@@ -79,7 +79,7 @@ Setup a local mysql instance (username `root` and password `toor` which only for
 ## Run Service
 
 ```shell
-go run service/main.go --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
+go run main.go --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
 ```
 
 ## Run Client

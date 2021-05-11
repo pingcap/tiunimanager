@@ -76,13 +76,13 @@ etcd --data-dir=data.etcd3 --name ${THIS_NAME} \
 
 Setup a local mysql instance (username `root` and password `toor` which only for test!!!) and create database `tcp`.
 
-## Run Service
+### Run Service
 
 ```shell
 go run main.go --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
 ```
 
-## Run Client
+### Run Client
 
 ```
 $ curl -su "admin:admin" -vX GET \

@@ -31,7 +31,7 @@ func main() {
 	}
 	{
 		g := router.SetUpRouter()
-		if err := g.Run(); err != nil {
+		if err := g.RunTLS(":443", "config/example/server.crt", "config/example/server.key"); err != nil {
 			log.Fatal(err)
 		}
 	}

@@ -95,19 +95,19 @@ $ go run main.go --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:237
 ### Run Client
 
 ```
-$ curl -su "admin:admin" -vX GET \
+$ curl --insecure -su "admin:admin" -vX GET \
     -H "Content-type: application/json"   \
     -H "Accept: application/json"   \
     -d '{"NamE":"bar"}'   \
-    "http://127.0.0.1:8080/api/greeter"
+    "https://127.0.0.1/api/greeter"
 
 {"code":"200","data":{"greeting":"Hello bar"}}
 
-$ curl -su "admin:dontknow" -vX GET \
+$ curl --insecure -su "admin:dontknow" -vX GET \
     -H "Content-type: application/json"   \
     -H "Accept: application/json"   \
     -d '{"NamE":"bar"}'   \
-    "http://127.0.0.1:8080/api/greeter"
+    "https://127.0.0.1/api/greeter"
 
 < HTTP/1.1 401 Unauthorized
 < Content-Type: text/plain; charset=utf-8

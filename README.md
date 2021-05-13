@@ -76,10 +76,20 @@ etcd --data-dir=data.etcd3 --name ${THIS_NAME} \
 
 Setup a local mysql instance (username `root` and password `toor` which only for test!!!) and create database `tcp`.
 
+### Setup Jaeger (for opentracing)
+
+Download binary from https://www.jaegertracing.io/download/.
+
+```shell
+$ jaeger-all-in-one --collector.zipkin.host-port=:9411
+```
+
+And visit the web interface from port 16686.
+
 ### Run Service
 
 ```shell
-go run main.go --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
+$ go run main.go --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
 ```
 
 ### Run Client
@@ -107,3 +117,11 @@ $ curl -su "admin:dontknow" -vX GET \
 <
 not authorized
 ```
+
+### Watch Traces
+
+Visit the web interface of Jaeger from port 16686.
+
+![opentrace1](docs/img/opentrace1.png)
+
+![opentrace2](docs/img/opentrace2.png)

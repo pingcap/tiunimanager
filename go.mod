@@ -9,7 +9,6 @@ require (
 	github.com/asim/go-micro/v3 v3.5.1
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/gin-gonic/gin v1.6.3
-	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/jackdoe/gin-basic-auth-dynamic v0.0.0-20201112112728-ede5321b610c
 	github.com/kr/pretty v0.2.0 // indirect

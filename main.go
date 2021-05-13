@@ -3,19 +3,21 @@ package main
 import (
 	"log"
 
+	"tcp/addon/tracer"
 	greeterPb "tcp/proto/greeter"
 	"tcp/router"
 	"tcp/service"
 
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
+	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
-	"tcp/models"
 )
 
 func main() {
 	{
 		srv := micro.NewService(
-			micro.Name("greeter"),
+			micro.Name("go.micro.greeter"),
+			micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 		)
 		srv.Init()
 		{

@@ -3,15 +3,17 @@ package models
 import (
 	"fmt"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	gormopentracing "gorm.io/plugin/opentracing"
 )
 
 var db *gorm.DB
 
 func init() {
 	var err error
-	db, err = gorm.Open("mysql", "root:toor@/tcp?charset=utf8&parseTime=True&loc=Local")
+	dsn := "root:toor@/tcp?charset=utf8&parseTime=True&loc=Local"
+	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
 		fmt.Printf("mysql connect error %v", err)
@@ -22,9 +24,5 @@ func init() {
 		fmt.Printf("database error %v", db.Error)
 		panic(db.Error)
 	}
-
-	if db.HasTable(&User{}) == false {
-		db.CreateTable(&User{})
-	}
-
+	db.Use(gormopentracing.New())
 }

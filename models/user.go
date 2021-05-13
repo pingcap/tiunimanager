@@ -1,10 +1,10 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 /*
@@ -34,10 +34,8 @@ func FindUserByName(name string) (user User, err error) {
 func CreateUser(user User) error {
 	tx := db.Begin()
 	var findUser User
-	tmp := db.Where("name = ?", user.Name).First(&findUser)
-	err := tmp.Error
-	notFound := tmp.RecordNotFound()
-	tmp = nil
+	err := db.Where("name = ?", user.Name).First(&findUser).Error
+	notFound := errors.Is(err, gorm.ErrRecordNotFound)
 	if err == nil { //already exist
 		tx.Rollback()
 		return fmt.Errorf("record already exist")

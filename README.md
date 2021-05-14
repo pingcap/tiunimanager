@@ -125,3 +125,7 @@ Visit the web interface of Jaeger from port 16686.
 ![opentrace1](docs/img/opentrace1.png)
 
 ![opentrace2](docs/img/opentrace2.png)
+
+### Collect Promethus Merics
+
+The Promethus metrics is exported at ":8080/metrics".

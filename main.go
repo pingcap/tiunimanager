@@ -3,12 +3,16 @@ package main
 import (
 	"crypto/tls"
 	"log"
+	"net/http"
 
 	"tcp/addon/tracer"
 	"tcp/config"
 	greeterPb "tcp/proto/greeter"
 	"tcp/router"
 	"tcp/service"
+
+	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
@@ -28,6 +32,7 @@ func main() {
 
 		srv := micro.NewService(
 			micro.Name("go.micro.greeter"),
+			micro.WrapHandler(prometheus.NewHandlerWrapper()),
 			micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 		)
@@ -38,6 +43,14 @@ func main() {
 		go func() {
 			if err := srv.Run(); err != nil {
 				log.Fatal(err)
+			}
+		}()
+		// start promhttp
+		http.Handle("/metrics", promhttp.Handler())
+		go func() {
+			err := http.ListenAndServe(":8080", nil)
+			if err != nil {
+				log.Fatal("promhttp ListenAndServe err:", err)
 			}
 		}()
 	}

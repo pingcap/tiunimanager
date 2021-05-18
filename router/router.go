@@ -1,6 +1,7 @@
 package router
 
 import (
+	"tcp/addon/logger"
 	"tcp/addon/tracer"
 	"tcp/api"
 	"tcp/auth"
@@ -9,7 +10,9 @@ import (
 )
 
 func SetUpRouter() *gin.Engine {
-	g := gin.Default()
+	gin.SetMode(gin.ReleaseMode)
+	g := gin.New()
+	g.Use(logger.GenGinLogger(), gin.Recovery())
 	g.Use(tracer.GinOpenTracing())
 	g.Use(auth.GenBasicAuth())
 	g.GET("/api/greeter", api.Greeter)

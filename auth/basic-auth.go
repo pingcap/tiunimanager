@@ -30,7 +30,7 @@ func GenBasicAuth() gin.HandlerFunc {
 				sp = opentracing.StartSpan(c.Request.URL.Path + "|mysql")
 			}
 
-			user, err := models.FindUserByName(userName)
+			user, err := models.FindUserByName(c, userName)
 
 			sp.Finish()
 

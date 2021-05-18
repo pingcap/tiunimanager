@@ -2,7 +2,7 @@ package client
 
 import (
 	"crypto/tls"
-	"log"
+	"tcp/addon/logger"
 	"tcp/addon/tracer"
 	"tcp/config"
 	greeterPb "tcp/proto/greeter"
@@ -29,9 +29,10 @@ var GreeterClient greeterPb.GreeterService
 
 func init() {
 	// tls
+	log := logger.WithContext(nil).WithField("init", "client")
 	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("tls.LoadX509KeyPair err:%s", err)
 		return
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}

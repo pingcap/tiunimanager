@@ -15,6 +15,7 @@ require (
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.5.1
+	github.com/sirupsen/logrus v1.4.2
 	github.com/uber/jaeger-client-go v2.28.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899 // indirect

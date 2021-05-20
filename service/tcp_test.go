@@ -2,17 +2,17 @@ package service
 
 import (
 	"context"
-	greeterPb "tcp/proto/greeter"
+	tcpPb "tcp/proto/tcp"
 	"testing"
 )
 
-func TestGreeterHello(t *testing.T) {
-	var g Greeter
-	req := greeterPb.Request{
+func TestTcpHello(t *testing.T) {
+	var tcp Tcp
+	req := tcpPb.HelloRequest{
 		Name: "Test",
 	}
-	resp := greeterPb.Response{}
-	err := g.Hello(context.Background(), &req, &resp)
+	resp := tcpPb.HelloResponse{}
+	err := tcp.Hello(context.Background(), &req, &resp)
 	if err != nil {
 		t.Error("got an error:", err)
 		return

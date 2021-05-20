@@ -5,20 +5,28 @@ import (
 	"log"
 	"net/http"
 
+	mylogger "tcp/addon/logger"
 	"tcp/addon/tracer"
 	"tcp/config"
-	greeterPb "tcp/proto/greeter"
+	tcpPb "tcp/proto/tcp"
 	"tcp/router"
 	"tcp/service"
 
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
+	mlog "github.com/asim/go-micro/v3/logger"
 	"github.com/asim/go-micro/v3/transport"
 )
+
+func init() {
+	// log
+	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(mylogger.WithContext(nil)))
+}
 
 func main() {
 	{
@@ -29,16 +37,16 @@ func main() {
 			return
 		}
 		tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
-
+		//
 		srv := micro.NewService(
-			micro.Name("go.micro.greeter"),
+			micro.Name("go.micro.tcp"),
 			micro.WrapHandler(prometheus.NewHandlerWrapper()),
 			micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 		)
 		srv.Init()
 		{
-			greeterPb.RegisterGreeterHandler(srv.Server(), new(service.Greeter))
+			tcpPb.RegisterTcpHandler(srv.Server(), new(service.Tcp))
 		}
 		go func() {
 			if err := srv.Run(); err != nil {

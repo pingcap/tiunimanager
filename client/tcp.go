@@ -5,7 +5,7 @@ import (
 	"tcp/addon/logger"
 	"tcp/addon/tracer"
 	"tcp/config"
-	greeterPb "tcp/proto/greeter"
+	tcpPb "tcp/proto/tcp"
 
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
@@ -15,7 +15,7 @@ import (
 
 // Make request
 /*
-	rsp, err := GreeterClient.Hello(context.Background(), &pb.Request{
+	rsp, err := TcpClient.Hello(context.Background(), &pb.HelloRequest{
 		Name: "Foo",
 	})
 	if err != nil {
@@ -25,7 +25,7 @@ import (
 
 	fmt.Println(rsp.Greeting)
 */
-var GreeterClient greeterPb.GreeterService
+var TcpClient tcpPb.TcpService
 
 func init() {
 	// tls
@@ -46,5 +46,5 @@ func init() {
 	service.Init()
 
 	// Use the generated client stub
-	GreeterClient = greeterPb.NewGreeterService("go.micro.greeter", service.Client())
+	TcpClient = tcpPb.NewTcpService("go.micro.tcp", service.Client())
 }

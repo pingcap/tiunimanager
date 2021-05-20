@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option go_package = "./;tcp";
+
+// TiDB Cloud Platform
+service Tcp {
+	rpc Hello(HelloRequest) returns (HelloResponse);
+}
+
+message HelloRequest {
+	string name = 1 ;
+}
+
+message HelloResponse {
+	string greeting = 1;
+}

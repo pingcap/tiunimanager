@@ -15,6 +15,6 @@ func SetUpRouter() *gin.Engine {
 	g.Use(logger.GenGinLogger(), gin.Recovery())
 	g.Use(tracer.GinOpenTracing())
 	g.Use(auth.GenBasicAuth())
-	g.GET("/api/greeter", api.Greeter)
+	g.GET("/api/hello", api.Hello)
 	return g
 }

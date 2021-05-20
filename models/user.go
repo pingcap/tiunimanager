@@ -35,13 +35,17 @@ func FindUserByName(ctx context.Context, name string) (user User, err error) {
 	if err != nil {
 		log.Errorf("err: %s", err)
 	} else {
-		log.Infof("sucess with return: %v", user)
+		u := user
+		u.Password = "******"
+		log.Infof("sucess with return: %v", u)
 	}
 	return
 }
 
 func CreateUser(ctx context.Context, user User) error {
-	log := logger.WithContext(ctx).WithField("models", "CreateUser").WithField("user", user)
+	u := user
+	u.Password = "******"
+	log := logger.WithContext(ctx).WithField("models", "CreateUser").WithField("user", u)
 	log.Debug("entry")
 	tx := db.Begin()
 	var findUser User

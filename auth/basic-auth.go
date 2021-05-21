@@ -1,7 +1,9 @@
 package auth
 
 import (
-	"tcp/models"
+	"github.com/pingcap/tcp/addon/logger"
+	"github.com/pingcap/tcp/client"
+	dbPb "github.com/pingcap/tcp/proto/db"
 
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/gin-gonic/gin"
@@ -30,17 +32,19 @@ func GenBasicAuth() gin.HandlerFunc {
 				sp = opentracing.StartSpan(c.Request.URL.Path + "|mysql")
 			}
 
-			user, err := models.FindUserByName(c, userName)
+			var req dbPb.CheckUserRequest
+			req.Name = userName
+			req.Passwd = userPass
+			resp, err := client.DbClient.CheckUser(c, &req)
 
 			sp.Finish()
 
-			if err == nil {
-				if user.Password == userPass {
-					return basicAuth.AuthResult{Success: true, Text: "authorized"}
-				} else {
-					return basicAuth.AuthResult{Success: false, Text: "not authorized"}
-				}
+			if err == nil && resp.ErrCode == 0 {
+				return basicAuth.AuthResult{Success: true, Text: "authorized"}
 			} else {
+				if err != nil {
+					logger.WithContext(c).Errorf("client.DbClient.CheckUser met an error:%v", err)
+				}
 				return basicAuth.AuthResult{Success: false, Text: "not authorized"}
 			}
 		},

@@ -5,12 +5,12 @@ import (
 	"log"
 	"net/http"
 
-	mylogger "tcp/addon/logger"
-	"tcp/addon/tracer"
-	"tcp/config"
-	tcpPb "tcp/proto/tcp"
-	"tcp/router"
-	"tcp/service"
+	mylogger "github.com/pingcap/tcp/addon/logger"
+	"github.com/pingcap/tcp/addon/tracer"
+	"github.com/pingcap/tcp/config"
+	dbPb "github.com/pingcap/tcp/proto/db"
+	"github.com/pingcap/tcp/router"
+	"github.com/pingcap/tcp/service"
 
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -39,14 +39,14 @@ func main() {
 		tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 		//
 		srv := micro.NewService(
-			micro.Name("go.micro.tcp"),
+			micro.Name("go.micro.tcp.db"),
 			micro.WrapHandler(prometheus.NewHandlerWrapper()),
 			micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 		)
 		srv.Init()
 		{
-			tcpPb.RegisterTcpHandler(srv.Server(), new(service.Tcp))
+			dbPb.RegisterDbHandler(srv.Server(), new(service.Db))
 		}
 		go func() {
 			if err := srv.Run(); err != nil {
@@ -56,7 +56,7 @@ func main() {
 		// start promhttp
 		http.Handle("/metrics", promhttp.Handler())
 		go func() {
-			err := http.ListenAndServe(":8080", nil)
+			err := http.ListenAndServe(":8081", nil)
 			if err != nil {
 				log.Fatal("promhttp ListenAndServe err:", err)
 			}
@@ -64,7 +64,7 @@ func main() {
 	}
 	{
 		g := router.SetUpRouter()
-		if err := g.RunTLS(":443", config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath()); err != nil {
+		if err := g.RunTLS(":444", config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath()); err != nil {
 			log.Fatal(err)
 		}
 	}

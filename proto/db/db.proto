@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+option go_package = "./;db";
+
+// TiDB Cloud Platform
+service Db {
+	rpc FindUserByName(FindUserByNameRequest) returns (FindUserByNameResponse);
+	rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+	rpc CheckUser(CheckUserRequest) returns (CheckUserResponse);
+}
+
+message User {
+	string name = 1;
+	string salt = 2;
+	string finalSalt = 3;
+}
+
+message FindUserByNameRequest {
+	string name = 1 ;
+}
+
+message FindUserByNameResponse {
+	// zero means ok
+	int32 errCode = 1;
+	string errStr = 2;
+	User u = 3;
+}
+
+message CreateUserRequest {
+	string name = 1;
+	string passwd = 2;
+}
+
+message CreateUserResponse {
+	// zero means ok
+	int32 errCode = 1;
+	string errStr = 2;
+}
+
+message CheckUserRequest {
+	string name = 1 ;
+	string passwd = 2;
+}
+
+message CheckUserResponse {
+	// zero means ok
+	int32 errCode = 1;
+	string errStr = 2;
+}

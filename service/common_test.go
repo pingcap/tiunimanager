@@ -2,17 +2,18 @@ package service
 
 import (
 	"context"
-	tcpPb "tcp/proto/tcp"
 	"testing"
+
+	commonPb "github.com/pingcap/tcp/proto/common"
 )
 
 func TestTcpHello(t *testing.T) {
-	var tcp Tcp
-	req := tcpPb.HelloRequest{
+	var c Common
+	req := commonPb.HelloRequest{
 		Name: "Test",
 	}
-	resp := tcpPb.HelloResponse{}
-	err := tcp.Hello(context.Background(), &req, &resp)
+	resp := commonPb.HelloResponse{}
+	err := c.Hello(context.Background(), &req, &resp)
 	if err != nil {
 		t.Error("got an error:", err)
 		return

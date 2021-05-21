@@ -5,9 +5,9 @@ type Config struct {
 }
 
 func GetCertificateCrtFilePath() string {
-	return "config/example/server.crt"
+	return "../../config/example/server.crt"
 }
 
 func GetCertificateKeyFilePath() string {
-	return "config/example/server.key"
+	return "../../config/example/server.key"
 }

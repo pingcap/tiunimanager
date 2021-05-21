@@ -1,9 +1,9 @@
 package api
 
 import (
-	"tcp/client"
+	"github.com/pingcap/tcp/client"
 
-	tcpPb "tcp/proto/tcp"
+	commonPb "github.com/pingcap/tcp/proto/common"
 
 	"github.com/opentracing/opentracing-go"
 
@@ -11,7 +11,7 @@ import (
 )
 
 func Hello(c *gin.Context) {
-	req := new(tcpPb.HelloRequest)
+	req := new(commonPb.HelloRequest)
 	if err := c.BindJSON(req); err != nil {
 		c.JSON(400, gin.H{
 			"code": "400",
@@ -19,7 +19,7 @@ func Hello(c *gin.Context) {
 		})
 		return
 	}
-	var resp *tcpPb.HelloResponse
+	var resp *commonPb.HelloResponse
 	var err error
 	{
 		v, existFlag := c.Get("ParentSpan")
@@ -30,9 +30,9 @@ func Hello(c *gin.Context) {
 		}
 		if existFlag && ok {
 			ctx := opentracing.ContextWithSpan(c, parentSpan)
-			resp, err = client.TcpClient.Hello(ctx, req)
+			resp, err = client.CommonClient.Hello(ctx, req)
 		} else {
-			resp, err = client.TcpClient.Hello(c, req)
+			resp, err = client.CommonClient.Hello(c, req)
 		}
 	}
 	if err != nil {

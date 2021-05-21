@@ -1,4 +1,4 @@
-module tcp
+module github.com/pingcap/tcp
 
 go 1.16
 
@@ -17,8 +17,9 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/uber/jaeger-client-go v2.28.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	google.golang.org/protobuf v1.26.0
-	gorm.io/driver/mysql v1.1.0
+	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.10
 	gorm.io/plugin/opentracing v0.0.0-20210506132430-24a9caea7709
 )

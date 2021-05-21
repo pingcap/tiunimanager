@@ -1,10 +1,10 @@
 package router
 
 import (
-	"tcp/addon/logger"
-	"tcp/addon/tracer"
-	"tcp/api"
-	"tcp/auth"
+	"github.com/pingcap/tcp/addon/logger"
+	"github.com/pingcap/tcp/addon/tracer"
+	"github.com/pingcap/tcp/api"
+	"github.com/pingcap/tcp/auth"
 
 	"github.com/gin-gonic/gin"
 )

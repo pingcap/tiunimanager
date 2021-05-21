@@ -2,10 +2,11 @@ package client
 
 import (
 	"crypto/tls"
-	"tcp/addon/logger"
-	"tcp/addon/tracer"
-	"tcp/config"
-	tcpPb "tcp/proto/tcp"
+
+	"github.com/pingcap/tcp/addon/logger"
+	"github.com/pingcap/tcp/addon/tracer"
+	"github.com/pingcap/tcp/config"
+	dbPb "github.com/pingcap/tcp/proto/db"
 
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
@@ -25,7 +26,7 @@ import (
 
 	fmt.Println(rsp.Greeting)
 */
-var TcpClient tcpPb.TcpService
+var DbClient dbPb.DbService
 
 func init() {
 	// tls
@@ -46,5 +47,5 @@ func init() {
 	service.Init()
 
 	// Use the generated client stub
-	TcpClient = tcpPb.NewTcpService("go.micro.tcp", service.Client())
+	DbClient = dbPb.NewDbService("go.micro.tcp.db", service.Client())
 }

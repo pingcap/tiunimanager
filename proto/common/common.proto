@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-option go_package = "./;tcp";
+option go_package = "./;common";
 
 // TiDB Cloud Platform
-service Tcp {
+service Common {
 	rpc Hello(HelloRequest) returns (HelloResponse);
 }
 

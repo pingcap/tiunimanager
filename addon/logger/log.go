@@ -8,6 +8,7 @@ import (
 )
 
 type logCtxKeyType struct{}
+type Fields log.Fields
 
 var logCtxKey logCtxKeyType
 
@@ -21,8 +22,8 @@ func init() {
 	defaultLogEntry = log.NewEntry(logger)
 }
 
-func NewContext(ctx context.Context, fields log.Fields) context.Context {
-	return context.WithValue(ctx, logCtxKey, WithContext(ctx).WithFields(fields))
+func NewContext(ctx context.Context, fields Fields) context.Context {
+	return context.WithValue(ctx, logCtxKey, WithContext(ctx).WithFields(log.Fields(fields)))
 }
 
 func WithContext(ctx context.Context) *log.Entry {

@@ -132,3 +132,60 @@ Visit the web interface of Jaeger from port 16686.
 ### Collect Promethus Merics
 
 The Promethus metrics is exported at ":8080/metrics".
+
+## Code Style Guide
+
+See [Uber Go Style Guide](https://github.com/uber-go/guide/blob/master/style.md) for the style guide.
+
+## How to Log
+
+For example:
+
+```go
+func CheckUser(ctx context.Context, name, passwd string) error {
+	log := logger.WithContext(ctx).WithField("models", "CheckUser").WithField("name", name)
+	u, err := FindUserByName(ctx, name)
+	if err == nil {
+		log.Info("user:", u)
+		if nil == bcrypt.CompareHashAndPassword([]byte(u.FinalHash), []byte(u.Salt+passwd)) {
+			log.Debug("check success")
+			return nil
+		} else {
+			return fmt.Errorf("failed")
+		}
+	} else {
+		return err
+	}
+}
+```
+
+```go
+func init() {
+    var err error
+    dbFile := "tcp.sqlite.db"
+    log := logger.WithContext(nil).WithField("dbFile", dbFile)
+    log.Debug("init: sqlite.open")
+    db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+  	/* ... */
+}
+```
+
+Basically, use `logger.WithContext(ctx)` to get the `log` if there is a valid ctx to inherit, or otherwise, use `logger.WithContext(nil)` to get the default log.
+
+```go
+func (d *Db) CheckUser(ctx context.Context, req *dbPb.CheckUserRequest, rsp *dbPb.CheckUserResponse) error {
+	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "CheckUser"})
+	log := logger.WithContext(ctx)
+	e := models.CheckUser(ctx, req.Name, req.Passwd)
+	if e == nil {
+		log.Debug("CheckUser success")
+	} else {
+		log.Errorf("CheckUser failed: %s", e)
+		rsp.ErrCode = 1
+		rsp.ErrStr = e.Error()
+	}
+	return nil
+}
+```
+
+Use something like `logger.NewContext(ctx, logger.Fields{"micro-service": "CheckUser"})` to create a new ctx from the old ctx with new customized log fields added.

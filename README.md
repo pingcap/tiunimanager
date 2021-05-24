@@ -142,6 +142,12 @@ See [Uber Go Style Guide](https://github.com/uber-go/guide/blob/master/style.md)
 For example:
 
 ```go
+import(
+	"github.com/pingcap/tcp/addon/logger"
+)
+```
+
+```go
 func CheckUser(ctx context.Context, name, passwd string) error {
 	log := logger.WithContext(ctx).WithField("models", "CheckUser").WithField("name", name)
 	u, err := FindUserByName(ctx, name)

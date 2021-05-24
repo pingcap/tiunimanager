@@ -166,7 +166,7 @@ func init() {
     log := logger.WithContext(nil).WithField("dbFile", dbFile)
     log.Debug("init: sqlite.open")
     db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
-  	/* ... */
+    /* ... */
 }
 ```
 

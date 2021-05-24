@@ -27,9 +27,9 @@ func GenBasicAuth() gin.HandlerFunc {
 			} else {
 			}
 			if existFlag && ok {
-				sp = opentracing.StartSpan(c.Request.URL.Path+"|mysql", opentracing.ChildOf(parentSpan.Context()))
+				sp = opentracing.StartSpan("mysql.CheckUserRequest", opentracing.ChildOf(parentSpan.Context()))
 			} else {
-				sp = opentracing.StartSpan(c.Request.URL.Path + "|mysql")
+				sp = opentracing.StartSpan("mysql.CheckUserRequest")
 			}
 
 			var req dbPb.CheckUserRequest

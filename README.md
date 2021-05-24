@@ -2,9 +2,13 @@
 
 ## Contents
 
+- addon - Addons.
 - api - OpenAPI http handler.
 - auth - Authentication.
 - client - Client of go-micro service.
+- config - Configurations.
+- docs - Documentation.
+- micro - Final main.go for different microservices.
 - models - Models of database.
 - proto - Protobuf definitions.
 - router - Router of http handler.
@@ -23,8 +27,10 @@ go get github.com/asim/go-micro/cmd/protoc-gen-micro/v3
 ### Generate Protobuf files
 
 ```
-cd proto/greeter
-protoc --proto_path=$GOPATH/src:. --micro_out=. --go_out=. greeter.proto
+cd proto/common
+protoc --proto_path=$GOPATH/src:. --micro_out=. --go_out=. *.proto
+cd proto/db
+protoc --proto_path=$GOPATH/src:. --micro_out=. --go_out=. *.proto
 ```
 
 ### Install And Setup local etcd service
@@ -72,10 +78,6 @@ etcd --data-dir=data.etcd3 --name ${THIS_NAME} \
     --initial-cluster-state ${CLUSTER_STATE} --initial-cluster-token ${TOKEN}
 ```
 
-### Setup Mysql
-
-Setup a local mysql instance (username `root` and password `toor` which only for test!!!) and create database `tcp`.
-
 ### Setup Jaeger (for opentracing)
 
 Download binary from https://www.jaegertracing.io/download/.
@@ -89,7 +91,8 @@ And visit the web interface from port 16686.
 ### Run Service
 
 ```shell
-$ go run main.go --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
+$ go run micro/common/main.go --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
+$ go run micro/db/main.go --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
 ```
 
 ### Run Client

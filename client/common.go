@@ -1,17 +1,11 @@
 package client
 
 import (
-	"crypto/tls"
-
-	"github.com/pingcap/tcp/addon/logger"
-	"github.com/pingcap/tcp/addon/tracer"
-	"github.com/pingcap/tcp/config"
 	commonPb "github.com/pingcap/tcp/proto/common"
+	"github.com/pingcap/tcp/service"
 
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
-	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
-	"github.com/asim/go-micro/v3/transport"
 )
 
 // Make request
@@ -29,23 +23,9 @@ import (
 var CommonClient commonPb.CommonService
 
 func init() {
-	// tls
-	log := logger.WithContext(nil).WithField("init", "client")
-	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
-	if err != nil {
-		log.Fatalf("tls.LoadX509KeyPair err:%s", err)
-		return
-	}
-	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
-	// create a new service
-	service := micro.NewService(
-		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
-		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
-	)
+	appendToInitFpArray(initCommonClient)
+}
 
-	// parse command line flags
-	service.Init()
-
-	// Use the generated client stub
-	CommonClient = commonPb.NewCommonService("go.micro.tcp.common", service.Client())
+func initCommonClient(srv micro.Service) {
+	CommonClient = commonPb.NewCommonService(service.TCP_COMMON_SERVICE_NAME, srv.Client())
 }

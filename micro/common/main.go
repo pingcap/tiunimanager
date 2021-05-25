@@ -2,11 +2,13 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net/http"
 
 	mylogger "github.com/pingcap/tcp/addon/logger"
 	"github.com/pingcap/tcp/addon/tracer"
+	"github.com/pingcap/tcp/client"
 	"github.com/pingcap/tcp/config"
 	commonPb "github.com/pingcap/tcp/proto/common"
 	"github.com/pingcap/tcp/router"
@@ -30,6 +32,15 @@ func init() {
 
 func main() {
 	{
+		// only use to init the config
+		srv := micro.NewService(
+			config.GetMicroCliArgsOption(),
+		)
+		srv.Init()
+		config.Init()
+		srv = nil
+	}
+	{
 		// tls
 		cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
 		if err != nil {
@@ -39,12 +50,13 @@ func main() {
 		tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 		//
 		srv := micro.NewService(
-			micro.Name("go.micro.tcp.common"),
+			micro.Name(service.TCP_COMMON_SERVICE_NAME),
 			micro.WrapHandler(prometheus.NewHandlerWrapper()),
 			micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 		)
 		srv.Init()
+		client.InitClient(srv)
 		{
 			commonPb.RegisterCommonHandler(srv.Server(), new(service.Common))
 		}
@@ -56,7 +68,8 @@ func main() {
 		// start promhttp
 		http.Handle("/metrics", promhttp.Handler())
 		go func() {
-			err := http.ListenAndServe(":8080", nil)
+			addr := fmt.Sprintf(":%d", config.GetPrometheusPort())
+			err := http.ListenAndServe(addr, nil)
 			if err != nil {
 				log.Fatal("promhttp ListenAndServe err:", err)
 			}
@@ -64,7 +77,8 @@ func main() {
 	}
 	{
 		g := router.SetUpRouter()
-		if err := g.RunTLS(":443", config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath()); err != nil {
+		addr := fmt.Sprintf(":%d", config.GetOpenApiPort())
+		if err := g.RunTLS(addr, config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath()); err != nil {
 			log.Fatal(err)
 		}
 	}

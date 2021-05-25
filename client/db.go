@@ -1,17 +1,11 @@
 package client
 
 import (
-	"crypto/tls"
-
-	"github.com/pingcap/tcp/addon/logger"
-	"github.com/pingcap/tcp/addon/tracer"
-	"github.com/pingcap/tcp/config"
+	"github.com/asim/go-micro/v3"
 	dbPb "github.com/pingcap/tcp/proto/db"
+	"github.com/pingcap/tcp/service"
 
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
-	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
-	"github.com/asim/go-micro/v3"
-	"github.com/asim/go-micro/v3/transport"
 )
 
 // Make request
@@ -29,23 +23,9 @@ import (
 var DbClient dbPb.DbService
 
 func init() {
-	// tls
-	log := logger.WithContext(nil).WithField("init", "client")
-	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
-	if err != nil {
-		log.Fatalf("tls.LoadX509KeyPair err:%s", err)
-		return
-	}
-	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
-	// create a new service
-	service := micro.NewService(
-		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
-		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
-	)
+	appendToInitFpArray(initDbClient)
+}
 
-	// parse command line flags
-	service.Init()
-
-	// Use the generated client stub
-	DbClient = dbPb.NewDbService("go.micro.tcp.db", service.Client())
+func initDbClient(srv micro.Service) {
+	DbClient = dbPb.NewDbService(service.TCP_DB_SERVICE_NAME, srv.Client())
 }

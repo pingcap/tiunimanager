@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pingcap/tcp/addon/logger"
+	"github.com/pingcap/tcp/config"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -12,9 +13,9 @@ import (
 
 var db *gorm.DB
 
-func init() {
+func Init() {
 	var err error
-	dbFile := "tcp.sqlite.db"
+	dbFile := config.GetSqliteFilePath()
 	log := logger.WithContext(nil).WithField("dbFile", dbFile)
 	log.Debug("init: sqlite.open")
 	db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})

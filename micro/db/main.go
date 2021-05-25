@@ -2,12 +2,15 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net/http"
 
 	mylogger "github.com/pingcap/tcp/addon/logger"
 	"github.com/pingcap/tcp/addon/tracer"
+	"github.com/pingcap/tcp/client"
 	"github.com/pingcap/tcp/config"
+	"github.com/pingcap/tcp/models"
 	dbPb "github.com/pingcap/tcp/proto/db"
 	"github.com/pingcap/tcp/router"
 	"github.com/pingcap/tcp/service"
@@ -30,6 +33,15 @@ func init() {
 
 func main() {
 	{
+		// only use to init the config
+		srv := micro.NewService(
+			config.GetMicroCliArgsOption(),
+		)
+		srv.Init()
+		config.Init()
+		srv = nil
+	}
+	{
 		// tls
 		cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
 		if err != nil {
@@ -39,12 +51,14 @@ func main() {
 		tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 		//
 		srv := micro.NewService(
-			micro.Name("go.micro.tcp.db"),
+			micro.Name(service.TCP_DB_SERVICE_NAME),
 			micro.WrapHandler(prometheus.NewHandlerWrapper()),
 			micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 		)
 		srv.Init()
+		models.Init()
+		client.InitClient(srv)
 		{
 			dbPb.RegisterDbHandler(srv.Server(), new(service.Db))
 		}
@@ -56,7 +70,8 @@ func main() {
 		// start promhttp
 		http.Handle("/metrics", promhttp.Handler())
 		go func() {
-			err := http.ListenAndServe(":8081", nil)
+			addr := fmt.Sprintf(":%d", config.GetPrometheusPort())
+			err := http.ListenAndServe(addr, nil)
 			if err != nil {
 				log.Fatal("promhttp ListenAndServe err:", err)
 			}
@@ -64,7 +79,8 @@ func main() {
 	}
 	{
 		g := router.SetUpRouter()
-		if err := g.RunTLS(":444", config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath()); err != nil {
+		addr := fmt.Sprintf(":%d", config.GetOpenApiPort())
+		if err := g.RunTLS(addr, config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath()); err != nil {
 			log.Fatal(err)
 		}
 	}

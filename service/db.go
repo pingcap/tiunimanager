@@ -9,6 +9,8 @@ import (
 	dbPb "github.com/pingcap/tcp/proto/db"
 )
 
+const TCP_DB_SERVICE_NAME = "go.micro.tcp.db"
+
 type Db struct{}
 
 func (d *Db) FindUserByName(ctx context.Context, req *dbPb.FindUserByNameRequest, rsp *dbPb.FindUserByNameResponse) error {

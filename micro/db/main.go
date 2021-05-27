@@ -53,6 +53,7 @@ func main() {
 		srv := micro.NewService(
 			micro.Name(service.TCP_DB_SERVICE_NAME),
 			micro.WrapHandler(prometheus.NewHandlerWrapper()),
+			micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 			micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 		)

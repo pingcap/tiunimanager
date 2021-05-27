@@ -91,8 +91,30 @@ And visit the web interface from port 16686.
 ### Run Service
 
 ```shell
-$ go run micro/common/main.go --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
-$ go run micro/db/main.go --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
+$ cd micro/common
+$ cat cfg.toml
+OpenApiPort = 4443
+PrometheusPort = 8080
+
+[Certificates]
+  CrtFilePath = "../../config/example/server.crt"
+  KeyFilePath = "../../config/example/server.key"
+
+$ go run main.go --tidb-cloud-platform-conf-file cfg.toml --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
+```
+
+```bash
+$ cd micro/db
+$ cat cfg.toml
+SqliteFilePath = "./tcp.sqlite.db"
+OpenApiPort = 4444
+PrometheusPort = 8081
+
+[Certificates]
+  CrtFilePath = "../../config/example/server.crt"
+  KeyFilePath = "../../config/example/server.key"
+
+$ go run main.go --tidb-cloud-platform-conf-file cfg.toml --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
 ```
 
 ### Run Client
@@ -102,7 +124,7 @@ $ curl --insecure -su "admin:admin" -vX GET \
     -H "Content-type: application/json"   \
     -H "Accept: application/json"   \
     -d '{"NamE":"bar"}'   \
-    "https://127.0.0.1/api/greeter"
+    "https://127.0.0.1:4443/api/greeter"
 
 {"code":"200","data":{"greeting":"Hello bar"}}
 
@@ -110,7 +132,7 @@ $ curl --insecure -su "admin:dontknow" -vX GET \
     -H "Content-type: application/json"   \
     -H "Accept: application/json"   \
     -d '{"NamE":"bar"}'   \
-    "https://127.0.0.1/api/greeter"
+    "https://127.0.0.1:4443/api/greeter"
 
 < HTTP/1.1 401 Unauthorized
 < Content-Type: text/plain; charset=utf-8
@@ -135,7 +157,7 @@ The Promethus metrics is exported at ":8080/metrics".
 
 ## Code Style Guide
 
-See [Uber Go Style Guide](https://github.com/uber-go/guide/blob/master/style.md) for the style guide.
+See [Effective Go](https://golang.org/doc/effective_go) for the style guide.
 
 ## How to Log
 

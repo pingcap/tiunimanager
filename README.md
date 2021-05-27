@@ -153,7 +153,7 @@ Visit the web interface of Jaeger from port 16686.
 
 ### Collect Promethus Merics
 
-The Promethus metrics is exported at ":8080/metrics".
+The Promethus metrics is exported as http resource and is located at ":${PrometheusPort}/metrics" which the `PrometheusPort` is defined in the configure file.
 
 ## Code Style Guide
 

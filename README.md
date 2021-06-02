@@ -18,10 +18,18 @@
 
 ### Dependencies
 
-Install the following
+Install the protobuf stuff
 
 ```
 go get github.com/asim/go-micro/cmd/protoc-gen-micro/v3
+go get google.golang.org/protobuf/cmd/protoc-gen-go
+
+# Install protoc Refer to http://google.github.io/proto-lens/installing-protoc.html
+PROTOC_ZIP=protoc-3.14.0-linux-x86_64.zip
+curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/$PROTOC_ZIP
+sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
+sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
+rm -f $PROTOC_ZIP
 ```
 
 ### Generate Protobuf files
@@ -124,7 +132,7 @@ $ curl --insecure -su "admin:admin" -vX GET \
     -H "Content-type: application/json"   \
     -H "Accept: application/json"   \
     -d '{"NamE":"bar"}'   \
-    "https://127.0.0.1:4443/api/greeter"
+    "https://127.0.0.1:4443/api/hello"
 
 {"code":"200","data":{"greeting":"Hello bar"}}
 
@@ -132,7 +140,7 @@ $ curl --insecure -su "admin:dontknow" -vX GET \
     -H "Content-type: application/json"   \
     -H "Accept: application/json"   \
     -d '{"NamE":"bar"}'   \
-    "https://127.0.0.1:4443/api/greeter"
+    "https://127.0.0.1:4443/api/hello"
 
 < HTTP/1.1 401 Unauthorized
 < Content-Type: text/plain; charset=utf-8

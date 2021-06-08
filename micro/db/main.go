@@ -6,14 +6,14 @@ import (
 	"log"
 	"net/http"
 
-	mylogger "github.com/pingcap/tcp/addon/logger"
-	"github.com/pingcap/tcp/addon/tracer"
-	"github.com/pingcap/tcp/client"
-	"github.com/pingcap/tcp/config"
-	"github.com/pingcap/tcp/models"
-	dbPb "github.com/pingcap/tcp/proto/db"
-	"github.com/pingcap/tcp/router"
-	"github.com/pingcap/tcp/service"
+	mylogger "github.com/pingcap/ticp/addon/logger"
+	"github.com/pingcap/ticp/addon/tracer"
+	"github.com/pingcap/ticp/client"
+	"github.com/pingcap/ticp/config"
+	"github.com/pingcap/ticp/models"
+	dbPb "github.com/pingcap/ticp/proto/db"
+	"github.com/pingcap/ticp/router"
+	"github.com/pingcap/ticp/service"
 
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -51,7 +51,7 @@ func main() {
 		tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 		//
 		srv := micro.NewService(
-			micro.Name(service.TCP_DB_SERVICE_NAME),
+			micro.Name(service.TICP_DB_SERVICE_NAME),
 			micro.WrapHandler(prometheus.NewHandlerWrapper()),
 			micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 			micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),

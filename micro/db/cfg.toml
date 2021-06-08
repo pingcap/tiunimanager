@@ -1,4 +1,4 @@
-SqliteFilePath = "./tcp.sqlite.db"
+SqliteFilePath = "./ticp.sqlite.db"
 OpenApiPort = 4444
 PrometheusPort = 8081
 

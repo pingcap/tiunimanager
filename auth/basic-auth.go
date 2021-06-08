@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"github.com/pingcap/tcp/addon/logger"
-	"github.com/pingcap/tcp/client"
-	dbPb "github.com/pingcap/tcp/proto/db"
+	"github.com/pingcap/ticp/addon/logger"
+	"github.com/pingcap/ticp/client"
+	dbPb "github.com/pingcap/ticp/proto/db"
 
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/gin-gonic/gin"

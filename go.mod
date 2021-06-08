@@ -1,4 +1,4 @@
-module github.com/pingcap/tcp
+module github.com/pingcap/ticp
 
 go 1.16
 

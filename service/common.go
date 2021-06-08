@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 
-	commonPb "github.com/pingcap/tcp/proto/common"
+	commonPb "github.com/pingcap/ticp/proto/common"
 )
 
-const TCP_COMMON_SERVICE_NAME = "go.micro.tcp.common"
+const TICP_COMMON_SERVICE_NAME = "go.micro.ticp.common"
 
 type Common struct{}
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	commonPb "github.com/pingcap/tcp/proto/common"
+	commonPb "github.com/pingcap/ticp/proto/common"
 )
 
-func TestTcpHello(t *testing.T) {
+func TestTicpHello(t *testing.T) {
 	var c Common
 	req := commonPb.HelloRequest{
 		Name: "Test",

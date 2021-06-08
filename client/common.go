@@ -1,8 +1,8 @@
 package client
 
 import (
-	commonPb "github.com/pingcap/tcp/proto/common"
-	"github.com/pingcap/tcp/service"
+	commonPb "github.com/pingcap/ticp/proto/common"
+	"github.com/pingcap/ticp/service"
 
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/v3"
@@ -10,7 +10,7 @@ import (
 
 // Make request
 /*
-	rsp, err := TcpClient.Hello(context.Background(), &pb.HelloRequest{
+	rsp, err := TicpClient.Hello(context.Background(), &pb.HelloRequest{
 		Name: "Foo",
 	})
 	if err != nil {
@@ -27,5 +27,5 @@ func init() {
 }
 
 func initCommonClient(srv micro.Service) {
-	CommonClient = commonPb.NewCommonService(service.TCP_COMMON_SERVICE_NAME, srv.Client())
+	CommonClient = commonPb.NewCommonService(service.TICP_COMMON_SERVICE_NAME, srv.Client())
 }

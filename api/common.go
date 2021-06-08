@@ -1,9 +1,9 @@
 package api
 
 import (
-	"github.com/pingcap/tcp/client"
+	"github.com/pingcap/ticp/client"
 
-	commonPb "github.com/pingcap/tcp/proto/common"
+	commonPb "github.com/pingcap/ticp/proto/common"
 
 	"github.com/opentracing/opentracing-go"
 

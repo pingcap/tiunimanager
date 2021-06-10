@@ -16,5 +16,6 @@ func SetUpRouter() *gin.Engine {
 	g.Use(tracer.GinOpenTracing())
 	g.Use(auth.GenBasicAuth())
 	g.GET("/api/hello", api.Hello)
+	g.GET("/api/user/login", api.Hello)
 	return g
 }

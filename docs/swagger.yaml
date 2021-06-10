@@ -1,0 +1,237 @@
+basePath: /api/
+definitions:
+  api.CommonResult:
+    properties:
+      code:
+        type: integer
+      data:
+        type: object
+      message:
+        type: string
+    type: object
+  api.Page:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+    type: object
+  api.ResultWithPage:
+    properties:
+      code:
+        type: integer
+      data:
+        type: object
+      message:
+        type: string
+      page:
+        $ref: '#/definitions/api.Page'
+    type: object
+  hostapi.HostInfo:
+    properties:
+      hostId:
+        type: string
+      hostIp:
+        type: string
+      hostName:
+        type: string
+    type: object
+  instanceapi.InstanceInfo:
+    properties:
+      instanceId:
+        type: string
+      instanceName:
+        type: string
+      instanceStatus:
+        type: integer
+      instanceVersion:
+        type: integer
+    type: object
+  userapi.UserIdentity:
+    properties:
+      userName:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: zhangpeijin@pingcap.com
+    name: zhangpeijin
+  description: TiCP UI API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: TiCP UI API
+  version: "1.0"
+paths:
+  /host/query:
+    post:
+      consumes:
+      - application/json
+      description: 查询主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - in: formData
+        name: page
+        type: integer
+      - in: formData
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/hostapi.HostInfo'
+                  type: array
+              type: object
+      summary: 查询主机接口
+      tags:
+      - 主机
+  /instance/create:
+    post:
+      consumes:
+      - application/json
+      description: 创建实例
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - in: formData
+        name: InstanceName
+        type: string
+      - in: formData
+        name: dbPassword
+        type: integer
+      - in: formData
+        name: instanceVersion
+        type: integer
+      - in: formData
+        name: pdCount
+        type: integer
+      - in: formData
+        name: tiDBCount
+        type: integer
+      - in: formData
+        name: tiKVCount
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/instanceapi.InstanceInfo'
+              type: object
+      summary: 创建实例接口
+      tags:
+      - 实例
+  /instance/query:
+    post:
+      consumes:
+      - application/json
+      description: 查询实例
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - in: formData
+        name: page
+        type: integer
+      - in: formData
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/instanceapi.InstanceInfo'
+                  type: array
+              type: object
+      summary: 查询实例接口
+      tags:
+      - 实例
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: 登录
+      parameters:
+      - in: formData
+        name: userName
+        type: string
+      - in: formData
+        name: userPassword
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/userapi.UserIdentity'
+              type: object
+      summary: 登录接口
+      tags:
+      - 用户
+  /user/logout:
+    post:
+      consumes:
+      - application/json
+      description: 退出登录
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - in: formData
+        name: userName
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/api.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/userapi.UserIdentity'
+              type: object
+      summary: 退出登录
+      tags:
+      - 用户
+swagger: "2.0"

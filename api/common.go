@@ -1,49 +1,63 @@
+// Package classification TiCP API.
+//
+// the purpose of this application is to provide an application
+// that is using plain go code to define an API
+//
+// This should demonstrate all the possible comment annotations
+// that are available to turn go code into a fully compliant swagger 2.0 spec
+
+// @title TiCP API
+// @version v1
+// @description This is a sample TiCP-API server.
+// @BasePath /api/v1
+
+// swagger:meta
 package api
 
 import (
-	"github.com/pingcap/ticp/client"
-
-	commonPb "github.com/pingcap/ticp/proto/common"
-
-	"github.com/opentracing/opentracing-go"
-
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
+type ResultMark struct {
+	Code    int          `json:"code"`
+	Message string       `json:"message"`
+}
+
+type CommonResult struct {
+	ResultMark
+	Data    interface{}  `json:"data"`
+}
+
+type ResultWithPage struct {
+	ResultMark
+	Data    interface{}  `json:"data"`
+	Page    Page         `json:"page"`
+}
+
+func Success(data interface{}) CommonResult {
+	return CommonResult{ResultMark:ResultMark{0, "OK"}, Data: data}
+}
+
+func SuccessWithPage(data interface{}, page Page) ResultWithPage {
+	return ResultWithPage{ResultMark:ResultMark{0, "OK"}, Data: data, Page: page}
+}
+
+func Fail(code int, message string) CommonResult {
+	return CommonResult{ResultMark{code, message}, struct{}{}}
+}
+
+type Page struct {
+	Page      int    `json:"page"`
+	PageSize  int    `json:"pageSize"`
+	Total     int    `json:"total"`
+}
+
+type PageRequest struct {
+	Page      int    `json:"page"`
+	PageSize  int    `json:"pageSize"`
+}
+
 func Hello(c *gin.Context) {
-	req := new(commonPb.HelloRequest)
-	if err := c.BindJSON(req); err != nil {
-		c.JSON(400, gin.H{
-			"code": "400",
-			"msg":  "bad param",
-		})
-		return
-	}
-	var resp *commonPb.HelloResponse
-	var err error
-	{
-		v, existFlag := c.Get("ParentSpan")
-		var parentSpan opentracing.Span
-		var ok bool
-		if existFlag {
-			parentSpan, ok = v.(opentracing.Span)
-		}
-		if existFlag && ok {
-			ctx := opentracing.ContextWithSpan(c, parentSpan)
-			resp, err = client.CommonClient.Hello(ctx, req)
-		} else {
-			resp, err = client.CommonClient.Hello(c, req)
-		}
-	}
-	if err != nil {
-		c.JSON(500, gin.H{
-			"code": "500",
-			"msg":  err.Error(),
-		})
-	} else {
-		c.JSON(200, gin.H{
-			"code": "200",
-			"data": resp,
-		})
-	}
+	c.JSON(http.StatusOK, Success("hello"))
 }

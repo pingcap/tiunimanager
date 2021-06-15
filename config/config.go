@@ -4,7 +4,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/asim/go-micro/v3"
 	"github.com/micro/cli/v2"
-	"github.com/pingcap/tcp/addon/logger"
+	"github.com/pingcap/ticp/addon/logger"
 )
 
 var configFilePath = ""
@@ -12,7 +12,7 @@ var configFilePath = ""
 func GetMicroCliArgsOption() micro.Option {
 	return micro.Flags(
 		&cli.StringFlag{
-			Name:        "tidb-cloud-platform-conf-file",
+			Name:        "ticp-config",
 			Value:       "",
 			Usage:       "specify the configure file path of tidb cloud platform",
 			Destination: &configFilePath,

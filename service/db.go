@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 
-	"github.com/pingcap/tcp/addon/logger"
-	"github.com/pingcap/tcp/models"
+	"github.com/pingcap/ticp/addon/logger"
+	"github.com/pingcap/ticp/models"
 
-	dbPb "github.com/pingcap/tcp/proto/db"
+	dbPb "github.com/pingcap/ticp/proto/db"
 )
 
-const TCP_DB_SERVICE_NAME = "go.micro.tcp.db"
+const TICP_DB_SERVICE_NAME = "go.micro.ticp.db"
 
 type Db struct{}
 

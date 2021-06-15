@@ -2,8 +2,8 @@ package client
 
 import (
 	"github.com/asim/go-micro/v3"
-	dbPb "github.com/pingcap/tcp/proto/db"
-	"github.com/pingcap/tcp/service"
+	dbPb "github.com/pingcap/ticp/proto/db"
+	"github.com/pingcap/ticp/service"
 
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 )
@@ -27,5 +27,5 @@ func init() {
 }
 
 func initDbClient(srv micro.Service) {
-	DbClient = dbPb.NewDbService(service.TCP_DB_SERVICE_NAME, srv.Client())
+	DbClient = dbPb.NewDbService(service.TICP_DB_SERVICE_NAME, srv.Client())
 }

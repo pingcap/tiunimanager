@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/pingcap/tcp/addon/logger"
+	"github.com/pingcap/ticp/addon/logger"
 
 	"gorm.io/gorm"
 )

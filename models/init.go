@@ -3,8 +3,8 @@ package models
 import (
 	"context"
 
-	"github.com/pingcap/tcp/addon/logger"
-	"github.com/pingcap/tcp/config"
+	"github.com/pingcap/ticp/addon/logger"
+	"github.com/pingcap/ticp/config"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

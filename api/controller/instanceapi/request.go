@@ -1,11 +1,11 @@
 package instanceapi
 
 import (
-	"github.com/pingcap/ticp/api"
+	"github.com/pingcap/ticp/api/controller"
 )
 
 type InstanceQuery struct {
-	api.PageRequest
+	controller.PageRequest
 }
 
 type InstanceCreate struct {

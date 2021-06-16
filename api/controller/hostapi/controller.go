@@ -2,7 +2,7 @@ package hostapi
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/api"
+	"github.com/pingcap/ticp/api/controller"
 	"net/http"
 )
 // Query 查询主机接口
@@ -23,7 +23,7 @@ func Query(c *gin.Context) {
 	}
 
 	hostInfos := make([]HostInfo, 2 ,2)
-	hostInfos[0] = HostInfo{HostId:"first",HostName: "hh",HostIp:"127.0.0.1:1111"}
-	hostInfos[1] = HostInfo{HostId:"second",HostName: "hh",HostIp:"127.0.0.1:2222"}
-	c.JSON(http.StatusOK, api.SuccessWithPage(hostInfos, api.Page{Page: 1, PageSize: 20, Total: 2}))
+	hostInfos[0] = HostInfo{HostId: "first",HostName: "hh",HostIp:"127.0.0.1:1111"}
+	hostInfos[1] = HostInfo{HostId: "second",HostName: "hh",HostIp:"127.0.0.1:2222"}
+	c.JSON(http.StatusOK, controller.SuccessWithPage(hostInfos, controller.Page{Page: 1, PageSize: 20, Total: 2}))
 }

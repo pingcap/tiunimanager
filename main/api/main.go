@@ -5,10 +5,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/addon/tracer"
-	"github.com/pingcap/ticp/api"
-	"github.com/pingcap/ticp/api/hostapi"
-	"github.com/pingcap/ticp/api/instanceapi"
-	"github.com/pingcap/ticp/api/userapi"
+	"github.com/pingcap/ticp/api/controller"
+	hostapi2 "github.com/pingcap/ticp/api/controller/hostapi"
+	instanceapi2 "github.com/pingcap/ticp/api/controller/instanceapi"
+	userapi2 "github.com/pingcap/ticp/api/controller/userapi"
 	_ "github.com/pingcap/ticp/docs"
 
 	swaggerFiles "github.com/swaggo/files"     // swagger embed files
@@ -34,14 +34,14 @@ func main()  {
 		g := gin.New()
 		g.Use(logger.GenGinLogger(), gin.Recovery())
 		g.Use(tracer.GinOpenTracing())
-		g.GET("/api/hello", api.Hello)
-		g.GET("/api/user/login", userapi.Login)
-		g.GET("/api/user/logout", userapi.Logout)
+		g.GET("/api/hello", controller.Hello)
+		g.GET("/api/user/login", userapi2.Login)
+		g.GET("/api/user/logout", userapi2.Logout)
 
-		g.GET("/api/instance/create", instanceapi.Create)
-		g.GET("/api/instance/query", instanceapi.Query)
+		g.GET("/api/instance/create", instanceapi2.Create)
+		g.GET("/api/instance/query", instanceapi2.Query)
 
-		g.GET("/api/host/query", hostapi.Query)
+		g.GET("/api/host/query", hostapi2.Query)
 
 		g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

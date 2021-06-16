@@ -12,7 +12,7 @@
 // @BasePath /api/v1
 
 // swagger:meta
-package api
+package controller
 
 import (
 	"github.com/gin-gonic/gin"
@@ -31,16 +31,16 @@ type CommonResult struct {
 
 type ResultWithPage struct {
 	ResultMark
-	Data    interface{}  `json:"data"`
-	Page    Page         `json:"page"`
+	Data interface{} `json:"data"`
+	Page Page        `json:"page"`
 }
 
 func Success(data interface{}) CommonResult {
-	return CommonResult{ResultMark:ResultMark{0, "OK"}, Data: data}
+	return CommonResult{ResultMark: ResultMark{0, "OK"}, Data: data}
 }
 
 func SuccessWithPage(data interface{}, page Page) ResultWithPage {
-	return ResultWithPage{ResultMark:ResultMark{0, "OK"}, Data: data, Page: page}
+	return ResultWithPage{ResultMark: ResultMark{0, "OK"}, Data: data, Page: page}
 }
 
 func Fail(code int, message string) CommonResult {

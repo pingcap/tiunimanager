@@ -2,7 +2,7 @@ package instanceapi
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/api"
+	"github.com/pingcap/ticp/api/controller"
 	"net/http"
 )
 
@@ -24,9 +24,9 @@ func Query(c *gin.Context) {
 	//}
 
 	instanceInfos := make([]InstanceInfo, 2 ,2)
-	instanceInfos[0] = InstanceInfo{InstanceName:"instance1"}
-	instanceInfos[1] = InstanceInfo{InstanceName:"instance2"}
-	c.JSON(http.StatusOK, api.SuccessWithPage(instanceInfos, api.Page{Page: 1, PageSize: 20, Total: 2}))
+	instanceInfos[0] = InstanceInfo{InstanceName: "instance1"}
+	instanceInfos[1] = InstanceInfo{InstanceName: "instance2"}
+	c.JSON(http.StatusOK, controller.SuccessWithPage(instanceInfos, controller.Page{Page: 1, PageSize: 20, Total: 2}))
 }
 
 // Create 创建实例接口
@@ -45,5 +45,5 @@ func Create(c *gin.Context) {
 	//	_ = c.Error(err)
 	//	return
 	//}
-	c.JSON(http.StatusOK, api.Success(InstanceInfo{InstanceName:"newInstance"}))
+	c.JSON(http.StatusOK, controller.Success(InstanceInfo{InstanceName: "newInstance"}))
 }

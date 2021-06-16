@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/addon/tracer"
+	"github.com/pingcap/ticp/api/controller"
 )
 
 func SetUpRouter() *gin.Engine {
@@ -12,7 +13,7 @@ func SetUpRouter() *gin.Engine {
 	g.Use(logger.GenGinLogger(), gin.Recovery())
 	g.Use(tracer.GinOpenTracing())
 	//g.Use(auth.GenBasicAuth())
-	g.GET("/api/hello", Hello)
-	g.GET("/api/user/login", Hello)
+	g.GET("/api/hello", controller.Hello)
+	g.GET("/api/user/login", controller.Hello)
 	return g
 }

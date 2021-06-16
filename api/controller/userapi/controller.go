@@ -2,7 +2,7 @@ package userapi
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/api"
+	"github.com/pingcap/ticp/api/controller"
 	"net/http"
 )
 
@@ -23,7 +23,7 @@ func Login(c *gin.Context) {
 	//	return
 	//}
 	//
-	c.JSON(http.StatusOK, api.Success(UserIdentity{UserName: "peijin"}))
+	c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: "peijin"}))
 }
 
 // Logout 退出登录
@@ -43,5 +43,5 @@ func Logout(c *gin.Context) {
 	//	return
 	//}
 
-	c.JSON(http.StatusOK, api.Success(UserIdentity{UserName: "peijin"}))
+	c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: "peijin"}))
 }

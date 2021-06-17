@@ -53,14 +53,12 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "name": "page",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "pageSize",
-                        "in": "formData"
+                        "description": "查询请求",
+                        "name": "{object}",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/hostapi.HostQuery"
+                        }
                     }
                 ],
                 "responses": {
@@ -69,7 +67,7 @@ var doc = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/api.ResultWithPage"
+                                    "$ref": "#/definitions/controller.ResultWithPage"
                                 },
                                 {
                                     "type": "object",
@@ -110,34 +108,13 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "name": "InstanceName",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "dbPassword",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "instanceVersion",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "pdCount",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "tiDBCount",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "tiKVCount",
-                        "in": "formData"
+                        "description": "创建请求",
+                        "name": "{object}",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.InstanceCreate"
+                        }
                     }
                 ],
                 "responses": {
@@ -146,7 +123,7 @@ var doc = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/api.CommonResult"
+                                    "$ref": "#/definitions/controller.CommonResult"
                                 },
                                 {
                                     "type": "object",
@@ -184,14 +161,13 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "name": "page",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "pageSize",
-                        "in": "formData"
+                        "description": "查询请求",
+                        "name": "{object}",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.InstanceQuery"
+                        }
                     }
                 ],
                 "responses": {
@@ -200,7 +176,7 @@ var doc = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/api.ResultWithPage"
+                                    "$ref": "#/definitions/controller.ResultWithPage"
                                 },
                                 {
                                     "type": "object",
@@ -234,14 +210,13 @@ var doc = `{
                 "summary": "登录接口",
                 "parameters": [
                     {
-                        "type": "string",
-                        "name": "userName",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "name": "userPassword",
-                        "in": "formData"
+                        "description": "登录信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/userapi.LoginInfo"
+                        }
                     }
                 ],
                 "responses": {
@@ -250,7 +225,7 @@ var doc = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/api.ResultWithPage"
+                                    "$ref": "#/definitions/controller.ResultWithPage"
                                 },
                                 {
                                     "type": "object",
@@ -288,9 +263,12 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "name": "userName",
-                        "in": "formData"
+                        "description": "登出信息",
+                        "name": "{object}",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/userapi.LogoutInfo"
+                        }
                     }
                 ],
                 "responses": {
@@ -299,7 +277,7 @@ var doc = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/api.ResultWithPage"
+                                    "$ref": "#/definitions/controller.ResultWithPage"
                                 },
                                 {
                                     "type": "object",
@@ -317,7 +295,7 @@ var doc = `{
         }
     },
     "definitions": {
-        "api.CommonResult": {
+        "controller.CommonResult": {
             "type": "object",
             "properties": {
                 "code": {
@@ -331,7 +309,7 @@ var doc = `{
                 }
             }
         },
-        "api.Page": {
+        "controller.Page": {
             "type": "object",
             "properties": {
                 "page": {
@@ -345,7 +323,7 @@ var doc = `{
                 }
             }
         },
-        "api.ResultWithPage": {
+        "controller.ResultWithPage": {
             "type": "object",
             "properties": {
                 "code": {
@@ -358,7 +336,7 @@ var doc = `{
                     "type": "string"
                 },
                 "page": {
-                    "$ref": "#/definitions/api.Page"
+                    "$ref": "#/definitions/controller.Page"
                 }
             }
         },
@@ -376,6 +354,40 @@ var doc = `{
                 }
             }
         },
+        "hostapi.HostQuery": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                }
+            }
+        },
+        "instanceapi.InstanceCreate": {
+            "type": "object",
+            "properties": {
+                "InstanceName": {
+                    "type": "string"
+                },
+                "dbPassword": {
+                    "type": "integer"
+                },
+                "instanceVersion": {
+                    "type": "integer"
+                },
+                "pdCount": {
+                    "type": "integer"
+                },
+                "tiDBCount": {
+                    "type": "integer"
+                },
+                "tiKVCount": {
+                    "type": "integer"
+                }
+            }
+        },
         "instanceapi.InstanceInfo": {
             "type": "object",
             "properties": {
@@ -390,6 +402,36 @@ var doc = `{
                 },
                 "instanceVersion": {
                     "type": "integer"
+                }
+            }
+        },
+        "instanceapi.InstanceQuery": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                }
+            }
+        },
+        "userapi.LoginInfo": {
+            "type": "object",
+            "properties": {
+                "userName": {
+                    "type": "string"
+                },
+                "userPassword": {
+                    "type": "string"
+                }
+            }
+        },
+        "userapi.LogoutInfo": {
+            "type": "object",
+            "properties": {
+                "userName": {
+                    "type": "string"
                 }
             }
         },

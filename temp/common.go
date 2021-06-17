@@ -3,8 +3,8 @@ package temp
 import (
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/v3"
-	"github.com/pingcap/ticp/cluster/infrastructure/adapt"
-	"github.com/pingcap/ticp/cluster/interfaces/proto"
+	"github.com/pingcap/ticp/micro-cluster/infrastructure/adapt"
+	proto2 "github.com/pingcap/ticp/micro-cluster/proto"
 )
 
 // Make request
@@ -19,12 +19,12 @@ import (
 
 	fmt.Println(rsp.Greeting)
 */
-var CommonClient proto.CommonService
+var CommonClient proto2.CommonService
 
 func init() {
 	appendToInitFpArray(initCommonClient)
 }
 
 func initCommonClient(srv micro.Service) {
-	CommonClient = proto.NewCommonService(adapt.TICP_COMMON_SERVICE_NAME, srv.Client())
+	CommonClient = proto2.NewCommonService(adapt.TICP_COMMON_SERVICE_NAME, srv.Client())
 }

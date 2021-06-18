@@ -3,8 +3,8 @@ package client
 import (
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/v3"
-	db "github.com/pingcap/ticp/micro-db/proto"
-	"github.com/pingcap/ticp/micro-db/service"
+	db "github.com/pingcap/ticp/micro-metadb/proto"
+	"github.com/pingcap/ticp/micro-metadb/service"
 )
 
 var initFpArray []func(srv micro.Service)
@@ -26,5 +26,5 @@ func init() {
 }
 
 func initDBClient(srv micro.Service) {
-	DBClient = db.NewTiCPDBService(service.TiCPDbServiceName, srv.Client())
+	DBClient = db.NewTiCPDBService(service.TiCPMetaDBServiceName, srv.Client())
 }

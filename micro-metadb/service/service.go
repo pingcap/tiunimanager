@@ -3,22 +3,22 @@ package service
 import (
 	"context"
 	"github.com/pingcap/ticp/micro-metadb/models"
-	db "github.com/pingcap/ticp/micro-metadb/proto"
+	proto "github.com/pingcap/ticp/micro-metadb/proto"
 	"time"
 )
 
 var TiCPMetaDBServiceName = "go.micro.ticp.db"
 
-var SuccessResponseStatus = &db.ResponseStatus {Code:0}
+var SuccessResponseStatus = &proto.ResponseStatus {Code: 0}
 
 type DBServiceHandler struct {}
 
-func (*DBServiceHandler) FindTenant(cxt context.Context, req *db.FindTenantRequest, resp *db.FindTenantResponse) error {
+func (*DBServiceHandler) FindTenant(cxt context.Context, req *proto.FindTenantRequest, resp *proto.FindTenantResponse) error {
 	tenant, err := models.FindTenantByName(req.GetName())
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
-		resp.Tenant = &db.TenantDTO{
+		resp.Tenant = &proto.TenantDTO{
 			Id: int32(tenant.Id),
 			Name: tenant.Name,
 			Type: int32(tenant.Type),
@@ -31,13 +31,13 @@ func (*DBServiceHandler) FindTenant(cxt context.Context, req *db.FindTenantReque
 
 	return nil
 }
-func (*DBServiceHandler) FindAccount(cxt context.Context, req *db.FindAccountRequest, resp *db.FindAccountResponse) error {
+func (*DBServiceHandler) FindAccount(cxt context.Context, req *proto.FindAccountRequest, resp *proto.FindAccountResponse) error {
 	account, err := models.FindAccount(req.GetName())
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
 
-		resp.Account = &db.AccountDTO{
+		resp.Account = &proto.AccountDTO{
 			Id: int32(account.ID),
 			TenantId: int32(account.TenantId),
 			Name: account.Name,
@@ -52,9 +52,9 @@ func (*DBServiceHandler) FindAccount(cxt context.Context, req *db.FindAccountReq
 	roles, err := models.FetchAllRolesByAccount(account.TenantId, account.ID)
 
 	if err == nil {
-		roleDTOs := make([]*db.RoleDTO, len(roles), cap(roles))
+		roleDTOs := make([]*proto.RoleDTO, len(roles), cap(roles))
 		for index,role := range roles {
-			roleDTOs[index] = &db.RoleDTO{
+			roleDTOs[index] = &proto.RoleDTO{
 				TenantId: int32(role.TenantId),
 				Name:     role.Name,
 				Status:   int32(role.Status),
@@ -67,7 +67,7 @@ func (*DBServiceHandler) FindAccount(cxt context.Context, req *db.FindAccountReq
 	}
 	return nil
 }
-func (*DBServiceHandler) SaveToken(cxt context.Context, req *db.SaveTokenRequest, resp *db.SaveTokenResponse) error {
+func (*DBServiceHandler) SaveToken(cxt context.Context, req *proto.SaveTokenRequest, resp *proto.SaveTokenResponse) error {
 	_, err := models.AddToken(req.Token.TokenString, req.Token.AccountId, req.Token.TenantId, time.Unix(req.Token.ExpirationTime, 0))
 
 	if err == nil {
@@ -78,12 +78,12 @@ func (*DBServiceHandler) SaveToken(cxt context.Context, req *db.SaveTokenRequest
 	}
 	return nil
 }
-func (*DBServiceHandler) FindToken(cxt context.Context, req *db.FindTokenRequest, resp *db.FindTokenResponse) error {
+func (*DBServiceHandler) FindToken(cxt context.Context, req *proto.FindTokenRequest, resp *proto.FindTokenResponse) error {
 	token, err := models.FindToken(req.GetTokenString())
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
-		resp.Token = &db.TokenDTO{
+		resp.Token = &proto.TokenDTO{
 			TokenString: token.TokenString,
 			AccountId: token.AccountId,
 			TenantId: token.TenantId,
@@ -97,13 +97,13 @@ func (*DBServiceHandler) FindToken(cxt context.Context, req *db.FindTokenRequest
 	return nil
 
 }
-func (*DBServiceHandler) FindRolesByPermission(cxt context.Context, req *db.FindRolesByPermissionRequest, resp *db.FindRolesByPermissionResponse) error {
+func (*DBServiceHandler) FindRolesByPermission(cxt context.Context, req *proto.FindRolesByPermissionRequest, resp *proto.FindRolesByPermissionResponse) error {
 	roles, err := models.FetchAllRolesByPermission(uint(req.TenantId), req.Code)
 
 	if err == nil {
-		roleDTOs := make([]*db.RoleDTO, len(roles), cap(roles))
+		roleDTOs := make([]*proto.RoleDTO, len(roles), cap(roles))
 		for index,role := range roles {
-			roleDTOs[index] = &db.RoleDTO{
+			roleDTOs[index] = &proto.RoleDTO{
 				TenantId: int32(role.TenantId),
 				Name:     role.Name,
 				Status:   int32(role.Status),

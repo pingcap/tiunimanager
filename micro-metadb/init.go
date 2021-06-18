@@ -19,8 +19,6 @@ import (
 	gormopentracing "gorm.io/plugin/opentracing"
 )
 
-var MetaDB *gorm.DB
-
 func initConfig() {
 	{
 		// only use to init the config
@@ -59,17 +57,17 @@ func initSqliteDB() {
 	dbFile := config.GetSqliteFilePath()
 	log := logger.WithContext(nil).WithField("dbFile", dbFile)
 	log.Debug("init: sqlite.open")
-	MetaDB, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+	models.MetaDB, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 	if err != nil {
 		log.Fatalf("sqlite open error %v", err)
 	}
 
-	if MetaDB.Error != nil {
-		log.Fatalf("database error %v", MetaDB.Error)
+	if models.MetaDB.Error != nil {
+		log.Fatalf("database error %v", models.MetaDB.Error)
 	}
 	log.Info("sqlite.open success")
-	MetaDB.Use(gormopentracing.New())
+	models.MetaDB.Use(gormopentracing.New())
 
 	err = initTables()
 
@@ -79,7 +77,7 @@ func initSqliteDB() {
 }
 
 func initTables() error {
-	err := MetaDB.Migrator().CreateTable(
+	err := models.MetaDB.Migrator().CreateTable(
 		&models.Tenant{},
 		&models.Account{},
 		&models.Role{},

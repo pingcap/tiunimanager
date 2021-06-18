@@ -1,4 +1,4 @@
-package service
+package clustermanage
 
 // Cluster 集群
 // todo

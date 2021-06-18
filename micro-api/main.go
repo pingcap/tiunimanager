@@ -15,11 +15,11 @@ import (
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host localhost:8080
-// @BasePath /api/
+// @BasePath /api/v1/
 func main()  {
-	initConfig()
-	initService()
-	initClient()
-	initPrometheus()
+	//initConfig()
+	//initService()
+	//initClient()
+	//initPrometheus()
 	initGinEngine()
 }

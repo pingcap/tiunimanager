@@ -20,3 +20,12 @@ message LoginResponse {
     ResponseStatus status = 1;
     string tokenString = 2;
 }
+
+message LogoutRequest {
+    string tokenString = 1;
+}
+
+message LogoutResponse {
+    ResponseStatus status = 1;
+    string accountName = 2;
+}

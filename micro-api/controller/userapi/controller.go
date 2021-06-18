@@ -14,15 +14,16 @@ import (
 // @Produce application/json
 // @Param request body LoginInfo true "登录信息"
 // @Header 200 {string} Token "DUISAFNDHIGADS"
-// @Success 200 {object} controller.ResultWithPage{data=UserIdentity}
+// @Success 200 {object} controller.CommonResult{data=UserIdentity}
 // @Router /user/login [post]
 func Login(c *gin.Context) {
-	//var req LoginInfo
-	//if err := c.ShouldBindJSON(&req); err != nil {
-	//	_ = c.Error(err)
-	//	return
-	//}
-	//
+	var req LoginInfo
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
 	c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: "peijin"}))
 }
 
@@ -34,7 +35,7 @@ func Login(c *gin.Context) {
 // @Produce application/json
 // @Param Token header string true "登录token"
 // @Param {object} body LogoutInfo false "登出信息"
-// @Success 200 {object} controller.ResultWithPage{data=UserIdentity}
+// @Success 200 {object} controller.CommonResult{data=UserIdentity}
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {
 	//var req LogoutInfo

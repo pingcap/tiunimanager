@@ -14,7 +14,7 @@
         "version": "1.0"
     },
     "host": "localhost:8080",
-    "basePath": "/api/",
+    "basePath": "/api/v1/",
     "paths": {
         "/host/query": {
             "post": {
@@ -26,7 +26,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "主机"
+                    "resource"
                 ],
                 "summary": "查询主机接口",
                 "parameters": [
@@ -81,7 +81,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "实例"
+                    "instance"
                 ],
                 "summary": "创建实例接口",
                 "parameters": [
@@ -134,7 +134,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "实例"
+                    "instance"
                 ],
                 "summary": "查询实例接口",
                 "parameters": [
@@ -190,7 +190,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "用户"
+                    "platform"
                 ],
                 "summary": "登录接口",
                 "parameters": [
@@ -210,7 +210,7 @@
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                    "$ref": "#/definitions/controller.CommonResult"
                                 },
                                 {
                                     "type": "object",
@@ -236,7 +236,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "用户"
+                    "platform"
                 ],
                 "summary": "退出登录",
                 "parameters": [
@@ -262,7 +262,7 @@
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                    "$ref": "#/definitions/controller.CommonResult"
                                 },
                                 {
                                     "type": "object",

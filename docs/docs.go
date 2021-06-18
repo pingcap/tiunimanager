@@ -41,7 +41,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "主机"
+                    "resource"
                 ],
                 "summary": "查询主机接口",
                 "parameters": [
@@ -96,7 +96,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "实例"
+                    "instance"
                 ],
                 "summary": "创建实例接口",
                 "parameters": [
@@ -149,7 +149,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "实例"
+                    "instance"
                 ],
                 "summary": "查询实例接口",
                 "parameters": [
@@ -205,7 +205,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "用户"
+                    "platform"
                 ],
                 "summary": "登录接口",
                 "parameters": [
@@ -225,7 +225,7 @@ var doc = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                    "$ref": "#/definitions/controller.CommonResult"
                                 },
                                 {
                                     "type": "object",
@@ -251,7 +251,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "用户"
+                    "platform"
                 ],
                 "summary": "退出登录",
                 "parameters": [
@@ -277,7 +277,7 @@ var doc = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                    "$ref": "#/definitions/controller.CommonResult"
                                 },
                                 {
                                     "type": "object",
@@ -459,7 +459,7 @@ type swaggerInfo struct {
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
 	Host:        "localhost:8080",
-	BasePath:    "/api/",
+	BasePath:    "/api/v1/",
 	Schemes:     []string{},
 	Title:       "TiCP UI API",
 	Description: "TiCP UI API",

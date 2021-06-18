@@ -1,4 +1,4 @@
-basePath: /api/
+basePath: /api/v1/
 definitions:
   controller.CommonResult:
     properties:
@@ -139,7 +139,7 @@ paths:
               type: object
       summary: 查询主机接口
       tags:
-      - 主机
+      - resource
   /instance/create:
     post:
       consumes:
@@ -171,7 +171,7 @@ paths:
               type: object
       summary: 创建实例接口
       tags:
-      - 实例
+      - instance
   /instance/query:
     post:
       consumes:
@@ -205,7 +205,7 @@ paths:
               type: object
       summary: 查询实例接口
       tags:
-      - 实例
+      - instance
   /user/login:
     post:
       consumes:
@@ -225,14 +225,14 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
+            - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
                   $ref: '#/definitions/userapi.UserIdentity'
               type: object
       summary: 登录接口
       tags:
-      - 用户
+      - platform
   /user/logout:
     post:
       consumes:
@@ -256,12 +256,12 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
+            - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
                   $ref: '#/definitions/userapi.UserIdentity'
               type: object
       summary: 退出登录
       tags:
-      - 用户
+      - platform
 swagger: "2.0"

@@ -1,6 +1,7 @@
-package service
+package models
 
 import (
+	"github.com/pingcap/ticp/micro-db/service"
 	"gorm.io/gorm"
 )
 
@@ -57,12 +58,12 @@ func AddAccount(tenantId uint, name string, salt string, finalHash string, statu
 	result.FinalHash = finalHash
 	result.Status = status
 
-	DB.Create(&result)
+	service.DB.Create(&result)
 	return
 }
 
-func FetchAccount(tenantId uint, name string) (result Account, err error) {
-	DB.Where(&Account{TenantId: tenantId, Name: name}).First(&result)
+func FindAccount(name string) (result Account, err error) {
+	service.DB.Where(&Account{Name: name}).First(&result)
 	return
 }
 
@@ -72,14 +73,15 @@ func AddRole(tenantId uint, name string, desc string, status int8) (result Role,
 	result.Desc = desc
 	result.Status = status
 
-	DB.Create(&result)
+	service.DB.Create(&result)
 	return
 }
 
 func FetchRole(tenantId uint, name string) (result Role, err error) {
-	DB.Where(&Role{TenantId: tenantId, Name: name}).First(&result)
+	service.DB.Where(&Role{TenantId: tenantId, Name: name}).First(&result)
 	return
 }
+
 func AddPermission(tenantId uint, code, name, desc string, permissionType, status int8) (result Permission, err error) {
 	result.TenantId = tenantId
 	result.Code = code
@@ -88,31 +90,31 @@ func AddPermission(tenantId uint, code, name, desc string, permissionType, statu
 	result.Type = permissionType
 	result.Status = status
 
-	DB.Create(&result)
+	service.DB.Create(&result)
 	return
 }
 
 func FetchPermission(tenantId uint, code string) (result Permission, err error) {
-	DB.Where(&Permission{TenantId: tenantId, Code: code}).First(&result)
+	service.DB.Where(&Permission{TenantId: tenantId, Code: code}).First(&result)
 	return
 }
 
-func FetchAllRolesByAccount(accountId uint) (result []Role, err error) {
-	DB.Where("account_id = ?", accountId).Limit(50).Find(&result)
+func FetchAllRolesByAccount(tenantId uint, accountId uint) (result []Role, err error) {
+	//service.DB.Where("account_id = ?", accountId).Limit(50).Find(&result)
 	return
 }
 
-func FetchAllRolesByPermission(permissionId uint) (result []Role, err error) {
-	DB.Where("permission_id = ?", permissionId).Limit(50).Find(&result)
+func FetchAllRolesByPermission(tenantId uint, permissionCode string) (result []Role, err error) {
+	service.DB.Where("tenant_id = ? and code = ?", tenantId, permissionCode).Limit(50).Find(&result)
 	return
 }
 
 func AddPermissionBindings(bindings []PermissionBinding) error {
-	DB.Create(&bindings)
+	service.DB.Create(&bindings)
 	return nil
 }
 
 func AddRoleBindings(bindings []RoleBinding) error{
-	DB.Create(&bindings)
+	service.DB.Create(&bindings)
 	return nil
 }

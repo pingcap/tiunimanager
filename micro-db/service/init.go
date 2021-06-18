@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/config"
+	"github.com/pingcap/ticp/micro-db/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormopentracing "gorm.io/plugin/opentracing"
@@ -36,12 +37,12 @@ func InitSqliteDB() {
 
 func initTables() error {
 	err := DB.Migrator().CreateTable(
-		&Tenant{},
-		&Account{},
-		&Role{},
-		&Permission{},
-		&PermissionBinding{},
-		&RoleBinding{},
+		&models.Tenant{},
+		&models.Account{},
+		&models.Role{},
+		&models.Permission{},
+		&models.PermissionBinding{},
+		&models.RoleBinding{},
 		)
 	return err
 }

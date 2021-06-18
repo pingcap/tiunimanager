@@ -9,7 +9,7 @@ import (
 // Login 登录接口
 // @Summary 登录接口
 // @Description 登录
-// @Tags 用户
+// @Tags platform
 // @Accept application/json
 // @Produce application/json
 // @Param request body LoginInfo true "登录信息"
@@ -29,7 +29,7 @@ func Login(c *gin.Context) {
 // Logout 退出登录
 // @Summary 退出登录
 // @Description 退出登录
-// @Tags 用户
+// @Tags platform
 // @Accept application/json
 // @Produce application/json
 // @Param Token header string true "登录token"

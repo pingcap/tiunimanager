@@ -9,7 +9,7 @@ import (
 // Query 查询实例接口
 // @Summary 查询实例接口
 // @Description 查询实例
-// @Tags 实例
+// @Tags instance
 // @Accept application/json
 // @Produce application/json
 // @Param Token header string true "登录token"
@@ -32,7 +32,7 @@ func Query(c *gin.Context) {
 // Create 创建实例接口
 // @Summary 创建实例接口
 // @Description 创建实例
-// @Tags 实例
+// @Tags instance
 // @Accept application/json
 // @Produce application/json
 // @Param Token header string true "登录token"

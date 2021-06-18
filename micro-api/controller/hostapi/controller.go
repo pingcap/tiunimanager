@@ -8,7 +8,7 @@ import (
 // Query 查询主机接口
 // @Summary 查询主机接口
 // @Description 查询主机
-// @Tags 主机
+// @Tags resource
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"

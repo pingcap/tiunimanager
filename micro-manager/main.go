@@ -75,11 +75,4 @@ func main() {
 			}
 		}()
 	}
-	{
-		g := route.SetUpRouter()
-		addr := fmt.Sprintf(":%d", config.GetOpenApiPort())
-		if err := g.RunTLS(addr, config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath()); err != nil {
-			log.Fatal(err)
-		}
-	}
 }

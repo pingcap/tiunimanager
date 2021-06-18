@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option go_package = "./;manager";
+
+message ResponseStatus {
+    int32 code = 1;
+    string message = 2;
+}
+
+service TiCPManagerService {
+    rpc Login(LoginRequest) returns (LoginResponse);
+}
+
+message LoginRequest {
+    string accountName = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    ResponseStatus status = 1;
+    string tokenString = 2;
+}

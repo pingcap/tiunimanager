@@ -1,16 +1,8 @@
 package main
 
 import (
-	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
-	mlog "github.com/asim/go-micro/v3/logger"
-	mylogger "github.com/pingcap/ticp/addon/logger"
 )
-
-func init() {
-	// log
-	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(mylogger.WithContext(nil)))
-}
 
 func main() {
 	//{

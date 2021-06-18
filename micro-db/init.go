@@ -1,7 +1,10 @@
-package service
+package main
 
 import (
+	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
+	mlog "github.com/asim/go-micro/v3/logger"
 	"github.com/pingcap/ticp/addon/logger"
+	mylogger "github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/config"
 	"github.com/pingcap/ticp/micro-db/models"
 	"gorm.io/driver/sqlite"
@@ -10,6 +13,11 @@ import (
 )
 
 var DB *gorm.DB
+
+func initLogger() {
+	// log
+	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(mylogger.WithContext(nil)))
+}
 
 func InitSqliteDB() {
 	var err error

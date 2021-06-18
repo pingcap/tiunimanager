@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/pingcap/ticp/micro-db/service"
+	"github.com/pingcap/ticp/micro-db"
 	"gorm.io/gorm"
 )
 
@@ -58,12 +58,12 @@ func AddAccount(tenantId uint, name string, salt string, finalHash string, statu
 	result.FinalHash = finalHash
 	result.Status = status
 
-	service.DB.Create(&result)
+	main.DB.Create(&result)
 	return
 }
 
 func FindAccount(name string) (result Account, err error) {
-	service.DB.Where(&Account{Name: name}).First(&result)
+	main.DB.Where(&Account{Name: name}).First(&result)
 	return
 }
 
@@ -73,12 +73,12 @@ func AddRole(tenantId uint, name string, desc string, status int8) (result Role,
 	result.Desc = desc
 	result.Status = status
 
-	service.DB.Create(&result)
+	main.DB.Create(&result)
 	return
 }
 
 func FetchRole(tenantId uint, name string) (result Role, err error) {
-	service.DB.Where(&Role{TenantId: tenantId, Name: name}).First(&result)
+	main.DB.Where(&Role{TenantId: tenantId, Name: name}).First(&result)
 	return
 }
 
@@ -90,12 +90,12 @@ func AddPermission(tenantId uint, code, name, desc string, permissionType, statu
 	result.Type = permissionType
 	result.Status = status
 
-	service.DB.Create(&result)
+	main.DB.Create(&result)
 	return
 }
 
 func FetchPermission(tenantId uint, code string) (result Permission, err error) {
-	service.DB.Where(&Permission{TenantId: tenantId, Code: code}).First(&result)
+	main.DB.Where(&Permission{TenantId: tenantId, Code: code}).First(&result)
 	return
 }
 
@@ -105,16 +105,16 @@ func FetchAllRolesByAccount(tenantId uint, accountId uint) (result []Role, err e
 }
 
 func FetchAllRolesByPermission(tenantId uint, permissionCode string) (result []Role, err error) {
-	service.DB.Where("tenant_id = ? and code = ?", tenantId, permissionCode).Limit(50).Find(&result)
+	main.DB.Where("tenant_id = ? and code = ?", tenantId, permissionCode).Limit(50).Find(&result)
 	return
 }
 
 func AddPermissionBindings(bindings []PermissionBinding) error {
-	service.DB.Create(&bindings)
+	main.DB.Create(&bindings)
 	return nil
 }
 
 func AddRoleBindings(bindings []RoleBinding) error{
-	service.DB.Create(&bindings)
+	main.DB.Create(&bindings)
 	return nil
 }

@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/pingcap/ticp/micro-db/service"
+	"github.com/pingcap/ticp/micro-db"
 	"gorm.io/gorm"
 )
 
@@ -19,17 +19,17 @@ func AddTenant(name string, tenantType, status int8) (tenant Tenant, err error) 
 	tenant.Type = tenantType
 	tenant.Name = name
 
-	service.DB.Create(&tenant)
+	main.DB.Create(&tenant)
 	// 返回ID
 	return
 }
 
 func FindTenantById(tenantId int) (tenant Tenant, err error){
-	service.DB.First(&tenant, tenantId)
+	main.DB.First(&tenant, tenantId)
 	return
 }
 
 func FindTenantByName(name string) (tenant Tenant, err error){
-	service.DB.Where("name = ?", name).First(&tenant)
+	main.DB.Where("name = ?", name).First(&tenant)
 	return
 }

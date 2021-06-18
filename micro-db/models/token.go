@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/pingcap/ticp/micro-db/service"
+	"github.com/pingcap/ticp/micro-db"
 	"gorm.io/gorm"
 	"time"
 )
@@ -23,11 +23,11 @@ func AddToken(tokenString string, accountId,tenantId int32, expirationTime time.
 	token.ExpirationTime = expirationTime
 	token.Status = 1
 
-	service.DB.Create(&token)
+	main.DB.Create(&token)
 	return
 }
 
 func FindToken(tokenString string) (token Token, err error) {
-	service.DB.Where("token_string = ?", tokenString).First(&token)
+	main.DB.Where("token_string = ?", tokenString).First(&token)
 	return
 }

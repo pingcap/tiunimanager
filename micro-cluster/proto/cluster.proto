@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "./;cluster";
+
+message ResponseStatus {
+    int32 code = 1;
+    string message = 2;
+}
+
+service TiCPClusterService {
+    rpc CreateCluster(CreateClusterRequest) returns (CreateClusterResponse);
+}
+
+message CreateClusterRequest {
+    string name = 1;
+}
+
+message CreateClusterResponse {
+    ResponseStatus status = 1;
+
+}

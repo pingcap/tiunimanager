@@ -9,11 +9,11 @@ import (
 
 var TiCPDbServiceName = "go.micro.ticp.db"
 
-type DBHandler struct {}
-
 var SuccessResponseStatus = &db.ResponseStatus {Code:0}
 
-func (*DBHandler) FindTenant(cxt context.Context, req *db.FindTenantRequest, resp *db.FindTenantResponse) error {
+type DBServiceHandler struct {}
+
+func (*DBServiceHandler) FindTenant(cxt context.Context, req *db.FindTenantRequest, resp *db.FindTenantResponse) error {
 	tenant, err := models.FindTenantByName(req.GetName())
 
 	if err == nil {
@@ -31,7 +31,7 @@ func (*DBHandler) FindTenant(cxt context.Context, req *db.FindTenantRequest, res
 
 	return nil
 }
-func (*DBHandler) FindAccount(cxt context.Context, req *db.FindAccountRequest, resp *db.FindAccountResponse) error {
+func (*DBServiceHandler) FindAccount(cxt context.Context, req *db.FindAccountRequest, resp *db.FindAccountResponse) error {
 	account, err := models.FindAccount(req.GetName())
 
 	if err == nil {
@@ -67,7 +67,7 @@ func (*DBHandler) FindAccount(cxt context.Context, req *db.FindAccountRequest, r
 	}
 	return nil
 }
-func (*DBHandler) SaveToken(cxt context.Context, req *db.SaveTokenRequest, resp *db.SaveTokenResponse) error {
+func (*DBServiceHandler) SaveToken(cxt context.Context, req *db.SaveTokenRequest, resp *db.SaveTokenResponse) error {
 	_, err := models.AddToken(req.Token.TokenString, req.Token.AccountId, req.Token.TenantId, time.Unix(req.Token.ExpirationTime, 0))
 
 	if err == nil {
@@ -78,7 +78,7 @@ func (*DBHandler) SaveToken(cxt context.Context, req *db.SaveTokenRequest, resp 
 	}
 	return nil
 }
-func (*DBHandler) FindToken(cxt context.Context, req *db.FindTokenRequest, resp *db.FindTokenResponse) error {
+func (*DBServiceHandler) FindToken(cxt context.Context, req *db.FindTokenRequest, resp *db.FindTokenResponse) error {
 	token, err := models.FindToken(req.GetTokenString())
 
 	if err == nil {
@@ -97,7 +97,7 @@ func (*DBHandler) FindToken(cxt context.Context, req *db.FindTokenRequest, resp 
 	return nil
 
 }
-func (*DBHandler) FindRolesByPermission(cxt context.Context, req *db.FindRolesByPermissionRequest, resp *db.FindRolesByPermissionResponse) error {
+func (*DBServiceHandler) FindRolesByPermission(cxt context.Context, req *db.FindRolesByPermissionRequest, resp *db.FindRolesByPermissionResponse) error {
 	roles, err := models.FetchAllRolesByPermission(uint(req.TenantId), req.Code)
 
 	if err == nil {

@@ -35,7 +35,7 @@ func CreateTenant(name string) (*Tenant, error) {
 
 // FindTenant 查找租户
 func FindTenant(name string) (*Tenant, error) {
-	tenant,err := port2.TenantRepo.FetchTenant(name)
+	tenant,err := port2.TenantRepo.FetchTenantByName(name)
 	return &tenant, err
 }
 

@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap/ticp/micro-db/models"
-	db "github.com/pingcap/ticp/micro-db/proto"
+	"github.com/pingcap/ticp/micro-metadb/models"
+	db "github.com/pingcap/ticp/micro-metadb/proto"
 	"time"
 )
 
-var TiCPDbServiceName = "go.micro.ticp.db"
+var TiCPMetaDBServiceName = "go.micro.ticp.db"
 
 var SuccessResponseStatus = &db.ResponseStatus {Code:0}
 

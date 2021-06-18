@@ -21,7 +21,7 @@ import (
 
 var TiCPApiServiceName = ""
 
-func InitConfig() {
+func initConfig() {
 	{
 		// only use to init the config
 		srv := micro.NewService(
@@ -32,7 +32,7 @@ func InitConfig() {
 		srv = nil
 	}
 }
-func InitService() {
+func initService() {
 	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
 	if err != nil {
 		log.Fatal(err)
@@ -48,10 +48,12 @@ func InitService() {
 	)
 	srv.Init()
 }
-func InitClient() {
-
+func initClient() {
+	// 依赖平台管理服务
+	// 依赖集群服务
 }
-func InitPrometheus() {
+
+func initPrometheus() {
 	http.Handle("/metrics", promhttp.Handler())
 	go func() {
 		addr := fmt.Sprintf(":%d", config.GetPrometheusPort())
@@ -61,7 +63,8 @@ func InitPrometheus() {
 		}
 	}()
 }
-func InitGinEngine() {
+
+func initGinEngine() {
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.New()
 	route.Route(g)

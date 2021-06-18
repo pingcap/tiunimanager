@@ -11,7 +11,7 @@ var TenantRepo TenantRepository
 type TenantRepository interface {
 	AddTenant(*tenant.Tenant) error
 
-	FetchTenant(name string)  (tenant.Tenant, error)
+	FetchTenantByName(name string)  (tenant.Tenant, error)
 
 	FetchTenantById(id uint)  (tenant.Tenant, error)
 }

@@ -1,1 +1,9 @@
-package micro_cluster
+package main
+
+func main() {
+	initConfig()
+	initLogger()
+	initPrometheus()
+	initService()
+	initClient()
+}

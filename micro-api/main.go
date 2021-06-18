@@ -17,8 +17,9 @@ import (
 // @host localhost:8080
 // @BasePath /api/
 func main()  {
-	//InitConfig()
-	//InitService()
-	//InitClient()
-	InitGinEngine()
+	initConfig()
+	initService()
+	initClient()
+	initPrometheus()
+	initGinEngine()
 }

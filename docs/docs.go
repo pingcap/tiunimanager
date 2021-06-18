@@ -53,11 +53,19 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "description": "查询请求",
-                        "name": "{object}",
+                        "description": "页码",
+                        "name": "page",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/hostapi.HostQuery"
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
                         }
                     }
                 ],
@@ -108,12 +116,57 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "description": "创建请求",
-                        "name": "{object}",
+                        "description": "实例名",
+                        "name": "instanceName",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/instanceapi.InstanceCreate"
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "实例版本",
+                        "name": "instanceVersion",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "数据库密码",
+                        "name": "dbPassword",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "PD数量",
+                        "name": "pdCount",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "TiDB数量",
+                        "name": "tiDBCount",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "TiKV数量",
+                        "name": "tiKVCount",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
                         }
                     }
                 ],
@@ -161,12 +214,19 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "description": "查询请求",
-                        "name": "{object}",
+                        "description": "页码",
+                        "name": "page",
                         "in": "body",
-                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/instanceapi.InstanceQuery"
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
                         }
                     }
                 ],
@@ -210,12 +270,21 @@ var doc = `{
                 "summary": "登录接口",
                 "parameters": [
                     {
-                        "description": "登录信息",
-                        "name": "request",
+                        "description": "账户名",
+                        "name": "userName",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/userapi.LoginInfo"
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "账户密码",
+                        "name": "userPassword",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
@@ -263,11 +332,11 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "description": "登出信息",
-                        "name": "{object}",
+                        "description": "账户名",
+                        "name": "userName",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/userapi.LogoutInfo"
+                            "type": "string"
                         }
                     }
                 ],
@@ -354,40 +423,6 @@ var doc = `{
                 }
             }
         },
-        "hostapi.HostQuery": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
-                }
-            }
-        },
-        "instanceapi.InstanceCreate": {
-            "type": "object",
-            "properties": {
-                "InstanceName": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "integer"
-                },
-                "instanceVersion": {
-                    "type": "integer"
-                },
-                "pdCount": {
-                    "type": "integer"
-                },
-                "tiDBCount": {
-                    "type": "integer"
-                },
-                "tiKVCount": {
-                    "type": "integer"
-                }
-            }
-        },
         "instanceapi.InstanceInfo": {
             "type": "object",
             "properties": {
@@ -402,36 +437,6 @@ var doc = `{
                 },
                 "instanceVersion": {
                     "type": "integer"
-                }
-            }
-        },
-        "instanceapi.InstanceQuery": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
-                }
-            }
-        },
-        "userapi.LoginInfo": {
-            "type": "object",
-            "properties": {
-                "userName": {
-                    "type": "string"
-                },
-                "userPassword": {
-                    "type": "string"
-                }
-            }
-        },
-        "userapi.LogoutInfo": {
-            "type": "object",
-            "properties": {
-                "userName": {
-                    "type": "string"
                 }
             }
         },

@@ -12,7 +12,8 @@ import (
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
-// @Param request body LoginInfo true "登录信息"
+// @Param userName body string true "账户名"
+// @Param userPassword body string true "账户密码"
 // @Header 200 {string} Token "DUISAFNDHIGADS"
 // @Success 200 {object} controller.CommonResult{data=UserIdentity}
 // @Router /user/login [post]
@@ -34,7 +35,7 @@ func Login(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param Token header string true "登录token"
-// @Param {object} body LogoutInfo false "登出信息"
+// @Param userName body string false "账户名"
 // @Success 200 {object} controller.CommonResult{data=UserIdentity}
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {

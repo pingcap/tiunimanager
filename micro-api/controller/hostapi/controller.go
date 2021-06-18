@@ -12,7 +12,8 @@ import (
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param {object} body HostQuery false "查询请求"
+// @Param page body int true "页码"
+// @Param pageSize body int true "每页数量"
 // @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
 // @Router /host/query [post]
 func Query(c *gin.Context) {

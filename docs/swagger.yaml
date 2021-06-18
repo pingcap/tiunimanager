@@ -38,28 +38,6 @@ definitions:
       hostName:
         type: string
     type: object
-  hostapi.HostQuery:
-    properties:
-      page:
-        type: integer
-      pageSize:
-        type: integer
-    type: object
-  instanceapi.InstanceCreate:
-    properties:
-      InstanceName:
-        type: string
-      dbPassword:
-        type: integer
-      instanceVersion:
-        type: integer
-      pdCount:
-        type: integer
-      tiDBCount:
-        type: integer
-      tiKVCount:
-        type: integer
-    type: object
   instanceapi.InstanceInfo:
     properties:
       instanceId:
@@ -70,25 +48,6 @@ definitions:
         type: integer
       instanceVersion:
         type: integer
-    type: object
-  instanceapi.InstanceQuery:
-    properties:
-      page:
-        type: integer
-      pageSize:
-        type: integer
-    type: object
-  userapi.LoginInfo:
-    properties:
-      userName:
-        type: string
-      userPassword:
-        type: string
-    type: object
-  userapi.LogoutInfo:
-    properties:
-      userName:
-        type: string
     type: object
   userapi.UserIdentity:
     properties:
@@ -118,11 +77,16 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 查询请求
+      - description: 页码
         in: body
-        name: '{object}'
+        name: page
         schema:
-          $ref: '#/definitions/hostapi.HostQuery'
+          type: integer
+      - description: 每页数量
+        in: body
+        name: pageSize
+        schema:
+          type: integer
       produces:
       - application/json
       responses:
@@ -151,12 +115,42 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 创建请求
+      - description: 实例名
         in: body
-        name: '{object}'
+        name: instanceName
         required: true
         schema:
-          $ref: '#/definitions/instanceapi.InstanceCreate'
+          type: string
+      - description: 实例版本
+        in: body
+        name: instanceVersion
+        required: true
+        schema:
+          type: integer
+      - description: 数据库密码
+        in: body
+        name: dbPassword
+        required: true
+        schema:
+          type: string
+      - description: PD数量
+        in: body
+        name: pdCount
+        required: true
+        schema:
+          type: integer
+      - description: TiDB数量
+        in: body
+        name: tiDBCount
+        required: true
+        schema:
+          type: integer
+      - description: TiKV数量
+        in: body
+        name: tiKVCount
+        required: true
+        schema:
+          type: integer
       produces:
       - application/json
       responses:
@@ -183,12 +177,16 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 查询请求
+      - description: 页码
         in: body
-        name: '{object}'
-        required: true
+        name: page
         schema:
-          $ref: '#/definitions/instanceapi.InstanceQuery'
+          type: integer
+      - description: 每页数量
+        in: body
+        name: pageSize
+        schema:
+          type: integer
       produces:
       - application/json
       responses:
@@ -212,12 +210,18 @@ paths:
       - application/json
       description: 登录
       parameters:
-      - description: 登录信息
+      - description: 账户名
         in: body
-        name: request
+        name: userName
         required: true
         schema:
-          $ref: '#/definitions/userapi.LoginInfo'
+          type: string
+      - description: 账户密码
+        in: body
+        name: userPassword
+        required: true
+        schema:
+          type: string
       produces:
       - application/json
       responses:
@@ -244,11 +248,11 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 登出信息
+      - description: 账户名
         in: body
-        name: '{object}'
+        name: userName
         schema:
-          $ref: '#/definitions/userapi.LogoutInfo'
+          type: string
       produces:
       - application/json
       responses:

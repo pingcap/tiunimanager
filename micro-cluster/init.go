@@ -12,20 +12,24 @@ import (
 	mylogger "github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/addon/tracer"
 	"github.com/pingcap/ticp/config"
+	cluster "github.com/pingcap/ticp/micro-cluster/proto"
 	"github.com/pingcap/ticp/micro-cluster/service"
+	managerclient "github.com/pingcap/ticp/micro-manager/client"
+	dbclient "github.com/pingcap/ticp/micro-metadb/client"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"log"
 	"net/http"
 )
 
 func initConfig() {
 	{
-		// only use to init the config
-		srv := micro.NewService(
-			config.GetMicroCliArgsOption(),
-		)
-		srv.Init()
+		//// only use to init the config
+		//srv := micro.NewService(
+		//	config.GetMicroCliArgsOption(),
+		//)
+		//srv.Init()
 		config.Init()
-		srv = nil
+		//srv = nil
 	}
 }
 
@@ -49,6 +53,14 @@ func initService() {
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 	)
 	srv.Init()
+
+	cluster.RegisterTiCPClusterServiceHandler(srv.Server(), new(service.ClusterServiceHandler))
+
+	go func() {
+		if err := srv.Run(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 }
 
 func initPrometheus() {
@@ -63,6 +75,6 @@ func initPrometheus() {
 }
 
 func initClient() {
-	// 远程DB服务client
-	// 远程平台管理服务client
+	managerclient.InitManagerClient()
+	dbclient.InitDBClient()
 }

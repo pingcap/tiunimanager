@@ -9,5 +9,4 @@ func main() {
 	initLogger()
 	initService()
 	initSqliteDB()
-	initTables()
 }

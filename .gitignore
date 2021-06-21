@@ -1,0 +1,5 @@
+/ticp.iml
+.DS_Store
+.idea/
+data.etcd1/
+micro-metadb/ticp.sqlite.db

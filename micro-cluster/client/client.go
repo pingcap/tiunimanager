@@ -1,30 +1,36 @@
 package client
 
 import (
+	"crypto/tls"
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
+	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
+	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
+	mlog "github.com/asim/go-micro/v3/logger"
+	"github.com/asim/go-micro/v3/transport"
+	"github.com/pingcap/ticp/addon/tracer"
+	"github.com/pingcap/ticp/config"
 	cluster "github.com/pingcap/ticp/micro-cluster/proto"
 	"github.com/pingcap/ticp/micro-cluster/service"
 )
 
-var initFpArray []func(srv micro.Service)
-
-func InitClient(srv micro.Service) {
-	for _, fp := range initFpArray {
-		fp(srv)
-	}
-}
-
-func appendToInitFpArray(fp func(srv micro.Service)) {
-	initFpArray = append(initFpArray, fp)
-}
-
 var ClusterClient cluster.TiCPClusterService
 
-func init() {
-	appendToInitFpArray(initClusterClient)
-}
+func InitClusterClient() {
+	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
+	if err != nil {
+		mlog.Fatal(err)
+		return
+	}
+	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	srv := micro.NewService(
+		micro.Name(service.TiCPClusterServiceName),
+		micro.WrapHandler(prometheus.NewHandlerWrapper()),
+		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
+		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
+		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+	)
+	srv.Init()
 
-func initClusterClient(srv micro.Service) {
 	ClusterClient = cluster.NewTiCPClusterService(service.TiCPClusterServiceName, srv.Client())
 }

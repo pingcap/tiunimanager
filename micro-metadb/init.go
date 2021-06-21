@@ -13,10 +13,12 @@ import (
 	"github.com/pingcap/ticp/addon/tracer"
 	"github.com/pingcap/ticp/config"
 	"github.com/pingcap/ticp/micro-metadb/models"
+	db "github.com/pingcap/ticp/micro-metadb/proto"
 	"github.com/pingcap/ticp/micro-metadb/service"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormopentracing "gorm.io/plugin/opentracing"
+	"log"
 )
 
 func initConfig() {
@@ -50,6 +52,14 @@ func initService() {
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 	)
 	srv.Init()
+
+	db.RegisterTiCPDBServiceHandler(srv.Server(), new(service.DBServiceHandler))
+
+	go func() {
+		if err := srv.Run(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 }
 
 func initSqliteDB() {
@@ -69,11 +79,12 @@ func initSqliteDB() {
 	log.Info("sqlite.open success")
 	models.MetaDB.Use(gormopentracing.New())
 
-	err = initTables()
+	//err = initTables()
+	//
+	//if err != nil {
+	//	log.Fatalf("sqlite create table failed: %v", err)
+	//}
 
-	if err != nil {
-		log.Fatalf("sqlite create table failed: %v", err)
-	}
 }
 
 func initTables() error {

@@ -38,6 +38,28 @@ definitions:
       hostName:
         type: string
     type: object
+  hostapi.HostQuery:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+    type: object
+  instanceapi.InstanceCreate:
+    properties:
+      dbPassword:
+        type: string
+      instanceName:
+        type: string
+      instanceVersion:
+        type: string
+      pdCount:
+        type: integer
+      tiDBCount:
+        type: integer
+      tiKVCount:
+        type: integer
+    type: object
   instanceapi.InstanceInfo:
     properties:
       instanceId:
@@ -48,6 +70,25 @@ definitions:
         type: integer
       instanceVersion:
         type: integer
+    type: object
+  instanceapi.InstanceQuery:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+    type: object
+  userapi.LoginInfo:
+    properties:
+      userName:
+        type: string
+      userPassword:
+        type: string
+    type: object
+  userapi.LogoutInfo:
+    properties:
+      userName:
+        type: string
     type: object
   userapi.UserIdentity:
     properties:
@@ -77,16 +118,12 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 页码
+      - description: 查询请求
         in: body
-        name: page
+        name: query
+        required: true
         schema:
-          type: integer
-      - description: 每页数量
-        in: body
-        name: pageSize
-        schema:
-          type: integer
+          $ref: '#/definitions/hostapi.HostQuery'
       produces:
       - application/json
       responses:
@@ -115,42 +152,12 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 实例名
+      - description: 创建参数
         in: body
-        name: instanceName
+        name: createInfo
         required: true
         schema:
-          type: string
-      - description: 实例版本
-        in: body
-        name: instanceVersion
-        required: true
-        schema:
-          type: integer
-      - description: 数据库密码
-        in: body
-        name: dbPassword
-        required: true
-        schema:
-          type: string
-      - description: PD数量
-        in: body
-        name: pdCount
-        required: true
-        schema:
-          type: integer
-      - description: TiDB数量
-        in: body
-        name: tiDBCount
-        required: true
-        schema:
-          type: integer
-      - description: TiKV数量
-        in: body
-        name: tiKVCount
-        required: true
-        schema:
-          type: integer
+          $ref: '#/definitions/instanceapi.InstanceCreate'
       produces:
       - application/json
       responses:
@@ -177,16 +184,12 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 页码
+      - description: 查询参数
         in: body
-        name: page
+        name: query
+        required: true
         schema:
-          type: integer
-      - description: 每页数量
-        in: body
-        name: pageSize
-        schema:
-          type: integer
+          $ref: '#/definitions/instanceapi.InstanceQuery'
       produces:
       - application/json
       responses:
@@ -210,18 +213,12 @@ paths:
       - application/json
       description: 登录
       parameters:
-      - description: 账户名
+      - description: 登录用户信息
         in: body
-        name: userName
+        name: loginInfo
         required: true
         schema:
-          type: string
-      - description: 账户密码
-        in: body
-        name: userPassword
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/userapi.LoginInfo'
       produces:
       - application/json
       responses:
@@ -248,11 +245,11 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 账户名
+      - description: 退出登录信息
         in: body
-        name: userName
+        name: logoutInfo
         schema:
-          type: string
+          $ref: '#/definitions/userapi.LogoutInfo'
       produces:
       - application/json
       responses:

@@ -12,8 +12,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param page body int true "页码"
-// @Param pageSize body int true "每页数量"
+// @Param query body HostQuery true "查询请求"
 // @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
 // @Router /host/query [post]
 func Query(c *gin.Context) {
@@ -27,4 +26,5 @@ func Query(c *gin.Context) {
 	hostInfos[0] = HostInfo{HostId: "first",HostName: "hh",HostIp:"127.0.0.1:1111"}
 	hostInfos[1] = HostInfo{HostId: "second",HostName: "hh",HostIp:"127.0.0.1:2222"}
 	c.JSON(http.StatusOK, controller.SuccessWithPage(hostInfos, controller.Page{Page: 1, PageSize: 20, Total: 2}))
+
 }

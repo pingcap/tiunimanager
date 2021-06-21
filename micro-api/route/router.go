@@ -6,15 +6,16 @@ import (
 	"github.com/pingcap/ticp/micro-api/controller/hostapi"
 	"github.com/pingcap/ticp/micro-api/controller/instanceapi"
 	"github.com/pingcap/ticp/micro-api/controller/userapi"
+	"github.com/pingcap/ticp/micro-api/security"
 )
 
 func Route(g *gin.Engine){
-	g.GET("/api/hello", controller.Hello)
-	g.GET("/api/user/login", userapi.Login)
-	g.GET("/api/user/logout", userapi.Logout)
+	g.POST("/api/v1/hello", security.VerifyIdentity, controller.Hello)
+	g.POST("/api/v1/user/login", userapi.Login)
+	g.POST("/api/v1/user/logout", userapi.Logout)
 
-	g.GET("/api/instance/create", instanceapi.Create)
-	g.GET("/api/instance/query", instanceapi.Query)
+	g.POST("/api/v1/instance/create", security.VerifyIdentity, instanceapi.Create)
+	g.POST("/api/v1/instance/query", security.VerifyIdentity, instanceapi.Query)
 
-	g.GET("/api/host/query", hostapi.Query)
+	g.POST("/api/v1/host/query", security.VerifyIdentity, hostapi.Query)
 }

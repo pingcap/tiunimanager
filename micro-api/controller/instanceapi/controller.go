@@ -13,16 +13,15 @@ import (
 // @Accept application/json
 // @Produce application/json
 // @Param Token header string true "登录token"
-// @Param page body int false "页码"
-// @Param pageSize body int false "每页数量"
+// @Param query body InstanceQuery true "查询参数"
 // @Success 200 {object} controller.ResultWithPage{data=[]InstanceInfo}
 // @Router /instance/query [post]
 func Query(c *gin.Context) {
-	//var req InstanceQuery
-	//if err := c.ShouldBindJSON(&req); err != nil {
-	//	_ = c.Error(err)
-	//	return
-	//}
+	var req InstanceQuery
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(err)
+		return
+	}
 
 	instanceInfos := make([]InstanceInfo, 2 ,2)
 	instanceInfos[0] = InstanceInfo{InstanceName: "instance1"}
@@ -37,19 +36,15 @@ func Query(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param Token header string true "登录token"
-// @Param instanceName body string true "实例名"
-// @Param instanceVersion body int true "实例版本"
-// @Param dbPassword body string true "数据库密码"
-// @Param pdCount body int true "PD数量"
-// @Param tiDBCount body int true "TiDB数量"
-// @Param tiKVCount body int true "TiKV数量"
+// @Param createInfo body InstanceCreate true "创建参数"
 // @Success 200 {object} controller.CommonResult{data=InstanceInfo}
 // @Router /instance/create [post]
 func Create(c *gin.Context) {
-	//var req InstanceCreate
-	//if err := c.ShouldBindJSON(&req); err != nil {
-	//	_ = c.Error(err)
-	//	return
-	//}
+	var req InstanceCreate
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
 	c.JSON(http.StatusOK, controller.Success(InstanceInfo{InstanceName: "newInstance"}))
 }

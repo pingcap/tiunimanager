@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 	_ "github.com/pingcap/ticp/docs"
 )
 
@@ -17,9 +18,9 @@ import (
 // @host localhost:8080
 // @BasePath /api/v1/
 func main()  {
-	//initConfig()
+	initConfig()
 	//initService()
-	//initClient()
+	initClient()
 	//initPrometheus()
 	initGinEngine()
 }

@@ -43,6 +43,8 @@ func NewTiCPManagerServiceEndpoints() []*api.Endpoint {
 
 type TiCPManagerService interface {
 	Login(ctx context.Context, in *LoginRequest, opts ...client.CallOption) (*LoginResponse, error)
+	Logout(ctx context.Context, in *LogoutRequest, opts ...client.CallOption) (*LogoutResponse, error)
+	VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, opts ...client.CallOption) (*VerifyIdentityResponse, error)
 }
 
 type tiCPManagerService struct {
@@ -67,15 +69,39 @@ func (c *tiCPManagerService) Login(ctx context.Context, in *LoginRequest, opts .
 	return out, nil
 }
 
+func (c *tiCPManagerService) Logout(ctx context.Context, in *LogoutRequest, opts ...client.CallOption) (*LogoutResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPManagerService.Logout", in)
+	out := new(LogoutResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPManagerService) VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, opts ...client.CallOption) (*VerifyIdentityResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPManagerService.VerifyIdentity", in)
+	out := new(VerifyIdentityResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for TiCPManagerService service
 
 type TiCPManagerServiceHandler interface {
 	Login(context.Context, *LoginRequest, *LoginResponse) error
+	Logout(context.Context, *LogoutRequest, *LogoutResponse) error
+	VerifyIdentity(context.Context, *VerifyIdentityRequest, *VerifyIdentityResponse) error
 }
 
 func RegisterTiCPManagerServiceHandler(s server.Server, hdlr TiCPManagerServiceHandler, opts ...server.HandlerOption) error {
 	type tiCPManagerService interface {
 		Login(ctx context.Context, in *LoginRequest, out *LoginResponse) error
+		Logout(ctx context.Context, in *LogoutRequest, out *LogoutResponse) error
+		VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, out *VerifyIdentityResponse) error
 	}
 	type TiCPManagerService struct {
 		tiCPManagerService
@@ -90,4 +116,12 @@ type tiCPManagerServiceHandler struct {
 
 func (h *tiCPManagerServiceHandler) Login(ctx context.Context, in *LoginRequest, out *LoginResponse) error {
 	return h.TiCPManagerServiceHandler.Login(ctx, in, out)
+}
+
+func (h *tiCPManagerServiceHandler) Logout(ctx context.Context, in *LogoutRequest, out *LogoutResponse) error {
+	return h.TiCPManagerServiceHandler.Logout(ctx, in, out)
+}
+
+func (h *tiCPManagerServiceHandler) VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, out *VerifyIdentityResponse) error {
+	return h.TiCPManagerServiceHandler.VerifyIdentity(ctx, in, out)
 }

@@ -10,7 +10,7 @@ type InstanceQuery struct {
 
 type InstanceCreate struct {
 	InstanceName 		string 	`json:"instanceName"`
-	InstanceVersion 	int 	`json:"instanceVersion"`
+	InstanceVersion 	string 	`json:"instanceVersion"`
 	DBPassword 			string 	`json:"dbPassword"`
 	PDCount 			int 	`json:"pdCount"`
 	TiDBCount 			int 	`json:"tiDBCount"`

@@ -9,6 +9,8 @@ message ResponseStatus {
 
 service TiCPManagerService {
     rpc Login(LoginRequest) returns (LoginResponse);
+    rpc Logout(LogoutRequest) returns (LogoutResponse);
+    rpc VerifyIdentity(VerifyIdentityRequest) returns (VerifyIdentityResponse);
 }
 
 message LoginRequest {
@@ -28,4 +30,16 @@ message LogoutRequest {
 message LogoutResponse {
     ResponseStatus status = 1;
     string accountName = 2;
+}
+
+message VerifyIdentityRequest {
+    string tokenString = 1;
+    string path = 2;
+    string authType = 3;
+}
+
+message VerifyIdentityResponse {
+    ResponseStatus status = 1;
+    string accountName = 2;
+    int32 tenantId = 3;
 }

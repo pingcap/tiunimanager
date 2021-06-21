@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
@@ -11,10 +12,16 @@ import (
 	mylogger "github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/addon/tracer"
 	"github.com/pingcap/ticp/config"
+	manager "github.com/pingcap/ticp/micro-manager/proto"
 	"github.com/pingcap/ticp/micro-manager/service"
+	dbclient "github.com/pingcap/ticp/micro-metadb/client"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"log"
+	"net/http"
 )
 
 func initConfig() {
+
 	{
 		// only use to init the config
 		srv := micro.NewService(
@@ -29,6 +36,17 @@ func initConfig() {
 func initLogger() {
 	// log
 	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(mylogger.WithContext(nil)))
+}
+
+func initPrometheus() {
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		addr := fmt.Sprintf(":%d", config.GetPrometheusPort())
+		err := http.ListenAndServe(addr, nil)
+		if err != nil {
+			log.Fatal("promhttp ListenAndServe err:", err)
+		}
+	}()
 }
 
 func initService() {
@@ -46,8 +64,14 @@ func initService() {
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 	)
 	srv.Init()
+
+	manager.RegisterTiCPManagerServiceHandler(srv.Server(), new(service.ManagerServiceHandler))
+
+	if err := srv.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func initClient() {
-	// 依赖DB 服务
+	dbclient.InitDBClient()
 }

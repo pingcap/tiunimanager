@@ -12,6 +12,8 @@ import (
 	"github.com/pingcap/ticp/addon/tracer"
 	"github.com/pingcap/ticp/config"
 	"github.com/pingcap/ticp/micro-api/route"
+	clusterclient "github.com/pingcap/ticp/micro-cluster/client"
+	managerclient "github.com/pingcap/ticp/micro-manager/client"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerFiles "github.com/swaggo/files"     // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
@@ -19,7 +21,7 @@ import (
 	"net/http"
 )
 
-var TiCPApiServiceName = ""
+var TiCPApiServiceName = "go.micro.ticp.api"
 
 func initConfig() {
 	{
@@ -39,6 +41,7 @@ func initService() {
 		return
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+
 	srv := micro.NewService(
 		micro.Name(TiCPApiServiceName),
 		micro.WrapHandler(prometheus.NewHandlerWrapper()),
@@ -47,10 +50,16 @@ func initService() {
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 	)
 	srv.Init()
+
+	go func() {
+		if err := srv.Run(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 }
 func initClient() {
-	// 依赖平台管理服务
-	// 依赖集群服务
+	managerclient.InitManagerClient()
+	clusterclient.InitClusterClient()
 }
 
 func initPrometheus() {
@@ -67,17 +76,18 @@ func initPrometheus() {
 func initGinEngine() {
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.New()
-	route.Route(g)
 
 	g.Use(logger.GenGinLogger(), gin.Recovery())
 	g.Use(tracer.GinOpenTracing())
 
+	route.Route(g)
 	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	addr := fmt.Sprintf(":%d", 8080)
 	if err := g.Run(addr); err != nil {
 		log.Fatal(err)
 	}
+
 	//if err := g.RunTLS(addr, config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath()); err != nil {
 	//	log.Fatal(err)
 	//}

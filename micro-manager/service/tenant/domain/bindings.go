@@ -1,4 +1,4 @@
-package tenant
+package domain
 
 import (
 	"fmt"
@@ -14,12 +14,12 @@ type Role struct {
 	Status CommonStatus
 }
 
-func CreateRole(tenant *Tenant, name string, desc string) (*Role, error) {
+func createRole(tenant *Tenant, name string, desc string) (*Role, error) {
 	if tenant == nil || !tenant.Status.IsValid(){
 		return nil, fmt.Errorf("tenant not valid")
 	}
 
-	existed, e := FindRoleByName(tenant, name)
+	existed, e := findRoleByName(tenant, name)
 
 	if e != nil {
 		return nil, e
@@ -39,7 +39,7 @@ func (role *Role) persist() error{
 	return nil
 }
 
-func FindRoleByName(tenant *Tenant, name string) (*Role, error) {
+func findRoleByName(tenant *Tenant, name string) (*Role, error) {
 	r,e := port2.RbacRepo.FetchRole(tenant.Id, name)
 	return &r, e
 }
@@ -56,8 +56,7 @@ type RoleBinding struct {
 	Status  CommonStatus
 }
 
-// Empower 给一个角色赋予权限
-func (role *Role) Empower(permissions []Permission) error {
+func (role *Role) empower(permissions []Permission) error {
 	bindings := make([]PermissionBinding, len(permissions), len(permissions))
 
 	for index,r := range permissions {

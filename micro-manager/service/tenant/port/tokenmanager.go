@@ -1,8 +1,7 @@
 package port
 
 import (
-	"github.com/pingcap/ticp/micro-manager/service/tenant"
-	"time"
+	"github.com/pingcap/ticp/micro-manager/service/tenant/domain"
 )
 
 var TokenMNG TokenManager
@@ -10,14 +9,11 @@ var TokenMNG TokenManager
 type TokenManager interface {
 
 	// Provide 提供一个有效的token
-	Provide (accountId uint, tenantId uint, expirationTime time.Time) (string, error)
+	Provide  (tiCPToken *domain.TiCPToken) (string, error)
 
-	// TakeBack 收回token
-	TakeBack (tokenString string) error
+	// Modify 修改token
+	Modify (tiCPToken *domain.TiCPToken) error
 
-	// Renew 续期token
-	Renew (tiCPToken *tenant.TiCPToken, expirationTime time.Time) error
-
-	// Verify 校验token并返回token对象
-	Verify (tokenString string) (tenant.TiCPToken, error)
+	// GetToken 获取一个token
+	GetToken(tokenString string) (domain.TiCPToken, error)
 }

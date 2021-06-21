@@ -3,28 +3,52 @@ package service
 import (
 	"context"
 	manager "github.com/pingcap/ticp/micro-manager/proto"
+	"github.com/pingcap/ticp/micro-manager/service/tenant/domain"
 )
 
 var TiCPManagerServiceName = "go.micro.ticp.manager"
 
 var SuccessResponseStatus = &manager.ResponseStatus {Code:0}
+var BizErrorResponseStatus = &manager.ResponseStatus {Code:1}
+
 
 type ManagerServiceHandler struct {}
 
 func (*ManagerServiceHandler) Login(ctx context.Context, req *manager.LoginRequest, resp *manager.LoginResponse) error {
-	resp.Status = SuccessResponseStatus
 
-	resp.TokenString = "mocktoken"
-	return nil
+	token, err := domain.Login(req.GetAccountName(), req.GetPassword())
+
+	if err != nil {
+		return err
+	} else {
+		resp.Status = SuccessResponseStatus
+		resp.TokenString = token
+		return nil
+	}
+
 }
+
 func (*ManagerServiceHandler) Logout(ctx context.Context, req *manager.LogoutRequest, resp *manager.LogoutResponse) error {
-	resp.Status = SuccessResponseStatus
-	resp.AccountName = "peijin"
-	return nil
+	accountName,err := domain.Logout(req.TokenString)
+	if err != nil {
+		return err
+	} else {
+		resp.Status = SuccessResponseStatus
+		resp.AccountName = accountName
+		return nil
+	}
 }
+
 func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.VerifyIdentityRequest, resp *manager.VerifyIdentityResponse) error {
-	resp.Status = SuccessResponseStatus
-	resp.AccountName = "peijin"
-	resp.TenantId = 1
+	tenantId, accountName, err := domain.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
+
+	if err != nil {
+		return err
+	} else {
+		resp.Status = SuccessResponseStatus
+		resp.TenantId = int32(tenantId)
+		resp.AccountName = accountName
+	}
+
 	return nil
 }

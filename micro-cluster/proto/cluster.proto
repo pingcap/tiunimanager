@@ -17,5 +17,6 @@ message CreateClusterRequest {
 
 message CreateClusterResponse {
     ResponseStatus status = 1;
+    int32 id = 2;
 
 }

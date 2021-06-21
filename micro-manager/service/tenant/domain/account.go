@@ -1,4 +1,4 @@
-package tenant
+package domain
 
 import (
 	cryrand "crypto/rand"
@@ -38,7 +38,7 @@ func (account *Account) genSaltAndHash(passwd string) error {
 	return nil
 }
 
-func  (account *Account) CheckPassword(passwd string) (bool, error) {
+func  (account *Account) checkPassword(passwd string) (bool, error) {
 	finalSalt, err := finalHash(account.Salt, passwd)
 	if err != nil {
 		return false, err
@@ -59,13 +59,13 @@ func (account *Account) persist() error{
 	return nil
 }
 
-// CreateAccount 创建账号
-func CreateAccount(tenant *Tenant, name, passwd string) (*Account, error) {
+// createAccount 创建账号
+func createAccount(tenant *Tenant, name, passwd string) (*Account, error) {
 	if tenant == nil || !tenant.Status.IsValid(){
 		return nil, fmt.Errorf("tenant not valid")
 	}
 
-	existed, e := FindAccountByName(name)
+	existed, e := findAccountByName(name)
 
 	if e != nil {
 		return nil, e
@@ -81,8 +81,8 @@ func CreateAccount(tenant *Tenant, name, passwd string) (*Account, error) {
 	return &account, nil
 }
 
-// FindAccountByName 根据名称获取账号
-func FindAccountByName(name string) (*Account, error) {
+// findAccountByName 根据名称获取账号
+func findAccountByName(name string) (*Account, error) {
 	a,err := port2.RbacRepo.FetchAccountByName(name)
 	if err != nil {
 		return nil, err
@@ -92,8 +92,8 @@ func FindAccountByName(name string) (*Account, error) {
 	return &a, err
 }
 
-// AssignRoles 给账号赋予角色
-func (account *Account) AssignRoles(roles []Role) error {
+// assignRoles 给账号赋予角色
+func (account *Account) assignRoles(roles []Role) error {
 	bindings := make([]RoleBinding, len(roles), len(roles))
 
 	for index,r := range roles {
@@ -102,14 +102,14 @@ func (account *Account) AssignRoles(roles []Role) error {
 	return port2.RbacRepo.AddRoleBindings(bindings)
 }
 
-// ListAllRoles 获取账号的所有角色
-func (account *Account) ListAllRoles() ([]Role, error){
+// listAllRoles 获取账号的所有角色
+func (account *Account) listAllRoles() ([]Role, error){
 	return port2.RbacRepo.FetchAllRolesByAccount(account)
 }
 
-// CheckAuth 校验权限
-func CheckAuth(account *Account, permission *Permission) (bool, error){
-	accountRoles,err := account.ListAllRoles()
+// checkAuth 校验权限
+func checkAuth(account *Account, permission *Permission) (bool, error){
+	accountRoles,err := account.listAllRoles()
 	if err != nil {
 		return false, err
 	}
@@ -123,7 +123,7 @@ func CheckAuth(account *Account, permission *Permission) (bool, error){
 		accountRoleMap[r.Id] = true
 	}
 	
-	allowedRoles,err := permission.ListAllRoles()
+	allowedRoles,err := permission.listAllRoles()
 	if err != nil {
 		return false, err
 	}

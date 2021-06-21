@@ -1,4 +1,4 @@
-package tenant
+package domain
 
 import (
 	"fmt"
@@ -27,12 +27,12 @@ func (permission *Permission) persist() error{
 	return nil
 }
 
-func CreatePermission(tenant *Tenant, code, name ,desc string, permissionType PermissionType) (*Permission, error) {
+func createPermission(tenant *Tenant, code, name ,desc string, permissionType PermissionType) (*Permission, error) {
 	if tenant == nil || !tenant.Status.IsValid(){
 		return nil, fmt.Errorf("tenant not valid")
 	}
 
-	existed, e := FindPermissionByCode(tenant, code)
+	existed, e := findPermissionByCode(tenant.Id, code)
 
 	if e != nil {
 		return nil, e
@@ -54,11 +54,11 @@ func CreatePermission(tenant *Tenant, code, name ,desc string, permissionType Pe
 	return &permission, nil
 }
 
-func FindPermissionByCode(tenant *Tenant, code string) (*Permission, error) {
-	a,e := port2.RbacRepo.FetchPermission(tenant.Id, code)
+func findPermissionByCode(tenantId uint, code string) (*Permission, error) {
+	a,e := port2.RbacRepo.FetchPermission(tenantId, code)
 	return &a, e
 }
 
-func (permission *Permission) ListAllRoles() ([]Role, error){
+func (permission *Permission) listAllRoles() ([]Role, error){
 	return port2.RbacRepo.FetchAllRolesByPermission(permission)
 }

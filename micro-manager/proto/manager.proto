@@ -40,6 +40,7 @@ message VerifyIdentityRequest {
 
 message VerifyIdentityResponse {
     ResponseStatus status = 1;
-    string accountName = 2;
-    int32 tenantId = 3;
+    string msg = 2;
+    string accountName = 3;
+    int32 tenantId = 4;
 }

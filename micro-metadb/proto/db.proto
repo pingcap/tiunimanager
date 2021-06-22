@@ -11,7 +11,7 @@ service TiCPDBService {
 	rpc FindRolesByPermission(FindRolesByPermissionRequest) returns (FindRolesByPermissionResponse);
 }
 
-message ResponseStatus {
+message DbResponseStatus {
 	int32 code = 1;
 	string message = 2;
 }
@@ -28,7 +28,7 @@ message FindTenantRequest {
 }
 
 message FindTenantResponse {
-	ResponseStatus status = 1;
+	DbResponseStatus status = 1;
 	TenantDTO tenant = 2;
 }
 
@@ -46,7 +46,7 @@ message FindAccountRequest {
 }
 
 message FindAccountResponse {
-	ResponseStatus status = 1;
+	DbResponseStatus status = 1;
 	AccountDTO account = 2;
 }
 
@@ -62,7 +62,7 @@ message SaveTokenRequest {
 }
 
 message SaveTokenResponse {
-	ResponseStatus status = 1;
+	DbResponseStatus status = 1;
 }
 
 message FindTokenRequest {
@@ -70,7 +70,7 @@ message FindTokenRequest {
 }
 
 message FindTokenResponse {
-	ResponseStatus status = 1;
+	DbResponseStatus status = 1;
 	TokenDTO token = 2;
 }
 
@@ -96,6 +96,6 @@ message FindRolesByPermissionRequest {
 }
 
 message FindRolesByPermissionResponse {
-	ResponseStatus status = 1;
+	DbResponseStatus status = 1;
 	repeated RoleDTO roles = 2;
 }

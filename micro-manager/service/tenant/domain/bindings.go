@@ -2,7 +2,6 @@ package domain
 
 import (
 	"fmt"
-	port2 "github.com/pingcap/ticp/micro-manager/service/tenant/port"
 )
 
 type Role struct {
@@ -35,12 +34,12 @@ func createRole(tenant *Tenant, name string, desc string) (*Role, error) {
 }
 
 func (role *Role) persist() error{
-	port2.RbacRepo.AddRole(role)
+	RbacRepo.AddRole(role)
 	return nil
 }
 
 func findRoleByName(tenant *Tenant, name string) (*Role, error) {
-	r,e := port2.RbacRepo.FetchRole(tenant.Id, name)
+	r,e := RbacRepo.FetchRole(tenant.Id, name)
 	return &r, e
 }
 
@@ -62,5 +61,5 @@ func (role *Role) empower(permissions []Permission) error {
 	for index,r := range permissions {
 		bindings[index] = PermissionBinding{Role: role, Permission: &r, Status: Valid}
 	}
-	return port2.RbacRepo.AddPermissionBindings(bindings)
+	return RbacRepo.AddPermissionBindings(bindings)
 }

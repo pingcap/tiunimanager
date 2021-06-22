@@ -2,7 +2,6 @@ package domain
 
 import (
 	"fmt"
-	port2 "github.com/pingcap/ticp/micro-manager/service/tenant/port"
 )
 
 type Permission struct {
@@ -23,7 +22,7 @@ const (
 )
 
 func (permission *Permission) persist() error{
-	port2.RbacRepo.AddPermission(permission)
+	RbacRepo.AddPermission(permission)
 	return nil
 }
 
@@ -55,10 +54,10 @@ func createPermission(tenant *Tenant, code, name ,desc string, permissionType Pe
 }
 
 func findPermissionByCode(tenantId uint, code string) (*Permission, error) {
-	a,e := port2.RbacRepo.FetchPermission(tenantId, code)
+	a,e := RbacRepo.FetchPermission(tenantId, code)
 	return &a, e
 }
 
 func (permission *Permission) listAllRoles() ([]Role, error){
-	return port2.RbacRepo.FetchAllRolesByPermission(permission)
+	return RbacRepo.FetchAllRolesByPermission(permission)
 }

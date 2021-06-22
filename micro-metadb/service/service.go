@@ -9,7 +9,7 @@ import (
 
 var TiCPMetaDBServiceName = "go.micro.ticp.db"
 
-var SuccessResponseStatus = &proto.ResponseStatus {Code: 0}
+var SuccessResponseStatus = &proto.DbResponseStatus {Code: 0}
 
 type DBServiceHandler struct {}
 

@@ -8,8 +8,8 @@ import (
 
 var TiCPManagerServiceName = "go.micro.ticp.manager"
 
-var SuccessResponseStatus = &manager.ResponseStatus {Code:0}
-var BizErrorResponseStatus = &manager.ResponseStatus {Code:1}
+var SuccessResponseStatus = &manager.ManagerResponseStatus {Code:0}
+var BizErrorResponseStatus = &manager.ManagerResponseStatus {Code:1}
 
 
 type ManagerServiceHandler struct {}

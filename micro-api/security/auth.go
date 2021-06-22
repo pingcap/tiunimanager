@@ -26,4 +26,5 @@ func VerifyIdentity(c *gin.Context) {
 		c.Set("accountName", result.AccountName)
 		c.Set("tenantId", result.TenantId)
 	}
+
 }

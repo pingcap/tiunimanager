@@ -1,9 +1,5 @@
 package domain
 
-import (
-	"github.com/pingcap/ticp/micro-manager/service/tenant/port"
-)
-
 // Login 登录
 func Login(userName, password string) (tokenString string, err error) {
 	account, err := findAccountByName(userName)
@@ -35,10 +31,10 @@ func Login(userName, password string) (tokenString string, err error) {
 
 // Logout 退出登录
 func Logout(tokenString string) (string, error) {
-	token,err := port.TokenMNG.GetToken(tokenString)
+	token,err := TokenMNG.GetToken(tokenString)
 	
 	if err != nil {
-		return "", err
+		return "", &UnauthorizedError{}
 	} else {
 		accountName := token.AccountName
 		err := token.destroy()
@@ -53,7 +49,7 @@ func Logout(tokenString string) (string, error) {
 
 // Accessible 路径鉴权
 func Accessible(pathType string, path string, tokenString string) (tenantId uint, accountName string, err error) {
-	token, err := port.TokenMNG.GetToken(tokenString)
+	token, err := TokenMNG.GetToken(tokenString)
 	
 	if err != nil {
 		return

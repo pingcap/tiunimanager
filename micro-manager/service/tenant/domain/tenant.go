@@ -2,7 +2,6 @@ package domain
 
 import (
 	"fmt"
-	port2 "github.com/pingcap/ticp/micro-manager/service/tenant/port"
 )
 
 // Tenant 租户
@@ -35,12 +34,12 @@ func CreateTenant(name string) (*Tenant, error) {
 
 // FindTenant 查找租户
 func FindTenant(name string) (*Tenant, error) {
-	tenant,err := port2.TenantRepo.FetchTenantByName(name)
+	tenant,err := TenantRepo.FetchTenantByName(name)
 	return &tenant, err
 }
 
 func FindTenantById(id uint) (*Tenant, error) {
-	tenant,err := port2.TenantRepo.FetchTenantById(id)
+	tenant,err := TenantRepo.FetchTenantById(id)
 	return &tenant, err
 }
 type TenantType int

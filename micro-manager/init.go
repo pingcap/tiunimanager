@@ -14,6 +14,7 @@ import (
 	"github.com/pingcap/ticp/config"
 	manager "github.com/pingcap/ticp/micro-manager/proto"
 	"github.com/pingcap/ticp/micro-manager/service"
+	"github.com/pingcap/ticp/micro-manager/service/tenant/adapt"
 	dbclient "github.com/pingcap/ticp/micro-metadb/client"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
@@ -74,4 +75,8 @@ func initService() {
 
 func initClient() {
 	dbclient.InitDBClient()
+}
+
+func initPort() {
+	adapt.InitMock()
 }

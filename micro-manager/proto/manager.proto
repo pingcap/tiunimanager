@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option go_package = "./;manager";
 
-message ResponseStatus {
+message ManagerResponseStatus {
     int32 code = 1;
     string message = 2;
 }
@@ -19,7 +19,7 @@ message LoginRequest {
 }
 
 message LoginResponse {
-    ResponseStatus status = 1;
+    ManagerResponseStatus status = 1;
     string tokenString = 2;
 }
 
@@ -28,7 +28,7 @@ message LogoutRequest {
 }
 
 message LogoutResponse {
-    ResponseStatus status = 1;
+    ManagerResponseStatus status = 1;
     string accountName = 2;
 }
 
@@ -39,7 +39,7 @@ message VerifyIdentityRequest {
 }
 
 message VerifyIdentityResponse {
-    ResponseStatus status = 1;
+    ManagerResponseStatus status = 1;
     string msg = 2;
     string accountName = 3;
     int32 tenantId = 4;

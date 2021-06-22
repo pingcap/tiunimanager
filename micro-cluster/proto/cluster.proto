@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option go_package = "./;cluster";
 
-message ResponseStatus {
+message ClusterResponseStatus {
     int32 code = 1;
     string message = 2;
 }
@@ -16,7 +16,7 @@ message CreateClusterRequest {
 }
 
 message CreateClusterResponse {
-    ResponseStatus status = 1;
+    ClusterResponseStatus status = 1;
     int32 id = 2;
 
 }

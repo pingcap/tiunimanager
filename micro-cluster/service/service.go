@@ -7,7 +7,7 @@ import (
 
 var TiCPClusterServiceName = "go.micro.ticp.cluster"
 
-var SuccessResponseStatus = &cluster.ResponseStatus {Code:0}
+var SuccessResponseStatus = &cluster.ClusterResponseStatus {Code:0}
 
 type ClusterServiceHandler struct {}
 

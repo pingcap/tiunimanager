@@ -5,8 +5,9 @@ import (
 )
 
 func main() {
+	initPort()
 	initConfig()
-	//initLogger()
+	initLogger()
 	initService()
 	//initPrometheus()
 	initClient()

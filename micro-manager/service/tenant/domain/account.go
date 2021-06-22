@@ -4,7 +4,6 @@ import (
 	cryrand "crypto/rand"
 	"encoding/base64"
 	"fmt"
-	port2 "github.com/pingcap/ticp/micro-manager/service/tenant/port"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -18,7 +17,7 @@ type Account struct {
 	Status    CommonStatus
 }
 
-func (account *Account) genSaltAndHash(passwd string) error {
+func (account *Account) GenSaltAndHash(passwd string) error {
 	b := make([]byte, 128)
 	_, err := cryrand.Read(b)
 
@@ -39,12 +38,19 @@ func (account *Account) genSaltAndHash(passwd string) error {
 }
 
 func  (account *Account) checkPassword(passwd string) (bool, error) {
-	finalSalt, err := finalHash(account.Salt, passwd)
+	s := account.Salt + passwd
+
+	err := bcrypt.CompareHashAndPassword([]byte(account.FinalHash), []byte(s))
+
 	if err != nil {
-		return false, err
+		if err == bcrypt.ErrMismatchedHashAndPassword  {
+			return false, nil
+		} else {
+			return false, err
+		}
 	}
 
-	return string(finalSalt) == account.FinalHash, err
+	return true, nil
 }
 
 func finalHash(salt string, passwd string) ([]byte, error) {
@@ -55,12 +61,12 @@ func finalHash(salt string, passwd string) ([]byte, error) {
 }
 
 func (account *Account) persist() error{
-	port2.RbacRepo.AddAccount(account)
+	RbacRepo.AddAccount(account)
 	return nil
 }
 
-// createAccount 创建账号
-func createAccount(tenant *Tenant, name, passwd string) (*Account, error) {
+// CreateAccount 创建账号
+func CreateAccount(tenant *Tenant, name, passwd string) (*Account, error) {
 	if tenant == nil || !tenant.Status.IsValid(){
 		return nil, fmt.Errorf("tenant not valid")
 	}
@@ -75,7 +81,7 @@ func createAccount(tenant *Tenant, name, passwd string) (*Account, error) {
 
 	account := Account{Tenant: tenant, Name: name, Status: Valid}
 
-	account.genSaltAndHash(passwd)
+	account.GenSaltAndHash(passwd)
 	account.persist()
 
 	return &account, nil
@@ -83,12 +89,11 @@ func createAccount(tenant *Tenant, name, passwd string) (*Account, error) {
 
 // findAccountByName 根据名称获取账号
 func findAccountByName(name string) (*Account, error) {
-	a,err := port2.RbacRepo.FetchAccountByName(name)
+	a,err := RbacRepo.FetchAccountByName(name)
 	if err != nil {
 		return nil, err
 	}
 
-	FindTenantById(a.Id)
 	return &a, err
 }
 
@@ -99,12 +104,12 @@ func (account *Account) assignRoles(roles []Role) error {
 	for index,r := range roles {
 		bindings[index] = RoleBinding{Account: account, Role: &r, Status: Valid}
 	}
-	return port2.RbacRepo.AddRoleBindings(bindings)
+	return RbacRepo.AddRoleBindings(bindings)
 }
 
 // listAllRoles 获取账号的所有角色
 func (account *Account) listAllRoles() ([]Role, error){
-	return port2.RbacRepo.FetchAllRolesByAccount(account)
+	return RbacRepo.FetchAllRolesByAccount(account)
 }
 
 // checkAuth 校验权限
@@ -118,11 +123,11 @@ func checkAuth(account *Account, permission *Permission) (bool, error){
 	}
 
 	accountRoleMap := make(map[int]bool)
-	
+
 	for _,r := range accountRoles {
 		accountRoleMap[r.Id] = true
 	}
-	
+
 	allowedRoles,err := permission.listAllRoles()
 	if err != nil {
 		return false, err
@@ -139,3 +144,4 @@ func checkAuth(account *Account, permission *Permission) (bool, error){
 
 	return false, nil
 }
+

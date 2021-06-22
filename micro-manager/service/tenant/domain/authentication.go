@@ -18,7 +18,7 @@ func Login(userName, password string) (tokenString string, err error) {
 		return
 	}
 
-	token, err := createToken(account.Name, account.TenantId)
+	token, err := createToken(account.Id, account.Name, account.TenantId)
 
 	if err != nil {
 		return
@@ -65,13 +65,13 @@ func Accessible(pathType string, path string, tokenString string) (tenantId uint
 	}
 
 	// 根据token查用户
-	account, err := findAccountByName(accountName)
+	account, err := findAccountAggregation(accountName)
 	if err != nil {
 		return
 	}
 
 	// 查权限
-	permission, err := findPermissionByCode(tenantId, path)
+	permission, err := findPermissionAggregationByCode(tenantId, path)
 	if err != nil {
 		return
 	}

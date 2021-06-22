@@ -1,21 +1,166 @@
 package adapt
 
 import (
+	"context"
 	"errors"
 	"github.com/pingcap/ticp/micro-manager/service/tenant/domain"
+	"github.com/pingcap/ticp/micro-metadb/client"
+	db "github.com/pingcap/ticp/micro-metadb/proto"
+	"time"
 )
 
 type MockRepo struct{}
+type MicroMetaDbRepo struct {}
 
-func InitMock() {
-	domain.RbacRepo = &MockRepo{}
-	domain.TenantRepo = &MockRepo{}
-	domain.TokenMNG = &MockRepo{}
-	me.Name = "peijin"
-	me.GenSaltAndHash("zhangpeijin")
+func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId uint, code string) (domain.PermissionAggregation, error) {
+	panic("implement me")
 }
 
+func (m MicroMetaDbRepo) LoadPermission(tenantId uint, code string) (domain.Permission, error) {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (domain.AccountAggregation, error) {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) Provide(tiCPToken *domain.TiCPToken) (tokenString string, err error) {
+	// 提供token
+	tokenString = tiCPToken.AccountName
+
+	req := db.SaveTokenRequest{
+		Token: &db.TokenDTO{
+			TenantId: int32(tiCPToken.TenantId),
+			AccountId: int32(tiCPToken.AccountId),
+			AccountName: tiCPToken.AccountName,
+			ExpirationTime: tiCPToken.ExpirationTime.Unix(),
+			TokenString: tokenString,
+		},
+	}
+
+	_, err = client.DBClient.SaveToken(context.TODO(), &req)
+
+	return
+}
+
+func (m MicroMetaDbRepo) Modify(tiCPToken *domain.TiCPToken) error {
+	req := db.SaveTokenRequest{
+		Token: &db.TokenDTO{
+			TenantId: int32(tiCPToken.TenantId),
+			AccountId: int32(tiCPToken.AccountId),
+			AccountName: tiCPToken.AccountName,
+			ExpirationTime: tiCPToken.ExpirationTime.Unix(),
+			TokenString: tiCPToken.TokenString,
+		},
+	}
+
+	_, err := client.DBClient.SaveToken(context.TODO(), &req)
+
+	return err
+}
+
+func (m MicroMetaDbRepo) GetToken(tokenString string) (token domain.TiCPToken, err error) {
+	req := db.FindTokenRequest{
+		TokenString: tokenString,
+	}
+
+	resp, err := client.DBClient.FindToken(context.TODO(), &req)
+	if err != nil {
+		return
+	}
+
+	dto := resp.Token
+
+	token.TokenString = dto.TokenString
+	token.AccountId =  uint(dto.AccountId)
+	token.AccountName = dto.AccountName
+	token.TenantId = uint(dto.TenantId)
+	token.ExpirationTime = time.Unix(dto.ExpirationTime, 0)
+
+	return
+}
+
+func (m MicroMetaDbRepo) AddTenant(tenant *domain.Tenant) error {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) LoadTenantByName(name string) (domain.Tenant, error) {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) LoadTenantById(id uint) (domain.Tenant, error) {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) AddAccount(a *domain.Account) error {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) LoadAccountByName(name string) (account domain.Account, err error) {
+	req := db.FindAccountRequest{
+		Name: name,
+	}
+
+
+
+	resp, err := client.DBClient.FindAccount(context.TODO(), &req)
+	if err != nil {
+		return
+	}
+
+	dto := resp.Account
+	account.Id = uint(dto.Id)
+	account.Name = dto.Name
+	account.TenantId = uint(dto.TenantId)
+	account.Salt = dto.Salt
+	account.FinalHash = dto.FinalHash
+
+	return
+}
+
+func (m MicroMetaDbRepo) LoadAccountById(id uint) (domain.Account, error) {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) AddRole(r *domain.Role) error {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) LoadRole(tenantId uint, name string) (domain.Role, error) {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) AddPermission(r *domain.Permission) error {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) LoadAllRolesByAccount(account *domain.Account) ([]domain.Role, error) {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) LoadAllRolesByPermission(permission *domain.Permission) ([]domain.Role, error) {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) AddPermissionBindings(bindings []domain.PermissionBinding) error {
+	panic("implement me")
+}
+
+func (m MicroMetaDbRepo) AddRoleBindings(bindings []domain.RoleBinding) error {
+	panic("implement me")
+}
+
+func InitMock() {
+	domain.RbacRepo = &MicroMetaDbRepo{}
+	domain.TenantRepo = &MicroMetaDbRepo{}
+	domain.TokenMNG = &MicroMetaDbRepo{}
+}
+
+
 var me = domain.Account{}
+var myToken domain.TiCPToken
+
+var admin = []domain.Role{{Id: 1}}
 func (m MockRepo) AddAccount(a *domain.Account) error {
 	panic("implement me")
 }
@@ -68,8 +213,6 @@ func (m MockRepo) AddRoleBindings(bindings []domain.RoleBinding) error {
 	panic("implement me")
 }
 
-var myToken domain.TiCPToken
-
 func (m MockRepo) Provide(tiCPToken *domain.TiCPToken) (string, error) {
 	myToken = *tiCPToken
 	myToken.TokenString = "mocktoken"
@@ -94,12 +237,10 @@ func (m MockRepo) AddTenant(tenant *domain.Tenant) error {
 	panic("implement me")
 }
 
-func (m MockRepo) FetchTenantByName(name string) (domain.Tenant, error) {
+func (m MockRepo) LoadTenantByName(name string) (domain.Tenant, error) {
 	panic("implement me")
 }
 
-func (m MockRepo) FetchTenantById(id uint) (domain.Tenant, error) {
+func (m MockRepo) LoadTenantById(id uint) (domain.Tenant, error) {
 	panic("implement me")
 }
-
-var admin = []domain.Role{{Id: 1}}

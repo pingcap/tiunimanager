@@ -31,7 +31,7 @@ func Login(c *gin.Context) {
 
 	if err == nil {
 		c.Header("Token", result.TokenString)
-		c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: "peijin"}))
+		c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: req.UserName}))
 	} else {
 		c.JSON(http.StatusOK, controller.Fail(401, "账号或密码错误"))
 	}

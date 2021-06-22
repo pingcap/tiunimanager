@@ -10,16 +10,18 @@ type Token struct {
 
 	TokenString    	string 		`gorm:"size:255"`
 	AccountId      	int32  		`gorm:"size:255"`
+	AccountName		string  	`gorm:"size:255"`
 	TenantId       	int32  		`gorm:"size:255"`
 	Status 			int8		`gorm:"size:255"`
 	ExpirationTime 	time.Time  	`gorm:"size:255"`
 }
 
-func AddToken(tokenString string, accountId,tenantId int32, expirationTime time.Time) (token Token, err error) {
+func AddToken(tokenString, accountName string, accountId,tenantId int32, expirationTime time.Time) (token Token, err error) {
 	token.TokenString = tokenString
 	token.AccountId = accountId
 	token.TenantId = tenantId
 	token.ExpirationTime = expirationTime
+	token.AccountName = accountName
 	token.Status = 1
 
 	MetaDB.Create(&token)

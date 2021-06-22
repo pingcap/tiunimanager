@@ -2,6 +2,7 @@ package client
 
 import (
 	"crypto/tls"
+	"fmt"
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
@@ -33,4 +34,6 @@ func InitDBClient() {
 	srv.Init()
 
 	DBClient = db.NewTiCPDBService(service.TiCPMetaDBServiceName, srv.Client())
+
+	fmt.Println(DBClient)
 }

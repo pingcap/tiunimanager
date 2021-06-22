@@ -7,6 +7,6 @@ import (
 func main() {
 	initConfig()
 	initLogger()
-	initService()
 	initSqliteDB()
+	initService()
 }

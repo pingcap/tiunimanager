@@ -19,7 +19,7 @@ func (*DBServiceHandler) FindTenant(cxt context.Context, req *proto.FindTenantRe
 	if err == nil {
 		resp.Status = SuccessResponseStatus
 		resp.Tenant = &proto.TenantDTO{
-			Id: int32(tenant.Id),
+			Id: int32(tenant.ID),
 			Name: tenant.Name,
 			Type: int32(tenant.Type),
 			Status: int32(tenant.Status),
@@ -68,7 +68,7 @@ func (*DBServiceHandler) FindAccount(cxt context.Context, req *proto.FindAccount
 	return nil
 }
 func (*DBServiceHandler) SaveToken(cxt context.Context, req *proto.SaveTokenRequest, resp *proto.SaveTokenResponse) error {
-	_, err := models.AddToken(req.Token.TokenString, req.Token.AccountId, req.Token.TenantId, time.Unix(req.Token.ExpirationTime, 0))
+	_, err := models.AddToken(req.Token.TokenString, req.Token.AccountName, req.Token.AccountId, req.Token.TenantId, time.Unix(req.Token.ExpirationTime, 0))
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus

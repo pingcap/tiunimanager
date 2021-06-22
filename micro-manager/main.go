@@ -8,7 +8,8 @@ func main() {
 	initPort()
 	initConfig()
 	initLogger()
+	initClient()
+
 	initService()
 	//initPrometheus()
-	initClient()
 }

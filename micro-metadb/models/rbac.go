@@ -42,6 +42,8 @@ type RoleBinding struct {
 }
 
 type Permission struct {
+	gorm.Model
+
 	TenantId 		uint		`gorm:"size:255"`
 	Code   			string		`gorm:"size:255"`
 	Name  	 		string		`gorm:"size:255"`

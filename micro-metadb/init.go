@@ -1,7 +1,10 @@
 package main
 
 import (
+	cryrand "crypto/rand"
 	"crypto/tls"
+	"encoding/base64"
+	"fmt"
 	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
@@ -15,9 +18,9 @@ import (
 	"github.com/pingcap/ticp/micro-metadb/models"
 	db "github.com/pingcap/ticp/micro-metadb/proto"
 	"github.com/pingcap/ticp/micro-metadb/service"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	gormopentracing "gorm.io/plugin/opentracing"
 	"log"
 )
 
@@ -55,18 +58,17 @@ func initService() {
 
 	db.RegisterTiCPDBServiceHandler(srv.Server(), new(service.DBServiceHandler))
 
-	go func() {
-		if err := srv.Run(); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	if err := srv.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func initSqliteDB() {
 	var err error
 	dbFile := config.GetSqliteFilePath()
+
 	log := logger.WithContext(nil).WithField("dbFile", dbFile)
-	log.Debug("init: sqlite.open")
+	log.Info("init: sqlite.open")
 	models.MetaDB, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 	if err != nil {
@@ -77,13 +79,14 @@ func initSqliteDB() {
 		log.Fatalf("database error %v", models.MetaDB.Error)
 	}
 	log.Info("sqlite.open success")
-	models.MetaDB.Use(gormopentracing.New())
-
-	//err = initTables()
 	//
-	//if err != nil {
-	//	log.Fatalf("sqlite create table failed: %v", err)
-	//}
+	//initTables()
+	//
+	//initData()
+
+	tenant, err := models.FindTenantById(1)
+
+	fmt.Println(tenant.Name)
 
 }
 
@@ -97,4 +100,56 @@ func initTables() error {
 		&models.RoleBinding{},
 		)
 	return err
+}
+
+func initData() {
+	tenant, _ := models.AddTenant("Ticp系统管理", 1, 0)
+	fmt.Println("tenantId = ", tenant.ID)
+
+	role1, _ := models.AddRole(tenant.ID, "管理员", "管理员", 0)
+	fmt.Println("role1.Id = ", role1.ID)
+
+	role2, _ := models.AddRole(tenant.ID, "DBA", "DBA", 0)
+	fmt.Println("role2.Id = ", role2.ID)
+
+	userId1 := initUser(tenant.ID, "admin")
+	fmt.Println("user1.Id = ", userId1)
+
+	userId2 := initUser(tenant.ID, "peijin")
+	fmt.Println("user2.Id = ", userId2)
+
+	nopermission := initUser(tenant.ID, "nopermission")
+	fmt.Println("user3.Id = ", nopermission)
+
+	models.AddRoleBindings([]models.RoleBinding{
+		{TenantId: tenant.ID, RoleId: role1.ID, AccountId: userId1, Status: 0},
+		{TenantId: tenant.ID, RoleId: role2.ID, AccountId: userId2, Status: 0},
+	})
+
+	permission1, _ := models.AddPermission(tenant.ID, "/api/v1/host/query", "查询主机", "查询主机", 2, 0)
+	permission2, _ := models.AddPermission(tenant.ID, "/api/v1/instance/query", "查询集群", "查询集群", 2, 0)
+	permission3, _ := models.AddPermission(tenant.ID, "/api/v1/instance/create", "创建集群", "创建集群", 2, 0)
+
+	models.AddPermissionBindings([]models.PermissionBinding{
+		{TenantId: tenant.ID, RoleId: role1.ID, PermissionId: permission1.ID, Status: 0},
+		{TenantId: tenant.ID, RoleId: role1.ID, PermissionId: permission2.ID, Status: 0},
+		{TenantId: tenant.ID, RoleId: role1.ID, PermissionId: permission3.ID, Status: 0},
+		{TenantId: tenant.ID, RoleId: role2.ID, PermissionId: permission1.ID, Status: 0},
+	})
+
+	return
+}
+
+func initUser(tenantId uint, name string) (uint) {
+
+	b := make([]byte, 16)
+	_, _ = cryrand.Read(b)
+
+	salt := base64.URLEncoding.EncodeToString(b)
+
+	s := salt + name
+	finalSalt, _ := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)
+	account, _ := models.AddAccount(tenantId, name, salt, string(finalSalt), 0)
+
+	return account.ID
 }

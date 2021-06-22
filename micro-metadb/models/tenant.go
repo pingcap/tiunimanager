@@ -8,7 +8,6 @@ type Tenant struct {
 	gorm.Model
 
 	Name   string		`gorm:"size:255"`
-	Id     uint			`gorm:"size:255"`
 	Type   int8			`gorm:"size:255"`
 	Status int8			`gorm:"size:255"`
 }

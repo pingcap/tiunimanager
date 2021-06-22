@@ -8,7 +8,6 @@ import (
 )
 
 type Account struct {
-	Tenant    *Tenant
 	Id        uint
 	TenantId  uint
 	Name      string
@@ -17,8 +16,14 @@ type Account struct {
 	Status    CommonStatus
 }
 
-func (account *Account) GenSaltAndHash(passwd string) error {
-	b := make([]byte, 128)
+type AccountAggregation struct {
+	Account
+	Roles []Role
+	Tenant *Tenant
+}
+
+func (account *Account) genSaltAndHash(passwd string) error {
+	b := make([]byte, 16)
 	_, err := cryrand.Read(b)
 
 	if err != nil {
@@ -79,9 +84,9 @@ func CreateAccount(tenant *Tenant, name, passwd string) (*Account, error) {
 		return nil, fmt.Errorf("account already exist")
 	}
 
-	account := Account{Tenant: tenant, Name: name, Status: Valid}
+	account := Account{Name: name, Status: Valid}
 
-	account.GenSaltAndHash(passwd)
+	account.genSaltAndHash(passwd)
 	account.persist()
 
 	return &account, nil
@@ -89,7 +94,17 @@ func CreateAccount(tenant *Tenant, name, passwd string) (*Account, error) {
 
 // findAccountByName 根据名称获取账号
 func findAccountByName(name string) (*Account, error) {
-	a,err := RbacRepo.FetchAccountByName(name)
+	a,err := RbacRepo.LoadAccountByName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &a, err
+}
+
+// findAccountExtendInfo 根据名称获取账号及扩展信息
+func findAccountAggregation(name string) (*AccountAggregation, error) {
+	a,err := RbacRepo.LoadAccountAggregation(name)
 	if err != nil {
 		return nil, err
 	}
@@ -107,17 +122,10 @@ func (account *Account) assignRoles(roles []Role) error {
 	return RbacRepo.AddRoleBindings(bindings)
 }
 
-// listAllRoles 获取账号的所有角色
-func (account *Account) listAllRoles() ([]Role, error){
-	return RbacRepo.FetchAllRolesByAccount(account)
-}
-
 // checkAuth 校验权限
-func checkAuth(account *Account, permission *Permission) (bool, error){
-	accountRoles,err := account.listAllRoles()
-	if err != nil {
-		return false, err
-	}
+func checkAuth(account *AccountAggregation, permission *PermissionAggregation) (bool, error){
+	accountRoles := account.Roles
+
 	if accountRoles == nil || len(accountRoles) == 0 {
 		return false, nil
 	}
@@ -128,10 +136,8 @@ func checkAuth(account *Account, permission *Permission) (bool, error){
 		accountRoleMap[r.Id] = true
 	}
 
-	allowedRoles,err := permission.listAllRoles()
-	if err != nil {
-		return false, err
-	}
+	allowedRoles := permission.Roles
+
 	if allowedRoles == nil || len(allowedRoles) == 0 {
 		return false, nil
 	}

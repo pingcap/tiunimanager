@@ -39,7 +39,7 @@ func (role *Role) persist() error{
 }
 
 func findRoleByName(tenant *Tenant, name string) (*Role, error) {
-	r,e := RbacRepo.FetchRole(tenant.Id, name)
+	r,e := RbacRepo.LoadRole(tenant.Id, name)
 	return &r, e
 }
 

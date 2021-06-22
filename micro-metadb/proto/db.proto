@@ -52,9 +52,10 @@ message FindAccountResponse {
 
 message TokenDTO {
 	string tokenString = 1;
-	int32 accountId = 2;
-	int32 tenantId = 3;
-	int64 expirationTime = 4;
+	string accountName = 2;
+	int32 accountId = 3;
+	int32 tenantId = 4;
+	int64 expirationTime = 5;
 }
 
 message SaveTokenRequest {

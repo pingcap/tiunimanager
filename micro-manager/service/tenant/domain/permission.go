@@ -5,7 +5,7 @@ import (
 )
 
 type Permission struct {
-	Tenant *Tenant
+	TenantId uint
 	Code   string
 	Name   string
 	Type   PermissionType
@@ -13,6 +13,10 @@ type Permission struct {
 	Status CommonStatus
 }
 
+type PermissionAggregation struct {
+	Permission
+	Roles []Role
+}
 type PermissionType int
 
 const (
@@ -40,7 +44,7 @@ func createPermission(tenant *Tenant, code, name ,desc string, permissionType Pe
 	}
 
 	permission := Permission{
-		Tenant: tenant,
+		TenantId: tenant.Id,
 		Code:   code,
 		Name:   name,
 		Type:   permissionType,
@@ -54,10 +58,16 @@ func createPermission(tenant *Tenant, code, name ,desc string, permissionType Pe
 }
 
 func findPermissionByCode(tenantId uint, code string) (*Permission, error) {
-	a,e := RbacRepo.FetchPermission(tenantId, code)
+	a,e := RbacRepo.LoadPermission(tenantId, code)
+	return &a, e
+}
+
+
+func findPermissionAggregationByCode(tenantId uint, code string) (*PermissionAggregation, error) {
+	a,e := RbacRepo.LoadPermissionAggregation(tenantId, code)
 	return &a, e
 }
 
 func (permission *Permission) listAllRoles() ([]Role, error){
-	return RbacRepo.FetchAllRolesByPermission(permission)
+	return RbacRepo.LoadAllRolesByPermission(permission)
 }

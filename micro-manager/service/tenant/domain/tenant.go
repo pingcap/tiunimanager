@@ -34,12 +34,12 @@ func CreateTenant(name string) (*Tenant, error) {
 
 // FindTenant 查找租户
 func FindTenant(name string) (*Tenant, error) {
-	tenant,err := TenantRepo.FetchTenantByName(name)
+	tenant,err := TenantRepo.LoadTenantByName(name)
 	return &tenant, err
 }
 
 func FindTenantById(id uint) (*Tenant, error) {
-	tenant,err := TenantRepo.FetchTenantById(id)
+	tenant,err := TenantRepo.LoadTenantById(id)
 	return &tenant, err
 }
 type TenantType int

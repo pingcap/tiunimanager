@@ -9,30 +9,34 @@ var TokenMNG TokenManager
 type TenantRepository interface {
 	AddTenant(*Tenant) error
 
-	FetchTenantByName(name string)  (Tenant, error)
+	LoadTenantByName(name string)  (Tenant, error)
 
-	FetchTenantById(id uint)  (Tenant, error)
+	LoadTenantById(id uint)  (Tenant, error)
 }
 
 type RbacRepository interface {
 
 	AddAccount(a *Account) error
 
-	FetchAccountByName(name string) (Account, error)
+	LoadAccountByName(name string) (Account, error)
 
-	FetchAccountById(id uint) (Account, error)
+	LoadAccountAggregation(name string) (AccountAggregation, error)
+
+	LoadAccountById(id uint) (Account, error)
 
 	AddRole(r *Role) error
 
-	FetchRole(tenantId uint, name string) (Role, error)
+	LoadRole(tenantId uint, name string) (Role, error)
 
 	AddPermission(r *Permission) error
 
-	FetchPermission(tenantId uint, code string) (Permission, error)
+	LoadPermissionAggregation(tenantId uint, code string) (PermissionAggregation, error)
 
-	FetchAllRolesByAccount(account *Account) ([]Role, error)
+	LoadPermission(tenantId uint, code string) (Permission, error)
 
-	FetchAllRolesByPermission(permission *Permission) ([]Role, error)
+	LoadAllRolesByAccount(account *Account) ([]Role, error)
+
+	LoadAllRolesByPermission(permission *Permission) ([]Role, error)
 
 	AddPermissionBindings(bindings []PermissionBinding) error
 

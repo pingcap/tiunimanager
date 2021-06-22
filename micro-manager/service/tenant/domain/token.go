@@ -8,7 +8,9 @@ import (
 type TiCPToken struct {
 	TokenString 	string
 	AccountName		string
+	AccountId		uint
 	TenantId		uint
+	TenantName		string
 	ExpirationTime  time.Time
 }
 
@@ -28,9 +30,10 @@ func (token *TiCPToken) isValid() bool {
 	return now.Before(token.ExpirationTime)
 }
 
-func createToken(accountName string, tenantId uint) (TiCPToken, error) {
+func createToken(accountId uint, accountName string, tenantId uint) (TiCPToken, error) {
 	token := TiCPToken{
 		AccountName: accountName,
+		AccountId: accountId,
 		TenantId: tenantId,
 		ExpirationTime: time.Now().Add(commons.DefaultTokenValidPeriod),
 	}

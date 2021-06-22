@@ -23,7 +23,17 @@ const (
 	Path PermissionType = 1
 	Act  PermissionType = 2
 	Data PermissionType = 3
+	UnrecognizedType PermissionType = 4
 )
+
+func PermissionTypeFromType(pType int32) PermissionType {
+	switch pType {
+		case 0: return Path
+		case 1: return Act
+		case 2: return Data
+		default: return UnrecognizedType
+	}
+}
 
 func (permission *Permission) persist() error{
 	RbacRepo.AddPermission(permission)
@@ -61,7 +71,6 @@ func findPermissionByCode(tenantId uint, code string) (*Permission, error) {
 	a,e := RbacRepo.LoadPermission(tenantId, code)
 	return &a, e
 }
-
 
 func findPermissionAggregationByCode(tenantId uint, code string) (*PermissionAggregation, error) {
 	a,e := RbacRepo.LoadPermissionAggregation(tenantId, code)

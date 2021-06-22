@@ -79,10 +79,10 @@ func initSqliteDB() {
 		log.Fatalf("database error %v", models.MetaDB.Error)
 	}
 	log.Info("sqlite.open success")
-	//
-	//initTables()
-	//
-	//initData()
+
+	initTables()
+
+	initData()
 
 	tenant, err := models.FindTenantById(1)
 
@@ -98,6 +98,7 @@ func initTables() error {
 		&models.Permission{},
 		&models.PermissionBinding{},
 		&models.RoleBinding{},
+		&models.Token{},
 		)
 	return err
 }

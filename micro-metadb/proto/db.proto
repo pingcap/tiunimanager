@@ -43,6 +43,7 @@ message AccountDTO {
 
 message FindAccountRequest {
 	string name = 1;
+	bool withRole = 2;
 }
 
 message FindAccountResponse {
@@ -98,5 +99,6 @@ message FindRolesByPermissionRequest {
 
 message FindRolesByPermissionResponse {
 	DbResponseStatus status = 1;
-	repeated RoleDTO roles = 2;
+	PermissionDTO permission = 2;
+	repeated RoleDTO roles = 3;
 }

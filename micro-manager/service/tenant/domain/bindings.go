@@ -5,12 +5,11 @@ import (
 )
 
 type Role struct {
-	Tenant 		*Tenant
-
-	Id     int
-	Name   string
-	Desc   string
-	Status CommonStatus
+	TenantId 	uint
+	Id     		int
+	Name   		string
+	Desc   		string
+	Status 		CommonStatus
 }
 
 func createRole(tenant *Tenant, name string, desc string) (*Role, error) {
@@ -26,7 +25,7 @@ func createRole(tenant *Tenant, name string, desc string) (*Role, error) {
 		return nil, fmt.Errorf("role already exist")
 	}
 
-	role := Role{Tenant: tenant, Name: name, Desc: desc, Status: Valid}
+	role := Role{TenantId: tenant.Id, Name: name, Desc: desc, Status: Valid}
 
 	role.persist()
 	return &role, nil

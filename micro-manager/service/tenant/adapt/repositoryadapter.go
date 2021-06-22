@@ -12,16 +12,84 @@ import (
 type MockRepo struct{}
 type MicroMetaDbRepo struct {}
 
-func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId uint, code string) (domain.PermissionAggregation, error) {
-	panic("implement me")
+func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId uint, code string) (p domain.PermissionAggregation, err error) {
+	req := db.FindRolesByPermissionRequest{
+		TenantId: int32(tenantId),
+		Code: code,
+	}
+
+	resp, err := client.DBClient.FindRolesByPermission(context.TODO(), &req)
+	if err != nil {
+		return
+	}
+
+	permissionDTO := resp.Permission
+
+	p.Permission = domain.Permission{
+		Code: permissionDTO.GetCode(),
+		TenantId: uint(permissionDTO.GetTenantId()),
+		Name: permissionDTO.GetName(),
+		Type: domain.PermissionTypeFromType(permissionDTO.GetType()),
+		Desc: permissionDTO.GetDesc(),
+		Status: domain.CommonStatusFromStatus(permissionDTO.GetStatus()),
+	}
+
+	rolesDTOs := resp.GetRoles()
+
+	if rolesDTOs == nil {
+		p.Roles = nil
+	} else {
+		p.Roles = make([]domain.Role, len(rolesDTOs), cap(rolesDTOs))
+		for index, r := range rolesDTOs {
+			p.Roles[index] = domain.Role{
+				TenantId: uint(r.TenantId),
+				Name: r.GetName(),
+				Desc: r.GetDesc(),
+				Status: domain.CommonStatusFromStatus(r.GetStatus()),
+			}
+		}
+	}
+	return
 }
 
 func (m MicroMetaDbRepo) LoadPermission(tenantId uint, code string) (domain.Permission, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (domain.AccountAggregation, error) {
-	panic("implement me")
+func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account domain.AccountAggregation, err error) {
+	req := db.FindAccountRequest{
+		Name: name,
+		WithRole: true,
+	}
+
+	resp, err := client.DBClient.FindAccount(context.TODO(), &req)
+	if err != nil {
+		return
+	}
+
+	dto := resp.Account
+
+	account.Id = uint(dto.Id)
+	account.Name = dto.Name
+	account.TenantId = uint(dto.TenantId)
+	account.Salt = dto.Salt
+	account.FinalHash = dto.FinalHash
+
+	if dto.Roles == nil {
+		account.Roles = nil
+	} else {
+		account.Roles = make([]domain.Role, len(dto.Roles), cap(dto.Roles))
+		for index, r := range dto.Roles {
+			account.Roles[index] = domain.Role{
+				TenantId: uint(r.TenantId),
+				Name: r.GetName(),
+				Desc: r.GetDesc(),
+				Status: domain.CommonStatusFromStatus(r.GetStatus()),
+			}
+		}
+	}
+
+	return
 }
 
 func (m MicroMetaDbRepo) Provide(tiCPToken *domain.TiCPToken) (tokenString string, err error) {
@@ -99,9 +167,8 @@ func (m MicroMetaDbRepo) AddAccount(a *domain.Account) error {
 func (m MicroMetaDbRepo) LoadAccountByName(name string) (account domain.Account, err error) {
 	req := db.FindAccountRequest{
 		Name: name,
+		WithRole: false,
 	}
-
-
 
 	resp, err := client.DBClient.FindAccount(context.TODO(), &req)
 	if err != nil {

@@ -19,7 +19,6 @@ type Account struct {
 type AccountAggregation struct {
 	Account
 	Roles []Role
-	Tenant *Tenant
 }
 
 func (account *Account) genSaltAndHash(passwd string) error {

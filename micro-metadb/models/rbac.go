@@ -102,11 +102,34 @@ func FetchPermission(tenantId uint, code string) (result Permission, err error) 
 
 func FetchAllRolesByAccount(tenantId uint, accountId uint) (result []Role, err error) {
 	//service.DB.Where("account_id = ?", accountId).Limit(50).Find(&result)
+
+	var roleBinds []RoleBinding
+	MetaDB.Where("tenant_id = ? and account_id = ? and status = 0", tenantId, accountId).Limit(50).Find(&roleBinds)
+
+	var roleIds []uint
+	for _, v := range roleBinds {
+		roleIds = append(roleIds, v.RoleId)
+	}
+
+	result, err = FetchRolesByIds(roleIds)
 	return
 }
 
-func FetchAllRolesByPermission(tenantId uint, permissionCode string) (result []Role, err error) {
-	MetaDB.Where("tenant_id = ? and code = ?", tenantId, permissionCode).Limit(50).Find(&result)
+func FetchRolesByIds(roleIds []uint) (result []Role, err error){
+	MetaDB.Where("id in ?", roleIds).Find(&result)
+	return
+}
+
+func FetchAllRolesByPermission(tenantId uint, permissionId uint) (result []Role, err error) {
+	var permissionBindings []PermissionBinding
+	MetaDB.Where("tenant_id = ? and permission_id = ? and status = 0", tenantId, permissionId).Limit(50).Find(&permissionBindings)
+
+	var roleIds []uint
+	for _, v := range permissionBindings {
+		roleIds = append(roleIds, v.RoleId)
+	}
+
+	result, err = FetchRolesByIds(roleIds)
 	return
 }
 

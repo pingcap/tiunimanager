@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"log"
+
 	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
@@ -21,7 +23,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"log"
 )
 
 func initConfig() {
@@ -81,10 +82,10 @@ func initSqliteDB() {
 	log.Info("sqlite.open success")
 
 	if models.MetaDB.Migrator().HasTable(&models.Tenant{}) {
-		
+
 	}
 	initTables()
-	
+
 	initDataForDemo()
 
 	tenant, err := models.FindTenantById(1)
@@ -104,7 +105,7 @@ func initTables() error {
 		&models.Token{},
 		&models.Host{},
 		&models.Disk{},
-		)
+	)
 	return err
 }
 
@@ -145,19 +146,66 @@ func initDataForDemo() {
 		{TenantId: tenant.ID, RoleId: role2.ID, PermissionId: permission1.ID, Status: 0},
 	})
 
-	// TODO 添加一些demo使用的host和disk数据
+	// 添加一些demo使用的host和disk数据
 	models.CreateHost(&models.Host{
-		Name: "主机1",
-		IP: "127.0.0.1",
+		Name:     "主机1",
+		IP:       "192.168.23.11",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 32,
+		Memory:   64,
+		Nic:      "1GE",
+		AZ:       "East China",
+		Rack:     "3-1",
+		Purpose:  "Compute",
 		Disks: []models.Disk{
-			{Path: "/gg", Capacity: 512},
+			{Name: "sdb", Path: "/data1", Capacity: 256, Status: 1},
+			{Name: "sdc", Path: "/data2", Capacity: 512, Status: 0},
+		},
+	})
+
+	models.CreateHost(&models.Host{
+		Name:     "主机2",
+		IP:       "192.168.23.12",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 64,
+		Memory:   128,
+		Nic:      "1GE",
+		AZ:       "East China",
+		Rack:     "3-2",
+		Purpose:  "Compute/Storage",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/mypath/data1", Capacity: 1024, Status: 0},
+			{Name: "sdc", Path: "/mypath/data2", Capacity: 1024, Status: 0},
+		},
+	})
+
+	models.CreateHost(&models.Host{
+		Name:     "主机3",
+		IP:       "192.168.23.13",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 16,
+		Memory:   16,
+		Nic:      "10GE",
+		AZ:       "East China",
+		Rack:     "3-3",
+		Purpose:  "Storage",
+		Disks: []models.Disk{
+			{Name: "nvme0p0", Path: "/root/disk1", Capacity: 1024, Status: 0},
+			{Name: "nvme0p1", Path: "/root/disk2", Capacity: 1024, Status: 0},
+			{Name: "nvme0p3", Path: "/root/disk3", Capacity: 1024, Status: 0},
 		},
 	})
 
 	return
 }
 
-func initUser(tenantId uint, name string) (uint) {
+func initUser(tenantId uint, name string) uint {
 
 	b := make([]byte, 16)
 	_, _ = cryrand.Read(b)

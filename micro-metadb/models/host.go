@@ -76,7 +76,7 @@ func CreateHostTable() (int32, error) {
 }
 
 func CreateHost(host *Host) (id string, err error) {
-	err = MetaDB.Create(&host).Error
+	err = MetaDB.Create(host).Error
 	if err != nil {
 		return
 	}

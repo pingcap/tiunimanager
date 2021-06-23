@@ -36,7 +36,7 @@ func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.AddHostRequest, 
 	if err != nil {
 		log.Fatalf("Failed to Import host %v to DB, err: %v", host.IP, err)
 		rsp.Rs.Code = 1
-		rsp.Rs.Msg = err.Error()
+		rsp.Rs.Message = err.Error()
 		return err
 	}
 	rsp.HostId = hostId
@@ -51,7 +51,7 @@ func (*DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.RemoveHostReq
 	if err != nil {
 		log.Fatalf("Failed to Delete host %v from DB, err: %v", hostId, err)
 		rsp.Rs.Code = 1
-		rsp.Rs.Msg = err.Error()
+		rsp.Rs.Message = err.Error()
 		return err
 	}
 	rsp.Rs.Code = 0
@@ -97,7 +97,7 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.CheckDetail
 	if err != nil {
 		log.Fatalf("Failed to Find host %v from DB, err: %v", req.HostId, err)
 		rsp.Rs.Code = 1
-		rsp.Rs.Msg = err.Error()
+		rsp.Rs.Message = err.Error()
 		return err
 	}
 	CopyHostInfo(host, rsp.Details)

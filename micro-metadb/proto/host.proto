@@ -4,7 +4,7 @@ option go_package = "./;db";
 
 message ResponseStatus {
     int32 code = 1;
-    string msg = 2;
+    string message = 2;
 }
 
 enum HostStatus {

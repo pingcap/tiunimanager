@@ -59,7 +59,7 @@ func ImportHost(ctx context.Context, in *hostPb.ImportHostRequest, out *hostPb.I
 	var err error
 	rsp, err := dbClient.DBClient.AddHost(ctx, &req)
 	out.Rs.Code = rsp.Rs.Code
-	out.Rs.Msg = rsp.Rs.Msg
+	out.Rs.Message = rsp.Rs.Message
 	if err != nil {
 		log.Fatal("Add Host Failed, err", err)
 		return err
@@ -73,7 +73,7 @@ func RemoveHost(ctx context.Context, in *hostPb.RemoveHostRequest, out *hostPb.R
 	req.HostId = in.HostId
 	rsp, err := dbClient.DBClient.RemoveHost(ctx, &req)
 	out.Rs.Code = rsp.Rs.Code
-	out.Rs.Msg = rsp.Rs.Msg
+	out.Rs.Message = rsp.Rs.Message
 	if err != nil {
 		log.Fatal("Remove Host Failed, err", err)
 		return err
@@ -87,7 +87,7 @@ func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.List
 	req.Status = dbPb.HostStatus(in.Status)
 	rsp, err := dbClient.DBClient.ListHost(ctx, &req)
 	out.Rs.Code = rsp.Rs.Code
-	out.Rs.Msg = rsp.Rs.Msg
+	out.Rs.Message = rsp.Rs.Message
 	if err != nil {
 		log.Fatal("List Host Failed, err", err)
 		return err
@@ -105,7 +105,7 @@ func CheckDetails(ctx context.Context, in *hostPb.CheckDetailsRequest, out *host
 	req.HostId = in.HostId
 	rsp, err := dbClient.DBClient.CheckDetails(ctx, &req)
 	out.Rs.Code = rsp.Rs.Code
-	out.Rs.Msg = rsp.Rs.Msg
+	out.Rs.Message = rsp.Rs.Message
 	if err != nil {
 		log.Fatal("Check Host", req.HostId, "Details Failed, err", err)
 		return err
@@ -120,7 +120,7 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 	req.TikvCount = in.TikvCount
 	rsp, err := dbClient.DBClient.AllocHosts(ctx, &req)
 	out.Rs.Code = rsp.Rs.Code
-	out.Rs.Msg = rsp.Rs.Msg
+	out.Rs.Message = rsp.Rs.Message
 	if err != nil {
 		log.Fatal("Alloc Hosts", req.PdCount, req.TidbCount, req.TikvCount, "Failed, err", err)
 		return err

@@ -42,11 +42,19 @@ func NewTiCPDBServiceEndpoints() []*api.Endpoint {
 // Client API for TiCPDBService service
 
 type TiCPDBService interface {
+	// Auth Module
 	FindTenant(ctx context.Context, in *FindTenantRequest, opts ...client.CallOption) (*FindTenantResponse, error)
 	FindAccount(ctx context.Context, in *FindAccountRequest, opts ...client.CallOption) (*FindAccountResponse, error)
 	SaveToken(ctx context.Context, in *SaveTokenRequest, opts ...client.CallOption) (*SaveTokenResponse, error)
 	FindToken(ctx context.Context, in *FindTokenRequest, opts ...client.CallOption) (*FindTokenResponse, error)
 	FindRolesByPermission(ctx context.Context, in *FindRolesByPermissionRequest, opts ...client.CallOption) (*FindRolesByPermissionResponse, error)
+	// Host Module
+	InitHostManager(ctx context.Context, in *InitHostManagerRequest, opts ...client.CallOption) (*InitHostManagerResponse, error)
+	AddHost(ctx context.Context, in *AddHostRequest, opts ...client.CallOption) (*AddHostResponse, error)
+	RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...client.CallOption) (*RemoveHostResponse, error)
+	ListHost(ctx context.Context, in *ListHostsRequest, opts ...client.CallOption) (*ListHostsResponse, error)
+	CheckDetails(ctx context.Context, in *CheckDetailsRequest, opts ...client.CallOption) (*CheckDetailsResponse, error)
+	AllocHosts(ctx context.Context, in *AllocHostsRequest, opts ...client.CallOption) (*AllocHostResponse, error)
 }
 
 type tiCPDBService struct {
@@ -111,14 +119,82 @@ func (c *tiCPDBService) FindRolesByPermission(ctx context.Context, in *FindRoles
 	return out, nil
 }
 
+func (c *tiCPDBService) InitHostManager(ctx context.Context, in *InitHostManagerRequest, opts ...client.CallOption) (*InitHostManagerResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.InitHostManager", in)
+	out := new(InitHostManagerResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) AddHost(ctx context.Context, in *AddHostRequest, opts ...client.CallOption) (*AddHostResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.AddHost", in)
+	out := new(AddHostResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...client.CallOption) (*RemoveHostResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.RemoveHost", in)
+	out := new(RemoveHostResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) ListHost(ctx context.Context, in *ListHostsRequest, opts ...client.CallOption) (*ListHostsResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.ListHost", in)
+	out := new(ListHostsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) CheckDetails(ctx context.Context, in *CheckDetailsRequest, opts ...client.CallOption) (*CheckDetailsResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.CheckDetails", in)
+	out := new(CheckDetailsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) AllocHosts(ctx context.Context, in *AllocHostsRequest, opts ...client.CallOption) (*AllocHostResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.AllocHosts", in)
+	out := new(AllocHostResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for TiCPDBService service
 
 type TiCPDBServiceHandler interface {
+	// Auth Module
 	FindTenant(context.Context, *FindTenantRequest, *FindTenantResponse) error
 	FindAccount(context.Context, *FindAccountRequest, *FindAccountResponse) error
 	SaveToken(context.Context, *SaveTokenRequest, *SaveTokenResponse) error
 	FindToken(context.Context, *FindTokenRequest, *FindTokenResponse) error
 	FindRolesByPermission(context.Context, *FindRolesByPermissionRequest, *FindRolesByPermissionResponse) error
+	// Host Module
+	InitHostManager(context.Context, *InitHostManagerRequest, *InitHostManagerResponse) error
+	AddHost(context.Context, *AddHostRequest, *AddHostResponse) error
+	RemoveHost(context.Context, *RemoveHostRequest, *RemoveHostResponse) error
+	ListHost(context.Context, *ListHostsRequest, *ListHostsResponse) error
+	CheckDetails(context.Context, *CheckDetailsRequest, *CheckDetailsResponse) error
+	AllocHosts(context.Context, *AllocHostsRequest, *AllocHostResponse) error
 }
 
 func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, opts ...server.HandlerOption) error {
@@ -128,6 +204,12 @@ func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, op
 		SaveToken(ctx context.Context, in *SaveTokenRequest, out *SaveTokenResponse) error
 		FindToken(ctx context.Context, in *FindTokenRequest, out *FindTokenResponse) error
 		FindRolesByPermission(ctx context.Context, in *FindRolesByPermissionRequest, out *FindRolesByPermissionResponse) error
+		InitHostManager(ctx context.Context, in *InitHostManagerRequest, out *InitHostManagerResponse) error
+		AddHost(ctx context.Context, in *AddHostRequest, out *AddHostResponse) error
+		RemoveHost(ctx context.Context, in *RemoveHostRequest, out *RemoveHostResponse) error
+		ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error
+		CheckDetails(ctx context.Context, in *CheckDetailsRequest, out *CheckDetailsResponse) error
+		AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error
 	}
 	type TiCPDBService struct {
 		tiCPDBService
@@ -158,4 +240,28 @@ func (h *tiCPDBServiceHandler) FindToken(ctx context.Context, in *FindTokenReque
 
 func (h *tiCPDBServiceHandler) FindRolesByPermission(ctx context.Context, in *FindRolesByPermissionRequest, out *FindRolesByPermissionResponse) error {
 	return h.TiCPDBServiceHandler.FindRolesByPermission(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) InitHostManager(ctx context.Context, in *InitHostManagerRequest, out *InitHostManagerResponse) error {
+	return h.TiCPDBServiceHandler.InitHostManager(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) AddHost(ctx context.Context, in *AddHostRequest, out *AddHostResponse) error {
+	return h.TiCPDBServiceHandler.AddHost(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) RemoveHost(ctx context.Context, in *RemoveHostRequest, out *RemoveHostResponse) error {
+	return h.TiCPDBServiceHandler.RemoveHost(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error {
+	return h.TiCPDBServiceHandler.ListHost(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) CheckDetails(ctx context.Context, in *CheckDetailsRequest, out *CheckDetailsResponse) error {
+	return h.TiCPDBServiceHandler.CheckDetails(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error {
+	return h.TiCPDBServiceHandler.AllocHosts(ctx, in, out)
 }

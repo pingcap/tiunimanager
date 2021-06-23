@@ -42,9 +42,16 @@ func NewTiCPManagerServiceEndpoints() []*api.Endpoint {
 // Client API for TiCPManagerService service
 
 type TiCPManagerService interface {
+	// Auth manager module
 	Login(ctx context.Context, in *LoginRequest, opts ...client.CallOption) (*LoginResponse, error)
 	Logout(ctx context.Context, in *LogoutRequest, opts ...client.CallOption) (*LogoutResponse, error)
 	VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, opts ...client.CallOption) (*VerifyIdentityResponse, error)
+	// host manager module
+	ImportHost(ctx context.Context, in *ImportHostRequest, opts ...client.CallOption) (*ImportHostResponse, error)
+	RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...client.CallOption) (*RemoveHostResponse, error)
+	ListHost(ctx context.Context, in *ListHostsRequest, opts ...client.CallOption) (*ListHostsResponse, error)
+	CheckDetails(ctx context.Context, in *CheckDetailsRequest, opts ...client.CallOption) (*CheckDetailsResponse, error)
+	AllocHosts(ctx context.Context, in *AllocHostsRequest, opts ...client.CallOption) (*AllocHostResponse, error)
 }
 
 type tiCPManagerService struct {
@@ -89,12 +96,69 @@ func (c *tiCPManagerService) VerifyIdentity(ctx context.Context, in *VerifyIdent
 	return out, nil
 }
 
+func (c *tiCPManagerService) ImportHost(ctx context.Context, in *ImportHostRequest, opts ...client.CallOption) (*ImportHostResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPManagerService.ImportHost", in)
+	out := new(ImportHostResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPManagerService) RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...client.CallOption) (*RemoveHostResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPManagerService.RemoveHost", in)
+	out := new(RemoveHostResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPManagerService) ListHost(ctx context.Context, in *ListHostsRequest, opts ...client.CallOption) (*ListHostsResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPManagerService.ListHost", in)
+	out := new(ListHostsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPManagerService) CheckDetails(ctx context.Context, in *CheckDetailsRequest, opts ...client.CallOption) (*CheckDetailsResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPManagerService.CheckDetails", in)
+	out := new(CheckDetailsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPManagerService) AllocHosts(ctx context.Context, in *AllocHostsRequest, opts ...client.CallOption) (*AllocHostResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPManagerService.AllocHosts", in)
+	out := new(AllocHostResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for TiCPManagerService service
 
 type TiCPManagerServiceHandler interface {
+	// Auth manager module
 	Login(context.Context, *LoginRequest, *LoginResponse) error
 	Logout(context.Context, *LogoutRequest, *LogoutResponse) error
 	VerifyIdentity(context.Context, *VerifyIdentityRequest, *VerifyIdentityResponse) error
+	// host manager module
+	ImportHost(context.Context, *ImportHostRequest, *ImportHostResponse) error
+	RemoveHost(context.Context, *RemoveHostRequest, *RemoveHostResponse) error
+	ListHost(context.Context, *ListHostsRequest, *ListHostsResponse) error
+	CheckDetails(context.Context, *CheckDetailsRequest, *CheckDetailsResponse) error
+	AllocHosts(context.Context, *AllocHostsRequest, *AllocHostResponse) error
 }
 
 func RegisterTiCPManagerServiceHandler(s server.Server, hdlr TiCPManagerServiceHandler, opts ...server.HandlerOption) error {
@@ -102,6 +166,11 @@ func RegisterTiCPManagerServiceHandler(s server.Server, hdlr TiCPManagerServiceH
 		Login(ctx context.Context, in *LoginRequest, out *LoginResponse) error
 		Logout(ctx context.Context, in *LogoutRequest, out *LogoutResponse) error
 		VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, out *VerifyIdentityResponse) error
+		ImportHost(ctx context.Context, in *ImportHostRequest, out *ImportHostResponse) error
+		RemoveHost(ctx context.Context, in *RemoveHostRequest, out *RemoveHostResponse) error
+		ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error
+		CheckDetails(ctx context.Context, in *CheckDetailsRequest, out *CheckDetailsResponse) error
+		AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error
 	}
 	type TiCPManagerService struct {
 		tiCPManagerService
@@ -124,4 +193,24 @@ func (h *tiCPManagerServiceHandler) Logout(ctx context.Context, in *LogoutReques
 
 func (h *tiCPManagerServiceHandler) VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, out *VerifyIdentityResponse) error {
 	return h.TiCPManagerServiceHandler.VerifyIdentity(ctx, in, out)
+}
+
+func (h *tiCPManagerServiceHandler) ImportHost(ctx context.Context, in *ImportHostRequest, out *ImportHostResponse) error {
+	return h.TiCPManagerServiceHandler.ImportHost(ctx, in, out)
+}
+
+func (h *tiCPManagerServiceHandler) RemoveHost(ctx context.Context, in *RemoveHostRequest, out *RemoveHostResponse) error {
+	return h.TiCPManagerServiceHandler.RemoveHost(ctx, in, out)
+}
+
+func (h *tiCPManagerServiceHandler) ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error {
+	return h.TiCPManagerServiceHandler.ListHost(ctx, in, out)
+}
+
+func (h *tiCPManagerServiceHandler) CheckDetails(ctx context.Context, in *CheckDetailsRequest, out *CheckDetailsResponse) error {
+	return h.TiCPManagerServiceHandler.CheckDetails(ctx, in, out)
+}
+
+func (h *tiCPManagerServiceHandler) AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error {
+	return h.TiCPManagerServiceHandler.AllocHosts(ctx, in, out)
 }

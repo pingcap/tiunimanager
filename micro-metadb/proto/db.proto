@@ -1,104 +1,24 @@
 syntax = "proto3";
 
+import "auth.proto";
+import "host.proto";
+
 option go_package = "./;db";
 
 // TiDB Cloud Platform database service
 service TiCPDBService {
+    // Auth Module
 	rpc FindTenant(FindTenantRequest) returns (FindTenantResponse);
 	rpc FindAccount(FindAccountRequest) returns (FindAccountResponse);
 	rpc SaveToken(SaveTokenRequest) returns (SaveTokenResponse);
 	rpc FindToken(FindTokenRequest) returns (FindTokenResponse);
 	rpc FindRolesByPermission(FindRolesByPermissionRequest) returns (FindRolesByPermissionResponse);
-}
 
-message DbResponseStatus {
-	int32 code = 1;
-	string message = 2;
-}
-
-message TenantDTO {
-	int32 id = 1;
-	string name = 2;
-	int32 type = 3;
-	int32 status = 4;
-}
-
-message FindTenantRequest {
-	string name = 1;
-}
-
-message FindTenantResponse {
-	DbResponseStatus status = 1;
-	TenantDTO tenant = 2;
-}
-
-message AccountDTO {
-	int32 id = 1;
-	int32 tenantId = 2;
-	string name = 3;
-	string salt = 4;
-	string finalHash = 5;
-	repeated RoleDTO roles= 6;
-}
-
-message FindAccountRequest {
-	string name = 1;
-	bool withRole = 2;
-}
-
-message FindAccountResponse {
-	DbResponseStatus status = 1;
-	AccountDTO account = 2;
-}
-
-message TokenDTO {
-	string tokenString = 1;
-	string accountName = 2;
-	int32 accountId = 3;
-	int32 tenantId = 4;
-	int64 expirationTime = 5;
-}
-
-message SaveTokenRequest {
-	TokenDTO token = 1;
-}
-
-message SaveTokenResponse {
-	DbResponseStatus status = 1;
-}
-
-message FindTokenRequest {
-	string tokenString = 1;
-}
-
-message FindTokenResponse {
-	DbResponseStatus status = 1;
-	TokenDTO token = 2;
-}
-
-message PermissionDTO {
-	int32 tenantId = 1;
-	string code = 2;
-	string name = 3;
-	int32 type = 4;
-	string desc = 5;
-	int32 status = 6;
-}
-
-message RoleDTO {
-	int32 tenantId = 1;
-	string name = 2;
-	string desc = 3;
-	int32 status = 4;
-}
-
-message FindRolesByPermissionRequest {
-	int32 tenantId = 1;
-	string code = 2;
-}
-
-message FindRolesByPermissionResponse {
-	DbResponseStatus status = 1;
-	PermissionDTO permission = 2;
-	repeated RoleDTO roles = 3;
+    // Host Module
+	rpc InitHostManager(InitHostManagerRequest) returns (InitHostManagerResponse);
+	rpc AddHost(AddHostRequest) returns (AddHostResponse);
+	rpc RemoveHost(RemoveHostRequest) returns (RemoveHostResponse);
+	rpc ListHost(ListHostsRequest) returns (ListHostsResponse);
+	rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
+	rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);
 }

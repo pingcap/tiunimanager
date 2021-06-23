@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+option go_package = "./;manager";
+
+message ResponseStatus {
+    int32 code = 1;
+    string msg = 2;
+}
+
+enum HostStatus {
+    ONLINE = 0;
+    OFFLINE = 1;
+}
+
+enum DiskStatus {
+    AVAILABLE = 0;              // This Disk can be alloced.
+    INUSED = 1;
+}
+
+message Disk {
+    string name = 1;            // [sda/sdb/nvmep0...]
+    int32 capacity = 2;         // Disk size, Unit: GB
+    string path = 3;            // Disk mount path: [/data1]
+    DiskStatus status = 4;
+}
+
+message HostInfo {
+    string hostName = 1;
+    string az = 2;
+    string rack = 3;
+    string ip = 4;
+    HostStatus status = 5;
+    string os = 6;              // Host os
+    string kernel = 7;
+    int32 cpuCores = 8;
+    int32 memory = 9;           // Host memory size, Unit:GB
+    string nic = 10;            // Host network type: 1GE or 10GE
+    string purpose = 11;        // What Purpose is the host used for? [compute/storage or both]
+    repeated Disk disks = 12;
+}
+
+message AllocHost {
+    string hostName = 1;
+    string ip = 2;
+    Disk disk = 3;
+}
+message ImportHostRequest {
+    HostInfo host = 1;
+}
+
+message ImportHostResponse {
+    ResponseStatus rs = 1;
+    string HostId = 2;
+}
+
+message RemoveHostRequest {
+    string hostId = 1;
+}
+
+message RemoveHostResponse {
+    ResponseStatus rs = 1;
+}
+
+message ListHostsRequest {
+    HostStatus status = 1;
+    string purpose = 2;
+}
+
+message ListHostsResponse {
+    ResponseStatus rs = 1;
+    repeated HostInfo hostList = 2;
+}
+
+message CheckDetailsRequest {
+    string hostId = 1;
+}
+
+message CheckDetailsResponse {
+    ResponseStatus rs = 1;
+    HostInfo details = 2;
+}
+
+message AllocHostsRequest {
+    int32 pdCount = 1;
+    int32 tidbCount = 2;
+    int32 tikvCount = 3;
+}
+
+message AllocHostResponse {
+    ResponseStatus rs = 1;
+    repeated AllocHost hosts = 2;
+}
+

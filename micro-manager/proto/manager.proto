@@ -1,46 +1,21 @@
 syntax = "proto3";
 
+import "auth.proto";
+import "host.proto";
+
 option go_package = "./;manager";
 
-message ManagerResponseStatus {
-    int32 code = 1;
-    string message = 2;
-}
-
 service TiCPManagerService {
+    // Auth manager module
     rpc Login(LoginRequest) returns (LoginResponse);
     rpc Logout(LogoutRequest) returns (LogoutResponse);
     rpc VerifyIdentity(VerifyIdentityRequest) returns (VerifyIdentityResponse);
+
+    // host manager module
+	rpc ImportHost(ImportHostRequest) returns (ImportHostResponse);
+	rpc RemoveHost(RemoveHostRequest) returns (RemoveHostResponse);
+	rpc ListHost(ListHostsRequest) returns (ListHostsResponse);
+	rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
+	rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);
 }
 
-message LoginRequest {
-    string accountName = 1;
-    string password = 2;
-}
-
-message LoginResponse {
-    ManagerResponseStatus status = 1;
-    string tokenString = 2;
-}
-
-message LogoutRequest {
-    string tokenString = 1;
-}
-
-message LogoutResponse {
-    ManagerResponseStatus status = 1;
-    string accountName = 2;
-}
-
-message VerifyIdentityRequest {
-    string tokenString = 1;
-    string path = 2;
-    string authType = 3;
-}
-
-message VerifyIdentityResponse {
-    ManagerResponseStatus status = 1;
-    string msg = 2;
-    string accountName = 3;
-    int32 tenantId = 4;
-}

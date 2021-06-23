@@ -15,7 +15,6 @@ service TiCPDBService {
 	rpc FindRolesByPermission(FindRolesByPermissionRequest) returns (FindRolesByPermissionResponse);
 
     // Host Module
-	rpc InitHostManager(InitHostManagerRequest) returns (InitHostManagerResponse);
 	rpc AddHost(AddHostRequest) returns (AddHostResponse);
 	rpc RemoveHost(RemoveHostRequest) returns (RemoveHostResponse);
 	rpc ListHost(ListHostsRequest) returns (ListHostsResponse);

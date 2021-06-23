@@ -45,13 +45,6 @@ message AllocHost {
     Disk disk = 3;
 }
 
-message InitHostManagerRequest {}
-
-message InitHostManagerResponse {
-	int32 builtCnt = 1;
-	ResponseStatus rs = 2;
-}
-
 message AddHostRequest {
     HostInfo host = 1;
 }

@@ -49,7 +49,6 @@ type TiCPDBService interface {
 	FindToken(ctx context.Context, in *FindTokenRequest, opts ...client.CallOption) (*FindTokenResponse, error)
 	FindRolesByPermission(ctx context.Context, in *FindRolesByPermissionRequest, opts ...client.CallOption) (*FindRolesByPermissionResponse, error)
 	// Host Module
-	InitHostManager(ctx context.Context, in *InitHostManagerRequest, opts ...client.CallOption) (*InitHostManagerResponse, error)
 	AddHost(ctx context.Context, in *AddHostRequest, opts ...client.CallOption) (*AddHostResponse, error)
 	RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...client.CallOption) (*RemoveHostResponse, error)
 	ListHost(ctx context.Context, in *ListHostsRequest, opts ...client.CallOption) (*ListHostsResponse, error)
@@ -119,16 +118,6 @@ func (c *tiCPDBService) FindRolesByPermission(ctx context.Context, in *FindRoles
 	return out, nil
 }
 
-func (c *tiCPDBService) InitHostManager(ctx context.Context, in *InitHostManagerRequest, opts ...client.CallOption) (*InitHostManagerResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPDBService.InitHostManager", in)
-	out := new(InitHostManagerResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *tiCPDBService) AddHost(ctx context.Context, in *AddHostRequest, opts ...client.CallOption) (*AddHostResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.AddHost", in)
 	out := new(AddHostResponse)
@@ -189,7 +178,6 @@ type TiCPDBServiceHandler interface {
 	FindToken(context.Context, *FindTokenRequest, *FindTokenResponse) error
 	FindRolesByPermission(context.Context, *FindRolesByPermissionRequest, *FindRolesByPermissionResponse) error
 	// Host Module
-	InitHostManager(context.Context, *InitHostManagerRequest, *InitHostManagerResponse) error
 	AddHost(context.Context, *AddHostRequest, *AddHostResponse) error
 	RemoveHost(context.Context, *RemoveHostRequest, *RemoveHostResponse) error
 	ListHost(context.Context, *ListHostsRequest, *ListHostsResponse) error
@@ -204,7 +192,6 @@ func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, op
 		SaveToken(ctx context.Context, in *SaveTokenRequest, out *SaveTokenResponse) error
 		FindToken(ctx context.Context, in *FindTokenRequest, out *FindTokenResponse) error
 		FindRolesByPermission(ctx context.Context, in *FindRolesByPermissionRequest, out *FindRolesByPermissionResponse) error
-		InitHostManager(ctx context.Context, in *InitHostManagerRequest, out *InitHostManagerResponse) error
 		AddHost(ctx context.Context, in *AddHostRequest, out *AddHostResponse) error
 		RemoveHost(ctx context.Context, in *RemoveHostRequest, out *RemoveHostResponse) error
 		ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error
@@ -240,10 +227,6 @@ func (h *tiCPDBServiceHandler) FindToken(ctx context.Context, in *FindTokenReque
 
 func (h *tiCPDBServiceHandler) FindRolesByPermission(ctx context.Context, in *FindRolesByPermissionRequest, out *FindRolesByPermissionResponse) error {
 	return h.TiCPDBServiceHandler.FindRolesByPermission(ctx, in, out)
-}
-
-func (h *tiCPDBServiceHandler) InitHostManager(ctx context.Context, in *InitHostManagerRequest, out *InitHostManagerResponse) error {
-	return h.TiCPDBServiceHandler.InitHostManager(ctx, in, out)
 }
 
 func (h *tiCPDBServiceHandler) AddHost(ctx context.Context, in *AddHostRequest, out *AddHostResponse) error {

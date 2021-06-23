@@ -80,9 +80,12 @@ func initSqliteDB() {
 	}
 	log.Info("sqlite.open success")
 
+	if models.MetaDB.Migrator().HasTable(&models.Tenant{}) {
+		
+	}
 	initTables()
-
-	initData()
+	
+	initDataForDemo()
 
 	tenant, err := models.FindTenantById(1)
 
@@ -99,11 +102,13 @@ func initTables() error {
 		&models.PermissionBinding{},
 		&models.RoleBinding{},
 		&models.Token{},
+		&models.Host{},
+		&models.Disk{},
 		)
 	return err
 }
 
-func initData() {
+func initDataForDemo() {
 	tenant, _ := models.AddTenant("Ticp系统管理", 1, 0)
 	fmt.Println("tenantId = ", tenant.ID)
 
@@ -119,8 +124,8 @@ func initData() {
 	userId2 := initUser(tenant.ID, "peijin")
 	fmt.Println("user2.Id = ", userId2)
 
-	nopermission := initUser(tenant.ID, "nopermission")
-	fmt.Println("user3.Id = ", nopermission)
+	userId3 := initUser(tenant.ID, "nopermission")
+	fmt.Println("user3.Id = ", userId3)
 
 	models.AddRoleBindings([]models.RoleBinding{
 		{TenantId: tenant.ID, RoleId: role1.ID, AccountId: userId1, Status: 0},
@@ -132,10 +137,21 @@ func initData() {
 	permission3, _ := models.AddPermission(tenant.ID, "/api/v1/instance/create", "创建集群", "创建集群", 2, 0)
 
 	models.AddPermissionBindings([]models.PermissionBinding{
+		// 管理员可做所有事
 		{TenantId: tenant.ID, RoleId: role1.ID, PermissionId: permission1.ID, Status: 0},
 		{TenantId: tenant.ID, RoleId: role1.ID, PermissionId: permission2.ID, Status: 0},
 		{TenantId: tenant.ID, RoleId: role1.ID, PermissionId: permission3.ID, Status: 0},
+		// 用户可做查询主机
 		{TenantId: tenant.ID, RoleId: role2.ID, PermissionId: permission1.ID, Status: 0},
+	})
+
+	// TODO 添加一些demo使用的host和disk数据
+	models.CreateHost(&models.Host{
+		Name: "主机1",
+		IP: "127.0.0.1",
+		Disks: []models.Disk{
+			{Path: "/gg", Capacity: 512},
+		},
 	})
 
 	return

@@ -9,17 +9,6 @@ import (
 	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
 )
 
-func (*DBServiceHandler) InitHostManager(ctx context.Context, req *dbPb.InitHostManagerRequest, rsp *dbPb.InitHostManagerResponse) error {
-	var builtCnt int32
-	var err error
-	if builtCnt, err = models.CreateHostTable(); err != nil {
-		rsp.Rs.Code = 1
-		rsp.Rs.Msg = err.Error()
-	}
-	rsp.BuiltCnt = builtCnt
-	return err
-}
-
 func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.AddHostRequest, rsp *dbPb.AddHostResponse) error {
 	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "AddHost"})
 	log := logger.WithContext(ctx)

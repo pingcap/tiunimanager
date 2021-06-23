@@ -1,12 +1,17 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
+	"log"
+	"net/http"
+
 	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
+	"github.com/asim/go-micro/v3/logger"
 	mlog "github.com/asim/go-micro/v3/logger"
 	"github.com/asim/go-micro/v3/transport"
 	mylogger "github.com/pingcap/ticp/addon/logger"
@@ -16,9 +21,8 @@ import (
 	"github.com/pingcap/ticp/micro-manager/service"
 	"github.com/pingcap/ticp/micro-manager/service/tenant/adapt"
 	dbclient "github.com/pingcap/ticp/micro-metadb/client"
+	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"log"
-	"net/http"
 )
 
 func initConfig() {
@@ -79,4 +83,18 @@ func initClient() {
 
 func initPort() {
 	adapt.InitMock()
+}
+
+func initHostManager() error {
+	var builtCnt int32
+	var err error
+	var req dbPb.InitHostManagerRequest
+	rsp, err := dbclient.DBClient.InitHostManager(context.TODO(), &req)
+	if err != nil {
+		logger.Fatal("Init HostManager Failed, err", err)
+		return err
+	}
+	builtCnt = rsp.BuiltCnt
+	logger.Info("Init HostManager Succeed,", builtCnt, "tables built")
+	return err
 }

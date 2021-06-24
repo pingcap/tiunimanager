@@ -13,13 +13,16 @@ type FlowWork struct {
 	context 	FlowContext
 }
 
-type FlowContext struct {}
-func (*FlowContext) Value(key interface{}) interface{} {
-	return nil
+type FlowContext map[interface{}]interface{}
+
+func (c FlowContext) Value(key interface{}) interface{} {
+	return c[key]
 }
 
-func (*FlowContext) Put(interface{}, interface{}) {
-
+// Put 向流程添加上下文变量
+// TODO 变量需要定义作用域，决定flowWork要不要存储它
+func (c FlowContext) Put(key interface{}, value interface{}) {
+	c[key] = value
 }
 
 func ClusterInitFlowWork() FlowWork {
@@ -68,11 +71,20 @@ type CronTask struct {
 type Task struct {
 	bizId 		string
 	// doing success fail
-	status 		int
-	taskType    string
-	parameter 	string
-	result 		string
-	retryTime	string
-	timeOut		time.Time
+	status 			int
+	taskType    	TaskType
+	taskCode		string
+	taskExecutor 	string
+	parameter 		string
+	result 			string
 }
+
+type TaskType int8
+
+const (
+	UserTaskType 		TaskType = 1 // 用户任务，如审批
+	SyncCallFuncTask 	TaskType = 2 // 立刻同步执行的方法，如申请主机
+	DelayedFuncTask 	TaskType = 3 // 延迟执行方法，如5分钟后检查审批状态
+	WaitNotifyTask		TaskType = 4 // 等待通知的任务，外部根据bizId来通知成功或失败
+)
 

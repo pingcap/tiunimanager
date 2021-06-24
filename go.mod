@@ -15,15 +15,15 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/micro/cli/v2 v2.1.2
 	github.com/opentracing/opentracing-go v1.2.0
-	github.com/prometheus/client_golang v1.10.0
+	github.com/pingcap/tiup v1.5.2
+	github.com/prometheus/client_golang v1.11.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.3.0
 	github.com/swaggo/swag v1.7.0
-	github.com/trustmaster/goflow v0.0.0-20210124103720-b48b2ee88975
 	github.com/uber/jaeger-client-go v2.29.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
-	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
+	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
 	google.golang.org/protobuf v1.26.0
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.10

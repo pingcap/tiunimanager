@@ -9,6 +9,28 @@ import (
 	manager "github.com/pingcap/ticp/micro-manager/proto"
 )
 
+// Query 查询主机接口
+// @Summary 查询主机接口
+// @Description 查询主机
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Param query body HostQuery true "查询请求"
+// @Param query body HostQuery true "查询请求"
+// @Success 200 {object} controller.ResultWithPage{data=[]DemoHostInfo}
+// @Router /host/query [post]
+func Query(c *gin.Context) {
+	var req HostQuery
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	hostInfos := make([]DemoHostInfo, 2, 2)
+	hostInfos[0] = DemoHostInfo{HostId: "first", HostName: "hh", HostIp: "127.0.0.1:1111"}
+	hostInfos[1] = DemoHostInfo{HostId: "second", HostName: "hh", HostIp: "127.0.0.1:2222"}
+	c.JSON(http.StatusOK, controller.SuccessWithPage(hostInfos, controller.Page{Page: 1, PageSize: 20, Total: 2}))
+}
+
 func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip

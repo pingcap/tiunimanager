@@ -23,7 +23,6 @@ import (
 )
 
 func initConfig() {
-
 	{
 		// only use to init the config
 		srv := micro.NewService(

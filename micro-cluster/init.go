@@ -23,16 +23,15 @@ import (
 
 func initConfig() {
 	{
-		//// only use to init the config
-		//srv := micro.NewService(
-		//	config.GetMicroCliArgsOption(),
-		//)
-		//srv.Init()
+		// only use to init the config
+		srv := micro.NewService(
+			config.GetMicroCliArgsOption(),
+		)
+		srv.Init()
 		config.Init()
-		//srv = nil
+		srv = nil
 	}
 }
-
 func initLogger() {
 	// log
 	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(mylogger.WithContext(nil)))

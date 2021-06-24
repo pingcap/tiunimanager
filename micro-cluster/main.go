@@ -7,7 +7,9 @@ import (
 func main() {
 	initConfig()
 	initLogger()
-	initPrometheus()
-	initService()
 	initClient()
+
+	initService()
+	//initPrometheus()
+
 }

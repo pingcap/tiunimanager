@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.26.0
 // 	protoc        v3.17.1
-// source: cluster.proto
+// source: db_cluster.proto
 
 package cluster
 
@@ -20,7 +20,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type ClusterResponseStatus struct {
+type TiDBClusterResponseStatus struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -29,8 +29,8 @@ type ClusterResponseStatus struct {
 	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 }
 
-func (x *ClusterResponseStatus) Reset() {
-	*x = ClusterResponseStatus{}
+func (x *TiDBClusterResponseStatus) Reset() {
+	*x = TiDBClusterResponseStatus{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cluster_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -38,13 +38,13 @@ func (x *ClusterResponseStatus) Reset() {
 	}
 }
 
-func (x *ClusterResponseStatus) String() string {
+func (x *TiDBClusterResponseStatus) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ClusterResponseStatus) ProtoMessage() {}
+func (*TiDBClusterResponseStatus) ProtoMessage() {}
 
-func (x *ClusterResponseStatus) ProtoReflect() protoreflect.Message {
+func (x *TiDBClusterResponseStatus) ProtoReflect() protoreflect.Message {
 	mi := &file_cluster_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -56,26 +56,26 @@ func (x *ClusterResponseStatus) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ClusterResponseStatus.ProtoReflect.Descriptor instead.
-func (*ClusterResponseStatus) Descriptor() ([]byte, []int) {
+// Deprecated: Use TiDBClusterResponseStatus.ProtoReflect.Descriptor instead.
+func (*TiDBClusterResponseStatus) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ClusterResponseStatus) GetCode() int32 {
+func (x *TiDBClusterResponseStatus) GetCode() int32 {
 	if x != nil {
 		return x.Code
 	}
 	return 0
 }
 
-func (x *ClusterResponseStatus) GetMessage() string {
+func (x *TiDBClusterResponseStatus) GetMessage() string {
 	if x != nil {
 		return x.Message
 	}
 	return ""
 }
 
-type CreateClusterRequest struct {
+type CreateTiDBClusterRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -83,8 +83,8 @@ type CreateClusterRequest struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (x *CreateClusterRequest) Reset() {
-	*x = CreateClusterRequest{}
+func (x *CreateTiDBClusterRequest) Reset() {
+	*x = CreateTiDBClusterRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cluster_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -92,13 +92,13 @@ func (x *CreateClusterRequest) Reset() {
 	}
 }
 
-func (x *CreateClusterRequest) String() string {
+func (x *CreateTiDBClusterRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateClusterRequest) ProtoMessage() {}
+func (*CreateTiDBClusterRequest) ProtoMessage() {}
 
-func (x *CreateClusterRequest) ProtoReflect() protoreflect.Message {
+func (x *CreateTiDBClusterRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_cluster_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -110,29 +110,29 @@ func (x *CreateClusterRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateClusterRequest.ProtoReflect.Descriptor instead.
-func (*CreateClusterRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateTiDBClusterRequest.ProtoReflect.Descriptor instead.
+func (*CreateTiDBClusterRequest) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateClusterRequest) GetName() string {
+func (x *CreateTiDBClusterRequest) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-type CreateClusterResponse struct {
+type CreateTiDBClusterResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Status *ClusterResponseStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	Id     int32                  `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	Status *TiDBClusterResponseStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Id     int32                      `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (x *CreateClusterResponse) Reset() {
-	*x = CreateClusterResponse{}
+func (x *CreateTiDBClusterResponse) Reset() {
+	*x = CreateTiDBClusterResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cluster_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -140,13 +140,13 @@ func (x *CreateClusterResponse) Reset() {
 	}
 }
 
-func (x *CreateClusterResponse) String() string {
+func (x *CreateTiDBClusterResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateClusterResponse) ProtoMessage() {}
+func (*CreateTiDBClusterResponse) ProtoMessage() {}
 
-func (x *CreateClusterResponse) ProtoReflect() protoreflect.Message {
+func (x *CreateTiDBClusterResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_cluster_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -158,19 +158,19 @@ func (x *CreateClusterResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateClusterResponse.ProtoReflect.Descriptor instead.
-func (*CreateClusterResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CreateTiDBClusterResponse.ProtoReflect.Descriptor instead.
+func (*CreateTiDBClusterResponse) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *CreateClusterResponse) GetStatus() *ClusterResponseStatus {
+func (x *CreateTiDBClusterResponse) GetStatus() *TiDBClusterResponseStatus {
 	if x != nil {
 		return x.Status
 	}
 	return nil
 }
 
-func (x *CreateClusterResponse) GetId() int32 {
+func (x *CreateTiDBClusterResponse) GetId() int32 {
 	if x != nil {
 		return x.Id
 	}
@@ -181,26 +181,28 @@ var File_cluster_proto protoreflect.FileDescriptor
 
 var file_cluster_proto_rawDesc = []byte{
 	0x0a, 0x0d, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
-	0x45, 0x0a, 0x15, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x18, 0x0a, 0x07,
-	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d,
-	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x2a, 0x0a, 0x14, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
-	0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12,
-	0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61,
-	0x6d, 0x65, 0x22, 0x57, 0x0a, 0x15, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6c, 0x75, 0x73,
-	0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x06, 0x73,
-	0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x43, 0x6c,
+	0x49, 0x0a, 0x19, 0x54, 0x69, 0x44, 0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x12, 0x0a, 0x04,
+	0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65,
+	0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x2e, 0x0a, 0x18, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x54, 0x69, 0x44, 0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x5f, 0x0a, 0x19, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x54, 0x69, 0x44, 0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75,
+	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x54, 0x69, 0x44, 0x42, 0x43, 0x6c,
 	0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61,
 	0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x0e, 0x0a, 0x02, 0x69,
-	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x02, 0x69, 0x64, 0x32, 0x54, 0x0a, 0x12, 0x54,
+	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x02, 0x69, 0x64, 0x32, 0x60, 0x0a, 0x12, 0x54,
 	0x69, 0x43, 0x50, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
-	0x65, 0x12, 0x3e, 0x0a, 0x0d, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6c, 0x75, 0x73, 0x74,
-	0x65, 0x72, 0x12, 0x15, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6c, 0x75, 0x73, 0x74,
-	0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x43, 0x72, 0x65, 0x61,
-	0x74, 0x65, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x42, 0x0c, 0x5a, 0x0a, 0x2e, 0x2f, 0x3b, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x12, 0x4a, 0x0a, 0x11, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x69, 0x44, 0x42, 0x43,
+	0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x12, 0x19, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54,
+	0x69, 0x44, 0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x1a, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x69, 0x44, 0x42, 0x43, 0x6c,
+	0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x0c, 0x5a,
+	0x0a, 0x2e, 0x2f, 0x3b, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -217,14 +219,14 @@ func file_cluster_proto_rawDescGZIP() []byte {
 
 var file_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_cluster_proto_goTypes = []interface{}{
-	(*ClusterResponseStatus)(nil), // 0: ClusterResponseStatus
-	(*CreateClusterRequest)(nil),  // 1: CreateClusterRequest
-	(*CreateClusterResponse)(nil), // 2: CreateClusterResponse
+	(*TiDBClusterResponseStatus)(nil), // 0: TiDBClusterResponseStatus
+	(*CreateTiDBClusterRequest)(nil),  // 1: CreateTiDBClusterRequest
+	(*CreateTiDBClusterResponse)(nil), // 2: CreateTiDBClusterResponse
 }
 var file_cluster_proto_depIdxs = []int32{
-	0, // 0: CreateClusterResponse.status:type_name -> ClusterResponseStatus
-	1, // 1: TiCPClusterService.CreateCluster:input_type -> CreateClusterRequest
-	2, // 2: TiCPClusterService.CreateCluster:output_type -> CreateClusterResponse
+	0, // 0: CreateTiDBClusterResponse.status:type_name -> TiDBClusterResponseStatus
+	1, // 1: TiCPClusterService.CreateTiDBCluster:input_type -> CreateTiDBClusterRequest
+	2, // 2: TiCPClusterService.CreateTiDBCluster:output_type -> CreateTiDBClusterResponse
 	2, // [2:3] is the sub-list for method output_type
 	1, // [1:2] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -239,7 +241,7 @@ func file_cluster_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_cluster_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClusterResponseStatus); i {
+			switch v := v.(*TiDBClusterResponseStatus); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -251,7 +253,7 @@ func file_cluster_proto_init() {
 			}
 		}
 		file_cluster_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateClusterRequest); i {
+			switch v := v.(*CreateTiDBClusterRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -263,7 +265,7 @@ func file_cluster_proto_init() {
 			}
 		}
 		file_cluster_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateClusterResponse); i {
+			switch v := v.(*CreateTiDBClusterResponse); i {
 			case 0:
 				return &v.state
 			case 1:

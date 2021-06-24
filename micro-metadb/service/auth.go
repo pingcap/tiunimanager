@@ -8,14 +8,14 @@ import (
 	proto "github.com/pingcap/ticp/micro-metadb/proto"
 )
 
-var SuccessResponseStatus = &proto.DbResponseStatus{Code: 0}
+var SuccessResponseStatus = &proto.DbAuthResponseStatus{Code: 0}
 
-func (*DBServiceHandler) FindTenant(cxt context.Context, req *proto.FindTenantRequest, resp *proto.FindTenantResponse) error {
+func (*DBServiceHandler) FindTenant(cxt context.Context, req *proto.DBFindTenantRequest, resp *proto.DBFindTenantResponse) error {
 	tenant, err := models.FindTenantByName(req.GetName())
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
-		resp.Tenant = &proto.TenantDTO{
+		resp.Tenant = &proto.DBTenantDTO{
 			Id:     int32(tenant.ID),
 			Name:   tenant.Name,
 			Type:   int32(tenant.Type),
@@ -28,13 +28,13 @@ func (*DBServiceHandler) FindTenant(cxt context.Context, req *proto.FindTenantRe
 
 	return nil
 }
-func (*DBServiceHandler) FindAccount(cxt context.Context, req *proto.FindAccountRequest, resp *proto.FindAccountResponse) error {
+func (*DBServiceHandler) FindAccount(cxt context.Context, req *proto.DBFindAccountRequest, resp *proto.DBFindAccountResponse) error {
 	account, err := models.FindAccount(req.GetName())
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
 
-		resp.Account = &proto.AccountDTO{
+		resp.Account = &proto.DBAccountDTO{
 			Id:        int32(account.ID),
 			TenantId:  int32(account.TenantId),
 			Name:      account.Name,
@@ -50,9 +50,9 @@ func (*DBServiceHandler) FindAccount(cxt context.Context, req *proto.FindAccount
 		roles, err := models.FetchAllRolesByAccount(account.TenantId, account.ID)
 
 		if err == nil {
-			roleDTOs := make([]*proto.RoleDTO, len(roles), cap(roles))
+			roleDTOs := make([]*proto.DBRoleDTO, len(roles), cap(roles))
 			for index, role := range roles {
-				roleDTOs[index] = &proto.RoleDTO{
+				roleDTOs[index] = &proto.DBRoleDTO{
 					TenantId: int32(role.TenantId),
 					Name:     role.Name,
 					Status:   int32(role.Status),
@@ -68,7 +68,7 @@ func (*DBServiceHandler) FindAccount(cxt context.Context, req *proto.FindAccount
 
 	return nil
 }
-func (*DBServiceHandler) SaveToken(cxt context.Context, req *proto.SaveTokenRequest, resp *proto.SaveTokenResponse) error {
+func (*DBServiceHandler) SaveToken(cxt context.Context, req *proto.DBSaveTokenRequest, resp *proto.DBSaveTokenResponse) error {
 	_, err := models.AddToken(req.Token.TokenString, req.Token.AccountName, req.Token.AccountId, req.Token.TenantId, time.Unix(req.Token.ExpirationTime, 0))
 
 	if err == nil {
@@ -79,12 +79,12 @@ func (*DBServiceHandler) SaveToken(cxt context.Context, req *proto.SaveTokenRequ
 	}
 	return nil
 }
-func (*DBServiceHandler) FindToken(cxt context.Context, req *proto.FindTokenRequest, resp *proto.FindTokenResponse) error {
+func (*DBServiceHandler) FindToken(cxt context.Context, req *proto.DBFindTokenRequest, resp *proto.DBFindTokenResponse) error {
 	token, err := models.FindToken(req.GetTokenString())
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
-		resp.Token = &proto.TokenDTO{
+		resp.Token = &proto.DBTokenDTO{
 			TokenString:    token.TokenString,
 			AccountId:      token.AccountId,
 			AccountName:    token.AccountName,
@@ -99,7 +99,7 @@ func (*DBServiceHandler) FindToken(cxt context.Context, req *proto.FindTokenRequ
 	return nil
 
 }
-func (*DBServiceHandler) FindRolesByPermission(cxt context.Context, req *proto.FindRolesByPermissionRequest, resp *proto.FindRolesByPermissionResponse) error {
+func (*DBServiceHandler) FindRolesByPermission(cxt context.Context, req *proto.DBFindRolesByPermissionRequest, resp *proto.DBFindRolesByPermissionResponse) error {
 	permissionDO, err := models.FetchPermission(uint(req.TenantId), req.Code)
 
 	if err != nil {
@@ -108,7 +108,7 @@ func (*DBServiceHandler) FindRolesByPermission(cxt context.Context, req *proto.F
 		return nil
 	}
 
-	resp.Permission = &proto.PermissionDTO{
+	resp.Permission = &proto.DBPermissionDTO{
 		TenantId: int32(permissionDO.TenantId),
 		Code:     permissionDO.Code,
 		Name:     permissionDO.Name,
@@ -124,9 +124,9 @@ func (*DBServiceHandler) FindRolesByPermission(cxt context.Context, req *proto.F
 		resp.Status.Message = err.Error()
 		return nil
 	} else {
-		roleDTOs := make([]*proto.RoleDTO, len(roles), cap(roles))
+		roleDTOs := make([]*proto.DBRoleDTO, len(roles), cap(roles))
 		for index, role := range roles {
-			roleDTOs[index] = &proto.RoleDTO{
+			roleDTOs[index] = &proto.DBRoleDTO{
 				TenantId: int32(role.TenantId),
 				Name:     role.Name,
 				Status:   int32(role.Status),

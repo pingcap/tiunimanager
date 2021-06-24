@@ -43,20 +43,20 @@ func NewTiCPDBServiceEndpoints() []*api.Endpoint {
 
 type TiCPDBService interface {
 	// Auth Module
-	FindTenant(ctx context.Context, in *FindTenantRequest, opts ...client.CallOption) (*FindTenantResponse, error)
-	FindAccount(ctx context.Context, in *FindAccountRequest, opts ...client.CallOption) (*FindAccountResponse, error)
-	SaveToken(ctx context.Context, in *SaveTokenRequest, opts ...client.CallOption) (*SaveTokenResponse, error)
-	FindToken(ctx context.Context, in *FindTokenRequest, opts ...client.CallOption) (*FindTokenResponse, error)
-	FindRolesByPermission(ctx context.Context, in *FindRolesByPermissionRequest, opts ...client.CallOption) (*FindRolesByPermissionResponse, error)
+	FindTenant(ctx context.Context, in *DBFindTenantRequest, opts ...client.CallOption) (*DBFindTenantResponse, error)
+	FindAccount(ctx context.Context, in *DBFindAccountRequest, opts ...client.CallOption) (*DBFindAccountResponse, error)
+	SaveToken(ctx context.Context, in *DBSaveTokenRequest, opts ...client.CallOption) (*DBSaveTokenResponse, error)
+	FindToken(ctx context.Context, in *DBFindTokenRequest, opts ...client.CallOption) (*DBFindTokenResponse, error)
+	FindRolesByPermission(ctx context.Context, in *DBFindRolesByPermissionRequest, opts ...client.CallOption) (*DBFindRolesByPermissionResponse, error)
 	// Host Module
-	AddHost(ctx context.Context, in *AddHostRequest, opts ...client.CallOption) (*AddHostResponse, error)
-	RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...client.CallOption) (*RemoveHostResponse, error)
-	ListHost(ctx context.Context, in *ListHostsRequest, opts ...client.CallOption) (*ListHostsResponse, error)
-	CheckDetails(ctx context.Context, in *CheckDetailsRequest, opts ...client.CallOption) (*CheckDetailsResponse, error)
-	AllocHosts(ctx context.Context, in *AllocHostsRequest, opts ...client.CallOption) (*AllocHostResponse, error)
-	AddCluster(ctx context.Context, in *CreateClusterRequest, opts ...client.CallOption) (*CreateClusterResponse, error)
-	FindCluster(ctx context.Context, in *FindClusterRequest, opts ...client.CallOption) (*FindClusterResponse, error)
-	UpdateTiUPConfig(ctx context.Context, in *UpdateTiUPConfigRequest, opts ...client.CallOption) (*UpdateTiUPConfigResponse, error)
+	AddHost(ctx context.Context, in *DBAddHostRequest, opts ...client.CallOption) (*DBAddHostResponse, error)
+	RemoveHost(ctx context.Context, in *DBRemoveHostRequest, opts ...client.CallOption) (*DBRemoveHostResponse, error)
+	ListHost(ctx context.Context, in *DBListHostsRequest, opts ...client.CallOption) (*DBListHostsResponse, error)
+	CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, opts ...client.CallOption) (*DBCheckDetailsResponse, error)
+	AllocHosts(ctx context.Context, in *DBAllocHostsRequest, opts ...client.CallOption) (*DBAllocHostResponse, error)
+	AddCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error)
+	FindCluster(ctx context.Context, in *DBFindClusterRequest, opts ...client.CallOption) (*DBFindClusterResponse, error)
+	UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, opts ...client.CallOption) (*DBUpdateTiUPConfigResponse, error)
 }
 
 type tiCPDBService struct {
@@ -71,9 +71,9 @@ func NewTiCPDBService(name string, c client.Client) TiCPDBService {
 	}
 }
 
-func (c *tiCPDBService) FindTenant(ctx context.Context, in *FindTenantRequest, opts ...client.CallOption) (*FindTenantResponse, error) {
+func (c *tiCPDBService) FindTenant(ctx context.Context, in *DBFindTenantRequest, opts ...client.CallOption) (*DBFindTenantResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.FindTenant", in)
-	out := new(FindTenantResponse)
+	out := new(DBFindTenantResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -81,9 +81,9 @@ func (c *tiCPDBService) FindTenant(ctx context.Context, in *FindTenantRequest, o
 	return out, nil
 }
 
-func (c *tiCPDBService) FindAccount(ctx context.Context, in *FindAccountRequest, opts ...client.CallOption) (*FindAccountResponse, error) {
+func (c *tiCPDBService) FindAccount(ctx context.Context, in *DBFindAccountRequest, opts ...client.CallOption) (*DBFindAccountResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.FindAccount", in)
-	out := new(FindAccountResponse)
+	out := new(DBFindAccountResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -91,9 +91,9 @@ func (c *tiCPDBService) FindAccount(ctx context.Context, in *FindAccountRequest,
 	return out, nil
 }
 
-func (c *tiCPDBService) SaveToken(ctx context.Context, in *SaveTokenRequest, opts ...client.CallOption) (*SaveTokenResponse, error) {
+func (c *tiCPDBService) SaveToken(ctx context.Context, in *DBSaveTokenRequest, opts ...client.CallOption) (*DBSaveTokenResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.SaveToken", in)
-	out := new(SaveTokenResponse)
+	out := new(DBSaveTokenResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -101,9 +101,9 @@ func (c *tiCPDBService) SaveToken(ctx context.Context, in *SaveTokenRequest, opt
 	return out, nil
 }
 
-func (c *tiCPDBService) FindToken(ctx context.Context, in *FindTokenRequest, opts ...client.CallOption) (*FindTokenResponse, error) {
+func (c *tiCPDBService) FindToken(ctx context.Context, in *DBFindTokenRequest, opts ...client.CallOption) (*DBFindTokenResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.FindToken", in)
-	out := new(FindTokenResponse)
+	out := new(DBFindTokenResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -111,9 +111,9 @@ func (c *tiCPDBService) FindToken(ctx context.Context, in *FindTokenRequest, opt
 	return out, nil
 }
 
-func (c *tiCPDBService) FindRolesByPermission(ctx context.Context, in *FindRolesByPermissionRequest, opts ...client.CallOption) (*FindRolesByPermissionResponse, error) {
+func (c *tiCPDBService) FindRolesByPermission(ctx context.Context, in *DBFindRolesByPermissionRequest, opts ...client.CallOption) (*DBFindRolesByPermissionResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.FindRolesByPermission", in)
-	out := new(FindRolesByPermissionResponse)
+	out := new(DBFindRolesByPermissionResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -121,9 +121,9 @@ func (c *tiCPDBService) FindRolesByPermission(ctx context.Context, in *FindRoles
 	return out, nil
 }
 
-func (c *tiCPDBService) AddHost(ctx context.Context, in *AddHostRequest, opts ...client.CallOption) (*AddHostResponse, error) {
+func (c *tiCPDBService) AddHost(ctx context.Context, in *DBAddHostRequest, opts ...client.CallOption) (*DBAddHostResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.AddHost", in)
-	out := new(AddHostResponse)
+	out := new(DBAddHostResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -131,9 +131,9 @@ func (c *tiCPDBService) AddHost(ctx context.Context, in *AddHostRequest, opts ..
 	return out, nil
 }
 
-func (c *tiCPDBService) RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...client.CallOption) (*RemoveHostResponse, error) {
+func (c *tiCPDBService) RemoveHost(ctx context.Context, in *DBRemoveHostRequest, opts ...client.CallOption) (*DBRemoveHostResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.RemoveHost", in)
-	out := new(RemoveHostResponse)
+	out := new(DBRemoveHostResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -141,9 +141,9 @@ func (c *tiCPDBService) RemoveHost(ctx context.Context, in *RemoveHostRequest, o
 	return out, nil
 }
 
-func (c *tiCPDBService) ListHost(ctx context.Context, in *ListHostsRequest, opts ...client.CallOption) (*ListHostsResponse, error) {
+func (c *tiCPDBService) ListHost(ctx context.Context, in *DBListHostsRequest, opts ...client.CallOption) (*DBListHostsResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.ListHost", in)
-	out := new(ListHostsResponse)
+	out := new(DBListHostsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -151,9 +151,9 @@ func (c *tiCPDBService) ListHost(ctx context.Context, in *ListHostsRequest, opts
 	return out, nil
 }
 
-func (c *tiCPDBService) CheckDetails(ctx context.Context, in *CheckDetailsRequest, opts ...client.CallOption) (*CheckDetailsResponse, error) {
+func (c *tiCPDBService) CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, opts ...client.CallOption) (*DBCheckDetailsResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.CheckDetails", in)
-	out := new(CheckDetailsResponse)
+	out := new(DBCheckDetailsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -161,9 +161,9 @@ func (c *tiCPDBService) CheckDetails(ctx context.Context, in *CheckDetailsReques
 	return out, nil
 }
 
-func (c *tiCPDBService) AllocHosts(ctx context.Context, in *AllocHostsRequest, opts ...client.CallOption) (*AllocHostResponse, error) {
+func (c *tiCPDBService) AllocHosts(ctx context.Context, in *DBAllocHostsRequest, opts ...client.CallOption) (*DBAllocHostResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.AllocHosts", in)
-	out := new(AllocHostResponse)
+	out := new(DBAllocHostResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -171,9 +171,9 @@ func (c *tiCPDBService) AllocHosts(ctx context.Context, in *AllocHostsRequest, o
 	return out, nil
 }
 
-func (c *tiCPDBService) AddCluster(ctx context.Context, in *CreateClusterRequest, opts ...client.CallOption) (*CreateClusterResponse, error) {
+func (c *tiCPDBService) AddCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.AddCluster", in)
-	out := new(CreateClusterResponse)
+	out := new(DBCreateClusterResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -181,9 +181,9 @@ func (c *tiCPDBService) AddCluster(ctx context.Context, in *CreateClusterRequest
 	return out, nil
 }
 
-func (c *tiCPDBService) FindCluster(ctx context.Context, in *FindClusterRequest, opts ...client.CallOption) (*FindClusterResponse, error) {
+func (c *tiCPDBService) FindCluster(ctx context.Context, in *DBFindClusterRequest, opts ...client.CallOption) (*DBFindClusterResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.FindCluster", in)
-	out := new(FindClusterResponse)
+	out := new(DBFindClusterResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -191,9 +191,9 @@ func (c *tiCPDBService) FindCluster(ctx context.Context, in *FindClusterRequest,
 	return out, nil
 }
 
-func (c *tiCPDBService) UpdateTiUPConfig(ctx context.Context, in *UpdateTiUPConfigRequest, opts ...client.CallOption) (*UpdateTiUPConfigResponse, error) {
+func (c *tiCPDBService) UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, opts ...client.CallOption) (*DBUpdateTiUPConfigResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.UpdateTiUPConfig", in)
-	out := new(UpdateTiUPConfigResponse)
+	out := new(DBUpdateTiUPConfigResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -205,37 +205,37 @@ func (c *tiCPDBService) UpdateTiUPConfig(ctx context.Context, in *UpdateTiUPConf
 
 type TiCPDBServiceHandler interface {
 	// Auth Module
-	FindTenant(context.Context, *FindTenantRequest, *FindTenantResponse) error
-	FindAccount(context.Context, *FindAccountRequest, *FindAccountResponse) error
-	SaveToken(context.Context, *SaveTokenRequest, *SaveTokenResponse) error
-	FindToken(context.Context, *FindTokenRequest, *FindTokenResponse) error
-	FindRolesByPermission(context.Context, *FindRolesByPermissionRequest, *FindRolesByPermissionResponse) error
+	FindTenant(context.Context, *DBFindTenantRequest, *DBFindTenantResponse) error
+	FindAccount(context.Context, *DBFindAccountRequest, *DBFindAccountResponse) error
+	SaveToken(context.Context, *DBSaveTokenRequest, *DBSaveTokenResponse) error
+	FindToken(context.Context, *DBFindTokenRequest, *DBFindTokenResponse) error
+	FindRolesByPermission(context.Context, *DBFindRolesByPermissionRequest, *DBFindRolesByPermissionResponse) error
 	// Host Module
-	AddHost(context.Context, *AddHostRequest, *AddHostResponse) error
-	RemoveHost(context.Context, *RemoveHostRequest, *RemoveHostResponse) error
-	ListHost(context.Context, *ListHostsRequest, *ListHostsResponse) error
-	CheckDetails(context.Context, *CheckDetailsRequest, *CheckDetailsResponse) error
-	AllocHosts(context.Context, *AllocHostsRequest, *AllocHostResponse) error
-	AddCluster(context.Context, *CreateClusterRequest, *CreateClusterResponse) error
-	FindCluster(context.Context, *FindClusterRequest, *FindClusterResponse) error
-	UpdateTiUPConfig(context.Context, *UpdateTiUPConfigRequest, *UpdateTiUPConfigResponse) error
+	AddHost(context.Context, *DBAddHostRequest, *DBAddHostResponse) error
+	RemoveHost(context.Context, *DBRemoveHostRequest, *DBRemoveHostResponse) error
+	ListHost(context.Context, *DBListHostsRequest, *DBListHostsResponse) error
+	CheckDetails(context.Context, *DBCheckDetailsRequest, *DBCheckDetailsResponse) error
+	AllocHosts(context.Context, *DBAllocHostsRequest, *DBAllocHostResponse) error
+	AddCluster(context.Context, *DBCreateClusterRequest, *DBCreateClusterResponse) error
+	FindCluster(context.Context, *DBFindClusterRequest, *DBFindClusterResponse) error
+	UpdateTiUPConfig(context.Context, *DBUpdateTiUPConfigRequest, *DBUpdateTiUPConfigResponse) error
 }
 
 func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, opts ...server.HandlerOption) error {
 	type tiCPDBService interface {
-		FindTenant(ctx context.Context, in *FindTenantRequest, out *FindTenantResponse) error
-		FindAccount(ctx context.Context, in *FindAccountRequest, out *FindAccountResponse) error
-		SaveToken(ctx context.Context, in *SaveTokenRequest, out *SaveTokenResponse) error
-		FindToken(ctx context.Context, in *FindTokenRequest, out *FindTokenResponse) error
-		FindRolesByPermission(ctx context.Context, in *FindRolesByPermissionRequest, out *FindRolesByPermissionResponse) error
-		AddHost(ctx context.Context, in *AddHostRequest, out *AddHostResponse) error
-		RemoveHost(ctx context.Context, in *RemoveHostRequest, out *RemoveHostResponse) error
-		ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error
-		CheckDetails(ctx context.Context, in *CheckDetailsRequest, out *CheckDetailsResponse) error
-		AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error
-		AddCluster(ctx context.Context, in *CreateClusterRequest, out *CreateClusterResponse) error
-		FindCluster(ctx context.Context, in *FindClusterRequest, out *FindClusterResponse) error
-		UpdateTiUPConfig(ctx context.Context, in *UpdateTiUPConfigRequest, out *UpdateTiUPConfigResponse) error
+		FindTenant(ctx context.Context, in *DBFindTenantRequest, out *DBFindTenantResponse) error
+		FindAccount(ctx context.Context, in *DBFindAccountRequest, out *DBFindAccountResponse) error
+		SaveToken(ctx context.Context, in *DBSaveTokenRequest, out *DBSaveTokenResponse) error
+		FindToken(ctx context.Context, in *DBFindTokenRequest, out *DBFindTokenResponse) error
+		FindRolesByPermission(ctx context.Context, in *DBFindRolesByPermissionRequest, out *DBFindRolesByPermissionResponse) error
+		AddHost(ctx context.Context, in *DBAddHostRequest, out *DBAddHostResponse) error
+		RemoveHost(ctx context.Context, in *DBRemoveHostRequest, out *DBRemoveHostResponse) error
+		ListHost(ctx context.Context, in *DBListHostsRequest, out *DBListHostsResponse) error
+		CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, out *DBCheckDetailsResponse) error
+		AllocHosts(ctx context.Context, in *DBAllocHostsRequest, out *DBAllocHostResponse) error
+		AddCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error
+		FindCluster(ctx context.Context, in *DBFindClusterRequest, out *DBFindClusterResponse) error
+		UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, out *DBUpdateTiUPConfigResponse) error
 	}
 	type TiCPDBService struct {
 		tiCPDBService
@@ -248,54 +248,54 @@ type tiCPDBServiceHandler struct {
 	TiCPDBServiceHandler
 }
 
-func (h *tiCPDBServiceHandler) FindTenant(ctx context.Context, in *FindTenantRequest, out *FindTenantResponse) error {
+func (h *tiCPDBServiceHandler) FindTenant(ctx context.Context, in *DBFindTenantRequest, out *DBFindTenantResponse) error {
 	return h.TiCPDBServiceHandler.FindTenant(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) FindAccount(ctx context.Context, in *FindAccountRequest, out *FindAccountResponse) error {
+func (h *tiCPDBServiceHandler) FindAccount(ctx context.Context, in *DBFindAccountRequest, out *DBFindAccountResponse) error {
 	return h.TiCPDBServiceHandler.FindAccount(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) SaveToken(ctx context.Context, in *SaveTokenRequest, out *SaveTokenResponse) error {
+func (h *tiCPDBServiceHandler) SaveToken(ctx context.Context, in *DBSaveTokenRequest, out *DBSaveTokenResponse) error {
 	return h.TiCPDBServiceHandler.SaveToken(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) FindToken(ctx context.Context, in *FindTokenRequest, out *FindTokenResponse) error {
+func (h *tiCPDBServiceHandler) FindToken(ctx context.Context, in *DBFindTokenRequest, out *DBFindTokenResponse) error {
 	return h.TiCPDBServiceHandler.FindToken(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) FindRolesByPermission(ctx context.Context, in *FindRolesByPermissionRequest, out *FindRolesByPermissionResponse) error {
+func (h *tiCPDBServiceHandler) FindRolesByPermission(ctx context.Context, in *DBFindRolesByPermissionRequest, out *DBFindRolesByPermissionResponse) error {
 	return h.TiCPDBServiceHandler.FindRolesByPermission(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) AddHost(ctx context.Context, in *AddHostRequest, out *AddHostResponse) error {
+func (h *tiCPDBServiceHandler) AddHost(ctx context.Context, in *DBAddHostRequest, out *DBAddHostResponse) error {
 	return h.TiCPDBServiceHandler.AddHost(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) RemoveHost(ctx context.Context, in *RemoveHostRequest, out *RemoveHostResponse) error {
+func (h *tiCPDBServiceHandler) RemoveHost(ctx context.Context, in *DBRemoveHostRequest, out *DBRemoveHostResponse) error {
 	return h.TiCPDBServiceHandler.RemoveHost(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error {
+func (h *tiCPDBServiceHandler) ListHost(ctx context.Context, in *DBListHostsRequest, out *DBListHostsResponse) error {
 	return h.TiCPDBServiceHandler.ListHost(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) CheckDetails(ctx context.Context, in *CheckDetailsRequest, out *CheckDetailsResponse) error {
+func (h *tiCPDBServiceHandler) CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, out *DBCheckDetailsResponse) error {
 	return h.TiCPDBServiceHandler.CheckDetails(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error {
+func (h *tiCPDBServiceHandler) AllocHosts(ctx context.Context, in *DBAllocHostsRequest, out *DBAllocHostResponse) error {
 	return h.TiCPDBServiceHandler.AllocHosts(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) AddCluster(ctx context.Context, in *CreateClusterRequest, out *CreateClusterResponse) error {
+func (h *tiCPDBServiceHandler) AddCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error {
 	return h.TiCPDBServiceHandler.AddCluster(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) FindCluster(ctx context.Context, in *FindClusterRequest, out *FindClusterResponse) error {
+func (h *tiCPDBServiceHandler) FindCluster(ctx context.Context, in *DBFindClusterRequest, out *DBFindClusterResponse) error {
 	return h.TiCPDBServiceHandler.FindCluster(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) UpdateTiUPConfig(ctx context.Context, in *UpdateTiUPConfigRequest, out *UpdateTiUPConfigResponse) error {
+func (h *tiCPDBServiceHandler) UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, out *DBUpdateTiUPConfigResponse) error {
 	return h.TiCPDBServiceHandler.UpdateTiUPConfig(ctx, in, out)
 }

@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+option go_package = "./;db";
+
+message DbAuthResponseStatus {
+	int32 code = 1;
+	string message = 2;
+}
+
+message DBTenantDTO {
+	int32 id = 1;
+	string name = 2;
+	int32 type = 3;
+	int32 status = 4;
+}
+
+message DBFindTenantRequest {
+	string name = 1;
+}
+
+message DBFindTenantResponse {
+	DbAuthResponseStatus status = 1;
+	DBTenantDTO tenant = 2;
+}
+
+message DBAccountDTO {
+	int32 id = 1;
+	int32 tenantId = 2;
+	string name = 3;
+	string salt = 4;
+	string finalHash = 5;
+	repeated DBRoleDTO roles= 6;
+}
+
+message DBFindAccountRequest {
+	string name = 1;
+	bool withRole = 2;
+}
+
+message DBFindAccountResponse {
+	DbAuthResponseStatus status = 1;
+	DBAccountDTO account = 2;
+}
+
+message DBTokenDTO {
+	string tokenString = 1;
+	string accountName = 2;
+	int32 accountId = 3;
+	int32 tenantId = 4;
+	int64 expirationTime = 5;
+}
+
+message DBSaveTokenRequest {
+	DBTokenDTO token = 1;
+}
+
+message DBSaveTokenResponse {
+	DbAuthResponseStatus status = 1;
+}
+
+message DBFindTokenRequest {
+	string tokenString = 1;
+}
+
+message DBFindTokenResponse {
+	DbAuthResponseStatus status = 1;
+	DBTokenDTO token = 2;
+}
+
+message DBPermissionDTO {
+	int32 tenantId = 1;
+	string code = 2;
+	string name = 3;
+	int32 type = 4;
+	string desc = 5;
+	int32 status = 6;
+}
+
+message DBRoleDTO {
+	int32 tenantId = 1;
+	string name = 2;
+	string desc = 3;
+	int32 status = 4;
+}
+
+message DBFindRolesByPermissionRequest {
+	int32 tenantId = 1;
+	string code = 2;
+}
+
+message DBFindRolesByPermissionResponse {
+	DbAuthResponseStatus status = 1;
+	DBPermissionDTO permission = 2;
+	repeated DBRoleDTO roles = 3;
+}

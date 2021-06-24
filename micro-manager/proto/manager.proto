@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-import "auth.proto";
-import "host.proto";
+import "mng_auth.proto";
+import "mng_host.proto";
 
 option go_package = "./;manager";
 

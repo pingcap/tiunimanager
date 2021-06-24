@@ -7,9 +7,9 @@ import (
 	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
 )
 
-var ClusterSuccessResponseStatus =  &dbPb.ClusterResponseStatus{Code: 0}
+var ClusterSuccessResponseStatus =  &dbPb.DBClusterResponseStatus{Code: 0}
 
-func (*DBServiceHandler) AddCluster(ctx context.Context, req *dbPb.CreateClusterRequest, resp *dbPb.CreateClusterResponse) error {
+func (*DBServiceHandler) AddCluster(ctx context.Context, req *dbPb.DBCreateClusterRequest, resp *dbPb.DBCreateClusterResponse) error {
 	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "AddCluster"})
 
 	dto := req.Cluster
@@ -28,14 +28,14 @@ func (*DBServiceHandler) AddCluster(ctx context.Context, req *dbPb.CreateCluster
 		resp.Status.Message = err.Error()
 	} else {
 		resp.Status = ClusterSuccessResponseStatus
-		clusterDTO := new(dbPb.ClusterDTO)
+		clusterDTO := new(dbPb.DBClusterDTO)
 		copyClusterModelToDTO(clusterModel, clusterDTO)
 		resp.Cluster = clusterDTO
 	}
 	return nil
 }
 
-func (*DBServiceHandler) FindCluster(ctx context.Context, req *dbPb.FindClusterRequest, resp *dbPb.FindClusterResponse) error {
+func (*DBServiceHandler) FindCluster(ctx context.Context, req *dbPb.DBFindClusterRequest, resp *dbPb.DBFindClusterResponse) error {
 	clusterModel, err := models.FetchCluster(uint(req.ClusterId))
 	if err != nil {
 		resp.Status.Code = 1
@@ -43,7 +43,7 @@ func (*DBServiceHandler) FindCluster(ctx context.Context, req *dbPb.FindClusterR
 		return nil
 	}
 
-	clusterDTO := new(dbPb.ClusterDTO)
+	clusterDTO := new(dbPb.DBClusterDTO)
 	copyClusterModelToDTO(clusterModel, clusterDTO)
 	resp.Cluster = clusterDTO
 	if clusterModel.ConfigID <= 0 {
@@ -56,7 +56,7 @@ func (*DBServiceHandler) FindCluster(ctx context.Context, req *dbPb.FindClusterR
 		resp.Status.Message = err.Error()
 		return nil
 	} else {
-		configDTO := new(dbPb.TiUPConfigDTO)
+		configDTO := new(dbPb.DBTiUPConfigDTO)
 		copyConfigModelToDTO(configModel, configDTO)
 		resp.Config = configDTO
 
@@ -64,7 +64,7 @@ func (*DBServiceHandler) FindCluster(ctx context.Context, req *dbPb.FindClusterR
 	}
 }
 
-func (*DBServiceHandler) UpdateTiUPConfig(ctx context.Context, req *dbPb.UpdateTiUPConfigRequest, resp *dbPb.UpdateTiUPConfigResponse) error {
+func (*DBServiceHandler) UpdateTiUPConfig(ctx context.Context, req *dbPb.DBUpdateTiUPConfigRequest, resp *dbPb.DBUpdateTiUPConfigResponse) error {
 	clusterModel, configModel, err := models.UpdateClusterTiUPConfig(uint(req.GetClusterId()), req.GetConfigContent())
 
 	if err != nil {
@@ -72,11 +72,11 @@ func (*DBServiceHandler) UpdateTiUPConfig(ctx context.Context, req *dbPb.UpdateT
 		resp.Status.Message = err.Error()
 		return nil
 	} else {
-		clusterDTO := new(dbPb.ClusterDTO)
+		clusterDTO := new(dbPb.DBClusterDTO)
 		copyClusterModelToDTO(clusterModel, clusterDTO)
 		resp.Cluster = clusterDTO
 
-		configDTO := new(dbPb.TiUPConfigDTO)
+		configDTO := new(dbPb.DBTiUPConfigDTO)
 		copyConfigModelToDTO(configModel, configDTO)
 		resp.Config = configDTO
 
@@ -84,7 +84,7 @@ func (*DBServiceHandler) UpdateTiUPConfig(ctx context.Context, req *dbPb.UpdateT
 	}
 }
 
-func copyClusterModelToDTO(model *models.Cluster, dto *dbPb.ClusterDTO) {
+func copyClusterModelToDTO(model *models.Cluster, dto *dbPb.DBClusterDTO) {
 	dto.Id = int32( model.ID)
 	dto.TenantId = int32(model.TenantId)
 	dto.Name = model.Name
@@ -96,7 +96,7 @@ func copyClusterModelToDTO(model *models.Cluster, dto *dbPb.ClusterDTO) {
 	dto.PdCount = 	int32(model.PdCount)
 }
 
-func copyConfigModelToDTO(model *models.TiUPConfig, dto *dbPb.TiUPConfigDTO) {
+func copyConfigModelToDTO(model *models.TiUPConfig, dto *dbPb.DBTiUPConfigDTO) {
 	dto.Id = int32(model.ID)
 	dto.TenantId = int32(model.TenantId)
 	dto.ClusterId = int32(model.ClusterId)

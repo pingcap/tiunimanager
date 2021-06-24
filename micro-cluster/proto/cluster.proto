@@ -2,21 +2,20 @@ syntax = "proto3";
 
 option go_package = "./;cluster";
 
-message ClusterResponseStatus {
+message TiDBClusterResponseStatus {
     int32 code = 1;
     string message = 2;
 }
 
 service TiCPClusterService {
-    rpc CreateCluster(CreateClusterRequest) returns (CreateClusterResponse);
+    rpc CreateTiDBCluster(CreateTiDBClusterRequest) returns (CreateTiDBClusterResponse);
 }
 
-message CreateClusterRequest {
+message CreateTiDBClusterRequest {
     string name = 1;
 }
 
-message CreateClusterResponse {
-    ClusterResponseStatus status = 1;
+message CreateTiDBClusterResponse {
+    TiDBClusterResponseStatus status = 1;
     int32 id = 2;
-
 }

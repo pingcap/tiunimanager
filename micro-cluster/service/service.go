@@ -7,11 +7,11 @@ import (
 
 var TiCPClusterServiceName = "go.micro.ticp.cluster"
 
-var SuccessResponseStatus = &cluster.ClusterResponseStatus {Code:0}
+var SuccessResponseStatus = &cluster.TiDBClusterResponseStatus {Code:0}
 
 type ClusterServiceHandler struct {}
 
-func (c ClusterServiceHandler) CreateCluster(ctx context.Context, request *cluster.CreateClusterRequest, response *cluster.CreateClusterResponse) error {
+func (c ClusterServiceHandler) CreateTiDBCluster(ctx context.Context, request *cluster.CreateTiDBClusterRequest, response *cluster.CreateTiDBClusterResponse) error {
 	panic("implement me")
 }
 

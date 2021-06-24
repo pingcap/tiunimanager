@@ -1,29 +1,29 @@
 syntax = "proto3";
 
-import "auth.proto";
-import "host.proto";
-import "cluster.proto";
+import "db_auth.proto";
+import "db_host.proto";
+import "db_cluster.proto";
 
 option go_package = "./;db";
 
 // TiDB Cloud Platform database service
 service TiCPDBService {
     // Auth Module
-	rpc FindTenant(FindTenantRequest) returns (FindTenantResponse);
-	rpc FindAccount(FindAccountRequest) returns (FindAccountResponse);
-	rpc SaveToken(SaveTokenRequest) returns (SaveTokenResponse);
-	rpc FindToken(FindTokenRequest) returns (FindTokenResponse);
-	rpc FindRolesByPermission(FindRolesByPermissionRequest) returns (FindRolesByPermissionResponse);
+	rpc FindTenant(DBFindTenantRequest) returns (DBFindTenantResponse);
+	rpc FindAccount(DBFindAccountRequest) returns (DBFindAccountResponse);
+	rpc SaveToken(DBSaveTokenRequest) returns (DBSaveTokenResponse);
+	rpc FindToken(DBFindTokenRequest) returns (DBFindTokenResponse);
+	rpc FindRolesByPermission(DBFindRolesByPermissionRequest) returns (DBFindRolesByPermissionResponse);
 
     // Host Module
-	rpc AddHost(AddHostRequest) returns (AddHostResponse);
-	rpc RemoveHost(RemoveHostRequest) returns (RemoveHostResponse);
-	rpc ListHost(ListHostsRequest) returns (ListHostsResponse);
-	rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
-	rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);
+	rpc AddHost(DBAddHostRequest) returns (DBAddHostResponse);
+	rpc RemoveHost(DBRemoveHostRequest) returns (DBRemoveHostResponse);
+	rpc ListHost(DBListHostsRequest) returns (DBListHostsResponse);
+	rpc CheckDetails(DBCheckDetailsRequest) returns (DBCheckDetailsResponse);
+	rpc AllocHosts(DBAllocHostsRequest) returns (DBAllocHostResponse);
 
-	rpc AddCluster(CreateClusterRequest) returns (CreateClusterResponse);
-	rpc FindCluster(FindClusterRequest) returns (FindClusterResponse);
-	rpc UpdateTiUPConfig(UpdateTiUPConfigRequest) returns (UpdateTiUPConfigResponse);
+	rpc AddCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);
+	rpc FindCluster(DBFindClusterRequest) returns (DBFindClusterResponse);
+	rpc UpdateTiUPConfig(DBUpdateTiUPConfigRequest) returns (DBUpdateTiUPConfigResponse);
 
 }

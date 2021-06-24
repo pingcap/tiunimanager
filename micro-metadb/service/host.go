@@ -9,7 +9,7 @@ import (
 	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
 )
 
-func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.AddHostRequest, rsp *dbPb.AddHostResponse) error {
+func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest, rsp *dbPb.DBAddHostResponse) error {
 	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "AddHost"})
 	log := logger.WithContext(ctx)
 	var host models.Host
@@ -43,7 +43,7 @@ func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.AddHostRequest, 
 	rsp.Rs.Code = 0
 	return nil
 }
-func (*DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.RemoveHostRequest, rsp *dbPb.RemoveHostResponse) error {
+func (*DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRemoveHostRequest, rsp *dbPb.DBRemoveHostResponse) error {
 	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "RemoveHost"})
 	log := logger.WithContext(ctx)
 	hostId := req.HostId
@@ -58,7 +58,7 @@ func (*DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.RemoveHostReq
 	return nil
 }
 
-func CopyHostInfo(src *models.Host, dst *dbPb.HostInfo) {
+func CopyHostInfo(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.HostName = src.Name
 	dst.Ip = src.IP
 	dst.Os = src.OS
@@ -68,29 +68,29 @@ func CopyHostInfo(src *models.Host, dst *dbPb.HostInfo) {
 	dst.Nic = src.Nic
 	dst.Az = src.AZ
 	dst.Rack = src.Rack
-	dst.Status = dbPb.HostStatus(src.Status)
+	dst.Status = dbPb.DBHostStatus(src.Status)
 	dst.Purpose = src.Purpose
 	for _, disk := range src.Disks {
-		dst.Disks = append(dst.Disks, &dbPb.Disk{
+		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
-			Status:   dbPb.DiskStatus(disk.Status),
+			Status:   dbPb.DBDiskStatus(disk.Status),
 		})
 	}
 }
 
-func (*DBServiceHandler) ListHost(ctx context.Context, req *dbPb.ListHostsRequest, rsp *dbPb.ListHostsResponse) error {
+func (*DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListHostsRequest, rsp *dbPb.DBListHostsResponse) error {
 	// TODO: proto3 does not support `optional` by now
 	hosts, _ := models.ListHosts()
 	for _, v := range hosts {
-		var host dbPb.HostInfo
+		var host dbPb.DBHostInfoDTO
 		CopyHostInfo(&v, &host)
 		rsp.HostList = append(rsp.HostList, &host)
 	}
 	return nil
 }
-func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.CheckDetailsRequest, rsp *dbPb.CheckDetailsResponse) error {
+func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDetailsRequest, rsp *dbPb.DBCheckDetailsResponse) error {
 	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "CheckDetails"})
 	log := logger.WithContext(ctx)
 	host, err := models.FindHostById(req.HostId)
@@ -103,19 +103,19 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.CheckDetail
 	CopyHostInfo(host, rsp.Details)
 	return err
 }
-func (*DBServiceHandler) AllocHosts(ctx context.Context, req *dbPb.AllocHostsRequest, rsp *dbPb.AllocHostResponse) error {
+func (*DBServiceHandler) AllocHosts(ctx context.Context, req *dbPb.DBAllocHostsRequest, rsp *dbPb.DBAllocHostResponse) error {
 	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "AllocHosts"})
 	log := logger.WithContext(ctx)
 	log.Infof("DB Service Receive Alloc Host Request, pd %d, tidb %d, tikv %d", req.PdCount, req.TidbCount, req.TikvCount)
 	hosts, _ := models.AllocHosts()
 	for _, v := range hosts {
-		var host dbPb.AllocHost
+		var host dbPb.DBAllocHostDTO
 		host.HostName = v.Name
 		host.Ip = v.IP
 		host.Disk.Name = v.Disks[0].Name
 		host.Disk.Capacity = v.Disks[0].Capacity
 		host.Disk.Path = v.Disks[0].Path
-		host.Disk.Status = dbPb.DiskStatus(v.Disks[0].Status)
+		host.Disk.Status = dbPb.DBDiskStatus(v.Disks[0].Status)
 		rsp.Hosts = append(rsp.Hosts, &host)
 	}
 	return nil

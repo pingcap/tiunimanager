@@ -8,13 +8,13 @@ message DBHostResponseStatus {
 }
 
 enum DBHostStatus {
-    ONLINE = 0;
-    OFFLINE = 1;
+    DBHostStatus_ONLINE = 0;
+    DBHostStatus_OFFLINE = 1;
 }
 
 enum DBDiskStatus {
-    AVAILABLE = 0;              // This Disk can be alloced.
-    INUSED = 1;
+    DBDiskStatus_AVAILABLE = 0;              // This Disk can be alloced.
+    DBDiskStatus_INUSED = 1;
 }
 
 message DBDiskDTO {

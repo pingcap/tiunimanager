@@ -9,7 +9,7 @@ import (
 	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
 )
 
-func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.HostInfo) {
+func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
 	dst.Os = src.Os
@@ -19,19 +19,19 @@ func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.HostInfo) {
 	dst.Nic = src.Nic
 	dst.Az = src.Az
 	dst.Rack = src.Rack
-	dst.Status = dbPb.HostStatus(src.Status)
+	dst.Status = dbPb.DBHostStatus(src.Status)
 	dst.Purpose = src.Purpose
 	for _, disk := range src.Disks {
-		dst.Disks = append(dst.Disks, &dbPb.Disk{
+		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
-			Status:   dbPb.DiskStatus(disk.Status),
+			Status:   dbPb.DBDiskStatus(disk.Status),
 		})
 	}
 }
 
-func CopyHostFromDBRsp(src *dbPb.HostInfo, dst *hostPb.HostInfo) {
+func CopyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
 	dst.Os = src.Os
@@ -54,7 +54,7 @@ func CopyHostFromDBRsp(src *dbPb.HostInfo, dst *hostPb.HostInfo) {
 }
 
 func ImportHost(ctx context.Context, in *hostPb.ImportHostRequest, out *hostPb.ImportHostResponse) error {
-	var req dbPb.AddHostRequest
+	var req dbPb.DBAddHostRequest
 	CopyHostToDBReq(in.Host, req.Host)
 	var err error
 	rsp, err := dbClient.DBClient.AddHost(ctx, &req)
@@ -69,7 +69,7 @@ func ImportHost(ctx context.Context, in *hostPb.ImportHostRequest, out *hostPb.I
 }
 
 func RemoveHost(ctx context.Context, in *hostPb.RemoveHostRequest, out *hostPb.RemoveHostResponse) error {
-	var req dbPb.RemoveHostRequest
+	var req dbPb.DBRemoveHostRequest
 	req.HostId = in.HostId
 	rsp, err := dbClient.DBClient.RemoveHost(ctx, &req)
 	out.Rs.Code = rsp.Rs.Code
@@ -82,9 +82,9 @@ func RemoveHost(ctx context.Context, in *hostPb.RemoveHostRequest, out *hostPb.R
 }
 
 func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.ListHostsResponse) error {
-	var req dbPb.ListHostsRequest
+	var req dbPb.DBListHostsRequest
 	req.Purpose = in.Purpose
-	req.Status = dbPb.HostStatus(in.Status)
+	req.Status = dbPb.DBHostStatus(in.Status)
 	rsp, err := dbClient.DBClient.ListHost(ctx, &req)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
@@ -101,7 +101,7 @@ func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.List
 }
 
 func CheckDetails(ctx context.Context, in *hostPb.CheckDetailsRequest, out *hostPb.CheckDetailsResponse) error {
-	var req dbPb.CheckDetailsRequest
+	var req dbPb.DBCheckDetailsRequest
 	req.HostId = in.HostId
 	rsp, err := dbClient.DBClient.CheckDetails(ctx, &req)
 	out.Rs.Code = rsp.Rs.Code
@@ -114,7 +114,7 @@ func CheckDetails(ctx context.Context, in *hostPb.CheckDetailsRequest, out *host
 }
 
 func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.AllocHostResponse) error {
-	var req dbPb.AllocHostsRequest
+	var req dbPb.DBAllocHostsRequest
 	req.PdCount = in.PdCount
 	req.TidbCount = in.TidbCount
 	req.TikvCount = in.TikvCount

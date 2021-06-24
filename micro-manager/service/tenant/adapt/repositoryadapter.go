@@ -13,7 +13,7 @@ type MockRepo struct{}
 type MicroMetaDbRepo struct {}
 
 func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId uint, code string) (p domain.PermissionAggregation, err error) {
-	req := db.FindRolesByPermissionRequest{
+	req := db.DBFindRolesByPermissionRequest{
 		TenantId: int32(tenantId),
 		Code: code,
 	}
@@ -57,7 +57,7 @@ func (m MicroMetaDbRepo) LoadPermission(tenantId uint, code string) (domain.Perm
 }
 
 func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account domain.AccountAggregation, err error) {
-	req := db.FindAccountRequest{
+	req := db.DBFindAccountRequest{
 		Name: name,
 		WithRole: true,
 	}
@@ -96,8 +96,8 @@ func (m MicroMetaDbRepo) Provide(tiCPToken *domain.TiCPToken) (tokenString strin
 	// 提供token
 	tokenString = tiCPToken.AccountName
 
-	req := db.SaveTokenRequest{
-		Token: &db.TokenDTO{
+	req := db.DBSaveTokenRequest{
+		Token: &db.DBTokenDTO{
 			TenantId: int32(tiCPToken.TenantId),
 			AccountId: int32(tiCPToken.AccountId),
 			AccountName: tiCPToken.AccountName,
@@ -112,8 +112,8 @@ func (m MicroMetaDbRepo) Provide(tiCPToken *domain.TiCPToken) (tokenString strin
 }
 
 func (m MicroMetaDbRepo) Modify(tiCPToken *domain.TiCPToken) error {
-	req := db.SaveTokenRequest{
-		Token: &db.TokenDTO{
+	req := db.DBSaveTokenRequest{
+		Token: &db.DBTokenDTO{
 			TenantId: int32(tiCPToken.TenantId),
 			AccountId: int32(tiCPToken.AccountId),
 			AccountName: tiCPToken.AccountName,
@@ -128,7 +128,7 @@ func (m MicroMetaDbRepo) Modify(tiCPToken *domain.TiCPToken) error {
 }
 
 func (m MicroMetaDbRepo) GetToken(tokenString string) (token domain.TiCPToken, err error) {
-	req := db.FindTokenRequest{
+	req := db.DBFindTokenRequest{
 		TokenString: tokenString,
 	}
 
@@ -165,7 +165,7 @@ func (m MicroMetaDbRepo) AddAccount(a *domain.Account) error {
 }
 
 func (m MicroMetaDbRepo) LoadAccountByName(name string) (account domain.Account, err error) {
-	req := db.FindAccountRequest{
+	req := db.DBFindAccountRequest{
 		Name: name,
 		WithRole: false,
 	}

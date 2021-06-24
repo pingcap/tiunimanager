@@ -105,6 +105,8 @@ func initTables() error {
 		&models.Token{},
 		&models.Host{},
 		&models.Disk{},
+		&models.Cluster{},
+		&models.TiUPConfig{},
 	)
 	return err
 }

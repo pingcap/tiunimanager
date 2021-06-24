@@ -54,6 +54,9 @@ type TiCPDBService interface {
 	ListHost(ctx context.Context, in *ListHostsRequest, opts ...client.CallOption) (*ListHostsResponse, error)
 	CheckDetails(ctx context.Context, in *CheckDetailsRequest, opts ...client.CallOption) (*CheckDetailsResponse, error)
 	AllocHosts(ctx context.Context, in *AllocHostsRequest, opts ...client.CallOption) (*AllocHostResponse, error)
+	AddCluster(ctx context.Context, in *CreateClusterRequest, opts ...client.CallOption) (*CreateClusterResponse, error)
+	FindCluster(ctx context.Context, in *FindClusterRequest, opts ...client.CallOption) (*FindClusterResponse, error)
+	UpdateTiUPConfig(ctx context.Context, in *UpdateTiUPConfigRequest, opts ...client.CallOption) (*UpdateTiUPConfigResponse, error)
 }
 
 type tiCPDBService struct {
@@ -168,6 +171,36 @@ func (c *tiCPDBService) AllocHosts(ctx context.Context, in *AllocHostsRequest, o
 	return out, nil
 }
 
+func (c *tiCPDBService) AddCluster(ctx context.Context, in *CreateClusterRequest, opts ...client.CallOption) (*CreateClusterResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.AddCluster", in)
+	out := new(CreateClusterResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) FindCluster(ctx context.Context, in *FindClusterRequest, opts ...client.CallOption) (*FindClusterResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.FindCluster", in)
+	out := new(FindClusterResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) UpdateTiUPConfig(ctx context.Context, in *UpdateTiUPConfigRequest, opts ...client.CallOption) (*UpdateTiUPConfigResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.UpdateTiUPConfig", in)
+	out := new(UpdateTiUPConfigResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for TiCPDBService service
 
 type TiCPDBServiceHandler interface {
@@ -183,6 +216,9 @@ type TiCPDBServiceHandler interface {
 	ListHost(context.Context, *ListHostsRequest, *ListHostsResponse) error
 	CheckDetails(context.Context, *CheckDetailsRequest, *CheckDetailsResponse) error
 	AllocHosts(context.Context, *AllocHostsRequest, *AllocHostResponse) error
+	AddCluster(context.Context, *CreateClusterRequest, *CreateClusterResponse) error
+	FindCluster(context.Context, *FindClusterRequest, *FindClusterResponse) error
+	UpdateTiUPConfig(context.Context, *UpdateTiUPConfigRequest, *UpdateTiUPConfigResponse) error
 }
 
 func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, opts ...server.HandlerOption) error {
@@ -197,6 +233,9 @@ func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, op
 		ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error
 		CheckDetails(ctx context.Context, in *CheckDetailsRequest, out *CheckDetailsResponse) error
 		AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error
+		AddCluster(ctx context.Context, in *CreateClusterRequest, out *CreateClusterResponse) error
+		FindCluster(ctx context.Context, in *FindClusterRequest, out *FindClusterResponse) error
+		UpdateTiUPConfig(ctx context.Context, in *UpdateTiUPConfigRequest, out *UpdateTiUPConfigResponse) error
 	}
 	type TiCPDBService struct {
 		tiCPDBService
@@ -247,4 +286,16 @@ func (h *tiCPDBServiceHandler) CheckDetails(ctx context.Context, in *CheckDetail
 
 func (h *tiCPDBServiceHandler) AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error {
 	return h.TiCPDBServiceHandler.AllocHosts(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) AddCluster(ctx context.Context, in *CreateClusterRequest, out *CreateClusterResponse) error {
+	return h.TiCPDBServiceHandler.AddCluster(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) FindCluster(ctx context.Context, in *FindClusterRequest, out *FindClusterResponse) error {
+	return h.TiCPDBServiceHandler.FindCluster(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) UpdateTiUPConfig(ctx context.Context, in *UpdateTiUPConfigRequest, out *UpdateTiUPConfigResponse) error {
+	return h.TiCPDBServiceHandler.UpdateTiUPConfig(ctx, in, out)
 }

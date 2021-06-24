@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "auth.proto";
 import "host.proto";
+import "cluster.proto";
 
 option go_package = "./;db";
 
@@ -20,4 +21,9 @@ service TiCPDBService {
 	rpc ListHost(ListHostsRequest) returns (ListHostsResponse);
 	rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
 	rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);
+
+	rpc AddCluster(CreateClusterRequest) returns (CreateClusterResponse);
+	rpc FindCluster(FindClusterRequest) returns (FindClusterResponse);
+	rpc UpdateTiUPConfig(UpdateTiUPConfigRequest) returns (UpdateTiUPConfigResponse);
+
 }

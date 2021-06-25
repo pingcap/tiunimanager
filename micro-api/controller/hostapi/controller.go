@@ -143,7 +143,7 @@ func ListHost(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param hostId body string true "主机ID"
+// @Param hostId path string true "主机ID"
 // @Success 200 {object} controller.CommonResult{data=HostInfo}
 // @Router /host/ [get]
 func HostDetails(c *gin.Context) {

@@ -55,9 +55,11 @@ func CopyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 
 func ImportHost(ctx context.Context, in *hostPb.ImportHostRequest, out *hostPb.ImportHostResponse) error {
 	var req dbPb.DBAddHostRequest
+	req.Host = new(dbPb.DBHostInfoDTO)
 	CopyHostToDBReq(in.Host, req.Host)
 	var err error
 	rsp, err := dbClient.DBClient.AddHost(ctx, &req)
+	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if err != nil {
@@ -72,6 +74,7 @@ func RemoveHost(ctx context.Context, in *hostPb.RemoveHostRequest, out *hostPb.R
 	var req dbPb.DBRemoveHostRequest
 	req.HostId = in.HostId
 	rsp, err := dbClient.DBClient.RemoveHost(ctx, &req)
+	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if err != nil {
@@ -86,6 +89,7 @@ func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.List
 	req.Purpose = in.Purpose
 	req.Status = dbPb.DBHostStatus(in.Status)
 	rsp, err := dbClient.DBClient.ListHost(ctx, &req)
+	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if err != nil {
@@ -104,12 +108,15 @@ func CheckDetails(ctx context.Context, in *hostPb.CheckDetailsRequest, out *host
 	var req dbPb.DBCheckDetailsRequest
 	req.HostId = in.HostId
 	rsp, err := dbClient.DBClient.CheckDetails(ctx, &req)
+	out.Details = new(hostPb.HostInfo)
+	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if err != nil {
 		log.Fatal("Check Host", req.HostId, "Details Failed, err", err)
 		return err
 	}
+	CopyHostFromDBRsp(rsp.Details, out.Details)
 	return err
 }
 
@@ -119,6 +126,7 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 	req.TidbCount = in.TidbCount
 	req.TikvCount = in.TikvCount
 	rsp, err := dbClient.DBClient.AllocHosts(ctx, &req)
+	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if err != nil {

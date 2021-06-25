@@ -33,6 +33,7 @@ func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest
 		})
 	}
 	hostId, err := models.CreateHost(&host)
+	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		log.Fatalf("Failed to Import host %v to DB, err: %v", host.IP, err)
 		rsp.Rs.Code = 1
@@ -48,6 +49,7 @@ func (*DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRemoveHostR
 	log := logger.WithContext(ctx)
 	hostId := req.HostId
 	err := models.DeleteHost(hostId)
+	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		log.Fatalf("Failed to Delete host %v from DB, err: %v", hostId, err)
 		rsp.Rs.Code = 1
@@ -83,6 +85,7 @@ func CopyHostInfo(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 func (*DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListHostsRequest, rsp *dbPb.DBListHostsResponse) error {
 	// TODO: proto3 does not support `optional` by now
 	hosts, _ := models.ListHosts()
+	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	for _, v := range hosts {
 		var host dbPb.DBHostInfoDTO
 		CopyHostInfo(&v, &host)
@@ -94,12 +97,14 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDeta
 	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "CheckDetails"})
 	log := logger.WithContext(ctx)
 	host, err := models.FindHostById(req.HostId)
+	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		log.Fatalf("Failed to Find host %v from DB, err: %v", req.HostId, err)
 		rsp.Rs.Code = 1
 		rsp.Rs.Message = err.Error()
 		return err
 	}
+	rsp.Details = new(dbPb.DBHostInfoDTO)
 	CopyHostInfo(host, rsp.Details)
 	return err
 }
@@ -108,6 +113,7 @@ func (*DBServiceHandler) AllocHosts(ctx context.Context, req *dbPb.DBAllocHostsR
 	log := logger.WithContext(ctx)
 	log.Infof("DB Service Receive Alloc Host Request, pd %d, tidb %d, tikv %d", req.PdCount, req.TidbCount, req.TikvCount)
 	hosts, _ := models.AllocHosts()
+	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	for _, v := range hosts {
 		var host dbPb.DBAllocHostDTO
 		host.HostName = v.Name

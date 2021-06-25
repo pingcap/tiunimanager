@@ -83,7 +83,7 @@ func Accessible(pathType string, path string, tokenString string) (tenantId uint
 	}
 
 	if !ok {
-		err = &UnauthorizedError{}
+		err = &ForbiddenError{}
 	}
 
 	return

@@ -25,13 +25,14 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *cluster.C
 		resp.Status.Message = err.Error()
 	} else {
 		resp.Status = SuccessResponseStatus
-		resp.Cluster = convert(cluster)
+		c := convert(cluster)
+		resp.Cluster = &c
 	}
 
 	return nil
 }
 
-func convert(cluster *clustermanage.Cluster) (dto *cluster.ClusterInfoDTO) {
+func convert(cluster *clustermanage.Cluster) (dto cluster.ClusterInfoDTO) {
 	dto.Id = int32(cluster.Id)
 	dto.Name = cluster.Name
 	dto.Version = string(cluster.Version)
@@ -45,5 +46,18 @@ func convert(cluster *clustermanage.Cluster) (dto *cluster.ClusterInfoDTO) {
 }
 
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, request *cluster.QueryClusterRequest, resp *cluster.QueryClusterResponse) error {
-	panic("implement me")
+	clusters, err := clustermanage.QueryCluster(int(request.Page.Page), int(request.Page.PageSize))
+
+	if err != nil {
+		resp.Status = BizErrorResponseStatus
+		resp.Status.Message = err.Error()
+	} else {
+		resp.Status = SuccessResponseStatus
+		resp.Clusters = make([]*cluster.ClusterInfoDTO, len(clusters), cap(clusters))
+		for index,c := range clusters {
+			cDTO := convert(c)
+			resp.Clusters[index] = &cDTO
+		}
+	}
+	return nil
 }

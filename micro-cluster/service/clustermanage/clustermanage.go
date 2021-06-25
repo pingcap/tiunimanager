@@ -167,3 +167,21 @@ func (cluster *Cluster) CheckTiUPResult(f *FlowWork) {
 	// todo 异步轮询韩森提供的接口？
 	f.moveOn("tiUPDone")
 }
+
+func QueryCluster(page, pageSize int) (clusters []*Cluster, err error) {
+	resp, err := dbClient.DBClient.ListCluster(context.TODO(), &dbPb.DBListClusterRequest{
+		Page: 		int32(page),
+		PageSize: 	int32(pageSize),
+	})
+
+	if err != nil {
+
+	}
+
+	for _, c := range resp.Clusters {
+		cluster := new(Cluster)
+		copyClusterDbDtoToDomain(c, cluster)
+		clusters = append(clusters, cluster)
+	}
+	return
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/config"
 
@@ -11,7 +12,7 @@ import (
 )
 
 type Disk struct {
-	ID        string `gorm:"PRIMARY_KEY;default:uuid_generate_v3()"`
+	ID        string `gorm:"PrimaryKey"`
 	HostId    string
 	Name      string `gorm:"size:255"`
 	Capacity  int32
@@ -22,9 +23,13 @@ type Disk struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
+func (d *Disk) BeforeCreate(tx *gorm.DB) (err error) {
+	d.ID = uuid.New().String()
+	return nil
+}
 
 type Host struct {
-	ID        string `gorm:"PrimaryKey;default:uuid_generate_v3()"`
+	ID        string `gorm:"PrimaryKey"`
 	IP        string `gorm:"size:32"`
 	Name      string `gorm:"size:255"`
 	Status    int32  `gorm:"size:32"`
@@ -40,6 +45,11 @@ type Host struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
+	h.ID = uuid.New().String()
+	return nil
 }
 
 func CreateHostTable() (int32, error) {

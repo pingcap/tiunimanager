@@ -13,6 +13,7 @@ require (
 	github.com/asim/go-micro/v3 v3.5.1
 	github.com/gin-gonic/gin v1.7.2
 	github.com/golang/protobuf v1.5.2
+	github.com/google/uuid v1.2.0
 	github.com/micro/cli/v2 v2.1.2
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/tiup v1.5.2

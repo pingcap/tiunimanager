@@ -88,7 +88,7 @@ func CreateHost(host *Host) (id string, err error) {
 
 // TODO: Check Record before delete
 func DeleteHost(hostId string) (err error) {
-	MetaDB.Where("UUID = ?", hostId).Delete(&Host{})
+	MetaDB.Where("ID = ?", hostId).Delete(&Host{})
 	return nil
 }
 
@@ -99,7 +99,7 @@ func ListHosts() (hosts []Host, err error) {
 
 func FindHostById(hostId string) (*Host, error) {
 	host := new(Host)
-	MetaDB.First(host, hostId)
+	MetaDB.First(host, "ID = ?", hostId)
 
 	return host, nil
 }

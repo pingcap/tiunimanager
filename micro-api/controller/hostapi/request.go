@@ -30,6 +30,6 @@ type HostInfo struct {
 }
 
 type ListHostCondition struct {
-	Status  int32  `json:"status"` // Host Status, 0 for Online, 1 for offline
-	Purpose string `json:"purpos"` // What Purpose is the host used for? [compute/storage or both]
+	Status  int32  `json:"status"`  // Host Status, 0 for Online, 1 for offline
+	Purpose string `json:"purpose"` // What Purpose is the host used for? [compute/storage or both]
 }

@@ -20,6 +20,6 @@ func Route(g *gin.Engine) {
 	g.POST("/api/v1/host/query", security.VerifyIdentity, hostapi.Query)
 	g.POST("/api/v1/host", security.VerifyIdentity, hostapi.ImportHost)
 	g.GET("/api/v1/hosts", security.VerifyIdentity, hostapi.ListHost)
-	g.GET("/api/v1/host", security.VerifyIdentity, hostapi.HostDetails)
+	g.GET("/api/v1/host/:hostId", security.VerifyIdentity, hostapi.HostDetails)
 	g.DELETE("/api/v1/host", security.VerifyIdentity, hostapi.RemoveHost)
 }

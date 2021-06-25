@@ -148,7 +148,7 @@ func ListHost(c *gin.Context) {
 // @Router /host/ [get]
 func HostDetails(c *gin.Context) {
 
-	hostId := c.Query("hostId")
+	hostId := c.Param("hostId")
 
 	HostDetailsReq := manager.CheckDetailsRequest{
 		HostId: hostId,

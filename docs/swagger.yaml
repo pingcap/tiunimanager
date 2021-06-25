@@ -29,7 +29,7 @@ definitions:
       page:
         $ref: '#/definitions/controller.Page'
     type: object
-  hostapi.HostInfo:
+  hostapi.DemoHostInfo:
     properties:
       hostId:
         type: string
@@ -38,11 +38,68 @@ definitions:
       hostName:
         type: string
     type: object
+  hostapi.Disk:
+    properties:
+      capacity:
+        description: 'Disk size, Unit: GB'
+        type: integer
+      name:
+        description: '[sda/sdb/nvmep0...]'
+        type: string
+      path:
+        description: 'Disk mount path: [/data1]'
+        type: string
+      status:
+        description: Disk Status, 0 for available, 1 for inused
+        type: integer
+    type: object
+  hostapi.HostInfo:
+    properties:
+      az:
+        type: string
+      cpuCores:
+        type: integer
+      disks:
+        items:
+          $ref: '#/definitions/hostapi.Disk'
+        type: array
+      hostName:
+        type: string
+      ip:
+        type: string
+      kernel:
+        type: string
+      memory:
+        description: Host memory size, Unit:GB
+        type: integer
+      nic:
+        description: 'Host network type: 1GE or 10GE'
+        type: string
+      os:
+        type: string
+      purpos:
+        description: What Purpose is the host used for? [compute/storage or both]
+        type: string
+      rack:
+        type: string
+      status:
+        description: Host Status, 0 for Online, 1 for offline
+        type: integer
+    type: object
   hostapi.HostQuery:
     properties:
       page:
         type: integer
       pageSize:
+        type: integer
+    type: object
+  hostapi.ListHostCondition:
+    properties:
+      purpos:
+        description: What Purpose is the host used for? [compute/storage or both]
+        type: string
+      status:
+        description: Host Status, 0 for Online, 1 for offline
         type: integer
     type: object
   instanceapi.InstanceCreate:
@@ -69,7 +126,7 @@ definitions:
       instanceStatus:
         type: integer
       instanceVersion:
-        type: integer
+        type: string
     type: object
   instanceapi.InstanceQuery:
     properties:
@@ -107,17 +164,107 @@ info:
   title: TiCP UI API
   version: "1.0"
 paths:
-  /host/query:
+  /host:
     post:
       consumes:
       - application/json
-      description: 查询主机
+      description: 将给定的主机信息导入TiCP
       parameters:
       - description: 登录token
         in: header
         name: Token
         required: true
         type: string
+      - description: 待导入的主机信息
+        in: body
+        name: host
+        required: true
+        schema:
+          $ref: '#/definitions/hostapi.HostInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 导入主机接口
+      tags:
+      - resource
+  /host/:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 待删除的主机ID
+        in: body
+        name: hostId
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 删除指定的主机
+      tags:
+      - resource
+    get:
+      consumes:
+      - application/json
+      description: 展示指定的主机的详细信息
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 主机ID
+        in: body
+        name: hostId
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/hostapi.HostInfo'
+              type: object
+      summary: 查询主机详情
+      tags:
+      - resource
+  /host/query:
+    post:
+      consumes:
+      - application/json
+      description: 查询主机
+      parameters:
       - description: 查询请求
         in: body
         name: query
@@ -135,10 +282,44 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/hostapi.HostInfo'
+                    $ref: '#/definitions/hostapi.DemoHostInfo'
                   type: array
               type: object
       summary: 查询主机接口
+      tags:
+      - resource
+  /hosts:
+    get:
+      consumes:
+      - application/json
+      description: 展示目前所有主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 可选的查询主机的条件
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/hostapi.ListHostCondition'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/hostapi.HostInfo'
+                  type: array
+              type: object
+      summary: 查询主机列表
       tags:
       - resource
   /instance/create:

@@ -29,7 +29,7 @@ func (*DBServiceHandler) AddCluster(ctx context.Context, req *dbPb.DBCreateClust
 	} else {
 		resp.Status = ClusterSuccessResponseStatus
 		clusterDTO := new(dbPb.DBClusterDTO)
-		copyClusterModelToDTO(clusterModel, clusterDTO)
+		copyClusterModelToDTO(&clusterModel, clusterDTO)
 		resp.Cluster = clusterDTO
 	}
 	return nil
@@ -73,15 +73,25 @@ func (*DBServiceHandler) UpdateTiUPConfig(ctx context.Context, req *dbPb.DBUpdat
 		return nil
 	} else {
 		clusterDTO := new(dbPb.DBClusterDTO)
-		copyClusterModelToDTO(clusterModel, clusterDTO)
+		copyClusterModelToDTO(&clusterModel, clusterDTO)
 		resp.Cluster = clusterDTO
 
 		configDTO := new(dbPb.DBTiUPConfigDTO)
-		copyConfigModelToDTO(configModel, configDTO)
+		copyConfigModelToDTO(&configModel, configDTO)
 		resp.Config = configDTO
 
 		return nil
 	}
+}
+
+func (*DBServiceHandler) ListCluster(ctx context.Context, req *dbPb.DBListClusterRequest, resp *dbPb.DBListClusterResponse) error {
+	clusters, _ := models.ListClusters(int(req.Page), int(req.PageSize))
+	for _, v := range clusters {
+		var clusterDTO dbPb.DBClusterDTO
+		copyClusterModelToDTO(&v, &clusterDTO)
+		resp.Clusters = append(resp.Clusters, &clusterDTO)
+	}
+	return nil
 }
 
 func copyClusterModelToDTO(model *models.Cluster, dto *dbPb.DBClusterDTO) {

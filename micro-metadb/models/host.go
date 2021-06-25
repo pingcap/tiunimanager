@@ -22,9 +22,6 @@ type Disk struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
-func (u Disk) TableName() string {
-	return "disks"
-}
 
 type Host struct {
 	ID        string `gorm:"PrimaryKey;default:uuid_generate_v3()"`
@@ -43,10 +40,6 @@ type Host struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
-}
-
-func (h Host) TableName() string {
-	return "hosts"
 }
 
 func CreateHostTable() (int32, error) {

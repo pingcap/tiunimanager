@@ -2,20 +2,58 @@ syntax = "proto3";
 
 option go_package = "./;cluster";
 
-message TiDBClusterResponseStatus {
+message ClusterInfoDTO {
+    int32 id = 1;
+    string name = 2;
+    string version = 3;
+    string dbPassword = 4;
+    int32 status = 5;
+    string config = 6;
+}
+
+message ClusterPage {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 total = 3;
+}
+
+message ClusterResponseStatus {
     int32 code = 1;
     string message = 2;
 }
 
-service TiCPClusterService {
-    rpc CreateTiDBCluster(CreateTiDBClusterRequest) returns (CreateTiDBClusterResponse);
+service ClusterService {
+    rpc CreateCluster(CreateClusterRequest) returns (CreateClusterResponse);
+    rpc QueryCluster(QueryClusterRequest) returns (QueryClusterResponse);
 }
 
-message CreateTiDBClusterRequest {
+message ClusterOperatorDTO {
+    string accountName = 1;
+    int32 tenantId = 2;
+}
+
+message CreateClusterRequest {
     string name = 1;
+    string version = 2;
+    string dbPassword = 3;
+    int32 pdCount = 4;
+    int32 tidbCount = 5;
+    int32 tikvCount = 6;
+
+    ClusterOperatorDTO operator = 7;
 }
 
-message CreateTiDBClusterResponse {
-    TiDBClusterResponseStatus status = 1;
-    int32 id = 2;
+message CreateClusterResponse {
+    ClusterResponseStatus status = 1;
+    ClusterInfoDTO cluster = 2;
+}
+
+message QueryClusterRequest {
+    ClusterPage page = 1;
+}
+
+message QueryClusterResponse {
+    ClusterResponseStatus status = 1;
+    ClusterPage page = 2;
+    repeated ClusterInfoDTO clusters = 3;
 }

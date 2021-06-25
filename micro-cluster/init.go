@@ -53,13 +53,12 @@ func initService() {
 	)
 	srv.Init()
 
-	cluster.RegisterTiCPClusterServiceHandler(srv.Server(), new(service.ClusterServiceHandler))
+	cluster.RegisterClusterServiceHandler(srv.Server(), new(service.ClusterServiceHandler))
 
-	go func() {
-		if err := srv.Run(); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	if err := srv.Run(); err != nil {
+		log.Fatal(err)
+	}
+
 }
 
 func initPrometheus() {

@@ -2,52 +2,92 @@ package clustermanage
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	log "github.com/sirupsen/logrus"
 	"time"
 
-	"github.com/pingcap/ticp/micro-manager/client"
-	manager "github.com/pingcap/ticp/micro-manager/proto"
+	mngClient "github.com/pingcap/ticp/micro-manager/client"
+	dbClient "github.com/pingcap/ticp/micro-metadb/client"
+
+	mngPb "github.com/pingcap/ticp/micro-manager/proto"
+	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
+
 	spec "github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
 // Cluster 集群
 type Cluster struct {
-	Id         uint
-	TenantId   uint
-	Name       string
-	Status     ClusterStatus
-	Version    ClusterVersion
-	CreateTime time.Time
+	Id         	uint
+	TenantId   	uint
+	Name       	string
+	Status     	int
+	Version    	string
+	CreateTime 	time.Time
 
-	demand     ClusterDemand
-	TiUPConfig spec.Specification
+	Demand          ClusterDemand
+	CurrentConfigId uint
+	TiUPConfig      spec.Specification
 }
-
-type ClusterStatus int8
-type ClusterVersion string
 
 // ClusterDemand 集群配置要求
 type ClusterDemand struct {
-	pdNodeQuantity   int8
-	tiDBNodeQuantity int8
-	tiKVNodeQuantity int8
+	pdNodeQuantity   int
+	tiDBNodeQuantity int
+	tiKVNodeQuantity int
 }
 
-func CreateCluster() {
-	var cluster Cluster
-	// 创建cluster，并保存到db，当前TiUPConfig 为空
-	flowWork := ClusterInitFlowWork()
-	flowWork.context.Put("cluster", &cluster)
-	flowWork.moveOn("start")
-}
-
-// AllocTask 申请主机的同步任务，还待抽象
-func (cluster *Cluster) AllocTask(f *FlowWork) {
-	req := manager.AllocHostsRequest{
-		PdCount:   int32(cluster.demand.pdNodeQuantity),
-		TidbCount: int32(cluster.demand.tiDBNodeQuantity),
-		TikvCount: int32(cluster.demand.tiKVNodeQuantity),
+func CreateCluster(name, dbPassword, version string,
+	tikvCount, tidbCount, pdCount int32,
+	operatorName string, tenantId uint) (*Cluster, error) {
+	log.Info("create cluster by ", operatorName)
+	req := dbPb.DBCreateClusterRequest{
+		Cluster: &dbPb.DBClusterDTO{
+			Name:      name,
+			TenantId: int32(tenantId),
+			DbPassword: dbPassword,
+			Version:   version,
+			TikvCount: tikvCount,
+			TidbCount: tidbCount,
+			PdCount:   pdCount,
+		},
 	}
-	resp, err := client.ManagerClient.AllocHosts(context.TODO(), &req)
+
+	resp, err :=  dbClient.DBClient.AddCluster(context.TODO(), &req)
+	if err != nil {
+		// 处理异常
+	}
+	cluster := new(Cluster)
+	copyClusterDbDtoToDomain(resp.Cluster, cluster)
+
+	flowWork := ClusterInitFlowWork()
+	flowWork.context.Put("cluster", cluster)
+	flowWork.moveOn("start")
+	return cluster, nil
+}
+
+func copyClusterDbDtoToDomain(dto *dbPb.DBClusterDTO, domain *Cluster) {
+	// 模型转换
+	domain.Id = uint(dto.Id)
+	domain.TenantId = uint(dto.TenantId)
+	domain.Name = dto.Name
+	domain.Status = int(dto.Status)
+	domain.Version = dto.Version
+	domain.Demand = ClusterDemand{
+		tiDBNodeQuantity: int(dto.TidbCount),
+		tiKVNodeQuantity: int(dto.TikvCount),
+		pdNodeQuantity: int(dto.PdCount),
+	}
+}
+
+// PrepareResource 申请主机的同步任务，还待抽象
+func (cluster *Cluster) PrepareResource(f *FlowWork) {
+	req := mngPb.AllocHostsRequest{
+		PdCount:   int32(cluster.Demand.pdNodeQuantity),
+		TidbCount: int32(cluster.Demand.tiDBNodeQuantity),
+		TikvCount: int32(cluster.Demand.tiKVNodeQuantity),
+	}
+	resp, err := mngClient.ManagerClient.AllocHosts(context.TODO(), &req)
 
 	if err != nil {
 		// 处理远程异常
@@ -60,7 +100,7 @@ func (cluster *Cluster) AllocTask(f *FlowWork) {
 // BuildConfig 根据要求和申请到的主机，生成一份TiUP的配置
 func (cluster *Cluster) BuildConfig(f *FlowWork) {
 
-	hosts := f.context.Value("hosts").([]*manager.AllocHost)
+	hosts := f.context.Value("hosts").([]*mngPb.AllocHost)
 	// Deal with Global Settings
 	cluster.TiUPConfig.GlobalOptions.User = "tidb"
 	cluster.TiUPConfig.GlobalOptions.SSHPort = 22
@@ -99,17 +139,31 @@ func (cluster *Cluster) BuildConfig(f *FlowWork) {
 		})
 	}
 
+	cluster.persistCurrentConfig()
 	f.moveOn("configDone")
 }
 
-func (cluster *Cluster) ExecuteTiUP(f *FlowWork) {
+func (cluster *Cluster) persistCurrentConfig() {
+	configByte, err := json.Marshal(cluster.TiUPConfig)
+	if err != nil {
+		// 处理json序列化异常
+	}
+	resp, err := dbClient.DBClient.UpdateTiUPConfig(context.TODO(), &dbPb.DBUpdateTiUPConfigRequest{
+		ClusterId: int32(cluster.Id),
+		ConfigContent: string(configByte),
+	})
 
+	cluster.CurrentConfigId = uint(resp.Config.Id)
+}
+
+func (cluster *Cluster) ExecuteTiUP(f *FlowWork) {
 	// todo 从韩森提供的接口去调用
+	fmt.Println("开始执行tiup了")
 	f.moveOn("tiUPStart")
 }
 
 func (cluster *Cluster) CheckTiUPResult(f *FlowWork) {
-
+	fmt.Println("检查到tiup执行成功")
 	// todo 异步轮询韩森提供的接口？
 	f.moveOn("tiUPDone")
 }

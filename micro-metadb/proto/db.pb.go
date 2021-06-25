@@ -25,7 +25,7 @@ var file_db_proto_rawDesc = []byte{
 	0x0a, 0x08, 0x64, 0x62, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x0d, 0x64, 0x62, 0x5f, 0x61,
 	0x75, 0x74, 0x68, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x0d, 0x64, 0x62, 0x5f, 0x68, 0x6f,
 	0x73, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x10, 0x64, 0x62, 0x5f, 0x63, 0x6c, 0x75,
-	0x73, 0x74, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x32, 0xbf, 0x06, 0x0a, 0x0d, 0x54,
+	0x73, 0x74, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x32, 0xfd, 0x06, 0x0a, 0x0d, 0x54,
 	0x69, 0x43, 0x50, 0x44, 0x42, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x39, 0x0a, 0x0a,
 	0x46, 0x69, 0x6e, 0x64, 0x54, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x12, 0x14, 0x2e, 0x44, 0x42, 0x46,
 	0x69, 0x6e, 0x64, 0x54, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
@@ -77,8 +77,12 @@ var file_db_proto_rawDesc = []byte{
 	0x66, 0x69, 0x67, 0x12, 0x1a, 0x2e, 0x44, 0x42, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x54, 0x69,
 	0x55, 0x50, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
 	0x1b, 0x2e, 0x44, 0x42, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x54, 0x69, 0x55, 0x50, 0x43, 0x6f,
-	0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x07, 0x5a, 0x05,
-	0x2e, 0x2f, 0x3b, 0x64, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3c, 0x0a, 0x0b,
+	0x4c, 0x69, 0x73, 0x74, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x12, 0x15, 0x2e, 0x44, 0x42,
+	0x4c, 0x69, 0x73, 0x74, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x16, 0x2e, 0x44, 0x42, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6c, 0x75, 0x73, 0x74,
+	0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x07, 0x5a, 0x05, 0x2e, 0x2f,
+	0x3b, 0x64, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var file_db_proto_goTypes = []interface{}{
@@ -95,19 +99,21 @@ var file_db_proto_goTypes = []interface{}{
 	(*DBCreateClusterRequest)(nil),          // 10: DBCreateClusterRequest
 	(*DBFindClusterRequest)(nil),            // 11: DBFindClusterRequest
 	(*DBUpdateTiUPConfigRequest)(nil),       // 12: DBUpdateTiUPConfigRequest
-	(*DBFindTenantResponse)(nil),            // 13: DBFindTenantResponse
-	(*DBFindAccountResponse)(nil),           // 14: DBFindAccountResponse
-	(*DBSaveTokenResponse)(nil),             // 15: DBSaveTokenResponse
-	(*DBFindTokenResponse)(nil),             // 16: DBFindTokenResponse
-	(*DBFindRolesByPermissionResponse)(nil), // 17: DBFindRolesByPermissionResponse
-	(*DBAddHostResponse)(nil),               // 18: DBAddHostResponse
-	(*DBRemoveHostResponse)(nil),            // 19: DBRemoveHostResponse
-	(*DBListHostsResponse)(nil),             // 20: DBListHostsResponse
-	(*DBCheckDetailsResponse)(nil),          // 21: DBCheckDetailsResponse
-	(*DBAllocHostResponse)(nil),             // 22: DBAllocHostResponse
-	(*DBCreateClusterResponse)(nil),         // 23: DBCreateClusterResponse
-	(*DBFindClusterResponse)(nil),           // 24: DBFindClusterResponse
-	(*DBUpdateTiUPConfigResponse)(nil),      // 25: DBUpdateTiUPConfigResponse
+	(*DBListClusterRequest)(nil),            // 13: DBListClusterRequest
+	(*DBFindTenantResponse)(nil),            // 14: DBFindTenantResponse
+	(*DBFindAccountResponse)(nil),           // 15: DBFindAccountResponse
+	(*DBSaveTokenResponse)(nil),             // 16: DBSaveTokenResponse
+	(*DBFindTokenResponse)(nil),             // 17: DBFindTokenResponse
+	(*DBFindRolesByPermissionResponse)(nil), // 18: DBFindRolesByPermissionResponse
+	(*DBAddHostResponse)(nil),               // 19: DBAddHostResponse
+	(*DBRemoveHostResponse)(nil),            // 20: DBRemoveHostResponse
+	(*DBListHostsResponse)(nil),             // 21: DBListHostsResponse
+	(*DBCheckDetailsResponse)(nil),          // 22: DBCheckDetailsResponse
+	(*DBAllocHostResponse)(nil),             // 23: DBAllocHostResponse
+	(*DBCreateClusterResponse)(nil),         // 24: DBCreateClusterResponse
+	(*DBFindClusterResponse)(nil),           // 25: DBFindClusterResponse
+	(*DBUpdateTiUPConfigResponse)(nil),      // 26: DBUpdateTiUPConfigResponse
+	(*DBListClusterResponse)(nil),           // 27: DBListClusterResponse
 }
 var file_db_proto_depIdxs = []int32{
 	0,  // 0: TiCPDBService.FindTenant:input_type -> DBFindTenantRequest
@@ -123,21 +129,23 @@ var file_db_proto_depIdxs = []int32{
 	10, // 10: TiCPDBService.AddCluster:input_type -> DBCreateClusterRequest
 	11, // 11: TiCPDBService.FindCluster:input_type -> DBFindClusterRequest
 	12, // 12: TiCPDBService.UpdateTiUPConfig:input_type -> DBUpdateTiUPConfigRequest
-	13, // 13: TiCPDBService.FindTenant:output_type -> DBFindTenantResponse
-	14, // 14: TiCPDBService.FindAccount:output_type -> DBFindAccountResponse
-	15, // 15: TiCPDBService.SaveToken:output_type -> DBSaveTokenResponse
-	16, // 16: TiCPDBService.FindToken:output_type -> DBFindTokenResponse
-	17, // 17: TiCPDBService.FindRolesByPermission:output_type -> DBFindRolesByPermissionResponse
-	18, // 18: TiCPDBService.AddHost:output_type -> DBAddHostResponse
-	19, // 19: TiCPDBService.RemoveHost:output_type -> DBRemoveHostResponse
-	20, // 20: TiCPDBService.ListHost:output_type -> DBListHostsResponse
-	21, // 21: TiCPDBService.CheckDetails:output_type -> DBCheckDetailsResponse
-	22, // 22: TiCPDBService.AllocHosts:output_type -> DBAllocHostResponse
-	23, // 23: TiCPDBService.AddCluster:output_type -> DBCreateClusterResponse
-	24, // 24: TiCPDBService.FindCluster:output_type -> DBFindClusterResponse
-	25, // 25: TiCPDBService.UpdateTiUPConfig:output_type -> DBUpdateTiUPConfigResponse
-	13, // [13:26] is the sub-list for method output_type
-	0,  // [0:13] is the sub-list for method input_type
+	13, // 13: TiCPDBService.ListCluster:input_type -> DBListClusterRequest
+	14, // 14: TiCPDBService.FindTenant:output_type -> DBFindTenantResponse
+	15, // 15: TiCPDBService.FindAccount:output_type -> DBFindAccountResponse
+	16, // 16: TiCPDBService.SaveToken:output_type -> DBSaveTokenResponse
+	17, // 17: TiCPDBService.FindToken:output_type -> DBFindTokenResponse
+	18, // 18: TiCPDBService.FindRolesByPermission:output_type -> DBFindRolesByPermissionResponse
+	19, // 19: TiCPDBService.AddHost:output_type -> DBAddHostResponse
+	20, // 20: TiCPDBService.RemoveHost:output_type -> DBRemoveHostResponse
+	21, // 21: TiCPDBService.ListHost:output_type -> DBListHostsResponse
+	22, // 22: TiCPDBService.CheckDetails:output_type -> DBCheckDetailsResponse
+	23, // 23: TiCPDBService.AllocHosts:output_type -> DBAllocHostResponse
+	24, // 24: TiCPDBService.AddCluster:output_type -> DBCreateClusterResponse
+	25, // 25: TiCPDBService.FindCluster:output_type -> DBFindClusterResponse
+	26, // 26: TiCPDBService.UpdateTiUPConfig:output_type -> DBUpdateTiUPConfigResponse
+	27, // 27: TiCPDBService.ListCluster:output_type -> DBListClusterResponse
+	14, // [14:28] is the sub-list for method output_type
+	0,  // [0:14] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name

@@ -25,5 +25,5 @@ service TiCPDBService {
 	rpc AddCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);
 	rpc FindCluster(DBFindClusterRequest) returns (DBFindClusterResponse);
 	rpc UpdateTiUPConfig(DBUpdateTiUPConfigRequest) returns (DBUpdateTiUPConfigResponse);
-
+	rpc ListCluster(DBListClusterRequest) returns (DBListClusterResponse);
 }

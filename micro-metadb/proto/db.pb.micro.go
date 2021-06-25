@@ -57,6 +57,7 @@ type TiCPDBService interface {
 	AddCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error)
 	FindCluster(ctx context.Context, in *DBFindClusterRequest, opts ...client.CallOption) (*DBFindClusterResponse, error)
 	UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, opts ...client.CallOption) (*DBUpdateTiUPConfigResponse, error)
+	ListCluster(ctx context.Context, in *DBListClusterRequest, opts ...client.CallOption) (*DBListClusterResponse, error)
 }
 
 type tiCPDBService struct {
@@ -201,6 +202,16 @@ func (c *tiCPDBService) UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPCo
 	return out, nil
 }
 
+func (c *tiCPDBService) ListCluster(ctx context.Context, in *DBListClusterRequest, opts ...client.CallOption) (*DBListClusterResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.ListCluster", in)
+	out := new(DBListClusterResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for TiCPDBService service
 
 type TiCPDBServiceHandler interface {
@@ -219,6 +230,7 @@ type TiCPDBServiceHandler interface {
 	AddCluster(context.Context, *DBCreateClusterRequest, *DBCreateClusterResponse) error
 	FindCluster(context.Context, *DBFindClusterRequest, *DBFindClusterResponse) error
 	UpdateTiUPConfig(context.Context, *DBUpdateTiUPConfigRequest, *DBUpdateTiUPConfigResponse) error
+	ListCluster(context.Context, *DBListClusterRequest, *DBListClusterResponse) error
 }
 
 func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, opts ...server.HandlerOption) error {
@@ -236,6 +248,7 @@ func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, op
 		AddCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error
 		FindCluster(ctx context.Context, in *DBFindClusterRequest, out *DBFindClusterResponse) error
 		UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, out *DBUpdateTiUPConfigResponse) error
+		ListCluster(ctx context.Context, in *DBListClusterRequest, out *DBListClusterResponse) error
 	}
 	type TiCPDBService struct {
 		tiCPDBService
@@ -298,4 +311,8 @@ func (h *tiCPDBServiceHandler) FindCluster(ctx context.Context, in *DBFindCluste
 
 func (h *tiCPDBServiceHandler) UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, out *DBUpdateTiUPConfigResponse) error {
 	return h.TiCPDBServiceHandler.UpdateTiUPConfig(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) ListCluster(ctx context.Context, in *DBListClusterRequest, out *DBListClusterResponse) error {
+	return h.TiCPDBServiceHandler.ListCluster(ctx, in, out)
 }

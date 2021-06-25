@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.26.0
 // 	protoc        v3.17.1
-// source: db_cluster.proto
+// source: cluster.proto
 
 package cluster
 
@@ -20,17 +20,21 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type TiDBClusterResponseStatus struct {
+type ClusterInfoDTO struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Code    int32  `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
-	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Id         int32  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name       string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Version    string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	DbPassword string `protobuf:"bytes,4,opt,name=dbPassword,proto3" json:"dbPassword,omitempty"`
+	Status     int32  `protobuf:"varint,5,opt,name=status,proto3" json:"status,omitempty"`
+	Config     string `protobuf:"bytes,6,opt,name=config,proto3" json:"config,omitempty"`
 }
 
-func (x *TiDBClusterResponseStatus) Reset() {
-	*x = TiDBClusterResponseStatus{}
+func (x *ClusterInfoDTO) Reset() {
+	*x = ClusterInfoDTO{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cluster_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -38,13 +42,13 @@ func (x *TiDBClusterResponseStatus) Reset() {
 	}
 }
 
-func (x *TiDBClusterResponseStatus) String() string {
+func (x *ClusterInfoDTO) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*TiDBClusterResponseStatus) ProtoMessage() {}
+func (*ClusterInfoDTO) ProtoMessage() {}
 
-func (x *TiDBClusterResponseStatus) ProtoReflect() protoreflect.Message {
+func (x *ClusterInfoDTO) ProtoReflect() protoreflect.Message {
 	mi := &file_cluster_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -56,35 +60,65 @@ func (x *TiDBClusterResponseStatus) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use TiDBClusterResponseStatus.ProtoReflect.Descriptor instead.
-func (*TiDBClusterResponseStatus) Descriptor() ([]byte, []int) {
+// Deprecated: Use ClusterInfoDTO.ProtoReflect.Descriptor instead.
+func (*ClusterInfoDTO) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *TiDBClusterResponseStatus) GetCode() int32 {
+func (x *ClusterInfoDTO) GetId() int32 {
 	if x != nil {
-		return x.Code
+		return x.Id
 	}
 	return 0
 }
 
-func (x *TiDBClusterResponseStatus) GetMessage() string {
+func (x *ClusterInfoDTO) GetName() string {
 	if x != nil {
-		return x.Message
+		return x.Name
 	}
 	return ""
 }
 
-type CreateTiDBClusterRequest struct {
+func (x *ClusterInfoDTO) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *ClusterInfoDTO) GetDbPassword() string {
+	if x != nil {
+		return x.DbPassword
+	}
+	return ""
+}
+
+func (x *ClusterInfoDTO) GetStatus() int32 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+func (x *ClusterInfoDTO) GetConfig() string {
+	if x != nil {
+		return x.Config
+	}
+	return ""
+}
+
+type ClusterPage struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Page     int32 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize int32 `protobuf:"varint,2,opt,name=pageSize,proto3" json:"pageSize,omitempty"`
+	Total    int32 `protobuf:"varint,3,opt,name=total,proto3" json:"total,omitempty"`
 }
 
-func (x *CreateTiDBClusterRequest) Reset() {
-	*x = CreateTiDBClusterRequest{}
+func (x *ClusterPage) Reset() {
+	*x = ClusterPage{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cluster_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -92,13 +126,13 @@ func (x *CreateTiDBClusterRequest) Reset() {
 	}
 }
 
-func (x *CreateTiDBClusterRequest) String() string {
+func (x *ClusterPage) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateTiDBClusterRequest) ProtoMessage() {}
+func (*ClusterPage) ProtoMessage() {}
 
-func (x *CreateTiDBClusterRequest) ProtoReflect() protoreflect.Message {
+func (x *ClusterPage) ProtoReflect() protoreflect.Message {
 	mi := &file_cluster_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -110,29 +144,43 @@ func (x *CreateTiDBClusterRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateTiDBClusterRequest.ProtoReflect.Descriptor instead.
-func (*CreateTiDBClusterRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ClusterPage.ProtoReflect.Descriptor instead.
+func (*ClusterPage) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateTiDBClusterRequest) GetName() string {
+func (x *ClusterPage) GetPage() int32 {
 	if x != nil {
-		return x.Name
+		return x.Page
 	}
-	return ""
+	return 0
 }
 
-type CreateTiDBClusterResponse struct {
+func (x *ClusterPage) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ClusterPage) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+type ClusterResponseStatus struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Status *TiDBClusterResponseStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	Id     int32                      `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	Code    int32  `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 }
 
-func (x *CreateTiDBClusterResponse) Reset() {
-	*x = CreateTiDBClusterResponse{}
+func (x *ClusterResponseStatus) Reset() {
+	*x = ClusterResponseStatus{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cluster_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -140,13 +188,13 @@ func (x *CreateTiDBClusterResponse) Reset() {
 	}
 }
 
-func (x *CreateTiDBClusterResponse) String() string {
+func (x *ClusterResponseStatus) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CreateTiDBClusterResponse) ProtoMessage() {}
+func (*ClusterResponseStatus) ProtoMessage() {}
 
-func (x *CreateTiDBClusterResponse) ProtoReflect() protoreflect.Message {
+func (x *ClusterResponseStatus) ProtoReflect() protoreflect.Message {
 	mi := &file_cluster_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -158,51 +206,415 @@ func (x *CreateTiDBClusterResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CreateTiDBClusterResponse.ProtoReflect.Descriptor instead.
-func (*CreateTiDBClusterResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ClusterResponseStatus.ProtoReflect.Descriptor instead.
+func (*ClusterResponseStatus) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *CreateTiDBClusterResponse) GetStatus() *TiDBClusterResponseStatus {
+func (x *ClusterResponseStatus) GetCode() int32 {
+	if x != nil {
+		return x.Code
+	}
+	return 0
+}
+
+func (x *ClusterResponseStatus) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type ClusterOperatorDTO struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	AccountName string `protobuf:"bytes,1,opt,name=accountName,proto3" json:"accountName,omitempty"`
+	TenantId    int32  `protobuf:"varint,2,opt,name=tenantId,proto3" json:"tenantId,omitempty"`
+}
+
+func (x *ClusterOperatorDTO) Reset() {
+	*x = ClusterOperatorDTO{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cluster_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ClusterOperatorDTO) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClusterOperatorDTO) ProtoMessage() {}
+
+func (x *ClusterOperatorDTO) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClusterOperatorDTO.ProtoReflect.Descriptor instead.
+func (*ClusterOperatorDTO) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ClusterOperatorDTO) GetAccountName() string {
+	if x != nil {
+		return x.AccountName
+	}
+	return ""
+}
+
+func (x *ClusterOperatorDTO) GetTenantId() int32 {
+	if x != nil {
+		return x.TenantId
+	}
+	return 0
+}
+
+type CreateClusterRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name       string              `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Version    string              `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
+	DbPassword string              `protobuf:"bytes,3,opt,name=dbPassword,proto3" json:"dbPassword,omitempty"`
+	PdCount    int32               `protobuf:"varint,4,opt,name=pdCount,proto3" json:"pdCount,omitempty"`
+	TidbCount  int32               `protobuf:"varint,5,opt,name=tidbCount,proto3" json:"tidbCount,omitempty"`
+	TikvCount  int32               `protobuf:"varint,6,opt,name=tikvCount,proto3" json:"tikvCount,omitempty"`
+	Operator   *ClusterOperatorDTO `protobuf:"bytes,7,opt,name=operator,proto3" json:"operator,omitempty"`
+}
+
+func (x *CreateClusterRequest) Reset() {
+	*x = CreateClusterRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cluster_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CreateClusterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateClusterRequest) ProtoMessage() {}
+
+func (x *CreateClusterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateClusterRequest.ProtoReflect.Descriptor instead.
+func (*CreateClusterRequest) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *CreateClusterRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateClusterRequest) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *CreateClusterRequest) GetDbPassword() string {
+	if x != nil {
+		return x.DbPassword
+	}
+	return ""
+}
+
+func (x *CreateClusterRequest) GetPdCount() int32 {
+	if x != nil {
+		return x.PdCount
+	}
+	return 0
+}
+
+func (x *CreateClusterRequest) GetTidbCount() int32 {
+	if x != nil {
+		return x.TidbCount
+	}
+	return 0
+}
+
+func (x *CreateClusterRequest) GetTikvCount() int32 {
+	if x != nil {
+		return x.TikvCount
+	}
+	return 0
+}
+
+func (x *CreateClusterRequest) GetOperator() *ClusterOperatorDTO {
+	if x != nil {
+		return x.Operator
+	}
+	return nil
+}
+
+type CreateClusterResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Status  *ClusterResponseStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Cluster *ClusterInfoDTO        `protobuf:"bytes,2,opt,name=cluster,proto3" json:"cluster,omitempty"`
+}
+
+func (x *CreateClusterResponse) Reset() {
+	*x = CreateClusterResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cluster_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CreateClusterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateClusterResponse) ProtoMessage() {}
+
+func (x *CreateClusterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateClusterResponse.ProtoReflect.Descriptor instead.
+func (*CreateClusterResponse) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CreateClusterResponse) GetStatus() *ClusterResponseStatus {
 	if x != nil {
 		return x.Status
 	}
 	return nil
 }
 
-func (x *CreateTiDBClusterResponse) GetId() int32 {
+func (x *CreateClusterResponse) GetCluster() *ClusterInfoDTO {
 	if x != nil {
-		return x.Id
+		return x.Cluster
 	}
-	return 0
+	return nil
+}
+
+type QueryClusterRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Page *ClusterPage `protobuf:"bytes,1,opt,name=page,proto3" json:"page,omitempty"`
+}
+
+func (x *QueryClusterRequest) Reset() {
+	*x = QueryClusterRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cluster_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryClusterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryClusterRequest) ProtoMessage() {}
+
+func (x *QueryClusterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QueryClusterRequest.ProtoReflect.Descriptor instead.
+func (*QueryClusterRequest) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *QueryClusterRequest) GetPage() *ClusterPage {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
+type QueryClusterResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Status   *ClusterResponseStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Page     *ClusterPage           `protobuf:"bytes,2,opt,name=page,proto3" json:"page,omitempty"`
+	Clusters []*ClusterInfoDTO      `protobuf:"bytes,3,rep,name=clusters,proto3" json:"clusters,omitempty"`
+}
+
+func (x *QueryClusterResponse) Reset() {
+	*x = QueryClusterResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cluster_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryClusterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryClusterResponse) ProtoMessage() {}
+
+func (x *QueryClusterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QueryClusterResponse.ProtoReflect.Descriptor instead.
+func (*QueryClusterResponse) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *QueryClusterResponse) GetStatus() *ClusterResponseStatus {
+	if x != nil {
+		return x.Status
+	}
+	return nil
+}
+
+func (x *QueryClusterResponse) GetPage() *ClusterPage {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
+func (x *QueryClusterResponse) GetClusters() []*ClusterInfoDTO {
+	if x != nil {
+		return x.Clusters
+	}
+	return nil
 }
 
 var File_cluster_proto protoreflect.FileDescriptor
 
 var file_cluster_proto_rawDesc = []byte{
 	0x0a, 0x0d, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
-	0x49, 0x0a, 0x19, 0x54, 0x69, 0x44, 0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x12, 0x0a, 0x04,
-	0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65,
-	0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x2e, 0x0a, 0x18, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x54, 0x69, 0x44, 0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x5f, 0x0a, 0x19, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x54, 0x69, 0x44, 0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75,
-	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x54, 0x69, 0x44, 0x42, 0x43, 0x6c,
-	0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61,
-	0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x0e, 0x0a, 0x02, 0x69,
-	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x02, 0x69, 0x64, 0x32, 0x60, 0x0a, 0x12, 0x54,
-	0x69, 0x43, 0x50, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
-	0x65, 0x12, 0x4a, 0x0a, 0x11, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x69, 0x44, 0x42, 0x43,
-	0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x12, 0x19, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54,
-	0x69, 0x44, 0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x1a, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x69, 0x44, 0x42, 0x43, 0x6c,
-	0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x0c, 0x5a,
-	0x0a, 0x2e, 0x2f, 0x3b, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x9e, 0x01, 0x0a, 0x0e, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x44,
+	0x54, 0x4f, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x02,
+	0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f,
+	0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e,
+	0x12, 0x1e, 0x0a, 0x0a, 0x64, 0x62, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x64, 0x62, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64,
+	0x12, 0x16, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x05,
+	0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x63, 0x6f, 0x6e, 0x66,
+	0x69, 0x67, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67,
+	0x22, 0x53, 0x0a, 0x0b, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x50, 0x61, 0x67, 0x65, 0x12,
+	0x12, 0x0a, 0x04, 0x70, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x70,
+	0x61, 0x67, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x67, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x70, 0x61, 0x67, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x12,
+	0x14, 0x0a, 0x05, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05,
+	0x74, 0x6f, 0x74, 0x61, 0x6c, 0x22, 0x45, 0x0a, 0x15, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x12,
+	0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x63, 0x6f,
+	0x64, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x52, 0x0a, 0x12,
+	0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x44,
+	0x54, 0x4f, 0x12, 0x20, 0x0a, 0x0b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x4e, 0x61, 0x6d,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x74, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x49, 0x64,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x74, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x49, 0x64,
+	0x22, 0xeb, 0x01, 0x0a, 0x14, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6c, 0x75, 0x73, 0x74,
+	0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x18, 0x0a,
+	0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
+	0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x1e, 0x0a, 0x0a, 0x64, 0x62, 0x50, 0x61, 0x73,
+	0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x64, 0x62, 0x50,
+	0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x64, 0x43, 0x6f, 0x75,
+	0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x70, 0x64, 0x43, 0x6f, 0x75, 0x6e,
+	0x74, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x64, 0x62, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x05, 0x52, 0x09, 0x74, 0x69, 0x64, 0x62, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12,
+	0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6b, 0x76, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x06, 0x20, 0x01,
+	0x28, 0x05, 0x52, 0x09, 0x74, 0x69, 0x6b, 0x76, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x2f, 0x0a,
+	0x08, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x13, 0x2e, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f,
+	0x72, 0x44, 0x54, 0x4f, 0x52, 0x08, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x22, 0x72,
+	0x0a, 0x15, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75,
+	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65,
+	0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52,
+	0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x29, 0x0a, 0x07, 0x63, 0x6c, 0x75, 0x73, 0x74,
+	0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x43, 0x6c, 0x75, 0x73, 0x74,
+	0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x44, 0x54, 0x4f, 0x52, 0x07, 0x63, 0x6c, 0x75, 0x73, 0x74,
+	0x65, 0x72, 0x22, 0x37, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6c, 0x75, 0x73, 0x74,
+	0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x20, 0x0a, 0x04, 0x70, 0x61, 0x67,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65,
+	0x72, 0x50, 0x61, 0x67, 0x65, 0x52, 0x04, 0x70, 0x61, 0x67, 0x65, 0x22, 0x95, 0x01, 0x0a, 0x14,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74,
+	0x61, 0x74, 0x75, 0x73, 0x12, 0x20, 0x0a, 0x04, 0x70, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x50, 0x61, 0x67, 0x65,
+	0x52, 0x04, 0x70, 0x61, 0x67, 0x65, 0x12, 0x2b, 0x0a, 0x08, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65,
+	0x72, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x43, 0x6c, 0x75, 0x73, 0x74,
+	0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x44, 0x54, 0x4f, 0x52, 0x08, 0x63, 0x6c, 0x75, 0x73, 0x74,
+	0x65, 0x72, 0x73, 0x32, 0x8d, 0x01, 0x0a, 0x0e, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x53,
+	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3e, 0x0a, 0x0d, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x12, 0x15, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16,
+	0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3b, 0x0a, 0x0c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43,
+	0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x12, 0x14, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x43, 0x6c,
+	0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x15, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x42, 0x0c, 0x5a, 0x0a, 0x2e, 0x2f, 0x3b, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65,
+	0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -217,21 +629,34 @@ func file_cluster_proto_rawDescGZIP() []byte {
 	return file_cluster_proto_rawDescData
 }
 
-var file_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_cluster_proto_goTypes = []interface{}{
-	(*TiDBClusterResponseStatus)(nil), // 0: TiDBClusterResponseStatus
-	(*CreateTiDBClusterRequest)(nil),  // 1: CreateTiDBClusterRequest
-	(*CreateTiDBClusterResponse)(nil), // 2: CreateTiDBClusterResponse
+	(*ClusterInfoDTO)(nil),        // 0: ClusterInfoDTO
+	(*ClusterPage)(nil),           // 1: ClusterPage
+	(*ClusterResponseStatus)(nil), // 2: ClusterResponseStatus
+	(*ClusterOperatorDTO)(nil),    // 3: ClusterOperatorDTO
+	(*CreateClusterRequest)(nil),  // 4: CreateClusterRequest
+	(*CreateClusterResponse)(nil), // 5: CreateClusterResponse
+	(*QueryClusterRequest)(nil),   // 6: QueryClusterRequest
+	(*QueryClusterResponse)(nil),  // 7: QueryClusterResponse
 }
 var file_cluster_proto_depIdxs = []int32{
-	0, // 0: CreateTiDBClusterResponse.status:type_name -> TiDBClusterResponseStatus
-	1, // 1: TiCPClusterService.CreateTiDBCluster:input_type -> CreateTiDBClusterRequest
-	2, // 2: TiCPClusterService.CreateTiDBCluster:output_type -> CreateTiDBClusterResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	3, // 0: CreateClusterRequest.operator:type_name -> ClusterOperatorDTO
+	2, // 1: CreateClusterResponse.status:type_name -> ClusterResponseStatus
+	0, // 2: CreateClusterResponse.cluster:type_name -> ClusterInfoDTO
+	1, // 3: QueryClusterRequest.page:type_name -> ClusterPage
+	2, // 4: QueryClusterResponse.status:type_name -> ClusterResponseStatus
+	1, // 5: QueryClusterResponse.page:type_name -> ClusterPage
+	0, // 6: QueryClusterResponse.clusters:type_name -> ClusterInfoDTO
+	4, // 7: ClusterService.CreateCluster:input_type -> CreateClusterRequest
+	6, // 8: ClusterService.QueryCluster:input_type -> QueryClusterRequest
+	5, // 9: ClusterService.CreateCluster:output_type -> CreateClusterResponse
+	7, // 10: ClusterService.QueryCluster:output_type -> QueryClusterResponse
+	9, // [9:11] is the sub-list for method output_type
+	7, // [7:9] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_cluster_proto_init() }
@@ -241,7 +666,7 @@ func file_cluster_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_cluster_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TiDBClusterResponseStatus); i {
+			switch v := v.(*ClusterInfoDTO); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -253,7 +678,7 @@ func file_cluster_proto_init() {
 			}
 		}
 		file_cluster_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateTiDBClusterRequest); i {
+			switch v := v.(*ClusterPage); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -265,7 +690,67 @@ func file_cluster_proto_init() {
 			}
 		}
 		file_cluster_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateTiDBClusterResponse); i {
+			switch v := v.(*ClusterResponseStatus); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cluster_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ClusterOperatorDTO); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cluster_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreateClusterRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cluster_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CreateClusterResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cluster_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryClusterRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cluster_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryClusterResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -283,7 +768,7 @@ func file_cluster_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cluster_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

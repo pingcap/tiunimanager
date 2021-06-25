@@ -7,33 +7,40 @@ import (
 // FlowWork 流程化的工作，用FlowWork记录其状态
 type FlowWork struct {
 	id			uint
-	flowName 	int
+	flowName 	string
 	bizId 		string
 	status 		int
 	context 	FlowContext
 }
 
-type FlowContext map[interface{}]interface{}
+type FlowContext map[string]interface{}
 
-func (c FlowContext) Value(key interface{}) interface{} {
+func (c FlowContext) Value(key string) interface{} {
 	return c[key]
 }
 
 // Put 向流程添加上下文变量
 // TODO 变量需要定义作用域，决定flowWork要不要存储它
-func (c FlowContext) Put(key interface{}, value interface{}) {
+func (c FlowContext) Put(key string, value interface{}) {
 	c[key] = value
 }
 
 func ClusterInitFlowWork() FlowWork {
-	return FlowWork{}
+	return FlowWork{
+		id: 1,
+		flowName: "创建集群",
+		bizId: "1212213",
+		status: 0,
+		context: make(map[string]interface{}),
+	}
 }
 
 // 应该按生成不同的task来驱动
 func (f *FlowWork) moveOn(event string) {
 	if event == "start" {
 		// 修改flow的task信息
-		f.context.Value("cluster").(*Cluster).AllocTask(f)
+		cluster := f.context.Value("cluster").(*Cluster)
+		cluster.PrepareResource(f)
 	}
 	if event == "allocDone" {
 		// 修改flow的task信息

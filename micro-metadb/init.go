@@ -84,6 +84,7 @@ func initSqliteDB() {
 	if models.MetaDB.Migrator().HasTable(&models.Tenant{}) {
 
 	}
+
 	initTables()
 
 	initDataForDemo()
@@ -103,10 +104,10 @@ func initTables() error {
 		&models.PermissionBinding{},
 		&models.RoleBinding{},
 		&models.Token{},
-		&models.Host{},
-		&models.Disk{},
 		&models.Cluster{},
 		&models.TiUPConfig{},
+		&models.Host{},
+		&models.Disk{},
 	)
 	return err
 }

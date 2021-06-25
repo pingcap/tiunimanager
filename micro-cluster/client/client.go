@@ -14,7 +14,7 @@ import (
 	"github.com/pingcap/ticp/micro-cluster/service"
 )
 
-var ClusterClient cluster.TiCPClusterService
+var ClusterClient cluster.ClusterService
 
 func InitClusterClient() {
 	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
@@ -32,5 +32,5 @@ func InitClusterClient() {
 	)
 	srv.Init()
 
-	ClusterClient = cluster.NewTiCPClusterService(service.TiCPClusterServiceName, srv.Client())
+	ClusterClient = cluster.NewClusterService(service.TiCPClusterServiceName, srv.Client())
 }

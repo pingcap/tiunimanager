@@ -595,6 +595,116 @@ func (x *DBUpdateTiUPConfigResponse) GetConfig() *DBTiUPConfigDTO {
 	return nil
 }
 
+type DBListClusterRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Page     int32 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize int32 `protobuf:"varint,2,opt,name=pageSize,proto3" json:"pageSize,omitempty"`
+}
+
+func (x *DBListClusterRequest) Reset() {
+	*x = DBListClusterRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBListClusterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBListClusterRequest) ProtoMessage() {}
+
+func (x *DBListClusterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBListClusterRequest.ProtoReflect.Descriptor instead.
+func (*DBListClusterRequest) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *DBListClusterRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *DBListClusterRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+type DBListClusterResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Status   *DBClusterResponseStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Clusters []*DBClusterDTO          `protobuf:"bytes,2,rep,name=clusters,proto3" json:"clusters,omitempty"`
+}
+
+func (x *DBListClusterResponse) Reset() {
+	*x = DBListClusterResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBListClusterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBListClusterResponse) ProtoMessage() {}
+
+func (x *DBListClusterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBListClusterResponse.ProtoReflect.Descriptor instead.
+func (*DBListClusterResponse) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *DBListClusterResponse) GetStatus() *DBClusterResponseStatus {
+	if x != nil {
+		return x.Status
+	}
+	return nil
+}
+
+func (x *DBListClusterResponse) GetClusters() []*DBClusterDTO {
+	if x != nil {
+		return x.Clusters
+	}
+	return nil
+}
+
 var File_db_cluster_proto protoreflect.FileDescriptor
 
 var file_db_cluster_proto_rawDesc = []byte{
@@ -669,8 +779,20 @@ var file_db_cluster_proto_rawDesc = []byte{
 	0x72, 0x44, 0x54, 0x4f, 0x52, 0x07, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x12, 0x28, 0x0a,
 	0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e,
 	0x44, 0x42, 0x54, 0x69, 0x55, 0x50, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x44, 0x54, 0x4f, 0x52,
-	0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x42, 0x07, 0x5a, 0x05, 0x2e, 0x2f, 0x3b, 0x64, 0x62,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x22, 0x46, 0x0a, 0x14, 0x44, 0x42, 0x4c, 0x69, 0x73,
+	0x74, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x12, 0x0a, 0x04, 0x70, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x70,
+	0x61, 0x67, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x67, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x70, 0x61, 0x67, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x22,
+	0x74, 0x0a, 0x15, 0x44, 0x42, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74,
+	0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x44, 0x42, 0x43, 0x6c, 0x75,
+	0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61, 0x74,
+	0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x29, 0x0a, 0x08, 0x63, 0x6c,
+	0x75, 0x73, 0x74, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0d, 0x2e, 0x44,
+	0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x44, 0x54, 0x4f, 0x52, 0x08, 0x63, 0x6c, 0x75,
+	0x73, 0x74, 0x65, 0x72, 0x73, 0x42, 0x07, 0x5a, 0x05, 0x2e, 0x2f, 0x3b, 0x64, 0x62, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -685,7 +807,7 @@ func file_db_cluster_proto_rawDescGZIP() []byte {
 	return file_db_cluster_proto_rawDescData
 }
 
-var file_db_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_db_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_db_cluster_proto_goTypes = []interface{}{
 	(*DBClusterResponseStatus)(nil),    // 0: DBClusterResponseStatus
 	(*DBClusterDTO)(nil),               // 1: DBClusterDTO
@@ -696,22 +818,26 @@ var file_db_cluster_proto_goTypes = []interface{}{
 	(*DBFindClusterResponse)(nil),      // 6: DBFindClusterResponse
 	(*DBUpdateTiUPConfigRequest)(nil),  // 7: DBUpdateTiUPConfigRequest
 	(*DBUpdateTiUPConfigResponse)(nil), // 8: DBUpdateTiUPConfigResponse
+	(*DBListClusterRequest)(nil),       // 9: DBListClusterRequest
+	(*DBListClusterResponse)(nil),      // 10: DBListClusterResponse
 }
 var file_db_cluster_proto_depIdxs = []int32{
-	1, // 0: DBCreateClusterRequest.cluster:type_name -> DBClusterDTO
-	0, // 1: DBCreateClusterResponse.status:type_name -> DBClusterResponseStatus
-	1, // 2: DBCreateClusterResponse.cluster:type_name -> DBClusterDTO
-	0, // 3: DBFindClusterResponse.status:type_name -> DBClusterResponseStatus
-	1, // 4: DBFindClusterResponse.cluster:type_name -> DBClusterDTO
-	2, // 5: DBFindClusterResponse.config:type_name -> DBTiUPConfigDTO
-	0, // 6: DBUpdateTiUPConfigResponse.status:type_name -> DBClusterResponseStatus
-	1, // 7: DBUpdateTiUPConfigResponse.cluster:type_name -> DBClusterDTO
-	2, // 8: DBUpdateTiUPConfigResponse.config:type_name -> DBTiUPConfigDTO
-	9, // [9:9] is the sub-list for method output_type
-	9, // [9:9] is the sub-list for method input_type
-	9, // [9:9] is the sub-list for extension type_name
-	9, // [9:9] is the sub-list for extension extendee
-	0, // [0:9] is the sub-list for field type_name
+	1,  // 0: DBCreateClusterRequest.cluster:type_name -> DBClusterDTO
+	0,  // 1: DBCreateClusterResponse.status:type_name -> DBClusterResponseStatus
+	1,  // 2: DBCreateClusterResponse.cluster:type_name -> DBClusterDTO
+	0,  // 3: DBFindClusterResponse.status:type_name -> DBClusterResponseStatus
+	1,  // 4: DBFindClusterResponse.cluster:type_name -> DBClusterDTO
+	2,  // 5: DBFindClusterResponse.config:type_name -> DBTiUPConfigDTO
+	0,  // 6: DBUpdateTiUPConfigResponse.status:type_name -> DBClusterResponseStatus
+	1,  // 7: DBUpdateTiUPConfigResponse.cluster:type_name -> DBClusterDTO
+	2,  // 8: DBUpdateTiUPConfigResponse.config:type_name -> DBTiUPConfigDTO
+	0,  // 9: DBListClusterResponse.status:type_name -> DBClusterResponseStatus
+	1,  // 10: DBListClusterResponse.clusters:type_name -> DBClusterDTO
+	11, // [11:11] is the sub-list for method output_type
+	11, // [11:11] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_db_cluster_proto_init() }
@@ -828,6 +954,30 @@ func file_db_cluster_proto_init() {
 				return nil
 			}
 		}
+		file_db_cluster_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBListClusterRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBListClusterResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -835,7 +985,7 @@ func file_db_cluster_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_db_cluster_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

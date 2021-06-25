@@ -24,7 +24,7 @@ func VerifyIdentity(c *gin.Context) {
 		c.JSON(http.StatusOK, controller.Fail(03, err.Error()))
 	} else {
 		c.Set("accountName", result.AccountName)
-		c.Set("tenantId", result.TenantId)
+		c.Set("tenantId", int(result.TenantId))
 	}
 
 }

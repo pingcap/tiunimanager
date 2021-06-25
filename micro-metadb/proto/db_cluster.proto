@@ -55,3 +55,13 @@ message DBUpdateTiUPConfigResponse {
     DBClusterDTO cluster = 2;
     DBTiUPConfigDTO config = 3;
 }
+
+message DBListClusterRequest {
+    int32 page = 1;
+    int32 pageSize = 2;
+}
+
+message DBListClusterResponse {
+    DBClusterResponseStatus status = 1;
+    repeated DBClusterDTO clusters = 2;
+}

@@ -16,7 +16,6 @@ import (
 // @Accept json
 // @Produce json
 // @Param query body HostQuery true "查询请求"
-// @Param query body HostQuery true "查询请求"
 // @Success 200 {object} controller.ResultWithPage{data=[]DemoHostInfo}
 // @Router /host/query [post]
 func Query(c *gin.Context) {
@@ -60,7 +59,7 @@ func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param query body controller.HostInfo true "待导入的主机信息"
+// @Param host body HostInfo true "待导入的主机信息"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /host [post]
 func ImportHost(c *gin.Context) {
@@ -108,7 +107,7 @@ func ImportHost(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param query body controller.ListHostCondition true "可选的查询主机的条件"
+// @Param query body ListHostCondition true "可选的查询主机的条件"
 // @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
 // @Router /hosts [get]
 func ListHost(c *gin.Context) {
@@ -144,12 +143,12 @@ func ListHost(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param query body hostId string true "主机ID"
+// @Param hostId body string true "主机ID"
 // @Success 200 {object} controller.CommonResult{data=HostInfo}
 // @Router /host/ [get]
 func HostDetails(c *gin.Context) {
 
-	hostId := c.Query("hostid")
+	hostId := c.Query("hostId")
 
 	HostDetailsReq := manager.CheckDetailsRequest{
 		HostId: hostId,
@@ -172,12 +171,12 @@ func HostDetails(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param query body hostID string true "待删除的主机ID"
+// @Param hostId body string true "待删除的主机ID"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /host/ [delete]
 func RemoveHost(c *gin.Context) {
 
-	hostId := c.Query("hostid")
+	hostId := c.Query("hostId")
 
 	RemoveHostReq := manager.RemoveHostRequest{
 		HostId: hostId,

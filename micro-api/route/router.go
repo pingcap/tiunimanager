@@ -62,7 +62,7 @@ func Route(g *gin.Engine) {
 			demoInstance.Use(security.VerifyIdentity)
 			host.POST("host", hostapi.ImportHost)
 			host.GET("hosts", hostapi.ListHost)
-			host.GET("/api/v1/host/:hostId", security.VerifyIdentity, hostapi.HostDetails)
+			host.GET("host/:hostId", hostapi.HostDetails)
 			host.DELETE("host", hostapi.RemoveHost)
 		}
 	}

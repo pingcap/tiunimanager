@@ -94,13 +94,17 @@ func DeleteHost(hostId string) (err error) {
 
 func ListHosts() (hosts []Host, err error) {
 	MetaDB.Find(&hosts)
+	for k, v := range hosts {
+		MetaDB.Find(&(hosts[k].Disks), "HOST_ID = ?", v.ID)
+	}
 	return
 }
 
 func FindHostById(hostId string) (*Host, error) {
 	host := new(Host)
 	MetaDB.First(host, "ID = ?", hostId)
-
+	// Fill Host's Disks
+	MetaDB.Find(&(host.Disks), "HOST_ID = ?", hostId)
 	return host, nil
 }
 

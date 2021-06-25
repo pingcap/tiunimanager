@@ -63,7 +63,7 @@ func Route(g *gin.Engine) {
 			host.POST("host", hostapi.ImportHost)
 			host.GET("hosts", hostapi.ListHost)
 			host.GET("host/:hostId", hostapi.HostDetails)
-			host.DELETE("host", hostapi.RemoveHost)
+			host.DELETE("host/:hostId", hostapi.RemoveHost)
 		}
 	}
 

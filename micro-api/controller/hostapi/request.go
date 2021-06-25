@@ -23,9 +23,9 @@ type HostInfo struct {
 	Os       string `json:"os"`
 	Kernel   string `json:"kernel"`
 	CpuCores int32  `json:"cpuCores"`
-	Memory   int32  `json:"memory"` // Host memory size, Unit:GB
-	Nic      string `json:"nic"`    // Host network type: 1GE or 10GE
-	Purpose  string `json:"purpos"` // What Purpose is the host used for? [compute/storage or both]
+	Memory   int32  `json:"memory"`  // Host memory size, Unit:GB
+	Nic      string `json:"nic"`     // Host network type: 1GE or 10GE
+	Purpose  string `json:"purpose"` // What Purpose is the host used for? [compute/storage or both]
 	Disks    []Disk `json:"disks"`
 }
 

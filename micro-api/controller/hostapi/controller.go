@@ -37,8 +37,8 @@ func Query(c *gin.Context) {
 		var res []DemoHostInfo
 		for _, v := range rsp.HostList {
 			host := DemoHostInfo{
-				HostId: v.Ip,
-				HostIp: v.Ip,
+				HostId:   v.Ip,
+				HostIp:   v.Ip,
 				HostName: v.HostName,
 			}
 			res = append(res, host)
@@ -193,7 +193,7 @@ func HostDetails(c *gin.Context) {
 // @Router /host/ [delete]
 func RemoveHost(c *gin.Context) {
 
-	hostId := c.Query("hostId")
+	hostId := c.Param("hostId")
 
 	RemoveHostReq := manager.RemoveHostRequest{
 		HostId: hostId,

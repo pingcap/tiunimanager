@@ -61,3 +61,8 @@ type PageRequest struct {
 func Hello(c *gin.Context) {
 	c.JSON(http.StatusOK, Success("hello"))
 }
+
+
+func HelloPage(c *gin.Context) {
+	c.JSON(http.StatusOK, Success("hello world"))
+}

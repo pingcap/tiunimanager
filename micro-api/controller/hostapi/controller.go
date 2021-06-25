@@ -24,10 +24,27 @@ func Query(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	hostInfos := make([]DemoHostInfo, 2, 2)
-	hostInfos[0] = DemoHostInfo{HostId: "first", HostName: "hh", HostIp: "127.0.0.1:1111"}
-	hostInfos[1] = DemoHostInfo{HostId: "second", HostName: "hh", HostIp: "127.0.0.1:2222"}
-	c.JSON(http.StatusOK, controller.SuccessWithPage(hostInfos, controller.Page{Page: 1, PageSize: 20, Total: 2}))
+
+	listHostReq := manager.ListHostsRequest{
+		Purpose: "storage",
+		Status:  manager.HostStatus(0),
+	}
+
+	rsp, err := client.ManagerClient.ListHost(c, &listHostReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, rsp.Rs.Message))
+	} else {
+		var res []DemoHostInfo
+		for _, v := range rsp.HostList {
+			host := DemoHostInfo{
+				HostId: v.Ip,
+				HostIp: v.Ip,
+				HostName: v.HostName,
+			}
+			res = append(res, host)
+		}
+		c.JSON(http.StatusOK, controller.SuccessWithPage(res, controller.Page{Page: 1, PageSize: 20, Total: len(res)}))
+	}
 }
 
 func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {

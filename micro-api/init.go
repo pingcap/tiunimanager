@@ -8,15 +8,12 @@ import (
 	"github.com/asim/go-micro/v3"
 	"github.com/asim/go-micro/v3/transport"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/addon/tracer"
 	"github.com/pingcap/ticp/config"
 	"github.com/pingcap/ticp/micro-api/route"
 	clusterclient "github.com/pingcap/ticp/micro-cluster/client"
 	managerclient "github.com/pingcap/ticp/micro-manager/client"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	swaggerFiles "github.com/swaggo/files"     // swagger embed files
-	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 	"log"
 	"net/http"
 )
@@ -77,11 +74,7 @@ func initGinEngine() {
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.New()
 
-	g.Use(logger.GenGinLogger(), gin.Recovery())
-	g.Use(tracer.GinOpenTracing())
-
 	route.Route(g)
-	g.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	addr := fmt.Sprintf(":%d", 8080)
 	if err := g.Run(addr); err != nil {

@@ -78,5 +78,5 @@ func initClient() {
 }
 
 func initPort() {
-	adapt.InitMock()
+	adapt.InjectionMetaDbRepo()
 }

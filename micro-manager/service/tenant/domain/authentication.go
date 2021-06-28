@@ -1,5 +1,7 @@
 package domain
 
+import "errors"
+
 // Login 登录
 func Login(userName, password string) (tokenString string, err error) {
 	account, err := findAccountByName(userName)
@@ -32,9 +34,11 @@ func Login(userName, password string) (tokenString string, err error) {
 // Logout 退出登录
 func Logout(tokenString string) (string, error) {
 	token,err := TokenMNG.GetToken(tokenString)
-	
+
 	if err != nil {
 		return "", &UnauthorizedError{}
+	} else if !token.isValid() {
+		return "", nil
 	} else {
 		accountName := token.AccountName
 		err := token.destroy()
@@ -49,6 +53,11 @@ func Logout(tokenString string) (string, error) {
 
 // Accessible 路径鉴权
 func Accessible(pathType string, path string, tokenString string) (tenantId uint, accountName string, err error) {
+	if path == "" {
+		err = errors.New("path cannot be blank")
+		return
+	}
+
 	token, err := TokenMNG.GetToken(tokenString)
 	
 	if err != nil {
@@ -91,11 +100,11 @@ func Accessible(pathType string, path string, tokenString string) (tenantId uint
 
 type UnauthorizedError struct {}
 func (*UnauthorizedError) Error() string{
-	return "认证失败"
+	return "Unauthorized"
 }
 
 type ForbiddenError struct {}
 func (*ForbiddenError) Error() string{
-	return "无访问权限"
+	return "Access Forbidden"
 }
 

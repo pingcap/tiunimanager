@@ -3,6 +3,7 @@ package domain
 import (
 	cryrand "crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -33,15 +34,23 @@ func (account *Account) genSaltAndHash(passwd string) error {
 
 	finalSalt, err := finalHash(salt, passwd)
 
-	if err == nil {
-		account.Salt = salt
-		account.FinalHash = string(finalSalt)
+	if err != nil {
+		return err
 	}
+
+	account.Salt = salt
+	account.FinalHash = string(finalSalt)
 
 	return nil
 }
 
 func  (account *Account) checkPassword(passwd string) (bool, error) {
+	if passwd == "" {
+		return false, errors.New("password cannot be empty")
+	}
+	if len(passwd) > 20 {
+		return false, errors.New("password is too long")
+	}
 	s := account.Salt + passwd
 
 	err := bcrypt.CompareHashAndPassword([]byte(account.FinalHash), []byte(s))
@@ -58,6 +67,9 @@ func  (account *Account) checkPassword(passwd string) (bool, error) {
 }
 
 func finalHash(salt string, passwd string) ([]byte, error) {
+	if passwd == "" {
+		return nil, errors.New("password cannot be empty")
+	}
 	s := salt + passwd
 	finalSalt, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)
 
@@ -65,8 +77,7 @@ func finalHash(salt string, passwd string) ([]byte, error) {
 }
 
 func (account *Account) persist() error{
-	RbacRepo.AddAccount(account)
-	return nil
+	return RbacRepo.AddAccount(account)
 }
 
 // CreateAccount 创建账号

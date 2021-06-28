@@ -23,6 +23,7 @@ func Route(g *gin.Engine) {
 	// web静态资源
 	web := g.Group("/web")
 	{
+		// 替换成静态文件
 		web.GET("/*any", controller.HelloPage)
 	}
 

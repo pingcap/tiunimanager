@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"net/http"
 
 	manager "github.com/pingcap/ticp/micro-manager/proto"
 	"github.com/pingcap/ticp/micro-manager/service/host"
@@ -10,8 +11,9 @@ import (
 
 var TiCPManagerServiceName = "go.micro.ticp.manager"
 
-var SuccessResponseStatus = &manager.ManagerResponseStatus{Code: 0}
-var BizErrorResponseStatus = &manager.ManagerResponseStatus{Code: 1}
+var SuccessResponseStatus = &manager.ManagerResponseStatus{
+	Code: 0,
+}
 
 type ManagerServiceHandler struct{}
 
@@ -20,7 +22,10 @@ func (*ManagerServiceHandler) Login(ctx context.Context, req *manager.LoginReque
 	token, err := domain.Login(req.GetAccountName(), req.GetPassword())
 
 	if err != nil {
-		resp.Status = BizErrorResponseStatus
+		resp.Status = &manager.ManagerResponseStatus{
+			Code: http.StatusInternalServerError,
+			Message: err.Error(),
+		}
 		resp.Status.Message = err.Error()
 	} else {
 		resp.Status = SuccessResponseStatus
@@ -33,7 +38,10 @@ func (*ManagerServiceHandler) Login(ctx context.Context, req *manager.LoginReque
 func (*ManagerServiceHandler) Logout(ctx context.Context, req *manager.LogoutRequest, resp *manager.LogoutResponse) error {
 	accountName, err := domain.Logout(req.TokenString)
 	if err != nil {
-		resp.Status = BizErrorResponseStatus
+		resp.Status = &manager.ManagerResponseStatus{
+			Code: http.StatusInternalServerError,
+			Message: err.Error(),
+		}
 		resp.Status.Message = err.Error()
 	} else {
 		resp.Status = SuccessResponseStatus
@@ -47,8 +55,22 @@ func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.V
 	tenantId, accountName, err := domain.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
 
 	if err != nil {
-		resp.Status = BizErrorResponseStatus
-		resp.Status.Message = err.Error()
+		if _, ok := err.(*domain.UnauthorizedError); ok {
+			resp.Status = &manager.ManagerResponseStatus{
+				Code: http.StatusUnauthorized,
+				Message: "未登录或登录失效，请重试",
+			}
+		} else if _, ok := err.(*domain.ForbiddenError); ok {
+			resp.Status = &manager.ManagerResponseStatus{
+				Code: http.StatusForbidden,
+				Message: "无权限",
+			}
+		} else {
+			resp.Status = &manager.ManagerResponseStatus{
+				Code: http.StatusInternalServerError,
+				Message: err.Error(),
+			}
+		}
 	} else {
 		resp.Status = SuccessResponseStatus
 		resp.TenantId = int32(tenantId)

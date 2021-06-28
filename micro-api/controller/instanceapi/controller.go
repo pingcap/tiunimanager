@@ -1,9 +1,9 @@
 package instanceapi
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/ticp/micro-api/controller"
+	"github.com/pingcap/ticp/micro-api/security"
 	"github.com/pingcap/ticp/micro-cluster/client"
 	cluster "github.com/pingcap/ticp/micro-cluster/proto"
 	"net/http"
@@ -71,12 +71,6 @@ func Create(c *gin.Context) {
 		return
 	}
 
-	accountName := c.GetString("accountName")
-	tenantId := c.GetInt("tenantId")
-
-	fmt.Println("accountName", accountName)
-	fmt.Println("tenantId", tenantId)
-
 	resp,err := client.ClusterClient.CreateCluster(c, &cluster.CreateClusterRequest{
 		Name:       req.InstanceName,
 		Version:    req.InstanceVersion,
@@ -85,8 +79,8 @@ func Create(c *gin.Context) {
 		TidbCount:  int32(req.TiDBCount),
 		TikvCount: int32(req.TiKVCount),
 		Operator: &cluster.ClusterOperatorDTO{
-			TenantId: int32(tenantId),
-			AccountName: accountName,
+			TenantId: int32(c.GetInt(security.TenantIdFromToken)),
+			AccountName: c.GetString(security.AccountNameFromToken),
 		},
 	})
 

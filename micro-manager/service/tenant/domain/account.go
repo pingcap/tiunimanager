@@ -3,6 +3,7 @@ package domain
 import (
 	cryrand "crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -14,11 +15,6 @@ type Account struct {
 	Salt      string
 	FinalHash string
 	Status    CommonStatus
-}
-
-type AccountAggregation struct {
-	Account
-	Roles []Role
 }
 
 func (account *Account) genSaltAndHash(passwd string) error {
@@ -33,15 +29,23 @@ func (account *Account) genSaltAndHash(passwd string) error {
 
 	finalSalt, err := finalHash(salt, passwd)
 
-	if err == nil {
-		account.Salt = salt
-		account.FinalHash = string(finalSalt)
+	if err != nil {
+		return err
 	}
+
+	account.Salt = salt
+	account.FinalHash = string(finalSalt)
 
 	return nil
 }
 
 func  (account *Account) checkPassword(passwd string) (bool, error) {
+	if passwd == "" {
+		return false, errors.New("password cannot be empty")
+	}
+	if len(passwd) > 20 {
+		return false, errors.New("password is too long")
+	}
 	s := account.Salt + passwd
 
 	err := bcrypt.CompareHashAndPassword([]byte(account.FinalHash), []byte(s))
@@ -58,6 +62,9 @@ func  (account *Account) checkPassword(passwd string) (bool, error) {
 }
 
 func finalHash(salt string, passwd string) ([]byte, error) {
+	if passwd == "" {
+		return nil, errors.New("password cannot be empty")
+	}
 	s := salt + passwd
 	finalSalt, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)
 
@@ -65,8 +72,7 @@ func finalHash(salt string, passwd string) ([]byte, error) {
 }
 
 func (account *Account) persist() error{
-	RbacRepo.AddAccount(account)
-	return nil
+	return RbacRepo.AddAccount(account)
 }
 
 // CreateAccount 创建账号
@@ -101,16 +107,6 @@ func findAccountByName(name string) (*Account, error) {
 	return &a, err
 }
 
-// findAccountExtendInfo 根据名称获取账号及扩展信息
-func findAccountAggregation(name string) (*AccountAggregation, error) {
-	a,err := RbacRepo.LoadAccountAggregation(name)
-	if err != nil {
-		return nil, err
-	}
-
-	return &a, err
-}
-
 // assignRoles 给账号赋予角色
 func (account *Account) assignRoles(roles []Role) error {
 	bindings := make([]RoleBinding, len(roles), len(roles))
@@ -119,34 +115,5 @@ func (account *Account) assignRoles(roles []Role) error {
 		bindings[index] = RoleBinding{Account: account, Role: &r, Status: Valid}
 	}
 	return RbacRepo.AddRoleBindings(bindings)
-}
-
-// checkAuth 校验权限
-func checkAuth(account *AccountAggregation, permission *PermissionAggregation) (bool, error){
-	accountRoles := account.Roles
-
-	if accountRoles == nil || len(accountRoles) == 0 {
-		return false, nil
-	}
-
-	accountRoleMap := make(map[int]bool)
-
-	for _,r := range accountRoles {
-		accountRoleMap[r.Id] = true
-	}
-
-	allowedRoles := permission.Roles
-
-	if allowedRoles == nil || len(allowedRoles) == 0 {
-		return false, nil
-	}
-
-	for _,r := range allowedRoles {
-		if _,exist := accountRoleMap[r.Id]; exist  {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }
 

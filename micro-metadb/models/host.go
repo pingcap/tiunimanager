@@ -52,6 +52,11 @@ func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 	return nil
 }
 
+func (h *Host) AfterDelete(tx *gorm.DB) (err error) {
+	tx.Where("host_id = ?", h.ID).Delete(&Disk{})
+	return nil
+}
+
 func CreateHostTable() (int32, error) {
 	var err error
 	var tablebuilt int32 = 0
@@ -88,7 +93,9 @@ func CreateHost(host *Host) (id string, err error) {
 
 // TODO: Check Record before delete
 func DeleteHost(hostId string) (err error) {
-	MetaDB.Where("ID = ?", hostId).Delete(&Host{})
+	MetaDB.Where("ID = ?", hostId).Delete(&Host{
+		ID: hostId,
+	})
 	return nil
 }
 

@@ -15,6 +15,7 @@ import (
 // @Tags resource
 // @Accept json
 // @Produce json
+// @Param Token header string true "登录token"
 // @Param query body HostQuery true "查询请求"
 // @Success 200 {object} controller.ResultWithPage{data=[]DemoHostInfo}
 // @Router /host/query [post]

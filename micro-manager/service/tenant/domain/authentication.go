@@ -1,5 +1,17 @@
 package domain
 
+import "errors"
+
+type AccountAggregation struct {
+	Account
+	Roles []Role
+}
+
+type PermissionAggregation struct {
+	Permission
+	Roles []Role
+}
+
 // Login 登录
 func Login(userName, password string) (tokenString string, err error) {
 	account, err := findAccountByName(userName)
@@ -32,9 +44,11 @@ func Login(userName, password string) (tokenString string, err error) {
 // Logout 退出登录
 func Logout(tokenString string) (string, error) {
 	token,err := TokenMNG.GetToken(tokenString)
-	
+
 	if err != nil {
 		return "", &UnauthorizedError{}
+	} else if !token.isValid() {
+		return "", nil
 	} else {
 		accountName := token.AccountName
 		err := token.destroy()
@@ -49,6 +63,11 @@ func Logout(tokenString string) (string, error) {
 
 // Accessible 路径鉴权
 func Accessible(pathType string, path string, tokenString string) (tenantId uint, accountName string, err error) {
+	if path == "" {
+		err = errors.New("path cannot be blank")
+		return
+	}
+
 	token, err := TokenMNG.GetToken(tokenString)
 	
 	if err != nil {
@@ -83,19 +102,63 @@ func Accessible(pathType string, path string, tokenString string) (tenantId uint
 	}
 
 	if !ok {
-		err = &UnauthorizedError{}
+		err = &ForbiddenError{}
 	}
 
 	return
 }
 
+// findAccountExtendInfo 根据名称获取账号及扩展信息
+func findAccountAggregation(name string) (*AccountAggregation, error) {
+	a,err := RbacRepo.LoadAccountAggregation(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &a, err
+}
+
+func findPermissionAggregationByCode(tenantId uint, code string) (*PermissionAggregation, error) {
+	a,e := RbacRepo.LoadPermissionAggregation(tenantId, code)
+	return &a, e
+}
+
+// checkAuth 校验权限
+func checkAuth(account *AccountAggregation, permission *PermissionAggregation) (bool, error){
+	accountRoles := account.Roles
+
+	if accountRoles == nil || len(accountRoles) == 0 {
+		return false, nil
+	}
+
+	accountRoleMap := make(map[int]bool)
+
+	for _,r := range accountRoles {
+		accountRoleMap[r.Id] = true
+	}
+
+	allowedRoles := permission.Roles
+
+	if allowedRoles == nil || len(allowedRoles) == 0 {
+		return false, nil
+	}
+
+	for _,r := range allowedRoles {
+		if _,exist := accountRoleMap[r.Id]; exist  {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 type UnauthorizedError struct {}
 func (*UnauthorizedError) Error() string{
-	return "认证失败"
+	return "Unauthorized"
 }
 
 type ForbiddenError struct {}
 func (*ForbiddenError) Error() string{
-	return "无访问权限"
+	return "Access Forbidden"
 }
 

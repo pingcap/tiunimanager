@@ -2,6 +2,16 @@ package domain
 
 import "errors"
 
+type AccountAggregation struct {
+	Account
+	Roles []Role
+}
+
+type PermissionAggregation struct {
+	Permission
+	Roles []Role
+}
+
 // Login 登录
 func Login(userName, password string) (tokenString string, err error) {
 	account, err := findAccountByName(userName)
@@ -96,6 +106,50 @@ func Accessible(pathType string, path string, tokenString string) (tenantId uint
 	}
 
 	return
+}
+
+// findAccountExtendInfo 根据名称获取账号及扩展信息
+func findAccountAggregation(name string) (*AccountAggregation, error) {
+	a,err := RbacRepo.LoadAccountAggregation(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &a, err
+}
+
+func findPermissionAggregationByCode(tenantId uint, code string) (*PermissionAggregation, error) {
+	a,e := RbacRepo.LoadPermissionAggregation(tenantId, code)
+	return &a, e
+}
+
+// checkAuth 校验权限
+func checkAuth(account *AccountAggregation, permission *PermissionAggregation) (bool, error){
+	accountRoles := account.Roles
+
+	if accountRoles == nil || len(accountRoles) == 0 {
+		return false, nil
+	}
+
+	accountRoleMap := make(map[int]bool)
+
+	for _,r := range accountRoles {
+		accountRoleMap[r.Id] = true
+	}
+
+	allowedRoles := permission.Roles
+
+	if allowedRoles == nil || len(allowedRoles) == 0 {
+		return false, nil
+	}
+
+	for _,r := range allowedRoles {
+		if _,exist := accountRoleMap[r.Id]; exist  {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 type UnauthorizedError struct {}

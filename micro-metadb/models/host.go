@@ -93,49 +93,26 @@ func DeleteHost(hostId string) (err error) {
 }
 
 func ListHosts() (hosts []Host, err error) {
-	tx := MetaDB.Begin()
-	if tx.Find(&hosts); tx.Error != nil {
-		tx.Rollback()
-		return nil, tx.Error
-	}
+	MetaDB.Find(&hosts)
 	for k, v := range hosts {
-		if tx.Find(&(hosts[k].Disks), "HOST_ID = ?", v.ID); tx.Error != nil {
-			tx.Rollback()
-			return nil, tx.Error
-		}
+		MetaDB.Find(&(hosts[k].Disks), "HOST_ID = ?", v.ID)
 	}
-	err = tx.Commit().Error
 	return
 }
 
 func FindHostById(hostId string) (*Host, error) {
 	host := new(Host)
-	tx := MetaDB.Begin()
-	if tx.First(host, "ID = ?", hostId); tx.Error != nil {
-		tx.Rollback()
-		return nil, tx.Error
-	}
+	MetaDB.First(host, "ID = ?", hostId)
 	// Fill Host's Disks
-	if tx.Find(&(host.Disks), "HOST_ID = ?", hostId); tx.Error != nil {
-		tx.Rollback()
-		return nil, tx.Error
-	}
+	MetaDB.Find(&(host.Disks), "HOST_ID = ?", hostId)
 	return host, nil
 }
 
 // TODO: Just a trick demo function
 func AllocHosts() (hosts []Host, err error) {
-	tx := MetaDB.Begin()
-	if tx.Find(&hosts); tx.Error != nil {
-		tx.Rollback()
-		return nil, tx.Error
-	}
+	MetaDB.Find(&hosts)
 	for k, v := range hosts {
-		if tx.Find(&(hosts[k].Disks), "HOST_ID = ?", v.ID); tx.Error != nil {
-			tx.Rollback()
-			return nil, tx.Error
-		}
+		MetaDB.Find(&(hosts[k].Disks), "HOST_ID = ?", v.ID)
 	}
-	err = tx.Commit().Error
-	return hosts, err
+	return
 }

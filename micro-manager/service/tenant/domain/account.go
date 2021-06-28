@@ -17,11 +17,6 @@ type Account struct {
 	Status    CommonStatus
 }
 
-type AccountAggregation struct {
-	Account
-	Roles []Role
-}
-
 func (account *Account) genSaltAndHash(passwd string) error {
 	b := make([]byte, 16)
 	_, err := cryrand.Read(b)
@@ -112,16 +107,6 @@ func findAccountByName(name string) (*Account, error) {
 	return &a, err
 }
 
-// findAccountExtendInfo 根据名称获取账号及扩展信息
-func findAccountAggregation(name string) (*AccountAggregation, error) {
-	a,err := RbacRepo.LoadAccountAggregation(name)
-	if err != nil {
-		return nil, err
-	}
-
-	return &a, err
-}
-
 // assignRoles 给账号赋予角色
 func (account *Account) assignRoles(roles []Role) error {
 	bindings := make([]RoleBinding, len(roles), len(roles))
@@ -130,34 +115,5 @@ func (account *Account) assignRoles(roles []Role) error {
 		bindings[index] = RoleBinding{Account: account, Role: &r, Status: Valid}
 	}
 	return RbacRepo.AddRoleBindings(bindings)
-}
-
-// checkAuth 校验权限
-func checkAuth(account *AccountAggregation, permission *PermissionAggregation) (bool, error){
-	accountRoles := account.Roles
-
-	if accountRoles == nil || len(accountRoles) == 0 {
-		return false, nil
-	}
-
-	accountRoleMap := make(map[int]bool)
-
-	for _,r := range accountRoles {
-		accountRoleMap[r.Id] = true
-	}
-
-	allowedRoles := permission.Roles
-
-	if allowedRoles == nil || len(allowedRoles) == 0 {
-		return false, nil
-	}
-
-	for _,r := range allowedRoles {
-		if _,exist := accountRoleMap[r.Id]; exist  {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }
 

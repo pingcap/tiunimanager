@@ -16,16 +16,24 @@ type Token struct {
 	ExpirationTime 	time.Time  	`gorm:"size:255"`
 }
 
-func AddToken(tokenString, accountName string, accountId,tenantId int32, expirationTime time.Time) (token Token, err error) {
-	token.TokenString = tokenString
-	token.AccountId = accountId
-	token.TenantId = tenantId
-	token.ExpirationTime = expirationTime
-	token.AccountName = accountName
-	token.Status = 1
+func AddToken(tokenString, accountName string, accountId, tenantId int32, expirationTime time.Time) (token Token, err error) {
+	token, err = FindToken(tokenString)
 
-	MetaDB.Create(&token)
-	return
+	if err == nil && token.TokenString == tokenString{
+		token.ExpirationTime = expirationTime
+		MetaDB.Save(&token)
+		return
+	} else {
+		token.TokenString = tokenString
+		token.AccountId = accountId
+		token.TenantId = tenantId
+		token.ExpirationTime = expirationTime
+		token.AccountName = accountName
+		token.Status = 1
+
+		MetaDB.Create(&token)
+		return
+	}
 }
 
 func FindToken(tokenString string) (token Token, err error) {

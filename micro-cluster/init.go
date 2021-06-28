@@ -3,6 +3,8 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/pingcap/ticp/micro-cluster/service/clustermanage"
+	"github.com/pingcap/ticp/micro-cluster/service/clusteroperate"
 	"log"
 	"net/http"
 
@@ -39,8 +41,9 @@ func initLogger() {
 	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(mylogger.WithContext(nil)))
 }
 
-func initMicroTiup() {
+func initClusterOperator() {
 	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup")
+	clustermanage.Operator = new(clusteroperate.TiUPOperator)
 }
 
 func initService() {

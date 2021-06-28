@@ -8,7 +8,7 @@ func main() {
 	initConfig()
 	initLogger()
 	initClient()
-
+	initClusterOperator()
 	initService()
 	//initPrometheus()
 

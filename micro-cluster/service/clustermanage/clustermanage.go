@@ -3,7 +3,6 @@ package clustermanage
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	log "github.com/sirupsen/logrus"
 	"time"
 
@@ -157,15 +156,41 @@ func (cluster *Cluster) persistCurrentConfig() {
 }
 
 func (cluster *Cluster) ExecuteTiUP(f *FlowWork) {
-	// todo 从韩森提供的接口去调用
-	fmt.Println("开始执行tiup了")
+	f.currentTask = CreateTask()
+
+	Operator.DeployCluster(cluster, uint64(f.currentTask.id))
+
 	f.moveOn("tiUPStart")
 }
 
 func (cluster *Cluster) CheckTiUPResult(f *FlowWork) {
-	fmt.Println("检查到tiup执行成功")
-	// todo 异步轮询韩森提供的接口？
-	f.moveOn("tiUPDone")
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		for _ = range ticker.C {
+			status, s, err := Operator.CheckProgress(uint64(f.currentTask.id))
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+
+			switch status {
+			case dbPb.TiupTaskStatus_Init:
+				log.Info(s)
+			case dbPb.TiupTaskStatus_Processing:
+				log.Info(s)
+			case dbPb.TiupTaskStatus_Finished:
+				log.Info(s)
+				f.moveOn("tiUPDone")
+				ticker.Stop()
+			case dbPb.TiupTaskStatus_Error:
+				log.Error(s)
+				f.moveOn("tiUPDone")
+				ticker.Stop()
+			}
+		}
+	}()
+
+
 }
 
 func QueryCluster(page, pageSize int) (clusters []*Cluster, err error) {
@@ -184,4 +209,19 @@ func QueryCluster(page, pageSize int) (clusters []*Cluster, err error) {
 		clusters = append(clusters, cluster)
 	}
 	return
+}
+
+var Operator ClusterOperator
+var Monitor ClusterMonitor
+
+// ClusterOperator 集群操作
+type ClusterOperator interface {
+	// DeployCluster 部署一个集群
+	DeployCluster(cluster *Cluster, bizId uint64) error
+	// CheckProgress 查看处理过程
+	CheckProgress(bizId uint64) (dbPb.TiupTaskStatus, string, error)
+}
+
+// ClusterMonitor 集群监控
+type ClusterMonitor interface {
 }

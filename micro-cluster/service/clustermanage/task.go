@@ -11,6 +11,7 @@ type FlowWork struct {
 	bizId 		string
 	status 		int
 	context 	FlowContext
+	currentTask Task
 }
 
 type FlowContext map[string]interface{}
@@ -76,7 +77,7 @@ type CronTask struct {
 
 // Task 异步的任务或工作。需要用户手动完成或系统回调的
 type Task struct {
-	bizId 		string
+	id         		uint
 	// doing success fail
 	status 			int
 	taskType    	TaskType
@@ -84,6 +85,14 @@ type Task struct {
 	taskExecutor 	string
 	parameter 		string
 	result 			string
+}
+
+var taskIdSeq uint = 100000000
+
+func CreateTask() (t Task) {
+	t.id = taskIdSeq
+	taskIdSeq ++
+	return
 }
 
 type TaskType int8

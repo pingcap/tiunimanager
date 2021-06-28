@@ -108,6 +108,7 @@ func initTables() error {
 		&models.TiUPConfig{},
 		&models.Host{},
 		&models.Disk{},
+		&models.TiupTask{},
 	)
 	return err
 }

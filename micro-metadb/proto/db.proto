@@ -3,6 +3,7 @@ syntax = "proto3";
 import "db_auth.proto";
 import "db_host.proto";
 import "db_cluster.proto";
+import "db_tiup.proto";
 
 option go_package = "./;db";
 
@@ -26,4 +27,10 @@ service TiCPDBService {
 	rpc FindCluster(DBFindClusterRequest) returns (DBFindClusterResponse);
 	rpc UpdateTiUPConfig(DBUpdateTiUPConfigRequest) returns (DBUpdateTiUPConfigResponse);
 	rpc ListCluster(DBListClusterRequest) returns (DBListClusterResponse);
+
+	// Tiup Task
+	rpc CreateTiupTask(CreateTiupTaskRequest) returns (CreateTiupTaskResponse);
+	rpc UpdateTiupTask(UpdateTiupTaskRequest) returns (UpdateTiupTaskResponse);
+	rpc FindTiupTaskByID(FindTiupTaskByIDRequest) returns (FindTiupTaskByIDResponse);
+	rpc GetTiupTaskStatusByBizID(GetTiupTaskStatusByBizIDRequest) returns (GetTiupTaskStatusByBizIDResponse);
 }

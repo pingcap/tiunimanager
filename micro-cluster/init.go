@@ -3,6 +3,9 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
+	"net/http"
+
 	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
@@ -14,11 +17,10 @@ import (
 	"github.com/pingcap/ticp/config"
 	cluster "github.com/pingcap/ticp/micro-cluster/proto"
 	"github.com/pingcap/ticp/micro-cluster/service"
+	"github.com/pingcap/ticp/micro-cluster/service/clusteroperate/libtiup"
 	managerclient "github.com/pingcap/ticp/micro-manager/client"
 	dbclient "github.com/pingcap/ticp/micro-metadb/client"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"log"
-	"net/http"
 )
 
 func initConfig() {
@@ -35,6 +37,10 @@ func initConfig() {
 func initLogger() {
 	// log
 	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(mylogger.WithContext(nil)))
+}
+
+func initMicroTiup() {
+	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup")
 }
 
 func initService() {

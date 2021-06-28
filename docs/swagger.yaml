@@ -263,6 +263,11 @@ paths:
       - application/json
       description: 查询主机
       parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
       - description: 查询请求
         in: body
         name: query

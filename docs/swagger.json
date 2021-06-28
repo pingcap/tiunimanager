@@ -184,6 +184,13 @@
                 "summary": "查询主机接口",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "查询请求",
                         "name": "query",
                         "in": "body",

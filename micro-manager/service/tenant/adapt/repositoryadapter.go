@@ -3,6 +3,7 @@ package adapt
 import (
 	"context"
 	"errors"
+	"github.com/google/uuid"
 	"github.com/pingcap/ticp/micro-manager/service/tenant/domain"
 	"github.com/pingcap/ticp/micro-metadb/client"
 	db "github.com/pingcap/ticp/micro-metadb/proto"
@@ -94,7 +95,7 @@ func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account domain.Acc
 
 func (m MicroMetaDbRepo) Provide(tiCPToken *domain.TiCPToken) (tokenString string, err error) {
 	// 提供token
-	tokenString = tiCPToken.AccountName
+	tokenString = uuid.New().String()
 
 	req := db.DBSaveTokenRequest{
 		Token: &db.DBTokenDTO{

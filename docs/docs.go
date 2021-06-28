@@ -106,13 +106,11 @@ var doc = `{
                         "required": true
                     },
                     {
+                        "type": "string",
                         "description": "主机ID",
                         "name": "hostId",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -157,13 +155,11 @@ var doc = `{
                         "required": true
                     },
                     {
+                        "type": "string",
                         "description": "待删除的主机ID",
                         "name": "hostId",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -262,7 +258,6 @@ var doc = `{
                         "description": "可选的查询主机的条件",
                         "name": "query",
                         "in": "body",
-                        "required": true,
                         "schema": {
                             "$ref": "#/definitions/hostapi.ListHostCondition"
                         }
@@ -617,7 +612,7 @@ var doc = `{
                 "os": {
                     "type": "string"
                 },
-                "purpos": {
+                "purpose": {
                     "description": "What Purpose is the host used for? [compute/storage or both]",
                     "type": "string"
                 },
@@ -644,7 +639,7 @@ var doc = `{
         "hostapi.ListHostCondition": {
             "type": "object",
             "properties": {
-                "purpos": {
+                "purpose": {
                     "description": "What Purpose is the host used for? [compute/storage or both]",
                     "type": "string"
                 },

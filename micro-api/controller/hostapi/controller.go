@@ -124,7 +124,7 @@ func ImportHost(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param query body ListHostCondition true "可选的查询主机的条件"
+// @Param query body ListHostCondition false "可选的查询主机的条件"
 // @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
 // @Router /hosts [get]
 func ListHost(c *gin.Context) {
@@ -188,7 +188,7 @@ func HostDetails(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param hostId body string true "待删除的主机ID"
+// @Param hostId path string true "待删除的主机ID"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /host/ [delete]
 func RemoveHost(c *gin.Context) {

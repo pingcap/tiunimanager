@@ -77,7 +77,7 @@ definitions:
         type: string
       os:
         type: string
-      purpos:
+      purpose:
         description: What Purpose is the host used for? [compute/storage or both]
         type: string
       rack:
@@ -95,7 +95,7 @@ definitions:
     type: object
   hostapi.ListHostCondition:
     properties:
-      purpos:
+      purpose:
         description: What Purpose is the host used for? [compute/storage or both]
         type: string
       status:
@@ -208,11 +208,10 @@ paths:
         required: true
         type: string
       - description: 待删除的主机ID
-        in: body
+        in: path
         name: hostId
         required: true
-        schema:
-          type: string
+        type: string
       produces:
       - application/json
       responses:
@@ -239,11 +238,10 @@ paths:
         required: true
         type: string
       - description: 主机ID
-        in: body
+        in: path
         name: hostId
         required: true
-        schema:
-          type: string
+        type: string
       produces:
       - application/json
       responses:
@@ -302,7 +300,6 @@ paths:
       - description: 可选的查询主机的条件
         in: body
         name: query
-        required: true
         schema:
           $ref: '#/definitions/hostapi.ListHostCondition'
       produces:

@@ -3,8 +3,10 @@ package clustermanage
 import (
 	"context"
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
+	"path/filepath"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	mngClient "github.com/pingcap/ticp/micro-manager/client"
 	dbClient "github.com/pingcap/ticp/micro-metadb/client"
@@ -17,12 +19,12 @@ import (
 
 // Cluster 集群
 type Cluster struct {
-	Id         	uint
-	TenantId   	uint
-	Name       	string
-	Status     	int
-	Version    	string
-	CreateTime 	time.Time
+	Id         uint
+	TenantId   uint
+	Name       string
+	Status     int
+	Version    string
+	CreateTime time.Time
 
 	Demand          ClusterDemand
 	CurrentConfigId uint
@@ -42,17 +44,17 @@ func CreateCluster(name, dbPassword, version string,
 	log.Info("create cluster by ", operatorName)
 	req := dbPb.DBCreateClusterRequest{
 		Cluster: &dbPb.DBClusterDTO{
-			Name:      name,
-			TenantId: int32(tenantId),
+			Name:       name,
+			TenantId:   int32(tenantId),
 			DbPassword: dbPassword,
-			Version:   version,
-			TikvCount: tikvCount,
-			TidbCount: tidbCount,
-			PdCount:   pdCount,
+			Version:    version,
+			TikvCount:  tikvCount,
+			TidbCount:  tidbCount,
+			PdCount:    pdCount,
 		},
 	}
 
-	resp, err :=  dbClient.DBClient.AddCluster(context.TODO(), &req)
+	resp, err := dbClient.DBClient.AddCluster(context.TODO(), &req)
 	if err != nil {
 		// 处理异常
 	}
@@ -75,7 +77,7 @@ func copyClusterDbDtoToDomain(dto *dbPb.DBClusterDTO, domain *Cluster) {
 	domain.Demand = ClusterDemand{
 		tiDBNodeQuantity: int(dto.TidbCount),
 		tiKVNodeQuantity: int(dto.TikvCount),
-		pdNodeQuantity: int(dto.PdCount),
+		pdNodeQuantity:   int(dto.PdCount),
 	}
 }
 
@@ -100,41 +102,35 @@ func (cluster *Cluster) PrepareResource(f *FlowWork) {
 func (cluster *Cluster) BuildConfig(f *FlowWork) {
 
 	hosts := f.context.Value("hosts").([]*mngPb.AllocHost)
+	dataDir := filepath.Join(hosts[0].Disk.Path, "data")
+	deployDir := filepath.Join(hosts[0].Disk.Path, "deploy")
 	// Deal with Global Settings
+	cluster.TiUPConfig.GlobalOptions.DataDir = dataDir
+	cluster.TiUPConfig.GlobalOptions.DeployDir = deployDir
 	cluster.TiUPConfig.GlobalOptions.User = "tidb"
 	cluster.TiUPConfig.GlobalOptions.SSHPort = 22
 	cluster.TiUPConfig.GlobalOptions.Arch = "amd64"
 	cluster.TiUPConfig.GlobalOptions.LogDir = "/tidb-log"
 	// Deal with Promethus, AlertManger, Grafana
 	cluster.TiUPConfig.Monitors = append(cluster.TiUPConfig.Monitors, &spec.PrometheusSpec{
-		Host:      hosts[0].Ip,
-		DataDir:   hosts[0].Disk.Path,
-		DeployDir: hosts[0].Disk.Path,
+		Host: hosts[0].Ip,
 	})
 	cluster.TiUPConfig.Alertmanagers = append(cluster.TiUPConfig.Alertmanagers, &spec.AlertmanagerSpec{
-		Host:      hosts[0].Ip,
-		DataDir:   hosts[0].Disk.Path,
-		DeployDir: hosts[0].Disk.Path,
+		Host: hosts[0].Ip,
 	})
 	cluster.TiUPConfig.Grafanas = append(cluster.TiUPConfig.Grafanas, &spec.GrafanaSpec{
-		Host:      hosts[0].Ip,
-		DeployDir: hosts[0].Disk.Path,
+		Host: hosts[0].Ip,
 	})
 	// Deal with PDServers, TiDBServers, TiKVServers
 	for _, v := range hosts {
 		cluster.TiUPConfig.PDServers = append(cluster.TiUPConfig.PDServers, &spec.PDSpec{
-			Host:      v.Ip,
-			DataDir:   v.Disk.Path,
-			DeployDir: v.Disk.Path,
+			Host: v.Ip,
 		})
 		cluster.TiUPConfig.TiDBServers = append(cluster.TiUPConfig.TiDBServers, &spec.TiDBSpec{
-			Host:      v.Ip,
-			DeployDir: v.Disk.Path,
+			Host: v.Ip,
 		})
 		cluster.TiUPConfig.TiKVServers = append(cluster.TiUPConfig.TiKVServers, &spec.TiKVSpec{
-			Host:      v.Ip,
-			DataDir:   v.Disk.Path,
-			DeployDir: v.Disk.Path,
+			Host: v.Ip,
 		})
 	}
 
@@ -148,7 +144,7 @@ func (cluster *Cluster) persistCurrentConfig() {
 		// 处理json序列化异常
 	}
 	resp, err := dbClient.DBClient.UpdateTiUPConfig(context.TODO(), &dbPb.DBUpdateTiUPConfigRequest{
-		ClusterId: int32(cluster.Id),
+		ClusterId:     int32(cluster.Id),
 		ConfigContent: string(configByte),
 	})
 
@@ -190,13 +186,12 @@ func (cluster *Cluster) CheckTiUPResult(f *FlowWork) {
 		}
 	}()
 
-
 }
 
 func QueryCluster(page, pageSize int) (clusters []*Cluster, err error) {
 	resp, err := dbClient.DBClient.ListCluster(context.TODO(), &dbPb.DBListClusterRequest{
-		Page: 		int32(page),
-		PageSize: 	int32(pageSize),
+		Page:     int32(page),
+		PageSize: int32(pageSize),
 	})
 
 	if err != nil {

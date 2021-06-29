@@ -17,7 +17,7 @@ func (TiUPOperator) DeployCluster(cluster *clustermanage.Cluster, bizId uint64) 
 	}
 	cfgYamlStr := string(bs)
 	_, err = libtiup.MicroSrvTiupDeploy(
-		cluster.Name, cluster.Version, cfgYamlStr, 0, nil, bizId,
+		cluster.Name, cluster.Version, cfgYamlStr, 0, []string{"-i", "/root/.ssh/id_rsa_tiup_test"}, bizId,
 	)
 	return err
 }

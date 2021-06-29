@@ -153,7 +153,7 @@ func initDataForDemo() {
 	// 添加一些demo使用的host和disk数据
 	models.CreateHost(&models.Host{
 		Name:     "主机1",
-		IP:       "192.168.23.11",
+		IP:       "192.168.125.132",
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
@@ -164,45 +164,7 @@ func initDataForDemo() {
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
-			{Name: "sdb", Path: "/data1", Capacity: 256, Status: 1},
-			{Name: "sdc", Path: "/data2", Capacity: 512, Status: 0},
-		},
-	})
-
-	models.CreateHost(&models.Host{
-		Name:     "主机2",
-		IP:       "192.168.23.12",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 64,
-		Memory:   128,
-		Nic:      "1GE",
-		AZ:       "East China",
-		Rack:     "3-2",
-		Purpose:  "Compute/Storage",
-		Disks: []models.Disk{
-			{Name: "sdb", Path: "/mypath/data1", Capacity: 1024, Status: 0},
-			{Name: "sdc", Path: "/mypath/data2", Capacity: 1024, Status: 0},
-		},
-	})
-
-	models.CreateHost(&models.Host{
-		Name:     "主机3",
-		IP:       "192.168.23.13",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 16,
-		Memory:   16,
-		Nic:      "10GE",
-		AZ:       "East China",
-		Rack:     "3-3",
-		Purpose:  "Storage",
-		Disks: []models.Disk{
-			{Name: "nvme0p0", Path: "/root/disk1", Capacity: 1024, Status: 0},
-			{Name: "nvme0p1", Path: "/root/disk2", Capacity: 1024, Status: 0},
-			{Name: "nvme0p3", Path: "/root/disk3", Capacity: 1024, Status: 0},
+			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	})
 

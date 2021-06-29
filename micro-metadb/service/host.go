@@ -118,6 +118,7 @@ func (*DBServiceHandler) AllocHosts(ctx context.Context, req *dbPb.DBAllocHostsR
 		var host dbPb.DBAllocHostDTO
 		host.HostName = v.Name
 		host.Ip = v.IP
+		host.Disk = new(dbPb.DBDiskDTO)
 		host.Disk.Name = v.Disks[0].Name
 		host.Disk.Capacity = v.Disks[0].Capacity
 		host.Disk.Path = v.Disks[0].Path

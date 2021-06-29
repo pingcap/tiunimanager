@@ -409,7 +409,7 @@ func TiupMgrRoutine() {
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			case CmdDestroyReqTypeStr:
 				resp := mgrHandleCmdDestroyReq(cmd.Content)
-				cmdResp.TypeStr = CmdDeployRespTypeStr
+				cmdResp.TypeStr = CmdDestroyRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			case CmdGetAllTaskStatusReqTypeStr:
 				resp := mgrHandleCmdGetAllTaskStatusReq(cmd.Content)

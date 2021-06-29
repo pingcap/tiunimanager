@@ -23,6 +23,10 @@ type Disk struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
+func (d Disk) TableName() string {
+	return "disks"
+}
+
 func (d *Disk) BeforeCreate(tx *gorm.DB) (err error) {
 	d.ID = uuid.New().String()
 	return nil
@@ -45,6 +49,10 @@ type Host struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+func (h Host) TableName() string {
+	return "hosts"
 }
 
 func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {

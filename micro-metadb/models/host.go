@@ -118,8 +118,5 @@ func FindHostById(hostId string) (*Host, error) {
 // TODO: Just a trick demo function
 func AllocHosts() (hosts []Host, err error) {
 	MetaDB.Find(&hosts)
-	for k, v := range hosts {
-		MetaDB.Find(&(hosts[k].Disks), "HOST_ID = ?", v.ID)
-	}
 	return
 }

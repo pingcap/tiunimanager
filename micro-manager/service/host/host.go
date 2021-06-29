@@ -133,10 +133,11 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 		log.Fatal("Alloc Hosts", req.PdCount, req.TidbCount, req.TikvCount, "Failed, err", err)
 		return err
 	}
-	for _, v := range out.Hosts {
+	for _, v := range rsp.Hosts {
 		var host hostPb.AllocHost
 		host.HostName = v.HostName
 		host.Ip = v.Ip
+		host.Disk = new(hostPb.Disk)
 		host.Disk.Name = v.Disk.Name
 		host.Disk.Capacity = v.Disk.Capacity
 		host.Disk.Path = v.Disk.Path

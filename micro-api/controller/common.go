@@ -47,6 +47,12 @@ func Fail(code int, message string) CommonResult {
 	return CommonResult{ResultMark{code, message}, struct{}{}}
 }
 
+type Usage struct {
+	Total float32
+	Used  float32
+	Usage float32
+}
+
 type Page struct {
 	Page      int    `json:"page"`
 	PageSize  int    `json:"pageSize"`

@@ -1,5 +1,237 @@
 basePath: /api/v1/
 definitions:
+  clusterapi.ClusterDisplayInfo:
+    properties:
+      backupFileUsage:
+        $ref: '#/definitions/controller.Usage'
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      cpuUsage:
+        $ref: '#/definitions/controller.Usage'
+      createTime:
+        type: string
+      dbPassword:
+        type: string
+      deleteTime:
+        type: string
+      diskUsage:
+        $ref: '#/definitions/controller.Usage'
+      extranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      inProcessFlowId:
+        type: integer
+      intranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      memoryUsage:
+        $ref: '#/definitions/controller.Usage'
+      port:
+        type: integer
+      status:
+        type: string
+      storageUsage:
+        $ref: '#/definitions/controller.Usage'
+      tls:
+        type: boolean
+      updateTime:
+        type: string
+      whitelist:
+        items:
+          type: string
+        type: array
+    type: object
+  clusterapi.ClusterKnowledgeRsp:
+    properties:
+      clusterTypes:
+        items:
+          $ref: '#/definitions/clusterapi.ClusterTypeInfo'
+        type: array
+    type: object
+  clusterapi.ClusterNodeDemand:
+    properties:
+      componentType:
+        type: string
+      distributionItems:
+        items:
+          $ref: '#/definitions/clusterapi.DistributionItem'
+        type: array
+      totalNodeCount:
+        type: integer
+    type: object
+  clusterapi.ClusterTypeInfo:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+      versions:
+        items:
+          $ref: '#/definitions/clusterapi.ClusterVersion'
+        type: array
+    type: object
+  clusterapi.ClusterVersion:
+    properties:
+      code:
+        type: string
+      constraints:
+        items:
+          $ref: '#/definitions/clusterapi.ComponentConstraint'
+        type: array
+      name:
+        type: string
+    type: object
+  clusterapi.ComponentConstraint:
+    properties:
+      availableSpecCodes:
+        items:
+          type: string
+        type: array
+      componentName:
+        type: string
+      componentRequired:
+        type: boolean
+      componentType:
+        type: string
+      minZoneQuantity:
+        type: integer
+      suggestedNodeQuantities:
+        items:
+          type: integer
+        type: array
+    type: object
+  clusterapi.CreateClusterRsp:
+    properties:
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      createTime:
+        type: string
+      dbPassword:
+        type: string
+      deleteTime:
+        type: string
+      inProcessFlowId:
+        type: integer
+      status:
+        type: string
+      tls:
+        type: boolean
+      updateTime:
+        type: string
+    type: object
+  clusterapi.CreateRequest:
+    properties:
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      dbPassword:
+        type: string
+      nodeDemandList:
+        items:
+          $ref: '#/definitions/clusterapi.ClusterNodeDemand'
+        type: array
+      tls:
+        type: boolean
+    type: object
+  clusterapi.DeleteClusterRsp:
+    properties:
+      clusterId:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      inProcessFlowId:
+        type: integer
+      status:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  clusterapi.DetailClusterRsp:
+    properties:
+      backupFileUsage:
+        $ref: '#/definitions/controller.Usage'
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      cpuUsage:
+        $ref: '#/definitions/controller.Usage'
+      createTime:
+        type: string
+      dbPassword:
+        type: string
+      deleteTime:
+        type: string
+      diskUsage:
+        $ref: '#/definitions/controller.Usage'
+      extranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      inProcessFlowId:
+        type: integer
+      intranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      maintainTaskCron:
+        type: string
+      memoryUsage:
+        $ref: '#/definitions/controller.Usage'
+      port:
+        type: integer
+      status:
+        type: string
+      storageUsage:
+        $ref: '#/definitions/controller.Usage'
+      tls:
+        type: boolean
+      updateTime:
+        type: string
+      whitelist:
+        items:
+          type: string
+        type: array
+    type: object
+  clusterapi.DistributionItem:
+    properties:
+      count:
+        type: integer
+      specCode:
+        type: string
+      zoneCode:
+        type: string
+    type: object
+  clusterapi.QueryRequest:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+    type: object
   controller.CommonResult:
     properties:
       code:
@@ -28,6 +260,15 @@ definitions:
         type: string
       page:
         $ref: '#/definitions/controller.Page'
+    type: object
+  controller.Usage:
+    properties:
+      total:
+        type: number
+      usage:
+        type: number
+      used:
+        type: number
     type: object
   hostapi.DemoHostInfo:
     properties:
@@ -104,6 +345,28 @@ definitions:
         description: Host Status, 0 for Online, 1 for offline
         type: integer
     type: object
+  hostapi.ZoneHostStock:
+    properties:
+      count:
+        type: integer
+      specCode:
+        type: string
+      specName:
+        type: string
+      zoneCode:
+        type: string
+      zoneName:
+        type: string
+    type: object
+  hostapi.ZoneHostStockRsp:
+    properties:
+      availableStocks:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/hostapi.ZoneHostStock'
+          type: array
+        type: object
+    type: object
   instanceapi.InstanceCreate:
     properties:
       dbPassword:
@@ -166,6 +429,158 @@ info:
   title: TiCP UI API
   version: "1.0"
 paths:
+  /cluster:
+    post:
+      consumes:
+      - application/json
+      description: 创建集群接口
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 创建参数
+        in: body
+        name: cluster
+        required: true
+        schema:
+          $ref: '#/definitions/clusterapi.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/clusterapi.CreateClusterRsp'
+              type: object
+      summary: 创建集群接口
+      tags:
+      - cluster
+  /cluster/:
+    delete:
+      consumes:
+      - application/json
+      description: 删除集群
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 待删除的集群ID
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/clusterapi.DeleteClusterRsp'
+              type: object
+      summary: 删除集群
+      tags:
+      - cluster
+    get:
+      consumes:
+      - application/json
+      description: 查看集群详情
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 集群ID
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/clusterapi.DetailClusterRsp'
+              type: object
+      summary: 查看集群详情
+      tags:
+      - cluster
+  /cluster/knowledge:
+    get:
+      consumes:
+      - application/json
+      description: 查看集群基本知识
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/clusterapi.ClusterKnowledgeRsp'
+              type: object
+      summary: 查看集群基本知识
+      tags:
+      - cluster
+  /clusters:
+    get:
+      consumes:
+      - application/json
+      description: 查询集群列表
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 可选的查询集群的条件
+        in: body
+        name: query
+        schema:
+          $ref: '#/definitions/clusterapi.QueryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/clusterapi.ClusterDisplayInfo'
+                  type: array
+              type: object
+      summary: 查询集群列表
+      tags:
+      - cluster
   /host:
     post:
       consumes:
@@ -324,6 +739,34 @@ paths:
                   type: array
               type: object
       summary: 查询主机列表
+      tags:
+      - resource
+  /hosts/stocks:
+    get:
+      consumes:
+      - application/json
+      description: 查询各可用区的主机规格库存
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/hostapi.ZoneHostStockRsp'
+                  type: array
+              type: object
+      summary: 查询各可用区的主机规格库存
       tags:
       - resource
   /instance/create:

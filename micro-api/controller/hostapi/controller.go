@@ -209,3 +209,16 @@ func RemoveHost(c *gin.Context) {
 		c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
 	}
 }
+
+// QueryZoneHostStock 查询各可用区的主机规格库存
+// @Summary 查询各可用区的主机规格库存
+// @Description 查询各可用区的主机规格库存
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Param Token header string true "登录token"
+// @Success 200 {object} controller.CommonResult{data=[]ZoneHostStockRsp}
+// @Router /hosts/stocks [get]
+func QueryZoneHostStock(c *gin.Context) {
+
+}

@@ -5,6 +5,7 @@ type DemoHostInfo struct {
 	HostName string `json:"hostName"`
 	HostIp   string `json:"hostIp"`
 }
+
 type ImportHostRsp struct {
 	HostId string `json:"hostId"`
 }
@@ -15,4 +16,8 @@ type ListHostRsp struct {
 
 type HostDetailsRsp struct {
 	Host HostInfo `json:"host"`
+}
+
+type ZoneHostStockRsp struct {
+	AvailableStocks 	map[string][]ZoneHostStock
 }

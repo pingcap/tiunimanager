@@ -1,0 +1,94 @@
+syntax = "proto3";
+
+option go_package = "./;db";
+
+message DBHostResponseStatus {
+    int32 code = 1;
+    string message = 2;
+}
+
+enum DBHostStatus {
+    DBHostStatus_ONLINE = 0;
+    DBHostStatus_OFFLINE = 1;
+}
+
+enum DBDiskStatus {
+    DBDiskStatus_AVAILABLE = 0;              // This Disk can be alloced.
+    DBDiskStatus_INUSED = 1;
+}
+
+message DBDiskDTO {
+    string name = 1;            // [sda/sdb/nvmep0...]
+    int32 capacity = 2;         // Disk size, Unit: GB
+    string path = 3;            // Disk mount path: [/data1]
+    DBDiskStatus status = 4;
+}
+
+message DBHostInfoDTO {
+    string hostName = 1;
+    string dc = 2;
+    string az = 3;
+    string rack = 4;
+    string ip = 5;
+    DBHostStatus status = 6;
+    string os = 7;                  // Host os
+    string kernel = 8;
+    int32 cpuCores = 9;
+    int32 memory = 10;              // Host memory size, Unit:GB
+    string nic = 11;                // Host network type: 1GE or 10GE
+    string purpose = 12;            // What Purpose is the host used for? [compute/storage or both]
+    repeated DBDiskDTO disks = 13;
+}
+
+message DBAllocHostDTO {
+    string hostName = 1;
+    string ip = 2;
+    DBDiskDTO disk = 3;
+}
+
+message DBAddHostRequest {
+    DBHostInfoDTO host = 1;
+}
+
+message DBAddHostResponse {
+    DBHostResponseStatus rs = 1;
+    string HostId = 2;
+}
+
+message DBRemoveHostRequest {
+    string hostId = 1;
+}
+
+message DBRemoveHostResponse {
+    DBHostResponseStatus rs = 1;
+}
+
+message DBListHostsRequest {
+    DBHostStatus status = 1;
+    string purpose = 2;
+}
+
+message DBListHostsResponse {
+    DBHostResponseStatus rs = 1;
+    repeated DBHostInfoDTO hostList = 2;
+}
+
+message DBCheckDetailsRequest {
+    string hostId = 1;
+}
+
+message DBCheckDetailsResponse {
+    DBHostResponseStatus rs = 1;
+    DBHostInfoDTO details = 2;
+}
+
+message DBAllocHostsRequest {
+    int32 pdCount = 1;
+    int32 tidbCount = 2;
+    int32 tikvCount = 3;
+}
+
+message DBAllocHostResponse {
+    DBHostResponseStatus rs = 1;
+    repeated DBAllocHostDTO hosts = 2;
+}

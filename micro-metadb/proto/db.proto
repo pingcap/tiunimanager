@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+import "db_auth.proto";
+import "db_host.proto";
+import "db_cluster.proto";
+import "db_tiup.proto";
+
+option go_package = "./;db";
+
+// TiDB Cloud Platform database service
+service TiCPDBService {
+    // Auth Module
+	rpc FindTenant(DBFindTenantRequest) returns (DBFindTenantResponse);
+	rpc FindAccount(DBFindAccountRequest) returns (DBFindAccountResponse);
+	rpc SaveToken(DBSaveTokenRequest) returns (DBSaveTokenResponse);
+	rpc FindToken(DBFindTokenRequest) returns (DBFindTokenResponse);
+	rpc FindRolesByPermission(DBFindRolesByPermissionRequest) returns (DBFindRolesByPermissionResponse);
+
+    // Host Module
+	rpc AddHost(DBAddHostRequest) returns (DBAddHostResponse);
+	rpc RemoveHost(DBRemoveHostRequest) returns (DBRemoveHostResponse);
+	rpc ListHost(DBListHostsRequest) returns (DBListHostsResponse);
+	rpc CheckDetails(DBCheckDetailsRequest) returns (DBCheckDetailsResponse);
+	rpc AllocHosts(DBAllocHostsRequest) returns (DBAllocHostResponse);
+
+	rpc AddCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);
+	rpc FindCluster(DBFindClusterRequest) returns (DBFindClusterResponse);
+	rpc UpdateTiUPConfig(DBUpdateTiUPConfigRequest) returns (DBUpdateTiUPConfigResponse);
+	rpc ListCluster(DBListClusterRequest) returns (DBListClusterResponse);
+
+	// Tiup Task
+	rpc CreateTiupTask(CreateTiupTaskRequest) returns (CreateTiupTaskResponse);
+	rpc UpdateTiupTask(UpdateTiupTaskRequest) returns (UpdateTiupTaskResponse);
+	rpc FindTiupTaskByID(FindTiupTaskByIDRequest) returns (FindTiupTaskByIDResponse);
+	rpc GetTiupTaskStatusByBizID(GetTiupTaskStatusByBizIDRequest) returns (GetTiupTaskStatusByBizIDResponse);
+}

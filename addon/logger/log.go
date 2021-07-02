@@ -5,6 +5,7 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 type logCtxKeyType struct{}
@@ -15,11 +16,26 @@ var logCtxKey logCtxKeyType
 var defaultLogEntry *log.Entry
 
 func init() {
+	if defaultLogEntry == nil {
+		logger := log.New()
+		logger.SetFormatter(&log.JSONFormatter{})
+		logger.SetOutput(os.Stdout)
+		logger.SetLevel(log.DebugLevel)
+		defaultLogEntry = log.NewEntry(logger)
+	}
+}
+
+// usage: please refer to https://github.com/natefinch/lumberjack#type-logger
+func GenerateRollingLogEntry(rollingLogger *lumberjack.Logger) *log.Entry {
 	logger := log.New()
 	logger.SetFormatter(&log.JSONFormatter{})
-	logger.SetOutput(os.Stdout)
+	logger.SetOutput(rollingLogger)
 	logger.SetLevel(log.DebugLevel)
-	defaultLogEntry = log.NewEntry(logger)
+	return log.NewEntry(logger)
+}
+
+func SetDefaultLogEntry(entry *log.Entry) {
+	defaultLogEntry = entry
 }
 
 func NewContext(ctx context.Context, fields Fields) context.Context {

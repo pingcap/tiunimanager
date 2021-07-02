@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+option go_package = "./;db";
+
+message DBClusterResponseStatus {
+    int32 code = 1;
+    string message = 2;
+}
+
+message DBClusterDTO {
+    int32 id = 1;
+    string name = 2;
+    int32 tenantId = 3;
+    string dbPassword = 4;
+    string version = 5;
+    int32 status = 6;
+    int32 tidbCount = 7;
+    int32 tikvCount = 8;
+    int32 pdCount = 9;
+}
+
+message DBTiUPConfigDTO {
+    int32 id = 1;
+    int32 tenantId = 2;
+    int32 clusterId = 3;
+    bool latest = 4;
+    string content = 5;
+}
+
+message DBCreateClusterRequest {
+    DBClusterDTO cluster = 1;
+}
+message DBCreateClusterResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+}
+
+message DBFindClusterRequest {
+    int32 clusterId = 1;
+}
+
+message DBFindClusterResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+    DBTiUPConfigDTO config = 3;
+}
+
+message DBUpdateTiUPConfigRequest {
+    int32 clusterId = 1;
+    string configContent = 2;
+}
+
+message DBUpdateTiUPConfigResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+    DBTiUPConfigDTO config = 3;
+}
+
+message DBListClusterRequest {
+    int32 page = 1;
+    int32 pageSize = 2;
+}
+
+message DBListClusterResponse {
+    DBClusterResponseStatus status = 1;
+    repeated DBClusterDTO clusters = 2;
+}

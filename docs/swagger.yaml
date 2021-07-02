@@ -1,0 +1,453 @@
+basePath: /api/v1/
+definitions:
+  controller.CommonResult:
+    properties:
+      code:
+        type: integer
+      data:
+        type: object
+      message:
+        type: string
+    type: object
+  controller.Page:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+    type: object
+  controller.ResultWithPage:
+    properties:
+      code:
+        type: integer
+      data:
+        type: object
+      message:
+        type: string
+      page:
+        $ref: '#/definitions/controller.Page'
+    type: object
+  hostapi.DemoHostInfo:
+    properties:
+      hostId:
+        type: string
+      hostIp:
+        type: string
+      hostName:
+        type: string
+    type: object
+  hostapi.Disk:
+    properties:
+      capacity:
+        description: 'Disk size, Unit: GB'
+        type: integer
+      name:
+        description: '[sda/sdb/nvmep0...]'
+        type: string
+      path:
+        description: 'Disk mount path: [/data1]'
+        type: string
+      status:
+        description: Disk Status, 0 for available, 1 for inused
+        type: integer
+    type: object
+  hostapi.HostInfo:
+    properties:
+      az:
+        type: string
+      cpuCores:
+        type: integer
+      dc:
+        type: string
+      disks:
+        items:
+          $ref: '#/definitions/hostapi.Disk'
+        type: array
+      hostName:
+        type: string
+      ip:
+        type: string
+      kernel:
+        type: string
+      memory:
+        description: Host memory size, Unit:GB
+        type: integer
+      nic:
+        description: 'Host network type: 1GE or 10GE'
+        type: string
+      os:
+        type: string
+      purpose:
+        description: What Purpose is the host used for? [compute/storage or both]
+        type: string
+      rack:
+        type: string
+      status:
+        description: Host Status, 0 for Online, 1 for offline
+        type: integer
+    type: object
+  hostapi.HostQuery:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+    type: object
+  hostapi.ListHostCondition:
+    properties:
+      purpose:
+        description: What Purpose is the host used for? [compute/storage or both]
+        type: string
+      status:
+        description: Host Status, 0 for Online, 1 for offline
+        type: integer
+    type: object
+  instanceapi.InstanceCreate:
+    properties:
+      dbPassword:
+        type: string
+      instanceName:
+        type: string
+      instanceVersion:
+        type: string
+      pdCount:
+        type: integer
+      tiDBCount:
+        type: integer
+      tiKVCount:
+        type: integer
+    type: object
+  instanceapi.InstanceInfo:
+    properties:
+      instanceId:
+        type: string
+      instanceName:
+        type: string
+      instanceStatus:
+        type: integer
+      instanceVersion:
+        type: string
+    type: object
+  instanceapi.InstanceQuery:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+    type: object
+  userapi.LoginInfo:
+    properties:
+      userName:
+        type: string
+      userPassword:
+        type: string
+    type: object
+  userapi.LogoutInfo:
+    properties:
+      userName:
+        type: string
+    type: object
+  userapi.UserIdentity:
+    properties:
+      userName:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: zhangpeijin@pingcap.com
+    name: zhangpeijin
+  description: TiCP UI API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: TiCP UI API
+  version: "1.0"
+paths:
+  /host:
+    post:
+      consumes:
+      - application/json
+      description: 将给定的主机信息导入TiCP
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 待导入的主机信息
+        in: body
+        name: host
+        required: true
+        schema:
+          $ref: '#/definitions/hostapi.HostInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 导入主机接口
+      tags:
+      - resource
+  /host/:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 待删除的主机ID
+        in: path
+        name: hostId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 删除指定的主机
+      tags:
+      - resource
+    get:
+      consumes:
+      - application/json
+      description: 展示指定的主机的详细信息
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 主机ID
+        in: path
+        name: hostId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/hostapi.HostInfo'
+              type: object
+      summary: 查询主机详情
+      tags:
+      - resource
+  /host/query:
+    post:
+      consumes:
+      - application/json
+      description: 查询主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 查询请求
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/hostapi.HostQuery'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/hostapi.DemoHostInfo'
+                  type: array
+              type: object
+      summary: 查询主机接口
+      tags:
+      - resource
+  /hosts:
+    get:
+      consumes:
+      - application/json
+      description: 展示目前所有主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 可选的查询主机的条件
+        in: body
+        name: query
+        schema:
+          $ref: '#/definitions/hostapi.ListHostCondition'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/hostapi.HostInfo'
+                  type: array
+              type: object
+      summary: 查询主机列表
+      tags:
+      - resource
+  /instance/create:
+    post:
+      consumes:
+      - application/json
+      description: 创建实例
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 创建参数
+        in: body
+        name: createInfo
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.InstanceCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/instanceapi.InstanceInfo'
+              type: object
+      summary: 创建实例接口
+      tags:
+      - instance
+  /instance/query:
+    post:
+      consumes:
+      - application/json
+      description: 查询实例
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 查询参数
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.InstanceQuery'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/instanceapi.InstanceInfo'
+                  type: array
+              type: object
+      summary: 查询实例接口
+      tags:
+      - instance
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: 登录
+      parameters:
+      - description: 登录用户信息
+        in: body
+        name: loginInfo
+        required: true
+        schema:
+          $ref: '#/definitions/userapi.LoginInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/userapi.UserIdentity'
+              type: object
+      summary: 登录接口
+      tags:
+      - platform
+  /user/logout:
+    post:
+      consumes:
+      - application/json
+      description: 退出登录
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 退出登录信息
+        in: body
+        name: logoutInfo
+        schema:
+          $ref: '#/definitions/userapi.LogoutInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/userapi.UserIdentity'
+              type: object
+      summary: 退出登录
+      tags:
+      - platform
+swagger: "2.0"

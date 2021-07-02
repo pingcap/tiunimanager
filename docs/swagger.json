@@ -1,0 +1,726 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "TiCP UI API",
+        "title": "TiCP UI API",
+        "contact": {
+            "name": "zhangpeijin",
+            "email": "zhangpeijin@pingcap.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1/",
+    "paths": {
+        "/host": {
+            "post": {
+                "description": "将给定的主机信息导入TiCP",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "导入主机接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "待导入的主机信息",
+                        "name": "host",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hostapi.HostInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/host/": {
+            "get": {
+                "description": "展示指定的主机的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "查询主机详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "主机ID",
+                        "name": "hostId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/hostapi.HostInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除指定的主机",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "删除指定的主机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "待删除的主机ID",
+                        "name": "hostId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/host/query": {
+            "post": {
+                "description": "查询主机",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "查询主机接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "查询请求",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hostapi.HostQuery"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/hostapi.DemoHostInfo"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/hosts": {
+            "get": {
+                "description": "展示目前所有主机",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "查询主机列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "可选的查询主机的条件",
+                        "name": "query",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/hostapi.ListHostCondition"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/hostapi.HostInfo"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/instance/create": {
+            "post": {
+                "description": "创建实例",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "instance"
+                ],
+                "summary": "创建实例接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "创建参数",
+                        "name": "createInfo",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.InstanceCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/instanceapi.InstanceInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/instance/query": {
+            "post": {
+                "description": "查询实例",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "instance"
+                ],
+                "summary": "查询实例接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "查询参数",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.InstanceQuery"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/instanceapi.InstanceInfo"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/user/login": {
+            "post": {
+                "description": "登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "登录接口",
+                "parameters": [
+                    {
+                        "description": "登录用户信息",
+                        "name": "loginInfo",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/userapi.LoginInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/userapi.UserIdentity"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/user/logout": {
+            "post": {
+                "description": "退出登录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "退出登录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "退出登录信息",
+                        "name": "logoutInfo",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/userapi.LogoutInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/userapi.UserIdentity"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "controller.CommonResult": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "object"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.Page": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "controller.ResultWithPage": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "object"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "page": {
+                    "$ref": "#/definitions/controller.Page"
+                }
+            }
+        },
+        "hostapi.DemoHostInfo": {
+            "type": "object",
+            "properties": {
+                "hostId": {
+                    "type": "string"
+                },
+                "hostIp": {
+                    "type": "string"
+                },
+                "hostName": {
+                    "type": "string"
+                }
+            }
+        },
+        "hostapi.Disk": {
+            "type": "object",
+            "properties": {
+                "capacity": {
+                    "description": "Disk size, Unit: GB",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "[sda/sdb/nvmep0...]",
+                    "type": "string"
+                },
+                "path": {
+                    "description": "Disk mount path: [/data1]",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Disk Status, 0 for available, 1 for inused",
+                    "type": "integer"
+                }
+            }
+        },
+        "hostapi.HostInfo": {
+            "type": "object",
+            "properties": {
+                "az": {
+                    "type": "string"
+                },
+                "cpuCores": {
+                    "type": "integer"
+                },
+                "dc": {
+                    "type": "string"
+                },
+                "disks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.Disk"
+                    }
+                },
+                "hostName": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "kernel": {
+                    "type": "string"
+                },
+                "memory": {
+                    "description": "Host memory size, Unit:GB",
+                    "type": "integer"
+                },
+                "nic": {
+                    "description": "Host network type: 1GE or 10GE",
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "purpose": {
+                    "description": "What Purpose is the host used for? [compute/storage or both]",
+                    "type": "string"
+                },
+                "rack": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Host Status, 0 for Online, 1 for offline",
+                    "type": "integer"
+                }
+            }
+        },
+        "hostapi.HostQuery": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hostapi.ListHostCondition": {
+            "type": "object",
+            "properties": {
+                "purpose": {
+                    "description": "What Purpose is the host used for? [compute/storage or both]",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Host Status, 0 for Online, 1 for offline",
+                    "type": "integer"
+                }
+            }
+        },
+        "instanceapi.InstanceCreate": {
+            "type": "object",
+            "properties": {
+                "dbPassword": {
+                    "type": "string"
+                },
+                "instanceName": {
+                    "type": "string"
+                },
+                "instanceVersion": {
+                    "type": "string"
+                },
+                "pdCount": {
+                    "type": "integer"
+                },
+                "tiDBCount": {
+                    "type": "integer"
+                },
+                "tiKVCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "instanceapi.InstanceInfo": {
+            "type": "object",
+            "properties": {
+                "instanceId": {
+                    "type": "string"
+                },
+                "instanceName": {
+                    "type": "string"
+                },
+                "instanceStatus": {
+                    "type": "integer"
+                },
+                "instanceVersion": {
+                    "type": "string"
+                }
+            }
+        },
+        "instanceapi.InstanceQuery": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                }
+            }
+        },
+        "userapi.LoginInfo": {
+            "type": "object",
+            "properties": {
+                "userName": {
+                    "type": "string"
+                },
+                "userPassword": {
+                    "type": "string"
+                }
+            }
+        },
+        "userapi.LogoutInfo": {
+            "type": "object",
+            "properties": {
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "userapi.UserIdentity": {
+            "type": "object",
+            "properties": {
+                "userName": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

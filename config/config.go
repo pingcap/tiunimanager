@@ -4,7 +4,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/asim/go-micro/v3"
 	"github.com/micro/cli/v2"
-	"github.com/pingcap/tcp/addon/logger"
+	"github.com/pingcap/ticp/addon/logger"
 )
 
 var configFilePath = ""

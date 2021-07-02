@@ -59,6 +59,8 @@ definitions:
         type: string
       cpuCores:
         type: integer
+      dc:
+        type: string
       disks:
         items:
           $ref: '#/definitions/hostapi.Disk'

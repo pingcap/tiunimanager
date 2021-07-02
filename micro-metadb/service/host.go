@@ -21,6 +21,7 @@ func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest
 	host.CpuCores = int(req.Host.CpuCores)
 	host.Memory = int(req.Host.Memory)
 	host.Nic = req.Host.Nic
+	host.DC = req.Host.Dc
 	host.AZ = req.Host.Az
 	host.Rack = req.Host.Rack
 	host.Purpose = req.Host.Purpose
@@ -68,6 +69,7 @@ func CopyHostInfo(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
 	dst.Nic = src.Nic
+	dst.Dc = src.DC
 	dst.Az = src.AZ
 	dst.Rack = src.Rack
 	dst.Status = dbPb.DBHostStatus(src.Status)

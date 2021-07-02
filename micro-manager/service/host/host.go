@@ -17,6 +17,7 @@ func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
 	dst.Nic = src.Nic
+	dst.Dc = src.Dc
 	dst.Az = src.Az
 	dst.Rack = src.Rack
 	dst.Status = dbPb.DBHostStatus(src.Status)
@@ -39,6 +40,7 @@ func CopyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
 	dst.Nic = src.Nic
+	dst.Dc = src.Dc
 	dst.Az = src.Az
 	dst.Rack = src.Rack
 	dst.Status = hostPb.HostStatus(src.Status)

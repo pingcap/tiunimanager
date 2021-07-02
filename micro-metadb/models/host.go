@@ -42,6 +42,7 @@ type Host struct {
 	CpuCores  int
 	Memory    int
 	Nic       string `gorm:"size:32"`
+	DC        string `gorm:"size:32"`
 	AZ        string `gorm:"size:32"`
 	Rack      string `gorm:"size:32"`
 	Purpose   string `gorm:"size:32"`

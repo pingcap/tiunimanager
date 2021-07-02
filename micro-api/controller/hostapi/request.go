@@ -16,6 +16,7 @@ type Disk struct {
 }
 type HostInfo struct {
 	HostName string `json:"hostName"`
+	Dc       string `json:"dc"`
 	Az       string `json:"az"`
 	Rack     string `json:"rack"`
 	Ip       string `json:"ip"`

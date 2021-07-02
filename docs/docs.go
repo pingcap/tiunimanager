@@ -593,6 +593,9 @@ var doc = `{
                 "cpuCores": {
                     "type": "integer"
                 },
+                "dc": {
+                    "type": "string"
+                },
                 "disks": {
                     "type": "array",
                     "items": {

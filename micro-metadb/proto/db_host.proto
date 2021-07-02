@@ -26,17 +26,18 @@ message DBDiskDTO {
 
 message DBHostInfoDTO {
     string hostName = 1;
-    string az = 2;
-    string rack = 3;
-    string ip = 4;
-    DBHostStatus status = 5;
-    string os = 6;              // Host os
-    string kernel = 7;
-    int32 cpuCores = 8;
-    int32 memory = 9;           // Host memory size, Unit:GB
-    string nic = 10;            // Host network type: 1GE or 10GE
-    string purpose = 11;        // What Purpose is the host used for? [compute/storage or both]
-    repeated DBDiskDTO disks = 12;
+    string dc = 2;
+    string az = 3;
+    string rack = 4;
+    string ip = 5;
+    DBHostStatus status = 6;
+    string os = 7;                  // Host os
+    string kernel = 8;
+    int32 cpuCores = 9;
+    int32 memory = 10;              // Host memory size, Unit:GB
+    string nic = 11;                // Host network type: 1GE or 10GE
+    string purpose = 12;            // What Purpose is the host used for? [compute/storage or both]
+    repeated DBDiskDTO disks = 13;
 }
 
 message DBAllocHostDTO {

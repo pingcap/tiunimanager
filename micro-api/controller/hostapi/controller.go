@@ -56,6 +56,7 @@ func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
 	dst.Nic = src.Nic
+	dst.Dc = src.Dc
 	dst.Az = src.Az
 	dst.Rack = src.Rack
 	dst.Status = int32(src.Status)
@@ -95,6 +96,7 @@ func ImportHost(c *gin.Context) {
 		Kernel:   host.Kernel,
 		CpuCores: host.CpuCores,
 		Memory:   host.Memory,
+		Dc:       host.Dc,
 		Az:       host.Az,
 		Rack:     host.Rack,
 		Nic:      host.Nic,

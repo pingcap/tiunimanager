@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 
 	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/micro-metadb/models"
@@ -110,6 +111,102 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDeta
 	CopyHostInfo(host, rsp.Details)
 	return err
 }
+
+type FailureDomain uint32
+
+const (
+	Root FailureDomain = iota
+	DataCenter
+	Zone
+	Rack
+	Host
+	Disk
+)
+const MAX_TRIES = 5
+
+type Item struct {
+	id                string
+	name              string
+	failureDomainType FailureDomain
+	status            int32
+	weight            uint32
+	subItems          []*Item
+}
+
+func BuildHierarchy() (rack2hosts map[string][]*Item, zone2racks map[string][]string, dc2zones map[string][]string, err error) {
+	rack2hosts = make(map[string][]*Item)
+	zone2racks = make(map[string][]string)
+	dc2zones = make(map[string][]string)
+	hosts, _ := models.ListHosts()
+	for _, host := range hosts {
+		hostItem := Item{
+			id:                host.ID,
+			name:              host.Name,
+			failureDomainType: Host,
+			status:            host.Status,
+		}
+		for _, disk := range host.Disks {
+			diskItem := Item{
+				id:     disk.ID,
+				name:   disk.Name,
+				status: disk.Status,
+				weight: uint32(disk.Capacity) / 512, // 512G per weight
+			}
+			hostItem.weight += diskItem.weight
+			hostItem.subItems = append(hostItem.subItems, &diskItem)
+		}
+		rack2hosts[host.Rack] = append(rack2hosts[host.Rack], &hostItem)
+		zone2racks[host.AZ] = append(zone2racks[host.AZ], host.Rack)
+		dc2zones[host.DC] = append(dc2zones[host.DC], host.AZ)
+	}
+	return
+}
+
+func GetHierarchyRoot() (root *Item, err error) {
+	rack2hosts, zone2racks, dc2zones, err := BuildHierarchy()
+	if err != nil {
+		log.Fatal("BuildHierarchy failed, err:", err)
+		return nil, err
+	}
+	root = new(Item)
+	root.failureDomainType = Root
+	root.name = "ROOT"
+	root.status = 0
+	for dc_name, zones := range dc2zones {
+		dcItem := Item{
+			name:              dc_name,
+			failureDomainType: DataCenter,
+			status:            0,
+		}
+		for _, az := range zones {
+			zoneItem := Item{
+				name:              az,
+				failureDomainType: Zone,
+				status:            0,
+			}
+			racks := zone2racks[az]
+			for _, rack := range racks {
+				rackItem := Item{
+					name:              rack,
+					failureDomainType: Rack,
+					status:            0,
+					subItems:          rack2hosts[rack],
+				}
+				for _, host := range rackItem.subItems {
+					rackItem.weight += host.weight
+				}
+				zoneItem.subItems = append(zoneItem.subItems, &rackItem)
+				zoneItem.weight += rackItem.weight
+			}
+			dcItem.subItems = append(dcItem.subItems, &zoneItem)
+			dcItem.weight += zoneItem.weight
+		}
+		root.subItems = append(root.subItems, &dcItem)
+		root.weight += dcItem.weight
+	}
+	return
+}
+
 func (*DBServiceHandler) AllocHosts(ctx context.Context, req *dbPb.DBAllocHostsRequest, rsp *dbPb.DBAllocHostResponse) error {
 	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "AllocHosts"})
 	log := logger.WithContext(ctx)

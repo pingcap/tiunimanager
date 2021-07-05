@@ -84,9 +84,9 @@ var doc = `{
                 }
             }
         },
-        "/cluster/": {
-            "delete": {
-                "description": "删除集群",
+        "/cluster/knowledge": {
+            "get": {
+                "description": "查看集群基本知识",
                 "consumes": [
                     "application/json"
                 ],
@@ -96,20 +96,13 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "删除集群",
+                "summary": "查看集群基本知识",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "token",
                         "name": "Token",
                         "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "待删除的集群ID",
-                        "name": "clusterId",
-                        "in": "path",
                         "required": true
                     }
                 ],
@@ -125,7 +118,68 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/clusterapi.DeleteClusterRsp"
+                                            "$ref": "#/definitions/clusterapi.ClusterKnowledgeRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/cluster/query": {
+            "get": {
+                "description": "查询集群列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "查询集群列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "pageSize",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/clusterapi.ClusterDisplayInfo"
+                                            }
                                         }
                                     }
                                 }
@@ -184,11 +238,9 @@ var doc = `{
                         }
                     }
                 }
-            }
-        },
-        "/clusters": {
-            "get": {
-                "description": "查询集群列表",
+            },
+            "delete": {
+                "description": "删除集群",
                 "consumes": [
                     "application/json"
                 ],
@@ -198,7 +250,7 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "查询集群列表",
+                "summary": "删除集群",
                 "parameters": [
                     {
                         "type": "string",
@@ -208,18 +260,11 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "page",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "page",
-                        "name": "pageSize",
-                        "in": "query"
+                        "type": "string",
+                        "description": "待删除的集群ID",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -228,16 +273,13 @@ var doc = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                    "$ref": "#/definitions/controller.CommonResult"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/clusterapi.ClusterDisplayInfo"
-                                            }
+                                            "$ref": "#/definitions/clusterapi.DeleteClusterRsp"
                                         }
                                     }
                                 }
@@ -558,106 +600,7 @@ var doc = `{
                 }
             }
         },
-        "/knowledge": {
-            "get": {
-                "description": "查看集群基本知识",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "查看集群基本知识",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/clusterapi.ClusterKnowledgeRsp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/param/query": {
-            "get": {
-                "description": "查询集群参数列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "查询集群参数列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "查询参数",
-                        "name": "query",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.ParamQueryReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/instanceapi.ParamItem"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/param/submit": {
+        "/params/submit": {
             "post": {
                 "description": "提交参数",
                 "consumes": [
@@ -701,6 +644,74 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/instanceapi.ParamUpdateRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/params/{clusterId}": {
+            "get": {
+                "description": "查询集群参数列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "查询集群参数列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "pageSize",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/instanceapi.ParamItem"
+                                            }
                                         }
                                     }
                                 }
@@ -1364,17 +1375,6 @@ var doc = `{
                 },
                 "definition": {
                     "$ref": "#/definitions/instanceapi.Parameter"
-                }
-            }
-        },
-        "instanceapi.ParamQueryReq": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "page": {
-                    "$ref": "#/definitions/controller.Page"
                 }
             }
         },

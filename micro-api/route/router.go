@@ -7,6 +7,7 @@ import (
 	"github.com/pingcap/ticp/micro-api/controller"
 	"github.com/pingcap/ticp/micro-api/controller/clusterapi"
 	"github.com/pingcap/ticp/micro-api/controller/hostapi"
+	"github.com/pingcap/ticp/micro-api/controller/instanceapi"
 	"github.com/pingcap/ticp/micro-api/controller/userapi"
 	"github.com/pingcap/ticp/micro-api/security"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
@@ -35,7 +36,6 @@ func Route(g *gin.Engine) {
 	// api
 	apiV1 := g.Group("/api/v1")
 	{
-
 		apiV1.Use(logger.GenGinLogger(), gin.Recovery())
 		apiV1.Use(tracer.GinOpenTracing())
 
@@ -49,6 +49,18 @@ func Route(g *gin.Engine) {
 		{
 			//cluster.Use(security.VerifyIdentity)
 			cluster.GET("/:clusterId", clusterapi.Detail)
+			cluster.POST("", clusterapi.Create)
+			cluster.GET("/query", clusterapi.Query)
+			cluster.DELETE("/:clusterId", clusterapi.Delete)
+
+			cluster.GET("/knowledge", clusterapi.ClusterKnowledge)
+		}
+
+		param := apiV1.Group("/params")
+		{
+			//param.Use(security.VerifyIdentity)
+			param.GET("/:clusterId", instanceapi.QueryParams)
+			param.POST("/submit", instanceapi.SubmitParams)
 		}
 
 		demoHost := apiV1.Group("/host")

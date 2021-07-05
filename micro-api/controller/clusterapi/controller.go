@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/ticp/micro-api/controller"
 	"net/http"
+	"strconv"
 )
 
 // Create 创建集群接口
@@ -17,7 +18,17 @@ import (
 // @Success 200 {object} controller.CommonResult{data=CreateClusterRsp}
 // @Router /cluster [post]
 func Create(c *gin.Context) {
+	var req CreateReq
 
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	rsp := CreateClusterRsp{ClusterId: "aaa"}
+	rsp.DbPassword = req.DbPassword
+
+	c.JSON(http.StatusOK, controller.Success(rsp))
 }
 
 // Query 查询集群列表
@@ -28,11 +39,19 @@ func Create(c *gin.Context) {
 // @Produce json
 // @Param Token header string true "token"
 // @Param page query int false "page" default(1)
-// @Param pageSize query int false "page" default(1)
+// @Param pageSize query int false "pageSize" default(20)
 // @Success 200 {object} controller.ResultWithPage{data=[]ClusterDisplayInfo}
-// @Router /clusters [get]
+// @Router /cluster/query [get]
 func Query(c *gin.Context) {
+	page, _ := strconv.Atoi(c.Query("page"))
+	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
 
+	clusters := []ClusterDisplayInfo{
+		ClusterDisplayInfo{ClusterId: "cluster1"},
+		ClusterDisplayInfo{ClusterId: "cluster2"},
+	}
+
+	c.JSON(http.StatusOK, controller.SuccessWithPage(clusters, controller.Page{Page: page, PageSize: pageSize}))
 }
 
 // Delete 删除集群
@@ -44,9 +63,12 @@ func Query(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param clusterId path string true "待删除的集群ID"
 // @Success 200 {object} controller.CommonResult{data=DeleteClusterRsp}
-// @Router /cluster/ [delete]
+// @Router /cluster/{clusterId} [delete]
 func Delete(c * gin.Context) {
+	rsp := DeleteClusterRsp{}
+	rsp.ClusterId = c.Param("clusterId")
 
+	c.JSON(http.StatusOK, controller.Success(rsp))
 }
 
 // Detail 查看集群详情
@@ -61,7 +83,8 @@ func Delete(c * gin.Context) {
 // @Router /cluster/{clusterId} [get]
 func Detail(c *gin.Context) {
 	rsp := DetailClusterRsp{}
-	rsp.ClusterId = c.GetString("clusterId")
+
+	rsp.ClusterId = c.Param("clusterId")
 	rsp.DbPassword = "pass"
 	c.JSON(http.StatusOK, controller.Success(rsp))
 }
@@ -74,7 +97,13 @@ func Detail(c *gin.Context) {
 // @Produce json
 // @Param Token header string true "token"
 // @Success 200 {object} controller.CommonResult{data=ClusterKnowledgeRsp}
-// @Router /knowledge [get]
+// @Router /cluster/knowledge [get]
 func ClusterKnowledge(c *gin.Context) {
-
+	rsp := ClusterKnowledgeRsp{}
+	rsp.ClusterTypes = []ClusterTypeInfo{
+		ClusterTypeInfo{
+			Code:"tidb",
+		},
+	}
+	c.JSON(http.StatusOK, controller.Success(rsp))
 }

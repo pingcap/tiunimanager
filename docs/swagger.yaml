@@ -367,13 +367,6 @@ definitions:
       definition:
         $ref: '#/definitions/instanceapi.Parameter'
     type: object
-  instanceapi.ParamQueryReq:
-    properties:
-      clusterId:
-        type: string
-      page:
-        $ref: '#/definitions/controller.Page'
-    type: object
   instanceapi.ParamUpdateReq:
     properties:
       clusterId:
@@ -486,7 +479,7 @@ paths:
       summary: 创建集群接口
       tags:
       - cluster
-  /cluster/:
+  /cluster/{clusterId}:
     delete:
       consumes:
       - application/json
@@ -517,7 +510,6 @@ paths:
       summary: 删除集群
       tags:
       - cluster
-  /cluster/{clusterId}:
     get:
       consumes:
       - application/json
@@ -548,7 +540,33 @@ paths:
       summary: 查看集群详情
       tags:
       - cluster
-  /clusters:
+  /cluster/knowledge:
+    get:
+      consumes:
+      - application/json
+      description: 查看集群基本知识
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/clusterapi.ClusterKnowledgeRsp'
+              type: object
+      summary: 查看集群基本知识
+      tags:
+      - cluster
+  /cluster/query:
     get:
       consumes:
       - application/json
@@ -564,8 +582,8 @@ paths:
         in: query
         name: page
         type: integer
-      - default: 1
-        description: page
+      - default: 20
+        description: pageSize
         in: query
         name: pageSize
         type: integer
@@ -774,33 +792,7 @@ paths:
       summary: 查询各可用区的主机规格库存
       tags:
       - resource
-  /knowledge:
-    get:
-      consumes:
-      - application/json
-      description: 查看集群基本知识
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/clusterapi.ClusterKnowledgeRsp'
-              type: object
-      summary: 查看集群基本知识
-      tags:
-      - cluster
-  /param/query:
+  /params/{clusterId}:
     get:
       consumes:
       - application/json
@@ -811,11 +803,21 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 查询参数
-        in: body
-        name: query
-        schema:
-          $ref: '#/definitions/instanceapi.ParamQueryReq'
+      - default: 1
+        description: page
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: pageSize
+        in: query
+        name: pageSize
+        type: integer
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -833,7 +835,7 @@ paths:
       summary: 查询集群参数列表
       tags:
       - cluster
-  /param/submit:
+  /params/submit:
     post:
       consumes:
       - application/json

@@ -2,7 +2,6 @@
 
 function build(){
     set -e
-    srcPath=`pwd`
     for microDir in micro-api micro-cluster micro-manager micro-metadb
     do
         echo "build $microDir ..."
@@ -45,7 +44,6 @@ function install(){
 }
 
 function clean(){
-    srcPath=`pwd`
     for microDir in micro-api micro-cluster micro-manager micro-metadb
     do
         echo "clean $microDir ..."

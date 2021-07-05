@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/micro-metadb/models"
@@ -115,14 +117,17 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDeta
 type FailureDomain uint32
 
 const (
-	Root FailureDomain = iota
-	DataCenter
-	Zone
-	Rack
-	Host
-	Disk
+	ROOT FailureDomain = iota
+	DATACENTER
+	ZONE
+	RACK
+	HOST
+	DISK
 )
-const MAX_TRIES = 5
+const (
+	MAX_TRIES     = 5
+	GB_PER_WEIGHT = 256
+)
 
 type Item struct {
 	id                string
@@ -133,31 +138,51 @@ type Item struct {
 	subItems          []*Item
 }
 
+func isAvailable(item *Item) bool {
+	return item.status == 0
+}
+
 func BuildHierarchy() (rack2hosts map[string][]*Item, zone2racks map[string][]string, dc2zones map[string][]string, err error) {
 	rack2hosts = make(map[string][]*Item)
 	zone2racks = make(map[string][]string)
 	dc2zones = make(map[string][]string)
+	// For deduplicated
+	tmp_rack_recorded := make(map[string]bool)
+	tmp_zone_recorded := make(map[string]bool)
+
 	hosts, _ := models.ListHosts()
 	for _, host := range hosts {
 		hostItem := Item{
 			id:                host.ID,
 			name:              host.Name,
-			failureDomainType: Host,
+			failureDomainType: HOST,
 			status:            host.Status,
 		}
 		for _, disk := range host.Disks {
 			diskItem := Item{
-				id:     disk.ID,
-				name:   disk.Name,
-				status: disk.Status,
-				weight: uint32(disk.Capacity) / 512, // 512G per weight
+				id:                disk.ID,
+				name:              disk.Name,
+				status:            disk.Status,
+				failureDomainType: DISK,
+				weight:            uint32(disk.Capacity) / GB_PER_WEIGHT,
 			}
-			hostItem.weight += diskItem.weight
+			if isAvailable(&hostItem) && isAvailable(&diskItem) {
+				hostItem.weight += diskItem.weight
+			}
 			hostItem.subItems = append(hostItem.subItems, &diskItem)
 		}
 		rack2hosts[host.Rack] = append(rack2hosts[host.Rack], &hostItem)
-		zone2racks[host.AZ] = append(zone2racks[host.AZ], host.Rack)
-		dc2zones[host.DC] = append(dc2zones[host.DC], host.AZ)
+
+		if _, ok := tmp_rack_recorded[host.Rack]; !ok {
+			tmp_rack_recorded[host.Rack] = true
+			zone2racks[host.AZ] = append(zone2racks[host.AZ], host.Rack)
+			//fmt.Println(host.Rack, "has been put into zone2racks under key", host.AZ)
+		}
+		if _, ok := tmp_zone_recorded[host.AZ]; !ok {
+			tmp_zone_recorded[host.AZ] = true
+			dc2zones[host.DC] = append(dc2zones[host.DC], host.AZ)
+			//fmt.Println(host.AZ, "has been put into dc2zones under key", host.DC)
+		}
 	}
 	return
 }
@@ -169,42 +194,77 @@ func GetHierarchyRoot() (root *Item, err error) {
 		return nil, err
 	}
 	root = new(Item)
-	root.failureDomainType = Root
+	root.failureDomainType = ROOT
 	root.name = "ROOT"
 	root.status = 0
 	for dc_name, zones := range dc2zones {
 		dcItem := Item{
 			name:              dc_name,
-			failureDomainType: DataCenter,
+			failureDomainType: DATACENTER,
 			status:            0,
 		}
 		for _, az := range zones {
 			zoneItem := Item{
 				name:              az,
-				failureDomainType: Zone,
+				failureDomainType: ZONE,
 				status:            0,
 			}
 			racks := zone2racks[az]
 			for _, rack := range racks {
 				rackItem := Item{
 					name:              rack,
-					failureDomainType: Rack,
+					failureDomainType: RACK,
 					status:            0,
 					subItems:          rack2hosts[rack],
 				}
 				for _, host := range rackItem.subItems {
-					rackItem.weight += host.weight
+					if isAvailable(&rackItem) && isAvailable(host) {
+						rackItem.weight += host.weight
+					}
 				}
 				zoneItem.subItems = append(zoneItem.subItems, &rackItem)
-				zoneItem.weight += rackItem.weight
+				if isAvailable(&zoneItem) && isAvailable(&rackItem) {
+					zoneItem.weight += rackItem.weight
+				}
 			}
 			dcItem.subItems = append(dcItem.subItems, &zoneItem)
-			dcItem.weight += zoneItem.weight
+			if isAvailable(&dcItem) && isAvailable(&zoneItem) {
+				dcItem.weight += zoneItem.weight
+			}
 		}
 		root.subItems = append(root.subItems, &dcItem)
-		root.weight += dcItem.weight
+		if isAvailable(root) && isAvailable(&dcItem) {
+			root.weight += dcItem.weight
+		}
 	}
 	return
+}
+
+// PrintHierarchy(root, "|----", false)
+func PrintHierarchy(root *Item, pre string, has_brother bool) {
+	ctx := logger.NewContext(context.Background(), logger.Fields{"micro-service": "PrintHierarchy"})
+	log := logger.WithContext(ctx)
+	if root == nil {
+		return
+	}
+	log.Debugln(pre, "Item name:", root.name, "Status:", root.status, "Id:", root.id, "Weight:", root.weight)
+	if root.subItems != nil {
+		for i, item := range root.subItems {
+			var str string
+			index := strings.LastIndex(pre, "|")
+			if has_brother {
+				str = fmt.Sprintf("%s|\t%s", pre[:index], pre[index:])
+			} else {
+				str = fmt.Sprintf("%s\t%s", pre[:index], pre[index:])
+			}
+
+			if i != len(root.subItems)-1 {
+				PrintHierarchy(item, str, true)
+			} else {
+				PrintHierarchy(item, str, false)
+			}
+		}
+	}
 }
 
 func (*DBServiceHandler) AllocHosts(ctx context.Context, req *dbPb.DBAllocHostsRequest, rsp *dbPb.DBAllocHostResponse) error {

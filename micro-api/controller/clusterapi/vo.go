@@ -3,7 +3,6 @@ package clusterapi
 import (
 	"github.com/pingcap/ticp/micro-api/controller"
 	"github.com/pingcap/ticp/micro-api/controller/hostapi"
-	"time"
 )
 
 type ClusterBaseInfo struct {
@@ -12,14 +11,6 @@ type ClusterBaseInfo struct {
 	ClusterType 		string
 	ClusterVersion 		string
 	Tls 				bool
-}
-
-type ClusterStatusInfo struct {
-	Status				string
-	InProcessFlowId 	int
-	CreateTime			time.Time
-	UpdateTime			time.Time
-	DeleteTime			time.Time
 }
 
 type ClusterInstanceInfo struct {
@@ -41,7 +32,7 @@ type ClusterMaintenanceInfo struct {
 type ClusterDisplayInfo struct {
 	ClusterId 			string
 	ClusterBaseInfo
-	ClusterStatusInfo
+	controller.StatusInfo
 	ClusterInstanceInfo
 }
 

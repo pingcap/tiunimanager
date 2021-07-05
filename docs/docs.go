@@ -31,6 +31,322 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/backup/record/recover": {
+            "post": {
+                "description": "恢复备份",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster backup"
+                ],
+                "summary": "恢复备份",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "恢复备份请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.BackupRecoverReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controller.StatusInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/backup/record/{clusterId}": {
+            "get": {
+                "description": "查询备份记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster backup"
+                ],
+                "summary": "查询备份记录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/instanceapi.BackupRecord"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/backup/record/{recordId}": {
+            "delete": {
+                "description": "删除备份记录",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster backup"
+                ],
+                "summary": "删除备份记录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "删除备份ID",
+                        "name": "recordId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/backup/strategy": {
+            "post": {
+                "description": "保存备份策略",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster backup"
+                ],
+                "summary": "保存备份策略",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "备份策略信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.BackupStrategyUpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/instanceapi.BackupStrategy"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/backup/strategy/{clusterId}": {
+            "get": {
+                "description": "查询备份策略",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster backup"
+                ],
+                "summary": "查询备份策略",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/instanceapi.BackupStrategy"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/backup/{clusterId}": {
+            "post": {
+                "description": "backup",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster backup"
+                ],
+                "summary": "backup",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "要备份的集群ID",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/instanceapi.BackupRecord"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/cluster": {
             "post": {
                 "description": "创建集群接口",
@@ -610,7 +926,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "cluster"
+                    "cluster params"
                 ],
                 "summary": "提交参数",
                 "parameters": [
@@ -663,7 +979,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "cluster"
+                    "cluster params"
                 ],
                 "summary": "查询集群参数列表",
                 "parameters": [
@@ -875,7 +1191,10 @@ var doc = `{
                 "port": {
                     "type": "integer"
                 },
-                "status": {
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
                     "type": "string"
                 },
                 "storageUsage": {
@@ -1013,7 +1332,10 @@ var doc = `{
                 "inProcessFlowId": {
                     "type": "integer"
                 },
-                "status": {
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
                     "type": "string"
                 },
                 "tls": {
@@ -1065,7 +1387,10 @@ var doc = `{
                 "inProcessFlowId": {
                     "type": "integer"
                 },
-                "status": {
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
                     "type": "string"
                 },
                 "updateTime": {
@@ -1130,7 +1455,10 @@ var doc = `{
                 "port": {
                     "type": "integer"
                 },
-                "status": {
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
                     "type": "string"
                 },
                 "storageUsage": {
@@ -1178,6 +1506,20 @@ var doc = `{
                 }
             }
         },
+        "controller.Operator": {
+            "type": "object",
+            "properties": {
+                "manualOperator": {
+                    "type": "boolean"
+                },
+                "operatorId": {
+                    "type": "string"
+                },
+                "operatorName": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.Page": {
             "type": "object",
             "properties": {
@@ -1206,6 +1548,29 @@ var doc = `{
                 },
                 "page": {
                     "$ref": "#/definitions/controller.Page"
+                }
+            }
+        },
+        "controller.StatusInfo": {
+            "type": "object",
+            "properties": {
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
                 }
             }
         },
@@ -1364,6 +1729,77 @@ var doc = `{
                             "$ref": "#/definitions/hostapi.ZoneHostStock"
                         }
                     }
+                }
+            }
+        },
+        "instanceapi.BackupRecord": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "endTime": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "operator": {
+                    "$ref": "#/definitions/controller.Operator"
+                },
+                "range": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "number"
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/controller.StatusInfo"
+                },
+                "way": {
+                    "type": "integer"
+                }
+            }
+        },
+        "instanceapi.BackupRecoverReq": {
+            "type": "object",
+            "properties": {
+                "backupRecordId": {
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                }
+            }
+        },
+        "instanceapi.BackupStrategy": {
+            "type": "object",
+            "properties": {
+                "cronString": {
+                    "type": "string"
+                },
+                "validityPeriod": {
+                    "type": "integer"
+                }
+            }
+        },
+        "instanceapi.BackupStrategyUpdateReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "cronString": {
+                    "type": "string"
+                },
+                "validityPeriod": {
+                    "type": "integer"
                 }
             }
         },

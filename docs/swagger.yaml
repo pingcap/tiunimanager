@@ -36,7 +36,9 @@ definitions:
         $ref: '#/definitions/controller.Usage'
       port:
         type: integer
-      status:
+      statusCode:
+        type: string
+      statusName:
         type: string
       storageUsage:
         $ref: '#/definitions/controller.Usage'
@@ -126,7 +128,9 @@ definitions:
         type: string
       inProcessFlowId:
         type: integer
-      status:
+      statusCode:
+        type: string
+      statusName:
         type: string
       tls:
         type: boolean
@@ -160,7 +164,9 @@ definitions:
         type: string
       inProcessFlowId:
         type: integer
-      status:
+      statusCode:
+        type: string
+      statusName:
         type: string
       updateTime:
         type: string
@@ -203,7 +209,9 @@ definitions:
         $ref: '#/definitions/controller.Usage'
       port:
         type: integer
-      status:
+      statusCode:
+        type: string
+      statusName:
         type: string
       storageUsage:
         $ref: '#/definitions/controller.Usage'
@@ -234,6 +242,15 @@ definitions:
       message:
         type: string
     type: object
+  controller.Operator:
+    properties:
+      manualOperator:
+        type: boolean
+      operatorId:
+        type: string
+      operatorName:
+        type: string
+    type: object
   controller.Page:
     properties:
       page:
@@ -253,6 +270,21 @@ definitions:
         type: string
       page:
         $ref: '#/definitions/controller.Page'
+    type: object
+  controller.StatusInfo:
+    properties:
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      inProcessFlowId:
+        type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      updateTime:
+        type: string
     type: object
   controller.Usage:
     properties:
@@ -360,6 +392,52 @@ definitions:
           type: array
         type: object
     type: object
+  instanceapi.BackupRecord:
+    properties:
+      clusterId:
+        type: string
+      endTime:
+        type: string
+      filePath:
+        type: string
+      id:
+        type: string
+      operator:
+        $ref: '#/definitions/controller.Operator'
+      range:
+        type: integer
+      size:
+        type: number
+      startTime:
+        type: string
+      status:
+        $ref: '#/definitions/controller.StatusInfo'
+      way:
+        type: integer
+    type: object
+  instanceapi.BackupRecoverReq:
+    properties:
+      backupRecordId:
+        type: string
+      clusterId:
+        type: string
+    type: object
+  instanceapi.BackupStrategy:
+    properties:
+      cronString:
+        type: string
+      validityPeriod:
+        type: integer
+    type: object
+  instanceapi.BackupStrategyUpdateReq:
+    properties:
+      clusterId:
+        type: string
+      cronString:
+        type: string
+      validityPeriod:
+        type: integer
+    type: object
   instanceapi.ParamItem:
     properties:
       currentValue:
@@ -447,6 +525,198 @@ info:
   title: TiCP UI API
   version: "1.0"
 paths:
+  /backup/{clusterId}:
+    post:
+      consumes:
+      - application/json
+      description: backup
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 要备份的集群ID
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/instanceapi.BackupRecord'
+              type: object
+      summary: backup
+      tags:
+      - cluster backup
+  /backup/record/{clusterId}:
+    get:
+      consumes:
+      - application/json
+      description: 查询备份记录
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/instanceapi.BackupRecord'
+                  type: array
+              type: object
+      summary: 查询备份记录
+      tags:
+      - cluster backup
+  /backup/record/{recordId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除备份记录
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 删除备份ID
+        in: path
+        name: recordId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 删除备份记录
+      tags:
+      - cluster backup
+  /backup/record/recover:
+    post:
+      consumes:
+      - application/json
+      description: 恢复备份
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 恢复备份请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.BackupRecoverReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.StatusInfo'
+              type: object
+      summary: 恢复备份
+      tags:
+      - cluster backup
+  /backup/strategy:
+    post:
+      consumes:
+      - application/json
+      description: 保存备份策略
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 备份策略信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.BackupStrategyUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/instanceapi.BackupStrategy'
+              type: object
+      summary: 保存备份策略
+      tags:
+      - cluster backup
+  /backup/strategy/{clusterId}:
+    get:
+      consumes:
+      - application/json
+      description: 查询备份策略
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/instanceapi.BackupStrategy'
+                  type: array
+              type: object
+      summary: 查询备份策略
+      tags:
+      - cluster backup
   /cluster:
     post:
       consumes:
@@ -834,7 +1104,7 @@ paths:
               type: object
       summary: 查询集群参数列表
       tags:
-      - cluster
+      - cluster params
   /params/submit:
     post:
       consumes:
@@ -866,7 +1136,7 @@ paths:
               type: object
       summary: 提交参数
       tags:
-      - cluster
+      - cluster params
   /user/login:
     post:
       consumes:

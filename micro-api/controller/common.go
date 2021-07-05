@@ -17,6 +17,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
 
 type ResultMark struct {
@@ -71,4 +72,19 @@ func Hello(c *gin.Context) {
 
 func HelloPage(c *gin.Context) {
 	c.JSON(http.StatusOK, Success("hello world"))
+}
+
+type StatusInfo struct {
+	StatusCode			string
+	StatusName			string
+	InProcessFlowId 	int
+	CreateTime			time.Time
+	UpdateTime			time.Time
+	DeleteTime			time.Time
+}
+
+type Operator struct {
+	ManualOperator 		bool
+	OperatorName 		string
+	OperatorId   		string
 }

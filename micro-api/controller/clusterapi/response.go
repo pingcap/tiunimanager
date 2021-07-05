@@ -1,9 +1,11 @@
 package clusterapi
 
+import "github.com/pingcap/ticp/micro-api/controller"
+
 type CreateClusterRsp struct {
 	ClusterId 			string
 	ClusterBaseInfo
-	ClusterStatusInfo
+	controller.StatusInfo
 }
 
 type ClusterKnowledgeRsp struct {
@@ -12,7 +14,7 @@ type ClusterKnowledgeRsp struct {
 
 type DeleteClusterRsp struct {
 	ClusterId 			string
-	ClusterStatusInfo
+	controller.StatusInfo
 }
 
 type DetailClusterRsp struct {

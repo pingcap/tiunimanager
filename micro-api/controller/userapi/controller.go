@@ -47,7 +47,7 @@ func Login(c *gin.Context) {
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
-// @Param Token header string true "登录token"
+// @Param Token header string true "token"
 // @Param logoutInfo body LogoutInfo false "退出登录信息"
 // @Success 200 {object} controller.CommonResult{data=UserIdentity}
 // @Router /user/logout [post]

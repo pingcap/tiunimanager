@@ -1,6 +1,10 @@
 package clusterapi
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap/ticp/micro-api/controller"
+	"net/http"
+)
 
 // Create 创建集群接口
 // @Summary 创建集群接口
@@ -8,8 +12,8 @@ import "github.com/gin-gonic/gin"
 // @Tags cluster
 // @Accept application/json
 // @Produce application/json
-// @Param Token header string true "登录token"
-// @Param cluster body CreateRequest true "创建参数"
+// @Param Token header string true "token"
+// @Param cluster body CreateReq true "创建参数"
 // @Success 200 {object} controller.CommonResult{data=CreateClusterRsp}
 // @Router /cluster [post]
 func Create(c *gin.Context) {
@@ -22,8 +26,9 @@ func Create(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param Token header string true "登录token"
-// @Param query body QueryRequest false "可选的查询集群的条件"
+// @Param Token header string true "token"
+// @Param page query int false "page" default(1)
+// @Param pageSize query int false "page" default(1)
 // @Success 200 {object} controller.ResultWithPage{data=[]ClusterDisplayInfo}
 // @Router /clusters [get]
 func Query(c *gin.Context) {
@@ -36,7 +41,7 @@ func Query(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param Token header string true "登录token"
+// @Param Token header string true "token"
 // @Param clusterId path string true "待删除的集群ID"
 // @Success 200 {object} controller.CommonResult{data=DeleteClusterRsp}
 // @Router /cluster/ [delete]
@@ -50,12 +55,15 @@ func Delete(c * gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param Token header string true "登录token"
+// @Param Token header string true "token"
 // @Param clusterId path string true "集群ID"
 // @Success 200 {object} controller.CommonResult{data=DetailClusterRsp}
-// @Router /cluster/ [get]
+// @Router /cluster/{clusterId} [get]
 func Detail(c *gin.Context) {
-
+	rsp := DetailClusterRsp{}
+	rsp.ClusterId = c.GetString("clusterId")
+	rsp.DbPassword = "pass"
+	c.JSON(http.StatusOK, controller.Success(rsp))
 }
 
 // ClusterKnowledge 查看集群基本知识
@@ -64,9 +72,9 @@ func Detail(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param Token header string true "登录token"
+// @Param Token header string true "token"
 // @Success 200 {object} controller.CommonResult{data=ClusterKnowledgeRsp}
-// @Router /cluster/knowledge [get]
+// @Router /knowledge [get]
 func ClusterKnowledge(c *gin.Context) {
 
 }

@@ -133,7 +133,7 @@ definitions:
       updateTime:
         type: string
     type: object
-  clusterapi.CreateRequest:
+  clusterapi.CreateReq:
     properties:
       clusterName:
         type: string
@@ -224,13 +224,6 @@ definitions:
         type: string
       zoneCode:
         type: string
-    type: object
-  clusterapi.QueryRequest:
-    properties:
-      page:
-        type: integer
-      pageSize:
-        type: integer
     type: object
   controller.CommonResult:
     properties:
@@ -367,38 +360,70 @@ definitions:
           type: array
         type: object
     type: object
-  instanceapi.InstanceCreate:
+  instanceapi.ParamItem:
     properties:
-      dbPassword:
-        type: string
-      instanceName:
-        type: string
-      instanceVersion:
-        type: string
-      pdCount:
-        type: integer
-      tiDBCount:
-        type: integer
-      tiKVCount:
-        type: integer
+      currentValue:
+        $ref: '#/definitions/instanceapi.ParamValue'
+      definition:
+        $ref: '#/definitions/instanceapi.Parameter'
     type: object
-  instanceapi.InstanceInfo:
+  instanceapi.ParamQueryReq:
     properties:
-      instanceId:
+      clusterId:
         type: string
-      instanceName:
-        type: string
-      instanceStatus:
-        type: integer
-      instanceVersion:
-        type: string
-    type: object
-  instanceapi.InstanceQuery:
-    properties:
       page:
+        $ref: '#/definitions/controller.Page'
+    type: object
+  instanceapi.ParamUpdateReq:
+    properties:
+      clusterId:
+        type: string
+      values:
+        items:
+          $ref: '#/definitions/instanceapi.ParamValue'
+        type: array
+    type: object
+  instanceapi.ParamUpdateRsp:
+    properties:
+      clusterId:
+        type: string
+      status:
+        type: string
+      taskId:
         type: integer
-      pageSize:
+    type: object
+  instanceapi.ParamValue:
+    properties:
+      name:
+        type: string
+      value:
+        type: object
+    type: object
+  instanceapi.ParamValueConstraint:
+    properties:
+      contrastValue:
+        type: object
+      type:
+        type: string
+    type: object
+  instanceapi.Parameter:
+    properties:
+      constraints:
+        items:
+          $ref: '#/definitions/instanceapi.ParamValueConstraint'
+        type: array
+      defaultValue:
+        type: object
+      desc:
+        type: string
+      name:
+        type: string
+      needRestart:
+        type: boolean
+      type:
         type: integer
+      unit:
+        type: string
     type: object
   userapi.LoginInfo:
     properties:
@@ -435,7 +460,7 @@ paths:
       - application/json
       description: 创建集群接口
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
@@ -445,7 +470,7 @@ paths:
         name: cluster
         required: true
         schema:
-          $ref: '#/definitions/clusterapi.CreateRequest'
+          $ref: '#/definitions/clusterapi.CreateReq'
       produces:
       - application/json
       responses:
@@ -467,7 +492,7 @@ paths:
       - application/json
       description: 删除集群
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
@@ -492,12 +517,13 @@ paths:
       summary: 删除集群
       tags:
       - cluster
+  /cluster/{clusterId}:
     get:
       consumes:
       - application/json
       description: 查看集群详情
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
@@ -522,48 +548,27 @@ paths:
       summary: 查看集群详情
       tags:
       - cluster
-  /cluster/knowledge:
-    get:
-      consumes:
-      - application/json
-      description: 查看集群基本知识
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/clusterapi.ClusterKnowledgeRsp'
-              type: object
-      summary: 查看集群基本知识
-      tags:
-      - cluster
   /clusters:
     get:
       consumes:
       - application/json
       description: 查询集群列表
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
         type: string
-      - description: 可选的查询集群的条件
-        in: body
-        name: query
-        schema:
-          $ref: '#/definitions/clusterapi.QueryRequest'
+      - default: 1
+        description: page
+        in: query
+        name: page
+        type: integer
+      - default: 1
+        description: page
+        in: query
+        name: pageSize
+        type: integer
       produces:
       - application/json
       responses:
@@ -587,7 +592,7 @@ paths:
       - application/json
       description: 将给定的主机信息导入TiCP
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
@@ -619,7 +624,7 @@ paths:
       - application/json
       description: 删除指定的主机
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
@@ -649,7 +654,7 @@ paths:
       - application/json
       description: 展示指定的主机的详细信息
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
@@ -680,7 +685,7 @@ paths:
       - application/json
       description: 查询主机
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
@@ -714,7 +719,7 @@ paths:
       - application/json
       description: 展示目前所有主机
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
@@ -747,7 +752,7 @@ paths:
       - application/json
       description: 查询各可用区的主机规格库存
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
@@ -769,23 +774,17 @@ paths:
       summary: 查询各可用区的主机规格库存
       tags:
       - resource
-  /instance/create:
-    post:
+  /knowledge:
+    get:
       consumes:
       - application/json
-      description: 创建实例
+      description: 查看集群基本知识
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
         type: string
-      - description: 创建参数
-        in: body
-        name: createInfo
-        required: true
-        schema:
-          $ref: '#/definitions/instanceapi.InstanceCreate'
       produces:
       - application/json
       responses:
@@ -796,18 +795,18 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/instanceapi.InstanceInfo'
+                  $ref: '#/definitions/clusterapi.ClusterKnowledgeRsp'
               type: object
-      summary: 创建实例接口
+      summary: 查看集群基本知识
       tags:
-      - instance
-  /instance/query:
-    post:
+      - cluster
+  /param/query:
+    get:
       consumes:
       - application/json
-      description: 查询实例
+      description: 查询集群参数列表
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
@@ -815,9 +814,8 @@ paths:
       - description: 查询参数
         in: body
         name: query
-        required: true
         schema:
-          $ref: '#/definitions/instanceapi.InstanceQuery'
+          $ref: '#/definitions/instanceapi.ParamQueryReq'
       produces:
       - application/json
       responses:
@@ -829,12 +827,44 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/instanceapi.InstanceInfo'
+                    $ref: '#/definitions/instanceapi.ParamItem'
                   type: array
               type: object
-      summary: 查询实例接口
+      summary: 查询集群参数列表
       tags:
-      - instance
+      - cluster
+  /param/submit:
+    post:
+      consumes:
+      - application/json
+      description: 提交参数
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 要提交的参数信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.ParamUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/instanceapi.ParamUpdateRsp'
+              type: object
+      summary: 提交参数
+      tags:
+      - cluster
   /user/login:
     post:
       consumes:
@@ -868,7 +898,7 @@ paths:
       - application/json
       description: 退出登录
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true

@@ -47,7 +47,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -58,7 +58,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/clusterapi.CreateRequest"
+                            "$ref": "#/definitions/clusterapi.CreateReq"
                         }
                     }
                 ],
@@ -85,55 +85,6 @@ var doc = `{
             }
         },
         "/cluster/": {
-            "get": {
-                "description": "查看集群详情",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "查看集群详情",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "集群ID",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/clusterapi.DetailClusterRsp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
             "delete": {
                 "description": "删除集群",
                 "consumes": [
@@ -149,7 +100,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -184,9 +135,9 @@ var doc = `{
                 }
             }
         },
-        "/cluster/knowledge": {
+        "/cluster/{clusterId}": {
             "get": {
-                "description": "查看集群基本知识",
+                "description": "查看集群详情",
                 "consumes": [
                     "application/json"
                 ],
@@ -196,13 +147,20 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "查看集群基本知识",
+                "summary": "查看集群详情",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "集群ID",
+                        "name": "clusterId",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -218,7 +176,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/clusterapi.ClusterKnowledgeRsp"
+                                            "$ref": "#/definitions/clusterapi.DetailClusterRsp"
                                         }
                                     }
                                 }
@@ -244,18 +202,24 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "description": "可选的查询集群的条件",
-                        "name": "query",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/clusterapi.QueryRequest"
-                        }
+                        "type": "integer",
+                        "default": 1,
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "page",
+                        "name": "pageSize",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -299,7 +263,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -352,7 +316,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -401,7 +365,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -452,7 +416,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -508,7 +472,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -563,7 +527,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -594,9 +558,9 @@ var doc = `{
                 }
             }
         },
-        "/instance/create": {
-            "post": {
-                "description": "创建实例",
+        "/knowledge": {
+            "get": {
+                "description": "查看集群基本知识",
                 "consumes": [
                     "application/json"
                 ],
@@ -604,25 +568,16 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "instance"
+                    "cluster"
                 ],
-                "summary": "创建实例接口",
+                "summary": "查看集群基本知识",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
                         "required": true
-                    },
-                    {
-                        "description": "创建参数",
-                        "name": "createInfo",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.InstanceCreate"
-                        }
                     }
                 ],
                 "responses": {
@@ -637,7 +592,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/instanceapi.InstanceInfo"
+                                            "$ref": "#/definitions/clusterapi.ClusterKnowledgeRsp"
                                         }
                                     }
                                 }
@@ -647,9 +602,9 @@ var doc = `{
                 }
             }
         },
-        "/instance/query": {
-            "post": {
-                "description": "查询实例",
+        "/param/query": {
+            "get": {
+                "description": "查询集群参数列表",
                 "consumes": [
                     "application/json"
                 ],
@@ -657,13 +612,13 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "instance"
+                    "cluster"
                 ],
-                "summary": "查询实例接口",
+                "summary": "查询集群参数列表",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -672,9 +627,8 @@ var doc = `{
                         "description": "查询参数",
                         "name": "query",
                         "in": "body",
-                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/instanceapi.InstanceQuery"
+                            "$ref": "#/definitions/instanceapi.ParamQueryReq"
                         }
                     }
                 ],
@@ -692,8 +646,61 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/instanceapi.InstanceInfo"
+                                                "$ref": "#/definitions/instanceapi.ParamItem"
                                             }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/param/submit": {
+            "post": {
+                "description": "提交参数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "提交参数",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "要提交的参数信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.ParamUpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/instanceapi.ParamUpdateRsp"
                                         }
                                     }
                                 }
@@ -765,7 +772,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
+                        "description": "token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -1006,7 +1013,7 @@ var doc = `{
                 }
             }
         },
-        "clusterapi.CreateRequest": {
+        "clusterapi.CreateReq": {
             "type": "object",
             "properties": {
                 "clusterName": {
@@ -1143,17 +1150,6 @@ var doc = `{
                 },
                 "zoneCode": {
                     "type": "string"
-                }
-            }
-        },
-        "clusterapi.QueryRequest": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
                 }
             }
         },
@@ -1360,54 +1356,104 @@ var doc = `{
                 }
             }
         },
-        "instanceapi.InstanceCreate": {
+        "instanceapi.ParamItem": {
             "type": "object",
             "properties": {
-                "dbPassword": {
-                    "type": "string"
+                "currentValue": {
+                    "$ref": "#/definitions/instanceapi.ParamValue"
                 },
-                "instanceName": {
-                    "type": "string"
-                },
-                "instanceVersion": {
-                    "type": "string"
-                },
-                "pdCount": {
-                    "type": "integer"
-                },
-                "tiDBCount": {
-                    "type": "integer"
-                },
-                "tiKVCount": {
-                    "type": "integer"
+                "definition": {
+                    "$ref": "#/definitions/instanceapi.Parameter"
                 }
             }
         },
-        "instanceapi.InstanceInfo": {
+        "instanceapi.ParamQueryReq": {
             "type": "object",
             "properties": {
-                "instanceId": {
+                "clusterId": {
                     "type": "string"
                 },
-                "instanceName": {
-                    "type": "string"
-                },
-                "instanceStatus": {
-                    "type": "integer"
-                },
-                "instanceVersion": {
-                    "type": "string"
-                }
-            }
-        },
-        "instanceapi.InstanceQuery": {
-            "type": "object",
-            "properties": {
                 "page": {
+                    "$ref": "#/definitions/controller.Page"
+                }
+            }
+        },
+        "instanceapi.ParamUpdateReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/instanceapi.ParamValue"
+                    }
+                }
+            }
+        },
+        "instanceapi.ParamUpdateRsp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "taskId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "instanceapi.ParamValue": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "object"
+                }
+            }
+        },
+        "instanceapi.ParamValueConstraint": {
+            "type": "object",
+            "properties": {
+                "contrastValue": {
+                    "type": "object"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "instanceapi.Parameter": {
+            "type": "object",
+            "properties": {
+                "constraints": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/instanceapi.ParamValueConstraint"
+                    }
+                },
+                "defaultValue": {
+                    "type": "object"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "needRestart": {
+                    "type": "boolean"
+                },
+                "type": {
                     "type": "integer"
                 },
-                "pageSize": {
-                    "type": "integer"
+                "unit": {
+                    "type": "string"
                 }
             }
         },

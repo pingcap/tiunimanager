@@ -247,7 +247,7 @@ func mgrHandleCmdGetAllTaskStatusReq(jsonStr string) CmdGetAllTaskStatusResp {
 func newTmpFileWithContent(content []byte) (fileName string, err error) {
 	tmpfile, err := ioutil.TempFile("", "ticp-topology-*.yaml")
 	if err != nil {
-		err = fmt.Errorf("fail to create temp file err:", err)
+		err = fmt.Errorf("fail to create temp file err: %s", err)
 		return "", err
 	}
 	fileName = tmpfile.Name()
@@ -256,7 +256,7 @@ func newTmpFileWithContent(content []byte) (fileName string, err error) {
 	if err != nil || ct != len(content) {
 		tmpfile.Close()
 		os.Remove(fileName)
-		err = fmt.Errorf("fail to write content to temp file ", fileName, "err:", err, "length of content:", "writed:", ct)
+		err = fmt.Errorf(fmt.Sprint("fail to write content to temp file ", fileName, "err:", err, "length of content:", "writed:", ct))
 		return "", err
 	}
 	if err := tmpfile.Close(); err != nil {
@@ -275,12 +275,16 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 	go func() {
 		defer close(exitCh)
 		var cmd *exec.Cmd
+		var cancelFp context.CancelFunc
 		if TimeoutS != 0 {
-			ctx, _ := context.WithTimeout(context.Background(), time.Duration(TimeoutS)*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TimeoutS)*time.Second)
+			cancelFp = cancel
 			exec.CommandContext(ctx, tiupPath, tiupArgs...)
 		} else {
 			cmd = exec.Command(tiupPath, tiupArgs...)
+			cancelFp = func() {}
 		}
+		defer cancelFp()
 		cmd.SysProcAttr = genSysProcAttr()
 		if err := cmd.Start(); err != nil {
 			glMgrTaskStatusCh <- TaskStatusMember{

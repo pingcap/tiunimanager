@@ -4,6 +4,33 @@ import (
 	"gorm.io/gorm"
 )
 
+type ClusterDO struct {
+	Entity
+	Demand 					ClusterDemandDO
+
+	ClusterName 			string
+	DbPassword 				string
+	ClusterType 			string
+	ClusterVersion 			string
+	Tls 					bool
+
+	Status 					uint
+	AlterationFlowId		uint
+	AlterationAlias			string
+}
+
+type ClusterDemandDO struct {
+	Record
+	ClusterId 			string
+	Content 			string		`gorm:"type:text"`
+}
+
+type TiUPConfigDO struct {
+	Record
+	ClusterId			string
+	Content 			string		`gorm:"type:text"`
+}
+
 type Cluster struct {
 	gorm.Model
 

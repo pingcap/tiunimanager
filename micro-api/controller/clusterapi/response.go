@@ -9,7 +9,7 @@ type CreateClusterRsp struct {
 }
 
 type ClusterKnowledgeRsp struct {
-	ClusterTypes 		[]ClusterTypeInfo
+	ClusterTypes 		[]ClusterTypeKnowledge
 }
 
 type DeleteClusterRsp struct {

@@ -82,7 +82,7 @@ func copyClusterDbDtoToDomain(dto *dbPb.DBClusterDTO, domain *Cluster) {
 }
 
 // PrepareResource 申请主机的同步任务，还待抽象
-func (cluster *Cluster) PrepareResource(f *FlowWork) {
+func (cluster *Cluster) PrepareResource(f *FlowWorkEntity) {
 	req := mngPb.AllocHostsRequest{
 		PdCount:   int32(cluster.Demand.pdNodeQuantity),
 		TidbCount: int32(cluster.Demand.tiDBNodeQuantity),
@@ -99,7 +99,7 @@ func (cluster *Cluster) PrepareResource(f *FlowWork) {
 }
 
 // BuildConfig 根据要求和申请到的主机，生成一份TiUP的配置
-func (cluster *Cluster) BuildConfig(f *FlowWork) {
+func (cluster *Cluster) BuildConfig(f *FlowWorkEntity) {
 
 	hosts := f.context.Value("hosts").([]*mngPb.AllocHost)
 	dataDir := filepath.Join(hosts[0].Disk.Path, "data")
@@ -151,7 +151,7 @@ func (cluster *Cluster) persistCurrentConfig() {
 	cluster.CurrentConfigId = uint(resp.Config.Id)
 }
 
-func (cluster *Cluster) ExecuteTiUP(f *FlowWork) {
+func (cluster *Cluster) ExecuteTiUP(f *FlowWorkEntity) {
 	f.currentTask = CreateTask()
 
 	Operator.DeployCluster(cluster, uint64(f.currentTask.id))
@@ -159,7 +159,7 @@ func (cluster *Cluster) ExecuteTiUP(f *FlowWork) {
 	f.moveOn("tiUPStart")
 }
 
-func (cluster *Cluster) CheckTiUPResult(f *FlowWork) {
+func (cluster *Cluster) CheckTiUPResult(f *FlowWorkEntity) {
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		for _ = range ticker.C {

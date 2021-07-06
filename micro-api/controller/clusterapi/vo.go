@@ -48,20 +48,24 @@ type DistributionItem struct {
 	Count  			int
 }
 
-type ClusterTypeInfo struct {
+type ClusterTypeKnowledge struct {
 	Code string
 	Name string
-	Versions []ClusterVersion
+	Versions []ClusterVersionKnowledge
 }
 
-type ClusterVersion struct {
-	Code string
-	Name string
-	Constraints []ComponentConstraint
+type ClusterVersionKnowledge struct {
+	Code       string
+	Name       string
+	Components ClusterComponentKnowledge
+}
+
+type ClusterComponentKnowledge struct {
+	ComponentBaseInfo
+	Constraint ComponentConstraint
 }
 
 type ComponentConstraint struct {
-	ComponentBaseInfo
 	ComponentRequired 		bool
 	SuggestedNodeQuantities []int
 	AvailableSpecCodes		[]string

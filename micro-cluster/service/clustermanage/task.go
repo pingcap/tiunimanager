@@ -4,14 +4,20 @@ import (
 	"time"
 )
 
-// FlowWork 流程化的工作，用FlowWork记录其状态
-type FlowWork struct {
-	id			uint
-	flowName 	string
-	bizId 		string
-	status 		int
-	context 	FlowContext
-	currentTask Task
+// FlowWorkEntity 流程化的工作，用FlowWork记录其状态
+type FlowWorkEntity struct {
+	id          string
+	flowName    string
+	alias       string
+	bizId       string
+	status      int
+	context     FlowContext
+	currentTask TaskEntity
+}
+
+type FlowWorkAggregation struct {
+	FlowWork 	FlowWorkEntity
+	Tasks 		[]TaskEntity
 }
 
 type FlowContext map[string]interface{}
@@ -26,9 +32,9 @@ func (c FlowContext) Put(key string, value interface{}) {
 	c[key] = value
 }
 
-func ClusterInitFlowWork() FlowWork {
-	return FlowWork{
-		id: 1,
+func ClusterInitFlowWork() FlowWorkEntity {
+	return FlowWorkEntity{
+		id: "flow1",
 		flowName: "创建集群",
 		bizId: "1212213",
 		status: 0,
@@ -37,7 +43,7 @@ func ClusterInitFlowWork() FlowWork {
 }
 
 // 应该按生成不同的task来驱动
-func (f *FlowWork) moveOn(event string) {
+func (f *FlowWorkEntity) moveOn(event string) {
 	if event == "start" {
 		// 修改flow的task信息
 		cluster := f.context.Value("cluster").(*Cluster)
@@ -62,8 +68,8 @@ func (f *FlowWork) moveOn(event string) {
 	}
 }
 
-// CronTask 定时任务，比如每周备份一次
-type CronTask struct {
+// CronTaskEntity 定时任务，比如每周备份一次
+type CronTaskEntity struct {
 	name string
 	cron string
 	handlerName string
@@ -74,9 +80,13 @@ type CronTask struct {
 	status int
 	config string
 }
+type CronTaskAggregation struct {
+	CronTask 	CronTaskEntity
+	Tasks 		[]TaskEntity
+}
 
-// Task 异步的任务或工作。需要用户手动完成或系统回调的
-type Task struct {
+// TaskEntity 异步的任务或工作。需要用户手动完成或系统回调的
+type TaskEntity struct {
 	id         		uint
 	// doing success fail
 	status 			int
@@ -89,7 +99,7 @@ type Task struct {
 
 var taskIdSeq uint = 100000000
 
-func CreateTask() (t Task) {
+func CreateTask() (t TaskEntity) {
 	t.id = taskIdSeq
 	taskIdSeq ++
 	return

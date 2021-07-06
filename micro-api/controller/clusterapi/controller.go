@@ -100,9 +100,9 @@ func Detail(c *gin.Context) {
 // @Router /cluster/knowledge [get]
 func ClusterKnowledge(c *gin.Context) {
 	rsp := ClusterKnowledgeRsp{}
-	rsp.ClusterTypes = []ClusterTypeInfo{
-		ClusterTypeInfo{
-			Code:"tidb",
+	rsp.ClusterTypes = []ClusterTypeKnowledge{
+		{
+			Code: "tidb",
 		},
 	}
 	c.JSON(http.StatusOK, controller.Success(rsp))

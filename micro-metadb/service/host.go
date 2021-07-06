@@ -116,6 +116,26 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDeta
 
 type FailureDomain uint32
 
+func (fd FailureDomain) GetStr() (str string) {
+	switch fd {
+	case ROOT:
+		str = "Root"
+	case DATACENTER:
+		str = "DataCenter"
+	case ZONE:
+		str = "Zone"
+	case RACK:
+		str = "Rack"
+	case HOST:
+		str = "Host"
+	case DISK:
+		str = "Disk"
+	default:
+		str = "Unknown"
+	}
+	return str
+}
+
 const (
 	ROOT FailureDomain = iota
 	DATACENTER
@@ -124,10 +144,15 @@ const (
 	HOST
 	DISK
 )
+
 const (
 	MAX_TRIES     = 5
 	GB_PER_WEIGHT = 256
 )
+
+func calcDiskWeight(c int32) uint32 {
+	return uint32(c) / GB_PER_WEIGHT
+}
 
 type Item struct {
 	id                string
@@ -164,9 +189,11 @@ func BuildHierarchy() (rack2hosts map[string][]*Item, zone2racks map[string][]st
 				name:              disk.Name,
 				status:            disk.Status,
 				failureDomainType: DISK,
-				weight:            uint32(disk.Capacity) / GB_PER_WEIGHT,
 			}
-			if isAvailable(&hostItem) && isAvailable(&diskItem) {
+			if isAvailable(&diskItem) {
+				diskItem.weight = calcDiskWeight(disk.Capacity)
+			}
+			if isAvailable(&hostItem) {
 				hostItem.weight += diskItem.weight
 			}
 			hostItem.subItems = append(hostItem.subItems, &diskItem)

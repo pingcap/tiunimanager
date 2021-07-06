@@ -281,9 +281,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 		} else {
 			cmd = exec.Command(tiupPath, tiupArgs...)
 		}
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			Pdeathsig: syscall.SIGTERM,
-		}
+		cmd.SysProcAttr = genSysProcAttr()
 		if err := cmd.Start(); err != nil {
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
@@ -732,9 +730,7 @@ func microCmdChanRoutine(cch chan CmdChanMember, outReader io.Reader, inWriter i
 func microStartTiupMgr() chan CmdChanMember {
 	tiupMgrPath := glTiUPMgrPath
 	cmd := exec.Command(tiupMgrPath)
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Pdeathsig: syscall.SIGTERM,
-	}
+	cmd.SysProcAttr = genSysProcAttr()
 	in, err := cmd.StdinPipe()
 	if err != nil {
 		//fmt.Println("err:", err)

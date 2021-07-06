@@ -38,6 +38,10 @@ func SetDefaultLogEntry(entry *log.Entry) {
 	defaultLogEntry = entry
 }
 
+func GetDefaultLogEntry() *log.Entry {
+	return defaultLogEntry
+}
+
 func NewContext(ctx context.Context, fields Fields) context.Context {
 	return context.WithValue(ctx, logCtxKey, WithContext(ctx).WithFields(log.Fields(fields)))
 }

@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"hash/fnv"
 	"log"
 	"strings"
 
@@ -292,6 +294,131 @@ func PrintHierarchy(root *Item, pre string, has_brother bool) {
 			}
 		}
 	}
+}
+
+func doHash(item *Item, n int) uint32 {
+	a := fnv.New32()
+	str := fmt.Sprintf("%d,%s,%s", n, item.id, item.name)
+	a.Write([]byte(str))
+	return a.Sum32() & 0x00ffffff
+}
+
+func bucketChoose(bucket *Item, trial int) (item *Item) {
+	var high_item *Item
+	var high_draw uint32
+	const Magic = 47
+	for index, item := range bucket.subItems {
+		draw := doHash(item, trial*Magic)
+		draw *= item.weight
+		if index == 0 || draw > high_draw {
+			high_item = item
+			high_draw = draw
+		}
+	}
+	return high_item
+
+}
+
+func hasChosen(items []*Item, item *Item) bool {
+	for _, eachItem := range items {
+		if item.id == eachItem.id && item.name == eachItem.name {
+			return true
+		}
+	}
+	return false
+}
+
+func adjustWeight(chosen_path []*Item) {
+	ctx := logger.NewContext(context.Background(), logger.Fields{"micro-service": "adjustWeight"})
+	log := logger.WithContext(ctx)
+	var last_index = len(chosen_path) - 1
+	if chosen_path[last_index].failureDomainType != DISK {
+		log.Fatalf("Expect last Item(%d) in path should be a DISK, but not %s\n", last_index, chosen_path[last_index].failureDomainType.GetStr())
+		return
+	}
+	diskWeight := chosen_path[last_index].weight
+	for _, item := range chosen_path {
+		log.Debugf("Adjust item (%s, %s) Weight, by (%d - %d)\n", item.name, item.failureDomainType.GetStr(), item.weight, diskWeight)
+		item.weight -= diskWeight
+	}
+}
+
+func ChooseFirstn(take *Item, numReps int32, failureDomain FailureDomain, chooseLeaf bool, chosen_path []*Item) (result []*Item, diskItem []*Item, err error) {
+	ctx := logger.NewContext(context.Background(), logger.Fields{"micro-service": "ChooseFirstn"})
+	log := logger.WithContext(ctx)
+	var chooseOne bool
+	reserved_path_len := len(chosen_path)
+	for i := 0; i < int(numReps); i++ {
+		log.Debugf("----- Start to choose (%d/%d) for %s -----\n", i+1, numReps, failureDomain.GetStr())
+		bucket := take
+		trial := i
+		chooseOne = false
+		chosen_path = chosen_path[:reserved_path_len]
+		for trial < MAX_TRIES+i {
+			chosen_path = append(chosen_path, bucket)
+			item := bucketChoose(bucket, trial)
+			if item.failureDomainType != failureDomain {
+				log.Debugf("%s failure domain %s contains target failure domain %s, will go into next\n",
+					item.name, item.failureDomainType.GetStr(), failureDomain.GetStr())
+				bucket = item
+				continue
+			}
+			if hasChosen(result, item) {
+				log.Warnf("%s (%s) has been chosen already, will re-choose another (retries: %d), chosen set by now:[%v]\n",
+					item.name, item.failureDomainType.GetStr(), trial, result)
+				goto RETRY
+			}
+			if !isAvailable(item) {
+				log.Warnf("%s (%s) is not available (Status: %v), will re-choose another (retries: %d), chosen set by now:[%v]\n",
+					item.name, item.failureDomainType.GetStr(), item.status, trial, result)
+				goto RETRY
+			}
+			if failureDomain == DISK {
+				log.Debugf("\tChoose Disk %v Succeed\n", *item)
+				result = append(result, item)
+				diskItem = append(diskItem, item)
+				chosen_path = append(chosen_path, item)
+				chooseOne = true
+				adjustWeight(chosen_path)
+				break
+			} else if chooseLeaf {
+				log.Debugf("=== Try to Choose Disk in %s (%s) ===\n", item.name, item.failureDomainType.GetStr())
+				_, leafDisk, err := ChooseFirstn(item, 1, DISK, false, chosen_path)
+				if err != nil {
+					log.Warnf("=== Try to Choose Disk in %s (%s) Failed, will retry(%d) err: %v===\n",
+						item.name, item.failureDomainType.GetStr(), trial, err)
+					goto RETRY
+				} else {
+					log.Debugf("=== Choose Disk %s in %s (%s) Succeed ===\n",
+						leafDisk[0].name, item.name, item.failureDomainType.GetStr())
+					result = append(result, item)
+					diskItem = append(diskItem, leafDisk[0])
+					chooseOne = true
+					break
+				}
+			} else {
+				log.Debugf("Choose %s (%s) Succeed, Try to Get another\n", item.name, item.failureDomainType.GetStr())
+				result = append(result, item)
+				chosen_path = append(chosen_path, item)
+				chooseOne = true
+				adjustWeight(chosen_path)
+				break
+			}
+		RETRY:
+			trial++
+			bucket = take
+			chosen_path = chosen_path[:reserved_path_len]
+			continue
+		}
+		if !chooseOne {
+			errMsg := fmt.Sprintf("Could not find a %s in Round (%d/%d)", failureDomain.GetStr(), i+1, numReps)
+			log.Errorln("-----", errMsg, "-----")
+			err = errors.New(errMsg)
+			return
+		}
+		log.Debugf("----- End to choose (%d/%d) for %s -----\n", i+1, numReps, failureDomain.GetStr())
+	}
+	return
 }
 
 func (*DBServiceHandler) AllocHosts(ctx context.Context, req *dbPb.DBAllocHostsRequest, rsp *dbPb.DBAllocHostResponse) error {

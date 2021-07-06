@@ -3,10 +3,10 @@ package domain
 type ClusterStatus int
 
 const (
-	ClusterStatusUnlined 	ClusterStatus = 0
-	ClusterStatusOnline 	ClusterStatus = 1
-	ClusterStatusOffline 	ClusterStatus = 2
-	ClusterStatusDeleted 	ClusterStatus = 3
+	ClusterStatusUnlined ClusterStatus = 0
+	ClusterStatusOnline  ClusterStatus = 1
+	ClusterStatusOffline ClusterStatus = 2
+	ClusterStatusDeleted ClusterStatus = 3
 )
 
 var allClusterStatus = []ClusterStatus{
@@ -15,8 +15,6 @@ var allClusterStatus = []ClusterStatus{
 	ClusterStatusOffline,
 	ClusterStatusDeleted,
 }
-
-var ErrorStatusValue = -1
 
 func ClusterStatusFromValue(v int) ClusterStatus {
 	for _, s := range allClusterStatus {

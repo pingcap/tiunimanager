@@ -8,10 +8,6 @@ type CreateClusterRsp struct {
 	controller.StatusInfo
 }
 
-type ClusterKnowledgeRsp struct {
-	ClusterTypes 		[]ClusterTypeKnowledge
-}
-
 type DeleteClusterRsp struct {
 	ClusterId 			string
 	controller.StatusInfo

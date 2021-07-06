@@ -2,7 +2,7 @@ package instanceapi
 
 type ParamUpdateReq struct {
 	ClusterId 		string
-	Values			[]ParamValue
+	Values			[]ParamInstance
 }
 
 type BackupStrategyUpdateReq struct {

@@ -3,6 +3,7 @@ package clusterapi
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/ticp/micro-api/controller"
+	"github.com/pingcap/ticp/knowledge/models"
 	"net/http"
 	"strconv"
 )
@@ -96,14 +97,17 @@ func Detail(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Success 200 {object} controller.CommonResult{data=ClusterKnowledgeRsp}
+// @Success 200 {object} controller.CommonResult{data=[]models.ClusterTypeSpec}
 // @Router /cluster/knowledge [get]
 func ClusterKnowledge(c *gin.Context) {
-	rsp := ClusterKnowledgeRsp{}
-	rsp.ClusterTypes = []ClusterTypeKnowledge{
+	c.JSON(http.StatusOK, controller.Success([]models.ClusterTypeSpec{
 		{
-			Code: "tidb",
+			models.ClusterType{
+				Name: "what",
+			},
+			[]models.ClusterVersionSpec{
+
+			},
 		},
-	}
-	c.JSON(http.StatusOK, controller.Success(rsp))
+	}))
 }

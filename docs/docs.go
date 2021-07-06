@@ -434,7 +434,10 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/clusterapi.ClusterKnowledgeRsp"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/models.ClusterTypeSpec"
+                                            }
                                         }
                                     }
                                 }
@@ -1214,17 +1217,6 @@ var doc = `{
                 }
             }
         },
-        "clusterapi.ClusterKnowledgeRsp": {
-            "type": "object",
-            "properties": {
-                "clusterTypes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clusterapi.ClusterTypeInfo"
-                    }
-                }
-            }
-        },
         "clusterapi.ClusterNodeDemand": {
             "type": "object",
             "properties": {
@@ -1239,69 +1231,6 @@ var doc = `{
                 },
                 "totalNodeCount": {
                     "type": "integer"
-                }
-            }
-        },
-        "clusterapi.ClusterTypeInfo": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "versions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clusterapi.ClusterVersion"
-                    }
-                }
-            }
-        },
-        "clusterapi.ClusterVersion": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "constraints": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clusterapi.ComponentConstraint"
-                    }
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "clusterapi.ComponentConstraint": {
-            "type": "object",
-            "properties": {
-                "availableSpecCodes": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "componentName": {
-                    "type": "string"
-                },
-                "componentRequired": {
-                    "type": "boolean"
-                },
-                "componentType": {
-                    "type": "string"
-                },
-                "minZoneQuantity": {
-                    "type": "integer"
-                },
-                "suggestedNodeQuantities": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
                 }
             }
         },
@@ -1803,14 +1732,25 @@ var doc = `{
                 }
             }
         },
+        "instanceapi.ParamInstance": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "object"
+                }
+            }
+        },
         "instanceapi.ParamItem": {
             "type": "object",
             "properties": {
                 "currentValue": {
-                    "$ref": "#/definitions/instanceapi.ParamValue"
+                    "$ref": "#/definitions/instanceapi.ParamInstance"
                 },
                 "definition": {
-                    "$ref": "#/definitions/instanceapi.Parameter"
+                    "$ref": "#/definitions/models.Parameter"
                 }
             }
         },
@@ -1823,7 +1763,7 @@ var doc = `{
                 "values": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/instanceapi.ParamValue"
+                        "$ref": "#/definitions/instanceapi.ParamInstance"
                     }
                 }
             }
@@ -1842,18 +1782,102 @@ var doc = `{
                 }
             }
         },
-        "instanceapi.ParamValue": {
+        "models.ClusterComponent": {
             "type": "object",
             "properties": {
-                "name": {
+                "componentName": {
                     "type": "string"
                 },
-                "value": {
-                    "type": "object"
+                "componentType": {
+                    "type": "string"
                 }
             }
         },
-        "instanceapi.ParamValueConstraint": {
+        "models.ClusterComponentSpec": {
+            "type": "object",
+            "properties": {
+                "clusterComponent": {
+                    "$ref": "#/definitions/models.ClusterComponent"
+                },
+                "componentConstraint": {
+                    "$ref": "#/definitions/models.ComponentConstraint"
+                }
+            }
+        },
+        "models.ClusterType": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ClusterTypeSpec": {
+            "type": "object",
+            "properties": {
+                "clusterType": {
+                    "$ref": "#/definitions/models.ClusterType"
+                },
+                "versionSpecs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ClusterVersionSpec"
+                    }
+                }
+            }
+        },
+        "models.ClusterVersion": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ClusterVersionSpec": {
+            "type": "object",
+            "properties": {
+                "clusterVersion": {
+                    "$ref": "#/definitions/models.ClusterVersion"
+                },
+                "componentSpecs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ClusterComponentSpec"
+                    }
+                }
+            }
+        },
+        "models.ComponentConstraint": {
+            "type": "object",
+            "properties": {
+                "availableSpecCodes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "componentRequired": {
+                    "type": "boolean"
+                },
+                "minZoneQuantity": {
+                    "type": "integer"
+                },
+                "suggestedNodeQuantities": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "models.ParamValueConstraint": {
             "type": "object",
             "properties": {
                 "contrastValue": {
@@ -1864,13 +1888,13 @@ var doc = `{
                 }
             }
         },
-        "instanceapi.Parameter": {
+        "models.Parameter": {
             "type": "object",
             "properties": {
                 "constraints": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/instanceapi.ParamValueConstraint"
+                        "$ref": "#/definitions/models.ParamValueConstraint"
                     }
                 },
                 "defaultValue": {

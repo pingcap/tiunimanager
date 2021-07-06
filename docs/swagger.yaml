@@ -51,13 +51,6 @@ definitions:
           type: string
         type: array
     type: object
-  clusterapi.ClusterKnowledgeRsp:
-    properties:
-      clusterTypes:
-        items:
-          $ref: '#/definitions/clusterapi.ClusterTypeInfo'
-        type: array
-    type: object
   clusterapi.ClusterNodeDemand:
     properties:
       componentType:
@@ -68,47 +61,6 @@ definitions:
         type: array
       totalNodeCount:
         type: integer
-    type: object
-  clusterapi.ClusterTypeInfo:
-    properties:
-      code:
-        type: string
-      name:
-        type: string
-      versions:
-        items:
-          $ref: '#/definitions/clusterapi.ClusterVersion'
-        type: array
-    type: object
-  clusterapi.ClusterVersion:
-    properties:
-      code:
-        type: string
-      constraints:
-        items:
-          $ref: '#/definitions/clusterapi.ComponentConstraint'
-        type: array
-      name:
-        type: string
-    type: object
-  clusterapi.ComponentConstraint:
-    properties:
-      availableSpecCodes:
-        items:
-          type: string
-        type: array
-      componentName:
-        type: string
-      componentRequired:
-        type: boolean
-      componentType:
-        type: string
-      minZoneQuantity:
-        type: integer
-      suggestedNodeQuantities:
-        items:
-          type: integer
-        type: array
     type: object
   clusterapi.CreateClusterRsp:
     properties:
@@ -438,12 +390,19 @@ definitions:
       validityPeriod:
         type: integer
     type: object
+  instanceapi.ParamInstance:
+    properties:
+      name:
+        type: string
+      value:
+        type: object
+    type: object
   instanceapi.ParamItem:
     properties:
       currentValue:
-        $ref: '#/definitions/instanceapi.ParamValue'
+        $ref: '#/definitions/instanceapi.ParamInstance'
       definition:
-        $ref: '#/definitions/instanceapi.Parameter'
+        $ref: '#/definitions/models.Parameter'
     type: object
   instanceapi.ParamUpdateReq:
     properties:
@@ -451,7 +410,7 @@ definitions:
         type: string
       values:
         items:
-          $ref: '#/definitions/instanceapi.ParamValue'
+          $ref: '#/definitions/instanceapi.ParamInstance'
         type: array
     type: object
   instanceapi.ParamUpdateRsp:
@@ -463,25 +422,79 @@ definitions:
       taskId:
         type: integer
     type: object
-  instanceapi.ParamValue:
+  models.ClusterComponent:
     properties:
+      componentName:
+        type: string
+      componentType:
+        type: string
+    type: object
+  models.ClusterComponentSpec:
+    properties:
+      clusterComponent:
+        $ref: '#/definitions/models.ClusterComponent'
+      componentConstraint:
+        $ref: '#/definitions/models.ComponentConstraint'
+    type: object
+  models.ClusterType:
+    properties:
+      code:
+        type: string
       name:
         type: string
-      value:
-        type: object
     type: object
-  instanceapi.ParamValueConstraint:
+  models.ClusterTypeSpec:
+    properties:
+      clusterType:
+        $ref: '#/definitions/models.ClusterType'
+      versionSpecs:
+        items:
+          $ref: '#/definitions/models.ClusterVersionSpec'
+        type: array
+    type: object
+  models.ClusterVersion:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    type: object
+  models.ClusterVersionSpec:
+    properties:
+      clusterVersion:
+        $ref: '#/definitions/models.ClusterVersion'
+      componentSpecs:
+        items:
+          $ref: '#/definitions/models.ClusterComponentSpec'
+        type: array
+    type: object
+  models.ComponentConstraint:
+    properties:
+      availableSpecCodes:
+        items:
+          type: string
+        type: array
+      componentRequired:
+        type: boolean
+      minZoneQuantity:
+        type: integer
+      suggestedNodeQuantities:
+        items:
+          type: integer
+        type: array
+    type: object
+  models.ParamValueConstraint:
     properties:
       contrastValue:
         type: object
       type:
         type: string
     type: object
-  instanceapi.Parameter:
+  models.Parameter:
     properties:
       constraints:
         items:
-          $ref: '#/definitions/instanceapi.ParamValueConstraint'
+          $ref: '#/definitions/models.ParamValueConstraint'
         type: array
       defaultValue:
         type: object
@@ -831,7 +844,9 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/clusterapi.ClusterKnowledgeRsp'
+                  items:
+                    $ref: '#/definitions/models.ClusterTypeSpec'
+                  type: array
               type: object
       summary: 查看集群基本知识
       tags:

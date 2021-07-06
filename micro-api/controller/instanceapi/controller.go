@@ -2,6 +2,7 @@ package instanceapi
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/pingcap/ticp/knowledge/models"
 	"github.com/pingcap/ticp/micro-api/controller"
 	"net/http"
 	"strconv"
@@ -24,8 +25,8 @@ func QueryParams(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
 	clusterId := c.Param("clusterId")
 	c.JSON(http.StatusOK, controller.SuccessWithPage([]ParamItem{
-		{Definition:Parameter{Name: clusterId}, CurrentValue: ParamValue{Value: clusterId}},
-		{Definition:Parameter{Name: "p2"}, CurrentValue: ParamValue{Value: 2}},
+		{Definition: models.Parameter{Name: clusterId}, CurrentValue: ParamInstance{Value: clusterId}},
+		{Definition: models.Parameter{Name: "p2"}, CurrentValue: ParamInstance{Value: 2}},
 	}, controller.Page{Page: page, PageSize: pageSize}))
 }
 

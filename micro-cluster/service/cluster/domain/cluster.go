@@ -1,6 +1,7 @@
 package domain
 
 import (
+	knowledge "github.com/pingcap/ticp/knowledge/models"
 	"time"
 )
 
@@ -11,11 +12,11 @@ type Cluster struct {
 
 	ClusterName 		string
 	DbPassword 			string
-	ClusterType 		ClusterType
-	ClusterVersion 		ClusterVersion
+	ClusterType 		knowledge.ClusterType
+	ClusterVersion 		knowledge.ClusterVersion
 	Tls 				bool
 
-	Status     			ClusterStatus
+	Status ClusterStatus
 
 	Demand 				[]ClusterComponentDemand
 
@@ -24,21 +25,6 @@ type Cluster struct {
 	CreateTime 			time.Time
 	UpdateTime 			time.Time
 	DeleteTime 			time.Time
-}
-
-type ClusterType struct {
-	Code string
-	Name string
-}
-
-type ClusterVersion struct {
-	Code string
-	Name string
-}
-
-type ClusterComponent struct {
-	ComponentType 			string
-	ComponentName			string
 }
 
 type ClusterComponentDemand struct {

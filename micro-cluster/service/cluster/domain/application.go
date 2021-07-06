@@ -43,11 +43,3 @@ func ListCluster(operator Operator) ([]*ClusterAggregation, error) {
 func GetClusterDetail(clusterId string, operator Operator) (*ClusterAggregation, error) {
 	return nil, nil
 }
-
-func GetClusterKnowledge() []*ClusterTypeSpec {
-	if Knowledge == nil {
-		loadKnowledge()
-	}
-
-	return Knowledge.SortedTypesKnowledge()
-}

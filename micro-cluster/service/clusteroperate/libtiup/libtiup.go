@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"sync"
 	"syscall"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/micro-metadb/client"
 	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // micro service --fork&exec--> tiup manager --fork&exec--> tiup process
@@ -121,13 +123,38 @@ var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 func TiupMgrInit() {
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
 	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
+	configPath := ""
+	if len(os.Args) > 1 {
+		configPath = os.Args[1]
+	}
+	if len(configPath) == 0 {
+		configPath = "./tiupmgr.log"
+	}
+	logger.SetDefaultLogEntry(
+		logger.GenerateRollingLogEntry(
+			&lumberjack.Logger{
+				Filename:   configPath,
+				MaxSize:    500, // megabytes
+				MaxBackups: 3,
+				MaxAge:     28,    //days
+				Compress:   false, // disabled by default
+			},
+		),
+	)
 }
 
 func assert(b bool) {
 	if b {
 	} else {
+		logger.GetDefaultLogEntry().Fatal("unexpected panic with stack trace:", string(debug.Stack()))
 		panic("unexpected")
 	}
+}
+
+func myPanic(v interface{}) {
+	s := fmt.Sprint(v)
+	logger.GetDefaultLogEntry().Fatalf("panic: %s, with stack trace:", s, string(debug.Stack()))
+	panic("unexpected")
 }
 
 func jsonMustMarshal(v interface{}) []byte {
@@ -193,7 +220,7 @@ func mgrHandleCmdDeployReq(jsonStr string) CmdDeployResp {
 	var req CmdDeployReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
 	if err != nil {
-		panic(fmt.Sprintln("json.Unmarshal CmdDeployReq failed err:", err))
+		myPanic(fmt.Sprintln("json.Unmarshal CmdDeployReq failed err:", err))
 	}
 	mgrStartNewTiupDeployTask(req.TaskID, &req)
 	return ret
@@ -204,7 +231,7 @@ func mgrHandleCmdStarReq(jsonStr string) CmdStartResp {
 	var req CmdStartReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
 	if err != nil {
-		panic(fmt.Sprintln("json.Unmarshal CmdStartReq failed err:", err))
+		myPanic(fmt.Sprintln("json.Unmarshal CmdStartReq failed err:", err))
 	}
 	mgrStartNewTiupStartTask(req.TaskID, &req)
 	return ret
@@ -215,7 +242,7 @@ func mgrHandleCmdListReq(jsonStr string) CmdListResp {
 	var req CmdListReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
 	if err != nil {
-		panic(fmt.Sprintln("json.Unmarshal CmdListReq failed err:", err))
+		myPanic(fmt.Sprintln("json.Unmarshal CmdListReq failed err:", err))
 	}
 	mgrStartNewTiupListTask(req.TaskID, &req)
 	return ret
@@ -226,7 +253,7 @@ func mgrHandleCmdDestroyReq(jsonStr string) CmdDestroyResp {
 	var req CmdDestroyReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
 	if err != nil {
-		panic(fmt.Sprintln("json.Unmarshal CmdDestroyReq failed err:", err))
+		myPanic(fmt.Sprintln("json.Unmarshal CmdDestroyReq failed err:", err))
 	}
 	mgrStartNewTiupDestroyTask(req.TaskID, &req)
 	return ret
@@ -236,7 +263,7 @@ func mgrHandleCmdGetAllTaskStatusReq(jsonStr string) CmdGetAllTaskStatusResp {
 	var req CmdGetAllTaskStatusReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
 	if err != nil {
-		panic(fmt.Sprintln("json.Unmarshal CmdGetAllTaskStatusReq failed err:", err))
+		myPanic(fmt.Sprintln("json.Unmarshal CmdGetAllTaskStatusReq failed err:", err))
 	}
 	glMgrStatusMapSync()
 	return CmdGetAllTaskStatusResp{
@@ -260,13 +287,15 @@ func newTmpFileWithContent(content []byte) (fileName string, err error) {
 		return "", err
 	}
 	if err := tmpfile.Close(); err != nil {
-		panic(fmt.Sprintln("fail to close temp file ", fileName))
+		myPanic(fmt.Sprintln("fail to close temp file ", fileName))
 	}
 	return fileName, nil
 }
 
 func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, TimeoutS int) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
+	log := logger.GetDefaultLogEntry().WithField("task", taskID)
+	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	glMgrTaskStatusCh <- TaskStatusMember{
 		TaskID:   taskID,
 		Status:   TaskStatusProcessing,
@@ -286,7 +315,9 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 		}
 		defer cancelFp()
 		cmd.SysProcAttr = genSysProcAttr()
+		t0 := time.Now()
 		if err := cmd.Start(); err != nil {
+			log.Error("cmd start err", err)
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
@@ -294,15 +325,19 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			}
 			return
 		}
+		log.Info("cmd started")
 		successFp := func() {
+			log.Info("task finished, time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusFinished,
 				ErrorStr: "",
 			}
 		}
+		log.Info("cmd wait")
 		err := cmd.Wait()
 		if err != nil {
+			log.Error("cmd wait return with err", err)
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
 					if status.ExitStatus() == 0 {
@@ -311,6 +346,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 					}
 				}
 			}
+			log.Error("task err:", err, "time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
@@ -318,6 +354,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			}
 			return
 		} else {
+			log.Info("cmd wait return successfully")
 			successFp()
 			return
 		}
@@ -379,13 +416,14 @@ func TiupMgrRoutine() {
 	inReader := bufio.NewReader(os.Stdin)
 	outWriter := os.Stdout
 	errw := os.Stderr
+	log := logger.GetDefaultLogEntry().WithField("func", "TiupMgrRoutine")
 	//errw.Write([]byte("TiupMgrRoutine enter\n"))
 	for {
 		//errw.Write([]byte("TiupMgrRoutine read\n"))
 		input, err := inReader.ReadString('\n')
 		//fmt.Println("input:", input, len(input), input[:len(input)-1], len(input[:len(input)-1]))
 		if err != nil {
-			panic(err)
+			myPanic(err)
 		}
 		errw.Write([]byte(input))
 		if input[len(input)-1] == '\n' {
@@ -393,8 +431,9 @@ func TiupMgrRoutine() {
 			var cmd CmdReqOrResp
 			err := json.Unmarshal([]byte(cmdStr), &cmd)
 			if err != nil {
-				panic(fmt.Sprintln("cmdStr unmarshal failed err:", err, "cmdStr:", cmdStr))
+				myPanic(fmt.Sprintln("cmdStr unmarshal failed err:", err, "cmdStr:", cmdStr))
 			}
+			log.Info("rcv req", cmd)
 			var cmdResp CmdReqOrResp
 			switch cmd.TypeStr {
 			case CmdDeployReqTypeStr:
@@ -418,8 +457,9 @@ func TiupMgrRoutine() {
 				cmdResp.TypeStr = CmdGetAllTaskStatusRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			default:
-				panic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
+				myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
 			}
+			log.Info("snd rsp", cmdResp)
 			bs := jsonMustMarshal(&cmdResp)
 			bs = append(bs, '\n')
 			//errw.Write([]byte("TiupMgrRoutine write\n"))
@@ -428,7 +468,7 @@ func TiupMgrRoutine() {
 			assert(ct == len(bs))
 			assert(err == nil)
 		} else {
-			panic("unexpected")
+			myPanic("unexpected")
 		}
 	}
 }
@@ -441,11 +481,11 @@ var glMicroTaskStatusMapMutex sync.Mutex
 var glTiUPMgrPath string
 var glTiUPBinPath string
 
-func MicroInit(tiupMgrPath, tiupBinPath string) {
+func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
 	glTiUPMgrPath = tiupMgrPath
 	glTiUPBinPath = tiupBinPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)
-	glMicroCmdChan = microStartTiupMgr()
+	glMicroCmdChan = microStartTiupMgr(mgrLogFilePath)
 	go glMicroTaskStatusMapSyncer()
 }
 
@@ -731,36 +771,31 @@ func microCmdChanRoutine(cch chan CmdChanMember, outReader io.Reader, inWriter i
 	}
 }
 
-func microStartTiupMgr() chan CmdChanMember {
+func microStartTiupMgr(argLogFilePath string) chan CmdChanMember {
 	tiupMgrPath := glTiUPMgrPath
-	cmd := exec.Command(tiupMgrPath)
+	cmd := exec.Command(tiupMgrPath, argLogFilePath)
 	cmd.SysProcAttr = genSysProcAttr()
 	in, err := cmd.StdinPipe()
 	if err != nil {
-		//fmt.Println("err:", err)
-		panic("unexpected")
+		myPanic("unexpected")
 	}
 	out, err := cmd.StdoutPipe()
 	if err != nil {
-		//fmt.Println("err:", err)
-		panic("unexpected")
+		myPanic("unexpected")
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		//fmt.Println("err:", err)
-		panic("unexpected")
+		myPanic("unexpected")
 	}
 	_ = stderr
 	cch := make(chan CmdChanMember, 1024)
 	if err := cmd.Start(); err != nil {
-		//fmt.Println("err0:", err)
-		assert(false)
+		myPanic(fmt.Sprint("start tiupmgr failed with err:", err))
 	}
 	go microCmdChanRoutine(cch, out, in)
 	go func() {
 		err = cmd.Wait()
-		//fmt.Println("err1:", err)
-		assert(false)
+		myPanic(fmt.Sprint("wait tiupmgr failed with err:", err))
 	}()
 	return cch
 }

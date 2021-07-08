@@ -57,6 +57,7 @@ type Item struct {
 	failureDomainType FailureDomain
 	status            int32
 	weight            uint32
+	extra             interface{}
 	subItems          []*Item
 }
 
@@ -72,8 +73,25 @@ func (item Item) GetStatus() int32 {
 	return item.status
 }
 
+func (item Item) GetExtra() interface{} {
+	return item.extra
+}
+
 func (item Item) isAvailable() bool {
 	return item.status == 0
+}
+
+type HostExtraInfo struct {
+	Id       string
+	Ip       string
+	CpuCores int
+	Memory   int
+}
+
+type DiskExtraInfo struct {
+	Id       string
+	Path     string
+	Capacity int32
 }
 
 func buildHierarchy() (rack2hosts map[string][]*Item, zone2racks map[string][]string, dc2zones map[string][]string, err error) {
@@ -86,18 +104,31 @@ func buildHierarchy() (rack2hosts map[string][]*Item, zone2racks map[string][]st
 
 	hosts, _ := models.ListHosts()
 	for _, host := range hosts {
+		hostExtra := HostExtraInfo{
+			Id:       host.ID,
+			Ip:       host.IP,
+			CpuCores: host.CpuCores,
+			Memory:   host.Memory,
+		}
 		hostItem := Item{
 			id:                host.ID,
 			name:              host.Name,
 			failureDomainType: HOST,
 			status:            host.Status,
+			extra:             &hostExtra,
 		}
 		for _, disk := range host.Disks {
+			diskExtra := DiskExtraInfo{
+				Id:       disk.ID,
+				Path:     disk.Path,
+				Capacity: disk.Capacity,
+			}
 			diskItem := Item{
 				id:                disk.ID,
 				name:              disk.Name,
 				status:            disk.Status,
 				failureDomainType: DISK,
+				extra:             &diskExtra,
 			}
 			if diskItem.isAvailable() {
 				diskItem.weight = calcDiskWeight(disk.Capacity)

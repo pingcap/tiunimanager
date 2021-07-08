@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/micro-metadb/models"
@@ -116,8 +118,9 @@ func (*DBServiceHandler) AllocHosts(ctx context.Context, req *dbPb.DBAllocHostsR
 	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "AllocHosts"})
 	log := logger.WithContext(ctx)
 	log.Infof("DB Service Receive Alloc Host Request, pd %d, tidb %d, tikv %d", req.PdCount, req.TidbCount, req.TikvCount)
-	//hostInfos, _ := models.AllocHosts()
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
+
+	// Build the resources hierarchy Tree according to the hosts table in database
 	root, err := resource.GetHierarchyRoot()
 	if err != nil {
 		log.Fatalln("GetHierarchyRoot Failed, err:", err)
@@ -126,7 +129,11 @@ func (*DBServiceHandler) AllocHosts(ctx context.Context, req *dbPb.DBAllocHostsR
 		return err
 	}
 	resource.PrintHierarchy(root, "|----", false)
+
+	// chosen_path is used to record the path from root to chosen disk in hierarchy tree, then adjust the resource weight
 	chosen_path := make([]*resource.Item, 0, resource.DISK)
+
+	// Choose nums of resources in HOST failure domain
 	hosts, disks, err := resource.ChooseFirstn(root, req.PdCount, resource.HOST, true, chosen_path)
 	if err != nil {
 		log.Fatalf("ChooseFirstn Failed for choose %d pd, err: %v\n", req.PdCount, err)
@@ -135,15 +142,34 @@ func (*DBServiceHandler) AllocHosts(ctx context.Context, req *dbPb.DBAllocHostsR
 		return err
 	}
 
-	// TODO: Add host IP and disk path Infos in Item struct
+	// TODO: Change the status of chosen disks and hosts' status to 'inused'
+	// models.ChangeStatus()
+
+	// Buildup AllocHostsResponse and Return
 	for k, v := range hosts {
 		var host dbPb.DBAllocHostDTO
+		hostExtra, ok := v.GetExtra().(*resource.HostExtraInfo)
+		if !ok {
+			errMsg := fmt.Sprintf("Get Host Item(%s) Extra Info Failed", v.GetName())
+			log.Fatalln(errMsg)
+			rsp.Rs.Code = 1
+			rsp.Rs.Message = errMsg
+			return errors.New(errMsg)
+		}
 		host.HostName = v.GetName()
-		//host.Ip = v.GetId()
+		host.Ip = hostExtra.Ip
 		host.Disk = new(dbPb.DBDiskDTO)
 		host.Disk.Name = disks[k].GetName()
-		//host.Disk.Capacity =
-		//host.Disk.Path =
+		diskExtra, ok := disks[k].GetExtra().(*resource.DiskExtraInfo)
+		if !ok {
+			errMsg := fmt.Sprintf("Get Disk Item(%s) Extra Info Failed", disks[k].GetName())
+			log.Fatalln(errMsg)
+			rsp.Rs.Code = 1
+			rsp.Rs.Message = errMsg
+			return errors.New(errMsg)
+		}
+		host.Disk.Capacity = diskExtra.Capacity
+		host.Disk.Path = diskExtra.Path
 		host.Disk.Status = dbPb.DBDiskStatus(disks[k].GetStatus())
 		rsp.Hosts = append(rsp.Hosts, &host)
 	}

@@ -268,18 +268,21 @@ func hasChosen(items []*Item, item *Item) bool {
 	return false
 }
 
-func adjustWeight(chosen_path []*Item) {
+func adjustWeight(chosen_path []*Item, adjust_for_failed bool) {
 	ctx := logger.NewContext(context.Background(), logger.Fields{"micro-service": "adjustWeight"})
 	log := logger.WithContext(ctx)
+	var adjust_unit uint32
 	var last_index = len(chosen_path) - 1
-	if chosen_path[last_index].failureDomainType != DISK {
-		log.Fatalf("Expect last Item(%d) in path should be a DISK, but not %s\n", last_index, chosen_path[last_index].failureDomainType)
-		return
+	if !adjust_for_failed {
+		if chosen_path[last_index].failureDomainType != DISK {
+			log.Fatalf("Expect last Item(%d) in path should be a DISK, but not %s\n", last_index, chosen_path[last_index].failureDomainType)
+			return
+		}
 	}
-	diskWeight := chosen_path[last_index].weight
+	adjust_unit = chosen_path[last_index].weight
 	for _, item := range chosen_path {
-		log.Debugf("Adjust item (%s, %s) Weight, by (%d - %d)\n", item.name, item.failureDomainType, item.weight, diskWeight)
-		item.weight -= diskWeight
+		log.Debugf("Adjust item (%s, %s) Weight, by (%d - %d)\n", item.name, item.failureDomainType, item.weight, adjust_unit)
+		item.weight -= adjust_unit
 	}
 }
 
@@ -306,6 +309,9 @@ func ChooseFirstn(take *Item, numReps int32, failureDomain FailureDomain, choose
 			if hasChosen(result, item) {
 				log.Warnf("%s (%s) has been chosen already, will re-choose another (retries: %d), chosen set by now:[%v]\n",
 					item.name, item.failureDomainType, trial, result)
+				// append item to chosen_path to adjust weight, after which will reset chosen_path in RETRY for a new loop
+				chosen_path = append(chosen_path, item)
+				adjustWeight(chosen_path, true)
 				goto RETRY
 			}
 			if !item.isAvailable() {
@@ -319,7 +325,7 @@ func ChooseFirstn(take *Item, numReps int32, failureDomain FailureDomain, choose
 				diskItem = append(diskItem, item)
 				chosen_path = append(chosen_path, item)
 				chooseOne = true
-				adjustWeight(chosen_path)
+				adjustWeight(chosen_path, false)
 				break
 			} else if chooseLeaf {
 				log.Debugf("=== Try to Choose Disk in %s (%s) ===\n", item.name, item.failureDomainType)
@@ -341,7 +347,7 @@ func ChooseFirstn(take *Item, numReps int32, failureDomain FailureDomain, choose
 				result = append(result, item)
 				chosen_path = append(chosen_path, item)
 				chooseOne = true
-				adjustWeight(chosen_path)
+				adjustWeight(chosen_path, false)
 				break
 			}
 		RETRY:

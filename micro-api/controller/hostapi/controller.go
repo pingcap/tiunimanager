@@ -218,6 +218,9 @@ func RemoveHost(c *gin.Context) {
 // @Produce json
 // @Param Token header string true "token"
 // @Success 200 {object} controller.CommonResult{data=[]ZoneHostStockRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /hosts/stocks [get]
 func QueryZoneHostStock(c *gin.Context) {
 

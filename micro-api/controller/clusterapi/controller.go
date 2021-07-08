@@ -2,8 +2,8 @@ package clusterapi
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/micro-api/controller"
 	"github.com/pingcap/ticp/knowledge/models"
+	"github.com/pingcap/ticp/micro-api/controller"
 	"net/http"
 	"strconv"
 )
@@ -17,6 +17,9 @@ import (
 // @Param Token header string true "token"
 // @Param cluster body CreateReq true "创建参数"
 // @Success 200 {object} controller.CommonResult{data=CreateClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /cluster [post]
 func Create(c *gin.Context) {
 	var req CreateReq
@@ -42,6 +45,9 @@ func Create(c *gin.Context) {
 // @Param page query int false "page" default(1)
 // @Param pageSize query int false "pageSize" default(20)
 // @Success 200 {object} controller.ResultWithPage{data=[]ClusterDisplayInfo}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /cluster/query [get]
 func Query(c *gin.Context) {
 	page, _ := strconv.Atoi(c.Query("page"))
@@ -64,6 +70,9 @@ func Query(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param clusterId path string true "待删除的集群ID"
 // @Success 200 {object} controller.CommonResult{data=DeleteClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /cluster/{clusterId} [delete]
 func Delete(c * gin.Context) {
 	rsp := DeleteClusterRsp{}
@@ -81,6 +90,9 @@ func Delete(c * gin.Context) {
 // @Param Token header string true "token"
 // @Param clusterId path string true "集群ID"
 // @Success 200 {object} controller.CommonResult{data=DetailClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /cluster/{clusterId} [get]
 func Detail(c *gin.Context) {
 	rsp := DetailClusterRsp{}
@@ -98,6 +110,9 @@ func Detail(c *gin.Context) {
 // @Produce json
 // @Param Token header string true "token"
 // @Success 200 {object} controller.CommonResult{data=[]models.ClusterTypeSpec}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /cluster/knowledge [get]
 func ClusterKnowledge(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success([]models.ClusterTypeSpec{

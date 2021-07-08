@@ -17,6 +17,8 @@ import (
 // @Param loginInfo body LoginInfo true "登录用户信息"
 // @Header 200 {string} Token "DUISAFNDHIGADS"
 // @Success 200 {object} controller.CommonResult{data=UserIdentity}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /user/login [post]
 func Login(c *gin.Context) {
 	var req LoginInfo
@@ -50,6 +52,8 @@ func Login(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param logoutInfo body LogoutInfo false "退出登录信息"
 // @Success 200 {object} controller.CommonResult{data=UserIdentity}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {
 	var req LogoutInfo

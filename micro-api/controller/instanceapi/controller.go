@@ -19,6 +19,9 @@ import (
 // @Param pageSize query int false "pageSize" default(20)
 // @Param clusterId path string true "clusterId"
 // @Success 200 {object} controller.ResultWithPage{data=[]ParamItem}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /params/{clusterId} [get]
 func QueryParams(c *gin.Context) {
 	page, _ := strconv.Atoi(c.Query("page"))
@@ -39,6 +42,9 @@ func QueryParams(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param request body ParamUpdateReq true "要提交的参数信息"
 // @Success 200 {object} controller.CommonResult{data=ParamUpdateRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /params/submit [post]
 func SubmitParams(c *gin.Context) {
 	var req ParamUpdateReq
@@ -63,6 +69,9 @@ func SubmitParams(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param clusterId path string true "要备份的集群ID"
 // @Success 200 {object} controller.CommonResult{data=BackupRecord}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /backup/{clusterId} [post]
 func Backup(c *gin.Context) {
 	clusterId := c.Param("clusterId")
@@ -78,6 +87,9 @@ func Backup(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param clusterId path string true "clusterId"
 // @Success 200 {object} controller.CommonResult{data=[]BackupStrategy}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /backup/strategy/{clusterId} [get]
 func QueryBackupStrategy(c *gin.Context) {
 	clusterId := c.Param("clusterId")
@@ -95,6 +107,9 @@ func QueryBackupStrategy(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param request body BackupStrategyUpdateReq true "备份策略信息"
 // @Success 200 {object} controller.CommonResult{data=BackupStrategy}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /backup/strategy [post]
 func SaveBackupStrategy(c *gin.Context) {
 	var req BackupStrategyUpdateReq
@@ -116,6 +131,9 @@ func SaveBackupStrategy(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param clusterId path string true "clusterId"
 // @Success 200 {object} controller.CommonResult{data=[]BackupRecord}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /backup/record/{clusterId} [get]
 func QueryBackup(c *gin.Context) {
 	clusterId := c.Param("clusterId")
@@ -133,6 +151,9 @@ func QueryBackup(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param request body BackupRecoverReq true "恢复备份请求"
 // @Success 200 {object} controller.CommonResult{data=controller.StatusInfo}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /backup/record/recover [post]
 func RecoverBackup(c *gin.Context) {
 	var req BackupRecoverReq
@@ -156,6 +177,9 @@ func RecoverBackup(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param recordId path string true "删除备份ID"
 // @Success 200 {object} controller.CommonResult{data=string}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /backup/record/{recordId} [delete]
 func DeleteBackup(c *gin.Context) {
 	recordId := c.Param("recordId")

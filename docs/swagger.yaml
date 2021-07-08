@@ -242,7 +242,7 @@ definitions:
     properties:
       total:
         type: number
-      usage:
+      usageRate:
         type: number
       used:
         type: number
@@ -566,6 +566,18 @@ paths:
                 data:
                   $ref: '#/definitions/instanceapi.BackupRecord'
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: backup
       tags:
       - cluster backup
@@ -599,6 +611,18 @@ paths:
                     $ref: '#/definitions/instanceapi.BackupRecord'
                   type: array
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 查询备份记录
       tags:
       - cluster backup
@@ -630,6 +654,18 @@ paths:
                 data:
                   type: string
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 删除备份记录
       tags:
       - cluster backup
@@ -662,6 +698,18 @@ paths:
                 data:
                   $ref: '#/definitions/controller.StatusInfo'
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 恢复备份
       tags:
       - cluster backup
@@ -694,6 +742,18 @@ paths:
                 data:
                   $ref: '#/definitions/instanceapi.BackupStrategy'
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 保存备份策略
       tags:
       - cluster backup
@@ -727,6 +787,18 @@ paths:
                     $ref: '#/definitions/instanceapi.BackupStrategy'
                   type: array
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 查询备份策略
       tags:
       - cluster backup
@@ -759,6 +831,18 @@ paths:
                 data:
                   $ref: '#/definitions/clusterapi.CreateClusterRsp'
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 创建集群接口
       tags:
       - cluster
@@ -790,6 +874,18 @@ paths:
                 data:
                   $ref: '#/definitions/clusterapi.DeleteClusterRsp'
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 删除集群
       tags:
       - cluster
@@ -820,6 +916,18 @@ paths:
                 data:
                   $ref: '#/definitions/clusterapi.DetailClusterRsp'
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 查看集群详情
       tags:
       - cluster
@@ -848,6 +956,18 @@ paths:
                     $ref: '#/definitions/models.ClusterTypeSpec'
                   type: array
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 查看集群基本知识
       tags:
       - cluster
@@ -886,6 +1006,18 @@ paths:
                     $ref: '#/definitions/clusterapi.ClusterDisplayInfo'
                   type: array
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 查询集群列表
       tags:
       - cluster
@@ -1074,6 +1206,18 @@ paths:
                     $ref: '#/definitions/hostapi.ZoneHostStockRsp'
                   type: array
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 查询各可用区的主机规格库存
       tags:
       - resource
@@ -1117,6 +1261,18 @@ paths:
                     $ref: '#/definitions/instanceapi.ParamItem'
                   type: array
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 查询集群参数列表
       tags:
       - cluster params
@@ -1149,6 +1305,18 @@ paths:
                 data:
                   $ref: '#/definitions/instanceapi.ParamUpdateRsp'
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 提交参数
       tags:
       - cluster params
@@ -1176,6 +1344,14 @@ paths:
                 data:
                   $ref: '#/definitions/userapi.UserIdentity'
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 登录接口
       tags:
       - platform
@@ -1207,6 +1383,14 @@ paths:
                 data:
                   $ref: '#/definitions/userapi.UserIdentity'
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 退出登录
       tags:
       - platform

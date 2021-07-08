@@ -49,9 +49,9 @@ func Fail(code int, message string) CommonResult {
 }
 
 type Usage struct {
-	Total float32
-	Used  float32
-	Usage float32
+	Total     float32
+	Used      float32
+	UsageRate float32
 }
 
 type Page struct {
@@ -68,7 +68,6 @@ type PageRequest struct {
 func Hello(c *gin.Context) {
 	c.JSON(http.StatusOK, Success("hello"))
 }
-
 
 func HelloPage(c *gin.Context) {
 	c.JSON(http.StatusOK, Success("hello world"))

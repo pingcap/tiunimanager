@@ -13,7 +13,7 @@ import (
 
 type FailureDomain uint32
 
-func (fd FailureDomain) GetStr() (str string) {
+func (fd FailureDomain) String() (str string) {
 	switch fd {
 	case ROOT:
 		str = "Root"
@@ -242,12 +242,12 @@ func adjustWeight(chosen_path []*Item) {
 	log := logger.WithContext(ctx)
 	var last_index = len(chosen_path) - 1
 	if chosen_path[last_index].failureDomainType != DISK {
-		log.Fatalf("Expect last Item(%d) in path should be a DISK, but not %s\n", last_index, chosen_path[last_index].failureDomainType.GetStr())
+		log.Fatalf("Expect last Item(%d) in path should be a DISK, but not %s\n", last_index, chosen_path[last_index].failureDomainType)
 		return
 	}
 	diskWeight := chosen_path[last_index].weight
 	for _, item := range chosen_path {
-		log.Debugf("Adjust item (%s, %s) Weight, by (%d - %d)\n", item.name, item.failureDomainType.GetStr(), item.weight, diskWeight)
+		log.Debugf("Adjust item (%s, %s) Weight, by (%d - %d)\n", item.name, item.failureDomainType, item.weight, diskWeight)
 		item.weight -= diskWeight
 	}
 }
@@ -258,7 +258,7 @@ func ChooseFirstn(take *Item, numReps int32, failureDomain FailureDomain, choose
 	var chooseOne bool
 	reserved_path_len := len(chosen_path)
 	for i := 0; i < int(numReps); i++ {
-		log.Debugf("----- Start to choose (%d/%d) for %s -----\n", i+1, numReps, failureDomain.GetStr())
+		log.Debugf("----- Start to choose (%d/%d) for %s -----\n", i+1, numReps, failureDomain)
 		bucket := take
 		trial := i
 		chooseOne = false
@@ -268,18 +268,18 @@ func ChooseFirstn(take *Item, numReps int32, failureDomain FailureDomain, choose
 			item := bucketChoose(bucket, trial)
 			if item.failureDomainType != failureDomain {
 				log.Debugf("%s failure domain %s contains target failure domain %s, will go into next\n",
-					item.name, item.failureDomainType.GetStr(), failureDomain.GetStr())
+					item.name, item.failureDomainType, failureDomain)
 				bucket = item
 				continue
 			}
 			if hasChosen(result, item) {
 				log.Warnf("%s (%s) has been chosen already, will re-choose another (retries: %d), chosen set by now:[%v]\n",
-					item.name, item.failureDomainType.GetStr(), trial, result)
+					item.name, item.failureDomainType, trial, result)
 				goto RETRY
 			}
 			if !item.isAvailable() {
 				log.Warnf("%s (%s) is not available (Status: %v), will re-choose another (retries: %d), chosen set by now:[%v]\n",
-					item.name, item.failureDomainType.GetStr(), item.status, trial, result)
+					item.name, item.failureDomainType, item.status, trial, result)
 				goto RETRY
 			}
 			if failureDomain == DISK {
@@ -291,22 +291,22 @@ func ChooseFirstn(take *Item, numReps int32, failureDomain FailureDomain, choose
 				adjustWeight(chosen_path)
 				break
 			} else if chooseLeaf {
-				log.Debugf("=== Try to Choose Disk in %s (%s) ===\n", item.name, item.failureDomainType.GetStr())
+				log.Debugf("=== Try to Choose Disk in %s (%s) ===\n", item.name, item.failureDomainType)
 				_, leafDisk, err := ChooseFirstn(item, 1, DISK, false, chosen_path)
 				if err != nil {
 					log.Warnf("=== Try to Choose Disk in %s (%s) Failed, will retry(%d) err: %v===\n",
-						item.name, item.failureDomainType.GetStr(), trial, err)
+						item.name, item.failureDomainType, trial, err)
 					goto RETRY
 				} else {
 					log.Debugf("=== Choose Disk %s in %s (%s) Succeed ===\n",
-						leafDisk[0].name, item.name, item.failureDomainType.GetStr())
+						leafDisk[0].name, item.name, item.failureDomainType)
 					result = append(result, item)
 					diskItem = append(diskItem, leafDisk[0])
 					chooseOne = true
 					break
 				}
 			} else {
-				log.Debugf("Choose %s (%s) Succeed, Try to Get another\n", item.name, item.failureDomainType.GetStr())
+				log.Debugf("Choose %s (%s) Succeed, Try to Get another\n", item.name, item.failureDomainType)
 				result = append(result, item)
 				chosen_path = append(chosen_path, item)
 				chooseOne = true
@@ -320,12 +320,12 @@ func ChooseFirstn(take *Item, numReps int32, failureDomain FailureDomain, choose
 			continue
 		}
 		if !chooseOne {
-			errMsg := fmt.Sprintf("Could not find a %s in Round (%d/%d)", failureDomain.GetStr(), i+1, numReps)
+			errMsg := fmt.Sprintf("Could not find a %s in Round (%d/%d)", failureDomain, i+1, numReps)
 			log.Errorln("-----", errMsg, "-----")
 			err = errors.New(errMsg)
 			return
 		}
-		log.Debugf("----- End to choose (%d/%d) for %s -----\n", i+1, numReps, failureDomain.GetStr())
+		log.Debugf("----- End to choose (%d/%d) for %s -----\n", i+1, numReps, failureDomain)
 	}
 	return
 }

@@ -1,8 +1,23 @@
 package instanceapi
 
+import (
+	"github.com/pingcap/ticp/micro-api/controller"
+	"time"
+)
+
+type ParamQueryReq struct {
+	controller.PageRequest
+}
+
 type ParamUpdateReq struct {
 	ClusterId 		string
 	Values			[]ParamInstance
+}
+
+type BackupRecordQueryReq struct {
+	StartTime time.Time
+	EndTime time.Time
+	controller.PageRequest
 }
 
 type BackupStrategyUpdateReq struct {

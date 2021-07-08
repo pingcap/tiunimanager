@@ -10,6 +10,7 @@ type ClusterBaseInfo struct {
 	DbPassword 			string
 	ClusterType 		string
 	ClusterVersion 		string
+	Tags 				string
 	Tls 				bool
 }
 

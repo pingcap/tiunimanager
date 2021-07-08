@@ -33,6 +33,5 @@ type BackupRange 		int
 type BackupWay 			int
 
 type BackupStrategy struct {
-	ValidityPeriod  	int64
 	CronString 			string
 }

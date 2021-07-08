@@ -5,7 +5,6 @@ import (
 	"github.com/pingcap/ticp/knowledge/models"
 	"github.com/pingcap/ticp/micro-api/controller"
 	"net/http"
-	"strconv"
 )
 
 // QueryParams 查询集群参数列表
@@ -15,22 +14,24 @@ import (
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param page query int false "page" default(1)
-// @Param pageSize query int false "pageSize" default(20)
+// @Param queryReq body ParamQueryReq false "page" default(1)
 // @Param clusterId path string true "clusterId"
 // @Success 200 {object} controller.ResultWithPage{data=[]ParamItem}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /params/{clusterId} [get]
+// @Router /params/{clusterId} [post]
 func QueryParams(c *gin.Context) {
-	page, _ := strconv.Atoi(c.Query("page"))
-	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
+	var req ParamQueryReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(err)
+		return
+	}
 	clusterId := c.Param("clusterId")
 	c.JSON(http.StatusOK, controller.SuccessWithPage([]ParamItem{
 		{Definition: models.Parameter{Name: clusterId}, CurrentValue: ParamInstance{Value: clusterId}},
 		{Definition: models.Parameter{Name: "p2"}, CurrentValue: ParamInstance{Value: 2}},
-	}, controller.Page{Page: page, PageSize: pageSize}))
+	}, controller.Page{Page: req.Page, PageSize: req.PageSize}))
 }
 
 // SubmitParams 提交参数
@@ -40,7 +41,7 @@ func QueryParams(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param request body ParamUpdateReq true "要提交的参数信息"
+// @Param updateReq body ParamUpdateReq true "要提交的参数信息"
 // @Success 200 {object} controller.CommonResult{data=ParamUpdateRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -94,7 +95,7 @@ func Backup(c *gin.Context) {
 func QueryBackupStrategy(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 	c.JSON(http.StatusOK, controller.Success([]BackupStrategy{
-		{ValidityPeriod: 7, CronString: clusterId},
+		{CronString: clusterId},
 	}))
 }
 
@@ -105,7 +106,7 @@ func QueryBackupStrategy(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param request body BackupStrategyUpdateReq true "备份策略信息"
+// @Param updateReq body BackupStrategyUpdateReq true "备份策略信息"
 // @Success 200 {object} controller.CommonResult{data=BackupStrategy}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -130,11 +131,12 @@ func SaveBackupStrategy(c *gin.Context) {
 // @Produce json
 // @Param Token header string true "token"
 // @Param clusterId path string true "clusterId"
-// @Success 200 {object} controller.CommonResult{data=[]BackupRecord}
+// @Param request body BackupRecordQueryReq false "page" default(1)
+// @Success 200 {object} controller.ResultWithPage{data=[]BackupRecord}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /backup/record/{clusterId} [get]
+// @Router /backup/records/{clusterId} [post]
 func QueryBackup(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 	c.JSON(http.StatusOK, controller.Success([]BackupRecord{
@@ -175,7 +177,7 @@ func RecoverBackup(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param recordId path string true "删除备份ID"
+// @Param recordId path int true "删除备份ID"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

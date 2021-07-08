@@ -42,6 +42,8 @@ definitions:
         type: string
       storageUsage:
         $ref: '#/definitions/controller.Usage'
+      tags:
+        type: string
       tls:
         type: boolean
       updateTime:
@@ -84,6 +86,8 @@ definitions:
         type: string
       statusName:
         type: string
+      tags:
+        type: string
       tls:
         type: boolean
       updateTime:
@@ -103,6 +107,8 @@ definitions:
         items:
           $ref: '#/definitions/clusterapi.ClusterNodeDemand'
         type: array
+      tags:
+        type: string
       tls:
         type: boolean
     type: object
@@ -167,6 +173,8 @@ definitions:
         type: string
       storageUsage:
         $ref: '#/definitions/controller.Usage'
+      tags:
+        type: string
       tls:
         type: boolean
       updateTime:
@@ -184,6 +192,23 @@ definitions:
         type: string
       zoneCode:
         type: string
+    type: object
+  clusterapi.QueryReq:
+    properties:
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      clusterStatus:
+        type: string
+      clusterTag:
+        type: string
+      clusterType:
+        type: string
+      page:
+        type: integer
+      pageSize:
+        type: integer
     type: object
   controller.CommonResult:
     properties:
@@ -247,15 +272,6 @@ definitions:
       used:
         type: number
     type: object
-  hostapi.DemoHostInfo:
-    properties:
-      hostId:
-        type: string
-      hostIp:
-        type: string
-      hostName:
-        type: string
-    type: object
   hostapi.Disk:
     properties:
       capacity:
@@ -306,15 +322,12 @@ definitions:
         description: Host Status, 0 for Online, 1 for offline
         type: integer
     type: object
-  hostapi.HostQuery:
+  hostapi.ListHostCondition:
     properties:
       page:
         type: integer
       pageSize:
         type: integer
-    type: object
-  hostapi.ListHostCondition:
-    properties:
       purpose:
         description: What Purpose is the host used for? [compute/storage or both]
         type: string
@@ -367,6 +380,17 @@ definitions:
       way:
         type: integer
     type: object
+  instanceapi.BackupRecordQueryReq:
+    properties:
+      endTime:
+        type: string
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      startTime:
+        type: string
+    type: object
   instanceapi.BackupRecoverReq:
     properties:
       backupRecordId:
@@ -378,8 +402,6 @@ definitions:
     properties:
       cronString:
         type: string
-      validityPeriod:
-        type: integer
     type: object
   instanceapi.BackupStrategyUpdateReq:
     properties:
@@ -387,8 +409,6 @@ definitions:
         type: string
       cronString:
         type: string
-      validityPeriod:
-        type: integer
     type: object
   instanceapi.ParamInstance:
     properties:
@@ -403,6 +423,13 @@ definitions:
         $ref: '#/definitions/instanceapi.ParamInstance'
       definition:
         $ref: '#/definitions/models.Parameter'
+    type: object
+  instanceapi.ParamQueryReq:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
     type: object
   instanceapi.ParamUpdateReq:
     properties:
@@ -581,51 +608,6 @@ paths:
       summary: backup
       tags:
       - cluster backup
-  /backup/record/{clusterId}:
-    get:
-      consumes:
-      - application/json
-      description: 查询备份记录
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: clusterId
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/instanceapi.BackupRecord'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      summary: 查询备份记录
-      tags:
-      - cluster backup
   /backup/record/{recordId}:
     delete:
       consumes:
@@ -641,7 +623,7 @@ paths:
         in: path
         name: recordId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -713,6 +695,56 @@ paths:
       summary: 恢复备份
       tags:
       - cluster backup
+  /backup/records/{clusterId}:
+    post:
+      consumes:
+      - application/json
+      description: 查询备份记录
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: page
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/instanceapi.BackupRecordQueryReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/instanceapi.BackupRecord'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 查询备份记录
+      tags:
+      - cluster backup
   /backup/strategy:
     post:
       consumes:
@@ -726,7 +758,7 @@ paths:
         type: string
       - description: 备份策略信息
         in: body
-        name: request
+        name: updateReq
         required: true
         schema:
           $ref: '#/definitions/instanceapi.BackupStrategyUpdateReq'
@@ -815,7 +847,7 @@ paths:
         type: string
       - description: 创建参数
         in: body
-        name: cluster
+        name: createReq
         required: true
         schema:
           $ref: '#/definitions/clusterapi.CreateReq'
@@ -972,7 +1004,7 @@ paths:
       tags:
       - cluster
   /cluster/query:
-    get:
+    post:
       consumes:
       - application/json
       description: 查询集群列表
@@ -982,16 +1014,11 @@ paths:
         name: Token
         required: true
         type: string
-      - default: 1
-        description: page
-        in: query
-        name: page
-        type: integer
-      - default: 20
-        description: pageSize
-        in: query
-        name: pageSize
-        type: integer
+      - description: page
+        in: body
+        name: queryReq
+        schema:
+          $ref: '#/definitions/clusterapi.QueryReq'
       produces:
       - application/json
       responses:
@@ -1053,7 +1080,7 @@ paths:
       summary: 导入主机接口
       tags:
       - resource
-  /host/:
+  /host/{hostId}:
     delete:
       consumes:
       - application/json
@@ -1118,40 +1145,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: 查询主机
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 查询请求
-        in: body
-        name: query
-        required: true
-        schema:
-          $ref: '#/definitions/hostapi.HostQuery'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/hostapi.DemoHostInfo'
-                  type: array
-              type: object
-      summary: 查询主机接口
-      tags:
-      - resource
-  /hosts:
-    get:
-      consumes:
-      - application/json
       description: 展示目前所有主机
       parameters:
       - description: token
@@ -1161,7 +1154,7 @@ paths:
         type: string
       - description: 可选的查询主机的条件
         in: body
-        name: query
+        name: condition
         schema:
           $ref: '#/definitions/hostapi.ListHostCondition'
       produces:
@@ -1182,7 +1175,7 @@ paths:
       tags:
       - resource
   /hosts/stocks:
-    get:
+    post:
       consumes:
       - application/json
       description: 查询各可用区的主机规格库存
@@ -1222,7 +1215,7 @@ paths:
       tags:
       - resource
   /params/{clusterId}:
-    get:
+    post:
       consumes:
       - application/json
       description: 查询集群参数列表
@@ -1232,16 +1225,11 @@ paths:
         name: Token
         required: true
         type: string
-      - default: 1
-        description: page
-        in: query
-        name: page
-        type: integer
-      - default: 20
-        description: pageSize
-        in: query
-        name: pageSize
-        type: integer
+      - description: page
+        in: body
+        name: queryReq
+        schema:
+          $ref: '#/definitions/instanceapi.ParamQueryReq'
       - description: clusterId
         in: path
         name: clusterId
@@ -1289,7 +1277,7 @@ paths:
         type: string
       - description: 要提交的参数信息
         in: body
-        name: request
+        name: updateReq
         required: true
         schema:
           $ref: '#/definitions/instanceapi.ParamUpdateReq'

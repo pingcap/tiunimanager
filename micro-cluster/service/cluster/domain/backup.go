@@ -6,7 +6,7 @@ import (
 )
 
 type BackupRecord struct {
-	ID 				string
+	Id 				uint
 	ClusterId 		string
 	StartTime 		time.Time
 	EndTime 		time.Time

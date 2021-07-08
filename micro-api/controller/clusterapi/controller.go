@@ -2,10 +2,10 @@ package clusterapi
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/pingcap/ticp/knowledge/models"
 	"github.com/pingcap/ticp/micro-api/controller"
 	"net/http"
-	"strconv"
 )
 
 // Create 创建集群接口
@@ -15,7 +15,7 @@ import (
 // @Accept application/json
 // @Produce application/json
 // @Param Token header string true "token"
-// @Param cluster body CreateReq true "创建参数"
+// @Param createReq body CreateReq true "创建参数"
 // @Success 200 {object} controller.CommonResult{data=CreateClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -24,7 +24,7 @@ import (
 func Create(c *gin.Context) {
 	var req CreateReq
 
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
 		_ = c.Error(err)
 		return
 	}
@@ -42,23 +42,25 @@ func Create(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param page query int false "page" default(1)
-// @Param pageSize query int false "pageSize" default(20)
+// @Param queryReq body QueryReq false "page" default(1)
 // @Success 200 {object} controller.ResultWithPage{data=[]ClusterDisplayInfo}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /cluster/query [get]
+// @Router /cluster/query [post]
 func Query(c *gin.Context) {
-	page, _ := strconv.Atoi(c.Query("page"))
-	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
+	var queryReq QueryReq
 
+	if err := c.ShouldBindJSON(&queryReq); err != nil {
+		_ = c.Error(err)
+		return
+	}
 	clusters := []ClusterDisplayInfo{
 		ClusterDisplayInfo{ClusterId: "cluster1"},
 		ClusterDisplayInfo{ClusterId: "cluster2"},
 	}
 
-	c.JSON(http.StatusOK, controller.SuccessWithPage(clusters, controller.Page{Page: page, PageSize: pageSize}))
+	c.JSON(http.StatusOK, controller.SuccessWithPage(clusters, controller.Page{Page: queryReq.Page, PageSize: queryReq.PageSize}))
 }
 
 // Delete 删除集群

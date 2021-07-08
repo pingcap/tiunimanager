@@ -9,45 +9,6 @@ import (
 	manager "github.com/pingcap/ticp/micro-manager/proto"
 )
 
-// Query 查询主机接口
-// @Summary 查询主机接口
-// @Description 查询主机
-// @Tags resource
-// @Accept json
-// @Produce json
-// @Param Token header string true "token"
-// @Param query body HostQuery true "查询请求"
-// @Success 200 {object} controller.ResultWithPage{data=[]DemoHostInfo}
-// @Router /host/query [post]
-func Query(c *gin.Context) {
-	var req HostQuery
-	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
-		return
-	}
-
-	listHostReq := manager.ListHostsRequest{
-		Purpose: "storage",
-		Status:  manager.HostStatus(0),
-	}
-
-	rsp, err := client.ManagerClient.ListHost(c, &listHostReq)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, rsp.Rs.Message))
-	} else {
-		var res []DemoHostInfo
-		for _, v := range rsp.HostList {
-			host := DemoHostInfo{
-				HostId:   v.Ip,
-				HostIp:   v.Ip,
-				HostName: v.HostName,
-			}
-			res = append(res, host)
-		}
-		c.JSON(http.StatusOK, controller.SuccessWithPage(res, controller.Page{Page: 1, PageSize: 20, Total: len(res)}))
-	}
-}
-
 func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
@@ -127,9 +88,9 @@ func ImportHost(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param query body ListHostCondition false "可选的查询主机的条件"
+// @Param condition body ListHostCondition false "可选的查询主机的条件"
 // @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
-// @Router /hosts [get]
+// @Router /host/query [post]
 func ListHost(c *gin.Context) {
 	var cond ListHostCondition
 	if err := c.ShouldBindJSON(&cond); err != nil {
@@ -165,7 +126,7 @@ func ListHost(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param hostId path string true "主机ID"
 // @Success 200 {object} controller.CommonResult{data=HostInfo}
-// @Router /host/ [get]
+// @Router /host/{hostId} [get]
 func HostDetails(c *gin.Context) {
 
 	hostId := c.Param("hostId")
@@ -193,7 +154,7 @@ func HostDetails(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param hostId path string true "待删除的主机ID"
 // @Success 200 {object} controller.CommonResult{data=string}
-// @Router /host/ [delete]
+// @Router /host/{hostId} [delete]
 func RemoveHost(c *gin.Context) {
 
 	hostId := c.Param("hostId")
@@ -221,7 +182,7 @@ func RemoveHost(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /hosts/stocks [get]
+// @Router /hosts/stocks [post]
 func QueryZoneHostStock(c *gin.Context) {
 
 }

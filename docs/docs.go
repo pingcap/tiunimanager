@@ -102,9 +102,9 @@ var doc = `{
                 }
             }
         },
-        "/backup/record/{clusterId}": {
-            "get": {
-                "description": "查询备份记录",
+        "/backup/record/{recordId}": {
+            "delete": {
+                "description": "删除备份记录",
                 "consumes": [
                     "application/json"
                 ],
@@ -114,7 +114,7 @@ var doc = `{
                 "tags": [
                     "cluster backup"
                 ],
-                "summary": "查询备份记录",
+                "summary": "删除备份记录",
                 "parameters": [
                     {
                         "type": "string",
@@ -124,9 +124,9 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
+                        "type": "integer",
+                        "description": "删除备份ID",
+                        "name": "recordId",
                         "in": "path",
                         "required": true
                     }
@@ -143,10 +143,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/instanceapi.BackupRecord"
-                                            }
+                                            "type": "string"
                                         }
                                     }
                                 }
@@ -174,9 +171,9 @@ var doc = `{
                 }
             }
         },
-        "/backup/record/{recordId}": {
-            "delete": {
-                "description": "删除备份记录",
+        "/backup/records/{clusterId}": {
+            "post": {
+                "description": "查询备份记录",
                 "consumes": [
                     "application/json"
                 ],
@@ -186,7 +183,7 @@ var doc = `{
                 "tags": [
                     "cluster backup"
                 ],
-                "summary": "删除备份记录",
+                "summary": "查询备份记录",
                 "parameters": [
                     {
                         "type": "string",
@@ -197,10 +194,18 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "删除备份ID",
-                        "name": "recordId",
+                        "description": "clusterId",
+                        "name": "clusterId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "page",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.BackupRecordQueryReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -209,13 +214,16 @@ var doc = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/controller.CommonResult"
+                                    "$ref": "#/definitions/controller.ResultWithPage"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "string"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/instanceapi.BackupRecord"
+                                            }
                                         }
                                     }
                                 }
@@ -266,7 +274,7 @@ var doc = `{
                     },
                     {
                         "description": "备份策略信息",
-                        "name": "request",
+                        "name": "updateReq",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -478,7 +486,7 @@ var doc = `{
                     },
                     {
                         "description": "创建参数",
-                        "name": "cluster",
+                        "name": "createReq",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -592,7 +600,7 @@ var doc = `{
             }
         },
         "/cluster/query": {
-            "get": {
+            "post": {
                 "description": "查询集群列表",
                 "consumes": [
                     "application/json"
@@ -613,18 +621,12 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "default": 1,
                         "description": "page",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "pageSize",
-                        "name": "pageSize",
-                        "in": "query"
+                        "name": "queryReq",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/clusterapi.QueryReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -859,7 +861,62 @@ var doc = `{
                 }
             }
         },
-        "/host/": {
+        "/host/query": {
+            "post": {
+                "description": "展示目前所有主机",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "查询主机列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "可选的查询主机的条件",
+                        "name": "condition",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/hostapi.ListHostCondition"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/hostapi.HostInfo"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/host/{hostId}": {
             "get": {
                 "description": "展示指定的主机的详细信息",
                 "consumes": [
@@ -959,119 +1016,8 @@ var doc = `{
                 }
             }
         },
-        "/host/query": {
-            "post": {
-                "description": "查询主机",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "查询主机接口",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "查询请求",
-                        "name": "query",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/hostapi.HostQuery"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/hostapi.DemoHostInfo"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/hosts": {
-            "get": {
-                "description": "展示目前所有主机",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "查询主机列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "可选的查询主机的条件",
-                        "name": "query",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/hostapi.ListHostCondition"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/hostapi.HostInfo"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
         "/hosts/stocks": {
-            "get": {
+            "post": {
                 "description": "查询各可用区的主机规格库存",
                 "consumes": [
                     "application/json"
@@ -1158,7 +1104,7 @@ var doc = `{
                     },
                     {
                         "description": "要提交的参数信息",
-                        "name": "request",
+                        "name": "updateReq",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -1207,7 +1153,7 @@ var doc = `{
             }
         },
         "/params/{clusterId}": {
-            "get": {
+            "post": {
                 "description": "查询集群参数列表",
                 "consumes": [
                     "application/json"
@@ -1228,18 +1174,12 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "default": 1,
                         "description": "page",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "pageSize",
-                        "name": "pageSize",
-                        "in": "query"
+                        "name": "queryReq",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.ParamQueryReq"
+                        }
                     },
                     {
                         "type": "string",
@@ -1479,6 +1419,9 @@ var doc = `{
                 "storageUsage": {
                     "$ref": "#/definitions/controller.Usage"
                 },
+                "tags": {
+                    "type": "string"
+                },
                 "tls": {
                     "type": "boolean"
                 },
@@ -1543,6 +1486,9 @@ var doc = `{
                 "statusName": {
                     "type": "string"
                 },
+                "tags": {
+                    "type": "string"
+                },
                 "tls": {
                     "type": "boolean"
                 },
@@ -1571,6 +1517,9 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/clusterapi.ClusterNodeDemand"
                     }
+                },
+                "tags": {
+                    "type": "string"
                 },
                 "tls": {
                     "type": "boolean"
@@ -1669,6 +1618,9 @@ var doc = `{
                 "storageUsage": {
                     "$ref": "#/definitions/controller.Usage"
                 },
+                "tags": {
+                    "type": "string"
+                },
                 "tls": {
                     "type": "boolean"
                 },
@@ -1694,6 +1646,32 @@ var doc = `{
                 },
                 "zoneCode": {
                     "type": "string"
+                }
+            }
+        },
+        "clusterapi.QueryReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterStatus": {
+                    "type": "string"
+                },
+                "clusterTag": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
                 }
             }
         },
@@ -1793,20 +1771,6 @@ var doc = `{
                 }
             }
         },
-        "hostapi.DemoHostInfo": {
-            "type": "object",
-            "properties": {
-                "hostId": {
-                    "type": "string"
-                },
-                "hostIp": {
-                    "type": "string"
-                },
-                "hostName": {
-                    "type": "string"
-                }
-            }
-        },
         "hostapi.Disk": {
             "type": "object",
             "properties": {
@@ -1879,7 +1843,7 @@ var doc = `{
                 }
             }
         },
-        "hostapi.HostQuery": {
+        "hostapi.ListHostCondition": {
             "type": "object",
             "properties": {
                 "page": {
@@ -1887,12 +1851,7 @@ var doc = `{
                 },
                 "pageSize": {
                     "type": "integer"
-                }
-            }
-        },
-        "hostapi.ListHostCondition": {
-            "type": "object",
-            "properties": {
+                },
                 "purpose": {
                     "description": "What Purpose is the host used for? [compute/storage or both]",
                     "type": "string"
@@ -1972,6 +1931,23 @@ var doc = `{
                 }
             }
         },
+        "instanceapi.BackupRecordQueryReq": {
+            "type": "object",
+            "properties": {
+                "endTime": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "startTime": {
+                    "type": "string"
+                }
+            }
+        },
         "instanceapi.BackupRecoverReq": {
             "type": "object",
             "properties": {
@@ -1988,9 +1964,6 @@ var doc = `{
             "properties": {
                 "cronString": {
                     "type": "string"
-                },
-                "validityPeriod": {
-                    "type": "integer"
                 }
             }
         },
@@ -2002,9 +1975,6 @@ var doc = `{
                 },
                 "cronString": {
                     "type": "string"
-                },
-                "validityPeriod": {
-                    "type": "integer"
                 }
             }
         },
@@ -2027,6 +1997,17 @@ var doc = `{
                 },
                 "definition": {
                     "$ref": "#/definitions/models.Parameter"
+                }
+            }
+        },
+        "instanceapi.ParamQueryReq": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "type": "integer"
                 }
             }
         },

@@ -50,7 +50,7 @@ func Route(g *gin.Engine) {
 			//cluster.Use(security.VerifyIdentity)
 			cluster.GET("/:clusterId", clusterapi.Detail)
 			cluster.POST("", clusterapi.Create)
-			cluster.GET("/query", clusterapi.Query)
+			cluster.POST("/query", clusterapi.Query)
 			cluster.DELETE("/:clusterId", clusterapi.Delete)
 
 			cluster.GET("/knowledge", clusterapi.ClusterKnowledge)
@@ -59,7 +59,7 @@ func Route(g *gin.Engine) {
 		param := apiV1.Group("/params")
 		{
 			//param.Use(security.VerifyIdentity)
-			param.GET("/:clusterId", instanceapi.QueryParams)
+			param.POST("/:clusterId", instanceapi.QueryParams)
 			param.POST("/submit", instanceapi.SubmitParams)
 		}
 
@@ -69,16 +69,10 @@ func Route(g *gin.Engine) {
 			backup.POST("/:clusterId", instanceapi.Backup)
 			backup.GET("/strategy/:clusterId", instanceapi.QueryBackupStrategy)
 			backup.POST("/strategy", instanceapi.SaveBackupStrategy)
-			backup.GET("/record/:clusterId", instanceapi.QueryBackup)
+			backup.POST("/records/:clusterId", instanceapi.QueryBackup)
 			backup.POST("/record/recover", instanceapi.RecoverBackup)
 
 			backup.DELETE("/record/:recordId", instanceapi.DeleteBackup)
-		}
-
-		demoHost := apiV1.Group("/host")
-		{
-			demoHost.Use(security.VerifyIdentity)
-			demoHost.POST("/query", hostapi.Query)
 		}
 
 		demoInstance := apiV1.Group("/instance")
@@ -86,13 +80,13 @@ func Route(g *gin.Engine) {
 			demoInstance.Use(security.VerifyIdentity)
 		}
 
-		host := apiV1.Group("/")
+		host := apiV1.Group("/host")
 		{
 			demoInstance.Use(security.VerifyIdentity)
-			host.POST("host", hostapi.ImportHost)
-			host.GET("hosts", hostapi.ListHost)
-			host.GET("host/:hostId", hostapi.HostDetails)
-			host.DELETE("host/:hostId", hostapi.RemoveHost)
+			host.POST("", hostapi.ImportHost)
+			host.POST("/query", hostapi.ListHost)
+			host.GET("/:hostId", hostapi.HostDetails)
+			host.DELETE("/:hostId", hostapi.RemoveHost)
 		}
 	}
 

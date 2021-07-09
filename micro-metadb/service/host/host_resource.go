@@ -43,7 +43,6 @@ const (
 )
 
 const (
-	MAX_TRIES     = 5
 	GB_PER_WEIGHT = 256
 )
 
@@ -94,13 +93,15 @@ type DiskExtraInfo struct {
 	Capacity int32
 }
 
-func buildHierarchy() (rack2hosts map[string][]*Item, zone2racks map[string][]string, dc2zones map[string][]string, err error) {
+func buildHierarchy() (rack2hosts map[string][]*Item, zone2racks map[string][]string, dc2zones map[string][]string, diskCount int, err error) {
 	rack2hosts = make(map[string][]*Item)
 	zone2racks = make(map[string][]string)
 	dc2zones = make(map[string][]string)
 	// For deduplicated
 	tmp_rack_recorded := make(map[string]bool)
 	tmp_zone_recorded := make(map[string]bool)
+	// total disk count
+	diskCount = 0
 
 	hosts, _ := models.ListHosts()
 	for _, host := range hosts {
@@ -137,6 +138,7 @@ func buildHierarchy() (rack2hosts map[string][]*Item, zone2racks map[string][]st
 				hostItem.weight += diskItem.weight
 			}
 			hostItem.subItems = append(hostItem.subItems, &diskItem)
+			diskCount++
 		}
 		rack2hosts[host.Rack] = append(rack2hosts[host.Rack], &hostItem)
 
@@ -154,13 +156,13 @@ func buildHierarchy() (rack2hosts map[string][]*Item, zone2racks map[string][]st
 	return
 }
 
-func GetHierarchyRoot() (root *Item, err error) {
+func GetHierarchyRoot() (root *Item, diskCnt int, err error) {
 	ctx := logger.NewContext(context.Background(), logger.Fields{"micro-service": "GetHierarchyRoot"})
 	log := logger.WithContext(ctx)
-	rack2hosts, zone2racks, dc2zones, err := buildHierarchy()
+	rack2hosts, zone2racks, dc2zones, diskCnt, err := buildHierarchy()
 	if err != nil {
 		log.Fatalln("BuildHierarchy failed, err:", err)
-		return nil, err
+		return nil, 0, err
 	}
 	root = new(Item)
 	root.failureDomainType = ROOT
@@ -255,6 +257,9 @@ func bucketChoose(bucket *Item, trial int) (item *Item) {
 			high_draw = draw
 		}
 	}
+	if high_item.weight == 0 {
+		return nil
+	}
 	return high_item
 
 }
@@ -286,7 +291,7 @@ func adjustWeight(chosen_path []*Item, adjust_for_failed bool) {
 	}
 }
 
-func ChooseFirstn(take *Item, numReps int32, failureDomain FailureDomain, chooseLeaf bool, chosen_path []*Item) (result []*Item, diskItem []*Item, err error) {
+func ChooseFirstn(take *Item, numReps int32, maxRetries int, failureDomain FailureDomain, chooseLeaf bool, chosen_path []*Item) (result []*Item, diskItem []*Item, err error) {
 	ctx := logger.NewContext(context.Background(), logger.Fields{"micro-service": "ChooseFirstn"})
 	log := logger.WithContext(ctx)
 	var chooseOne bool
@@ -297,9 +302,13 @@ func ChooseFirstn(take *Item, numReps int32, failureDomain FailureDomain, choose
 		trial := i
 		chooseOne = false
 		chosen_path = chosen_path[:reserved_path_len]
-		for trial < MAX_TRIES+i {
+		for trial < maxRetries+i {
 			chosen_path = append(chosen_path, bucket)
 			item := bucketChoose(bucket, trial)
+			if item == nil {
+				log.Warnf("Resources under %s are all not available", bucket.failureDomainType)
+				break
+			}
 			if item.failureDomainType != failureDomain {
 				log.Debugf("%s failure domain %s contains target failure domain %s, will go into next\n",
 					item.name, item.failureDomainType, failureDomain)
@@ -317,6 +326,9 @@ func ChooseFirstn(take *Item, numReps int32, failureDomain FailureDomain, choose
 			if !item.isAvailable() {
 				log.Warnf("%s (%s) is not available (Status: %v), will re-choose another (retries: %d), chosen set by now:[%v]\n",
 					item.name, item.failureDomainType, item.status, trial, result)
+				// append item to chosen_path to adjust weight, after which will reset chosen_path in RETRY for a new loop
+				chosen_path = append(chosen_path, item)
+				adjustWeight(chosen_path, true)
 				goto RETRY
 			}
 			if failureDomain == DISK {
@@ -329,7 +341,7 @@ func ChooseFirstn(take *Item, numReps int32, failureDomain FailureDomain, choose
 				break
 			} else if chooseLeaf {
 				log.Debugf("=== Try to Choose Disk in %s (%s) ===\n", item.name, item.failureDomainType)
-				_, leafDisk, err := ChooseFirstn(item, 1, DISK, false, chosen_path)
+				_, leafDisk, err := ChooseFirstn(item, 1, maxRetries, DISK, false, chosen_path)
 				if err != nil {
 					log.Warnf("=== Try to Choose Disk in %s (%s) Failed, will retry(%d) err: %v===\n",
 						item.name, item.failureDomainType, trial, err)

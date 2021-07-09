@@ -33,17 +33,28 @@ message HostInfo {
     HostStatus status = 6;
     string os = 7;              // Host os
     string kernel = 8;
-    int32 cpuCores = 9;
-    int32 memory = 10;          // Host memory size, Unit:GB
-    string nic = 11;            // Host network type: 1GE or 10GE
-    string purpose = 12;        // What Purpose is the host used for? [compute/storage or both]
-    repeated Disk disks = 13;
+    string spec = 9;            // Host Spec ["4U8G/16U32G"]
+    int32 cpuCores = 10;        // Host cpu remains
+    int32 memory = 11;          // Host memory remains, Unit:GB
+    string nic = 12;            // Host network type: 1GE or 10GE
+    string purpose = 13;        // What Purpose is the host used for? [compute/storage or both]
+    repeated Disk disks = 14;
+}
+
+// The request means "Get 3 '4U8G' Hosts in Zone3"
+message AllocationReq {
+    string failureDomain = 1;
+    int32 cpuCores = 2;
+    int32 memory = 3;
+    int32 count = 4;
 }
 
 message AllocHost {
     string hostName = 1;
     string ip = 2;
-    Disk disk = 3;
+    int32 cpuCores = 3;
+    int32 memory = 4; 
+    Disk disk = 5;
 }
 message ImportHostRequest {
     HostInfo host = 1;
@@ -82,13 +93,15 @@ message CheckDetailsResponse {
 }
 
 message AllocHostsRequest {
-    int32 pdCount = 1;
-    int32 tidbCount = 2;
-    int32 tikvCount = 3;
+    repeated AllocationReq pdReq = 1;
+    repeated AllocationReq tidbReq = 2;
+    repeated AllocationReq tikvReq = 3;
 }
 
 message AllocHostResponse {
     ResponseStatus rs = 1;
-    repeated AllocHost hosts = 2;
+    repeated AllocHost pdHosts = 2;
+    repeated AllocHost tidbHosts = 3;
+    repeated AllocHost tikvHosts = 4;
 }
 

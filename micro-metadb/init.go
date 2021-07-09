@@ -152,7 +152,7 @@ func initDataForDemo() {
 
 	// 添加一些demo使用的host和disk数据
 	models.CreateHost(&models.Host{
-		Name:     "主机1",
+		HostName: "主机1",
 		IP:       "192.168.125.132",
 		Status:   0,
 		OS:       "CentOS",

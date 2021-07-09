@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/micro-metadb/models"
@@ -13,7 +15,7 @@ func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest
 	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "AddHost"})
 	log := logger.WithContext(ctx)
 	var host models.Host
-	host.Name = req.Host.HostName
+	host.HostName = req.Host.HostName
 	host.IP = req.Host.Ip
 	host.Status = int32(req.Host.Status)
 	host.OS = req.Host.Os
@@ -62,7 +64,7 @@ func (*DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRemoveHostR
 }
 
 func CopyHostInfo(src *models.Host, dst *dbPb.DBHostInfoDTO) {
-	dst.HostName = src.Name
+	dst.HostName = src.HostName
 	dst.Ip = src.IP
 	dst.Os = src.OS
 	dst.Kernel = src.Kernel
@@ -110,22 +112,65 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDeta
 	CopyHostInfo(host, rsp.Details)
 	return err
 }
-func (*DBServiceHandler) AllocHosts(ctx context.Context, req *dbPb.DBAllocHostsRequest, rsp *dbPb.DBAllocHostResponse) error {
-	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "AllocHosts"})
+
+func (*DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DBPreAllocHostsRequest, rsp *dbPb.DBPreAllocHostsResponse) error {
+	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "CheckDetails"})
 	log := logger.WithContext(ctx)
-	log.Infof("DB Service Receive Alloc Host Request, pd %d, tidb %d, tikv %d", req.PdCount, req.TidbCount, req.TikvCount)
-	hosts, _ := models.AllocHosts()
+	log.Infof("DB Service Receive Alloc Host in %s for %d x (%dU%dG),", req.Req.FailureDomain, req.Req.Count, req.Req.CpuCores, req.Req.Memory)
+	resources, err := models.PreAllocHosts(req.Req.FailureDomain, int(req.Req.Count), int(req.Req.CpuCores), int(req.Req.Memory))
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
-	for _, v := range hosts {
-		var host dbPb.DBAllocHostDTO
-		host.HostName = v.Name
-		host.Ip = v.IP
-		host.Disk = new(dbPb.DBDiskDTO)
-		host.Disk.Name = v.Disks[0].Name
-		host.Disk.Capacity = v.Disks[0].Capacity
-		host.Disk.Path = v.Disks[0].Path
-		host.Disk.Status = dbPb.DBDiskStatus(v.Disks[0].Status)
-		rsp.Hosts = append(rsp.Hosts, &host)
+	if err != nil {
+		rsp.Rs.Code = 1
+		rsp.Rs.Message = err.Error()
+		return err
+	}
+	if len(resources) < int(req.Req.Count) {
+		rsp.Rs.Code = 1
+		errMsg := fmt.Sprintf("No Enough host resources(%d/%d) in %s", len(resources), req.Req.Count, req.Req.FailureDomain)
+		rsp.Rs.Message = errMsg
+		return errors.New(errMsg)
+	}
+	for _, v := range resources {
+		rsp.Results = append(rsp.Results, &dbPb.DBPreAllocation{
+			FailureDomain: req.Req.FailureDomain,
+			HostId:        v.HostId,
+			DiskId:        v.Id,
+			OriginCores:   int32(v.CpuCores),
+			OriginMem:     int32(v.Memory),
+			RequestCores:  req.Req.CpuCores,
+			RequestMem:    req.Req.Memory,
+			HostName:      v.HostName,
+			Ip:            v.Ip,
+			DiskName:      v.Name,
+			DiskPath:      v.Path,
+			DiskCap:       int32(v.Capacity),
+		})
+	}
+	return nil
+}
+
+func (*DBServiceHandler) LockHosts(ctx context.Context, req *dbPb.DBLockHostsRequest, rsp *dbPb.DBLockHostsResponse) error {
+	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "CheckDetails"})
+	log := logger.WithContext(ctx)
+	var resources []models.ResourceLock
+	for _, v := range req.Req {
+		resources = append(resources, models.ResourceLock{
+			HostId:       v.HostId,
+			DiskId:       v.DiskId,
+			OriginCores:  int(v.OriginCores),
+			OriginMem:    int(v.OriginMem),
+			RequestCores: int(v.RequestCores),
+			RequestMem:   int(v.RequestMem),
+		})
+	}
+	rsp.Rs = new(dbPb.DBHostResponseStatus)
+	err := models.LockHosts(resources)
+	if err != nil {
+		errMsg := fmt.Sprintf("LockHosts Failed, err: %v", err)
+		log.Fatalln(errMsg)
+		rsp.Rs.Code = 1
+		rsp.Rs.Message = errMsg
+		return err
 	}
 	return nil
 }

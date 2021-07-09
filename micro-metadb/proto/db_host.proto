@@ -24,6 +24,29 @@ message DBDiskDTO {
     DBDiskStatus status = 4;
 }
 
+message DBAllocationReq {
+    string failureDomain = 1;
+    int32 cpuCores = 2;
+    int32 memory = 3;
+    int32 count = 4;
+}
+
+message DBPreAllocation {
+    string failureDomain = 1;
+    string hostId = 2;
+    string diskId = 3;
+    int32 originCores = 4;
+    int32 originMem = 5;
+    int32 requestCores = 6;
+    int32 requestMem = 7;
+    string hostName = 8;
+    string Ip = 9;
+    string diskName = 10;
+    string diskPath = 11;
+    int32 diskCap = 12;
+
+}
+
 message DBHostInfoDTO {
     string hostName = 1;
     string dc = 2;
@@ -33,17 +56,21 @@ message DBHostInfoDTO {
     DBHostStatus status = 6;
     string os = 7;                  // Host os
     string kernel = 8;
-    int32 cpuCores = 9;
-    int32 memory = 10;              // Host memory size, Unit:GB
-    string nic = 11;                // Host network type: 1GE or 10GE
-    string purpose = 12;            // What Purpose is the host used for? [compute/storage or both]
-    repeated DBDiskDTO disks = 13;
+    string spec = 9;                // Host Spec ["4U8G/16U32G"]
+    int32 cpuCores = 10;            // Host cpu Remains
+    int32 memory = 11;              // Host memory Remains, Unit:GB
+    string nic = 12;                // Host network type: 1GE or 10GE
+    string purpose = 13;            // What Purpose is the host used for? [compute/storage or both]
+    repeated DBDiskDTO disks = 14;
 }
 
 message DBAllocHostDTO {
     string hostName = 1;
     string ip = 2;
-    DBDiskDTO disk = 3;
+    string component = 3;           // Alloc this host for which compoent? [pd/tidb/tikv]
+    int32 cpuCores = 4;
+    int32 memory = 5;
+    DBDiskDTO disk = 6;
 }
 
 message DBAddHostRequest {
@@ -82,13 +109,19 @@ message DBCheckDetailsResponse {
     DBHostInfoDTO details = 2;
 }
 
-message DBAllocHostsRequest {
-    int32 pdCount = 1;
-    int32 tidbCount = 2;
-    int32 tikvCount = 3;
+message DBPreAllocHostsRequest {
+    DBAllocationReq req = 1;
 }
 
-message DBAllocHostResponse {
+message DBPreAllocHostsResponse {
     DBHostResponseStatus rs = 1;
-    repeated DBAllocHostDTO hosts = 2;
+    repeated DBPreAllocation results = 2;
+}
+
+message DBLockHostsRequest {
+    repeated DBPreAllocation req = 1;
+}
+
+message DBLockHostsResponse {
+    DBHostResponseStatus rs = 1;
 }

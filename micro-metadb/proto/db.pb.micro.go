@@ -53,7 +53,8 @@ type TiCPDBService interface {
 	RemoveHost(ctx context.Context, in *DBRemoveHostRequest, opts ...client.CallOption) (*DBRemoveHostResponse, error)
 	ListHost(ctx context.Context, in *DBListHostsRequest, opts ...client.CallOption) (*DBListHostsResponse, error)
 	CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, opts ...client.CallOption) (*DBCheckDetailsResponse, error)
-	AllocHosts(ctx context.Context, in *DBAllocHostsRequest, opts ...client.CallOption) (*DBAllocHostResponse, error)
+	PreAllocHosts(ctx context.Context, in *DBPreAllocHostsRequest, opts ...client.CallOption) (*DBPreAllocHostsResponse, error)
+	LockHosts(ctx context.Context, in *DBLockHostsRequest, opts ...client.CallOption) (*DBLockHostsResponse, error)
 	AddCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error)
 	FindCluster(ctx context.Context, in *DBFindClusterRequest, opts ...client.CallOption) (*DBFindClusterResponse, error)
 	UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, opts ...client.CallOption) (*DBUpdateTiUPConfigResponse, error)
@@ -167,9 +168,19 @@ func (c *tiCPDBService) CheckDetails(ctx context.Context, in *DBCheckDetailsRequ
 	return out, nil
 }
 
-func (c *tiCPDBService) AllocHosts(ctx context.Context, in *DBAllocHostsRequest, opts ...client.CallOption) (*DBAllocHostResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPDBService.AllocHosts", in)
-	out := new(DBAllocHostResponse)
+func (c *tiCPDBService) PreAllocHosts(ctx context.Context, in *DBPreAllocHostsRequest, opts ...client.CallOption) (*DBPreAllocHostsResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.PreAllocHosts", in)
+	out := new(DBPreAllocHostsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) LockHosts(ctx context.Context, in *DBLockHostsRequest, opts ...client.CallOption) (*DBLockHostsResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.LockHosts", in)
+	out := new(DBLockHostsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -271,7 +282,8 @@ type TiCPDBServiceHandler interface {
 	RemoveHost(context.Context, *DBRemoveHostRequest, *DBRemoveHostResponse) error
 	ListHost(context.Context, *DBListHostsRequest, *DBListHostsResponse) error
 	CheckDetails(context.Context, *DBCheckDetailsRequest, *DBCheckDetailsResponse) error
-	AllocHosts(context.Context, *DBAllocHostsRequest, *DBAllocHostResponse) error
+	PreAllocHosts(context.Context, *DBPreAllocHostsRequest, *DBPreAllocHostsResponse) error
+	LockHosts(context.Context, *DBLockHostsRequest, *DBLockHostsResponse) error
 	AddCluster(context.Context, *DBCreateClusterRequest, *DBCreateClusterResponse) error
 	FindCluster(context.Context, *DBFindClusterRequest, *DBFindClusterResponse) error
 	UpdateTiUPConfig(context.Context, *DBUpdateTiUPConfigRequest, *DBUpdateTiUPConfigResponse) error
@@ -294,7 +306,8 @@ func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, op
 		RemoveHost(ctx context.Context, in *DBRemoveHostRequest, out *DBRemoveHostResponse) error
 		ListHost(ctx context.Context, in *DBListHostsRequest, out *DBListHostsResponse) error
 		CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, out *DBCheckDetailsResponse) error
-		AllocHosts(ctx context.Context, in *DBAllocHostsRequest, out *DBAllocHostResponse) error
+		PreAllocHosts(ctx context.Context, in *DBPreAllocHostsRequest, out *DBPreAllocHostsResponse) error
+		LockHosts(ctx context.Context, in *DBLockHostsRequest, out *DBLockHostsResponse) error
 		AddCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error
 		FindCluster(ctx context.Context, in *DBFindClusterRequest, out *DBFindClusterResponse) error
 		UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, out *DBUpdateTiUPConfigResponse) error
@@ -351,8 +364,12 @@ func (h *tiCPDBServiceHandler) CheckDetails(ctx context.Context, in *DBCheckDeta
 	return h.TiCPDBServiceHandler.CheckDetails(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) AllocHosts(ctx context.Context, in *DBAllocHostsRequest, out *DBAllocHostResponse) error {
-	return h.TiCPDBServiceHandler.AllocHosts(ctx, in, out)
+func (h *tiCPDBServiceHandler) PreAllocHosts(ctx context.Context, in *DBPreAllocHostsRequest, out *DBPreAllocHostsResponse) error {
+	return h.TiCPDBServiceHandler.PreAllocHosts(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) LockHosts(ctx context.Context, in *DBLockHostsRequest, out *DBLockHostsResponse) error {
+	return h.TiCPDBServiceHandler.LockHosts(ctx, in, out)
 }
 
 func (h *tiCPDBServiceHandler) AddCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error {

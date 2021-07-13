@@ -43,6 +43,8 @@ definitions:
       capacity:
         description: 'Disk size, Unit: GB'
         type: integer
+      diskId:
+        type: string
       name:
         description: '[sda/sdb/nvmep0...]'
         type: string
@@ -65,6 +67,8 @@ definitions:
         items:
           $ref: '#/definitions/hostapi.Disk'
         type: array
+      hostId:
+        type: string
       hostName:
         type: string
       ip:
@@ -170,7 +174,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 将给定的主机信息导入TiCP
+      description: 将给定的主机信息导入系统
       parameters:
       - description: 登录token
         in: header
@@ -324,6 +328,36 @@ paths:
                   type: array
               type: object
       summary: 查询主机列表
+      tags:
+      - resource
+    post:
+      consumes:
+      - multipart/form-data
+      description: 通过文件批量导入主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 包含待导入主机信息的文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 通过文件批量导入主机
       tags:
       - resource
   /instance/create:

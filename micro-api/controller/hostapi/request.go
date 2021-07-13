@@ -9,12 +9,14 @@ type HostQuery struct {
 }
 
 type Disk struct {
+	DiskId   string `json:"diskId"`
 	Name     string `json:"name"`     // [sda/sdb/nvmep0...]
 	Capacity int32  `json:"capacity"` // Disk size, Unit: GB
 	Path     string `json:"path"`     // Disk mount path: [/data1]
 	Status   int32  `json:"status"`   // Disk Status, 0 for available, 1 for inused
 }
 type HostInfo struct {
+	HostId   string `json:"hostId"`
 	HostName string `json:"hostName"`
 	Dc       string `json:"dc"`
 	Az       string `json:"az"`
@@ -29,6 +31,23 @@ type HostInfo struct {
 	Purpose  string `json:"purpose"` // What Purpose is the host used for? [compute/storage or both]
 	Disks    []Disk `json:"disks"`
 }
+
+type ExcelField int
+
+const (
+	HOSTNAME_FIELD ExcelField = iota
+	IP_FILED
+	DC_FIELD
+	ZONE_FIELD
+	RACK_FIELD
+	OS_FIELD
+	KERNEL_FIELD
+	CPU_FIELD
+	MEM_FIELD
+	NIC_FIELD
+	PURPOSE_FIELD
+	DISKS_FIELD
+)
 
 type ListHostCondition struct {
 	Status  int32  `json:"status"`  // Host Status, 0 for Online, 1 for offline

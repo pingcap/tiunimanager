@@ -1,8 +1,15 @@
 package hostapi
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net"
 	"net/http"
+	"strconv"
 
+	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/ticp/micro-api/controller"
 	"github.com/pingcap/ticp/micro-manager/client"
@@ -49,6 +56,7 @@ func Query(c *gin.Context) {
 }
 
 func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
+	dst.HostId = src.HostId
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
 	dst.Os = src.Os
@@ -63,6 +71,7 @@ func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	dst.Purpose = src.Purpose
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, Disk{
+			DiskId:   disk.DiskId,
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
@@ -71,23 +80,7 @@ func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	}
 }
 
-// ImportHost 导入主机接口
-// @Summary 导入主机接口
-// @Description 将给定的主机信息导入TiCP
-// @Tags resource
-// @Accept json
-// @Produce json
-// @Param Token header string true "登录token"
-// @Param host body HostInfo true "待导入的主机信息"
-// @Success 200 {object} controller.CommonResult{data=string}
-// @Router /host [post]
-func ImportHost(c *gin.Context) {
-	var host HostInfo
-	if err := c.ShouldBindJSON(&host); err != nil {
-		_ = c.Error(err)
-		return
-	}
-
+func doImport(c *gin.Context, host *HostInfo) (rsp *manager.ImportHostResponse, err error) {
 	importReq := manager.ImportHostRequest{}
 	importReq.Host = &manager.HostInfo{
 		HostName: host.HostName,
@@ -112,12 +105,106 @@ func ImportHost(c *gin.Context) {
 		})
 	}
 
-	rsp, err := client.ManagerClient.ImportHost(c, &importReq)
+	return client.ManagerClient.ImportHost(c, &importReq)
+}
+
+// ImportHost 导入主机接口
+// @Summary 导入主机接口
+// @Description 将给定的主机信息导入系统
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Param Token header string true "登录token"
+// @Param host body HostInfo true "待导入的主机信息"
+// @Success 200 {object} controller.CommonResult{data=string}
+// @Router /host [post]
+func ImportHost(c *gin.Context) {
+	var host HostInfo
+	if err := c.ShouldBindJSON(&host); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	rsp, err := doImport(c, &host)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, rsp.Rs.Message))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(ImportHostRsp{HostId: rsp.HostId}))
 	}
+}
+
+func importExcelFile(r io.Reader) ([]*HostInfo, error) {
+	xlsx, err := excelize.OpenReader(r)
+	if err != nil {
+		return nil, err
+	}
+	rows := xlsx.GetRows("主机信息")
+	var hosts []*HostInfo
+	for irow, row := range rows {
+		if irow > 0 {
+			var host HostInfo
+			host.HostName = row[HOSTNAME_FIELD]
+			addr := net.ParseIP(row[IP_FILED])
+			if addr == nil {
+				errMsg := fmt.Sprintf("Row %d has a Invalid IP Address %s", irow, row[1])
+				return nil, errors.New(errMsg)
+			}
+			host.Ip = addr.String()
+			host.Dc = row[DC_FIELD]
+			host.Az = row[ZONE_FIELD]
+			host.Rack = row[RACK_FIELD]
+			host.Os = row[OS_FIELD]
+			host.Kernel = row[KERNEL_FIELD]
+			coreNum, _ := (strconv.Atoi(row[CPU_FIELD]))
+			host.CpuCores = int32(coreNum)
+			mem, _ := (strconv.Atoi(row[MEM_FIELD]))
+			host.Memory = int32(mem)
+			host.Nic = row[NIC_FIELD]
+			host.Purpose = row[PURPOSE_FIELD]
+			disksStr := row[DISKS_FIELD]
+			if err = json.Unmarshal([]byte(disksStr), &host.Disks); err != nil {
+				errMsg := fmt.Sprintf("Row %d has a Invalid Disk Json Format, %v", irow, err)
+				return nil, errors.New(errMsg)
+			}
+			hosts = append(hosts, &host)
+		}
+	}
+	return hosts, nil
+}
+
+// ImportHosts 批量导入主机接口
+// @Summary 通过文件批量导入主机
+// @Description 通过文件批量导入主机
+// @Tags resource
+// @Accept mpfd
+// @Produce json
+// @Param Token header string true "登录token"
+// @Param file formData file true "包含待导入主机信息的文件"
+// @Success 200 {object} controller.CommonResult{data=string}
+// @Router /hosts [post]
+func ImportHosts(c *gin.Context) {
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(500, "GetFormFile Error"))
+		return
+	}
+	hosts, err := importExcelFile(file)
+	if err != nil {
+		errmsg := fmt.Sprintf("Import File Error: %v", err)
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, errmsg))
+	}
+
+	var hostIds []string
+	for _, host := range hosts {
+		rsp, err := doImport(c, host)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, controller.Fail(500, rsp.Rs.Message))
+			return
+		} else {
+			hostIds = append(hostIds, rsp.HostId)
+		}
+	}
+	c.JSON(http.StatusOK, controller.Success(ImportHostsRsp{HostIds: hostIds}))
 }
 
 // ListHost 查询主机列表接口

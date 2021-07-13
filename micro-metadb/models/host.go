@@ -1,12 +1,11 @@
 package models
 
 import (
-	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pingcap/ticp/addon/logger"
-	"github.com/pingcap/ticp/config"
 
 	"gorm.io/gorm"
 )
@@ -57,44 +56,32 @@ func (h Host) TableName() string {
 }
 
 func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
-	h.ID = uuid.New().String()
-	return nil
+	err = tx.Where("IP = ? and Name = ?", h.IP, h.Name).First(&Host{}).Error
+	if err == nil {
+		errMsg := fmt.Sprintf("Host %s(%s) is Existed", h.Name, h.IP)
+		return errors.New(errMsg)
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		h.ID = uuid.New().String()
+		return nil
+	} else {
+		return err
+	}
+}
+
+func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
+	err = tx.Where("ID = ?", h.ID).First(&Host{}).Error
+	return err
 }
 
 func (h *Host) AfterDelete(tx *gorm.DB) (err error) {
-	tx.Where("host_id = ?", h.ID).Delete(&Disk{})
-	return nil
-}
-
-func (h *Host) AfterFind(tx *gorm.DB) (err error) {
-	tx.Find(&(h.Disks), "HOST_ID = ?", h.ID)
+	err = tx.Where("host_id = ?", h.ID).Delete(&Disk{}).Error
 	return
 }
 
-func CreateHostTable() (int32, error) {
-	var err error
-	var tablebuilt int32 = 0
-	dbFile := config.GetSqliteFilePath()
-	log := logger.WithContext(context.TODO()).WithField("dbFile", dbFile)
-	if MetaDB.Migrator().HasTable(&Host{}) {
-		log.Info("Host Table Has Already Created")
-	} else {
-		err = MetaDB.Migrator().CreateTable(&Host{})
-		if err != nil {
-			log.Fatalf("sqlite create host table failed: %v", err)
-		}
-		tablebuilt++
-	}
-	if MetaDB.Migrator().HasTable(&Disk{}) {
-		log.Info("Disk Table Has Already Created")
-	} else {
-		err = MetaDB.Migrator().CreateTable(&Disk{})
-		if err != nil {
-			log.Fatalf("sqlite create disk table failed: %v", err)
-		}
-		tablebuilt++
-	}
-	return tablebuilt, err
+func (h *Host) AfterFind(tx *gorm.DB) (err error) {
+	err = tx.Find(&(h.Disks), "HOST_ID = ?", h.ID).Error
+	return
 }
 
 func CreateHost(host *Host) (id string, err error) {
@@ -107,21 +94,21 @@ func CreateHost(host *Host) (id string, err error) {
 
 // TODO: Check Record before delete
 func DeleteHost(hostId string) (err error) {
-	MetaDB.Where("ID = ?", hostId).Delete(&Host{
+	err = MetaDB.Where("ID = ?", hostId).Delete(&Host{
 		ID: hostId,
-	})
-	return nil
+	}).Error
+	return
 }
 
 func ListHosts() (hosts []Host, err error) {
-	MetaDB.Find(&hosts)
+	err = MetaDB.Find(&hosts).Error
 	return
 }
 
 func FindHostById(hostId string) (*Host, error) {
 	host := new(Host)
-	MetaDB.First(host, "ID = ?", hostId)
-	return host, nil
+	err := MetaDB.First(host, "ID = ?", hostId).Error
+	return host, err
 }
 
 // TODO: Just a trick demo function

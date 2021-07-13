@@ -33,7 +33,7 @@ var doc = `{
     "paths": {
         "/host": {
             "post": {
-                "description": "将给定的主机信息导入TiCP",
+                "description": "将给定的主机信息导入系统",
                 "consumes": [
                     "application/json"
                 ],
@@ -286,6 +286,55 @@ var doc = `{
                                             "items": {
                                                 "$ref": "#/definitions/hostapi.HostInfo"
                                             }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "通过文件批量导入主机",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "通过文件批量导入主机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "包含待导入主机信息的文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
                                         }
                                     }
                                 }
@@ -570,6 +619,9 @@ var doc = `{
                     "description": "Disk size, Unit: GB",
                     "type": "integer"
                 },
+                "diskId": {
+                    "type": "string"
+                },
                 "name": {
                     "description": "[sda/sdb/nvmep0...]",
                     "type": "string"
@@ -601,6 +653,9 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/hostapi.Disk"
                     }
+                },
+                "hostId": {
+                    "type": "string"
                 },
                 "hostName": {
                     "type": "string"

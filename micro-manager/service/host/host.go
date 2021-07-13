@@ -33,6 +33,7 @@ func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 }
 
 func CopyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
+	dst.HostId = src.HostId
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
 	dst.Os = src.Os
@@ -47,6 +48,7 @@ func CopyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.Purpose = src.Purpose
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &hostPb.Disk{
+			DiskId:   disk.DiskId,
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,

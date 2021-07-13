@@ -36,7 +36,7 @@ func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest
 	hostId, err := models.CreateHost(&host)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
-		log.Fatalf("Failed to Import host %v to DB, err: %v", host.IP, err)
+		log.Warnf("Failed to Import host %v to DB, err: %v", host.IP, err)
 		rsp.Rs.Code = 1
 		rsp.Rs.Message = err.Error()
 		return err
@@ -52,7 +52,7 @@ func (*DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRemoveHostR
 	err := models.DeleteHost(hostId)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
-		log.Fatalf("Failed to Delete host %v from DB, err: %v", hostId, err)
+		log.Warnf("Failed to Delete host %v from DB, err: %v", hostId, err)
 		rsp.Rs.Code = 1
 		rsp.Rs.Message = err.Error()
 		return err
@@ -62,6 +62,7 @@ func (*DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRemoveHostR
 }
 
 func CopyHostInfo(src *models.Host, dst *dbPb.DBHostInfoDTO) {
+	dst.HostId = src.ID
 	dst.HostName = src.Name
 	dst.Ip = src.IP
 	dst.Os = src.OS
@@ -76,6 +77,7 @@ func CopyHostInfo(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.Purpose = src.Purpose
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
+			DiskId:   disk.ID,
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
@@ -101,7 +103,7 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDeta
 	host, err := models.FindHostById(req.HostId)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
-		log.Fatalf("Failed to Find host %v from DB, err: %v", req.HostId, err)
+		log.Warnf("Failed to Find host %v from DB, err: %v", req.HostId, err)
 		rsp.Rs.Code = 1
 		rsp.Rs.Message = err.Error()
 		return err

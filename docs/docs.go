@@ -135,7 +135,7 @@ var doc = `{
                 }
             },
             "delete": {
-                "description": "删除指定的主机",
+                "description": "批量删除指定的主机",
                 "consumes": [
                     "application/json"
                 ],
@@ -145,7 +145,7 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "删除指定的主机",
+                "summary": "批量删除指定的主机",
                 "parameters": [
                     {
                         "type": "string",
@@ -155,11 +155,16 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "type": "string",
                         "description": "待删除的主机ID",
-                        "name": "hostId",
-                        "in": "path",
-                        "required": true
+                        "name": "hostIds",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
                     }
                 ],
                 "responses": {
@@ -320,6 +325,65 @@ var doc = `{
                         "name": "file",
                         "in": "formData",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/hosts/": {
+            "delete": {
+                "description": "删除指定的主机",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "删除指定的主机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "待删除的主机ID数组",
+                        "name": "hostId",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
                     }
                 ],
                 "responses": {

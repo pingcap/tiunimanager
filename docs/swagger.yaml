@@ -206,7 +206,7 @@ paths:
     delete:
       consumes:
       - application/json
-      description: 删除指定的主机
+      description: 批量删除指定的主机
       parameters:
       - description: 登录token
         in: header
@@ -214,10 +214,13 @@ paths:
         required: true
         type: string
       - description: 待删除的主机ID
-        in: path
-        name: hostId
+        in: body
+        name: hostIds
         required: true
-        type: string
+        schema:
+          items:
+            type: string
+          type: array
       produces:
       - application/json
       responses:
@@ -230,7 +233,7 @@ paths:
                 data:
                   type: string
               type: object
-      summary: 删除指定的主机
+      summary: 批量删除指定的主机
       tags:
       - resource
     get:
@@ -355,9 +358,45 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  type: string
+                  items:
+                    type: string
+                  type: array
               type: object
       summary: 通过文件批量导入主机
+      tags:
+      - resource
+  /hosts/:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 待删除的主机ID数组
+        in: body
+        name: hostId
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 删除指定的主机
       tags:
       - resource
   /instance/create:

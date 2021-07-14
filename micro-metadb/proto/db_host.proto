@@ -59,11 +59,28 @@ message DBAddHostResponse {
     string HostId = 2;
 }
 
+message DBAddHostsInBatchRequest {
+    repeated DBHostInfoDTO hosts = 1;
+}
+
+message DBAddHostsInBatchResponse {
+    DBHostResponseStatus rs = 1;
+    repeated string HostIds = 2;
+}
+
 message DBRemoveHostRequest {
     string hostId = 1;
 }
 
 message DBRemoveHostResponse {
+    DBHostResponseStatus rs = 1;
+}
+
+message DBRemoveHostsInBatchRequest {
+    repeated string hostIds = 1;
+}
+
+message DBRemoveHostsInBatchResponse {
     DBHostResponseStatus rs = 1;
 }
 

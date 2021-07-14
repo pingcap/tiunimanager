@@ -66,6 +66,8 @@ func Route(g *gin.Engine) {
 			host.GET("hosts", hostapi.ListHost)
 			host.GET("host/:hostId", hostapi.HostDetails)
 			host.DELETE("host/:hostId", hostapi.RemoveHost)
+			host.DELETE("hosts", hostapi.RemoveHosts)
+			host.GET("download_template", hostapi.DownloadHostTemplateFile)
 		}
 	}
 

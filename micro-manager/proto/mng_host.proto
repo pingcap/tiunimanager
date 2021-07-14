@@ -58,11 +58,28 @@ message ImportHostResponse {
     string HostId = 2;
 }
 
+message ImportHostsInBatchRequest {
+    repeated HostInfo hosts = 1;
+}
+
+message ImportHostsInBatchResponse {
+    ResponseStatus rs = 1;
+    repeated string HostIds = 2;
+}
+
 message RemoveHostRequest {
     string hostId = 1;
 }
 
 message RemoveHostResponse {
+    ResponseStatus rs = 1;
+}
+
+message RemoveHostsInBatchRequest {
+    repeated string hostIds = 1;
+}
+
+message RemoveHostsInBatchResponse {
     ResponseStatus rs = 1;
 }
 

@@ -13,7 +13,9 @@ service TiCPManagerService {
 
     // host manager module
 	rpc ImportHost(ImportHostRequest) returns (ImportHostResponse);
+	rpc ImportHostsInBatch(ImportHostsInBatchRequest) returns (ImportHostsInBatchResponse);
 	rpc RemoveHost(RemoveHostRequest) returns (RemoveHostResponse);
+	rpc RemoveHostsInBatch(RemoveHostsInBatchRequest) returns (RemoveHostsInBatchResponse);
 	rpc ListHost(ListHostsRequest) returns (ListHostsResponse);
 	rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
 	rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);

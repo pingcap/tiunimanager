@@ -18,7 +18,9 @@ service TiCPDBService {
 
     // Host Module
 	rpc AddHost(DBAddHostRequest) returns (DBAddHostResponse);
+	rpc AddHostsInBatch(DBAddHostsInBatchRequest) returns (DBAddHostsInBatchResponse);
 	rpc RemoveHost(DBRemoveHostRequest) returns (DBRemoveHostResponse);
+	rpc RemoveHostsInBatch(DBRemoveHostsInBatchRequest) returns (DBRemoveHostsInBatchResponse);
 	rpc ListHost(DBListHostsRequest) returns (DBListHostsResponse);
 	rpc CheckDetails(DBCheckDetailsRequest) returns (DBCheckDetailsResponse);
 	rpc AllocHosts(DBAllocHostsRequest) returns (DBAllocHostResponse);

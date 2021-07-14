@@ -7,6 +7,8 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
@@ -14,6 +16,7 @@ import (
 	"github.com/pingcap/ticp/micro-api/controller"
 	"github.com/pingcap/ticp/micro-manager/client"
 	manager "github.com/pingcap/ticp/micro-manager/proto"
+	"google.golang.org/grpc/codes"
 )
 
 // Query 查询主机接口
@@ -80,32 +83,45 @@ func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	}
 }
 
-func doImport(c *gin.Context, host *HostInfo) (rsp *manager.ImportHostResponse, err error) {
-	importReq := manager.ImportHostRequest{}
-	importReq.Host = &manager.HostInfo{
-		HostName: host.HostName,
-		Ip:       host.Ip,
-		Os:       host.Os,
-		Kernel:   host.Kernel,
-		CpuCores: host.CpuCores,
-		Memory:   host.Memory,
-		Dc:       host.Dc,
-		Az:       host.Az,
-		Rack:     host.Rack,
-		Nic:      host.Nic,
-		Status:   manager.HostStatus(host.Status),
-		Purpose:  host.Purpose,
-	}
-	for _, v := range host.Disks {
-		importReq.Host.Disks = append(importReq.Host.Disks, &manager.Disk{
+func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
+	dst.HostName = src.HostName
+	dst.Ip = src.Ip
+	dst.Os = src.Os
+	dst.Kernel = src.Kernel
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
+	dst.Dc = src.Dc
+	dst.Az = src.Az
+	dst.Rack = src.Rack
+	dst.Status = manager.HostStatus(src.Status)
+	dst.Purpose = src.Purpose
+
+	for _, v := range src.Disks {
+		dst.Disks = append(dst.Disks, &manager.Disk{
 			Name:     v.Name,
 			Capacity: v.Capacity,
 			Status:   manager.DiskStatus(v.Status),
 			Path:     v.Path,
 		})
 	}
+}
 
+func doImport(c *gin.Context, host *HostInfo) (rsp *manager.ImportHostResponse, err error) {
+	importReq := manager.ImportHostRequest{}
+	importReq.Host = new(manager.HostInfo)
+	copyHostToReq(host, importReq.Host)
 	return client.ManagerClient.ImportHost(c, &importReq)
+}
+
+func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *manager.ImportHostsInBatchResponse, err error) {
+	importReq := manager.ImportHostsInBatchRequest{}
+	importReq.Hosts = make([]*manager.HostInfo, len(hosts))
+	for i, host := range hosts {
+		importReq.Hosts[i] = new(manager.HostInfo)
+		copyHostToReq(host, importReq.Hosts[i])
+	}
+
+	return client.ManagerClient.ImportHostsInBatch(c, &importReq)
 }
 
 // ImportHost 导入主机接口
@@ -127,10 +143,16 @@ func ImportHost(c *gin.Context) {
 
 	rsp, err := doImport(c, &host)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, rsp.Rs.Message))
-	} else {
-		c.JSON(http.StatusOK, controller.Success(ImportHostRsp{HostId: rsp.HostId}))
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
 	}
+
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+
+	c.JSON(http.StatusOK, controller.Success(ImportHostRsp{HostId: rsp.HostId}))
 }
 
 func importExcelFile(r io.Reader) ([]*HostInfo, error) {
@@ -180,31 +202,33 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 // @Produce json
 // @Param Token header string true "登录token"
 // @Param file formData file true "包含待导入主机信息的文件"
-// @Success 200 {object} controller.CommonResult{data=string}
+// @Success 200 {object} controller.CommonResult{data=[]string}
 // @Router /hosts [post]
 func ImportHosts(c *gin.Context) {
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(500, "GetFormFile Error"))
+		errmsg := fmt.Sprintf("GetFormFile Error: %v", err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
 	hosts, err := importExcelFile(file)
 	if err != nil {
 		errmsg := fmt.Sprintf("Import File Error: %v", err)
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, errmsg))
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.InvalidArgument), errmsg))
+		return
 	}
 
-	var hostIds []string
-	for _, host := range hosts {
-		rsp, err := doImport(c, host)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, controller.Fail(500, rsp.Rs.Message))
-			return
-		} else {
-			hostIds = append(hostIds, rsp.HostId)
-		}
+	rsp, err := doImportBatch(c, hosts)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
 	}
-	c.JSON(http.StatusOK, controller.Success(ImportHostsRsp{HostIds: hostIds}))
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+
+	c.JSON(http.StatusOK, controller.Success(ImportHostsRsp{HostIds: rsp.HostIds}))
 }
 
 // ListHost 查询主机列表接口
@@ -231,16 +255,20 @@ func ListHost(c *gin.Context) {
 
 	rsp, err := client.ManagerClient.ListHost(c, &listHostReq)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, rsp.Rs.Message))
-	} else {
-		var res ListHostRsp
-		for _, v := range rsp.HostList {
-			var host HostInfo
-			CopyHostFromRsp(v, &host)
-			res.Hosts = append(res.Hosts, host)
-		}
-		c.JSON(http.StatusOK, controller.SuccessWithPage(res, controller.Page{Page: 1, PageSize: 20, Total: len(res.Hosts)}))
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
 	}
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+	var res ListHostRsp
+	for _, v := range rsp.HostList {
+		var host HostInfo
+		CopyHostFromRsp(v, &host)
+		res.Hosts = append(res.Hosts, host)
+	}
+	c.JSON(http.StatusOK, controller.SuccessWithPage(res, controller.Page{Page: 1, PageSize: 20, Total: len(res.Hosts)}))
 }
 
 // HostDetails 查询主机详情接口
@@ -263,22 +291,26 @@ func HostDetails(c *gin.Context) {
 
 	rsp, err := client.ManagerClient.CheckDetails(c, &HostDetailsReq)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, rsp.Rs.Message))
-	} else {
-		var res HostDetailsRsp
-		CopyHostFromRsp(rsp.Details, &(res.Host))
-		c.JSON(http.StatusOK, controller.Success(res))
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
 	}
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+	var res HostDetailsRsp
+	CopyHostFromRsp(rsp.Details, &(res.Host))
+	c.JSON(http.StatusOK, controller.Success(res))
 }
 
-// RemoveHost 删除主机接口
-// @Summary 删除指定的主机
-// @Description 删除指定的主机
+// RemoveHosts 批量删除主机接口
+// @Summary 批量删除指定的主机
+// @Description 批量删除指定的主机
 // @Tags resource
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param hostId path string true "待删除的主机ID"
+// @Param hostIds body []string true "待删除的主机ID"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /host/ [delete]
 func RemoveHost(c *gin.Context) {
@@ -291,8 +323,96 @@ func RemoveHost(c *gin.Context) {
 
 	rsp, err := client.ManagerClient.RemoveHost(c, &RemoveHostReq)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, rsp.Rs.Message))
-	} else {
-		c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
 	}
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+	c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
+}
+
+func detectDuplicateElement(hostIds []string) (string, bool) {
+	temp := map[string]struct{}{}
+	hasDuplicate := false
+	var duplicateStr string
+	for _, item := range hostIds {
+		if _, ok := temp[item]; !ok {
+			temp[item] = struct{}{}
+		} else {
+			hasDuplicate = true
+			duplicateStr = item
+			break
+		}
+	}
+	return duplicateStr, hasDuplicate
+}
+
+// RemoveHost 删除主机接口
+// @Summary 删除指定的主机
+// @Description 删除指定的主机
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Param Token header string true "登录token"
+// @Param hostId body []string true "待删除的主机ID数组"
+// @Success 200 {object} controller.CommonResult{data=string}
+// @Router /hosts/ [delete]
+func RemoveHosts(c *gin.Context) {
+
+	var hostIds []string
+	if err := c.ShouldBindJSON(&hostIds); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	if str, dup := detectDuplicateElement(hostIds); dup {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), str+" Is Duplicated in request"))
+		return
+	}
+
+	RemoveHostsReq := manager.RemoveHostsInBatchRequest{
+		HostIds: hostIds,
+	}
+
+	rsp, err := client.ManagerClient.RemoveHostsInBatch(c, &RemoveHostsReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
+	}
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+	c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
+}
+
+// DownloadHostTemplateFile 导出主机信息模板文件
+// @Summary 导出主机信息模板文件
+// @Description 将主机信息文件导出到本地
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Param Token header string true "登录token"
+// @Success 200 {object} controller.CommonResult{data=HostInfo}
+// @Router /download_template/ [get]
+func DownloadHostTemplateFile(c *gin.Context) {
+	curDir, _ := os.Getwd()
+	templateName := "hostInfo_template.xlsx"
+	filePath := filepath.Join(curDir, templateName)
+
+	fileTmp, err := os.Open(filePath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
+	}
+	defer fileTmp.Close()
+
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Disposition", "attachment; filename="+templateName)
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Header("Cache-Control", "no-cache")
+
+	c.File(filePath)
 }

@@ -568,6 +568,108 @@ func (x *DBAddHostResponse) GetHostId() string {
 	return ""
 }
 
+type DBAddHostsInBatchRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Hosts []*DBHostInfoDTO `protobuf:"bytes,1,rep,name=hosts,proto3" json:"hosts,omitempty"`
+}
+
+func (x *DBAddHostsInBatchRequest) Reset() {
+	*x = DBAddHostsInBatchRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_host_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBAddHostsInBatchRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBAddHostsInBatchRequest) ProtoMessage() {}
+
+func (x *DBAddHostsInBatchRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_db_host_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBAddHostsInBatchRequest.ProtoReflect.Descriptor instead.
+func (*DBAddHostsInBatchRequest) Descriptor() ([]byte, []int) {
+	return file_db_host_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DBAddHostsInBatchRequest) GetHosts() []*DBHostInfoDTO {
+	if x != nil {
+		return x.Hosts
+	}
+	return nil
+}
+
+type DBAddHostsInBatchResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Rs      *DBHostResponseStatus `protobuf:"bytes,1,opt,name=rs,proto3" json:"rs,omitempty"`
+	HostIds []string              `protobuf:"bytes,2,rep,name=HostIds,proto3" json:"HostIds,omitempty"`
+}
+
+func (x *DBAddHostsInBatchResponse) Reset() {
+	*x = DBAddHostsInBatchResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_host_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBAddHostsInBatchResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBAddHostsInBatchResponse) ProtoMessage() {}
+
+func (x *DBAddHostsInBatchResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_db_host_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBAddHostsInBatchResponse.ProtoReflect.Descriptor instead.
+func (*DBAddHostsInBatchResponse) Descriptor() ([]byte, []int) {
+	return file_db_host_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *DBAddHostsInBatchResponse) GetRs() *DBHostResponseStatus {
+	if x != nil {
+		return x.Rs
+	}
+	return nil
+}
+
+func (x *DBAddHostsInBatchResponse) GetHostIds() []string {
+	if x != nil {
+		return x.HostIds
+	}
+	return nil
+}
+
 type DBRemoveHostRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -579,7 +681,7 @@ type DBRemoveHostRequest struct {
 func (x *DBRemoveHostRequest) Reset() {
 	*x = DBRemoveHostRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_db_host_proto_msgTypes[6]
+		mi := &file_db_host_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -592,7 +694,7 @@ func (x *DBRemoveHostRequest) String() string {
 func (*DBRemoveHostRequest) ProtoMessage() {}
 
 func (x *DBRemoveHostRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_db_host_proto_msgTypes[6]
+	mi := &file_db_host_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -605,7 +707,7 @@ func (x *DBRemoveHostRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DBRemoveHostRequest.ProtoReflect.Descriptor instead.
 func (*DBRemoveHostRequest) Descriptor() ([]byte, []int) {
-	return file_db_host_proto_rawDescGZIP(), []int{6}
+	return file_db_host_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DBRemoveHostRequest) GetHostId() string {
@@ -626,7 +728,7 @@ type DBRemoveHostResponse struct {
 func (x *DBRemoveHostResponse) Reset() {
 	*x = DBRemoveHostResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_db_host_proto_msgTypes[7]
+		mi := &file_db_host_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -639,7 +741,7 @@ func (x *DBRemoveHostResponse) String() string {
 func (*DBRemoveHostResponse) ProtoMessage() {}
 
 func (x *DBRemoveHostResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_db_host_proto_msgTypes[7]
+	mi := &file_db_host_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -652,10 +754,104 @@ func (x *DBRemoveHostResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DBRemoveHostResponse.ProtoReflect.Descriptor instead.
 func (*DBRemoveHostResponse) Descriptor() ([]byte, []int) {
-	return file_db_host_proto_rawDescGZIP(), []int{7}
+	return file_db_host_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *DBRemoveHostResponse) GetRs() *DBHostResponseStatus {
+	if x != nil {
+		return x.Rs
+	}
+	return nil
+}
+
+type DBRemoveHostsInBatchRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	HostIds []string `protobuf:"bytes,1,rep,name=hostIds,proto3" json:"hostIds,omitempty"`
+}
+
+func (x *DBRemoveHostsInBatchRequest) Reset() {
+	*x = DBRemoveHostsInBatchRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_host_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBRemoveHostsInBatchRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBRemoveHostsInBatchRequest) ProtoMessage() {}
+
+func (x *DBRemoveHostsInBatchRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_db_host_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBRemoveHostsInBatchRequest.ProtoReflect.Descriptor instead.
+func (*DBRemoveHostsInBatchRequest) Descriptor() ([]byte, []int) {
+	return file_db_host_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *DBRemoveHostsInBatchRequest) GetHostIds() []string {
+	if x != nil {
+		return x.HostIds
+	}
+	return nil
+}
+
+type DBRemoveHostsInBatchResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Rs *DBHostResponseStatus `protobuf:"bytes,1,opt,name=rs,proto3" json:"rs,omitempty"`
+}
+
+func (x *DBRemoveHostsInBatchResponse) Reset() {
+	*x = DBRemoveHostsInBatchResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_host_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBRemoveHostsInBatchResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBRemoveHostsInBatchResponse) ProtoMessage() {}
+
+func (x *DBRemoveHostsInBatchResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_db_host_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBRemoveHostsInBatchResponse.ProtoReflect.Descriptor instead.
+func (*DBRemoveHostsInBatchResponse) Descriptor() ([]byte, []int) {
+	return file_db_host_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *DBRemoveHostsInBatchResponse) GetRs() *DBHostResponseStatus {
 	if x != nil {
 		return x.Rs
 	}
@@ -674,7 +870,7 @@ type DBListHostsRequest struct {
 func (x *DBListHostsRequest) Reset() {
 	*x = DBListHostsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_db_host_proto_msgTypes[8]
+		mi := &file_db_host_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -687,7 +883,7 @@ func (x *DBListHostsRequest) String() string {
 func (*DBListHostsRequest) ProtoMessage() {}
 
 func (x *DBListHostsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_db_host_proto_msgTypes[8]
+	mi := &file_db_host_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -700,7 +896,7 @@ func (x *DBListHostsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DBListHostsRequest.ProtoReflect.Descriptor instead.
 func (*DBListHostsRequest) Descriptor() ([]byte, []int) {
-	return file_db_host_proto_rawDescGZIP(), []int{8}
+	return file_db_host_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *DBListHostsRequest) GetStatus() DBHostStatus {
@@ -729,7 +925,7 @@ type DBListHostsResponse struct {
 func (x *DBListHostsResponse) Reset() {
 	*x = DBListHostsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_db_host_proto_msgTypes[9]
+		mi := &file_db_host_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -742,7 +938,7 @@ func (x *DBListHostsResponse) String() string {
 func (*DBListHostsResponse) ProtoMessage() {}
 
 func (x *DBListHostsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_db_host_proto_msgTypes[9]
+	mi := &file_db_host_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -755,7 +951,7 @@ func (x *DBListHostsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DBListHostsResponse.ProtoReflect.Descriptor instead.
 func (*DBListHostsResponse) Descriptor() ([]byte, []int) {
-	return file_db_host_proto_rawDescGZIP(), []int{9}
+	return file_db_host_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *DBListHostsResponse) GetRs() *DBHostResponseStatus {
@@ -783,7 +979,7 @@ type DBCheckDetailsRequest struct {
 func (x *DBCheckDetailsRequest) Reset() {
 	*x = DBCheckDetailsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_db_host_proto_msgTypes[10]
+		mi := &file_db_host_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -796,7 +992,7 @@ func (x *DBCheckDetailsRequest) String() string {
 func (*DBCheckDetailsRequest) ProtoMessage() {}
 
 func (x *DBCheckDetailsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_db_host_proto_msgTypes[10]
+	mi := &file_db_host_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -809,7 +1005,7 @@ func (x *DBCheckDetailsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DBCheckDetailsRequest.ProtoReflect.Descriptor instead.
 func (*DBCheckDetailsRequest) Descriptor() ([]byte, []int) {
-	return file_db_host_proto_rawDescGZIP(), []int{10}
+	return file_db_host_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *DBCheckDetailsRequest) GetHostId() string {
@@ -831,7 +1027,7 @@ type DBCheckDetailsResponse struct {
 func (x *DBCheckDetailsResponse) Reset() {
 	*x = DBCheckDetailsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_db_host_proto_msgTypes[11]
+		mi := &file_db_host_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -844,7 +1040,7 @@ func (x *DBCheckDetailsResponse) String() string {
 func (*DBCheckDetailsResponse) ProtoMessage() {}
 
 func (x *DBCheckDetailsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_db_host_proto_msgTypes[11]
+	mi := &file_db_host_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -857,7 +1053,7 @@ func (x *DBCheckDetailsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DBCheckDetailsResponse.ProtoReflect.Descriptor instead.
 func (*DBCheckDetailsResponse) Descriptor() ([]byte, []int) {
-	return file_db_host_proto_rawDescGZIP(), []int{11}
+	return file_db_host_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *DBCheckDetailsResponse) GetRs() *DBHostResponseStatus {
@@ -887,7 +1083,7 @@ type DBAllocHostsRequest struct {
 func (x *DBAllocHostsRequest) Reset() {
 	*x = DBAllocHostsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_db_host_proto_msgTypes[12]
+		mi := &file_db_host_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -900,7 +1096,7 @@ func (x *DBAllocHostsRequest) String() string {
 func (*DBAllocHostsRequest) ProtoMessage() {}
 
 func (x *DBAllocHostsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_db_host_proto_msgTypes[12]
+	mi := &file_db_host_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -913,7 +1109,7 @@ func (x *DBAllocHostsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DBAllocHostsRequest.ProtoReflect.Descriptor instead.
 func (*DBAllocHostsRequest) Descriptor() ([]byte, []int) {
-	return file_db_host_proto_rawDescGZIP(), []int{12}
+	return file_db_host_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *DBAllocHostsRequest) GetPdCount() int32 {
@@ -949,7 +1145,7 @@ type DBAllocHostResponse struct {
 func (x *DBAllocHostResponse) Reset() {
 	*x = DBAllocHostResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_db_host_proto_msgTypes[13]
+		mi := &file_db_host_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -962,7 +1158,7 @@ func (x *DBAllocHostResponse) String() string {
 func (*DBAllocHostResponse) ProtoMessage() {}
 
 func (x *DBAllocHostResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_db_host_proto_msgTypes[13]
+	mi := &file_db_host_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -975,7 +1171,7 @@ func (x *DBAllocHostResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DBAllocHostResponse.ProtoReflect.Descriptor instead.
 func (*DBAllocHostResponse) Descriptor() ([]byte, []int) {
-	return file_db_host_proto_rawDescGZIP(), []int{13}
+	return file_db_host_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *DBAllocHostResponse) GetRs() *DBHostResponseStatus {
@@ -1045,11 +1241,29 @@ var file_db_host_proto_rawDesc = []byte{
 	0x72, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x44, 0x42, 0x48, 0x6f, 0x73,
 	0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52,
 	0x02, 0x72, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x48, 0x6f, 0x73, 0x74, 0x49, 0x64, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x06, 0x48, 0x6f, 0x73, 0x74, 0x49, 0x64, 0x22, 0x2d, 0x0a, 0x13, 0x44,
+	0x01, 0x28, 0x09, 0x52, 0x06, 0x48, 0x6f, 0x73, 0x74, 0x49, 0x64, 0x22, 0x40, 0x0a, 0x18, 0x44,
+	0x42, 0x41, 0x64, 0x64, 0x48, 0x6f, 0x73, 0x74, 0x73, 0x49, 0x6e, 0x42, 0x61, 0x74, 0x63, 0x68,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x24, 0x0a, 0x05, 0x68, 0x6f, 0x73, 0x74, 0x73,
+	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x44, 0x42, 0x48, 0x6f, 0x73, 0x74, 0x49,
+	0x6e, 0x66, 0x6f, 0x44, 0x54, 0x4f, 0x52, 0x05, 0x68, 0x6f, 0x73, 0x74, 0x73, 0x22, 0x5c, 0x0a,
+	0x19, 0x44, 0x42, 0x41, 0x64, 0x64, 0x48, 0x6f, 0x73, 0x74, 0x73, 0x49, 0x6e, 0x42, 0x61, 0x74,
+	0x63, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x25, 0x0a, 0x02, 0x72, 0x73,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x44, 0x42, 0x48, 0x6f, 0x73, 0x74, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x02, 0x72,
+	0x73, 0x12, 0x18, 0x0a, 0x07, 0x48, 0x6f, 0x73, 0x74, 0x49, 0x64, 0x73, 0x18, 0x02, 0x20, 0x03,
+	0x28, 0x09, 0x52, 0x07, 0x48, 0x6f, 0x73, 0x74, 0x49, 0x64, 0x73, 0x22, 0x2d, 0x0a, 0x13, 0x44,
 	0x42, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x48, 0x6f, 0x73, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x68, 0x6f, 0x73, 0x74, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x06, 0x68, 0x6f, 0x73, 0x74, 0x49, 0x64, 0x22, 0x3d, 0x0a, 0x14, 0x44, 0x42,
 	0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x48, 0x6f, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x25, 0x0a, 0x02, 0x72, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15,
+	0x2e, 0x44, 0x42, 0x48, 0x6f, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53,
+	0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x02, 0x72, 0x73, 0x22, 0x37, 0x0a, 0x1b, 0x44, 0x42, 0x52,
+	0x65, 0x6d, 0x6f, 0x76, 0x65, 0x48, 0x6f, 0x73, 0x74, 0x73, 0x49, 0x6e, 0x42, 0x61, 0x74, 0x63,
+	0x68, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x68, 0x6f, 0x73, 0x74,
+	0x49, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x68, 0x6f, 0x73, 0x74, 0x49,
+	0x64, 0x73, 0x22, 0x45, 0x0a, 0x1c, 0x44, 0x42, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x48, 0x6f,
+	0x73, 0x74, 0x73, 0x49, 0x6e, 0x42, 0x61, 0x74, 0x63, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
 	0x73, 0x65, 0x12, 0x25, 0x0a, 0x02, 0x72, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15,
 	0x2e, 0x44, 0x42, 0x48, 0x6f, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53,
 	0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x02, 0x72, 0x73, 0x22, 0x55, 0x0a, 0x12, 0x44, 0x42, 0x4c,
@@ -1116,24 +1330,28 @@ func file_db_host_proto_rawDescGZIP() []byte {
 }
 
 var file_db_host_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_db_host_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_db_host_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_db_host_proto_goTypes = []interface{}{
-	(DBHostStatus)(0),              // 0: DBHostStatus
-	(DBDiskStatus)(0),              // 1: DBDiskStatus
-	(*DBHostResponseStatus)(nil),   // 2: DBHostResponseStatus
-	(*DBDiskDTO)(nil),              // 3: DBDiskDTO
-	(*DBHostInfoDTO)(nil),          // 4: DBHostInfoDTO
-	(*DBAllocHostDTO)(nil),         // 5: DBAllocHostDTO
-	(*DBAddHostRequest)(nil),       // 6: DBAddHostRequest
-	(*DBAddHostResponse)(nil),      // 7: DBAddHostResponse
-	(*DBRemoveHostRequest)(nil),    // 8: DBRemoveHostRequest
-	(*DBRemoveHostResponse)(nil),   // 9: DBRemoveHostResponse
-	(*DBListHostsRequest)(nil),     // 10: DBListHostsRequest
-	(*DBListHostsResponse)(nil),    // 11: DBListHostsResponse
-	(*DBCheckDetailsRequest)(nil),  // 12: DBCheckDetailsRequest
-	(*DBCheckDetailsResponse)(nil), // 13: DBCheckDetailsResponse
-	(*DBAllocHostsRequest)(nil),    // 14: DBAllocHostsRequest
-	(*DBAllocHostResponse)(nil),    // 15: DBAllocHostResponse
+	(DBHostStatus)(0),                    // 0: DBHostStatus
+	(DBDiskStatus)(0),                    // 1: DBDiskStatus
+	(*DBHostResponseStatus)(nil),         // 2: DBHostResponseStatus
+	(*DBDiskDTO)(nil),                    // 3: DBDiskDTO
+	(*DBHostInfoDTO)(nil),                // 4: DBHostInfoDTO
+	(*DBAllocHostDTO)(nil),               // 5: DBAllocHostDTO
+	(*DBAddHostRequest)(nil),             // 6: DBAddHostRequest
+	(*DBAddHostResponse)(nil),            // 7: DBAddHostResponse
+	(*DBAddHostsInBatchRequest)(nil),     // 8: DBAddHostsInBatchRequest
+	(*DBAddHostsInBatchResponse)(nil),    // 9: DBAddHostsInBatchResponse
+	(*DBRemoveHostRequest)(nil),          // 10: DBRemoveHostRequest
+	(*DBRemoveHostResponse)(nil),         // 11: DBRemoveHostResponse
+	(*DBRemoveHostsInBatchRequest)(nil),  // 12: DBRemoveHostsInBatchRequest
+	(*DBRemoveHostsInBatchResponse)(nil), // 13: DBRemoveHostsInBatchResponse
+	(*DBListHostsRequest)(nil),           // 14: DBListHostsRequest
+	(*DBListHostsResponse)(nil),          // 15: DBListHostsResponse
+	(*DBCheckDetailsRequest)(nil),        // 16: DBCheckDetailsRequest
+	(*DBCheckDetailsResponse)(nil),       // 17: DBCheckDetailsResponse
+	(*DBAllocHostsRequest)(nil),          // 18: DBAllocHostsRequest
+	(*DBAllocHostResponse)(nil),          // 19: DBAllocHostResponse
 }
 var file_db_host_proto_depIdxs = []int32{
 	1,  // 0: DBDiskDTO.status:type_name -> DBDiskStatus
@@ -1142,19 +1360,22 @@ var file_db_host_proto_depIdxs = []int32{
 	3,  // 3: DBAllocHostDTO.disk:type_name -> DBDiskDTO
 	4,  // 4: DBAddHostRequest.host:type_name -> DBHostInfoDTO
 	2,  // 5: DBAddHostResponse.rs:type_name -> DBHostResponseStatus
-	2,  // 6: DBRemoveHostResponse.rs:type_name -> DBHostResponseStatus
-	0,  // 7: DBListHostsRequest.status:type_name -> DBHostStatus
-	2,  // 8: DBListHostsResponse.rs:type_name -> DBHostResponseStatus
-	4,  // 9: DBListHostsResponse.hostList:type_name -> DBHostInfoDTO
-	2,  // 10: DBCheckDetailsResponse.rs:type_name -> DBHostResponseStatus
-	4,  // 11: DBCheckDetailsResponse.details:type_name -> DBHostInfoDTO
-	2,  // 12: DBAllocHostResponse.rs:type_name -> DBHostResponseStatus
-	5,  // 13: DBAllocHostResponse.hosts:type_name -> DBAllocHostDTO
-	14, // [14:14] is the sub-list for method output_type
-	14, // [14:14] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	4,  // 6: DBAddHostsInBatchRequest.hosts:type_name -> DBHostInfoDTO
+	2,  // 7: DBAddHostsInBatchResponse.rs:type_name -> DBHostResponseStatus
+	2,  // 8: DBRemoveHostResponse.rs:type_name -> DBHostResponseStatus
+	2,  // 9: DBRemoveHostsInBatchResponse.rs:type_name -> DBHostResponseStatus
+	0,  // 10: DBListHostsRequest.status:type_name -> DBHostStatus
+	2,  // 11: DBListHostsResponse.rs:type_name -> DBHostResponseStatus
+	4,  // 12: DBListHostsResponse.hostList:type_name -> DBHostInfoDTO
+	2,  // 13: DBCheckDetailsResponse.rs:type_name -> DBHostResponseStatus
+	4,  // 14: DBCheckDetailsResponse.details:type_name -> DBHostInfoDTO
+	2,  // 15: DBAllocHostResponse.rs:type_name -> DBHostResponseStatus
+	5,  // 16: DBAllocHostResponse.hosts:type_name -> DBAllocHostDTO
+	17, // [17:17] is the sub-list for method output_type
+	17, // [17:17] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_db_host_proto_init() }
@@ -1236,7 +1457,7 @@ func file_db_host_proto_init() {
 			}
 		}
 		file_db_host_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DBRemoveHostRequest); i {
+			switch v := v.(*DBAddHostsInBatchRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1248,7 +1469,7 @@ func file_db_host_proto_init() {
 			}
 		}
 		file_db_host_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DBRemoveHostResponse); i {
+			switch v := v.(*DBAddHostsInBatchResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1260,7 +1481,7 @@ func file_db_host_proto_init() {
 			}
 		}
 		file_db_host_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DBListHostsRequest); i {
+			switch v := v.(*DBRemoveHostRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1272,7 +1493,7 @@ func file_db_host_proto_init() {
 			}
 		}
 		file_db_host_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DBListHostsResponse); i {
+			switch v := v.(*DBRemoveHostResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1284,7 +1505,7 @@ func file_db_host_proto_init() {
 			}
 		}
 		file_db_host_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DBCheckDetailsRequest); i {
+			switch v := v.(*DBRemoveHostsInBatchRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1296,7 +1517,7 @@ func file_db_host_proto_init() {
 			}
 		}
 		file_db_host_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DBCheckDetailsResponse); i {
+			switch v := v.(*DBRemoveHostsInBatchResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1308,7 +1529,7 @@ func file_db_host_proto_init() {
 			}
 		}
 		file_db_host_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DBAllocHostsRequest); i {
+			switch v := v.(*DBListHostsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1320,6 +1541,54 @@ func file_db_host_proto_init() {
 			}
 		}
 		file_db_host_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBListHostsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_host_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBCheckDetailsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_host_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBCheckDetailsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_host_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBAllocHostsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_host_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DBAllocHostResponse); i {
 			case 0:
 				return &v.state
@@ -1338,7 +1607,7 @@ func file_db_host_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_db_host_proto_rawDesc,
 			NumEnums:      2,
-			NumMessages:   14,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

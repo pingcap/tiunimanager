@@ -2,11 +2,11 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
-
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
@@ -58,8 +58,7 @@ func (h Host) TableName() string {
 func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 	err = tx.Where("IP = ? and Name = ?", h.IP, h.Name).First(&Host{}).Error
 	if err == nil {
-		errMsg := fmt.Sprintf("Host %s(%s) is Existed", h.Name, h.IP)
-		return errors.New(errMsg)
+		return status.Errorf(codes.AlreadyExists, "Host %s(%s) is Existed", h.Name, h.IP)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		h.ID = uuid.New().String()
@@ -71,6 +70,9 @@ func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 
 func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
 	err = tx.Where("ID = ?", h.ID).First(&Host{}).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return status.Errorf(codes.NotFound, "HostId %s is not found", h.ID)
+	}
 	return err
 }
 
@@ -92,11 +94,42 @@ func CreateHost(host *Host) (id string, err error) {
 	return host.ID, err
 }
 
-// TODO: Check Record before delete
+func CreateHostsInBatch(hosts []*Host) (ids []string, err error) {
+	tx := MetaDB.Begin()
+	for _, host := range hosts {
+		err = tx.Create(host).Error
+		if err != nil {
+			tx.Rollback()
+			return nil, status.Errorf(codes.Canceled, "Create %s(%s) err, %v", host.Name, host.IP, err)
+		}
+		ids = append(ids, host.ID)
+	}
+	err = tx.Commit().Error
+	return
+}
+
 func DeleteHost(hostId string) (err error) {
 	err = MetaDB.Where("ID = ?", hostId).Delete(&Host{
 		ID: hostId,
 	}).Error
+	return
+}
+
+func DeleteHostsInBatch(hostIds []string) (err error) {
+	tx := MetaDB.Begin()
+	for _, hostId := range hostIds {
+		var host Host
+		if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
+			tx.Rollback()
+			return status.Errorf(codes.FailedPrecondition, "Lock Host %s(%s) error, %v", hostId, host.IP, err)
+		}
+		err = tx.Delete(&host).Error
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit().Error
 	return
 }
 

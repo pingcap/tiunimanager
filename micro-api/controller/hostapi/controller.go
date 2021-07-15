@@ -238,19 +238,27 @@ func ImportHosts(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param query body ListHostCondition false "可选的查询主机的条件"
+// @Param purpose query string false "查询特定用途的主机列表"
+// @Param status query string false "查询特定状态的主机列表"
 // @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
 // @Router /hosts [get]
 func ListHost(c *gin.Context) {
-	var cond ListHostCondition
-	if err := c.ShouldBindJSON(&cond); err != nil {
-		_ = c.Error(err)
+	const ALL_STATS = "-1"
+	statusStr := c.Query("status")
+	if statusStr == "" {
+		statusStr = ALL_STATS
+	}
+	queryStatus, err := strconv.Atoi(statusStr)
+	if err != nil {
+		errmsg := fmt.Sprintf("Input Status %s Invalid: %v", c.Query("status"), err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
+	queryPurpose := c.Query("purpose")
 
 	listHostReq := manager.ListHostsRequest{
-		Purpose: cond.Purpose,
-		Status:  manager.HostStatus(cond.Status),
+		Purpose: queryPurpose,
+		Status:  manager.HostStatus(queryStatus),
 	}
 
 	rsp, err := client.ManagerClient.ListHost(c, &listHostReq)
@@ -280,7 +288,7 @@ func ListHost(c *gin.Context) {
 // @Param Token header string true "登录token"
 // @Param hostId path string true "主机ID"
 // @Success 200 {object} controller.CommonResult{data=HostInfo}
-// @Router /host/ [get]
+// @Router /host/{hostId} [get]
 func HostDetails(c *gin.Context) {
 
 	hostId := c.Param("hostId")
@@ -303,16 +311,16 @@ func HostDetails(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(res))
 }
 
-// RemoveHosts 批量删除主机接口
-// @Summary 批量删除指定的主机
-// @Description 批量删除指定的主机
+// RemoveHost 删除主机接口
+// @Summary 删除指定的主机
+// @Description 删除指定的主机
 // @Tags resource
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param hostIds body []string true "待删除的主机ID"
+// @Param hostId path string true "待删除的主机ID"
 // @Success 200 {object} controller.CommonResult{data=string}
-// @Router /host/ [delete]
+// @Router /host/{hostId} [delete]
 func RemoveHost(c *gin.Context) {
 
 	hostId := c.Param("hostId")
@@ -349,9 +357,9 @@ func detectDuplicateElement(hostIds []string) (string, bool) {
 	return duplicateStr, hasDuplicate
 }
 
-// RemoveHost 删除主机接口
-// @Summary 删除指定的主机
-// @Description 删除指定的主机
+// RemoveHosts 批量删除主机接口
+// @Summary 批量删除指定的主机
+// @Description 批量删除指定的主机
 // @Tags resource
 // @Accept json
 // @Produce json
@@ -393,9 +401,9 @@ func RemoveHosts(c *gin.Context) {
 // @Description 将主机信息文件导出到本地
 // @Tags resource
 // @Accept json
-// @Produce json
+// @Produce octet-stream
 // @Param Token header string true "登录token"
-// @Success 200 {object} controller.CommonResult{data=HostInfo}
+// @Success 200 {file} file
 // @Router /download_template/ [get]
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
@@ -404,7 +412,7 @@ func DownloadHostTemplateFile(c *gin.Context) {
 
 	fileTmp, err := os.Open(filePath)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.NotFound), err.Error()))
 		return
 	}
 	defer fileTmp.Close()

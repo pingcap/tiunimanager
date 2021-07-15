@@ -48,8 +48,3 @@ const (
 	PURPOSE_FIELD
 	DISKS_FIELD
 )
-
-type ListHostCondition struct {
-	Status  int32  `json:"status"`  // Host Status, 0 for Online, 1 for offline
-	Purpose string `json:"purpose"` // What Purpose is the host used for? [compute/storage or both]
-}

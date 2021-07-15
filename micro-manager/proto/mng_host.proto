@@ -7,24 +7,12 @@ message ResponseStatus {
     string message = 2;
 }
 
-enum HostStatus {
-    HOST_ONLINE = 0;
-    HOST_OFFLINE = 1;
-    HOST_INUSED = 2;
-    HOST_DELETED = 3;
-}
-
-enum DiskStatus {
-    AVAILABLE = 0;              // This Disk can be alloced.
-    INUSED = 1;
-}
-
 message Disk {
     string diskId = 1;
     string name = 2;            // [sda/sdb/nvmep0...]
     int32 capacity = 3;         // Disk size, Unit: GB
     string path = 4;            // Disk mount path: [/data1]
-    DiskStatus status = 5;
+    int32 status = 5;
 }
 
 message HostInfo {
@@ -34,7 +22,7 @@ message HostInfo {
     string az = 4;
     string rack = 5;
     string ip = 6;
-    HostStatus status = 7;
+    int32 status = 7;
     string os = 8;              // Host os
     string kernel = 9;
     int32 cpuCores = 10;
@@ -84,7 +72,7 @@ message RemoveHostsInBatchResponse {
 }
 
 message ListHostsRequest {
-    HostStatus status = 1;
+    int32 status = 1;
     string purpose = 2;
 }
 

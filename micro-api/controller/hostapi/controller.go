@@ -38,7 +38,7 @@ func Query(c *gin.Context) {
 
 	listHostReq := manager.ListHostsRequest{
 		Purpose: "storage",
-		Status:  manager.HostStatus(0),
+		Status:  0,
 	}
 
 	rsp, err := client.ManagerClient.ListHost(c, &listHostReq)
@@ -93,14 +93,14 @@ func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
 	dst.Dc = src.Dc
 	dst.Az = src.Az
 	dst.Rack = src.Rack
-	dst.Status = manager.HostStatus(src.Status)
+	dst.Status = src.Status
 	dst.Purpose = src.Purpose
 
 	for _, v := range src.Disks {
 		dst.Disks = append(dst.Disks, &manager.Disk{
 			Name:     v.Name,
 			Capacity: v.Capacity,
-			Status:   manager.DiskStatus(v.Status),
+			Status:   v.Status,
 			Path:     v.Path,
 		})
 	}
@@ -258,7 +258,7 @@ func ListHost(c *gin.Context) {
 
 	listHostReq := manager.ListHostsRequest{
 		Purpose: queryPurpose,
-		Status:  manager.HostStatus(queryStatus),
+		Status:  int32(queryStatus),
 	}
 
 	rsp, err := client.ManagerClient.ListHost(c, &listHostReq)

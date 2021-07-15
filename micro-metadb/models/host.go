@@ -10,6 +10,26 @@ import (
 	"gorm.io/gorm"
 )
 
+type HostStatus int32
+
+const (
+	HOST_ONLINE HostStatus = iota
+	HOST_OFFLINE
+	HOST_INUSED
+	HOST_DELETED
+)
+
+func (s HostStatus) IsInused() bool {
+	return s == HOST_INUSED
+}
+
+type DiskStatus int32
+
+const (
+	DISK_AVAILABLE DiskStatus = iota
+	DISK_INUSED
+)
+
 type Disk struct {
 	ID        string `gorm:"PrimaryKey"`
 	HostId    string
@@ -69,10 +89,17 @@ func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
-	err = tx.Where("ID = ?", h.ID).First(&Host{}).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return status.Errorf(codes.NotFound, "HostId %s is not found", h.ID)
+	err = tx.Where("ID = ?", h.ID).First(h).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return status.Errorf(codes.NotFound, "HostId %s is not found", h.ID)
+		}
+	} else {
+		if HostStatus(h.Status).IsInused() {
+			return status.Errorf(codes.PermissionDenied, "HostId %s is still in used", h.ID)
+		}
 	}
+
 	return err
 }
 

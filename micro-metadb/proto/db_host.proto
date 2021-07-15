@@ -7,24 +7,12 @@ message DBHostResponseStatus {
     string message = 2;
 }
 
-enum DBHostStatus {
-    DBHostStatus_ONLINE = 0;
-    DBHostStatus_OFFLINE = 1;
-    DBHostStatus_INUSED = 2;
-    DBHostStatus_DELETED = 3;
-}
-
-enum DBDiskStatus {
-    DBDiskStatus_AVAILABLE = 0;              // This Disk can be alloced.
-    DBDiskStatus_INUSED = 1;
-}
-
 message DBDiskDTO {
     string diskId = 1;
     string name = 2;            // [sda/sdb/nvmep0...]
     int32 capacity = 3;         // Disk size, Unit: GB
     string path = 4;            // Disk mount path: [/data1]
-    DBDiskStatus status = 5;
+    int32 status = 5;
 }
 
 message DBHostInfoDTO {
@@ -34,7 +22,7 @@ message DBHostInfoDTO {
     string az = 4;
     string rack = 5;
     string ip = 6;
-    DBHostStatus status = 7;
+    int32 status = 7;
     string os = 8;                  // Host os
     string kernel = 9;
     int32 cpuCores = 10;
@@ -85,7 +73,7 @@ message DBRemoveHostsInBatchResponse {
 }
 
 message DBListHostsRequest {
-    DBHostStatus status = 1;
+    int32 status = 1;
     string purpose = 2;
 }
 

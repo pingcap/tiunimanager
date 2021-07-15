@@ -152,7 +152,7 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.Dc = src.DC
 	dst.Az = src.AZ
 	dst.Rack = src.Rack
-	dst.Status = dbPb.DBHostStatus(src.Status)
+	dst.Status = src.Status
 	dst.Purpose = src.Purpose
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
@@ -160,7 +160,7 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
-			Status:   dbPb.DBDiskStatus(disk.Status),
+			Status:   disk.Status,
 		})
 	}
 }
@@ -232,7 +232,7 @@ func (*DBServiceHandler) AllocHosts(ctx context.Context, req *dbPb.DBAllocHostsR
 		host.Disk.Name = v.Disks[0].Name
 		host.Disk.Capacity = v.Disks[0].Capacity
 		host.Disk.Path = v.Disks[0].Path
-		host.Disk.Status = dbPb.DBDiskStatus(v.Disks[0].Status)
+		host.Disk.Status = v.Disks[0].Status
 		rsp.Hosts = append(rsp.Hosts, &host)
 	}
 	return nil

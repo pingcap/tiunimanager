@@ -22,14 +22,14 @@ func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.Dc = src.Dc
 	dst.Az = src.Az
 	dst.Rack = src.Rack
-	dst.Status = dbPb.DBHostStatus(src.Status)
+	dst.Status = src.Status
 	dst.Purpose = src.Purpose
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
-			Status:   dbPb.DBDiskStatus(disk.Status),
+			Status:   disk.Status,
 		})
 	}
 }
@@ -46,7 +46,7 @@ func CopyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.Dc = src.Dc
 	dst.Az = src.Az
 	dst.Rack = src.Rack
-	dst.Status = hostPb.HostStatus(src.Status)
+	dst.Status = src.Status
 	dst.Purpose = src.Purpose
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &hostPb.Disk{
@@ -54,7 +54,7 @@ func CopyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
-			Status:   hostPb.DiskStatus(disk.Status),
+			Status:   disk.Status,
 		})
 	}
 }
@@ -161,7 +161,7 @@ func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.List
 	log := logger.WithContext(ctx)
 	var req dbPb.DBListHostsRequest
 	req.Purpose = in.Purpose
-	req.Status = dbPb.DBHostStatus(in.Status)
+	req.Status = in.Status
 	rsp, err := dbClient.DBClient.ListHost(ctx, &req)
 	if err != nil {
 		log.Errorf("List Host error, %v", err)
@@ -232,7 +232,7 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 		host.Disk.Name = v.Disk.Name
 		host.Disk.Capacity = v.Disk.Capacity
 		host.Disk.Path = v.Disk.Path
-		host.Disk.Status = hostPb.DiskStatus(v.Disk.Status)
+		host.Disk.Status = v.Disk.Status
 		out.Hosts = append(out.Hosts, &host)
 	}
 	return err

@@ -19,7 +19,7 @@ type ConstraintType string
 
 const (
 	ConstraintTypeLT = "lt"
-	ConstraintTypeLTE = "gte"
+	ConstraintTypeLTE = "lte"
 
 	ConstraintTypeGT = "gt"
 	ConstraintTypeGTE = "gte"

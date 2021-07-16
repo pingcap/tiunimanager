@@ -16,5 +16,5 @@ type DeleteClusterRsp struct {
 type DetailClusterRsp struct {
 	ClusterDisplayInfo
 	ClusterMaintenanceInfo
-	components []ComponentInstance
+	Components []ComponentInstance
 }

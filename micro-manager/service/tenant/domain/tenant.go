@@ -7,7 +7,7 @@ import (
 // Tenant 租户
 type Tenant struct {
 	Name   string
-	Id     uint
+	Id     string
 	Type   TenantType
 	Status CommonStatus
 }
@@ -38,7 +38,7 @@ func FindTenant(name string) (*Tenant, error) {
 	return &tenant, err
 }
 
-func FindTenantById(id uint) (*Tenant, error) {
+func FindTenantById(id string) (*Tenant, error) {
 	tenant,err := TenantRepo.LoadTenantById(id)
 	return &tenant, err
 }

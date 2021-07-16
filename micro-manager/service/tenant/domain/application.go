@@ -62,7 +62,7 @@ func Logout(tokenString string) (string, error) {
 }
 
 // Accessible 路径鉴权
-func Accessible(pathType string, path string, tokenString string) (tenantId uint, accountName string, err error) {
+func Accessible(pathType string, path string, tokenString string) (tenantId string, accountId, accountName string, err error) {
 	if path == "" {
 		err = errors.New("path cannot be blank")
 		return
@@ -74,6 +74,7 @@ func Accessible(pathType string, path string, tokenString string) (tenantId uint
 		return
 	}
 
+	accountId = token.AccountId
 	accountName = token.AccountName
 	tenantId = token.TenantId
 
@@ -118,7 +119,7 @@ func findAccountAggregation(name string) (*AccountAggregation, error) {
 	return &a, err
 }
 
-func findPermissionAggregationByCode(tenantId uint, code string) (*PermissionAggregation, error) {
+func findPermissionAggregationByCode(tenantId string, code string) (*PermissionAggregation, error) {
 	a,e := RbacRepo.LoadPermissionAggregation(tenantId, code)
 	return &a, e
 }
@@ -131,7 +132,7 @@ func checkAuth(account *AccountAggregation, permission *PermissionAggregation) (
 		return false, nil
 	}
 
-	accountRoleMap := make(map[int]bool)
+	accountRoleMap := make(map[string]bool)
 
 	for _,r := range accountRoles {
 		accountRoleMap[r.Id] = true

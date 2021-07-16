@@ -11,7 +11,7 @@ type TenantRepository interface {
 
 	LoadTenantByName(name string)  (Tenant, error)
 
-	LoadTenantById(id uint)  (Tenant, error)
+	LoadTenantById(id string)  (Tenant, error)
 }
 
 type RbacRepository interface {
@@ -22,17 +22,17 @@ type RbacRepository interface {
 
 	LoadAccountAggregation(name string) (AccountAggregation, error)
 
-	LoadAccountById(id uint) (Account, error)
+	LoadAccountById(id string) (Account, error)
 
 	AddRole(r *Role) error
 
-	LoadRole(tenantId uint, name string) (Role, error)
+	LoadRole(tenantId string, name string) (Role, error)
 
 	AddPermission(r *Permission) error
 
-	LoadPermissionAggregation(tenantId uint, code string) (PermissionAggregation, error)
+	LoadPermissionAggregation(tenantId string, code string) (PermissionAggregation, error)
 
-	LoadPermission(tenantId uint, code string) (Permission, error)
+	LoadPermission(tenantId string, code string) (Permission, error)
 
 	LoadAllRolesByAccount(account *Account) ([]Role, error)
 

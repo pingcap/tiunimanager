@@ -14,11 +14,12 @@ type Cluster struct {
 	DbPassword 			string
 	ClusterType 		knowledge.ClusterType
 	ClusterVersion 		knowledge.ClusterVersion
+	Tags 				[]string
 	Tls 				bool
 
-	Status ClusterStatus
+	Status 				ClusterStatus
 
-	Demand 				[]ClusterComponentDemand
+	Demand 				[]*ClusterComponentDemand
 
 	WorkFlowId 			uint
 
@@ -30,14 +31,14 @@ type Cluster struct {
 type ClusterComponentDemand struct {
 	ComponentType 			string
 	TotalNodeCount  		int
-	DistributionItems  		[]ClusterNodeDistributionItem
+	DistributionItems  		[]*ClusterNodeDistributionItem
 }
 
 type ClusterDemandRecord struct {
 	Id 					uint
 	TenantId 			string
 	ClusterId 			string
-	Content 			[]ClusterComponentDemand
+	Content 			[]*ClusterComponentDemand
 	CreateTime  		time.Time
 }
 

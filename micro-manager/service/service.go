@@ -52,7 +52,7 @@ func (*ManagerServiceHandler) Logout(ctx context.Context, req *manager.LogoutReq
 }
 
 func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.VerifyIdentityRequest, resp *manager.VerifyIdentityResponse) error {
-	tenantId, accountName, err := domain.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
+	tenantId, accountId, accountName, err := domain.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
 
 	if err != nil {
 		if _, ok := err.(*domain.UnauthorizedError); ok {
@@ -73,7 +73,8 @@ func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.V
 		}
 	} else {
 		resp.Status = SuccessResponseStatus
-		resp.TenantId = int32(tenantId)
+		resp.TenantId = tenantId
+		resp.AccountId = accountId
 		resp.AccountName = accountName
 	}
 

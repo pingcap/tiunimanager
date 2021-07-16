@@ -47,7 +47,7 @@ func Route(g *gin.Engine) {
 
 		cluster := apiV1.Group("/cluster")
 		{
-			//cluster.Use(security.VerifyIdentity)
+			cluster.Use(security.VerifyIdentity)
 			cluster.GET("/:clusterId", clusterapi.Detail)
 			cluster.POST("", clusterapi.Create)
 			cluster.POST("/query", clusterapi.Query)
@@ -58,14 +58,14 @@ func Route(g *gin.Engine) {
 
 		param := apiV1.Group("/params")
 		{
-			//param.Use(security.VerifyIdentity)
+			param.Use(security.VerifyIdentity)
 			param.POST("/:clusterId", instanceapi.QueryParams)
 			param.POST("/submit", instanceapi.SubmitParams)
 		}
 
 		backup := apiV1.Group("/backup")
 		{
-			//cluster.Use(security.VerifyIdentity)
+			cluster.Use(security.VerifyIdentity)
 			backup.POST("/:clusterId", instanceapi.Backup)
 			backup.GET("/strategy/:clusterId", instanceapi.QueryBackupStrategy)
 			backup.POST("/strategy", instanceapi.SaveBackupStrategy)

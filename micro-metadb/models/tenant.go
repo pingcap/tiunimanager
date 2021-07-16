@@ -1,11 +1,7 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
-
 type Tenant struct {
-	gorm.Model
+	EntityBase
 
 	Name   string		`gorm:"size:255"`
 	Type   int8			`gorm:"size:255"`
@@ -22,7 +18,7 @@ func AddTenant(name string, tenantType, status int8) (tenant Tenant, err error) 
 	return
 }
 
-func FindTenantById(tenantId int) (tenant Tenant, err error){
+func FindTenantById(tenantId string) (tenant Tenant, err error){
 	MetaDB.First(&tenant, tenantId)
 	return
 }

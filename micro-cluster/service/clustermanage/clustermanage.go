@@ -3,7 +3,6 @@ package clustermanage
 import (
 	"context"
 	"encoding/json"
-	"path/filepath"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -14,7 +13,6 @@ import (
 	mngPb "github.com/pingcap/ticp/micro-manager/proto"
 	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
 
-	spec "github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
 // Cluster 集群
@@ -28,7 +26,8 @@ type Cluster struct {
 
 	Demand          ClusterDemand
 	CurrentConfigId uint
-	TiUPConfig      spec.Specification
+	ConfigContent 	string
+
 }
 
 // ClusterDemand 集群配置要求
@@ -100,39 +99,6 @@ func (cluster *Cluster) PrepareResource(f *FlowWorkEntity) {
 
 // BuildConfig 根据要求和申请到的主机，生成一份TiUP的配置
 func (cluster *Cluster) BuildConfig(f *FlowWorkEntity) {
-
-	hosts := f.context.Value("hosts").([]*mngPb.AllocHost)
-	dataDir := filepath.Join(hosts[0].Disk.Path, "data")
-	deployDir := filepath.Join(hosts[0].Disk.Path, "deploy")
-	// Deal with Global Settings
-	cluster.TiUPConfig.GlobalOptions.DataDir = dataDir
-	cluster.TiUPConfig.GlobalOptions.DeployDir = deployDir
-	cluster.TiUPConfig.GlobalOptions.User = "tidb"
-	cluster.TiUPConfig.GlobalOptions.SSHPort = 22
-	cluster.TiUPConfig.GlobalOptions.Arch = "amd64"
-	cluster.TiUPConfig.GlobalOptions.LogDir = "/tidb-log"
-	// Deal with Promethus, AlertManger, Grafana
-	cluster.TiUPConfig.Monitors = append(cluster.TiUPConfig.Monitors, &spec.PrometheusSpec{
-		Host: hosts[0].Ip,
-	})
-	cluster.TiUPConfig.Alertmanagers = append(cluster.TiUPConfig.Alertmanagers, &spec.AlertmanagerSpec{
-		Host: hosts[0].Ip,
-	})
-	cluster.TiUPConfig.Grafanas = append(cluster.TiUPConfig.Grafanas, &spec.GrafanaSpec{
-		Host: hosts[0].Ip,
-	})
-	// Deal with PDServers, TiDBServers, TiKVServers
-	for _, v := range hosts {
-		cluster.TiUPConfig.PDServers = append(cluster.TiUPConfig.PDServers, &spec.PDSpec{
-			Host: v.Ip,
-		})
-		cluster.TiUPConfig.TiDBServers = append(cluster.TiUPConfig.TiDBServers, &spec.TiDBSpec{
-			Host: v.Ip,
-		})
-		cluster.TiUPConfig.TiKVServers = append(cluster.TiUPConfig.TiKVServers, &spec.TiKVSpec{
-			Host: v.Ip,
-		})
-	}
 
 	cluster.persistCurrentConfig()
 	f.moveOn("configDone")
@@ -213,6 +179,8 @@ var Monitor ClusterMonitor
 type ClusterOperator interface {
 	// DeployCluster 部署一个集群
 	DeployCluster(cluster *Cluster, bizId uint64) error
+
+	BuildConfig(cluster *Cluster, bizId uint64) error
 	// CheckProgress 查看处理过程
 	CheckProgress(bizId uint64) (dbPb.TiupTaskStatus, string, error)
 }

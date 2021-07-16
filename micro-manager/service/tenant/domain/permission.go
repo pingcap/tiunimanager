@@ -5,7 +5,7 @@ import (
 )
 
 type Permission struct {
-	TenantId uint
+	TenantId string
 	Code   string
 	Name   string
 	Type   PermissionType
@@ -63,7 +63,7 @@ func createPermission(tenant *Tenant, code, name ,desc string, permissionType Pe
 	return &permission, nil
 }
 
-func findPermissionByCode(tenantId uint, code string) (*Permission, error) {
+func findPermissionByCode(tenantId string, code string) (*Permission, error) {
 	a,e := RbacRepo.LoadPermission(tenantId, code)
 	return &a, e
 }

@@ -1,10 +1,13 @@
 package clusterapi
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pingcap/ticp/knowledge/models"
 	"github.com/pingcap/ticp/micro-api/controller"
+	"github.com/pingcap/ticp/micro-cluster/client"
+	cluster "github.com/pingcap/ticp/micro-cluster/proto"
 	"net/http"
 )
 
@@ -29,10 +32,31 @@ func Create(c *gin.Context) {
 		return
 	}
 
-	rsp := CreateClusterRsp{ClusterId: "aaa"}
-	rsp.DbPassword = req.DbPassword
+	operator := controller.GetOperator(c)
 
-	c.JSON(http.StatusOK, controller.Success(rsp))
+	baseInfo, demand := req.ConvertToDTO()
+
+	reqDTO := &cluster.ClusterCreateReqDTO{
+		Operator: operator.ConvertToDTO(),
+		Cluster: baseInfo,
+		Demands: demand,
+	}
+
+	respDTO, err := client.ClusterClient.CreateCluster(context.TODO(), reqDTO)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetRespStatus()
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, CreateClusterRsp{
+			ClusterId: respDTO.GetClusterId(),
+			ClusterBaseInfo: *ParseClusterBaseInfoFromDTO(respDTO.GetBaseInfo()),
+			StatusInfo: *ParseStatusFromDTO(respDTO.GetClusterStatus()),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
 }
 
 // Query 查询集群列表
@@ -55,12 +79,37 @@ func Query(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	clusters := []ClusterDisplayInfo{
-		ClusterDisplayInfo{ClusterId: "cluster1"},
-		ClusterDisplayInfo{ClusterId: "cluster2"},
+
+	operator := controller.GetOperator(c)
+
+	reqDTO := &cluster.ClusterQueryReqDTO{
+		Operator: operator.ConvertToDTO(),
+		PageReq: queryReq.PageRequest.ConvertToDTO(),
+		ClusterId: queryReq.ClusterId,
+		ClusterType: queryReq.ClusterType,
+		ClusterName: queryReq.ClusterName,
+		ClusterTag: queryReq.ClusterTag,
+		ClusterStatus: queryReq.ClusterStatus,
 	}
 
-	c.JSON(http.StatusOK, controller.SuccessWithPage(clusters, controller.Page{Page: queryReq.Page, PageSize: queryReq.PageSize}))
+	respDTO, err := client.ClusterClient.QueryCluster(context.TODO(), reqDTO)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetRespStatus()
+
+		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters), len(respDTO.Clusters))
+
+		for i,v := range respDTO.Clusters {
+			clusters[i] = *ParseDisplayInfoFromDTO(v)
+		}
+
+		result := controller.BuildResultWithPage(int(status.Code), status.Message, controller.ParsePageFromDTO(respDTO.Page), clusters)
+
+		c.JSON(http.StatusOK, result)
+	}
+
 }
 
 // Delete 删除集群
@@ -77,10 +126,27 @@ func Query(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /cluster/{clusterId} [delete]
 func Delete(c * gin.Context) {
-	rsp := DeleteClusterRsp{}
-	rsp.ClusterId = c.Param("clusterId")
+	operator := controller.GetOperator(c)
 
-	c.JSON(http.StatusOK, controller.Success(rsp))
+	reqDTO := &cluster.ClusterDeleteReqDTO{
+		Operator: operator.ConvertToDTO(),
+		ClusterId: c.Param("clusterId"),
+	}
+
+	respDTO, err := client.ClusterClient.DeleteCluster(context.TODO(), reqDTO)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetRespStatus()
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, DeleteClusterRsp{
+			ClusterId: respDTO.GetClusterId(),
+			StatusInfo: *ParseStatusFromDTO(respDTO.GetClusterStatus()),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
 }
 
 // Detail 查看集群详情
@@ -97,12 +163,37 @@ func Delete(c * gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /cluster/{clusterId} [get]
 func Detail(c *gin.Context) {
-	rsp := DetailClusterRsp{}
+	operator := controller.GetOperator(c)
 
-	rsp.ClusterId = c.Param("clusterId")
-	rsp.DbPassword = "pass"
-	c.JSON(http.StatusOK, controller.Success(rsp))
-}
+	reqDTO := &cluster.ClusterDetailReqDTO{
+		Operator: operator.ConvertToDTO(),
+		ClusterId: c.Param("clusterId"),
+	}
+
+	respDTO, err := client.ClusterClient.DetailCluster(context.TODO(), reqDTO)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetRespStatus()
+
+		display := respDTO.GetDisplayInfo()
+		maintenance := respDTO.GetMaintenanceInfo()
+		components := respDTO.GetComponents()
+
+		componentInstances := make([]ComponentInstance, len(components), len(components))
+		for i,v := range components {
+			componentInstances[i] = *ParseComponentInfoFromDTO(v)
+		}
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, DetailClusterRsp{
+			ClusterDisplayInfo: *ParseDisplayInfoFromDTO(display),
+			ClusterMaintenanceInfo: *ParseMaintenanceInfoFromDTO(maintenance),
+			Components: componentInstances,
+		})
+
+		c.JSON(http.StatusOK, result)
+	}}
 
 // ClusterKnowledge 查看集群基本知识
 // @Summary 查看集群基本知识

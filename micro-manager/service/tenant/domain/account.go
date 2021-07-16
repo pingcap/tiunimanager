@@ -9,8 +9,8 @@ import (
 )
 
 type Account struct {
-	Id        uint
-	TenantId  uint
+	Id        string
+	TenantId  string
 	Name      string
 	Salt      string
 	FinalHash string

@@ -7,8 +7,13 @@ import (
 	"net/http"
 )
 
-const AccountNameFromToken = "AccountNameFromToken"
-const TenantIdFromToken = "TenantIdFromToken"
+const VisitorIdentityKey = "VisitorIdentity"
+
+type VisitorIdentity struct {
+	AccountId string
+	AccountName string
+	TenantId string
+}
 
 func VerifyIdentity(c *gin.Context) {
 
@@ -30,8 +35,11 @@ func VerifyIdentity(c *gin.Context) {
 		c.Status(int(result.Status.Code))
 		c.Abort()
 	} else {
-		c.Set(AccountNameFromToken, result.AccountName)
-		c.Set(TenantIdFromToken, int(result.TenantId))
+		c.Set(VisitorIdentityKey, &VisitorIdentity{
+			AccountId: result.AccountId,
+			AccountName: result.AccountName,
+			TenantId: result.TenantId,
+		})
 		c.Next()
 	}
 }

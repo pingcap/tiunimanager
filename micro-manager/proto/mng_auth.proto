@@ -35,6 +35,7 @@ message VerifyIdentityRequest {
 message VerifyIdentityResponse {
     ManagerResponseStatus status = 1;
     string msg = 2;
-    string accountName = 3;
-    int32 tenantId = 4;
+    string accountId = 3;
+    string accountName = 4;
+    string tenantId = 5;
 }

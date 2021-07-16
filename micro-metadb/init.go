@@ -89,10 +89,6 @@ func initSqliteDB() {
 
 	initDataForDemo()
 
-	tenant, err := models.FindTenantById(1)
-
-	fmt.Println(tenant.Name)
-
 }
 
 func initTables() error {
@@ -133,8 +129,8 @@ func initDataForDemo() {
 	fmt.Println("user3.Id = ", userId3)
 
 	models.AddRoleBindings([]models.RoleBinding{
-		{TenantId: tenant.ID, RoleId: role1.ID, AccountId: userId1, Status: 0},
-		{TenantId: tenant.ID, RoleId: role2.ID, AccountId: userId2, Status: 0},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, AccountId: userId1},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role2.ID, AccountId: userId2, },
 	})
 
 	permission1, _ := models.AddPermission(tenant.ID, "/api/v1/host/query", "查询主机", "查询主机", 2, 0)
@@ -143,11 +139,11 @@ func initDataForDemo() {
 
 	models.AddPermissionBindings([]models.PermissionBinding{
 		// 管理员可做所有事
-		{TenantId: tenant.ID, RoleId: role1.ID, PermissionId: permission1.ID, Status: 0},
-		{TenantId: tenant.ID, RoleId: role1.ID, PermissionId: permission2.ID, Status: 0},
-		{TenantId: tenant.ID, RoleId: role1.ID, PermissionId: permission3.ID, Status: 0},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission1.ID},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission2.ID},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission3.ID},
 		// 用户可做查询主机
-		{TenantId: tenant.ID, RoleId: role2.ID, PermissionId: permission1.ID, Status: 0},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role2.ID, PermissionId: permission1.ID},
 	})
 
 	// 添加一些demo使用的host和disk数据
@@ -171,7 +167,7 @@ func initDataForDemo() {
 	return
 }
 
-func initUser(tenantId uint, name string) uint {
+func initUser(tenantId string, name string) string {
 
 	b := make([]byte, 16)
 	_, _ = cryrand.Read(b)

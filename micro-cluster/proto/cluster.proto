@@ -1,59 +1,174 @@
 syntax = "proto3";
 
+import "common.proto";
+import "softwarespec.proto";
+
 option go_package = "./;cluster";
 
-message ClusterInfoDTO {
-    int32 id = 1;
-    string name = 2;
-    string version = 3;
-    string dbPassword = 4;
-    int32 status = 5;
-    string config = 6;
-}
-
-message ClusterPage {
-    int32 page = 1;
-    int32 pageSize = 2;
-    int32 total = 3;
-}
-
-message ClusterResponseStatus {
-    int32 code = 1;
-    string message = 2;
-}
-
 service ClusterService {
-    rpc CreateCluster(CreateClusterRequest) returns (CreateClusterResponse);
-    rpc QueryCluster(QueryClusterRequest) returns (QueryClusterResponse);
+    rpc CreateCluster(ClusterCreateReqDTO) returns (ClusterCreateRespDTO);
+    rpc QueryCluster(ClusterQueryReqDTO) returns (ClusterQueryRespDTO);
+    rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
+    rpc DetailCluster(ClusterDetailReqDTO) returns (ClusterDetailRespDTO);
 }
 
-message ClusterOperatorDTO {
-    string accountName = 1;
-    int32 tenantId = 2;
+message ClusterCreateReqDTO {
+    OperatorDTO operator = 1;
+    ClusterBaseInfoDTO cluster = 2;
+    repeated ClusterNodeDemandDTO demands = 3;
 }
 
-message CreateClusterRequest {
-    string name = 1;
+message ClusterCreateRespDTO {
+    ResponseStatusDTO respStatus = 1;
+    string clusterId = 2;
+    ClusterBaseInfoDTO baseInfo = 3;
+    DisplayStatusDTO clusterStatus = 4;
+}
+
+message ClusterQueryReqDTO {
+    OperatorDTO operator = 1;
+    PageDTO pageReq = 2;
+    string clusterId = 3;
+    string clusterName = 4;
+    string clusterType = 5;
+    string clusterStatus = 6;
+    string clusterTag = 7;
+}
+
+message ClusterQueryRespDTO {
+    ResponseStatusDTO respStatus = 1;
+    PageDTO page = 2;
+    repeated ClusterDisplayDTO clusters = 3;
+}
+
+message ClusterDeleteReqDTO {
+    OperatorDTO operator = 1;
+    string clusterId = 2;
+}
+
+message ClusterDeleteRespDTO {
+    ResponseStatusDTO respStatus = 1;
+    string clusterId = 2;
+    DisplayStatusDTO clusterStatus = 3;
+}
+
+message ClusterDetailReqDTO {
+    OperatorDTO operator = 1;
+    string clusterId = 2;
+}
+
+message ClusterDetailRespDTO {
+    ResponseStatusDTO respStatus = 1;
+    ClusterDisplayDTO displayInfo = 2;
+    ClusterMaintenanceDTO maintenanceInfo = 3;
+    repeated ComponentInstanceDTO components = 4;
+}
+
+message ClusterMaintenanceDTO {
+    string maintainTaskCron = 1;
+}
+
+message ComponentInstanceDTO {
+    ComponentBaseInfoDTO baseInfo = 1;
+    repeated ComponentNodeDisplayInfoDTO nodes = 2;
+}
+
+message ComponentNodeDisplayInfoDTO {
+    string nodeId = 1;
     string version = 2;
-    string dbPassword = 3;
-    int32 pdCount = 4;
-    int32 tidbCount = 5;
-    int32 tikvCount = 6;
-
-    ClusterOperatorDTO operator = 7;
+    string status = 3;
+    ComponentNodeInstanceDTO instance = 4;
+    ComponentNodeUsageDTO usages = 5;
 }
 
-message CreateClusterResponse {
-    ClusterResponseStatus status = 1;
-    ClusterInfoDTO cluster = 2;
+message ComponentNodeUsageDTO {
+    float ioUtil = 1;
+    repeated float iops = 2;
+    UsageDTO cpuUsage = 3;
+    UsageDTO memoryUsage = 4;
+    UsageDTO storegeUsage = 5;
 }
 
-message QueryClusterRequest {
-    ClusterPage page = 1;
+message ComponentNodeInstanceDTO {
+    string hostId = 1;
+    int32 port = 2;
+    ComponentNodeRoleDTO role = 3;
+
+    SpecBaseInfoDTO spec = 4;
+    ZoneBaseInfoDTO zone = 5;
 }
 
-message QueryClusterResponse {
-    ClusterResponseStatus status = 1;
-    ClusterPage page = 2;
-    repeated ClusterInfoDTO clusters = 3;
+message ZoneBaseInfoDTO {
+    string zoneCode = 1;
+    string zoneName = 2;
+}
+
+message SpecBaseInfoDTO {
+    string specCode = 1;
+    string specName = 2;
+}
+
+message ComponentNodeRoleDTO {
+    string roleCode = 1;
+    string roleName = 2;
+}
+
+message ComponentBaseInfoDTO {
+    string componentType = 1;
+    string componentName = 2;
+}
+
+message DisplayStatusDTO {
+    string statusCode = 1;
+    string statusName = 2;
+    int32 inProcessFlowId = 3;
+    int64 createTime = 4;
+    int64 updateTime = 5;
+    int64 deleteTime = 6;
+}
+
+message ClusterBaseInfoDTO {
+    string clusterName = 1;
+    string dbPasswordName = 2;
+    ClusterTypeDTO clusterType = 3;
+    ClusterVersionDTO clusterVersion = 4;
+    string tags = 5;
+    bool tls = 6;
+}
+
+message OperatorDTO {
+    string id = 1;
+    string name = 2;
+    string tenantId = 3;
+}
+
+message ClusterNodeDemandDTO {
+    string componentType = 1;
+    int32 totalNodeCount = 2;
+    repeated DistributionItemDTO items = 3;
+}
+
+message DistributionItemDTO {
+    string zoneCode = 1;
+    string specCode = 2;
+    int32  count = 3;
+}
+
+message ClusterDisplayDTO {
+    string clusterId = 1;
+    ClusterBaseInfoDTO baseInfo = 2;
+    DisplayStatusDTO status = 3;
+    ClusterInstanceDTO instances = 4;
+}
+
+message ClusterInstanceDTO {
+    repeated string intranetConnectAddresses = 1;
+    repeated string extranetConnectAddresses = 2;
+    repeated string whitelist = 3;
+    int32 port = 4;
+    UsageDTO diskUsage = 5;
+    UsageDTO cpuUsage = 6;
+    UsageDTO memoryUsage = 7;
+    UsageDTO storageUsage = 8;
+    UsageDTO backupFileUsage = 9;
 }

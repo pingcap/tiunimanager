@@ -8,8 +8,8 @@ import (
 type TiCPToken struct {
 	TokenString 	string
 	AccountName		string
-	AccountId		uint
-	TenantId		uint
+	AccountId		string
+	TenantId		string
 	TenantName		string
 	ExpirationTime  time.Time
 }
@@ -30,7 +30,7 @@ func (token *TiCPToken) isValid() bool {
 	return now.Before(token.ExpirationTime)
 }
 
-func createToken(accountId uint, accountName string, tenantId uint) (TiCPToken, error) {
+func createToken(accountId string, accountName string, tenantId string) (TiCPToken, error) {
 	token := TiCPToken{
 		AccountName: accountName,
 		AccountId: accountId,

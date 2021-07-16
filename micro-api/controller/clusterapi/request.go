@@ -1,11 +1,14 @@
 package clusterapi
 
-import "github.com/pingcap/ticp/micro-api/controller"
+import (
+	"github.com/pingcap/ticp/micro-api/controller"
+)
 
 type CreateReq struct {
 	ClusterBaseInfo
 	NodeDemandList  []ClusterNodeDemand
 }
+
 
 type QueryReq struct {
 	controller.PageRequest
@@ -15,3 +18,4 @@ type QueryReq struct {
 	ClusterStatus 	string
 	ClusterTag 		string
 }
+

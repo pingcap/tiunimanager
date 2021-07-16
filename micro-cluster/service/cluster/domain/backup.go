@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"github.com/pingcap/ticp/micro-api/controller"
 	"time"
 )
 
@@ -12,9 +11,9 @@ type BackupRecord struct {
 	EndTime 		time.Time
 	Range 			BackupRange
 	Way 			BackupWay
-	Operator 		controller.Operator
+	Operator 		Operator
 	Size 			float32
-	Status 			controller.StatusInfo
+	Status 			string
 	FilePath 		string
 }
 

@@ -51,7 +51,7 @@ type DistributionItem struct {
 
 type ComponentInstance struct {
 	ComponentBaseInfo
-	nodes []ComponentNodeDisplayInfo
+	Nodes []ComponentNodeDisplayInfo
 }
 
 type ComponentNodeDisplayInfo struct {
@@ -64,6 +64,7 @@ type ComponentNodeDisplayInfo struct {
 
 type ComponentNodeInstanceInfo struct {
 	HostId 				string
+	Port 				int
 	Role 				ComponentNodeRole
 	Spec 				hostapi.SpecBaseInfo
 	Zone 				hostapi.ZoneBaseInfo
@@ -72,7 +73,6 @@ type ComponentNodeInstanceInfo struct {
 type ComponentNodeUsageInfo struct {
 	IoUtil 				float32
 	Iops 				[]float32
-	Port 				int
 	CpuUsage 			controller.Usage
 	MemoryUsage 		controller.Usage
 	StorageUsage 		controller.Usage

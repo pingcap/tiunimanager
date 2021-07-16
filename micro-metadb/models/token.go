@@ -9,14 +9,14 @@ type Token struct {
 	gorm.Model
 
 	TokenString    	string 		`gorm:"size:255"`
-	AccountId      	int32  		`gorm:"size:255"`
+	AccountId      	string  		`gorm:"size:255"`
 	AccountName		string  	`gorm:"size:255"`
-	TenantId       	int32  		`gorm:"size:255"`
+	TenantId       	string  		`gorm:"size:255"`
 	Status 			int8		`gorm:"size:255"`
 	ExpirationTime 	time.Time  	`gorm:"size:255"`
 }
 
-func AddToken(tokenString, accountName string, accountId, tenantId int32, expirationTime time.Time) (token Token, err error) {
+func AddToken(tokenString, accountName string, accountId, tenantId string, expirationTime time.Time) (token Token, err error) {
 	token, err = FindToken(tokenString)
 
 	if err == nil && token.TokenString == tokenString{

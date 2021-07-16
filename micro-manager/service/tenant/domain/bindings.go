@@ -5,8 +5,8 @@ import (
 )
 
 type Role struct {
-	TenantId 	uint
-	Id     		int
+	TenantId 	string
+	Id     		string
 	Name   		string
 	Desc   		string
 	Status 		CommonStatus

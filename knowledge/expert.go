@@ -1,6 +1,8 @@
 package knowledge
 
-import "github.com/pingcap/ticp/knowledge/models"
+import (
+	"github.com/pingcap/ticp/knowledge/models"
+)
 
 var SpecKnowledge *ClusterSpecKnowledge
 

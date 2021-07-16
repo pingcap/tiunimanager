@@ -11,9 +11,9 @@ import (
 
 type MicroMetaDbRepo struct {}
 
-func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId uint, code string) (p domain.PermissionAggregation, err error) {
+func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId string, code string) (p domain.PermissionAggregation, err error) {
 	req := db.DBFindRolesByPermissionRequest{
-		TenantId: int32(tenantId),
+		TenantId: tenantId,
 		Code: code,
 	}
 
@@ -26,7 +26,7 @@ func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId uint, code string) (
 
 	p.Permission = domain.Permission{
 		Code: permissionDTO.GetCode(),
-		TenantId: uint(permissionDTO.GetTenantId()),
+		TenantId: permissionDTO.GetTenantId(),
 		Name: permissionDTO.GetName(),
 		Type: domain.PermissionTypeFromType(permissionDTO.GetType()),
 		Desc: permissionDTO.GetDesc(),
@@ -41,7 +41,7 @@ func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId uint, code string) (
 		p.Roles = make([]domain.Role, len(rolesDTOs), cap(rolesDTOs))
 		for index, r := range rolesDTOs {
 			p.Roles[index] = domain.Role{
-				TenantId: uint(r.TenantId),
+				TenantId: r.TenantId,
 				Name: r.GetName(),
 				Desc: r.GetDesc(),
 				Status: domain.CommonStatusFromStatus(r.GetStatus()),
@@ -51,7 +51,7 @@ func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId uint, code string) (
 	return
 }
 
-func (m MicroMetaDbRepo) LoadPermission(tenantId uint, code string) (domain.Permission, error) {
+func (m MicroMetaDbRepo) LoadPermission(tenantId string, code string) (domain.Permission, error) {
 	panic("implement me")
 }
 
@@ -68,9 +68,9 @@ func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account domain.Acc
 
 	dto := resp.Account
 
-	account.Id = uint(dto.Id)
+	account.Id = dto.Id
 	account.Name = dto.Name
-	account.TenantId = uint(dto.TenantId)
+	account.TenantId = dto.TenantId
 	account.Salt = dto.Salt
 	account.FinalHash = dto.FinalHash
 
@@ -80,7 +80,7 @@ func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account domain.Acc
 		account.Roles = make([]domain.Role, len(dto.Roles), cap(dto.Roles))
 		for index, r := range dto.Roles {
 			account.Roles[index] = domain.Role{
-				TenantId: uint(r.TenantId),
+				TenantId: r.TenantId,
 				Name: r.GetName(),
 				Desc: r.GetDesc(),
 				Status: domain.CommonStatusFromStatus(r.GetStatus()),
@@ -97,8 +97,8 @@ func (m MicroMetaDbRepo) Provide(tiCPToken *domain.TiCPToken) (tokenString strin
 
 	req := db.DBSaveTokenRequest{
 		Token: &db.DBTokenDTO{
-			TenantId: int32(tiCPToken.TenantId),
-			AccountId: int32(tiCPToken.AccountId),
+			TenantId: tiCPToken.TenantId,
+			AccountId: tiCPToken.AccountId,
 			AccountName: tiCPToken.AccountName,
 			ExpirationTime: tiCPToken.ExpirationTime.Unix(),
 			TokenString: tokenString,
@@ -113,8 +113,8 @@ func (m MicroMetaDbRepo) Provide(tiCPToken *domain.TiCPToken) (tokenString strin
 func (m MicroMetaDbRepo) Modify(tiCPToken *domain.TiCPToken) error {
 	req := db.DBSaveTokenRequest{
 		Token: &db.DBTokenDTO{
-			TenantId: int32(tiCPToken.TenantId),
-			AccountId: int32(tiCPToken.AccountId),
+			TenantId: tiCPToken.TenantId,
+			AccountId: tiCPToken.AccountId,
 			AccountName: tiCPToken.AccountName,
 			ExpirationTime: tiCPToken.ExpirationTime.Unix(),
 			TokenString: tiCPToken.TokenString,
@@ -139,9 +139,9 @@ func (m MicroMetaDbRepo) GetToken(tokenString string) (token domain.TiCPToken, e
 	dto := resp.Token
 
 	token.TokenString = dto.TokenString
-	token.AccountId =  uint(dto.AccountId)
+	token.AccountId =  dto.AccountId
 	token.AccountName = dto.AccountName
-	token.TenantId = uint(dto.TenantId)
+	token.TenantId = dto.TenantId
 	token.ExpirationTime = time.Unix(dto.ExpirationTime, 0)
 
 	return
@@ -155,7 +155,7 @@ func (m MicroMetaDbRepo) LoadTenantByName(name string) (domain.Tenant, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadTenantById(id uint) (domain.Tenant, error) {
+func (m MicroMetaDbRepo) LoadTenantById(id string) (domain.Tenant, error) {
 	panic("implement me")
 }
 
@@ -175,16 +175,16 @@ func (m MicroMetaDbRepo) LoadAccountByName(name string) (account domain.Account,
 	}
 
 	dto := resp.Account
-	account.Id = uint(dto.Id)
+	account.Id = dto.Id
 	account.Name = dto.Name
-	account.TenantId = uint(dto.TenantId)
+	account.TenantId = dto.TenantId
 	account.Salt = dto.Salt
 	account.FinalHash = dto.FinalHash
 
 	return
 }
 
-func (m MicroMetaDbRepo) LoadAccountById(id uint) (domain.Account, error) {
+func (m MicroMetaDbRepo) LoadAccountById(id string) (domain.Account, error) {
 	panic("implement me")
 }
 
@@ -192,7 +192,7 @@ func (m MicroMetaDbRepo) AddRole(r *domain.Role) error {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadRole(tenantId uint, name string) (domain.Role, error) {
+func (m MicroMetaDbRepo) LoadRole(tenantId string, name string) (domain.Role, error) {
 	panic("implement me")
 }
 

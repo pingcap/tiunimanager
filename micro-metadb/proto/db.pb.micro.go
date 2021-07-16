@@ -50,7 +50,9 @@ type TiCPDBService interface {
 	FindRolesByPermission(ctx context.Context, in *DBFindRolesByPermissionRequest, opts ...client.CallOption) (*DBFindRolesByPermissionResponse, error)
 	// Host Module
 	AddHost(ctx context.Context, in *DBAddHostRequest, opts ...client.CallOption) (*DBAddHostResponse, error)
+	AddHostsInBatch(ctx context.Context, in *DBAddHostsInBatchRequest, opts ...client.CallOption) (*DBAddHostsInBatchResponse, error)
 	RemoveHost(ctx context.Context, in *DBRemoveHostRequest, opts ...client.CallOption) (*DBRemoveHostResponse, error)
+	RemoveHostsInBatch(ctx context.Context, in *DBRemoveHostsInBatchRequest, opts ...client.CallOption) (*DBRemoveHostsInBatchResponse, error)
 	ListHost(ctx context.Context, in *DBListHostsRequest, opts ...client.CallOption) (*DBListHostsResponse, error)
 	CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, opts ...client.CallOption) (*DBCheckDetailsResponse, error)
 	AllocHosts(ctx context.Context, in *DBAllocHostsRequest, opts ...client.CallOption) (*DBAllocHostResponse, error)
@@ -137,9 +139,29 @@ func (c *tiCPDBService) AddHost(ctx context.Context, in *DBAddHostRequest, opts 
 	return out, nil
 }
 
+func (c *tiCPDBService) AddHostsInBatch(ctx context.Context, in *DBAddHostsInBatchRequest, opts ...client.CallOption) (*DBAddHostsInBatchResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.AddHostsInBatch", in)
+	out := new(DBAddHostsInBatchResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tiCPDBService) RemoveHost(ctx context.Context, in *DBRemoveHostRequest, opts ...client.CallOption) (*DBRemoveHostResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.RemoveHost", in)
 	out := new(DBRemoveHostResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) RemoveHostsInBatch(ctx context.Context, in *DBRemoveHostsInBatchRequest, opts ...client.CallOption) (*DBRemoveHostsInBatchResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.RemoveHostsInBatch", in)
+	out := new(DBRemoveHostsInBatchResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -268,7 +290,9 @@ type TiCPDBServiceHandler interface {
 	FindRolesByPermission(context.Context, *DBFindRolesByPermissionRequest, *DBFindRolesByPermissionResponse) error
 	// Host Module
 	AddHost(context.Context, *DBAddHostRequest, *DBAddHostResponse) error
+	AddHostsInBatch(context.Context, *DBAddHostsInBatchRequest, *DBAddHostsInBatchResponse) error
 	RemoveHost(context.Context, *DBRemoveHostRequest, *DBRemoveHostResponse) error
+	RemoveHostsInBatch(context.Context, *DBRemoveHostsInBatchRequest, *DBRemoveHostsInBatchResponse) error
 	ListHost(context.Context, *DBListHostsRequest, *DBListHostsResponse) error
 	CheckDetails(context.Context, *DBCheckDetailsRequest, *DBCheckDetailsResponse) error
 	AllocHosts(context.Context, *DBAllocHostsRequest, *DBAllocHostResponse) error
@@ -291,7 +315,9 @@ func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, op
 		FindToken(ctx context.Context, in *DBFindTokenRequest, out *DBFindTokenResponse) error
 		FindRolesByPermission(ctx context.Context, in *DBFindRolesByPermissionRequest, out *DBFindRolesByPermissionResponse) error
 		AddHost(ctx context.Context, in *DBAddHostRequest, out *DBAddHostResponse) error
+		AddHostsInBatch(ctx context.Context, in *DBAddHostsInBatchRequest, out *DBAddHostsInBatchResponse) error
 		RemoveHost(ctx context.Context, in *DBRemoveHostRequest, out *DBRemoveHostResponse) error
+		RemoveHostsInBatch(ctx context.Context, in *DBRemoveHostsInBatchRequest, out *DBRemoveHostsInBatchResponse) error
 		ListHost(ctx context.Context, in *DBListHostsRequest, out *DBListHostsResponse) error
 		CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, out *DBCheckDetailsResponse) error
 		AllocHosts(ctx context.Context, in *DBAllocHostsRequest, out *DBAllocHostResponse) error
@@ -339,8 +365,16 @@ func (h *tiCPDBServiceHandler) AddHost(ctx context.Context, in *DBAddHostRequest
 	return h.TiCPDBServiceHandler.AddHost(ctx, in, out)
 }
 
+func (h *tiCPDBServiceHandler) AddHostsInBatch(ctx context.Context, in *DBAddHostsInBatchRequest, out *DBAddHostsInBatchResponse) error {
+	return h.TiCPDBServiceHandler.AddHostsInBatch(ctx, in, out)
+}
+
 func (h *tiCPDBServiceHandler) RemoveHost(ctx context.Context, in *DBRemoveHostRequest, out *DBRemoveHostResponse) error {
 	return h.TiCPDBServiceHandler.RemoveHost(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) RemoveHostsInBatch(ctx context.Context, in *DBRemoveHostsInBatchRequest, out *DBRemoveHostsInBatchResponse) error {
+	return h.TiCPDBServiceHandler.RemoveHostsInBatch(ctx, in, out)
 }
 
 func (h *tiCPDBServiceHandler) ListHost(ctx context.Context, in *DBListHostsRequest, out *DBListHostsResponse) error {

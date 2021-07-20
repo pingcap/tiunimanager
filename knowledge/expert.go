@@ -1,32 +1,28 @@
 package knowledge
 
-import (
-	"github.com/pingcap/ticp/knowledge/models"
-)
-
 var SpecKnowledge *ClusterSpecKnowledge
 
 type ClusterSpecKnowledge struct {
-	Specs 		[]*models.ClusterTypeSpec
-	Types 		map[string]*models.ClusterType
-	Versions 	map[string]*models.ClusterVersion
-	Components  map[string]*models.ClusterComponent
+	Specs 		[]*ClusterTypeSpec
+	Types 		map[string]*ClusterType
+	Versions 	map[string]*ClusterVersion
+	Components  map[string]*ClusterComponent
 }
 
-func ClusterTypeFromCode(code string) *models.ClusterType {
+func ClusterTypeFromCode(code string) *ClusterType {
 	return SpecKnowledge.Types[code]
 }
 
-func ClusterVersionFromCode(code string) *models.ClusterVersion {
+func ClusterVersionFromCode(code string) *ClusterVersion {
 	return SpecKnowledge.Versions[code]
 }
 
-func ClusterComponentFromCode(componentType string) *models.ClusterComponent {
+func ClusterComponentFromCode(componentType string) *ClusterComponent {
 	return SpecKnowledge.Components[componentType]
 }
 
-func SortedTypesKnowledge() []*models.ClusterTypeSpec {
-	slice := make([]*models.ClusterTypeSpec, len(SpecKnowledge.Specs), len(SpecKnowledge.Specs))
+func SortedTypesKnowledge() []*ClusterTypeSpec {
+	slice := make([]*ClusterTypeSpec, len(SpecKnowledge.Specs), len(SpecKnowledge.Specs))
 	for _, v := range SpecKnowledge.Specs  {
 		slice = append(slice, v)
 	}

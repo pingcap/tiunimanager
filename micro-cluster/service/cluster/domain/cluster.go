@@ -1,7 +1,7 @@
 package domain
 
 import (
-	knowledge "github.com/pingcap/ticp/knowledge/models"
+	"github.com/pingcap/ticp/knowledge"
 	"time"
 )
 
@@ -10,28 +10,34 @@ type Cluster struct {
 	Code 				string
 	TenantId   			string
 
-	ClusterName 		string
-	DbPassword 			string
-	ClusterType 		knowledge.ClusterType
+	ClusterName    		string
+	DbPassword     		string
+	ClusterType    		knowledge.ClusterType
 	ClusterVersion 		knowledge.ClusterVersion
-	Tags 				[]string
-	Tls 				bool
+	Tags           		[]string
+	Tls            		bool
 
 	Status 				ClusterStatus
 
-	Demand 				[]*ClusterComponentDemand
+	Demands 			[]*ClusterComponentDemand
 
 	WorkFlowId 			uint
+
+	OwnerId 			string
 
 	CreateTime 			time.Time
 	UpdateTime 			time.Time
 	DeleteTime 			time.Time
 }
 
+func (c *Cluster) Delete()  {
+	c.Status = ClusterStatusDeleted
+}
+
 type ClusterComponentDemand struct {
-	ComponentType 			string
-	TotalNodeCount  		int
-	DistributionItems  		[]*ClusterNodeDistributionItem
+	ComponentType     *knowledge.ClusterComponent
+	TotalNodeCount    int
+	DistributionItems []*ClusterNodeDistributionItem
 }
 
 type ClusterDemandRecord struct {

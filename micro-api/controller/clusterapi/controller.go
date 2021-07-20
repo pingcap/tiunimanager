@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/pingcap/ticp/knowledge/models"
+	"github.com/pingcap/ticp/knowledge"
 	"github.com/pingcap/ticp/micro-api/controller"
 	"github.com/pingcap/ticp/micro-cluster/client"
 	cluster "github.com/pingcap/ticp/micro-cluster/proto"
@@ -208,12 +208,12 @@ func Detail(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /cluster/knowledge [get]
 func ClusterKnowledge(c *gin.Context) {
-	c.JSON(http.StatusOK, controller.Success([]models.ClusterTypeSpec{
+	c.JSON(http.StatusOK, controller.Success([]knowledge.ClusterTypeSpec{
 		{
-			models.ClusterType{
+			knowledge.ClusterType{
 				Name: "what",
 			},
-			[]models.ClusterVersionSpec{
+			[]knowledge.ClusterVersionSpec{
 
 			},
 		},

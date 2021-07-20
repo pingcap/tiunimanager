@@ -1,4 +1,4 @@
-package models
+package knowledge
 
 type Parameter struct {
 	Name         string

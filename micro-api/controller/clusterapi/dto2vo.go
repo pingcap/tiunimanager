@@ -10,7 +10,7 @@ import (
 func ParseClusterBaseInfoFromDTO(dto *cluster.ClusterBaseInfoDTO) (baseInfo *ClusterBaseInfo) {
 	baseInfo = &ClusterBaseInfo{
 		ClusterName: dto.ClusterName,
-		DbPassword: dto.DbPasswordName,
+		DbPassword: dto.DbPassword,
 		ClusterType: dto.ClusterType.Code,
 		ClusterVersion: dto.ClusterVersion.Code,
 		Tags: dto.Tags,

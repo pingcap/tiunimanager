@@ -9,20 +9,12 @@ type TiUPConfigRecord struct {
 	Id 					uint
 	TenantId 			string
 	ClusterId 			string
-	FlowWorkId 			string
-	ConfigModel 		spec.Specification
+	ConfigModel 		*spec.Specification
 	CreateTime 			time.Time
 }
 
 type ClusterInstanceProxy struct {
 	ClusterId         	string
 	TenantId   			string
-}
-
-func (proxy ClusterInstanceProxy) Topology(clusterId string) Topology {
-	return Topology{}
-}
-
-type Topology struct {
-
+	CurrentTiUPConfig	*TiUPConfigRecord
 }

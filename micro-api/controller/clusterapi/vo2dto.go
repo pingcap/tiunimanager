@@ -17,7 +17,7 @@ func (baseInfo *ClusterBaseInfo) ConvertToDTO() (dto *cluster.ClusterBaseInfoDTO
 	dto = &cluster.ClusterBaseInfoDTO{
 		ClusterName: baseInfo.ClusterName,
 
-		DbPasswordName : baseInfo.DbPassword,
+		DbPassword : baseInfo.DbPassword,
 		ClusterType: controller.ConvertTypeDTO(baseInfo.ClusterType),
 		ClusterVersion: controller.ConvertVersionDTO(baseInfo.ClusterVersion),
 		Tags: baseInfo.Tags,

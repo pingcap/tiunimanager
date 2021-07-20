@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	cluster "github.com/pingcap/ticp/micro-cluster/proto"
+	"github.com/pingcap/ticp/micro-cluster/service/cluster/domain"
 )
 
 var TiCPClusterServiceName = "go.micro.ticp.cluster"
@@ -13,7 +14,19 @@ var BizErrorResponseStatus = &cluster.ResponseStatusDTO {Code:1}
 type ClusterServiceHandler struct {}
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *cluster.ClusterCreateReqDTO, resp *cluster.ClusterCreateRespDTO) error {
-	return nil
+	clusterAggregation, err := domain.CreateCluster(req.GetOperator(), req.GetCluster(), req.GetDemands())
+
+	if err != nil {
+		// todo
+		return nil
+	} else {
+		resp.RespStatus = SuccessResponseStatus
+		resp.ClusterId = clusterAggregation.Cluster.Id
+		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
+		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+		return nil
+	}
+
 }
 
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *cluster.ClusterQueryReqDTO, resp *cluster.ClusterQueryRespDTO) error {
@@ -21,7 +34,16 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *cluster.Cl
 }
 
 func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *cluster.ClusterDeleteReqDTO, resp *cluster.ClusterDeleteRespDTO) error {
-	return nil
+	clusterAggregation, err := domain.DeleteCluster(req.GetOperator(), req.GetClusterId())
+	if err != nil {
+		// todo
+		return nil
+	} else {
+		resp.RespStatus = SuccessResponseStatus
+		resp.ClusterId = clusterAggregation.Cluster.Id
+		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+		return nil
+	}
 }
 
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *cluster.ClusterDetailReqDTO, resp *cluster.ClusterDetailRespDTO) error {

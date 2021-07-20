@@ -1,4 +1,4 @@
-package models
+package knowledge
 
 type ClusterType struct {
 	Code string
@@ -16,17 +16,17 @@ type ClusterComponent struct {
 }
 
 type ClusterTypeSpec struct {
-	ClusterType  		ClusterType
-	VersionSpecs 		[]ClusterVersionSpec
+	ClusterType  ClusterType
+	VersionSpecs []ClusterVersionSpec
 }
 
 type ClusterVersionSpec struct {
-	ClusterVersion 		ClusterVersion
-	ComponentSpecs 		[]ClusterComponentSpec
+	ClusterVersion ClusterVersion
+	ComponentSpecs []ClusterComponentSpec
 }
 
 type ClusterComponentSpec struct {
-	ClusterComponent 	ClusterComponent
+	ClusterComponent    ClusterComponent
 	ComponentConstraint ComponentConstraint
 }
 

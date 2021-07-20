@@ -1,13 +1,13 @@
 package instanceapi
 
 import (
-	"github.com/pingcap/ticp/knowledge/models"
+	"github.com/pingcap/ticp/knowledge"
 	"github.com/pingcap/ticp/micro-api/controller"
 	"time"
 )
 
 type ParamItem struct {
-	Definition   models.Parameter
+	Definition   knowledge.Parameter
 	CurrentValue ParamInstance
 }
 

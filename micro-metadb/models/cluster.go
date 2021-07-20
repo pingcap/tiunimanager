@@ -13,10 +13,10 @@ type ClusterDO struct {
 	ClusterType 			string
 	ClusterVersion 			string
 	Tls 					bool
-
+	Tags           			string
+	OwnerId 				string
 	Status 					uint
-	AlterationFlowId		uint
-	AlterationAlias			string
+	CurrentFlowId			uint
 }
 
 type ClusterDemandDO struct {

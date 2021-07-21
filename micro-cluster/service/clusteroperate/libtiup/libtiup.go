@@ -17,7 +17,6 @@ import (
 	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/micro-metadb/client"
 	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
-	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // micro service --fork&exec--> tiup manager --fork&exec--> tiup process
@@ -120,6 +119,8 @@ type TaskStatusMapValue struct {
 var glMgrTaskStatusCh chan TaskStatusMember
 var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
+var log *logger.LogRecord
+
 func TiupMgrInit() {
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
 	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -130,30 +131,19 @@ func TiupMgrInit() {
 	if len(configPath) == 0 {
 		configPath = "./tiupmgr.log"
 	}
-	logger.SetDefaultLogEntry(
-		logger.GenerateRollingLogEntry(
-			&lumberjack.Logger{
-				Filename:   configPath,
-				MaxSize:    500, // megabytes
-				MaxBackups: 3,
-				MaxAge:     28,    //days
-				Compress:   false, // disabled by default
-			},
-		),
-	)
 }
 
 func assert(b bool) {
 	if b {
 	} else {
-		logger.GetDefaultLogEntry().Fatal("unexpected panic with stack trace:", string(debug.Stack()))
+		log.Fatal("unexpected panic with stack trace:", string(debug.Stack()))
 		panic("unexpected")
 	}
 }
 
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
-	logger.GetDefaultLogEntry().Fatalf("panic: %s, with stack trace:", s, string(debug.Stack()))
+	log.Fatalf("panic: %s, with stack trace:", s, string(debug.Stack()))
 	panic("unexpected")
 }
 
@@ -294,7 +284,7 @@ func newTmpFileWithContent(content []byte) (fileName string, err error) {
 
 func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, TimeoutS int) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
-	log := logger.GetDefaultLogEntry().WithField("task", taskID)
+	log := log.Record("task", taskID)
 	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	glMgrTaskStatusCh <- TaskStatusMember{
 		TaskID:   taskID,
@@ -416,7 +406,6 @@ func TiupMgrRoutine() {
 	inReader := bufio.NewReader(os.Stdin)
 	outWriter := os.Stdout
 	errw := os.Stderr
-	log := logger.GetDefaultLogEntry().WithField("func", "TiupMgrRoutine")
 	//errw.Write([]byte("TiupMgrRoutine enter\n"))
 	for {
 		//errw.Write([]byte("TiupMgrRoutine read\n"))

@@ -185,7 +185,7 @@ func (lr *LogRecord) RecordFun() *log.Entry {
 	return logEntry
 }
 
-func (lr *LogRecord) Debug(args interface{}) {
+func (lr *LogRecord) Debug(args ...interface{}) {
 	lr.RecordFun().Debug(args)
 }
 
@@ -193,11 +193,11 @@ func (lr *LogRecord) Debugf(format string, args ...interface{}) {
 	lr.RecordFun().Debugf(format, args)
 }
 
-func (lr *LogRecord) Debugln(args interface{}) {
+func (lr *LogRecord) Debugln(args ...interface{}) {
 	lr.RecordFun().Debugln(args)
 }
 
-func (lr *LogRecord) Info(args interface{}) {
+func (lr *LogRecord) Info(args ...interface{}) {
 	lr.RecordFun().Info(args)
 }
 
@@ -205,11 +205,11 @@ func (lr *LogRecord) Infof(format string, args ...interface{}) {
 	lr.RecordFun().Infof(format, args)
 }
 
-func (lr *LogRecord) Infoln(args interface{}) {
+func (lr *LogRecord) Infoln(args ...interface{}) {
 	lr.RecordFun().Infoln(args)
 }
 
-func (lr *LogRecord) Warn(args interface{}) {
+func (lr *LogRecord) Warn(args ...interface{}) {
 	lr.RecordFun().Warn(args)
 }
 
@@ -217,11 +217,11 @@ func (lr *LogRecord) Warnf(format string, args ...interface{}) {
 	lr.RecordFun().Warnf(format, args)
 }
 
-func (lr *LogRecord) Warnln(args interface{}) {
+func (lr *LogRecord) Warnln(args ...interface{}) {
 	lr.RecordFun().Warnln(args)
 }
 
-func (lr *LogRecord) Warning(args interface{}) {
+func (lr *LogRecord) Warning(args ...interface{}) {
 	lr.RecordFun().Warning(args)
 }
 
@@ -229,11 +229,11 @@ func (lr *LogRecord) Warningf(format string, args ...interface{}) {
 	lr.RecordFun().Warningf(format, args)
 }
 
-func (lr *LogRecord) Warningln(args interface{}) {
+func (lr *LogRecord) Warningln(args ...interface{}) {
 	lr.RecordFun().Warningln(args)
 }
 
-func (lr *LogRecord) Error(args interface{}) {
+func (lr *LogRecord) Error(args ...interface{}) {
 	lr.RecordFun().Error(args)
 }
 
@@ -241,11 +241,11 @@ func (lr *LogRecord) Errorf(format string, args ...interface{}) {
 	lr.RecordFun().Errorf(format, args)
 }
 
-func (lr *LogRecord) Errorln(args interface{}) {
+func (lr *LogRecord) Errorln(args ...interface{}) {
 	lr.RecordFun().Errorln(args)
 }
 
-func (lr *LogRecord) Fatal(args interface{}) {
+func (lr *LogRecord) Fatal(args ...interface{}) {
 	lr.RecordFun().Fatal(args)
 }
 
@@ -253,6 +253,6 @@ func (lr *LogRecord) Fatalf(format string, args ...interface{}) {
 	lr.RecordFun().Fatalf(format, args)
 }
 
-func (lr *LogRecord) Fatalln(args interface{}) {
+func (lr *LogRecord) Fatalln(args ...interface{}) {
 	lr.RecordFun().Fatalln(args)
 }

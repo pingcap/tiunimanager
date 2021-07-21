@@ -1,10 +1,11 @@
 package config
 
 import (
+	"log"
+
 	"github.com/BurntSushi/toml"
 	"github.com/asim/go-micro/v3"
 	"github.com/micro/cli/v2"
-	"github.com/pingcap/ticp/addon/logger"
 )
 
 var configFilePath = ""
@@ -27,8 +28,28 @@ func GetConfigFilePath() string {
 type Config struct {
 	SqliteFilePath string
 	Certificates   Certificates
+	Log            Log
 	OpenApiPort    int
 	PrometheusPort int
+}
+
+// Log Corresponding to [Log] in cfg.toml configuration
+type Log struct {
+	LogLevel      string
+	LogOutput     string
+	LogFilePath   string
+	LogMaxSize    int
+	LogMaxAge     int
+	LogMaxBackups int
+	LogLocalTime  bool
+	LogCompress   bool
+
+	RecordSysName string
+	RecordModName string
+}
+
+func GetLogConfig() Log {
+	return cfg.Log
 }
 
 type Certificates struct {
@@ -52,12 +73,10 @@ var cfg Config
 
 func Init() error {
 	_, err := toml.DecodeFile(GetConfigFilePath(), &cfg)
-	if err == nil {
-		return nil
-	} else {
-		logger.WithContext(nil).WithField("config.Init", GetConfigFilePath()).Fatal(err)
-		return err
+	if err != nil {
+		log.Fatal(err)
 	}
+	return err
 }
 
 func GetCertificateCrtFilePath() string {

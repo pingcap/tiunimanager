@@ -3,3 +3,26 @@ PrometheusPort = 8081
 [Certificates]
   CrtFilePath = "../config/example/server.crt"
   KeyFilePath = "../config/example/server.key"
+
+[Log]
+# log level: debug, info, warn, error, fetal
+LogLevel = "debug"
+# log output: options are console or file, multiple outputs are connected using commas
+LogOutput = "console,file"
+# Log output file path
+LogFilePath = "../logs/micro-api.log"
+# Maximum log file size, unit: MB
+LogMaxSize = 512
+# Maximum time interval for keeping expired files, unit: days
+LogMaxAge = 30
+# Maximum number of expired logs to backups
+LogMaxBackups = 0
+# Whether to use local time
+LogLocalTime = true
+# Do you need to compress the rolling log, use gzip compression
+LogCompress = true
+
+# Record sys name, default ticp
+RecordSysName = "ticp"
+# Record current mod name
+RecordModName = "micro-api"

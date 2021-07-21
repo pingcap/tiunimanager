@@ -20,7 +20,7 @@ func init() {
 		logger := log.New()
 		logger.SetFormatter(&log.JSONFormatter{})
 		logger.SetOutput(os.Stdout)
-		logger.SetLevel(log.DebugLevel)
+		logger.SetLevel(log.InfoLevel)
 		defaultLogEntry = log.NewEntry(logger)
 	}
 }
@@ -30,7 +30,7 @@ func GenerateRollingLogEntry(rollingLogger *lumberjack.Logger) *log.Entry {
 	logger := log.New()
 	logger.SetFormatter(&log.JSONFormatter{})
 	logger.SetOutput(rollingLogger)
-	logger.SetLevel(log.DebugLevel)
+	logger.SetLevel(log.InfoLevel)
 	return log.NewEntry(logger)
 }
 

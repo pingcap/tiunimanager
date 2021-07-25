@@ -43,6 +43,8 @@ definitions:
       capacity:
         description: 'Disk size, Unit: GB'
         type: integer
+      diskId:
+        type: string
       name:
         description: '[sda/sdb/nvmep0...]'
         type: string
@@ -65,6 +67,8 @@ definitions:
         items:
           $ref: '#/definitions/hostapi.Disk'
         type: array
+      hostId:
+        type: string
       hostName:
         type: string
       ip:
@@ -93,15 +97,6 @@ definitions:
       page:
         type: integer
       pageSize:
-        type: integer
-    type: object
-  hostapi.ListHostCondition:
-    properties:
-      purpose:
-        description: What Purpose is the host used for? [compute/storage or both]
-        type: string
-      status:
-        description: Host Status, 0 for Online, 1 for offline
         type: integer
     type: object
   instanceapi.InstanceCreate:
@@ -166,11 +161,32 @@ info:
   title: TiCP UI API
   version: "1.0"
 paths:
+  /download_template/:
+    get:
+      consumes:
+      - application/json
+      description: 将主机信息文件导出到本地
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: 导出主机信息模板文件
+      tags:
+      - resource
   /host:
     post:
       consumes:
       - application/json
-      description: 将给定的主机信息导入TiCP
+      description: 将给定的主机信息导入系统
       parameters:
       - description: 登录token
         in: header
@@ -198,7 +214,7 @@ paths:
       summary: 导入主机接口
       tags:
       - resource
-  /host/:
+  /host/{hostId}:
     delete:
       consumes:
       - application/json
@@ -304,11 +320,14 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 可选的查询主机的条件
-        in: body
-        name: query
-        schema:
-          $ref: '#/definitions/hostapi.ListHostCondition'
+      - description: 查询特定用途的主机列表
+        in: query
+        name: purpose
+        type: string
+      - description: 查询特定状态的主机列表
+        in: query
+        name: status
+        type: string
       produces:
       - application/json
       responses:
@@ -324,6 +343,72 @@ paths:
                   type: array
               type: object
       summary: 查询主机列表
+      tags:
+      - resource
+    post:
+      consumes:
+      - multipart/form-data
+      description: 通过文件批量导入主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 包含待导入主机信息的文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+      summary: 通过文件批量导入主机
+      tags:
+      - resource
+  /hosts/:
+    delete:
+      consumes:
+      - application/json
+      description: 批量删除指定的主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 待删除的主机ID数组
+        in: body
+        name: hostId
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 批量删除指定的主机
       tags:
       - resource
   /instance/create:

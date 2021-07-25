@@ -9,6 +9,9 @@ type ImportHostRsp struct {
 	HostId string `json:"hostId"`
 }
 
+type ImportHostsRsp struct {
+	HostIds []string `json:"hostIds"`
+}
 type ListHostRsp struct {
 	Hosts []HostInfo `json:"hosts"`
 }

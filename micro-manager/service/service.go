@@ -23,7 +23,7 @@ func (*ManagerServiceHandler) Login(ctx context.Context, req *manager.LoginReque
 
 	if err != nil {
 		resp.Status = &manager.ManagerResponseStatus{
-			Code: http.StatusInternalServerError,
+			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		}
 		resp.Status.Message = err.Error()
@@ -39,7 +39,7 @@ func (*ManagerServiceHandler) Logout(ctx context.Context, req *manager.LogoutReq
 	accountName, err := domain.Logout(req.TokenString)
 	if err != nil {
 		resp.Status = &manager.ManagerResponseStatus{
-			Code: http.StatusInternalServerError,
+			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
 		}
 		resp.Status.Message = err.Error()
@@ -57,17 +57,17 @@ func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.V
 	if err != nil {
 		if _, ok := err.(*domain.UnauthorizedError); ok {
 			resp.Status = &manager.ManagerResponseStatus{
-				Code: http.StatusUnauthorized,
+				Code:    http.StatusUnauthorized,
 				Message: "未登录或登录失效，请重试",
 			}
 		} else if _, ok := err.(*domain.ForbiddenError); ok {
 			resp.Status = &manager.ManagerResponseStatus{
-				Code: http.StatusForbidden,
+				Code:    http.StatusForbidden,
 				Message: "无权限",
 			}
 		} else {
 			resp.Status = &manager.ManagerResponseStatus{
-				Code: http.StatusInternalServerError,
+				Code:    http.StatusInternalServerError,
 				Message: err.Error(),
 			}
 		}
@@ -84,8 +84,16 @@ func (*ManagerServiceHandler) ImportHost(ctx context.Context, in *manager.Import
 	return host.ImportHost(ctx, in, out)
 }
 
+func (*ManagerServiceHandler) ImportHostsInBatch(ctx context.Context, in *manager.ImportHostsInBatchRequest, out *manager.ImportHostsInBatchResponse) error {
+	return host.ImportHostsInBatch(ctx, in, out)
+}
+
 func (*ManagerServiceHandler) RemoveHost(ctx context.Context, in *manager.RemoveHostRequest, out *manager.RemoveHostResponse) error {
 	return host.RemoveHost(ctx, in, out)
+}
+
+func (*ManagerServiceHandler) RemoveHostsInBatch(ctx context.Context, in *manager.RemoveHostsInBatchRequest, out *manager.RemoveHostsInBatchResponse) error {
+	return host.RemoveHostsInBatch(ctx, in, out)
 }
 
 func (*ManagerServiceHandler) ListHost(ctx context.Context, in *manager.ListHostsRequest, out *manager.ListHostsResponse) error {

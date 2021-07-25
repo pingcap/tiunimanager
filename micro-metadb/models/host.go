@@ -1,18 +1,48 @@
 package models
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/asim/go-micro/v3/util/log"
 	"github.com/google/uuid"
-	"github.com/pingcap/ticp/addon/logger"
-	"github.com/pingcap/ticp/config"
-
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
+
+type HostStatus int32
+
+const (
+	HOST_ONLINE HostStatus = iota
+	HOST_OFFLINE
+	HOST_INUSED
+	HOST_EXHAUST
+	HOST_DELETED
+)
+
+func (s HostStatus) IsInused() bool {
+	return s == HOST_INUSED
+}
+
+func (s HostStatus) IsAvailable() bool {
+	return (s == HOST_ONLINE || s == HOST_INUSED)
+}
+
+type DiskStatus int32
+
+const (
+	DISK_AVAILABLE DiskStatus = iota
+	DISK_INUSED
+)
+
+func (s DiskStatus) IsInused() bool {
+	return s == DISK_INUSED
+}
+
+func (s DiskStatus) IsAvailable() bool {
+	return s == DISK_AVAILABLE
+}
 
 type Disk struct {
 	ID        string `gorm:"PrimaryKey"`
@@ -59,45 +89,46 @@ func (h Host) TableName() string {
 	return "hosts"
 }
 
+func (h Host) IsExhaust() bool {
+	return h.CpuCores == 0 || h.Memory == 0
+}
+
 func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
-	h.ID = uuid.New().String()
-	return nil
+	err = tx.Where("IP = ? and Name = ?", h.IP, h.HostName).First(&Host{}).Error
+	if err == nil {
+		return status.Errorf(codes.AlreadyExists, "Host %s(%s) is Existed", h.HostName, h.IP)
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		h.ID = uuid.New().String()
+		return nil
+	} else {
+		return err
+	}
+}
+
+func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
+	err = tx.Where("ID = ?", h.ID).First(h).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return status.Errorf(codes.NotFound, "HostId %s is not found", h.ID)
+		}
+	} else {
+		if HostStatus(h.Status).IsInused() {
+			return status.Errorf(codes.PermissionDenied, "HostId %s is still in used", h.ID)
+		}
+	}
+
+	return err
 }
 
 func (h *Host) AfterDelete(tx *gorm.DB) (err error) {
-	tx.Where("host_id = ?", h.ID).Delete(&Disk{})
-	return nil
-}
-
-func (h *Host) AfterFind(tx *gorm.DB) (err error) {
-	tx.Find(&(h.Disks), "HOST_ID = ?", h.ID)
+	err = tx.Where("host_id = ?", h.ID).Delete(&Disk{}).Error
 	return
 }
 
-func CreateHostTable() (int32, error) {
-	var err error
-	var tablebuilt int32 = 0
-	dbFile := config.GetSqliteFilePath()
-	log := logger.WithContext(context.TODO()).WithField("dbFile", dbFile)
-	if MetaDB.Migrator().HasTable(&Host{}) {
-		log.Info("Host Table Has Already Created")
-	} else {
-		err = MetaDB.Migrator().CreateTable(&Host{})
-		if err != nil {
-			log.Fatalf("sqlite create host table failed: %v", err)
-		}
-		tablebuilt++
-	}
-	if MetaDB.Migrator().HasTable(&Disk{}) {
-		log.Info("Disk Table Has Already Created")
-	} else {
-		err = MetaDB.Migrator().CreateTable(&Disk{})
-		if err != nil {
-			log.Fatalf("sqlite create disk table failed: %v", err)
-		}
-		tablebuilt++
-	}
-	return tablebuilt, err
+func (h *Host) AfterFind(tx *gorm.DB) (err error) {
+	err = tx.Find(&(h.Disks), "HOST_ID = ?", h.ID).Error
+	return
 }
 
 func CreateHost(host *Host) (id string, err error) {
@@ -108,23 +139,54 @@ func CreateHost(host *Host) (id string, err error) {
 	return host.ID, err
 }
 
-// TODO: Check Record before delete
+func CreateHostsInBatch(hosts []*Host) (ids []string, err error) {
+	tx := MetaDB.Begin()
+	for _, host := range hosts {
+		err = tx.Create(host).Error
+		if err != nil {
+			tx.Rollback()
+			return nil, status.Errorf(codes.Canceled, "Create %s(%s) err, %v", host.HostName, host.IP, err)
+		}
+		ids = append(ids, host.ID)
+	}
+	err = tx.Commit().Error
+	return
+}
+
 func DeleteHost(hostId string) (err error) {
-	MetaDB.Where("ID = ?", hostId).Delete(&Host{
+	err = MetaDB.Where("ID = ?", hostId).Delete(&Host{
 		ID: hostId,
-	})
-	return nil
+	}).Error
+	return
+}
+
+func DeleteHostsInBatch(hostIds []string) (err error) {
+	tx := MetaDB.Begin()
+	for _, hostId := range hostIds {
+		var host Host
+		if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
+			tx.Rollback()
+			return status.Errorf(codes.FailedPrecondition, "Lock Host %s(%s) error, %v", hostId, host.IP, err)
+		}
+		err = tx.Delete(&host).Error
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit().Error
+	return
 }
 
 func ListHosts() (hosts []Host, err error) {
-	MetaDB.Find(&hosts)
+	err = MetaDB.Find(&hosts).Error
 	return
 }
 
 func FindHostById(hostId string) (*Host, error) {
 	host := new(Host)
-	MetaDB.First(host, "ID = ?", hostId)
-	return host, nil
+	err := MetaDB.First(host, "ID = ?", hostId).Error
+	return host, err
 }
 
 // TODO: Just a trick demo function
@@ -163,7 +225,6 @@ type HostLocked struct {
 }
 
 func LockHosts(resources []ResourceLock) (err error) {
-	var errmsg string
 	var setUpdate map[string]*HostLocked = make(map[string]*HostLocked)
 	tx := MetaDB.Begin()
 	for _, v := range resources {
@@ -180,30 +241,32 @@ func LockHosts(resources []ResourceLock) (err error) {
 				mem:      0,
 			}
 		}
-		if host.Status != 0 || host.CpuCores < v.RequestCores || host.Memory < v.RequestMem {
+		if !HostStatus(host.Status).IsAvailable() || host.CpuCores < v.RequestCores || host.Memory < v.RequestMem {
 			tx.Rollback()
-			errmsg = fmt.Sprintf("No enough resource for Host %s cpu(%d/%d), mem(%d|%d)", v.HostId, host.CpuCores, v.RequestCores, host.Memory, v.RequestMem)
-			return errors.New(errmsg)
+			return status.Errorf(codes.ResourceExhausted,
+				"No enough resource for Host %s(status:%d) cpu(%d/%d), mem(%d|%d)",
+				v.HostId, host.Status, host.CpuCores, v.RequestCores, host.Memory, v.RequestMem)
 		}
 		if host.CpuCores+setUpdate[v.HostId].cpuCores == v.OriginCores && host.Memory+setUpdate[v.HostId].mem == v.OriginMem {
 			host.CpuCores -= v.RequestCores
 			host.Memory -= v.RequestMem
-			if host.CpuCores == 0 || host.Memory == 0 {
-				host.Status = 2
+			if host.IsExhaust() {
+				host.Status = int32(HOST_EXHAUST)
 			}
 		} else {
 			tx.Rollback()
-			errmsg = fmt.Sprintf("Host %s was changed concurrently, cpu(%d|%d), mem(%d|%d)", v.HostId, host.CpuCores+setUpdate[v.HostId].cpuCores, v.OriginCores, host.Memory+setUpdate[v.HostId].mem, v.OriginMem)
-			return errors.New(errmsg)
+			return status.Errorf(codes.FailedPrecondition,
+				"Host %s was changed concurrently, cpu(%d|%d), mem(%d|%d)",
+				v.HostId, host.CpuCores+setUpdate[v.HostId].cpuCores, v.OriginCores, host.Memory+setUpdate[v.HostId].mem, v.OriginMem)
 		}
 		var disk Disk
 		MetaDB.First(&disk, "ID = ?", v.DiskId).First(&disk)
-		if disk.Status == 0 {
-			disk.Status = 2
+		if DiskStatus(disk.Status).IsAvailable() {
+			disk.Status = int32(DISK_INUSED)
 		} else {
 			tx.Rollback()
-			errmsg = fmt.Sprintf("Disk %s Status not expected(%d)", v.DiskId, disk.Status)
-			return errors.New(errmsg)
+			return status.Errorf(codes.FailedPrecondition,
+				"Disk %s Status not expected(%d)", v.DiskId, disk.Status)
 		}
 		setUpdate[v.HostId].cpuCores += v.RequestCores
 		setUpdate[v.HostId].mem += v.RequestMem

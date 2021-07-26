@@ -6,20 +6,39 @@ import (
 )
 
 type Entity struct {
-	EntityBase
-	Code		string				`gorm:"uniqueIndex:code_index"`
-	TenantId    string
-	Status 		int8
-}
-
-type EntityBase struct {
 	ID        	string 				`gorm:"PrimaryKey"`
 	CreatedAt 	time.Time
 	UpdatedAt 	time.Time
-	DeletedAt 	gorm.DeletedAt 		`gorm:"uniqueIndex:code_index"`
+	DeletedAt 	gorm.DeletedAt 		`gorm:"uniqueIndex"`
+
+	Code		string				`gorm:"uniqueIndex"`
+	TenantId    string				`gorm:"not null;type:varchar(36);default:null"`
+	Status 		int8				`gorm:"default:0"`
 }
+
+func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
+	e.ID = GenerateID()
+	e.Code = e.ID
+	e.Status = 0
+	return nil
+}
+
 type Record struct {
-	ID        	uint 				`gorm:"PrimaryKey"`
-	TenantId    string
+	ID        	uint 				`gorm:"primarykey"`
 	CreatedAt 	time.Time
+	UpdatedAt 	time.Time
+	DeletedAt 	gorm.DeletedAt 		`gorm:"index"`
+
+	TenantId    string				`gorm:"not null;type:varchar(36);default:null"`
 }
+
+type Data struct {
+	ID        	uint 				`gorm:"primarykey"`
+	CreatedAt 	time.Time
+	UpdatedAt 	time.Time
+	DeletedAt 	gorm.DeletedAt 		`gorm:"index"`
+
+	BizId       string				`gorm:"not null;type:varchar(64);default:null"`
+	Status      int8				`gorm:"default:0"`
+}
+

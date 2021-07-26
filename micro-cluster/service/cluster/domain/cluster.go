@@ -2,6 +2,7 @@ package domain
 
 import (
 	"github.com/pingcap/ticp/knowledge"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"time"
 )
 
@@ -52,4 +53,12 @@ type ClusterNodeDistributionItem struct {
 	ZoneCode 		string
 	SpecCode		string
 	Count  			int
+}
+
+type TiUPConfigRecord struct {
+	Id 					uint
+	TenantId 			string
+	ClusterId 			string
+	ConfigModel 		*spec.Specification
+	CreateTime 			time.Time
 }

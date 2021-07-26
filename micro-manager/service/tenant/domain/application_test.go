@@ -13,20 +13,20 @@ func TestAccessible(t *testing.T) {
 	tests := []struct {
 		name            string
 		args            args
-		wantTenantId    uint
+		wantTenantId    string
 		wantAccountName string
 		wantErr         bool
 		prepareType 	int // 0 什么都不做，1 登录，2 退出，3登录再退出
 	}{
-		{"test accessible without token", args{path: testPath1, pathType: "type1"}, 0, "", true, 0},
-		{"test accessible with wrong token", args{tokenString: "wrong token", path: testPath1, pathType: "type1"}, 0, "", true, 0},
-		{"test accessible with invalid token", args{tokenString: testMyName, path: testPath1, pathType: "type1"}, 1, testMyName, true, 3},
-		{"test accessible normal", args{tokenString: testMyName, path: testPath1, pathType: "type1"}, 1, testMyName, false, 1},
+		{"test accessible without token", args{path: testPath1, pathType: "type1"}, "", "", true, 0},
+		{"test accessible with wrong token", args{tokenString: "wrong token", path: testPath1, pathType: "type1"}, "", "", true, 0},
+		{"test accessible with invalid token", args{tokenString: testMyName, path: testPath1, pathType: "type1"}, "1", testMyName, true, 3},
+		{"test accessible normal", args{tokenString: testMyName, path: testPath1, pathType: "type1"}, "1", testMyName, false, 1},
 
-		{"test accessible without path", args{tokenString: testMyName, pathType: "type1"}, 0, "", true, 1},
-		{"test accessible with wrong path", args{tokenString: testMyName, path: "whatever", pathType: "type1"}, 1, testMyName, true, 1},
-		{"test accessible without permission1", args{tokenString: testMyName, path: testPath2, pathType: "type1"}, 1, testMyName, true, 1},
-		{"test accessible without permission2", args{tokenString: testOtherName, path: testPath1, pathType: "type1"}, 1, testOtherName, true, 1},
+		{"test accessible without path", args{tokenString: testMyName, pathType: "type1"}, "", "", true, 1},
+		{"test accessible with wrong path", args{tokenString: testMyName, path: "whatever", pathType: "type1"}, "1", testMyName, true, 1},
+		{"test accessible without permission1", args{tokenString: testMyName, path: testPath2, pathType: "type1"}, "1", testMyName, true, 1},
+		{"test accessible without permission2", args{tokenString: testOtherName, path: testPath1, pathType: "type1"}, "1", testOtherName, true, 1},
 
 	}
 	for _, tt := range tests {
@@ -46,7 +46,7 @@ func TestAccessible(t *testing.T) {
 				Logout(testMyName)
 			default:
 			}
-			gotTenantId, gotAccountName, err := Accessible(tt.args.pathType, tt.args.path, tt.args.tokenString)
+			gotTenantId, _, gotAccountName, err := Accessible(tt.args.pathType, tt.args.path, tt.args.tokenString)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Accessible() error = %v, wantErr %v", err, tt.wantErr)
 				return

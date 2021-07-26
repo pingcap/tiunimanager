@@ -60,7 +60,7 @@ func (t *TaskEntity) Fail(e error) {
 	t.Result = e.Error()
 }
 
-// FlowWorkAggregation the aggregation of flow and tasks
+// FlowWorkAggregation
 type FlowWorkAggregation struct {
 	FlowWork 	*FlowWorkEntity
 	Define 		*FlowWorkDefine

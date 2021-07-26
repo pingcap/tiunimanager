@@ -6,7 +6,6 @@ var TaskRepo TaskRepository
 
 type ClusterRepository interface {
 	AddCluster (cluster *Cluster) error
-	LoadCluster (id string) (cluster *Cluster, err error)
 
 	Persist(aggregation *ClusterAggregation) error
 	Load (id string) (cluster *ClusterAggregation, err error)

@@ -2,115 +2,124 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/micro-metadb/models"
 	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
+	"gorm.io/gorm"
 )
 
 var ClusterSuccessResponseStatus =  &dbPb.DBClusterResponseStatus{Code: 0}
 
-func (*DBServiceHandler) AddCluster(ctx context.Context, req *dbPb.DBCreateClusterRequest, resp *dbPb.DBCreateClusterResponse) error {
-	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "AddCluster"})
-
+func (*DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DBCreateClusterRequest, resp *dbPb.DBCreateClusterResponse) error {
 	dto := req.Cluster
-	clusterModel, err := models.CreateCluster(
-		uint(dto.TenantId),
-		dto.Name,
-		dto.DbPassword,
-		dto.Version,
-		int(dto.Status),
-		int(dto.TidbCount),
-		int(dto.TikvCount),
-		int(dto.PdCount))
-
+	cluster, err := models.CreateCluster(dto.Name, dto.DbPassword, dto.ClusterType, dto.VersionCode, dto.Tls, dto.Tags, dto.OwnerId, dto.TenantId)
 	if err != nil {
-		resp.Status.Code = 1
-		resp.Status.Message = err.Error()
-	} else {
-		resp.Status = ClusterSuccessResponseStatus
-		clusterDTO := new(dbPb.DBClusterDTO)
-		copyClusterModelToDTO(&clusterModel, clusterDTO)
-		resp.Cluster = clusterDTO
+		// todo
+		return nil
 	}
+
+	do, err := models.UpdateClusterDemand(cluster.ID, req.Cluster.Demands, cluster.TenantId)
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+
+	resp.Cluster = ConvertToClusterDTO(do)
 	return nil
 }
 
-func (*DBServiceHandler) FindCluster(ctx context.Context, req *dbPb.DBFindClusterRequest, resp *dbPb.DBFindClusterResponse) error {
-	clusterModel, err := models.FetchCluster(uint(req.ClusterId))
+func (*DBServiceHandler) DeleteCluster(ctx context.Context, req *dbPb.DBDeleteClusterRequest, resp *dbPb.DBDeleteClusterResponse) error {
+	cluster, err := models.DeleteCluster(req.ClusterId)
 	if err != nil {
-		resp.Status.Code = 1
-		resp.Status.Message = err.Error()
+		// todo
 		return nil
 	}
 
-	clusterDTO := new(dbPb.DBClusterDTO)
-	copyClusterModelToDTO(clusterModel, clusterDTO)
-	resp.Cluster = clusterDTO
-	if clusterModel.ConfigID <= 0 {
-		return nil
-	}
+	resp.Status = ClusterSuccessResponseStatus
 
-	configModel, err := models.FetchTiUPConfig(clusterModel.ConfigID)
-	if err != nil {
-		resp.Status.Code = 1
-		resp.Status.Message = err.Error()
-		return nil
-	} else {
-		configDTO := new(dbPb.DBTiUPConfigDTO)
-		copyConfigModelToDTO(configModel, configDTO)
-		resp.Config = configDTO
+	resp.Cluster = ConvertToClusterDTO(cluster)
+	return nil
+}
 
-		return nil
+func ConvertToDisplayDTO(do *models.ClusterDO, flow *models.FlowDO) (dto *dbPb.DBClusterDisplayDTO) {
+	return &dbPb.DBClusterDisplayDTO{
+		Cluster: ConvertToClusterDTO(do),
+		Flow: convertFlowToDTO(flow),
 	}
 }
 
-func (*DBServiceHandler) UpdateTiUPConfig(ctx context.Context, req *dbPb.DBUpdateTiUPConfigRequest, resp *dbPb.DBUpdateTiUPConfigResponse) error {
-	clusterModel, configModel, err := models.UpdateClusterTiUPConfig(uint(req.GetClusterId()), req.GetConfigContent())
-
-	if err != nil {
-		resp.Status.Code = 1
-		resp.Status.Message = err.Error()
-		return nil
-	} else {
-		clusterDTO := new(dbPb.DBClusterDTO)
-		copyClusterModelToDTO(&clusterModel, clusterDTO)
-		resp.Cluster = clusterDTO
-
-		configDTO := new(dbPb.DBTiUPConfigDTO)
-		copyConfigModelToDTO(&configModel, configDTO)
-		resp.Config = configDTO
-
-		return nil
+func ConvertToClusterDTO(do *models.ClusterDO) (dto *dbPb.DBClusterDTO) {
+	return &dbPb.DBClusterDTO {
+		Id:          do.ID,
+		Code:        do.Code,
+		Name:        do.ClusterName,
+		TenantId:    do.TenantId,
+		DbPassword:  do.DbPassword,
+		ClusterType: do.ClusterType,
+		VersionCode: do.ClusterVersion,
+		Status: 	 int32(do.Status),
+		Tags:        do.Tags,
+		Tls:         do.Tls,
+		WorkFlowId:  int32(do.CurrentFlowId),
+		OwnerId:     do.OwnerId,
+		CreateTime:  do.CreatedAt.Unix(),
+		UpdateTime:  do.UpdatedAt.Unix(),
+		DeleteTime:  DeletedAtUnix(do.DeletedAt),
 	}
 }
 
+func DeletedAtUnix(at gorm.DeletedAt) (unix int64) {
+	if at.Valid {
+		return at.Time.Unix()
+	}
+	return
+}
+
+func (*DBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, req *dbPb.DBUpdateTiupConfigRequest, resp *dbPb.DBUpdateTiupConfigResponse) error {
+	var err error
+	do, err := models.UpdateTiUPConfig(req.ClusterId, req.Content, req.TenantId)
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.Cluster = ConvertToClusterDTO(do)
+	return nil
+}
+
+func (*DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *dbPb.DBUpdateClusterStatusRequest, resp *dbPb.DBUpdateClusterStatusResponse) error {
+	var err error
+	var do *models.ClusterDO
+	if req.UpdateStatus {
+		do, err = models.UpdateClusterFlowId(req.ClusterId, uint(req.FlowId))
+		if err != nil {
+			// todo
+			return nil
+		}
+	}
+
+	if req.UpdateFlow {
+		do, err = models.UpdateClusterStatus(req.ClusterId, int8(req.Status))
+		if err != nil {
+			// todo
+			return nil
+		}
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.Cluster = ConvertToClusterDTO(do)
+
+	return nil
+}
+func (*DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLoadClusterRequest, resp *dbPb.DBLoadClusterResponse) error {
+	return nil
+}
 func (*DBServiceHandler) ListCluster(ctx context.Context, req *dbPb.DBListClusterRequest, resp *dbPb.DBListClusterResponse) error {
-	clusters, _ := models.ListClusters(int(req.Page), int(req.PageSize))
-	for _, v := range clusters {
-		var clusterDTO dbPb.DBClusterDTO
-		copyClusterModelToDTO(&v, &clusterDTO)
-		resp.Clusters = append(resp.Clusters, &clusterDTO)
-	}
 	return nil
 }
 
-func copyClusterModelToDTO(model *models.Cluster, dto *dbPb.DBClusterDTO) {
-	dto.Id = int32( model.ID)
-	dto.TenantId = int32(model.TenantId)
-	dto.Name = model.Name
-	dto.DbPassword = model.DbPassword
-	dto.Version = model.Version
-	dto.Status = int32(model.Status)
-	dto.TidbCount = int32(model.TidbCount)
-	dto.TikvCount = int32(model.TikvCount)
-	dto.PdCount = 	int32(model.PdCount)
+func ParseDBClusterDTO(dto *dbPb.DBClusterDTO) (do *models.ClusterDO){
+	return
 }
-
-func copyConfigModelToDTO(model *models.TiUPConfig, dto *dbPb.DBTiUPConfigDTO) {
-	dto.Id = int32(model.ID)
-	dto.TenantId = int32(model.TenantId)
-	dto.ClusterId = int32(model.ClusterId)
-	dto.Latest = model.Latest
-	dto.Content = model.Content
-}
-

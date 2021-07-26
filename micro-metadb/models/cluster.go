@@ -1,107 +1,143 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
+import "errors"
 
 type ClusterDO struct {
 	Entity
-	Demand 					ClusterDemandDO
-
 	ClusterName 			string
 	DbPassword 				string
 	ClusterType 			string
 	ClusterVersion 			string
 	Tls 					bool
 	Tags           			string
-	OwnerId 				string
-	Status 					uint
+	OwnerId 				string		`gorm:"not null;type:varchar(36);default:null"`
+	CurrentTiupConfigId     uint
+	CurrentDemandId 		uint
 	CurrentFlowId			uint
 }
 
-type ClusterDemandDO struct {
+func (d ClusterDO) TableName() string {
+	return "clusters"
+}
+
+type DemandRecordDO struct {
 	Record
-	ClusterId 			string
+	ClusterId 			string		`gorm:"not null;type:varchar(36);default:null"`
 	Content 			string		`gorm:"type:text"`
+}
+
+func (d DemandRecordDO) TableName() string {
+	return "demand_records"
 }
 
 type TiUPConfigDO struct {
 	Record
-	ClusterId			string
+	ClusterId			string		`gorm:"not null;type:varchar(36);default:null"`
 	Content 			string		`gorm:"type:text"`
 }
 
-type Cluster struct {
-	gorm.Model
-
-	TenantId   uint 	`gorm:"size:32"`
-	Name       string 	`gorm:"size:32"`
-	DbPassword string 	`gorm:"size:32"`
-	Version    string 	`gorm:"size:32"`
-	Status     int 		`gorm:"size:32"`
-	TidbCount  int  	`gorm:"size:32"`
-	TikvCount  int  	`gorm:"size:32"`
-	PdCount    int  	`gorm:"size:32"`
-	ConfigID   uint 	`gorm:"size:32"`
+func (d TiUPConfigDO) TableName() string {
+	return "tiup_configs"
 }
 
-type TiUPConfig struct {
-	gorm.Model
-
-	TenantId  uint   `gorm:"size:32"`
-	ClusterId uint   `gorm:"size:32"`
-	Latest    bool   `gorm:"size:32"`
-	Content   string `gorm:"type:text"`
-}
-
-func FetchCluster(clusterId uint) (cluster *Cluster, err error) {
-	MetaDB.First(cluster, clusterId)
+func UpdateClusterStatus(clusterId string, status int8) (cluster *ClusterDO, err error) {
+	if clusterId == ""{
+		return nil, errors.New("cluster id is empty")
+	}
+	cluster = &ClusterDO{}
+	err = MetaDB.Model(cluster).Where("id = ?", clusterId).Update("status", status).Error
 	return
 }
 
-func FetchTiUPConfig(configId uint) (config *TiUPConfig, err error){
-	MetaDB.First(config, configId)
-	return
-}
-
-func CreateCluster(tenantId uint, name, dbPassword, Version string, status,tidbCount,tikvCount,pdCount int) (cluster Cluster, err error) {
-
-	cluster.TenantId = tenantId
-	cluster.Name = name
-	cluster.DbPassword = dbPassword
-	cluster.Version = Version
-	cluster.Status = status
-	cluster.TikvCount = tikvCount
-	cluster.TidbCount = tidbCount
-	cluster.PdCount = pdCount
-
-	MetaDB.Create(&cluster)
-	return
-}
-
-func UpdateClusterTiUPConfig(clusterId uint, configContent string) (cluster Cluster, config TiUPConfig, err error) {
-	MetaDB.First(&cluster, clusterId)
-
-	// 保存配置
-	config.TenantId = cluster.TenantId
-	config.ClusterId = cluster.ID
-	config.Latest = true
-	config.Content = configContent
-	MetaDB.Create(&config)
-
-	// 更新旧配置的Latest标签
-	if cluster.ConfigID != 0 {
-		MetaDB.First(new(TiUPConfig), cluster.ConfigID).Update("latest", false)
+func UpdateClusterDemand(clusterId string, content string, tenantId string) (cluster *ClusterDO, err error) {
+	record := &DemandRecordDO{
+		ClusterId: clusterId,
+		Content: content,
+		Record: Record{
+			TenantId: tenantId,
+		},
 	}
 
-	// 更新集群的配置版本
-	cluster.ConfigID = config.ClusterId
-	MetaDB.Save(cluster)
+	err = MetaDB.Create(record).Error
+	if err != nil {
+		return
+	}
 
-	return cluster, config, nil
+	cluster = &ClusterDO{}
+	err = MetaDB.Model(cluster).Where("id = ?", clusterId).Update("current_demand_id", record.ID).Error
+	return
 }
 
-func ListClusters(page, pageSize int) (clusters []Cluster, err error) {
-	MetaDB.Find(&clusters).Offset((page - 1) * pageSize).Limit(pageSize)
+func UpdateClusterFlowId(clusterId string, flowId uint) (cluster *ClusterDO, err error) {
+	if clusterId == ""{
+		return nil, errors.New("cluster id is empty")
+	}
+	cluster = &ClusterDO{}
+
+	err = MetaDB.Model(cluster).Where("id = ?", clusterId).Update("current_flow_id", flowId).Error
+
+	return
+}
+
+func UpdateTiUPConfig(clusterId string, content string, tenantId string) (cluster *ClusterDO, err error) {
+	cluster = &ClusterDO{}
+	record := &TiUPConfigDO{
+		ClusterId: clusterId,
+		Content: content,
+		Record: Record{
+			TenantId: tenantId,
+		},
+	}
+
+	err = MetaDB.Create(record).Error
+	if err != nil {
+		return
+	}
+
+	err = MetaDB.Model(cluster).Where("id = ?", clusterId).Update("current_tiup_config_id", record.ID).Error
+
+	return
+}
+
+func DeleteCluster(clusterId string) (cluster *ClusterDO, err error) {
+	if clusterId == ""{
+		 return nil, errors.New("empty cluster id")
+	}
+	cluster = &ClusterDO{}
+	err = MetaDB.Find(cluster, "id = ?", clusterId).Error
+
+	if err != nil {
+		return
+	}
+
+	err = MetaDB.Delete(cluster).Error
+	return
+}
+
+func CreateCluster(
+		ClusterName 			string,
+		DbPassword 				string,
+		ClusterType 			string,
+		ClusterVersion 			string,
+		Tls 					bool,
+		Tags           			string,
+		OwnerId 				string,
+		TenantId    			string,
+	) (cluster *ClusterDO, err error){
+	cluster = &ClusterDO{}
+	cluster.ClusterName = ClusterName
+	cluster.DbPassword = DbPassword
+	cluster.ClusterType = ClusterType
+	cluster.ClusterVersion = ClusterVersion
+	cluster.Tls = Tls
+	cluster.Tags = Tags
+	cluster.OwnerId = OwnerId
+	cluster.TenantId = TenantId
+
+	err = MetaDB.Create(cluster).Error
+	if err != nil {
+		return
+	}
+
 	return
 }

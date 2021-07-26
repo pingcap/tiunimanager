@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "db_task.proto";
+
 option go_package = "./;db";
 
 message DBClusterResponseStatus {
@@ -30,8 +32,8 @@ message DBTiUPConfigDTO {
     int32 id = 1;
     int32 tenantId = 2;
     int32 clusterId = 3;
-    bool latest = 4;
-    string content = 5;
+    string content = 4;
+    int64 createTime = 5;
 }
 
 message DBCreateClusterRequest {
@@ -43,13 +45,72 @@ message DBCreateClusterResponse {
     DBClusterDTO cluster = 2;
 }
 
-message DBUpdateTiUPConfigRequest {
-    int32 clusterId = 1;
-    string configContent = 2;
+message DBLoadClusterRequest {
+    string clusterId = 1;
 }
 
-message DBUpdateTiUPConfigResponse {
+message DBLoadClusterResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDetailDTO clusterDetail = 2;
+}
+
+message DBClusterDisplayDTO {
+    DBClusterDTO cluster = 1;
+    DBFlowDTO flow = 2;
+}
+
+message DBClusterDetailDTO {
+    DBClusterDTO cluster = 1;
+    DBTiUPConfigDTO tiupConfigRecord = 2;
+    DBFlowDTO flow = 3;
+}
+
+message DBListClusterRequest {
+
+}
+
+message DBListClusterResponse {
+    DBClusterResponseStatus status = 1;
+    repeated DBClusterDisplayDTO clusters = 2;
+    DBPageDTO page = 3;
+}
+
+message DBDeleteClusterRequest {
+    string clusterId = 1;
+}
+
+message DBDeleteClusterResponse {
     DBClusterResponseStatus status = 1;
     DBClusterDTO cluster = 2;
-    DBTiUPConfigDTO config = 3;
+}
+
+message DBUpdateClusterStatusRequest {
+    string clusterId = 1;
+    int32 status = 2;
+    bool updateStatus = 3;
+    int64 flowId = 4;
+    bool updateFlow = 5;
+}
+
+message DBUpdateClusterStatusResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+}
+
+message DBUpdateTiupConfigRequest {
+    string clusterId = 1;
+    string content = 2;
+    string tenantId = 3;
+}
+
+message DBUpdateTiupConfigResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+    DBTiUPConfigDTO tiupConfigRecord = 3;
+}
+
+message DBPageDTO {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 total = 3;
 }

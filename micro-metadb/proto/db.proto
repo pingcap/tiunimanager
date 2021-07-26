@@ -4,6 +4,7 @@ import "db_auth.proto";
 import "db_host.proto";
 import "db_cluster.proto";
 import "db_tiup.proto";
+import "db_task.proto";
 
 option go_package = "./;db";
 
@@ -23,9 +24,12 @@ service TiCPDBService {
 	rpc CheckDetails(DBCheckDetailsRequest) returns (DBCheckDetailsResponse);
 	rpc AllocHosts(DBAllocHostsRequest) returns (DBAllocHostResponse);
 
-	rpc AddCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);
-	rpc FindCluster(DBFindClusterRequest) returns (DBFindClusterResponse);
-	rpc UpdateTiUPConfig(DBUpdateTiUPConfigRequest) returns (DBUpdateTiUPConfigResponse);
+	// Cluster
+	rpc CreateCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);
+	rpc DeleteCluster(DBDeleteClusterRequest) returns (DBDeleteClusterResponse);
+	rpc UpdateClusterStatus(DBUpdateClusterStatusRequest) returns (DBUpdateClusterStatusResponse);
+	rpc UpdateClusterTiupConfig(DBUpdateTiupConfigRequest) returns (DBUpdateTiupConfigResponse);
+	rpc LoadCluster(DBLoadClusterRequest) returns (DBLoadClusterResponse);
 	rpc ListCluster(DBListClusterRequest) returns (DBListClusterResponse);
 
 	// Tiup Task
@@ -33,4 +37,12 @@ service TiCPDBService {
 	rpc UpdateTiupTask(UpdateTiupTaskRequest) returns (UpdateTiupTaskResponse);
 	rpc FindTiupTaskByID(FindTiupTaskByIDRequest) returns (FindTiupTaskByIDResponse);
 	rpc GetTiupTaskStatusByBizID(GetTiupTaskStatusByBizIDRequest) returns (GetTiupTaskStatusByBizIDResponse);
+
+	// Workflow and Task
+	rpc CreateFlow(DBCreateFlowRequest) returns (DBCreateFlowResponse);
+	rpc CreateTask(DBCreateTaskRequest) returns (DBCreateTaskResponse);
+	rpc UpdateFlow(DBUpdateFlowRequest) returns (DBUpdateFlowResponse);
+	rpc UpdateTask(DBUpdateTaskRequest) returns (DBUpdateTaskResponse);
+	rpc LoadFlow(DBLoadFlowRequest) returns (DBLoadFlowResponse);
+	rpc LoadTask(DBLoadTaskRequest) returns (DBLoadTaskResponse);
 }

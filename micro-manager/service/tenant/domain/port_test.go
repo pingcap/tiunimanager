@@ -35,18 +35,18 @@ const testOtherPassword = "testOtherPassword"
 func mockData() {
 	me = &Account{
 		Name:     testMyName,
-		TenantId: 1,
-		Id:       1,
+		TenantId: "1",
+		Id:       "1",
 	}
 	me.genSaltAndHash(testMyPassword)
 
 	other = &Account{
 		Name:     testOtherName,
-		TenantId: 1,
-		Id:       2,
+		TenantId: "1",
+		Id:       "2",
 	}
 	other.genSaltAndHash(testOtherPassword)
-	roles = []Role{{Id: 1, Name: "admin", TenantId: 1}, {Id: 2, Name: "dba", TenantId: 1}}
+	roles = []Role{{Id: "1", Name: "admin", TenantId: "1"}, {Id: "2", Name: "dba", TenantId: "1"}}
 
 	permissions = []PermissionAggregation{
 		{
@@ -68,7 +68,7 @@ func (m MockRepo) LoadTenantByName(name string) (Tenant, error) {
 	panic("implement me")
 }
 
-func (m MockRepo) LoadTenantById(id uint) (Tenant, error) {
+func (m MockRepo) LoadTenantById(id string) (Tenant, error) {
 	panic("implement me")
 }
 
@@ -110,15 +110,15 @@ func (m MockRepo) LoadAccountAggregation(name string) (AccountAggregation, error
 	return AccountAggregation{}, errors.New("noaccount")
 }
 
-func (m MockRepo) LoadAccountById(id uint) (Account, error) {
+func (m MockRepo) LoadAccountById(id string) (Account, error) {
 	panic("implement me")
 }
 
-func (m MockRepo) LoadRole(tenantId uint, name string) (Role, error) {
+func (m MockRepo) LoadRole(tenantId string, name string) (Role, error) {
 	panic("implement me")
 }
 
-func (m MockRepo) LoadPermissionAggregation(tenantId uint, code string) (PermissionAggregation, error) {
+func (m MockRepo) LoadPermissionAggregation(tenantId string, code string) (PermissionAggregation, error) {
 	for _,p := range permissions {
 		if p.Code == code {
 			return p, nil
@@ -127,7 +127,7 @@ func (m MockRepo) LoadPermissionAggregation(tenantId uint, code string) (Permiss
 	return PermissionAggregation{}, errors.New("no permission found")
 }
 
-func (m MockRepo) LoadPermission(tenantId uint, code string) (Permission, error) {
+func (m MockRepo) LoadPermission(tenantId string, code string) (Permission, error) {
 	panic("implement me")
 }
 

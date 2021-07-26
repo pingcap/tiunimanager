@@ -15,18 +15,19 @@ import (
 )
 
 type ClusterAggregation struct {
-	Cluster 			*Cluster
+	Cluster 				*Cluster
 
-	DemandRecords       []*ClusterDemandRecord
+	CurrentDemandRecords 	[]*ClusterDemandRecord
 
-	NewTiUPConfigRecord *TiUPConfigRecord
-	CurrentWorkFlow  	*FlowWorkEntity
+	CurrentTiUPConfigRecord *TiUPConfigRecord
 
-	HistoryWorkFLows 	[]*FlowWorkEntity
+	CurrentWorkFlow  		*FlowWorkEntity
 
-	UsedResources 		interface{}
+	HistoryWorkFLows 		[]*FlowWorkEntity
+
+	UsedResources 			interface{}
 	
-	AvailableResources	interface{}
+	AvailableResources		interface{}
 }
 
 var contextClusterKey = "clusterAggregation"
@@ -266,7 +267,7 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 		ConfigModel: convertConfig(resources, clusterAggregation.Cluster),
 	}
 
-	clusterAggregation.NewTiUPConfigRecord = config
+	clusterAggregation.CurrentTiUPConfigRecord = config
 	task.Success(config.Id)
 	return true
 }
@@ -274,7 +275,7 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 func deployCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
 	cluster := clusterAggregation.Cluster
-	spec := clusterAggregation.NewTiUPConfigRecord.ConfigModel
+	spec := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
 
 	if true {
 		bs, err := yaml.Marshal(spec)

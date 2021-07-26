@@ -1,7 +1,15 @@
 package models
 
+import (
+	"gorm.io/gorm"
+	"time"
+)
+
 type Tenant struct {
-	EntityBase
+	ID        	string 				`gorm:"PrimaryKey"`
+	CreatedAt 	time.Time
+	UpdatedAt 	time.Time
+	DeletedAt 	gorm.DeletedAt
 
 	Name   string		`gorm:"size:255"`
 	Type   int8			`gorm:"size:255"`

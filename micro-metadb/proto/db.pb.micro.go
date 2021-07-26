@@ -54,15 +54,25 @@ type TiCPDBService interface {
 	ListHost(ctx context.Context, in *DBListHostsRequest, opts ...client.CallOption) (*DBListHostsResponse, error)
 	CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, opts ...client.CallOption) (*DBCheckDetailsResponse, error)
 	AllocHosts(ctx context.Context, in *DBAllocHostsRequest, opts ...client.CallOption) (*DBAllocHostResponse, error)
-	AddCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error)
-	FindCluster(ctx context.Context, in *DBFindClusterRequest, opts ...client.CallOption) (*DBFindClusterResponse, error)
-	UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, opts ...client.CallOption) (*DBUpdateTiUPConfigResponse, error)
+	// Cluster
+	CreateCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error)
+	DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, opts ...client.CallOption) (*DBDeleteClusterResponse, error)
+	UpdateClusterStatus(ctx context.Context, in *DBUpdateClusterStatusRequest, opts ...client.CallOption) (*DBUpdateClusterStatusResponse, error)
+	UpdateClusterTiupConfig(ctx context.Context, in *DBUpdateTiupConfigRequest, opts ...client.CallOption) (*DBUpdateTiupConfigResponse, error)
+	LoadCluster(ctx context.Context, in *DBLoadClusterRequest, opts ...client.CallOption) (*DBLoadClusterResponse, error)
 	ListCluster(ctx context.Context, in *DBListClusterRequest, opts ...client.CallOption) (*DBListClusterResponse, error)
 	// Tiup Task
 	CreateTiupTask(ctx context.Context, in *CreateTiupTaskRequest, opts ...client.CallOption) (*CreateTiupTaskResponse, error)
 	UpdateTiupTask(ctx context.Context, in *UpdateTiupTaskRequest, opts ...client.CallOption) (*UpdateTiupTaskResponse, error)
 	FindTiupTaskByID(ctx context.Context, in *FindTiupTaskByIDRequest, opts ...client.CallOption) (*FindTiupTaskByIDResponse, error)
 	GetTiupTaskStatusByBizID(ctx context.Context, in *GetTiupTaskStatusByBizIDRequest, opts ...client.CallOption) (*GetTiupTaskStatusByBizIDResponse, error)
+	// Workflow and Task
+	CreateFlow(ctx context.Context, in *DBCreateFlowRequest, opts ...client.CallOption) (*DBCreateFlowResponse, error)
+	CreateTask(ctx context.Context, in *DBCreateTaskRequest, opts ...client.CallOption) (*DBCreateTaskResponse, error)
+	UpdateFlow(ctx context.Context, in *DBUpdateFlowRequest, opts ...client.CallOption) (*DBUpdateFlowResponse, error)
+	UpdateTask(ctx context.Context, in *DBUpdateTaskRequest, opts ...client.CallOption) (*DBUpdateTaskResponse, error)
+	LoadFlow(ctx context.Context, in *DBLoadFlowRequest, opts ...client.CallOption) (*DBLoadFlowResponse, error)
+	LoadTask(ctx context.Context, in *DBLoadTaskRequest, opts ...client.CallOption) (*DBLoadTaskResponse, error)
 }
 
 type tiCPDBService struct {
@@ -177,8 +187,8 @@ func (c *tiCPDBService) AllocHosts(ctx context.Context, in *DBAllocHostsRequest,
 	return out, nil
 }
 
-func (c *tiCPDBService) AddCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPDBService.AddCluster", in)
+func (c *tiCPDBService) CreateCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.CreateCluster", in)
 	out := new(DBCreateClusterResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -187,9 +197,9 @@ func (c *tiCPDBService) AddCluster(ctx context.Context, in *DBCreateClusterReque
 	return out, nil
 }
 
-func (c *tiCPDBService) FindCluster(ctx context.Context, in *DBFindClusterRequest, opts ...client.CallOption) (*DBFindClusterResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPDBService.FindCluster", in)
-	out := new(DBFindClusterResponse)
+func (c *tiCPDBService) DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, opts ...client.CallOption) (*DBDeleteClusterResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.DeleteCluster", in)
+	out := new(DBDeleteClusterResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -197,9 +207,29 @@ func (c *tiCPDBService) FindCluster(ctx context.Context, in *DBFindClusterReques
 	return out, nil
 }
 
-func (c *tiCPDBService) UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, opts ...client.CallOption) (*DBUpdateTiUPConfigResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPDBService.UpdateTiUPConfig", in)
-	out := new(DBUpdateTiUPConfigResponse)
+func (c *tiCPDBService) UpdateClusterStatus(ctx context.Context, in *DBUpdateClusterStatusRequest, opts ...client.CallOption) (*DBUpdateClusterStatusResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.UpdateClusterStatus", in)
+	out := new(DBUpdateClusterStatusResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) UpdateClusterTiupConfig(ctx context.Context, in *DBUpdateTiupConfigRequest, opts ...client.CallOption) (*DBUpdateTiupConfigResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.UpdateClusterTiupConfig", in)
+	out := new(DBUpdateTiupConfigResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) LoadCluster(ctx context.Context, in *DBLoadClusterRequest, opts ...client.CallOption) (*DBLoadClusterResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.LoadCluster", in)
+	out := new(DBLoadClusterResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -257,6 +287,66 @@ func (c *tiCPDBService) GetTiupTaskStatusByBizID(ctx context.Context, in *GetTiu
 	return out, nil
 }
 
+func (c *tiCPDBService) CreateFlow(ctx context.Context, in *DBCreateFlowRequest, opts ...client.CallOption) (*DBCreateFlowResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.CreateFlow", in)
+	out := new(DBCreateFlowResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) CreateTask(ctx context.Context, in *DBCreateTaskRequest, opts ...client.CallOption) (*DBCreateTaskResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.CreateTask", in)
+	out := new(DBCreateTaskResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) UpdateFlow(ctx context.Context, in *DBUpdateFlowRequest, opts ...client.CallOption) (*DBUpdateFlowResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.UpdateFlow", in)
+	out := new(DBUpdateFlowResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) UpdateTask(ctx context.Context, in *DBUpdateTaskRequest, opts ...client.CallOption) (*DBUpdateTaskResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.UpdateTask", in)
+	out := new(DBUpdateTaskResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) LoadFlow(ctx context.Context, in *DBLoadFlowRequest, opts ...client.CallOption) (*DBLoadFlowResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.LoadFlow", in)
+	out := new(DBLoadFlowResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) LoadTask(ctx context.Context, in *DBLoadTaskRequest, opts ...client.CallOption) (*DBLoadTaskResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.LoadTask", in)
+	out := new(DBLoadTaskResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for TiCPDBService service
 
 type TiCPDBServiceHandler interface {
@@ -272,15 +362,25 @@ type TiCPDBServiceHandler interface {
 	ListHost(context.Context, *DBListHostsRequest, *DBListHostsResponse) error
 	CheckDetails(context.Context, *DBCheckDetailsRequest, *DBCheckDetailsResponse) error
 	AllocHosts(context.Context, *DBAllocHostsRequest, *DBAllocHostResponse) error
-	AddCluster(context.Context, *DBCreateClusterRequest, *DBCreateClusterResponse) error
-	FindCluster(context.Context, *DBFindClusterRequest, *DBFindClusterResponse) error
-	UpdateTiUPConfig(context.Context, *DBUpdateTiUPConfigRequest, *DBUpdateTiUPConfigResponse) error
+	// Cluster
+	CreateCluster(context.Context, *DBCreateClusterRequest, *DBCreateClusterResponse) error
+	DeleteCluster(context.Context, *DBDeleteClusterRequest, *DBDeleteClusterResponse) error
+	UpdateClusterStatus(context.Context, *DBUpdateClusterStatusRequest, *DBUpdateClusterStatusResponse) error
+	UpdateClusterTiupConfig(context.Context, *DBUpdateTiupConfigRequest, *DBUpdateTiupConfigResponse) error
+	LoadCluster(context.Context, *DBLoadClusterRequest, *DBLoadClusterResponse) error
 	ListCluster(context.Context, *DBListClusterRequest, *DBListClusterResponse) error
 	// Tiup Task
 	CreateTiupTask(context.Context, *CreateTiupTaskRequest, *CreateTiupTaskResponse) error
 	UpdateTiupTask(context.Context, *UpdateTiupTaskRequest, *UpdateTiupTaskResponse) error
 	FindTiupTaskByID(context.Context, *FindTiupTaskByIDRequest, *FindTiupTaskByIDResponse) error
 	GetTiupTaskStatusByBizID(context.Context, *GetTiupTaskStatusByBizIDRequest, *GetTiupTaskStatusByBizIDResponse) error
+	// Workflow and Task
+	CreateFlow(context.Context, *DBCreateFlowRequest, *DBCreateFlowResponse) error
+	CreateTask(context.Context, *DBCreateTaskRequest, *DBCreateTaskResponse) error
+	UpdateFlow(context.Context, *DBUpdateFlowRequest, *DBUpdateFlowResponse) error
+	UpdateTask(context.Context, *DBUpdateTaskRequest, *DBUpdateTaskResponse) error
+	LoadFlow(context.Context, *DBLoadFlowRequest, *DBLoadFlowResponse) error
+	LoadTask(context.Context, *DBLoadTaskRequest, *DBLoadTaskResponse) error
 }
 
 func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, opts ...server.HandlerOption) error {
@@ -295,14 +395,22 @@ func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, op
 		ListHost(ctx context.Context, in *DBListHostsRequest, out *DBListHostsResponse) error
 		CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, out *DBCheckDetailsResponse) error
 		AllocHosts(ctx context.Context, in *DBAllocHostsRequest, out *DBAllocHostResponse) error
-		AddCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error
-		FindCluster(ctx context.Context, in *DBFindClusterRequest, out *DBFindClusterResponse) error
-		UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, out *DBUpdateTiUPConfigResponse) error
+		CreateCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error
+		DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, out *DBDeleteClusterResponse) error
+		UpdateClusterStatus(ctx context.Context, in *DBUpdateClusterStatusRequest, out *DBUpdateClusterStatusResponse) error
+		UpdateClusterTiupConfig(ctx context.Context, in *DBUpdateTiupConfigRequest, out *DBUpdateTiupConfigResponse) error
+		LoadCluster(ctx context.Context, in *DBLoadClusterRequest, out *DBLoadClusterResponse) error
 		ListCluster(ctx context.Context, in *DBListClusterRequest, out *DBListClusterResponse) error
 		CreateTiupTask(ctx context.Context, in *CreateTiupTaskRequest, out *CreateTiupTaskResponse) error
 		UpdateTiupTask(ctx context.Context, in *UpdateTiupTaskRequest, out *UpdateTiupTaskResponse) error
 		FindTiupTaskByID(ctx context.Context, in *FindTiupTaskByIDRequest, out *FindTiupTaskByIDResponse) error
 		GetTiupTaskStatusByBizID(ctx context.Context, in *GetTiupTaskStatusByBizIDRequest, out *GetTiupTaskStatusByBizIDResponse) error
+		CreateFlow(ctx context.Context, in *DBCreateFlowRequest, out *DBCreateFlowResponse) error
+		CreateTask(ctx context.Context, in *DBCreateTaskRequest, out *DBCreateTaskResponse) error
+		UpdateFlow(ctx context.Context, in *DBUpdateFlowRequest, out *DBUpdateFlowResponse) error
+		UpdateTask(ctx context.Context, in *DBUpdateTaskRequest, out *DBUpdateTaskResponse) error
+		LoadFlow(ctx context.Context, in *DBLoadFlowRequest, out *DBLoadFlowResponse) error
+		LoadTask(ctx context.Context, in *DBLoadTaskRequest, out *DBLoadTaskResponse) error
 	}
 	type TiCPDBService struct {
 		tiCPDBService
@@ -355,16 +463,24 @@ func (h *tiCPDBServiceHandler) AllocHosts(ctx context.Context, in *DBAllocHostsR
 	return h.TiCPDBServiceHandler.AllocHosts(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) AddCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error {
-	return h.TiCPDBServiceHandler.AddCluster(ctx, in, out)
+func (h *tiCPDBServiceHandler) CreateCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error {
+	return h.TiCPDBServiceHandler.CreateCluster(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) FindCluster(ctx context.Context, in *DBFindClusterRequest, out *DBFindClusterResponse) error {
-	return h.TiCPDBServiceHandler.FindCluster(ctx, in, out)
+func (h *tiCPDBServiceHandler) DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, out *DBDeleteClusterResponse) error {
+	return h.TiCPDBServiceHandler.DeleteCluster(ctx, in, out)
 }
 
-func (h *tiCPDBServiceHandler) UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, out *DBUpdateTiUPConfigResponse) error {
-	return h.TiCPDBServiceHandler.UpdateTiUPConfig(ctx, in, out)
+func (h *tiCPDBServiceHandler) UpdateClusterStatus(ctx context.Context, in *DBUpdateClusterStatusRequest, out *DBUpdateClusterStatusResponse) error {
+	return h.TiCPDBServiceHandler.UpdateClusterStatus(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, in *DBUpdateTiupConfigRequest, out *DBUpdateTiupConfigResponse) error {
+	return h.TiCPDBServiceHandler.UpdateClusterTiupConfig(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) LoadCluster(ctx context.Context, in *DBLoadClusterRequest, out *DBLoadClusterResponse) error {
+	return h.TiCPDBServiceHandler.LoadCluster(ctx, in, out)
 }
 
 func (h *tiCPDBServiceHandler) ListCluster(ctx context.Context, in *DBListClusterRequest, out *DBListClusterResponse) error {
@@ -385,4 +501,28 @@ func (h *tiCPDBServiceHandler) FindTiupTaskByID(ctx context.Context, in *FindTiu
 
 func (h *tiCPDBServiceHandler) GetTiupTaskStatusByBizID(ctx context.Context, in *GetTiupTaskStatusByBizIDRequest, out *GetTiupTaskStatusByBizIDResponse) error {
 	return h.TiCPDBServiceHandler.GetTiupTaskStatusByBizID(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) CreateFlow(ctx context.Context, in *DBCreateFlowRequest, out *DBCreateFlowResponse) error {
+	return h.TiCPDBServiceHandler.CreateFlow(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) CreateTask(ctx context.Context, in *DBCreateTaskRequest, out *DBCreateTaskResponse) error {
+	return h.TiCPDBServiceHandler.CreateTask(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) UpdateFlow(ctx context.Context, in *DBUpdateFlowRequest, out *DBUpdateFlowResponse) error {
+	return h.TiCPDBServiceHandler.UpdateFlow(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) UpdateTask(ctx context.Context, in *DBUpdateTaskRequest, out *DBUpdateTaskResponse) error {
+	return h.TiCPDBServiceHandler.UpdateTask(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) LoadFlow(ctx context.Context, in *DBLoadFlowRequest, out *DBLoadFlowResponse) error {
+	return h.TiCPDBServiceHandler.LoadFlow(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) LoadTask(ctx context.Context, in *DBLoadTaskRequest, out *DBLoadTaskResponse) error {
+	return h.TiCPDBServiceHandler.LoadTask(ctx, in, out)
 }

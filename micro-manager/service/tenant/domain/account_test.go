@@ -10,8 +10,8 @@ func TestAccount_checkPassword(t *testing.T) {
 	}
 	ac.genSaltAndHash(testMyPassword)
 	type fields struct {
-		Id        uint
-		TenantId  uint
+		Id        string
+		TenantId  string
 		Name      string
 		Salt      string
 		FinalHash string
@@ -101,8 +101,8 @@ func TestAccount_checkPassword(t *testing.T) {
 
 func TestAccount_genSaltAndHash(t *testing.T) {
 	type fields struct {
-		Id        uint
-		TenantId  uint
+		Id        string
+		TenantId  string
 		Name      string
 		Salt      string
 		FinalHash string
@@ -165,8 +165,8 @@ func TestAccount_genSaltAndHash(t *testing.T) {
 
 func TestAccount_persist(t *testing.T) {
 	type fields struct {
-		Id        uint
-		TenantId  uint
+		Id        string
+		TenantId  string
 		Name      string
 		Salt      string
 		FinalHash string
@@ -241,20 +241,20 @@ func Test_checkAuth(t *testing.T) {
 				&AccountAggregation{
 					Roles: []Role{
 						{
-							Id: 1,
+							Id: "1",
 						},
 						{
-							Id: 2,
+							Id: "2",
 						},
 					},
 				},
 				&PermissionAggregation{
 					Roles: []Role{
 						{
-							Id: 1,
+							Id: "1",
 						},
 						{
-							Id: 5,
+							Id: "5",
 						},
 					},
 				},
@@ -268,26 +268,26 @@ func Test_checkAuth(t *testing.T) {
 				&AccountAggregation{
 					Roles: []Role{
 						{
-							Id: 4,
+							Id: "4",
 						},
 						{
-							Id: 3,
+							Id: "3",
 						},
 						{
-							Id: 2,
+							Id: "2",
 						},
 						{
-							Id: 1,
+							Id: "1",
 						},
 					},
 				},
 				&PermissionAggregation{
 					Roles: []Role{
 						{
-							Id: 9,
+							Id: "9",
 						},
 						{
-							Id: 1,
+							Id: "1",
 						},
 					},
 				},
@@ -301,20 +301,20 @@ func Test_checkAuth(t *testing.T) {
 				&AccountAggregation{
 					Roles: []Role{
 						{
-							Id: 1,
+							Id: "1",
 						},
 						{
-							Id: 2,
+							Id: "2",
 						},
 					},
 				},
 				&PermissionAggregation{
 					Roles: []Role{
 						{
-							Id: 3,
+							Id: "3",
 						},
 						{
-							Id: 4,
+							Id: "4",
 						},
 					},
 				},
@@ -331,10 +331,10 @@ func Test_checkAuth(t *testing.T) {
 				&PermissionAggregation{
 					Roles: []Role{
 						{
-							Id: 1,
+							Id: "1",
 						},
 						{
-							Id: 5,
+							Id: "5",
 						},
 					},
 				},
@@ -351,10 +351,10 @@ func Test_checkAuth(t *testing.T) {
 				&PermissionAggregation{
 					Roles: []Role{
 						{
-							Id: 1,
+							Id: "1",
 						},
 						{
-							Id: 5,
+							Id: "5",
 						},
 					},
 				},
@@ -368,10 +368,10 @@ func Test_checkAuth(t *testing.T) {
 				&AccountAggregation{
 					Roles: []Role{
 						{
-							Id: 1,
+							Id: "1",
 						},
 						{
-							Id: 2,
+							Id: "2",
 						},
 					},
 				},
@@ -390,10 +390,10 @@ func Test_checkAuth(t *testing.T) {
 				&AccountAggregation{
 					Roles: []Role{
 						{
-							Id: 1,
+							Id: "1",
 						},
 						{
-							Id: 2,
+							Id: "2",
 						},
 					},
 				},
@@ -484,12 +484,12 @@ func Test_findAccountAggregation(t *testing.T) {
 		{name: "test account", args: args{testMyName}, want: &AccountAggregation{
 			Account: Account{
 				Name:     testMyName,
-				Id:       1,
-				TenantId: 1,
+				Id:       "1",
+				TenantId: "1",
 			},
 			Roles: []Role{
-				{Id: 1, Name: "admin",TenantId: 1},
-				{Id: 2, Name: "dba",TenantId: 1},
+				{Id: "1", Name: "admin",TenantId: "1"},
+				{Id: "2", Name: "dba",TenantId: "1"},
 			},
 		}, wantErr: false},
 	}

@@ -22,7 +22,7 @@ const (
 )
 
 func (s HostStatus) IsInused() bool {
-	return s == HOST_INUSED
+	return s == HOST_INUSED || s == HOST_EXHAUST
 }
 
 func (s HostStatus) IsAvailable() bool {
@@ -90,7 +90,23 @@ func (h Host) TableName() string {
 }
 
 func (h Host) IsExhaust() bool {
-	return h.CpuCores == 0 || h.Memory == 0
+	diskExaust := true
+	for _, disk := range h.Disks {
+		if disk.Status == int32(DISK_AVAILABLE) {
+			diskExaust = false
+			break
+		}
+	}
+	return diskExaust || h.CpuCores == 0 || h.Memory == 0
+}
+
+func (h *Host) SetDiskStatus(diskId string, s DiskStatus) {
+	for i := range h.Disks {
+		if h.Disks[i].ID == diskId {
+			h.Disks[i].Status = int32(s)
+			break
+		}
+	}
 }
 
 func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
@@ -205,8 +221,8 @@ type Resource struct {
 func PreAllocHosts(failedDomain string, numReps int, cpuCores int, mem int) (resources []Resource, err error) {
 	err = MetaDB.Order("hosts.cpu_cores").Limit(numReps).Model(&Disk{}).Select(
 		"disks.host_id, disks.id, hosts.cpu_cores, hosts.memory, hosts.host_name, hosts.ip, disks.name, disks.path, disks.capacity").Joins("left join hosts on disks.host_id = hosts.id").Where(
-		"disks.status = ? and hosts.az = ? and hosts.status = ? and hosts.cpu_cores >= ? and memory >= ?",
-		0, failedDomain, 0, cpuCores, mem).Group("hosts.id").Scan(&resources).Error
+		"disks.status = ? and hosts.az = ? and (hosts.status = ? or hosts.status = ?) and hosts.cpu_cores >= ? and memory >= ?",
+		DISK_AVAILABLE, failedDomain, HOST_ONLINE, HOST_INUSED, cpuCores, mem).Group("hosts.id").Scan(&resources).Error
 	return
 }
 
@@ -250,9 +266,6 @@ func LockHosts(resources []ResourceLock) (err error) {
 		if host.CpuCores+setUpdate[v.HostId].cpuCores == v.OriginCores && host.Memory+setUpdate[v.HostId].mem == v.OriginMem {
 			host.CpuCores -= v.RequestCores
 			host.Memory -= v.RequestMem
-			if host.IsExhaust() {
-				host.Status = int32(HOST_EXHAUST)
-			}
 		} else {
 			tx.Rollback()
 			return status.Errorf(codes.FailedPrecondition,
@@ -263,6 +276,8 @@ func LockHosts(resources []ResourceLock) (err error) {
 		MetaDB.First(&disk, "ID = ?", v.DiskId).First(&disk)
 		if DiskStatus(disk.Status).IsAvailable() {
 			disk.Status = int32(DISK_INUSED)
+			// Set Disk Status in host - for exaust judgement
+			host.SetDiskStatus(v.DiskId, DISK_INUSED)
 		} else {
 			tx.Rollback()
 			return status.Errorf(codes.FailedPrecondition,
@@ -270,7 +285,12 @@ func LockHosts(resources []ResourceLock) (err error) {
 		}
 		setUpdate[v.HostId].cpuCores += v.RequestCores
 		setUpdate[v.HostId].mem += v.RequestMem
-		tx.Model(&host).Select("CpuCores", "Memory").Updates(Host{CpuCores: host.CpuCores, Memory: host.Memory})
+		if host.IsExhaust() {
+			host.Status = int32(HOST_EXHAUST)
+		} else {
+			host.Status = int32(HOST_INUSED)
+		}
+		tx.Model(&host).Select("CpuCores", "Memory", "Status").Updates(Host{CpuCores: host.CpuCores, Memory: host.Memory, Status: host.Status})
 		tx.Model(&disk).Update("Status", disk.Status)
 	}
 	tx.Commit()

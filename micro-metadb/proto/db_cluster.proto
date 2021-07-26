@@ -30,8 +30,8 @@ message DBClusterDTO {
 
 message DBTiUPConfigDTO {
     int32 id = 1;
-    int32 tenantId = 2;
-    int32 clusterId = 3;
+    string tenantId = 2;
+    string clusterId = 3;
     string content = 4;
     int64 createTime = 5;
 }

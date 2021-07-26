@@ -49,6 +49,22 @@ const (
 	TaskStatusError      TaskStatus = 3
 )
 
+var allTaskStatus = []TaskStatus{
+	TaskStatusInit,
+	TaskStatusProcessing,
+	TaskStatusFinished,
+	TaskStatusError,
+}
+
+func TaskStatusFromValue(v int) TaskStatus {
+	for _, s := range allTaskStatus {
+		if int(s) == v {
+			return s
+		}
+	}
+	return -1
+}
+
 type CronStatus int
 
 const (

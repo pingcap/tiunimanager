@@ -58,9 +58,9 @@ func (define *FlowWorkDefine) getInstance(bizId string, context map[string]inter
 			StatusAlias: define.StatusAlias,
 			BizId: bizId,
 			Status: TaskStatusInit,
-			Context: context,
 		},
 		Tasks: make([]*TaskEntity, 4, 4),
+		Context: context,
 		Define: define,
 	}
 }

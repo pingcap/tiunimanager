@@ -47,5 +47,18 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *cluster.C
 }
 
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *cluster.ClusterDetailReqDTO, resp *cluster.ClusterDetailRespDTO) error {
-	return nil
+	cluster, err := domain.GetClusterDetail(req.ClusterId, req.Operator)
+
+	if err != nil {
+		// todo
+		return nil
+	} else {
+		resp.RespStatus = SuccessResponseStatus
+		resp.DisplayInfo = cluster.ExtractDisplayDTO()
+		resp.Components = cluster.ExtractComponentDTOs()
+		resp.MaintenanceInfo = cluster.ExtractMaintenanceDTO()
+
+		return nil
+	}
 }
+

@@ -17,7 +17,7 @@ func (*DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DBCreateCl
 		return nil
 	}
 
-	do, err := models.UpdateClusterDemand(cluster.ID, req.Cluster.Demands, cluster.TenantId)
+	do, demand, err := models.UpdateClusterDemand(cluster.ID, req.Cluster.Demands, cluster.TenantId)
 	if err != nil {
 		// todo
 		return nil
@@ -25,7 +25,7 @@ func (*DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DBCreateCl
 
 	resp.Status = ClusterSuccessResponseStatus
 
-	resp.Cluster = ConvertToClusterDTO(do)
+	resp.Cluster = ConvertToClusterDTO(do, demand)
 	return nil
 }
 
@@ -38,42 +38,8 @@ func (*DBServiceHandler) DeleteCluster(ctx context.Context, req *dbPb.DBDeleteCl
 
 	resp.Status = ClusterSuccessResponseStatus
 
-	resp.Cluster = ConvertToClusterDTO(cluster)
+	resp.Cluster = ConvertToClusterDTO(cluster, nil)
 	return nil
-}
-
-func ConvertToDisplayDTO(do *models.ClusterDO, flow *models.FlowDO) (dto *dbPb.DBClusterDisplayDTO) {
-	return &dbPb.DBClusterDisplayDTO{
-		Cluster: ConvertToClusterDTO(do),
-		Flow: convertFlowToDTO(flow),
-	}
-}
-
-func ConvertToClusterDTO(do *models.ClusterDO) (dto *dbPb.DBClusterDTO) {
-	return &dbPb.DBClusterDTO {
-		Id:          do.ID,
-		Code:        do.Code,
-		Name:        do.ClusterName,
-		TenantId:    do.TenantId,
-		DbPassword:  do.DbPassword,
-		ClusterType: do.ClusterType,
-		VersionCode: do.ClusterVersion,
-		Status: 	 int32(do.Status),
-		Tags:        do.Tags,
-		Tls:         do.Tls,
-		WorkFlowId:  int32(do.CurrentFlowId),
-		OwnerId:     do.OwnerId,
-		CreateTime:  do.CreatedAt.Unix(),
-		UpdateTime:  do.UpdatedAt.Unix(),
-		DeleteTime:  DeletedAtUnix(do.DeletedAt),
-	}
-}
-
-func DeletedAtUnix(at gorm.DeletedAt) (unix int64) {
-	if at.Valid {
-		return at.Time.Unix()
-	}
-	return
 }
 
 func (*DBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, req *dbPb.DBUpdateTiupConfigRequest, resp *dbPb.DBUpdateTiupConfigResponse) error {
@@ -85,7 +51,7 @@ func (*DBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, req *dbPb.
 	}
 
 	resp.Status = ClusterSuccessResponseStatus
-	resp.Cluster = ConvertToClusterDTO(do)
+	resp.Cluster = ConvertToClusterDTO(do, nil)
 	return nil
 }
 
@@ -109,15 +75,82 @@ func (*DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *dbPb.DBUp
 	}
 
 	resp.Status = ClusterSuccessResponseStatus
-	resp.Cluster = ConvertToClusterDTO(do)
+	resp.Cluster = ConvertToClusterDTO(do, nil)
 
 	return nil
 }
+
 func (*DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLoadClusterRequest, resp *dbPb.DBLoadClusterResponse) error {
+	cluster, demand, config, flow, err := models.FetchCluster(req.ClusterId)
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.ClusterDetail = &dbPb.DBClusterDetailDTO{
+		Cluster: ConvertToClusterDTO(cluster, demand),
+		TiupConfigRecord: ConvertToConfigDTO(config),
+		Flow: convertFlowToDTO(flow),
+	}
 	return nil
 }
+
 func (*DBServiceHandler) ListCluster(ctx context.Context, req *dbPb.DBListClusterRequest, resp *dbPb.DBListClusterResponse) error {
 	return nil
+}
+
+func ConvertToClusterDTO(do *models.ClusterDO, demand *models.DemandRecordDO) (dto *dbPb.DBClusterDTO) {
+	dto = &dbPb.DBClusterDTO {
+		Id:          do.ID,
+		Code:        do.Code,
+		Name:        do.ClusterName,
+		TenantId:    do.TenantId,
+		DbPassword:  do.DbPassword,
+		ClusterType: do.ClusterType,
+		VersionCode: do.ClusterVersion,
+		Status: 	 int32(do.Status),
+		Tags:        do.Tags,
+		Tls:         do.Tls,
+		WorkFlowId:  int32(do.CurrentFlowId),
+		OwnerId:     do.OwnerId,
+		CreateTime:  do.CreatedAt.Unix(),
+		UpdateTime:  do.UpdatedAt.Unix(),
+		DeleteTime:  DeletedAtUnix(do.DeletedAt),
+	}
+
+	if demand != nil {
+		dto.Demands = demand.Content
+	}
+	return
+}
+
+func ConvertToDisplayDTO(do *models.ClusterDO, flow *models.FlowDO) (dto *dbPb.DBClusterDisplayDTO) {
+	if do == nil {
+		return nil
+	}
+	return &dbPb.DBClusterDisplayDTO{
+		Cluster: ConvertToClusterDTO(do, nil),
+		Flow: convertFlowToDTO(flow),
+	}
+}
+
+func ConvertToConfigDTO(do *models.TiUPConfigDO) (dto *dbPb.DBTiUPConfigDTO) {
+	return &dbPb.DBTiUPConfigDTO{
+		Id: int32(do.ID),
+		TenantId:   do.TenantId,
+		ClusterId:  do.ClusterId,
+		Content:    do.Content,
+		CreateTime: do.CreatedAt.Unix(),
+
+	}
+}
+
+func DeletedAtUnix(at gorm.DeletedAt) (unix int64) {
+	if at.Valid {
+		return at.Time.Unix()
+	}
+	return
 }
 
 func ParseDBClusterDTO(dto *dbPb.DBClusterDTO) (do *models.ClusterDO){

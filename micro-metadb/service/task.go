@@ -41,6 +41,7 @@ func (d *DBServiceHandler) CreateTask(ctx context.Context, req *dbPb.DBCreateTas
 
 	return nil
 }
+
 func (d *DBServiceHandler) UpdateFlow(ctx context.Context, req *dbPb.DBUpdateFlowRequest, rsp *dbPb.DBUpdateFlowResponse) error {
 	flow, err := models.UpdateFlow(*parseFlowDTO(req.FlowWithTasks.Flow))
 	if err != nil {
@@ -60,6 +61,7 @@ func (d *DBServiceHandler) UpdateFlow(ctx context.Context, req *dbPb.DBUpdateFlo
 	}
 	return nil
 }
+
 func (d *DBServiceHandler) UpdateTask(ctx context.Context, req *dbPb.DBUpdateTaskRequest, rsp *dbPb.DBUpdateTaskResponse) error {
 	task, err := models.UpdateTask(*parseTaskDTO(req.Task))
 	if err != nil {
@@ -72,6 +74,7 @@ func (d *DBServiceHandler) UpdateTask(ctx context.Context, req *dbPb.DBUpdateTas
 
 	return nil
 }
+
 func (d *DBServiceHandler) LoadFlow(ctx context.Context, req *dbPb.DBLoadFlowRequest, rsp *dbPb.DBLoadFlowResponse) error {
 	flow , tasks, err  := models.FetchFlowDetail(uint(req.Id))
 	if err != nil {
@@ -86,6 +89,7 @@ func (d *DBServiceHandler) LoadFlow(ctx context.Context, req *dbPb.DBLoadFlowReq
 
 	return nil
 }
+
 func (d *DBServiceHandler) LoadTask(ctx context.Context, req *dbPb.DBLoadTaskRequest, rsp *dbPb.DBLoadTaskResponse) error {
 	task, err := models.FetchTask(uint(req.Id))
 	if err != nil {
@@ -100,6 +104,9 @@ func (d *DBServiceHandler) LoadTask(ctx context.Context, req *dbPb.DBLoadTaskReq
 }
 
 func convertFlowToDTO(do *models.FlowDO) (dto *dbPb.DBFlowDTO) {
+	if do == nil {
+		return
+	}
 	dto = &dbPb.DBFlowDTO{}
 	dto.Id = int64(do.ID)
 	dto.FlowName = do.FlowName
@@ -114,6 +121,9 @@ func convertFlowToDTO(do *models.FlowDO) (dto *dbPb.DBFlowDTO) {
 }
 
 func parseFlowDTO(dto *dbPb.DBFlowDTO) (do *models.FlowDO) {
+	if dto == nil {
+		return
+	}
 	do = &models.FlowDO{}
 	do.ID = uint(dto.Id)
 	do.FlowName = dto.FlowName
@@ -124,6 +134,9 @@ func parseFlowDTO(dto *dbPb.DBFlowDTO) (do *models.FlowDO) {
 }
 
 func convertTaskToDTO(do *models.TaskDO) (dto *dbPb.DBTaskDTO) {
+	if do == nil {
+		return
+	}
 	dto = &dbPb.DBTaskDTO{}
 	dto.Id = int64(do.ID)
 
@@ -164,6 +177,9 @@ func batchParseTaskDTO(dtos []*dbPb.DBTaskDTO) (dos []*models.TaskDO) {
 }
 
 func parseTaskDTO(dto *dbPb.DBTaskDTO) (do *models.TaskDO) {
+	if dto == nil {
+		return
+	}
 	do = &models.TaskDO{}
 	do.ID = uint(dto.Id)
 	do.BizId = dto.BizId

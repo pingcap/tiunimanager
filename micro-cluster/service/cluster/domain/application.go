@@ -17,17 +17,20 @@ import (
 type ClusterAggregation struct {
 	Cluster 				*Cluster
 
-	CurrentDemandRecords 	[]*ClusterDemandRecord
-
 	CurrentTiUPConfigRecord *TiUPConfigRecord
-
 	CurrentWorkFlow  		*FlowWorkEntity
 
+	MaintainCronTask 		*CronTaskEntity
 	HistoryWorkFLows 		[]*FlowWorkEntity
 
 	UsedResources 			interface{}
 	
 	AvailableResources		interface{}
+
+	StatusModified 			bool
+	FlowModified 			bool
+
+	ConfigModified 			bool
 }
 
 var contextClusterKey = "clusterAggregation"
@@ -99,64 +102,10 @@ func ListCluster(operator Operator) ([]*ClusterAggregation, error) {
 	return nil, nil
 }
 
-func GetClusterDetail(clusterId string, operator Operator) (*ClusterAggregation, error) {
-	return nil, nil
-}
-
-func parseOperatorFromDTO(dto *proto.OperatorDTO) (operator *Operator) {
-	operator = &Operator{
-		Id: dto.Id,
-		Name: dto.Name,
-		TenantId: dto.TenantId,
-	}
-	return
-}
-
-func parseDistributionItemFromDTO(dto *proto.DistributionItemDTO) (item *ClusterNodeDistributionItem) {
-	item = &ClusterNodeDistributionItem{
-		ZoneCode: dto.ZoneCode,
-		SpecCode: dto.SpecCode,
-		Count: int(dto.Count),
-	}
-	return
-}
-
-func parseNodeDemandFromDTO(dto *proto.ClusterNodeDemandDTO) (demand *ClusterComponentDemand) {
-	items := make([]*ClusterNodeDistributionItem, len(dto.Items), len(dto.Items))
-
-	for i,v := range dto.Items {
-		items[i] = parseDistributionItemFromDTO(v)
-	}
-
-	demand = &ClusterComponentDemand{
-		ComponentType:  knowledge.ClusterComponentFromCode(dto.ComponentType),
-		TotalNodeCount: int(dto.TotalNodeCount),
-		DistributionItems: items,
-	}
-
-	return demand
-}
-
-func (aggregation *ClusterAggregation) ExtractStatusDTO() *proto.DisplayStatusDTO{
-	cluster := aggregation.Cluster
-	
-	dto := &proto.DisplayStatusDTO {
-		CreateTime:      cluster.CreateTime.Unix(),
-		UpdateTime:      cluster.UpdateTime.Unix(),
-		DeleteTime:      cluster.DeleteTime.Unix(),
-		InProcessFlowId: int32(cluster.WorkFlowId),
-	}
-	
-	if cluster.WorkFlowId > 0 {
-
-		dto.StatusCode = aggregation.CurrentWorkFlow.FlowName
-		dto.StatusName = aggregation.CurrentWorkFlow.StatusAlias
-	} else {
-		dto.StatusCode = strconv.Itoa(int(aggregation.Cluster.Status))
-		dto.StatusName = aggregation.Cluster.Status.Display()
-	}
-
-	return dto
+func GetClusterDetail(clusterId string, ope *proto.OperatorDTO) (*ClusterAggregation, error) {
+	cluster, err := ClusterRepo.Load(clusterId)
+	// todo 补充其他的信息
+	return cluster, err
 }
 
 func (aggregation *ClusterAggregation) loadWorkFlow() error {
@@ -171,37 +120,6 @@ func (aggregation *ClusterAggregation) loadWorkFlow() error {
 	}
 
 	return nil
-}
-
-func (aggregation *ClusterAggregation) GetCurrentWorkFlow() *FlowWorkEntity {
-	if aggregation.CurrentWorkFlow != nil {
-		return aggregation.CurrentWorkFlow
-	}
-
-	if aggregation.Cluster.WorkFlowId > 0 {
-		// todo 从DB获取
-		return nil
-	}
-	
-	return nil
-}
-
-func (aggregation *ClusterAggregation) ExtractBaseInfoDTO() *proto.ClusterBaseInfoDTO {
-	cluster :=  aggregation.Cluster
-	return &proto.ClusterBaseInfoDTO {
-		ClusterName: cluster.ClusterName,
-		DbPassword: cluster.DbPassword,
-		ClusterType: &proto.ClusterTypeDTO{
-			Code: cluster.ClusterType.Code,
-			Name: cluster.ClusterType.Name,
-		},
-		ClusterVersion: &proto.ClusterVersionDTO{
-			Code: cluster.ClusterVersion.Code,
-			Name: cluster.ClusterVersion.Name,
-		},
-		Tags: cluster.Tags,
-		Tls: cluster.Tls,
-	}
 }
 
 func prepareResource(task *TaskEntity, context *FlowContext) bool {
@@ -312,4 +230,111 @@ func freedResource(task *TaskEntity, context *FlowContext) bool {
 
 func destroyTasks(task *TaskEntity, context *FlowContext) bool {
 	panic("implement me")
+}
+
+func (aggregation *ClusterAggregation) ExtractStatusDTO() *proto.DisplayStatusDTO{
+	cluster := aggregation.Cluster
+
+	dto := &proto.DisplayStatusDTO {
+		CreateTime:      cluster.CreateTime.Unix(),
+		UpdateTime:      cluster.UpdateTime.Unix(),
+		DeleteTime:      cluster.DeleteTime.Unix(),
+		InProcessFlowId: int32(cluster.WorkFlowId),
+	}
+
+	if cluster.WorkFlowId > 0 {
+		dto.StatusCode = aggregation.CurrentWorkFlow.FlowName
+		dto.StatusName = aggregation.CurrentWorkFlow.StatusAlias
+	} else {
+		dto.StatusCode = strconv.Itoa(int(aggregation.Cluster.Status))
+		dto.StatusName = aggregation.Cluster.Status.Display()
+	}
+
+	return dto
+}
+
+func (aggregation *ClusterAggregation) GetCurrentWorkFlow() *FlowWorkEntity {
+	if aggregation.CurrentWorkFlow != nil {
+		return aggregation.CurrentWorkFlow
+	}
+
+	if aggregation.Cluster.WorkFlowId > 0 {
+		// todo 从DB获取
+		return nil
+	}
+
+	return nil
+}
+
+func (aggregation *ClusterAggregation) ExtractDisplayDTO() *proto.ClusterDisplayDTO {
+	dto := &proto.ClusterDisplayDTO{
+		ClusterId: aggregation.Cluster.Id,
+		BaseInfo: aggregation.ExtractBaseInfoDTO(),
+		Status: aggregation.ExtractStatusDTO(),
+		Instances: aggregation.ExtractInstancesDTO(),
+	}
+	return dto
+}
+
+func (aggregation *ClusterAggregation) ExtractMaintenanceDTO() *proto.ClusterMaintenanceDTO {
+	dto := &proto.ClusterMaintenanceDTO{}
+	if aggregation.MaintainCronTask != nil {
+		dto.MaintainTaskCron = aggregation.MaintainCronTask.cron
+	} else {
+		// default maintain ?
+	}
+
+	return dto
+}
+
+func (aggregation *ClusterAggregation) ExtractBaseInfoDTO() *proto.ClusterBaseInfoDTO {
+	cluster :=  aggregation.Cluster
+	return &proto.ClusterBaseInfoDTO {
+		ClusterName: cluster.ClusterName,
+		DbPassword: cluster.DbPassword,
+		ClusterType: &proto.ClusterTypeDTO{
+			Code: cluster.ClusterType.Code,
+			Name: cluster.ClusterType.Name,
+		},
+		ClusterVersion: &proto.ClusterVersionDTO{
+			Code: cluster.ClusterVersion.Code,
+			Name: cluster.ClusterVersion.Name,
+		},
+		Tags: cluster.Tags,
+		Tls: cluster.Tls,
+	}
+}
+
+func parseOperatorFromDTO(dto *proto.OperatorDTO) (operator *Operator) {
+	operator = &Operator{
+		Id: dto.Id,
+		Name: dto.Name,
+		TenantId: dto.TenantId,
+	}
+	return
+}
+
+func parseDistributionItemFromDTO(dto *proto.DistributionItemDTO) (item *ClusterNodeDistributionItem) {
+	item = &ClusterNodeDistributionItem{
+		ZoneCode: dto.ZoneCode,
+		SpecCode: dto.SpecCode,
+		Count: int(dto.Count),
+	}
+	return
+}
+
+func parseNodeDemandFromDTO(dto *proto.ClusterNodeDemandDTO) (demand *ClusterComponentDemand) {
+	items := make([]*ClusterNodeDistributionItem, len(dto.Items), len(dto.Items))
+
+	for i,v := range dto.Items {
+		items[i] = parseDistributionItemFromDTO(v)
+	}
+
+	demand = &ClusterComponentDemand{
+		ComponentType:  knowledge.ClusterComponentFromCode(dto.ComponentType),
+		TotalNodeCount: int(dto.TotalNodeCount),
+		DistributionItems: items,
+	}
+
+	return demand
 }

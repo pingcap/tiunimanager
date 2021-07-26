@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"encoding/json"
 	"github.com/pingcap/ticp/knowledge"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"time"
@@ -61,4 +62,9 @@ type TiUPConfigRecord struct {
 	ClusterId 			string
 	ConfigModel 		*spec.Specification
 	CreateTime 			time.Time
+}
+
+func (r TiUPConfigRecord) Content() string {
+	bytes, _ := json.Marshal(r.ConfigModel)
+	return string(bytes)
 }

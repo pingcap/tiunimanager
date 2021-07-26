@@ -15,7 +15,7 @@ type FlowWorkEntity struct {
 	StatusAlias string
 	BizId       string
 	Status      TaskStatus
-	Context     FlowContext
+	ContextContent string
 }
 
 type FlowContext map[string]interface{}
@@ -66,6 +66,7 @@ type FlowWorkAggregation struct {
 	Define 		*FlowWorkDefine
 	CurrentTask *TaskEntity
 	Tasks    	[]*TaskEntity
+	Context     FlowContext
 }
 
 func CreateFlowWork(bizId string, defineName string) (*FlowWorkAggregation, error){
@@ -94,7 +95,7 @@ func (flow *FlowWorkAggregation) Destroy() {
 }
 
 func (flow *FlowWorkAggregation) AddContext(key string, value interface{}) {
-	flow.FlowWork.Context.put(key, value)
+	flow.Context.put(key, value)
 }
 
 func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
@@ -108,7 +109,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 	flow.Tasks = append(flow.Tasks, task)
 	task.Processing()
 
-	handleSuccess := taskDefine.Executor(task, &flow.FlowWork.Context)
+	handleSuccess := taskDefine.Executor(task, &flow.Context)
 
 	if !handleSuccess {
 		if "" == taskDefine.FailEvent {

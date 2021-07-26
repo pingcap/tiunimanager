@@ -9,6 +9,10 @@ type ClusterSpecKnowledge struct {
 	Components  map[string]*ClusterComponent
 }
 
+type ResourceSpecKnowledge struct {
+	Specs 		[]*ResourceSpec
+}
+
 func ClusterTypeFromCode(code string) *ClusterType {
 	return SpecKnowledge.Types[code]
 }

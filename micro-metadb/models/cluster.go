@@ -49,8 +49,8 @@ func UpdateClusterStatus(clusterId string, status int8) (cluster *ClusterDO, err
 	return
 }
 
-func UpdateClusterDemand(clusterId string, content string, tenantId string) (cluster *ClusterDO, err error) {
-	record := &DemandRecordDO{
+func UpdateClusterDemand(clusterId string, content string, tenantId string) (cluster *ClusterDO, demand *DemandRecordDO, err error) {
+	demand = &DemandRecordDO{
 		ClusterId: clusterId,
 		Content: content,
 		Record: Record{
@@ -58,13 +58,13 @@ func UpdateClusterDemand(clusterId string, content string, tenantId string) (clu
 		},
 	}
 
-	err = MetaDB.Create(record).Error
+	err = MetaDB.Create(demand).Error
 	if err != nil {
 		return
 	}
 
 	cluster = &ClusterDO{}
-	err = MetaDB.Model(cluster).Where("id = ?", clusterId).Update("current_demand_id", record.ID).Error
+	err = MetaDB.Model(cluster).Where("id = ?", clusterId).Update("current_demand_id", demand.ID).Error
 	return
 }
 
@@ -114,6 +114,39 @@ func DeleteCluster(clusterId string) (cluster *ClusterDO, err error) {
 	return
 }
 
+func FetchCluster(clusterId string) (cluster *ClusterDO, demand *DemandRecordDO, config *TiUPConfigDO, flow *FlowDO, err error) {
+	cluster = &ClusterDO{}
+	err = MetaDB.Find(cluster, clusterId).Error
+	if err !=nil {
+		return
+	}
+
+	if cluster.CurrentDemandId > 0 {
+		demand = &DemandRecordDO{}
+		err = MetaDB.Find(demand, cluster.CurrentDemandId).Error
+		if err != nil {
+			return
+		}
+	}
+
+	if cluster.CurrentTiupConfigId > 0 {
+		config = &TiUPConfigDO{}
+		err = MetaDB.Find(config, cluster.CurrentTiupConfigId).Error
+		if err != nil {
+			return
+		}
+	}
+
+	if cluster.CurrentFlowId > 0 {
+		flow = &FlowDO{}
+		err = MetaDB.Find(flow, cluster.CurrentFlowId).Error
+	}
+	return
+}
+
+func ListClusters() {
+
+}
 func CreateCluster(
 		ClusterName 			string,
 		DbPassword 				string,

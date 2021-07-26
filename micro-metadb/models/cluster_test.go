@@ -93,9 +93,13 @@ func TestUpdateClusterDemand(t *testing.T) {
 
 		demandId := cluster.CurrentDemandId
 
-		cluster, err := UpdateClusterDemand(cluster.ID, "aaa", cluster.TenantId)
+		cluster, demand, err := UpdateClusterDemand(cluster.ID, "aaa", cluster.TenantId)
 		if err != nil {
 			t.Errorf("UpdateClusterDemand() error = %v", err)
+		}
+
+		if demand == nil || demand.ID == 0 {
+			t.Errorf("UpdateClusterDemand() demand = %v", demand)
 		}
 
 		if cluster.CurrentDemandId == 0 || cluster.CurrentDemandId <= demandId {
@@ -104,7 +108,7 @@ func TestUpdateClusterDemand(t *testing.T) {
 	})
 
 	t.Run("empty clusterId", func(t *testing.T) {
-		_, err := UpdateClusterDemand("", "aaa", "111")
+		_, _, err := UpdateClusterDemand("", "aaa", "111")
 		if err == nil {
 			t.Errorf("UpdateClusterDemand() error = %v", err)
 		}
@@ -193,7 +197,7 @@ func TestUpdateTiUPConfig(t *testing.T) {
 	})
 
 	t.Run("empty clusterId", func(t *testing.T) {
-		_, err := UpdateClusterDemand("", "aaa", "111")
+		_, _, err := UpdateClusterDemand("", "aaa", "111")
 		if err == nil {
 			t.Errorf("UpdateClusterDemand() error = %v", err)
 		}

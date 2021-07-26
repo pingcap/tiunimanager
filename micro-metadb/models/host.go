@@ -94,7 +94,7 @@ func (h Host) IsExhaust() bool {
 }
 
 func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
-	err = tx.Where("IP = ? and Name = ?", h.IP, h.HostName).First(&Host{}).Error
+	err = tx.Where("IP = ? and HOST_NAME = ?", h.IP, h.HostName).First(&Host{}).Error
 	if err == nil {
 		return status.Errorf(codes.AlreadyExists, "Host %s(%s) is Existed", h.HostName, h.IP)
 	}
@@ -270,8 +270,8 @@ func LockHosts(resources []ResourceLock) (err error) {
 		}
 		setUpdate[v.HostId].cpuCores += v.RequestCores
 		setUpdate[v.HostId].mem += v.RequestMem
-		tx.Save(&host)
-		tx.Save(&disk)
+		tx.Model(&host).Select("CpuCores", "Memory").Updates(Host{CpuCores: host.CpuCores, Memory: host.Memory})
+		tx.Model(&disk).Update("Status", disk.Status)
 	}
 	tx.Commit()
 	return nil

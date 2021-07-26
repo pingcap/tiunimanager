@@ -222,10 +222,14 @@ func mergeReqs(zonesReqs map[string]map[string]*dbPb.DBPreAllocHostsRequest, req
 			r.Req.Count += eachReq.Count
 		} else {
 			var req dbPb.DBPreAllocHostsRequest
+			req.Req = new(dbPb.DBAllocationReq)
 			req.Req.FailureDomain = eachReq.FailureDomain
 			req.Req.CpuCores = eachReq.CpuCores
 			req.Req.Memory = eachReq.Memory
 			req.Req.Count = eachReq.Count
+			if zonesReqs[eachReq.FailureDomain] == nil {
+				zonesReqs[eachReq.FailureDomain] = make(map[string]*dbPb.DBPreAllocHostsRequest)
+			}
 			zonesReqs[eachReq.FailureDomain][spec] = &req
 		}
 	}
@@ -240,11 +244,14 @@ func fetchResults(zonesRsps map[string]map[string][]*dbPb.DBPreAllocation, reqs 
 			var host hostPb.AllocHost
 			host.HostName = rsp.HostName
 			host.Ip = rsp.Ip
+			host.CpuCores = rsp.RequestCores
+			host.Memory = rsp.RequestMem
 			host.Disk = new(hostPb.Disk)
 			host.Disk.Name = rsp.DiskName
 			host.Disk.Capacity = rsp.DiskCap
 			host.Disk.Path = rsp.DiskPath
 			host.Disk.Status = 0
+			host.Disk.DiskId = rsp.DiskId
 			res = append(res, &host)
 		}
 		zonesRsps[zone][spec] = zonesRsps[zone][spec][eachReq.Count:]
@@ -283,6 +290,9 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 					log.Errorf("PreAlloc %d Hosts with spec(%dU%dG) in %s failed with errCode(%d)",
 						req.Req.Count, req.Req.CpuCores, req.Req.Memory, req.Req.FailureDomain, rsp.Rs.Code)
 					return nil
+				}
+				if zonesRsps[zone] == nil {
+					zonesRsps[zone] = make(map[string][]*dbPb.DBPreAllocation)
 				}
 				zonesRsps[zone][spec] = append(zonesRsps[zone][spec], rsp.Results...)
 				lockReq.Req = append(lockReq.Req, rsp.Results...)

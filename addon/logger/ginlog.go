@@ -34,7 +34,7 @@ func GenGinLogger(notLogged ...string) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		// other handler can change c.Path so:
-		logger := WithContext(c)
+		logger := LogRecord{defaultLogEntry: WithContext(c)}
 		path := c.Request.URL.Path
 		start := time.Now()
 		c.Next()
@@ -53,7 +53,7 @@ func GenGinLogger(notLogged ...string) gin.HandlerFunc {
 			return
 		}
 
-		entry := logger.WithFields(log.Fields{
+		entry := logger.Records(log.Fields{
 			"hostname":   hostname,
 			"statusCode": statusCode,
 			"latency":    latency, // time to process

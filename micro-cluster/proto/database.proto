@@ -1,11 +1,12 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "common.proto";
 
 option go_package = "./;cluster";
 
 message DataImportRequest {
-    string  tenantId = 1;
+    OperatorDTO operator = 1;
     string  clusterId = 2;
     string  userName = 3;
     string  password = 4;
@@ -13,11 +14,12 @@ message DataImportRequest {
 }
 
 message DataImportResponse {
-    string  flowId = 1;
+    ResponseStatusDTO respStatus = 1;
+    uint32  flowId = 2;
 }
 
 message DataExportRequest {
-    string  tenantId = 1;
+    OperatorDTO operator = 1;
     string  clusterId = 2;
     string  userName = 3;
     string  password = 4;
@@ -25,11 +27,12 @@ message DataExportRequest {
 }
 
 message DataExportResponse {
-    string  flowId = 1;
+    ResponseStatusDTO respStatus = 1;
+    uint32  flowId = 2;
 }
 
 message DataTransportQueryRequest {
-    string  tenantId = 1;
+    OperatorDTO operator = 1;
     string  clusterId = 2;
     string  flowId = 3;
 }
@@ -44,5 +47,6 @@ message DataTransportTaskInfo {
 }
 
 message DataTransportQueryResponse {
-    repeated DataTransportTaskInfo taskInfo = 1;
+    ResponseStatusDTO respStatus = 1;
+    repeated DataTransportTaskInfo taskInfo = 2;
 }

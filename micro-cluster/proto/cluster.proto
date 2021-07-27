@@ -141,12 +141,6 @@ message ClusterBaseInfoDTO {
     bool tls = 6;
 }
 
-message OperatorDTO {
-    string id = 1;
-    string name = 2;
-    string tenantId = 3;
-}
-
 message ClusterNodeDemandDTO {
     string componentType = 1;
     int32 totalNodeCount = 2;

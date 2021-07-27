@@ -16,9 +16,11 @@ func ExportData(c *gin.Context) {
 		return
 	}
 
+	operator := controller.GetOperator(c)
+
 	//todo: call cluster api
-	resp,err := client.ClusterClient.ExportData(c,&cluster.DataExportRequest{
-		TenantId: req.TenantId,
+	respDTO, err := client.ClusterClient.ExportData(c,&cluster.DataExportRequest{
+		Operator: operator.ConvertToDTO(),
 		ClusterId: req.ClusterId,
 		UserName: req.UserName,
 		Password: req.Password,
@@ -26,10 +28,16 @@ func ExportData(c *gin.Context) {
 	})
 
 	if err != nil {
-		// 处理异常
-	}
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetRespStatus()
 
-	c.JSON(http.StatusOK, controller.Success(resp.FlowId))
+		result := controller.BuildCommonResult(int(status.Code), status.Message, DataExportResp{
+			FlowId: respDTO.GetFlowId(),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
 }
 
 func ImportData(c *gin.Context) {
@@ -40,13 +48,28 @@ func ImportData(c *gin.Context) {
 		return
 	}
 
+	operator := controller.GetOperator(c)
+
 	//todo: call cluster api
+	respDTO, err := client.ClusterClient.ImportData(c,&cluster.DataImportRequest{
+		Operator: operator.ConvertToDTO(),
+		ClusterId: req.ClusterId,
+		UserName: req.UserName,
+		Password: req.Password,
+		DataDir: req.DataDir,
+	})
 
 	if err != nil {
-		// 处理异常
-	}
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetRespStatus()
 
-	//c.JSON(http.StatusOK, controller.Success(CopyInstanceInfoFromDTO(resp.Cluster)))
+		result := controller.BuildCommonResult(int(status.Code), status.Message, DataImportResp{
+			FlowId: respDTO.GetFlowId(),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
 }
 
 func DescribeDataTransport(c *gin.Context) {

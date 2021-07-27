@@ -62,17 +62,32 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *cluster.C
 	}
 }
 
-func (c ClusterServiceHandler) ExportData(ctx context.Context, request *cluster.DataExportRequest, resp *cluster.DataExportResponse) error {
-	//todo: implement
+func (c ClusterServiceHandler) ExportData(ctx context.Context, req *cluster.DataExportRequest, resp *cluster.DataExportResponse) error {
+	flowId, err := domain.ExportData(req.Operator, req.ClusterId, req.UserName, req.Password, req.FileType)
+
+	if err != nil {
+		return err
+	} else {
+		resp.RespStatus = SuccessResponseStatus
+		resp.FlowId = flowId
+	}
 	return nil
 }
 
-func (c ClusterServiceHandler) ImportData(ctx context.Context, request *cluster.DataImportRequest, resp *cluster.DataImportResponse) error {
-	//todo: implement
+func (c ClusterServiceHandler) ImportData(ctx context.Context, req *cluster.DataImportRequest, resp *cluster.DataImportResponse) error {
+	flowId, err := domain.ImportData(req.Operator, req.ClusterId, req.UserName, req.Password, req.DataDir)
+
+	if err != nil {
+		return err
+	} else {
+		resp.RespStatus = SuccessResponseStatus
+		resp.FlowId = flowId
+	}
+	return nil
 	return nil
 }
 
-func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, request *cluster.DataTransportQueryRequest, resp *cluster.DataTransportQueryResponse) error {
+func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *cluster.DataTransportQueryRequest, resp *cluster.DataTransportQueryResponse) error {
 	//todo: implement
 	return nil
 }

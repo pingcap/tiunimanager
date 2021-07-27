@@ -85,4 +85,6 @@ const (
 const (
 	FlowCreateCluster = "CreateCluster"
 	FlowDeleteCluster = "DeleteCluster"
+	FlowExportData = "ExportData"
+	FlowImportData = "ImportData"
 )

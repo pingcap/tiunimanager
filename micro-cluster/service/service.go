@@ -64,7 +64,7 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *cluster.C
 
 func (c ClusterServiceHandler) ExportData(ctx context.Context, request *cluster.DataExportRequest, resp *cluster.DataExportResponse) error {
 	//todo: implement
-	return nils
+	return nil
 }
 
 func (c ClusterServiceHandler) ImportData(ctx context.Context, request *cluster.DataImportRequest, resp *cluster.DataImportResponse) error {

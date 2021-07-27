@@ -9,6 +9,7 @@ import (
 	"github.com/pingcap/ticp/micro-api/controller/hostapi"
 	"github.com/pingcap/ticp/micro-api/controller/instanceapi"
 	"github.com/pingcap/ticp/micro-api/controller/userapi"
+	"github.com/pingcap/ticp/micro-api/controller/databaseapi"
 	"github.com/pingcap/ticp/micro-api/security"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"

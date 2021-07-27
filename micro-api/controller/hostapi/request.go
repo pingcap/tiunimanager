@@ -48,3 +48,16 @@ const (
 	PURPOSE_FIELD
 	DISKS_FIELD
 )
+
+type Allocation struct {
+	FailureDomain string `json:"failureDomain"`
+	CpuCores      int32  `json:"cpuCores"`
+	Memory        int32  `json:"memory"`
+	Count         int32  `json:"count"`
+}
+
+type AllocHostsReq struct {
+	PdReq   []Allocation `json:"pdReq"`
+	TidbReq []Allocation `json:"tidbReq"`
+	TikvReq []Allocation `json:"tikvReq"`
+}

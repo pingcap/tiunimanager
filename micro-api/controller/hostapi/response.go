@@ -19,3 +19,17 @@ type ListHostRsp struct {
 type HostDetailsRsp struct {
 	Host HostInfo `json:"host"`
 }
+
+type AllocateRsp struct {
+	HostName string `json:"hostName"`
+	Ip       string `json:"ip"`
+	CpuCores int32  `json:"cpuCore"`
+	Memory   int32  `json:"memory"`
+	Disk     Disk   `json:"disk"`
+}
+
+type AllocHostsRsp struct {
+	PdHosts   []AllocateRsp `json:"pdHosts"`
+	TidbHosts []AllocateRsp `json:"tidbHosts"`
+	TikvHosts []AllocateRsp `json:"tikvHosts"`
+}

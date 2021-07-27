@@ -7,10 +7,10 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-	github.com/asim/go-micro/plugins/logger/logrus/v3 v3.0.0-20210721080634-e1bc7e302871
-	github.com/asim/go-micro/plugins/registry/etcd/v3 v3.0.0-20210721080634-e1bc7e302871
-	github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3 v3.0.0-20210721080634-e1bc7e302871
-	github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3 v3.0.0-20210721080634-e1bc7e302871
+	github.com/asim/go-micro/plugins/logger/logrus/v3 v3.0.0-20210726052521-c3107e6843e2
+	github.com/asim/go-micro/plugins/registry/etcd/v3 v3.0.0-20210726052521-c3107e6843e2
+	github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3 v3.0.0-20210726052521-c3107e6843e2
+	github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3 v3.0.0-20210726052521-c3107e6843e2
 	github.com/asim/go-micro/v3 v3.5.2
 	github.com/gin-gonic/gin v1.7.2
 	github.com/golang/protobuf v1.5.2

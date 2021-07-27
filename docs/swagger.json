@@ -16,6 +16,59 @@
     "host": "localhost:8080",
     "basePath": "/api/v1/",
     "paths": {
+        "/allochosts": {
+            "post": {
+                "description": "按指定的配置分配主机资源",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "分配主机接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "主机分配请求",
+                        "name": "Alloc",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hostapi.AllocHostsReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/hostapi.AllocHostsRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/download_template/": {
             "get": {
                 "description": "将主机信息文件导出到本地",
@@ -391,7 +444,7 @@
                     },
                     {
                         "description": "待删除的主机ID数组",
-                        "name": "hostId",
+                        "name": "hostIds",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -675,6 +728,89 @@
                 },
                 "page": {
                     "$ref": "#/definitions/controller.Page"
+                }
+            }
+        },
+        "hostapi.AllocHostsReq": {
+            "type": "object",
+            "properties": {
+                "pdReq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.Allocation"
+                    }
+                },
+                "tidbReq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.Allocation"
+                    }
+                },
+                "tikvReq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.Allocation"
+                    }
+                }
+            }
+        },
+        "hostapi.AllocHostsRsp": {
+            "type": "object",
+            "properties": {
+                "pdHosts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.AllocateRsp"
+                    }
+                },
+                "tidbHosts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.AllocateRsp"
+                    }
+                },
+                "tikvHosts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.AllocateRsp"
+                    }
+                }
+            }
+        },
+        "hostapi.AllocateRsp": {
+            "type": "object",
+            "properties": {
+                "cpuCore": {
+                    "type": "integer"
+                },
+                "disk": {
+                    "$ref": "#/definitions/hostapi.Disk"
+                },
+                "hostName": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "memory": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hostapi.Allocation": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "cpuCores": {
+                    "type": "integer"
+                },
+                "failureDomain": {
+                    "type": "string"
+                },
+                "memory": {
+                    "type": "integer"
                 }
             }
         },

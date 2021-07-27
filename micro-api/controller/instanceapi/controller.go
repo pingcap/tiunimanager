@@ -188,3 +188,4 @@ func DeleteBackup(c *gin.Context) {
 
 	c.JSON(http.StatusOK, controller.Success(recordId))
 }
+

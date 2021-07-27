@@ -75,6 +75,14 @@ func Route(g *gin.Engine) {
 			backup.DELETE("/record/:recordId", instanceapi.DeleteBackup)
 		}
 
+		database := apiV1.Group("/database")
+		{
+			database.Use(security.VerifyIdentity)
+			database.POST("/importData", databaseapi.ImportData)
+			database.POST("/exportData", databaseapi.ExportData)
+			database.GET("/describeDataTransport", databaseapi.DescribeDataTransport)
+		}
+
 		demoInstance := apiV1.Group("/instance")
 		{
 			demoInstance.Use(security.VerifyIdentity)

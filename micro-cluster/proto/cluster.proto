@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "common.proto";
 import "softwarespec.proto";
+import "database.proto";
 
 option go_package = "./;cluster";
 
@@ -10,6 +11,10 @@ service ClusterService {
     rpc QueryCluster(ClusterQueryReqDTO) returns (ClusterQueryRespDTO);
     rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
     rpc DetailCluster(ClusterDetailReqDTO) returns (ClusterDetailRespDTO);
+
+    rpc ImportData(DataImportRequest) returns (DataImportResponse);
+    rpc ExportData(DataExportRequest) returns (DataExportResponse);
+    rpc DescribeDataTransport(DataTransportQueryRequest) returns (DataTransportQueryResponse);
 }
 
 message ClusterCreateReqDTO {

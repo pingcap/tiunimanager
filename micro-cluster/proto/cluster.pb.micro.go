@@ -5,7 +5,7 @@ package cluster
 
 import (
 	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
+	proto "google.golang.org/protobuf/proto"
 	math "math"
 )
 
@@ -20,12 +20,6 @@ import (
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the proto package it is being compiled against.
-// A compilation error at this line likely means your copy of the
-// proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ api.Endpoint
@@ -46,6 +40,9 @@ type ClusterService interface {
 	QueryCluster(ctx context.Context, in *ClusterQueryReqDTO, opts ...client.CallOption) (*ClusterQueryRespDTO, error)
 	DeleteCluster(ctx context.Context, in *ClusterDeleteReqDTO, opts ...client.CallOption) (*ClusterDeleteRespDTO, error)
 	DetailCluster(ctx context.Context, in *ClusterDetailReqDTO, opts ...client.CallOption) (*ClusterDetailRespDTO, error)
+	ImportData(ctx context.Context, in *DataImportRequest, opts ...client.CallOption) (*DataImportResponse, error)
+	ExportData(ctx context.Context, in *DataExportRequest, opts ...client.CallOption) (*DataExportResponse, error)
+	DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, opts ...client.CallOption) (*DataTransportQueryResponse, error)
 }
 
 type clusterService struct {
@@ -100,6 +97,36 @@ func (c *clusterService) DetailCluster(ctx context.Context, in *ClusterDetailReq
 	return out, nil
 }
 
+func (c *clusterService) ImportData(ctx context.Context, in *DataImportRequest, opts ...client.CallOption) (*DataImportResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.ImportData", in)
+	out := new(DataImportResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) ExportData(ctx context.Context, in *DataExportRequest, opts ...client.CallOption) (*DataExportResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.ExportData", in)
+	out := new(DataExportResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, opts ...client.CallOption) (*DataTransportQueryResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.DescribeDataTransport", in)
+	out := new(DataTransportQueryResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterService service
 
 type ClusterServiceHandler interface {
@@ -107,6 +134,9 @@ type ClusterServiceHandler interface {
 	QueryCluster(context.Context, *ClusterQueryReqDTO, *ClusterQueryRespDTO) error
 	DeleteCluster(context.Context, *ClusterDeleteReqDTO, *ClusterDeleteRespDTO) error
 	DetailCluster(context.Context, *ClusterDetailReqDTO, *ClusterDetailRespDTO) error
+	ImportData(context.Context, *DataImportRequest, *DataImportResponse) error
+	ExportData(context.Context, *DataExportRequest, *DataExportResponse) error
+	DescribeDataTransport(context.Context, *DataTransportQueryRequest, *DataTransportQueryResponse) error
 }
 
 func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, opts ...server.HandlerOption) error {
@@ -115,6 +145,9 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		QueryCluster(ctx context.Context, in *ClusterQueryReqDTO, out *ClusterQueryRespDTO) error
 		DeleteCluster(ctx context.Context, in *ClusterDeleteReqDTO, out *ClusterDeleteRespDTO) error
 		DetailCluster(ctx context.Context, in *ClusterDetailReqDTO, out *ClusterDetailRespDTO) error
+		ImportData(ctx context.Context, in *DataImportRequest, out *DataImportResponse) error
+		ExportData(ctx context.Context, in *DataExportRequest, out *DataExportResponse) error
+		DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, out *DataTransportQueryResponse) error
 	}
 	type ClusterService struct {
 		clusterService
@@ -141,4 +174,16 @@ func (h *clusterServiceHandler) DeleteCluster(ctx context.Context, in *ClusterDe
 
 func (h *clusterServiceHandler) DetailCluster(ctx context.Context, in *ClusterDetailReqDTO, out *ClusterDetailRespDTO) error {
 	return h.ClusterServiceHandler.DetailCluster(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) ImportData(ctx context.Context, in *DataImportRequest, out *DataImportResponse) error {
+	return h.ClusterServiceHandler.ImportData(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) ExportData(ctx context.Context, in *DataExportRequest, out *DataExportResponse) error {
+	return h.ClusterServiceHandler.ExportData(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, out *DataTransportQueryResponse) error {
+	return h.ClusterServiceHandler.DescribeDataTransport(ctx, in, out)
 }

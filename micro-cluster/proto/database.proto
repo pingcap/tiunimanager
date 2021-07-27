@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./;cluster";
+
+message DataImportRequest {
+    string  tenantId = 1;
+    string  clusterId = 2;
+    string  userName = 3;
+    string  password = 4;
+    string  dataDir = 5;
+}
+
+message DataImportResponse {
+    string  flowId = 1;
+}
+
+message DataExportRequest {
+    string  tenantId = 1;
+    string  clusterId = 2;
+    string  userName = 3;
+    string  password = 4;
+    string  fileType = 5;
+}
+
+message DataExportResponse {
+    string  flowId = 1;
+}
+
+message DataTransportQueryRequest {
+    string  tenantId = 1;
+    string  clusterId = 2;
+    string  flowId = 3;
+}
+
+message DataTransportTaskInfo {
+    string flowId = 1;
+    string clusterId = 2;
+    int32 transportType = 3;
+    google.protobuf.Timestamp createdTime = 4;
+    bool result = 5;
+    string dataDir = 6;
+}
+
+message DataTransportQueryResponse {
+    repeated DataTransportTaskInfo taskInfo = 1;
+}

@@ -3,16 +3,13 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"log"
 	"net/http"
 
-	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
-	mlog "github.com/asim/go-micro/v3/logger"
 	"github.com/asim/go-micro/v3/transport"
-	mylogger "github.com/pingcap/ticp/addon/logger"
+	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/addon/tracer"
 	"github.com/pingcap/ticp/config"
 	manager "github.com/pingcap/ticp/micro-manager/proto"
@@ -21,6 +18,9 @@ import (
 	dbclient "github.com/pingcap/ticp/micro-metadb/client"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+// Global LogRecord object
+var log *logger.LogRecord
 
 func initConfig() {
 	{
@@ -36,7 +36,8 @@ func initConfig() {
 
 func initLogger() {
 	// log
-	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(mylogger.WithContext(nil)))
+	log = logger.GetLogger()
+	service.InitLogger()
 }
 
 func initPrometheus() {
@@ -53,7 +54,7 @@ func initPrometheus() {
 func initService() {
 	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
 	if err != nil {
-		mlog.Fatal(err)
+		log.Fatal(err)
 		return
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}

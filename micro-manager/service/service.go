@@ -80,6 +80,10 @@ func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.V
 	return nil
 }
 
+func InitLogger() {
+	host.InitLogger()
+}
+
 func (*ManagerServiceHandler) ImportHost(ctx context.Context, in *manager.ImportHostRequest, out *manager.ImportHostResponse) error {
 	return host.ImportHost(ctx, in, out)
 }

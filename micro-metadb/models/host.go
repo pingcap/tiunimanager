@@ -4,8 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/asim/go-micro/v3/util/log"
 	"github.com/google/uuid"
+	"github.com/pingcap/ticp/addon/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -112,7 +112,7 @@ func (h *Host) SetDiskStatus(diskId string, s DiskStatus) {
 func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 	err = tx.Where("IP = ? and HOST_NAME = ?", h.IP, h.HostName).First(&Host{}).Error
 	if err == nil {
-		return status.Errorf(codes.AlreadyExists, "Host %s(%s) is Existed", h.HostName, h.IP)
+		return status.Errorf(codes.AlreadyExists, "host %s(%s) is existed", h.HostName, h.IP)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		h.ID = uuid.New().String()
@@ -126,11 +126,11 @@ func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
 	err = tx.Where("ID = ?", h.ID).First(h).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return status.Errorf(codes.NotFound, "HostId %s is not found", h.ID)
+			return status.Errorf(codes.NotFound, "host %s is not found", h.ID)
 		}
 	} else {
 		if HostStatus(h.Status).IsInused() {
-			return status.Errorf(codes.PermissionDenied, "HostId %s is still in used", h.ID)
+			return status.Errorf(codes.PermissionDenied, "host %s is still in used", h.ID)
 		}
 	}
 
@@ -161,7 +161,7 @@ func CreateHostsInBatch(hosts []*Host) (ids []string, err error) {
 		err = tx.Create(host).Error
 		if err != nil {
 			tx.Rollback()
-			return nil, status.Errorf(codes.Canceled, "Create %s(%s) err, %v", host.HostName, host.IP, err)
+			return nil, status.Errorf(codes.Canceled, "create %s(%s) err, %v", host.HostName, host.IP, err)
 		}
 		ids = append(ids, host.ID)
 	}
@@ -182,7 +182,7 @@ func DeleteHostsInBatch(hostIds []string) (err error) {
 		var host Host
 		if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
 			tx.Rollback()
-			return status.Errorf(codes.FailedPrecondition, "Lock Host %s(%s) error, %v", hostId, host.IP, err)
+			return status.Errorf(codes.FailedPrecondition, "lock host %s(%s) error, %v", hostId, host.IP, err)
 		}
 		err = tx.Delete(&host).Error
 		if err != nil {
@@ -249,7 +249,7 @@ func LockHosts(resources []ResourceLock) (err error) {
 		if _, ok := setUpdate[v.HostId]; !ok {
 			if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host).Error; err != nil {
 				tx.Rollback()
-				log.Errorf("SET FOR UPDATE host %s failed", v.HostId)
+				logger.GetLogger().Errorf("set for update host %s failed", v.HostId)
 				return err
 			}
 			setUpdate[v.HostId] = &HostLocked{
@@ -260,7 +260,7 @@ func LockHosts(resources []ResourceLock) (err error) {
 		if !HostStatus(host.Status).IsAvailable() || host.CpuCores < v.RequestCores || host.Memory < v.RequestMem {
 			tx.Rollback()
 			return status.Errorf(codes.ResourceExhausted,
-				"No enough resource for Host %s(status:%d) cpu(%d/%d), mem(%d|%d)",
+				"no enough resource for host %s(status:%d) cpu(%d/%d), mem(%d|%d)",
 				v.HostId, host.Status, host.CpuCores, v.RequestCores, host.Memory, v.RequestMem)
 		}
 		if host.CpuCores+setUpdate[v.HostId].cpuCores == v.OriginCores && host.Memory+setUpdate[v.HostId].mem == v.OriginMem {
@@ -269,7 +269,7 @@ func LockHosts(resources []ResourceLock) (err error) {
 		} else {
 			tx.Rollback()
 			return status.Errorf(codes.FailedPrecondition,
-				"Host %s was changed concurrently, cpu(%d|%d), mem(%d|%d)",
+				"host %s was changed concurrently, cpu(%d|%d), mem(%d|%d)",
 				v.HostId, host.CpuCores+setUpdate[v.HostId].cpuCores, v.OriginCores, host.Memory+setUpdate[v.HostId].mem, v.OriginMem)
 		}
 		var disk Disk
@@ -281,7 +281,7 @@ func LockHosts(resources []ResourceLock) (err error) {
 		} else {
 			tx.Rollback()
 			return status.Errorf(codes.FailedPrecondition,
-				"Disk %s Status not expected(%d)", v.DiskId, disk.Status)
+				"disk %s status not expected(%d)", v.DiskId, disk.Status)
 		}
 		setUpdate[v.HostId].cpuCores += v.RequestCores
 		setUpdate[v.HostId].mem += v.RequestMem

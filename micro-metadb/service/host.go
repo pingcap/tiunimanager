@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/micro-metadb/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -36,8 +35,6 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
 }
 
 func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest, rsp *dbPb.DBAddHostResponse) error {
-	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "AddHost"})
-	log := logger.WithContext(ctx)
 	var host models.Host
 	copyHostInfoFromReq(req.Host, &host)
 
@@ -50,7 +47,7 @@ func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest
 			rsp.Rs.Message = st.Message()
 		} else {
 			rsp.Rs.Code = int32(codes.Internal)
-			rsp.Rs.Message = fmt.Sprintf("Failed to Import Host(%s) %s, %v", host.HostName, host.IP, err)
+			rsp.Rs.Message = fmt.Sprintf("failed to import host(%s) %s, %v", host.HostName, host.IP, err)
 		}
 		log.Warnln(rsp.Rs.Message)
 
@@ -63,8 +60,6 @@ func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest
 }
 
 func (*DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbPb.DBAddHostsInBatchRequest, rsp *dbPb.DBAddHostsInBatchResponse) error {
-	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "AddHostInBatch"})
-	log := logger.WithContext(ctx)
 	var hosts []*models.Host
 	for _, v := range req.Hosts {
 		var host models.Host
@@ -80,7 +75,7 @@ func (*DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbPb.DBAddHos
 			rsp.Rs.Message = st.Message()
 		} else {
 			rsp.Rs.Code = int32(codes.Internal)
-			rsp.Rs.Message = fmt.Sprintf("Failed to Import Hosts, %v", err)
+			rsp.Rs.Message = fmt.Sprintf("failed to import hosts, %v", err)
 		}
 		log.Warnln(rsp.Rs.Message)
 
@@ -93,8 +88,6 @@ func (*DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbPb.DBAddHos
 }
 
 func (*DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRemoveHostRequest, rsp *dbPb.DBRemoveHostResponse) error {
-	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "RemoveHost"})
-	log := logger.WithContext(ctx)
 	hostId := req.HostId
 	err := models.DeleteHost(hostId)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
@@ -105,7 +98,7 @@ func (*DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRemoveHostR
 			rsp.Rs.Message = st.Message()
 		} else {
 			rsp.Rs.Code = int32(codes.Internal)
-			rsp.Rs.Message = fmt.Sprintf("Failed to Delete HostId(%s), %v", hostId, err)
+			rsp.Rs.Message = fmt.Sprintf("failed to delete host(%s), %v", hostId, err)
 		}
 		log.Warnln(rsp.Rs.Message)
 
@@ -117,9 +110,6 @@ func (*DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRemoveHostR
 }
 
 func (*DBServiceHandler) RemoveHostsInBatch(ctx context.Context, req *dbPb.DBRemoveHostsInBatchRequest, rsp *dbPb.DBRemoveHostsInBatchResponse) error {
-	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "RemoveHostInBatch"})
-	log := logger.WithContext(ctx)
-
 	err := models.DeleteHostsInBatch(req.HostIds)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
@@ -129,7 +119,7 @@ func (*DBServiceHandler) RemoveHostsInBatch(ctx context.Context, req *dbPb.DBRem
 			rsp.Rs.Message = st.Message()
 		} else {
 			rsp.Rs.Code = int32(codes.Internal)
-			rsp.Rs.Message = fmt.Sprintf("Failed to Delete HostId In Batch, %v", err)
+			rsp.Rs.Message = fmt.Sprintf("failed to delete host in batch, %v", err)
 		}
 		log.Warnln(rsp.Rs.Message)
 
@@ -167,8 +157,6 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 
 func (*DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListHostsRequest, rsp *dbPb.DBListHostsResponse) error {
 	// TODO: proto3 does not support `optional` by now
-	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "ListHost"})
-	log := logger.WithContext(ctx)
 	hosts, err := models.ListHosts()
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
@@ -178,7 +166,7 @@ func (*DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListHostsRequ
 			rsp.Rs.Message = st.Message()
 		} else {
 			rsp.Rs.Code = int32(codes.Internal)
-			rsp.Rs.Message = fmt.Sprintf("Failed to List Hosts, %v", err)
+			rsp.Rs.Message = fmt.Sprintf("failed to list hosts, %v", err)
 		}
 		log.Warnln(rsp.Rs.Message)
 
@@ -194,8 +182,6 @@ func (*DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListHostsRequ
 	return nil
 }
 func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDetailsRequest, rsp *dbPb.DBCheckDetailsResponse) error {
-	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "CheckDetails"})
-	log := logger.WithContext(ctx)
 	host, err := models.FindHostById(req.HostId)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
@@ -205,7 +191,7 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDeta
 			rsp.Rs.Message = st.Message()
 		} else {
 			rsp.Rs.Code = int32(codes.Internal)
-			rsp.Rs.Message = fmt.Sprintf("Failed to List Hosts %s, %v", req.HostId, err)
+			rsp.Rs.Message = fmt.Sprintf("failed to list hosts %s, %v", req.HostId, err)
 		}
 		log.Warnln(rsp.Rs.Message)
 
@@ -220,9 +206,7 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDeta
 }
 
 func (*DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DBPreAllocHostsRequest, rsp *dbPb.DBPreAllocHostsResponse) error {
-	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "PreAllocHost"})
-	log := logger.WithContext(ctx)
-	log.Infof("DB Service Receive Alloc Host in %s for %d x (%dU%dG)", req.Req.FailureDomain, req.Req.Count, req.Req.CpuCores, req.Req.Memory)
+	log.Infof("db service receive alloc host in %s for %d x (%du%dg)", req.Req.FailureDomain, req.Req.Count, req.Req.CpuCores, req.Req.Memory)
 	resources, err := models.PreAllocHosts(req.Req.FailureDomain, int(req.Req.Count), int(req.Req.CpuCores), int(req.Req.Memory))
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
@@ -232,7 +216,7 @@ func (*DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DBPreAlloc
 			rsp.Rs.Message = st.Message()
 		} else {
 			rsp.Rs.Code = int32(codes.Internal)
-			rsp.Rs.Message = fmt.Sprintf("DB Service Receive Alloc Host in %s for %d x (%dU%dG) Error, err: %v",
+			rsp.Rs.Message = fmt.Sprintf("db service receive alloc host in %s for %d x (%du%dg) error, %v",
 				req.Req.FailureDomain, req.Req.Count, req.Req.CpuCores, req.Req.Memory, err)
 		}
 		log.Warnln(rsp.Rs.Message)
@@ -242,7 +226,7 @@ func (*DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DBPreAlloc
 	}
 
 	if len(resources) < int(req.Req.Count) {
-		errMsg := fmt.Sprintf("No Enough host resources(%d/%d) in %s", len(resources), req.Req.Count, req.Req.FailureDomain)
+		errMsg := fmt.Sprintf("no enough host resources(%d/%d) in %s", len(resources), req.Req.Count, req.Req.FailureDomain)
 		log.Errorln(errMsg)
 		rsp.Rs.Code = int32(codes.ResourceExhausted)
 		rsp.Rs.Message = errMsg
@@ -268,8 +252,6 @@ func (*DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DBPreAlloc
 }
 
 func (*DBServiceHandler) LockHosts(ctx context.Context, req *dbPb.DBLockHostsRequest, rsp *dbPb.DBLockHostsResponse) error {
-	ctx = logger.NewContext(ctx, logger.Fields{"micro-service": "LockHost"})
-	log := logger.WithContext(ctx)
 	var resources []models.ResourceLock
 	for _, v := range req.Req {
 		resources = append(resources, models.ResourceLock{
@@ -290,7 +272,7 @@ func (*DBServiceHandler) LockHosts(ctx context.Context, req *dbPb.DBLockHostsReq
 			rsp.Rs.Message = st.Message()
 		} else {
 			rsp.Rs.Code = int32(codes.Internal)
-			rsp.Rs.Message = fmt.Sprintf("LockHosts Failed, err: %v", err)
+			rsp.Rs.Message = fmt.Sprintf("lock hosts failed, err: %v", err)
 		}
 		log.Warnln(rsp.Rs.Message)
 

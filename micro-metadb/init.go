@@ -6,11 +6,9 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
-	mlog "github.com/asim/go-micro/v3/logger"
 	"github.com/asim/go-micro/v3/transport"
 	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/addon/tracer"
@@ -42,12 +40,10 @@ func initConfig() {
 }
 
 func initLogger() {
-	// log
-	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(logger.WithContext(nil)))
-
 	log = logger.GetLogger()
+	service.InitLogger()
 	// use log
-	log.Debug("I'm a test log")
+	log.Debug("init logger completed!")
 }
 
 func initService() {

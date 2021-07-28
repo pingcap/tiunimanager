@@ -473,7 +473,7 @@ func AllocHosts(c *gin.Context) {
 	copyAllocToReq(allocation.PdReq, &allocReq.PdReq)
 	copyAllocToReq(allocation.TidbReq, &allocReq.TidbReq)
 	copyAllocToReq(allocation.TikvReq, &allocReq.TikvReq)
-	fmt.Println(allocReq.PdReq, allocReq.TidbReq, allocReq.TikvReq)
+	//fmt.Println(allocReq.PdReq, allocReq.TidbReq, allocReq.TikvReq)
 	rsp, err := client.ManagerClient.AllocHosts(c, &allocReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))

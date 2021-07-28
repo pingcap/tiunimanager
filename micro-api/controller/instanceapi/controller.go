@@ -132,7 +132,7 @@ func SaveBackupStrategy(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param clusterId path string true "clusterId"
 // @Param request body BackupRecordQueryReq false "page" default(1)
-// @Success 200 {object} controller.ResultWithPage{data=[] BackupRecord}
+// @Success 200 {object} controller.ResultWithPage{data=[]BackupRecord}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult

@@ -48,7 +48,9 @@ type TiCPManagerService interface {
 	VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, opts ...client.CallOption) (*VerifyIdentityResponse, error)
 	// host manager module
 	ImportHost(ctx context.Context, in *ImportHostRequest, opts ...client.CallOption) (*ImportHostResponse, error)
+	ImportHostsInBatch(ctx context.Context, in *ImportHostsInBatchRequest, opts ...client.CallOption) (*ImportHostsInBatchResponse, error)
 	RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...client.CallOption) (*RemoveHostResponse, error)
+	RemoveHostsInBatch(ctx context.Context, in *RemoveHostsInBatchRequest, opts ...client.CallOption) (*RemoveHostsInBatchResponse, error)
 	ListHost(ctx context.Context, in *ListHostsRequest, opts ...client.CallOption) (*ListHostsResponse, error)
 	CheckDetails(ctx context.Context, in *CheckDetailsRequest, opts ...client.CallOption) (*CheckDetailsResponse, error)
 	AllocHosts(ctx context.Context, in *AllocHostsRequest, opts ...client.CallOption) (*AllocHostResponse, error)
@@ -106,9 +108,29 @@ func (c *tiCPManagerService) ImportHost(ctx context.Context, in *ImportHostReque
 	return out, nil
 }
 
+func (c *tiCPManagerService) ImportHostsInBatch(ctx context.Context, in *ImportHostsInBatchRequest, opts ...client.CallOption) (*ImportHostsInBatchResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPManagerService.ImportHostsInBatch", in)
+	out := new(ImportHostsInBatchResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tiCPManagerService) RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...client.CallOption) (*RemoveHostResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPManagerService.RemoveHost", in)
 	out := new(RemoveHostResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPManagerService) RemoveHostsInBatch(ctx context.Context, in *RemoveHostsInBatchRequest, opts ...client.CallOption) (*RemoveHostsInBatchResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPManagerService.RemoveHostsInBatch", in)
+	out := new(RemoveHostsInBatchResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -155,7 +177,9 @@ type TiCPManagerServiceHandler interface {
 	VerifyIdentity(context.Context, *VerifyIdentityRequest, *VerifyIdentityResponse) error
 	// host manager module
 	ImportHost(context.Context, *ImportHostRequest, *ImportHostResponse) error
+	ImportHostsInBatch(context.Context, *ImportHostsInBatchRequest, *ImportHostsInBatchResponse) error
 	RemoveHost(context.Context, *RemoveHostRequest, *RemoveHostResponse) error
+	RemoveHostsInBatch(context.Context, *RemoveHostsInBatchRequest, *RemoveHostsInBatchResponse) error
 	ListHost(context.Context, *ListHostsRequest, *ListHostsResponse) error
 	CheckDetails(context.Context, *CheckDetailsRequest, *CheckDetailsResponse) error
 	AllocHosts(context.Context, *AllocHostsRequest, *AllocHostResponse) error
@@ -167,7 +191,9 @@ func RegisterTiCPManagerServiceHandler(s server.Server, hdlr TiCPManagerServiceH
 		Logout(ctx context.Context, in *LogoutRequest, out *LogoutResponse) error
 		VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, out *VerifyIdentityResponse) error
 		ImportHost(ctx context.Context, in *ImportHostRequest, out *ImportHostResponse) error
+		ImportHostsInBatch(ctx context.Context, in *ImportHostsInBatchRequest, out *ImportHostsInBatchResponse) error
 		RemoveHost(ctx context.Context, in *RemoveHostRequest, out *RemoveHostResponse) error
+		RemoveHostsInBatch(ctx context.Context, in *RemoveHostsInBatchRequest, out *RemoveHostsInBatchResponse) error
 		ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error
 		CheckDetails(ctx context.Context, in *CheckDetailsRequest, out *CheckDetailsResponse) error
 		AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error
@@ -199,8 +225,16 @@ func (h *tiCPManagerServiceHandler) ImportHost(ctx context.Context, in *ImportHo
 	return h.TiCPManagerServiceHandler.ImportHost(ctx, in, out)
 }
 
+func (h *tiCPManagerServiceHandler) ImportHostsInBatch(ctx context.Context, in *ImportHostsInBatchRequest, out *ImportHostsInBatchResponse) error {
+	return h.TiCPManagerServiceHandler.ImportHostsInBatch(ctx, in, out)
+}
+
 func (h *tiCPManagerServiceHandler) RemoveHost(ctx context.Context, in *RemoveHostRequest, out *RemoveHostResponse) error {
 	return h.TiCPManagerServiceHandler.RemoveHost(ctx, in, out)
+}
+
+func (h *tiCPManagerServiceHandler) RemoveHostsInBatch(ctx context.Context, in *RemoveHostsInBatchRequest, out *RemoveHostsInBatchResponse) error {
+	return h.TiCPManagerServiceHandler.RemoveHostsInBatch(ctx, in, out)
 }
 
 func (h *tiCPManagerServiceHandler) ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error {

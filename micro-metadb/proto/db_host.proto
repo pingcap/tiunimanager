@@ -7,37 +7,29 @@ message DBHostResponseStatus {
     string message = 2;
 }
 
-enum DBHostStatus {
-    DBHostStatus_ONLINE = 0;
-    DBHostStatus_OFFLINE = 1;
-}
-
-enum DBDiskStatus {
-    DBDiskStatus_AVAILABLE = 0;              // This Disk can be alloced.
-    DBDiskStatus_INUSED = 1;
-}
-
 message DBDiskDTO {
-    string name = 1;            // [sda/sdb/nvmep0...]
-    int32 capacity = 2;         // Disk size, Unit: GB
-    string path = 3;            // Disk mount path: [/data1]
-    DBDiskStatus status = 4;
+    string diskId = 1;
+    string name = 2;            // [sda/sdb/nvmep0...]
+    int32 capacity = 3;         // Disk size, Unit: GB
+    string path = 4;            // Disk mount path: [/data1]
+    int32 status = 5;
 }
 
 message DBHostInfoDTO {
-    string hostName = 1;
-    string dc = 2;
-    string az = 3;
-    string rack = 4;
-    string ip = 5;
-    DBHostStatus status = 6;
-    string os = 7;                  // Host os
-    string kernel = 8;
-    int32 cpuCores = 9;
-    int32 memory = 10;              // Host memory size, Unit:GB
-    string nic = 11;                // Host network type: 1GE or 10GE
-    string purpose = 12;            // What Purpose is the host used for? [compute/storage or both]
-    repeated DBDiskDTO disks = 13;
+    string hostId = 1;
+    string hostName = 2;
+    string dc = 3;
+    string az = 4;
+    string rack = 5;
+    string ip = 6;
+    int32 status = 7;
+    string os = 8;                  // Host os
+    string kernel = 9;
+    int32 cpuCores = 10;
+    int32 memory = 11;              // Host memory size, Unit:GB
+    string nic = 12;                // Host network type: 1GE or 10GE
+    string purpose = 13;            // What Purpose is the host used for? [compute/storage or both]
+    repeated DBDiskDTO disks = 14;
 }
 
 message DBAllocHostDTO {
@@ -55,6 +47,15 @@ message DBAddHostResponse {
     string HostId = 2;
 }
 
+message DBAddHostsInBatchRequest {
+    repeated DBHostInfoDTO hosts = 1;
+}
+
+message DBAddHostsInBatchResponse {
+    DBHostResponseStatus rs = 1;
+    repeated string HostIds = 2;
+}
+
 message DBRemoveHostRequest {
     string hostId = 1;
 }
@@ -63,8 +64,16 @@ message DBRemoveHostResponse {
     DBHostResponseStatus rs = 1;
 }
 
+message DBRemoveHostsInBatchRequest {
+    repeated string hostIds = 1;
+}
+
+message DBRemoveHostsInBatchResponse {
+    DBHostResponseStatus rs = 1;
+}
+
 message DBListHostsRequest {
-    DBHostStatus status = 1;
+    int32 status = 1;
     string purpose = 2;
 }
 

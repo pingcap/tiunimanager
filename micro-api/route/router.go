@@ -65,7 +65,7 @@ func Route(g *gin.Engine) {
 
 		backup := apiV1.Group("/backup")
 		{
-			cluster.Use(security.VerifyIdentity)
+			backup.Use(security.VerifyIdentity)
 			backup.POST("/:clusterId", instanceapi.Backup)
 			backup.GET("/strategy/:clusterId", instanceapi.QueryBackupStrategy)
 			backup.POST("/strategy", instanceapi.SaveBackupStrategy)
@@ -80,13 +80,16 @@ func Route(g *gin.Engine) {
 			demoInstance.Use(security.VerifyIdentity)
 		}
 
-		host := apiV1.Group("/host")
+		host := apiV1.Group("/")
 		{
-			demoInstance.Use(security.VerifyIdentity)
-			host.POST("", hostapi.ImportHost)
-			host.POST("/query", hostapi.ListHost)
-			host.GET("/:hostId", hostapi.HostDetails)
-			host.DELETE("/:hostId", hostapi.RemoveHost)
+			host.Use(security.VerifyIdentity)
+			host.POST("host", hostapi.ImportHost)
+			host.POST("hosts", hostapi.ImportHosts)
+			host.GET("hosts", hostapi.ListHost)
+			host.GET("host/:hostId", hostapi.HostDetails)
+			host.DELETE("host/:hostId", hostapi.RemoveHost)
+			host.DELETE("hosts", hostapi.RemoveHosts)
+			host.GET("download_template", hostapi.DownloadHostTemplateFile)
 		}
 	}
 

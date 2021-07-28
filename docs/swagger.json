@@ -16,526 +16,23 @@
     "host": "localhost:8080",
     "basePath": "/api/v1/",
     "paths": {
-        "/backup/record/recover": {
-            "post": {
-                "description": "恢复备份",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster backup"
-                ],
-                "summary": "恢复备份",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "恢复备份请求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.BackupRecoverReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/controller.StatusInfo"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/backup/record/{recordId}": {
-            "delete": {
-                "description": "删除备份记录",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster backup"
-                ],
-                "summary": "删除备份记录",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "删除备份ID",
-                        "name": "recordId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/backup/records/{clusterId}": {
-            "post": {
-                "description": "查询备份记录",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster backup"
-                ],
-                "summary": "查询备份记录",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "page",
-                        "name": "request",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.BackupRecordQueryReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/instanceapi.BackupRecord"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/backup/strategy": {
-            "post": {
-                "description": "保存备份策略",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster backup"
-                ],
-                "summary": "保存备份策略",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "备份策略信息",
-                        "name": "updateReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.BackupStrategyUpdateReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/instanceapi.BackupStrategy"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/backup/strategy/{clusterId}": {
+        "/download_template/": {
             "get": {
-                "description": "查询备份策略",
+                "description": "将主机信息文件导出到本地",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
-                    "application/json"
+                    "application/octet-stream"
                 ],
                 "tags": [
-                    "cluster backup"
+                    "resource"
                 ],
-                "summary": "查询备份策略",
+                "summary": "导出主机信息模板文件",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/instanceapi.BackupStrategy"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/backup/{clusterId}": {
-            "post": {
-                "description": "backup",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster backup"
-                ],
-                "summary": "backup",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "要备份的集群ID",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/instanceapi.BackupRecord"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/cluster": {
-            "post": {
-                "description": "创建集群接口",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "创建集群接口",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "创建参数",
-                        "name": "createReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/clusterapi.CreateReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/clusterapi.CreateClusterRsp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/cluster/knowledge": {
-            "get": {
-                "description": "查看集群基本知识",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "查看集群基本知识",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
+                        "description": "登录token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -545,249 +42,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/models.ClusterTypeSpec"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/cluster/query": {
-            "post": {
-                "description": "查询集群列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "查询集群列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "page",
-                        "name": "queryReq",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/clusterapi.QueryReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/clusterapi.ClusterDisplayInfo"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/cluster/{clusterId}": {
-            "get": {
-                "description": "查看集群详情",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "查看集群详情",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "集群ID",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/clusterapi.DetailClusterRsp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "删除集群",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "删除集群",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "待删除的集群ID",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/clusterapi.DeleteClusterRsp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
+                            "type": "file"
                         }
                     }
                 }
@@ -795,7 +50,7 @@
         },
         "/host": {
             "post": {
-                "description": "将给定的主机信息导入TiCP",
+                "description": "将给定的主机信息导入系统",
                 "consumes": [
                     "application/json"
                 ],
@@ -809,7 +64,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
+                        "description": "登录token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -848,7 +103,7 @@
         },
         "/host/query": {
             "post": {
-                "description": "展示目前所有主机",
+                "description": "查询主机",
                 "consumes": [
                     "application/json"
                 ],
@@ -858,21 +113,22 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "查询主机列表",
+                "summary": "查询主机接口",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
+                        "description": "登录token",
                         "name": "Token",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "description": "可选的查询主机的条件",
-                        "name": "condition",
+                        "description": "查询请求",
+                        "name": "query",
                         "in": "body",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/hostapi.ListHostCondition"
+                            "$ref": "#/definitions/hostapi.HostQuery"
                         }
                     }
                 ],
@@ -890,7 +146,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/hostapi.HostInfo"
+                                                "$ref": "#/definitions/hostapi.DemoHostInfo"
                                             }
                                         }
                                     }
@@ -917,7 +173,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
+                        "description": "登录token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -966,7 +222,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
+                        "description": "登录token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -1001,9 +257,9 @@
                 }
             }
         },
-        "/hosts/stocks": {
-            "post": {
-                "description": "查询各可用区的主机规格库存",
+        "/hosts": {
+            "get": {
+                "description": "展示目前所有主机",
                 "consumes": [
                     "application/json"
                 ],
@@ -1013,165 +269,26 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "查询各可用区的主机规格库存",
+                "summary": "查询主机列表",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/hostapi.ZoneHostStockRsp"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/params/submit": {
-            "post": {
-                "description": "提交参数",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster params"
-                ],
-                "summary": "提交参数",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
+                        "description": "登录token",
                         "name": "Token",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "description": "要提交的参数信息",
-                        "name": "updateReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.ParamUpdateReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/instanceapi.ParamUpdateRsp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/params/{clusterId}": {
-            "post": {
-                "description": "查询集群参数列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster params"
-                ],
-                "summary": "查询集群参数列表",
-                "parameters": [
-                    {
                         "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "page",
-                        "name": "queryReq",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.ParamQueryReq"
-                        }
+                        "description": "查询特定用途的主机列表",
+                        "name": "purpose",
+                        "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "clusterId",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
+                        "description": "查询特定状态的主机列表",
+                        "name": "status",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1188,30 +305,229 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/instanceapi.ParamItem"
+                                                "$ref": "#/definitions/hostapi.HostInfo"
                                             }
                                         }
                                     }
                                 }
                             ]
                         }
+                    }
+                }
+            },
+            "post": {
+                "description": "通过文件批量导入主机",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "通过文件批量导入主机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    {
+                        "type": "file",
+                        "description": "包含待导入主机信息的文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
+                    }
+                }
+            }
+        },
+        "/hosts/": {
+            "delete": {
+                "description": "批量删除指定的主机",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "批量删除指定的主机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
                     },
-                    "403": {
-                        "description": "Forbidden",
+                    {
+                        "description": "待删除的主机ID数组",
+                        "name": "hostId",
+                        "in": "body",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/instance/create": {
+            "post": {
+                "description": "创建实例",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "instance"
+                ],
+                "summary": "创建实例接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "创建参数",
+                        "name": "createInfo",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.InstanceCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/instanceapi.InstanceInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/instance/query": {
+            "post": {
+                "description": "查询实例",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "instance"
+                ],
+                "summary": "查询实例接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "查询参数",
+                        "name": "query",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.InstanceQuery"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/instanceapi.InstanceInfo"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1259,18 +575,6 @@
                                 }
                             ]
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
                     }
                 }
             }
@@ -1291,7 +595,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
+                        "description": "登录token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -1323,343 +627,12 @@
                                 }
                             ]
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
                     }
                 }
             }
         }
     },
     "definitions": {
-        "clusterapi.ClusterDisplayInfo": {
-            "type": "object",
-            "properties": {
-                "backupFileUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "cpuUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "diskUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "extranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "intranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "memoryUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "port": {
-                    "type": "integer"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "storageUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "tags": {
-                    "type": "string"
-                },
-                "tls": {
-                    "type": "boolean"
-                },
-                "updateTime": {
-                    "type": "string"
-                },
-                "whitelist": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "clusterapi.ClusterNodeDemand": {
-            "type": "object",
-            "properties": {
-                "componentType": {
-                    "type": "string"
-                },
-                "distributionItems": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clusterapi.DistributionItem"
-                    }
-                },
-                "totalNodeCount": {
-                    "type": "integer"
-                }
-            }
-        },
-        "clusterapi.CreateClusterRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "string"
-                },
-                "tls": {
-                    "type": "boolean"
-                },
-                "updateTime": {
-                    "type": "string"
-                }
-            }
-        },
-        "clusterapi.CreateReq": {
-            "type": "object",
-            "properties": {
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "nodeDemandList": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clusterapi.ClusterNodeDemand"
-                    }
-                },
-                "tags": {
-                    "type": "string"
-                },
-                "tls": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "clusterapi.DeleteClusterRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "updateTime": {
-                    "type": "string"
-                }
-            }
-        },
-        "clusterapi.DetailClusterRsp": {
-            "type": "object",
-            "properties": {
-                "backupFileUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "cpuUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "diskUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "extranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "intranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "maintainTaskCron": {
-                    "type": "string"
-                },
-                "memoryUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "port": {
-                    "type": "integer"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "storageUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "tags": {
-                    "type": "string"
-                },
-                "tls": {
-                    "type": "boolean"
-                },
-                "updateTime": {
-                    "type": "string"
-                },
-                "whitelist": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "clusterapi.DistributionItem": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "specCode": {
-                    "type": "string"
-                },
-                "zoneCode": {
-                    "type": "string"
-                }
-            }
-        },
-        "clusterapi.QueryReq": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterStatus": {
-                    "type": "string"
-                },
-                "clusterTag": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
-                }
-            }
-        },
         "controller.CommonResult": {
             "type": "object",
             "properties": {
@@ -1670,20 +643,6 @@
                     "type": "object"
                 },
                 "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.Operator": {
-            "type": "object",
-            "properties": {
-                "manualOperator": {
-                    "type": "boolean"
-                },
-                "operatorId": {
-                    "type": "string"
-                },
-                "operatorName": {
                     "type": "string"
                 }
             }
@@ -1719,40 +678,17 @@
                 }
             }
         },
-        "controller.StatusInfo": {
+        "hostapi.DemoHostInfo": {
             "type": "object",
             "properties": {
-                "createTime": {
+                "hostId": {
                     "type": "string"
                 },
-                "deleteTime": {
+                "hostIp": {
                     "type": "string"
                 },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "statusCode": {
+                "hostName": {
                     "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "updateTime": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.Usage": {
-            "type": "object",
-            "properties": {
-                "total": {
-                    "type": "number"
-                },
-                "usageRate": {
-                    "type": "number"
-                },
-                "used": {
-                    "type": "number"
                 }
             }
         },
@@ -1762,6 +698,9 @@
                 "capacity": {
                     "description": "Disk size, Unit: GB",
                     "type": "integer"
+                },
+                "diskId": {
+                    "type": "string"
                 },
                 "name": {
                     "description": "[sda/sdb/nvmep0...]",
@@ -1794,6 +733,9 @@
                     "items": {
                         "$ref": "#/definitions/hostapi.Disk"
                     }
+                },
+                "hostId": {
+                    "type": "string"
                 },
                 "hostName": {
                     "type": "string"
@@ -1828,164 +770,7 @@
                 }
             }
         },
-        "hostapi.ListHostCondition": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
-                },
-                "purpose": {
-                    "description": "What Purpose is the host used for? [compute/storage or both]",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Host Status, 0 for Online, 1 for offline",
-                    "type": "integer"
-                }
-            }
-        },
-        "hostapi.ZoneHostStock": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "specCode": {
-                    "type": "string"
-                },
-                "specName": {
-                    "type": "string"
-                },
-                "zoneCode": {
-                    "type": "string"
-                },
-                "zoneName": {
-                    "type": "string"
-                }
-            }
-        },
-        "hostapi.ZoneHostStockRsp": {
-            "type": "object",
-            "properties": {
-                "availableStocks": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/hostapi.ZoneHostStock"
-                        }
-                    }
-                }
-            }
-        },
-        "instanceapi.BackupRecord": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "endTime": {
-                    "type": "string"
-                },
-                "filePath": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "operator": {
-                    "$ref": "#/definitions/controller.Operator"
-                },
-                "range": {
-                    "type": "integer"
-                },
-                "size": {
-                    "type": "number"
-                },
-                "startTime": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/controller.StatusInfo"
-                },
-                "way": {
-                    "type": "integer"
-                }
-            }
-        },
-        "instanceapi.BackupRecordQueryReq": {
-            "type": "object",
-            "properties": {
-                "endTime": {
-                    "type": "string"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
-                },
-                "startTime": {
-                    "type": "string"
-                }
-            }
-        },
-        "instanceapi.BackupRecoverReq": {
-            "type": "object",
-            "properties": {
-                "backupRecordId": {
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                }
-            }
-        },
-        "instanceapi.BackupStrategy": {
-            "type": "object",
-            "properties": {
-                "cronString": {
-                    "type": "string"
-                }
-            }
-        },
-        "instanceapi.BackupStrategyUpdateReq": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "cronString": {
-                    "type": "string"
-                }
-            }
-        },
-        "instanceapi.ParamInstance": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "object"
-                }
-            }
-        },
-        "instanceapi.ParamItem": {
-            "type": "object",
-            "properties": {
-                "currentValue": {
-                    "$ref": "#/definitions/instanceapi.ParamInstance"
-                },
-                "definition": {
-                    "$ref": "#/definitions/models.Parameter"
-                }
-            }
-        },
-        "instanceapi.ParamQueryReq": {
+        "hostapi.HostQuery": {
             "type": "object",
             "properties": {
                 "page": {
@@ -1996,166 +781,54 @@
                 }
             }
         },
-        "instanceapi.ParamUpdateReq": {
+        "instanceapi.InstanceCreate": {
             "type": "object",
             "properties": {
-                "clusterId": {
+                "dbPassword": {
                     "type": "string"
                 },
-                "values": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/instanceapi.ParamInstance"
-                    }
-                }
-            }
-        },
-        "instanceapi.ParamUpdateRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
+                "instanceName": {
                     "type": "string"
                 },
-                "status": {
+                "instanceVersion": {
                     "type": "string"
                 },
-                "taskId": {
+                "pdCount": {
+                    "type": "integer"
+                },
+                "tiDBCount": {
+                    "type": "integer"
+                },
+                "tiKVCount": {
                     "type": "integer"
                 }
             }
         },
-        "models.ClusterComponent": {
+        "instanceapi.InstanceInfo": {
             "type": "object",
             "properties": {
-                "componentName": {
+                "instanceId": {
                     "type": "string"
                 },
-                "componentType": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.ClusterComponentSpec": {
-            "type": "object",
-            "properties": {
-                "clusterComponent": {
-                    "$ref": "#/definitions/models.ClusterComponent"
-                },
-                "componentConstraint": {
-                    "$ref": "#/definitions/models.ComponentConstraint"
-                }
-            }
-        },
-        "models.ClusterType": {
-            "type": "object",
-            "properties": {
-                "code": {
+                "instanceName": {
                     "type": "string"
                 },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.ClusterTypeSpec": {
-            "type": "object",
-            "properties": {
-                "clusterType": {
-                    "$ref": "#/definitions/models.ClusterType"
-                },
-                "versionSpecs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.ClusterVersionSpec"
-                    }
-                }
-            }
-        },
-        "models.ClusterVersion": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.ClusterVersionSpec": {
-            "type": "object",
-            "properties": {
-                "clusterVersion": {
-                    "$ref": "#/definitions/models.ClusterVersion"
-                },
-                "componentSpecs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.ClusterComponentSpec"
-                    }
-                }
-            }
-        },
-        "models.ComponentConstraint": {
-            "type": "object",
-            "properties": {
-                "availableSpecCodes": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "componentRequired": {
-                    "type": "boolean"
-                },
-                "minZoneQuantity": {
+                "instanceStatus": {
                     "type": "integer"
                 },
-                "suggestedNodeQuantities": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "models.ParamValueConstraint": {
-            "type": "object",
-            "properties": {
-                "contrastValue": {
-                    "type": "object"
-                },
-                "type": {
+                "instanceVersion": {
                     "type": "string"
                 }
             }
         },
-        "models.Parameter": {
+        "instanceapi.InstanceQuery": {
             "type": "object",
             "properties": {
-                "constraints": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.ParamValueConstraint"
-                    }
-                },
-                "defaultValue": {
-                    "type": "object"
-                },
-                "desc": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "needRestart": {
-                    "type": "boolean"
-                },
-                "type": {
+                "page": {
                     "type": "integer"
                 },
-                "unit": {
-                    "type": "string"
+                "pageSize": {
+                    "type": "integer"
                 }
             }
         },

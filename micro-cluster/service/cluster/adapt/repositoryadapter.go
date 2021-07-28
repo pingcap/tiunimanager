@@ -19,7 +19,7 @@ func InjectionMetaDbRepo() {
 
 type ClusterRepoAdapter struct {}
 
-func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*domain.ClusterAggregation, error) {
+func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*domain.ClusterAggregation, int, error) {
 	req := &db.DBListClusterRequest {
 		ClusterName: clusterName,
 		ClusterId: clusterId,
@@ -35,11 +35,11 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 	resp, err := client.DBClient.ListCluster(context.TODO(), req)
 
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	if resp.Status.Code != 0  {
 		err = errors.New(resp.Status.Message)
-		return nil, err
+		return nil, 0, err
 	}
 
 	clusters := make([]*domain.ClusterAggregation, len(resp.Clusters), len(resp.Clusters))
@@ -52,7 +52,7 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 
 		clusters[i] = cluster
 	}
-	return clusters, err
+	return clusters, 0, err
 
 }
 

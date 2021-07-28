@@ -108,64 +108,6 @@ func GetClusterDetail(clusterId string, ope *proto.OperatorDTO) (*ClusterAggrega
 	return cluster, err
 }
 
-
-func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, fileType string) (uint32, error) {
-	log.Infof("begin exportdata clusterId: %s, userName: %s, password: %s, fileType: %s", clusterId, userName, password, fileType)
-	defer log.Infof("end exportdata")
-	//todo: check operator
-	operator := parseOperatorFromDTO(ope)
-	log.Info(operator)
-	clusterAggregation, err := ClusterRepo.Load(clusterId)
-
-	info := &ExportInfo{
-		ClusterId: clusterId,
-		UserName: userName,
-		Password: password,//todo: need encrypt
-		FileType: fileType,
-	}
-	clusterAggregation.UsedResources = info
-	// Start the workflow
-	flow, err := CreateFlowWork(clusterId, FlowExportData)
-	if err != nil {
-		return 0, nil
-	}
-	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.Start()
-
-	clusterAggregation.CurrentWorkFlow = flow.FlowWork
-	ClusterRepo.Persist(clusterAggregation)
-	return uint32(flow.FlowWork.Id), nil
-}
-
-func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, filepath string) (uint32, error) {
-	log.Infof("begin importdata clusterId: %s, userName: %s, password: %s, datadIR: %s", clusterId, userName, password, filepath)
-	defer log.Infof("end importdata")
-	//todo: check operator
-	operator := parseOperatorFromDTO(ope)
-	log.Info(operator)
-	clusterAggregation, err := ClusterRepo.Load(clusterId)
-
-	info := &ImportInfo{
-		ClusterId: clusterId,
-		UserName: userName,
-		Password: password,//todo: need encrypt
-		FilePath: filepath,
-	}
-	clusterAggregation.UsedResources = info
-
-	// Start the workflow
-	flow, err := CreateFlowWork(clusterId, FlowImportData)
-	if err != nil {
-		return 0, nil
-	}
-	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.Start()
-
-	clusterAggregation.CurrentWorkFlow = flow.FlowWork
-	ClusterRepo.Persist(clusterAggregation)
-	return uint32(flow.FlowWork.Id), nil
-}
-
 func (aggregation *ClusterAggregation) loadWorkFlow() error {
 	if aggregation.Cluster.WorkFlowId > 0 && aggregation.CurrentWorkFlow == nil {
 		flowWork, err := TaskRepo.LoadFlowWork(aggregation.Cluster.WorkFlowId)

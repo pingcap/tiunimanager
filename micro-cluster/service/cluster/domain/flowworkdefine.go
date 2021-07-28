@@ -41,11 +41,10 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		FlowName:    FlowExportData,
 		StatusAlias: copywriting.DisplayByDefault(copywriting.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
-			"start":              {"destroyTasks", "destroyTasksDone", "fail", PollingTasK, destroyTasks},
-			"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", PollingTasK, destroyCluster},
-			"destroyClusterDone": {"deleteCluster", "deleteClusterDone", "fail", SyncFuncTask, deleteCluster},
-			"deleteClusterDone":  {"freedResource", "freedResourceDone", "fail", SyncFuncTask, freedResource},
-			"freedResourceDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
+			"start":              {"exportDataFromCluster", "exportDataDone", "fail", PollingTasK, exportDataFromCluster},
+			"destroyTasksDone":   {"updateDataExportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataExportRecord},
+			"updateRecordDone": {"cleanExportTempfile", "cleanTempfileDone", "fail", SyncFuncTask, cleanExportTempfile},
+			"cleanTempfileDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
 		},
 		ContextParser: func(s string) *FlowContext {
@@ -58,11 +57,11 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		FlowName:    FlowImportData,
 		StatusAlias: copywriting.DisplayByDefault(copywriting.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
-			"start":              {"destroyTasks", "destroyTasksDone", "fail", PollingTasK, destroyTasks},
-			"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", PollingTasK, destroyCluster},
-			"destroyClusterDone": {"deleteCluster", "deleteClusterDone", "fail", SyncFuncTask, deleteCluster},
-			"deleteClusterDone":  {"freedResource", "freedResourceDone", "fail", SyncFuncTask, freedResource},
-			"freedResourceDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
+			"start":              {"buildDataImportConfig", "buildConfigDone", "fail", SyncFuncTask, buildDataImportConfig},
+			"buildConfigDone":   {"importDataToCluster", "importDataDone", "fail", PollingTasK, importDataToCluster},
+			"importDataDone": {"updateDataImportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataImportRecord},
+			"updateRecordDone": {"cleanImportTempfile", "cleanTempfileDone", "fail", SyncFuncTask, cleanImportTempfile},
+			"cleanTempfileDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
 		},
 		ContextParser: func(s string) *FlowContext {

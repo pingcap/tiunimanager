@@ -68,9 +68,9 @@ func TaskStatusFromValue(v int) TaskStatus {
 type CronStatus int
 
 const (
-	Valid 		CronStatus 	= 0
-	Invalid 	CronStatus 	= 1
-	Deleted 	CronStatus 	= 2
+	CronStatusValid 		CronStatus 	= 0
+	CronStatusInvalid 		CronStatus 	= 1
+	CronStatusDeleted 		CronStatus 	= 2
 )
 
 type TaskReturnType int8
@@ -85,4 +85,12 @@ const (
 const (
 	FlowCreateCluster = "CreateCluster"
 	FlowDeleteCluster = "DeleteCluster"
+)
+
+type CronTaskType int8
+
+const (
+	CronMaintainStart CronTaskType = 1
+	CronMaintainEnd   CronTaskType = 2
+	CronBackup 		  CronTaskType = 3
 )

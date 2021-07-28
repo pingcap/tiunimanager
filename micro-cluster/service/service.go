@@ -30,7 +30,22 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *cluster.C
 }
 
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *cluster.ClusterQueryReqDTO, resp *cluster.ClusterQueryRespDTO) error {
-	return nil
+	clusters, total, err := domain.ListCluster(req.Operator, req)
+	if err != nil {
+		return nil
+	} else {
+		resp.RespStatus = SuccessResponseStatus
+		resp.Clusters = make([]*cluster.ClusterDisplayDTO, len(clusters), len(clusters))
+		for i,v := range clusters {
+			resp.Clusters[i] = v.ExtractDisplayDTO()
+		}
+		resp.Page = &cluster.PageDTO{
+			Page:     req.PageReq.Page,
+			PageSize: int32(len(clusters)),
+			Total:    int32(total),
+		}
+		return nil
+	}
 }
 
 func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *cluster.ClusterDeleteReqDTO, resp *cluster.ClusterDeleteRespDTO) error {
@@ -47,7 +62,7 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *cluster.C
 }
 
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *cluster.ClusterDetailReqDTO, resp *cluster.ClusterDetailRespDTO) error {
-	cluster, err := domain.GetClusterDetail(req.ClusterId, req.Operator)
+	cluster, err := domain.GetClusterDetail(req.Operator, req.ClusterId)
 
 	if err != nil {
 		// todo
@@ -62,3 +77,54 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *cluster.C
 	}
 }
 
+func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *cluster.QueryBackupRequest, response *cluster.QueryBackupResponse) error {
+	panic("implement me")
+}
+
+func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluster.CreateBackupRequest, response *cluster.CreateBackupResponse) error {
+	panic("implement me")
+}
+
+func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request *cluster.RecoverBackupRequest, response *cluster.RecoverBackupResponse) error {
+	panic("implement me")
+}
+
+func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *cluster.DeleteBackupRequest, response *cluster.DeleteBackupResponse) error {
+	panic("implement me")
+}
+
+func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *cluster.SaveBackupStrategyRequest, response *cluster.SaveBackupStrategyResponse) error {
+	cronEntity, err := domain.TaskRepo.QueryCronTask(request.ClusterId, int(domain.CronBackup))
+
+	if err != nil {
+		// todo
+	}
+
+	if cronEntity == nil {
+		cronEntity = &domain.CronTaskEntity{
+			Cron: request.Cron,
+			BizId: request.ClusterId,
+			CronTaskType: domain.CronBackup,
+			Status: domain.CronStatusValid,
+		}
+
+		domain.TaskRepo.AddCronTask(cronEntity)
+	} else {
+		cronEntity.Cron = request.Cron
+	}
+
+	return nil
+}
+
+func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *cluster.GetBackupStrategyRequest, response *cluster.GetBackupStrategyResponse) error {
+	cronEntity, err := domain.TaskRepo.QueryCronTask(request.ClusterId, int(domain.CronBackup))
+
+	if err != nil {
+		// todo
+	}
+
+	response.Status = SuccessResponseStatus
+	response.Cron = cronEntity.Cron
+
+	return nil
+}

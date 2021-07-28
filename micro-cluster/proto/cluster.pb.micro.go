@@ -46,6 +46,12 @@ type ClusterService interface {
 	QueryCluster(ctx context.Context, in *ClusterQueryReqDTO, opts ...client.CallOption) (*ClusterQueryRespDTO, error)
 	DeleteCluster(ctx context.Context, in *ClusterDeleteReqDTO, opts ...client.CallOption) (*ClusterDeleteRespDTO, error)
 	DetailCluster(ctx context.Context, in *ClusterDetailReqDTO, opts ...client.CallOption) (*ClusterDetailRespDTO, error)
+	QueryBackupRecord(ctx context.Context, in *QueryBackupRequest, opts ...client.CallOption) (*QueryBackupResponse, error)
+	CreateBackup(ctx context.Context, in *CreateBackupRequest, opts ...client.CallOption) (*CreateBackupResponse, error)
+	RecoverBackupRecord(ctx context.Context, in *RecoverBackupRequest, opts ...client.CallOption) (*RecoverBackupResponse, error)
+	DeleteBackupRecord(ctx context.Context, in *DeleteBackupRequest, opts ...client.CallOption) (*DeleteBackupResponse, error)
+	SaveBackupStrategy(ctx context.Context, in *SaveBackupStrategyRequest, opts ...client.CallOption) (*SaveBackupStrategyResponse, error)
+	GetBackupStrategy(ctx context.Context, in *GetBackupStrategyRequest, opts ...client.CallOption) (*GetBackupStrategyResponse, error)
 }
 
 type clusterService struct {
@@ -100,6 +106,66 @@ func (c *clusterService) DetailCluster(ctx context.Context, in *ClusterDetailReq
 	return out, nil
 }
 
+func (c *clusterService) QueryBackupRecord(ctx context.Context, in *QueryBackupRequest, opts ...client.CallOption) (*QueryBackupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.QueryBackupRecord", in)
+	out := new(QueryBackupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) CreateBackup(ctx context.Context, in *CreateBackupRequest, opts ...client.CallOption) (*CreateBackupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.CreateBackup", in)
+	out := new(CreateBackupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) RecoverBackupRecord(ctx context.Context, in *RecoverBackupRequest, opts ...client.CallOption) (*RecoverBackupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.RecoverBackupRecord", in)
+	out := new(RecoverBackupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) DeleteBackupRecord(ctx context.Context, in *DeleteBackupRequest, opts ...client.CallOption) (*DeleteBackupResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.DeleteBackupRecord", in)
+	out := new(DeleteBackupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) SaveBackupStrategy(ctx context.Context, in *SaveBackupStrategyRequest, opts ...client.CallOption) (*SaveBackupStrategyResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.SaveBackupStrategy", in)
+	out := new(SaveBackupStrategyResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) GetBackupStrategy(ctx context.Context, in *GetBackupStrategyRequest, opts ...client.CallOption) (*GetBackupStrategyResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.GetBackupStrategy", in)
+	out := new(GetBackupStrategyResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterService service
 
 type ClusterServiceHandler interface {
@@ -107,6 +173,12 @@ type ClusterServiceHandler interface {
 	QueryCluster(context.Context, *ClusterQueryReqDTO, *ClusterQueryRespDTO) error
 	DeleteCluster(context.Context, *ClusterDeleteReqDTO, *ClusterDeleteRespDTO) error
 	DetailCluster(context.Context, *ClusterDetailReqDTO, *ClusterDetailRespDTO) error
+	QueryBackupRecord(context.Context, *QueryBackupRequest, *QueryBackupResponse) error
+	CreateBackup(context.Context, *CreateBackupRequest, *CreateBackupResponse) error
+	RecoverBackupRecord(context.Context, *RecoverBackupRequest, *RecoverBackupResponse) error
+	DeleteBackupRecord(context.Context, *DeleteBackupRequest, *DeleteBackupResponse) error
+	SaveBackupStrategy(context.Context, *SaveBackupStrategyRequest, *SaveBackupStrategyResponse) error
+	GetBackupStrategy(context.Context, *GetBackupStrategyRequest, *GetBackupStrategyResponse) error
 }
 
 func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, opts ...server.HandlerOption) error {
@@ -115,6 +187,12 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		QueryCluster(ctx context.Context, in *ClusterQueryReqDTO, out *ClusterQueryRespDTO) error
 		DeleteCluster(ctx context.Context, in *ClusterDeleteReqDTO, out *ClusterDeleteRespDTO) error
 		DetailCluster(ctx context.Context, in *ClusterDetailReqDTO, out *ClusterDetailRespDTO) error
+		QueryBackupRecord(ctx context.Context, in *QueryBackupRequest, out *QueryBackupResponse) error
+		CreateBackup(ctx context.Context, in *CreateBackupRequest, out *CreateBackupResponse) error
+		RecoverBackupRecord(ctx context.Context, in *RecoverBackupRequest, out *RecoverBackupResponse) error
+		DeleteBackupRecord(ctx context.Context, in *DeleteBackupRequest, out *DeleteBackupResponse) error
+		SaveBackupStrategy(ctx context.Context, in *SaveBackupStrategyRequest, out *SaveBackupStrategyResponse) error
+		GetBackupStrategy(ctx context.Context, in *GetBackupStrategyRequest, out *GetBackupStrategyResponse) error
 	}
 	type ClusterService struct {
 		clusterService
@@ -141,4 +219,28 @@ func (h *clusterServiceHandler) DeleteCluster(ctx context.Context, in *ClusterDe
 
 func (h *clusterServiceHandler) DetailCluster(ctx context.Context, in *ClusterDetailReqDTO, out *ClusterDetailRespDTO) error {
 	return h.ClusterServiceHandler.DetailCluster(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) QueryBackupRecord(ctx context.Context, in *QueryBackupRequest, out *QueryBackupResponse) error {
+	return h.ClusterServiceHandler.QueryBackupRecord(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) CreateBackup(ctx context.Context, in *CreateBackupRequest, out *CreateBackupResponse) error {
+	return h.ClusterServiceHandler.CreateBackup(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) RecoverBackupRecord(ctx context.Context, in *RecoverBackupRequest, out *RecoverBackupResponse) error {
+	return h.ClusterServiceHandler.RecoverBackupRecord(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) DeleteBackupRecord(ctx context.Context, in *DeleteBackupRequest, out *DeleteBackupResponse) error {
+	return h.ClusterServiceHandler.DeleteBackupRecord(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) SaveBackupStrategy(ctx context.Context, in *SaveBackupStrategyRequest, out *SaveBackupStrategyResponse) error {
+	return h.ClusterServiceHandler.SaveBackupStrategy(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) GetBackupStrategy(ctx context.Context, in *GetBackupStrategyRequest, out *GetBackupStrategyResponse) error {
+	return h.ClusterServiceHandler.GetBackupStrategy(ctx, in, out)
 }

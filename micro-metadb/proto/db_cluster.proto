@@ -66,13 +66,19 @@ message DBClusterDetailDTO {
 }
 
 message DBListClusterRequest {
-
+    DBPageDTO pageReq = 1;
+    string clusterId = 2;
+    string clusterName = 3;
+    string clusterType = 4;
+    string clusterStatus = 5;
+    string clusterTag = 6;
 }
 
 message DBListClusterResponse {
     DBClusterResponseStatus status = 1;
-    repeated DBClusterDisplayDTO clusters = 2;
+    repeated DBClusterDetailDTO clusters = 2;
     DBPageDTO page = 3;
+
 }
 
 message DBDeleteClusterRequest {

@@ -9,6 +9,7 @@ type ClusterRepository interface {
 
 	Persist(aggregation *ClusterAggregation) error
 	Load (id string) (cluster *ClusterAggregation, err error)
+	Query (clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error)
 }
 
 type TaskRepository interface {
@@ -20,4 +21,7 @@ type TaskRepository interface {
 
 	LoadFlowWork(id uint) (*FlowWorkEntity, error)
 	Load(id uint) (flowWork *FlowWorkAggregation, err error)
+
+	QueryCronTask(bizId string, cronTaskType int) (cronTask *CronTaskEntity, err error)
+	PersistCronTask(cronTask *CronTaskEntity) (err error)
 }

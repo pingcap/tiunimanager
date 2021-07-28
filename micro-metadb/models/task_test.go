@@ -459,3 +459,23 @@ func TestUpdateTask(t *testing.T) {
 		})
 	}
 }
+
+func TestBatchFetchFlows(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		flow1, _ := CreateFlow("flow1", "创建中", "121212")
+		flow2, _ := CreateFlow("flow2", "创建中", "121212")
+
+		got, err := BatchFetchFlows([]uint{0, flow1.ID, 0, flow2.ID, 0})
+		if err != nil {
+			t.Errorf("TestBatchFetchFlows() error = %v", err)
+		}
+
+		if len(got) != 2 {
+			t.Errorf("FetchFlowDetail() got = %v, want %v", len(got), 2)
+		}
+
+		if got[1].FlowName != "flow2" {
+			t.Errorf("FetchFlowDetail() got = %v, want %v", got[1].FlowName, "flow2")
+		}
+	})
+}

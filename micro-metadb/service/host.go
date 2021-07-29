@@ -18,6 +18,7 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int(src.CpuCores)
 	dst.Memory = int(src.Memory)
+	dst.Spec = src.Spec
 	dst.Nic = src.Nic
 	dst.DC = src.Dc
 	dst.AZ = src.Az
@@ -138,6 +139,7 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
+	dst.Spec = src.Spec
 	dst.Nic = src.Nic
 	dst.Dc = src.DC
 	dst.Az = src.AZ

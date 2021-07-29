@@ -66,6 +66,7 @@ func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
+	dst.Spec = src.Spec
 	dst.Nic = src.Nic
 	dst.Dc = src.Dc
 	dst.Az = src.Az
@@ -83,6 +84,10 @@ func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	}
 }
 
+func genHostSpec(cpuCores int32, mem int32) string {
+	return fmt.Sprintf("%dU%dG", cpuCores, mem)
+}
+
 func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
@@ -90,6 +95,7 @@ func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
 	dst.Kernel = src.Kernel
 	dst.CpuCores = src.CpuCores
 	dst.Memory = src.Memory
+	dst.Spec = genHostSpec(src.CpuCores, src.Memory)
 	dst.Nic = src.Nic
 	dst.Dc = src.Dc
 	dst.Az = src.Az

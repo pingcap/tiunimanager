@@ -74,6 +74,7 @@ type Host struct {
 	Kernel    string `gorm:"size:32"`
 	CpuCores  int
 	Memory    int
+	Spec      string
 	Nic       string `gorm:"size:32"`
 	DC        string `gorm:"size:32"`
 	AZ        string `gorm:"size:32"`

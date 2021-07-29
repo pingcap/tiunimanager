@@ -90,6 +90,7 @@ func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
 	dst.Kernel = src.Kernel
 	dst.CpuCores = src.CpuCores
 	dst.Memory = src.Memory
+	dst.Nic = src.Nic
 	dst.Dc = src.Dc
 	dst.Az = src.Az
 	dst.Rack = src.Rack

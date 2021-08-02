@@ -41,11 +41,11 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		FlowName:    FlowExportData,
 		StatusAlias: copywriting.DisplayByDefault(copywriting.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
-			"start":              {"exportDataFromCluster", "exportDataDone", "fail", PollingTasK, exportDataFromCluster},
-			"destroyTasksDone":   {"updateDataExportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataExportRecord},
-			"updateRecordDone":   {"cleanExportTempfile", "cleanTempfileDone", "fail", SyncFuncTask, cleanExportTempfile},
-			"cleanTempfileDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
-			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
+			"start":				{"exportDataFromCluster", "exportDataDone", "fail", PollingTasK, exportDataFromCluster},
+			"exportDataDone":		{"compressExportData", "compressDataDone", "fail", SyncFuncTask, compressExportData},
+			"compressDataDone":		{"updateDataExportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataExportRecord},
+			"updateRecordDone":		{"end", "", "", SyncFuncTask, DefaultEnd},
+			"fail":					{"fail", "", "", SyncFuncTask, DefaultFail},
 		},
 		ContextParser: func(s string) *FlowContext {
 			// todo parse context
@@ -57,12 +57,12 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		FlowName:    FlowImportData,
 		StatusAlias: copywriting.DisplayByDefault(copywriting.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
-			"start":              {"buildDataImportConfig", "buildConfigDone", "fail", SyncFuncTask, buildDataImportConfig},
-			"buildConfigDone":    {"importDataToCluster", "importDataDone", "fail", PollingTasK, importDataToCluster},
-			"importDataDone":     {"updateDataImportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataImportRecord},
-			"updateRecordDone":   {"cleanImportTempfile", "cleanTempfileDone", "fail", SyncFuncTask, cleanImportTempfile},
-			"cleanTempfileDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
-			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
+			"start":				{"buildDataImportConfig", "buildConfigDone", "fail", SyncFuncTask, buildDataImportConfig},
+			"buildConfigDone":		{"deCompressImportData", "deCompressDataDone", "fail", SyncFuncTask, deCompressImportData},
+			"deCompressDataDone":	{"importDataToCluster", "importDataDone", "fail", PollingTasK, importDataToCluster},
+			"importDataDone":		{"updateDataImportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataImportRecord},
+			"updateRecordDone":		{"end", "", "", SyncFuncTask, DefaultEnd},
+			"fail":					{"fail", "", "", SyncFuncTask, DefaultFail},
 		},
 		ContextParser: func(s string) *FlowContext {
 			// todo parse context

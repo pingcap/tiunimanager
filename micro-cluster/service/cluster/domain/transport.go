@@ -1,17 +1,21 @@
 package domain
 
 import (
+	"archive/zip"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	proto "github.com/pingcap/ticp/micro-cluster/proto"
 	log "github.com/sirupsen/logrus"
+	"io"
+	"os"
+	"path/filepath"
 	"time"
 )
 
-type TransportType uint32
+type TransportType string
 const (
-	TransportTypeExport TransportType = 0
-	TransportTypeImport TransportType = 1
+	TransportTypeExport TransportType = "export"
+	TransportTypeImport TransportType = "import"
 )
 
 type TransportRecord struct {
@@ -29,6 +33,7 @@ type ImportInfo struct {
 	UserName		string
 	Password 		string
 	FilePath 		string
+	StartTime 		time.Time
 }
 
 type ExportInfo struct {
@@ -36,6 +41,7 @@ type ExportInfo struct {
 	UserName		string
 	Password 		string
 	FileType 		string
+	StartTime 		time.Time
 }
 
 /*
@@ -73,6 +79,7 @@ type TidbCfg struct {
 }
 
 var contextDataTransportKey = "dataTransportInfo"
+var dataTransportDirPrefix = "/tmp/tiem/datatransport"
 
 func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, fileType string) (uint32, error) {
 	log.Infof("[domain] begin exportdata clusterId: %s, userName: %s, password: %s, fileType: %s", clusterId, userName, password, fileType)
@@ -87,6 +94,7 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 		UserName: userName,
 		Password: password,//todo: need encrypt
 		FileType: fileType,
+		StartTime: time.Now(),
 	}
 
 	// Start the workflow
@@ -116,6 +124,7 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 		UserName: userName,
 		Password: password,//todo: need encrypt
 		FilePath: filepath,
+		StartTime: time.Now(),
 	}
 
 	// Start the workflow
@@ -132,7 +141,7 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	return uint32(flow.FlowWork.Id), nil
 }
 
-func convertTomlConfig(clusterAggregation *ClusterAggregation, task *TaskEntity, info *ImportInfo) *DataImportConfig {
+func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo) *DataImportConfig {
 	if clusterAggregation == nil || clusterAggregation.CurrentTiUPConfigRecord == nil {
 		return nil
 	}
@@ -147,7 +156,7 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, task *TaskEntity,
 	config := &DataImportConfig{
 		Lighting: LightingCfg{
 			Level: "info",
-			File: fmt.Sprintf("/user/local/tiem/datatransport/%s/import/task-%s/tidb-lighting.log", cluster.Id, task.Id),
+			File: fmt.Sprintf("%s/tidb-lighting.log", getDataTransportDir(cluster.Id, TransportTypeImport)),
 		},
 		TikvImporter: TikvImporterCfg{
 			Backend: "local",
@@ -168,16 +177,116 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, task *TaskEntity,
 	return config
 }
 
+/**
+data import && export dir
+└── dataTransportDirPrefix/[cluster-id]
+	├── import
+	|	├── data
+	|	├── data.zip
+	|	└── log
+	└── export
+		├── data
+		├── data.zip
+		└── log
+*/
+func getDataTransportDir(clusterId string, transportType TransportType) string {
+	return fmt.Sprintf("%s/%s/%s", dataTransportDirPrefix, clusterId, transportType)
+}
+
+func cleanDataTransportDir(clusterId string, transportType TransportType) error {
+	if err := os.RemoveAll(getDataTransportDir(clusterId, transportType)); err != nil {
+		return err
+	}
+
+	if err := os.Mkdir(getDataTransportDir(clusterId, transportType), os.ModePerm); err != nil {
+		return err
+	}
+	return nil
+}
+
+func zipDir(dir string, zipFile string) error {
+	fz, err := os.Create(zipFile)
+	if err != nil {
+		return fmt.Errorf("Create zip file failed: %s", err.Error())
+	}
+	defer fz.Close()
+
+	w := zip.NewWriter(fz)
+	defer w.Close()
+
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			fDest, err := w.Create(path)
+			if err != nil {
+				return fmt.Errorf("zip Create failed: %s", err.Error())
+			}
+			fSrc, err := os.Open(path)
+			if err != nil {
+				return fmt.Errorf("zip Open failed: %s", err.Error())
+			}
+			defer fSrc.Close()
+			_, err = io.Copy(fDest, fSrc)
+			if err != nil {
+				return fmt.Errorf("zip Copy failed: %s", err.Error())
+			}
+		}
+		return nil
+	})
+
+	return nil
+}
+
+func unzipDir(zipFile string, dir string) error {
+	r, err := zip.OpenReader(zipFile)
+	if err != nil {
+		return fmt.Errorf("Open zip file failed: %s", err.Error())
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		func() {
+			path := dir + string(filepath.Separator) + f.Name
+			os.MkdirAll(filepath.Dir(path), 0755)
+			fDest, err := os.Create(path)
+			if err != nil {
+				log.Printf("unzip Create failed: %s", err.Error())
+				return
+			}
+			defer fDest.Close()
+
+			fSrc, err := f.Open()
+			if err != nil {
+				log.Printf("unzip Open failed: %s", err.Error())
+				return
+			}
+			defer fSrc.Close()
+
+			_, err = io.Copy(fDest, fSrc)
+			if err != nil {
+				log.Printf("unzip Copy failed: %s", err.Error())
+				return
+			}
+		}()
+	}
+	return nil
+}
+
 func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
 	info := context.value(contextDataTransportKey).(ImportInfo)
+	cluster := clusterAggregation.Cluster
 
-	config := convertTomlConfig(&clusterAggregation, task, &info)
+	if err := cleanDataTransportDir(cluster.Id, TransportTypeImport); err != nil {
+		log.Errorf("[domain] clean import directory failed, %s", err.Error())
+		return false
+	}
+
+	config := convertTomlConfig(&clusterAggregation, &info)
 	if config == nil {
 		log.Errorf("[domain] convert toml config failed, cluster: %v", clusterAggregation)
 		return false
 	}
-	filePath := fmt.Sprintf("/user/local/tiem/datatransport/%s/import/task-%s/tidb-lighting.toml", clusterAggregation.Cluster.Id, task.Id)
+	filePath := fmt.Sprintf("%s/tidb-lighting.toml", getDataTransportDir(cluster.Id, TransportTypeImport))
 	if _, err := toml.DecodeFile(filePath, &config); err != nil {
 		log.Errorf("[domain] decode data import toml config failed, %s", err.Error())
 		return false
@@ -186,7 +295,7 @@ func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 }
 
 func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
-	//todo: implement
+	//todo: call tiupmgr
 	return true
 }
 
@@ -195,13 +304,16 @@ func updateDataImportRecord(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func cleanImportTempfile(task *TaskEntity, context *FlowContext) bool {
-	//todo: implement
-	return true
-}
-
 func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
-	//todo: implement
+	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	if err := cleanDataTransportDir(cluster.Id, TransportTypeExport); err != nil {
+		log.Errorf("[domain] clean export directory failed, %s", err.Error())
+		return false
+	}
+	//todo: call tiupmgr
+
 	return true
 }
 
@@ -210,12 +322,31 @@ func updateDataExportRecord(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func cleanDataImportRecord(task *TaskEntity, context *FlowContext) bool {
-	//todo: implement
+func compressExportData(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	dataDir := fmt.Sprintf("%s/data", getDataTransportDir(cluster.Id, TransportTypeExport))
+	dataZipDir := fmt.Sprintf("%s/data.zip", getDataTransportDir(cluster.Id, TransportTypeExport))
+	if err := zipDir(dataDir, dataZipDir); err != nil {
+		log.Errorf("[domain] compress export data failed, %s", err.Error())
+		return false
+	}
+
 	return true
 }
 
-func cleanExportTempfile(task *TaskEntity, context *FlowContext) bool {
-	//todo: implement
+func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	info := context.value(contextDataTransportKey).(ImportInfo)
+	cluster := clusterAggregation.Cluster
+
+	dataDir := fmt.Sprintf("%s/", getDataTransportDir(cluster.Id, TransportTypeImport))
+	dataZipDir := info.FilePath
+	if err := unzipDir(dataZipDir, dataDir); err != nil {
+		log.Errorf("[domain] deCompress import data failed, %s", err.Error())
+		return false
+	}
+
 	return true
 }

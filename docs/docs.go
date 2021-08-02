@@ -570,7 +570,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/models.ClusterTypeSpec"
+                                                "$ref": "#/definitions/knowledge.ClusterTypeSpec"
                                             }
                                         }
                                     }
@@ -808,9 +808,41 @@ var doc = `{
                 }
             }
         },
+        "/download_template/": {
+            "get": {
+                "description": "将主机信息文件导出到本地",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "导出主机信息模板文件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
         "/host": {
             "post": {
-                "description": "将给定的主机信息导入TiCP",
+                "description": "将给定的主机信息导入系统",
                 "consumes": [
                     "application/json"
                 ],
@@ -863,7 +895,7 @@ var doc = `{
         },
         "/host/query": {
             "post": {
-                "description": "展示目前所有主机",
+                "description": "查询主机",
                 "consumes": [
                     "application/json"
                 ],
@@ -873,21 +905,22 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "查询主机列表",
+                "summary": "查询主机接口",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
+                        "description": "登录token",
                         "name": "Token",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "description": "可选的查询主机的条件",
-                        "name": "condition",
+                        "description": "查询请求",
+                        "name": "query",
                         "in": "body",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/hostapi.ListHostCondition"
+                            "$ref": "#/definitions/hostapi.HostQuery"
                         }
                     }
                 ],
@@ -905,7 +938,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/hostapi.HostInfo"
+                                                "$ref": "#/definitions/hostapi.DemoHostInfo"
                                             }
                                         }
                                     }
@@ -992,6 +1025,173 @@ var doc = `{
                         "name": "hostId",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/hosts": {
+            "get": {
+                "description": "展示目前所有主机",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "查询主机列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "查询特定用途的主机列表",
+                        "name": "purpose",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "查询特定状态的主机列表",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/hostapi.HostInfo"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "通过文件批量导入主机",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "通过文件批量导入主机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "包含待导入主机信息的文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/hosts/": {
+            "delete": {
+                "description": "批量删除指定的主机",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "批量删除指定的主机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "待删除的主机ID数组",
+                        "name": "hostId",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
                     }
                 ],
                 "responses": {
@@ -1453,6 +1653,81 @@ var doc = `{
                 }
             }
         },
+        "clusterapi.ComponentInstance": {
+            "type": "object",
+            "properties": {
+                "componentName": {
+                    "type": "string"
+                },
+                "componentType": {
+                    "type": "string"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clusterapi.ComponentNodeDisplayInfo"
+                    }
+                }
+            }
+        },
+        "clusterapi.ComponentNodeDisplayInfo": {
+            "type": "object",
+            "properties": {
+                "cpuUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "ioUtil": {
+                    "type": "number"
+                },
+                "iops": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                },
+                "memoryUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "nodeId": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "role": {
+                    "$ref": "#/definitions/clusterapi.ComponentNodeRole"
+                },
+                "spec": {
+                    "$ref": "#/definitions/hostapi.SpecBaseInfo"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "storageUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "zone": {
+                    "$ref": "#/definitions/hostapi.ZoneBaseInfo"
+                }
+            }
+        },
+        "clusterapi.ComponentNodeRole": {
+            "type": "object",
+            "properties": {
+                "roleCode": {
+                    "type": "string"
+                },
+                "roleName": {
+                    "type": "string"
+                }
+            }
+        },
         "clusterapi.CreateClusterRsp": {
             "type": "object",
             "properties": {
@@ -1569,6 +1844,12 @@ var doc = `{
                 },
                 "clusterVersion": {
                     "type": "string"
+                },
+                "components": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clusterapi.ComponentInstance"
+                    }
                 },
                 "cpuUsage": {
                     "$ref": "#/definitions/controller.Usage"
@@ -1700,6 +1981,9 @@ var doc = `{
                 },
                 "operatorName": {
                     "type": "string"
+                },
+                "tenantId": {
+                    "type": "string"
                 }
             }
         },
@@ -1771,12 +2055,29 @@ var doc = `{
                 }
             }
         },
+        "hostapi.DemoHostInfo": {
+            "type": "object",
+            "properties": {
+                "hostId": {
+                    "type": "string"
+                },
+                "hostIp": {
+                    "type": "string"
+                },
+                "hostName": {
+                    "type": "string"
+                }
+            }
+        },
         "hostapi.Disk": {
             "type": "object",
             "properties": {
                 "capacity": {
                     "description": "Disk size, Unit: GB",
                     "type": "integer"
+                },
+                "diskId": {
+                    "type": "string"
                 },
                 "name": {
                     "description": "[sda/sdb/nvmep0...]",
@@ -1809,6 +2110,9 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/hostapi.Disk"
                     }
+                },
+                "hostId": {
+                    "type": "string"
                 },
                 "hostName": {
                     "type": "string"
@@ -1843,7 +2147,7 @@ var doc = `{
                 }
             }
         },
-        "hostapi.ListHostCondition": {
+        "hostapi.HostQuery": {
             "type": "object",
             "properties": {
                 "page": {
@@ -1851,14 +2155,28 @@ var doc = `{
                 },
                 "pageSize": {
                     "type": "integer"
-                },
-                "purpose": {
-                    "description": "What Purpose is the host used for? [compute/storage or both]",
+                }
+            }
+        },
+        "hostapi.SpecBaseInfo": {
+            "type": "object",
+            "properties": {
+                "specCode": {
                     "type": "string"
                 },
-                "status": {
-                    "description": "Host Status, 0 for Online, 1 for offline",
-                    "type": "integer"
+                "specName": {
+                    "type": "string"
+                }
+            }
+        },
+        "hostapi.ZoneBaseInfo": {
+            "type": "object",
+            "properties": {
+                "zoneCode": {
+                    "type": "string"
+                },
+                "zoneName": {
+                    "type": "string"
                 }
             }
         },
@@ -1996,7 +2314,7 @@ var doc = `{
                     "$ref": "#/definitions/instanceapi.ParamInstance"
                 },
                 "definition": {
-                    "$ref": "#/definitions/models.Parameter"
+                    "$ref": "#/definitions/knowledge.Parameter"
                 }
             }
         },
@@ -2039,7 +2357,7 @@ var doc = `{
                 }
             }
         },
-        "models.ClusterComponent": {
+        "knowledge.ClusterComponent": {
             "type": "object",
             "properties": {
                 "componentName": {
@@ -2050,18 +2368,18 @@ var doc = `{
                 }
             }
         },
-        "models.ClusterComponentSpec": {
+        "knowledge.ClusterComponentSpec": {
             "type": "object",
             "properties": {
                 "clusterComponent": {
-                    "$ref": "#/definitions/models.ClusterComponent"
+                    "$ref": "#/definitions/knowledge.ClusterComponent"
                 },
                 "componentConstraint": {
-                    "$ref": "#/definitions/models.ComponentConstraint"
+                    "$ref": "#/definitions/knowledge.ComponentConstraint"
                 }
             }
         },
-        "models.ClusterType": {
+        "knowledge.ClusterType": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2072,21 +2390,21 @@ var doc = `{
                 }
             }
         },
-        "models.ClusterTypeSpec": {
+        "knowledge.ClusterTypeSpec": {
             "type": "object",
             "properties": {
                 "clusterType": {
-                    "$ref": "#/definitions/models.ClusterType"
+                    "$ref": "#/definitions/knowledge.ClusterType"
                 },
                 "versionSpecs": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.ClusterVersionSpec"
+                        "$ref": "#/definitions/knowledge.ClusterVersionSpec"
                     }
                 }
             }
         },
-        "models.ClusterVersion": {
+        "knowledge.ClusterVersion": {
             "type": "object",
             "properties": {
                 "code": {
@@ -2097,21 +2415,21 @@ var doc = `{
                 }
             }
         },
-        "models.ClusterVersionSpec": {
+        "knowledge.ClusterVersionSpec": {
             "type": "object",
             "properties": {
                 "clusterVersion": {
-                    "$ref": "#/definitions/models.ClusterVersion"
+                    "$ref": "#/definitions/knowledge.ClusterVersion"
                 },
                 "componentSpecs": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.ClusterComponentSpec"
+                        "$ref": "#/definitions/knowledge.ClusterComponentSpec"
                     }
                 }
             }
         },
-        "models.ComponentConstraint": {
+        "knowledge.ComponentConstraint": {
             "type": "object",
             "properties": {
                 "availableSpecCodes": {
@@ -2134,7 +2452,7 @@ var doc = `{
                 }
             }
         },
-        "models.ParamValueConstraint": {
+        "knowledge.ParamValueConstraint": {
             "type": "object",
             "properties": {
                 "contrastValue": {
@@ -2145,13 +2463,13 @@ var doc = `{
                 }
             }
         },
-        "models.Parameter": {
+        "knowledge.Parameter": {
             "type": "object",
             "properties": {
                 "constraints": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.ParamValueConstraint"
+                        "$ref": "#/definitions/knowledge.ParamValueConstraint"
                     }
                 },
                 "defaultValue": {

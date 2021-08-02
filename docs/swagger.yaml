@@ -64,6 +64,55 @@ definitions:
       totalNodeCount:
         type: integer
     type: object
+  clusterapi.ComponentInstance:
+    properties:
+      componentName:
+        type: string
+      componentType:
+        type: string
+      nodes:
+        items:
+          $ref: '#/definitions/clusterapi.ComponentNodeDisplayInfo'
+        type: array
+    type: object
+  clusterapi.ComponentNodeDisplayInfo:
+    properties:
+      cpuUsage:
+        $ref: '#/definitions/controller.Usage'
+      hostId:
+        type: string
+      ioUtil:
+        type: number
+      iops:
+        items:
+          type: number
+        type: array
+      memoryUsage:
+        $ref: '#/definitions/controller.Usage'
+      nodeId:
+        type: string
+      port:
+        type: integer
+      role:
+        $ref: '#/definitions/clusterapi.ComponentNodeRole'
+      spec:
+        $ref: '#/definitions/hostapi.SpecBaseInfo'
+      status:
+        type: string
+      storageUsage:
+        $ref: '#/definitions/controller.Usage'
+      version:
+        type: string
+      zone:
+        $ref: '#/definitions/hostapi.ZoneBaseInfo'
+    type: object
+  clusterapi.ComponentNodeRole:
+    properties:
+      roleCode:
+        type: string
+      roleName:
+        type: string
+    type: object
   clusterapi.CreateClusterRsp:
     properties:
       clusterId:
@@ -141,6 +190,10 @@ definitions:
         type: string
       clusterVersion:
         type: string
+      components:
+        items:
+          $ref: '#/definitions/clusterapi.ComponentInstance'
+        type: array
       cpuUsage:
         $ref: '#/definitions/controller.Usage'
       createTime:
@@ -227,6 +280,8 @@ definitions:
         type: string
       operatorName:
         type: string
+      tenantId:
+        type: string
     type: object
   controller.Page:
     properties:
@@ -272,11 +327,22 @@ definitions:
       used:
         type: number
     type: object
+  hostapi.DemoHostInfo:
+    properties:
+      hostId:
+        type: string
+      hostIp:
+        type: string
+      hostName:
+        type: string
+    type: object
   hostapi.Disk:
     properties:
       capacity:
         description: 'Disk size, Unit: GB'
         type: integer
+      diskId:
+        type: string
       name:
         description: '[sda/sdb/nvmep0...]'
         type: string
@@ -299,6 +365,8 @@ definitions:
         items:
           $ref: '#/definitions/hostapi.Disk'
         type: array
+      hostId:
+        type: string
       hostName:
         type: string
       ip:
@@ -322,18 +390,26 @@ definitions:
         description: Host Status, 0 for Online, 1 for offline
         type: integer
     type: object
-  hostapi.ListHostCondition:
+  hostapi.HostQuery:
     properties:
       page:
         type: integer
       pageSize:
         type: integer
-      purpose:
-        description: What Purpose is the host used for? [compute/storage or both]
+    type: object
+  hostapi.SpecBaseInfo:
+    properties:
+      specCode:
         type: string
-      status:
-        description: Host Status, 0 for Online, 1 for offline
-        type: integer
+      specName:
+        type: string
+    type: object
+  hostapi.ZoneBaseInfo:
+    properties:
+      zoneCode:
+        type: string
+      zoneName:
+        type: string
     type: object
   hostapi.ZoneHostStock:
     properties:
@@ -422,7 +498,7 @@ definitions:
       currentValue:
         $ref: '#/definitions/instanceapi.ParamInstance'
       definition:
-        $ref: '#/definitions/models.Parameter'
+        $ref: '#/definitions/knowledge.Parameter'
     type: object
   instanceapi.ParamQueryReq:
     properties:
@@ -449,53 +525,53 @@ definitions:
       taskId:
         type: integer
     type: object
-  models.ClusterComponent:
+  knowledge.ClusterComponent:
     properties:
       componentName:
         type: string
       componentType:
         type: string
     type: object
-  models.ClusterComponentSpec:
+  knowledge.ClusterComponentSpec:
     properties:
       clusterComponent:
-        $ref: '#/definitions/models.ClusterComponent'
+        $ref: '#/definitions/knowledge.ClusterComponent'
       componentConstraint:
-        $ref: '#/definitions/models.ComponentConstraint'
+        $ref: '#/definitions/knowledge.ComponentConstraint'
     type: object
-  models.ClusterType:
+  knowledge.ClusterType:
     properties:
       code:
         type: string
       name:
         type: string
     type: object
-  models.ClusterTypeSpec:
+  knowledge.ClusterTypeSpec:
     properties:
       clusterType:
-        $ref: '#/definitions/models.ClusterType'
+        $ref: '#/definitions/knowledge.ClusterType'
       versionSpecs:
         items:
-          $ref: '#/definitions/models.ClusterVersionSpec'
+          $ref: '#/definitions/knowledge.ClusterVersionSpec'
         type: array
     type: object
-  models.ClusterVersion:
+  knowledge.ClusterVersion:
     properties:
       code:
         type: string
       name:
         type: string
     type: object
-  models.ClusterVersionSpec:
+  knowledge.ClusterVersionSpec:
     properties:
       clusterVersion:
-        $ref: '#/definitions/models.ClusterVersion'
+        $ref: '#/definitions/knowledge.ClusterVersion'
       componentSpecs:
         items:
-          $ref: '#/definitions/models.ClusterComponentSpec'
+          $ref: '#/definitions/knowledge.ClusterComponentSpec'
         type: array
     type: object
-  models.ComponentConstraint:
+  knowledge.ComponentConstraint:
     properties:
       availableSpecCodes:
         items:
@@ -510,18 +586,18 @@ definitions:
           type: integer
         type: array
     type: object
-  models.ParamValueConstraint:
+  knowledge.ParamValueConstraint:
     properties:
       contrastValue:
         type: object
       type:
         type: string
     type: object
-  models.Parameter:
+  knowledge.Parameter:
     properties:
       constraints:
         items:
-          $ref: '#/definitions/models.ParamValueConstraint'
+          $ref: '#/definitions/knowledge.ParamValueConstraint'
         type: array
       defaultValue:
         type: object
@@ -985,7 +1061,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/models.ClusterTypeSpec'
+                    $ref: '#/definitions/knowledge.ClusterTypeSpec'
                   type: array
               type: object
         "401":
@@ -1048,11 +1124,32 @@ paths:
       summary: 查询集群列表
       tags:
       - cluster
+  /download_template/:
+    get:
+      consumes:
+      - application/json
+      description: 将主机信息文件导出到本地
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: 导出主机信息模板文件
+      tags:
+      - resource
   /host:
     post:
       consumes:
       - application/json
-      description: 将给定的主机信息导入TiCP
+      description: 将给定的主机信息导入系统
       parameters:
       - description: token
         in: header
@@ -1145,6 +1242,40 @@ paths:
     post:
       consumes:
       - application/json
+      description: 查询主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 查询请求
+        in: body
+        name: query
+        required: true
+        schema:
+          $ref: '#/definitions/hostapi.HostQuery'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/hostapi.DemoHostInfo'
+                  type: array
+              type: object
+      summary: 查询主机接口
+      tags:
+      - resource
+  /hosts:
+    get:
+      consumes:
+      - application/json
       description: 展示目前所有主机
       parameters:
       - description: token
@@ -1152,11 +1283,14 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 可选的查询主机的条件
-        in: body
-        name: condition
-        schema:
-          $ref: '#/definitions/hostapi.ListHostCondition'
+      - description: 查询特定用途的主机列表
+        in: query
+        name: purpose
+        type: string
+      - description: 查询特定状态的主机列表
+        in: query
+        name: status
+        type: string
       produces:
       - application/json
       responses:
@@ -1172,6 +1306,72 @@ paths:
                   type: array
               type: object
       summary: 查询主机列表
+      tags:
+      - resource
+    post:
+      consumes:
+      - multipart/form-data
+      description: 通过文件批量导入主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 包含待导入主机信息的文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+      summary: 通过文件批量导入主机
+      tags:
+      - resource
+  /hosts/:
+    delete:
+      consumes:
+      - application/json
+      description: 批量删除指定的主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 待删除的主机ID数组
+        in: body
+        name: hostId
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 批量删除指定的主机
       tags:
       - resource
   /hosts/stocks:

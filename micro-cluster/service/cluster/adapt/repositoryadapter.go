@@ -19,6 +19,43 @@ func InjectionMetaDbRepo() {
 
 type ClusterRepoAdapter struct {}
 
+func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*domain.ClusterAggregation, int, error) {
+	req := &db.DBListClusterRequest {
+		ClusterName: clusterName,
+		ClusterId: clusterId,
+		ClusterTag: clusterTag,
+		ClusterStatus: clusterStatus,
+		ClusterType: clusterType,
+		PageReq: &db.DBPageDTO{
+			Page: int32(page),
+			PageSize: int32(pageSize),
+		},
+	}
+
+	resp, err := client.DBClient.ListCluster(context.TODO(), req)
+
+	if err != nil {
+		return nil, 0, err
+	}
+	if resp.Status.Code != 0  {
+		err = errors.New(resp.Status.Message)
+		return nil, 0, err
+	}
+
+	clusters := make([]*domain.ClusterAggregation, len(resp.Clusters), len(resp.Clusters))
+	for i,v := range resp.Clusters {
+		cluster := &domain.ClusterAggregation{}
+		cluster.Cluster = ParseFromClusterDTO(v.Cluster)
+		cluster.CurrentTiUPConfigRecord = parseConfigRecordDTO(v.TiupConfigRecord)
+		cluster.CurrentWorkFlow = parseFlowFromDTO(v.Flow)
+		cluster.MaintainCronTask = domain.GetDefaultMaintainTask() // next_version get from db
+
+		clusters[i] = cluster
+	}
+	return clusters, 0, err
+
+}
+
 func (c ClusterRepoAdapter) AddCluster(cluster *domain.Cluster) error {
 	req := &db.DBCreateClusterRequest{
 		Cluster: ConvertClusterToDTO(cluster),
@@ -40,26 +77,6 @@ func (c ClusterRepoAdapter) AddCluster(cluster *domain.Cluster) error {
 		cluster.UpdateTime = time.Unix(dto.UpdateTime, 0)
 	}
 	return nil
-}
-
-func (c ClusterRepoAdapter) LoadCluster(id string) (cluster *domain.Cluster, err error) {
-	req := &db.DBLoadClusterRequest{
-		ClusterId: id,
-	}
-
-	resp, err := client.DBClient.LoadCluster(context.TODO(), req)
-
-	if err != nil {
-		return
-	}
-
-	if resp.Status.Code != 0  {
-		err = errors.New(resp.Status.Message)
-		return
-	} else {
-		cluster = ParseFromClusterDTO(resp.ClusterDetail.Cluster)
-		return
-	}
 }
 
 func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) error {
@@ -119,11 +136,20 @@ func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation,
 		cluster.Cluster = ParseFromClusterDTO(resp.ClusterDetail.Cluster)
 		cluster.CurrentTiUPConfigRecord = parseConfigRecordDTO(resp.ClusterDetail.TiupConfigRecord)
 		cluster.CurrentWorkFlow = parseFlowFromDTO(resp.ClusterDetail.Flow)
+		cluster.MaintainCronTask = domain.GetDefaultMaintainTask() // next_version get from db
 		return
 	}
 }
 
 type TaskRepoAdapter struct {}
+
+func (t TaskRepoAdapter) QueryCronTask(bizId string, cronTaskType int) (cronTask *domain.CronTaskEntity, err error) {
+	panic("implement me")
+}
+
+func (t TaskRepoAdapter) PersistCronTask(cronTask *domain.CronTaskEntity) (err error) {
+	panic("implement me")
+}
 
 func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
 	panic("implement me")

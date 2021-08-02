@@ -116,7 +116,7 @@ func convertFlowToDTO(do *models.FlowDO) (dto *dbPb.DBFlowDTO) {
 	dto.CreateTime = do.CreatedAt.Unix()
 	dto.UpdateTime = do.UpdatedAt.Unix()
 
-	dto.DeleteTime = DeletedAtUnix(do.DeletedAt)
+	dto.DeleteTime = deletedAtUnix(do.DeletedAt)
 	return
 }
 
@@ -145,7 +145,7 @@ func convertTaskToDTO(do *models.TaskDO) (dto *dbPb.DBTaskDTO) {
 	dto.CreateTime = do.CreatedAt.Unix()
 	dto.UpdateTime = do.UpdatedAt.Unix()
 
-	dto.DeleteTime = DeletedAtUnix(do.DeletedAt)
+	dto.DeleteTime = deletedAtUnix(do.DeletedAt)
 
 	dto.ParentId = do.ParentId
 	dto.ParentType = int32(do.ParentType)

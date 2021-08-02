@@ -15,6 +15,13 @@ service ClusterService {
     rpc ImportData(DataImportRequest) returns (DataImportResponse);
     rpc ExportData(DataExportRequest) returns (DataExportResponse);
     rpc DescribeDataTransport(DataTransportQueryRequest) returns (DataTransportQueryResponse);
+
+    rpc QueryBackupRecord(QueryBackupRequest) returns (QueryBackupResponse);
+    rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
+    rpc RecoverBackupRecord(RecoverBackupRequest) returns (RecoverBackupResponse);
+    rpc DeleteBackupRecord(DeleteBackupRequest) returns (DeleteBackupResponse);
+    rpc SaveBackupStrategy(SaveBackupStrategyRequest) returns (SaveBackupStrategyResponse);
+    rpc GetBackupStrategy(GetBackupStrategyRequest) returns (GetBackupStrategyResponse);
 }
 
 message ClusterCreateReqDTO {
@@ -170,4 +177,87 @@ message ClusterInstanceDTO {
     UsageDTO memoryUsage = 7;
     UsageDTO storageUsage = 8;
     UsageDTO backupFileUsage = 9;
+}
+
+message BackupRecordDTO {
+    int64 id = 1;
+    string clusterId = 2;
+    int64 startTime = 3;
+    int64 endTime = 4;
+    int32 range = 5;
+    int32 way = 6;
+    OperatorDTO operator = 7;
+    float size = 8;
+    DisplayStatusDTO displayStatus = 9;
+    string filePath = 10;
+}
+
+message QueryBackupRequest {
+    string clusterId = 1;
+    int64 startTime = 2;
+    int64 endTime = 3;
+    PageDTO page = 4;
+}
+
+message QueryBackupResponse {
+    ResponseStatusDTO status = 1;
+    repeated BackupRecordDTO backupRecords= 2;
+    PageDTO page = 3;
+}
+
+message CreateBackupRequest {
+    string clusterId = 1;
+    OperatorDTO operator = 2;
+}
+
+message CreateBackupResponse {
+    ResponseStatusDTO status = 1;
+    BackupRecordDTO backupRecord = 2;
+}
+
+message RecoverBackupRequest {
+    string clusterId = 1;
+    OperatorDTO operator = 2;
+    int64 backupRecordId = 3;
+}
+
+message RecoverBackupResponse {
+    ResponseStatusDTO status = 1;
+    BackupRecoverRecordDTO recoverRecord = 2;
+}
+
+message BackupRecoverRecordDTO {
+    int64 id = 1;
+    string clusterId = 2;
+    int64 backupRecordId = 3;
+    int64 startTime = 4;
+    int64 endTime = 5;
+    DisplayStatusDTO displayStatus = 6;
+}
+
+message DeleteBackupRequest {
+    string clusterId = 1;
+    OperatorDTO operator = 2;
+    int64 backupRecordId = 3;
+}
+
+message DeleteBackupResponse {
+    ResponseStatusDTO status = 1;
+}
+
+message SaveBackupStrategyRequest {
+    string clusterId = 1;
+    string cron = 2;
+}
+
+message SaveBackupStrategyResponse {
+    ResponseStatusDTO status = 1;
+}
+
+message GetBackupStrategyRequest {
+    string clusterId = 1;
+}
+message GetBackupStrategyResponse {
+    ResponseStatusDTO status = 1;
+    string cron = 2;
 }

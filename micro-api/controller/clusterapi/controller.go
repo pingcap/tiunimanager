@@ -202,7 +202,7 @@ func Detail(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Success 200 {object} controller.CommonResult{data=[]models.ClusterTypeSpec}
+// @Success 200 {object} controller.CommonResult{data=[]knowledge.ClusterTypeSpec}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult

@@ -72,6 +72,11 @@ func FetchFlow(id uint) (flow FlowDO, err error) {
 	return
 }
 
+func BatchFetchFlows(ids []uint) (flows []*FlowDO, err error) {
+	err = MetaDB.Find(&flows, ids).Error
+	return
+}
+
 func FetchFlowDetail(id uint) (flow *FlowDO, tasks []*TaskDO, err error) {
 	flow = &FlowDO{}
 	err = MetaDB.Find(flow, id).Error

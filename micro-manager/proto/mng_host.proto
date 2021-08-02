@@ -7,37 +7,29 @@ message ResponseStatus {
     string message = 2;
 }
 
-enum HostStatus {
-    ONLINE = 0;
-    OFFLINE = 1;
-}
-
-enum DiskStatus {
-    AVAILABLE = 0;              // This Disk can be alloced.
-    INUSED = 1;
-}
-
 message Disk {
-    string name = 1;            // [sda/sdb/nvmep0...]
-    int32 capacity = 2;         // Disk size, Unit: GB
-    string path = 3;            // Disk mount path: [/data1]
-    DiskStatus status = 4;
+    string diskId = 1;
+    string name = 2;            // [sda/sdb/nvmep0...]
+    int32 capacity = 3;         // Disk size, Unit: GB
+    string path = 4;            // Disk mount path: [/data1]
+    int32 status = 5;
 }
 
 message HostInfo {
-    string hostName = 1;
-    string dc = 2;
-    string az = 3;
-    string rack = 4;
-    string ip = 5;
-    HostStatus status = 6;
-    string os = 7;              // Host os
-    string kernel = 8;
-    int32 cpuCores = 9;
-    int32 memory = 10;          // Host memory size, Unit:GB
-    string nic = 11;            // Host network type: 1GE or 10GE
-    string purpose = 12;        // What Purpose is the host used for? [compute/storage or both]
-    repeated Disk disks = 13;
+    string hostId = 1;
+    string hostName = 2;
+    string dc = 3;
+    string az = 4;
+    string rack = 5;
+    string ip = 6;
+    int32 status = 7;
+    string os = 8;              // Host os
+    string kernel = 9;
+    int32 cpuCores = 10;
+    int32 memory = 11;          // Host memory size, Unit:GB
+    string nic = 12;            // Host network type: 1GE or 10GE
+    string purpose = 13;        // What Purpose is the host used for? [compute/storage or both]
+    repeated Disk disks = 14;
 }
 
 message AllocHost {
@@ -54,6 +46,15 @@ message ImportHostResponse {
     string HostId = 2;
 }
 
+message ImportHostsInBatchRequest {
+    repeated HostInfo hosts = 1;
+}
+
+message ImportHostsInBatchResponse {
+    ResponseStatus rs = 1;
+    repeated string HostIds = 2;
+}
+
 message RemoveHostRequest {
     string hostId = 1;
 }
@@ -62,8 +63,16 @@ message RemoveHostResponse {
     ResponseStatus rs = 1;
 }
 
+message RemoveHostsInBatchRequest {
+    repeated string hostIds = 1;
+}
+
+message RemoveHostsInBatchResponse {
+    ResponseStatus rs = 1;
+}
+
 message ListHostsRequest {
-    HostStatus status = 1;
+    int32 status = 1;
     string purpose = 2;
 }
 

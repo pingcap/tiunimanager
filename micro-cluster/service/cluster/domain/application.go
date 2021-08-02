@@ -61,6 +61,7 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 
 	clusterAggregation := &ClusterAggregation{
 		Cluster: cluster,
+		MaintainCronTask: GetDefaultMaintainTask(),
 	}
 
 	// Start the workflow to create a cluster instance
@@ -88,7 +89,6 @@ func DeleteCluster(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregatio
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-
 	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster)
 	flow.AddContext(contextClusterKey, clusterAggregation)
 
@@ -98,11 +98,12 @@ func DeleteCluster(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregatio
 	return clusterAggregation, nil
 }
 
-func ListCluster(operator Operator) ([]*ClusterAggregation, error) {
-	return nil, nil
+func ListCluster(ope *proto.OperatorDTO, req *proto.ClusterQueryReqDTO) ([]*ClusterAggregation, int, error) {
+	return ClusterRepo.Query(req.ClusterId, req.ClusterName, req.ClusterType, req.ClusterStatus, req.ClusterTag,
+		int(req.PageReq.Page), int(req.PageReq.PageSize))
 }
 
-func GetClusterDetail(clusterId string, ope *proto.OperatorDTO) (*ClusterAggregation, error) {
+func GetClusterDetail(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
 	cluster, err := ClusterRepo.Load(clusterId)
 	// todo 补充其他的信息
 	return cluster, err
@@ -279,7 +280,7 @@ func (aggregation *ClusterAggregation) ExtractDisplayDTO() *proto.ClusterDisplay
 func (aggregation *ClusterAggregation) ExtractMaintenanceDTO() *proto.ClusterMaintenanceDTO {
 	dto := &proto.ClusterMaintenanceDTO{}
 	if aggregation.MaintainCronTask != nil {
-		dto.MaintainTaskCron = aggregation.MaintainCronTask.cron
+		dto.MaintainTaskCron = aggregation.MaintainCronTask.Cron
 	} else {
 		// default maintain ?
 	}

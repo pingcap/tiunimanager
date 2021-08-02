@@ -25,7 +25,7 @@ func (*DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DBCreateCl
 
 	resp.Status = ClusterSuccessResponseStatus
 
-	resp.Cluster = ConvertToClusterDTO(do, demand)
+	resp.Cluster = convertToClusterDTO(do, demand)
 	return nil
 }
 
@@ -38,7 +38,7 @@ func (*DBServiceHandler) DeleteCluster(ctx context.Context, req *dbPb.DBDeleteCl
 
 	resp.Status = ClusterSuccessResponseStatus
 
-	resp.Cluster = ConvertToClusterDTO(cluster, nil)
+	resp.Cluster = convertToClusterDTO(cluster, nil)
 	return nil
 }
 
@@ -51,7 +51,7 @@ func (*DBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, req *dbPb.
 	}
 
 	resp.Status = ClusterSuccessResponseStatus
-	resp.Cluster = ConvertToClusterDTO(do, nil)
+	resp.Cluster = convertToClusterDTO(do, nil)
 	return nil
 }
 
@@ -75,13 +75,13 @@ func (*DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *dbPb.DBUp
 	}
 
 	resp.Status = ClusterSuccessResponseStatus
-	resp.Cluster = ConvertToClusterDTO(do, nil)
+	resp.Cluster = convertToClusterDTO(do, nil)
 
 	return nil
 }
 
 func (*DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLoadClusterRequest, resp *dbPb.DBLoadClusterResponse) error {
-	cluster, demand, config, flow, err := models.FetchCluster(req.ClusterId)
+	result, err := models.FetchCluster(req.ClusterId)
 	if err != nil {
 		// todo
 		return nil
@@ -89,18 +89,43 @@ func (*DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLoadCluste
 
 	resp.Status = ClusterSuccessResponseStatus
 	resp.ClusterDetail = &dbPb.DBClusterDetailDTO{
-		Cluster: ConvertToClusterDTO(cluster, demand),
-		TiupConfigRecord: ConvertToConfigDTO(config),
-		Flow: convertFlowToDTO(flow),
+		Cluster:          convertToClusterDTO(result.Cluster, result.DemandRecord),
+		TiupConfigRecord: convertToConfigDTO(result.TiUPConfig),
+		Flow:             convertFlowToDTO(result.Flow),
 	}
 	return nil
 }
 
-func (*DBServiceHandler) ListCluster(ctx context.Context, req *dbPb.DBListClusterRequest, resp *dbPb.DBListClusterResponse) error {
+func (*DBServiceHandler) ListCluster (ctx context.Context, req *dbPb.DBListClusterRequest, resp *dbPb.DBListClusterResponse) error {
+	clusters, total ,err  := models.ListClusterDetails(req.ClusterId, req.ClusterName, req.ClusterType, req.ClusterStatus, req.ClusterTag,
+		int((req.PageReq.Page - 1) * req.PageReq.PageSize), int(req.PageReq.PageSize))
+
+	if err != nil {
+		// todo
+	}
+
+	resp.Page = &dbPb.DBPageDTO{
+		Page:     req.PageReq.Page,
+		PageSize: req.PageReq.PageSize,
+		Total: int32(total),
+	}
+
+	clusterDetails :=  make([]*dbPb.DBClusterDetailDTO, len(clusters), len(clusters))
+
+	for i, v := range clusters {
+		clusterDetails[i] = &dbPb.DBClusterDetailDTO{
+			Cluster:          convertToClusterDTO(v.Cluster, v.DemandRecord),
+			TiupConfigRecord: convertToConfigDTO(v.TiUPConfig),
+			Flow:             convertFlowToDTO(v.Flow),
+		}
+	}
+
+	resp.Clusters = clusterDetails
+
 	return nil
 }
 
-func ConvertToClusterDTO(do *models.ClusterDO, demand *models.DemandRecordDO) (dto *dbPb.DBClusterDTO) {
+func convertToClusterDTO(do *models.ClusterDO, demand *models.DemandRecordDO) (dto *dbPb.DBClusterDTO) {
 	dto = &dbPb.DBClusterDTO {
 		Id:          do.ID,
 		Code:        do.Code,
@@ -109,14 +134,14 @@ func ConvertToClusterDTO(do *models.ClusterDO, demand *models.DemandRecordDO) (d
 		DbPassword:  do.DbPassword,
 		ClusterType: do.ClusterType,
 		VersionCode: do.ClusterVersion,
-		Status: 	 int32(do.Status),
+		Status:      int32(do.Status),
 		Tags:        do.Tags,
 		Tls:         do.Tls,
 		WorkFlowId:  int32(do.CurrentFlowId),
 		OwnerId:     do.OwnerId,
 		CreateTime:  do.CreatedAt.Unix(),
 		UpdateTime:  do.UpdatedAt.Unix(),
-		DeleteTime:  DeletedAtUnix(do.DeletedAt),
+		DeleteTime:  deletedAtUnix(do.DeletedAt),
 	}
 
 	if demand != nil {
@@ -125,34 +150,20 @@ func ConvertToClusterDTO(do *models.ClusterDO, demand *models.DemandRecordDO) (d
 	return
 }
 
-func ConvertToDisplayDTO(do *models.ClusterDO, flow *models.FlowDO) (dto *dbPb.DBClusterDisplayDTO) {
-	if do == nil {
-		return nil
-	}
-	return &dbPb.DBClusterDisplayDTO{
-		Cluster: ConvertToClusterDTO(do, nil),
-		Flow: convertFlowToDTO(flow),
-	}
-}
+func convertToConfigDTO(do *models.TiUPConfigDO) (dto *dbPb.DBTiUPConfigDTO) {
 
-func ConvertToConfigDTO(do *models.TiUPConfigDO) (dto *dbPb.DBTiUPConfigDTO) {
 	return &dbPb.DBTiUPConfigDTO{
 		Id: int32(do.ID),
 		TenantId:   do.TenantId,
 		ClusterId:  do.ClusterId,
 		Content:    do.Content,
 		CreateTime: do.CreatedAt.Unix(),
-
 	}
 }
 
-func DeletedAtUnix(at gorm.DeletedAt) (unix int64) {
+func deletedAtUnix(at gorm.DeletedAt) (unix int64) {
 	if at.Valid {
 		return at.Time.Unix()
 	}
-	return
-}
-
-func ParseDBClusterDTO(dto *dbPb.DBClusterDTO) (do *models.ClusterDO){
 	return
 }

@@ -152,19 +152,27 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 }
 
 type CronTaskEntity struct {
-	name string
-	cron string
-	handlerName string
-	parameter string
-
-	nextTime time.Time
-	// 0 启用，1 暂停，2 未启用，3 删除
-	status CronStatus
-	config string
+	ID uint
+	Name string
+	BizId string
+	CronTaskType CronTaskType
+	Cron string
+	Parameter string
+	NextTime time.Time
+	Status CronStatus
 }
 
 type CronTaskAggregation struct {
 	CronTask CronTaskEntity
 	Tasks    []TaskEntity
 }
+
+func GetDefaultMaintainTask() *CronTaskEntity {
+	return &CronTaskEntity{
+		Name: "maintain",
+		Cron: "0 0 21 ? ? ? ",
+		Status: CronStatusValid,
+	}
+}
+
 

@@ -6,10 +6,10 @@ import (
 	"github.com/pingcap/ticp/addon/tracer"
 	"github.com/pingcap/ticp/micro-api/controller"
 	"github.com/pingcap/ticp/micro-api/controller/clusterapi"
+	"github.com/pingcap/ticp/micro-api/controller/databaseapi"
 	"github.com/pingcap/ticp/micro-api/controller/hostapi"
 	"github.com/pingcap/ticp/micro-api/controller/instanceapi"
 	"github.com/pingcap/ticp/micro-api/controller/userapi"
-	"github.com/pingcap/ticp/micro-api/controller/databaseapi"
 	"github.com/pingcap/ticp/micro-api/security"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -66,7 +66,7 @@ func Route(g *gin.Engine) {
 
 		backup := apiV1.Group("/backup")
 		{
-			cluster.Use(security.VerifyIdentity)
+			backup.Use(security.VerifyIdentity)
 			backup.POST("/:clusterId", instanceapi.Backup)
 			backup.GET("/strategy/:clusterId", instanceapi.QueryBackupStrategy)
 			backup.POST("/strategy", instanceapi.SaveBackupStrategy)
@@ -89,13 +89,16 @@ func Route(g *gin.Engine) {
 			demoInstance.Use(security.VerifyIdentity)
 		}
 
-		host := apiV1.Group("/host")
+		host := apiV1.Group("/")
 		{
-			demoInstance.Use(security.VerifyIdentity)
-			host.POST("", hostapi.ImportHost)
-			host.POST("/query", hostapi.ListHost)
-			host.GET("/:hostId", hostapi.HostDetails)
-			host.DELETE("/:hostId", hostapi.RemoveHost)
+			host.Use(security.VerifyIdentity)
+			host.POST("host", hostapi.ImportHost)
+			host.POST("hosts", hostapi.ImportHosts)
+			host.GET("hosts", hostapi.ListHost)
+			host.GET("host/:hostId", hostapi.HostDetails)
+			host.DELETE("host/:hostId", hostapi.RemoveHost)
+			host.DELETE("hosts", hostapi.RemoveHosts)
+			host.GET("download_template", hostapi.DownloadHostTemplateFile)
 		}
 	}
 

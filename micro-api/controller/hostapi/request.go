@@ -27,6 +27,7 @@ type HostInfo struct {
 	Kernel   string `json:"kernel"`
 	CpuCores int32  `json:"cpuCores"`
 	Memory   int32  `json:"memory"`  // Host memory size, Unit:GB
+	Spec     string `json:"spec"`    // Host Spec, init while importing
 	Nic      string `json:"nic"`     // Host network type: 1GE or 10GE
 	Purpose  string `json:"purpose"` // What Purpose is the host used for? [compute/storage or both]
 	Disks    []Disk `json:"disks"`
@@ -48,3 +49,16 @@ const (
 	PURPOSE_FIELD
 	DISKS_FIELD
 )
+
+type Allocation struct {
+	FailureDomain string `json:"failureDomain"`
+	CpuCores      int32  `json:"cpuCores"`
+	Memory        int32  `json:"memory"`
+	Count         int32  `json:"count"`
+}
+
+type AllocHostsReq struct {
+	PdReq   []Allocation `json:"pdReq"`
+	TidbReq []Allocation `json:"tidbReq"`
+	TikvReq []Allocation `json:"tikvReq"`
+}

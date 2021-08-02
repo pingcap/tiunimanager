@@ -66,6 +66,7 @@ func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
+	dst.Spec = src.Spec
 	dst.Nic = src.Nic
 	dst.Dc = src.Dc
 	dst.Az = src.Az
@@ -83,6 +84,10 @@ func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	}
 }
 
+func genHostSpec(cpuCores int32, mem int32) string {
+	return fmt.Sprintf("%dU%dG", cpuCores, mem)
+}
+
 func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
@@ -90,6 +95,8 @@ func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
 	dst.Kernel = src.Kernel
 	dst.CpuCores = src.CpuCores
 	dst.Memory = src.Memory
+	dst.Spec = genHostSpec(src.CpuCores, src.Memory)
+	dst.Nic = src.Nic
 	dst.Dc = src.Dc
 	dst.Az = src.Az
 	dst.Rack = src.Rack
@@ -364,7 +371,7 @@ func detectDuplicateElement(hostIds []string) (string, bool) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param hostId body []string true "待删除的主机ID数组"
+// @Param hostIds body []string true "待删除的主机ID数组"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /hosts/ [delete]
 func RemoveHosts(c *gin.Context) {
@@ -423,4 +430,72 @@ func DownloadHostTemplateFile(c *gin.Context) {
 	c.Header("Cache-Control", "no-cache")
 
 	c.File(filePath)
+}
+
+func copyAllocToReq(src []Allocation, dst *[]*manager.AllocationReq) {
+	for _, req := range src {
+		*dst = append(*dst, &manager.AllocationReq{
+			FailureDomain: req.FailureDomain,
+			CpuCores:      req.CpuCores,
+			Memory:        req.Memory,
+			Count:         req.Count,
+		})
+	}
+}
+
+func copyAllocFromRsp(src []*manager.AllocHost, dst *[]AllocateRsp) {
+	for i, host := range src {
+		*dst = append(*dst, AllocateRsp{
+			HostName: host.HostName,
+			Ip:       host.Ip,
+			CpuCores: host.CpuCores,
+			Memory:   host.Memory,
+		})
+		(*dst)[i].Disk.DiskId = host.Disk.DiskId
+		(*dst)[i].Disk.Name = host.Disk.Name
+		(*dst)[i].Disk.Path = host.Disk.Path
+		(*dst)[i].Disk.Capacity = host.Disk.Capacity
+		(*dst)[i].Disk.Status = host.Disk.Status
+	}
+}
+
+// AllocHosts 分配主机接口
+// @Summary 分配主机接口
+// @Description 按指定的配置分配主机资源
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Param Token header string true "登录token"
+// @Param Alloc body AllocHostsReq true "主机分配请求"
+// @Success 200 {object} controller.CommonResult{data=AllocHostsRsp}
+// @Router /allochosts [post]
+func AllocHosts(c *gin.Context) {
+	var allocation AllocHostsReq
+	if err := c.ShouldBindJSON(&allocation); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	allocReq := manager.AllocHostsRequest{}
+	copyAllocToReq(allocation.PdReq, &allocReq.PdReq)
+	copyAllocToReq(allocation.TidbReq, &allocReq.TidbReq)
+	copyAllocToReq(allocation.TikvReq, &allocReq.TikvReq)
+	//fmt.Println(allocReq.PdReq, allocReq.TidbReq, allocReq.TikvReq)
+	rsp, err := client.ManagerClient.AllocHosts(c, &allocReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
+	}
+
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+
+	var res AllocHostsRsp
+	copyAllocFromRsp(rsp.PdHosts, &res.PdHosts)
+	copyAllocFromRsp(rsp.TidbHosts, &res.TidbHosts)
+	copyAllocFromRsp(rsp.TikvHosts, &res.TikvHosts)
+
+	c.JSON(http.StatusOK, controller.Success(res))
 }

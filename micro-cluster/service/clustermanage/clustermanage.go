@@ -83,10 +83,29 @@ func copyClusterDbDtoToDomain(dto *dbPb.DBClusterDTO, domain *Cluster) {
 
 // PrepareResource 申请主机的同步任务，还待抽象
 func (cluster *Cluster) PrepareResource(f *FlowWork) {
+	var aReq []*mngPb.AllocationReq
+	aReq = append(aReq, &mngPb.AllocationReq{
+		FailureDomain: "Zone1",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	aReq = append(aReq, &mngPb.AllocationReq{
+		FailureDomain: "Zone2",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	aReq = append(aReq, &mngPb.AllocationReq{
+		FailureDomain: "Zone3",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
 	req := mngPb.AllocHostsRequest{
-		PdCount:   int32(cluster.Demand.pdNodeQuantity),
-		TidbCount: int32(cluster.Demand.tiDBNodeQuantity),
-		TikvCount: int32(cluster.Demand.tiKVNodeQuantity),
+		PdReq:   aReq,
+		TidbReq: aReq,
+		TikvReq: aReq,
 	}
 	resp, err := mngClient.ManagerClient.AllocHosts(context.TODO(), &req)
 
@@ -94,16 +113,20 @@ func (cluster *Cluster) PrepareResource(f *FlowWork) {
 		// 处理远程异常
 	}
 
-	f.context.Put("hosts", resp.Hosts)
+	f.context.Put("pdHosts", resp.PdHosts)
+	f.context.Put("tidbHosts", resp.TidbHosts)
+	f.context.Put("tikvHosts", resp.TikvHosts)
 	f.moveOn("allocDone")
 }
 
 // BuildConfig 根据要求和申请到的主机，生成一份TiUP的配置
 func (cluster *Cluster) BuildConfig(f *FlowWork) {
 
-	hosts := f.context.Value("hosts").([]*mngPb.AllocHost)
-	dataDir := filepath.Join(hosts[0].Disk.Path, "data")
-	deployDir := filepath.Join(hosts[0].Disk.Path, "deploy")
+	pdHosts := f.context.Value("pdHosts").([]*mngPb.AllocHost)
+	tidbHosts := f.context.Value("tidbHosts").([]*mngPb.AllocHost)
+	tikvHosts := f.context.Value("tikvHosts").([]*mngPb.AllocHost)
+	dataDir := filepath.Join(tidbHosts[0].Disk.Path, "data")
+	deployDir := filepath.Join(tidbHosts[0].Disk.Path, "deploy")
 	// Deal with Global Settings
 	cluster.TiUPConfig.GlobalOptions.DataDir = dataDir
 	cluster.TiUPConfig.GlobalOptions.DeployDir = deployDir
@@ -113,24 +136,33 @@ func (cluster *Cluster) BuildConfig(f *FlowWork) {
 	cluster.TiUPConfig.GlobalOptions.LogDir = "/tidb-log"
 	// Deal with Promethus, AlertManger, Grafana
 	cluster.TiUPConfig.Monitors = append(cluster.TiUPConfig.Monitors, &spec.PrometheusSpec{
-		Host: hosts[0].Ip,
+		Host: pdHosts[0].Ip,
 	})
 	cluster.TiUPConfig.Alertmanagers = append(cluster.TiUPConfig.Alertmanagers, &spec.AlertmanagerSpec{
-		Host: hosts[0].Ip,
+		Host: pdHosts[0].Ip,
 	})
 	cluster.TiUPConfig.Grafanas = append(cluster.TiUPConfig.Grafanas, &spec.GrafanaSpec{
-		Host: hosts[0].Ip,
+		Host: pdHosts[0].Ip,
 	})
 	// Deal with PDServers, TiDBServers, TiKVServers
-	for _, v := range hosts {
+	for _, v := range pdHosts {
 		cluster.TiUPConfig.PDServers = append(cluster.TiUPConfig.PDServers, &spec.PDSpec{
-			Host: v.Ip,
+			Host:      v.Ip,
+			DataDir:   v.Disk.Path,
+			DeployDir: v.Disk.Path,
 		})
+	}
+	for _, v := range tidbHosts {
 		cluster.TiUPConfig.TiDBServers = append(cluster.TiUPConfig.TiDBServers, &spec.TiDBSpec{
-			Host: v.Ip,
+			Host:      v.Ip,
+			DeployDir: v.Disk.Path,
 		})
+	}
+	for _, v := range tikvHosts {
 		cluster.TiUPConfig.TiKVServers = append(cluster.TiUPConfig.TiKVServers, &spec.TiKVSpec{
-			Host: v.Ip,
+			Host:      v.Ip,
+			DataDir:   v.Disk.Path,
+			DeployDir: v.Disk.Path,
 		})
 	}
 

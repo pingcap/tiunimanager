@@ -5,16 +5,12 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"log"
 
-	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
-	mlog "github.com/asim/go-micro/v3/logger"
 	"github.com/asim/go-micro/v3/transport"
 	"github.com/pingcap/ticp/addon/logger"
-	mylogger "github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/addon/tracer"
 	"github.com/pingcap/ticp/config"
 	"github.com/pingcap/ticp/micro-metadb/models"
@@ -25,6 +21,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// Global LogRecord object
+var log *logger.LogRecord
+
 func initConfig() {
 	{
 		// only use to init the config
@@ -32,19 +31,25 @@ func initConfig() {
 			config.GetMicroCliArgsOption(),
 		)
 		srv.Init()
-		config.Init()
+		err := config.Init()
+		if err != nil {
+			return
+		}
 		srv = nil
 	}
 }
+
 func initLogger() {
-	// log
-	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(mylogger.WithContext(nil)))
+	log = logger.GetLogger()
+	service.InitLogger()
+	// use log
+	log.Debug("init logger completed!")
 }
 
 func initService() {
 	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
 	if err != nil {
-		mlog.Fatal(err)
+		log.Fatal(err)
 		return
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
@@ -67,9 +72,7 @@ func initService() {
 func initSqliteDB() {
 	var err error
 	dbFile := config.GetSqliteFilePath()
-
-	log := logger.WithContext(nil).WithField("dbFile", dbFile)
-	log.Info("init: sqlite.open")
+	log.Record("dbFile", dbFile).Info("init: sqlite.open")
 	models.MetaDB, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 	if err != nil {
@@ -152,7 +155,7 @@ func initDataForDemo() {
 
 	// 添加一些demo使用的host和disk数据
 	models.CreateHost(&models.Host{
-		Name:     "主机1",
+		HostName: "主机1",
 		IP:       "192.168.125.132",
 		Status:   0,
 		OS:       "CentOS",

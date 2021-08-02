@@ -29,6 +29,60 @@ definitions:
       page:
         $ref: '#/definitions/controller.Page'
     type: object
+  hostapi.AllocHostsReq:
+    properties:
+      pdReq:
+        items:
+          $ref: '#/definitions/hostapi.Allocation'
+        type: array
+      tidbReq:
+        items:
+          $ref: '#/definitions/hostapi.Allocation'
+        type: array
+      tikvReq:
+        items:
+          $ref: '#/definitions/hostapi.Allocation'
+        type: array
+    type: object
+  hostapi.AllocHostsRsp:
+    properties:
+      pdHosts:
+        items:
+          $ref: '#/definitions/hostapi.AllocateRsp'
+        type: array
+      tidbHosts:
+        items:
+          $ref: '#/definitions/hostapi.AllocateRsp'
+        type: array
+      tikvHosts:
+        items:
+          $ref: '#/definitions/hostapi.AllocateRsp'
+        type: array
+    type: object
+  hostapi.AllocateRsp:
+    properties:
+      cpuCore:
+        type: integer
+      disk:
+        $ref: '#/definitions/hostapi.Disk'
+      hostName:
+        type: string
+      ip:
+        type: string
+      memory:
+        type: integer
+    type: object
+  hostapi.Allocation:
+    properties:
+      count:
+        type: integer
+      cpuCores:
+        type: integer
+      failureDomain:
+        type: string
+      memory:
+        type: integer
+    type: object
   hostapi.DemoHostInfo:
     properties:
       hostId:
@@ -161,6 +215,38 @@ info:
   title: TiCP UI API
   version: "1.0"
 paths:
+  /allochosts:
+    post:
+      consumes:
+      - application/json
+      description: 按指定的配置分配主机资源
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 主机分配请求
+        in: body
+        name: Alloc
+        required: true
+        schema:
+          $ref: '#/definitions/hostapi.AllocHostsReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/hostapi.AllocHostsRsp'
+              type: object
+      summary: 分配主机接口
+      tags:
+      - resource
   /download_template/:
     get:
       consumes:
@@ -390,7 +476,7 @@ paths:
         type: string
       - description: 待删除的主机ID数组
         in: body
-        name: hostId
+        name: hostIds
         required: true
         schema:
           items:

@@ -3,10 +3,11 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/pingcap/ticp/micro-cluster/service/clustermanage"
-	"github.com/pingcap/ticp/micro-cluster/service/clusteroperate"
 	"log"
 	"net/http"
+
+	"github.com/pingcap/ticp/micro-cluster/service/clustermanage"
+	"github.com/pingcap/ticp/micro-cluster/service/clusteroperate"
 
 	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
@@ -42,7 +43,7 @@ func initLogger() {
 }
 
 func initClusterOperator() {
-	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup")
+	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup", "")
 	clustermanage.Operator = new(clusteroperate.TiUPOperator)
 }
 

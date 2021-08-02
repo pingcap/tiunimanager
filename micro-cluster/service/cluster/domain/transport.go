@@ -65,10 +65,10 @@ type MyDumperCfg struct {
 
 type TidbCfg struct {
 	Host 			string 	`toml:"host"`
-	Port 			uint32	`toml:"port"`
+	Port 			int		`toml:"port"`
 	User 			string 	`toml:"user"`
 	Password		string 	`toml:"password"`
-	StatusPort		uint32 	`toml:"status-port"`	//table infomation from tidb status port
+	StatusPort		int 	`toml:"status-port"`	//table infomation from tidb status port
 	PdAddr 			string 	`toml:"pd-addr"`
 }
 
@@ -132,27 +132,37 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	return uint32(flow.FlowWork.Id), nil
 }
 
-func convertTomlConfig(cluster *Cluster, info *ImportInfo) *DataImportConfig {
-	//todo: replace config item
+func convertTomlConfig(clusterAggregation *ClusterAggregation, task *TaskEntity, info *ImportInfo) *DataImportConfig {
+	if clusterAggregation == nil || clusterAggregation.CurrentTiUPConfigRecord == nil {
+		return nil
+	}
+	cluster := clusterAggregation.Cluster
+	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	if configModel == nil || configModel.TiDBServers == nil || configModel.PDServers == nil {
+		return nil
+	}
+	tidbServer := configModel.TiDBServers[0]
+	pdServer := configModel.PDServers[0]
+
 	config := &DataImportConfig{
 		Lighting: LightingCfg{
 			Level: "info",
-			File: fmt.Sprintf("/user/local/tiem/datatransport/%s/import/tidb-lighting.log", cluster.Id),
+			File: fmt.Sprintf("/user/local/tiem/datatransport/%s/import/task-%s/tidb-lighting.log", cluster.Id, task.Id),
 		},
 		TikvImporter: TikvImporterCfg{
 			Backend: "local",
-			SortedKvDir: "/mnt/ssd/sorted-kv-dir",
+			SortedKvDir: "/mnt/ssd/sorted-kv-dir", //todo: replace config item
 		},
 		MyDumper: MyDumperCfg{
 			DataSourceDir: info.FilePath,
 		},
 		Tidb: TidbCfg{
-			Host: "127.0.0.1",
-			Port: 4000,
+			Host: tidbServer.Host,
+			Port: tidbServer.Port,
 			User: info.UserName,
 			Password: info.Password,
-			StatusPort: 10080,
-			PdAddr: "127.0.0.1:2379",
+			StatusPort: tidbServer.StatusPort,
+			PdAddr: fmt.Sprintf("%s:%d", pdServer.Host, pdServer.ClientPort),
 		},
 	}
 	return config
@@ -162,8 +172,12 @@ func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
 	info := context.value(contextDataTransportKey).(ImportInfo)
 
-	config := convertTomlConfig(clusterAggregation.Cluster, &info)
-	filePath := fmt.Sprintf("/user/local/tiem/datatransport/%s/import/tidb-lighting.toml", clusterAggregation.Cluster.Id)
+	config := convertTomlConfig(&clusterAggregation, task, &info)
+	if config == nil {
+		log.Errorf("[domain] convert toml config failed, cluster: %v", clusterAggregation)
+		return false
+	}
+	filePath := fmt.Sprintf("/user/local/tiem/datatransport/%s/import/task-%s/tidb-lighting.toml", clusterAggregation.Cluster.Id, task.Id)
 	if _, err := toml.DecodeFile(filePath, &config); err != nil {
 		log.Errorf("[domain] decode data import toml config failed, %s", err.Error())
 		return false

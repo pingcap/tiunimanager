@@ -43,7 +43,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		TaskNodes: map[string]*TaskDefine{
 			"start":              {"exportDataFromCluster", "exportDataDone", "fail", PollingTasK, exportDataFromCluster},
 			"destroyTasksDone":   {"updateDataExportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataExportRecord},
-			"updateRecordDone": {"cleanExportTempfile", "cleanTempfileDone", "fail", SyncFuncTask, cleanExportTempfile},
+			"updateRecordDone":   {"cleanExportTempfile", "cleanTempfileDone", "fail", SyncFuncTask, cleanExportTempfile},
 			"cleanTempfileDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
 		},
@@ -58,9 +58,9 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		StatusAlias: copywriting.DisplayByDefault(copywriting.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
 			"start":              {"buildDataImportConfig", "buildConfigDone", "fail", SyncFuncTask, buildDataImportConfig},
-			"buildConfigDone":   {"importDataToCluster", "importDataDone", "fail", PollingTasK, importDataToCluster},
-			"importDataDone": {"updateDataImportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataImportRecord},
-			"updateRecordDone": {"cleanImportTempfile", "cleanTempfileDone", "fail", SyncFuncTask, cleanImportTempfile},
+			"buildConfigDone":    {"importDataToCluster", "importDataDone", "fail", PollingTasK, importDataToCluster},
+			"importDataDone":     {"updateDataImportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataImportRecord},
+			"updateRecordDone":   {"cleanImportTempfile", "cleanTempfileDone", "fail", SyncFuncTask, cleanImportTempfile},
 			"cleanTempfileDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
 		},

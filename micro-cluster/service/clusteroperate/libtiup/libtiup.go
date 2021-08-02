@@ -131,6 +131,7 @@ func TiupMgrInit() {
 	if len(configPath) == 0 {
 		configPath = "./tiupmgr.log"
 	}
+	log = logger.GetLogger()
 }
 
 func assert(b bool) {

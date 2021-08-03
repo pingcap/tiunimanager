@@ -3,3 +3,4 @@
 .idea/
 data.etcd1/
 micro-metadb/ticp.sqlite.db
+./logs

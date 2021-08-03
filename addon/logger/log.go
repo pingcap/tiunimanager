@@ -2,12 +2,12 @@ package logger
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/pingcap/ticp/config"
 
@@ -59,40 +59,53 @@ const (
 	RecordLineField = "line"
 )
 
+var mutex = sync.Mutex{}
+
 func Init() {
 	if logRecord == nil {
-		logger := log.New()
-
-		// Get global log configuration
-		conf := config.GetLogConfig()
-
-		// Set log format
-		logger.SetFormatter(&log.JSONFormatter{})
-		// Set log level
-		logger.SetLevel(getLogLevel(conf.LogLevel))
-
-		// Define output type writer
-		writers := []io.Writer{os.Stdout}
-
-		// Determine whether the log output contains the file type
-		if strings.Contains(strings.ToLower(conf.LogOutput), OutputFile) {
-			writers = append(writers, getFileOutput(conf))
+		mutex.Lock()
+		defer mutex.Unlock()
+		if logRecord == nil {
+			// init LogRecord
+			logRecord = newLogRecord()
 		}
-		// If console is not included, remove the os.Stdout output
-		if !strings.Contains(strings.ToLower(conf.LogOutput), OutputConsole) {
-			writers = writers[1:]
-		}
-		// Set log output
-		logger.SetOutput(io.MultiWriter(writers...))
-
-		logRecord = &LogRecord{
-			defaultLogEntry: log.NewEntry(logger),
-		}
-
-		// Record sys and mod default init
-		logRecord.defaultLogEntry = logRecord.defaultLogEntry.
-			WithField(RecordSysField, conf.RecordSysName).WithField(RecordModField, conf.RecordModName)
 	}
+}
+
+// newLogRecord Get a new log record object
+func newLogRecord() *LogRecord {
+	logger := log.New()
+
+	// Get global log configuration
+	conf := config.GetLogConfig()
+
+	// Set log format
+	logger.SetFormatter(&log.JSONFormatter{})
+	// Set log level
+	logger.SetLevel(getLogLevel(conf.LogLevel))
+
+	// Define output type writer
+	writers := []io.Writer{os.Stdout}
+
+	// Determine whether the log output contains the file type
+	if strings.Contains(strings.ToLower(conf.LogOutput), OutputFile) {
+		writers = append(writers, getFileOutput(conf))
+	}
+	// If console is not included, remove the os.Stdout output
+	if !strings.Contains(strings.ToLower(conf.LogOutput), OutputConsole) {
+		writers = writers[1:]
+	}
+	// Set log output
+	logger.SetOutput(io.MultiWriter(writers...))
+
+	lr := &LogRecord{
+		defaultLogEntry: log.NewEntry(logger),
+	}
+
+	// Record sys and mod default init
+	lr.defaultLogEntry = lr.defaultLogEntry.
+		WithField(RecordSysField, conf.RecordSysName).WithField(RecordModField, conf.RecordModName)
+	return lr
 }
 
 // Log file output configuration
@@ -137,19 +150,15 @@ func NewContext(ctx context.Context, fields Fields) context.Context {
 
 func WithContext(ctx context.Context) *log.Entry {
 	if ctx == nil {
-		if logRecord == nil {
-			Init()
-		}
+		// default by global log entry
+		Init()
 		return logRecord.defaultLogEntry
 	}
 	le, ok := ctx.Value(logCtxKey).(*log.Entry)
 	if ok {
 		return le
 	} else {
-		if logRecord == nil {
-			Init()
-		}
-		return logRecord.defaultLogEntry
+		return newLogRecord().defaultLogEntry
 	}
 }
 
@@ -183,7 +192,7 @@ func (lr *LogRecord) RecordFun() *log.Entry {
 	logEntry := logRecord.defaultLogEntry
 	if pc, file, line, ok := runtime.Caller(2); ok {
 		ptr := runtime.FuncForPC(pc)
-		fmt.Println(ptr.Name(), file, line)
+		//fmt.Println(ptr.Name(), file, line)
 		logEntry = logRecord.defaultLogEntry.WithField(RecordFunField, ptr.Name()).
 			WithField(RecordFileField, path.Base(file)).WithField(RecordLineField, line)
 	}

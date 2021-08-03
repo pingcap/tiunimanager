@@ -33,3 +33,16 @@ type AllocHostsRsp struct {
 	TidbHosts []AllocateRsp `json:"tidbHosts"`
 	TikvHosts []AllocateRsp `json:"tikvHosts"`
 }
+
+type DomainResource struct {
+	FailureDomain string `json:"failureDomain"`
+	DomainCode    string `json:"domaincode"`
+	Purpose       string `json:"purpose"`
+	Spec          string `json:"spec"`
+	SpecCode      string `json:"speccode"`
+	Count         int32  `json:"count"`
+}
+
+type DomainResourceRsp struct {
+	Resources []DomainResource `json:"resources"`
+}

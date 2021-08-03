@@ -16,6 +16,7 @@ import (
 	"github.com/pingcap/ticp/micro-api/controller"
 	"github.com/pingcap/ticp/micro-manager/client"
 	manager "github.com/pingcap/ticp/micro-manager/proto"
+	"github.com/pingcap/ticp/micro-metadb/service"
 	"google.golang.org/grpc/codes"
 )
 
@@ -498,4 +499,54 @@ func AllocHosts(c *gin.Context) {
 	copyAllocFromRsp(rsp.TikvHosts, &res.TikvHosts)
 
 	c.JSON(http.StatusOK, controller.Success(res))
+}
+
+// GetFailureDomain 查询指定故障域里的资源情况
+// @Summary 查询指定故障域的资源
+// @Description 查询指定故障域的资源情况
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Param Token header string true "登录token"
+// @Param failureDomainType query int false "指定故障域类型" Enums(1, 2, 3)
+// @Success 200 {object} controller.ResultWithPage{data=[]DomainResource}
+// @Router /failuredomains [get]
+func GetFailureDomain(c *gin.Context) {
+	var domain int
+	domainStr := c.Query("failureDomainType")
+	if domainStr == "" {
+		domain = int(service.ZONE)
+	}
+	domain, err := strconv.Atoi(domainStr)
+	if err != nil || domain > int(service.RACK) || domain < int(service.DATACENTER) {
+		errmsg := fmt.Sprintf("Input domainType [%s] Invalid: %v", c.Query("failureDomainType"), err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
+		return
+	}
+
+	GetDoaminReq := manager.GetFailureDomainRequest{
+		FailureDomainType: int32(domain),
+	}
+
+	rsp, err := client.ManagerClient.GetFailureDomain(c, &GetDoaminReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
+	}
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+	var res DomainResourceRsp
+	for _, v := range rsp.FdList {
+		res.Resources = append(res.Resources, DomainResource{
+			FailureDomain: service.GetDomainNameFromCode(v.FailureDomain),
+			DomainCode:    v.FailureDomain,
+			Purpose:       v.Purpose,
+			Spec:          v.Spec,
+			SpecCode:      v.Spec,
+			Count:         v.Count,
+		})
+	}
+	c.JSON(http.StatusOK, controller.SuccessWithPage(res, controller.Page{Page: 1, PageSize: 20, Total: len(res.Resources)}))
 }

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/pingcap/ticp/micro-metadb/models"
 	"google.golang.org/grpc/codes"
@@ -10,6 +11,26 @@ import (
 
 	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
 )
+
+type FailureDomain int32
+
+const (
+	ROOT FailureDomain = iota
+	DATACENTER
+	ZONE
+	RACK
+	HOST
+	DISK
+)
+
+func genDomainCodeByName(pre string, name string) string {
+	return fmt.Sprintf("%s,%s", pre, name)
+}
+
+func GetDomainNameFromCode(failureDomain string) string {
+	pos := strings.LastIndex(failureDomain, ",")
+	return failureDomain[pos+1:]
+}
 
 func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
 	dst.HostName = src.HostName
@@ -21,8 +42,8 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
 	dst.Spec = src.Spec
 	dst.Nic = src.Nic
 	dst.DC = src.Dc
-	dst.AZ = src.Az
-	dst.Rack = src.Rack
+	dst.AZ = genDomainCodeByName(dst.DC, src.Az)
+	dst.Rack = genDomainCodeByName(dst.AZ, src.Rack)
 	dst.Status = int32(src.Status)
 	dst.Purpose = src.Purpose
 	for _, disk := range src.Disks {
@@ -142,8 +163,8 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.Spec = src.Spec
 	dst.Nic = src.Nic
 	dst.Dc = src.DC
-	dst.Az = src.AZ
-	dst.Rack = src.Rack
+	dst.Az = GetDomainNameFromCode(src.AZ)
+	dst.Rack = GetDomainNameFromCode(src.Rack)
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
 	for _, disk := range src.Disks {
@@ -280,6 +301,69 @@ func (*DBServiceHandler) LockHosts(ctx context.Context, req *dbPb.DBLockHostsReq
 
 		// return nil to use rsp
 		return nil
+	}
+	return nil
+}
+
+func genHostSpec(cpuCores int32, mem int32) string {
+	return fmt.Sprintf("%dU%dG", cpuCores, mem)
+}
+
+func getFailureDomainByType(fd FailureDomain) (domain string, err error) {
+	switch fd {
+	case DATACENTER:
+		domain = "dc"
+	case ZONE:
+		domain = "az"
+	case RACK:
+		domain = "rack"
+	default:
+		err = status.Errorf(codes.InvalidArgument, "%s is invalid domain type")
+	}
+	return
+}
+
+func (*DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb.DBGetFailureDomainRequest, rsp *dbPb.DBGetFailureDomainResponse) error {
+	domainType := req.FailureDomainType
+	domain, err := getFailureDomainByType(FailureDomain(domainType))
+	rsp.Rs = new(dbPb.DBHostResponseStatus)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			rsp.Rs.Code = int32(st.Code())
+			rsp.Rs.Message = st.Message()
+		} else {
+			rsp.Rs.Code = int32(codes.Internal)
+			rsp.Rs.Message = fmt.Sprintf("get failure domain resources failed, err: %v", err)
+		}
+		log.Warnln(rsp.Rs.Message)
+
+		// return nil to use rsp
+		return nil
+	}
+
+	resources, err := models.GetFailureDomain(domain)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			rsp.Rs.Code = int32(st.Code())
+			rsp.Rs.Message = st.Message()
+		} else {
+			rsp.Rs.Code = int32(codes.Internal)
+			rsp.Rs.Message = fmt.Sprintf("get failure domain resources failed, err: %v", err)
+		}
+		log.Warnln(rsp.Rs.Message)
+
+		// return nil to use rsp
+		return nil
+	}
+	for _, v := range resources {
+		rsp.FdList = append(rsp.FdList, &dbPb.DBFailureDomainResource{
+			FailureDomain: v.FailureDomain,
+			Purpose:       v.Purpose,
+			Spec:          genHostSpec(int32(v.CpuCores), int32(v.Memory)),
+			Count:         int32(v.Count),
+		})
 	}
 	return nil
 }

@@ -213,6 +213,9 @@ func getHostSpec(cpuCores int32, mem int32) string {
 
 func mergeReqs(zonesReqs map[string]map[string]*dbPb.DBPreAllocHostsRequest, reqs []*hostPb.AllocationReq) {
 	for _, eachReq := range reqs {
+		if eachReq.Count == 0 {
+			continue
+		}
 		spec := getHostSpec(eachReq.CpuCores, eachReq.Memory)
 		if r, ok := zonesReqs[eachReq.FailureDomain][spec]; ok {
 			r.Req.Count += eachReq.Count
@@ -233,6 +236,9 @@ func mergeReqs(zonesReqs map[string]map[string]*dbPb.DBPreAllocHostsRequest, req
 
 func fetchResults(zonesRsps map[string]map[string][]*dbPb.DBPreAllocation, reqs []*hostPb.AllocationReq) (res []*hostPb.AllocHost) {
 	for _, eachReq := range reqs {
+		if eachReq.Count == 0 {
+			continue
+		}
 		spec := getHostSpec(eachReq.CpuCores, eachReq.Memory)
 		zone := eachReq.FailureDomain
 		for i := 0; i < int(eachReq.Count); i++ {
@@ -320,5 +326,34 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 	out.PdHosts = fetchResults(zonesRsps, in.PdReq)
 	out.TidbHosts = fetchResults(zonesRsps, in.TidbReq)
 	out.TikvHosts = fetchResults(zonesRsps, in.TikvReq)
+	return nil
+}
+
+func GetFailureDomain(ctx context.Context, in *hostPb.GetFailureDomainRequest, out *hostPb.GetFailureDomainResponse) error {
+	var req dbPb.DBGetFailureDomainRequest
+	req.FailureDomainType = in.FailureDomainType
+	rsp, err := dbClient.DBClient.GetFailureDomain(ctx, &req)
+	if err != nil {
+		log.Errorf("get failure domains error, %v", err)
+		return err
+	}
+	out.Rs = new(hostPb.ResponseStatus)
+	out.Rs.Code = rsp.Rs.Code
+	out.Rs.Message = rsp.Rs.Message
+
+	if rsp.Rs.Code != int32(codes.OK) {
+		log.Warnf("get failure domains info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		return nil
+	}
+
+	log.Infof("get failure domain type %d from db service succeed", req.FailureDomainType)
+	for _, v := range rsp.FdList {
+		out.FdList = append(out.FdList, &hostPb.FailureDomainResource{
+			FailureDomain: v.FailureDomain,
+			Purpose:       v.Purpose,
+			Spec:          v.Spec,
+			Count:         v.Count,
+		})
+	}
 	return nil
 }

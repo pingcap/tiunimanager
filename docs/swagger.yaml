@@ -109,6 +109,21 @@ definitions:
         description: Disk Status, 0 for available, 1 for inused
         type: integer
     type: object
+  hostapi.DomainResource:
+    properties:
+      count:
+        type: integer
+      domaincode:
+        type: string
+      failureDomain:
+        type: string
+      purpose:
+        type: string
+      spec:
+        type: string
+      speccode:
+        type: string
+    type: object
   hostapi.HostInfo:
     properties:
       az:
@@ -141,6 +156,9 @@ definitions:
         description: What Purpose is the host used for? [compute/storage or both]
         type: string
       rack:
+        type: string
+      spec:
+        description: Host Spec, init while importing
         type: string
       status:
         description: Host Status, 0 for Online, 1 for offline
@@ -266,6 +284,42 @@ paths:
           schema:
             type: file
       summary: 导出主机信息模板文件
+      tags:
+      - resource
+  /failuredomains:
+    get:
+      consumes:
+      - application/json
+      description: 查询指定故障域的资源情况
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 指定故障域类型
+        enum:
+        - 1
+        - 2
+        - 3
+        in: query
+        name: failureDomainType
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/hostapi.DomainResource'
+                  type: array
+              type: object
+      summary: 查询指定故障域的资源
       tags:
       - resource
   /host:

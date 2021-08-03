@@ -12,6 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 type ClusterAggregation struct {
@@ -19,6 +20,8 @@ type ClusterAggregation struct {
 
 	CurrentTiUPConfigRecord *TiUPConfigRecord
 	CurrentWorkFlow  		*FlowWorkEntity
+
+	CurrentOperator         *Operator
 
 	MaintainCronTask 		*CronTaskEntity
 	HistoryWorkFLows 		[]*FlowWorkEntity
@@ -31,6 +34,10 @@ type ClusterAggregation struct {
 	FlowModified 			bool
 
 	ConfigModified 			bool
+
+	LastBackupRecord 		*BackupRecord
+
+	LastRecoverRecord		*RecoverRecord
 }
 
 var contextClusterKey = "clusterAggregation"
@@ -59,9 +66,10 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 	// persist the cluster into database
 	ClusterRepo.AddCluster(cluster)
 
-	clusterAggregation := &ClusterAggregation{
+	clusterAggregation := &ClusterAggregation {
 		Cluster: cluster,
 		MaintainCronTask: GetDefaultMaintainTask(),
+		CurrentOperator: operator,
 	}
 
 	// Start the workflow to create a cluster instance
@@ -84,6 +92,7 @@ func DeleteCluster(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregatio
 	operator := parseOperatorFromDTO(ope)
 	log.Info(operator)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	clusterAggregation.CurrentOperator = operator
 
 	if err != nil {
 		return clusterAggregation, errors.New("cluster not exist")
@@ -107,6 +116,76 @@ func GetClusterDetail(ope *proto.OperatorDTO, clusterId string) (*ClusterAggrega
 	cluster, err := ClusterRepo.Load(clusterId)
 	// todo 补充其他的信息
 	return cluster, err
+}
+
+func ListBackupRecords(ope *proto.OperatorDTO, clusterId string, startTime, endTime time.Time) () {
+
+}
+
+func Backup(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error){
+	operator := parseOperatorFromDTO(ope)
+	log.Info(operator)
+	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	clusterAggregation.CurrentOperator = operator
+
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
+
+	currentFlow := clusterAggregation.CurrentWorkFlow
+	if currentFlow != nil && !currentFlow.Finished(){
+		return clusterAggregation, errors.New("incomplete processing flow")
+	}
+
+	flow, err := CreateFlowWork(clusterId, FlowBackupCluster)
+	if err != nil {
+		// todo
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+
+	flow.Start()
+
+	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	ClusterRepo.Persist(clusterAggregation)
+	return clusterAggregation, nil
+}
+
+func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*ClusterAggregation, error){
+	operator := parseOperatorFromDTO(ope)
+	log.Info(operator)
+	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	clusterAggregation.CurrentOperator = operator
+
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
+
+	currentFlow := clusterAggregation.CurrentWorkFlow
+	if currentFlow != nil && !currentFlow.Finished(){
+		return clusterAggregation, errors.New("incomplete processing flow")
+	}
+
+	flow, err := CreateFlowWork(clusterId, FlowRecoverCluster)
+	if err != nil {
+		// todo
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+
+	flow.Start()
+
+	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	ClusterRepo.Persist(clusterAggregation)
+	return clusterAggregation, nil
+}
+
+func ModifyParameters() {
+
+}
+
+func GetParameters() {
+
 }
 
 func (aggregation *ClusterAggregation) loadWorkFlow() error {
@@ -303,6 +382,45 @@ func (aggregation *ClusterAggregation) ExtractBaseInfoDTO() *proto.ClusterBaseIn
 		},
 		Tags: cluster.Tags,
 		Tls: cluster.Tls,
+	}
+}
+
+func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRecordDTO {
+	record := aggregation.LastBackupRecord
+	currentFlow := aggregation.CurrentWorkFlow
+
+	return &proto.BackupRecordDTO{
+		Id:        int64(record.Id),
+		ClusterId: record.ClusterId,
+		Range:     int32(record.Range),
+		Way: int32(record.BackupType),
+		Size:      record.Size,
+		DisplayStatus: &proto.DisplayStatusDTO {
+			InProcessFlowId: int32(currentFlow.Id),
+			StatusCode:      currentFlow.Status.Display(),
+			StatusName:      currentFlow.StatusAlias,
+		},
+		Operator: &proto.OperatorDTO {
+			Id: aggregation.CurrentOperator.Id,
+			Name: aggregation.CurrentOperator.Name,
+			TenantId: aggregation.CurrentOperator.TenantId,
+		},
+		FilePath: record.FilePath,
+	}
+}
+
+func (aggregation *ClusterAggregation) ExtractRecoverRecordDTO() *proto.BackupRecoverRecordDTO {
+	record := aggregation.LastRecoverRecord
+	currentFlow := aggregation.CurrentWorkFlow
+	return &proto.BackupRecoverRecordDTO{
+		Id:        int64(record.Id),
+		ClusterId: record.ClusterId,
+		DisplayStatus: &proto.DisplayStatusDTO {
+			InProcessFlowId: int32(currentFlow.Id),
+			StatusCode:      currentFlow.Status.Display(),
+			StatusName:      currentFlow.StatusAlias,
+		},
+		BackupRecordId: int64(record.BackupRecord.Id),
 	}
 }
 

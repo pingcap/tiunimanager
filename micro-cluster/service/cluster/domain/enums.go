@@ -49,6 +49,22 @@ const (
 	TaskStatusError      TaskStatus = 3
 )
 
+func (s TaskStatus) Display() string {
+
+	switch s {
+	case TaskStatusInit: return copywriting.DisplayByDefault(copywriting.CWTaskStatusInit)
+	case TaskStatusProcessing: return copywriting.DisplayByDefault(copywriting.CWTaskStatusProcessing)
+	case TaskStatusFinished: return copywriting.DisplayByDefault(copywriting.CWTaskStatusFinished)
+	case TaskStatusError: return copywriting.DisplayByDefault(copywriting.CWTaskStatusError)
+	}
+
+	panic("Unknown task status")
+}
+
+func (s TaskStatus) Finished() bool {
+	return TaskStatusFinished == s || TaskStatusError == s
+}
+
 var allTaskStatus = []TaskStatus{
 	TaskStatusInit,
 	TaskStatusProcessing,
@@ -85,6 +101,9 @@ const (
 const (
 	FlowCreateCluster = "CreateCluster"
 	FlowDeleteCluster = "DeleteCluster"
+	FlowBackupCluster = "BackupCluster"
+	FlowRecoverCluster = "RecoverCluster"
+	FlowModifyParameters = "ModifyParameters"
 )
 
 type CronTaskType int8

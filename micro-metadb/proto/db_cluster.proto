@@ -120,3 +120,87 @@ message DBPageDTO {
     int32 pageSize = 2;
     int32 total = 3;
 }
+
+message DBParameterRecordDTO {
+    int64 id = 1;
+    string tenantId = 2;
+    string clusterId = 3;
+    int64 createTime = 4;
+    string operatorId = 5;
+    string content = 6;
+    int64 flowId = 7;
+}
+
+message DBSaveParametersRequest {
+    DBParameterRecordDTO parameters = 1;
+}
+
+message DBSaveParametersResponse {
+    DBClusterResponseStatus status = 1;
+    DBParameterRecordDTO parameters = 2;
+}
+
+message DBGetCurrentParametersRequest {
+    string clusterId = 1;
+}
+
+message DBGetCurrentParametersResponse {
+    DBClusterResponseStatus status = 1;
+    DBParameterRecordDTO parameters = 2;
+}
+
+message DBBackupRecordDTO {
+    int64 id = 1;
+    string tenantId = 2;
+    string clusterId = 3;
+    int64 createTime = 4;
+    int32 backupRange = 5;
+    int32 backupType = 6;
+    string operatorId = 7;
+    string filePath = 8;
+    int64 flowId = 9;
+}
+
+message DBSaveBackupRecordRequest {
+    DBBackupRecordDTO backupRecord = 1;
+}
+
+message DBSaveBackupRecordResponse {
+    DBClusterResponseStatus status = 1;
+    DBBackupRecordDTO backupRecord = 2;
+}
+
+message DBListBackupRecordsRequest {
+    string clusterId = 1;
+    DBPageDTO page = 2;
+}
+
+message DBDBBackupRecordDisplayDTO {
+    DBBackupRecordDTO backupRecord = 1;
+    DBFlowDTO flow = 2;
+}
+
+message DBListBackupRecordsResponse {
+    DBClusterResponseStatus status = 1;
+    repeated DBDBBackupRecordDisplayDTO backupRecords = 2;
+    DBPageDTO page = 3;
+}
+
+message DBRecoverRecordDTO {
+    int64 id = 1;
+    string tenantId = 2;
+    string clusterId = 3;
+    int64 createTime = 4;
+    string operatorId = 5;
+    int64 backupRecordId = 6;
+    int64 flowId = 7;
+}
+
+message DBSaveRecoverRecordRequest {
+    DBRecoverRecordDTO recoverRecord = 1;
+}
+
+message DBSaveRecoverRecordResponse {
+    DBClusterResponseStatus status = 1;
+    DBRecoverRecordDTO recoverRecord = 2;
+}

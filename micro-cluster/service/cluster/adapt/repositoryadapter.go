@@ -114,6 +114,43 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 		aggregation.CurrentTiUPConfigRecord = parseConfigRecordDTO(resp.TiupConfigRecord)
 	}
 
+	if aggregation.LastBackupRecord != nil && aggregation.LastBackupRecord.Id == 0 {
+		record := aggregation.LastBackupRecord
+		resp, err :=  client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
+			BackupRecord: &db.DBBackupRecordDTO{
+				TenantId:    cluster.TenantId,
+				ClusterId:   record.ClusterId,
+				BackupType: int32(record.BackupType),
+				BackupRange: int32(record.Range),
+				OperatorId:  record.OperatorId,
+				FilePath:    record.FilePath,
+				FlowId:      int64(aggregation.CurrentWorkFlow.Id),
+			},
+		})
+		if err != nil {
+			// todo
+			return err
+		}
+		aggregation.LastBackupRecord.Id = uint(resp.BackupRecord.Id)
+	}
+
+	if aggregation.LastRecoverRecord != nil && aggregation.LastRecoverRecord.Id == 0 {
+		record := aggregation.LastRecoverRecord
+		resp, err :=  client.DBClient.SaveRecoverRecord(context.TODO(), &db.DBSaveRecoverRecordRequest{
+			RecoverRecord: &db.DBRecoverRecordDTO{
+				TenantId:       cluster.TenantId,
+				ClusterId:      record.ClusterId,
+				OperatorId:     record.OperatorId,
+				BackupRecordId: int64(record.BackupRecord.Id),
+				FlowId:         int64(aggregation.CurrentWorkFlow.Id),
+			},
+		})
+		if err != nil {
+			// todo
+			return err
+		}
+		aggregation.LastRecoverRecord.Id = uint(resp.RecoverRecord.Id)
+	}
 	return nil
 }
 

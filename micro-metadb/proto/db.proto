@@ -34,6 +34,13 @@ service TiCPDBService {
 	rpc LoadCluster(DBLoadClusterRequest) returns (DBLoadClusterResponse);
 	rpc ListCluster(DBListClusterRequest) returns (DBListClusterResponse);
 
+	// backup & recover & parameters
+	rpc SaveBackupRecord(DBSaveBackupRecordRequest) returns (DBSaveBackupRecordResponse);
+	rpc ListBackupRecords(DBListBackupRecordsRequest) returns (DBListBackupRecordsResponse);
+	rpc SaveRecoverRecord(DBSaveRecoverRecordRequest) returns (DBSaveRecoverRecordResponse);
+	rpc SaveParametersRecord(DBSaveParametersRequest) returns (DBSaveParametersResponse);
+	rpc GetCurrentParametersRecord(DBGetCurrentParametersRequest) returns (DBGetCurrentParametersResponse);
+
 	// Tiup Task
 	rpc CreateTiupTask(CreateTiupTaskRequest) returns (CreateTiupTaskResponse);
 	rpc UpdateTiupTask(UpdateTiupTaskRequest) returns (UpdateTiupTaskResponse);
@@ -47,4 +54,5 @@ service TiCPDBService {
 	rpc UpdateTask(DBUpdateTaskRequest) returns (DBUpdateTaskResponse);
 	rpc LoadFlow(DBLoadFlowRequest) returns (DBLoadFlowResponse);
 	rpc LoadTask(DBLoadTaskRequest) returns (DBLoadTaskResponse);
+
 }

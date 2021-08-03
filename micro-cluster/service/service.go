@@ -77,16 +77,30 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *cluster.C
 	}
 }
 
-func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *cluster.QueryBackupRequest, response *cluster.QueryBackupResponse) error {
-	panic("implement me")
-}
-
 func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluster.CreateBackupRequest, response *cluster.CreateBackupResponse) error {
-	panic("implement me")
+	cluster, err := domain.Backup(request.Operator, request.ClusterId)
+
+	if err != nil {
+		// todo
+		return nil
+	} else {
+		response.Status = SuccessResponseStatus
+		response.BackupRecord = cluster.ExtractBackupRecordDTO()
+		return nil
+	}
 }
 
 func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request *cluster.RecoverBackupRequest, response *cluster.RecoverBackupResponse) error {
-	panic("implement me")
+	cluster, err := domain.Recover(request.Operator, request.ClusterId, request.BackupRecordId)
+
+	if err != nil {
+		// todo
+		return nil
+	} else {
+		response.Status = SuccessResponseStatus
+		response.RecoverRecord = cluster.ExtractRecoverRecordDTO()
+		return nil
+	}
 }
 
 func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *cluster.DeleteBackupRequest, response *cluster.DeleteBackupResponse) error {
@@ -127,4 +141,16 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 	response.Cron = cronEntity.Cron
 
 	return nil
+}
+
+func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *cluster.QueryBackupRequest, response *cluster.QueryBackupResponse) error {
+	panic("implement me")
+}
+
+func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *cluster.QueryClusterParametersRequest, response *cluster.QueryClusterParametersResponse) error {
+	panic("implement me")
+}
+
+func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *cluster.SaveClusterParametersRequest, response *cluster.SaveClusterParametersResponse) error {
+	panic("implement me")
 }

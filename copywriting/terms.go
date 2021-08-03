@@ -13,12 +13,16 @@ func Display(key string, language string) string {
 // CopyWritingContainer map[language]map[copyWritingKey]copyWritingValue
 var CopyWritingContainer = map[string]map[string]string{
 	"cn":{
-		CWClusterStatusUnlined:	"未启动",
+		CWClusterStatusUnlined:	"未开始",
 		CWClusterStatusOnline:	"运行中",
 		CWClusterStatusOffline:	"已停止",
 		CWClusterStatusDeleted:	"已删除",
 		CWFlowCreateCluster:	"创建中",
 		CWFlowDeleteCluster:	"删除中",
+		CWTaskStatusInit: 		"未开始",
+		CWTaskStatusProcessing: "处理中",
+		CWTaskStatusFinished: 	"已完成",
+		CWTaskStatusError: 		"已失败",
 	},
 }
 
@@ -26,6 +30,11 @@ var CWClusterStatusUnlined = "CW_ClusterStatusUnlined"
 var CWClusterStatusOnline = "CW_ClusterStatusOnline"
 var CWClusterStatusOffline = "CW_ClusterStatusOffline"
 var CWClusterStatusDeleted = "CW_ClusterStatusDeleted"
+
+var CWTaskStatusInit = "CW_TaskStatusInit"
+var CWTaskStatusProcessing = "CW_TaskStatusProcessing"
+var CWTaskStatusFinished = "CW_TaskStatusFinished"
+var CWTaskStatusError = "CW_TaskStatusError"
 
 var CWFlowCreateCluster = "CW_FlowCreateCluster"
 var CWFlowDeleteCluster = "CW_FlowDeleteCluster"

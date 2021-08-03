@@ -1218,6 +1218,888 @@ func (x *DBPageDTO) GetTotal() int32 {
 	return 0
 }
 
+type DBParameterRecordDTO struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id         int64  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	TenantId   string `protobuf:"bytes,2,opt,name=tenantId,proto3" json:"tenantId,omitempty"`
+	ClusterId  string `protobuf:"bytes,3,opt,name=clusterId,proto3" json:"clusterId,omitempty"`
+	CreateTime int64  `protobuf:"varint,4,opt,name=createTime,proto3" json:"createTime,omitempty"`
+	OperatorId string `protobuf:"bytes,5,opt,name=operatorId,proto3" json:"operatorId,omitempty"`
+	Content    string `protobuf:"bytes,6,opt,name=content,proto3" json:"content,omitempty"`
+	FlowId     int64  `protobuf:"varint,7,opt,name=flowId,proto3" json:"flowId,omitempty"`
+}
+
+func (x *DBParameterRecordDTO) Reset() {
+	*x = DBParameterRecordDTO{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[18]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBParameterRecordDTO) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBParameterRecordDTO) ProtoMessage() {}
+
+func (x *DBParameterRecordDTO) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[18]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBParameterRecordDTO.ProtoReflect.Descriptor instead.
+func (*DBParameterRecordDTO) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *DBParameterRecordDTO) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *DBParameterRecordDTO) GetTenantId() string {
+	if x != nil {
+		return x.TenantId
+	}
+	return ""
+}
+
+func (x *DBParameterRecordDTO) GetClusterId() string {
+	if x != nil {
+		return x.ClusterId
+	}
+	return ""
+}
+
+func (x *DBParameterRecordDTO) GetCreateTime() int64 {
+	if x != nil {
+		return x.CreateTime
+	}
+	return 0
+}
+
+func (x *DBParameterRecordDTO) GetOperatorId() string {
+	if x != nil {
+		return x.OperatorId
+	}
+	return ""
+}
+
+func (x *DBParameterRecordDTO) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *DBParameterRecordDTO) GetFlowId() int64 {
+	if x != nil {
+		return x.FlowId
+	}
+	return 0
+}
+
+type DBSaveParametersRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Parameters *DBParameterRecordDTO `protobuf:"bytes,1,opt,name=parameters,proto3" json:"parameters,omitempty"`
+}
+
+func (x *DBSaveParametersRequest) Reset() {
+	*x = DBSaveParametersRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[19]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBSaveParametersRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBSaveParametersRequest) ProtoMessage() {}
+
+func (x *DBSaveParametersRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[19]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBSaveParametersRequest.ProtoReflect.Descriptor instead.
+func (*DBSaveParametersRequest) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *DBSaveParametersRequest) GetParameters() *DBParameterRecordDTO {
+	if x != nil {
+		return x.Parameters
+	}
+	return nil
+}
+
+type DBSaveParametersResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Status     *DBClusterResponseStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Parameters *DBParameterRecordDTO    `protobuf:"bytes,2,opt,name=parameters,proto3" json:"parameters,omitempty"`
+}
+
+func (x *DBSaveParametersResponse) Reset() {
+	*x = DBSaveParametersResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[20]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBSaveParametersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBSaveParametersResponse) ProtoMessage() {}
+
+func (x *DBSaveParametersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[20]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBSaveParametersResponse.ProtoReflect.Descriptor instead.
+func (*DBSaveParametersResponse) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *DBSaveParametersResponse) GetStatus() *DBClusterResponseStatus {
+	if x != nil {
+		return x.Status
+	}
+	return nil
+}
+
+func (x *DBSaveParametersResponse) GetParameters() *DBParameterRecordDTO {
+	if x != nil {
+		return x.Parameters
+	}
+	return nil
+}
+
+type DBGetCurrentParametersRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ClusterId string `protobuf:"bytes,1,opt,name=clusterId,proto3" json:"clusterId,omitempty"`
+}
+
+func (x *DBGetCurrentParametersRequest) Reset() {
+	*x = DBGetCurrentParametersRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[21]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBGetCurrentParametersRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBGetCurrentParametersRequest) ProtoMessage() {}
+
+func (x *DBGetCurrentParametersRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[21]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBGetCurrentParametersRequest.ProtoReflect.Descriptor instead.
+func (*DBGetCurrentParametersRequest) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *DBGetCurrentParametersRequest) GetClusterId() string {
+	if x != nil {
+		return x.ClusterId
+	}
+	return ""
+}
+
+type DBGetCurrentParametersResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Status     *DBClusterResponseStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	Parameters *DBParameterRecordDTO    `protobuf:"bytes,2,opt,name=parameters,proto3" json:"parameters,omitempty"`
+}
+
+func (x *DBGetCurrentParametersResponse) Reset() {
+	*x = DBGetCurrentParametersResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[22]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBGetCurrentParametersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBGetCurrentParametersResponse) ProtoMessage() {}
+
+func (x *DBGetCurrentParametersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[22]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBGetCurrentParametersResponse.ProtoReflect.Descriptor instead.
+func (*DBGetCurrentParametersResponse) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *DBGetCurrentParametersResponse) GetStatus() *DBClusterResponseStatus {
+	if x != nil {
+		return x.Status
+	}
+	return nil
+}
+
+func (x *DBGetCurrentParametersResponse) GetParameters() *DBParameterRecordDTO {
+	if x != nil {
+		return x.Parameters
+	}
+	return nil
+}
+
+type DBBackupRecordDTO struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id          int64  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	TenantId    string `protobuf:"bytes,2,opt,name=tenantId,proto3" json:"tenantId,omitempty"`
+	ClusterId   string `protobuf:"bytes,3,opt,name=clusterId,proto3" json:"clusterId,omitempty"`
+	CreateTime  int64  `protobuf:"varint,4,opt,name=createTime,proto3" json:"createTime,omitempty"`
+	BackupRange int32  `protobuf:"varint,5,opt,name=backupRange,proto3" json:"backupRange,omitempty"`
+	BackupType  int32  `protobuf:"varint,6,opt,name=backupType,proto3" json:"backupType,omitempty"`
+	OperatorId  string `protobuf:"bytes,7,opt,name=operatorId,proto3" json:"operatorId,omitempty"`
+	FilePath    string `protobuf:"bytes,8,opt,name=filePath,proto3" json:"filePath,omitempty"`
+	FlowId      int64  `protobuf:"varint,9,opt,name=flowId,proto3" json:"flowId,omitempty"`
+}
+
+func (x *DBBackupRecordDTO) Reset() {
+	*x = DBBackupRecordDTO{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[23]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBBackupRecordDTO) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBBackupRecordDTO) ProtoMessage() {}
+
+func (x *DBBackupRecordDTO) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[23]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBBackupRecordDTO.ProtoReflect.Descriptor instead.
+func (*DBBackupRecordDTO) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *DBBackupRecordDTO) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *DBBackupRecordDTO) GetTenantId() string {
+	if x != nil {
+		return x.TenantId
+	}
+	return ""
+}
+
+func (x *DBBackupRecordDTO) GetClusterId() string {
+	if x != nil {
+		return x.ClusterId
+	}
+	return ""
+}
+
+func (x *DBBackupRecordDTO) GetCreateTime() int64 {
+	if x != nil {
+		return x.CreateTime
+	}
+	return 0
+}
+
+func (x *DBBackupRecordDTO) GetBackupRange() int32 {
+	if x != nil {
+		return x.BackupRange
+	}
+	return 0
+}
+
+func (x *DBBackupRecordDTO) GetBackupType() int32 {
+	if x != nil {
+		return x.BackupType
+	}
+	return 0
+}
+
+func (x *DBBackupRecordDTO) GetOperatorId() string {
+	if x != nil {
+		return x.OperatorId
+	}
+	return ""
+}
+
+func (x *DBBackupRecordDTO) GetFilePath() string {
+	if x != nil {
+		return x.FilePath
+	}
+	return ""
+}
+
+func (x *DBBackupRecordDTO) GetFlowId() int64 {
+	if x != nil {
+		return x.FlowId
+	}
+	return 0
+}
+
+type DBSaveBackupRecordRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	BackupRecord *DBBackupRecordDTO `protobuf:"bytes,1,opt,name=backupRecord,proto3" json:"backupRecord,omitempty"`
+}
+
+func (x *DBSaveBackupRecordRequest) Reset() {
+	*x = DBSaveBackupRecordRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[24]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBSaveBackupRecordRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBSaveBackupRecordRequest) ProtoMessage() {}
+
+func (x *DBSaveBackupRecordRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[24]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBSaveBackupRecordRequest.ProtoReflect.Descriptor instead.
+func (*DBSaveBackupRecordRequest) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *DBSaveBackupRecordRequest) GetBackupRecord() *DBBackupRecordDTO {
+	if x != nil {
+		return x.BackupRecord
+	}
+	return nil
+}
+
+type DBSaveBackupRecordResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Status       *DBClusterResponseStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	BackupRecord *DBBackupRecordDTO       `protobuf:"bytes,2,opt,name=backupRecord,proto3" json:"backupRecord,omitempty"`
+}
+
+func (x *DBSaveBackupRecordResponse) Reset() {
+	*x = DBSaveBackupRecordResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[25]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBSaveBackupRecordResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBSaveBackupRecordResponse) ProtoMessage() {}
+
+func (x *DBSaveBackupRecordResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[25]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBSaveBackupRecordResponse.ProtoReflect.Descriptor instead.
+func (*DBSaveBackupRecordResponse) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *DBSaveBackupRecordResponse) GetStatus() *DBClusterResponseStatus {
+	if x != nil {
+		return x.Status
+	}
+	return nil
+}
+
+func (x *DBSaveBackupRecordResponse) GetBackupRecord() *DBBackupRecordDTO {
+	if x != nil {
+		return x.BackupRecord
+	}
+	return nil
+}
+
+type DBListBackupRecordsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ClusterId string     `protobuf:"bytes,1,opt,name=clusterId,proto3" json:"clusterId,omitempty"`
+	Page      *DBPageDTO `protobuf:"bytes,2,opt,name=page,proto3" json:"page,omitempty"`
+}
+
+func (x *DBListBackupRecordsRequest) Reset() {
+	*x = DBListBackupRecordsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[26]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBListBackupRecordsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBListBackupRecordsRequest) ProtoMessage() {}
+
+func (x *DBListBackupRecordsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[26]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBListBackupRecordsRequest.ProtoReflect.Descriptor instead.
+func (*DBListBackupRecordsRequest) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *DBListBackupRecordsRequest) GetClusterId() string {
+	if x != nil {
+		return x.ClusterId
+	}
+	return ""
+}
+
+func (x *DBListBackupRecordsRequest) GetPage() *DBPageDTO {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
+type DBDBBackupRecordDisplayDTO struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	BackupRecord *DBBackupRecordDTO `protobuf:"bytes,1,opt,name=backupRecord,proto3" json:"backupRecord,omitempty"`
+	Flow         *DBFlowDTO         `protobuf:"bytes,2,opt,name=flow,proto3" json:"flow,omitempty"`
+}
+
+func (x *DBDBBackupRecordDisplayDTO) Reset() {
+	*x = DBDBBackupRecordDisplayDTO{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[27]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBDBBackupRecordDisplayDTO) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBDBBackupRecordDisplayDTO) ProtoMessage() {}
+
+func (x *DBDBBackupRecordDisplayDTO) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[27]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBDBBackupRecordDisplayDTO.ProtoReflect.Descriptor instead.
+func (*DBDBBackupRecordDisplayDTO) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *DBDBBackupRecordDisplayDTO) GetBackupRecord() *DBBackupRecordDTO {
+	if x != nil {
+		return x.BackupRecord
+	}
+	return nil
+}
+
+func (x *DBDBBackupRecordDisplayDTO) GetFlow() *DBFlowDTO {
+	if x != nil {
+		return x.Flow
+	}
+	return nil
+}
+
+type DBListBackupRecordsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Status        *DBClusterResponseStatus      `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	BackupRecords []*DBDBBackupRecordDisplayDTO `protobuf:"bytes,2,rep,name=backupRecords,proto3" json:"backupRecords,omitempty"`
+	Page          *DBPageDTO                    `protobuf:"bytes,3,opt,name=page,proto3" json:"page,omitempty"`
+}
+
+func (x *DBListBackupRecordsResponse) Reset() {
+	*x = DBListBackupRecordsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[28]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBListBackupRecordsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBListBackupRecordsResponse) ProtoMessage() {}
+
+func (x *DBListBackupRecordsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[28]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBListBackupRecordsResponse.ProtoReflect.Descriptor instead.
+func (*DBListBackupRecordsResponse) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *DBListBackupRecordsResponse) GetStatus() *DBClusterResponseStatus {
+	if x != nil {
+		return x.Status
+	}
+	return nil
+}
+
+func (x *DBListBackupRecordsResponse) GetBackupRecords() []*DBDBBackupRecordDisplayDTO {
+	if x != nil {
+		return x.BackupRecords
+	}
+	return nil
+}
+
+func (x *DBListBackupRecordsResponse) GetPage() *DBPageDTO {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
+type DBRecoverRecordDTO struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id             int64  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	TenantId       string `protobuf:"bytes,2,opt,name=tenantId,proto3" json:"tenantId,omitempty"`
+	ClusterId      string `protobuf:"bytes,3,opt,name=clusterId,proto3" json:"clusterId,omitempty"`
+	CreateTime     int64  `protobuf:"varint,4,opt,name=createTime,proto3" json:"createTime,omitempty"`
+	OperatorId     string `protobuf:"bytes,5,opt,name=operatorId,proto3" json:"operatorId,omitempty"`
+	BackupRecordId int64  `protobuf:"varint,6,opt,name=backupRecordId,proto3" json:"backupRecordId,omitempty"`
+	FlowId         int64  `protobuf:"varint,7,opt,name=flowId,proto3" json:"flowId,omitempty"`
+}
+
+func (x *DBRecoverRecordDTO) Reset() {
+	*x = DBRecoverRecordDTO{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[29]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBRecoverRecordDTO) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBRecoverRecordDTO) ProtoMessage() {}
+
+func (x *DBRecoverRecordDTO) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[29]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBRecoverRecordDTO.ProtoReflect.Descriptor instead.
+func (*DBRecoverRecordDTO) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *DBRecoverRecordDTO) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *DBRecoverRecordDTO) GetTenantId() string {
+	if x != nil {
+		return x.TenantId
+	}
+	return ""
+}
+
+func (x *DBRecoverRecordDTO) GetClusterId() string {
+	if x != nil {
+		return x.ClusterId
+	}
+	return ""
+}
+
+func (x *DBRecoverRecordDTO) GetCreateTime() int64 {
+	if x != nil {
+		return x.CreateTime
+	}
+	return 0
+}
+
+func (x *DBRecoverRecordDTO) GetOperatorId() string {
+	if x != nil {
+		return x.OperatorId
+	}
+	return ""
+}
+
+func (x *DBRecoverRecordDTO) GetBackupRecordId() int64 {
+	if x != nil {
+		return x.BackupRecordId
+	}
+	return 0
+}
+
+func (x *DBRecoverRecordDTO) GetFlowId() int64 {
+	if x != nil {
+		return x.FlowId
+	}
+	return 0
+}
+
+type DBSaveRecoverRecordRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	RecoverRecord *DBRecoverRecordDTO `protobuf:"bytes,1,opt,name=recoverRecord,proto3" json:"recoverRecord,omitempty"`
+}
+
+func (x *DBSaveRecoverRecordRequest) Reset() {
+	*x = DBSaveRecoverRecordRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[30]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBSaveRecoverRecordRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBSaveRecoverRecordRequest) ProtoMessage() {}
+
+func (x *DBSaveRecoverRecordRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[30]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBSaveRecoverRecordRequest.ProtoReflect.Descriptor instead.
+func (*DBSaveRecoverRecordRequest) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *DBSaveRecoverRecordRequest) GetRecoverRecord() *DBRecoverRecordDTO {
+	if x != nil {
+		return x.RecoverRecord
+	}
+	return nil
+}
+
+type DBSaveRecoverRecordResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Status        *DBClusterResponseStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	RecoverRecord *DBRecoverRecordDTO      `protobuf:"bytes,2,opt,name=recoverRecord,proto3" json:"recoverRecord,omitempty"`
+}
+
+func (x *DBSaveRecoverRecordResponse) Reset() {
+	*x = DBSaveRecoverRecordResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_db_cluster_proto_msgTypes[31]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DBSaveRecoverRecordResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DBSaveRecoverRecordResponse) ProtoMessage() {}
+
+func (x *DBSaveRecoverRecordResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_db_cluster_proto_msgTypes[31]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DBSaveRecoverRecordResponse.ProtoReflect.Descriptor instead.
+func (*DBSaveRecoverRecordResponse) Descriptor() ([]byte, []int) {
+	return file_db_cluster_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *DBSaveRecoverRecordResponse) GetStatus() *DBClusterResponseStatus {
+	if x != nil {
+		return x.Status
+	}
+	return nil
+}
+
+func (x *DBSaveRecoverRecordResponse) GetRecoverRecord() *DBRecoverRecordDTO {
+	if x != nil {
+		return x.RecoverRecord
+	}
+	return nil
+}
+
 var File_db_cluster_proto protoreflect.FileDescriptor
 
 var file_db_cluster_proto_rawDesc = []byte{
@@ -1381,8 +2263,132 @@ var file_db_cluster_proto_rawDesc = []byte{
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x70, 0x61, 0x67, 0x65, 0x12, 0x1a, 0x0a, 0x08,
 	0x70, 0x61, 0x67, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08,
 	0x70, 0x61, 0x67, 0x65, 0x53, 0x69, 0x7a, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x6f, 0x74, 0x61,
-	0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x42, 0x07,
-	0x5a, 0x05, 0x2e, 0x2f, 0x3b, 0x64, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x22, 0xd2,
+	0x01, 0x0a, 0x14, 0x44, 0x42, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x52, 0x65,
+	0x63, 0x6f, 0x72, 0x64, 0x44, 0x54, 0x4f, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x03, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x74, 0x65, 0x6e, 0x61, 0x6e,
+	0x74, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x74, 0x65, 0x6e, 0x61, 0x6e,
+	0x74, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49, 0x64,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49,
+	0x64, 0x12, 0x1e, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x69, 0x6d,
+	0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x49, 0x64, 0x18,
+	0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x49,
+	0x64, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x18, 0x06, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x66,
+	0x6c, 0x6f, 0x77, 0x49, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x66, 0x6c, 0x6f,
+	0x77, 0x49, 0x64, 0x22, 0x50, 0x0a, 0x17, 0x44, 0x42, 0x53, 0x61, 0x76, 0x65, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x35,
+	0x0a, 0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x15, 0x2e, 0x44, 0x42, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72,
+	0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x44, 0x54, 0x4f, 0x52, 0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d,
+	0x65, 0x74, 0x65, 0x72, 0x73, 0x22, 0x83, 0x01, 0x0a, 0x18, 0x44, 0x42, 0x53, 0x61, 0x76, 0x65,
+	0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x18, 0x2e, 0x44, 0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74,
+	0x61, 0x74, 0x75, 0x73, 0x12, 0x35, 0x0a, 0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65,
+	0x72, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x44, 0x42, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x44, 0x54, 0x4f, 0x52,
+	0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x22, 0x3d, 0x0a, 0x1d, 0x44,
+	0x42, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d,
+	0x65, 0x74, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09,
+	0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x09, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49, 0x64, 0x22, 0x89, 0x01, 0x0a, 0x1e, 0x44,
+	0x42, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d,
+	0x65, 0x74, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x30, 0x0a,
+	0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e,
+	0x44, 0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12,
+	0x35, 0x0a, 0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x44, 0x42, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65,
+	0x72, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x44, 0x54, 0x4f, 0x52, 0x0a, 0x70, 0x61, 0x72, 0x61,
+	0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x22, 0x93, 0x02, 0x0a, 0x11, 0x44, 0x42, 0x42, 0x61, 0x63,
+	0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x44, 0x54, 0x4f, 0x12, 0x0e, 0x0a, 0x02,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1a, 0x0a, 0x08,
+	0x74, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
+	0x74, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x63, 0x6c, 0x75, 0x73,
+	0x74, 0x65, 0x72, 0x49, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x63, 0x6c, 0x75,
+	0x73, 0x74, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1e, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x54, 0x69, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0a, 0x63, 0x72, 0x65, 0x61,
+	0x74, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x20, 0x0a, 0x0b, 0x62, 0x61, 0x63, 0x6b, 0x75, 0x70,
+	0x52, 0x61, 0x6e, 0x67, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0b, 0x62, 0x61, 0x63,
+	0x6b, 0x75, 0x70, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x62, 0x61, 0x63, 0x6b,
+	0x75, 0x70, 0x54, 0x79, 0x70, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0a, 0x62, 0x61,
+	0x63, 0x6b, 0x75, 0x70, 0x54, 0x79, 0x70, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x6f, 0x70, 0x65, 0x72,
+	0x61, 0x74, 0x6f, 0x72, 0x49, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6f, 0x70,
+	0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x66, 0x69, 0x6c, 0x65,
+	0x50, 0x61, 0x74, 0x68, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x69, 0x6c, 0x65,
+	0x50, 0x61, 0x74, 0x68, 0x12, 0x16, 0x0a, 0x06, 0x66, 0x6c, 0x6f, 0x77, 0x49, 0x64, 0x18, 0x09,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x66, 0x6c, 0x6f, 0x77, 0x49, 0x64, 0x22, 0x53, 0x0a, 0x19,
+	0x44, 0x42, 0x53, 0x61, 0x76, 0x65, 0x42, 0x61, 0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x36, 0x0a, 0x0c, 0x62, 0x61, 0x63,
+	0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x12, 0x2e, 0x44, 0x42, 0x42, 0x61, 0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64,
+	0x44, 0x54, 0x4f, 0x52, 0x0c, 0x62, 0x61, 0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72,
+	0x64, 0x22, 0x86, 0x01, 0x0a, 0x1a, 0x44, 0x42, 0x53, 0x61, 0x76, 0x65, 0x42, 0x61, 0x63, 0x6b,
+	0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x30, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x18, 0x2e, 0x44, 0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74,
+	0x75, 0x73, 0x12, 0x36, 0x0a, 0x0c, 0x62, 0x61, 0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x44, 0x42, 0x42, 0x61, 0x63,
+	0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x44, 0x54, 0x4f, 0x52, 0x0c, 0x62, 0x61,
+	0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x22, 0x5a, 0x0a, 0x1a, 0x44, 0x42,
+	0x4c, 0x69, 0x73, 0x74, 0x42, 0x61, 0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64,
+	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x63, 0x6c, 0x75, 0x73,
+	0x74, 0x65, 0x72, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x63, 0x6c, 0x75,
+	0x73, 0x74, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1e, 0x0a, 0x04, 0x70, 0x61, 0x67, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x0a, 0x2e, 0x44, 0x42, 0x50, 0x61, 0x67, 0x65, 0x44, 0x54, 0x4f,
+	0x52, 0x04, 0x70, 0x61, 0x67, 0x65, 0x22, 0x74, 0x0a, 0x1a, 0x44, 0x42, 0x44, 0x42, 0x42, 0x61,
+	0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x44, 0x69, 0x73, 0x70, 0x6c, 0x61,
+	0x79, 0x44, 0x54, 0x4f, 0x12, 0x36, 0x0a, 0x0c, 0x62, 0x61, 0x63, 0x6b, 0x75, 0x70, 0x52, 0x65,
+	0x63, 0x6f, 0x72, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x44, 0x42, 0x42,
+	0x61, 0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x44, 0x54, 0x4f, 0x52, 0x0c,
+	0x62, 0x61, 0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x12, 0x1e, 0x0a, 0x04,
+	0x66, 0x6c, 0x6f, 0x77, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0a, 0x2e, 0x44, 0x42, 0x46,
+	0x6c, 0x6f, 0x77, 0x44, 0x54, 0x4f, 0x52, 0x04, 0x66, 0x6c, 0x6f, 0x77, 0x22, 0xb2, 0x01, 0x0a,
+	0x1b, 0x44, 0x42, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x61, 0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x30, 0x0a, 0x06,
+	0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x44,
+	0x42, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x41,
+	0x0a, 0x0d, 0x62, 0x61, 0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x18,
+	0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x44, 0x42, 0x44, 0x42, 0x42, 0x61, 0x63, 0x6b,
+	0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x44, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x44,
+	0x54, 0x4f, 0x52, 0x0d, 0x62, 0x61, 0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64,
+	0x73, 0x12, 0x1e, 0x0a, 0x04, 0x70, 0x61, 0x67, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x0a, 0x2e, 0x44, 0x42, 0x50, 0x61, 0x67, 0x65, 0x44, 0x54, 0x4f, 0x52, 0x04, 0x70, 0x61, 0x67,
+	0x65, 0x22, 0xde, 0x01, 0x0a, 0x12, 0x44, 0x42, 0x52, 0x65, 0x63, 0x6f, 0x76, 0x65, 0x72, 0x52,
+	0x65, 0x63, 0x6f, 0x72, 0x64, 0x44, 0x54, 0x4f, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x74, 0x65, 0x6e, 0x61,
+	0x6e, 0x74, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x74, 0x65, 0x6e, 0x61,
+	0x6e, 0x74, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49,
+	0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72,
+	0x49, 0x64, 0x12, 0x1e, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x69, 0x6d, 0x65,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x69,
+	0x6d, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x49, 0x64,
+	0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72,
+	0x49, 0x64, 0x12, 0x26, 0x0a, 0x0e, 0x62, 0x61, 0x63, 0x6b, 0x75, 0x70, 0x52, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x49, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0e, 0x62, 0x61, 0x63, 0x6b,
+	0x75, 0x70, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x49, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x66, 0x6c,
+	0x6f, 0x77, 0x49, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x66, 0x6c, 0x6f, 0x77,
+	0x49, 0x64, 0x22, 0x57, 0x0a, 0x1a, 0x44, 0x42, 0x53, 0x61, 0x76, 0x65, 0x52, 0x65, 0x63, 0x6f,
+	0x76, 0x65, 0x72, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x39, 0x0a, 0x0d, 0x72, 0x65, 0x63, 0x6f, 0x76, 0x65, 0x72, 0x52, 0x65, 0x63, 0x6f, 0x72,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x44, 0x42, 0x52, 0x65, 0x63, 0x6f,
+	0x76, 0x65, 0x72, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x44, 0x54, 0x4f, 0x52, 0x0d, 0x72, 0x65,
+	0x63, 0x6f, 0x76, 0x65, 0x72, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x22, 0x8a, 0x01, 0x0a, 0x1b,
+	0x44, 0x42, 0x53, 0x61, 0x76, 0x65, 0x52, 0x65, 0x63, 0x6f, 0x76, 0x65, 0x72, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x30, 0x0a, 0x06, 0x73,
+	0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x44, 0x42,
+	0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53,
+	0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x39, 0x0a,
+	0x0d, 0x72, 0x65, 0x63, 0x6f, 0x76, 0x65, 0x72, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x44, 0x42, 0x52, 0x65, 0x63, 0x6f, 0x76, 0x65, 0x72,
+	0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x44, 0x54, 0x4f, 0x52, 0x0d, 0x72, 0x65, 0x63, 0x6f, 0x76,
+	0x65, 0x72, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x07, 0x5a, 0x05, 0x2e, 0x2f, 0x3b, 0x64,
+	0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1397,27 +2403,41 @@ func file_db_cluster_proto_rawDescGZIP() []byte {
 	return file_db_cluster_proto_rawDescData
 }
 
-var file_db_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_db_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
 var file_db_cluster_proto_goTypes = []interface{}{
-	(*DBClusterResponseStatus)(nil),       // 0: DBClusterResponseStatus
-	(*DBClusterDTO)(nil),                  // 1: DBClusterDTO
-	(*DBTiUPConfigDTO)(nil),               // 2: DBTiUPConfigDTO
-	(*DBCreateClusterRequest)(nil),        // 3: DBCreateClusterRequest
-	(*DBCreateClusterResponse)(nil),       // 4: DBCreateClusterResponse
-	(*DBLoadClusterRequest)(nil),          // 5: DBLoadClusterRequest
-	(*DBLoadClusterResponse)(nil),         // 6: DBLoadClusterResponse
-	(*DBClusterDisplayDTO)(nil),           // 7: DBClusterDisplayDTO
-	(*DBClusterDetailDTO)(nil),            // 8: DBClusterDetailDTO
-	(*DBListClusterRequest)(nil),          // 9: DBListClusterRequest
-	(*DBListClusterResponse)(nil),         // 10: DBListClusterResponse
-	(*DBDeleteClusterRequest)(nil),        // 11: DBDeleteClusterRequest
-	(*DBDeleteClusterResponse)(nil),       // 12: DBDeleteClusterResponse
-	(*DBUpdateClusterStatusRequest)(nil),  // 13: DBUpdateClusterStatusRequest
-	(*DBUpdateClusterStatusResponse)(nil), // 14: DBUpdateClusterStatusResponse
-	(*DBUpdateTiupConfigRequest)(nil),     // 15: DBUpdateTiupConfigRequest
-	(*DBUpdateTiupConfigResponse)(nil),    // 16: DBUpdateTiupConfigResponse
-	(*DBPageDTO)(nil),                     // 17: DBPageDTO
-	(*DBFlowDTO)(nil),                     // 18: DBFlowDTO
+	(*DBClusterResponseStatus)(nil),        // 0: DBClusterResponseStatus
+	(*DBClusterDTO)(nil),                   // 1: DBClusterDTO
+	(*DBTiUPConfigDTO)(nil),                // 2: DBTiUPConfigDTO
+	(*DBCreateClusterRequest)(nil),         // 3: DBCreateClusterRequest
+	(*DBCreateClusterResponse)(nil),        // 4: DBCreateClusterResponse
+	(*DBLoadClusterRequest)(nil),           // 5: DBLoadClusterRequest
+	(*DBLoadClusterResponse)(nil),          // 6: DBLoadClusterResponse
+	(*DBClusterDisplayDTO)(nil),            // 7: DBClusterDisplayDTO
+	(*DBClusterDetailDTO)(nil),             // 8: DBClusterDetailDTO
+	(*DBListClusterRequest)(nil),           // 9: DBListClusterRequest
+	(*DBListClusterResponse)(nil),          // 10: DBListClusterResponse
+	(*DBDeleteClusterRequest)(nil),         // 11: DBDeleteClusterRequest
+	(*DBDeleteClusterResponse)(nil),        // 12: DBDeleteClusterResponse
+	(*DBUpdateClusterStatusRequest)(nil),   // 13: DBUpdateClusterStatusRequest
+	(*DBUpdateClusterStatusResponse)(nil),  // 14: DBUpdateClusterStatusResponse
+	(*DBUpdateTiupConfigRequest)(nil),      // 15: DBUpdateTiupConfigRequest
+	(*DBUpdateTiupConfigResponse)(nil),     // 16: DBUpdateTiupConfigResponse
+	(*DBPageDTO)(nil),                      // 17: DBPageDTO
+	(*DBParameterRecordDTO)(nil),           // 18: DBParameterRecordDTO
+	(*DBSaveParametersRequest)(nil),        // 19: DBSaveParametersRequest
+	(*DBSaveParametersResponse)(nil),       // 20: DBSaveParametersResponse
+	(*DBGetCurrentParametersRequest)(nil),  // 21: DBGetCurrentParametersRequest
+	(*DBGetCurrentParametersResponse)(nil), // 22: DBGetCurrentParametersResponse
+	(*DBBackupRecordDTO)(nil),              // 23: DBBackupRecordDTO
+	(*DBSaveBackupRecordRequest)(nil),      // 24: DBSaveBackupRecordRequest
+	(*DBSaveBackupRecordResponse)(nil),     // 25: DBSaveBackupRecordResponse
+	(*DBListBackupRecordsRequest)(nil),     // 26: DBListBackupRecordsRequest
+	(*DBDBBackupRecordDisplayDTO)(nil),     // 27: DBDBBackupRecordDisplayDTO
+	(*DBListBackupRecordsResponse)(nil),    // 28: DBListBackupRecordsResponse
+	(*DBRecoverRecordDTO)(nil),             // 29: DBRecoverRecordDTO
+	(*DBSaveRecoverRecordRequest)(nil),     // 30: DBSaveRecoverRecordRequest
+	(*DBSaveRecoverRecordResponse)(nil),    // 31: DBSaveRecoverRecordResponse
+	(*DBFlowDTO)(nil),                      // 32: DBFlowDTO
 }
 var file_db_cluster_proto_depIdxs = []int32{
 	1,  // 0: DBCreateClusterRequest.cluster:type_name -> DBClusterDTO
@@ -1426,10 +2446,10 @@ var file_db_cluster_proto_depIdxs = []int32{
 	0,  // 3: DBLoadClusterResponse.status:type_name -> DBClusterResponseStatus
 	8,  // 4: DBLoadClusterResponse.clusterDetail:type_name -> DBClusterDetailDTO
 	1,  // 5: DBClusterDisplayDTO.cluster:type_name -> DBClusterDTO
-	18, // 6: DBClusterDisplayDTO.flow:type_name -> DBFlowDTO
+	32, // 6: DBClusterDisplayDTO.flow:type_name -> DBFlowDTO
 	1,  // 7: DBClusterDetailDTO.cluster:type_name -> DBClusterDTO
 	2,  // 8: DBClusterDetailDTO.tiupConfigRecord:type_name -> DBTiUPConfigDTO
-	18, // 9: DBClusterDetailDTO.flow:type_name -> DBFlowDTO
+	32, // 9: DBClusterDetailDTO.flow:type_name -> DBFlowDTO
 	17, // 10: DBListClusterRequest.pageReq:type_name -> DBPageDTO
 	0,  // 11: DBListClusterResponse.status:type_name -> DBClusterResponseStatus
 	8,  // 12: DBListClusterResponse.clusters:type_name -> DBClusterDetailDTO
@@ -1441,11 +2461,28 @@ var file_db_cluster_proto_depIdxs = []int32{
 	0,  // 18: DBUpdateTiupConfigResponse.status:type_name -> DBClusterResponseStatus
 	1,  // 19: DBUpdateTiupConfigResponse.cluster:type_name -> DBClusterDTO
 	2,  // 20: DBUpdateTiupConfigResponse.tiupConfigRecord:type_name -> DBTiUPConfigDTO
-	21, // [21:21] is the sub-list for method output_type
-	21, // [21:21] is the sub-list for method input_type
-	21, // [21:21] is the sub-list for extension type_name
-	21, // [21:21] is the sub-list for extension extendee
-	0,  // [0:21] is the sub-list for field type_name
+	18, // 21: DBSaveParametersRequest.parameters:type_name -> DBParameterRecordDTO
+	0,  // 22: DBSaveParametersResponse.status:type_name -> DBClusterResponseStatus
+	18, // 23: DBSaveParametersResponse.parameters:type_name -> DBParameterRecordDTO
+	0,  // 24: DBGetCurrentParametersResponse.status:type_name -> DBClusterResponseStatus
+	18, // 25: DBGetCurrentParametersResponse.parameters:type_name -> DBParameterRecordDTO
+	23, // 26: DBSaveBackupRecordRequest.backupRecord:type_name -> DBBackupRecordDTO
+	0,  // 27: DBSaveBackupRecordResponse.status:type_name -> DBClusterResponseStatus
+	23, // 28: DBSaveBackupRecordResponse.backupRecord:type_name -> DBBackupRecordDTO
+	17, // 29: DBListBackupRecordsRequest.page:type_name -> DBPageDTO
+	23, // 30: DBDBBackupRecordDisplayDTO.backupRecord:type_name -> DBBackupRecordDTO
+	32, // 31: DBDBBackupRecordDisplayDTO.flow:type_name -> DBFlowDTO
+	0,  // 32: DBListBackupRecordsResponse.status:type_name -> DBClusterResponseStatus
+	27, // 33: DBListBackupRecordsResponse.backupRecords:type_name -> DBDBBackupRecordDisplayDTO
+	17, // 34: DBListBackupRecordsResponse.page:type_name -> DBPageDTO
+	29, // 35: DBSaveRecoverRecordRequest.recoverRecord:type_name -> DBRecoverRecordDTO
+	0,  // 36: DBSaveRecoverRecordResponse.status:type_name -> DBClusterResponseStatus
+	29, // 37: DBSaveRecoverRecordResponse.recoverRecord:type_name -> DBRecoverRecordDTO
+	38, // [38:38] is the sub-list for method output_type
+	38, // [38:38] is the sub-list for method input_type
+	38, // [38:38] is the sub-list for extension type_name
+	38, // [38:38] is the sub-list for extension extendee
+	0,  // [0:38] is the sub-list for field type_name
 }
 
 func init() { file_db_cluster_proto_init() }
@@ -1671,6 +2708,174 @@ func file_db_cluster_proto_init() {
 				return nil
 			}
 		}
+		file_db_cluster_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBParameterRecordDTO); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBSaveParametersRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBSaveParametersResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBGetCurrentParametersRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBGetCurrentParametersResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBBackupRecordDTO); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBSaveBackupRecordRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBSaveBackupRecordResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBListBackupRecordsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBDBBackupRecordDisplayDTO); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBListBackupRecordsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBRecoverRecordDTO); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBSaveRecoverRecordRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_db_cluster_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DBSaveRecoverRecordResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1678,7 +2883,7 @@ func file_db_cluster_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_db_cluster_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   32,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

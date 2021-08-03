@@ -63,6 +63,12 @@ type TiCPDBService interface {
 	UpdateClusterTiupConfig(ctx context.Context, in *DBUpdateTiupConfigRequest, opts ...client.CallOption) (*DBUpdateTiupConfigResponse, error)
 	LoadCluster(ctx context.Context, in *DBLoadClusterRequest, opts ...client.CallOption) (*DBLoadClusterResponse, error)
 	ListCluster(ctx context.Context, in *DBListClusterRequest, opts ...client.CallOption) (*DBListClusterResponse, error)
+	// backup & recover & parameters
+	SaveBackupRecord(ctx context.Context, in *DBSaveBackupRecordRequest, opts ...client.CallOption) (*DBSaveBackupRecordResponse, error)
+	ListBackupRecords(ctx context.Context, in *DBListBackupRecordsRequest, opts ...client.CallOption) (*DBListBackupRecordsResponse, error)
+	SaveRecoverRecord(ctx context.Context, in *DBSaveRecoverRecordRequest, opts ...client.CallOption) (*DBSaveRecoverRecordResponse, error)
+	SaveParametersRecord(ctx context.Context, in *DBSaveParametersRequest, opts ...client.CallOption) (*DBSaveParametersResponse, error)
+	GetCurrentParametersRecord(ctx context.Context, in *DBGetCurrentParametersRequest, opts ...client.CallOption) (*DBGetCurrentParametersResponse, error)
 	// Tiup Task
 	CreateTiupTask(ctx context.Context, in *CreateTiupTaskRequest, opts ...client.CallOption) (*CreateTiupTaskResponse, error)
 	UpdateTiupTask(ctx context.Context, in *UpdateTiupTaskRequest, opts ...client.CallOption) (*UpdateTiupTaskResponse, error)
@@ -269,6 +275,56 @@ func (c *tiCPDBService) ListCluster(ctx context.Context, in *DBListClusterReques
 	return out, nil
 }
 
+func (c *tiCPDBService) SaveBackupRecord(ctx context.Context, in *DBSaveBackupRecordRequest, opts ...client.CallOption) (*DBSaveBackupRecordResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.SaveBackupRecord", in)
+	out := new(DBSaveBackupRecordResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) ListBackupRecords(ctx context.Context, in *DBListBackupRecordsRequest, opts ...client.CallOption) (*DBListBackupRecordsResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.ListBackupRecords", in)
+	out := new(DBListBackupRecordsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) SaveRecoverRecord(ctx context.Context, in *DBSaveRecoverRecordRequest, opts ...client.CallOption) (*DBSaveRecoverRecordResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.SaveRecoverRecord", in)
+	out := new(DBSaveRecoverRecordResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) SaveParametersRecord(ctx context.Context, in *DBSaveParametersRequest, opts ...client.CallOption) (*DBSaveParametersResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.SaveParametersRecord", in)
+	out := new(DBSaveParametersResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) GetCurrentParametersRecord(ctx context.Context, in *DBGetCurrentParametersRequest, opts ...client.CallOption) (*DBGetCurrentParametersResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.GetCurrentParametersRecord", in)
+	out := new(DBGetCurrentParametersResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tiCPDBService) CreateTiupTask(ctx context.Context, in *CreateTiupTaskRequest, opts ...client.CallOption) (*CreateTiupTaskResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.CreateTiupTask", in)
 	out := new(CreateTiupTaskResponse)
@@ -393,6 +449,12 @@ type TiCPDBServiceHandler interface {
 	UpdateClusterTiupConfig(context.Context, *DBUpdateTiupConfigRequest, *DBUpdateTiupConfigResponse) error
 	LoadCluster(context.Context, *DBLoadClusterRequest, *DBLoadClusterResponse) error
 	ListCluster(context.Context, *DBListClusterRequest, *DBListClusterResponse) error
+	// backup & recover & parameters
+	SaveBackupRecord(context.Context, *DBSaveBackupRecordRequest, *DBSaveBackupRecordResponse) error
+	ListBackupRecords(context.Context, *DBListBackupRecordsRequest, *DBListBackupRecordsResponse) error
+	SaveRecoverRecord(context.Context, *DBSaveRecoverRecordRequest, *DBSaveRecoverRecordResponse) error
+	SaveParametersRecord(context.Context, *DBSaveParametersRequest, *DBSaveParametersResponse) error
+	GetCurrentParametersRecord(context.Context, *DBGetCurrentParametersRequest, *DBGetCurrentParametersResponse) error
 	// Tiup Task
 	CreateTiupTask(context.Context, *CreateTiupTaskRequest, *CreateTiupTaskResponse) error
 	UpdateTiupTask(context.Context, *UpdateTiupTaskRequest, *UpdateTiupTaskResponse) error
@@ -427,6 +489,11 @@ func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, op
 		UpdateClusterTiupConfig(ctx context.Context, in *DBUpdateTiupConfigRequest, out *DBUpdateTiupConfigResponse) error
 		LoadCluster(ctx context.Context, in *DBLoadClusterRequest, out *DBLoadClusterResponse) error
 		ListCluster(ctx context.Context, in *DBListClusterRequest, out *DBListClusterResponse) error
+		SaveBackupRecord(ctx context.Context, in *DBSaveBackupRecordRequest, out *DBSaveBackupRecordResponse) error
+		ListBackupRecords(ctx context.Context, in *DBListBackupRecordsRequest, out *DBListBackupRecordsResponse) error
+		SaveRecoverRecord(ctx context.Context, in *DBSaveRecoverRecordRequest, out *DBSaveRecoverRecordResponse) error
+		SaveParametersRecord(ctx context.Context, in *DBSaveParametersRequest, out *DBSaveParametersResponse) error
+		GetCurrentParametersRecord(ctx context.Context, in *DBGetCurrentParametersRequest, out *DBGetCurrentParametersResponse) error
 		CreateTiupTask(ctx context.Context, in *CreateTiupTaskRequest, out *CreateTiupTaskResponse) error
 		UpdateTiupTask(ctx context.Context, in *UpdateTiupTaskRequest, out *UpdateTiupTaskResponse) error
 		FindTiupTaskByID(ctx context.Context, in *FindTiupTaskByIDRequest, out *FindTiupTaskByIDResponse) error
@@ -519,6 +586,26 @@ func (h *tiCPDBServiceHandler) LoadCluster(ctx context.Context, in *DBLoadCluste
 
 func (h *tiCPDBServiceHandler) ListCluster(ctx context.Context, in *DBListClusterRequest, out *DBListClusterResponse) error {
 	return h.TiCPDBServiceHandler.ListCluster(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) SaveBackupRecord(ctx context.Context, in *DBSaveBackupRecordRequest, out *DBSaveBackupRecordResponse) error {
+	return h.TiCPDBServiceHandler.SaveBackupRecord(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) ListBackupRecords(ctx context.Context, in *DBListBackupRecordsRequest, out *DBListBackupRecordsResponse) error {
+	return h.TiCPDBServiceHandler.ListBackupRecords(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) SaveRecoverRecord(ctx context.Context, in *DBSaveRecoverRecordRequest, out *DBSaveRecoverRecordResponse) error {
+	return h.TiCPDBServiceHandler.SaveRecoverRecord(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) SaveParametersRecord(ctx context.Context, in *DBSaveParametersRequest, out *DBSaveParametersResponse) error {
+	return h.TiCPDBServiceHandler.SaveParametersRecord(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) GetCurrentParametersRecord(ctx context.Context, in *DBGetCurrentParametersRequest, out *DBGetCurrentParametersResponse) error {
+	return h.TiCPDBServiceHandler.GetCurrentParametersRecord(ctx, in, out)
 }
 
 func (h *tiCPDBServiceHandler) CreateTiupTask(ctx context.Context, in *CreateTiupTaskRequest, out *CreateTiupTaskResponse) error {

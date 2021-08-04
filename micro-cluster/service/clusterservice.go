@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	cluster "github.com/pingcap/ticp/micro-cluster/proto"
-	"github.com/pingcap/ticp/micro-cluster/service/cluster/domain"
+	cluster "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap/tiem/micro-cluster/service/cluster/domain"
 )
 
-var TiCPClusterServiceName = "go.micro.ticp.cluster"
+var TiEMClusterServiceName = "go.micro.tiem.cluster"
 
 var SuccessResponseStatus = &cluster.ResponseStatusDTO {Code:0}
 var BizErrorResponseStatus = &cluster.ResponseStatusDTO {Code:1}

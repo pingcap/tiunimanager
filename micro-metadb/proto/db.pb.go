@@ -27,8 +27,8 @@ var file_db_proto_rawDesc = []byte{
 	0x73, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x10, 0x64, 0x62, 0x5f, 0x63, 0x6c, 0x75,
 	0x73, 0x74, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x0d, 0x64, 0x62, 0x5f, 0x74,
 	0x69, 0x75, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x0d, 0x64, 0x62, 0x5f, 0x74, 0x61,
-	0x73, 0x6b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x32, 0xec, 0x12, 0x0a, 0x0d, 0x54, 0x69, 0x43,
-	0x50, 0x44, 0x42, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x39, 0x0a, 0x0a, 0x46, 0x69,
+	0x73, 0x6b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x32, 0xec, 0x12, 0x0a, 0x0d, 0x54, 0x69, 0x45,
+	0x4d, 0x44, 0x42, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x39, 0x0a, 0x0a, 0x46, 0x69,
 	0x6e, 0x64, 0x54, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x12, 0x14, 0x2e, 0x44, 0x42, 0x46, 0x69, 0x6e,
 	0x64, 0x54, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x15,
 	0x2e, 0x44, 0x42, 0x46, 0x69, 0x6e, 0x64, 0x54, 0x65, 0x6e, 0x61, 0x6e, 0x74, 0x52, 0x65, 0x73,
@@ -255,76 +255,76 @@ var file_db_proto_goTypes = []interface{}{
 	(*DBLoadTaskResponse)(nil),               // 69: DBLoadTaskResponse
 }
 var file_db_proto_depIdxs = []int32{
-	0,  // 0: TiCPDBService.FindTenant:input_type -> DBFindTenantRequest
-	1,  // 1: TiCPDBService.FindAccount:input_type -> DBFindAccountRequest
-	2,  // 2: TiCPDBService.SaveToken:input_type -> DBSaveTokenRequest
-	3,  // 3: TiCPDBService.FindToken:input_type -> DBFindTokenRequest
-	4,  // 4: TiCPDBService.FindRolesByPermission:input_type -> DBFindRolesByPermissionRequest
-	5,  // 5: TiCPDBService.AddHost:input_type -> DBAddHostRequest
-	6,  // 6: TiCPDBService.AddHostsInBatch:input_type -> DBAddHostsInBatchRequest
-	7,  // 7: TiCPDBService.RemoveHost:input_type -> DBRemoveHostRequest
-	8,  // 8: TiCPDBService.RemoveHostsInBatch:input_type -> DBRemoveHostsInBatchRequest
-	9,  // 9: TiCPDBService.ListHost:input_type -> DBListHostsRequest
-	10, // 10: TiCPDBService.CheckDetails:input_type -> DBCheckDetailsRequest
-	11, // 11: TiCPDBService.PreAllocHosts:input_type -> DBPreAllocHostsRequest
-	12, // 12: TiCPDBService.LockHosts:input_type -> DBLockHostsRequest
-	13, // 13: TiCPDBService.GetFailureDomain:input_type -> DBGetFailureDomainRequest
-	14, // 14: TiCPDBService.CreateCluster:input_type -> DBCreateClusterRequest
-	15, // 15: TiCPDBService.DeleteCluster:input_type -> DBDeleteClusterRequest
-	16, // 16: TiCPDBService.UpdateClusterStatus:input_type -> DBUpdateClusterStatusRequest
-	17, // 17: TiCPDBService.UpdateClusterTiupConfig:input_type -> DBUpdateTiupConfigRequest
-	18, // 18: TiCPDBService.LoadCluster:input_type -> DBLoadClusterRequest
-	19, // 19: TiCPDBService.ListCluster:input_type -> DBListClusterRequest
-	20, // 20: TiCPDBService.SaveBackupRecord:input_type -> DBSaveBackupRecordRequest
-	21, // 21: TiCPDBService.ListBackupRecords:input_type -> DBListBackupRecordsRequest
-	22, // 22: TiCPDBService.SaveRecoverRecord:input_type -> DBSaveRecoverRecordRequest
-	23, // 23: TiCPDBService.SaveParametersRecord:input_type -> DBSaveParametersRequest
-	24, // 24: TiCPDBService.GetCurrentParametersRecord:input_type -> DBGetCurrentParametersRequest
-	25, // 25: TiCPDBService.CreateTiupTask:input_type -> CreateTiupTaskRequest
-	26, // 26: TiCPDBService.UpdateTiupTask:input_type -> UpdateTiupTaskRequest
-	27, // 27: TiCPDBService.FindTiupTaskByID:input_type -> FindTiupTaskByIDRequest
-	28, // 28: TiCPDBService.GetTiupTaskStatusByBizID:input_type -> GetTiupTaskStatusByBizIDRequest
-	29, // 29: TiCPDBService.CreateFlow:input_type -> DBCreateFlowRequest
-	30, // 30: TiCPDBService.CreateTask:input_type -> DBCreateTaskRequest
-	31, // 31: TiCPDBService.UpdateFlow:input_type -> DBUpdateFlowRequest
-	32, // 32: TiCPDBService.UpdateTask:input_type -> DBUpdateTaskRequest
-	33, // 33: TiCPDBService.LoadFlow:input_type -> DBLoadFlowRequest
-	34, // 34: TiCPDBService.LoadTask:input_type -> DBLoadTaskRequest
-	35, // 35: TiCPDBService.FindTenant:output_type -> DBFindTenantResponse
-	36, // 36: TiCPDBService.FindAccount:output_type -> DBFindAccountResponse
-	37, // 37: TiCPDBService.SaveToken:output_type -> DBSaveTokenResponse
-	38, // 38: TiCPDBService.FindToken:output_type -> DBFindTokenResponse
-	39, // 39: TiCPDBService.FindRolesByPermission:output_type -> DBFindRolesByPermissionResponse
-	40, // 40: TiCPDBService.AddHost:output_type -> DBAddHostResponse
-	41, // 41: TiCPDBService.AddHostsInBatch:output_type -> DBAddHostsInBatchResponse
-	42, // 42: TiCPDBService.RemoveHost:output_type -> DBRemoveHostResponse
-	43, // 43: TiCPDBService.RemoveHostsInBatch:output_type -> DBRemoveHostsInBatchResponse
-	44, // 44: TiCPDBService.ListHost:output_type -> DBListHostsResponse
-	45, // 45: TiCPDBService.CheckDetails:output_type -> DBCheckDetailsResponse
-	46, // 46: TiCPDBService.PreAllocHosts:output_type -> DBPreAllocHostsResponse
-	47, // 47: TiCPDBService.LockHosts:output_type -> DBLockHostsResponse
-	48, // 48: TiCPDBService.GetFailureDomain:output_type -> DBGetFailureDomainResponse
-	49, // 49: TiCPDBService.CreateCluster:output_type -> DBCreateClusterResponse
-	50, // 50: TiCPDBService.DeleteCluster:output_type -> DBDeleteClusterResponse
-	51, // 51: TiCPDBService.UpdateClusterStatus:output_type -> DBUpdateClusterStatusResponse
-	52, // 52: TiCPDBService.UpdateClusterTiupConfig:output_type -> DBUpdateTiupConfigResponse
-	53, // 53: TiCPDBService.LoadCluster:output_type -> DBLoadClusterResponse
-	54, // 54: TiCPDBService.ListCluster:output_type -> DBListClusterResponse
-	55, // 55: TiCPDBService.SaveBackupRecord:output_type -> DBSaveBackupRecordResponse
-	56, // 56: TiCPDBService.ListBackupRecords:output_type -> DBListBackupRecordsResponse
-	57, // 57: TiCPDBService.SaveRecoverRecord:output_type -> DBSaveRecoverRecordResponse
-	58, // 58: TiCPDBService.SaveParametersRecord:output_type -> DBSaveParametersResponse
-	59, // 59: TiCPDBService.GetCurrentParametersRecord:output_type -> DBGetCurrentParametersResponse
-	60, // 60: TiCPDBService.CreateTiupTask:output_type -> CreateTiupTaskResponse
-	61, // 61: TiCPDBService.UpdateTiupTask:output_type -> UpdateTiupTaskResponse
-	62, // 62: TiCPDBService.FindTiupTaskByID:output_type -> FindTiupTaskByIDResponse
-	63, // 63: TiCPDBService.GetTiupTaskStatusByBizID:output_type -> GetTiupTaskStatusByBizIDResponse
-	64, // 64: TiCPDBService.CreateFlow:output_type -> DBCreateFlowResponse
-	65, // 65: TiCPDBService.CreateTask:output_type -> DBCreateTaskResponse
-	66, // 66: TiCPDBService.UpdateFlow:output_type -> DBUpdateFlowResponse
-	67, // 67: TiCPDBService.UpdateTask:output_type -> DBUpdateTaskResponse
-	68, // 68: TiCPDBService.LoadFlow:output_type -> DBLoadFlowResponse
-	69, // 69: TiCPDBService.LoadTask:output_type -> DBLoadTaskResponse
+	0,  // 0: TiEMDBService.FindTenant:input_type -> DBFindTenantRequest
+	1,  // 1: TiEMDBService.FindAccount:input_type -> DBFindAccountRequest
+	2,  // 2: TiEMDBService.SaveToken:input_type -> DBSaveTokenRequest
+	3,  // 3: TiEMDBService.FindToken:input_type -> DBFindTokenRequest
+	4,  // 4: TiEMDBService.FindRolesByPermission:input_type -> DBFindRolesByPermissionRequest
+	5,  // 5: TiEMDBService.AddHost:input_type -> DBAddHostRequest
+	6,  // 6: TiEMDBService.AddHostsInBatch:input_type -> DBAddHostsInBatchRequest
+	7,  // 7: TiEMDBService.RemoveHost:input_type -> DBRemoveHostRequest
+	8,  // 8: TiEMDBService.RemoveHostsInBatch:input_type -> DBRemoveHostsInBatchRequest
+	9,  // 9: TiEMDBService.ListHost:input_type -> DBListHostsRequest
+	10, // 10: TiEMDBService.CheckDetails:input_type -> DBCheckDetailsRequest
+	11, // 11: TiEMDBService.PreAllocHosts:input_type -> DBPreAllocHostsRequest
+	12, // 12: TiEMDBService.LockHosts:input_type -> DBLockHostsRequest
+	13, // 13: TiEMDBService.GetFailureDomain:input_type -> DBGetFailureDomainRequest
+	14, // 14: TiEMDBService.CreateCluster:input_type -> DBCreateClusterRequest
+	15, // 15: TiEMDBService.DeleteCluster:input_type -> DBDeleteClusterRequest
+	16, // 16: TiEMDBService.UpdateClusterStatus:input_type -> DBUpdateClusterStatusRequest
+	17, // 17: TiEMDBService.UpdateClusterTiupConfig:input_type -> DBUpdateTiupConfigRequest
+	18, // 18: TiEMDBService.LoadCluster:input_type -> DBLoadClusterRequest
+	19, // 19: TiEMDBService.ListCluster:input_type -> DBListClusterRequest
+	20, // 20: TiEMDBService.SaveBackupRecord:input_type -> DBSaveBackupRecordRequest
+	21, // 21: TiEMDBService.ListBackupRecords:input_type -> DBListBackupRecordsRequest
+	22, // 22: TiEMDBService.SaveRecoverRecord:input_type -> DBSaveRecoverRecordRequest
+	23, // 23: TiEMDBService.SaveParametersRecord:input_type -> DBSaveParametersRequest
+	24, // 24: TiEMDBService.GetCurrentParametersRecord:input_type -> DBGetCurrentParametersRequest
+	25, // 25: TiEMDBService.CreateTiupTask:input_type -> CreateTiupTaskRequest
+	26, // 26: TiEMDBService.UpdateTiupTask:input_type -> UpdateTiupTaskRequest
+	27, // 27: TiEMDBService.FindTiupTaskByID:input_type -> FindTiupTaskByIDRequest
+	28, // 28: TiEMDBService.GetTiupTaskStatusByBizID:input_type -> GetTiupTaskStatusByBizIDRequest
+	29, // 29: TiEMDBService.CreateFlow:input_type -> DBCreateFlowRequest
+	30, // 30: TiEMDBService.CreateTask:input_type -> DBCreateTaskRequest
+	31, // 31: TiEMDBService.UpdateFlow:input_type -> DBUpdateFlowRequest
+	32, // 32: TiEMDBService.UpdateTask:input_type -> DBUpdateTaskRequest
+	33, // 33: TiEMDBService.LoadFlow:input_type -> DBLoadFlowRequest
+	34, // 34: TiEMDBService.LoadTask:input_type -> DBLoadTaskRequest
+	35, // 35: TiEMDBService.FindTenant:output_type -> DBFindTenantResponse
+	36, // 36: TiEMDBService.FindAccount:output_type -> DBFindAccountResponse
+	37, // 37: TiEMDBService.SaveToken:output_type -> DBSaveTokenResponse
+	38, // 38: TiEMDBService.FindToken:output_type -> DBFindTokenResponse
+	39, // 39: TiEMDBService.FindRolesByPermission:output_type -> DBFindRolesByPermissionResponse
+	40, // 40: TiEMDBService.AddHost:output_type -> DBAddHostResponse
+	41, // 41: TiEMDBService.AddHostsInBatch:output_type -> DBAddHostsInBatchResponse
+	42, // 42: TiEMDBService.RemoveHost:output_type -> DBRemoveHostResponse
+	43, // 43: TiEMDBService.RemoveHostsInBatch:output_type -> DBRemoveHostsInBatchResponse
+	44, // 44: TiEMDBService.ListHost:output_type -> DBListHostsResponse
+	45, // 45: TiEMDBService.CheckDetails:output_type -> DBCheckDetailsResponse
+	46, // 46: TiEMDBService.PreAllocHosts:output_type -> DBPreAllocHostsResponse
+	47, // 47: TiEMDBService.LockHosts:output_type -> DBLockHostsResponse
+	48, // 48: TiEMDBService.GetFailureDomain:output_type -> DBGetFailureDomainResponse
+	49, // 49: TiEMDBService.CreateCluster:output_type -> DBCreateClusterResponse
+	50, // 50: TiEMDBService.DeleteCluster:output_type -> DBDeleteClusterResponse
+	51, // 51: TiEMDBService.UpdateClusterStatus:output_type -> DBUpdateClusterStatusResponse
+	52, // 52: TiEMDBService.UpdateClusterTiupConfig:output_type -> DBUpdateTiupConfigResponse
+	53, // 53: TiEMDBService.LoadCluster:output_type -> DBLoadClusterResponse
+	54, // 54: TiEMDBService.ListCluster:output_type -> DBListClusterResponse
+	55, // 55: TiEMDBService.SaveBackupRecord:output_type -> DBSaveBackupRecordResponse
+	56, // 56: TiEMDBService.ListBackupRecords:output_type -> DBListBackupRecordsResponse
+	57, // 57: TiEMDBService.SaveRecoverRecord:output_type -> DBSaveRecoverRecordResponse
+	58, // 58: TiEMDBService.SaveParametersRecord:output_type -> DBSaveParametersResponse
+	59, // 59: TiEMDBService.GetCurrentParametersRecord:output_type -> DBGetCurrentParametersResponse
+	60, // 60: TiEMDBService.CreateTiupTask:output_type -> CreateTiupTaskResponse
+	61, // 61: TiEMDBService.UpdateTiupTask:output_type -> UpdateTiupTaskResponse
+	62, // 62: TiEMDBService.FindTiupTaskByID:output_type -> FindTiupTaskByIDResponse
+	63, // 63: TiEMDBService.GetTiupTaskStatusByBizID:output_type -> GetTiupTaskStatusByBizIDResponse
+	64, // 64: TiEMDBService.CreateFlow:output_type -> DBCreateFlowResponse
+	65, // 65: TiEMDBService.CreateTask:output_type -> DBCreateTaskResponse
+	66, // 66: TiEMDBService.UpdateFlow:output_type -> DBUpdateFlowResponse
+	67, // 67: TiEMDBService.UpdateTask:output_type -> DBUpdateTaskResponse
+	68, // 68: TiEMDBService.LoadFlow:output_type -> DBLoadFlowResponse
+	69, // 69: TiEMDBService.LoadTask:output_type -> DBLoadTaskResponse
 	35, // [35:70] is the sub-list for method output_type
 	0,  // [0:35] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name

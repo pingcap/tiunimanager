@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/pingcap/ticp/library/secondparty/libtiup"
+	"github.com/pingcap/tiem/library/secondparty/libtiup"
 )
 
 func init() {

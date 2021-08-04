@@ -3,7 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
-	"github.com/pingcap/ticp/library/thirdparty/logger"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
 	"time"
 
 	"github.com/google/uuid"

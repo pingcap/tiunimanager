@@ -1,7 +1,7 @@
 package instanceapi
 
 import (
-	"github.com/pingcap/ticp/micro-api/controller"
+	"github.com/pingcap/tiem/micro-api/controller"
 	"time"
 )
 

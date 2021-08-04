@@ -19,7 +19,7 @@ var me *Account
 // 没有role
 var other *Account
 
-var tokens = []*TiCPToken{{}}
+var tokens = []*TiEMToken{{}}
 
 var roles []Role
 // testPath1 赋给两个role, testPath2
@@ -159,18 +159,18 @@ func (m MockRepo) AddRoleBindings(bindings []RoleBinding) error {
 	panic("implement me")
 }
 
-func (m MockRepo) Provide(tiCPToken *TiCPToken) (string, error) {
-	tiCPToken.TokenString = tiCPToken.AccountName
+func (m MockRepo) Provide(tiEMToken *TiEMToken) (string, error) {
+	tiEMToken.TokenString = tiEMToken.AccountName
 
-	tokens[0] = tiCPToken
+	tokens[0] = tiEMToken
 
-	return tiCPToken.TokenString, nil
+	return tiEMToken.TokenString, nil
 }
 
-func (m MockRepo) Modify(tiCPToken *TiCPToken) error {
+func (m MockRepo) Modify(tiEMToken *TiEMToken) error {
 	for index,token := range tokens {
-		if token.TokenString == tiCPToken.TokenString {
-			tokens[index] = tiCPToken
+		if token.TokenString == tiEMToken.TokenString {
+			tokens[index] = tiEMToken
 			return nil
 		}
 	}
@@ -178,11 +178,11 @@ func (m MockRepo) Modify(tiCPToken *TiCPToken) error {
 	return errors.New("token not exist")
 }
 
-func (m MockRepo) GetToken(tokenString string) (TiCPToken, error) {
+func (m MockRepo) GetToken(tokenString string) (TiEMToken, error) {
 	for _,token := range tokens {
 		if token.TokenString == tokenString {
 			return *token, nil
 		}
 	}
-	return TiCPToken{}, errors.New("no token")
+	return TiEMToken{}, errors.New("no token")
 }

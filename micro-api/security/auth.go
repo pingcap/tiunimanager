@@ -2,8 +2,8 @@ package security
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/micro-cluster/client"
-	cluster "github.com/pingcap/ticp/micro-cluster/proto"
+	"github.com/pingcap/tiem/micro-cluster/client"
+	cluster "github.com/pingcap/tiem/micro-cluster/proto"
 	"net/http"
 )
 

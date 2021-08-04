@@ -18,7 +18,7 @@ func InitForMonolith() {
 		0,
 	}
 
-	LocalConfig[KEY_SQLITE_FILE_PATH] = CreateInstance(KEY_SQLITE_FILE_PATH, "./ticp.sqlite.db")
+	LocalConfig[KEY_SQLITE_FILE_PATH] = CreateInstance(KEY_SQLITE_FILE_PATH, "./tiem.sqlite.db")
 
 	LocalConfig[KEY_API_LOG] = CreateInstance(KEY_API_PORT, Log {
 		//LogLevel      string

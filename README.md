@@ -1,4 +1,4 @@
-# TiCP - TiDB Cloud Platform
+# TiEM - TiDB Enterprise Manager
 
 ## Contents
 
@@ -14,7 +14,7 @@
 - router - Router of http handler.
 - service - go-micro service implementation.
 
-## Build and Run TiCP
+## Build and Run TiEM
 
 ### Dependencies
 
@@ -114,7 +114,7 @@ $ go run main.go --tidb-cloud-platform-conf-file cfg.toml --registry etcd --regi
 ```bash
 $ cd micro/db
 $ cat cfg.toml
-SqliteFilePath = "./ticp.sqlite.db"
+SqliteFilePath = "./tiem.sqlite.db"
 OpenApiPort = 4444
 PrometheusPort = 8081
 
@@ -173,7 +173,7 @@ For example:
 
 ```go
 import(
-	"github.com/pingcap/ticp/addon/logger"
+	"github.com/pingcap/tiem/addon/logger"
 )
 ```
 
@@ -198,7 +198,7 @@ func CheckUser(ctx context.Context, name, passwd string) error {
 ```go
 func init() {
     var err error
-    dbFile := "ticp.sqlite.db"
+    dbFile := "tiem.sqlite.db"
     log := logger.WithContext(nil).WithField("dbFile", dbFile)
     log.Debug("init: sqlite.open")
     db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})

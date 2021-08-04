@@ -10,14 +10,14 @@ import (
 	mlog "github.com/asim/go-micro/v3/logger"
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/transport"
-	"github.com/pingcap/ticp/library/firstparty/config"
-	"github.com/pingcap/ticp/library/secondparty/libtiup"
-	"github.com/pingcap/ticp/library/thirdparty/logger"
-	"github.com/pingcap/ticp/library/thirdparty/tracer"
-	cluster "github.com/pingcap/ticp/micro-cluster/proto"
-	"github.com/pingcap/ticp/micro-cluster/service"
-	"github.com/pingcap/ticp/micro-cluster/service/tenant/adapt"
-	dbclient "github.com/pingcap/ticp/micro-metadb/client"
+	"github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap/tiem/library/secondparty/libtiup"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap/tiem/library/thirdparty/tracer"
+	cluster "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap/tiem/micro-cluster/service"
+	"github.com/pingcap/tiem/micro-cluster/service/tenant/adapt"
+	dbclient "github.com/pingcap/tiem/micro-metadb/client"
 	"log"
 )
 
@@ -42,7 +42,7 @@ func initService() {
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	srv1 := micro.NewService(
-		micro.Name(service.TiCPClusterServiceName),
+		micro.Name(service.TiEMClusterServiceName),
 		micro.WrapHandler(prometheus.NewHandlerWrapper()),
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
@@ -58,7 +58,7 @@ func initService() {
 	}
 
 	srv2 := micro.NewService(
-		micro.Name(service.TiCPManagerServiceName),
+		micro.Name(service.TiEMManagerServiceName),
 		micro.WrapHandler(prometheus.NewHandlerWrapper()),
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
@@ -67,7 +67,7 @@ func initService() {
 	)
 	srv2.Init()
 
-	cluster.RegisterTiCPManagerServiceHandler(srv2.Server(), new(service.ManagerServiceHandler))
+	cluster.RegisterTiEMManagerServiceHandler(srv2.Server(), new(service.ManagerServiceHandler))
 
 	if err := srv2.Run(); err != nil {
 		log.Fatal(err)

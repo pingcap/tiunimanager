@@ -2,7 +2,7 @@ package logger
 
 import (
 	"context"
-	config2 "github.com/pingcap/ticp/library/firstparty/config"
+	config2 "github.com/pingcap/tiem/library/firstparty/config"
 	"io"
 	"os"
 	"path"

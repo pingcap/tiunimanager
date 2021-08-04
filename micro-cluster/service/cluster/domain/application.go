@@ -3,9 +3,9 @@ package domain
 import (
 	"errors"
 	"fmt"
-	"github.com/pingcap/ticp/library/knowledge"
-	"github.com/pingcap/ticp/library/secondparty/libtiup"
-	proto "github.com/pingcap/ticp/micro-cluster/proto"
+	"github.com/pingcap/tiem/library/knowledge"
+	"github.com/pingcap/tiem/library/secondparty/libtiup"
+	proto "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"

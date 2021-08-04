@@ -9,7 +9,7 @@ import "db_task.proto";
 option go_package = "./;db";
 
 // TiDB Cloud Platform database service
-service TiCPDBService {
+service TiEMDBService {
     // Auth Module
 	rpc FindTenant(DBFindTenantRequest) returns (DBFindTenantResponse);
 	rpc FindAccount(DBFindAccountRequest) returns (DBFindAccountResponse);

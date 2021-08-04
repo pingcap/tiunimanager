@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "TiCP UI API",
-        "title": "TiCP UI API",
+        "description": "TiEM UI API",
+        "title": "TiEM UI API",
         "contact": {
             "name": "zhangpeijin",
             "email": "zhangpeijin@pingcap.com"

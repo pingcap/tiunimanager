@@ -1,7 +1,7 @@
 package domain
 
 import (
-	copywriting2 "github.com/pingcap/ticp/library/copywriting"
+	copywriting2 "github.com/pingcap/tiem/library/copywriting"
 )
 
 type ClusterStatus int

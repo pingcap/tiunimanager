@@ -1,11 +1,11 @@
 package domain
 
 import (
-	commons2 "github.com/pingcap/ticp/micro-cluster/service/tenant/commons"
+	commons2 "github.com/pingcap/tiem/micro-cluster/service/tenant/commons"
 	"time"
 )
 
-type TiCPToken struct {
+type TiEMToken struct {
 	TokenString 	string
 	AccountName		string
 	AccountId		string
@@ -14,24 +14,24 @@ type TiCPToken struct {
 	ExpirationTime  time.Time
 }
 
-func (token *TiCPToken) destroy() error {
+func (token *TiEMToken) destroy() error {
 	token.ExpirationTime = time.Now()
 	return TokenMNG.Modify(token)
 }
 
-func (token *TiCPToken) renew() error {
+func (token *TiEMToken) renew() error {
 	token.ExpirationTime = time.Now().Add(commons2.DefaultTokenValidPeriod)
 	return TokenMNG.Modify(token)
 }
 
-func (token *TiCPToken) isValid() bool {
+func (token *TiEMToken) isValid() bool {
 	now := time.Now()
 
 	return now.Before(token.ExpirationTime)
 }
 
-func createToken(accountId string, accountName string, tenantId string) (TiCPToken, error) {
-	token := TiCPToken{
+func createToken(accountId string, accountName string, tenantId string) (TiEMToken, error) {
+	token := TiEMToken{
 		AccountName: accountName,
 		AccountId: accountId,
 		TenantId: tenantId,

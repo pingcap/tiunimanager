@@ -10,14 +10,14 @@ import (
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/transport"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/library/firstparty/config"
-	"github.com/pingcap/ticp/library/thirdparty/tracer"
-	"github.com/pingcap/ticp/micro-api/route"
-	"github.com/pingcap/ticp/micro-cluster/client"
+	"github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap/tiem/library/thirdparty/tracer"
+	"github.com/pingcap/tiem/micro-api/route"
+	"github.com/pingcap/tiem/micro-cluster/client"
 	"log"
 )
 
-var TiCPApiServiceName = "go.micro.ticp.api"
+var TiEMApiServiceName = "go.micro.tiem.api"
 
 func initConfig() {
 	config.InitForMonolith()
@@ -32,7 +32,7 @@ func initService() {
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 
 	srv := micro.NewService(
-		micro.Name(TiCPApiServiceName),
+		micro.Name(TiEMApiServiceName),
 		micro.WrapHandler(prometheus.NewHandlerWrapper()),
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),

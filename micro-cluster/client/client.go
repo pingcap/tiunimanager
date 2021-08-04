@@ -10,15 +10,15 @@ import (
 	mlog "github.com/asim/go-micro/v3/logger"
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/transport"
-	"github.com/pingcap/ticp/library/firstparty/config"
-	"github.com/pingcap/ticp/library/thirdparty/tracer"
-	cluster "github.com/pingcap/ticp/micro-cluster/proto"
-	"github.com/pingcap/ticp/micro-cluster/service"
+	"github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap/tiem/library/thirdparty/tracer"
+	cluster "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap/tiem/micro-cluster/service"
 )
 
 var ClusterClient cluster.ClusterService
 
-var ManagerClient cluster.TiCPManagerService
+var ManagerClient cluster.TiEMManagerService
 
 func InitManagerClient() {
 	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
@@ -28,7 +28,7 @@ func InitManagerClient() {
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	srv := micro.NewService(
-		micro.Name(service.TiCPManagerServiceName),
+		micro.Name(service.TiEMManagerServiceName),
 		micro.WrapHandler(prometheus.NewHandlerWrapper()),
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
@@ -37,7 +37,7 @@ func InitManagerClient() {
 	)
 	srv.Init()
 
-	ManagerClient = cluster.NewTiCPManagerService(service.TiCPManagerServiceName, srv.Client())
+	ManagerClient = cluster.NewTiEMManagerService(service.TiEMManagerServiceName, srv.Client())
 }
 
 func InitClusterClient() {
@@ -48,7 +48,7 @@ func InitClusterClient() {
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	srv := micro.NewService(
-		micro.Name(service.TiCPClusterServiceName),
+		micro.Name(service.TiEMClusterServiceName),
 		micro.WrapHandler(prometheus.NewHandlerWrapper()),
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
@@ -56,5 +56,5 @@ func InitClusterClient() {
 	)
 	srv.Init()
 
-	ClusterClient = cluster.NewClusterService(service.TiCPClusterServiceName, srv.Client())
+	ClusterClient = cluster.NewClusterService(service.TiEMClusterServiceName, srv.Client())
 }

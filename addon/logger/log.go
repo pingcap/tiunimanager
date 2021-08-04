@@ -170,30 +170,30 @@ func GetLogger() *LogRecord {
 }
 
 func (lr *LogRecord) Record(key string, value interface{}) *LogRecord {
-	logRecord.defaultLogEntry = logRecord.defaultLogEntry.WithField(key, value)
-	return logRecord
+	lr.defaultLogEntry = lr.defaultLogEntry.WithField(key, value)
+	return lr
 }
 
 func (lr *LogRecord) Records(fields log.Fields) *LogRecord {
-	logRecord.defaultLogEntry = logRecord.defaultLogEntry.WithFields(fields)
-	return logRecord
+	lr.defaultLogEntry = lr.defaultLogEntry.WithFields(fields)
+	return lr
 }
 
 func (lr *LogRecord) RecordSys(sys string) *LogRecord {
-	logRecord.defaultLogEntry = logRecord.defaultLogEntry.WithField(RecordSysField, sys)
-	return logRecord
+	lr.defaultLogEntry = lr.defaultLogEntry.WithField(RecordSysField, sys)
+	return lr
 }
 func (lr *LogRecord) RecordMod(mod string) *LogRecord {
-	logRecord.defaultLogEntry = logRecord.defaultLogEntry.WithField(RecordModField, mod)
-	return logRecord
+	lr.defaultLogEntry = lr.defaultLogEntry.WithField(RecordModField, mod)
+	return lr
 }
 
 func (lr *LogRecord) RecordFun() *log.Entry {
-	logEntry := logRecord.defaultLogEntry
+	logEntry := lr.defaultLogEntry
 	if pc, file, line, ok := runtime.Caller(2); ok {
 		ptr := runtime.FuncForPC(pc)
 		//fmt.Println(ptr.Name(), file, line)
-		logEntry = logRecord.defaultLogEntry.WithField(RecordFunField, ptr.Name()).
+		logEntry = lr.defaultLogEntry.WithField(RecordFunField, ptr.Name()).
 			WithField(RecordFileField, path.Base(file)).WithField(RecordLineField, line)
 	}
 	return logEntry

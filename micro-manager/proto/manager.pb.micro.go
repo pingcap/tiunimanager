@@ -48,6 +48,7 @@ type TiCPManagerService interface {
 	ListHost(ctx context.Context, in *ListHostsRequest, opts ...client.CallOption) (*ListHostsResponse, error)
 	CheckDetails(ctx context.Context, in *CheckDetailsRequest, opts ...client.CallOption) (*CheckDetailsResponse, error)
 	AllocHosts(ctx context.Context, in *AllocHostsRequest, opts ...client.CallOption) (*AllocHostResponse, error)
+	GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, opts ...client.CallOption) (*GetFailureDomainResponse, error)
 }
 
 type tiCPManagerService struct {
@@ -162,6 +163,16 @@ func (c *tiCPManagerService) AllocHosts(ctx context.Context, in *AllocHostsReque
 	return out, nil
 }
 
+func (c *tiCPManagerService) GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, opts ...client.CallOption) (*GetFailureDomainResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPManagerService.GetFailureDomain", in)
+	out := new(GetFailureDomainResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for TiCPManagerService service
 
 type TiCPManagerServiceHandler interface {
@@ -177,6 +188,7 @@ type TiCPManagerServiceHandler interface {
 	ListHost(context.Context, *ListHostsRequest, *ListHostsResponse) error
 	CheckDetails(context.Context, *CheckDetailsRequest, *CheckDetailsResponse) error
 	AllocHosts(context.Context, *AllocHostsRequest, *AllocHostResponse) error
+	GetFailureDomain(context.Context, *GetFailureDomainRequest, *GetFailureDomainResponse) error
 }
 
 func RegisterTiCPManagerServiceHandler(s server.Server, hdlr TiCPManagerServiceHandler, opts ...server.HandlerOption) error {
@@ -191,6 +203,7 @@ func RegisterTiCPManagerServiceHandler(s server.Server, hdlr TiCPManagerServiceH
 		ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error
 		CheckDetails(ctx context.Context, in *CheckDetailsRequest, out *CheckDetailsResponse) error
 		AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error
+		GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, out *GetFailureDomainResponse) error
 	}
 	type TiCPManagerService struct {
 		tiCPManagerService
@@ -241,4 +254,8 @@ func (h *tiCPManagerServiceHandler) CheckDetails(ctx context.Context, in *CheckD
 
 func (h *tiCPManagerServiceHandler) AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error {
 	return h.TiCPManagerServiceHandler.AllocHosts(ctx, in, out)
+}
+
+func (h *tiCPManagerServiceHandler) GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, out *GetFailureDomainResponse) error {
+	return h.TiCPManagerServiceHandler.GetFailureDomain(ctx, in, out)
 }

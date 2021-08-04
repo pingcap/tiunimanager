@@ -111,3 +111,7 @@ func (*ManagerServiceHandler) CheckDetails(ctx context.Context, in *manager.Chec
 func (*ManagerServiceHandler) AllocHosts(ctx context.Context, in *manager.AllocHostsRequest, out *manager.AllocHostResponse) error {
 	return host.AllocHosts(ctx, in, out)
 }
+
+func (*ManagerServiceHandler) GetFailureDomain(ctx context.Context, in *manager.GetFailureDomainRequest, out *manager.GetFailureDomainResponse) error {
+	return host.GetFailureDomain(ctx, in, out)
+}

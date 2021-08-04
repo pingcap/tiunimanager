@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -296,4 +297,19 @@ func LockHosts(resources []ResourceLock) (err error) {
 	}
 	tx.Commit()
 	return nil
+}
+
+type FailureDomainResource struct {
+	FailureDomain string
+	Purpose       string
+	CpuCores      int
+	Memory        int
+	Count         int
+}
+
+func GetFailureDomain(domain string) (res []FailureDomainResource, err error) {
+	selectStr := fmt.Sprintf("%s as FailureDomain, purpose, cpu_cores, memory, count(id) as Count", domain)
+	err = MetaDB.Table("hosts").Where("Status = ? or Status = ?", HOST_ONLINE, HOST_INUSED).Select(selectStr).
+		Group(domain).Group("purpose").Group("cpu_cores").Group("memory").Scan(&res).Error
+	return
 }

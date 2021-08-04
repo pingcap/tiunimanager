@@ -20,6 +20,7 @@ message DBAllocationReq {
     int32 cpuCores = 2;
     int32 memory = 3;
     int32 count = 4;
+    string purpose = 5;
 }
 
 message DBPreAllocation {
@@ -63,6 +64,13 @@ message DBAllocHostDTO {
     int32 cpuCores = 4;
     int32 memory = 5;
     DBDiskDTO disk = 6;
+}
+
+message DBFailureDomainResource {
+    string failureDomain = 1;
+    string purpose = 2;
+    string spec = 3;
+    int32 count = 4;
 }
 
 message DBAddHostRequest {
@@ -133,4 +141,13 @@ message DBLockHostsRequest {
 
 message DBLockHostsResponse {
     DBHostResponseStatus rs = 1;
+}
+
+message DBGetFailureDomainRequest {
+    int32 failureDomainType = 1;
+}
+
+message DBGetFailureDomainResponse {
+    DBHostResponseStatus rs = 1;
+    repeated DBFailureDomainResource fdList = 2;
 }

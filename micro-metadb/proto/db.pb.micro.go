@@ -51,6 +51,7 @@ type TiCPDBService interface {
 	CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, opts ...client.CallOption) (*DBCheckDetailsResponse, error)
 	PreAllocHosts(ctx context.Context, in *DBPreAllocHostsRequest, opts ...client.CallOption) (*DBPreAllocHostsResponse, error)
 	LockHosts(ctx context.Context, in *DBLockHostsRequest, opts ...client.CallOption) (*DBLockHostsResponse, error)
+	GetFailureDomain(ctx context.Context, in *DBGetFailureDomainRequest, opts ...client.CallOption) (*DBGetFailureDomainResponse, error)
 	AddCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error)
 	FindCluster(ctx context.Context, in *DBFindClusterRequest, opts ...client.CallOption) (*DBFindClusterResponse, error)
 	UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, opts ...client.CallOption) (*DBUpdateTiUPConfigResponse, error)
@@ -204,6 +205,16 @@ func (c *tiCPDBService) LockHosts(ctx context.Context, in *DBLockHostsRequest, o
 	return out, nil
 }
 
+func (c *tiCPDBService) GetFailureDomain(ctx context.Context, in *DBGetFailureDomainRequest, opts ...client.CallOption) (*DBGetFailureDomainResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.GetFailureDomain", in)
+	out := new(DBGetFailureDomainResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tiCPDBService) AddCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error) {
 	req := c.c.NewRequest(c.name, "TiCPDBService.AddCluster", in)
 	out := new(DBCreateClusterResponse)
@@ -302,6 +313,7 @@ type TiCPDBServiceHandler interface {
 	CheckDetails(context.Context, *DBCheckDetailsRequest, *DBCheckDetailsResponse) error
 	PreAllocHosts(context.Context, *DBPreAllocHostsRequest, *DBPreAllocHostsResponse) error
 	LockHosts(context.Context, *DBLockHostsRequest, *DBLockHostsResponse) error
+	GetFailureDomain(context.Context, *DBGetFailureDomainRequest, *DBGetFailureDomainResponse) error
 	AddCluster(context.Context, *DBCreateClusterRequest, *DBCreateClusterResponse) error
 	FindCluster(context.Context, *DBFindClusterRequest, *DBFindClusterResponse) error
 	UpdateTiUPConfig(context.Context, *DBUpdateTiUPConfigRequest, *DBUpdateTiUPConfigResponse) error
@@ -328,6 +340,7 @@ func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, op
 		CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, out *DBCheckDetailsResponse) error
 		PreAllocHosts(ctx context.Context, in *DBPreAllocHostsRequest, out *DBPreAllocHostsResponse) error
 		LockHosts(ctx context.Context, in *DBLockHostsRequest, out *DBLockHostsResponse) error
+		GetFailureDomain(ctx context.Context, in *DBGetFailureDomainRequest, out *DBGetFailureDomainResponse) error
 		AddCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error
 		FindCluster(ctx context.Context, in *DBFindClusterRequest, out *DBFindClusterResponse) error
 		UpdateTiUPConfig(ctx context.Context, in *DBUpdateTiUPConfigRequest, out *DBUpdateTiUPConfigResponse) error
@@ -398,6 +411,10 @@ func (h *tiCPDBServiceHandler) PreAllocHosts(ctx context.Context, in *DBPreAlloc
 
 func (h *tiCPDBServiceHandler) LockHosts(ctx context.Context, in *DBLockHostsRequest, out *DBLockHostsResponse) error {
 	return h.TiCPDBServiceHandler.LockHosts(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) GetFailureDomain(ctx context.Context, in *DBGetFailureDomainRequest, out *DBGetFailureDomainResponse) error {
+	return h.TiCPDBServiceHandler.GetFailureDomain(ctx, in, out)
 }
 
 func (h *tiCPDBServiceHandler) AddCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error {

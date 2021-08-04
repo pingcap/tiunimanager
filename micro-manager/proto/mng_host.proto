@@ -39,6 +39,7 @@ message AllocationReq {
     int32 cpuCores = 2;
     int32 memory = 3;
     int32 count = 4;
+    string purpose = 5;
 }
 
 message AllocHost {
@@ -48,6 +49,14 @@ message AllocHost {
     int32 memory = 4; 
     Disk disk = 5;
 }
+
+message FailureDomainResource {
+    string failureDomain = 1;
+    string purpose = 2;
+    string spec = 3;
+    int32 count = 4;
+}
+
 message ImportHostRequest {
     HostInfo host = 1;
 }
@@ -112,5 +121,14 @@ message AllocHostResponse {
     repeated AllocHost pdHosts = 2;
     repeated AllocHost tidbHosts = 3;
     repeated AllocHost tikvHosts = 4;
+}
+
+message GetFailureDomainRequest {
+    int32 failureDomainType = 1;
+}
+
+message GetFailureDomainResponse {
+    ResponseStatus rs = 1;
+    repeated FailureDomainResource fdList = 2;
 }
 

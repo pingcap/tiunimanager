@@ -116,6 +116,64 @@ var doc = `{
                 }
             }
         },
+        "/failuredomains": {
+            "get": {
+                "description": "查询指定故障域的资源情况",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "查询指定故障域的资源",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2,
+                            3
+                        ],
+                        "type": "integer",
+                        "description": "指定故障域类型",
+                        "name": "failureDomainType",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/hostapi.DomainResource"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/host": {
             "post": {
                 "description": "将给定的主机信息导入系统",
@@ -867,6 +925,29 @@ var doc = `{
                 }
             }
         },
+        "hostapi.DomainResource": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "domaincode": {
+                    "type": "string"
+                },
+                "failureDomain": {
+                    "type": "string"
+                },
+                "purpose": {
+                    "type": "string"
+                },
+                "spec": {
+                    "type": "string"
+                },
+                "speccode": {
+                    "type": "string"
+                }
+            }
+        },
         "hostapi.HostInfo": {
             "type": "object",
             "properties": {
@@ -913,6 +994,10 @@ var doc = `{
                     "type": "string"
                 },
                 "rack": {
+                    "type": "string"
+                },
+                "spec": {
+                    "description": "Host Spec, init while importing",
                     "type": "string"
                 },
                 "status": {

@@ -25,6 +25,7 @@ service TiCPDBService {
 	rpc CheckDetails(DBCheckDetailsRequest) returns (DBCheckDetailsResponse);
 	rpc PreAllocHosts(DBPreAllocHostsRequest) returns (DBPreAllocHostsResponse);
 	rpc LockHosts(DBLockHostsRequest) returns (DBLockHostsResponse);
+	rpc GetFailureDomain(DBGetFailureDomainRequest) returns (DBGetFailureDomainResponse);
 
 	rpc AddCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);
 	rpc FindCluster(DBFindClusterRequest) returns (DBFindClusterResponse);

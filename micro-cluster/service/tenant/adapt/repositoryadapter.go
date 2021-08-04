@@ -3,7 +3,7 @@ package adapt
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/pingcap/ticp/micro-manager/service/tenant/domain"
+	tenant "github.com/pingcap/ticp/micro-cluster/service/tenant/domain"
 	"github.com/pingcap/ticp/micro-metadb/client"
 	db "github.com/pingcap/ticp/micro-metadb/proto"
 	"time"
@@ -11,7 +11,13 @@ import (
 
 type MicroMetaDbRepo struct {}
 
-func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId string, code string) (p domain.PermissionAggregation, err error) {
+func InjectionMetaDbRepo () {
+	tenant.RbacRepo = &MicroMetaDbRepo{}
+	tenant.TenantRepo = &MicroMetaDbRepo{}
+	tenant.TokenMNG = &MicroMetaDbRepo{}
+}
+
+func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId string, code string) (p tenant.PermissionAggregation, err error) {
 	req := db.DBFindRolesByPermissionRequest{
 		TenantId: tenantId,
 		Code: code,
@@ -24,13 +30,13 @@ func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId string, code string)
 
 	permissionDTO := resp.Permission
 
-	p.Permission = domain.Permission{
-		Code: permissionDTO.GetCode(),
+	p.Permission = tenant.Permission{
+		Code:     permissionDTO.GetCode(),
 		TenantId: permissionDTO.GetTenantId(),
-		Name: permissionDTO.GetName(),
-		Type: domain.PermissionTypeFromType(permissionDTO.GetType()),
-		Desc: permissionDTO.GetDesc(),
-		Status: domain.CommonStatusFromStatus(permissionDTO.GetStatus()),
+		Name:     permissionDTO.GetName(),
+		Type:     tenant.PermissionTypeFromType(permissionDTO.GetType()),
+		Desc:     permissionDTO.GetDesc(),
+		Status:   tenant.CommonStatusFromStatus(permissionDTO.GetStatus()),
 	}
 
 	rolesDTOs := resp.GetRoles()
@@ -38,24 +44,24 @@ func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId string, code string)
 	if rolesDTOs == nil {
 		p.Roles = nil
 	} else {
-		p.Roles = make([]domain.Role, len(rolesDTOs), cap(rolesDTOs))
+		p.Roles = make([]tenant.Role, len(rolesDTOs), cap(rolesDTOs))
 		for index, r := range rolesDTOs {
-			p.Roles[index] = domain.Role{
+			p.Roles[index] = tenant.Role{
 				TenantId: r.TenantId,
-				Name: r.GetName(),
-				Desc: r.GetDesc(),
-				Status: domain.CommonStatusFromStatus(r.GetStatus()),
+				Name:     r.GetName(),
+				Desc:     r.GetDesc(),
+				Status:   tenant.CommonStatusFromStatus(r.GetStatus()),
 			}
 		}
 	}
 	return
 }
 
-func (m MicroMetaDbRepo) LoadPermission(tenantId string, code string) (domain.Permission, error) {
+func (m MicroMetaDbRepo) LoadPermission(tenantId string, code string) (tenant.Permission, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account domain.AccountAggregation, err error) {
+func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account tenant.AccountAggregation, err error) {
 	req := db.DBFindAccountRequest{
 		Name: name,
 		WithRole: true,
@@ -77,13 +83,13 @@ func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account domain.Acc
 	if dto.Roles == nil {
 		account.Roles = nil
 	} else {
-		account.Roles = make([]domain.Role, len(dto.Roles), cap(dto.Roles))
+		account.Roles = make([]tenant.Role, len(dto.Roles), cap(dto.Roles))
 		for index, r := range dto.Roles {
-			account.Roles[index] = domain.Role{
+			account.Roles[index] = tenant.Role{
 				TenantId: r.TenantId,
-				Name: r.GetName(),
-				Desc: r.GetDesc(),
-				Status: domain.CommonStatusFromStatus(r.GetStatus()),
+				Name:     r.GetName(),
+				Desc:     r.GetDesc(),
+				Status:   tenant.CommonStatusFromStatus(r.GetStatus()),
 			}
 		}
 	}
@@ -91,7 +97,7 @@ func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account domain.Acc
 	return
 }
 
-func (m MicroMetaDbRepo) Provide(tiCPToken *domain.TiCPToken) (tokenString string, err error) {
+func (m MicroMetaDbRepo) Provide(tiCPToken *tenant.TiCPToken) (tokenString string, err error) {
 	// 提供token，简单地使用UUID
 	tokenString = uuid.New().String()
 
@@ -110,7 +116,7 @@ func (m MicroMetaDbRepo) Provide(tiCPToken *domain.TiCPToken) (tokenString strin
 	return
 }
 
-func (m MicroMetaDbRepo) Modify(tiCPToken *domain.TiCPToken) error {
+func (m MicroMetaDbRepo) Modify(tiCPToken *tenant.TiCPToken) error {
 	req := db.DBSaveTokenRequest{
 		Token: &db.DBTokenDTO{
 			TenantId: tiCPToken.TenantId,
@@ -126,7 +132,7 @@ func (m MicroMetaDbRepo) Modify(tiCPToken *domain.TiCPToken) error {
 	return err
 }
 
-func (m MicroMetaDbRepo) GetToken(tokenString string) (token domain.TiCPToken, err error) {
+func (m MicroMetaDbRepo) GetToken(tokenString string) (token tenant.TiCPToken, err error) {
 	req := db.DBFindTokenRequest{
 		TokenString: tokenString,
 	}
@@ -147,23 +153,23 @@ func (m MicroMetaDbRepo) GetToken(tokenString string) (token domain.TiCPToken, e
 	return
 }
 
-func (m MicroMetaDbRepo) AddTenant(tenant *domain.Tenant) error {
+func (m MicroMetaDbRepo) AddTenant(tenant *tenant.Tenant) error {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadTenantByName(name string) (domain.Tenant, error) {
+func (m MicroMetaDbRepo) LoadTenantByName(name string) (tenant.Tenant, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadTenantById(id string) (domain.Tenant, error) {
+func (m MicroMetaDbRepo) LoadTenantById(id string) (tenant.Tenant, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) AddAccount(a *domain.Account) error {
+func (m MicroMetaDbRepo) AddAccount(a *tenant.Account) error {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadAccountByName(name string) (account domain.Account, err error) {
+func (m MicroMetaDbRepo) LoadAccountByName(name string) (account tenant.Account, err error) {
 	req := db.DBFindAccountRequest{
 		Name: name,
 		WithRole: false,
@@ -184,41 +190,36 @@ func (m MicroMetaDbRepo) LoadAccountByName(name string) (account domain.Account,
 	return
 }
 
-func (m MicroMetaDbRepo) LoadAccountById(id string) (domain.Account, error) {
+func (m MicroMetaDbRepo) LoadAccountById(id string) (tenant.Account, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) AddRole(r *domain.Role) error {
+func (m MicroMetaDbRepo) AddRole(r *tenant.Role) error {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadRole(tenantId string, name string) (domain.Role, error) {
+func (m MicroMetaDbRepo) LoadRole(tenantId string, name string) (tenant.Role, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) AddPermission(r *domain.Permission) error {
+func (m MicroMetaDbRepo) AddPermission(r *tenant.Permission) error {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadAllRolesByAccount(account *domain.Account) ([]domain.Role, error) {
+func (m MicroMetaDbRepo) LoadAllRolesByAccount(account *tenant.Account) ([]tenant.Role, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadAllRolesByPermission(permission *domain.Permission) ([]domain.Role, error) {
+func (m MicroMetaDbRepo) LoadAllRolesByPermission(permission *tenant.Permission) ([]tenant.Role, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) AddPermissionBindings(bindings []domain.PermissionBinding) error {
+func (m MicroMetaDbRepo) AddPermissionBindings(bindings []tenant.PermissionBinding) error {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) AddRoleBindings(bindings []domain.RoleBinding) error {
+func (m MicroMetaDbRepo) AddRoleBindings(bindings []tenant.RoleBinding) error {
 	panic("implement me")
 }
 
-func InjectionMetaDbRepo () {
-	domain.RbacRepo = &MicroMetaDbRepo{}
-	domain.TenantRepo = &MicroMetaDbRepo{}
-	domain.TokenMNG = &MicroMetaDbRepo{}
-}
 

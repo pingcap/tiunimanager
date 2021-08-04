@@ -14,8 +14,8 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/ticp/micro-api/controller"
-	"github.com/pingcap/ticp/micro-manager/client"
-	manager "github.com/pingcap/ticp/micro-manager/proto"
+	"github.com/pingcap/ticp/micro-cluster/client"
+	manager "github.com/pingcap/ticp/micro-cluster/proto"
 	"github.com/pingcap/ticp/micro-metadb/service"
 	"google.golang.org/grpc/codes"
 )

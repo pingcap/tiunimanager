@@ -6,19 +6,19 @@ import (
 
 type Permission struct {
 	TenantId string
-	Code   string
-	Name   string
-	Type   PermissionType
-	Desc   string
-	Status CommonStatus
+	Code     string
+	Name     string
+	Type     PermissionType
+	Desc     string
+	Status   CommonStatus
 }
 
 type PermissionType int
 
 const (
-	Path PermissionType = 1
-	Act  PermissionType = 2
-	Data PermissionType = 3
+	Path             PermissionType = 1
+	Act              PermissionType = 2
+	Data             PermissionType = 3
 	UnrecognizedType PermissionType = 4
 )
 
@@ -51,11 +51,11 @@ func createPermission(tenant *Tenant, code, name ,desc string, permissionType Pe
 
 	permission := Permission{
 		TenantId: tenant.Id,
-		Code:   code,
-		Name:   name,
-		Type:   permissionType,
-		Desc:   desc,
-		Status: Valid,
+		Code:     code,
+		Name:     name,
+		Type:     permissionType,
+		Desc:     desc,
+		Status:   Valid,
 	}
 
 	permission.persist()

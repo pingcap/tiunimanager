@@ -1666,7 +1666,10 @@ var doc = `{
                     "$ref": "#/definitions/controller.Usage"
                 },
                 "tags": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tls": {
                     "type": "boolean"
@@ -1808,7 +1811,10 @@ var doc = `{
                     "type": "string"
                 },
                 "tags": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tls": {
                     "type": "boolean"
@@ -1840,7 +1846,10 @@ var doc = `{
                     }
                 },
                 "tags": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tls": {
                     "type": "boolean"
@@ -1946,7 +1955,10 @@ var doc = `{
                     "$ref": "#/definitions/controller.Usage"
                 },
                 "tags": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tls": {
                     "type": "boolean"

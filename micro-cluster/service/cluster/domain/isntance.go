@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"github.com/pingcap/ticp/knowledge"
+	"github.com/pingcap/ticp/library/knowledge"
 	proto "github.com/pingcap/ticp/micro-cluster/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 )

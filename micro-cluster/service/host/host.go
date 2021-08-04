@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/pingcap/ticp/addon/logger"
-	hostPb "github.com/pingcap/ticp/micro-manager/proto"
+	hostPb "github.com/pingcap/ticp/micro-cluster/proto"
 	dbClient "github.com/pingcap/ticp/micro-metadb/client"
 	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
 	"google.golang.org/grpc/codes"

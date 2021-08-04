@@ -11,8 +11,7 @@ import (
 	"github.com/pingcap/ticp/addon/tracer"
 	"github.com/pingcap/ticp/config"
 	"github.com/pingcap/ticp/micro-api/route"
-	clusterclient "github.com/pingcap/ticp/micro-cluster/client"
-	managerclient "github.com/pingcap/ticp/micro-manager/client"
+	client "github.com/pingcap/ticp/micro-cluster/client"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net/http"
@@ -54,9 +53,10 @@ func initService() {
 		}
 	}()
 }
+
 func initClient() {
-	managerclient.InitManagerClient()
-	clusterclient.InitClusterClient()
+	client.InitManagerClient()
+	client.InitClusterClient()
 }
 
 func initPrometheus() {

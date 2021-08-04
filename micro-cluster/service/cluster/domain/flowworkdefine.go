@@ -1,11 +1,13 @@
 package domain
 
-import "github.com/pingcap/ticp/copywriting"
+import (
+	copywriting2 "github.com/pingcap/ticp/library/copywriting"
+)
 
 var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	FlowCreateCluster: {
 		FlowName:    FlowCreateCluster,
-		StatusAlias: copywriting.DisplayByDefault(copywriting.CWFlowCreateCluster),
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
 			"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
 			"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
@@ -22,7 +24,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	},
 	FlowDeleteCluster: {
 		FlowName:    FlowDeleteCluster,
-		StatusAlias: copywriting.DisplayByDefault(copywriting.CWFlowCreateCluster),
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
 			"start":              {"destroyTasks", "destroyTasksDone", "fail", PollingTasK, destroyTasks},
 			"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", PollingTasK, destroyCluster},
@@ -74,10 +76,12 @@ type TaskDefine struct {
 }
 
 func DefaultEnd(task *TaskEntity, context *FlowContext) bool {
+	task.Status = TaskStatusFinished
 	return true
 }
 
 func DefaultFail(task *TaskEntity, context *FlowContext) bool {
+	task.Status = TaskStatusError
 	return true
 }
 

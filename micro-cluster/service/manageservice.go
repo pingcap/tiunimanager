@@ -2,16 +2,16 @@ package service
 
 import (
 	"context"
+	host2 "github.com/pingcap/ticp/micro-cluster/service/host"
+	domain2 "github.com/pingcap/ticp/micro-cluster/service/tenant/domain"
 	"net/http"
 
-	manager "github.com/pingcap/ticp/micro-manager/proto"
-	"github.com/pingcap/ticp/micro-manager/service/host"
-	"github.com/pingcap/ticp/micro-manager/service/tenant/domain"
+	manager "github.com/pingcap/ticp/micro-cluster/proto"
 )
 
 var TiCPManagerServiceName = "go.micro.ticp.manager"
 
-var SuccessResponseStatus = &manager.ManagerResponseStatus{
+var ManageSuccessResponseStatus = &manager.ManagerResponseStatus{
 	Code: 0,
 }
 
@@ -19,7 +19,7 @@ type ManagerServiceHandler struct{}
 
 func (*ManagerServiceHandler) Login(ctx context.Context, req *manager.LoginRequest, resp *manager.LoginResponse) error {
 
-	token, err := domain.Login(req.GetAccountName(), req.GetPassword())
+	token, err := domain2.Login(req.GetAccountName(), req.GetPassword())
 
 	if err != nil {
 		resp.Status = &manager.ManagerResponseStatus{
@@ -28,7 +28,7 @@ func (*ManagerServiceHandler) Login(ctx context.Context, req *manager.LoginReque
 		}
 		resp.Status.Message = err.Error()
 	} else {
-		resp.Status = SuccessResponseStatus
+		resp.Status = ManageSuccessResponseStatus
 		resp.TokenString = token
 	}
 	return nil
@@ -36,7 +36,7 @@ func (*ManagerServiceHandler) Login(ctx context.Context, req *manager.LoginReque
 }
 
 func (*ManagerServiceHandler) Logout(ctx context.Context, req *manager.LogoutRequest, resp *manager.LogoutResponse) error {
-	accountName, err := domain.Logout(req.TokenString)
+	accountName, err := domain2.Logout(req.TokenString)
 	if err != nil {
 		resp.Status = &manager.ManagerResponseStatus{
 			Code:    http.StatusInternalServerError,
@@ -44,7 +44,7 @@ func (*ManagerServiceHandler) Logout(ctx context.Context, req *manager.LogoutReq
 		}
 		resp.Status.Message = err.Error()
 	} else {
-		resp.Status = SuccessResponseStatus
+		resp.Status = ManageSuccessResponseStatus
 		resp.AccountName = accountName
 	}
 	return nil
@@ -52,15 +52,15 @@ func (*ManagerServiceHandler) Logout(ctx context.Context, req *manager.LogoutReq
 }
 
 func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.VerifyIdentityRequest, resp *manager.VerifyIdentityResponse) error {
-	tenantId, accountId, accountName, err := domain.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
+	tenantId, accountId, accountName, err := domain2.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
 
 	if err != nil {
-		if _, ok := err.(*domain.UnauthorizedError); ok {
+		if _, ok := err.(*domain2.UnauthorizedError); ok {
 			resp.Status = &manager.ManagerResponseStatus{
 				Code:    http.StatusUnauthorized,
 				Message: "未登录或登录失效，请重试",
 			}
-		} else if _, ok := err.(*domain.ForbiddenError); ok {
+		} else if _, ok := err.(*domain2.ForbiddenError); ok {
 			resp.Status = &manager.ManagerResponseStatus{
 				Code:    http.StatusForbidden,
 				Message: "无权限",
@@ -72,7 +72,7 @@ func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.V
 			}
 		}
 	} else {
-		resp.Status = SuccessResponseStatus
+		resp.Status = ManageSuccessResponseStatus
 		resp.TenantId = tenantId
 		resp.AccountId = accountId
 		resp.AccountName = accountName
@@ -82,37 +82,37 @@ func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.V
 }
 
 func InitLogger() {
-	host.InitLogger()
+	host2.InitLogger()
 }
 
 func (*ManagerServiceHandler) ImportHost(ctx context.Context, in *manager.ImportHostRequest, out *manager.ImportHostResponse) error {
-	return host.ImportHost(ctx, in, out)
+	return host2.ImportHost(ctx, in, out)
 }
 
 func (*ManagerServiceHandler) ImportHostsInBatch(ctx context.Context, in *manager.ImportHostsInBatchRequest, out *manager.ImportHostsInBatchResponse) error {
-	return host.ImportHostsInBatch(ctx, in, out)
+	return host2.ImportHostsInBatch(ctx, in, out)
 }
 
 func (*ManagerServiceHandler) RemoveHost(ctx context.Context, in *manager.RemoveHostRequest, out *manager.RemoveHostResponse) error {
-	return host.RemoveHost(ctx, in, out)
+	return host2.RemoveHost(ctx, in, out)
 }
 
 func (*ManagerServiceHandler) RemoveHostsInBatch(ctx context.Context, in *manager.RemoveHostsInBatchRequest, out *manager.RemoveHostsInBatchResponse) error {
-	return host.RemoveHostsInBatch(ctx, in, out)
+	return host2.RemoveHostsInBatch(ctx, in, out)
 }
 
 func (*ManagerServiceHandler) ListHost(ctx context.Context, in *manager.ListHostsRequest, out *manager.ListHostsResponse) error {
-	return host.ListHost(ctx, in, out)
+	return host2.ListHost(ctx, in, out)
 }
 
 func (*ManagerServiceHandler) CheckDetails(ctx context.Context, in *manager.CheckDetailsRequest, out *manager.CheckDetailsResponse) error {
-	return host.CheckDetails(ctx, in, out)
+	return host2.CheckDetails(ctx, in, out)
 }
 
 func (*ManagerServiceHandler) AllocHosts(ctx context.Context, in *manager.AllocHostsRequest, out *manager.AllocHostResponse) error {
-	return host.AllocHosts(ctx, in, out)
+	return host2.AllocHosts(ctx, in, out)
 }
 
 func (*ManagerServiceHandler) GetFailureDomain(ctx context.Context, in *manager.GetFailureDomainRequest, out *manager.GetFailureDomainResponse) error {
-	return host.GetFailureDomain(ctx, in, out)
+	return host2.GetFailureDomain(ctx, in, out)
 }

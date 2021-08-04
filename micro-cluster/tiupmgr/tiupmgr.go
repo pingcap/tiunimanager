@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/pingcap/ticp/micro-cluster/service/clusteroperate/libtiup"
+	"github.com/pingcap/ticp/library/secondparty/libtiup"
 )
 
 func init() {

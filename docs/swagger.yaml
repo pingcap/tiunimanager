@@ -43,7 +43,9 @@ definitions:
       storageUsage:
         $ref: '#/definitions/controller.Usage'
       tags:
-        type: string
+        items:
+          type: string
+        type: array
       tls:
         type: boolean
       updateTime:
@@ -136,7 +138,9 @@ definitions:
       statusName:
         type: string
       tags:
-        type: string
+        items:
+          type: string
+        type: array
       tls:
         type: boolean
       updateTime:
@@ -157,7 +161,9 @@ definitions:
           $ref: '#/definitions/clusterapi.ClusterNodeDemand'
         type: array
       tags:
-        type: string
+        items:
+          type: string
+        type: array
       tls:
         type: boolean
     type: object
@@ -227,7 +233,9 @@ definitions:
       storageUsage:
         $ref: '#/definitions/controller.Usage'
       tags:
-        type: string
+        items:
+          type: string
+        type: array
       tls:
         type: boolean
       updateTime:

@@ -3,7 +3,7 @@ syntax = "proto3";
 import "mng_auth.proto";
 import "mng_host.proto";
 
-option go_package = "./;manager";
+option go_package = "./;cluster";
 
 service TiCPManagerService {
     // Auth manager module

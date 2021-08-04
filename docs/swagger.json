@@ -1651,7 +1651,10 @@
                     "$ref": "#/definitions/controller.Usage"
                 },
                 "tags": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tls": {
                     "type": "boolean"
@@ -1793,7 +1796,10 @@
                     "type": "string"
                 },
                 "tags": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tls": {
                     "type": "boolean"
@@ -1825,7 +1831,10 @@
                     }
                 },
                 "tags": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tls": {
                     "type": "boolean"
@@ -1931,7 +1940,10 @@
                     "$ref": "#/definitions/controller.Usage"
                 },
                 "tags": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tls": {
                     "type": "boolean"

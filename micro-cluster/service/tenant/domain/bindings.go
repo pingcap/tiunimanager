@@ -5,11 +5,11 @@ import (
 )
 
 type Role struct {
-	TenantId 	string
-	Id     		string
-	Name   		string
-	Desc   		string
-	Status 		CommonStatus
+	TenantId string
+	Id       string
+	Name     string
+	Desc     string
+	Status   CommonStatus
 }
 
 func createRole(tenant *Tenant, name string, desc string) (*Role, error) {

@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"github.com/pingcap/ticp/micro-manager/service/tenant/commons"
+	commons2 "github.com/pingcap/ticp/micro-cluster/service/tenant/commons"
 	"time"
 )
 
@@ -20,7 +20,7 @@ func (token *TiCPToken) destroy() error {
 }
 
 func (token *TiCPToken) renew() error {
-	token.ExpirationTime = time.Now().Add(commons.DefaultTokenValidPeriod)
+	token.ExpirationTime = time.Now().Add(commons2.DefaultTokenValidPeriod)
 	return TokenMNG.Modify(token)
 }
 
@@ -35,7 +35,7 @@ func createToken(accountId string, accountName string, tenantId string) (TiCPTok
 		AccountName: accountName,
 		AccountId: accountId,
 		TenantId: tenantId,
-		ExpirationTime: time.Now().Add(commons.DefaultTokenValidPeriod),
+		ExpirationTime: time.Now().Add(commons2.DefaultTokenValidPeriod),
 	}
 
 	tokenString, err := TokenMNG.Provide(&token)

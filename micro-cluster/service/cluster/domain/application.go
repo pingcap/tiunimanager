@@ -3,14 +3,12 @@ package domain
 import (
 	"errors"
 	"fmt"
-	"github.com/pingcap/ticp/knowledge"
+	"github.com/pingcap/ticp/library/knowledge"
+	"github.com/pingcap/ticp/library/secondparty/libtiup"
 	proto "github.com/pingcap/ticp/micro-cluster/proto"
-	"github.com/pingcap/ticp/micro-cluster/service/clusteroperate/libtiup"
-	mngPb "github.com/pingcap/ticp/micro-manager/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
-	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -203,6 +201,8 @@ func (aggregation *ClusterAggregation) loadWorkFlow() error {
 }
 
 func prepareResource(task *TaskEntity, context *FlowContext) bool {
+	// todo prepareResource
+
 	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
 	if true {
 		// todo
@@ -214,42 +214,45 @@ func prepareResource(task *TaskEntity, context *FlowContext) bool {
 }
 
 func convertConfig(resource interface{}, cluster *Cluster) *spec.Specification {
-	hosts := resource.([]*mngPb.AllocHost)
+	// todo convertConfig
+	return nil
 
-	tiupConfig := new(spec.Specification)
-
-	dataDir := filepath.Join(hosts[0].Disk.Path, "data")
-	deployDir := filepath.Join(hosts[0].Disk.Path, "deploy")
-	// Deal with Global Settings
-	tiupConfig.GlobalOptions.DataDir = dataDir
-	tiupConfig.GlobalOptions.DeployDir = deployDir
-	tiupConfig.GlobalOptions.User = "tidb"
-	tiupConfig.GlobalOptions.SSHPort = 22
-	tiupConfig.GlobalOptions.Arch = "amd64"
-	tiupConfig.GlobalOptions.LogDir = "/tidb-log"
-	// Deal with Promethus, AlertManger, Grafana
-	tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
-		Host: hosts[0].Ip,
-	})
-	tiupConfig.Alertmanagers = append(tiupConfig.Alertmanagers, &spec.AlertmanagerSpec{
-		Host: hosts[0].Ip,
-	})
-	tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
-		Host: hosts[0].Ip,
-	})
-	// Deal with PDServers, TiDBServers, TiKVServers
-	for _, v := range hosts {
-		tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
-			Host: v.Ip,
-		})
-		tiupConfig.TiDBServers = append(tiupConfig.TiDBServers, &spec.TiDBSpec{
-			Host: v.Ip,
-		})
-		tiupConfig.TiKVServers = append(tiupConfig.TiKVServers, &spec.TiKVSpec{
-			Host: v.Ip,
-		})
-	}
-	return tiupConfig
+	//hosts := resource.([]*mngPb.AllocHost)
+	//
+	//tiupConfig := new(spec.Specification)
+	//
+	//dataDir := filepath.Join(hosts[0].Disk.Path, "data")
+	//deployDir := filepath.Join(hosts[0].Disk.Path, "deploy")
+	//// Deal with Global Settings
+	//tiupConfig.GlobalOptions.DataDir = dataDir
+	//tiupConfig.GlobalOptions.DeployDir = deployDir
+	//tiupConfig.GlobalOptions.User = "tidb"
+	//tiupConfig.GlobalOptions.SSHPort = 22
+	//tiupConfig.GlobalOptions.Arch = "amd64"
+	//tiupConfig.GlobalOptions.LogDir = "/tidb-log"
+	//// Deal with Promethus, AlertManger, Grafana
+	//tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
+	//	Host: hosts[0].Ip,
+	//})
+	//tiupConfig.Alertmanagers = append(tiupConfig.Alertmanagers, &spec.AlertmanagerSpec{
+	//	Host: hosts[0].Ip,
+	//})
+	//tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
+	//	Host: hosts[0].Ip,
+	//})
+	//// Deal with PDServers, TiDBServers, TiKVServers
+	//for _, v := range hosts {
+	//	tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
+	//		Host: v.Ip,
+	//	})
+	//	tiupConfig.TiDBServers = append(tiupConfig.TiDBServers, &spec.TiDBSpec{
+	//		Host: v.Ip,
+	//	})
+	//	tiupConfig.TiKVServers = append(tiupConfig.TiKVServers, &spec.TiKVSpec{
+	//		Host: v.Ip,
+	//	})
+	//}
+	//return tiupConfig
 }
 
 func buildConfig(task *TaskEntity, context *FlowContext) bool {

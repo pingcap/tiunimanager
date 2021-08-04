@@ -2,7 +2,7 @@ package domain
 
 import (
 	"encoding/json"
-	"github.com/pingcap/ticp/knowledge"
+	"github.com/pingcap/ticp/library/knowledge"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"time"
 )

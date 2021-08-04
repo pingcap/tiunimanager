@@ -3,8 +3,8 @@ package userapi
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/ticp/micro-api/controller"
-	"github.com/pingcap/ticp/micro-manager/client"
-	"github.com/pingcap/ticp/micro-manager/proto"
+	"github.com/pingcap/ticp/micro-cluster/client"
+	"github.com/pingcap/ticp/micro-cluster/proto"
 	"net/http"
 )
 
@@ -28,7 +28,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	loginReq := manager.LoginRequest{AccountName: req.UserName, Password: req.UserPassword}
+	loginReq := cluster.LoginRequest{AccountName: req.UserName, Password: req.UserPassword}
 	result, err := client.ManagerClient.Login(c, &loginReq)
 
 	if err == nil {
@@ -62,7 +62,7 @@ func Logout(c *gin.Context) {
 		return
 	}
 
-	logoutReq := manager.LogoutRequest{TokenString: c.GetHeader("Token")}
+	logoutReq := cluster.LogoutRequest{TokenString: c.GetHeader("Token")}
 	result, err := client.ManagerClient.Logout(c, &logoutReq)
 
 	if err == nil {

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "./;manager";
+option go_package = "./;cluster";
 
 message ResponseStatus {
     int32 code = 1;

@@ -3,11 +3,10 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	libtiup2 "github.com/pingcap/ticp/library/secondparty/libtiup"
+	tenant "github.com/pingcap/ticp/micro-cluster/service/tenant/adapt"
 	"log"
 	"net/http"
-
-	"github.com/pingcap/ticp/micro-cluster/service/clustermanage"
-	"github.com/pingcap/ticp/micro-cluster/service/clusteroperate"
 
 	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
@@ -20,8 +19,6 @@ import (
 	"github.com/pingcap/ticp/config"
 	cluster "github.com/pingcap/ticp/micro-cluster/proto"
 	"github.com/pingcap/ticp/micro-cluster/service"
-	"github.com/pingcap/ticp/micro-cluster/service/clusteroperate/libtiup"
-	managerclient "github.com/pingcap/ticp/micro-manager/client"
 	dbclient "github.com/pingcap/ticp/micro-metadb/client"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -43,8 +40,7 @@ func initLogger() {
 }
 
 func initClusterOperator() {
-	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup", "")
-	clustermanage.Operator = new(clusteroperate.TiUPOperator)
+	libtiup2.MicroInit("./tiupmgr/tiupmgr", "tiup", "")
 }
 
 func initService() {
@@ -54,21 +50,35 @@ func initService() {
 		return
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
-	srv := micro.NewService(
+	srv1 := micro.NewService(
 		micro.Name(service.TiCPClusterServiceName),
 		micro.WrapHandler(prometheus.NewHandlerWrapper()),
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 	)
-	srv.Init()
+	srv1.Init()
 
-	cluster.RegisterClusterServiceHandler(srv.Server(), new(service.ClusterServiceHandler))
+	cluster.RegisterClusterServiceHandler(srv1.Server(), new(service.ClusterServiceHandler))
 
-	if err := srv.Run(); err != nil {
+	if err := srv1.Run(); err != nil {
 		log.Fatal(err)
 	}
 
+	srv2 := micro.NewService(
+		micro.Name(service.TiCPManagerServiceName),
+		micro.WrapHandler(prometheus.NewHandlerWrapper()),
+		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
+		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
+		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+	)
+	srv2.Init()
+
+	cluster.RegisterTiCPManagerServiceHandler(srv2.Server(), new(service.ManagerServiceHandler))
+
+	if err := srv2.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func initPrometheus() {
@@ -83,6 +93,10 @@ func initPrometheus() {
 }
 
 func initClient() {
-	managerclient.InitManagerClient()
 	dbclient.InitDBClient()
 }
+
+func initPort() {
+	tenant.InjectionMetaDbRepo()
+}
+

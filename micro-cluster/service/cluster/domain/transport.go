@@ -249,21 +249,21 @@ func unzipDir(zipFile string, dir string) error {
 			os.MkdirAll(filepath.Dir(path), 0755)
 			fDest, err := os.Create(path)
 			if err != nil {
-				log.Printf("unzip Create failed: %s", err.Error())
+				log.Errorf("unzip Create failed: %s", err.Error())
 				return
 			}
 			defer fDest.Close()
 
 			fSrc, err := f.Open()
 			if err != nil {
-				log.Printf("unzip Open failed: %s", err.Error())
+				log.Errorf("unzip Open failed: %s", err.Error())
 				return
 			}
 			defer fSrc.Close()
 
 			_, err = io.Copy(fDest, fSrc)
 			if err != nil {
-				log.Printf("unzip Copy failed: %s", err.Error())
+				log.Errorf("unzip Copy failed: %s", err.Error())
 				return
 			}
 		}()

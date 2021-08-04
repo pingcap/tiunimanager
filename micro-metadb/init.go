@@ -107,6 +107,7 @@ func initTables() error {
 		&models.Host{},
 		&models.Disk{},
 		&models.TiupTask{},
+		&models.TransportRecord{},
 	)
 	return err
 }

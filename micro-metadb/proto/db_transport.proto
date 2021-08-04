@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option go_package = "./;db";
+
+message TransportRecordDTO {
+	string ID = 1;
+	string ClusterId = 2;
+	string TransportType = 3;
+	string FilePath = 4;
+	string TenantId = 5;
+	string Status = 6;
+	int64 StratTime = 7;
+	int64 EndTime   = 8;
+}
+
+message DBCreateTransportRecordRequest {
+	TransportRecordDTO record = 1;
+}
+
+message DBCreateTransportRecordResponse {
+	int32 errCode = 1;
+	string errStr = 2;
+	string id = 3;
+}
+
+message DBUpdateTransportRecordRequest {
+	TransportRecordDTO record = 1;
+}
+
+message DBUpdateTransportRecordResponse {
+	int32 errCode = 1;
+	string errStr = 2;
+}
+
+message DBFindTransportRecordByIDRequest {
+	TransportRecordDTO record = 1;
+}
+
+message DBFindTransportRecordByIDResponse {
+	int32 errCode = 1;
+	string errStr = 2;
+	TransportRecordDTO record = 3;
+}
+

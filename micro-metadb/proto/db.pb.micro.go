@@ -69,6 +69,10 @@ type TiCPDBService interface {
 	UpdateTask(ctx context.Context, in *DBUpdateTaskRequest, opts ...client.CallOption) (*DBUpdateTaskResponse, error)
 	LoadFlow(ctx context.Context, in *DBLoadFlowRequest, opts ...client.CallOption) (*DBLoadFlowResponse, error)
 	LoadTask(ctx context.Context, in *DBLoadTaskRequest, opts ...client.CallOption) (*DBLoadTaskResponse, error)
+	// DataTransport
+	CreateTransportRecord(ctx context.Context, in *DBCreateTransportRecordRequest, opts ...client.CallOption) (*DBCreateTransportRecordResponse, error)
+	UpdateTransportRecord(ctx context.Context, in *DBUpdateTransportRecordRequest, opts ...client.CallOption) (*DBUpdateTransportRecordResponse, error)
+	FindTrasnportRecordByID(ctx context.Context, in *DBFindTransportRecordByIDRequest, opts ...client.CallOption) (*DBFindTransportRecordByIDResponse, error)
 }
 
 type tiCPDBService struct {
@@ -363,6 +367,36 @@ func (c *tiCPDBService) LoadTask(ctx context.Context, in *DBLoadTaskRequest, opt
 	return out, nil
 }
 
+func (c *tiCPDBService) CreateTransportRecord(ctx context.Context, in *DBCreateTransportRecordRequest, opts ...client.CallOption) (*DBCreateTransportRecordResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.CreateTransportRecord", in)
+	out := new(DBCreateTransportRecordResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) UpdateTransportRecord(ctx context.Context, in *DBUpdateTransportRecordRequest, opts ...client.CallOption) (*DBUpdateTransportRecordResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.UpdateTransportRecord", in)
+	out := new(DBUpdateTransportRecordResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiCPDBService) FindTrasnportRecordByID(ctx context.Context, in *DBFindTransportRecordByIDRequest, opts ...client.CallOption) (*DBFindTransportRecordByIDResponse, error) {
+	req := c.c.NewRequest(c.name, "TiCPDBService.FindTrasnportRecordByID", in)
+	out := new(DBFindTransportRecordByIDResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for TiCPDBService service
 
 type TiCPDBServiceHandler interface {
@@ -399,6 +433,10 @@ type TiCPDBServiceHandler interface {
 	UpdateTask(context.Context, *DBUpdateTaskRequest, *DBUpdateTaskResponse) error
 	LoadFlow(context.Context, *DBLoadFlowRequest, *DBLoadFlowResponse) error
 	LoadTask(context.Context, *DBLoadTaskRequest, *DBLoadTaskResponse) error
+	// DataTransport
+	CreateTransportRecord(context.Context, *DBCreateTransportRecordRequest, *DBCreateTransportRecordResponse) error
+	UpdateTransportRecord(context.Context, *DBUpdateTransportRecordRequest, *DBUpdateTransportRecordResponse) error
+	FindTrasnportRecordByID(context.Context, *DBFindTransportRecordByIDRequest, *DBFindTransportRecordByIDResponse) error
 }
 
 func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, opts ...server.HandlerOption) error {
@@ -431,6 +469,9 @@ func RegisterTiCPDBServiceHandler(s server.Server, hdlr TiCPDBServiceHandler, op
 		UpdateTask(ctx context.Context, in *DBUpdateTaskRequest, out *DBUpdateTaskResponse) error
 		LoadFlow(ctx context.Context, in *DBLoadFlowRequest, out *DBLoadFlowResponse) error
 		LoadTask(ctx context.Context, in *DBLoadTaskRequest, out *DBLoadTaskResponse) error
+		CreateTransportRecord(ctx context.Context, in *DBCreateTransportRecordRequest, out *DBCreateTransportRecordResponse) error
+		UpdateTransportRecord(ctx context.Context, in *DBUpdateTransportRecordRequest, out *DBUpdateTransportRecordResponse) error
+		FindTrasnportRecordByID(ctx context.Context, in *DBFindTransportRecordByIDRequest, out *DBFindTransportRecordByIDResponse) error
 	}
 	type TiCPDBService struct {
 		tiCPDBService
@@ -553,4 +594,16 @@ func (h *tiCPDBServiceHandler) LoadFlow(ctx context.Context, in *DBLoadFlowReque
 
 func (h *tiCPDBServiceHandler) LoadTask(ctx context.Context, in *DBLoadTaskRequest, out *DBLoadTaskResponse) error {
 	return h.TiCPDBServiceHandler.LoadTask(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) CreateTransportRecord(ctx context.Context, in *DBCreateTransportRecordRequest, out *DBCreateTransportRecordResponse) error {
+	return h.TiCPDBServiceHandler.CreateTransportRecord(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) UpdateTransportRecord(ctx context.Context, in *DBUpdateTransportRecordRequest, out *DBUpdateTransportRecordResponse) error {
+	return h.TiCPDBServiceHandler.UpdateTransportRecord(ctx, in, out)
+}
+
+func (h *tiCPDBServiceHandler) FindTrasnportRecordByID(ctx context.Context, in *DBFindTransportRecordByIDRequest, out *DBFindTransportRecordByIDResponse) error {
+	return h.TiCPDBServiceHandler.FindTrasnportRecordByID(ctx, in, out)
 }

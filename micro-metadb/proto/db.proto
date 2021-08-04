@@ -5,6 +5,7 @@ import "db_host.proto";
 import "db_cluster.proto";
 import "db_tiup.proto";
 import "db_task.proto";
+import "db_transport.proto";
 
 option go_package = "./;db";
 
@@ -47,4 +48,9 @@ service TiCPDBService {
 	rpc UpdateTask(DBUpdateTaskRequest) returns (DBUpdateTaskResponse);
 	rpc LoadFlow(DBLoadFlowRequest) returns (DBLoadFlowResponse);
 	rpc LoadTask(DBLoadTaskRequest) returns (DBLoadTaskResponse);
+
+	// DataTransport
+	rpc CreateTransportRecord(DBCreateTransportRecordRequest) returns (DBCreateTransportRecordResponse);
+    rpc UpdateTransportRecord(DBUpdateTransportRecordRequest) returns (DBUpdateTransportRecordResponse);
+    rpc FindTrasnportRecordByID(DBFindTransportRecordByIDRequest) returns (DBFindTransportRecordByIDResponse);
 }

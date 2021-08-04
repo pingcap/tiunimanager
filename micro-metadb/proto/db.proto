@@ -24,7 +24,9 @@ service TiCPDBService {
 	rpc RemoveHostsInBatch(DBRemoveHostsInBatchRequest) returns (DBRemoveHostsInBatchResponse);
 	rpc ListHost(DBListHostsRequest) returns (DBListHostsResponse);
 	rpc CheckDetails(DBCheckDetailsRequest) returns (DBCheckDetailsResponse);
-	rpc AllocHosts(DBAllocHostsRequest) returns (DBAllocHostResponse);
+	rpc PreAllocHosts(DBPreAllocHostsRequest) returns (DBPreAllocHostsResponse);
+	rpc LockHosts(DBLockHostsRequest) returns (DBLockHostsResponse);
+	rpc GetFailureDomain(DBGetFailureDomainRequest) returns (DBGetFailureDomainResponse);
 
 	// Cluster
 	rpc CreateCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);

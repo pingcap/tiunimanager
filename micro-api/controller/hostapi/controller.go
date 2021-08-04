@@ -16,6 +16,7 @@ import (
 	"github.com/pingcap/ticp/micro-api/controller"
 	"github.com/pingcap/ticp/micro-manager/client"
 	manager "github.com/pingcap/ticp/micro-manager/proto"
+	"github.com/pingcap/ticp/micro-metadb/service"
 	"google.golang.org/grpc/codes"
 )
 
@@ -66,6 +67,7 @@ func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
+	dst.Spec = src.Spec
 	dst.Nic = src.Nic
 	dst.Dc = src.Dc
 	dst.Az = src.Az
@@ -83,6 +85,10 @@ func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	}
 }
 
+func genHostSpec(cpuCores int32, mem int32) string {
+	return fmt.Sprintf("%dU%dG", cpuCores, mem)
+}
+
 func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
@@ -90,6 +96,8 @@ func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
 	dst.Kernel = src.Kernel
 	dst.CpuCores = src.CpuCores
 	dst.Memory = src.Memory
+	dst.Spec = genHostSpec(src.CpuCores, src.Memory)
+	dst.Nic = src.Nic
 	dst.Dc = src.Dc
 	dst.Az = src.Az
 	dst.Rack = src.Rack
@@ -130,7 +138,7 @@ func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *manager.ImportHostsI
 // @Tags resource
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Param Token header string true "登录token"
 // @Param host body HostInfo true "待导入的主机信息"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /host [post]
@@ -237,7 +245,7 @@ func ImportHosts(c *gin.Context) {
 // @Tags resource
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Param Token header string true "登录token"
 // @Param purpose query string false "查询特定用途的主机列表"
 // @Param status query string false "查询特定状态的主机列表"
 // @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
@@ -285,7 +293,7 @@ func ListHost(c *gin.Context) {
 // @Tags resource
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Param Token header string true "登录token"
 // @Param hostId path string true "主机ID"
 // @Success 200 {object} controller.CommonResult{data=HostInfo}
 // @Router /host/{hostId} [get]
@@ -317,7 +325,7 @@ func HostDetails(c *gin.Context) {
 // @Tags resource
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Param Token header string true "登录token"
 // @Param hostId path string true "待删除的主机ID"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /host/{hostId} [delete]
@@ -364,7 +372,7 @@ func detectDuplicateElement(hostIds []string) (string, bool) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param hostId body []string true "待删除的主机ID数组"
+// @Param hostIds body []string true "待删除的主机ID数组"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /hosts/ [delete]
 func RemoveHosts(c *gin.Context) {
@@ -425,18 +433,120 @@ func DownloadHostTemplateFile(c *gin.Context) {
 	c.File(filePath)
 }
 
-// QueryZoneHostStock 查询各可用区的主机规格库存
-// @Summary 查询各可用区的主机规格库存
-// @Description 查询各可用区的主机规格库存
+func copyAllocToReq(src []Allocation, dst *[]*manager.AllocationReq) {
+	for _, req := range src {
+		*dst = append(*dst, &manager.AllocationReq{
+			FailureDomain: req.FailureDomain,
+			CpuCores:      req.CpuCores,
+			Memory:        req.Memory,
+			Count:         req.Count,
+		})
+	}
+}
+
+func copyAllocFromRsp(src []*manager.AllocHost, dst *[]AllocateRsp) {
+	for i, host := range src {
+		*dst = append(*dst, AllocateRsp{
+			HostName: host.HostName,
+			Ip:       host.Ip,
+			CpuCores: host.CpuCores,
+			Memory:   host.Memory,
+		})
+		(*dst)[i].Disk.DiskId = host.Disk.DiskId
+		(*dst)[i].Disk.Name = host.Disk.Name
+		(*dst)[i].Disk.Path = host.Disk.Path
+		(*dst)[i].Disk.Capacity = host.Disk.Capacity
+		(*dst)[i].Disk.Status = host.Disk.Status
+	}
+}
+
+// AllocHosts 分配主机接口
+// @Summary 分配主机接口
+// @Description 按指定的配置分配主机资源
 // @Tags resource
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
-// @Success 200 {object} controller.CommonResult{data=[]ZoneHostStockRsp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /hosts/stocks [post]
-func QueryZoneHostStock(c *gin.Context) {
+// @Param Token header string true "登录token"
+// @Param Alloc body AllocHostsReq true "主机分配请求"
+// @Success 200 {object} controller.CommonResult{data=AllocHostsRsp}
+// @Router /allochosts [post]
+func AllocHosts(c *gin.Context) {
+	var allocation AllocHostsReq
+	if err := c.ShouldBindJSON(&allocation); err != nil {
+		_ = c.Error(err)
+		return
+	}
 
+	allocReq := manager.AllocHostsRequest{}
+	copyAllocToReq(allocation.PdReq, &allocReq.PdReq)
+	copyAllocToReq(allocation.TidbReq, &allocReq.TidbReq)
+	copyAllocToReq(allocation.TikvReq, &allocReq.TikvReq)
+	//fmt.Println(allocReq.PdReq, allocReq.TidbReq, allocReq.TikvReq)
+	rsp, err := client.ManagerClient.AllocHosts(c, &allocReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
+	}
+
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+
+	var res AllocHostsRsp
+	copyAllocFromRsp(rsp.PdHosts, &res.PdHosts)
+	copyAllocFromRsp(rsp.TidbHosts, &res.TidbHosts)
+	copyAllocFromRsp(rsp.TikvHosts, &res.TikvHosts)
+
+	c.JSON(http.StatusOK, controller.Success(res))
+}
+
+// GetFailureDomain 查询指定故障域里的资源情况
+// @Summary 查询指定故障域的资源
+// @Description 查询指定故障域的资源情况
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Param Token header string true "登录token"
+// @Param failureDomainType query int false "指定故障域类型" Enums(1, 2, 3)
+// @Success 200 {object} controller.ResultWithPage{data=[]DomainResource}
+// @Router /failuredomains [get]
+func GetFailureDomain(c *gin.Context) {
+	var domain int
+	domainStr := c.Query("failureDomainType")
+	if domainStr == "" {
+		domain = int(service.ZONE)
+	}
+	domain, err := strconv.Atoi(domainStr)
+	if err != nil || domain > int(service.RACK) || domain < int(service.DATACENTER) {
+		errmsg := fmt.Sprintf("Input domainType [%s] Invalid: %v", c.Query("failureDomainType"), err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
+		return
+	}
+
+	GetDoaminReq := manager.GetFailureDomainRequest{
+		FailureDomainType: int32(domain),
+	}
+
+	rsp, err := client.ManagerClient.GetFailureDomain(c, &GetDoaminReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
+	}
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+	var res DomainResourceRsp
+	for _, v := range rsp.FdList {
+		res.Resources = append(res.Resources, DomainResource{
+			FailureDomain: service.GetDomainNameFromCode(v.FailureDomain),
+			DomainCode:    v.FailureDomain,
+			Purpose:       v.Purpose,
+			Spec:          v.Spec,
+			SpecCode:      v.Spec,
+			Count:         v.Count,
+		})
+	}
+	c.JSON(http.StatusOK, controller.SuccessWithPage(res, controller.Page{Page: 1, PageSize: 20, Total: len(res.Resources)}))
 }

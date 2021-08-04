@@ -81,6 +81,10 @@ func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.V
 	return nil
 }
 
+func InitLogger() {
+	host.InitLogger()
+}
+
 func (*ManagerServiceHandler) ImportHost(ctx context.Context, in *manager.ImportHostRequest, out *manager.ImportHostResponse) error {
 	return host.ImportHost(ctx, in, out)
 }
@@ -107,4 +111,8 @@ func (*ManagerServiceHandler) CheckDetails(ctx context.Context, in *manager.Chec
 
 func (*ManagerServiceHandler) AllocHosts(ctx context.Context, in *manager.AllocHostsRequest, out *manager.AllocHostResponse) error {
 	return host.AllocHosts(ctx, in, out)
+}
+
+func (*ManagerServiceHandler) GetFailureDomain(ctx context.Context, in *manager.GetFailureDomainRequest, out *manager.GetFailureDomainResponse) error {
+	return host.GetFailureDomain(ctx, in, out)
 }

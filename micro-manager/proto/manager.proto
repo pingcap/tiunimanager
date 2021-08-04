@@ -19,5 +19,6 @@ service TiCPManagerService {
 	rpc ListHost(ListHostsRequest) returns (ListHostsResponse);
 	rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
 	rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);
+	rpc GetFailureDomain(GetFailureDomainRequest) returns (GetFailureDomainResponse);
 }
 

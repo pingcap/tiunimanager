@@ -90,6 +90,9 @@ func Route(g *gin.Engine) {
 			host.DELETE("host/:hostId", hostapi.RemoveHost)
 			host.DELETE("hosts", hostapi.RemoveHosts)
 			host.GET("download_template", hostapi.DownloadHostTemplateFile)
+			host.GET("failuredomains", hostapi.GetFailureDomain)
+			// Add allochosts API for debugging, not release.
+			host.POST("allochosts", hostapi.AllocHosts)
 		}
 	}
 

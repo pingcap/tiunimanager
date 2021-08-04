@@ -12,15 +12,15 @@ func InitForMonolith() {
 	LocalConfig[KEY_CERTIFICATES] = Instance {
 		KEY_CERTIFICATES,
 		Certificates{
-			CrtFilePath: "../library/firstparty/config/example/server.crt",
-			KeyFilePath: "../library/firstparty/config/example/server.key",
+			CrtFilePath: "library/firstparty/config/example/server.crt",
+			KeyFilePath: "library/firstparty/config/example/server.key",
 		},
 		0,
 	}
 
 	LocalConfig[KEY_SQLITE_FILE_PATH] = CreateInstance(KEY_SQLITE_FILE_PATH, "./tiem.sqlite.db")
 
-	LocalConfig[KEY_API_LOG] = CreateInstance(KEY_API_PORT, Log {
+	LocalConfig[KEY_API_LOG] = CreateInstance(KEY_API_LOG, Log {
 		//LogLevel      string
 		LogLevel: "debug",
 		LogOutput: "console,file",
@@ -72,7 +72,19 @@ func InitForTiUPCluster() {
 }
 
 func GetLogConfig() Log {
-	return Log{}
+	// todo : get from LocalConfig
+	return  Log {
+		LogLevel: "debug",
+		LogOutput: "console,file",
+		LogFilePath: "../logs/tiem.log",
+		LogMaxSize: 512,
+		LogMaxAge: 30,
+		LogMaxBackups: 0,
+		LogLocalTime: true,
+		LogCompress: true,
+		RecordSysName: "tiem",
+		RecordModName:"example",
+	}
 }
 
 func GetSqliteFilePath() string {

@@ -2,8 +2,8 @@ package route
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/addon/logger"
-	"github.com/pingcap/ticp/addon/tracer"
+	"github.com/pingcap/ticp/library/thirdparty/logger"
+	"github.com/pingcap/ticp/library/thirdparty/tracer"
 	"github.com/pingcap/ticp/micro-api/controller"
 	"github.com/pingcap/ticp/micro-api/controller/clusterapi"
 	"github.com/pingcap/ticp/micro-api/controller/hostapi"

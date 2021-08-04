@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap/ticp/library/thirdparty/logger"
 	"io"
 	"io/ioutil"
 	"os"
@@ -14,7 +15,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pingcap/ticp/addon/logger"
 	"github.com/pingcap/ticp/micro-metadb/client"
 	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
 )

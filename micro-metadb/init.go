@@ -5,14 +5,16 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"github.com/asim/go-micro/plugins/registry/etcd/v3"
+	"github.com/asim/go-micro/v3/registry"
+	"github.com/pingcap/ticp/library/firstparty/config"
+	"github.com/pingcap/ticp/library/thirdparty/logger"
+	"github.com/pingcap/ticp/library/thirdparty/tracer"
 
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
 	"github.com/asim/go-micro/v3/transport"
-	"github.com/pingcap/ticp/addon/logger"
-	"github.com/pingcap/ticp/addon/tracer"
-	"github.com/pingcap/ticp/config"
 	"github.com/pingcap/ticp/micro-metadb/models"
 	db "github.com/pingcap/ticp/micro-metadb/proto"
 	"github.com/pingcap/ticp/micro-metadb/service"
@@ -25,18 +27,7 @@ import (
 var log *logger.LogRecord
 
 func initConfig() {
-	{
-		// only use to init the config
-		srv := micro.NewService(
-			config.GetMicroCliArgsOption(),
-		)
-		srv.Init()
-		err := config.Init()
-		if err != nil {
-			return
-		}
-		srv = nil
-	}
+	config.InitForMonolith()
 }
 
 func initLogger() {
@@ -59,6 +50,7 @@ func initService() {
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
 	srv.Init()
 
@@ -83,10 +75,6 @@ func initSqliteDB() {
 		log.Fatalf("database error %v", models.MetaDB.Error)
 	}
 	log.Info("sqlite.open success")
-
-	if models.MetaDB.Migrator().HasTable(&models.Tenant{}) {
-
-	}
 
 	initTables()
 
@@ -113,7 +101,6 @@ func initTables() error {
 		&models.ParametersRecordDO{},
 		&models.BackupRecordDO{},
 		&models.BackupRecordDO{},
-
 	)
 	return err
 }

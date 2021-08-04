@@ -2,14 +2,13 @@ package logger
 
 import (
 	"context"
+	config2 "github.com/pingcap/ticp/library/firstparty/config"
 	"io"
 	"os"
 	"path"
 	"runtime"
 	"strings"
 	"sync"
-
-	"github.com/pingcap/ticp/config"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -77,7 +76,7 @@ func newLogRecord() *LogRecord {
 	logger := log.New()
 
 	// Get global log configuration
-	conf := config.GetLogConfig()
+	conf := config2.GetLogConfig()
 
 	// Set log format
 	logger.SetFormatter(&log.JSONFormatter{})
@@ -109,7 +108,7 @@ func newLogRecord() *LogRecord {
 }
 
 // Log file output configuration
-func getFileOutput(conf config.Log) *lumberjack.Logger {
+func getFileOutput(conf config2.Log) *lumberjack.Logger {
 	logConfig := &lumberjack.Logger{
 		// Log output file path
 		Filename: conf.LogFilePath,

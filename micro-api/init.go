@@ -3,33 +3,26 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
+	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/transport"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/addon/tracer"
-	"github.com/pingcap/ticp/config"
+	"github.com/pingcap/ticp/library/firstparty/config"
+	"github.com/pingcap/ticp/library/thirdparty/tracer"
 	"github.com/pingcap/ticp/micro-api/route"
-	client "github.com/pingcap/ticp/micro-cluster/client"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/pingcap/ticp/micro-cluster/client"
 	"log"
-	"net/http"
 )
 
 var TiCPApiServiceName = "go.micro.ticp.api"
 
 func initConfig() {
-	{
-		// only use to init the config
-		srv := micro.NewService(
-			config.GetMicroCliArgsOption(),
-		)
-		srv.Init()
-		config.Init()
-		srv = nil
-	}
+	config.InitForMonolith()
 }
+
 func initService() {
 	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
 	if err != nil {
@@ -44,6 +37,7 @@ func initService() {
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
 	srv.Init()
 
@@ -57,17 +51,6 @@ func initService() {
 func initClient() {
 	client.InitManagerClient()
 	client.InitClusterClient()
-}
-
-func initPrometheus() {
-	http.Handle("/metrics", promhttp.Handler())
-	go func() {
-		addr := fmt.Sprintf(":%d", config.GetPrometheusPort())
-		err := http.ListenAndServe(addr, nil)
-		if err != nil {
-			log.Fatal("promhttp ListenAndServe err:", err)
-		}
-	}()
 }
 
 func initGinEngine() {

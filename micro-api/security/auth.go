@@ -2,8 +2,8 @@ package security
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/micro-manager/client"
-	manager "github.com/pingcap/ticp/micro-manager/proto"
+	"github.com/pingcap/ticp/micro-cluster/client"
+	cluster "github.com/pingcap/ticp/micro-cluster/proto"
 	"net/http"
 )
 
@@ -24,7 +24,7 @@ func VerifyIdentity(c *gin.Context) {
 	}
 
 	path := c.Request.URL
-	req := manager.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
+	req := cluster.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
 
 	result, err := client.ManagerClient.VerifyIdentity(c, &req)
 	if err != nil {

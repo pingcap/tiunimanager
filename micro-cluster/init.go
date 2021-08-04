@@ -2,45 +2,36 @@ package main
 
 import (
 	"crypto/tls"
-	"fmt"
-	libtiup2 "github.com/pingcap/ticp/library/secondparty/libtiup"
-	tenant "github.com/pingcap/ticp/micro-cluster/service/tenant/adapt"
-	"log"
-	"net/http"
-
 	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
+	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
 	mlog "github.com/asim/go-micro/v3/logger"
+	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/transport"
-	mylogger "github.com/pingcap/ticp/addon/logger"
-	"github.com/pingcap/ticp/addon/tracer"
-	"github.com/pingcap/ticp/config"
+	"github.com/pingcap/ticp/library/firstparty/config"
+	"github.com/pingcap/ticp/library/secondparty/libtiup"
+	"github.com/pingcap/ticp/library/thirdparty/logger"
+	"github.com/pingcap/ticp/library/thirdparty/tracer"
 	cluster "github.com/pingcap/ticp/micro-cluster/proto"
 	"github.com/pingcap/ticp/micro-cluster/service"
+	"github.com/pingcap/ticp/micro-cluster/service/tenant/adapt"
 	dbclient "github.com/pingcap/ticp/micro-metadb/client"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"log"
 )
 
 func initConfig() {
-	{
-		// only use to init the config
-		srv := micro.NewService(
-			config.GetMicroCliArgsOption(),
-		)
-		srv.Init()
-		config.Init()
-		srv = nil
-	}
+	config.InitForMonolith()
 }
+
 func initLogger() {
 	// log
-	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(mylogger.WithContext(nil)))
+	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(logger.WithContext(nil)))
 }
 
 func initClusterOperator() {
-	libtiup2.MicroInit("./tiupmgr/tiupmgr", "tiup", "")
+	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup", "")
 }
 
 func initService() {
@@ -56,6 +47,7 @@ func initService() {
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
 	srv1.Init()
 
@@ -71,6 +63,7 @@ func initService() {
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
 	srv2.Init()
 
@@ -81,22 +74,11 @@ func initService() {
 	}
 }
 
-func initPrometheus() {
-	http.Handle("/metrics", promhttp.Handler())
-	go func() {
-		addr := fmt.Sprintf(":%d", config.GetPrometheusPort())
-		err := http.ListenAndServe(addr, nil)
-		if err != nil {
-			mlog.Fatal("promhttp ListenAndServe err:", err)
-		}
-	}()
-}
-
 func initClient() {
 	dbclient.InitDBClient()
 }
 
 func initPort() {
-	tenant.InjectionMetaDbRepo()
+	adapt.InjectionMetaDbRepo()
 }
 

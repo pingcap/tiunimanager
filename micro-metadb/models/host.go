@@ -3,10 +3,10 @@ package models
 import (
 	"errors"
 	"fmt"
+	"github.com/pingcap/ticp/library/thirdparty/logger"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pingcap/ticp/addon/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"

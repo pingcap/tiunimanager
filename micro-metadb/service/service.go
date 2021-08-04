@@ -1,6 +1,8 @@
 package service
 
-import "github.com/pingcap/ticp/addon/logger"
+import (
+	"github.com/pingcap/ticp/library/thirdparty/logger"
+)
 
 var TiCPMetaDBServiceName = "go.micro.ticp.db"
 

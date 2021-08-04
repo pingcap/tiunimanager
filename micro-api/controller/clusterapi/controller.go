@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/pingcap/ticp/knowledge"
+	"github.com/pingcap/ticp/library/knowledge"
 	"github.com/pingcap/ticp/micro-api/controller"
 	"github.com/pingcap/ticp/micro-cluster/client"
 	cluster "github.com/pingcap/ticp/micro-cluster/proto"

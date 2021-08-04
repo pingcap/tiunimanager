@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/pingcap/ticp/knowledge"
+	"github.com/pingcap/ticp/library/knowledge"
 	"github.com/pingcap/ticp/micro-cluster/service/cluster/domain"
 	"github.com/pingcap/ticp/micro-metadb/client"
 	db "github.com/pingcap/ticp/micro-metadb/proto"

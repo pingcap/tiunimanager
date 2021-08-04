@@ -3,10 +3,10 @@ package host
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap/ticp/library/thirdparty/logger"
 
-	"github.com/pingcap/ticp/addon/logger"
 	hostPb "github.com/pingcap/ticp/micro-cluster/proto"
-	dbClient "github.com/pingcap/ticp/micro-metadb/client"
+	"github.com/pingcap/ticp/micro-metadb/client"
 	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
 	"google.golang.org/grpc/codes"
 )
@@ -72,7 +72,7 @@ func ImportHost(ctx context.Context, in *hostPb.ImportHostRequest, out *hostPb.I
 	req.Host = new(dbPb.DBHostInfoDTO)
 	CopyHostToDBReq(in.Host, req.Host)
 	var err error
-	rsp, err := dbClient.DBClient.AddHost(ctx, &req)
+	rsp, err := client.DBClient.AddHost(ctx, &req)
 	if err != nil {
 		log.Errorf("import host %s error, %v", req.Host.Ip, err)
 		return err
@@ -98,7 +98,7 @@ func ImportHostsInBatch(ctx context.Context, in *hostPb.ImportHostsInBatchReques
 		req.Hosts = append(req.Hosts, &host)
 	}
 	var err error
-	rsp, err := dbClient.DBClient.AddHostsInBatch(ctx, &req)
+	rsp, err := client.DBClient.AddHostsInBatch(ctx, &req)
 	if err != nil {
 		log.Errorf("import hosts in batch error, %v", err)
 		return err
@@ -119,7 +119,7 @@ func ImportHostsInBatch(ctx context.Context, in *hostPb.ImportHostsInBatchReques
 func RemoveHost(ctx context.Context, in *hostPb.RemoveHostRequest, out *hostPb.RemoveHostResponse) error {
 	var req dbPb.DBRemoveHostRequest
 	req.HostId = in.HostId
-	rsp, err := dbClient.DBClient.RemoveHost(ctx, &req)
+	rsp, err := client.DBClient.RemoveHost(ctx, &req)
 	if err != nil {
 		log.Errorf("remove host %s error, %v", req.HostId, err)
 		return err
@@ -139,7 +139,7 @@ func RemoveHost(ctx context.Context, in *hostPb.RemoveHostRequest, out *hostPb.R
 func RemoveHostsInBatch(ctx context.Context, in *hostPb.RemoveHostsInBatchRequest, out *hostPb.RemoveHostsInBatchResponse) error {
 	var req dbPb.DBRemoveHostsInBatchRequest
 	req.HostIds = in.HostIds
-	rsp, err := dbClient.DBClient.RemoveHostsInBatch(ctx, &req)
+	rsp, err := client.DBClient.RemoveHostsInBatch(ctx, &req)
 	if err != nil {
 		log.Errorf("remove hosts in batch error, %v", err)
 		return err
@@ -160,7 +160,7 @@ func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.List
 	var req dbPb.DBListHostsRequest
 	req.Purpose = in.Purpose
 	req.Status = in.Status
-	rsp, err := dbClient.DBClient.ListHost(ctx, &req)
+	rsp, err := client.DBClient.ListHost(ctx, &req)
 	if err != nil {
 		log.Errorf("list hosts error, %v", err)
 		return err
@@ -186,7 +186,7 @@ func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.List
 func CheckDetails(ctx context.Context, in *hostPb.CheckDetailsRequest, out *hostPb.CheckDetailsResponse) error {
 	var req dbPb.DBCheckDetailsRequest
 	req.HostId = in.HostId
-	rsp, err := dbClient.DBClient.CheckDetails(ctx, &req)
+	rsp, err := client.DBClient.CheckDetails(ctx, &req)
 	if err != nil {
 		log.Errorf("check host %s details failed, %v", req.HostId, err)
 		return err
@@ -277,7 +277,7 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 	for {
 		for zone, specReqs := range zonesReqs {
 			for spec, req := range specReqs {
-				rsp, err := dbClient.DBClient.PreAllocHosts(ctx, req)
+				rsp, err := client.DBClient.PreAllocHosts(ctx, req)
 				// if PreAllocHosts failed, maybe no enough resources, no need to retry
 				if err != nil {
 					log.Errorf("pre-alloc %d hosts with spec(%du%dg) in %s failed, err: %v",
@@ -299,7 +299,7 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 			}
 		}
 
-		rsp, err := dbClient.DBClient.LockHosts(ctx, &lockReq)
+		rsp, err := client.DBClient.LockHosts(ctx, &lockReq)
 		if err != nil {
 			log.Warnf("lock pre-alloced resources failed in turn(%d), err: %v", retry, err)
 			return err
@@ -332,7 +332,7 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 func GetFailureDomain(ctx context.Context, in *hostPb.GetFailureDomainRequest, out *hostPb.GetFailureDomainResponse) error {
 	var req dbPb.DBGetFailureDomainRequest
 	req.FailureDomainType = in.FailureDomainType
-	rsp, err := dbClient.DBClient.GetFailureDomain(ctx, &req)
+	rsp, err := client.DBClient.GetFailureDomain(ctx, &req)
 	if err != nil {
 		log.Errorf("get failure domains error, %v", err)
 		return err

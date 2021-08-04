@@ -15,7 +15,7 @@ func (d *DBServiceHandler)CreateTransportRecord(ctx context.Context, in *db.DBCr
 		FilePath: in.GetRecord().GetFilePath(),
 		TenantId: in.GetRecord().GetTenantId(),
 		Status: in.GetRecord().GetStatus(),
-		StratTime: time.Unix(in.GetRecord().GetStratTime(), 0),
+		StartTime: time.Unix(in.GetRecord().GetStartTime(), 0),
 	}
 	id, err := models.CreateTransportRecord(record)
 	if err != nil {
@@ -45,7 +45,7 @@ func (d *DBServiceHandler)FindTrasnportRecordByID(ctx context.Context, in *db.DB
 		TenantId: record.TenantId,
 		FilePath: record.FilePath,
 		Status: record.Status,
-		StratTime: record.StratTime.Unix(),
+		StartTime: record.StartTime.Unix(),
 		EndTime: record.EndTime.Unix(),
 	}
 	out.Record = recordDTO

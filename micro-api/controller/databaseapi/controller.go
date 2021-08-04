@@ -6,6 +6,7 @@ import (
 	"github.com/pingcap/ticp/micro-cluster/client"
 	cluster "github.com/pingcap/ticp/micro-cluster/proto"
 	"net/http"
+	"time"
 )
 
 func ExportData(c *gin.Context) {
@@ -34,7 +35,7 @@ func ExportData(c *gin.Context) {
 		status := respDTO.GetRespStatus()
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, DataExportResp{
-			FlowId: respDTO.GetFlowId(),
+			RecordId: respDTO.GetRecordId(),
 		})
 
 		c.JSON(http.StatusOK, result)
@@ -57,7 +58,7 @@ func ImportData(c *gin.Context) {
 		ClusterId: req.ClusterId,
 		UserName: req.UserName,
 		Password: req.Password,
-		DataDir: req.DataDir,
+		FilePath: req.FilePath,
 	})
 
 	if err != nil {
@@ -66,7 +67,7 @@ func ImportData(c *gin.Context) {
 		status := respDTO.GetRespStatus()
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, DataImportResp{
-			FlowId: respDTO.GetFlowId(),
+			RecordId: respDTO.GetRecordId(),
 		})
 
 		c.JSON(http.StatusOK, result)
@@ -81,11 +82,28 @@ func DescribeDataTransport(c *gin.Context) {
 		return
 	}
 
-	//todo: call cluster api
+	operator := controller.GetOperator(c)
+	respDTO, err := client.ClusterClient.DescribeDataTransport(c, &cluster.DataTransportQueryRequest{
+		Operator: operator.ConvertToDTO(),
+		ClusterId: req.ClusterId,
+		RecordId: req.RecordId,
+	})
 
 	if err != nil {
-		// 处理异常
-	}
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	}else {
+		status := respDTO.GetRespStatus()
 
-	//c.JSON(http.StatusOK, controller.SuccessWithPage(instanceInfos, controller.Page{Page: req.Page, PageSize: req.PageSize, Total: len(instanceInfos)}))
+		result := controller.BuildCommonResult(int(status.Code), status.Message, DataTransportInfo{
+			RecordId: respDTO.GetTransportInfo().GetRecordId(),
+			ClusterId: respDTO.GetTransportInfo().GetClusterId(),
+			FilePath: respDTO.GetTransportInfo().GetFilePath(),
+			Status: respDTO.GetTransportInfo().GetStatus(),
+			TransportType: respDTO.GetTransportInfo().GetTransportType(),
+			StartTime: time.Unix(respDTO.GetTransportInfo().GetStartTime(), 0),
+			EndTime: time.Unix(respDTO.GetTransportInfo().GetEndTime(), 0),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
 }

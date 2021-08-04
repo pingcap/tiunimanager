@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func init() {
+func testInit() {
 	var err error
 	models.MetaDB, err = gorm.Open(sqlite.Open("../ticp.sqlite.db"), &gorm.Config{})
 	if err != nil {
@@ -28,6 +28,7 @@ func init() {
 }
 
 func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
+	testInit()
 	record := &db.TransportRecordDTO{
 		ID: "uuid-abcd",
 		ClusterId: "tc-123",
@@ -35,7 +36,7 @@ func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
 		FilePath: "/tmp/tiem/datatransport/tc-123/import",
 		TenantId: "admin",
 		Status: "Running",
-		StratTime: time.Now().Unix(),
+		StartTime: time.Now().Unix(),
 	}
 	in := &db.DBCreateTransportRecordRequest{
 		Record: record,
@@ -52,6 +53,7 @@ func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
 }
 
 func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
+	testInit()
 	record := &db.TransportRecordDTO{
 		ID: "uuid-abcd",
 		ClusterId: "tc-123",
@@ -73,6 +75,7 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 }
 
 func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
+	testInit()
 	record := &db.TransportRecordDTO{
 		ID: "uuid-abcd",
 	}

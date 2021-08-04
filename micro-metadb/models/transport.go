@@ -1,6 +1,8 @@
 package models
 
 import (
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -11,12 +13,19 @@ type TransportRecord struct {
 	FilePath 		string
 	TenantId       	string
 	Status 			string
-	StratTime 		time.Time
+	StartTime 		time.Time
 	EndTime			time.Time
 }
 
 func (rc *TransportRecord) TableName() string {
 	return "transport_record"
+}
+
+func (rc *TransportRecord) BeforeCreate(tx *gorm.DB) error {
+	if rc.ID == "" {
+		rc.ID = uuid.New().String()
+	}
+	return nil
 }
 
 func CreateTransportRecord(record *TransportRecord) (id string, err error) {

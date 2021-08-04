@@ -9,7 +9,7 @@ message TransportRecordDTO {
 	string FilePath = 4;
 	string TenantId = 5;
 	string Status = 6;
-	int64 StratTime = 7;
+	int64 StartTime = 7;
 	int64 EndTime   = 8;
 }
 

@@ -1,26 +1,23 @@
 package databaseapi
 
-import "time"
+import (
+	"time"
+)
 
 type DataExportResp struct {
-	FlowId        uint32     `json:"flowId"`//返回flow流程的id
+	RecordId        string     `json:"recordId"`
 }
 
 type DataImportResp struct {
-	FlowId        uint32     `json:"flowId"`//返回flow流程的id
+	RecordId        string     `json:"recordId"`
 }
 
-type TransportType uint32
-const (
-	TransportTypeExport TransportType = 0
-	TransportTypeImport TransportType = 1
-)
-
-type DataTransportTaskInfo struct {
-	FlowId        uint32           `json:"flowId"`
-	ClusterId     string           `json:"clusterId"`
-	TransportType TransportType    `json:"transportType"`
-	CreatedTime   time.Time        `json:"createdTime"`
-	Result        bool             `json:"result"`
-	DataDir       string           `json:"dataDir"`
+type DataTransportInfo struct {
+	RecordId        string      	`json:"recordId"`
+	ClusterId     	string			`json:"clusterId"`
+	TransportType 	string    		`json:"transportType"`
+	StartTime   	time.Time    	`json:"startTime"`
+	EndTime   		time.Time    	`json:"endTime"`
+	Status        	string         	`json:"status"`
+	FilePath       	string       	`json:"filePath"`
 }

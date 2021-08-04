@@ -2,9 +2,12 @@ package domain
 
 import (
 	"archive/zip"
+	ctx "context"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	proto "github.com/pingcap/ticp/micro-cluster/proto"
+	"github.com/pingcap/ticp/micro-metadb/client"
+	db "github.com/pingcap/ticp/micro-metadb/proto"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
@@ -18,22 +21,18 @@ const (
 	TransportTypeImport TransportType = "import"
 )
 
-type TransportRecord struct {
-	Id 				uint
-	ClusterId 		string
-	StartTime 		time.Time
-	EndTime 		time.Time
-	Operator 		Operator
-	TransportType   TransportType
-	FilePath 		string
-}
+const (
+	TransportStatusRunning string = "Running"
+	TransportStatusFailed string = "Failed"
+	TransportStatusSuccess string = "Success"
+)
 
 type ImportInfo struct {
 	ClusterId 		string
 	UserName		string
 	Password 		string
 	FilePath 		string
-	StartTime 		time.Time
+	RecordId		string
 }
 
 type ExportInfo struct {
@@ -41,7 +40,16 @@ type ExportInfo struct {
 	UserName		string
 	Password 		string
 	FileType 		string
-	StartTime 		time.Time
+	RecordId		string
+}
+
+type TransportInfo struct {
+	ClusterId 		string
+	RecordId		string
+	Status 			string
+	FilePath 		string
+	StartTime		int64
+	EndTime 		int64
 }
 
 /*
@@ -81,7 +89,7 @@ type TidbCfg struct {
 var contextDataTransportKey = "dataTransportInfo"
 var dataTransportDirPrefix = "/tmp/tiem/datatransport"
 
-func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, fileType string) (uint32, error) {
+func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, fileType string) (string, error) {
 	log.Infof("[domain] begin exportdata clusterId: %s, userName: %s, password: %s, fileType: %s", clusterId, userName, password, fileType)
 	defer log.Infof("[domain] end exportdata")
 	//todo: check operator
@@ -89,18 +97,34 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	log.Info(operator)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 
+	req := &db.DBCreateTransportRecordRequest{
+		Record: &db.TransportRecordDTO{
+			ClusterId: clusterId,
+			TenantId: operator.TenantId,
+			TransportType: string(TransportTypeExport),
+			FilePath: getDataTransportDir(clusterId, TransportTypeExport),
+			Status: TransportStatusRunning,
+			StartTime: time.Now().Unix(),
+			EndTime: time.Now().Unix(),
+		},
+	}
+	resp, err := client.DBClient.CreateTransportRecord(ctx.Background(), req)
+	if err != nil {
+		return "", err
+	}
+
 	info := &ExportInfo{
 		ClusterId: clusterId,
 		UserName: userName,
 		Password: password,//todo: need encrypt
 		FileType: fileType,
-		StartTime: time.Now(),
+		RecordId: resp.GetId(),
 	}
 
 	// Start the workflow
 	flow, err := CreateFlowWork(clusterId, FlowExportData)
 	if err != nil {
-		return 0, nil
+		return "", err
 	}
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.AddContext(contextDataTransportKey, info)
@@ -108,10 +132,10 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
 	ClusterRepo.Persist(clusterAggregation)
-	return uint32(flow.FlowWork.Id), nil
+	return info.RecordId, nil
 }
 
-func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, filepath string) (uint32, error) {
+func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, filepath string) (string, error) {
 	log.Infof("[domain] begin importdata clusterId: %s, userName: %s, password: %s, datadIR: %s", clusterId, userName, password, filepath)
 	defer log.Infof("[domain] end importdata")
 	//todo: check operator
@@ -119,18 +143,33 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	log.Info(operator)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 
+	req := &db.DBCreateTransportRecordRequest{
+		Record: &db.TransportRecordDTO{
+			ClusterId: clusterId,
+			TenantId: operator.TenantId,
+			TransportType: string(TransportTypeImport),
+			FilePath: getDataTransportDir(clusterId, TransportTypeImport),
+			Status: TransportStatusRunning,
+			StartTime: time.Now().Unix(),
+			EndTime: time.Now().Unix(),
+		},
+	}
+	resp, err := client.DBClient.CreateTransportRecord(ctx.Background(), req)
+	if err != nil {
+		return "", err
+	}
 	info := &ImportInfo{
 		ClusterId: clusterId,
 		UserName: userName,
 		Password: password,//todo: need encrypt
 		FilePath: filepath,
-		StartTime: time.Now(),
+		RecordId: resp.GetId(),
 	}
 
 	// Start the workflow
 	flow, err := CreateFlowWork(clusterId, FlowImportData)
 	if err != nil {
-		return 0, nil
+		return "", err
 	}
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.AddContext(contextDataTransportKey, info)
@@ -138,7 +177,29 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
 	ClusterRepo.Persist(clusterAggregation)
-	return uint32(flow.FlowWork.Id), nil
+	return info.RecordId, nil
+}
+
+func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId string) (*TransportInfo, error) {
+	info := &TransportInfo{}
+	req := &db.DBFindTransportRecordByIDRequest{
+		Record: &db.TransportRecordDTO{
+			ID: recordId,
+			ClusterId: clusterId,
+		},
+	}
+	resp, err := client.DBClient.FindTrasnportRecordByID(ctx.Background(), req)
+	if err != nil {
+		return info, err
+	}
+	info.RecordId = resp.GetRecord().GetID()
+	info.ClusterId = resp.GetRecord().GetClusterId()
+	info.Status = resp.GetRecord().GetStatus()
+	info.FilePath = resp.GetRecord().GetFilePath()
+	info.StartTime = resp.GetRecord().GetStartTime()
+	info.EndTime = resp.GetRecord().GetEndTime()
+
+	return info, nil
 }
 
 func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo) *DataImportConfig {
@@ -300,7 +361,24 @@ func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
 }
 
 func updateDataImportRecord(task *TaskEntity, context *FlowContext) bool {
-	//todo: implement
+	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	info := context.value(contextDataTransportKey).(ImportInfo)
+	cluster := clusterAggregation.Cluster
+
+	req := &db.DBUpdateTransportRecordRequest{
+		Record: &db.TransportRecordDTO{
+			ID: info.RecordId,
+			ClusterId: cluster.Id,
+			Status: TransportStatusSuccess,
+			EndTime: time.Now().Unix(),
+		},
+	}
+	resp, err := client.DBClient.UpdateTransportRecord(ctx.Background(), req)
+	if err != nil {
+		log.Errorf("[domain] update data transport record failed, %s", err.Error())
+		return false
+	}
+	log.Infof("[domain] update data transport record success, %v", resp)
 	return true
 }
 
@@ -318,7 +396,24 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 }
 
 func updateDataExportRecord(task *TaskEntity, context *FlowContext) bool {
-	//todo: implement
+	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	info := context.value(contextDataTransportKey).(ExportInfo)
+	cluster := clusterAggregation.Cluster
+
+	req := &db.DBUpdateTransportRecordRequest{
+		Record: &db.TransportRecordDTO{
+			ID: info.RecordId,
+			ClusterId: cluster.Id,
+			Status: TransportStatusSuccess,
+			EndTime: time.Now().Unix(),
+		},
+	}
+	resp, err := client.DBClient.UpdateTransportRecord(ctx.Background(), req)
+	if err != nil {
+		log.Errorf("[domain] update data transport record failed, %s", err.Error())
+		return false
+	}
+	log.Infof("[domain] update data transport record success, %v", resp)
 	return true
 }
 

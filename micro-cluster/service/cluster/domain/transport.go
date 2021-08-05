@@ -46,6 +46,7 @@ type ExportInfo struct {
 type TransportInfo struct {
 	ClusterId 		string
 	RecordId		string
+	TransportType 	string
 	Status 			string
 	FilePath 		string
 	StartTime		int64
@@ -193,6 +194,7 @@ func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId str
 		return info, err
 	}
 	info.RecordId = resp.GetRecord().GetID()
+	info.TransportType = resp.GetRecord().GetTransportType()
 	info.ClusterId = resp.GetRecord().GetClusterId()
 	info.Status = resp.GetRecord().GetStatus()
 	info.FilePath = resp.GetRecord().GetFilePath()
@@ -444,4 +446,46 @@ func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	return true
+}
+
+func importDataFailed(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	info := context.value(contextDataTransportKey).(ImportInfo)
+	cluster := clusterAggregation.Cluster
+
+	if err := updateTransportRecordFailed(info.RecordId, cluster.Id); err != nil {
+		return false
+	}
+
+	return DefaultFail(task, context)
+}
+
+func exportDataFailed(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	info := context.value(contextDataTransportKey).(ExportInfo)
+	cluster := clusterAggregation.Cluster
+
+	if err := updateTransportRecordFailed(info.RecordId, cluster.Id); err != nil {
+		return false
+	}
+
+	return DefaultFail(task, context)
+}
+
+func updateTransportRecordFailed(recordId, clusterId string) error {
+	req := &db.DBUpdateTransportRecordRequest{
+		Record: &db.TransportRecordDTO{
+			ID: recordId,
+			ClusterId: clusterId,
+			Status: TransportStatusFailed,
+			EndTime: time.Now().Unix(),
+		},
+	}
+	resp, err := client.DBClient.UpdateTransportRecord(ctx.Background(), req)
+	if err != nil {
+		log.Errorf("[domain] update data transport record failed, %s", err.Error())
+		return err
+	}
+	log.Infof("[domain] update data transport record success, %v", resp)
+	return nil
 }

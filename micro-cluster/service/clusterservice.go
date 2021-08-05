@@ -112,6 +112,7 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 	resp.RespStatus = SuccessResponseStatus
 	resp.TransportInfo = &cluster.DataTransportInfo{
 		RecordId:  info.RecordId,
+		TransportType: info.TransportType,
 		ClusterId: info.ClusterId,
 		FilePath: info.FilePath,
 		Status: info.Status,

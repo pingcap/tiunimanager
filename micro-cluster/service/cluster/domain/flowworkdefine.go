@@ -47,7 +47,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"exportDataDone":		{"compressExportData", "compressDataDone", "fail", SyncFuncTask, compressExportData},
 			"compressDataDone":		{"updateDataExportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataExportRecord},
 			"updateRecordDone":		{"end", "", "", SyncFuncTask, DefaultEnd},
-			"fail":					{"fail", "", "", SyncFuncTask, DefaultFail},
+			"fail":					{"fail", "", "", SyncFuncTask, exportDataFailed},
 		},
 		ContextParser: func(s string) *FlowContext {
 			// todo parse context
@@ -64,7 +64,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"deCompressDataDone":	{"importDataToCluster", "importDataDone", "fail", PollingTasK, importDataToCluster},
 			"importDataDone":		{"updateDataImportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataImportRecord},
 			"updateRecordDone":		{"end", "", "", SyncFuncTask, DefaultEnd},
-			"fail":					{"fail", "", "", SyncFuncTask, DefaultFail},
+			"fail":					{"fail", "", "", SyncFuncTask, importDataFailed},
 		},
 		ContextParser: func(s string) *FlowContext {
 			// todo parse context

@@ -330,6 +330,18 @@ func GetCurrentParameters(clusterId string) (do *ParametersRecordDO, err error) 
 	return
 }
 
+func DeleteBackupRecord(id uint) (record *BackupRecordDO, err error) {
+	record = &BackupRecordDO{}
+	err = MetaDB.Find(record, "id = ?", id).Error
+
+	if err != nil {
+		return
+	}
+
+	err = MetaDB.Delete(record).Error
+	return
+}
+
 func SaveBackupRecord(tenantId, clusterId, operatorId string,
 	backupRange, backupType int8, flowId uint,
 	filePath string) (do *BackupRecordDO, err error){

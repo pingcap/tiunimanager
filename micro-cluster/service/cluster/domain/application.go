@@ -12,7 +12,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"strconv"
-	"time"
 )
 
 type ClusterAggregation struct {
@@ -38,6 +37,8 @@ type ClusterAggregation struct {
 	LastBackupRecord 		*BackupRecord
 
 	LastRecoverRecord		*RecoverRecord
+
+	LastParameterRecord 	*ParameterRecord
 }
 
 var contextClusterKey = "clusterAggregation"
@@ -118,15 +119,19 @@ func GetClusterDetail(ope *proto.OperatorDTO, clusterId string) (*ClusterAggrega
 	return cluster, err
 }
 
-func ListBackupRecords(ope *proto.OperatorDTO, clusterId string, startTime, endTime time.Time) () {
-
-}
-
 func Backup(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error){
 	operator := parseOperatorFromDTO(ope)
 	log.Info(operator)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	clusterAggregation.CurrentOperator = operator
+	clusterAggregation.LastBackupRecord = &BackupRecord{
+		ClusterId: clusterId,
+		Range: BackupRangeWhole,
+		BackupType: BackupTypeLogic,
+		OperatorId: operator.Id,
+		// todo how to generate
+		FilePath: "",
+	}
 
 	if err != nil {
 		return clusterAggregation, errors.New("cluster not exist")
@@ -156,7 +161,11 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 	log.Info(operator)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	clusterAggregation.CurrentOperator = operator
-
+	clusterAggregation.LastRecoverRecord = &RecoverRecord{
+		ClusterId: clusterId,
+		OperatorId: operator.Id,
+		BackupRecord: BackupRecord{Id: uint(backupRecordId)},
+	}
 	if err != nil {
 		return clusterAggregation, errors.New("cluster not exist")
 	}
@@ -181,11 +190,41 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 }
 
 func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
-	panic("implement me")
+	operator := parseOperatorFromDTO(ope)
+	log.Info(operator)
+	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	clusterAggregation.CurrentOperator = operator
+	clusterAggregation.LastParameterRecord = &ParameterRecord{
+		ClusterId: clusterId,
+		OperatorId: operator.Id,
+		Content: content,
+	}
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
+
+	currentFlow := clusterAggregation.CurrentWorkFlow
+	if currentFlow != nil && !currentFlow.Finished(){
+		return clusterAggregation, errors.New("incomplete processing flow")
+	}
+
+	flow, err := CreateFlowWork(clusterId, FlowModifyParameters)
+	if err != nil {
+		// todo
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+
+	flow.Start()
+
+	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	ClusterRepo.Persist(clusterAggregation)
+	return clusterAggregation, nil
 }
 
-func GetParameters(ope *proto.OperatorDTO, clusterId string) (record *ParameterRecord, err error) {
-	panic("implement me")
+func GetParameters(ope *proto.OperatorDTO, clusterId string) (parameterJson string, err error) {
+	log.Info(ope)
+	return InstanceRepo.QueryParameterJson(clusterId)
 }
 
 func (aggregation *ClusterAggregation) loadWorkFlow() error {

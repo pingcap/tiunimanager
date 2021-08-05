@@ -38,6 +38,8 @@ service TiEMDBService {
 
 	// backup & recover & parameters
 	rpc SaveBackupRecord(DBSaveBackupRecordRequest) returns (DBSaveBackupRecordResponse);
+	rpc DeleteBackupRecord(DBDeleteBackupRecordRequest) returns (DBDeleteBackupRecordResponse);
+
 	rpc ListBackupRecords(DBListBackupRecordsRequest) returns (DBListBackupRecordsResponse);
 	rpc SaveRecoverRecord(DBSaveRecoverRecordRequest) returns (DBSaveRecoverRecordResponse);
 	rpc SaveParametersRecord(DBSaveParametersRequest) returns (DBSaveParametersResponse);

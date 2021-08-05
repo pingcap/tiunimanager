@@ -4,7 +4,11 @@ import (
 	"context"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
 	cluster "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap/tiem/micro-metadb/client"
+	"strconv"
+
 	"github.com/pingcap/tiem/micro-cluster/service/cluster/domain"
+	db "github.com/pingcap/tiem/micro-metadb/proto"
 )
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
@@ -111,7 +115,14 @@ func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request 
 }
 
 func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *cluster.DeleteBackupRequest, response *cluster.DeleteBackupResponse) error {
-	panic("implement me")
+	_, err := client.DBClient.DeleteBackupRecord(context.TODO(), &db.DBDeleteBackupRecordRequest{Id: request.GetBackupRecordId()})
+	if err != nil  {
+		// todo
+		return nil
+	} else {
+		response.Status = SuccessResponseStatus
+		return nil
+	}
 }
 
 func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *cluster.SaveBackupStrategyRequest, response *cluster.SaveBackupStrategyResponse) error {
@@ -151,11 +162,45 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 }
 
 func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *cluster.QueryBackupRequest, response *cluster.QueryBackupResponse) error {
-	panic("implement me")
+	result, err := client.DBClient.ListBackupRecords(context.TODO(), &db.DBListBackupRecordsRequest{
+		ClusterId: request.ClusterId,
+		Page: &db.DBPageDTO{
+			Page: request.Page.Page,
+			PageSize: request.Page.PageSize,
+		},
+	})
+	if err != nil  {
+		// todo
+		return nil
+	} else {
+		response.Status = SuccessResponseStatus
+		response.Page = &cluster.PageDTO{
+			Page: result.Page.Page,
+			PageSize: result.Page.PageSize,
+		}
+		response.BackupRecords = make([]*cluster.BackupRecordDTO, len(result.BackupRecords), len(result.BackupRecords))
+		for i,v := range result.BackupRecords {
+			response.BackupRecords[i] = &cluster.BackupRecordDTO{
+				Id: v.BackupRecord.Id,
+				ClusterId: v.BackupRecord.ClusterId,
+				Range: v.BackupRecord.BackupRange,
+				Way: v.BackupRecord.BackupType,
+				FilePath: v.BackupRecord.FilePath,
+				StartTime: v.Flow.CreateTime,
+				EndTime: v.Flow.UpdateTime,
+				DisplayStatus: &cluster.DisplayStatusDTO {
+					StatusCode:      strconv.Itoa(int(v.Flow.Status)),
+					StatusName:      v.Flow.StatusAlias,
+					InProcessFlowId: int32(v.Flow.Id),
+				},
+			}
+		}
+		return nil
+	}
 }
 
 func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *cluster.QueryClusterParametersRequest, response *cluster.QueryClusterParametersResponse) error {
-	record, err := domain.GetParameters(request.Operator, request.ClusterId)
+	content, err := domain.GetParameters(request.Operator, request.ClusterId)
 
 	if err != nil {
 		// todo
@@ -164,7 +209,7 @@ func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *clu
 		response.Status = SuccessResponseStatus
 
 		response.ClusterId = request.ClusterId
-		response.ParametersJson = record.Content
+		response.ParametersJson = content
 		return nil
 	}
 }

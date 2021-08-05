@@ -141,6 +141,18 @@ func (*DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveB
 	return nil
 }
 
+func (*DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *dbPb.DBDeleteBackupRecordRequest, resp *dbPb.DBDeleteBackupRecordResponse) error{
+	result, err := models.DeleteBackupRecord(uint(req.Id))
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.BackupRecord = ConvertToBackupRecordDTO(result)
+	return nil
+}
+
 func (*DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbPb.DBListBackupRecordsRequest, resp *dbPb.DBListBackupRecordsResponse) error{
 	backupRecords, total ,err  := models.ListBackupRecords(req.ClusterId,
 		int((req.Page.Page - 1) * req.Page.PageSize), int(req.Page.PageSize))

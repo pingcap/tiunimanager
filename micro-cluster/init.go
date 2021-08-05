@@ -15,7 +15,9 @@ import (
 	"github.com/pingcap/tiem/library/thirdparty/tracer"
 	cluster "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiem/micro-cluster/service"
-	"github.com/pingcap/tiem/micro-cluster/service/tenant/adapt"
+	clusterAdapt "github.com/pingcap/tiem/micro-cluster/service/cluster/adapt"
+	tenantAdapt "github.com/pingcap/tiem/micro-cluster/service/tenant/adapt"
+
 	dbclient "github.com/pingcap/tiem/micro-metadb/client"
 )
 
@@ -83,5 +85,6 @@ func initClient() {
 }
 
 func initPort() {
-	adapt.InjectionMetaDbRepo()
+	tenantAdapt.InjectionMetaDbRepo()
+	clusterAdapt.InjectionMetaDbRepo()
 }

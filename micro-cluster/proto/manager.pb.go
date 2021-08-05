@@ -25,7 +25,7 @@ var file_manager_proto_rawDesc = []byte{
 	0x0a, 0x0d, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a,
 	0x0e, 0x6d, 0x6e, 0x67, 0x5f, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a,
 	0x0e, 0x6d, 0x6e, 0x67, 0x5f, 0x68, 0x6f, 0x73, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x32,
-	0xa5, 0x05, 0x0a, 0x12, 0x54, 0x69, 0x43, 0x50, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72, 0x53,
+	0xa5, 0x05, 0x0a, 0x12, 0x54, 0x69, 0x45, 0x4d, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72, 0x53,
 	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x26, 0x0a, 0x05, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x12,
 	0x0d, 0x2e, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0e,
 	0x2e, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x29,
@@ -96,28 +96,28 @@ var file_manager_proto_goTypes = []interface{}{
 	(*GetFailureDomainResponse)(nil),   // 21: GetFailureDomainResponse
 }
 var file_manager_proto_depIdxs = []int32{
-	0,  // 0: TiCPManagerService.Login:input_type -> LoginRequest
-	1,  // 1: TiCPManagerService.Logout:input_type -> LogoutRequest
-	2,  // 2: TiCPManagerService.VerifyIdentity:input_type -> VerifyIdentityRequest
-	3,  // 3: TiCPManagerService.ImportHost:input_type -> ImportHostRequest
-	4,  // 4: TiCPManagerService.ImportHostsInBatch:input_type -> ImportHostsInBatchRequest
-	5,  // 5: TiCPManagerService.RemoveHost:input_type -> RemoveHostRequest
-	6,  // 6: TiCPManagerService.RemoveHostsInBatch:input_type -> RemoveHostsInBatchRequest
-	7,  // 7: TiCPManagerService.ListHost:input_type -> ListHostsRequest
-	8,  // 8: TiCPManagerService.CheckDetails:input_type -> CheckDetailsRequest
-	9,  // 9: TiCPManagerService.AllocHosts:input_type -> AllocHostsRequest
-	10, // 10: TiCPManagerService.GetFailureDomain:input_type -> GetFailureDomainRequest
-	11, // 11: TiCPManagerService.Login:output_type -> LoginResponse
-	12, // 12: TiCPManagerService.Logout:output_type -> LogoutResponse
-	13, // 13: TiCPManagerService.VerifyIdentity:output_type -> VerifyIdentityResponse
-	14, // 14: TiCPManagerService.ImportHost:output_type -> ImportHostResponse
-	15, // 15: TiCPManagerService.ImportHostsInBatch:output_type -> ImportHostsInBatchResponse
-	16, // 16: TiCPManagerService.RemoveHost:output_type -> RemoveHostResponse
-	17, // 17: TiCPManagerService.RemoveHostsInBatch:output_type -> RemoveHostsInBatchResponse
-	18, // 18: TiCPManagerService.ListHost:output_type -> ListHostsResponse
-	19, // 19: TiCPManagerService.CheckDetails:output_type -> CheckDetailsResponse
-	20, // 20: TiCPManagerService.AllocHosts:output_type -> AllocHostResponse
-	21, // 21: TiCPManagerService.GetFailureDomain:output_type -> GetFailureDomainResponse
+	0,  // 0: TiEMManagerService.Login:input_type -> LoginRequest
+	1,  // 1: TiEMManagerService.Logout:input_type -> LogoutRequest
+	2,  // 2: TiEMManagerService.VerifyIdentity:input_type -> VerifyIdentityRequest
+	3,  // 3: TiEMManagerService.ImportHost:input_type -> ImportHostRequest
+	4,  // 4: TiEMManagerService.ImportHostsInBatch:input_type -> ImportHostsInBatchRequest
+	5,  // 5: TiEMManagerService.RemoveHost:input_type -> RemoveHostRequest
+	6,  // 6: TiEMManagerService.RemoveHostsInBatch:input_type -> RemoveHostsInBatchRequest
+	7,  // 7: TiEMManagerService.ListHost:input_type -> ListHostsRequest
+	8,  // 8: TiEMManagerService.CheckDetails:input_type -> CheckDetailsRequest
+	9,  // 9: TiEMManagerService.AllocHosts:input_type -> AllocHostsRequest
+	10, // 10: TiEMManagerService.GetFailureDomain:input_type -> GetFailureDomainRequest
+	11, // 11: TiEMManagerService.Login:output_type -> LoginResponse
+	12, // 12: TiEMManagerService.Logout:output_type -> LogoutResponse
+	13, // 13: TiEMManagerService.VerifyIdentity:output_type -> VerifyIdentityResponse
+	14, // 14: TiEMManagerService.ImportHost:output_type -> ImportHostResponse
+	15, // 15: TiEMManagerService.ImportHostsInBatch:output_type -> ImportHostsInBatchResponse
+	16, // 16: TiEMManagerService.RemoveHost:output_type -> RemoveHostResponse
+	17, // 17: TiEMManagerService.RemoveHostsInBatch:output_type -> RemoveHostsInBatchResponse
+	18, // 18: TiEMManagerService.ListHost:output_type -> ListHostsResponse
+	19, // 19: TiEMManagerService.CheckDetails:output_type -> CheckDetailsResponse
+	20, // 20: TiEMManagerService.AllocHosts:output_type -> AllocHostResponse
+	21, // 21: TiEMManagerService.GetFailureDomain:output_type -> GetFailureDomainResponse
 	11, // [11:22] is the sub-list for method output_type
 	0,  // [0:11] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name

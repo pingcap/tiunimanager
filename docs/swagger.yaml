@@ -419,15 +419,15 @@ definitions:
     properties:
       count:
         type: integer
-      domaincode:
-        type: string
-      failureDomain:
-        type: string
       purpose:
         type: string
-      spec:
+      specCode:
         type: string
-      speccode:
+      specName:
+        type: string
+      zoneCode:
+        type: string
+      zoneName:
         type: string
     type: object
   hostapi.HostInfo:
@@ -692,11 +692,11 @@ info:
   contact:
     email: zhangpeijin@pingcap.com
     name: zhangpeijin
-  description: TiCP UI API
+  description: TiEM UI API
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  title: TiCP UI API
+  title: TiEM UI API
   version: "1.0"
 paths:
   /allochosts:

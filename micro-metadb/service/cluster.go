@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap/ticp/micro-metadb/models"
-	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
+	"github.com/pingcap/tiem/micro-metadb/models"
+	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
 	"gorm.io/gorm"
 )
 

@@ -2,12 +2,12 @@ package main
 
 import (
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
-	_ "github.com/pingcap/ticp/docs"
+	_ "github.com/pingcap/tiem/docs"
 )
 
-// @title TiCP UI API
+// @title TiEM UI API
 // @version 1.0
-// @description TiCP UI API
+// @description TiEM UI API
 
 // @contact.name zhangpeijin
 // @contact.email zhangpeijin@pingcap.com

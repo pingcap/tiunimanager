@@ -7,17 +7,17 @@ import (
 	"fmt"
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/v3/registry"
-	"github.com/pingcap/ticp/library/firstparty/config"
-	"github.com/pingcap/ticp/library/thirdparty/logger"
-	"github.com/pingcap/ticp/library/thirdparty/tracer"
+	"github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap/tiem/library/thirdparty/tracer"
 
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
 	"github.com/asim/go-micro/v3/transport"
-	"github.com/pingcap/ticp/micro-metadb/models"
-	db "github.com/pingcap/ticp/micro-metadb/proto"
-	"github.com/pingcap/ticp/micro-metadb/service"
+	"github.com/pingcap/tiem/micro-metadb/models"
+	db "github.com/pingcap/tiem/micro-metadb/proto"
+	"github.com/pingcap/tiem/micro-metadb/service"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -45,7 +45,7 @@ func initService() {
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	srv := micro.NewService(
-		micro.Name(service.TiCPMetaDBServiceName),
+		micro.Name(service.TiEMMetaDBServiceName),
 		micro.WrapHandler(prometheus.NewHandlerWrapper()),
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
@@ -54,7 +54,7 @@ func initService() {
 	)
 	srv.Init()
 
-	db.RegisterTiCPDBServiceHandler(srv.Server(), new(service.DBServiceHandler))
+	db.RegisterTiEMDBServiceHandler(srv.Server(), new(service.DBServiceHandler))
 
 	if err := srv.Run(); err != nil {
 		log.Fatal(err)
@@ -106,7 +106,7 @@ func initTables() error {
 }
 
 func initDataForDemo() {
-	tenant, _ := models.AddTenant("Ticp系统管理", 1, 0)
+	tenant, _ := models.AddTenant("TiEM系统管理", 1, 0)
 	fmt.Println("tenantId = ", tenant.ID)
 
 	role1, _ := models.AddRole(tenant.ID, "管理员", "管理员", 0)

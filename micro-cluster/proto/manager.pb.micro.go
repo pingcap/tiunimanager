@@ -33,15 +33,15 @@ var _ context.Context
 var _ client.Option
 var _ server.Option
 
-// Api Endpoints for TiCPManagerService service
+// Api Endpoints for TiEMManagerService service
 
-func NewTiCPManagerServiceEndpoints() []*api.Endpoint {
+func NewTiEMManagerServiceEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{}
 }
 
-// Client API for TiCPManagerService service
+// Client API for TiEMManagerService service
 
-type TiCPManagerService interface {
+type TiEMManagerService interface {
 	// Auth manager module
 	Login(ctx context.Context, in *LoginRequest, opts ...client.CallOption) (*LoginResponse, error)
 	Logout(ctx context.Context, in *LogoutRequest, opts ...client.CallOption) (*LogoutResponse, error)
@@ -57,20 +57,20 @@ type TiCPManagerService interface {
 	GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, opts ...client.CallOption) (*GetFailureDomainResponse, error)
 }
 
-type tiCPManagerService struct {
+type tiEMManagerService struct {
 	c    client.Client
 	name string
 }
 
-func NewTiCPManagerService(name string, c client.Client) TiCPManagerService {
-	return &tiCPManagerService{
+func NewTiEMManagerService(name string, c client.Client) TiEMManagerService {
+	return &tiEMManagerService{
 		c:    c,
 		name: name,
 	}
 }
 
-func (c *tiCPManagerService) Login(ctx context.Context, in *LoginRequest, opts ...client.CallOption) (*LoginResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPManagerService.Login", in)
+func (c *tiEMManagerService) Login(ctx context.Context, in *LoginRequest, opts ...client.CallOption) (*LoginResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMManagerService.Login", in)
 	out := new(LoginResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -79,8 +79,8 @@ func (c *tiCPManagerService) Login(ctx context.Context, in *LoginRequest, opts .
 	return out, nil
 }
 
-func (c *tiCPManagerService) Logout(ctx context.Context, in *LogoutRequest, opts ...client.CallOption) (*LogoutResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPManagerService.Logout", in)
+func (c *tiEMManagerService) Logout(ctx context.Context, in *LogoutRequest, opts ...client.CallOption) (*LogoutResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMManagerService.Logout", in)
 	out := new(LogoutResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -89,8 +89,8 @@ func (c *tiCPManagerService) Logout(ctx context.Context, in *LogoutRequest, opts
 	return out, nil
 }
 
-func (c *tiCPManagerService) VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, opts ...client.CallOption) (*VerifyIdentityResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPManagerService.VerifyIdentity", in)
+func (c *tiEMManagerService) VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, opts ...client.CallOption) (*VerifyIdentityResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMManagerService.VerifyIdentity", in)
 	out := new(VerifyIdentityResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -99,8 +99,8 @@ func (c *tiCPManagerService) VerifyIdentity(ctx context.Context, in *VerifyIdent
 	return out, nil
 }
 
-func (c *tiCPManagerService) ImportHost(ctx context.Context, in *ImportHostRequest, opts ...client.CallOption) (*ImportHostResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPManagerService.ImportHost", in)
+func (c *tiEMManagerService) ImportHost(ctx context.Context, in *ImportHostRequest, opts ...client.CallOption) (*ImportHostResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMManagerService.ImportHost", in)
 	out := new(ImportHostResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -109,8 +109,8 @@ func (c *tiCPManagerService) ImportHost(ctx context.Context, in *ImportHostReque
 	return out, nil
 }
 
-func (c *tiCPManagerService) ImportHostsInBatch(ctx context.Context, in *ImportHostsInBatchRequest, opts ...client.CallOption) (*ImportHostsInBatchResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPManagerService.ImportHostsInBatch", in)
+func (c *tiEMManagerService) ImportHostsInBatch(ctx context.Context, in *ImportHostsInBatchRequest, opts ...client.CallOption) (*ImportHostsInBatchResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMManagerService.ImportHostsInBatch", in)
 	out := new(ImportHostsInBatchResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -119,8 +119,8 @@ func (c *tiCPManagerService) ImportHostsInBatch(ctx context.Context, in *ImportH
 	return out, nil
 }
 
-func (c *tiCPManagerService) RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...client.CallOption) (*RemoveHostResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPManagerService.RemoveHost", in)
+func (c *tiEMManagerService) RemoveHost(ctx context.Context, in *RemoveHostRequest, opts ...client.CallOption) (*RemoveHostResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMManagerService.RemoveHost", in)
 	out := new(RemoveHostResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -129,8 +129,8 @@ func (c *tiCPManagerService) RemoveHost(ctx context.Context, in *RemoveHostReque
 	return out, nil
 }
 
-func (c *tiCPManagerService) RemoveHostsInBatch(ctx context.Context, in *RemoveHostsInBatchRequest, opts ...client.CallOption) (*RemoveHostsInBatchResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPManagerService.RemoveHostsInBatch", in)
+func (c *tiEMManagerService) RemoveHostsInBatch(ctx context.Context, in *RemoveHostsInBatchRequest, opts ...client.CallOption) (*RemoveHostsInBatchResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMManagerService.RemoveHostsInBatch", in)
 	out := new(RemoveHostsInBatchResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -139,8 +139,8 @@ func (c *tiCPManagerService) RemoveHostsInBatch(ctx context.Context, in *RemoveH
 	return out, nil
 }
 
-func (c *tiCPManagerService) ListHost(ctx context.Context, in *ListHostsRequest, opts ...client.CallOption) (*ListHostsResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPManagerService.ListHost", in)
+func (c *tiEMManagerService) ListHost(ctx context.Context, in *ListHostsRequest, opts ...client.CallOption) (*ListHostsResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMManagerService.ListHost", in)
 	out := new(ListHostsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -149,8 +149,8 @@ func (c *tiCPManagerService) ListHost(ctx context.Context, in *ListHostsRequest,
 	return out, nil
 }
 
-func (c *tiCPManagerService) CheckDetails(ctx context.Context, in *CheckDetailsRequest, opts ...client.CallOption) (*CheckDetailsResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPManagerService.CheckDetails", in)
+func (c *tiEMManagerService) CheckDetails(ctx context.Context, in *CheckDetailsRequest, opts ...client.CallOption) (*CheckDetailsResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMManagerService.CheckDetails", in)
 	out := new(CheckDetailsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -159,8 +159,8 @@ func (c *tiCPManagerService) CheckDetails(ctx context.Context, in *CheckDetailsR
 	return out, nil
 }
 
-func (c *tiCPManagerService) AllocHosts(ctx context.Context, in *AllocHostsRequest, opts ...client.CallOption) (*AllocHostResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPManagerService.AllocHosts", in)
+func (c *tiEMManagerService) AllocHosts(ctx context.Context, in *AllocHostsRequest, opts ...client.CallOption) (*AllocHostResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMManagerService.AllocHosts", in)
 	out := new(AllocHostResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -169,8 +169,8 @@ func (c *tiCPManagerService) AllocHosts(ctx context.Context, in *AllocHostsReque
 	return out, nil
 }
 
-func (c *tiCPManagerService) GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, opts ...client.CallOption) (*GetFailureDomainResponse, error) {
-	req := c.c.NewRequest(c.name, "TiCPManagerService.GetFailureDomain", in)
+func (c *tiEMManagerService) GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, opts ...client.CallOption) (*GetFailureDomainResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMManagerService.GetFailureDomain", in)
 	out := new(GetFailureDomainResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -179,9 +179,9 @@ func (c *tiCPManagerService) GetFailureDomain(ctx context.Context, in *GetFailur
 	return out, nil
 }
 
-// Server API for TiCPManagerService service
+// Server API for TiEMManagerService service
 
-type TiCPManagerServiceHandler interface {
+type TiEMManagerServiceHandler interface {
 	// Auth manager module
 	Login(context.Context, *LoginRequest, *LoginResponse) error
 	Logout(context.Context, *LogoutRequest, *LogoutResponse) error
@@ -197,8 +197,8 @@ type TiCPManagerServiceHandler interface {
 	GetFailureDomain(context.Context, *GetFailureDomainRequest, *GetFailureDomainResponse) error
 }
 
-func RegisterTiCPManagerServiceHandler(s server.Server, hdlr TiCPManagerServiceHandler, opts ...server.HandlerOption) error {
-	type tiCPManagerService interface {
+func RegisterTiEMManagerServiceHandler(s server.Server, hdlr TiEMManagerServiceHandler, opts ...server.HandlerOption) error {
+	type tiEMManagerService interface {
 		Login(ctx context.Context, in *LoginRequest, out *LoginResponse) error
 		Logout(ctx context.Context, in *LogoutRequest, out *LogoutResponse) error
 		VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, out *VerifyIdentityResponse) error
@@ -211,57 +211,57 @@ func RegisterTiCPManagerServiceHandler(s server.Server, hdlr TiCPManagerServiceH
 		AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error
 		GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, out *GetFailureDomainResponse) error
 	}
-	type TiCPManagerService struct {
-		tiCPManagerService
+	type TiEMManagerService struct {
+		tiEMManagerService
 	}
-	h := &tiCPManagerServiceHandler{hdlr}
-	return s.Handle(s.NewHandler(&TiCPManagerService{h}, opts...))
+	h := &tiEMManagerServiceHandler{hdlr}
+	return s.Handle(s.NewHandler(&TiEMManagerService{h}, opts...))
 }
 
-type tiCPManagerServiceHandler struct {
-	TiCPManagerServiceHandler
+type tiEMManagerServiceHandler struct {
+	TiEMManagerServiceHandler
 }
 
-func (h *tiCPManagerServiceHandler) Login(ctx context.Context, in *LoginRequest, out *LoginResponse) error {
-	return h.TiCPManagerServiceHandler.Login(ctx, in, out)
+func (h *tiEMManagerServiceHandler) Login(ctx context.Context, in *LoginRequest, out *LoginResponse) error {
+	return h.TiEMManagerServiceHandler.Login(ctx, in, out)
 }
 
-func (h *tiCPManagerServiceHandler) Logout(ctx context.Context, in *LogoutRequest, out *LogoutResponse) error {
-	return h.TiCPManagerServiceHandler.Logout(ctx, in, out)
+func (h *tiEMManagerServiceHandler) Logout(ctx context.Context, in *LogoutRequest, out *LogoutResponse) error {
+	return h.TiEMManagerServiceHandler.Logout(ctx, in, out)
 }
 
-func (h *tiCPManagerServiceHandler) VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, out *VerifyIdentityResponse) error {
-	return h.TiCPManagerServiceHandler.VerifyIdentity(ctx, in, out)
+func (h *tiEMManagerServiceHandler) VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, out *VerifyIdentityResponse) error {
+	return h.TiEMManagerServiceHandler.VerifyIdentity(ctx, in, out)
 }
 
-func (h *tiCPManagerServiceHandler) ImportHost(ctx context.Context, in *ImportHostRequest, out *ImportHostResponse) error {
-	return h.TiCPManagerServiceHandler.ImportHost(ctx, in, out)
+func (h *tiEMManagerServiceHandler) ImportHost(ctx context.Context, in *ImportHostRequest, out *ImportHostResponse) error {
+	return h.TiEMManagerServiceHandler.ImportHost(ctx, in, out)
 }
 
-func (h *tiCPManagerServiceHandler) ImportHostsInBatch(ctx context.Context, in *ImportHostsInBatchRequest, out *ImportHostsInBatchResponse) error {
-	return h.TiCPManagerServiceHandler.ImportHostsInBatch(ctx, in, out)
+func (h *tiEMManagerServiceHandler) ImportHostsInBatch(ctx context.Context, in *ImportHostsInBatchRequest, out *ImportHostsInBatchResponse) error {
+	return h.TiEMManagerServiceHandler.ImportHostsInBatch(ctx, in, out)
 }
 
-func (h *tiCPManagerServiceHandler) RemoveHost(ctx context.Context, in *RemoveHostRequest, out *RemoveHostResponse) error {
-	return h.TiCPManagerServiceHandler.RemoveHost(ctx, in, out)
+func (h *tiEMManagerServiceHandler) RemoveHost(ctx context.Context, in *RemoveHostRequest, out *RemoveHostResponse) error {
+	return h.TiEMManagerServiceHandler.RemoveHost(ctx, in, out)
 }
 
-func (h *tiCPManagerServiceHandler) RemoveHostsInBatch(ctx context.Context, in *RemoveHostsInBatchRequest, out *RemoveHostsInBatchResponse) error {
-	return h.TiCPManagerServiceHandler.RemoveHostsInBatch(ctx, in, out)
+func (h *tiEMManagerServiceHandler) RemoveHostsInBatch(ctx context.Context, in *RemoveHostsInBatchRequest, out *RemoveHostsInBatchResponse) error {
+	return h.TiEMManagerServiceHandler.RemoveHostsInBatch(ctx, in, out)
 }
 
-func (h *tiCPManagerServiceHandler) ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error {
-	return h.TiCPManagerServiceHandler.ListHost(ctx, in, out)
+func (h *tiEMManagerServiceHandler) ListHost(ctx context.Context, in *ListHostsRequest, out *ListHostsResponse) error {
+	return h.TiEMManagerServiceHandler.ListHost(ctx, in, out)
 }
 
-func (h *tiCPManagerServiceHandler) CheckDetails(ctx context.Context, in *CheckDetailsRequest, out *CheckDetailsResponse) error {
-	return h.TiCPManagerServiceHandler.CheckDetails(ctx, in, out)
+func (h *tiEMManagerServiceHandler) CheckDetails(ctx context.Context, in *CheckDetailsRequest, out *CheckDetailsResponse) error {
+	return h.TiEMManagerServiceHandler.CheckDetails(ctx, in, out)
 }
 
-func (h *tiCPManagerServiceHandler) AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error {
-	return h.TiCPManagerServiceHandler.AllocHosts(ctx, in, out)
+func (h *tiEMManagerServiceHandler) AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error {
+	return h.TiEMManagerServiceHandler.AllocHosts(ctx, in, out)
 }
 
-func (h *tiCPManagerServiceHandler) GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, out *GetFailureDomainResponse) error {
-	return h.TiCPManagerServiceHandler.GetFailureDomain(ctx, in, out)
+func (h *tiEMManagerServiceHandler) GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, out *GetFailureDomainResponse) error {
+	return h.TiEMManagerServiceHandler.GetFailureDomain(ctx, in, out)
 }

@@ -1,10 +1,9 @@
-module github.com/pingcap/ticp
+module github.com/pingcap/tiem
 
 go 1.16
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
-	github.com/BurntSushi/toml v0.3.1
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asim/go-micro/plugins/registry/etcd/v3 v3.0.0-20210726052521-c3107e6843e2
@@ -14,10 +13,8 @@ require (
 	github.com/gin-gonic/gin v1.7.2
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
-	github.com/micro/cli/v2 v2.1.2
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/tiup v1.5.3
-	github.com/prometheus/client_golang v1.11.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.3.0

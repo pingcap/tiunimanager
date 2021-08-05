@@ -13,10 +13,10 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/micro-api/controller"
-	"github.com/pingcap/ticp/micro-cluster/client"
-	manager "github.com/pingcap/ticp/micro-cluster/proto"
-	"github.com/pingcap/ticp/micro-metadb/service"
+	"github.com/pingcap/tiem/micro-api/controller"
+	"github.com/pingcap/tiem/micro-cluster/client"
+	manager "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap/tiem/micro-metadb/service"
 	"google.golang.org/grpc/codes"
 )
 
@@ -540,12 +540,12 @@ func GetFailureDomain(c *gin.Context) {
 	var res DomainResourceRsp
 	for _, v := range rsp.FdList {
 		res.Resources = append(res.Resources, DomainResource{
-			FailureDomain: service.GetDomainNameFromCode(v.FailureDomain),
-			DomainCode:    v.FailureDomain,
-			Purpose:       v.Purpose,
-			Spec:          v.Spec,
-			SpecCode:      v.Spec,
-			Count:         v.Count,
+			ZoneName: service.GetDomainNameFromCode(v.FailureDomain),
+			ZoneCode: v.FailureDomain,
+			Purpose:  v.Purpose,
+			SpecName: v.Spec,
+			SpecCode: v.Spec,
+			Count:    v.Count,
 		})
 	}
 	c.JSON(http.StatusOK, controller.SuccessWithPage(res, controller.Page{Page: 1, PageSize: 20, Total: len(res.Resources)}))

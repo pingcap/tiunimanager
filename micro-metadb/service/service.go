@@ -1,10 +1,10 @@
 package service
 
 import (
-	"github.com/pingcap/ticp/library/thirdparty/logger"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
 )
 
-var TiCPMetaDBServiceName = "go.micro.ticp.db"
+var TiEMMetaDBServiceName = "go.micro.tiem.db"
 
 type DBServiceHandler struct{}
 

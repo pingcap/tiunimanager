@@ -2240,19 +2240,19 @@ var doc = `{
                 "count": {
                     "type": "integer"
                 },
-                "domaincode": {
-                    "type": "string"
-                },
-                "failureDomain": {
-                    "type": "string"
-                },
                 "purpose": {
                     "type": "string"
                 },
-                "spec": {
+                "specCode": {
                     "type": "string"
                 },
-                "speccode": {
+                "specName": {
+                    "type": "string"
+                },
+                "zoneCode": {
+                    "type": "string"
+                },
+                "zoneName": {
                     "type": "string"
                 }
             }
@@ -2671,8 +2671,8 @@ var SwaggerInfo = swaggerInfo{
 	Host:        "localhost:8080",
 	BasePath:    "/api/v1/",
 	Schemes:     []string{},
-	Title:       "TiCP UI API",
-	Description: "TiCP UI API",
+	Title:       "TiEM UI API",
+	Description: "TiEM UI API",
 }
 
 type s struct{}

@@ -8,11 +8,11 @@ package clustermanage
 //
 //	log "github.com/sirupsen/logrus"
 //
-//	mngClient "github.com/pingcap/ticp/micro-manager/client"
-//	dbClient "github.com/pingcap/ticp/micro-metadb/client"
+//	mngClient "github.com/pingcap/tiem/micro-manager/client"
+//	dbClient "github.com/pingcap/tiem/micro-metadb/client"
 //
-//	mngPb "github.com/pingcap/ticp/micro-manager/proto"
-//	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
+//	mngPb "github.com/pingcap/tiem/micro-manager/proto"
+//	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
 //
 //	spec "github.com/pingcap/tiup/pkg/cluster/spec"
 //)

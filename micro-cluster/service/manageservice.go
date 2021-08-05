@@ -2,14 +2,15 @@ package service
 
 import (
 	"context"
-	host2 "github.com/pingcap/ticp/micro-cluster/service/host"
-	domain2 "github.com/pingcap/ticp/micro-cluster/service/tenant/domain"
 	"net/http"
 
-	manager "github.com/pingcap/ticp/micro-cluster/proto"
+	host2 "github.com/pingcap/tiem/micro-cluster/service/host"
+	domain2 "github.com/pingcap/tiem/micro-cluster/service/tenant/domain"
+
+	manager "github.com/pingcap/tiem/micro-cluster/proto"
 )
 
-var TiCPManagerServiceName = "go.micro.ticp.manager"
+var TiEMManagerServiceName = "go.micro.tiem.manager"
 
 var ManageSuccessResponseStatus = &manager.ManagerResponseStatus{
 	Code: 0,
@@ -81,7 +82,7 @@ func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.V
 	return nil
 }
 
-func InitLogger() {
+func InitHostLogger() {
 	host2.InitLogger()
 }
 

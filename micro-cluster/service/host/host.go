@@ -3,11 +3,11 @@ package host
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap/ticp/library/thirdparty/logger"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
 
-	hostPb "github.com/pingcap/ticp/micro-cluster/proto"
-	"github.com/pingcap/ticp/micro-metadb/client"
-	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
+	hostPb "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap/tiem/micro-metadb/client"
+	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
 	"google.golang.org/grpc/codes"
 )
 

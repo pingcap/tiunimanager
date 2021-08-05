@@ -3,9 +3,9 @@ package adapt
 import (
 	"context"
 	"github.com/google/uuid"
-	tenant "github.com/pingcap/ticp/micro-cluster/service/tenant/domain"
-	"github.com/pingcap/ticp/micro-metadb/client"
-	db "github.com/pingcap/ticp/micro-metadb/proto"
+	tenant "github.com/pingcap/tiem/micro-cluster/service/tenant/domain"
+	"github.com/pingcap/tiem/micro-metadb/client"
+	db "github.com/pingcap/tiem/micro-metadb/proto"
 	"time"
 )
 
@@ -97,16 +97,16 @@ func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account tenant.Acc
 	return
 }
 
-func (m MicroMetaDbRepo) Provide(tiCPToken *tenant.TiCPToken) (tokenString string, err error) {
+func (m MicroMetaDbRepo) Provide(tiEMToken *tenant.TiEMToken) (tokenString string, err error) {
 	// 提供token，简单地使用UUID
 	tokenString = uuid.New().String()
 
 	req := db.DBSaveTokenRequest{
 		Token: &db.DBTokenDTO{
-			TenantId: tiCPToken.TenantId,
-			AccountId: tiCPToken.AccountId,
-			AccountName: tiCPToken.AccountName,
-			ExpirationTime: tiCPToken.ExpirationTime.Unix(),
+			TenantId: tiEMToken.TenantId,
+			AccountId: tiEMToken.AccountId,
+			AccountName: tiEMToken.AccountName,
+			ExpirationTime: tiEMToken.ExpirationTime.Unix(),
 			TokenString: tokenString,
 		},
 	}
@@ -116,14 +116,14 @@ func (m MicroMetaDbRepo) Provide(tiCPToken *tenant.TiCPToken) (tokenString strin
 	return
 }
 
-func (m MicroMetaDbRepo) Modify(tiCPToken *tenant.TiCPToken) error {
+func (m MicroMetaDbRepo) Modify(tiEMToken *tenant.TiEMToken) error {
 	req := db.DBSaveTokenRequest{
 		Token: &db.DBTokenDTO{
-			TenantId: tiCPToken.TenantId,
-			AccountId: tiCPToken.AccountId,
-			AccountName: tiCPToken.AccountName,
-			ExpirationTime: tiCPToken.ExpirationTime.Unix(),
-			TokenString: tiCPToken.TokenString,
+			TenantId: tiEMToken.TenantId,
+			AccountId: tiEMToken.AccountId,
+			AccountName: tiEMToken.AccountName,
+			ExpirationTime: tiEMToken.ExpirationTime.Unix(),
+			TokenString: tiEMToken.TokenString,
 		},
 	}
 
@@ -132,7 +132,7 @@ func (m MicroMetaDbRepo) Modify(tiCPToken *tenant.TiCPToken) error {
 	return err
 }
 
-func (m MicroMetaDbRepo) GetToken(tokenString string) (token tenant.TiCPToken, err error) {
+func (m MicroMetaDbRepo) GetToken(tokenString string) (token tenant.TiEMToken, err error) {
 	req := db.DBFindTokenRequest{
 		TokenString: tokenString,
 	}

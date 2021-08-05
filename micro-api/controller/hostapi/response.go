@@ -22,7 +22,7 @@ type HostDetailsRsp struct {
 }
 
 type ZoneHostStockRsp struct {
-	AvailableStocks 	map[string][]ZoneHostStock
+	AvailableStocks map[string][]ZoneHostStock
 }
 type AllocateRsp struct {
 	HostName string `json:"hostName"`
@@ -39,12 +39,12 @@ type AllocHostsRsp struct {
 }
 
 type DomainResource struct {
-	FailureDomain string `json:"failureDomain"`
-	DomainCode    string `json:"domaincode"`
-	Purpose       string `json:"purpose"`
-	Spec          string `json:"spec"`
-	SpecCode      string `json:"speccode"`
-	Count         int32  `json:"count"`
+	ZoneName string `json:"zoneName"`
+	ZoneCode string `json:"zoneCode"`
+	Purpose  string `json:"purpose"`
+	SpecName string `json:"specName"`
+	SpecCode string `json:"specCode"`
+	Count    int32  `json:"count"`
 }
 
 type DomainResourceRsp struct {

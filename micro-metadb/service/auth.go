@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/pingcap/ticp/micro-metadb/models"
-	proto "github.com/pingcap/ticp/micro-metadb/proto"
+	"github.com/pingcap/tiem/micro-metadb/models"
+	proto "github.com/pingcap/tiem/micro-metadb/proto"
 )
 
 var SuccessResponseStatus = &proto.DbAuthResponseStatus{Code: 0}

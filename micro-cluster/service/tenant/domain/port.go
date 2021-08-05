@@ -46,11 +46,11 @@ type RbacRepository interface {
 type TokenManager interface {
 
 	// Provide 提供一个有效的token
-	Provide  (tiCPToken *TiCPToken) (string, error)
+	Provide  (tiEMToken *TiEMToken) (string, error)
 
 	// Modify 修改token
-	Modify (tiCPToken *TiCPToken) error
+	Modify (tiEMToken *TiEMToken) error
 
 	// GetToken 获取一个token
-	GetToken(tokenString string) (TiCPToken, error)
+	GetToken(tokenString string) (TiEMToken, error)
 }

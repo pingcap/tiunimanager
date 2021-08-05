@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap/ticp/library/thirdparty/logger"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
 	"io"
 	"io/ioutil"
 	"os"
@@ -15,8 +15,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pingcap/ticp/micro-metadb/client"
-	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
+	"github.com/pingcap/tiem/micro-metadb/client"
+	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
 )
 
 // micro service --fork&exec--> tiup manager --fork&exec--> tiup process
@@ -263,7 +263,7 @@ func mgrHandleCmdGetAllTaskStatusReq(jsonStr string) CmdGetAllTaskStatusResp {
 }
 
 func newTmpFileWithContent(content []byte) (fileName string, err error) {
-	tmpfile, err := ioutil.TempFile("", "ticp-topology-*.yaml")
+	tmpfile, err := ioutil.TempFile("", "tiem-topology-*.yaml")
 	if err != nil {
 		err = fmt.Errorf("fail to create temp file err: %s", err)
 		return "", err

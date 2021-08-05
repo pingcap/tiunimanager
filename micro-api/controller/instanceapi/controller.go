@@ -2,8 +2,8 @@ package instanceapi
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/library/knowledge"
-	"github.com/pingcap/ticp/micro-api/controller"
+	"github.com/pingcap/tiem/library/knowledge"
+	"github.com/pingcap/tiem/micro-api/controller"
 	"net/http"
 )
 
@@ -166,7 +166,7 @@ func RecoverBackup(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, controller.Success(controller.StatusInfo{
-		StatusName: req.BackupRecordId,
+		StatusName: "已完成",
 	}))
 }
 

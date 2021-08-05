@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
+	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
 	"testing"
 )
 

@@ -2,7 +2,7 @@
 
 function build(){
     set -e
-    for microDir in micro-api micro-cluster micro-manager micro-metadb
+    for microDir in micro-api micro-cluster micro-metadb
     do
         echo "build $microDir ..."
         cd $microDir
@@ -26,7 +26,7 @@ function install(){
     srcDir=`pwd`
     mkdir -p "$installDir"
     cd "$installDir"
-    for microDir in micro-api micro-cluster micro-manager micro-metadb
+    for microDir in micro-api micro-cluster micro-metadb
     do
         mkdir -p "$microDir"
         binName="$microDir"
@@ -44,7 +44,7 @@ function install(){
 }
 
 function clean(){
-    for microDir in micro-api micro-cluster micro-manager micro-metadb
+    for microDir in micro-api micro-cluster micro-metadb
     do
         echo "clean $microDir ..."
         cd $microDir

@@ -2,12 +2,11 @@ package main
 
 import (
 	"crypto/tls"
-	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
+
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
-	mlog "github.com/asim/go-micro/v3/logger"
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/transport"
 	"github.com/pingcap/tiem/library/firstparty/config"
@@ -18,7 +17,6 @@ import (
 	"github.com/pingcap/tiem/micro-cluster/service"
 	"github.com/pingcap/tiem/micro-cluster/service/tenant/adapt"
 	dbclient "github.com/pingcap/tiem/micro-metadb/client"
-	"log"
 )
 
 func initConfig() {
@@ -26,8 +24,7 @@ func initConfig() {
 }
 
 func initLogger() {
-	// log
-	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(logger.WithContext(nil)))
+	service.InitHostLogger()
 }
 
 func initClusterOperator() {
@@ -37,7 +34,7 @@ func initClusterOperator() {
 func initService() {
 	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
 	if err != nil {
-		mlog.Fatal(err)
+		logger.GetLogger().Fatal(err)
 		return
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
@@ -54,7 +51,7 @@ func initService() {
 	cluster.RegisterClusterServiceHandler(srv1.Server(), new(service.ClusterServiceHandler))
 
 	if err := srv1.Run(); err != nil {
-		log.Fatal(err)
+		logger.GetLogger().Fatal(err)
 	}
 
 	srv2 := micro.NewService(
@@ -70,7 +67,7 @@ func initService() {
 	cluster.RegisterTiEMManagerServiceHandler(srv2.Server(), new(service.ManagerServiceHandler))
 
 	if err := srv2.Run(); err != nil {
-		log.Fatal(err)
+		logger.GetLogger().Fatal(err)
 	}
 }
 
@@ -81,4 +78,3 @@ func initClient() {
 func initPort() {
 	adapt.InjectionMetaDbRepo()
 }
-

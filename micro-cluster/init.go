@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/pingcap/ticp/micro-cluster/service/clusteroperate/libbr"
 	"log"
 	"net/http"
 
@@ -44,6 +45,7 @@ func initLogger() {
 
 func initClusterOperator() {
 	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup", "")
+	libbr.MicroInit("./brmgr/brmgr", "br", "")
 	clustermanage.Operator = new(clusteroperate.TiUPOperator)
 }
 

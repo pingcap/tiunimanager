@@ -19,6 +19,9 @@ var CopyWritingContainer = map[string]map[string]string{
 		CWClusterStatusDeleted: "已删除",
 		CWFlowCreateCluster:    "创建中",
 		CWFlowDeleteCluster:    "删除中",
+		CWFlowBackupCluster:    "备份中",
+		CWFlowRecoverCluster:   "恢复中",
+		CWFlowModifyParameters: "配置中",
 		CWTaskStatusInit:       "未开始",
 		CWTaskStatusProcessing: "处理中",
 		CWTaskStatusFinished:   "已完成",
@@ -38,3 +41,7 @@ var CWTaskStatusError = "CW_TaskStatusError"
 
 var CWFlowCreateCluster = "CW_FlowCreateCluster"
 var CWFlowDeleteCluster = "CW_FlowDeleteCluster"
+
+var CWFlowBackupCluster = "CW_FlowBackupCluster"
+var CWFlowRecoverCluster = "CW_FlowRecoverCluster"
+var CWFlowModifyParameters = "CW_FlowModifyParameters"

@@ -42,7 +42,7 @@ type DomainResource struct {
 	ZoneName string `json:"zoneName"`
 	ZoneCode string `json:"zoneCode"`
 	Purpose  string `json:"purpose"`
-	Spec     string `json:"spec"`
+	SpecName string `json:"specName"`
 	SpecCode string `json:"specCode"`
 	Count    int32  `json:"count"`
 }

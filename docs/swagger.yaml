@@ -421,9 +421,9 @@ definitions:
         type: integer
       purpose:
         type: string
-      spec:
-        type: string
       specCode:
+        type: string
+      specName:
         type: string
       zoneCode:
         type: string

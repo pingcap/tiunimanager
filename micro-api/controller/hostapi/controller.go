@@ -543,7 +543,7 @@ func GetFailureDomain(c *gin.Context) {
 			ZoneName: service.GetDomainNameFromCode(v.FailureDomain),
 			ZoneCode: v.FailureDomain,
 			Purpose:  v.Purpose,
-			Spec:     v.Spec,
+			SpecName: v.Spec,
 			SpecCode: v.Spec,
 			Count:    v.Count,
 		})

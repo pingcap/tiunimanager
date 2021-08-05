@@ -2243,10 +2243,10 @@ var doc = `{
                 "purpose": {
                     "type": "string"
                 },
-                "spec": {
+                "specCode": {
                     "type": "string"
                 },
-                "specCode": {
+                "specName": {
                     "type": "string"
                 },
                 "zoneCode": {

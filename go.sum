@@ -140,8 +140,6 @@ github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef h1:2JGTg6JapxP
 github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef/go.mod h1:JS7hed4L1fj0hXcyEejnW57/7LCetXggd+vwrRnYeII=
 github.com/asim/go-micro/plugins/broker/memory/v3 v3.0.0-20210630062103-c13bb07171bc h1:K4mquvo0DyrloQoayVZc5hfyQ8NLJCpEkYY6eB8uC5c=
 github.com/asim/go-micro/plugins/broker/memory/v3 v3.0.0-20210630062103-c13bb07171bc/go.mod h1:EH0EOjRcyefTt6Db72aX3My8dowi7QvTDaQc8AYqHjw=
-github.com/asim/go-micro/plugins/logger/logrus/v3 v3.0.0-20210726052521-c3107e6843e2 h1:k66ZHoTzYJWnCkS7RyIUXtObt8LLDbRSV8edHxqzD8M=
-github.com/asim/go-micro/plugins/logger/logrus/v3 v3.0.0-20210726052521-c3107e6843e2/go.mod h1:2GKOwHJlBzVG/ZaUka6LCk9/bCpA9cnIza4Nqk7yyjI=
 github.com/asim/go-micro/plugins/registry/etcd/v3 v3.0.0-20210726052521-c3107e6843e2 h1:04iXEE0VJDoqYYBkA+JeJzOWh8CEITBINIjZdWo316o=
 github.com/asim/go-micro/plugins/registry/etcd/v3 v3.0.0-20210726052521-c3107e6843e2/go.mod h1:xenxhgwP3iAb990MTs6j50zhmkdF1+IczQn2E3TzccY=
 github.com/asim/go-micro/plugins/registry/memory/v3 v3.0.0-20210630062103-c13bb07171bc h1:tDva/ON5dAKeND5j+CSR/wr22280KdPZjOzZxUcWFL8=

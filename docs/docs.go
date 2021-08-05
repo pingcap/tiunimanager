@@ -2361,7 +2361,7 @@ var doc = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "operator": {
                     "$ref": "#/definitions/controller.Operator"

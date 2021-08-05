@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
+	"net/http"
+
 	host2 "github.com/pingcap/tiem/micro-cluster/service/host"
 	domain2 "github.com/pingcap/tiem/micro-cluster/service/tenant/domain"
-	"net/http"
 
 	manager "github.com/pingcap/tiem/micro-cluster/proto"
 )
@@ -81,7 +82,7 @@ func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.V
 	return nil
 }
 
-func InitLogger() {
+func InitHostLogger() {
 	host2.InitLogger()
 }
 

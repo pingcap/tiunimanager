@@ -1,11 +1,13 @@
 package domain
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/pingcap/ticp/library/knowledge"
 	"github.com/pingcap/ticp/library/secondparty/libtiup"
 	proto "github.com/pingcap/ticp/micro-cluster/proto"
+	"github.com/pingcap/ticp/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -200,17 +202,58 @@ func (aggregation *ClusterAggregation) loadWorkFlow() error {
 	return nil
 }
 
-func prepareResource(task *TaskEntity, context *FlowContext) bool {
-	// todo prepareResource
-
-	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
+	clusterAggregation := flowContext.value(contextClusterKey).(ClusterAggregation)
 	if true {
 		// todo
 	}
 
-	clusterAggregation.AvailableResources = nil
+	demands := clusterAggregation.Cluster.Demands
+
+	result := &proto.AllocHostResponse{}
+	err := host.AllocHosts(context.TODO(), convertAllocHostsRequest(demands), result)
+
+	if err != nil {
+		// todo
+	}
+
+	clusterAggregation.AvailableResources = result
 	task.Success(nil)
 	return true
+}
+
+func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *proto.AllocHostsRequest){
+	req = &proto.AllocHostsRequest{}
+
+	for _,d := range demands {
+		switch d.ComponentType.ComponentType {
+		case "tidb":
+			req.TidbReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			for i,v := range d.DistributionItems {
+				req.TidbReq[i] = ConvertAllocationReq(v)
+			}
+		case "tikv":
+			req.TikvReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			for i,v := range d.DistributionItems {
+				req.TikvReq[i] = ConvertAllocationReq(v)
+			}
+		case "pd":
+			req.PdReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			for i,v := range d.DistributionItems {
+				req.PdReq[i] = ConvertAllocationReq(v)
+			}
+		}
+	}
+	return
+}
+
+func ConvertAllocationReq(item *ClusterNodeDistributionItem) *proto.AllocationReq {
+	return &proto.AllocationReq {
+		FailureDomain: item.ZoneCode,
+		CpuCores: int32(knowledge.ParseCpu(item.SpecCode)),
+		Memory:   int32(knowledge.ParseMemory(item.SpecCode)),
+		Count:         int32(item.Count),
+	}
 }
 
 func convertConfig(resource interface{}, cluster *Cluster) *spec.Specification {
@@ -308,7 +351,7 @@ func destroyCluster(task *TaskEntity, context *FlowContext) bool {
 }
 
 func freedResource(task *TaskEntity, context *FlowContext) bool {
-	panic("implement me")
+	return true
 }
 
 func destroyTasks(task *TaskEntity, context *FlowContext) bool {

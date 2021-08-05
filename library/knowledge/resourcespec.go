@@ -30,3 +30,12 @@ type ResourceSpecItem struct {
 	Value     interface{}
 }
 
+func ParseCpu(specCode string) int {
+	// todo
+	return 4
+}
+
+func ParseMemory(specCode string) int {
+	// todo
+	return 8
+}

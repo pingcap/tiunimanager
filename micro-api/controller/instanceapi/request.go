@@ -27,5 +27,5 @@ type BackupStrategyUpdateReq struct {
 
 type BackupRecoverReq struct {
 	ClusterId 			string
-	BackupRecordId	 	string
+	BackupRecordId	 	int64
 }

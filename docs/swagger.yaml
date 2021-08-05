@@ -528,7 +528,7 @@ definitions:
   instanceapi.BackupRecoverReq:
     properties:
       backupRecordId:
-        type: string
+        type: integer
       clusterId:
         type: string
     type: object

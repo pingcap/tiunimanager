@@ -2404,7 +2404,7 @@ var doc = `{
             "type": "object",
             "properties": {
                 "backupRecordId": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "clusterId": {
                     "type": "string"

@@ -540,12 +540,12 @@ func GetFailureDomain(c *gin.Context) {
 	var res DomainResourceRsp
 	for _, v := range rsp.FdList {
 		res.Resources = append(res.Resources, DomainResource{
-			FailureDomain: service.GetDomainNameFromCode(v.FailureDomain),
-			DomainCode:    v.FailureDomain,
-			Purpose:       v.Purpose,
-			Spec:          v.Spec,
-			SpecCode:      v.Spec,
-			Count:         v.Count,
+			ZoneName: service.GetDomainNameFromCode(v.FailureDomain),
+			ZoneCode: v.FailureDomain,
+			Purpose:  v.Purpose,
+			Spec:     v.Spec,
+			SpecCode: v.Spec,
+			Count:    v.Count,
 		})
 	}
 	c.JSON(http.StatusOK, controller.SuccessWithPage(res, controller.Page{Page: 1, PageSize: 20, Total: len(res.Resources)}))

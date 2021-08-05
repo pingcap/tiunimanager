@@ -2240,19 +2240,19 @@ var doc = `{
                 "count": {
                     "type": "integer"
                 },
-                "domaincode": {
-                    "type": "string"
-                },
-                "failureDomain": {
-                    "type": "string"
-                },
                 "purpose": {
                     "type": "string"
                 },
                 "spec": {
                     "type": "string"
                 },
-                "speccode": {
+                "specCode": {
+                    "type": "string"
+                },
+                "zoneCode": {
+                    "type": "string"
+                },
+                "zoneName": {
                     "type": "string"
                 }
             }

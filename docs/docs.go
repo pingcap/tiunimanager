@@ -2361,7 +2361,7 @@ var doc = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "operator": {
                     "$ref": "#/definitions/controller.Operator"
@@ -2404,7 +2404,7 @@ var doc = `{
             "type": "object",
             "properties": {
                 "backupRecordId": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "clusterId": {
                     "type": "string"

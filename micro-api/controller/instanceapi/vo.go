@@ -17,7 +17,7 @@ type ParamInstance struct {
 }
 
 type BackupRecord struct {
-	ID 				string
+	ID 				int64
 	ClusterId 		string
 	StartTime 		time.Time
 	EndTime 		time.Time

@@ -72,19 +72,19 @@ And visit the web interface from port 16686.
 start micro-metadb
 ```
 cd micro-metadb
-$ go run main.go init.go
+$ go run main.go
 ```
 
 start micro-cluster
 ```
 cd micro-metadb
-$ go run main.go init.go
+$ go run main.go 
 ```
 
 start micro-api
 ```
 cd micro-api
-$ go run main.go init.go
+$ go run main.go 
 ```
 
 ### Try it out

@@ -19,12 +19,18 @@ import (
 	dbclient "github.com/pingcap/tiem/micro-metadb/client"
 )
 
+// Global LogRecord object
+var log *logger.LogRecord
+
 func initConfig() {
 	config.InitForMonolith()
 }
 
 func initLogger() {
-	service.InitHostLogger()
+	log = logger.GetLogger()
+	service.InitClusterLogger()
+
+	log.Debug("init logger completed!")
 }
 
 func initClusterOperator() {
@@ -34,7 +40,7 @@ func initClusterOperator() {
 func initService() {
 	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
 	if err != nil {
-		logger.GetLogger().Fatal(err)
+		log.Fatal(err)
 		return
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
@@ -46,12 +52,13 @@ func initService() {
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
+
 	srv1.Init()
 
 	cluster.RegisterClusterServiceHandler(srv1.Server(), new(service.ClusterServiceHandler))
 
 	if err := srv1.Run(); err != nil {
-		logger.GetLogger().Fatal(err)
+		log.Fatal(err)
 	}
 
 	srv2 := micro.NewService(
@@ -67,7 +74,7 @@ func initService() {
 	cluster.RegisterTiEMManagerServiceHandler(srv2.Server(), new(service.ManagerServiceHandler))
 
 	if err := srv2.Run(); err != nil {
-		logger.GetLogger().Fatal(err)
+		log.Fatal(err)
 	}
 }
 

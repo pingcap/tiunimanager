@@ -78,6 +78,11 @@ func Accessible(pathType string, path string, tokenString string) (tenantId stri
 	accountName = token.AccountName
 	tenantId = token.TenantId
 
+	if (true) {
+		// todo checkAuth switch
+		return
+	}
+
 	// 校验token有效
 	if !token.isValid() {
 		err =  &UnauthorizedError{}
@@ -126,6 +131,7 @@ func findPermissionAggregationByCode(tenantId string, code string) (*PermissionA
 
 // checkAuth 校验权限
 func checkAuth(account *AccountAggregation, permission *PermissionAggregation) (bool, error){
+
 	accountRoles := account.Roles
 
 	if accountRoles == nil || len(accountRoles) == 0 {

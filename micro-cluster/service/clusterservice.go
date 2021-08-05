@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
 	cluster "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiem/micro-cluster/service/cluster/domain"
 )
@@ -12,6 +13,12 @@ var SuccessResponseStatus = &cluster.ResponseStatusDTO {Code:0}
 var BizErrorResponseStatus = &cluster.ResponseStatusDTO {Code:1}
 
 type ClusterServiceHandler struct {}
+
+var log *logger.LogRecord
+
+func InitClusterLogger() {
+	log = logger.GetLogger()
+}
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *cluster.ClusterCreateReqDTO, resp *cluster.ClusterCreateRespDTO) error {
 	clusterAggregation, err := domain.CreateCluster(req.GetOperator(), req.GetCluster(), req.GetDemands())
@@ -148,9 +155,31 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 }
 
 func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *cluster.QueryClusterParametersRequest, response *cluster.QueryClusterParametersResponse) error {
-	panic("implement me")
+	record, err := domain.GetParameters(request.Operator, request.ClusterId)
+
+	if err != nil {
+		// todo
+		return nil
+	} else {
+		response.Status = SuccessResponseStatus
+
+		response.ClusterId = request.ClusterId
+		response.ParametersJson = record.Content
+		return nil
+	}
 }
 
 func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *cluster.SaveClusterParametersRequest, response *cluster.SaveClusterParametersResponse) error {
-	panic("implement me")
+	clusterAggregation, err := domain.ModifyParameters(request.Operator, request.ClusterId, request.ParametersJson)
+
+	if err != nil {
+		// todo
+		return nil
+	} else {
+		response.Status = SuccessResponseStatus
+		response.DisplayInfo = &cluster.DisplayStatusDTO{
+			InProcessFlowId: int32(clusterAggregation.CurrentWorkFlow.Id),
+		}
+		return nil
+	}
 }

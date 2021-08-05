@@ -122,6 +122,7 @@ var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 var log *logger.LogRecord
 
 func TiupMgrInit() {
+
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
 	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	configPath := ""
@@ -132,6 +133,7 @@ func TiupMgrInit() {
 		configPath = "./tiupmgr.log"
 	}
 	log = logger.GetLogger()
+
 }
 
 func assert(b bool) {

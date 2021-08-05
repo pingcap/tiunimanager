@@ -180,12 +180,12 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 	return clusterAggregation, nil
 }
 
-func ModifyParameters() {
-
+func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
+	panic("implement me")
 }
 
-func GetParameters() {
-
+func GetParameters(ope *proto.OperatorDTO, clusterId string) (record *ParameterRecord, err error) {
+	panic("implement me")
 }
 
 func (aggregation *ClusterAggregation) loadWorkFlow() error {

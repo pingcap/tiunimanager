@@ -131,7 +131,6 @@ func TiupMgrInit() {
 	if len(configPath) == 0 {
 		configPath = "./tiupmgr.log"
 	}
-	log = logger.GetLogger()
 }
 
 func assert(b bool) {
@@ -472,6 +471,8 @@ var glTiUPMgrPath string
 var glTiUPBinPath string
 
 func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
+	// init log
+	log = logger.GetLogger()
 	glTiUPMgrPath = tiupMgrPath
 	glTiUPBinPath = tiupBinPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)

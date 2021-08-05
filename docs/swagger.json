@@ -2346,7 +2346,7 @@
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "operator": {
                     "$ref": "#/definitions/controller.Operator"
@@ -2389,7 +2389,7 @@
             "type": "object",
             "properties": {
                 "backupRecordId": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "clusterId": {
                     "type": "string"

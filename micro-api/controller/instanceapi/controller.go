@@ -140,7 +140,7 @@ func SaveBackupStrategy(c *gin.Context) {
 func QueryBackup(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 	c.JSON(http.StatusOK, controller.Success([]BackupRecord{
-		{ClusterId: clusterId, ID: "111"},
+		{ClusterId: clusterId, ID: 111},
 	}))
 }
 
@@ -166,7 +166,7 @@ func RecoverBackup(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, controller.Success(controller.StatusInfo{
-		StatusName: req.BackupRecordId,
+		StatusName: "已完成",
 	}))
 }
 

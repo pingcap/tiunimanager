@@ -1,5 +1,0 @@
-OpenApiPort = 4441
-PrometheusPort = 8081
-[Certificates]
-  CrtFilePath = "../config/example/server.crt"
-  KeyFilePath = "../config/example/server.key"

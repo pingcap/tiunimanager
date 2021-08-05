@@ -1,6 +1,8 @@
 package models
 
-import "errors"
+import (
+	"errors"
+)
 
 type ClusterDO struct {
 	Entity
@@ -265,3 +267,149 @@ func CreateCluster(
 
 	return
 }
+
+type BackupRecordDO struct {
+	Record
+	ClusterId   string		`gorm:"not null;type:varchar(36);default:null"`
+	BackupRange int8
+	BackupType  int8
+	OperatorId  string		`gorm:"not null;type:varchar(36);default:null"`
+
+	FilePath 		string
+	FlowId			uint
+}
+
+func (d BackupRecordDO) TableName() string {
+	return "backup_records"
+}
+
+type RecoverRecordDO struct {
+	Record
+	ClusterId 		string		`gorm:"not null;type:varchar(36);default:null"`
+
+	OperatorId 		string		`gorm:"not null;type:varchar(36);default:null"`
+	BackupRecordId  uint
+	FlowId			uint
+}
+
+func (d RecoverRecordDO) TableName() string {
+	return "recover_records"
+}
+
+type ParametersRecordDO struct {
+	Record
+	ClusterId 		string		`gorm:"not null;type:varchar(36);default:null"`
+
+	OperatorId 		string		`gorm:"not null;type:varchar(36);default:null"`
+	Content 		string		`gorm:"type:text"`
+	FlowId 			uint
+}
+
+func (d ParametersRecordDO) TableName() string {
+	return "parameters_records"
+}
+
+func SaveParameters(tenantId, clusterId, operatorId string, flowId uint, content string) (do *ParametersRecordDO, err error) {
+	do = &ParametersRecordDO {
+		Record: Record{
+			TenantId: tenantId,
+		},
+		OperatorId: operatorId,
+		ClusterId: clusterId,
+		Content: content,
+		FlowId: flowId,
+	}
+
+	err = MetaDB.Create(do).Error
+	return
+}
+
+func GetCurrentParameters(clusterId string) (do *ParametersRecordDO, err error) {
+	do = &ParametersRecordDO{}
+	err = MetaDB.Where("cluster_id = ?", clusterId).Last(do).Error
+	return
+}
+
+func SaveBackupRecord(tenantId, clusterId, operatorId string,
+	backupRange, backupType int8, flowId uint,
+	filePath string) (do *BackupRecordDO, err error){
+	do = &BackupRecordDO{
+		Record: Record{
+			TenantId: tenantId,
+		},
+		ClusterId: clusterId,
+		OperatorId: operatorId,
+		BackupRange: backupRange,
+		BackupType: backupType,
+		FlowId: flowId,
+		FilePath: filePath,
+	}
+
+	err = MetaDB.Create(do).Error
+	return
+}
+
+
+type BackupRecordFetchResult struct {
+	BackupRecordDO *BackupRecordDO
+	Flow *FlowDO
+}
+
+func ListBackupRecords(clusterId string,
+	offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
+
+	records := make([]*BackupRecordDO, length, length)
+	err = MetaDB.Table("backup_records").
+		Where("cluster_id = ?", clusterId).
+		Count(&total).Order("id desc").Offset(offset).Limit(length).
+		Find(&records).
+		Error
+
+	if err != nil {return}
+	// query flows
+	flowIds := make([]uint, len(records), len(records))
+
+	dos = make([]*BackupRecordFetchResult, len(records), len(records))
+
+	for i,r := range records {
+		flowIds[i] = r.FlowId
+		dos[i] = &BackupRecordFetchResult{
+			BackupRecordDO: r,
+		}
+	}
+
+	flows := make([]*FlowDO, len(records), len(records))
+	err = MetaDB.Find(&flows, flowIds).Error
+	if err != nil {return}
+
+	flowMap := make(map[uint]*FlowDO)
+
+	for _,v := range flows {
+		flowMap[v.ID] = v
+	}
+
+	for i,v := range records {
+		dos[i].BackupRecordDO = v
+		dos[i].Flow = flowMap[v.FlowId]
+	}
+
+	return
+}
+
+func SaveRecoverRecord(tenantId, clusterId, operatorId string,
+	backupRecordId uint,
+	flowId uint) (do *RecoverRecordDO, err error) {
+	do = &RecoverRecordDO{
+		Record: Record{
+			TenantId: tenantId,
+		},
+		ClusterId: clusterId,
+		OperatorId: operatorId,
+		FlowId: flowId,
+		BackupRecordId: backupRecordId,
+	}
+
+	err = MetaDB.Create(do).Error
+	return
+}
+

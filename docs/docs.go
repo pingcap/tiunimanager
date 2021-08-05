@@ -31,6 +31,59 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/allochosts": {
+            "post": {
+                "description": "按指定的配置分配主机资源",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "分配主机接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "主机分配请求",
+                        "name": "Alloc",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hostapi.AllocHostsReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/hostapi.AllocHostsRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/backup/record/recover": {
             "post": {
                 "description": "恢复备份",
@@ -840,6 +893,64 @@ var doc = `{
                 }
             }
         },
+        "/failuredomains": {
+            "get": {
+                "description": "查询指定故障域的资源情况",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "查询指定故障域的资源",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2,
+                            3
+                        ],
+                        "type": "integer",
+                        "description": "指定故障域类型",
+                        "name": "failureDomainType",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/hostapi.DomainResource"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/host": {
             "post": {
                 "description": "将给定的主机信息导入系统",
@@ -856,7 +967,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
+                        "description": "登录token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -965,7 +1076,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
+                        "description": "登录token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -1014,7 +1125,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
+                        "description": "登录token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -1065,7 +1176,7 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
+                        "description": "登录token",
                         "name": "Token",
                         "in": "header",
                         "required": true
@@ -1183,7 +1294,7 @@ var doc = `{
                     },
                     {
                         "description": "待删除的主机ID数组",
-                        "name": "hostId",
+                        "name": "hostIds",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -1211,71 +1322,6 @@ var doc = `{
                                     }
                                 }
                             ]
-                        }
-                    }
-                }
-            }
-        },
-        "/hosts/stocks": {
-            "post": {
-                "description": "查询各可用区的主机规格库存",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "查询各可用区的主机规格库存",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/hostapi.ZoneHostStockRsp"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
                         }
                     }
                 }
@@ -1620,7 +1666,10 @@ var doc = `{
                     "$ref": "#/definitions/controller.Usage"
                 },
                 "tags": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tls": {
                     "type": "boolean"
@@ -1762,7 +1811,10 @@ var doc = `{
                     "type": "string"
                 },
                 "tags": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tls": {
                     "type": "boolean"
@@ -1794,7 +1846,10 @@ var doc = `{
                     }
                 },
                 "tags": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tls": {
                     "type": "boolean"
@@ -1900,7 +1955,10 @@ var doc = `{
                     "$ref": "#/definitions/controller.Usage"
                 },
                 "tags": {
-                    "type": "string"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "tls": {
                     "type": "boolean"
@@ -2055,6 +2113,89 @@ var doc = `{
                 }
             }
         },
+        "hostapi.AllocHostsReq": {
+            "type": "object",
+            "properties": {
+                "pdReq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.Allocation"
+                    }
+                },
+                "tidbReq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.Allocation"
+                    }
+                },
+                "tikvReq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.Allocation"
+                    }
+                }
+            }
+        },
+        "hostapi.AllocHostsRsp": {
+            "type": "object",
+            "properties": {
+                "pdHosts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.AllocateRsp"
+                    }
+                },
+                "tidbHosts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.AllocateRsp"
+                    }
+                },
+                "tikvHosts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.AllocateRsp"
+                    }
+                }
+            }
+        },
+        "hostapi.AllocateRsp": {
+            "type": "object",
+            "properties": {
+                "cpuCore": {
+                    "type": "integer"
+                },
+                "disk": {
+                    "$ref": "#/definitions/hostapi.Disk"
+                },
+                "hostName": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "memory": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hostapi.Allocation": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "cpuCores": {
+                    "type": "integer"
+                },
+                "failureDomain": {
+                    "type": "string"
+                },
+                "memory": {
+                    "type": "integer"
+                }
+            }
+        },
         "hostapi.DemoHostInfo": {
             "type": "object",
             "properties": {
@@ -2090,6 +2231,29 @@ var doc = `{
                 "status": {
                     "description": "Disk Status, 0 for available, 1 for inused",
                     "type": "integer"
+                }
+            }
+        },
+        "hostapi.DomainResource": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "domaincode": {
+                    "type": "string"
+                },
+                "failureDomain": {
+                    "type": "string"
+                },
+                "purpose": {
+                    "type": "string"
+                },
+                "spec": {
+                    "type": "string"
+                },
+                "speccode": {
+                    "type": "string"
                 }
             }
         },
@@ -2141,6 +2305,10 @@ var doc = `{
                 "rack": {
                     "type": "string"
                 },
+                "spec": {
+                    "description": "Host Spec, init while importing",
+                    "type": "string"
+                },
                 "status": {
                     "description": "Host Status, 0 for Online, 1 for offline",
                     "type": "integer"
@@ -2177,40 +2345,6 @@ var doc = `{
                 },
                 "zoneName": {
                     "type": "string"
-                }
-            }
-        },
-        "hostapi.ZoneHostStock": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "specCode": {
-                    "type": "string"
-                },
-                "specName": {
-                    "type": "string"
-                },
-                "zoneCode": {
-                    "type": "string"
-                },
-                "zoneName": {
-                    "type": "string"
-                }
-            }
-        },
-        "hostapi.ZoneHostStockRsp": {
-            "type": "object",
-            "properties": {
-                "availableStocks": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/hostapi.ZoneHostStock"
-                        }
-                    }
                 }
             }
         },
@@ -2537,8 +2671,8 @@ var SwaggerInfo = swaggerInfo{
 	Host:        "localhost:8080",
 	BasePath:    "/api/v1/",
 	Schemes:     []string{},
-	Title:       "TiCP UI API",
-	Description: "TiCP UI API",
+	Title:       "TiEM UI API",
+	Description: "TiEM UI API",
 }
 
 type s struct{}

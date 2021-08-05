@@ -2,15 +2,15 @@ package route
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/addon/logger"
-	"github.com/pingcap/ticp/addon/tracer"
-	"github.com/pingcap/ticp/micro-api/controller"
-	"github.com/pingcap/ticp/micro-api/controller/clusterapi"
-	"github.com/pingcap/ticp/micro-api/controller/databaseapi"
-	"github.com/pingcap/ticp/micro-api/controller/hostapi"
-	"github.com/pingcap/ticp/micro-api/controller/instanceapi"
-	"github.com/pingcap/ticp/micro-api/controller/userapi"
-	"github.com/pingcap/ticp/micro-api/security"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap/tiem/library/thirdparty/tracer"
+	"github.com/pingcap/tiem/micro-api/controller"
+	"github.com/pingcap/tiem/micro-api/controller/clusterapi"
+	"github.com/pingcap/tiem/micro-api/controller/hostapi"
+	"github.com/pingcap/tiem/micro-api/controller/instanceapi"
+	"github.com/pingcap/tiem/micro-api/controller/userapi"
+	"github.com/pingcap/tiem/micro-api/controller/databaseapi"
+	"github.com/pingcap/tiem/micro-api/security"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -99,6 +99,9 @@ func Route(g *gin.Engine) {
 			host.DELETE("host/:hostId", hostapi.RemoveHost)
 			host.DELETE("hosts", hostapi.RemoveHosts)
 			host.GET("download_template", hostapi.DownloadHostTemplateFile)
+			host.GET("failuredomains", hostapi.GetFailureDomain)
+			// Add allochosts API for debugging, not release.
+			host.POST("allochosts", hostapi.AllocHosts)
 		}
 	}
 

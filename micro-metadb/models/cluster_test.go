@@ -524,3 +524,114 @@ func TestListClusterDetails(t *testing.T) {
 	})
 
 }
+
+func TestSaveBackupRecord(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		gotDo, err := SaveBackupRecord("111", "111", "operator1", 1,1,111, "path1")
+		if err != nil {
+			t.Errorf("SaveBackupRecord() error = %v", err)
+			return
+		}
+		if gotDo.ID == 0 {
+			t.Errorf("SaveBackupRecord() gotDoId == 0")
+			return
+		}
+	})
+}
+
+func TestSaveRecoverRecord(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		gotDo, err := SaveRecoverRecord("111", "111", "operator1", 1,1)
+		if err != nil {
+			t.Errorf("SaveRecoverRecord() error = %v", err)
+			return
+		}
+		if gotDo.ID == 0 {
+			t.Errorf("SaveRecoverRecord() gotDoId == 0")
+			return
+		}
+	})
+}
+
+func TestListBackupRecords(t *testing.T) {
+	flow, _ := CreateFlow("backup", "backup", "111")
+	SaveBackupRecord("111", "222", "operator1", 1,1,flow.ID, "path1")
+	SaveBackupRecord("111", "222", "operator1", 1,1,flow.ID, "path2")
+	SaveBackupRecord("111", "111", "operator1", 1,1,flow.ID, "path3")
+	SaveBackupRecord("111", "111", "operator1", 1,1,flow.ID, "path4")
+	SaveBackupRecord("111", "111", "operator1", 1,1,flow.ID, "path5")
+	SaveBackupRecord("111", "111", "operator1", 1,1,flow.ID, "path6")
+	SaveBackupRecord("111", "111", "operator1", 1,1,flow.ID, "path7")
+
+	t.Run("normal", func(t *testing.T) {
+		dos , total , err := ListBackupRecords("111", 2,2)
+		if err != nil {
+			t.Errorf("ListBackupRecords() error = %v", err)
+			return
+		}
+		if total != 5 {
+			t.Errorf("ListBackupRecords() error, want total = %v, got = %v", 5, total)
+			return
+		}
+
+		if len(dos) != 2 {
+			t.Errorf("ListBackupRecords() error, want length = %v, got = %v", 2, len(dos))
+			return
+		}
+
+		if dos[1].BackupRecordDO.ClusterId != "111" {
+			t.Errorf("ListBackupRecords() error, want ClusterId = %v, got = %v", "111", dos[1].BackupRecordDO.ClusterId)
+			return
+		}
+
+
+		if dos[0].BackupRecordDO.ID <= dos[1].BackupRecordDO.ID {
+			t.Errorf("ListBackupRecords() error, want order by id desc, got = %v", dos)
+			return
+		}
+
+		if dos[0].Flow.ID != dos[0].BackupRecordDO.FlowId {
+			t.Errorf("ListBackupRecords() error, want FlowId = %v, got = %v", dos[0].BackupRecordDO.FlowId,  dos[0].Flow.ID)
+			return
+		}
+	})
+}
+
+func TestSaveParameters(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		gotDo, err := SaveParameters("111", "111", "someone", 1,"content1")
+		if err != nil {
+			t.Errorf("SaveParameters() error = %v", err)
+			return
+		}
+		if gotDo.ID == 0 {
+			t.Errorf("SaveParameters() gotDoId == 0")
+			return
+		}
+	})
+
+}
+
+func TestGetCurrentParameters(t *testing.T) {
+	SaveParameters("111", "111", "someone", 1,"content1")
+	SaveParameters("111", "111", "someone", 1,"content2")
+	SaveParameters("111", "111", "someone", 1,"wanted")
+	SaveParameters("111", "222", "someone", 1,"content4")
+
+	t.Run("normal", func(t *testing.T) {
+		gotDo, err := GetCurrentParameters("111")
+		if err != nil {
+			t.Errorf("SaveRecoverRecord() error = %v", err)
+			return
+		}
+		if gotDo.ID == 0 {
+			t.Errorf("SaveRecoverRecord() gotDoId == 0")
+			return
+		}
+
+		if gotDo.Content != "wanted" {
+			t.Errorf("SaveRecoverRecord() gotDo.Content == %v", gotDo.Content)
+			return
+		}
+	})
+}

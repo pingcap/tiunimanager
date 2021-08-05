@@ -40,6 +40,9 @@ func TestMain(m *testing.M) {
 		&FlowDO{},
 		&TaskDO{},
 		&Token{},
+		&BackupRecordDO{},
+		&RecoverRecordDO{},
+		&ParametersRecordDO{},
 	)
 	if err == nil {
 		m.Run()

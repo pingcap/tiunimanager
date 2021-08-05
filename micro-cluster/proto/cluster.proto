@@ -22,6 +22,9 @@ service ClusterService {
     rpc DeleteBackupRecord(DeleteBackupRequest) returns (DeleteBackupResponse);
     rpc SaveBackupStrategy(SaveBackupStrategyRequest) returns (SaveBackupStrategyResponse);
     rpc GetBackupStrategy(GetBackupStrategyRequest) returns (GetBackupStrategyResponse);
+
+    rpc QueryParameters(QueryClusterParametersRequest) returns (QueryClusterParametersResponse);
+    rpc SaveParameters(SaveClusterParametersRequest) returns (SaveClusterParametersResponse);
 }
 
 message ClusterCreateReqDTO {
@@ -248,6 +251,8 @@ message DeleteBackupResponse {
 message SaveBackupStrategyRequest {
     string clusterId = 1;
     string cron = 2;
+    OperatorDTO operator = 3;
+
 }
 
 message SaveBackupStrategyResponse {
@@ -256,8 +261,33 @@ message SaveBackupStrategyResponse {
 
 message GetBackupStrategyRequest {
     string clusterId = 1;
+    OperatorDTO operator = 2;
+
 }
+
 message GetBackupStrategyResponse {
     ResponseStatusDTO status = 1;
     string cron = 2;
 }
+
+message QueryClusterParametersRequest {
+    string clusterId = 1;
+    OperatorDTO operator = 2;
+}
+
+message QueryClusterParametersResponse {
+    string clusterId = 1;
+    string parametersJson = 2;
+}
+
+message SaveClusterParametersRequest {
+    string clusterId = 1;
+    string parametersJson = 2;
+    OperatorDTO operator = 3;
+}
+
+message SaveClusterParametersResponse {
+    ResponseStatusDTO status = 1;
+    DisplayStatusDTO displayInfo = 2;
+}
+

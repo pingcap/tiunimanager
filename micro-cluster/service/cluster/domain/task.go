@@ -28,6 +28,10 @@ func (c FlowContext) put(key string, value interface{}) {
 	c[key] = value
 }
 
+func (c FlowWorkEntity) Finished() bool {
+	return c.Status.Finished()
+}
+
 // TaskEntity
 type TaskEntity struct {
 	Id             uint

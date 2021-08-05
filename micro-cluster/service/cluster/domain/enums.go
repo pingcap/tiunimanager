@@ -1,6 +1,8 @@
 package domain
 
-import "github.com/pingcap/ticp/copywriting"
+import (
+	copywriting2 "github.com/pingcap/tiem/library/copywriting"
+)
 
 type ClusterStatus int
 
@@ -31,10 +33,10 @@ func ClusterStatusFromValue(v int) ClusterStatus {
 func (s ClusterStatus) Display() string {
 
 	switch s {
-	case ClusterStatusUnlined: return copywriting.DisplayByDefault(copywriting.CWClusterStatusUnlined)
-	case ClusterStatusOnline: return copywriting.DisplayByDefault(copywriting.CWClusterStatusOnline)
-	case ClusterStatusOffline: return copywriting.DisplayByDefault(copywriting.CWClusterStatusOffline)
-	case ClusterStatusDeleted: return copywriting.DisplayByDefault(copywriting.CWClusterStatusDeleted)
+	case ClusterStatusUnlined: return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusUnlined)
+	case ClusterStatusOnline: return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusOnline)
+	case ClusterStatusOffline: return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusOffline)
+	case ClusterStatusDeleted: return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusDeleted)
 	}
 
 	panic("Unknown cluster status")
@@ -48,6 +50,22 @@ const (
 	TaskStatusFinished   TaskStatus = 2
 	TaskStatusError      TaskStatus = 3
 )
+
+func (s TaskStatus) Display() string {
+
+	switch s {
+	case TaskStatusInit: return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusInit)
+	case TaskStatusProcessing: return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusProcessing)
+	case TaskStatusFinished: return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusFinished)
+	case TaskStatusError: return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusError)
+	}
+
+	panic("Unknown task status")
+}
+
+func (s TaskStatus) Finished() bool {
+	return TaskStatusFinished == s || TaskStatusError == s
+}
 
 var allTaskStatus = []TaskStatus{
 	TaskStatusInit,
@@ -85,6 +103,9 @@ const (
 const (
 	FlowCreateCluster = "CreateCluster"
 	FlowDeleteCluster = "DeleteCluster"
+	FlowBackupCluster = "BackupCluster"
+	FlowRecoverCluster = "RecoverCluster"
+	FlowModifyParameters = "ModifyParameters"
 	FlowExportData = "ExportData"
 	FlowImportData = "ImportData"
 )

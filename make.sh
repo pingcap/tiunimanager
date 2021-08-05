@@ -67,7 +67,7 @@ function test(){
 
 function unitTest(){
     set -e
-    find . -iname "*_test.go" -exec dirname {} \; | sort -u | sed -e "s/^\./github.com\/pingcap\/ticp/" | while read pkg
+    find . -iname "*_test.go" -exec dirname {} \; | sort -u | sed -e "s/^\./github.com\/pingcap\/tiem/" | while read pkg
     do
         echo "unit test:$pkg"
         go test -race -cover "$pkg"

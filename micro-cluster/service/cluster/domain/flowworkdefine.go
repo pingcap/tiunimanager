@@ -1,11 +1,13 @@
 package domain
 
-import "github.com/pingcap/ticp/copywriting"
+import (
+	copywriting2 "github.com/pingcap/tiem/library/copywriting"
+)
 
 var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	FlowCreateCluster: {
 		FlowName:    FlowCreateCluster,
-		StatusAlias: copywriting.DisplayByDefault(copywriting.CWFlowCreateCluster),
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
 			"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
 			"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
@@ -22,7 +24,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	},
 	FlowDeleteCluster: {
 		FlowName:    FlowDeleteCluster,
-		StatusAlias: copywriting.DisplayByDefault(copywriting.CWFlowCreateCluster),
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
 			"start":              {"destroyTasks", "destroyTasksDone", "fail", PollingTasK, destroyTasks},
 			"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", PollingTasK, destroyCluster},
@@ -39,7 +41,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	},
 	FlowExportData: {
 		FlowName:    FlowExportData,
-		StatusAlias: copywriting.DisplayByDefault(copywriting.CWFlowCreateCluster),
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
 			"start":				{"exportDataFromCluster", "exportDataDone", "fail", PollingTasK, exportDataFromCluster},
 			"exportDataDone":		{"compressExportData", "compressDataDone", "fail", SyncFuncTask, compressExportData},
@@ -55,7 +57,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	},
 	FlowImportData: {
 		FlowName:    FlowImportData,
-		StatusAlias: copywriting.DisplayByDefault(copywriting.CWFlowCreateCluster),
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
 			"start":				{"buildDataImportConfig", "buildConfigDone", "fail", SyncFuncTask, buildDataImportConfig},
 			"buildConfigDone":		{"deCompressImportData", "deCompressDataDone", "fail", SyncFuncTask, deCompressImportData},
@@ -107,10 +109,12 @@ type TaskDefine struct {
 }
 
 func DefaultEnd(task *TaskEntity, context *FlowContext) bool {
+	task.Status = TaskStatusFinished
 	return true
 }
 
 func DefaultFail(task *TaskEntity, context *FlowContext) bool {
+	task.Status = TaskStatusError
 	return true
 }
 

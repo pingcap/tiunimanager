@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+import "mng_auth.proto";
+import "mng_host.proto";
+
+option go_package = "./;cluster";
+
+service TiEMManagerService {
+    // Auth manager module
+    rpc Login(LoginRequest) returns (LoginResponse);
+    rpc Logout(LogoutRequest) returns (LogoutResponse);
+    rpc VerifyIdentity(VerifyIdentityRequest) returns (VerifyIdentityResponse);
+
+    // host manager module
+	rpc ImportHost(ImportHostRequest) returns (ImportHostResponse);
+	rpc ImportHostsInBatch(ImportHostsInBatchRequest) returns (ImportHostsInBatchResponse);
+	rpc RemoveHost(RemoveHostRequest) returns (RemoveHostResponse);
+	rpc RemoveHostsInBatch(RemoveHostsInBatchRequest) returns (RemoveHostsInBatchResponse);
+	rpc ListHost(ListHostsRequest) returns (ListHostsResponse);
+	rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
+	rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);
+	rpc GetFailureDomain(GetFailureDomainRequest) returns (GetFailureDomainResponse);
+}
+

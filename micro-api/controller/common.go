@@ -1,4 +1,4 @@
-// Package classification TiCP API.
+// Package classification TiEM API.
 //
 // the purpose of this application is to provide an application
 // that is using plain go code to define an API
@@ -6,9 +6,9 @@
 // This should demonstrate all the possible comment annotations
 // that are available to turn go code into a fully compliant swagger 2.0 spec
 
-// @title TiCP API
+// @title TiEM API
 // @version v1
-// @description This is a sample TiCP-API server.
+// @description This is a sample TiEM-API server.
 // @BasePath /api/v1
 
 // swagger:meta
@@ -16,9 +16,9 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/knowledge"
-	"github.com/pingcap/ticp/micro-api/security"
-	cluster "github.com/pingcap/ticp/micro-cluster/proto"
+	"github.com/pingcap/tiem/library/knowledge"
+	"github.com/pingcap/tiem/micro-api/security"
+	cluster "github.com/pingcap/tiem/micro-cluster/proto"
 	"net/http"
 	"time"
 )

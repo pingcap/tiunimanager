@@ -1,8 +1,8 @@
 package clusterapi
 
 import (
-	"github.com/pingcap/ticp/micro-api/controller"
-	"github.com/pingcap/ticp/micro-api/controller/hostapi"
+	"github.com/pingcap/tiem/micro-api/controller"
+	"github.com/pingcap/tiem/micro-api/controller/hostapi"
 )
 
 type ClusterBaseInfo struct {
@@ -10,7 +10,7 @@ type ClusterBaseInfo struct {
 	DbPassword 			string
 	ClusterType 		string
 	ClusterVersion 		string
-	Tags 				string
+	Tags 				[]string
 	Tls 				bool
 }
 

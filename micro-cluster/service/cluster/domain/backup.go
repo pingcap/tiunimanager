@@ -1,24 +1,24 @@
 package domain
 
-import (
-	"time"
-)
-
 type BackupRecord struct {
-	Id 				uint
-	ClusterId 		string
-	StartTime 		time.Time
-	EndTime 		time.Time
-	Range 			BackupRange
-	Way 			BackupWay
-	Operator 		Operator
-	Size 			float32
-	Status 			string
-	FilePath 		string
+	Id         uint
+	ClusterId  string
+	Range      BackupRange
+	BackupType BackupType
+	OperatorId string
+	Size       float32
+	FilePath   string
+}
+
+type RecoverRecord struct {
+	Id         uint
+	ClusterId  string
+	OperatorId string
+	BackupRecord   BackupRecord
 }
 
 type BackupRange 		int
-type BackupWay 			int
+type BackupType int
 
 type BackupStrategy struct {
 	ValidityPeriod  	int64

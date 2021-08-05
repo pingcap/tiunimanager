@@ -2,48 +2,36 @@ package main
 
 import (
 	"crypto/tls"
-	"fmt"
-	"github.com/pingcap/ticp/micro-cluster/service/clustermanage"
-	"github.com/pingcap/ticp/micro-cluster/service/clusteroperate"
-	"log"
-	"net/http"
-
 	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
+	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
 	mlog "github.com/asim/go-micro/v3/logger"
+	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/transport"
-	mylogger "github.com/pingcap/ticp/addon/logger"
-	"github.com/pingcap/ticp/addon/tracer"
-	"github.com/pingcap/ticp/config"
-	cluster "github.com/pingcap/ticp/micro-cluster/proto"
-	"github.com/pingcap/ticp/micro-cluster/service"
-	"github.com/pingcap/ticp/micro-cluster/service/clusteroperate/libtiup"
-	managerclient "github.com/pingcap/ticp/micro-manager/client"
-	dbclient "github.com/pingcap/ticp/micro-metadb/client"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap/tiem/library/secondparty/libtiup"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap/tiem/library/thirdparty/tracer"
+	cluster "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap/tiem/micro-cluster/service"
+	"github.com/pingcap/tiem/micro-cluster/service/tenant/adapt"
+	dbclient "github.com/pingcap/tiem/micro-metadb/client"
+	"log"
 )
 
 func initConfig() {
-	{
-		// only use to init the config
-		srv := micro.NewService(
-			config.GetMicroCliArgsOption(),
-		)
-		srv.Init()
-		config.Init()
-		srv = nil
-	}
+	config.InitForMonolith()
 }
+
 func initLogger() {
 	// log
-	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(mylogger.WithContext(nil)))
+	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(logger.WithContext(nil)))
 }
 
 func initClusterOperator() {
-	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup")
-	clustermanage.Operator = new(clusteroperate.TiUPOperator)
+	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup", "")
 }
 
 func initService() {
@@ -53,35 +41,44 @@ func initService() {
 		return
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
-	srv := micro.NewService(
-		micro.Name(service.TiCPClusterServiceName),
+	srv1 := micro.NewService(
+		micro.Name(service.TiEMClusterServiceName),
 		micro.WrapHandler(prometheus.NewHandlerWrapper()),
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
-	srv.Init()
+	srv1.Init()
 
-	cluster.RegisterClusterServiceHandler(srv.Server(), new(service.ClusterServiceHandler))
+	cluster.RegisterClusterServiceHandler(srv1.Server(), new(service.ClusterServiceHandler))
 
-	if err := srv.Run(); err != nil {
+	if err := srv1.Run(); err != nil {
 		log.Fatal(err)
 	}
 
-}
+	srv2 := micro.NewService(
+		micro.Name(service.TiEMManagerServiceName),
+		micro.WrapHandler(prometheus.NewHandlerWrapper()),
+		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
+		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
+		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
+	)
+	srv2.Init()
 
-func initPrometheus() {
-	http.Handle("/metrics", promhttp.Handler())
-	go func() {
-		addr := fmt.Sprintf(":%d", config.GetPrometheusPort())
-		err := http.ListenAndServe(addr, nil)
-		if err != nil {
-			mlog.Fatal("promhttp ListenAndServe err:", err)
-		}
-	}()
+	cluster.RegisterTiEMManagerServiceHandler(srv2.Server(), new(service.ManagerServiceHandler))
+
+	if err := srv2.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func initClient() {
-	managerclient.InitManagerClient()
 	dbclient.InitDBClient()
 }
+
+func initPort() {
+	adapt.InjectionMetaDbRepo()
+}
+

@@ -49,6 +49,8 @@ type ClusterService interface {
 	DeleteBackupRecord(ctx context.Context, in *DeleteBackupRequest, opts ...client.CallOption) (*DeleteBackupResponse, error)
 	SaveBackupStrategy(ctx context.Context, in *SaveBackupStrategyRequest, opts ...client.CallOption) (*SaveBackupStrategyResponse, error)
 	GetBackupStrategy(ctx context.Context, in *GetBackupStrategyRequest, opts ...client.CallOption) (*GetBackupStrategyResponse, error)
+	QueryParameters(ctx context.Context, in *QueryClusterParametersRequest, opts ...client.CallOption) (*QueryClusterParametersResponse, error)
+	SaveParameters(ctx context.Context, in *SaveClusterParametersRequest, opts ...client.CallOption) (*SaveClusterParametersResponse, error)
 }
 
 type clusterService struct {
@@ -193,6 +195,26 @@ func (c *clusterService) GetBackupStrategy(ctx context.Context, in *GetBackupStr
 	return out, nil
 }
 
+func (c *clusterService) QueryParameters(ctx context.Context, in *QueryClusterParametersRequest, opts ...client.CallOption) (*QueryClusterParametersResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.QueryParameters", in)
+	out := new(QueryClusterParametersResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) SaveParameters(ctx context.Context, in *SaveClusterParametersRequest, opts ...client.CallOption) (*SaveClusterParametersResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.SaveParameters", in)
+	out := new(SaveClusterParametersResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterService service
 
 type ClusterServiceHandler interface {
@@ -209,6 +231,8 @@ type ClusterServiceHandler interface {
 	DeleteBackupRecord(context.Context, *DeleteBackupRequest, *DeleteBackupResponse) error
 	SaveBackupStrategy(context.Context, *SaveBackupStrategyRequest, *SaveBackupStrategyResponse) error
 	GetBackupStrategy(context.Context, *GetBackupStrategyRequest, *GetBackupStrategyResponse) error
+	QueryParameters(context.Context, *QueryClusterParametersRequest, *QueryClusterParametersResponse) error
+	SaveParameters(context.Context, *SaveClusterParametersRequest, *SaveClusterParametersResponse) error
 }
 
 func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, opts ...server.HandlerOption) error {
@@ -226,6 +250,8 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		DeleteBackupRecord(ctx context.Context, in *DeleteBackupRequest, out *DeleteBackupResponse) error
 		SaveBackupStrategy(ctx context.Context, in *SaveBackupStrategyRequest, out *SaveBackupStrategyResponse) error
 		GetBackupStrategy(ctx context.Context, in *GetBackupStrategyRequest, out *GetBackupStrategyResponse) error
+		QueryParameters(ctx context.Context, in *QueryClusterParametersRequest, out *QueryClusterParametersResponse) error
+		SaveParameters(ctx context.Context, in *SaveClusterParametersRequest, out *SaveClusterParametersResponse) error
 	}
 	type ClusterService struct {
 		clusterService
@@ -288,4 +314,12 @@ func (h *clusterServiceHandler) SaveBackupStrategy(ctx context.Context, in *Save
 
 func (h *clusterServiceHandler) GetBackupStrategy(ctx context.Context, in *GetBackupStrategyRequest, out *GetBackupStrategyResponse) error {
 	return h.ClusterServiceHandler.GetBackupStrategy(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) QueryParameters(ctx context.Context, in *QueryClusterParametersRequest, out *QueryClusterParametersResponse) error {
+	return h.ClusterServiceHandler.QueryParameters(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) SaveParameters(ctx context.Context, in *SaveClusterParametersRequest, out *SaveClusterParametersResponse) error {
+	return h.ClusterServiceHandler.SaveParameters(ctx, in, out)
 }

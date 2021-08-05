@@ -1,20 +1,14 @@
-# TiCP - TiDB Cloud Platform
+# TiEM - TiDB Enterprise Manager
 
 ## Contents
 
-- addon - Addons.
-- api - OpenAPI http handler.
-- auth - Authentication.
-- client - Client of go-micro service.
-- config - Configurations.
+- library - Common components and resources.
+- micro-api - OpenAPI http handler.
+- micro-cluster - Core service.
+- micro-metadb - Client of go-micro service.
 - docs - Documentation.
-- micro - Final main.go for different microservices.
-- models - Models of database.
-- proto - Protobuf definitions.
-- router - Router of http handler.
-- service - go-micro service implementation.
 
-## Build and Run TiCP
+## Build and Run TiEM
 
 ### Dependencies
 
@@ -35,9 +29,9 @@ rm -f $PROTOC_ZIP
 ### Generate Protobuf files
 
 ```
-cd proto/common
+cd micro-metadb/proto
 protoc --proto_path=$GOPATH/src:. --micro_out=. --go_out=. *.proto
-cd proto/db
+cd micro-cluster/proto
 protoc --proto_path=$GOPATH/src:. --micro_out=. --go_out=. *.proto
 ```
 
@@ -51,35 +45,12 @@ Setup:
 TOKEN=token-tidb-cloud-platform
 CLUSTER_STATE=new
 NAME_1=machine-1
-NAME_2=machine-2
-NAME_3=machine-3
 HOST_1=127.0.0.1
-HOST_2=127.0.0.2
-HOST_3=127.0.0.3
-CLUSTER=${NAME_1}=http://${HOST_1}:2380,${NAME_2}=http://${HOST_2}:2380,${NAME_3}=http://${HOST_3}:2380
+CLUSTER=${NAME_1}=http://${HOST_1}:2380
 
-# For machine 1
 THIS_NAME=${NAME_1}
 THIS_IP=${HOST_1}
 etcd --data-dir=data.etcd1 --name ${THIS_NAME} \
-    --initial-advertise-peer-urls http://${THIS_IP}:2380 --listen-peer-urls http://${THIS_IP}:2380 \
-    --advertise-client-urls http://${THIS_IP}:2379 --listen-client-urls http://${THIS_IP}:2379 \
-    --initial-cluster ${CLUSTER} \
-    --initial-cluster-state ${CLUSTER_STATE} --initial-cluster-token ${TOKEN}
-
-# For machine 2
-THIS_NAME=${NAME_2}
-THIS_IP=${HOST_2}
-etcd --data-dir=data.etcd2 --name ${THIS_NAME} \
-    --initial-advertise-peer-urls http://${THIS_IP}:2380 --listen-peer-urls http://${THIS_IP}:2380 \
-    --advertise-client-urls http://${THIS_IP}:2379 --listen-client-urls http://${THIS_IP}:2379 \
-    --initial-cluster ${CLUSTER} \
-    --initial-cluster-state ${CLUSTER_STATE} --initial-cluster-token ${TOKEN}
-
-# For machine 3
-THIS_NAME=${NAME_3}
-THIS_IP=${HOST_3}
-etcd --data-dir=data.etcd3 --name ${THIS_NAME} \
     --initial-advertise-peer-urls http://${THIS_IP}:2380 --listen-peer-urls http://${THIS_IP}:2380 \
     --advertise-client-urls http://${THIS_IP}:2379 --listen-client-urls http://${THIS_IP}:2379 \
     --initial-cluster ${CLUSTER} \
@@ -98,58 +69,27 @@ And visit the web interface from port 16686.
 
 ### Run Service
 
-```shell
-$ cd micro/common
-$ cat cfg.toml
-OpenApiPort = 4443
-PrometheusPort = 8080
-
-[Certificates]
-  CrtFilePath = "../../config/example/server.crt"
-  KeyFilePath = "../../config/example/server.key"
-
-$ go run main.go --tidb-cloud-platform-conf-file cfg.toml --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
+start micro-metadb
+```
+cd micro-metadb
+$ go run main.go init.go
 ```
 
-```bash
-$ cd micro/db
-$ cat cfg.toml
-SqliteFilePath = "./ticp.sqlite.db"
-OpenApiPort = 4444
-PrometheusPort = 8081
-
-[Certificates]
-  CrtFilePath = "../../config/example/server.crt"
-  KeyFilePath = "../../config/example/server.key"
-
-$ go run main.go --tidb-cloud-platform-conf-file cfg.toml --registry etcd --registry_address 127.0.0.1:2379,127.0.0.2:2379,127.0.0.3:2379
+start micro-cluster
+```
+cd micro-metadb
+$ go run main.go init.go
 ```
 
-### Run Client
-
+start micro-api
 ```
-$ curl --insecure -su "admin:admin" -vX GET \
-    -H "Content-type: application/json"   \
-    -H "Accept: application/json"   \
-    -d '{"NamE":"bar"}'   \
-    "https://127.0.0.1:4443/api/hello"
-
-{"code":"200","data":{"greeting":"Hello bar"}}
-
-$ curl --insecure -su "admin:dontknow" -vX GET \
-    -H "Content-type: application/json"   \
-    -H "Accept: application/json"   \
-    -d '{"NamE":"bar"}'   \
-    "https://127.0.0.1:4443/api/hello"
-
-< HTTP/1.1 401 Unauthorized
-< Content-Type: text/plain; charset=utf-8
-< Www-Authenticate: Basic realm="Authorization Required"
-< Date: Tue, 11 May 2021 10:47:49 GMT
-< Content-Length: 14
-<
-not authorized
+cd micro-api
+$ go run main.go init.go
 ```
+
+### Try it out
+via swagger : http://localhost:8080/swagger/index.html
+or : http://localhost:8080/system/check
 
 ### Watch Traces
 
@@ -173,7 +113,7 @@ For example:
 
 ```go
 import(
-	"github.com/pingcap/ticp/addon/logger"
+	"github.com/pingcap/tiem/addon/logger"
 )
 ```
 
@@ -198,7 +138,7 @@ func CheckUser(ctx context.Context, name, passwd string) error {
 ```go
 func init() {
     var err error
-    dbFile := "ticp.sqlite.db"
+    dbFile := "tiem.sqlite.db"
     log := logger.WithContext(nil).WithField("dbFile", dbFile)
     log.Debug("init: sqlite.open")
     db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})

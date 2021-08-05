@@ -1,8 +1,8 @@
 package clusterapi
 
 import (
-	"github.com/pingcap/ticp/micro-api/controller"
-	cluster "github.com/pingcap/ticp/micro-cluster/proto"
+	"github.com/pingcap/tiem/micro-api/controller"
+	cluster "github.com/pingcap/tiem/micro-cluster/proto"
 )
 
 func (req *CreateReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, demandsDTO []*cluster.ClusterNodeDemandDTO) {

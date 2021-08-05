@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap/ticp/micro-metadb/models"
-	dbPb "github.com/pingcap/ticp/micro-metadb/proto"
+	"github.com/pingcap/tiem/micro-metadb/models"
+	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
 	"gorm.io/gorm"
 )
 
@@ -104,6 +104,7 @@ func (*DBServiceHandler) ListCluster (ctx context.Context, req *dbPb.DBListClust
 		// todo
 	}
 
+	resp.Status = ClusterSuccessResponseStatus
 	resp.Page = &dbPb.DBPageDTO{
 		Page:     req.PageReq.Page,
 		PageSize: req.PageReq.PageSize,
@@ -123,6 +124,139 @@ func (*DBServiceHandler) ListCluster (ctx context.Context, req *dbPb.DBListClust
 	resp.Clusters = clusterDetails
 
 	return nil
+}
+
+func (*DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveBackupRecordRequest, resp *dbPb.DBSaveBackupRecordResponse) error{
+
+	dto := req.BackupRecord
+	result, err := models.SaveBackupRecord(dto.TenantId, dto.ClusterId, dto.OperatorId, int8(dto.BackupRange), int8(dto.BackupType), uint(dto.FlowId), dto.FilePath)
+
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.BackupRecord = ConvertToBackupRecordDTO(result)
+	return nil
+}
+
+func (*DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbPb.DBListBackupRecordsRequest, resp *dbPb.DBListBackupRecordsResponse) error{
+	backupRecords, total ,err  := models.ListBackupRecords(req.ClusterId,
+		int((req.Page.Page - 1) * req.Page.PageSize), int(req.Page.PageSize))
+
+	if err != nil {
+		// todo
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.Page = &dbPb.DBPageDTO{
+		Page:     req.Page.Page,
+		PageSize: req.Page.PageSize,
+		Total: int32(total),
+	}
+
+	backupRecordDTOs :=  make([]*dbPb.DBDBBackupRecordDisplayDTO, len(backupRecords), len(backupRecords))
+
+	for i, v := range backupRecords {
+		backupRecordDTOs[i] = ConvertToBackupRecordDisplayDTO(v.BackupRecordDO, v.Flow)
+	}
+
+	resp.BackupRecords = backupRecordDTOs
+	return nil
+}
+
+func (*DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbPb.DBSaveRecoverRecordRequest, resp *dbPb.DBSaveRecoverRecordResponse) error{
+
+	dto := req.RecoverRecord
+	result, err := models.SaveRecoverRecord(dto.TenantId, dto.ClusterId, dto.OperatorId, uint(dto.BackupRecordId), uint(dto.FlowId))
+
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.RecoverRecord = ConvertToRecoverRecordDTO(result)
+	return nil
+}
+
+func (*DBServiceHandler) SaveParametersRecord(ctx context.Context, req *dbPb.DBSaveParametersRequest, resp *dbPb.DBSaveParametersResponse) error{
+
+	dto := req.Parameters
+	result, err := models.SaveParameters(dto.TenantId, dto.ClusterId, dto.OperatorId, uint(dto.FlowId), dto.Content)
+
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.Parameters = ConvertToParameterRecordDTO(result)
+	return nil
+}
+
+func (*DBServiceHandler) GetCurrentParametersRecord(ctx context.Context, req *dbPb.DBGetCurrentParametersRequest, resp *dbPb.DBGetCurrentParametersResponse) error{
+	result, err := models.GetCurrentParameters(req.GetClusterId())
+
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.Parameters = ConvertToParameterRecordDTO(result)
+	return nil
+}
+
+func ConvertToBackupRecordDTO(do *models.BackupRecordDO) (dto *dbPb.DBBackupRecordDTO) {
+	dto =  &dbPb.DBBackupRecordDTO{
+		Id:          int64(do.ID),
+		TenantId:    do.TenantId,
+		ClusterId:   do.ClusterId,
+		CreateTime:  do.CreatedAt.Unix(),
+		BackupRange: int32(do.BackupRange),
+		BackupType:  int32(do.BackupType),
+		OperatorId:  do.OperatorId,
+		FilePath:    do.FilePath,
+		FlowId: int64(do.FlowId),
+	}
+	return
+}
+
+func ConvertToBackupRecordDisplayDTO(do *models.BackupRecordDO, flow *models.FlowDO) (dto *dbPb.DBDBBackupRecordDisplayDTO){
+	dto = &dbPb.DBDBBackupRecordDisplayDTO{
+		BackupRecord: ConvertToBackupRecordDTO(do),
+		Flow: convertFlowToDTO(flow),
+	}
+
+	return
+}
+
+func ConvertToRecoverRecordDTO(do *models.RecoverRecordDO) (dto *dbPb.DBRecoverRecordDTO) {
+	dto = &dbPb.DBRecoverRecordDTO{
+		Id:             int64(do.ID),
+		TenantId:       do.TenantId,
+		ClusterId:      do.ClusterId,
+		CreateTime:     do.CreatedAt.Unix(),
+		OperatorId:     do.OperatorId,
+		BackupRecordId: int64(do.BackupRecordId),
+		FlowId:         int64(do.FlowId),
+	}
+	return
+}
+
+func ConvertToParameterRecordDTO(do *models.ParametersRecordDO) (dto *dbPb.DBParameterRecordDTO) {
+	dto = &dbPb.DBParameterRecordDTO{
+		Id:             int64(do.ID),
+		TenantId:       do.TenantId,
+		ClusterId:      do.ClusterId,
+		CreateTime:     do.CreatedAt.Unix(),
+		OperatorId:     do.OperatorId,
+		FlowId:         int64(do.FlowId),
+		Content: 		do.Content,
+	}
+	return
 }
 
 func convertToClusterDTO(do *models.ClusterDO, demand *models.DemandRecordDO) (dto *dbPb.DBClusterDTO) {

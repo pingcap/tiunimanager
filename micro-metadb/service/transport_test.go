@@ -3,8 +3,8 @@ package service
 import (
 	"fmt"
 	"github.com/pingcap/errors"
-	"github.com/pingcap/ticp/micro-metadb/models"
-	db "github.com/pingcap/ticp/micro-metadb/proto"
+	"github.com/pingcap/tiem/micro-metadb/models"
+	db "github.com/pingcap/tiem/micro-metadb/proto"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"testing"

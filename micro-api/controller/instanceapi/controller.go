@@ -2,8 +2,8 @@ package instanceapi
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/knowledge"
-	"github.com/pingcap/ticp/micro-api/controller"
+	"github.com/pingcap/tiem/library/knowledge"
+	"github.com/pingcap/tiem/micro-api/controller"
 	"net/http"
 )
 

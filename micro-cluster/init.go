@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"time"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
@@ -65,6 +66,8 @@ func initService() {
 			log.Fatal(err)
 		}
 	}()
+
+	time.Sleep(time.Second)
 
 	srv2 := micro.NewService(
 		micro.Name(service.TiEMManagerServiceName),

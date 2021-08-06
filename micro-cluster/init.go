@@ -32,7 +32,7 @@ func initConfig() {
 func initLogger() {
 	log = logger.GetLogger()
 	service.InitClusterLogger()
-
+	service.InitHostLogger()
 	log.Debug("init logger completed!")
 }
 

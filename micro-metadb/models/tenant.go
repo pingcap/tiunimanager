@@ -17,11 +17,17 @@ type Tenant struct {
 	Status int8   `gorm:"size:255"`
 }
 
+
+func (e *Tenant) BeforeCreate(tx *gorm.DB) (err error) {
+	e.ID = GenerateID()
+	e.Status = 0
+	return nil
+}
+
 func AddTenant(name string, tenantType, status int8) (tenant Tenant, err error) {
 	tenant.Status = tenantType
 	tenant.Type = tenantType
 	tenant.Name = name
-	tenant.ID = "d5624ef9-43b6-411f-b06a-01422bdfb0e5"
 	MetaDB.Create(&tenant)
 	// 返回ID
 	return

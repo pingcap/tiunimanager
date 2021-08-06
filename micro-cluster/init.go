@@ -52,6 +52,7 @@ func initService() {
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		micro.Address(":" + config.GetStringWithDefault(config.KEY_CLUSTER_PORT, "444")),
 		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
 
@@ -59,9 +60,11 @@ func initService() {
 
 	cluster.RegisterClusterServiceHandler(srv1.Server(), new(service.ClusterServiceHandler))
 
-	if err := srv1.Run(); err != nil {
-		log.Fatal(err)
-	}
+	go func() {
+		if err := srv1.Run(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	srv2 := micro.NewService(
 		micro.Name(service.TiEMManagerServiceName),
@@ -69,6 +72,7 @@ func initService() {
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		micro.Address(":" + config.GetStringWithDefault(config.KEY_MANAGER_PORT, "445")),
 		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
 	srv2.Init()

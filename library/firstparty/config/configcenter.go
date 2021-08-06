@@ -21,6 +21,7 @@ const (
 
 	KEY_API_PORT = "config_key_api_port"
 	KEY_CLUSTER_PORT = "config_key_cluster_port"
+	KEY_MANAGER_PORT = "config_key_manager_port"
 	KEY_METADB_PORT = "config_key_metadb_port"
 
 	KEY_CERTIFICATES = "config_key_Certificates"

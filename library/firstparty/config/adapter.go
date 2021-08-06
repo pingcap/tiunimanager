@@ -12,8 +12,8 @@ func InitForMonolith() {
 	LocalConfig[KEY_CERTIFICATES] = Instance{
 		KEY_CERTIFICATES,
 		Certificates{
-			CrtFilePath: "library/firstparty/config/example/server.crt",
-			KeyFilePath: "library/firstparty/config/example/server.key",
+			CrtFilePath: "../library/firstparty/config/example/server.crt",
+			KeyFilePath: "../library/firstparty/config/example/server.key",
 		},
 		0,
 	}
@@ -64,7 +64,8 @@ func InitForMonolith() {
 
 	LocalConfig[KEY_API_PORT] = CreateInstance(KEY_API_PORT, 443)
 	LocalConfig[KEY_CLUSTER_PORT] = CreateInstance(KEY_CLUSTER_PORT, 444)
-	LocalConfig[KEY_METADB_PORT] = CreateInstance(KEY_API_PORT, 443)
+	LocalConfig[KEY_CLUSTER_PORT] = CreateInstance(KEY_CLUSTER_PORT, 445)
+	LocalConfig[KEY_METADB_PORT] = CreateInstance(KEY_METADB_PORT, 446)
 }
 
 func InitForTiUPCluster() {

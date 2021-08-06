@@ -5,10 +5,10 @@ import (
 	ctx "context"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
 	proto "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiem/micro-metadb/client"
 	db "github.com/pingcap/tiem/micro-metadb/proto"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"path/filepath"
@@ -89,7 +89,6 @@ type TidbCfg struct {
 
 var contextDataTransportKey = "dataTransportInfo"
 var dataTransportDirPrefix = "/tmp/tiem/datatransport"
-var log *logger.LogRecord = logger.GetLogger()
 
 func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, fileType string) (string, error) {
 	log.Infof("[domain] begin exportdata clusterId: %s, userName: %s, password: %s, fileType: %s", clusterId, userName, password, fileType)

@@ -1,16 +1,17 @@
 package domain
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"github.com/pingcap/tiem/library/knowledge"
 	"github.com/pingcap/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap/tiem/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
+	"path/filepath"
 	"strconv"
-	"time"
 )
 
 type ClusterAggregation struct {
@@ -26,7 +27,7 @@ type ClusterAggregation struct {
 
 	UsedResources 			interface{}
 	
-	AvailableResources		interface{}
+	AvailableResources		*proto.AllocHostResponse
 
 	StatusModified 			bool
 	FlowModified 			bool
@@ -36,6 +37,8 @@ type ClusterAggregation struct {
 	LastBackupRecord 		*BackupRecord
 
 	LastRecoverRecord		*RecoverRecord
+
+	LastParameterRecord 	*ParameterRecord
 }
 
 var contextClusterKey = "clusterAggregation"
@@ -116,15 +119,19 @@ func GetClusterDetail(ope *proto.OperatorDTO, clusterId string) (*ClusterAggrega
 	return cluster, err
 }
 
-func ListBackupRecords(ope *proto.OperatorDTO, clusterId string, startTime, endTime time.Time) () {
-
-}
-
 func Backup(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error){
 	operator := parseOperatorFromDTO(ope)
 	log.Info(operator)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	clusterAggregation.CurrentOperator = operator
+	clusterAggregation.LastBackupRecord = &BackupRecord{
+		ClusterId: clusterId,
+		Range: BackupRangeWhole,
+		BackupType: BackupTypeLogic,
+		OperatorId: operator.Id,
+		// todo how to generate
+		FilePath: "",
+	}
 
 	if err != nil {
 		return clusterAggregation, errors.New("cluster not exist")
@@ -154,7 +161,11 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 	log.Info(operator)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	clusterAggregation.CurrentOperator = operator
-
+	clusterAggregation.LastRecoverRecord = &RecoverRecord{
+		ClusterId: clusterId,
+		OperatorId: operator.Id,
+		BackupRecord: BackupRecord{Id: uint(backupRecordId)},
+	}
 	if err != nil {
 		return clusterAggregation, errors.New("cluster not exist")
 	}
@@ -178,12 +189,42 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 	return clusterAggregation, nil
 }
 
-func ModifyParameters() {
+func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
+	operator := parseOperatorFromDTO(ope)
+	log.Info(operator)
+	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	clusterAggregation.CurrentOperator = operator
+	clusterAggregation.LastParameterRecord = &ParameterRecord{
+		ClusterId: clusterId,
+		OperatorId: operator.Id,
+		Content: content,
+	}
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
 
+	currentFlow := clusterAggregation.CurrentWorkFlow
+	if currentFlow != nil && !currentFlow.Finished(){
+		return clusterAggregation, errors.New("incomplete processing flow")
+	}
+
+	flow, err := CreateFlowWork(clusterId, FlowModifyParameters)
+	if err != nil {
+		// todo
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+
+	flow.Start()
+
+	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	ClusterRepo.Persist(clusterAggregation)
+	return clusterAggregation, nil
 }
 
-func GetParameters() {
-
+func GetParameters(ope *proto.OperatorDTO, clusterId string) (parameterJson string, err error) {
+	log.Info(ope)
+	return InstanceRepo.QueryParameterJson(clusterId)
 }
 
 func (aggregation *ClusterAggregation) loadWorkFlow() error {
@@ -200,72 +241,29 @@ func (aggregation *ClusterAggregation) loadWorkFlow() error {
 	return nil
 }
 
-func prepareResource(task *TaskEntity, context *FlowContext) bool {
-	// todo prepareResource
+func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
+	clusterAggregation := flowContext.value(contextClusterKey).(ClusterAggregation)
 
-	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
-	if true {
+	demands := clusterAggregation.Cluster.Demands
+
+	clusterAggregation.AvailableResources = &proto.AllocHostResponse{}
+	err := host.AllocHosts(context.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
+
+	if err != nil {
 		// todo
 	}
 
-	clusterAggregation.AvailableResources = nil
 	task.Success(nil)
 	return true
-}
-
-func convertConfig(resource interface{}, cluster *Cluster) *spec.Specification {
-	// todo convertConfig
-	return nil
-
-	//hosts := resource.([]*mngPb.AllocHost)
-	//
-	//tiupConfig := new(spec.Specification)
-	//
-	//dataDir := filepath.Join(hosts[0].Disk.Path, "data")
-	//deployDir := filepath.Join(hosts[0].Disk.Path, "deploy")
-	//// Deal with Global Settings
-	//tiupConfig.GlobalOptions.DataDir = dataDir
-	//tiupConfig.GlobalOptions.DeployDir = deployDir
-	//tiupConfig.GlobalOptions.User = "tidb"
-	//tiupConfig.GlobalOptions.SSHPort = 22
-	//tiupConfig.GlobalOptions.Arch = "amd64"
-	//tiupConfig.GlobalOptions.LogDir = "/tidb-log"
-	//// Deal with Promethus, AlertManger, Grafana
-	//tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
-	//	Host: hosts[0].Ip,
-	//})
-	//tiupConfig.Alertmanagers = append(tiupConfig.Alertmanagers, &spec.AlertmanagerSpec{
-	//	Host: hosts[0].Ip,
-	//})
-	//tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
-	//	Host: hosts[0].Ip,
-	//})
-	//// Deal with PDServers, TiDBServers, TiKVServers
-	//for _, v := range hosts {
-	//	tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
-	//		Host: v.Ip,
-	//	})
-	//	tiupConfig.TiDBServers = append(tiupConfig.TiDBServers, &spec.TiDBSpec{
-	//		Host: v.Ip,
-	//	})
-	//	tiupConfig.TiKVServers = append(tiupConfig.TiKVServers, &spec.TiKVSpec{
-	//		Host: v.Ip,
-	//	})
-	//}
-	//return tiupConfig
 }
 
 func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
 
-	resources := clusterAggregation.AvailableResources
-	// todo
-	fmt.Println(resources)
-
 	config := &TiUPConfigRecord {
 		TenantId:    clusterAggregation.Cluster.TenantId,
 		ClusterId:   clusterAggregation.Cluster.Id,
-		ConfigModel: convertConfig(resources, clusterAggregation.Cluster),
+		ConfigModel: convertConfig(clusterAggregation.AvailableResources, clusterAggregation.Cluster),
 	}
 
 	clusterAggregation.CurrentTiUPConfigRecord = config
@@ -299,20 +297,43 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
+func backupCluster(task *TaskEntity, context *FlowContext) bool {
+	task.Success(nil)
+	return true
+}
+
+func recoverCluster(task *TaskEntity, context *FlowContext) bool {
+	task.Success(nil)
+	return true
+}
+
+func modifyParameters(task *TaskEntity, context *FlowContext) bool {
+	task.Success(nil)
+	return true
+}
+
 func deleteCluster(task *TaskEntity, context *FlowContext) bool {
-	panic("implement me")
+	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	clusterAggregation.Cluster.Delete()
+	clusterAggregation.ConfigModified = true
+
+	task.Success(nil)
+	return true
 }
 
 func destroyCluster(task *TaskEntity, context *FlowContext) bool {
-	panic("implement me")
+	task.Success(nil)
+	return true
 }
 
 func freedResource(task *TaskEntity, context *FlowContext) bool {
-	panic("implement me")
+	task.Success(nil)
+	return true
 }
 
 func destroyTasks(task *TaskEntity, context *FlowContext) bool {
-	panic("implement me")
+	task.Success(nil)
+	return true
 }
 
 func (aggregation *ClusterAggregation) ExtractStatusDTO() *proto.DisplayStatusDTO{
@@ -459,4 +480,92 @@ func parseNodeDemandFromDTO(dto *proto.ClusterNodeDemandDTO) (demand *ClusterCom
 	}
 
 	return demand
+}
+
+func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *proto.AllocHostsRequest){
+	req = &proto.AllocHostsRequest{}
+
+	for _,d := range demands {
+		switch d.ComponentType.ComponentType {
+		case "tidb":
+			req.TidbReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			for i,v := range d.DistributionItems {
+				req.TidbReq[i] = convertAllocationReq(v)
+			}
+		case "tikv":
+			req.TikvReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			for i,v := range d.DistributionItems {
+				req.TikvReq[i] = convertAllocationReq(v)
+			}
+		case "pd":
+			req.PdReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			for i,v := range d.DistributionItems {
+				req.PdReq[i] = convertAllocationReq(v)
+			}
+		}
+	}
+	return
+}
+
+func convertAllocationReq(item *ClusterNodeDistributionItem) *proto.AllocationReq {
+	return &proto.AllocationReq {
+		FailureDomain: item.ZoneCode,
+		CpuCores: int32(knowledge.ParseCpu(item.SpecCode)),
+		Memory:   int32(knowledge.ParseMemory(item.SpecCode)),
+		Count:         int32(item.Count),
+	}
+}
+
+func convertConfig(resource *proto.AllocHostResponse, cluster *Cluster) *spec.Specification {
+	// todo convertConfig
+	return nil
+
+	tidbHosts := resource.TidbHosts
+	tikvHosts := resource.TikvHosts
+	pdHosts := resource.PdHosts
+
+	tiupConfig := new(spec.Specification)
+
+	dataDir := filepath.Join(tidbHosts[0].Disk.Path, "data")
+	deployDir := filepath.Join(tidbHosts[0].Disk.Path, "deploy")
+	// Deal with Global Settings
+	tiupConfig.GlobalOptions.DataDir = dataDir
+	tiupConfig.GlobalOptions.DeployDir = deployDir
+	tiupConfig.GlobalOptions.User = "tidb"
+	tiupConfig.GlobalOptions.SSHPort = 22
+	tiupConfig.GlobalOptions.Arch = "amd64"
+	tiupConfig.GlobalOptions.LogDir = "/tidb-log"
+	// Deal with Promethus, AlertManger, Grafana
+	tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
+		Host: pdHosts[0].Ip,
+	})
+	tiupConfig.Alertmanagers = append(tiupConfig.Alertmanagers, &spec.AlertmanagerSpec{
+		Host: pdHosts[0].Ip,
+	})
+	tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
+		Host: pdHosts[0].Ip,
+	})
+	// Deal with PDServers, TiDBServers, TiKVServers
+	for _, v := range pdHosts {
+		tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
+			Host:      v.Ip,
+			DataDir:   v.Disk.Path,
+			DeployDir: v.Disk.Path,
+		})
+	}
+	for _, v := range tidbHosts {
+		tiupConfig.TiDBServers = append(tiupConfig.TiDBServers, &spec.TiDBSpec{
+			Host:      v.Ip,
+			DeployDir: v.Disk.Path,
+		})
+	}
+	for _, v := range tikvHosts {
+		tiupConfig.TiKVServers = append(tiupConfig.TiKVServers, &spec.TiKVSpec{
+			Host:      v.Ip,
+			DataDir:   v.Disk.Path,
+			DeployDir: v.Disk.Path,
+		})
+	}
+
+	return tiupConfig
 }

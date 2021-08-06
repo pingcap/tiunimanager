@@ -276,8 +276,9 @@ message QueryClusterParametersRequest {
 }
 
 message QueryClusterParametersResponse {
-    string clusterId = 1;
-    string parametersJson = 2;
+    ResponseStatusDTO status = 1;
+    string clusterId = 2;
+    string parametersJson = 3;
 }
 
 message SaveClusterParametersRequest {

@@ -1,5 +1,7 @@
 package config
 
+import "strconv"
+
 func InitForMonolith() {
 	LocalConfig = make(map[Key]Instance)
 
@@ -20,7 +22,7 @@ func InitForMonolith() {
 
 	LocalConfig[KEY_SQLITE_FILE_PATH] = CreateInstance(KEY_SQLITE_FILE_PATH, "./tiem.sqlite.db")
 
-	LocalConfig[KEY_API_LOG] = CreateInstance(KEY_API_LOG, Log{
+	LocalConfig[KEY_API_LOG] = CreateInstance(KEY_API_LOG, Log {
 		//LogLevel      string
 		LogLevel:      "debug",
 		LogOutput:     "console,file",
@@ -64,26 +66,43 @@ func InitForMonolith() {
 
 	LocalConfig[KEY_API_PORT] = CreateInstance(KEY_API_PORT, 443)
 	LocalConfig[KEY_CLUSTER_PORT] = CreateInstance(KEY_CLUSTER_PORT, 444)
-	LocalConfig[KEY_METADB_PORT] = CreateInstance(KEY_API_PORT, 443)
+	LocalConfig[KEY_MANAGER_PORT] = CreateInstance(KEY_MANAGER_PORT, 445)
+	LocalConfig[KEY_METADB_PORT] = CreateInstance(KEY_METADB_PORT, 446)
 }
 
 func InitForTiUPCluster() {
 	//
 }
 
+func GetApiServiceAddress() string {
+	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_API_PORT, 443))
+}
+
+func GetClusterServiceAddress() string {
+	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_CLUSTER_PORT, 444))
+}
+
+func GetManagerServiceAddress() string {
+	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_MANAGER_PORT, 445))
+}
+
+func GetMetaDBServiceAddress() string {
+	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_METADB_PORT, 446))
+}
+
 func GetLogConfig() Log {
 	// todo : get from LocalConfig
-	return Log{
-		LogLevel:      "debug",
-		LogOutput:     "console,file",
-		LogFilePath:   "../logs/tiem.log",
-		LogMaxSize:    512,
-		LogMaxAge:     30,
+	return  Log {
+		LogLevel: "debug",
+		LogOutput: "console,file",
+		LogFilePath: "../logs/tiem.log",
+		LogMaxSize: 512,
+		LogMaxAge: 30,
 		LogMaxBackups: 0,
-		LogLocalTime:  true,
-		LogCompress:   true,
+		LogLocalTime: true,
+		LogCompress: true,
 		RecordSysName: "tiem",
-		RecordModName: "example",
+		RecordModName:"example",
 	}
 }
 

@@ -117,3 +117,17 @@ const (
 	CronMaintainEnd   CronTaskType = 2
 	CronBackup 		  CronTaskType = 3
 )
+
+
+type BackupRange 		int
+type BackupType int
+
+const (
+	BackupRangeWhole BackupRange = 0
+	BackupRangeIncrement = 1
+)
+
+const (
+	BackupTypeLogic BackupType = 0
+	BackupTypePhysics = 1
+)

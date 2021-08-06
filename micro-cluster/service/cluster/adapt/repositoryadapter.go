@@ -15,6 +15,7 @@ import (
 func InjectionMetaDbRepo() {
 	domain.TaskRepo = TaskRepoAdapter{}
 	domain.ClusterRepo = ClusterRepoAdapter{}
+	domain.InstanceRepo = InstanceRepoAdapter{}
 }
 
 type ClusterRepoAdapter struct {}
@@ -151,6 +152,25 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 		}
 		aggregation.LastRecoverRecord.Id = uint(resp.RecoverRecord.Id)
 	}
+
+	if aggregation.LastParameterRecord != nil && aggregation.LastParameterRecord.Id == 0 {
+		record := aggregation.LastParameterRecord
+		resp, err :=  client.DBClient.SaveParametersRecord(context.TODO(), &db.DBSaveParametersRequest{
+			Parameters: &db.DBParameterRecordDTO{
+				TenantId:       cluster.TenantId,
+				ClusterId:      record.ClusterId,
+				OperatorId:     record.OperatorId,
+				Content: 		record.Content,
+				FlowId:         int64(aggregation.CurrentWorkFlow.Id),
+			},
+		})
+		if err != nil {
+			// todo
+			return err
+		}
+		aggregation.LastParameterRecord.Id = uint(resp.Parameters.Id)
+	}
+
 	return nil
 }
 
@@ -178,6 +198,25 @@ func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation,
 	}
 }
 
+type InstanceRepoAdapter struct {}
+
+func (c InstanceRepoAdapter) QueryParameterJson(clusterId string) (content string, err error) {
+	resp, err := client.DBClient.GetCurrentParametersRecord(context.TODO(), &db.DBGetCurrentParametersRequest{
+		ClusterId: clusterId,
+	})
+
+	if err != nil {
+		return
+	}
+
+	if resp.Status.Code != 0 {
+		err = errors.New(resp.Status.Message)
+		return
+	} else {
+		resp.GetParameters().GetContent()
+	}
+	return
+}
 type TaskRepoAdapter struct {}
 
 func (t TaskRepoAdapter) QueryCronTask(bizId string, cronTaskType int) (cronTask *domain.CronTaskEntity, err error) {

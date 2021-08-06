@@ -7,6 +7,7 @@ import (
 func main() {
 	initConfig()
 	initLogger()
+	initPort()
 	initClient()
 	initClusterOperator()
 	initService()

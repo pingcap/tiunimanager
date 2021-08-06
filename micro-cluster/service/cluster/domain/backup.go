@@ -17,9 +17,6 @@ type RecoverRecord struct {
 	BackupRecord   BackupRecord
 }
 
-type BackupRange 		int
-type BackupType int
-
 type BackupStrategy struct {
 	ValidityPeriod  	int64
 	CronString 			string

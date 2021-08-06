@@ -553,6 +553,24 @@ func TestSaveRecoverRecord(t *testing.T) {
 	})
 }
 
+func TestDeleteBackupRecord(t *testing.T) {
+	record, _ :=SaveBackupRecord("111", "222", "operator1", 1,1, 1, "path1")
+	t.Run("normal", func(t *testing.T) {
+		got, err := DeleteBackupRecord(record.ID)
+		if err != nil {
+			t.Errorf("DeleteBackupRecord() error = %v", err)
+			return
+		}
+		if got.ID != record.ID {
+			t.Errorf("DeleteBackupRecord() error, want id = %v, got = %v", record.ID, got.ID)
+			return
+		}
+		if !got.DeletedAt.Valid {
+			t.Errorf("DeleteBackupRecord() error, DeletedAt valid")
+			return
+		}
+	})
+}
 func TestListBackupRecords(t *testing.T) {
 	flow, _ := CreateFlow("backup", "backup", "111")
 	SaveBackupRecord("111", "222", "operator1", 1,1,flow.ID, "path1")

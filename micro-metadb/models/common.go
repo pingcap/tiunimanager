@@ -18,7 +18,9 @@ type Entity struct {
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
 	e.ID = GenerateID()
-	e.Code = e.ID
+	if e.Code == "" {
+		e.Code = e.ID
+	}
 	e.Status = 0
 	return nil
 }

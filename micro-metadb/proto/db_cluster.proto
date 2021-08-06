@@ -170,6 +170,15 @@ message DBSaveBackupRecordResponse {
     DBBackupRecordDTO backupRecord = 2;
 }
 
+message DBDeleteBackupRecordRequest {
+    int64 id = 1;
+}
+
+message DBDeleteBackupRecordResponse {
+    DBClusterResponseStatus status = 1;
+    DBBackupRecordDTO backupRecord = 2;
+}
+
 message DBListBackupRecordsRequest {
     string clusterId = 1;
     DBPageDTO page = 2;

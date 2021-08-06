@@ -81,6 +81,7 @@ type TiEMDBService interface {
 	CreateTransportRecord(ctx context.Context, in *DBCreateTransportRecordRequest, opts ...client.CallOption) (*DBCreateTransportRecordResponse, error)
 	UpdateTransportRecord(ctx context.Context, in *DBUpdateTransportRecordRequest, opts ...client.CallOption) (*DBUpdateTransportRecordResponse, error)
 	FindTrasnportRecordByID(ctx context.Context, in *DBFindTransportRecordByIDRequest, opts ...client.CallOption) (*DBFindTransportRecordByIDResponse, error)
+	ListTrasnportRecord(ctx context.Context, in *DBListTransportRecordRequest, opts ...client.CallOption) (*DBListTransportRecordResponse, error)
 }
 
 type tiEMDBService struct {
@@ -475,6 +476,16 @@ func (c *tiEMDBService) FindTrasnportRecordByID(ctx context.Context, in *DBFindT
 	return out, nil
 }
 
+func (c *tiEMDBService) ListTrasnportRecord(ctx context.Context, in *DBListTransportRecordRequest, opts ...client.CallOption) (*DBListTransportRecordResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.ListTrasnportRecord", in)
+	out := new(DBListTransportRecordResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for TiEMDBService service
 
 type TiEMDBServiceHandler interface {
@@ -523,6 +534,7 @@ type TiEMDBServiceHandler interface {
 	CreateTransportRecord(context.Context, *DBCreateTransportRecordRequest, *DBCreateTransportRecordResponse) error
 	UpdateTransportRecord(context.Context, *DBUpdateTransportRecordRequest, *DBUpdateTransportRecordResponse) error
 	FindTrasnportRecordByID(context.Context, *DBFindTransportRecordByIDRequest, *DBFindTransportRecordByIDResponse) error
+	ListTrasnportRecord(context.Context, *DBListTransportRecordRequest, *DBListTransportRecordResponse) error
 }
 
 func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, opts ...server.HandlerOption) error {
@@ -565,6 +577,7 @@ func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, op
 		CreateTransportRecord(ctx context.Context, in *DBCreateTransportRecordRequest, out *DBCreateTransportRecordResponse) error
 		UpdateTransportRecord(ctx context.Context, in *DBUpdateTransportRecordRequest, out *DBUpdateTransportRecordResponse) error
 		FindTrasnportRecordByID(ctx context.Context, in *DBFindTransportRecordByIDRequest, out *DBFindTransportRecordByIDResponse) error
+		ListTrasnportRecord(ctx context.Context, in *DBListTransportRecordRequest, out *DBListTransportRecordResponse) error
 	}
 	type TiEMDBService struct {
 		tiEMDBService
@@ -727,4 +740,8 @@ func (h *tiEMDBServiceHandler) UpdateTransportRecord(ctx context.Context, in *DB
 
 func (h *tiEMDBServiceHandler) FindTrasnportRecordByID(ctx context.Context, in *DBFindTransportRecordByIDRequest, out *DBFindTransportRecordByIDResponse) error {
 	return h.TiEMDBServiceHandler.FindTrasnportRecordByID(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) ListTrasnportRecord(ctx context.Context, in *DBListTransportRecordRequest, out *DBListTransportRecordResponse) error {
+	return h.TiEMDBServiceHandler.ListTrasnportRecord(ctx, in, out)
 }

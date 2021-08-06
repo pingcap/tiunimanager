@@ -34,10 +34,33 @@ func (d *DBServiceHandler)UpdateTransportRecord(ctx context.Context, in *db.DBUp
 }
 
 func (d *DBServiceHandler)FindTrasnportRecordByID(ctx context.Context, in *db.DBFindTransportRecordByIDRequest, out *db.DBFindTransportRecordByIDResponse) error {
-	record, err := models.FindTransportRecordById(in.GetRecord().GetID())
+	record, err := models.FindTransportRecordById(in.GetRecordId())
 	if err != nil {
 		return err
 	}
+	out.Record = convertRecordDTO(record)
+	return nil
+}
+
+func (d *DBServiceHandler)ListTrasnportRecord(ctx context.Context, in *db.DBListTransportRecordRequest, out *db.DBListTransportRecordResponse) error {
+	records, total, err := models.ListTransportRecord(in.GetClusterId(), in.GetRecordId(), in.GetPage().GetPage(), in.GetPage().GetPageSize())
+	if err != nil {
+		return err
+	}
+	out.Records = make([]*db.TransportRecordDTO, len(records))
+	for index := 0; index < len(records); index ++ {
+		out.Records[index] = convertRecordDTO(records[index])
+	}
+	out.Page = &db.DBPageDTO{
+		Page: in.GetPage().GetPage(),
+		PageSize: in.GetPage().GetPageSize(),
+		Total: int32(total),
+	}
+
+	return nil
+}
+
+func convertRecordDTO(record *models.TransportRecord) *db.TransportRecordDTO {
 	recordDTO := &db.TransportRecordDTO{
 		ID: record.ID,
 		ClusterId: record.ClusterId,
@@ -48,6 +71,5 @@ func (d *DBServiceHandler)FindTrasnportRecordByID(ctx context.Context, in *db.DB
 		StartTime: record.StartTime.Unix(),
 		EndTime: record.EndTime.Unix(),
 	}
-	out.Record = recordDTO
-	return nil
+	return recordDTO
 }

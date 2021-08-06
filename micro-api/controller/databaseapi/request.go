@@ -16,8 +16,10 @@ type DataImport struct {
 }
 
 type DataTransportQuery struct {
-	ClusterId     string     `json:"clusterId"`
-	RecordId      string     `json:"recordId"`
+	ClusterId	string		`json:"clusterId"`
+	RecordId	string		`json:"recordId"`
+	Page		int32		`json:"page"`
+	PageSize 	int32		`json:"pageSize"`
 }
 
 

@@ -104,20 +104,21 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, req *cluster.Data
 }
 
 func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *cluster.DataTransportQueryRequest, resp *cluster.DataTransportQueryResponse) error {
-	info, err := domain.DescribeDataTransportRecord(req.GetOperator(), req.GetRecordId(), req.GetClusterId())
+	infos, err := domain.DescribeDataTransportRecord(req.GetOperator(), req.GetRecordId(), req.GetClusterId(), req.GetPageReq().GetPage(), req.GetPageReq().GetPageSize())
 	if err != nil {
 		//todo
 		return err
 	}
 	resp.RespStatus = SuccessResponseStatus
-	resp.TransportInfo = &cluster.DataTransportInfo{
-		RecordId:  info.RecordId,
-		TransportType: info.TransportType,
-		ClusterId: info.ClusterId,
-		FilePath: info.FilePath,
-		Status: info.Status,
-		StartTime: info.StartTime,
-		EndTime: info.EndTime,
+	resp.TransportInfos = make([]*cluster.DataTransportInfo, len(infos))
+	for index := 0; index < len(infos); index ++ {
+		resp.TransportInfos[index].RecordId = infos[index].RecordId
+		resp.TransportInfos[index].ClusterId = infos[index].ClusterId
+		resp.TransportInfos[index].TransportType = infos[index].TransportType
+		resp.TransportInfos[index].FilePath = infos[index].FilePath
+		resp.TransportInfos[index].Status = infos[index].Status
+		resp.TransportInfos[index].StartTime = infos[index].StartTime
+		resp.TransportInfos[index].EndTime = infos[index].EndTime
 	}
 	return nil
 }

@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "db_cluster.proto";
+
 option go_package = "./;db";
 
 message TransportRecordDTO {
@@ -33,7 +35,7 @@ message DBUpdateTransportRecordResponse {
 }
 
 message DBFindTransportRecordByIDRequest {
-	TransportRecordDTO record = 1;
+	string recordId = 1;
 }
 
 message DBFindTransportRecordByIDResponse {
@@ -42,3 +44,15 @@ message DBFindTransportRecordByIDResponse {
 	TransportRecordDTO record = 3;
 }
 
+message DBListTransportRecordRequest {
+    DBPageDTO page = 1;
+	string clusterId = 2;
+	string recordId = 3;
+}
+
+message DBListTransportRecordResponse {
+	DBPageDTO page = 1;
+	int32 errCode = 2;
+	string errStr = 3;
+	repeated TransportRecordDTO records = 4;
+}

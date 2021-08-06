@@ -30,7 +30,7 @@ func testInit() {
 func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
 	testInit()
 	record := &db.TransportRecordDTO{
-		ID: "uuid-abcd",
+		ID: "uuid-abc",
 		ClusterId: "tc-123",
 		TransportType: "import",
 		FilePath: "/tmp/tiem/datatransport/tc-123/import",
@@ -76,11 +76,8 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 
 func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 	testInit()
-	record := &db.TransportRecordDTO{
-		ID: "uuid-abcd",
-	}
 	in := &db.DBFindTransportRecordByIDRequest{
-		Record: record,
+		RecordId: "uuid-abcd",
 	}
 	out :=  &db.DBFindTransportRecordByIDResponse{}
 	db := new(DBServiceHandler)
@@ -91,4 +88,20 @@ func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 		return
 	}
 	t.Logf("TestDBServiceHandler_FindTrasnportRecordByID success, record: %v", out)
+}
+
+func TestDBServiceHandler_ListTrasnportRecord(t *testing.T) {
+	testInit()
+	in := &db.DBListTransportRecordRequest{
+		ClusterId: "tc-123",
+	}
+	out :=  &db.DBListTransportRecordResponse{}
+	db := new(DBServiceHandler)
+	var err error
+	err = db.ListTrasnportRecord(nil, in, out)
+	if err != nil{
+		t.Errorf("TestDBServiceHandler_ListTrasnportRecord failed: %s", err.Error())
+		return
+	}
+	t.Logf("TestDBServiceHandler_ListTrasnportRecord success, record: %v", out)
 }

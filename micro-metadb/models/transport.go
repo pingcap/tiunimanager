@@ -45,10 +45,23 @@ func UpdateTransportRecord(id, clusterId, status string, endTime time.Time) (err
 	return err
 }
 
-func FindTransportRecordById(id string) (record TransportRecord, err error) {
-	err = MetaDB.First(&record, &TransportRecord{ID: id}).Error
+func FindTransportRecordById(id string) (record *TransportRecord, err error) {
+	err = MetaDB.First(record, &TransportRecord{ID: id}).Error
 	if err != nil {
 		return record, err
 	}
 	return record, nil
+}
+
+func ListTransportRecord(clusterId string, recordId string, offset int32, length int32) (records []*TransportRecord, total int64, err error) {
+	records = make([]*TransportRecord, length)
+
+	db := MetaDB.Model(TransportRecord{}).Where("cluster_id = ?", clusterId)
+	if recordId != "" {
+		db.Where("id = ?", recordId)
+	}
+
+	err = db.Count(&total).Offset(int(offset)).Limit(int(length)).Find(&records).Error
+
+	return
 }

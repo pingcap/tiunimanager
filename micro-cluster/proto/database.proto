@@ -32,9 +32,10 @@ message DataExportResponse {
 }
 
 message DataTransportQueryRequest {
-    OperatorDTO operator = 1;
-    string  clusterId = 2;
-    string  recordId = 3;
+    PageDTO pageReq = 1;
+    OperatorDTO operator = 2;
+    string  clusterId = 3;
+    string  recordId = 4;
 }
 
 message DataTransportInfo {
@@ -48,6 +49,7 @@ message DataTransportInfo {
 }
 
 message DataTransportQueryResponse {
-    ResponseStatusDTO respStatus = 1;
-    DataTransportInfo transportInfo = 2;
+    PageDTO pageReq = 1;
+    ResponseStatusDTO respStatus = 2;
+    repeated DataTransportInfo transportInfos = 3;
 }

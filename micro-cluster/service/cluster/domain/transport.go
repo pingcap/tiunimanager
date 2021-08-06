@@ -181,25 +181,32 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	return info.RecordId, nil
 }
 
-func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId string) (*TransportInfo, error) {
-	info := &TransportInfo{}
-	req := &db.DBFindTransportRecordByIDRequest{
-		Record: &db.TransportRecordDTO{
-			ID: recordId,
-			ClusterId: clusterId,
+func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*TransportInfo, error) {
+	req := &db.DBListTransportRecordRequest{
+		Page: &db.DBPageDTO{
+			Page: page,
+			PageSize: pageSize,
 		},
+		ClusterId: clusterId,
+		RecordId: recordId,
 	}
-	resp, err := client.DBClient.FindTrasnportRecordByID(ctx.Background(), req)
+	resp, err := client.DBClient.ListTrasnportRecord(ctx.Background(), req)
 	if err != nil {
-		return info, err
+		return nil, err
 	}
-	info.RecordId = resp.GetRecord().GetID()
-	info.TransportType = resp.GetRecord().GetTransportType()
-	info.ClusterId = resp.GetRecord().GetClusterId()
-	info.Status = resp.GetRecord().GetStatus()
-	info.FilePath = resp.GetRecord().GetFilePath()
-	info.StartTime = resp.GetRecord().GetStartTime()
-	info.EndTime = resp.GetRecord().GetEndTime()
+
+	info := make([]*TransportInfo, resp.GetPage().GetTotal())
+	records := resp.GetRecords()
+	for index := 0; index < len(info); index++ {
+		info[index].RecordId = records[index].GetID()
+		info[index].TransportType = records[index].GetTransportType()
+		info[index].ClusterId = records[index].GetClusterId()
+		info[index].Status = records[index].GetStatus()
+		info[index].FilePath = records[index].GetFilePath()
+		info[index].StartTime = records[index].GetStartTime()
+		info[index].EndTime = records[index].GetEndTime()
+	}
+
 
 	return info, nil
 }

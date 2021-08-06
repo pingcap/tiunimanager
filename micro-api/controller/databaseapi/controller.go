@@ -87,22 +87,32 @@ func DescribeDataTransport(c *gin.Context) {
 		Operator: operator.ConvertToDTO(),
 		ClusterId: req.ClusterId,
 		RecordId: req.RecordId,
+		PageReq: &cluster.PageDTO{
+			Page: req.Page,
+			PageSize: req.PageSize,
+		},
 	})
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	}else {
 		status := respDTO.GetRespStatus()
+		data := &DataTransportRecordQueryResp{
+			Page: req.Page,
+			PageSize: req.PageSize,
+			TransportRecords: make([]*DataTransportInfo, len(respDTO.GetTransportInfos())),
+		}
+		for index := 0; index < len(data.TransportRecords); index++ {
+			data.TransportRecords[index].RecordId = respDTO.GetTransportInfos()[index].GetRecordId()
+			data.TransportRecords[index].ClusterId = respDTO.GetTransportInfos()[index].GetClusterId()
+			data.TransportRecords[index].TransportType = respDTO.GetTransportInfos()[index].GetTransportType()
+			data.TransportRecords[index].Status = respDTO.GetTransportInfos()[index].GetStatus()
+			data.TransportRecords[index].FilePath = respDTO.GetTransportInfos()[index].GetFilePath()
+			data.TransportRecords[index].StartTime = time.Unix(respDTO.GetTransportInfos()[index].GetStartTime(), 0);
+			data.TransportRecords[index].EndTime = time.Unix(respDTO.GetTransportInfos()[index].GetEndTime(), 0 )
+		}
 
-		result := controller.BuildCommonResult(int(status.Code), status.Message, DataTransportInfo{
-			RecordId: respDTO.GetTransportInfo().GetRecordId(),
-			ClusterId: respDTO.GetTransportInfo().GetClusterId(),
-			FilePath: respDTO.GetTransportInfo().GetFilePath(),
-			Status: respDTO.GetTransportInfo().GetStatus(),
-			TransportType: respDTO.GetTransportInfo().GetTransportType(),
-			StartTime: time.Unix(respDTO.GetTransportInfo().GetStartTime(), 0),
-			EndTime: time.Unix(respDTO.GetTransportInfo().GetEndTime(), 0),
-		})
+		result := controller.BuildCommonResult(int(status.Code), status.Message, data)
 
 		c.JSON(http.StatusOK, result)
 	}

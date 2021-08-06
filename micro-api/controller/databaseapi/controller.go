@@ -18,8 +18,7 @@ func ExportData(c *gin.Context) {
 	}
 
 	operator := controller.GetOperator(c)
-
-	//todo: call cluster api
+	
 	respDTO, err := client.ClusterClient.ExportData(c,&cluster.DataExportRequest{
 		Operator: operator.ConvertToDTO(),
 		ClusterId: req.ClusterId,
@@ -52,7 +51,6 @@ func ImportData(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	//todo: call cluster api
 	respDTO, err := client.ClusterClient.ImportData(c,&cluster.DataImportRequest{
 		Operator: operator.ConvertToDTO(),
 		ClusterId: req.ClusterId,

@@ -52,7 +52,7 @@ func initService() {
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
-		micro.Address(":" + config.GetStringWithDefault(config.KEY_CLUSTER_PORT, "444")),
+		micro.Address(config.GetClusterServiceAddress()),
 		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
 
@@ -72,7 +72,7 @@ func initService() {
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
-		micro.Address(":" + config.GetStringWithDefault(config.KEY_MANAGER_PORT, "445")),
+		micro.Address(config.GetManagerServiceAddress()),
 		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
 	srv2.Init()

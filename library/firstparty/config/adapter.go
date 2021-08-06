@@ -1,5 +1,7 @@
 package config
 
+import "strconv"
+
 func InitForMonolith() {
 	LocalConfig = make(map[Key]Instance)
 
@@ -64,12 +66,28 @@ func InitForMonolith() {
 
 	LocalConfig[KEY_API_PORT] = CreateInstance(KEY_API_PORT, 443)
 	LocalConfig[KEY_CLUSTER_PORT] = CreateInstance(KEY_CLUSTER_PORT, 444)
-	LocalConfig[KEY_CLUSTER_PORT] = CreateInstance(KEY_CLUSTER_PORT, 445)
+	LocalConfig[KEY_MANAGER_PORT] = CreateInstance(KEY_MANAGER_PORT, 445)
 	LocalConfig[KEY_METADB_PORT] = CreateInstance(KEY_METADB_PORT, 446)
 }
 
 func InitForTiUPCluster() {
 	//
+}
+
+func GetApiServiceAddress() string {
+	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_API_PORT, 443))
+}
+
+func GetClusterServiceAddress() string {
+	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_CLUSTER_PORT, 444))
+}
+
+func GetManagerServiceAddress() string {
+	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_MANAGER_PORT, 445))
+}
+
+func GetMetaDBServiceAddress() string {
+	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_METADB_PORT, 446))
 }
 
 func GetLogConfig() Log {

@@ -93,6 +93,7 @@ func initTables() error {
 		&models.RoleBinding{},
 		&models.Token{},
 		&models.ClusterDO{},
+		&models.DemandRecordDO{},
 		&models.TiUPConfigDO{},
 		&models.TaskDO{},
 		&models.FlowDO{},
@@ -153,14 +154,47 @@ func initDataForDemo() {
 		CpuCores: 32,
 		Memory:   64,
 		Nic:      "1GE",
-		AZ:       "East China",
+		AZ:       "Aone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	})
-
+	// 添加一些demo使用的host和disk数据
+	models.CreateHost(&models.Host{
+		HostName: "主机2",
+		IP:       "192.168.125.133",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 32,
+		Memory:   64,
+		Nic:      "1GE",
+		AZ:       "Aone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/tikv", Capacity: 256, Status: 1},
+		},
+	})
+	// 添加一些demo使用的host和disk数据
+	models.CreateHost(&models.Host{
+		HostName: "主机3",
+		IP:       "192.168.125.134",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 32,
+		Memory:   64,
+		Nic:      "1GE",
+		AZ:       "Aone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/pd", Capacity: 256, Status: 1},
+		},
+	})
 	return
 }
 

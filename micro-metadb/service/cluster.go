@@ -222,6 +222,9 @@ func (*DBServiceHandler) GetCurrentParametersRecord(ctx context.Context, req *db
 }
 
 func ConvertToBackupRecordDTO(do *models.BackupRecordDO) (dto *dbPb.DBBackupRecordDTO) {
+	if do == nil {
+		return nil
+	}
 	dto =  &dbPb.DBBackupRecordDTO{
 		Id:          int64(do.ID),
 		TenantId:    do.TenantId,
@@ -237,6 +240,10 @@ func ConvertToBackupRecordDTO(do *models.BackupRecordDO) (dto *dbPb.DBBackupReco
 }
 
 func ConvertToBackupRecordDisplayDTO(do *models.BackupRecordDO, flow *models.FlowDO) (dto *dbPb.DBDBBackupRecordDisplayDTO){
+	if do == nil {
+		return nil
+	}
+
 	dto = &dbPb.DBDBBackupRecordDisplayDTO{
 		BackupRecord: ConvertToBackupRecordDTO(do),
 		Flow: convertFlowToDTO(flow),
@@ -246,6 +253,9 @@ func ConvertToBackupRecordDisplayDTO(do *models.BackupRecordDO, flow *models.Flo
 }
 
 func ConvertToRecoverRecordDTO(do *models.RecoverRecordDO) (dto *dbPb.DBRecoverRecordDTO) {
+	if do == nil {
+		return nil
+	}
 	dto = &dbPb.DBRecoverRecordDTO{
 		Id:             int64(do.ID),
 		TenantId:       do.TenantId,
@@ -259,6 +269,9 @@ func ConvertToRecoverRecordDTO(do *models.RecoverRecordDO) (dto *dbPb.DBRecoverR
 }
 
 func ConvertToParameterRecordDTO(do *models.ParametersRecordDO) (dto *dbPb.DBParameterRecordDTO) {
+	if do == nil {
+		return nil
+	}
 	dto = &dbPb.DBParameterRecordDTO{
 		Id:             int64(do.ID),
 		TenantId:       do.TenantId,
@@ -272,6 +285,9 @@ func ConvertToParameterRecordDTO(do *models.ParametersRecordDO) (dto *dbPb.DBPar
 }
 
 func convertToClusterDTO(do *models.ClusterDO, demand *models.DemandRecordDO) (dto *dbPb.DBClusterDTO) {
+	if do == nil {
+		return nil
+	}
 	dto = &dbPb.DBClusterDTO {
 		Id:          do.ID,
 		Code:        do.Code,
@@ -297,7 +313,9 @@ func convertToClusterDTO(do *models.ClusterDO, demand *models.DemandRecordDO) (d
 }
 
 func convertToConfigDTO(do *models.TiUPConfigDO) (dto *dbPb.DBTiUPConfigDTO) {
-
+	if do == nil {
+		return nil
+	}
 	return &dbPb.DBTiUPConfigDTO{
 		Id: int32(do.ID),
 		TenantId:   do.TenantId,

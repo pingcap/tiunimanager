@@ -52,7 +52,7 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 		ClusterType: *knowledge.ClusterTypeFromCode(clusterInfo.ClusterType.Code),
 		ClusterVersion: *knowledge.ClusterVersionFromCode(clusterInfo.ClusterVersion.Code),
 		Tls: clusterInfo.Tls,
-
+		TenantId: operator.TenantId,
 		OwnerId: operator.Id,
 	}
 
@@ -242,7 +242,7 @@ func (aggregation *ClusterAggregation) loadWorkFlow() error {
 }
 
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
-	clusterAggregation := flowContext.value(contextClusterKey).(ClusterAggregation)
+	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
 
 	demands := clusterAggregation.Cluster.Demands
 

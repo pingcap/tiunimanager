@@ -29,12 +29,10 @@ func (do TaskDO) TableName() string {
 }
 
 func (do *TaskDO) BeforeCreate(tx *gorm.DB) (err error) {
-	do.Status = 0
 	return nil
 }
 
 func (do *FlowDO) BeforeCreate(tx *gorm.DB) (err error) {
-	do.Status = 0
 	return nil
 }
 

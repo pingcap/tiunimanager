@@ -63,7 +63,7 @@ func LoadSpecKnowledge() {
 		Specs: []*ClusterTypeSpec{{tidbType, []ClusterVersionSpec{tidbV4Spec}}},
 		Types: map[string]*ClusterType{tidbType.Code:&tidbType},
 		Versions: map[string]*ClusterVersion{tidbV4.Code: &tidbV4},
-		Components: map[string]*ClusterComponent{tidbComponent.ComponentType:&tidbComponent,tikvComponent.ComponentType:&tikvComponent, tikvComponent.ComponentType: &tikvComponent},
+		Components: map[string]*ClusterComponent{tidbComponent.ComponentType:&tidbComponent,tikvComponent.ComponentType:&tikvComponent, pdComponent.ComponentType: &pdComponent},
 	}
 
 

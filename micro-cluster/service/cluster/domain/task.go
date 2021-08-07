@@ -103,13 +103,16 @@ func (flow *FlowWorkAggregation) AddContext(key string, value interface{}) {
 }
 
 func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
+	if taskDefine == nil {
+		flow.FlowWork.Status = TaskStatusFinished
+	}
 	task := &TaskEntity{
 		Status:   TaskStatusInit,
 		TaskName: taskDefine.Name,
 		TaskReturnType: taskDefine.ReturnType,
 	}
 
-	TaskRepo.AddTask(task)
+	TaskRepo.AddFlowTask(task, flow.FlowWork.Id)
 	flow.Tasks = append(flow.Tasks, task)
 	task.Processing()
 

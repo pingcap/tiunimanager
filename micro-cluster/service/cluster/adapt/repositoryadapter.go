@@ -9,6 +9,7 @@ import (
 	"github.com/pingcap/tiem/micro-metadb/client"
 	db "github.com/pingcap/tiem/micro-metadb/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"strconv"
 	"time"
 )
 
@@ -219,8 +220,10 @@ func (c InstanceRepoAdapter) QueryParameterJson(clusterId string) (content strin
 }
 type TaskRepoAdapter struct {}
 
+
 func (t TaskRepoAdapter) QueryCronTask(bizId string, cronTaskType int) (cronTask *domain.CronTaskEntity, err error) {
-	panic("implement me")
+	cronTask = domain.GetDefaultMaintainTask()
+	return
 }
 
 func (t TaskRepoAdapter) PersistCronTask(cronTask *domain.CronTaskEntity) (err error) {
@@ -228,22 +231,89 @@ func (t TaskRepoAdapter) PersistCronTask(cronTask *domain.CronTaskEntity) (err e
 }
 
 func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
-	panic("implement me")
+	resp, err := client.DBClient.CreateFlow(context.TODO(), &db.DBCreateFlowRequest{
+		Flow: &db.DBFlowDTO{
+			FlowName: flowWork.FlowName,
+			StatusAlias: flowWork.StatusAlias,
+			BizId: flowWork.BizId,
+		},
+	})
+
+	if err != nil {
+		// todo
+	}
+
+	if resp.Status.Code != 0 {
+		err = errors.New(resp.Status.Message)
+	} else {
+		flowWork.Id = uint(resp.Flow.Id)
+	}
+	return err
 }
 
-func (t TaskRepoAdapter) AddTask(task *domain.TaskEntity) error {
-	panic("implement me")
+func (t TaskRepoAdapter) AddFlowTask(task *domain.TaskEntity, flowId uint) error {
+	resp, err := client.DBClient.CreateTask(context.TODO(), &db.DBCreateTaskRequest{
+		Task: &db.DBTaskDTO{
+			TaskName: task.TaskName,
+			TaskReturnType: strconv.Itoa(int(task.TaskReturnType)),
+			BizId: task.BizId,
+			Parameters: task.Parameters,
+			ParentId: strconv.Itoa(int(flowId)),
+			ParentType: 0,
+		},
+	})
+
+	if err != nil {
+		// todo
+	}
+
+	if resp.Status.Code != 0 {
+		err = errors.New(resp.Status.Message)
+	} else {
+		task.Id = uint(resp.Task.Id)
+	}
+	return err
 }
 
 func (t TaskRepoAdapter) AddCronTask(cronTask *domain.CronTaskEntity) error {
-	panic("implement me")
+	return nil
 }
 
 func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
-	panic("implement me")
+	req :=  &db.DBUpdateFlowRequest{
+		FlowWithTasks: &db.DBFlowWithTaskDTO{
+			Flow: &db.DBFlowDTO{
+				Id:     int64(flowWork.FlowWork.Id),
+				BizId:  flowWork.FlowWork.BizId,
+				Status: int32(flowWork.FlowWork.Status),
+				FlowName: flowWork.FlowWork.FlowName,
+				StatusAlias: flowWork.FlowWork.StatusAlias,
+			},
+		},
+	}
+
+	tasks := make([]*db.DBTaskDTO, len(flowWork.Tasks), len(flowWork.Tasks))
+	req.FlowWithTasks.Tasks = tasks
+
+	for i, v := range flowWork.Tasks {
+		tasks[i] = &db.DBTaskDTO{
+			Id:             int64(v.Id),
+			Status:         int32(v.Status),
+			Result:         v.Result,
+			TaskReturnType: strconv.Itoa(int(v.TaskReturnType)),
+			TaskName:       v.TaskName,
+			BizId:          v.BizId,
+			Parameters:     v.Parameters,
+			ParentId: strconv.Itoa(int(flowWork.FlowWork.Id)),
+			ParentType: 0,
+		}
+	}
+
+	_, err := client.DBClient.UpdateFlow(context.TODO(), req)
+	return err
 }
 
-func (t TaskRepoAdapter) LoadFlowWork(id uint) (*domain.FlowWorkEntity, error) {
+func (t TaskRepoAdapter) LoadFlowWork(id uint) (flow *domain.FlowWorkEntity, err error) {
 	panic("implement me")
 }
 

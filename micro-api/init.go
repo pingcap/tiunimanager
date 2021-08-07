@@ -51,8 +51,8 @@ func initService() {
 }
 
 func initClient() {
-	client.InitManagerClient()
 	client.InitClusterClient()
+	client.InitManagerClient()
 }
 
 func initGinEngine() {

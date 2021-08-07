@@ -10,10 +10,10 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
 			"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
-			"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
-			"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
+			//"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
+			//"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
 			//"deployDone":   {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
-			"deployDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
+			"resourceDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
 		},
 		ContextParser: func(s string) *FlowContext {
@@ -103,7 +103,7 @@ func (define *FlowWorkDefine) getInstance(bizId string, context map[string]inter
 			BizId: bizId,
 			Status: TaskStatusInit,
 		},
-		Tasks: make([]*TaskEntity, 4, 4),
+		Tasks: make([]*TaskEntity, 0 ,4),
 		Context: context,
 		Define: define,
 	}

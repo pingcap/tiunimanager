@@ -11,6 +11,7 @@ import (
 	"github.com/asim/go-micro/v3/transport"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap/tiem/library/knowledge"
 	"github.com/pingcap/tiem/library/thirdparty/tracer"
 	"github.com/pingcap/tiem/micro-api/route"
 	"github.com/pingcap/tiem/micro-cluster/client"
@@ -68,4 +69,8 @@ func initGinEngine() {
 	//if err := g.RunTLS(addr, config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath()); err != nil {
 	//	log.Fatal(err)
 	//}
+}
+
+func initKnowledge() {
+	knowledge.LoadSpecKnowledge()
 }

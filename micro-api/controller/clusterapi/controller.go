@@ -208,14 +208,5 @@ func Detail(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /cluster/knowledge [get]
 func ClusterKnowledge(c *gin.Context) {
-	c.JSON(http.StatusOK, controller.Success([]knowledge.ClusterTypeSpec{
-		{
-			knowledge.ClusterType{
-				Name: "what",
-			},
-			[]knowledge.ClusterVersionSpec{
-
-			},
-		},
-	}))
+	c.JSON(http.StatusOK, controller.Success(knowledge.SpecKnowledge.Specs))
 }

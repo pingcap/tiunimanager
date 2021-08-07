@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"github.com/pingcap/tiem/library/knowledge"
 	"time"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
@@ -82,8 +83,14 @@ func initService() {
 
 	cluster.RegisterTiEMManagerServiceHandler(srv2.Server(), new(service.ManagerServiceHandler))
 
-	if err := srv2.Run(); err != nil {
-		log.Fatal(err)
+	go func() {
+		if err := srv2.Run(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	for true {
+		time.Sleep(time.Minute)
 	}
 }
 
@@ -94,4 +101,8 @@ func initClient() {
 func initPort() {
 	tenantAdapt.InjectionMetaDbRepo()
 	clusterAdapt.InjectionMetaDbRepo()
+}
+
+func initKnowledge() {
+	knowledge.LoadSpecKnowledge()
 }

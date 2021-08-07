@@ -168,7 +168,7 @@ func ConvertVersionDTO(code string) (dto *cluster.ClusterVersionDTO) {
 }
 
 func ConvertTypeDTO(code string) (dto *cluster.ClusterTypeDTO) {
-	t := knowledge.ClusterVersionFromCode(code)
+	t := knowledge.ClusterTypeFromCode(code)
 
 	dto = &cluster.ClusterTypeDTO{
 		Code: t.Code,

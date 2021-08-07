@@ -35,5 +35,36 @@ func SortedTypesKnowledge() []*ClusterTypeSpec {
 }
 
 func LoadSpecKnowledge() {
+	tidbType := ClusterType{"tidb", "tidb"}
+	tidbV4 := ClusterVersion{"tidbV4", "v4"}
+
+	tidbComponent := ClusterComponent{
+		"tidb", "tidb",
+	}
+
+	tikvComponent := ClusterComponent{
+		"tikv", "tikv",
+	}
+
+	pdComponent := ClusterComponent{
+		"pd", "pd",
+	}
+
+	tidbV4Spec := ClusterVersionSpec{
+		ClusterVersion: tidbV4,
+		ComponentSpecs: []ClusterComponentSpec{
+			{tidbComponent, ComponentConstraint{true,[]int{2}, []string{"4c8g"}, 1}},
+			{tikvComponent, ComponentConstraint{true,[]int{2}, []string{"4c8g"}, 1}},
+			{pdComponent, ComponentConstraint{true,[]int{2}, []string{"4c8g"}, 1}},
+		},
+	}
+
+	SpecKnowledge = &ClusterSpecKnowledge {
+		Specs: []*ClusterTypeSpec{{tidbType, []ClusterVersionSpec{tidbV4Spec}}},
+		Types: map[string]*ClusterType{tidbType.Code:&tidbType},
+		Versions: map[string]*ClusterVersion{tidbV4.Code: &tidbV4},
+		Components: map[string]*ClusterComponent{tidbComponent.ComponentType:&tidbComponent,tikvComponent.ComponentType:&tikvComponent, tikvComponent.ComponentType: &tikvComponent},
+	}
+
 
 }

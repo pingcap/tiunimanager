@@ -10,6 +10,23 @@ func (req *CreateReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, d
 
 	demandsDTO = make([]*cluster.ClusterNodeDemandDTO, len(req.NodeDemandList), len(req.NodeDemandList))
 
+	for i,demand := range req.NodeDemandList {
+		items := make([]*cluster.DistributionItemDTO, len(demand.DistributionItems), len(demand.DistributionItems))
+
+		for j, item := range demand.DistributionItems {
+			items[j] = &cluster.DistributionItemDTO{
+				ZoneCode: item.ZoneCode,
+				SpecCode: item.SpecCode,
+				Count: int32(item.Count),
+			}
+		}
+
+		demandsDTO[i] = &cluster.ClusterNodeDemandDTO{
+			ComponentType:  demand.ComponentType,
+			TotalNodeCount: int32(demand.TotalNodeCount),
+			Items:          items,
+		}
+	}
 	return
 }
 

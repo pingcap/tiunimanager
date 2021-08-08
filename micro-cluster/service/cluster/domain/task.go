@@ -105,6 +105,7 @@ func (flow *FlowWorkAggregation) AddContext(key string, value interface{}) {
 func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 	if taskDefine == nil {
 		flow.FlowWork.Status = TaskStatusFinished
+		return
 	}
 	task := &TaskEntity{
 		Status:   TaskStatusInit,

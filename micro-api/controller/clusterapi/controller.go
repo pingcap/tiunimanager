@@ -109,7 +109,6 @@ func Query(c *gin.Context) {
 
 		c.JSON(http.StatusOK, result)
 	}
-
 }
 
 // Delete 删除集群

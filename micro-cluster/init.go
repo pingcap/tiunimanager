@@ -105,5 +105,5 @@ func initPort() {
 }
 
 func initKnowledge() {
-	knowledge.LoadSpecKnowledge()
+	knowledge.LoadKnowledge()
 }

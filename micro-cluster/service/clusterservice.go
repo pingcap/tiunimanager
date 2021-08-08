@@ -203,7 +203,7 @@ func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *clu
 	content, err := domain.GetParameters(request.Operator, request.ClusterId)
 
 	if err != nil {
-		// todo
+		response.Status = BizErrorResponseStatus
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus

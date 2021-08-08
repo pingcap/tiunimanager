@@ -211,15 +211,18 @@ func (c InstanceRepoAdapter) QueryParameterJson(clusterId string) (content strin
 	}
 
 	if resp.Status.Code != 0 {
+		if resp.Status.Code == 1 {
+			content = "[]"
+			return
+		}
 		err = errors.New(resp.Status.Message)
 		return
 	} else {
-		resp.GetParameters().GetContent()
+		content = resp.GetParameters().GetContent()
 	}
 	return
 }
 type TaskRepoAdapter struct {}
-
 
 func (t TaskRepoAdapter) QueryCronTask(bizId string, cronTaskType int) (cronTask *domain.CronTaskEntity, err error) {
 	cronTask = domain.GetDefaultMaintainTask()
@@ -353,6 +356,9 @@ func ConvertClusterToDTO(cluster *domain.Cluster) (dto *db.DBClusterDTO) {
 }
 
 func ParseFromClusterDTO(dto *db.DBClusterDTO) (cluster *domain.Cluster) {
+	if dto == nil {
+		return nil
+	}
 	cluster = &domain.Cluster{
 		Id: dto.Id,
 		Code:           dto.Code,
@@ -377,6 +383,9 @@ func ParseFromClusterDTO(dto *db.DBClusterDTO) (cluster *domain.Cluster) {
 }
 
 func parseConfigRecordDTO(dto *db.DBTiUPConfigDTO) (record *domain.TiUPConfigRecord) {
+	if dto == nil {
+		return nil
+	}
 	record = &domain.TiUPConfigRecord{
 		Id: uint(dto.Id),
 		TenantId:   dto.TenantId,
@@ -391,6 +400,9 @@ func parseConfigRecordDTO(dto *db.DBTiUPConfigDTO) (record *domain.TiUPConfigRec
 }
 
 func parseFlowFromDTO(dto *db.DBFlowDTO) (flow *domain.FlowWorkEntity) {
+	if dto == nil {
+		return nil
+	}
 	flow = &domain.FlowWorkEntity {
 		Id: uint(dto.Id),
 		FlowName:    dto.FlowName,

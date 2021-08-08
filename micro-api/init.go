@@ -72,5 +72,5 @@ func initGinEngine() {
 }
 
 func initKnowledge() {
-	knowledge.LoadSpecKnowledge()
+	knowledge.LoadKnowledge()
 }

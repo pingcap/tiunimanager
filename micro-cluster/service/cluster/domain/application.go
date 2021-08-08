@@ -84,9 +84,14 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 
 	flow.Start()
 
-	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
+}
+
+func (clusterAggregation *ClusterAggregation) updateWorkFlow(flow *FlowWorkEntity) {
+	clusterAggregation.CurrentWorkFlow = flow
+	clusterAggregation.FlowModified = true
 }
 
 func DeleteCluster(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
@@ -102,7 +107,7 @@ func DeleteCluster(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregatio
 	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster)
 	flow.AddContext(contextClusterKey, clusterAggregation)
 
-	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	TaskRepo.Persist(flow)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
@@ -137,10 +142,10 @@ func Backup(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, erro
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	currentFlow := clusterAggregation.CurrentWorkFlow
-	if currentFlow != nil && !currentFlow.Finished(){
-		return clusterAggregation, errors.New("incomplete processing flow")
-	}
+	//currentFlow := clusterAggregation.CurrentWorkFlow
+	//if currentFlow != nil && !currentFlow.Finished(){
+	//	return clusterAggregation, errors.New("incomplete processing flow")
+	//}
 
 	flow, err := CreateFlowWork(clusterId, FlowBackupCluster)
 	if err != nil {
@@ -151,7 +156,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, erro
 
 	flow.Start()
 
-	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }
@@ -170,10 +175,10 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	currentFlow := clusterAggregation.CurrentWorkFlow
-	if currentFlow != nil && !currentFlow.Finished(){
-		return clusterAggregation, errors.New("incomplete processing flow")
-	}
+	//currentFlow := clusterAggregation.CurrentWorkFlow
+	//if currentFlow != nil && !currentFlow.Finished(){
+	//	return clusterAggregation, errors.New("incomplete processing flow")
+	//}
 
 	flow, err := CreateFlowWork(clusterId, FlowRecoverCluster)
 	if err != nil {
@@ -184,7 +189,7 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 
 	flow.Start()
 
-	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }
@@ -203,10 +208,10 @@ func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) 
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	currentFlow := clusterAggregation.CurrentWorkFlow
-	if currentFlow != nil && !currentFlow.Finished(){
-		return clusterAggregation, errors.New("incomplete processing flow")
-	}
+	//currentFlow := clusterAggregation.CurrentWorkFlow
+	//if currentFlow != nil && !currentFlow.Finished(){
+	//	return clusterAggregation, errors.New("incomplete processing flow")
+	//}
 
 	flow, err := CreateFlowWork(clusterId, FlowModifyParameters)
 	if err != nil {
@@ -217,7 +222,7 @@ func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) 
 
 	flow.Start()
 
-	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }

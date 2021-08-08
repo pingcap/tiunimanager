@@ -1,6 +1,12 @@
 package knowledge
 
 var SpecKnowledge *ClusterSpecKnowledge
+var ParameterKnowledge *ClusterParameterKnowledge
+
+type ClusterParameterKnowledge struct {
+	Parameters []*Parameter
+	Names 		map[string]*Parameter
+}
 
 type ClusterSpecKnowledge struct {
 	Specs 		[]*ClusterTypeSpec
@@ -34,7 +40,16 @@ func SortedTypesKnowledge() []*ClusterTypeSpec {
 	return slice
 }
 
-func LoadSpecKnowledge() {
+func ParameterFromName(name string) *Parameter {
+	return ParameterKnowledge.Names[name]
+}
+
+func LoadKnowledge() {
+	loadSpecKnowledge()
+	loadParameterKnowledge()
+}
+
+func loadSpecKnowledge () {
 	tidbType := ClusterType{"tidb", "tidb"}
 	tidbV4 := ClusterVersion{"tidbV4", "v4"}
 
@@ -65,6 +80,21 @@ func LoadSpecKnowledge() {
 		Versions: map[string]*ClusterVersion{tidbV4.Code: &tidbV4},
 		Components: map[string]*ClusterComponent{tidbComponent.ComponentType:&tidbComponent,tikvComponent.ComponentType:&tikvComponent, pdComponent.ComponentType: &pdComponent},
 	}
+}
 
+func loadParameterKnowledge() {
+	ParameterKnowledge = &ClusterParameterKnowledge{
+		Parameters: []*Parameter{
+			{"binlog_cache_size", ParamTypeInteger, ParamUnitMb, 1024, false, []ParamValueConstraint{
+				{ConstraintTypeGT, 0},
+				{ConstraintTypeGT, 2048},
+			}, "binlog cache size"},
+			{"show_query_log", ParamTypeBoolean, ParamUnitNil, true, false, []ParamValueConstraint{}, "show_query_log"},
+		},
+	}
 
+	ParameterKnowledge.Names = make(map[string]*Parameter)
+	for _,v := range ParameterKnowledge.Parameters {
+		ParameterKnowledge.Names[v.Name] = v
+	}
 }

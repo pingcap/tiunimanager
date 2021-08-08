@@ -1,9 +1,13 @@
 package instanceapi
 
 import (
+	"context"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/tiem/library/knowledge"
 	"github.com/pingcap/tiem/micro-api/controller"
+	"github.com/pingcap/tiem/micro-cluster/client"
+	proto "github.com/pingcap/tiem/micro-cluster/proto"
 	"net/http"
 )
 
@@ -28,10 +32,46 @@ func QueryParams(c *gin.Context) {
 		return
 	}
 	clusterId := c.Param("clusterId")
-	c.JSON(http.StatusOK, controller.SuccessWithPage([]ParamItem{
-		{Definition: knowledge.Parameter{Name: clusterId}, CurrentValue: ParamInstance{Value: clusterId}},
-		{Definition: knowledge.Parameter{Name: "p2"}, CurrentValue: ParamInstance{Value: 2}},
-	}, controller.Page{Page: req.Page, PageSize: req.PageSize}))
+	operator := controller.GetOperator(c)
+	resp, err := client.ClusterClient.QueryParameters(context.TODO(), &proto.QueryClusterParametersRequest{
+		ClusterId: clusterId,
+		Operator: operator.ConvertToDTO(),
+
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		instances := make([]ParamInstance, 0)
+
+		err = json.Unmarshal([]byte(resp.GetParametersJson()), &instances)
+
+		instanceMap := make(map[string]interface{})
+		if len(instances) > 0{
+			for _,v := range instances {
+				instanceMap[v.Name] = v.Value
+			}
+		}
+
+		if err != nil  {
+			c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+			return
+		}
+
+		parameters := make([]ParamItem, len(knowledge.ParameterKnowledge.Parameters), len(knowledge.ParameterKnowledge.Parameters))
+
+		for i,v := range knowledge.ParameterKnowledge.Parameters {
+			parameters[i] = ParamItem{
+				Definition: *v,
+				CurrentValue: ParamInstance{
+					Name: v.Name,
+					Value: instanceMap[v.Name],
+				},
+			}
+		}
+
+		c.JSON(http.StatusOK, controller.SuccessWithPage(parameters, controller.Page{Page: req.Page, PageSize: req.PageSize, Total: len(parameters)}))
+	}
 }
 
 // SubmitParams 提交参数
@@ -55,10 +95,27 @@ func SubmitParams(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, controller.Success(ParamUpdateRsp{
-		ClusterId: req.ClusterId,
-		TaskId: 111,
-	}))
+	clusterId := req.ClusterId
+	operator := controller.GetOperator(c)
+	values := req.Values
+
+	jsonByte, _ := json.Marshal(values)
+
+	jsonContent := string(jsonByte)
+
+	resp, err := client.ClusterClient.SaveParameters(context.TODO(), &proto.SaveClusterParametersRequest{
+		ClusterId: clusterId,
+		ParametersJson: jsonContent,
+		Operator: operator.ConvertToDTO(),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		c.JSON(http.StatusOK, controller.Success(ParamUpdateRsp{
+			ClusterId: req.ClusterId,
+			TaskId: uint(resp.DisplayInfo.InProcessFlowId),
+		}))
+	}
 }
 
 // Backup backup

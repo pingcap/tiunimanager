@@ -47,5 +47,7 @@ type ParamUnit string
 
 const (
 	ParamUnitNil ParamUnit = ""
+	ParamUnitKb  ParamUnit = "kb"
+	ParamUnitMb  ParamUnit = "mb"
 	ParamUnitGb  ParamUnit = "gb"
 )

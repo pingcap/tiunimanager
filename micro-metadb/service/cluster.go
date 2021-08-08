@@ -8,6 +8,7 @@ import (
 )
 
 var ClusterSuccessResponseStatus =  &dbPb.DBClusterResponseStatus{Code: 0}
+var ClusterNoResultResponseStatus =  &dbPb.DBClusterResponseStatus{Code: 1}
 
 func (*DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DBCreateClusterRequest, resp *dbPb.DBCreateClusterResponse) error {
 	dto := req.Cluster
@@ -59,7 +60,7 @@ func (*DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *dbPb.DBUp
 	var err error
 	var do *models.ClusterDO
 	if req.UpdateStatus {
-		do, err = models.UpdateClusterFlowId(req.ClusterId, uint(req.FlowId))
+		do, err = models.UpdateClusterStatus(req.ClusterId, int8(req.Status))
 		if err != nil {
 			// todo
 			return nil
@@ -67,7 +68,7 @@ func (*DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *dbPb.DBUp
 	}
 
 	if req.UpdateFlow {
-		do, err = models.UpdateClusterStatus(req.ClusterId, int8(req.Status))
+		do, err = models.UpdateClusterFlowId(req.ClusterId, uint(req.FlowId))
 		if err != nil {
 			// todo
 			return nil
@@ -212,7 +213,7 @@ func (*DBServiceHandler) GetCurrentParametersRecord(ctx context.Context, req *db
 	result, err := models.GetCurrentParameters(req.GetClusterId())
 
 	if err != nil {
-		// todo
+		resp.Status = ClusterNoResultResponseStatus
 		return nil
 	}
 

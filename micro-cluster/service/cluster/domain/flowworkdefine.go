@@ -71,7 +71,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		FlowName:    FlowModifyParameters,
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowRecoverCluster),
 		TaskNodes: map[string]*TaskDefine {
-			"start":              {"modify", "modifyDone", "fail", PollingTasK, modifyParameters},
+			"start":              {"modifyParameter", "modifyDone", "fail", PollingTasK, modifyParameters},
 			"modifyDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
 		},

@@ -7,19 +7,23 @@ import (
 )
 
 func (aggregation *ClusterAggregation) ExtractInstancesDTO() *proto.ClusterInstanceDTO {
-	config := aggregation.CurrentTiUPConfigRecord.ConfigModel
-
 	dto := &proto.ClusterInstanceDTO {
-		Port: int32(config.GlobalOptions.SSHPort),
-		// todo fill
-		Whitelist:                []string{},
-		IntranetConnectAddresses: ConnectAddresses(config),
-		ExtranetConnectAddresses: ConnectAddresses(config),
+		Whitelist:           	[]string{},
 		DiskUsage:                MockUsage(),
 		CpuUsage:                 MockUsage(),
 		MemoryUsage:              MockUsage(),
 		StorageUsage:             MockUsage(),
 		BackupFileUsage:          MockUsage(),
+	}
+
+	if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
+		dto.Port = int32(record.ConfigModel.GlobalOptions.SSHPort)
+		dto.IntranetConnectAddresses = ConnectAddresses(record.ConfigModel)
+		dto.ExtranetConnectAddresses = ConnectAddresses(record.ConfigModel)
+	} else {
+		dto.Port = 22
+		dto.IntranetConnectAddresses = []string{"127.0.0.1"}
+		dto.ExtranetConnectAddresses = []string{"127.0.0.1"}
 	}
 
 	return dto

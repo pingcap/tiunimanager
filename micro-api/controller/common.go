@@ -40,6 +40,7 @@ type ResultWithPage struct {
 }
 
 func BuildCommonResult(code int, message string, data interface{}) (result *CommonResult) {
+	result = &CommonResult{}
 	result.Code = code
 	result.Message = message
 	result.Data = data
@@ -47,8 +48,8 @@ func BuildCommonResult(code int, message string, data interface{}) (result *Comm
 	return
 }
 
-
 func BuildResultWithPage(code int, message string, page *Page, data interface{}) (result *ResultWithPage) {
+	result = &ResultWithPage{}
 	result.Code = code
 	result.Message = message
 	result.Data = data

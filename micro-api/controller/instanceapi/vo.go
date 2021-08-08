@@ -12,8 +12,8 @@ type ParamItem struct {
 }
 
 type ParamInstance struct {
-	Name 		string
-	Value  		interface{}
+	Name 		string 			`json:"name"`
+	Value  		interface{} 	`json:"value"`
 }
 
 type BackupRecord struct {

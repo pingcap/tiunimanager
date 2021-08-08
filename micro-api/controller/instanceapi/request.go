@@ -2,7 +2,6 @@ package instanceapi
 
 import (
 	"github.com/pingcap/tiem/micro-api/controller"
-	"time"
 )
 
 type ParamQueryReq struct {
@@ -15,8 +14,8 @@ type ParamUpdateReq struct {
 }
 
 type BackupRecordQueryReq struct {
-	StartTime time.Time
-	EndTime time.Time
+	//StartTime time.Time
+	//EndTime time.Time
 	controller.PageRequest
 }
 

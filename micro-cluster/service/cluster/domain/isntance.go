@@ -40,10 +40,13 @@ func ConnectAddresses(spec *spec.Specification) []string {
 }
 
 func (aggregation *ClusterAggregation) ExtractComponentDTOs() []*proto.ComponentInstanceDTO {
-	config := aggregation.CurrentTiUPConfigRecord.ConfigModel
-	var knowledge *knowledge.ClusterVersionSpec
+	if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
+		config := record.ConfigModel
+		var knowledge *knowledge.ClusterVersionSpec
 
-	return appendAllComponentInstances(config, knowledge)
+		return appendAllComponentInstances(config, knowledge)
+	}
+	return make([]*proto.ComponentInstanceDTO, 0)
 }
 
 func appendAllComponentInstances(config *spec.Specification, knowledge *knowledge.ClusterVersionSpec) []*proto.ComponentInstanceDTO{

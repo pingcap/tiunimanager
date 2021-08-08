@@ -21,7 +21,7 @@ var CopyWritingContainer = map[string]map[string]string{
 		CWFlowDeleteCluster:    "删除中",
 		CWFlowBackupCluster:    "备份中",
 		CWFlowRecoverCluster:   "恢复中",
-		CWFlowModifyParameters: "配置中",
+		CWFlowModifyParameters: "参数修改中",
 		CWTaskStatusInit:       "未开始",
 		CWTaskStatusProcessing: "处理中",
 		CWTaskStatusFinished:   "已完成",

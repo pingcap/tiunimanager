@@ -3,12 +3,15 @@ package instanceapi
 import (
 	"context"
 	"encoding/json"
+	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/tiem/library/knowledge"
 	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-cluster/client"
+	"github.com/pingcap/tiem/micro-api/controller/clusterapi"
+	cluster "github.com/pingcap/tiem/micro-cluster/client"
 	proto "github.com/pingcap/tiem/micro-cluster/proto"
 	"net/http"
+	"time"
 )
 
 // QueryParams 查询集群参数列表
@@ -33,7 +36,7 @@ func QueryParams(c *gin.Context) {
 	}
 	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
-	resp, err := client.ClusterClient.QueryParameters(context.TODO(), &proto.QueryClusterParametersRequest{
+	resp, err := cluster.ClusterClient.QueryParameters(context.TODO(), &proto.QueryClusterParametersRequest{
 		ClusterId: clusterId,
 		Operator: operator.ConvertToDTO(),
 
@@ -103,7 +106,7 @@ func SubmitParams(c *gin.Context) {
 
 	jsonContent := string(jsonByte)
 
-	resp, err := client.ClusterClient.SaveParameters(context.TODO(), &proto.SaveClusterParametersRequest{
+	resp, err := cluster.ClusterClient.SaveParameters(context.TODO(), &proto.SaveClusterParametersRequest{
 		ClusterId: clusterId,
 		ParametersJson: jsonContent,
 		Operator: operator.ConvertToDTO(),
@@ -133,7 +136,24 @@ func SubmitParams(c *gin.Context) {
 // @Router /backup/{clusterId} [post]
 func Backup(c *gin.Context) {
 	clusterId := c.Param("clusterId")
-	c.JSON(http.StatusOK, controller.Success(BackupRecord{ClusterId: clusterId}))
+
+	operator := controller.GetOperator(c)
+
+	resp, err := cluster.ClusterClient.CreateBackup(context.TODO(), &proto.CreateBackupRequest{
+		ClusterId: clusterId,
+		Operator: operator.ConvertToDTO(),
+	}, func(o *client.CallOptions) {
+		o.RequestTimeout = time.Second * 30
+		o.DialTimeout = time.Second * 30
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		c.JSON(http.StatusOK, controller.Success(BackupRecord{
+			ID: resp.BackupRecord.Id,
+			Status: *clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
+		}))
+	}
 }
 
 // QueryBackupStrategy
@@ -189,16 +209,54 @@ func SaveBackupStrategy(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param clusterId path string true "clusterId"
 // @Param request body BackupRecordQueryReq false "page" default(1)
-// @Success 200 {object} controller.ResultWithPage{data=[]BackupRecord}
+// @Success 200 {object} controller.ResultWithPage{data=[] BackupRecord}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /backup/records/{clusterId} [post]
 func QueryBackup(c *gin.Context) {
 	clusterId := c.Param("clusterId")
-	c.JSON(http.StatusOK, controller.Success([]BackupRecord{
-		{ClusterId: clusterId, ID: 111},
-	}))
+
+	var queryReq BackupRecordQueryReq
+	if err := c.ShouldBindJSON(&queryReq); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	//operator := controller.GetOperator(c)
+
+	reqDTO := &proto.QueryBackupRequest {
+		ClusterId: clusterId,
+		Page: queryReq.PageRequest.ConvertToDTO(),
+	}
+
+	resp, err := cluster.ClusterClient.QueryBackupRecord(context.TODO(), reqDTO)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		records := make([]BackupRecord, len(resp.BackupRecords), len(resp.BackupRecords))
+
+		for i,v := range resp.BackupRecords {
+			records[i] = BackupRecord{
+				ID:        v.Id,
+				ClusterId: v.ClusterId,
+				StartTime: time.Unix(v.StartTime, 0),
+				EndTime:   time.Unix(v.EndTime, 0),
+				Range:     int(v.Range),
+				Way: int(v.Way),
+				Operator:  controller.Operator{
+					ManualOperator: true,
+					OperatorId: v.Operator.Id,
+					//OperatorName: v.Operator.Name,
+					//TenantId: v.Operator.TenantId,
+				},
+				Size:      v.Size,
+				Status:    *clusterapi.ParseStatusFromDTO(v.DisplayStatus),
+				FilePath:  v.FilePath,
+			}
+		}
+		c.JSON(http.StatusOK, controller.SuccessWithPage(records, *controller.ParsePageFromDTO(resp.Page)))
+	}
 }
 
 // RecoverBackup

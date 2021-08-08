@@ -385,14 +385,14 @@ func TestUpdateFlow(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotFlow, err := UpdateFlow(tt.args.flow)
+			gotFlow, err := UpdateFlowStatus(tt.args.flow)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("UpdateFlow() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("UpdateFlowStatus() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			for i, assert := range tt.wants {
 				if !assert(tt.args, gotFlow) {
-					t.Errorf("UpdateFlow() test error, testname = %v, assert = %v, args = %v, gotFlow = %v", tt.name, i, tt.args, gotFlow)
+					t.Errorf("UpdateFlowStatus() test error, testname = %v, assert = %v, args = %v, gotFlow = %v", tt.name, i, tt.args, gotFlow)
 				}
 			}
 		})
@@ -455,7 +455,7 @@ func TestUpdateTask(t *testing.T) {
 			}
 			for i, assert := range tt.wants {
 				if !assert(tt.args, gotNewTask) {
-					t.Errorf("UpdateFlow() test error, testname = %v, assert = %v, args = %v, gotFlow = %v", tt.name, i, tt.args, gotNewTask)
+					t.Errorf("UpdateFlowStatus() test error, testname = %v, assert = %v, args = %v, gotFlow = %v", tt.name, i, tt.args, gotNewTask)
 				}
 			}
 		})

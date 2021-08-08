@@ -10,7 +10,7 @@ import (
 var TaskSuccessResponseStatus = &dbPb.DBTaskResponseStatus{Code: 0}
 
 func (d *DBServiceHandler) CreateFlow(ctx context.Context, req *dbPb.DBCreateFlowRequest, rsp *dbPb.DBCreateFlowResponse) error {
-	flow, err := models.CreateFlow(req.Flow.FlowName, req.Flow.GetFlowName(), req.Flow.GetBizId())
+	flow, err := models.CreateFlow(req.Flow.FlowName, req.Flow.StatusAlias, req.Flow.GetBizId())
 	if err != nil {
 		// todo
 
@@ -43,7 +43,7 @@ func (d *DBServiceHandler) CreateTask(ctx context.Context, req *dbPb.DBCreateTas
 }
 
 func (d *DBServiceHandler) UpdateFlow(ctx context.Context, req *dbPb.DBUpdateFlowRequest, rsp *dbPb.DBUpdateFlowResponse) error {
-	flow, err := models.UpdateFlow(*parseFlowDTO(req.FlowWithTasks.Flow))
+	flow, err := models.UpdateFlowStatus(*parseFlowDTO(req.FlowWithTasks.Flow))
 	if err != nil {
 		// todo
 	} else {

@@ -177,6 +177,7 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 		response.Page = &cluster.PageDTO{
 			Page: result.Page.Page,
 			PageSize: result.Page.PageSize,
+			Total: result.Page.Total,
 		}
 		response.BackupRecords = make([]*cluster.BackupRecordDTO, len(result.BackupRecords), len(result.BackupRecords))
 		for i,v := range result.BackupRecords {
@@ -188,6 +189,9 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 				FilePath: v.BackupRecord.FilePath,
 				StartTime: v.Flow.CreateTime,
 				EndTime: v.Flow.UpdateTime,
+				Operator: &cluster.OperatorDTO {
+					Id: v.BackupRecord.OperatorId,
+				},
 				DisplayStatus: &cluster.DisplayStatusDTO {
 					StatusCode:      strconv.Itoa(int(v.Flow.Status)),
 					StatusName:      v.Flow.StatusAlias,

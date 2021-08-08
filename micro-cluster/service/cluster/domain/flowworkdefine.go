@@ -24,7 +24,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	},
 	FlowDeleteCluster: {
 		FlowName:    FlowDeleteCluster,
-		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowDeleteCluster),
 		TaskNodes: map[string]*TaskDefine {
 			"start":              {"destroyTasks", "destroyTasksDone", "fail", PollingTasK, destroyTasks},
 			"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", PollingTasK, destroyCluster},
@@ -69,7 +69,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	},
 	FlowModifyParameters: {
 		FlowName:    FlowModifyParameters,
-		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowRecoverCluster),
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowModifyParameters),
 		TaskNodes: map[string]*TaskDefine {
 			"start":              {"modifyParameter", "modifyDone", "fail", PollingTasK, modifyParameters},
 			"modifyDone":  {"end", "", "", SyncFuncTask, DefaultEnd},

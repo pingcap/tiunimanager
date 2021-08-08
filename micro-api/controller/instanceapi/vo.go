@@ -21,16 +21,13 @@ type BackupRecord struct {
 	ClusterId 		string
 	StartTime 		time.Time
 	EndTime 		time.Time
-	Range 			BackupRange
-	Way 			BackupWay
+	Range 			int
+	Way 			int
 	Operator 		controller.Operator
 	Size 			float32
 	Status 			controller.StatusInfo
 	FilePath 		string
 }
-
-type BackupRange 		int
-type BackupWay 			int
 
 type BackupStrategy struct {
 	CronString 			string

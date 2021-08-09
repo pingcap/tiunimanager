@@ -6,86 +6,86 @@ import (
 )
 
 type ClusterBaseInfo struct {
-	ClusterName 		string
-	DbPassword 			string
-	ClusterType 		string
-	ClusterVersion 		string
-	Tags 				[]string
-	Tls 				bool
+	ClusterName 		string   	`json:"clusterName"`
+	DbPassword 			string   	`json:"dbPassword"`
+	ClusterType 		string   	`json:"clusterType"`
+	ClusterVersion 		string		`json:"clusterVersion"`
+	Tags 				[]string		`json:"tags"`
+	Tls 				bool		`json:"tls"`
 }
 
 type ClusterInstanceInfo struct {
-	IntranetConnectAddresses	[]string
-	ExtranetConnectAddresses	[]string
-	Whitelist					[]string
-	Port 						int
-	DiskUsage           		controller.Usage
-	CpuUsage    				controller.Usage
-	MemoryUsage 				controller.Usage
-	StorageUsage				controller.Usage
-	BackupFileUsage				controller.Usage
+	IntranetConnectAddresses	[]string	`json:"intranetConnectAddresses"`
+	ExtranetConnectAddresses	[]string	`json:"extranetConnectAddresses"`
+	Whitelist					[]string	`json:"whitelist"`
+	Port 						int			`json:"port"`
+	DiskUsage           		controller.Usage	`json:"diskUsage"`
+	CpuUsage    				controller.Usage	`json:"cpuUsage"`
+	MemoryUsage 				controller.Usage	`json:"memoryUsage"`
+	StorageUsage				controller.Usage	`json:"storageUsage"`
+	BackupFileUsage				controller.Usage	`json:"backupFileUsage"`
 }
 
 type ClusterMaintenanceInfo struct {
-	MaintainTaskCron  			string
+	MaintainTaskCron  			string	`json:"maintainTaskCron"`
 }
 
 type ClusterDisplayInfo struct {
-	ClusterId 			string
+	ClusterId 			string	`json:"clusterId"`
 	ClusterBaseInfo
 	controller.StatusInfo
 	ClusterInstanceInfo
 }
 
 type ClusterNodeDemand struct {
-	ComponentType 			string
-	TotalNodeCount  	int
-	DistributionItems  	[]DistributionItem
+	ComponentType 		string	`json:"componentType"`
+	TotalNodeCount  	int		`json:"totalNodeCount"`
+	DistributionItems  	[]DistributionItem	`json:"distributionItems"`
 }
 
 type DistributionItem struct {
-	ZoneCode 		string
-	SpecCode		string
-	Count  			int
+	ZoneCode 		string	`json:"zoneCode"`
+	SpecCode		string	`json:"specCode"`
+	Count  			int		`json:"count"`
 }
 
 type ComponentInstance struct {
 	ComponentBaseInfo
-	Nodes []ComponentNodeDisplayInfo
+	Nodes []ComponentNodeDisplayInfo	`json:"nodes"`
 }
 
 type ComponentNodeDisplayInfo struct {
-	NodeId 				string
-	Version 			string
-	Status  			string
+	NodeId 				string	`json:"nodeId"`
+	Version 			string	`json:"version"`
+	Status  			string	`json:"status"`
 	ComponentNodeInstanceInfo
 	ComponentNodeUsageInfo
 }
 
 type ComponentNodeInstanceInfo struct {
-	HostId 				string
-	Port 				int
-	Role 				ComponentNodeRole
-	Spec 				hostapi.SpecBaseInfo
-	Zone 				hostapi.ZoneBaseInfo
+	HostId 				string	`json:"hostId"`
+	Port 				int		`json:"port"`
+	Role 				ComponentNodeRole		`json:"role"`
+	Spec 				hostapi.SpecBaseInfo	`json:"spec"`
+	Zone 				hostapi.ZoneBaseInfo	`json:"zone"`
 }
 
 type ComponentNodeUsageInfo struct {
-	IoUtil 				float32
-	Iops 				[]float32
-	CpuUsage 			controller.Usage
-	MemoryUsage 		controller.Usage
-	StorageUsage 		controller.Usage
+	IoUtil 				float32			`json:"ioUtil"`
+	Iops 				[]float32		`json:"iops"`
+	CpuUsage 			controller.Usage	`json:"cpuUsage"`
+	MemoryUsage 		controller.Usage	`json:"memoryUsage"`
+	StorageUsage 		controller.Usage	`json:"storageUsage"`
 }
 
 type ComponentNodeRole struct {
-	RoleCode string
-	RoleName string
+	RoleCode string	`json:"roleCode"`
+	RoleName string	`json:"roleName"`
 }
 
 type ComponentBaseInfo struct {
-	ComponentType 			string
-	ComponentName			string
+	ComponentType 			string	`json:"componentType"`
+	ComponentName			string	`json:"componentName"`
 }
 
 

@@ -11,8 +11,8 @@ func ParseClusterBaseInfoFromDTO(dto *cluster.ClusterBaseInfoDTO) (baseInfo *Clu
 	baseInfo = &ClusterBaseInfo{
 		ClusterName: dto.ClusterName,
 		DbPassword: dto.DbPassword,
-		ClusterType: dto.ClusterType.Code,
-		ClusterVersion: dto.ClusterVersion.Code,
+		ClusterType: dto.ClusterType.Name,
+		ClusterVersion: dto.ClusterVersion.Name,
 		Tags: dto.Tags,
 		Tls: dto.Tls,
 	}
@@ -119,7 +119,6 @@ func ParseInstanceInfoFromDTO(dto *cluster.ClusterInstanceDTO) (instance *Cluste
 		MemoryUsage: *controller.ParseUsageFromDTO(dto.MemoryUsage),
 		StorageUsage: *controller.ParseUsageFromDTO(dto.StorageUsage),
 		BackupFileUsage: *controller.ParseUsageFromDTO(dto.BackupFileUsage),
-
 	}
 
 	return

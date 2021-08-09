@@ -2,6 +2,8 @@ package main
 
 import (
 	"crypto/tls"
+	"github.com/pingcap/tiem/library/knowledge"
+	"time"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
@@ -92,6 +94,9 @@ func initService() {
 	if err := srv2.Run(); err != nil {
 		log.Fatal(err)
 	}
+	for true {
+		time.Sleep(time.Minute)
+	}
 }
 
 func initClient() {
@@ -101,4 +106,8 @@ func initClient() {
 func initPort() {
 	tenantAdapt.InjectionMetaDbRepo()
 	clusterAdapt.InjectionMetaDbRepo()
+}
+
+func initKnowledge() {
+	knowledge.LoadKnowledge()
 }

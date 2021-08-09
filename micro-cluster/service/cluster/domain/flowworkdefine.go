@@ -10,10 +10,10 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
 		TaskNodes: map[string]*TaskDefine{
 			"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
-			"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
-			"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
+			//"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
+			//"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
 			//"deployDone":   {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
-			"deployDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
+			"resourceDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
 		},
 		ContextParser: func(s string) *FlowContext {
@@ -24,7 +24,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	},
 	FlowDeleteCluster: {
 		FlowName:    FlowDeleteCluster,
-		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowDeleteCluster),
 		TaskNodes: map[string]*TaskDefine {
 			"start":              {"destroyTasks", "destroyTasksDone", "fail", PollingTasK, destroyTasks},
 			"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", PollingTasK, destroyCluster},
@@ -69,9 +69,9 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	},
 	FlowModifyParameters: {
 		FlowName:    FlowModifyParameters,
-		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowRecoverCluster),
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowModifyParameters),
 		TaskNodes: map[string]*TaskDefine {
-			"start":              {"modify", "modifyDone", "fail", PollingTasK, modifyParameters},
+			"start":              {"modifyParameter", "modifyDone", "fail", PollingTasK, modifyParameters},
 			"modifyDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
 		},
@@ -103,7 +103,7 @@ func (define *FlowWorkDefine) getInstance(bizId string, context map[string]inter
 			BizId: bizId,
 			Status: TaskStatusInit,
 		},
-		Tasks: make([]*TaskEntity, 4, 4),
+		Tasks: make([]*TaskEntity, 0 ,4),
 		Context: context,
 		Define: define,
 	}

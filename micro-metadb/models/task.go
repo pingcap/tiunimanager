@@ -29,12 +29,10 @@ func (do TaskDO) TableName() string {
 }
 
 func (do *TaskDO) BeforeCreate(tx *gorm.DB) (err error) {
-	do.Status = 0
 	return nil
 }
 
 func (do *FlowDO) BeforeCreate(tx *gorm.DB) (err error) {
-	do.Status = 0
 	return nil
 }
 
@@ -98,8 +96,9 @@ func QueryTask(bizId string, taskType string) (tasks []TaskDO, err error) {
 	return
 }
 
-func UpdateFlow(flow FlowDO) (FlowDO, error) {
-	err := MetaDB.Save(&flow).Error
+func UpdateFlowStatus(flow FlowDO) (FlowDO, error) {
+	err := MetaDB.Model(&flow).Where("id = ?", flow.ID).Update("status", flow.Status).Error
+
 	if err != nil {
 		return flow, err
 	}
@@ -115,7 +114,7 @@ func BatchSaveTasks(tasks []*TaskDO) (returnTasks []*TaskDO, err error) {
 }
 
 func UpdateFlowAndTasks(flow FlowDO, tasks []TaskDO) (FlowDO, []TaskDO, error) {
-	err := MetaDB.Save(&flow).Error
+	err := MetaDB.Model(&flow).Where("id = ?", flow.ID).Update("status", flow.Status).Error
 
 	if err != nil {
 		return flow, tasks, err

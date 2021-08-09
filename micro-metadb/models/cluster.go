@@ -71,7 +71,7 @@ func UpdateClusterDemand(clusterId string, content string, tenantId string) (clu
 }
 
 func UpdateClusterFlowId(clusterId string, flowId uint) (cluster *ClusterDO, err error) {
-	if clusterId == ""{
+	if clusterId == "" {
 		return nil, errors.New("cluster id is empty")
 	}
 	cluster = &ClusterDO{}
@@ -119,33 +119,33 @@ func DeleteCluster(clusterId string) (cluster *ClusterDO, err error) {
 func FetchCluster(clusterId string) (result *ClusterFetchResult, err error) {
 	result = &ClusterFetchResult{
 		Cluster: &ClusterDO{},
-		TiUPConfig: &TiUPConfigDO{},
-		Flow: &FlowDO{},
 	}
 
-	err = MetaDB.Find(result.Cluster, clusterId).Error
+	err = MetaDB.Find(result.Cluster, "id = ?", clusterId).Error
 	if err != nil {
 		return
 	}
 
 	cluster := result.Cluster
 	if cluster.CurrentDemandId > 0 {
-
-		err = MetaDB.Find(result.DemandRecord, cluster.CurrentDemandId).Error
+		result.DemandRecord = &DemandRecordDO{}
+		err = MetaDB.Find(result.DemandRecord, "id = ?", cluster.CurrentDemandId).Error
 		if err != nil {
 			return
 		}
 	}
 
 	if cluster.CurrentTiupConfigId > 0 {
-		err = MetaDB.Find(result.TiUPConfig, cluster.CurrentTiupConfigId).Error
+		result.TiUPConfig = &TiUPConfigDO{}
+		err = MetaDB.Find(result.TiUPConfig, "id = ?", cluster.CurrentTiupConfigId).Error
 		if err != nil {
 			return
 		}
 	}
 
 	if cluster.CurrentFlowId > 0 {
-		err = MetaDB.Find(result.Flow, cluster.CurrentFlowId).Error
+		result.Flow = &FlowDO{}
+		err = MetaDB.Find(result.Flow, "id = ?", cluster.CurrentFlowId).Error
 	}
 	return
 }

@@ -2,13 +2,13 @@ package main
 
 import (
 	"crypto/tls"
-	"time"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
 	"github.com/asim/go-micro/v3/registry"
+	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
 	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/secondparty/libtiup"
@@ -47,14 +47,19 @@ func initService() {
 		return
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+
+	serv1 := server.NewServer(
+		server.Name(service.TiEMClusterServiceName),
+		server.WrapHandler(prometheus.NewHandlerWrapper()),
+		server.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
+		server.Address(config.GetClusterServiceAddress()),
+		server.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		server.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
+	)
+
 	srv1 := micro.NewService(
-		micro.Name(service.TiEMClusterServiceName),
-		micro.WrapHandler(prometheus.NewHandlerWrapper()),
+		micro.Server(serv1),
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
-		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
-		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
-		micro.Address(config.GetClusterServiceAddress()),
-		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
 
 	srv1.Init()
@@ -67,16 +72,18 @@ func initService() {
 		}
 	}()
 
-	time.Sleep(time.Second)
+	serv2 := server.NewServer(
+		server.Name(service.TiEMManagerServiceName),
+		server.WrapHandler(prometheus.NewHandlerWrapper()),
+		server.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
+		server.Address(config.GetManagerServiceAddress()),
+		server.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		server.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
+	)
 
 	srv2 := micro.NewService(
-		micro.Name(service.TiEMManagerServiceName),
-		micro.WrapHandler(prometheus.NewHandlerWrapper()),
+		micro.Server(serv2),
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
-		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
-		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
-		micro.Address(config.GetManagerServiceAddress()),
-		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
 	srv2.Init()
 

@@ -3,7 +3,7 @@ package knowledge
 import "errors"
 
 type ResourceSpec struct {
-	SpecItems []ResourceSpecItem
+	SpecItems []ResourceSpecItem	`json:"specItems"`
 }
 
 func (spec *ResourceSpec) GetAttributeValue(attribute ResourceSpecAttribute) (interface{}, error) {

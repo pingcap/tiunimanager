@@ -284,7 +284,7 @@ func ListHost(c *gin.Context) {
 		CopyHostFromRsp(v, &host)
 		res.Hosts = append(res.Hosts, host)
 	}
-	c.JSON(http.StatusOK, controller.SuccessWithPage(res, controller.Page{Page: 1, PageSize: 20, Total: len(res.Hosts)}))
+	c.JSON(http.StatusOK, controller.SuccessWithPage(res.Hosts, controller.Page{Page: 1, PageSize: 20, Total: len(res.Hosts)}))
 }
 
 // HostDetails 查询主机详情接口
@@ -548,5 +548,5 @@ func GetFailureDomain(c *gin.Context) {
 			Count:    v.Count,
 		})
 	}
-	c.JSON(http.StatusOK, controller.SuccessWithPage(res, controller.Page{Page: 1, PageSize: 20, Total: len(res.Resources)}))
+	c.JSON(http.StatusOK, controller.SuccessWithPage(res.Resources, controller.Page{Page: 1, PageSize: 20, Total: len(res.Resources)}))
 }

@@ -131,8 +131,8 @@ func mockRole() *proto.ComponentNodeRoleDTO{
 
 func mockSpec() *proto.SpecBaseInfoDTO {
 	return &proto.SpecBaseInfoDTO{
-		SpecCode: "4C8GB",
-		SpecName: "4C8GB",
+		SpecCode: "4U8G",
+		SpecName: "4U8G",
 	}
 }
 

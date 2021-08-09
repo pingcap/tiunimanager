@@ -54,7 +54,7 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 
 		clusters[i] = cluster
 	}
-	return clusters, 0, err
+	return clusters, int(resp.Page.Total), err
 
 }
 

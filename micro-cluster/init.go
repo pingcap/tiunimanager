@@ -62,11 +62,7 @@ func initService() {
 
 	cluster.RegisterClusterServiceHandler(srv1.Server(), new(service.ClusterServiceHandler))
 
-	go func() {
-		if err := srv1.Run(); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	go runService(srv1)
 
 	time.Sleep(time.Second)
 
@@ -83,14 +79,21 @@ func initService() {
 
 	cluster.RegisterTiEMManagerServiceHandler(srv2.Server(), new(service.ManagerServiceHandler))
 
-	go func() {
-		if err := srv2.Run(); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	go runService(srv2)
 
 	for true {
 		time.Sleep(time.Minute)
+	}
+}
+
+func runService(srv micro.Service) {
+	//defer func() {
+	//	if err := recover(); err != nil {
+	//		runService(srv)
+	//	}
+	//}()
+	if err := srv.Run(); err != nil {
+		log.Fatal(err)
 	}
 }
 

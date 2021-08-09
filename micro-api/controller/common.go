@@ -15,6 +15,7 @@
 package controller
 
 import (
+	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/tiem/library/knowledge"
 	"github.com/pingcap/tiem/micro-api/security"
@@ -58,6 +59,10 @@ func BuildResultWithPage(code int, message string, page *Page, data interface{})
 	return
 }
 
+var DefaultTimeout = func(o *client.CallOptions) {
+	o.RequestTimeout = time.Second * 30
+	o.DialTimeout = time.Second * 30
+}
 
 func Success(data interface{}) *CommonResult {
 	return &CommonResult{ResultMark: ResultMark{0, "OK"}, Data: data}
@@ -72,9 +77,9 @@ func Fail(code int, message string) *CommonResult {
 }
 
 type Usage struct {
-	Total     float32
-	Used      float32
-	UsageRate float32
+	Total     float32	`json:"total"`
+	Used      float32	`json:"used"`
+	UsageRate float32	`json:"usageRate"`
 }
 
 type Page struct {
@@ -97,19 +102,19 @@ func HelloPage(c *gin.Context) {
 }
 
 type StatusInfo struct {
-	StatusCode			string
-	StatusName			string
-	InProcessFlowId 	int
-	CreateTime			time.Time
-	UpdateTime			time.Time
-	DeleteTime			time.Time
+	StatusCode			string	`json:"statusCode"`
+	StatusName			string	`json:"statusName"`
+	InProcessFlowId 	int	`json:"inProcessFlowId"`
+	CreateTime			time.Time	`json:"createTime"`
+	UpdateTime			time.Time	`json:"updateTime"`
+	DeleteTime			time.Time	`json:"deleteTime"`
 }
 
 type Operator struct {
-	ManualOperator 		bool
-	OperatorName 		string
-	OperatorId   		string
-	TenantId			string
+	ManualOperator 		bool	`json:"manualOperator"`
+	OperatorName 		string	`json:"operatorName"`
+	OperatorId   		string	`json:"operatorId"`
+	TenantId			string	`json:"tenantId"`
 }
 
 func GetOperator(c *gin.Context) *Operator {

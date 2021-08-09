@@ -102,7 +102,7 @@ func initTables() error {
 		&models.TiupTask{},
 		&models.ParametersRecordDO{},
 		&models.BackupRecordDO{},
-		&models.BackupRecordDO{},
+		&models.RecoverRecordDO{},
 	)
 	return err
 }
@@ -151,8 +151,8 @@ func initDataForDemo() {
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
-		CpuCores: 32,
-		Memory:   64,
+		CpuCores: 4,
+		Memory:   8,
 		Nic:      "1GE",
 		AZ:       "Aone1",
 		Rack:     "3-1",
@@ -168,8 +168,8 @@ func initDataForDemo() {
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
-		CpuCores: 32,
-		Memory:   64,
+		CpuCores: 4,
+		Memory:   8,
 		Nic:      "1GE",
 		AZ:       "Aone1",
 		Rack:     "3-1",
@@ -185,14 +185,65 @@ func initDataForDemo() {
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
-		CpuCores: 32,
-		Memory:   64,
+		CpuCores: 4,
+		Memory:   8,
 		Nic:      "1GE",
 		AZ:       "Aone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
 			{Name: "sdb", Path: "/pd", Capacity: 256, Status: 1},
+		},
+	})
+
+	models.CreateHost(&models.Host{
+		HostName: "主机4",
+		IP:       "192.168.125.135",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Aone2",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
+		},
+	})
+
+	models.CreateHost(&models.Host{
+		HostName: "主机4",
+		IP:       "192.168.125.136",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Aone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
+		},
+	})
+
+	models.CreateHost(&models.Host{
+		HostName: "主机4",
+		IP:       "192.168.125.137",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Aone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
 		},
 	})
 	return

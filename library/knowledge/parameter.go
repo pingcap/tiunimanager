@@ -1,18 +1,18 @@
 package knowledge
 
 type Parameter struct {
-	Name         string
-	Type         ParamType
-	Unit         ParamUnit
-	DefaultValue interface{}
-	NeedRestart  bool
-	Constraints  []ParamValueConstraint
-	Desc         string
+	Name         string				`json:"name"`
+	Type         ParamType			`json:"type"`
+	Unit         ParamUnit			`json:"unit"`
+	DefaultValue interface{}		`json:"defaultValue"`
+	NeedRestart  bool				`json:"needRestart"`
+	Constraints  []ParamValueConstraint	`json:"constraints"`
+	Desc         string				`json:"desc"`
 }
 
 type ParamValueConstraint struct {
-	Type          ConstraintType
-	ContrastValue interface{}
+	Type          ConstraintType	`json:"type"`
+	ContrastValue interface{}		`json:"contrastValue"`
 }
 
 type ConstraintType string

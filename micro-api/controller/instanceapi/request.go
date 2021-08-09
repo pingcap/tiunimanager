@@ -9,8 +9,8 @@ type ParamQueryReq struct {
 }
 
 type ParamUpdateReq struct {
-	ClusterId 		string
-	Values			[]ParamInstance
+	ClusterId 		string				`json:"clusterId"`
+	Values			[]ParamInstance		`json:"values"`
 }
 
 type BackupRecordQueryReq struct {
@@ -20,11 +20,11 @@ type BackupRecordQueryReq struct {
 }
 
 type BackupStrategyUpdateReq struct {
-	ClusterId string
+	ClusterId string	`json:"clusterId"`
 	BackupStrategy
 }
 
 type BackupRecoverReq struct {
-	ClusterId 			string
-	BackupRecordId	 	int64
+	ClusterId 			string	`json:"clusterId"`
+	BackupRecordId	 	int64	`json:"backupRecordId"`
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/pingcap/tiem/library/knowledge"
 	proto "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"math/rand"
 )
 
 func (aggregation *ClusterAggregation) ExtractInstancesDTO() *proto.ClusterInstanceDTO {
@@ -115,11 +116,12 @@ func pDComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDT
 
 // MockUsage TODO will be replaced with monitor implement
 func MockUsage() *proto.UsageDTO {
-	return &proto.UsageDTO{
-		Total: 100,
-		Used: 80,
-		UsageRate: 0.80,
+	usage := &proto.UsageDTO{
+		Total:     100,
+		Used: float32(rand.Intn(100)),
 	}
+	usage.UsageRate = usage.Used / usage.Total
+	return usage
 }
 
 func mockRole() *proto.ComponentNodeRoleDTO{
@@ -131,8 +133,8 @@ func mockRole() *proto.ComponentNodeRoleDTO{
 
 func mockSpec() *proto.SpecBaseInfoDTO {
 	return &proto.SpecBaseInfoDTO{
-		SpecCode: "4U8G",
-		SpecName: "4U8G",
+		SpecCode: knowledge.GenSpecCode(4, 8),
+		SpecName: knowledge.GenSpecCode(4, 8),
 	}
 }
 

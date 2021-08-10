@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap/tiem/library/knowledge"
 	"strings"
 
 	"github.com/pingcap/tiem/micro-metadb/models"
@@ -305,10 +306,6 @@ func (*DBServiceHandler) LockHosts(ctx context.Context, req *dbPb.DBLockHostsReq
 	return nil
 }
 
-func genHostSpec(cpuCores int32, mem int32) string {
-	return fmt.Sprintf("%dU%dG", cpuCores, mem)
-}
-
 func getFailureDomainByType(fd FailureDomain) (domain string, err error) {
 	switch fd {
 	case DATACENTER:
@@ -361,7 +358,7 @@ func (*DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb.DBGetFa
 		rsp.FdList = append(rsp.FdList, &dbPb.DBFailureDomainResource{
 			FailureDomain: v.FailureDomain,
 			Purpose:       v.Purpose,
-			Spec:          genHostSpec(int32(v.CpuCores), int32(v.Memory)),
+			Spec:          knowledge.GenSpecCode(int32(v.CpuCores), int32(v.Memory)),
 			Count:         int32(v.Count),
 		})
 	}

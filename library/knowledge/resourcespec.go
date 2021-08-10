@@ -1,6 +1,9 @@
 package knowledge
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type ResourceSpec struct {
 	SpecItems []ResourceSpecItem	`json:"specItems"`
@@ -38,4 +41,8 @@ func ParseCpu(specCode string) int {
 func ParseMemory(specCode string) int {
 	// todo
 	return 8
+}
+
+func GenSpecCode(cpuCores int32, mem int32) string {
+	return fmt.Sprintf("%dC%dG", cpuCores, mem)
 }

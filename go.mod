@@ -11,6 +11,10 @@ require (
 	github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3 v3.0.0-20210726052521-c3107e6843e2
 	github.com/asim/go-micro/v3 v3.5.2
 	github.com/gin-gonic/gin v1.7.2
+	github.com/go-openapi/jsonreference v0.19.6 // indirect
+	github.com/go-openapi/spec v0.20.3 // indirect
+	github.com/go-openapi/swag v0.19.15 // indirect
+	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
 	github.com/opentracing/opentracing-go v1.2.0

@@ -24,7 +24,7 @@ func TestCreateCluster(t *testing.T) {
 	}{
 		{"normal create", args{TenantId: "111", ClusterName: "testCluster", OwnerId: "111"}, false, []func (args args, cluster *ClusterDO) bool{
 			func (args args, cluster *ClusterDO) bool{ return args.TenantId == cluster.TenantId},
-			func (args args, cluster *ClusterDO) bool{ return args.ClusterName == cluster.ClusterName},
+			func (args args, cluster *ClusterDO) bool{ return args.ClusterName == cluster.Name },
 			func (args args, cluster *ClusterDO) bool{ return cluster.ID != ""},
 		}},
 	}
@@ -226,30 +226,30 @@ func TestUpdateTiUPConfig(t *testing.T) {
 func TestListClusters(t *testing.T) {
 	MetaDB.Create(&ClusterDO{
 		Entity : Entity{TenantId: "111"},
-		ClusterType: "type1",
-		ClusterName: "test",
-		Tags: ",tag,",
+		Type:    "test_type_1",
+		Name:    "test_cluster_name",
+		Tags:    ",tag,",
 		OwnerId: "ttt",
 	})
 	MetaDB.Create(&ClusterDO{
 		Entity : Entity{TenantId: "111"},
-		ClusterType: "type1",
-		ClusterName: "1111test",
-		Tags: "tag,",
+		Type:    "test_type_1",
+		Name:    "1111test",
+		Tags:    "tag,",
 		OwnerId: "ttt",
 	})
 	MetaDB.Create(&ClusterDO{
 		Entity : Entity{TenantId: "111"},
-		ClusterType: "whatever",
-		ClusterName: "test1111",
-		Tags: ",tag",
+		Type:    "whatever",
+		Name:    "test_cluster_name",
+		Tags:    ",tag",
 		OwnerId: "ttt",
 	})
 	cluster := &ClusterDO{
 		Entity : Entity{TenantId: "111"},
-		ClusterType: "type1",
-		ClusterName: "whatever",
-		Tags: "1,tag,2",
+		Type:    "test_type_1",
+		Name:    "whatever",
+		Tags:    "1,tag,2",
 		OwnerId: "ttt",
 	}
 	MetaDB.Create(cluster)
@@ -273,34 +273,34 @@ func TestListClusters(t *testing.T) {
 			t.Errorf("ListClusters() clusters len = %v, want = %v", len(clusters), 1)
 		}
 
-		if clusters[0].ID != cluster.ID || clusters[0].ClusterName != cluster.ClusterName{
+		if clusters[0].ID != cluster.ID || clusters[0].Name != cluster.Name {
 			t.Errorf("ListClusters() clusters = %v, want = %v", clusters[0], cluster)
 		}
 	})
 
 	t.Run("cluster name", func(t *testing.T) {
-		clusters,total,err := ListClusters("", "test", "", "", "", 0, 10)
+		clusters,total,err := ListClusters("", "test_cluster_name", "", "", "", 0, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
 		}
-		if total != 3 {
-			t.Errorf("ListClusters() total = %v, want = %v", total, 3)
+		if total != 2 {
+			t.Errorf("ListClusters() total = %v, want = %v", total, 2)
 		}
 
-		if len(clusters) != 3 {
-			t.Errorf("ListClusters() clusters len = %v, want = %v", len(clusters), 3)
+		if len(clusters) != 2 {
+			t.Errorf("ListClusters() clusters len = %v, want = %v", len(clusters), 2)
 		}
 
 		for _,v := range clusters {
-			if !strings.Contains(v.ClusterName, "test") {
+			if !strings.Contains(v.Name, "test") {
 				t.Errorf("ListClusters() clusters = %v, want cluster name contains = %v", v, "test")
 			}
 		}
 	})
 
 	t.Run("cluster type", func(t *testing.T) {
-		clusters,total,err := ListClusters("", "", "type1", "", "", 0, 10)
+		clusters,total,err := ListClusters("", "", "test_type_1", "", "", 0, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -314,7 +314,7 @@ func TestListClusters(t *testing.T) {
 		}
 
 		for _,v := range clusters {
-			if v.ClusterType != "type1" {
+			if v.Type != "test_type_1" {
 				t.Errorf("ListClusters() clusters = %v, wantClusterType = %v", v, "type1")
 			}
 		}
@@ -327,12 +327,12 @@ func TestListClusters(t *testing.T) {
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
 		}
-		if total != 4 {
-			t.Errorf("ListClusters() total = %v, want = %v", total, 4)
+		if total < 4 {
+			t.Errorf("ListClusters() total = %v, want %v at least", total, 4)
 		}
 
-		if len(clusters) != 4 {
-			t.Errorf("ListClusters() clusters len = %v, want = %v", len(clusters), 4)
+		if len(clusters) < 4 {
+			t.Errorf("ListClusters() clusters len = %v, want %v at least", len(clusters), 4)
 		}
 
 		for _,v := range clusters {
@@ -364,13 +364,13 @@ func TestListClusters(t *testing.T) {
 	})
 
 	t.Run("cluster empty", func(t *testing.T) {
-		clusters,total,err := ListClusters("", "", "", "", "", 0, 10)
+		clusters,total,err := ListClusters("", "", "", "", "", 0, 5)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
 		}
-		if total != 5 {
-			t.Errorf("ListClusters() total = %v, want = %v", total, 5)
+		if total < 5 {
+			t.Errorf("ListClusters() total = %v, want %v at least", total, 5)
 		}
 
 		if len(clusters) != 5 {
@@ -385,13 +385,13 @@ func TestListClusters(t *testing.T) {
 	})
 
 	t.Run("cluster offset", func(t *testing.T) {
-		clusters,total,err := ListClusters("", "", "type1", "", "", 1, 10)
+		clusters,total,err := ListClusters("", "", "test_type_1", "", "", 1, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
 		}
 		if total != 3 {
-			t.Errorf("ListClusters() total = %v, want = %v", total, 2)
+			t.Errorf("ListClusters() total = %v, want = %v", total, 3)
 		}
 
 		if len(clusters) != 2 {
@@ -399,20 +399,20 @@ func TestListClusters(t *testing.T) {
 		}
 
 		for _,v := range clusters {
-			if v.ClusterType != "type1" {
+			if v.Type != "test_type_1" {
 				t.Errorf("ListClusters() clusters = %v, wantClusterType = %v", v, "type1")
 			}
 		}
 	})
 
 	t.Run("cluster limit", func(t *testing.T) {
-		clusters,total,err := ListClusters("", "", "type1", "", "", 1, 1)
+		clusters,total,err := ListClusters("", "", "test_type_1", "", "", 1, 1)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
 		}
 		if total != 3 {
-			t.Errorf("ListClusters() total = %v, want = %v", total, 2)
+			t.Errorf("ListClusters() total = %v, want = %v", total, 3)
 		}
 
 		if len(clusters) != 1 {
@@ -420,20 +420,20 @@ func TestListClusters(t *testing.T) {
 		}
 
 		for _,v := range clusters {
-			if v.ClusterType != "type1" {
+			if v.Type != "test_type_1" {
 				t.Errorf("ListClusters() clusters = %v, wantClusterType = %v", v, "type1")
 			}
 		}
 	})
 
 	t.Run("cluster offset 10", func(t *testing.T) {
-		clusters,total,err := ListClusters("", "", "type1", "", "", 10, 10)
+		clusters,total,err := ListClusters("", "", "test_type_1", "", "", 10, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
 		}
 		if total != 3 {
-			t.Errorf("ListClusters() total = %v, want = %v", total, 2)
+			t.Errorf("ListClusters() total = %v, want = %v", total, 3)
 		}
 
 		if len(clusters) != 0 {
@@ -463,9 +463,9 @@ func TestListClusters(t *testing.T) {
 func TestListClusterDetails(t *testing.T) {
 	cluster1 := &ClusterDO{
 		Entity : Entity{TenantId: "111"},
-		ClusterType: "someType",
-		ClusterName: "cluster1",
-		Tags: "",
+		Type:    "someType",
+		Name:    "cluster1",
+		Tags:    "",
 		OwnerId: "me",
 	}
 	MetaDB.Create(cluster1)
@@ -478,17 +478,17 @@ func TestListClusterDetails(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		MetaDB.Create(&ClusterDO{
 			Entity : Entity{TenantId: "111"},
-			ClusterType: "someType",
-			ClusterName: "otherCluster",
-			Tags: "1,tag,2",
+			Type:    "someType",
+			Name:    "otherCluster",
+			Tags:    "1,tag,2",
 			OwnerId: "me",
 		})
 	}
 	cluster3 := &ClusterDO {
 		Entity : Entity{TenantId: "111"},
-		ClusterType: "otherType",
-		ClusterName: "whatever",
-		Tags: "",
+		Type:    "otherType",
+		Name:    "whatever",
+		Tags:    "",
 		OwnerId: "me",
 	}
 	MetaDB.Create(cluster3)
@@ -508,7 +508,7 @@ func TestListClusterDetails(t *testing.T) {
 		}
 
 		if results[0].Cluster.ID != cluster1.ID ||
-			results[0].Cluster.ClusterName != cluster1.ClusterName {
+			results[0].Cluster.Name != cluster1.Name {
 			t.Errorf("ListClusters() clusters = %v, want = %v", results[0], cluster1)
 		}
 
@@ -518,8 +518,8 @@ func TestListClusterDetails(t *testing.T) {
 		if results[0].TiUPConfig.Content != "tiup1" {
 			t.Errorf("ListClusters() TiUPConfig = %v, want = %v", results[0].TiUPConfig.Content, "tiup1")
 		}
-		if results[0].Flow.FlowName != "flow1" {
-			t.Errorf("ListClusters() Flow = %v, want = %v", results[0].Flow.FlowName, "flow1")
+		if results[0].Flow.Name != "flow1" {
+			t.Errorf("ListClusters() Flow = %v, want = %v", results[0].Flow.Name, "flow1")
 		}
 	})
 
@@ -571,18 +571,19 @@ func TestDeleteBackupRecord(t *testing.T) {
 		}
 	})
 }
+
 func TestListBackupRecords(t *testing.T) {
 	flow, _ := CreateFlow("backup", "backup", "111")
 	SaveBackupRecord("111", "222", "operator1", 1,1,flow.ID, "path1")
 	SaveBackupRecord("111", "222", "operator1", 1,1,flow.ID, "path2")
-	SaveBackupRecord("111", "111", "operator1", 1,1,flow.ID, "path3")
-	SaveBackupRecord("111", "111", "operator1", 1,1,flow.ID, "path4")
-	SaveBackupRecord("111", "111", "operator1", 1,1,flow.ID, "path5")
-	SaveBackupRecord("111", "111", "operator1", 1,1,flow.ID, "path6")
-	SaveBackupRecord("111", "111", "operator1", 1,1,flow.ID, "path7")
+	SaveBackupRecord("111", "11111", "operator1", 1,1,flow.ID, "path3")
+	SaveBackupRecord("111", "11111", "operator1", 1,1,flow.ID, "path4")
+	SaveBackupRecord("111", "11111", "operator1", 1,1,flow.ID, "path5")
+	SaveBackupRecord("111", "11111", "operator1", 1,1,flow.ID, "path6")
+	SaveBackupRecord("111", "11111", "operator1", 1,1,flow.ID, "path7")
 
 	t.Run("normal", func(t *testing.T) {
-		dos , total , err := ListBackupRecords("111", 2,2)
+		dos , total , err := ListBackupRecords("11111", 2,2)
 		if err != nil {
 			t.Errorf("ListBackupRecords() error = %v", err)
 			return
@@ -597,7 +598,7 @@ func TestListBackupRecords(t *testing.T) {
 			return
 		}
 
-		if dos[1].BackupRecordDO.ClusterId != "111" {
+		if dos[1].BackupRecordDO.ClusterId != "11111" {
 			t.Errorf("ListBackupRecords() error, want ClusterId = %v, got = %v", "111", dos[1].BackupRecordDO.ClusterId)
 			return
 		}

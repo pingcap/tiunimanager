@@ -6,7 +6,7 @@ import (
 
 type FlowDO struct {
 	Data
-	FlowName    string
+	Name        string
 	StatusAlias string
 }
 
@@ -16,12 +16,12 @@ func (do FlowDO) TableName() string {
 
 type TaskDO struct {
 	Data
-	ParentType      int8		`gorm:"default:0"`
-	ParentId 		string
-	TaskName 		string
-	TaskReturnType 	string
-	Parameters 		string
-	Result 			string
+	ParentType int8		`gorm:"default:0"`
+	ParentId   string
+	Name       string
+	ReturnType string
+	Parameters string
+	Result     string
 }
 
 func (do TaskDO) TableName() string {
@@ -38,7 +38,7 @@ func (do *FlowDO) BeforeCreate(tx *gorm.DB) (err error) {
 
 func CreateFlow(flowName string, statusAlias string, bizId string) (flow *FlowDO, err error) {
 	flow = &FlowDO{
-		FlowName: flowName,
+		Name:        flowName,
 		StatusAlias: statusAlias,
 		Data: Data{
 			BizId: bizId,
@@ -51,9 +51,9 @@ func CreateFlow(flowName string, statusAlias string, bizId string) (flow *FlowDO
 func CreateTask(parentType int8, parentId string, taskName, bizId string, taskReturnType string, parameters, result string) (task *TaskDO, err error) {
 	task = &TaskDO{
 		ParentType: parentType,
-		ParentId: parentId,
-		TaskName: taskName,
-		TaskReturnType: taskReturnType,
+		ParentId:   parentId,
+		Name:       taskName,
+		ReturnType: taskReturnType,
 
 		Parameters: parameters,
 		Result: result,

@@ -28,7 +28,10 @@ type TestData struct {
 func TestMain(m *testing.M) {
 	testFile := uuid.New().String() + ".db"
 	MetaDB, _ = gorm.Open(sqlite.Open(testFile), &gorm.Config{})
-	defer os.Remove(testFile)
+
+	defer func() {
+		os.Remove(testFile)
+	}()
 
 	err := MetaDB.Migrator().CreateTable(
 		&TestEntity{},
@@ -177,16 +180,4 @@ func TestData_BeforeCreate(t *testing.T) {
 		}
 	})
 
-	t.Run("test empty bizId", func(t *testing.T) {
-		do := &TestData{
-			Data{},
-			"start",
-		}
-
-		err := MetaDB.Create(do).Error
-
-		if err == nil {
-			t.Errorf("TestEntity_BeforeCreate() want error")
-		}
-	})
 }

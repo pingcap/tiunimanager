@@ -6,16 +6,16 @@ import (
 
 type ClusterDO struct {
 	Entity
-	ClusterName 			string
-	DbPassword 				string
-	ClusterType 			string
-	ClusterVersion 			string
-	Tls 					bool
-	Tags           			string
-	OwnerId 				string		`gorm:"not null;type:varchar(36);default:null"`
-	CurrentTiupConfigId     uint
-	CurrentDemandId 		uint
-	CurrentFlowId			uint
+	Name                string
+	DbPassword          string
+	Type                string
+	Version             string
+	Tls                 bool
+	Tags                string
+	OwnerId             string		`gorm:"not null;type:varchar(36);default:null"`
+	CurrentTiupConfigId uint
+	CurrentDemandId     uint
+	CurrentFlowId       uint
 }
 
 func (d ClusterDO) TableName() string {
@@ -47,7 +47,7 @@ func UpdateClusterStatus(clusterId string, status int8) (cluster *ClusterDO, err
 		return nil, errors.New("cluster id is empty")
 	}
 	cluster = &ClusterDO{}
-	err = MetaDB.Model(cluster).Where("id = ?", clusterId).Update("status", status).Error
+	err = MetaDB.Model(cluster).Where("id = ?", clusterId).Update("status", status).Find(cluster).Error
 	return
 }
 
@@ -116,8 +116,8 @@ func DeleteCluster(clusterId string) (cluster *ClusterDO, err error) {
 	return
 }
 
-func FetchCluster(clusterId string) (result *ClusterFetchResult, err error) {
-	result = &ClusterFetchResult{
+func FetchCluster(clusterId string) (result *ClusterFetchResultDO, err error) {
+	result = &ClusterFetchResultDO{
 		Cluster: &ClusterDO{},
 	}
 
@@ -150,7 +150,7 @@ func FetchCluster(clusterId string) (result *ClusterFetchResult, err error) {
 	return
 }
 
-type ClusterFetchResult struct {
+type ClusterFetchResultDO struct {
 	Cluster *ClusterDO
 	Flow *FlowDO
 	DemandRecord *DemandRecordDO
@@ -162,7 +162,7 @@ func ListClusterDetails(clusterId string,
 	clusterType string,
 	clusterStatus string,
 	clusterTag string,
-	offset int, length int) (result []*ClusterFetchResult, total int64, err error){
+	offset int, length int) (result []*ClusterFetchResultDO, total int64, err error){
 
 	clusters, total, err := ListClusters(clusterId, clusterName, clusterType, clusterStatus, clusterTag, offset, length)
 
@@ -170,14 +170,14 @@ func ListClusterDetails(clusterId string,
 	demandIds := make([]uint, len(clusters), len(clusters))
 	tiupConfigIds := make([]uint, len(clusters), len(clusters))
 
-	result = make([]*ClusterFetchResult, len(clusters), len(clusters))
-	clusterMap := make(map[string]*ClusterFetchResult)
+	result = make([]*ClusterFetchResultDO, len(clusters), len(clusters))
+	clusterMap := make(map[string]*ClusterFetchResultDO)
 
 	for i,c := range clusters {
 		flowIds[i] = c.CurrentFlowId
 		demandIds[i] = c.CurrentDemandId
 		tiupConfigIds[i] = c.CurrentTiupConfigId
-		result[i] = &ClusterFetchResult{
+		result[i] = &ClusterFetchResultDO{
 			Cluster: c,
 		}
 		clusterMap[c.ID] = result[i]
@@ -220,11 +220,11 @@ func ListClusters(clusterId string,
 	}
 
 	if clusterName != ""{
-		db = db.Where("cluster_name like '%" + clusterName + "%'")
+		db = db.Where("name like '%" + clusterName + "%'")
 	}
 
 	if clusterType != ""{
-		db = db.Where("cluster_type = ?", clusterType)
+		db = db.Where("type = ?", clusterType)
 	}
 
 	if clusterStatus != ""{
@@ -251,10 +251,10 @@ func CreateCluster(
 		TenantId    			string,
 	) (cluster *ClusterDO, err error){
 	cluster = &ClusterDO{}
-	cluster.ClusterName = ClusterName
+	cluster.Name = ClusterName
 	cluster.DbPassword = DbPassword
-	cluster.ClusterType = ClusterType
-	cluster.ClusterVersion = ClusterVersion
+	cluster.Type = ClusterType
+	cluster.Version = ClusterVersion
 	cluster.Tls = Tls
 	cluster.Tags = Tags
 	cluster.OwnerId = OwnerId
@@ -270,10 +270,10 @@ func CreateCluster(
 
 type BackupRecordDO struct {
 	Record
-	ClusterId   string		`gorm:"not null;type:varchar(36);default:null"`
-	BackupRange int8
-	BackupType  int8
-	OperatorId  string		`gorm:"not null;type:varchar(36);default:null"`
+	ClusterId  string		`gorm:"not null;type:varchar(36);default:null"`
+	Range      int8
+	Type       int8
+	OperatorId string		`gorm:"not null;type:varchar(36);default:null"`
 
 	FilePath 		string
 	FlowId			uint
@@ -349,12 +349,12 @@ func SaveBackupRecord(tenantId, clusterId, operatorId string,
 		Record: Record{
 			TenantId: tenantId,
 		},
-		ClusterId: clusterId,
+		ClusterId:  clusterId,
 		OperatorId: operatorId,
-		BackupRange: backupRange,
-		BackupType: backupType,
-		FlowId: flowId,
-		FilePath: filePath,
+		Range:      backupRange,
+		Type:       backupType,
+		FlowId:     flowId,
+		FilePath:   filePath,
 	}
 
 	err = MetaDB.Create(do).Error

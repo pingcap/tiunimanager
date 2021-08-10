@@ -54,6 +54,7 @@ func Route(g *gin.Engine) {
 			cluster.DELETE("/:clusterId", clusterapi.Delete)
 
 			cluster.GET("/knowledge", clusterapi.ClusterKnowledge)
+			cluster.GET("/dashboard", clusterapi.DescribeDashboard)
 		}
 
 		param := apiV1.Group("/params")

@@ -22,5 +22,7 @@ func main()  {
 	//initService()
 	initClient()
 	//initPrometheus()
+	initKnowledge()
 	initGinEngine()
+
 }

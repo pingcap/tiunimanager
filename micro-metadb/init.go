@@ -93,6 +93,7 @@ func initTables() error {
 		&models.RoleBinding{},
 		&models.Token{},
 		&models.ClusterDO{},
+		&models.DemandRecordDO{},
 		&models.TiUPConfigDO{},
 		&models.TaskDO{},
 		&models.FlowDO{},
@@ -102,7 +103,7 @@ func initTables() error {
 		&models.TransportRecord{},
 		&models.ParametersRecordDO{},
 		&models.BackupRecordDO{},
-		&models.BackupRecordDO{},
+		&models.RecoverRecordDO{},
 	)
 	return err
 }
@@ -151,17 +152,101 @@ func initDataForDemo() {
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
-		CpuCores: 32,
-		Memory:   64,
+		CpuCores: 4,
+		Memory:   8,
 		Nic:      "1GE",
-		AZ:       "East China",
+		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	})
+	// 添加一些demo使用的host和disk数据
+	models.CreateHost(&models.Host{
+		HostName: "主机2",
+		IP:       "192.168.125.133",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Zone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/tikv", Capacity: 256, Status: 1},
+		},
+	})
+	// 添加一些demo使用的host和disk数据
+	models.CreateHost(&models.Host{
+		HostName: "主机3",
+		IP:       "192.168.125.134",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Zone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/pd", Capacity: 256, Status: 1},
+		},
+	})
 
+	models.CreateHost(&models.Host{
+		HostName: "主机4",
+		IP:       "192.168.125.135",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Zone2",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
+		},
+	})
+
+	models.CreateHost(&models.Host{
+		HostName: "主机4",
+		IP:       "192.168.125.136",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Zone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
+		},
+	})
+
+	models.CreateHost(&models.Host{
+		HostName: "主机4",
+		IP:       "192.168.125.137",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Zone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
+		},
+	})
 	return
 }
 

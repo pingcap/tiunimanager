@@ -8,7 +8,6 @@ import (
 	proto "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiem/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"path/filepath"
 	"strconv"
@@ -52,7 +51,7 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 		ClusterType: *knowledge.ClusterTypeFromCode(clusterInfo.ClusterType.Code),
 		ClusterVersion: *knowledge.ClusterVersionFromCode(clusterInfo.ClusterVersion.Code),
 		Tls: clusterInfo.Tls,
-
+		TenantId: operator.TenantId,
 		OwnerId: operator.Id,
 	}
 
@@ -84,14 +83,19 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 
 	flow.Start()
 
-	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }
 
+func (clusterAggregation *ClusterAggregation) updateWorkFlow(flow *FlowWorkEntity) {
+	clusterAggregation.CurrentWorkFlow = flow
+	clusterAggregation.FlowModified = true
+}
+
 func DeleteCluster(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
-	log.Info(operator)
+
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	clusterAggregation.CurrentOperator = operator
 
@@ -101,8 +105,9 @@ func DeleteCluster(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregatio
 
 	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster)
 	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.Start()
 
-	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	TaskRepo.Persist(flow)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
@@ -121,44 +126,42 @@ func GetClusterDetail(ope *proto.OperatorDTO, clusterId string) (*ClusterAggrega
 
 func Backup(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error){
 	operator := parseOperatorFromDTO(ope)
-	log.Info(operator)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	clusterAggregation.CurrentOperator = operator
-	clusterAggregation.LastBackupRecord = &BackupRecord{
+	clusterAggregation.LastBackupRecord = &BackupRecord {
 		ClusterId: clusterId,
 		Range: BackupRangeWhole,
 		BackupType: BackupTypeLogic,
 		OperatorId: operator.Id,
 		// todo how to generate
-		FilePath: "",
 	}
 
 	if err != nil {
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	currentFlow := clusterAggregation.CurrentWorkFlow
-	if currentFlow != nil && !currentFlow.Finished(){
-		return clusterAggregation, errors.New("incomplete processing flow")
-	}
+	//currentFlow := clusterAggregation.CurrentWorkFlow
+	//if currentFlow != nil && !currentFlow.Finished(){
+	//	return clusterAggregation, errors.New("incomplete processing flow")
+	//}
 
-	flow, err := CreateFlowWork(clusterId, FlowBackupCluster)
-	if err != nil {
-		// todo
-	}
+	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster)
+	filePath :=  "/" + clusterId + "/" + strconv.Itoa(int(flow.FlowWork.Id))
+
+	clusterAggregation.LastBackupRecord.FilePath = filePath
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
 
 	flow.Start()
 
-	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }
 
 func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*ClusterAggregation, error){
 	operator := parseOperatorFromDTO(ope)
-	log.Info(operator)
+
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	clusterAggregation.CurrentOperator = operator
 	clusterAggregation.LastRecoverRecord = &RecoverRecord{
@@ -170,10 +173,10 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	currentFlow := clusterAggregation.CurrentWorkFlow
-	if currentFlow != nil && !currentFlow.Finished(){
-		return clusterAggregation, errors.New("incomplete processing flow")
-	}
+	//currentFlow := clusterAggregation.CurrentWorkFlow
+	//if currentFlow != nil && !currentFlow.Finished(){
+	//	return clusterAggregation, errors.New("incomplete processing flow")
+	//}
 
 	flow, err := CreateFlowWork(clusterId, FlowRecoverCluster)
 	if err != nil {
@@ -184,14 +187,14 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 
 	flow.Start()
 
-	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }
 
 func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
-	log.Info(operator)
+
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	clusterAggregation.CurrentOperator = operator
 	clusterAggregation.LastParameterRecord = &ParameterRecord{
@@ -203,10 +206,10 @@ func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) 
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	currentFlow := clusterAggregation.CurrentWorkFlow
-	if currentFlow != nil && !currentFlow.Finished(){
-		return clusterAggregation, errors.New("incomplete processing flow")
-	}
+	//currentFlow := clusterAggregation.CurrentWorkFlow
+	//if currentFlow != nil && !currentFlow.Finished(){
+	//	return clusterAggregation, errors.New("incomplete processing flow")
+	//}
 
 	flow, err := CreateFlowWork(clusterId, FlowModifyParameters)
 	if err != nil {
@@ -217,13 +220,12 @@ func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) 
 
 	flow.Start()
 
-	clusterAggregation.CurrentWorkFlow = flow.FlowWork
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }
 
 func GetParameters(ope *proto.OperatorDTO, clusterId string) (parameterJson string, err error) {
-	log.Info(ope)
 	return InstanceRepo.QueryParameterJson(clusterId)
 }
 
@@ -242,7 +244,7 @@ func (aggregation *ClusterAggregation) loadWorkFlow() error {
 }
 
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
-	clusterAggregation := flowContext.value(contextClusterKey).(ClusterAggregation)
+	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
 
 	demands := clusterAggregation.Cluster.Demands
 
@@ -293,6 +295,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 }
 
 func startupCluster(task *TaskEntity, context *FlowContext) bool {
+	// todo
 	task.Success(nil)
 	return true
 }
@@ -313,9 +316,9 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 }
 
 func deleteCluster(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.Cluster.Delete()
-	clusterAggregation.ConfigModified = true
+	clusterAggregation.StatusModified = true
 
 	task.Success(nil)
 	return true
@@ -421,8 +424,8 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRec
 		Size:      record.Size,
 		DisplayStatus: &proto.DisplayStatusDTO {
 			InProcessFlowId: int32(currentFlow.Id),
-			StatusCode:      currentFlow.Status.Display(),
-			StatusName:      currentFlow.StatusAlias,
+			StatusCode:      strconv.Itoa(int(currentFlow.Status)),
+			StatusName:      currentFlow.Status.Display(),
 		},
 		Operator: &proto.OperatorDTO {
 			Id: aggregation.CurrentOperator.Id,
@@ -441,8 +444,8 @@ func (aggregation *ClusterAggregation) ExtractRecoverRecordDTO() *proto.BackupRe
 		ClusterId: record.ClusterId,
 		DisplayStatus: &proto.DisplayStatusDTO {
 			InProcessFlowId: int32(currentFlow.Id),
-			StatusCode:      currentFlow.Status.Display(),
-			StatusName:      currentFlow.StatusAlias,
+			StatusCode:      strconv.Itoa(int(currentFlow.Status)),
+			StatusName:      currentFlow.Status.Display(),
 		},
 		BackupRecordId: int64(record.BackupRecord.Id),
 	}

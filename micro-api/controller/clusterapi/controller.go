@@ -42,7 +42,7 @@ func Create(c *gin.Context) {
 		Demands: demand,
 	}
 
-	respDTO, err := client.ClusterClient.CreateCluster(context.TODO(), reqDTO)
+	respDTO, err := client.ClusterClient.CreateCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -73,6 +73,7 @@ func Create(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /cluster/query [post]
 func Query(c *gin.Context) {
+
 	var queryReq QueryReq
 
 	if err := c.ShouldBindJSON(&queryReq); err != nil {
@@ -92,7 +93,7 @@ func Query(c *gin.Context) {
 		ClusterStatus: queryReq.ClusterStatus,
 	}
 
-	respDTO, err := client.ClusterClient.QueryCluster(context.TODO(), reqDTO)
+	respDTO, err := client.ClusterClient.QueryCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -109,7 +110,6 @@ func Query(c *gin.Context) {
 
 		c.JSON(http.StatusOK, result)
 	}
-
 }
 
 // Delete 删除集群
@@ -126,6 +126,7 @@ func Query(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /cluster/{clusterId} [delete]
 func Delete(c * gin.Context) {
+
 	operator := controller.GetOperator(c)
 
 	reqDTO := &cluster.ClusterDeleteReqDTO{
@@ -133,7 +134,7 @@ func Delete(c * gin.Context) {
 		ClusterId: c.Param("clusterId"),
 	}
 
-	respDTO, err := client.ClusterClient.DeleteCluster(context.TODO(), reqDTO)
+	respDTO, err := client.ClusterClient.DeleteCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -170,7 +171,7 @@ func Detail(c *gin.Context) {
 		ClusterId: c.Param("clusterId"),
 	}
 
-	respDTO, err := client.ClusterClient.DetailCluster(context.TODO(), reqDTO)
+	respDTO, err := client.ClusterClient.DetailCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -208,14 +209,5 @@ func Detail(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /cluster/knowledge [get]
 func ClusterKnowledge(c *gin.Context) {
-	c.JSON(http.StatusOK, controller.Success([]knowledge.ClusterTypeSpec{
-		{
-			knowledge.ClusterType{
-				Name: "what",
-			},
-			[]knowledge.ClusterVersionSpec{
-
-			},
-		},
-	}))
+	c.JSON(http.StatusOK, controller.Success(knowledge.SpecKnowledge.Specs))
 }

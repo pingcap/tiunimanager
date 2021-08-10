@@ -40,7 +40,7 @@ type Data struct {
 	UpdatedAt 	time.Time
 	DeletedAt 	gorm.DeletedAt 		`gorm:"index"`
 
-	BizId       string				`gorm:"not null;type:varchar(64);default:null"`
+	BizId       string				`gorm:"type:varchar(64);default:null"`
 	Status      int8				`gorm:"default:0"`
 }
 

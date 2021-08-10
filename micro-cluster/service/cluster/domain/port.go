@@ -23,7 +23,7 @@ type InstanceRepository interface {
 
 type TaskRepository interface {
 	AddFlowWork(flowWork *FlowWorkEntity) error
-	AddTask(task *TaskEntity) error
+	AddFlowTask(task *TaskEntity, flowId uint) error
 	AddCronTask(cronTask *CronTaskEntity) error
 
 	Persist(flowWork *FlowWorkAggregation) error

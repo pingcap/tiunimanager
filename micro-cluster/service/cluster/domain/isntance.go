@@ -4,22 +4,27 @@ import (
 	"github.com/pingcap/tiem/library/knowledge"
 	proto "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"math/rand"
 )
 
 func (aggregation *ClusterAggregation) ExtractInstancesDTO() *proto.ClusterInstanceDTO {
-	config := aggregation.CurrentTiUPConfigRecord.ConfigModel
-
 	dto := &proto.ClusterInstanceDTO {
-		Port: int32(config.GlobalOptions.SSHPort),
-		// todo fill
-		Whitelist:                []string{},
-		IntranetConnectAddresses: ConnectAddresses(config),
-		ExtranetConnectAddresses: ConnectAddresses(config),
+		Whitelist:           	[]string{},
 		DiskUsage:                MockUsage(),
 		CpuUsage:                 MockUsage(),
 		MemoryUsage:              MockUsage(),
 		StorageUsage:             MockUsage(),
 		BackupFileUsage:          MockUsage(),
+	}
+
+	if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
+		dto.Port = int32(record.ConfigModel.GlobalOptions.SSHPort)
+		dto.IntranetConnectAddresses = ConnectAddresses(record.ConfigModel)
+		dto.ExtranetConnectAddresses = ConnectAddresses(record.ConfigModel)
+	} else {
+		dto.Port = 22
+		dto.IntranetConnectAddresses = []string{"127.0.0.1"}
+		dto.ExtranetConnectAddresses = []string{"127.0.0.1"}
 	}
 
 	return dto
@@ -36,10 +41,13 @@ func ConnectAddresses(spec *spec.Specification) []string {
 }
 
 func (aggregation *ClusterAggregation) ExtractComponentDTOs() []*proto.ComponentInstanceDTO {
-	config := aggregation.CurrentTiUPConfigRecord.ConfigModel
-	var knowledge *knowledge.ClusterVersionSpec
+	if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
+		config := record.ConfigModel
+		var knowledge *knowledge.ClusterVersionSpec
 
-	return appendAllComponentInstances(config, knowledge)
+		return appendAllComponentInstances(config, knowledge)
+	}
+	return make([]*proto.ComponentInstanceDTO, 0)
 }
 
 func appendAllComponentInstances(config *spec.Specification, knowledge *knowledge.ClusterVersionSpec) []*proto.ComponentInstanceDTO{
@@ -108,11 +116,12 @@ func pDComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDT
 
 // MockUsage TODO will be replaced with monitor implement
 func MockUsage() *proto.UsageDTO {
-	return &proto.UsageDTO{
-		Total: 100,
-		Used: 80,
-		UsageRate: 0.80,
+	usage := &proto.UsageDTO{
+		Total:     100,
+		Used: float32(rand.Intn(100)),
 	}
+	usage.UsageRate = usage.Used / usage.Total
+	return usage
 }
 
 func mockRole() *proto.ComponentNodeRoleDTO{
@@ -124,8 +133,8 @@ func mockRole() *proto.ComponentNodeRoleDTO{
 
 func mockSpec() *proto.SpecBaseInfoDTO {
 	return &proto.SpecBaseInfoDTO{
-		SpecCode: "4C8GB",
-		SpecName: "4C8GB",
+		SpecCode: knowledge.GenSpecCode(4, 8),
+		SpecName: knowledge.GenSpecCode(4, 8),
 	}
 }
 

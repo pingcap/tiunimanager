@@ -19,12 +19,14 @@ func TestBatchSaveTasks(t *testing.T) {
 		wants    []func (a args, r []*TaskDO) bool
 	}{
 		{"normal", args{[]*TaskDO{
-			{TaskName: "task1", Data: Data{BizId: "111"}},
-			{TaskName: "task2", Data: Data{BizId: "222"}},
-			{TaskName: "task3", Data: Data{BizId: "333"}},
+			{TaskName: "task1", Data: Data{BizId: "111", Status: 1}},
+			{TaskName: "task2", Data: Data{BizId: "222", Status: 1}},
+			{TaskName: "task3", Data: Data{BizId: "333", Status: 1}},
 		}}, false, []func (a args, r []*TaskDO) bool{
 			func (a args, r []*TaskDO) bool {return len(a.tasks) == len(r)},
 			func (a args, r []*TaskDO) bool {return r[2].ID > 0},
+			func (a args, r []*TaskDO) bool {return r[0].Status == a.tasks[0].Status},
+			func (a args, r []*TaskDO) bool {return r[0].Status == 1},
 		}},
 	}
 	for _, tt := range tests {
@@ -383,14 +385,14 @@ func TestUpdateFlow(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotFlow, err := UpdateFlow(tt.args.flow)
+			gotFlow, err := UpdateFlowStatus(tt.args.flow)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("UpdateFlow() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("UpdateFlowStatus() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			for i, assert := range tt.wants {
 				if !assert(tt.args, gotFlow) {
-					t.Errorf("UpdateFlow() test error, testname = %v, assert = %v, args = %v, gotFlow = %v", tt.name, i, tt.args, gotFlow)
+					t.Errorf("UpdateFlowStatus() test error, testname = %v, assert = %v, args = %v, gotFlow = %v", tt.name, i, tt.args, gotFlow)
 				}
 			}
 		})
@@ -453,7 +455,7 @@ func TestUpdateTask(t *testing.T) {
 			}
 			for i, assert := range tt.wants {
 				if !assert(tt.args, gotNewTask) {
-					t.Errorf("UpdateFlow() test error, testname = %v, assert = %v, args = %v, gotFlow = %v", tt.name, i, tt.args, gotNewTask)
+					t.Errorf("UpdateFlowStatus() test error, testname = %v, assert = %v, args = %v, gotFlow = %v", tt.name, i, tt.args, gotNewTask)
 				}
 			}
 		})

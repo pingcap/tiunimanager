@@ -10,6 +10,7 @@ func main() {
 	initPort()
 	initClient()
 	initClusterOperator()
+	initKnowledge()
 	initService()
 	//initPrometheus()
 

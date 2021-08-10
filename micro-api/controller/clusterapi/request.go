@@ -6,16 +6,16 @@ import (
 
 type CreateReq struct {
 	ClusterBaseInfo
-	NodeDemandList  []ClusterNodeDemand
+	NodeDemandList  []ClusterNodeDemand	`json:"nodeDemandList"`
 }
 
 
 type QueryReq struct {
 	controller.PageRequest
-	ClusterId 		string
-	ClusterName 	string
-	ClusterType 	string
-	ClusterStatus 	string
-	ClusterTag 		string
+	ClusterId 		string	`json:"clusterId"`
+	ClusterName 	string	`json:"clusterName"`
+	ClusterType 	string	`json:"clusterType"`
+	ClusterStatus 	string	`json:"clusterStatus"`
+	ClusterTag 		string	`json:"clusterTag"`
 }
 

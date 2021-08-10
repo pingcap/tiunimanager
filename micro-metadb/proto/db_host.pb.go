@@ -382,7 +382,7 @@ type DBHostInfoDTO struct {
 	Status   int32        `protobuf:"varint,7,opt,name=status,proto3" json:"status,omitempty"`
 	Os       string       `protobuf:"bytes,8,opt,name=os,proto3" json:"os,omitempty"` // Host os
 	Kernel   string       `protobuf:"bytes,9,opt,name=kernel,proto3" json:"kernel,omitempty"`
-	Spec     string       `protobuf:"bytes,10,opt,name=spec,proto3" json:"spec,omitempty"`          // Host Spec ["4U8G/16U32G"]
+	Spec     string       `protobuf:"bytes,10,opt,name=spec,proto3" json:"spec,omitempty"`          // Host Spec ["4C8G/16C32g"]
 	CpuCores int32        `protobuf:"varint,11,opt,name=cpuCores,proto3" json:"cpuCores,omitempty"` // Host cpu Remains
 	Memory   int32        `protobuf:"varint,12,opt,name=memory,proto3" json:"memory,omitempty"`     // Host memory Remains, Unit:GB
 	Nic      string       `protobuf:"bytes,13,opt,name=nic,proto3" json:"nic,omitempty"`            // Host network type: 1GE or 10GE

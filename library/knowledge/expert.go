@@ -68,9 +68,9 @@ func loadSpecKnowledge () {
 	tidbV4Spec := ClusterVersionSpec{
 		ClusterVersion: tidbV4,
 		ComponentSpecs: []ClusterComponentSpec{
-			{tidbComponent, ComponentConstraint{true,[]int{2}, []string{"4U8G"}, 1}},
-			{tikvComponent, ComponentConstraint{true,[]int{2}, []string{"4U8G"}, 1}},
-			{pdComponent, ComponentConstraint{true,[]int{2}, []string{"4U8G"}, 1}},
+			{tidbComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(4, 8)}, 1}},
+			{tikvComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(4, 8)}, 1}},
+			{pdComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(16, 32)}, 1}},
 		},
 	}
 
@@ -84,7 +84,7 @@ func loadSpecKnowledge () {
 	dmVxSpec := ClusterVersionSpec{
 		ClusterVersion: dmVx,
 		ComponentSpecs: []ClusterComponentSpec{
-			{dmComponent, ComponentConstraint{true,[]int{2}, []string{"4U8G"}, 1}},
+			{dmComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(4, 8)}, 1}},
 			},
 	}
 

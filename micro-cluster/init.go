@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"github.com/pingcap/tiem/library/knowledge"
+	"github.com/pingcap/tiem/library/secondparty/libbr"
 	"time"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
@@ -40,6 +41,7 @@ func initLogger() {
 
 func initClusterOperator() {
 	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup", "")
+	libbr.MicroInit("./brmgr/brmgr", "br", "")
 }
 
 func initService() {

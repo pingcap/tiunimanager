@@ -168,7 +168,7 @@ type HostInfo struct {
 	Status   int32   `protobuf:"varint,7,opt,name=status,proto3" json:"status,omitempty"`
 	Os       string  `protobuf:"bytes,8,opt,name=os,proto3" json:"os,omitempty"` // Host os
 	Kernel   string  `protobuf:"bytes,9,opt,name=kernel,proto3" json:"kernel,omitempty"`
-	Spec     string  `protobuf:"bytes,10,opt,name=spec,proto3" json:"spec,omitempty"`          // Host Spec ["4U8G/16U32G"]
+	Spec     string  `protobuf:"bytes,10,opt,name=spec,proto3" json:"spec,omitempty"`          // Host Spec ["4C8G/16C32g"]
 	CpuCores int32   `protobuf:"varint,11,opt,name=cpuCores,proto3" json:"cpuCores,omitempty"` // Host cpu remains
 	Memory   int32   `protobuf:"varint,12,opt,name=memory,proto3" json:"memory,omitempty"`     // Host memory remains, Unit:GB
 	Nic      string  `protobuf:"bytes,13,opt,name=nic,proto3" json:"nic,omitempty"`            // Host network type: 1GE or 10GE
@@ -313,7 +313,7 @@ func (x *HostInfo) GetDisks() []*Disk {
 	return nil
 }
 
-// The request means "Get 3 '4U8G' Hosts in Zone3"
+// The request means "Get 3 '4C8G' Hosts in Zone3"
 type AllocationReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

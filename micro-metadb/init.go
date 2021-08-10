@@ -154,7 +154,7 @@ func initDataForDemo() {
 		CpuCores: 4,
 		Memory:   8,
 		Nic:      "1GE",
-		AZ:       "Aone1",
+		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
@@ -171,7 +171,7 @@ func initDataForDemo() {
 		CpuCores: 4,
 		Memory:   8,
 		Nic:      "1GE",
-		AZ:       "Aone1",
+		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
@@ -188,7 +188,7 @@ func initDataForDemo() {
 		CpuCores: 4,
 		Memory:   8,
 		Nic:      "1GE",
-		AZ:       "Aone1",
+		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
@@ -205,7 +205,7 @@ func initDataForDemo() {
 		CpuCores: 4,
 		Memory:   8,
 		Nic:      "1GE",
-		AZ:       "Aone2",
+		AZ:       "Zone2",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
@@ -222,7 +222,7 @@ func initDataForDemo() {
 		CpuCores: 4,
 		Memory:   8,
 		Nic:      "1GE",
-		AZ:       "Aone1",
+		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
@@ -239,7 +239,7 @@ func initDataForDemo() {
 		CpuCores: 4,
 		Memory:   8,
 		Nic:      "1GE",
-		AZ:       "Aone1",
+		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []models.Disk{

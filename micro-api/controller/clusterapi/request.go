@@ -19,3 +19,6 @@ type QueryReq struct {
 	ClusterTag 		string	`json:"clusterTag"`
 }
 
+type DescribeDashboardReq struct {
+	ClusterId 		string 	`json:"clusterId"`
+}

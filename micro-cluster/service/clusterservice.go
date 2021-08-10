@@ -261,3 +261,18 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 		return nil
 	}
 }
+
+func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *cluster.DescribeDashboardRequest, response *cluster.DescribeDashboardResponse) (err error) {
+	info, err := domain.DecribeDashboard(request.Operator, request.ClusterId)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	response.Status = SuccessResponseStatus
+	response.ClusterId = info.ClusterId
+	response.Url = info.Url
+	response.ShareCode = info.ShareCode
+
+	return nil
+}

@@ -26,6 +26,13 @@ func TestCreateCluster(t *testing.T) {
 			func (args args, cluster *ClusterDO) bool{ return args.TenantId == cluster.TenantId},
 			func (args args, cluster *ClusterDO) bool{ return args.ClusterName == cluster.Name },
 			func (args args, cluster *ClusterDO) bool{ return cluster.ID != ""},
+			func (args args, cluster *ClusterDO) bool{ return cluster.Code == "testCluster"},
+		}},
+		{"Chinese name", args{TenantId: "111", ClusterName: "中文测试集群", OwnerId: "111"}, false, []func (args args, cluster *ClusterDO) bool{
+			func (args args, cluster *ClusterDO) bool{ return args.TenantId == cluster.TenantId},
+			func (args args, cluster *ClusterDO) bool{ return args.ClusterName == cluster.Name },
+			func (args args, cluster *ClusterDO) bool{ return cluster.ID != ""},
+			func (args args, cluster *ClusterDO) bool{ return cluster.Code == "_zhong_wen_ce_shi_ji_qun"},
 		}},
 	}
 	for _, tt := range tests {

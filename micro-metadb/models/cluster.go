@@ -252,6 +252,7 @@ func CreateCluster(
 	) (cluster *ClusterDO, err error){
 	cluster = &ClusterDO{}
 	cluster.Name = ClusterName
+	cluster.Code = generateEntityCode(ClusterName)
 	cluster.DbPassword = DbPassword
 	cluster.Type = ClusterType
 	cluster.Version = ClusterVersion

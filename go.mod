@@ -17,6 +17,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
+	github.com/mozillazg/go-pinyin v0.18.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/tiup v1.5.3
 	github.com/sirupsen/logrus v1.8.1

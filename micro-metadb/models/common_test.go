@@ -15,6 +15,11 @@ type TestEntity struct {
 	name string
 }
 
+type TestEntity2 struct {
+	Entity
+	name string
+}
+
 type TestRecord struct {
 	Record
 	name string
@@ -35,6 +40,7 @@ func TestMain(m *testing.M) {
 
 	err := MetaDB.Migrator().CreateTable(
 		&TestEntity{},
+		&TestEntity2{},
 		&TestRecord{},
 		&TestData{},
 		&DemandRecordDO{},
@@ -85,8 +91,38 @@ func TestTime(t *testing.T)  {
 	})
 }
 
-func TestEntity_BeforeCreate(t *testing.T) {
+func TestEntityCode(t *testing.T) {
+	t.Run("test id", func(t *testing.T) {
+		err := MetaDB.Create(&TestEntity{
+			Entity{
+				TenantId: "111",
+				Code: "test_code",
+			},
+			"start",
+		}).Error
 
+		if err != nil {
+			t.Errorf("TestEntity_BeforeCreate() error = %v", err)
+		}
+
+		err = MetaDB.Create(&TestEntity2{
+			Entity{
+				TenantId: "111",
+				Code: "test_code",
+
+			},
+			"start",
+		}).Error
+
+		if err != nil {
+			t.Errorf("TestEntity_BeforeCreate() error = %v", err)
+		}
+
+	})
+
+}
+
+func TestEntity_BeforeCreate(t *testing.T) {
 	t.Run("test id", func(t *testing.T) {
 		do := &TestEntity{
 			Entity{
@@ -180,4 +216,29 @@ func TestData_BeforeCreate(t *testing.T) {
 		}
 	})
 
+}
+
+func Test_generateEntityCode(t *testing.T) {
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"normal", args{"中文"}, "_zhong_wen"},
+		{"english", args{"english"}, "english"},
+		{"mixed1", args{"english中mix"}, "english_zhong_mix"},
+		{"mixed2", args{"中english结合"}, "_zhong_english_jie_he"},
+		{"mixedAll", args{"中1文Eng2结4k_5v合''s"}, "_zhong_1_wen_Eng2_jie_4k_5v_he_''s"},
+		{"empty", args{""}, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := generateEntityCode(tt.args.name); got != tt.want {
+				t.Errorf("generateEntityCode() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

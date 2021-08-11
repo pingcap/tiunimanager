@@ -284,7 +284,7 @@ func assert(b bool) {
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
 	//log.Fatalf("panic: %s, with stack trace:", s, string(debug.Stack()))
-	fmt.Println("panic: %s, with stack trace:", s, string(debug.Stack()))
+	fmt.Printf("panic: %s, with stack trace: %v\n", s, string(debug.Stack()))
 	panic("unexpected")
 }
 

@@ -52,21 +52,25 @@ func Route(g *gin.Engine) {
 			cluster.POST("/", clusterapi.Create)
 			cluster.GET("/", clusterapi.Query)
 			cluster.DELETE("/:clusterId", clusterapi.Delete)
+
+			// Params
+			cluster.GET("/:clusterId/params", instanceapi.QueryParams)
+			cluster.POST("/:clusterId/params", instanceapi.SubmitParams)
 		}
 
 		knowledge := apiV1.Group("/knowledges")
 		{
-			// api/v1/knowledges?clusterId=xxxx
+			// api/v1/knowledges?type=cluster
 			knowledge.GET("/", clusterapi.ClusterKnowledge)
 		}
 
-		param := apiV1.Group("/params")
-		{
-			param.Use(security.VerifyIdentity)
-			// api/v1/params?clusterId=xxxx
-			param.GET("/", instanceapi.QueryParams)
-			param.POST("/submit", instanceapi.SubmitParams)
-		}
+		//param := apiV1.Group("/params")
+		//{
+		//	param.Use(security.VerifyIdentity)
+		// api/v1/params?clusterId=xxxx
+		//	param.GET("/", instanceapi.QueryParams)
+		//	param.POST("/submit", instanceapi.SubmitParams)
+		//}
 
 		backup := apiV1.Group("/backup")
 		{

@@ -101,13 +101,16 @@ func DescribeDataTransport(c *gin.Context) {
 			TransportRecords: make([]*DataTransportInfo, len(respDTO.GetTransportInfos())),
 		}
 		for index := 0; index < len(data.TransportRecords); index++ {
-			data.TransportRecords[index].RecordId = respDTO.GetTransportInfos()[index].GetRecordId()
-			data.TransportRecords[index].ClusterId = respDTO.GetTransportInfos()[index].GetClusterId()
-			data.TransportRecords[index].TransportType = respDTO.GetTransportInfos()[index].GetTransportType()
-			data.TransportRecords[index].Status = respDTO.GetTransportInfos()[index].GetStatus()
-			data.TransportRecords[index].FilePath = respDTO.GetTransportInfos()[index].GetFilePath()
-			data.TransportRecords[index].StartTime = time.Unix(respDTO.GetTransportInfos()[index].GetStartTime(), 0);
-			data.TransportRecords[index].EndTime = time.Unix(respDTO.GetTransportInfos()[index].GetEndTime(), 0 )
+			data.TransportRecords[index] = &DataTransportInfo{
+				RecordId: respDTO.GetTransportInfos()[index].GetRecordId(),
+				ClusterId: respDTO.GetTransportInfos()[index].GetClusterId(),
+				TransportType: respDTO.GetTransportInfos()[index].GetTransportType(),
+				Status: respDTO.GetTransportInfos()[index].GetStatus(),
+				FilePath: respDTO.GetTransportInfos()[index].GetFilePath(),
+				StartTime: time.Unix(respDTO.GetTransportInfos()[index].GetStartTime(), 0),
+				EndTime: time.Unix(respDTO.GetTransportInfos()[index].GetEndTime(), 0),
+			}
+
 		}
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, data)

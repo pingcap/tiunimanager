@@ -198,13 +198,15 @@ func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId str
 	info := make([]*TransportInfo, resp.GetPage().GetTotal())
 	records := resp.GetRecords()
 	for index := 0; index < len(info); index++ {
-		info[index].RecordId = records[index].GetID()
-		info[index].TransportType = records[index].GetTransportType()
-		info[index].ClusterId = records[index].GetClusterId()
-		info[index].Status = records[index].GetStatus()
-		info[index].FilePath = records[index].GetFilePath()
-		info[index].StartTime = records[index].GetStartTime()
-		info[index].EndTime = records[index].GetEndTime()
+		info[index] = &TransportInfo{
+			RecordId: records[index].GetID(),
+			TransportType: records[index].GetTransportType(),
+			ClusterId: records[index].GetClusterId(),
+			Status: records[index].GetStatus(),
+			FilePath: records[index].GetFilePath(),
+			StartTime: records[index].GetStartTime(),
+			EndTime: records[index].GetEndTime(),
+		}
 	}
 
 

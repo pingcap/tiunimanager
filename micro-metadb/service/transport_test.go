@@ -13,7 +13,7 @@ import (
 
 func testInit() {
 	var err error
-	models.MetaDB, err = gorm.Open(sqlite.Open("../ticp.sqlite.db"), &gorm.Config{})
+	models.MetaDB, err = gorm.Open(sqlite.Open("../tiem.sqlite.db"), &gorm.Config{})
 	if err != nil {
 		fmt.Printf("init open database failed, %s", err.Error())
 		return

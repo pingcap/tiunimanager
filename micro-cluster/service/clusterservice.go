@@ -134,13 +134,15 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 	resp.RespStatus = SuccessResponseStatus
 	resp.TransportInfos = make([]*cluster.DataTransportInfo, len(infos))
 	for index := 0; index < len(infos); index ++ {
-		resp.TransportInfos[index].RecordId = infos[index].RecordId
-		resp.TransportInfos[index].ClusterId = infos[index].ClusterId
-		resp.TransportInfos[index].TransportType = infos[index].TransportType
-		resp.TransportInfos[index].FilePath = infos[index].FilePath
-		resp.TransportInfos[index].Status = infos[index].Status
-		resp.TransportInfos[index].StartTime = infos[index].StartTime
-		resp.TransportInfos[index].EndTime = infos[index].EndTime
+		resp.TransportInfos[index] = &cluster.DataTransportInfo{
+			RecordId: infos[index].RecordId,
+			ClusterId: infos[index].ClusterId,
+			TransportType: infos[index].TransportType,
+			FilePath: infos[index].FilePath,
+			Status: infos[index].Status,
+			StartTime: infos[index].StartTime,
+			EndTime: infos[index].EndTime,
+		}
 	}
 	return nil
 }

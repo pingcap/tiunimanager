@@ -26,8 +26,7 @@ install:
 	@bash make.sh install $(INSTALL_DIR)
 clean:
 	@bash make.sh clean
-test:
-	@bash make.sh test
+test: unit_test
 help:
 	@echo "make build"
 	@echo "make INSTALL_DIR=installDir install"

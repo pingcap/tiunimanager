@@ -13,9 +13,9 @@ import (
 )
 
 type LoginRequest struct {
-	Type     int 			`json:"type" example:"0"`
-	Username string         `json:"username" example:"root"` // Does not present for AuthTypeSharingCode
-	Password string         `json:"password"`
+	Type     int    `json:"type"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 type LoginResponse struct {
@@ -33,14 +33,14 @@ type ShareResponse struct {
 }
 
 type Dashboard struct {
-	ClusterId 	string 		`json:"clusterId"`
-	Url 		string 		`json:"url"`
-	ShareCode	string 		`json:"shareCode"`
+	ClusterId string `json:"clusterId"`
+	Url       string `json:"url"`
+	ShareCode string `json:"shareCode"`
 }
 
 var shareCodeUrlSuffix string = "api/user/share/code"
 var loginUrlSuffix string = "api/user/login"
-var defaultExpire int64 = 60*60*3 //3 hour expire
+var defaultExpire int64 = 60 * 60 * 3 //3 hour expire
 
 func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
 	//todo: check operator
@@ -49,7 +49,7 @@ func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, err
 		return nil, err
 	}
 
-	token, err := getLoginToken(url, "root", "")	//todo: replace by real data
+	token, err := getLoginToken(url, "root", "") //todo: replace by real data
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, err
 
 	dashboard := &Dashboard{
 		ClusterId: clusterId,
-		Url: url,
+		Url:       url,
 		ShareCode: shareCode,
 	}
 
@@ -147,6 +147,6 @@ func post(url string, body interface{}, headers map[string]string) (*http.Respon
 	}
 	//http client
 	client := &http.Client{}
-	log.Infof("%s URL : %s \n", http.MethodPost,req.URL.String())
+	log.Infof("%s URL : %s \n", http.MethodPost, req.URL.String())
 	return client.Do(req)
 }

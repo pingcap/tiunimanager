@@ -16,6 +16,7 @@ import (
 )
 
 type TransportType string
+
 const (
 	TransportTypeExport TransportType = "export"
 	TransportTypeImport TransportType = "import"
@@ -23,68 +24,68 @@ const (
 
 const (
 	TransportStatusRunning string = "Running"
-	TransportStatusFailed string = "Failed"
+	TransportStatusFailed  string = "Failed"
 	TransportStatusSuccess string = "Success"
 )
 
 type ImportInfo struct {
-	ClusterId 		string
-	UserName		string
-	Password 		string
-	FilePath 		string
-	RecordId		string
+	ClusterId string
+	UserName  string
+	Password  string
+	FilePath  string
+	RecordId  string
 }
 
 type ExportInfo struct {
-	ClusterId 		string
-	UserName		string
-	Password 		string
-	FileType 		string
-	RecordId		string
+	ClusterId string
+	UserName  string
+	Password  string
+	FileType  string
+	RecordId  string
 }
 
 type TransportInfo struct {
-	ClusterId 		string
-	RecordId		string
-	TransportType 	string
-	Status 			string
-	FilePath 		string
-	StartTime		int64
-	EndTime 		int64
+	ClusterId     string
+	RecordId      string
+	TransportType string
+	Status        string
+	FilePath      string
+	StartTime     int64
+	EndTime       int64
 }
 
 /*
 	data import toml config for lighting
 	https://docs.pingcap.com/zh/tidb/dev/deploy-tidb-lightning
- */
+*/
 type DataImportConfig struct {
-	Lighting 		LightingCfg			`toml:"lighting"`
-	TikvImporter	TikvImporterCfg 	`toml:"tikv-importer"`
-	MyDumper		MyDumperCfg 		`toml:"mydumper"`
-	Tidb 			TidbCfg 			`toml:"tidb"`
+	Lighting     LightingCfg     `toml:"lighting"`
+	TikvImporter TikvImporterCfg `toml:"tikv-importer"`
+	MyDumper     MyDumperCfg     `toml:"mydumper"`
+	Tidb         TidbCfg         `toml:"tidb"`
 }
 
 type LightingCfg struct {
-	Level			string	`toml:"level"`	//lighting log level
-	File 			string 	`toml:"file"`	//lighting log path
+	Level string `toml:"level"` //lighting log level
+	File  string `toml:"file"`  //lighting log path
 }
 
 type TikvImporterCfg struct {
-	Backend 		string 	`toml:"backend"`		//backend mode: local/normal
-	SortedKvDir		string 	`toml:"sorted-kv-dir"`	//temp store path
+	Backend     string `toml:"backend"`       //backend mode: local/normal
+	SortedKvDir string `toml:"sorted-kv-dir"` //temp store path
 }
 
 type MyDumperCfg struct {
-	DataSourceDir	string	`toml:"data-source-dir"`	//import data filepath
+	DataSourceDir string `toml:"data-source-dir"` //import data filepath
 }
 
 type TidbCfg struct {
-	Host 			string 	`toml:"host"`
-	Port 			int		`toml:"port"`
-	User 			string 	`toml:"user"`
-	Password		string 	`toml:"password"`
-	StatusPort		int 	`toml:"status-port"`	//table infomation from tidb status port
-	PdAddr 			string 	`toml:"pd-addr"`
+	Host       string `toml:"host"`
+	Port       int    `toml:"port"`
+	User       string `toml:"user"`
+	Password   string `toml:"password"`
+	StatusPort int    `toml:"status-port"` //table infomation from tidb status port
+	PdAddr     string `toml:"pd-addr"`
 }
 
 var contextDataTransportKey = "dataTransportInfo"
@@ -100,13 +101,13 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 
 	req := &db.DBCreateTransportRecordRequest{
 		Record: &db.TransportRecordDTO{
-			ClusterId: clusterId,
-			TenantId: operator.TenantId,
+			ClusterId:     clusterId,
+			TenantId:      operator.TenantId,
 			TransportType: string(TransportTypeExport),
-			FilePath: getDataTransportDir(clusterId, TransportTypeExport),
-			Status: TransportStatusRunning,
-			StartTime: time.Now().Unix(),
-			EndTime: time.Now().Unix(),
+			FilePath:      getDataTransportDir(clusterId, TransportTypeExport),
+			Status:        TransportStatusRunning,
+			StartTime:     time.Now().Unix(),
+			EndTime:       time.Now().Unix(),
 		},
 	}
 	resp, err := client.DBClient.CreateTransportRecord(ctx.Background(), req)
@@ -116,10 +117,10 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 
 	info := &ExportInfo{
 		ClusterId: clusterId,
-		UserName: userName,
-		Password: password,//todo: need encrypt
-		FileType: fileType,
-		RecordId: resp.GetId(),
+		UserName:  userName,
+		Password:  password, //todo: need encrypt
+		FileType:  fileType,
+		RecordId:  resp.GetId(),
 	}
 
 	// Start the workflow
@@ -146,13 +147,13 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 
 	req := &db.DBCreateTransportRecordRequest{
 		Record: &db.TransportRecordDTO{
-			ClusterId: clusterId,
-			TenantId: operator.TenantId,
+			ClusterId:     clusterId,
+			TenantId:      operator.TenantId,
 			TransportType: string(TransportTypeImport),
-			FilePath: getDataTransportDir(clusterId, TransportTypeImport),
-			Status: TransportStatusRunning,
-			StartTime: time.Now().Unix(),
-			EndTime: time.Now().Unix(),
+			FilePath:      getDataTransportDir(clusterId, TransportTypeImport),
+			Status:        TransportStatusRunning,
+			StartTime:     time.Now().Unix(),
+			EndTime:       time.Now().Unix(),
 		},
 	}
 	resp, err := client.DBClient.CreateTransportRecord(ctx.Background(), req)
@@ -161,10 +162,10 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	}
 	info := &ImportInfo{
 		ClusterId: clusterId,
-		UserName: userName,
-		Password: password,//todo: need encrypt
-		FilePath: filepath,
-		RecordId: resp.GetId(),
+		UserName:  userName,
+		Password:  password, //todo: need encrypt
+		FilePath:  filepath,
+		RecordId:  resp.GetId(),
 	}
 
 	// Start the workflow
@@ -184,31 +185,30 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*TransportInfo, error) {
 	req := &db.DBListTransportRecordRequest{
 		Page: &db.DBPageDTO{
-			Page: page,
+			Page:     page,
 			PageSize: pageSize,
 		},
 		ClusterId: clusterId,
-		RecordId: recordId,
+		RecordId:  recordId,
 	}
 	resp, err := client.DBClient.ListTrasnportRecord(ctx.Background(), req)
 	if err != nil {
 		return nil, err
 	}
 
-	info := make([]*TransportInfo, resp.GetPage().GetTotal())
 	records := resp.GetRecords()
+	info := make([]*TransportInfo, len(records))
 	for index := 0; index < len(info); index++ {
 		info[index] = &TransportInfo{
-			RecordId: records[index].GetID(),
+			RecordId:      records[index].GetID(),
 			TransportType: records[index].GetTransportType(),
-			ClusterId: records[index].GetClusterId(),
-			Status: records[index].GetStatus(),
-			FilePath: records[index].GetFilePath(),
-			StartTime: records[index].GetStartTime(),
-			EndTime: records[index].GetEndTime(),
+			ClusterId:     records[index].GetClusterId(),
+			Status:        records[index].GetStatus(),
+			FilePath:      records[index].GetFilePath(),
+			StartTime:     records[index].GetStartTime(),
+			EndTime:       records[index].GetEndTime(),
 		}
 	}
-
 
 	return info, nil
 }
@@ -228,22 +228,22 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	config := &DataImportConfig{
 		Lighting: LightingCfg{
 			Level: "info",
-			File: fmt.Sprintf("%s/tidb-lighting.log", getDataTransportDir(cluster.Id, TransportTypeImport)),
+			File:  fmt.Sprintf("%s/tidb-lighting.log", getDataTransportDir(cluster.Id, TransportTypeImport)),
 		},
 		TikvImporter: TikvImporterCfg{
-			Backend: "local",
+			Backend:     "local",
 			SortedKvDir: "/mnt/ssd/sorted-kv-dir", //todo: replace config item
 		},
 		MyDumper: MyDumperCfg{
 			DataSourceDir: info.FilePath,
 		},
 		Tidb: TidbCfg{
-			Host: tidbServer.Host,
-			Port: tidbServer.Port,
-			User: info.UserName,
-			Password: info.Password,
+			Host:       tidbServer.Host,
+			Port:       tidbServer.Port,
+			User:       info.UserName,
+			Password:   info.Password,
 			StatusPort: tidbServer.StatusPort,
-			PdAddr: fmt.Sprintf("%s:%d", pdServer.Host, pdServer.ClientPort),
+			PdAddr:     fmt.Sprintf("%s:%d", pdServer.Host, pdServer.ClientPort),
 		},
 	}
 	return config
@@ -378,10 +378,10 @@ func updateDataImportRecord(task *TaskEntity, context *FlowContext) bool {
 
 	req := &db.DBUpdateTransportRecordRequest{
 		Record: &db.TransportRecordDTO{
-			ID: info.RecordId,
+			ID:        info.RecordId,
 			ClusterId: cluster.Id,
-			Status: TransportStatusSuccess,
-			EndTime: time.Now().Unix(),
+			Status:    TransportStatusSuccess,
+			EndTime:   time.Now().Unix(),
 		},
 	}
 	resp, err := client.DBClient.UpdateTransportRecord(ctx.Background(), req)
@@ -413,10 +413,10 @@ func updateDataExportRecord(task *TaskEntity, context *FlowContext) bool {
 
 	req := &db.DBUpdateTransportRecordRequest{
 		Record: &db.TransportRecordDTO{
-			ID: info.RecordId,
+			ID:        info.RecordId,
 			ClusterId: cluster.Id,
-			Status: TransportStatusSuccess,
-			EndTime: time.Now().Unix(),
+			Status:    TransportStatusSuccess,
+			EndTime:   time.Now().Unix(),
 		},
 	}
 	resp, err := client.DBClient.UpdateTransportRecord(ctx.Background(), req)
@@ -484,10 +484,10 @@ func exportDataFailed(task *TaskEntity, context *FlowContext) bool {
 func updateTransportRecordFailed(recordId, clusterId string) error {
 	req := &db.DBUpdateTransportRecordRequest{
 		Record: &db.TransportRecordDTO{
-			ID: recordId,
+			ID:        recordId,
 			ClusterId: clusterId,
-			Status: TransportStatusFailed,
-			EndTime: time.Now().Unix(),
+			Status:    TransportStatusFailed,
+			EndTime:   time.Now().Unix(),
 		},
 	}
 	resp, err := client.DBClient.UpdateTransportRecord(ctx.Background(), req)

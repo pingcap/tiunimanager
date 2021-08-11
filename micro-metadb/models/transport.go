@@ -7,14 +7,14 @@ import (
 )
 
 type TransportRecord struct {
-	ID				string 		`gorm:"primaryKey"`
-	ClusterId 		string
-	TransportType   string
-	FilePath 		string
-	TenantId       	string
-	Status 			string
-	StartTime 		time.Time
-	EndTime			time.Time
+	ID            string `gorm:"primaryKey"`
+	ClusterId     string
+	TransportType string
+	FilePath      string
+	TenantId      string
+	Status        string
+	StartTime     time.Time
+	EndTime       time.Time
 }
 
 func (rc *TransportRecord) TableName() string {
@@ -33,12 +33,12 @@ func CreateTransportRecord(record *TransportRecord) (id string, err error) {
 	if err != nil {
 		return "", err
 	}
-	return record.ID,nil
+	return record.ID, nil
 }
 
 func UpdateTransportRecord(id, clusterId, status string, endTime time.Time) (err error) {
 	record := TransportRecord{
-		ID: id,
+		ID:        id,
 		ClusterId: clusterId,
 	}
 	err = MetaDB.Model(&record).Updates(map[string]interface{}{"Status": status, "EndTime": endTime}).Error
@@ -61,7 +61,7 @@ func ListTransportRecord(clusterId string, recordId string, offset int32, length
 		db.Where("id = ?", recordId)
 	}
 
-	err = db.Count(&total).Offset(int(offset)).Limit(int(length)).Find(&records).Error
+	err = db.Count(&total).Offset(int(offset - 1)).Limit(int(length)).Find(&records).Error
 
 	return
 }

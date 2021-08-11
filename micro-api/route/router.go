@@ -80,17 +80,20 @@ func Route(g *gin.Engine) {
 			demoInstance.Use(security.VerifyIdentity)
 		}
 
-		host := apiV1.Group("/")
+		host := apiV1.Group("/resources")
 		{
 			host.Use(security.VerifyIdentity)
 			host.POST("host", hostapi.ImportHost)
 			host.POST("hosts", hostapi.ImportHosts)
 			host.GET("hosts", hostapi.ListHost)
-			host.GET("host/:hostId", hostapi.HostDetails)
-			host.DELETE("host/:hostId", hostapi.RemoveHost)
+			host.GET("hosts/:hostId", hostapi.HostDetails)
+			host.DELETE("hosts/:hostId", hostapi.RemoveHost)
 			host.DELETE("hosts", hostapi.RemoveHosts)
-			host.GET("download_template", hostapi.DownloadHostTemplateFile)
+
+			host.GET("hosts-template", hostapi.DownloadHostTemplateFile)
+
 			host.GET("failuredomains", hostapi.GetFailureDomain)
+
 			// Add allochosts API for debugging, not release.
 			host.POST("allochosts", hostapi.AllocHosts)
 		}

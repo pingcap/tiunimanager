@@ -31,59 +31,6 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/allochosts": {
-            "post": {
-                "description": "按指定的配置分配主机资源",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "分配主机接口",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "主机分配请求",
-                        "name": "Alloc",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/hostapi.AllocHostsReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/hostapi.AllocHostsRsp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
         "/backup/record/recover": {
             "post": {
                 "description": "恢复备份",
@@ -196,7 +143,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "string"
+                                            "type": "integer"
                                         }
                                     }
                                 }
@@ -861,472 +808,6 @@ var doc = `{
                 }
             }
         },
-        "/download_template/": {
-            "get": {
-                "description": "将主机信息文件导出到本地",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/octet-stream"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "导出主机信息模板文件",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "file"
-                        }
-                    }
-                }
-            }
-        },
-        "/failuredomains": {
-            "get": {
-                "description": "查询指定故障域的资源情况",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "查询指定故障域的资源",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "enum": [
-                            1,
-                            2,
-                            3
-                        ],
-                        "type": "integer",
-                        "description": "指定故障域类型",
-                        "name": "failureDomainType",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/hostapi.DomainResource"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/host": {
-            "post": {
-                "description": "将给定的主机信息导入系统",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "导入主机接口",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "待导入的主机信息",
-                        "name": "host",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/hostapi.HostInfo"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/host/query": {
-            "post": {
-                "description": "查询主机",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "查询主机接口",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "查询请求",
-                        "name": "query",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/hostapi.HostQuery"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/hostapi.DemoHostInfo"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/host/{hostId}": {
-            "get": {
-                "description": "展示指定的主机的详细信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "查询主机详情",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "主机ID",
-                        "name": "hostId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/hostapi.HostInfo"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "删除指定的主机",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "删除指定的主机",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "待删除的主机ID",
-                        "name": "hostId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/hosts": {
-            "get": {
-                "description": "展示目前所有主机",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "查询主机列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "查询特定用途的主机列表",
-                        "name": "purpose",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "查询特定状态的主机列表",
-                        "name": "status",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/hostapi.HostInfo"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "通过文件批量导入主机",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "通过文件批量导入主机",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "包含待导入主机信息的文件",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/hosts/": {
-            "delete": {
-                "description": "批量删除指定的主机",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "批量删除指定的主机",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "待删除的主机ID数组",
-                        "name": "hostIds",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
         "/params/submit": {
             "post": {
                 "description": "提交参数",
@@ -1473,6 +954,469 @@ var doc = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/allochosts": {
+            "post": {
+                "description": "按指定的配置分配主机资源",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "分配主机接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "主机分配请求",
+                        "name": "Alloc",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hostapi.AllocHostsReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/hostapi.AllocHostsRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/failuredomains": {
+            "get": {
+                "description": "查询指定故障域的资源情况",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "查询指定故障域的资源",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2,
+                            3
+                        ],
+                        "type": "integer",
+                        "description": "指定故障域类型",
+                        "name": "failureDomainType",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/hostapi.DomainResource"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/host": {
+            "post": {
+                "description": "将给定的主机信息导入系统",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "导入主机接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "待导入的主机信息",
+                        "name": "host",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hostapi.HostInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/hosts": {
+            "get": {
+                "description": "展示目前所有主机",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "查询主机列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "查询特定用途的主机列表",
+                        "name": "purpose",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "查询特定状态的主机列表",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/hostapi.HostInfo"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "通过文件批量导入主机",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "通过文件批量导入主机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "包含待导入主机信息的文件",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/hosts-template/": {
+            "get": {
+                "description": "将主机信息文件导出到本地",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "导出主机信息模板文件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/hosts/": {
+            "delete": {
+                "description": "批量删除指定的主机",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "批量删除指定的主机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "待删除的主机ID数组",
+                        "name": "hostIds",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/hosts/{hostId}": {
+            "get": {
+                "description": "展示指定的主机的详细信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "查询主机详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "主机ID",
+                        "name": "hostId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/hostapi.HostInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除指定的主机",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "删除指定的主机",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "待删除的主机ID",
+                        "name": "hostId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2196,20 +2140,6 @@ var doc = `{
                 }
             }
         },
-        "hostapi.DemoHostInfo": {
-            "type": "object",
-            "properties": {
-                "hostId": {
-                    "type": "string"
-                },
-                "hostIp": {
-                    "type": "string"
-                },
-                "hostName": {
-                    "type": "string"
-                }
-            }
-        },
         "hostapi.Disk": {
             "type": "object",
             "properties": {
@@ -2315,17 +2245,6 @@ var doc = `{
                 }
             }
         },
-        "hostapi.HostQuery": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
-                }
-            }
-        },
         "hostapi.SpecBaseInfo": {
             "type": "object",
             "properties": {
@@ -2386,17 +2305,11 @@ var doc = `{
         "instanceapi.BackupRecordQueryReq": {
             "type": "object",
             "properties": {
-                "endTime": {
-                    "type": "string"
-                },
                 "page": {
                     "type": "integer"
                 },
                 "pageSize": {
                     "type": "integer"
-                },
-                "startTime": {
-                    "type": "string"
                 }
             }
         },

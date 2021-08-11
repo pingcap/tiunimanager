@@ -1,8 +1,8 @@
 package models
 
 import (
-	"reflect"
 	"testing"
+	"time"
 )
 
 func TestAddTenant(t *testing.T) {
@@ -14,10 +14,14 @@ func TestAddTenant(t *testing.T) {
 	tests := []struct {
 		name       string
 		args       args
-		wantTenant Tenant
 		wantErr    bool
+		wants 	  []func(a args, tenant Tenant) bool
 	}{
-		// TODO: Add test cases.
+		{"normal", args{name: "test_add_tenant_name"}, false, []func(a args, tenant Tenant) bool{
+			func(a args, tenant Tenant) bool{return len(tenant.ID) == 22},
+			func(a args, tenant Tenant) bool{return tenant.CreatedAt.Before(time.Now())},
+		}},
+		{"empty", args{}, true, []func(a args, tenant Tenant) bool{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -26,67 +30,106 @@ func TestAddTenant(t *testing.T) {
 				t.Errorf("AddTenant() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotTenant, tt.wantTenant) {
-				t.Errorf("AddTenant() gotTenant = %v, want %v", gotTenant, tt.wantTenant)
+
+			for i, assert := range tt.wants {
+				if !assert(tt.args, gotTenant) {
+					t.Errorf("AddToken() test error, testname = %v, assert %v, args = %v, gotTenant = %v", tt.name, i, tt.args, gotTenant)
+				}
 			}
+
 		})
 	}
 }
 
 func TestFindTenantById(t *testing.T) {
-	type args struct {
-		tenantId string
-	}
-	tests := []struct {
-		name       string
-		args       args
-		wantTenant Tenant
-		wantErr    bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotTenant, err := FindTenantById(tt.args.tenantId)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("FindTenantById() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(gotTenant, tt.wantTenant) {
-				t.Errorf("FindTenantById() gotTenant = %v, want %v", gotTenant, tt.wantTenant)
-			}
-		})
-	}
+	t.Run("normal", func(t *testing.T) {
+		tenant, _ := AddTenant("tenantName", 1, 0)
+
+		gotTenant, err := FindTenantById(tenant.ID)
+		if err != nil {
+			t.Errorf("TestFindTenantById() error = %v", err)
+			return
+		}
+
+		if gotTenant.ID != tenant.ID {
+			t.Errorf("TestFindTenantById() want tenant id = %v, got = %v", tenant.ID, gotTenant.ID)
+			return
+		}
+		if gotTenant.Name != tenant.Name {
+			t.Errorf("TestFindTenantById() want tenant name = %v, got = %v", tenant.Name, gotTenant.Name)
+			return
+		}
+	})
+	t.Run("no result", func(t *testing.T) {
+		AddTenant("tenantName", 1, 0)
+
+		gotTenant, err := FindTenantById("dfsaf")
+		if err == nil {
+			t.Errorf("TestFindTenantById() want err")
+			return
+		}
+		if gotTenant.ID != "" {
+			t.Errorf("TestFindTenantById() want empty result, got = %v", gotTenant)
+			return
+		}
+		gotTenant, err = FindTenantById("")
+		if err == nil {
+			t.Errorf("TestFindTenantById() want err")
+			return
+		}
+		if gotTenant.ID != "" {
+			t.Errorf("TestFindTenantById() want empty result, got = %v", gotTenant)
+			return
+		}
+
+	})
+
 }
 
 func TestFindTenantByName(t *testing.T) {
-	type args struct {
-		name string
-	}
-	tests := []struct {
-		name       string
-		args       args
-		wantTenant Tenant
-		wantErr    bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotTenant, err := FindTenantByName(tt.args.name)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("FindTenantByName() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(gotTenant, tt.wantTenant) {
-				t.Errorf("FindTenantByName() gotTenant = %v, want %v", gotTenant, tt.wantTenant)
-			}
-		})
-	}
+	t.Run("normal", func(t *testing.T) {
+		tenant, _ := AddTenant("testTenantName", 1, 0)
+
+		gotTenant, err := FindTenantByName(tenant.Name)
+		if err != nil {
+			t.Errorf("TestFindTenantByName() error = %v", err)
+			return
+		}
+
+		if gotTenant.ID != tenant.ID {
+			t.Errorf("TestFindTenantByName() want tenant id = %v, got = %v", tenant.ID, gotTenant.ID)
+			return
+		}
+		if gotTenant.Name != tenant.Name {
+			t.Errorf("TestFindTenantByName() want tenant name = %v, got = %v", tenant.Name, gotTenant.Name)
+			return
+		}
+	})
+	t.Run("no result", func(t *testing.T) {
+		AddTenant("tenantName", 1, 0)
+
+		gotTenant, err := FindTenantByName("no_result_name")
+		if err == nil {
+			t.Errorf("TestFindTenantByName() want err")
+			return
+		}
+		if gotTenant.ID != "" {
+			t.Errorf("TestFindTenantByName() want empty result, got = %v", gotTenant)
+			return
+		}
+		gotTenant, err = FindTenantByName("")
+		if err == nil {
+			t.Errorf("TestFindTenantByName() want err")
+			return
+		}
+		if gotTenant.ID != "" {
+			t.Errorf("TestFindTenantByName() want empty result, got = %v", gotTenant)
+			return
+		}
+	})
 }
 
 func TestTenant_BeforeCreate(t *testing.T) {
-
 		t.Run("normal", func(t *testing.T) {
 			tenant := Tenant{
 				Name: "name_test_tenant",
@@ -100,8 +143,8 @@ func TestTenant_BeforeCreate(t *testing.T) {
 				t.Errorf("BeforeCreate() error, want status %v, got %v", 0, tenant.Status)
 			}
 
-			if tenant.ID == "" || len(tenant.ID) != 18 {
-				t.Errorf("BeforeCreate() error, want id length %v, got %v", 18, len(tenant.ID))
+			if tenant.ID == "" || len(tenant.ID) != 22 {
+				t.Errorf("BeforeCreate() error, want id length %v, got %v", 22, len(tenant.ID))
 			}
 
 			if tenant.Name != "name_test_tenant" {

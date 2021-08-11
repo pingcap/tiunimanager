@@ -28,12 +28,13 @@ func TestCreateCluster(t *testing.T) {
 			func (args args, cluster *ClusterDO) bool{ return cluster.ID != ""},
 			func (args args, cluster *ClusterDO) bool{ return cluster.Code == "testCluster"},
 		}},
-		{"Chinese name", args{TenantId: "111", ClusterName: "中文测试集群", OwnerId: "111"}, false, []func (args args, cluster *ClusterDO) bool{
+		{"chinese name", args{TenantId: "111", ClusterName: "中文测试集群", OwnerId: "111"}, false, []func (args args, cluster *ClusterDO) bool{
 			func (args args, cluster *ClusterDO) bool{ return args.TenantId == cluster.TenantId},
 			func (args args, cluster *ClusterDO) bool{ return args.ClusterName == cluster.Name },
 			func (args args, cluster *ClusterDO) bool{ return cluster.ID != ""},
 			func (args args, cluster *ClusterDO) bool{ return cluster.Code == "_zhong_wen_ce_shi_ji_qun"},
 		}},
+		{"error", args{TenantId: "111", ClusterName: "中文测试集群"}, true,[]func (args args, cluster *ClusterDO) bool{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -54,7 +55,7 @@ func TestCreateCluster(t *testing.T) {
 }
 
 func TestDeleteCluster(t *testing.T) {
-	t.Run("normal delete", func(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
 		cluster := &ClusterDO{
 			Entity : Entity{TenantId: "111"},
 			OwnerId: "111",
@@ -82,6 +83,13 @@ func TestDeleteCluster(t *testing.T) {
 		}
 	})
 
+	t.Run("no record", func(t *testing.T) {
+		_, err := DeleteCluster("TestDeleteClusterId")
+
+		if err == nil {
+			t.Errorf("DeleteCluster() error = %v", err)
+		}
+	})
 	t.Run("empty clusterId", func(t *testing.T) {
 		_, err := DeleteCluster("")
 
@@ -577,6 +585,14 @@ func TestDeleteBackupRecord(t *testing.T) {
 			return
 		}
 	})
+	t.Run("no record", func(t *testing.T) {
+		_, err := DeleteBackupRecord(999999)
+		if err == nil {
+			t.Errorf("DeleteBackupRecord() want error")
+			return
+		}
+	})
+
 }
 
 func TestListBackupRecords(t *testing.T) {
@@ -660,4 +676,131 @@ func TestGetCurrentParameters(t *testing.T) {
 			return
 		}
 	})
+}
+
+var defaultTenantId = "defaultTenantId"
+
+func TestFetchCluster(t *testing.T) {
+	cluster, _ := CreateCluster("TestFetchCluster", "tt.args.DbPassword", "tidb", "v1", true, "","TestFetchCluster.ownerId", defaultTenantId)
+	t.Run("normal", func(t *testing.T) {
+		gotResult, err := FetchCluster(cluster.ID)
+		if err != nil {
+			t.Errorf("FetchCluster() error = %v", err)
+			return
+		}
+		if gotResult.Cluster.ID != cluster.ID {
+			t.Errorf("FetchCluster() want id = %v, got = %v", cluster.ID, gotResult.Cluster.ID)
+			return
+		}
+	})
+	t.Run("no result", func(t *testing.T) {
+		_, err := FetchCluster("what ever")
+		if err == nil {
+			t.Errorf("FetchCluster() want error")
+			return
+		}
+	})
+	t.Run("with demand", func(t *testing.T) {
+		cluster, demand, _ :=UpdateClusterDemand(cluster.ID, "demand content", defaultTenantId)
+		gotResult, err := FetchCluster(cluster.ID)
+		if err != nil {
+			t.Errorf("FetchCluster() error = %v", err)
+			return
+		}
+		if gotResult.Cluster.ID != cluster.ID {
+			t.Errorf("FetchCluster() want id = %v, got = %v", cluster.ID, gotResult.Cluster.ID)
+			return
+		}
+		if gotResult.Cluster.CurrentDemandId != demand.ID {
+			t.Errorf("FetchCluster() want CurrentDemandId = %v, got = %v", cluster.CurrentDemandId, gotResult.Cluster.CurrentDemandId)
+			return
+		}
+		if gotResult.DemandRecord.ID != demand.ID {
+			t.Errorf("FetchCluster() want DemandRecord id = %v, got = %v", cluster.CurrentDemandId, gotResult.Cluster.CurrentDemandId)
+			return
+		}
+		if gotResult.DemandRecord.Content != demand.Content {
+			t.Errorf("FetchCluster() want DemandRecord content = %v, got = %v", demand.Content, gotResult.DemandRecord.Content)
+			return
+		}
+	})
+	t.Run("with demand err", func(t *testing.T) {
+		cluster, demand, _ := UpdateClusterDemand(cluster.ID, "demand content", defaultTenantId)
+		MetaDB.Delete(demand)
+		_, err := FetchCluster(cluster.ID)
+		if err == nil {
+			t.Errorf("FetchCluster() want error")
+			return
+		}
+		UpdateClusterDemand(cluster.ID, "demand content", defaultTenantId)
+	})
+	t.Run("with config", func(t *testing.T) {
+		cluster, _ := UpdateTiUPConfig(cluster.ID, "config content", defaultTenantId)
+		gotResult, err := FetchCluster(cluster.ID)
+		if err != nil {
+			t.Errorf("FetchCluster() error = %v", err)
+			return
+		}
+		if gotResult.Cluster.ID != cluster.ID {
+			t.Errorf("FetchCluster() want id = %v, got = %v", cluster.ID, gotResult.Cluster.ID)
+			return
+		}
+		if gotResult.Cluster.CurrentTiupConfigId != cluster.CurrentTiupConfigId {
+			t.Errorf("FetchCluster() want CurrentTiupConfigId = %v, got = %v", cluster.CurrentTiupConfigId, gotResult.Cluster.CurrentTiupConfigId)
+			return
+		}
+		if gotResult.TiUPConfig.ID != cluster.CurrentTiupConfigId {
+			t.Errorf("FetchCluster() want TiUPConfig id = %v, got = %v", cluster.CurrentTiupConfigId, gotResult.TiUPConfig.ID)
+			return
+		}
+		if gotResult.TiUPConfig.Content != "config content" {
+			t.Errorf("FetchCluster() want TiUPConfig content = %v, got = %v", "config content", gotResult.TiUPConfig.Content)
+			return
+		}
+	})
+	t.Run("with config err", func(t *testing.T) {
+		cluster, _ := UpdateTiUPConfig(cluster.ID, "config content", defaultTenantId)
+		MetaDB.Model(&TiUPConfigDO{}).Where("id = ?", cluster.CurrentTiupConfigId).Delete(&TiUPConfigDO{})
+		_, err := FetchCluster(cluster.ID)
+		if err == nil {
+			t.Errorf("FetchCluster() want error")
+			return
+		}
+		UpdateTiUPConfig(cluster.ID, "config content", defaultTenantId)
+	})
+	t.Run("with flow", func(t *testing.T) {
+		flow, _ := CreateFlow("whatever", "whatever", "whatever")
+		cluster, _ := UpdateClusterFlowId(cluster.ID, flow.ID)
+		gotResult, err := FetchCluster(cluster.ID)
+		if err != nil {
+			t.Errorf("FetchCluster() error = %v", err)
+			return
+		}
+		if gotResult.Cluster.ID != cluster.ID {
+			t.Errorf("FetchCluster() want id = %v, got = %v", cluster.ID, gotResult.Cluster.ID)
+			return
+		}
+		if gotResult.Cluster.CurrentFlowId != flow.ID {
+			t.Errorf("FetchCluster() want CurrentFlowId = %v, got = %v", flow.ID, gotResult.Cluster.CurrentFlowId)
+			return
+		}
+		if gotResult.Flow.ID != flow.ID {
+			t.Errorf("FetchCluster() want flow id = %v, got = %v", flow.ID, gotResult.Flow.ID)
+			return
+		}
+		if gotResult.Flow.StatusAlias != flow.StatusAlias {
+			t.Errorf("FetchCluster() want flow StatusAlias = %v, got = %v", flow.StatusAlias, gotResult.Flow.StatusAlias)
+			return
+		}
+	})
+	t.Run("with flow error", func(t *testing.T) {
+		cluster, _ := UpdateClusterFlowId(cluster.ID, 555555)
+		_, err := FetchCluster(cluster.ID)
+		if err == nil {
+			t.Errorf("FetchCluster() want error")
+			return
+		}
+		UpdateClusterFlowId(cluster.ID, 0)
+	})
+
 }

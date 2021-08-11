@@ -46,6 +46,7 @@ func TestMain(m *testing.M) {
 		&DemandRecordDO{},
 		&ClusterDO{},
 		&TiUPConfigDO{},
+		&Tenant{},
 		&FlowDO{},
 		&TaskDO{},
 		&Token{},
@@ -92,38 +93,145 @@ func TestTime(t *testing.T)  {
 }
 
 func TestEntityCode(t *testing.T) {
-	t.Run("test id", func(t *testing.T) {
+	t.Run("repeated code ", func(t *testing.T) {
 		err := MetaDB.Create(&TestEntity{
 			Entity{
 				TenantId: "111",
-				Code: "test_code",
+				Code: "repeated_code",
 			},
 			"start",
 		}).Error
 
 		if err != nil {
-			t.Errorf("TestEntity_BeforeCreate() error = %v", err)
+			t.Errorf("TestEntityCode() error = %v", err)
 		}
 
 		err = MetaDB.Create(&TestEntity2{
 			Entity{
 				TenantId: "111",
-				Code: "test_code",
-
+				Code: "repeated_code",
 			},
 			"start",
 		}).Error
 
 		if err != nil {
-			t.Errorf("TestEntity_BeforeCreate() error = %v", err)
+			t.Errorf("TestEntityCode() error = %v", err)
+		}
+
+		err = MetaDB.Create(&TestEntity2{
+			Entity{
+				TenantId: "111",
+				Code: "repeated_code",
+
+			},
+			"start",
+		}).Error
+
+		if err == nil {
+			t.Errorf("TestEntityCode() want err, got nil")
 		}
 
 	})
+	t.Run("too long", func(t *testing.T) {
+		code := ""
+		for i := 0; i < 128; i++  {
+			code = code + "1"
+		}
+		err := MetaDB.Create(&TestEntity{
+			Entity{
+				TenantId: "111",
+				Code:     code,
+			},
+			"start",
+		}).Error
 
+		if err != nil {
+			t.Errorf("TestEntityCode() error = %v", err)
+		}
+
+		code = code + "1"
+		te := &TestEntity{
+			Entity{
+				TenantId: "111",
+				Code:     code,
+			},
+			"start",
+		}
+		err = MetaDB.Create(te).Error
+
+		if err == nil {
+			t.Errorf("TestEntityCode() want err, got nil")
+		}
+		te2 := &TestEntity{}
+		err = MetaDB.Where("id = ?", te.ID).Find(te2).Error
+		if err != nil {
+			t.Errorf("TestEntityCode() want err, got nil")
+		}
+		if len(te2.Code) > 128 {
+			t.Errorf("TestEntityCode() code too long, got = %v", te2.Code)
+		}
+
+	})
+	t.Run("modify", func(t *testing.T) {
+		te := &TestEntity{
+			Entity{
+				TenantId: "111",
+				Code:     "test_code_modify",
+			},
+			"start",
+		}
+		MetaDB.Create(te)
+		te.name = "modified"
+		te.Code = "modified"
+		MetaDB.Updates(te)
+		MetaDB.Where("id = ?", te.ID).Find(te)
+		if te.name != "modified" {
+			t.Errorf("TestEntityCode() name want %v, got = %v", "modified", te.name)
+		}
+		if te.Code != "test_code_modify" {
+			t.Errorf("TestEntityCode() code want %v, got = %v", "test_code_modify", te.Code)
+		}
+	})
+}
+
+func TestEntityTenantId(t *testing.T) {
+	t.Run("test empty tenant", func(t *testing.T) {
+		do := &TestEntity{
+			Entity{},
+			"start",
+		}
+
+		err := MetaDB.Create(do).Error
+
+		if err == nil {
+			t.Errorf("TestEntityTenantId() want error")
+		}
+	})
+
+	t.Run("modify", func(t *testing.T) {
+		te := &TestEntity{
+			Entity{
+				TenantId: "111",
+				Code:     "dfsafdaf",
+			},
+			"start",
+		}
+		MetaDB.Create(te)
+		te.name = "modified"
+		te.TenantId = "modified"
+		MetaDB.Updates(te)
+		MetaDB.Where("id = ?", te.ID).Find(te)
+		if te.name != "modified" {
+			t.Errorf("TestEntityTenantId() name want %v, got = %v", "modified", te.name)
+		}
+		if te.TenantId != "111" {
+			t.Errorf("TestEntityTenantId() TenandId want %v, got = %v", "111", te.Code)
+		}
+	})
 }
 
 func TestEntity_BeforeCreate(t *testing.T) {
-	t.Run("test id", func(t *testing.T) {
+	t.Run("test generate id", func(t *testing.T) {
 		do := &TestEntity{
 			Entity{
 				TenantId: "111",
@@ -146,7 +254,7 @@ func TestEntity_BeforeCreate(t *testing.T) {
 		}
 	})
 
-	t.Run("test empty tenant", func(t *testing.T) {
+	t.Run("test generate code", func(t *testing.T) {
 		do := &TestEntity{
 			Entity{},
 			"start",
@@ -156,6 +264,41 @@ func TestEntity_BeforeCreate(t *testing.T) {
 
 		if err == nil {
 			t.Errorf("TestEntity_BeforeCreate() want error")
+		}
+		if do.Code == "" {
+			t.Errorf("TestEntity_BeforeCreate() empty code")
+		}
+		if do.Code != do.ID {
+			t.Errorf("TestEntity_BeforeCreate() entity code want = %v, got = %v", do.ID, do.Code)
+		}
+
+	})
+
+	t.Run("test existing code", func(t *testing.T) {
+		do := &TestEntity{
+			Entity{Code: "existingCode"},
+			"start",
+		}
+		err := MetaDB.Create(do).Error
+		if err == nil {
+			t.Errorf("TestEntity_BeforeCreate() want error")
+		}
+		if do.Code != "existingCode" {
+			t.Errorf("TestEntity_BeforeCreate() entity code want = %v, got = %v", "existingCode", do.Code)
+		}
+	})
+
+	t.Run("test status", func(t *testing.T) {
+		do := &TestEntity{
+			Entity{Status: 4},
+			"start",
+		}
+		err := MetaDB.Create(do).Error
+		if err == nil {
+			t.Errorf("TestEntity_BeforeCreate() want error")
+		}
+		if do.Status != 0 {
+			t.Errorf("TestEntity_BeforeCreate() entity status want = %v, got = %v", 0, do.Status)
 		}
 	})
 

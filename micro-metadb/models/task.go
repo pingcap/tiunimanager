@@ -17,11 +17,11 @@ func (do FlowDO) TableName() string {
 type TaskDO struct {
 	Data
 	ParentType int8		`gorm:"default:0"`
-	ParentId   string
-	Name       string
-	ReturnType string
-	Parameters string
-	Result     string
+	ParentId   string	`gorm:"default:null"`
+	Name       string	`gorm:"default:null"`
+	ReturnType string	`gorm:"default:null"`
+	Parameters string	`gorm:"default:null"`
+	Result     string	`gorm:"default:null"`
 }
 
 func (do TaskDO) TableName() string {
@@ -113,18 +113,34 @@ func BatchSaveTasks(tasks []*TaskDO) (returnTasks []*TaskDO, err error) {
 	return tasks,nil
 }
 
-func UpdateFlowAndTasks(flow FlowDO, tasks []TaskDO) (FlowDO, []TaskDO, error) {
-	err := MetaDB.Model(&flow).Where("id = ?", flow.ID).Update("status", flow.Status).Error
-
-	if err != nil {
-		return flow, tasks, err
-	}
-
-	err = MetaDB.Save(&tasks).Error
-
-	return flow, tasks, nil
-}
+//func UpdateFlowAndTasks(flow *FlowDO, tasks []*TaskDO) (*FlowDO, []*TaskDO, error) {
+//	err := MetaDB.Model(&flow).Where("id = ?", flow.ID).Update("status", flow.Status).First(&flow).Error
+//
+//	if err != nil {
+//		return flow, tasks, err
+//	}
+//
+//	newTasks := make([]*TaskDO, 0, len(tasks))
+//	needUpdateTasks := make([]*TaskDO, 0, len(tasks))
+//	for _,t := range tasks {
+//		if t.ID != 0 {
+//			needUpdateTasks = append(needUpdateTasks, t)
+//		} else {
+//			newTasks = append(newTasks, t)
+//		}
+//	}
+//
+//	if len(newTasks) > 0 {
+//		err = MetaDB.CreateInBatches(&newTasks, len(newTasks)).Error
+//	}
+//
+//	for _, t := range needUpdateTasks {
+//		w, err := UpdateTask(*t)
+//	}
+//
+//	return flow, tasks, nil
+//}
 
 func UpdateTask(task TaskDO)  (returnTask TaskDO, err error) {
-	return task, MetaDB.Save(&task).Error
+	return task, MetaDB.Model(task).Where("id = ?", task.ID).Updates(task).First(&returnTask).Error
 }

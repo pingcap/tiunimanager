@@ -2,7 +2,6 @@ package models
 
 import (
 	"gorm.io/gorm"
-	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -392,39 +391,65 @@ func TestUpdateFlow(t *testing.T) {
 	}
 }
 
-func TestUpdateFlowAndTasks(t *testing.T) {
-	type args struct {
-		flow  FlowDO
-		tasks []TaskDO
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    FlowDO
-		want1   []TaskDO
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := UpdateFlowAndTasks(tt.args.flow, tt.args.tasks)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("UpdateFlowAndTasks() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UpdateFlowAndTasks() got = %v, want %v", got, tt.want)
-			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("UpdateFlowAndTasks() got1 = %v, want %v", got1, tt.want1)
-			}
-		})
-	}
-}
+//func TestUpdateFlowAndTasks(t *testing.T) {
+//	flow, _ := CreateFlow("TestUpdateFlowAndTasks", "TestUpdateFlowAndTasks", "TestUpdateFlowAndTasks")
+//	task, _ := CreateTask(0, strconv.Itoa(int(flow.ID)), "taskName", "bizId" , "taskReturnType" , "parameters", "result" )
+//
+//	type args struct {
+//		flow  FlowDO
+//		tasks []TaskDO
+//	}
+//	tests := []struct {
+//		name    string
+//		args    args
+//		wantErr bool
+//		wants   []func (a args, r FlowDO, tasks []TaskDO, index int) bool
+//	}{
+//		{"normal", args{flow: *flow, tasks: []TaskDO{*task, {Data: Data{BizId: "bizId2222"}, ParentType: 0, ParentId: strconv.Itoa(int(flow.ID)), Name: "newTaskName"}}}, false, []func (a args, r FlowDO, tasks []TaskDO, index int) bool{
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {return r.ID == flow.ID},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {return index == int(r.Status)},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {return 2 == len(tasks)},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {return tasks[0].ID == task.ID},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {
+//				return index == int(tasks[0].Status)
+//			},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {
+//				return tasks[1].ID > task.ID
+//			},
+//		}},
+//		{"no flow", args{flow: FlowDO{Data: Data{ID: 87878787}}, tasks: []TaskDO{}}, true, []func (a args, r FlowDO, tasks []TaskDO, index int) bool{}},
+//		{"no flow id", args{flow: FlowDO{Data: Data{}}, tasks: []TaskDO{}}, true, []func (a args, r FlowDO, tasks []TaskDO, index int) bool{}},
+//		{"no tasks", args{flow: *flow, tasks: []TaskDO{}}, false, []func (a args, r FlowDO, tasks []TaskDO, index int) bool{
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {return r.ID == flow.ID},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {
+//				return index == int(r.Status)
+//			},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {return 0 == len(tasks)},
+//		}},
+//	}
+//	for index, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			tt.args.flow.Status = int8(index + 1)
+//			if len(tt.args.tasks) > 0 {
+//				tt.args.tasks[0].Status = int8(index + 1)
+//			}
+//			gotFlow, gotTasks, err := UpdateFlowAndTasks(tt.args.flow, tt.args.tasks)
+//			if (err != nil) != tt.wantErr {
+//				t.Errorf("UpdateFlowAndTasks() error = %v, wantErr %v", err, tt.wantErr)
+//				return
+//			}
+//			for i, assert := range tt.wants {
+//				if !assert(tt.args, gotFlow, gotTasks, index + 1) {
+//					t.Errorf("UpdateFlowStatus() test error, assert = %v, args = %v, gotFlow = %v, gotTasks = %v", i, tt.args, gotFlow, gotTasks)
+//				}
+//			}
+//		})
+//	}
+//}
 
 func TestUpdateTask(t *testing.T) {
-	now := time.Now()
+	task, _ := CreateTask(0, "28282828", "taskName", "bizId" , "taskReturnType" , "parameters", "result" )
+
 	type args struct {
 		task TaskDO
 	}
@@ -432,22 +457,23 @@ func TestUpdateTask(t *testing.T) {
 		name        string
 		args        args
 		wantErr     bool
-		wants   	[]func (a args, r TaskDO) bool
+		wants   	[]func (a args, r TaskDO, index int) bool
 
 	}{
-		{"normal", args{task: TaskDO{Data: Data{BizId: "TestUpdateTask1"}}}, false, []func (a args, r TaskDO) bool{
-			func (a args, r TaskDO) bool{return r.UpdatedAt.After(now)},
+		{"normal", args{task: *task}, false, []func (a args, r TaskDO, index int) bool{
+			func (a args, r TaskDO, index int) bool{return int(r.Status) == index},
 		}},
 	}
-	for _, tt := range tests {
+	for index, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt.args.task.Status = int8(index + 1)
 			gotNewTask, err := UpdateTask(tt.args.task)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpdateTask() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			for i, assert := range tt.wants {
-				if !assert(tt.args, gotNewTask) {
+				if !assert(tt.args, gotNewTask, index + 1) {
 					t.Errorf("UpdateFlowStatus() test error, testname = %v, assert = %v, args = %v, gotFlow = %v", tt.name, i, tt.args, gotNewTask)
 				}
 			}

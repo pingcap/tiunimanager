@@ -389,15 +389,6 @@ definitions:
       memory:
         type: integer
     type: object
-  hostapi.DemoHostInfo:
-    properties:
-      hostId:
-        type: string
-      hostIp:
-        type: string
-      hostName:
-        type: string
-    type: object
   hostapi.Disk:
     properties:
       capacity:
@@ -470,13 +461,6 @@ definitions:
         description: Host Status, 0 for Online, 1 for offline
         type: integer
     type: object
-  hostapi.HostQuery:
-    properties:
-      page:
-        type: integer
-      pageSize:
-        type: integer
-    type: object
   hostapi.SpecBaseInfo:
     properties:
       specCode:
@@ -516,14 +500,10 @@ definitions:
     type: object
   instanceapi.BackupRecordQueryReq:
     properties:
-      endTime:
-        type: string
       page:
         type: integer
       pageSize:
         type: integer
-      startTime:
-        type: string
     type: object
   instanceapi.BackupRecoverReq:
     properties:
@@ -699,38 +679,6 @@ info:
   title: TiEM UI API
   version: "1.0"
 paths:
-  /allochosts:
-    post:
-      consumes:
-      - application/json
-      description: 按指定的配置分配主机资源
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 主机分配请求
-        in: body
-        name: Alloc
-        required: true
-        schema:
-          $ref: '#/definitions/hostapi.AllocHostsReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/hostapi.AllocHostsRsp'
-              type: object
-      summary: 分配主机接口
-      tags:
-      - resource
   /backup/{clusterId}:
     post:
       consumes:
@@ -800,7 +748,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  type: string
+                  type: integer
               type: object
         "401":
           description: Unauthorized
@@ -1214,292 +1162,6 @@ paths:
       summary: 查询集群列表
       tags:
       - cluster
-  /download_template/:
-    get:
-      consumes:
-      - application/json
-      description: 将主机信息文件导出到本地
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      produces:
-      - application/octet-stream
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: file
-      summary: 导出主机信息模板文件
-      tags:
-      - resource
-  /failuredomains:
-    get:
-      consumes:
-      - application/json
-      description: 查询指定故障域的资源情况
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 指定故障域类型
-        enum:
-        - 1
-        - 2
-        - 3
-        in: query
-        name: failureDomainType
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/hostapi.DomainResource'
-                  type: array
-              type: object
-      summary: 查询指定故障域的资源
-      tags:
-      - resource
-  /host:
-    post:
-      consumes:
-      - application/json
-      description: 将给定的主机信息导入系统
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 待导入的主机信息
-        in: body
-        name: host
-        required: true
-        schema:
-          $ref: '#/definitions/hostapi.HostInfo'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  type: string
-              type: object
-      summary: 导入主机接口
-      tags:
-      - resource
-  /host/{hostId}:
-    delete:
-      consumes:
-      - application/json
-      description: 删除指定的主机
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 待删除的主机ID
-        in: path
-        name: hostId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  type: string
-              type: object
-      summary: 删除指定的主机
-      tags:
-      - resource
-    get:
-      consumes:
-      - application/json
-      description: 展示指定的主机的详细信息
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 主机ID
-        in: path
-        name: hostId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/hostapi.HostInfo'
-              type: object
-      summary: 查询主机详情
-      tags:
-      - resource
-  /host/query:
-    post:
-      consumes:
-      - application/json
-      description: 查询主机
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 查询请求
-        in: body
-        name: query
-        required: true
-        schema:
-          $ref: '#/definitions/hostapi.HostQuery'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/hostapi.DemoHostInfo'
-                  type: array
-              type: object
-      summary: 查询主机接口
-      tags:
-      - resource
-  /hosts:
-    get:
-      consumes:
-      - application/json
-      description: 展示目前所有主机
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 查询特定用途的主机列表
-        in: query
-        name: purpose
-        type: string
-      - description: 查询特定状态的主机列表
-        in: query
-        name: status
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/hostapi.HostInfo'
-                  type: array
-              type: object
-      summary: 查询主机列表
-      tags:
-      - resource
-    post:
-      consumes:
-      - multipart/form-data
-      description: 通过文件批量导入主机
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 包含待导入主机信息的文件
-        in: formData
-        name: file
-        required: true
-        type: file
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  items:
-                    type: string
-                  type: array
-              type: object
-      summary: 通过文件批量导入主机
-      tags:
-      - resource
-  /hosts/:
-    delete:
-      consumes:
-      - application/json
-      description: 批量删除指定的主机
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 待删除的主机ID数组
-        in: body
-        name: hostIds
-        required: true
-        schema:
-          items:
-            type: string
-          type: array
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  type: string
-              type: object
-      summary: 批量删除指定的主机
-      tags:
-      - resource
   /params/{clusterId}:
     post:
       consumes:
@@ -1594,6 +1256,290 @@ paths:
       summary: 提交参数
       tags:
       - cluster params
+  /resources/allochosts:
+    post:
+      consumes:
+      - application/json
+      description: 按指定的配置分配主机资源
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 主机分配请求
+        in: body
+        name: Alloc
+        required: true
+        schema:
+          $ref: '#/definitions/hostapi.AllocHostsReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/hostapi.AllocHostsRsp'
+              type: object
+      summary: 分配主机接口
+      tags:
+      - resource
+  /resources/failuredomains:
+    get:
+      consumes:
+      - application/json
+      description: 查询指定故障域的资源情况
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 指定故障域类型
+        enum:
+        - 1
+        - 2
+        - 3
+        in: query
+        name: failureDomainType
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/hostapi.DomainResource'
+                  type: array
+              type: object
+      summary: 查询指定故障域的资源
+      tags:
+      - resource
+  /resources/host:
+    post:
+      consumes:
+      - application/json
+      description: 将给定的主机信息导入系统
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 待导入的主机信息
+        in: body
+        name: host
+        required: true
+        schema:
+          $ref: '#/definitions/hostapi.HostInfo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 导入主机接口
+      tags:
+      - resource
+  /resources/hosts:
+    get:
+      consumes:
+      - application/json
+      description: 展示目前所有主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 查询特定用途的主机列表
+        in: query
+        name: purpose
+        type: string
+      - description: 查询特定状态的主机列表
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/hostapi.HostInfo'
+                  type: array
+              type: object
+      summary: 查询主机列表
+      tags:
+      - resource
+    post:
+      consumes:
+      - multipart/form-data
+      description: 通过文件批量导入主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 包含待导入主机信息的文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+      summary: 通过文件批量导入主机
+      tags:
+      - resource
+  /resources/hosts-template/:
+    get:
+      consumes:
+      - application/json
+      description: 将主机信息文件导出到本地
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: 导出主机信息模板文件
+      tags:
+      - resource
+  /resources/hosts/:
+    delete:
+      consumes:
+      - application/json
+      description: 批量删除指定的主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 待删除的主机ID数组
+        in: body
+        name: hostIds
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 批量删除指定的主机
+      tags:
+      - resource
+  /resources/hosts/{hostId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 待删除的主机ID
+        in: path
+        name: hostId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 删除指定的主机
+      tags:
+      - resource
+    get:
+      consumes:
+      - application/json
+      description: 展示指定的主机的详细信息
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 主机ID
+        in: path
+        name: hostId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/hostapi.HostInfo'
+              type: object
+      summary: 查询主机详情
+      tags:
+      - resource
   /user/login:
     post:
       consumes:

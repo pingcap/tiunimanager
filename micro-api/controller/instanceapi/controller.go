@@ -3,15 +3,16 @@ package instanceapi
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/tiem/library/knowledge"
 	"github.com/pingcap/tiem/micro-api/controller"
 	"github.com/pingcap/tiem/micro-api/controller/clusterapi"
 	cluster "github.com/pingcap/tiem/micro-cluster/client"
 	proto "github.com/pingcap/tiem/micro-cluster/proto"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 // QueryParams 查询集群参数列表
@@ -38,8 +39,7 @@ func QueryParams(c *gin.Context) {
 	operator := controller.GetOperator(c)
 	resp, err := cluster.ClusterClient.QueryParameters(context.TODO(), &proto.QueryClusterParametersRequest{
 		ClusterId: clusterId,
-		Operator: operator.ConvertToDTO(),
-
+		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
 
 	if err != nil {
@@ -50,24 +50,24 @@ func QueryParams(c *gin.Context) {
 		err = json.Unmarshal([]byte(resp.GetParametersJson()), &instances)
 
 		instanceMap := make(map[string]interface{})
-		if len(instances) > 0{
-			for _,v := range instances {
+		if len(instances) > 0 {
+			for _, v := range instances {
 				instanceMap[v.Name] = v.Value
 			}
 		}
 
-		if err != nil  {
+		if err != nil {
 			c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 			return
 		}
 
 		parameters := make([]ParamItem, len(knowledge.ParameterKnowledge.Parameters), len(knowledge.ParameterKnowledge.Parameters))
 
-		for i,v := range knowledge.ParameterKnowledge.Parameters {
+		for i, v := range knowledge.ParameterKnowledge.Parameters {
 			parameters[i] = ParamItem{
 				Definition: *v,
 				CurrentValue: ParamInstance{
-					Name: v.Name,
+					Name:  v.Name,
 					Value: instanceMap[v.Name],
 				},
 			}
@@ -107,16 +107,16 @@ func SubmitParams(c *gin.Context) {
 	jsonContent := string(jsonByte)
 
 	resp, err := cluster.ClusterClient.SaveParameters(context.TODO(), &proto.SaveClusterParametersRequest{
-		ClusterId: clusterId,
+		ClusterId:      clusterId,
 		ParametersJson: jsonContent,
-		Operator: operator.ConvertToDTO(),
+		Operator:       operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(ParamUpdateRsp{
 			ClusterId: req.ClusterId,
-			TaskId: uint(resp.DisplayInfo.InProcessFlowId),
+			TaskId:    uint(resp.DisplayInfo.InProcessFlowId),
 		}))
 	}
 }
@@ -142,13 +142,13 @@ func Backup(c *gin.Context) {
 
 	resp, err := cluster.ClusterClient.CreateBackup(context.TODO(), &proto.CreateBackupRequest{
 		ClusterId: clusterId,
-		Operator: operator.ConvertToDTO(),
+		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(BackupRecord{
-			ID: resp.BackupRecord.Id,
+			ID:     resp.BackupRecord.Id,
 			Status: *clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
 		}))
 	}
@@ -173,7 +173,7 @@ func QueryBackupStrategy(c *gin.Context) {
 
 	resp, err := cluster.ClusterClient.GetBackupStrategy(context.TODO(), &proto.GetBackupStrategyRequest{
 		ClusterId: clusterId,
-		Operator: operator.ConvertToDTO(),
+		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -209,8 +209,8 @@ func SaveBackupStrategy(c *gin.Context) {
 	}
 	_, err := cluster.ClusterClient.SaveBackupStrategy(context.TODO(), &proto.SaveBackupStrategyRequest{
 		ClusterId: req.ClusterId,
-		Operator: operator.ConvertToDTO(),
-		Cron: req.CronString,
+		Operator:  operator.ConvertToDTO(),
+		Cron:      req.CronString,
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -230,7 +230,7 @@ func SaveBackupStrategy(c *gin.Context) {
 // @Param Token header string true "token"
 // @Param clusterId path string true "clusterId"
 // @Param request body BackupRecordQueryReq false "page" default(1)
-// @Success 200 {object} controller.ResultWithPage{data=[] BackupRecord}
+// @Success 200 {object} controller.ResultWithPage{data=[]BackupRecord}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -245,9 +245,9 @@ func QueryBackup(c *gin.Context) {
 	}
 	//operator := controller.GetOperator(c)
 
-	reqDTO := &proto.QueryBackupRequest {
+	reqDTO := &proto.QueryBackupRequest{
 		ClusterId: clusterId,
-		Page: queryReq.PageRequest.ConvertToDTO(),
+		Page:      queryReq.PageRequest.ConvertToDTO(),
 	}
 
 	resp, err := cluster.ClusterClient.QueryBackupRecord(context.TODO(), reqDTO, controller.DefaultTimeout)
@@ -257,23 +257,23 @@ func QueryBackup(c *gin.Context) {
 	} else {
 		records := make([]BackupRecord, len(resp.BackupRecords), len(resp.BackupRecords))
 
-		for i,v := range resp.BackupRecords {
+		for i, v := range resp.BackupRecords {
 			records[i] = BackupRecord{
 				ID:        v.Id,
 				ClusterId: v.ClusterId,
 				StartTime: time.Unix(v.StartTime, 0),
 				EndTime:   time.Unix(v.EndTime, 0),
 				Range:     int(v.Range),
-				Way: int(v.Way),
-				Operator:  controller.Operator{
+				Way:       int(v.Way),
+				Operator: controller.Operator{
 					ManualOperator: true,
-					OperatorId: v.Operator.Id,
+					OperatorId:     v.Operator.Id,
 					//OperatorName: v.Operator.Name,
 					//TenantId: v.Operator.TenantId,
 				},
-				Size:      v.Size,
-				Status:    *clusterapi.ParseStatusFromDTO(v.DisplayStatus),
-				FilePath:  v.FilePath,
+				Size:     v.Size,
+				Status:   *clusterapi.ParseStatusFromDTO(v.DisplayStatus),
+				FilePath: v.FilePath,
 			}
 		}
 		c.JSON(http.StatusOK, controller.SuccessWithPage(records, *controller.ParsePageFromDTO(resp.Page)))
@@ -304,8 +304,8 @@ func RecoverBackup(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
 	resp, err := cluster.ClusterClient.RecoverBackupRecord(context.TODO(), &proto.RecoverBackupRequest{
-		ClusterId: req.ClusterId,
-		Operator: operator.ConvertToDTO(),
+		ClusterId:      req.ClusterId,
+		Operator:       operator.ConvertToDTO(),
 		BackupRecordId: req.BackupRecordId,
 	}, controller.DefaultTimeout)
 	if err != nil {

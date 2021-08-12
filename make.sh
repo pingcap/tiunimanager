@@ -13,6 +13,10 @@ function build(){
             cd tiupmgr
             go build .
             cd ..
+             echo "    build brmgr ..."
+            cd brmgr
+            go build .
+            cd ..
         fi
         cd ..
     done

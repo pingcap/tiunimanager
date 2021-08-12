@@ -33,14 +33,6 @@ const (
 	CmdShowRestoreInfoRespTypeStr 			CmdTypeStr = "CmdShowRestoreInfoResp"
 )
 
-type BrScopeStr string
-
-const (
-	FullBrScope		BrScopeStr = "full"
-	DbBrScope		BrScopeStr = "db"
-	TableBrScope	BrScopeStr = "table"
-)
-
 type CmdReqOrResp struct {
 	TypeStr CmdTypeStr
 	Content string
@@ -53,6 +45,13 @@ type DbConnParam struct {
 	Port		string
 }
 
+type StorageType string
+
+const (
+	StorageTypeLocal 	StorageType = "local"
+	StorageTypeS3 		StorageType = "s3"
+)
+
 type CmdBackUpPreCheckReq struct {
 }
 
@@ -61,19 +60,16 @@ type CmdBackUpPreCheckResp struct {
 
 type CmdBackUpReq struct {
 	TaskID 				uint64
-	PdAddress 			string // only used in br command, not used in SQL command
 	DbName				string
 	TableName 			string
 	FilterDbTableName 	string // used in br command, pending for use in SQL command
 	StorageAddress 		string
-	BrScope      		BrScopeStr // only for br command, not used in SQL command
-	DbConnParameter		DbConnParam // only for SQL command, not used in SQL command
+	DbConnParameter		DbConnParam // only for SQL command, not used in br command
 	RateLimitM      	string
-	Concurrency         string // only for SQL command, not used in SQL command
-	CheckSum            string // only for SQL command, not used in SQL command
+	Concurrency         string // only for SQL command, not used in br command
+	CheckSum            string // only for SQL command, not used in br command
 	LogFile				string // used in br command, pending for use in SQL command
 	TimeoutS 			int // used in br command, pending for use in SQL command
-	BrPath 				string // only for br command, not used in SQL command
 	Flags 				[]string // used in br command, pending for use in SQL command
 }
 
@@ -81,13 +77,13 @@ type CmdBackUpResp struct {
 }
 
 type CmdShowBackUpInfoReq struct {
-	DbConnParameter		DbConnParam // only for SQL command, not used in SQL command
+	DbConnParameter		DbConnParam
 }
 
 type CmdShowBackUpInfoResp struct {
 	Destination		string
 	State			string
-	Progress		string
+	Progress		float32
 	Queue_time		string
 	Execution_Time	string
 	Finish_Time		*string
@@ -102,19 +98,16 @@ type CmdRestorePreCheckResp struct {
 
 type CmdRestoreReq struct {
 	TaskID 				uint64
-	PdAddress 			string // only used in br command, not used in SQL command
 	DbName				string
 	TableName 			string
 	FilterDbTableName 	string // used in br command, pending for use in SQL command
 	StorageAddress 		string
-	BrScope      		BrScopeStr // only for br command, not used in SQL command
-	DbConnParameter		DbConnParam // only for SQL command, not used in SQL command
+	DbConnParameter		DbConnParam // only for SQL command, not used in br command
 	RateLimitM      	string
-	Concurrency         string // only for SQL command, not used in SQL command
-	CheckSum            string // only for SQL command, not used in SQL command
+	Concurrency         string // only for SQL command, not used in br command
+	CheckSum            string // only for SQL command, not used in br command
 	LogFile				string // used in br command, pending for use in SQL command
 	TimeoutS 			int // used in br command, pending for use in SQL command
-	BrPath 				string // only for br command, not used in SQL command
 	Flags 				[]string // used in br command, pending for use in SQL command
 }
 
@@ -122,20 +115,18 @@ type CmdRestoreResp struct {
 }
 
 type CmdShowRestoreInfoReq struct {
-	DbConnParameter		DbConnParam // only for SQL command, not used in SQL command
+	DbConnParameter		DbConnParam
 }
 
 type CmdShowRestoreInfoResp struct {
 	Destination		string
 	State			string
-	Progress		string
+	Progress		float32
 	Queue_time		string
 	Execution_Time	string
 	Finish_Time		string
 	Connection		string
 }
-
-type StorageType string
 
 type TaskStatus int
 
@@ -152,60 +143,15 @@ type TaskStatusMember struct {
 	ErrorStr string
 }
 
-type TaskStatusMapValue struct {
-	validFlag bool
-	stat      TaskStatusMember
-	readct    uint64
-}
-
 //var glMgrTaskStatusCh chan TaskStatusMember
 //var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
 var log *logger.LogRecord
 
-const (
-	StorageTypeLocal 	StorageType = "local"
-	StorageTypeS3 		StorageType = "s3"
-)
-
-type ClusterFacade struct {
-	ClusterId 	string
-	ClusterName string
-	PdAddress 	string
-	BrScope		BrScopeStr
-}
-
-type BRPort interface {
-	BackUpPreCheck(cluster ClusterFacade, storage BrStorage, bizId uint) error
-
-	BackUp(cluster ClusterFacade, storage BrStorage, bizId uint) error
-
-	ShowBackUpInfo(bizId uint) ProgressRate
-
-	RestorePreCheck(cluster ClusterFacade, storage BrStorage, bizId uint) error
-
-	Restore(cluster ClusterFacade, storage BrStorage, bizId uint) error
-
-	ShowRestoreInfo(bizId uint) ProgressRate
-}
-
-type ProgressRate struct {
-	Rate 	float32 // 0.99 means 99%
-	Checked bool
-	Error 	error
-}
-
-type BrStorage struct {
-	StorageType StorageType
-	Root string // "/tmp/backup"
-}
-
 var glMgrTaskStatusCh chan TaskStatusMember
-var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
 func BrMgrInit() {
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
-	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	// TODO: comprehend this part
 	configPath := ""
 	if len(os.Args) > 1 {
@@ -284,7 +230,7 @@ func assert(b bool) {
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
 	//log.Fatalf("panic: %s, with stack trace:", s, string(debug.Stack()))
-	fmt.Println("panic: %s, with stack trace:", s, string(debug.Stack()))
+	fmt.Printf("panic: %s, with stack trace: %s\n", s, string(debug.Stack()))
 	panic("unexpected")
 }
 
@@ -342,30 +288,6 @@ func mgrHandleCmdShowRestoreInfoReq(jsonStr string) CmdShowRestoreInfoResp {
 	ret = mgrStartNewBrShowRestoreInfoThruSQL(&req)
 	return ret
 }
-
-//func mgrStartNewBrBackUpTask(taskID uint64, req *CmdBackUpReq) {
-//	go func() {
-//		var args []string
-//		args = append(args, "backup", string(req.BrScope))
-//		args = append(args, "--pd", req.PdAddress)
-//		switch req.BrScope {
-//		case FullBrScope:
-//			if len(req.FilterDbTableName) != 0 {
-//				args = append(args, "--filter", req.FilterDbTableName)
-//			}
-//		case DbBrScope:
-//			args = append(args, "--db", req.DbName)
-//		case TableBrScope:
-//			args = append(args, "--db", req.DbName)
-//			args = append(args, "--table", req.TableName)
-//		}
-//		args = append(args, "--storage", req.StorageAddress)
-//		args = append(args, "--ratelimit", req.RateLimitM)
-//		args = append(args, "--log-file", req.LogFile)
-//		args = append(args, req.Flags...)
-//		<-mgrStartNewBrTask(taskID, req.BrPath, args, req.TimeoutS)
-//	}()
-//}
 
 func mgrStartNewBrBackUpTaskThruSQL(taskID uint64, req *CmdBackUpReq) {
 	go func() {
@@ -425,30 +347,6 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 	return resp
 }
 
-//func mgrStartNewBrRestoreTask(taskID uint64, req *CmdRestoreReq) {
-//	go func() {
-//		var args []string
-//		args = append(args, "restore", string(req.BrScope))
-//		args = append(args, "--pd", req.PdAddress)
-//		switch req.BrScope {
-//		case FullBrScope:
-//			if len(req.FilterDbTableName) != 0 {
-//				args = append(args, "--filter", req.FilterDbTableName)
-//			}
-//		case DbBrScope:
-//			args = append(args, "--db", req.DbName)
-//		case TableBrScope:
-//			args = append(args, "--db", req.DbName)
-//			args = append(args, "--table", req.TableName)
-//		}
-//		args = append(args, "--storage", req.StorageAddress)
-//		args = append(args, "--ratelimit", req.RateLimitM)
-//		args = append(args, "--log-file", req.LogFile)
-//		args = append(args, req.Flags...)
-//		<-mgrStartNewBrTask(taskID, req.BrPath, args, req.TimeoutS)
-//	}()
-//}
-
 func mgrStartNewBrRestoreTaskThruSQL(taskID uint64, req *CmdRestoreReq) {
 	go func() {
 		var args []string
@@ -506,76 +404,6 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 	successFp()
 	return resp
 }
-
-//func mgrStartNewBrTask(taskID uint64, brPath string, brArgs []string, TimeoutS int) (exitCh chan struct{}) {
-//	exitCh = make(chan struct{})
-//	log := log.Record("task", taskID)
-//	log.Info("task start processing:", fmt.Sprintf("brPath:%s brArgs:%v timeouts:%d", brPath, brArgs, TimeoutS))
-//	glMgrTaskStatusCh <- TaskStatusMember{
-//		TaskID:   taskID,
-//		Status:   TaskStatusProcessing,
-//		ErrorStr: "",
-//	}
-//	go func() {
-//		defer close(exitCh)
-//		var cmd *exec.Cmd
-//		var cancelFp context.CancelFunc
-//		if TimeoutS != 0 {
-//			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(TimeoutS)*time.Second)
-//			cancelFp = cancel
-//			cmd = exec.CommandContext(ctx, brPath, brArgs...)
-//		} else {
-//			cmd = exec.Command(brPath, brArgs...)
-//			cancelFp = func() {}
-//		}
-//		defer cancelFp()
-//		cmd.SysProcAttr = genSysProcAttr()
-//		t0 := time.Now()
-//		if err := cmd.Start(); err != nil {
-//			log.Error("cmd start err", err)
-//			glMgrTaskStatusCh <- TaskStatusMember{
-//				TaskID:   taskID,
-//				Status:   TaskStatusError,
-//				ErrorStr: fmt.Sprintln(err),
-//			}
-//			return
-//		}
-//		log.Info("cmd started")
-//		successFp := func() {
-//			log.Info("task finished, time cost", time.Now().Sub(t0))
-//			glMgrTaskStatusCh <- TaskStatusMember{
-//				TaskID:   taskID,
-//				Status:   TaskStatusFinished,
-//				ErrorStr: "",
-//			}
-//		}
-//		log.Info("cmd wait")
-//		err := cmd.Wait()
-//		if err != nil {
-//			log.Error("cmd wait return with err", err)
-//			if exiterr, ok := err.(*exec.ExitError); ok {
-//				if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-//					if status.ExitStatus() == 0 {
-//						successFp()
-//						return
-//					}
-//				}
-//			}
-//			log.Error("task err:", err, "time cost", time.Now().Sub(t0))
-//			glMgrTaskStatusCh <- TaskStatusMember{
-//				TaskID:   taskID,
-//				Status:   TaskStatusError,
-//				ErrorStr: fmt.Sprintln(err),
-//			}
-//			return
-//		} else {
-//			log.Info("cmd wait return successfully")
-//			successFp()
-//			return
-//		}
-//	}()
-//	return exitCh
-//}
 
 func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd string) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
@@ -639,15 +467,30 @@ type CmdChanMember struct {
 
 var glMicroCmdChan chan CmdChanMember
 
-var glMicroTaskStatusMap map[uint64]TaskStatusMapValue
-
 var glBrMgrPath string
-var glBrBinPath string
 
-func MicroInit(brMgrPath, brBinPath, mgrLogFilePath string) {
+type ClusterFacade struct {
+	DbConnParameter		DbConnParam
+	DbName				string
+	TableName 			string
+	ClusterId 			string // todo: need to know the usage
+	ClusterName 		string // todo: need to know the usage
+	//PdAddress 			string
+}
+
+type BrStorage struct {
+	StorageType StorageType
+	Root string // "/tmp/backup"
+}
+
+type ProgressRate struct {
+	Rate 	float32 // 0.99 means 99%
+	Checked bool
+	Error 	error
+}
+
+func MicroInit(brMgrPath, mgrLogFilePath string) {
 	glBrMgrPath = brMgrPath
-	glBrBinPath = brBinPath
-	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	glMicroCmdChan = microStartBrMgr(mgrLogFilePath)
 }
 
@@ -663,10 +506,10 @@ func microStartBrMgr(mgrLogFilePath string) chan CmdChanMember {
 	if err != nil {
 		myPanic("unexpected")
 	}
-	_, err = cmd.StderrPipe()
-	if err != nil {
-		myPanic("unexpected")
-	}
+	//_, err = cmd.StderrPipe()
+	//if err != nil {
+	//	myPanic("unexpected")
+	//}
 	cch := make(chan CmdChanMember, 1024)
 	if err := cmd.Start(); err != nil {
 		myPanic(fmt.Sprint("start brmgr failed with err:", err))
@@ -679,11 +522,35 @@ func microStartBrMgr(mgrLogFilePath string) chan CmdChanMember {
 	return cch
 }
 
+// Basically this method get request thru cch(which contain CmdReqOrResp and a chan of it as resp),
+// and write command as string to mgr, and receive command as string from mgr
+// cch: where micro service receives commands
+// inWriter(of mgr): where micro service passes the command to the mgr
+// outReader(of mgr): where micro service receives the output of mgr from
 func microCmdChanRoutine(cch chan CmdChanMember, outReader io.Reader, inWriter io.Writer) {
-	//outBufReader := bufio.NewReader(outReader)
-	//for {
-	//	var cmdMember CmdChanMember
-	//}
+	outBufReader := bufio.NewReader(outReader)
+	for {
+		var cmdMember CmdChanMember
+		var ok bool
+		select {
+		case cmdMember, ok = <-cch:
+			assert(ok)
+		}
+		bs := jsonMustMarshal(cmdMember.req)
+		bs = append(bs, '\n')
+		ct, err := inWriter.Write(bs)
+		assert(ct == len(bs) && err == nil)
+		output, err := outBufReader.ReadString('\n')
+		//fmt.Println(string(output), len(output), err)
+		assert(len(output) > 1 && err == nil && output[len(output)-1] == '\n')
+		var resp CmdReqOrResp
+		err = json.Unmarshal([]byte(output[:len(output)-1]), &resp)
+		assert(err == nil)
+		select {
+		case cmdMember.respCh <- resp:
+		default:
+		}
+	}
 }
 
 // TODO: backup precheck command not found in BR, may need to check later
@@ -691,48 +558,124 @@ func BackUpPreCheck(cluster ClusterFacade, storage BrStorage, bizId uint) error 
 	return nil
 }
 
-// 1. back up data in local
-// 2. back up data in s3
+func backUp(backUpReq CmdBackUpReq) CmdBackUpResp {
+	assert(cap(glMicroCmdChan) > 0)
+	cmdReq := CmdReqOrResp{
+		TypeStr: CmdBackUpReqTypeStr,
+		Content: string(jsonMustMarshal(&backUpReq)),
+	}
+	respCh := make(chan CmdReqOrResp, 1)
+	glMicroCmdChan <- CmdChanMember{
+		req:    cmdReq,
+		respCh: respCh,
+	}
+	respCmd := <-respCh
+	assert(respCmd.TypeStr == CmdBackUpRespTypeStr)
+	var resp CmdBackUpResp
+	err := json.Unmarshal([]byte(respCmd.Content), &resp)
+	assert(err == nil)
+	return resp
+}
+
+// todo: back up data in s3
 func BackUp(cluster ClusterFacade, storage BrStorage, bizId uint) error {
-	// back up data in local
-	//var req CmdBackUpReq = CmdBackUpReq{
-	//	BrScope: cluster.BrScope,
-	//	PdAddress: cluster.PdAddress,
-	//}
-	//// TODO: define taskID
-	//mgrStartNewBrBackUpTask(0, &req)
+	var backupReq CmdBackUpReq
+	backupReq.DbConnParameter = cluster.DbConnParameter
+	backupReq.DbName = cluster.DbName
+	backupReq.TableName = cluster.TableName
+	backupReq.StorageAddress = fmt.Sprintf("%s://%s", string(storage.StorageType), storage.Root)
+	backUp(backupReq)
 	return nil
 }
 
-//func (brMgr *BrMgr) mgrHandleCmdBackUpReq(jsonStr string) CmdBackUpResp {
-//	// TODO: ret is empty for now, fill it
-//	ret := CmdBackUpResp{}
-//	var req CmdBackUpReq
-//	err := json.Unmarshal([]byte(jsonStr), &req)
-//	if err != nil {
-//		myPanic(fmt.Sprintln("json.unmarshal cmdbackupreq failed err:", err))
-//	}
-//	brMgr.mgrStartNewBrBackUpTask(req.TaskID, &req)
-//	return ret
-//}
+func showBackUpInfo(showBackUpInfoReq CmdShowBackUpInfoReq) CmdShowBackUpInfoResp {
+	assert(cap(glMicroCmdChan) > 0)
+	cmdReq := CmdReqOrResp{
+		TypeStr: CmdShowBackUpInfoReqTypeStr,
+		Content: string(jsonMustMarshal(&showBackUpInfoReq)),
+	}
+	respCh := make(chan CmdReqOrResp, 1)
+	glMicroCmdChan <- CmdChanMember{
+		req:    cmdReq,
+		respCh: respCh,
+	}
+	respCmd := <-respCh
+	assert(respCmd.TypeStr == CmdShowBackUpInfoRespTypeStr)
+	var resp CmdShowBackUpInfoResp
+	err := json.Unmarshal([]byte(respCmd.Content), &resp)
+	assert(err == nil)
+	return resp
+}
 
-// TODO: show back up info command not found in BR, may need to check later
-func ShowBackUpInfo(bizId uint) ProgressRate {
-	return ProgressRate{}
+func ShowBackUpInfo(cluster ClusterFacade, bizId uint) ProgressRate {
+	var progressRate ProgressRate
+	var showBackUpInfoReq CmdShowBackUpInfoReq
+	showBackUpInfoReq.DbConnParameter = cluster.DbConnParameter
+	showBackUpInfoResp := showBackUpInfo(showBackUpInfoReq)
+	progressRate.Rate = showBackUpInfoResp.Progress/100
+	return progressRate
 }
 
 // TODO: restore precheck command not found in BR, may need to check later
 // restore precheck list:
-	// 1. if the data was backed up locally, make sure the sst files have been copied to every TiKV nodes
+// 1. if the data was backed up locally, make sure the sst files have been copied to every TiKV nodes
 func RestorePreCheck(cluster ClusterFacade, storage BrStorage, bizId uint) error {
 	return nil
 }
 
+func restore(restoreReq CmdRestoreReq) CmdRestoreResp {
+	assert(cap(glMicroCmdChan) > 0)
+	cmdReq := CmdReqOrResp{
+		TypeStr: CmdRestoreReqTypeStr,
+		Content: string(jsonMustMarshal(&restoreReq)),
+	}
+	respCh := make(chan CmdReqOrResp, 1)
+	glMicroCmdChan <- CmdChanMember{
+		req:    cmdReq,
+		respCh: respCh,
+	}
+	respCmd := <-respCh
+	assert(respCmd.TypeStr == CmdRestoreRespTypeStr)
+	var resp CmdRestoreResp
+	err := json.Unmarshal([]byte(respCmd.Content), &resp)
+	assert(err == nil)
+	return resp
+}
+
 func Restore(cluster ClusterFacade, storage BrStorage, bizId uint) error {
+	var restoreReq CmdRestoreReq
+	restoreReq.DbConnParameter = cluster.DbConnParameter
+	restoreReq.DbName = cluster.DbName
+	restoreReq.TableName = cluster.TableName
+	restoreReq.StorageAddress = fmt.Sprintf("%s://%s", string(storage.StorageType), storage.Root)
+	restore(restoreReq)
 	return nil
 }
 
-// TODO: show restore info command not found in BR, may need to check later
-func ShowRestoreInfo(bizId uint) ProgressRate {
-	return ProgressRate{}
+func showRestoreInfo(showRestoreInfoReq CmdShowRestoreInfoReq) CmdShowRestoreInfoResp {
+	assert(cap(glMicroCmdChan) > 0)
+	cmdReq := CmdReqOrResp{
+		TypeStr: CmdShowRestoreInfoReqTypeStr,
+		Content: string(jsonMustMarshal(&showRestoreInfoReq)),
+	}
+	respCh := make(chan CmdReqOrResp, 1)
+	glMicroCmdChan <- CmdChanMember{
+		req:    cmdReq,
+		respCh: respCh,
+	}
+	respCmd := <-respCh
+	assert(respCmd.TypeStr == CmdShowRestoreInfoRespTypeStr)
+	var resp CmdShowRestoreInfoResp
+	err := json.Unmarshal([]byte(respCmd.Content), &resp)
+	assert(err == nil)
+	return resp
+}
+
+func ShowRestoreInfo(cluster ClusterFacade, bizId uint) ProgressRate {
+	var progressRate ProgressRate
+	var showRestoreInfoReq CmdShowRestoreInfoReq
+	showRestoreInfoReq.DbConnParameter = cluster.DbConnParameter
+	showRestoreInfoResp := showRestoreInfo(showRestoreInfoReq)
+	progressRate.Rate = showRestoreInfoResp.Progress/100
+	return progressRate
 }

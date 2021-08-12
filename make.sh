@@ -31,7 +31,7 @@ function install(){
         mkdir -p "$microDir"
         binName="$microDir"
         cp -fr "$srcDir"/"$microDir"/"$binName" "$microDir"
-        cp -fr "$srcDir"/"$microDir"/"cfg.toml" "$microDir"
+        #cp -fr "$srcDir"/"$microDir"/"cfg.toml" "$microDir"
         if [ "$microDir" == "micro-cluster" ]
         then
             cd "$microDir"

@@ -86,11 +86,11 @@ func initSqliteDB() {
 func initTables() error {
 	err := models.MetaDB.Migrator().CreateTable(
 		&models.Tenant{},
-		&models.Account{},
-		&models.Role{},
-		&models.Permission{},
-		&models.PermissionBinding{},
-		&models.RoleBinding{},
+		&models.AccountDO{},
+		&models.RoleDO{},
+		&models.PermissionDO{},
+		&models.PermissionBindingDO{},
+		&models.RoleBindingDO{},
 		&models.Token{},
 		&models.ClusterDO{},
 		&models.DemandRecordDO{},
@@ -126,7 +126,7 @@ func initDataForDemo() {
 	userId3 := initUser(tenant.ID, "nopermission")
 	fmt.Println("user3.Id = ", userId3)
 
-	models.AddRoleBindings([]models.RoleBinding{
+	models.AddRoleBindings([]models.RoleBindingDO{
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, AccountId: userId1},
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role2.ID, AccountId: userId2, },
 	})
@@ -135,7 +135,7 @@ func initDataForDemo() {
 	permission2, _ := models.AddPermission(tenant.ID, "/api/v1/instance/query", "查询集群", "查询集群", 2, 0)
 	permission3, _ := models.AddPermission(tenant.ID, "/api/v1/instance/create", "创建集群", "创建集群", 2, 0)
 
-	models.AddPermissionBindings([]models.PermissionBinding{
+	models.AddPermissionBindings([]models.PermissionBindingDO{
 		// 管理员可做所有事
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission1.ID},
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission2.ID},

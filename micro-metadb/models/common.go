@@ -13,8 +13,8 @@ type Entity struct {
 	UpdatedAt 	time.Time
 	DeletedAt 	gorm.DeletedAt 		`gorm:"uniqueIndex"`
 
-	Code		string				`gorm:"default:null;not null;uniqueIndex;<-:create"`
-	TenantId    string				`gorm:"default:null;not null;<-:create"`
+	Code		string				`gorm:"uniqueIndex;default:null;not null;<-:create"`
+	TenantId    string				`gorm:"uniqueIndex;default:null;not null;<-:create"`
 	Status 		int8				`gorm:"type:SMALLINT;default:0"`
 }
 

@@ -39,6 +39,11 @@ func TestMain(m *testing.M) {
 	}()
 
 	err := MetaDB.Migrator().CreateTable(
+		&AccountDO{},
+		&RoleBindingDO{},
+		&RoleDO{},
+		&PermissionBindingDO{},
+		&PermissionDO{},
 		&TestEntity{},
 		&TestEntity2{},
 		&TestRecord{},

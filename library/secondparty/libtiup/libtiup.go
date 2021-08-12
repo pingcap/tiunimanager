@@ -166,7 +166,7 @@ type CmdClusterDisplayReq struct {
 }
 
 type CmdClusterDisplayResp struct {
-	url string
+	Url string
 }
 
 type TaskStatusMapValue struct {

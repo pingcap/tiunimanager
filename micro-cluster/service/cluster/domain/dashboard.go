@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap/tiem/micro-cluster/proto"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -69,8 +70,13 @@ func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, err
 }
 
 func getDashboardUrl(clusterId string) (string, error) {
-	//todo: call tiup cluster display api
-	return "http://127.0.0.1:2379/dashboard", nil
+	//tiup cluster display CLUSTER_NAME --dashboard
+	resp, err := libtiup.MicroSrvTiupClusterDisplay(clusterId, 0, []string{"--dashboard"})
+	if err != nil {
+		return "", nil
+	}
+
+	return resp.Url, nil
 }
 
 func getLoginToken(dashboardUrl, userName, password string) (string, error) {

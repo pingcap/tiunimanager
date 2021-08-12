@@ -22,16 +22,16 @@ import (
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param queryReq body ParamQueryReq false "page" default(1)
+// @Param queryReq query ParamQueryReq false "page" default(1)
 // @Param clusterId path string true "clusterId"
 // @Success 200 {object} controller.ResultWithPage{data=[]ParamItem}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /params/{clusterId} [post]
+// @Router /clusters/{clusterId}/params [get]
 func QueryParams(c *gin.Context) {
 	var req ParamQueryReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBindQuery(&req); err != nil {
 		_ = c.Error(err)
 		return
 	}
@@ -85,11 +85,12 @@ func QueryParams(c *gin.Context) {
 // @Produce json
 // @Param Token header string true "token"
 // @Param updateReq body ParamUpdateReq true "要提交的参数信息"
+// @Param clusterId path string true "clusterId"
 // @Success 200 {object} controller.CommonResult{data=ParamUpdateRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /params/submit [post]
+// @Router /clusters/{clusterId}/params [post]
 func SubmitParams(c *gin.Context) {
 	var req ParamUpdateReq
 
@@ -98,7 +99,7 @@ func SubmitParams(c *gin.Context) {
 		return
 	}
 
-	clusterId := req.ClusterId
+	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
 	values := req.Values
 
@@ -115,7 +116,7 @@ func SubmitParams(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(ParamUpdateRsp{
-			ClusterId: req.ClusterId,
+			ClusterId: clusterId,
 			TaskId:    uint(resp.DisplayInfo.InProcessFlowId),
 		}))
 	}

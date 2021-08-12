@@ -254,23 +254,6 @@ definitions:
       zoneCode:
         type: string
     type: object
-  clusterapi.QueryReq:
-    properties:
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      clusterStatus:
-        type: string
-      clusterTag:
-        type: string
-      clusterType:
-        type: string
-      page:
-        type: integer
-      pageSize:
-        type: integer
-    type: object
   controller.CommonResult:
     properties:
       code:
@@ -538,17 +521,8 @@ definitions:
       definition:
         $ref: '#/definitions/knowledge.Parameter'
     type: object
-  instanceapi.ParamQueryReq:
-    properties:
-      page:
-        type: integer
-      pageSize:
-        type: integer
-    type: object
   instanceapi.ParamUpdateReq:
     properties:
-      clusterId:
-        type: string
       values:
         items:
           $ref: '#/definitions/instanceapi.ParamInstance'
@@ -948,7 +922,107 @@ paths:
       summary: 查询备份策略
       tags:
       - cluster backup
-  /cluster:
+  /cluster/knowledge:
+    get:
+      consumes:
+      - application/json
+      description: 查看集群基本知识
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/knowledge.ClusterTypeSpec'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 查看集群基本知识
+      tags:
+      - cluster
+  /clusters:
+    get:
+      consumes:
+      - application/json
+      description: 查询集群列表
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - in: query
+        name: clusterId
+        type: string
+      - in: query
+        name: clusterName
+        type: string
+      - in: query
+        name: clusterStatus
+        type: string
+      - in: query
+        name: clusterTag
+        type: string
+      - in: query
+        name: clusterType
+        type: string
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/clusterapi.ClusterDisplayInfo'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 查询集群列表
+      tags:
+      - cluster
     post:
       consumes:
       - application/json
@@ -992,7 +1066,7 @@ paths:
       summary: 创建集群接口
       tags:
       - cluster
-  /cluster/{clusterId}:
+  /clusters/{clusterId}:
     delete:
       consumes:
       - application/json
@@ -1077,93 +1151,8 @@ paths:
       summary: 查看集群详情
       tags:
       - cluster
-  /cluster/knowledge:
+  /clusters/{clusterId}/params:
     get:
-      consumes:
-      - application/json
-      description: 查看集群基本知识
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/knowledge.ClusterTypeSpec'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      summary: 查看集群基本知识
-      tags:
-      - cluster
-  /cluster/query:
-    post:
-      consumes:
-      - application/json
-      description: 查询集群列表
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: page
-        in: body
-        name: queryReq
-        schema:
-          $ref: '#/definitions/clusterapi.QueryReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/clusterapi.ClusterDisplayInfo'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      summary: 查询集群列表
-      tags:
-      - cluster
-  /params/{clusterId}:
-    post:
       consumes:
       - application/json
       description: 查询集群参数列表
@@ -1173,11 +1162,12 @@ paths:
         name: Token
         required: true
         type: string
-      - description: page
-        in: body
-        name: queryReq
-        schema:
-          $ref: '#/definitions/instanceapi.ParamQueryReq'
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: pageSize
+        type: integer
       - description: clusterId
         in: path
         name: clusterId
@@ -1212,7 +1202,6 @@ paths:
       summary: 查询集群参数列表
       tags:
       - cluster params
-  /params/submit:
     post:
       consumes:
       - application/json
@@ -1229,6 +1218,11 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/instanceapi.ParamUpdateReq'
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
       produces:
       - application/json
       responses:

@@ -369,11 +369,18 @@ func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 }
 
 func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
-	//tiup tidb-lightning -config tidb-lightning.toml
 	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
-	info := context.value(contextDataTransportKey).(ImportInfo)
+	cluster := clusterAggregation.Cluster
 
-	
+	//tiup tidb-lightning -config tidb-lightning.toml
+	_, err := libtiup.MicroSrvTiupLightning(0,
+		[]string{"-config", fmt.Sprintf("%s/tidb-lighting.toml", getDataTransportDir(cluster.Id, TransportTypeImport))},
+		uint64(task.Id))
+	if err != nil {
+		log.Errorf("[domain] call tiup lighting api failed, %s", err.Error())
+		return false
+	}
+
 	return true
 }
 

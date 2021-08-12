@@ -5,6 +5,7 @@ import (
 	ctx "context"
 	"fmt"
 	"github.com/BurntSushi/toml"
+	"github.com/pingcap/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiem/micro-metadb/client"
 	db "github.com/pingcap/tiem/micro-metadb/proto"
@@ -12,6 +13,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -367,7 +369,11 @@ func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 }
 
 func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
-	//todo: call tiupmgr
+	//tiup tidb-lightning -config tidb-lightning.toml
+	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	info := context.value(contextDataTransportKey).(ImportInfo)
+
+	
 	return true
 }
 
@@ -395,13 +401,25 @@ func updateDataImportRecord(task *TaskEntity, context *FlowContext) bool {
 
 func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	info := context.value(contextDataTransportKey).(ExportInfo)
 	cluster := clusterAggregation.Cluster
+	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	tidbServer := configModel.TiDBServers[0]
 
 	if err := cleanDataTransportDir(cluster.Id, TransportTypeExport); err != nil {
 		log.Errorf("[domain] clean export directory failed, %s", err.Error())
 		return false
 	}
-	//todo: call tiupmgr
+
+	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB
+	//todo: admin root password
+	_, err := libtiup.MicroSrvTiupDumpling(0,
+		[]string{"-u", info.UserName, "-p", info.Password, "-P", strconv.Itoa(tidbServer.Port), "--host", tidbServer.Host, "--filetype", info.FileType, "-t", "8", "-o", getDataTransportDir(cluster.Id, TransportTypeExport), "-r", "200000", "-F", "256MiB"},
+		uint64(task.Id))
+	if err != nil {
+		log.Errorf("[domain] call tiup dumpling api failed, %s", err.Error())
+		return false
+	}
 
 	return true
 }

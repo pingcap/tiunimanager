@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "db_task.proto";
+
 option go_package = "./;db";
 
 message DBClusterResponseStatus {
@@ -8,60 +10,206 @@ message DBClusterResponseStatus {
 }
 
 message DBClusterDTO {
-    int32 id = 1;
-    string name = 2;
-    int32 tenantId = 3;
-    string dbPassword = 4;
-    string version = 5;
-    int32 status = 6;
-    int32 tidbCount = 7;
-    int32 tikvCount = 8;
-    int32 pdCount = 9;
+    string id = 1;
+    string code = 2;
+    string name = 3;
+    string tenantId = 4;
+    string dbPassword = 5;
+    string clusterType = 6;
+    string versionCode = 7;
+    int32 status = 8;
+    string tags = 9;
+    bool tls = 10;
+    string demands = 11;
+    int32 workFlowId = 12;
+    string ownerId = 13;
+    int64 createTime = 14;
+    int64 updateTime = 15;
+    int64 deleteTime = 16;
 }
 
 message DBTiUPConfigDTO {
     int32 id = 1;
-    int32 tenantId = 2;
-    int32 clusterId = 3;
-    bool latest = 4;
-    string content = 5;
+    string tenantId = 2;
+    string clusterId = 3;
+    string content = 4;
+    int64 createTime = 5;
 }
 
 message DBCreateClusterRequest {
     DBClusterDTO cluster = 1;
 }
+
 message DBCreateClusterResponse {
     DBClusterResponseStatus status = 1;
     DBClusterDTO cluster = 2;
 }
 
-message DBFindClusterRequest {
-    int32 clusterId = 1;
+message DBLoadClusterRequest {
+    string clusterId = 1;
 }
 
-message DBFindClusterResponse {
+message DBLoadClusterResponse {
     DBClusterResponseStatus status = 1;
-    DBClusterDTO cluster = 2;
-    DBTiUPConfigDTO config = 3;
+    DBClusterDetailDTO clusterDetail = 2;
 }
 
-message DBUpdateTiUPConfigRequest {
-    int32 clusterId = 1;
-    string configContent = 2;
+message DBClusterDisplayDTO {
+    DBClusterDTO cluster = 1;
+    DBFlowDTO flow = 2;
 }
 
-message DBUpdateTiUPConfigResponse {
-    DBClusterResponseStatus status = 1;
-    DBClusterDTO cluster = 2;
-    DBTiUPConfigDTO config = 3;
+message DBClusterDetailDTO {
+    DBClusterDTO cluster = 1;
+    DBTiUPConfigDTO tiupConfigRecord = 2;
+    DBFlowDTO flow = 3;
 }
 
 message DBListClusterRequest {
-    int32 page = 1;
-    int32 pageSize = 2;
+    DBPageDTO pageReq = 1;
+    string clusterId = 2;
+    string clusterName = 3;
+    string clusterType = 4;
+    string clusterStatus = 5;
+    string clusterTag = 6;
 }
 
 message DBListClusterResponse {
     DBClusterResponseStatus status = 1;
-    repeated DBClusterDTO clusters = 2;
+    repeated DBClusterDetailDTO clusters = 2;
+    DBPageDTO page = 3;
+
+}
+
+message DBDeleteClusterRequest {
+    string clusterId = 1;
+}
+
+message DBDeleteClusterResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+}
+
+message DBUpdateClusterStatusRequest {
+    string clusterId = 1;
+    int32 status = 2;
+    bool updateStatus = 3;
+    int64 flowId = 4;
+    bool updateFlow = 5;
+}
+
+message DBUpdateClusterStatusResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+}
+
+message DBUpdateTiupConfigRequest {
+    string clusterId = 1;
+    string content = 2;
+    string tenantId = 3;
+}
+
+message DBUpdateTiupConfigResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+    DBTiUPConfigDTO tiupConfigRecord = 3;
+}
+
+message DBPageDTO {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 total = 3;
+}
+
+message DBParameterRecordDTO {
+    int64 id = 1;
+    string tenantId = 2;
+    string clusterId = 3;
+    int64 createTime = 4;
+    string operatorId = 5;
+    string content = 6;
+    int64 flowId = 7;
+}
+
+message DBSaveParametersRequest {
+    DBParameterRecordDTO parameters = 1;
+}
+
+message DBSaveParametersResponse {
+    DBClusterResponseStatus status = 1;
+    DBParameterRecordDTO parameters = 2;
+}
+
+message DBGetCurrentParametersRequest {
+    string clusterId = 1;
+}
+
+message DBGetCurrentParametersResponse {
+    DBClusterResponseStatus status = 1;
+    DBParameterRecordDTO parameters = 2;
+}
+
+message DBBackupRecordDTO {
+    int64 id = 1;
+    string tenantId = 2;
+    string clusterId = 3;
+    int64 createTime = 4;
+    int32 backupRange = 5;
+    int32 backupType = 6;
+    string operatorId = 7;
+    string filePath = 8;
+    int64 flowId = 9;
+}
+
+message DBSaveBackupRecordRequest {
+    DBBackupRecordDTO backupRecord = 1;
+}
+
+message DBSaveBackupRecordResponse {
+    DBClusterResponseStatus status = 1;
+    DBBackupRecordDTO backupRecord = 2;
+}
+
+message DBDeleteBackupRecordRequest {
+    int64 id = 1;
+}
+
+message DBDeleteBackupRecordResponse {
+    DBClusterResponseStatus status = 1;
+    DBBackupRecordDTO backupRecord = 2;
+}
+
+message DBListBackupRecordsRequest {
+    string clusterId = 1;
+    DBPageDTO page = 2;
+}
+
+message DBDBBackupRecordDisplayDTO {
+    DBBackupRecordDTO backupRecord = 1;
+    DBFlowDTO flow = 2;
+}
+
+message DBListBackupRecordsResponse {
+    DBClusterResponseStatus status = 1;
+    repeated DBDBBackupRecordDisplayDTO backupRecords = 2;
+    DBPageDTO page = 3;
+}
+
+message DBRecoverRecordDTO {
+    int64 id = 1;
+    string tenantId = 2;
+    string clusterId = 3;
+    int64 createTime = 4;
+    string operatorId = 5;
+    int64 backupRecordId = 6;
+    int64 flowId = 7;
+}
+
+message DBSaveRecoverRecordRequest {
+    DBRecoverRecordDTO recoverRecord = 1;
+}
+
+message DBSaveRecoverRecordResponse {
+    DBClusterResponseStatus status = 1;
+    DBRecoverRecordDTO recoverRecord = 2;
 }

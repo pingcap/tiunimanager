@@ -6,18 +6,18 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	mlogrus "github.com/asim/go-micro/plugins/logger/logrus/v3"
+	"github.com/asim/go-micro/plugins/registry/etcd/v3"
+	"github.com/asim/go-micro/v3/registry"
+	"github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap/tiem/library/thirdparty/tracer"
+
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
-	"github.com/asim/go-micro/v3"
-	mlog "github.com/asim/go-micro/v3/logger"
 	"github.com/asim/go-micro/v3/transport"
-	"github.com/pingcap/ticp/addon/logger"
-	"github.com/pingcap/ticp/addon/tracer"
-	"github.com/pingcap/ticp/config"
-	"github.com/pingcap/ticp/micro-metadb/models"
-	db "github.com/pingcap/ticp/micro-metadb/proto"
-	"github.com/pingcap/ticp/micro-metadb/service"
+	"github.com/pingcap/tiem/micro-metadb/models"
+	db "github.com/pingcap/tiem/micro-metadb/proto"
+	"github.com/pingcap/tiem/micro-metadb/service"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -27,27 +27,14 @@ import (
 var log *logger.LogRecord
 
 func initConfig() {
-	{
-		// only use to init the config
-		srv := micro.NewService(
-			config.GetMicroCliArgsOption(),
-		)
-		srv.Init()
-		err := config.Init()
-		if err != nil {
-			return
-		}
-		srv = nil
-	}
+	config.InitForMonolith()
 }
 
 func initLogger() {
-	// log
-	mlog.DefaultLogger = mlogrus.NewLogger(mlogrus.WithLogger(logger.WithContext(nil)))
-
 	log = logger.GetLogger()
+	service.InitLogger()
 	// use log
-	log.Debug("I'm a test log")
+	log.Debug("init logger completed!")
 }
 
 func initService() {
@@ -58,19 +45,22 @@ func initService() {
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	srv := micro.NewService(
-		micro.Name(service.TiCPMetaDBServiceName),
+		micro.Name(service.TiEMMetaDBServiceName),
 		micro.WrapHandler(prometheus.NewHandlerWrapper()),
 		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
 		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
 		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		micro.Address(config.GetMetaDBServiceAddress()),
+		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
 	)
 	srv.Init()
 
-	db.RegisterTiCPDBServiceHandler(srv.Server(), new(service.DBServiceHandler))
+	db.RegisterTiEMDBServiceHandler(srv.Server(), new(service.DBServiceHandler))
 
 	if err := srv.Run(); err != nil {
 		log.Fatal(err)
 	}
+	log.Info(" Initialization micro service successful")
 }
 
 func initSqliteDB() {
@@ -88,17 +78,9 @@ func initSqliteDB() {
 	}
 	log.Info("sqlite.open success")
 
-	if models.MetaDB.Migrator().HasTable(&models.Tenant{}) {
-
-	}
-
 	initTables()
 
 	initDataForDemo()
-
-	tenant, err := models.FindTenantById(1)
-
-	fmt.Println(tenant.Name)
 
 }
 
@@ -111,17 +93,23 @@ func initTables() error {
 		&models.PermissionBinding{},
 		&models.RoleBinding{},
 		&models.Token{},
-		&models.Cluster{},
-		&models.TiUPConfig{},
+		&models.ClusterDO{},
+		&models.DemandRecordDO{},
+		&models.TiUPConfigDO{},
+		&models.TaskDO{},
+		&models.FlowDO{},
 		&models.Host{},
 		&models.Disk{},
 		&models.TiupTask{},
+		&models.ParametersRecordDO{},
+		&models.BackupRecordDO{},
+		&models.RecoverRecordDO{},
 	)
 	return err
 }
 
 func initDataForDemo() {
-	tenant, _ := models.AddTenant("Ticp系统管理", 1, 0)
+	tenant, _ := models.AddTenant("TiEM系统管理", 1, 0)
 	fmt.Println("tenantId = ", tenant.ID)
 
 	role1, _ := models.AddRole(tenant.ID, "管理员", "管理员", 0)
@@ -140,8 +128,8 @@ func initDataForDemo() {
 	fmt.Println("user3.Id = ", userId3)
 
 	models.AddRoleBindings([]models.RoleBinding{
-		{TenantId: tenant.ID, RoleId: role1.ID, AccountId: userId1, Status: 0},
-		{TenantId: tenant.ID, RoleId: role2.ID, AccountId: userId2, Status: 0},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, AccountId: userId1},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role2.ID, AccountId: userId2},
 	})
 
 	permission1, _ := models.AddPermission(tenant.ID, "/api/v1/host/query", "查询主机", "查询主机", 2, 0)
@@ -150,35 +138,119 @@ func initDataForDemo() {
 
 	models.AddPermissionBindings([]models.PermissionBinding{
 		// 管理员可做所有事
-		{TenantId: tenant.ID, RoleId: role1.ID, PermissionId: permission1.ID, Status: 0},
-		{TenantId: tenant.ID, RoleId: role1.ID, PermissionId: permission2.ID, Status: 0},
-		{TenantId: tenant.ID, RoleId: role1.ID, PermissionId: permission3.ID, Status: 0},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission1.ID},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission2.ID},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission3.ID},
 		// 用户可做查询主机
-		{TenantId: tenant.ID, RoleId: role2.ID, PermissionId: permission1.ID, Status: 0},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role2.ID, PermissionId: permission1.ID},
 	})
 
 	// 添加一些demo使用的host和disk数据
 	models.CreateHost(&models.Host{
-		Name:     "主机1",
+		HostName: "主机1",
 		IP:       "192.168.125.132",
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
-		CpuCores: 32,
-		Memory:   64,
+		CpuCores: 4,
+		Memory:   8,
 		Nic:      "1GE",
-		AZ:       "East China",
+		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	})
+	// 添加一些demo使用的host和disk数据
+	models.CreateHost(&models.Host{
+		HostName: "主机2",
+		IP:       "192.168.125.133",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Zone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/tikv", Capacity: 256, Status: 1},
+		},
+	})
+	// 添加一些demo使用的host和disk数据
+	models.CreateHost(&models.Host{
+		HostName: "主机3",
+		IP:       "192.168.125.134",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Zone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/pd", Capacity: 256, Status: 1},
+		},
+	})
 
+	models.CreateHost(&models.Host{
+		HostName: "主机4",
+		IP:       "192.168.125.135",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Zone2",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
+		},
+	})
+
+	models.CreateHost(&models.Host{
+		HostName: "主机4",
+		IP:       "192.168.125.136",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Zone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
+		},
+	})
+
+	models.CreateHost(&models.Host{
+		HostName: "主机4",
+		IP:       "192.168.125.137",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 4,
+		Memory:   8,
+		Nic:      "1GE",
+		AZ:       "Zone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []models.Disk{
+			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
+		},
+	})
 	return
 }
 
-func initUser(tenantId uint, name string) uint {
+func initUser(tenantId string, name string) string {
 
 	b := make([]byte, 16)
 	_, _ = cryrand.Read(b)

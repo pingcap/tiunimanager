@@ -1,6 +1,9 @@
-/ticp.iml
+/tiem.iml
 .DS_Store
 .idea/
 data.etcd1/
-micro-metadb/ticp.sqlite.db
-./logs
+micro-metadb/tiem.sqlite.db
+logs/
+/micro-cluster/tiupmgr/tiupmgr
+/tiem.sqlite.db
+/micro-cluster/brmgr/brmgr

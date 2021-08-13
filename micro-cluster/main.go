@@ -7,8 +7,10 @@ import (
 func main() {
 	initConfig()
 	initLogger()
+	initPort()
 	initClient()
 	initClusterOperator()
+	initKnowledge()
 	initService()
 	//initPrometheus()
 

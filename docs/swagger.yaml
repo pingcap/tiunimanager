@@ -1,5 +1,259 @@
 basePath: /api/v1/
 definitions:
+  clusterapi.ClusterDisplayInfo:
+    properties:
+      backupFileUsage:
+        $ref: '#/definitions/controller.Usage'
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      cpuUsage:
+        $ref: '#/definitions/controller.Usage'
+      createTime:
+        type: string
+      dbPassword:
+        type: string
+      deleteTime:
+        type: string
+      diskUsage:
+        $ref: '#/definitions/controller.Usage'
+      extranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      inProcessFlowId:
+        type: integer
+      intranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      memoryUsage:
+        $ref: '#/definitions/controller.Usage'
+      port:
+        type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      storageUsage:
+        $ref: '#/definitions/controller.Usage'
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+      updateTime:
+        type: string
+      whitelist:
+        items:
+          type: string
+        type: array
+    type: object
+  clusterapi.ClusterNodeDemand:
+    properties:
+      componentType:
+        type: string
+      distributionItems:
+        items:
+          $ref: '#/definitions/clusterapi.DistributionItem'
+        type: array
+      totalNodeCount:
+        type: integer
+    type: object
+  clusterapi.ComponentInstance:
+    properties:
+      componentName:
+        type: string
+      componentType:
+        type: string
+      nodes:
+        items:
+          $ref: '#/definitions/clusterapi.ComponentNodeDisplayInfo'
+        type: array
+    type: object
+  clusterapi.ComponentNodeDisplayInfo:
+    properties:
+      cpuUsage:
+        $ref: '#/definitions/controller.Usage'
+      hostId:
+        type: string
+      ioUtil:
+        type: number
+      iops:
+        items:
+          type: number
+        type: array
+      memoryUsage:
+        $ref: '#/definitions/controller.Usage'
+      nodeId:
+        type: string
+      port:
+        type: integer
+      role:
+        $ref: '#/definitions/clusterapi.ComponentNodeRole'
+      spec:
+        $ref: '#/definitions/hostapi.SpecBaseInfo'
+      status:
+        type: string
+      storageUsage:
+        $ref: '#/definitions/controller.Usage'
+      version:
+        type: string
+      zone:
+        $ref: '#/definitions/hostapi.ZoneBaseInfo'
+    type: object
+  clusterapi.ComponentNodeRole:
+    properties:
+      roleCode:
+        type: string
+      roleName:
+        type: string
+    type: object
+  clusterapi.CreateClusterRsp:
+    properties:
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      createTime:
+        type: string
+      dbPassword:
+        type: string
+      deleteTime:
+        type: string
+      inProcessFlowId:
+        type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+      updateTime:
+        type: string
+    type: object
+  clusterapi.CreateReq:
+    properties:
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      dbPassword:
+        type: string
+      nodeDemandList:
+        items:
+          $ref: '#/definitions/clusterapi.ClusterNodeDemand'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+    type: object
+  clusterapi.DeleteClusterRsp:
+    properties:
+      clusterId:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      inProcessFlowId:
+        type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  clusterapi.DetailClusterRsp:
+    properties:
+      backupFileUsage:
+        $ref: '#/definitions/controller.Usage'
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      components:
+        items:
+          $ref: '#/definitions/clusterapi.ComponentInstance'
+        type: array
+      cpuUsage:
+        $ref: '#/definitions/controller.Usage'
+      createTime:
+        type: string
+      dbPassword:
+        type: string
+      deleteTime:
+        type: string
+      diskUsage:
+        $ref: '#/definitions/controller.Usage'
+      extranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      inProcessFlowId:
+        type: integer
+      intranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      maintainTaskCron:
+        type: string
+      memoryUsage:
+        $ref: '#/definitions/controller.Usage'
+      port:
+        type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      storageUsage:
+        $ref: '#/definitions/controller.Usage'
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+      updateTime:
+        type: string
+      whitelist:
+        items:
+          type: string
+        type: array
+    type: object
+  clusterapi.DistributionItem:
+    properties:
+      count:
+        type: integer
+      specCode:
+        type: string
+      zoneCode:
+        type: string
+    type: object
   controller.CommonResult:
     properties:
       code:
@@ -7,6 +261,17 @@ definitions:
       data:
         type: object
       message:
+        type: string
+    type: object
+  controller.Operator:
+    properties:
+      manualOperator:
+        type: boolean
+      operatorId:
+        type: string
+      operatorName:
+        type: string
+      tenantId:
         type: string
     type: object
   controller.Page:
@@ -29,20 +294,91 @@ definitions:
       page:
         $ref: '#/definitions/controller.Page'
     type: object
-  hostapi.DemoHostInfo:
+  controller.StatusInfo:
     properties:
-      hostId:
+      createTime:
         type: string
-      hostIp:
+      deleteTime:
         type: string
+      inProcessFlowId:
+        type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  controller.Usage:
+    properties:
+      total:
+        type: number
+      usageRate:
+        type: number
+      used:
+        type: number
+    type: object
+  hostapi.AllocHostsReq:
+    properties:
+      pdReq:
+        items:
+          $ref: '#/definitions/hostapi.Allocation'
+        type: array
+      tidbReq:
+        items:
+          $ref: '#/definitions/hostapi.Allocation'
+        type: array
+      tikvReq:
+        items:
+          $ref: '#/definitions/hostapi.Allocation'
+        type: array
+    type: object
+  hostapi.AllocHostsRsp:
+    properties:
+      pdHosts:
+        items:
+          $ref: '#/definitions/hostapi.AllocateRsp'
+        type: array
+      tidbHosts:
+        items:
+          $ref: '#/definitions/hostapi.AllocateRsp'
+        type: array
+      tikvHosts:
+        items:
+          $ref: '#/definitions/hostapi.AllocateRsp'
+        type: array
+    type: object
+  hostapi.AllocateRsp:
+    properties:
+      cpuCore:
+        type: integer
+      disk:
+        $ref: '#/definitions/hostapi.Disk'
       hostName:
         type: string
+      ip:
+        type: string
+      memory:
+        type: integer
+    type: object
+  hostapi.Allocation:
+    properties:
+      count:
+        type: integer
+      cpuCores:
+        type: integer
+      failureDomain:
+        type: string
+      memory:
+        type: integer
     type: object
   hostapi.Disk:
     properties:
       capacity:
         description: 'Disk size, Unit: GB'
         type: integer
+      diskId:
+        type: string
       name:
         description: '[sda/sdb/nvmep0...]'
         type: string
@@ -52,6 +388,21 @@ definitions:
       status:
         description: Disk Status, 0 for available, 1 for inused
         type: integer
+    type: object
+  hostapi.DomainResource:
+    properties:
+      count:
+        type: integer
+      purpose:
+        type: string
+      specCode:
+        type: string
+      specName:
+        type: string
+      zoneCode:
+        type: string
+      zoneName:
+        type: string
     type: object
   hostapi.HostInfo:
     properties:
@@ -65,6 +416,8 @@ definitions:
         items:
           $ref: '#/definitions/hostapi.Disk'
         type: array
+      hostId:
+        type: string
       hostName:
         type: string
       ip:
@@ -84,58 +437,193 @@ definitions:
         type: string
       rack:
         type: string
+      spec:
+        description: Host Spec, init while importing
+        type: string
       status:
         description: Host Status, 0 for Online, 1 for offline
         type: integer
     type: object
-  hostapi.HostQuery:
+  hostapi.SpecBaseInfo:
+    properties:
+      specCode:
+        type: string
+      specName:
+        type: string
+    type: object
+  hostapi.ZoneBaseInfo:
+    properties:
+      zoneCode:
+        type: string
+      zoneName:
+        type: string
+    type: object
+  instanceapi.BackupRecord:
+    properties:
+      clusterId:
+        type: string
+      endTime:
+        type: string
+      filePath:
+        type: string
+      id:
+        type: integer
+      operator:
+        $ref: '#/definitions/controller.Operator'
+      range:
+        type: integer
+      size:
+        type: number
+      startTime:
+        type: string
+      status:
+        $ref: '#/definitions/controller.StatusInfo'
+      way:
+        type: integer
+    type: object
+  instanceapi.BackupRecordQueryReq:
     properties:
       page:
         type: integer
       pageSize:
         type: integer
     type: object
-  hostapi.ListHostCondition:
+  instanceapi.BackupRecoverReq:
     properties:
-      purpose:
-        description: What Purpose is the host used for? [compute/storage or both]
+      clusterId:
+        type: string
+    type: object
+  instanceapi.BackupReq:
+    properties:
+      clusterId:
+        type: string
+    type: object
+  instanceapi.BackupStrategy:
+    properties:
+      cronString:
+        type: string
+    type: object
+  instanceapi.BackupStrategyUpdateReq:
+    properties:
+      cronString:
+        type: string
+    type: object
+  instanceapi.ParamInstance:
+    properties:
+      name:
+        type: string
+      value:
+        type: object
+    type: object
+  instanceapi.ParamItem:
+    properties:
+      currentValue:
+        $ref: '#/definitions/instanceapi.ParamInstance'
+      definition:
+        $ref: '#/definitions/knowledge.Parameter'
+    type: object
+  instanceapi.ParamUpdateReq:
+    properties:
+      values:
+        items:
+          $ref: '#/definitions/instanceapi.ParamInstance'
+        type: array
+    type: object
+  instanceapi.ParamUpdateRsp:
+    properties:
+      clusterId:
         type: string
       status:
-        description: Host Status, 0 for Online, 1 for offline
+        type: string
+      taskId:
         type: integer
     type: object
-  instanceapi.InstanceCreate:
+  knowledge.ClusterComponent:
     properties:
-      dbPassword:
+      componentName:
         type: string
-      instanceName:
-        type: string
-      instanceVersion:
-        type: string
-      pdCount:
-        type: integer
-      tiDBCount:
-        type: integer
-      tiKVCount:
-        type: integer
-    type: object
-  instanceapi.InstanceInfo:
-    properties:
-      instanceId:
-        type: string
-      instanceName:
-        type: string
-      instanceStatus:
-        type: integer
-      instanceVersion:
+      componentType:
         type: string
     type: object
-  instanceapi.InstanceQuery:
+  knowledge.ClusterComponentSpec:
     properties:
-      page:
+      clusterComponent:
+        $ref: '#/definitions/knowledge.ClusterComponent'
+      componentConstraint:
+        $ref: '#/definitions/knowledge.ComponentConstraint'
+    type: object
+  knowledge.ClusterType:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    type: object
+  knowledge.ClusterTypeSpec:
+    properties:
+      clusterType:
+        $ref: '#/definitions/knowledge.ClusterType'
+      versionSpecs:
+        items:
+          $ref: '#/definitions/knowledge.ClusterVersionSpec'
+        type: array
+    type: object
+  knowledge.ClusterVersion:
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+    type: object
+  knowledge.ClusterVersionSpec:
+    properties:
+      clusterVersion:
+        $ref: '#/definitions/knowledge.ClusterVersion'
+      componentSpecs:
+        items:
+          $ref: '#/definitions/knowledge.ClusterComponentSpec'
+        type: array
+    type: object
+  knowledge.ComponentConstraint:
+    properties:
+      availableSpecCodes:
+        items:
+          type: string
+        type: array
+      componentRequired:
+        type: boolean
+      minZoneQuantity:
         type: integer
-      pageSize:
+      suggestedNodeQuantities:
+        items:
+          type: integer
+        type: array
+    type: object
+  knowledge.ParamValueConstraint:
+    properties:
+      contrastValue:
+        type: object
+      type:
+        type: string
+    type: object
+  knowledge.Parameter:
+    properties:
+      constraints:
+        items:
+          $ref: '#/definitions/knowledge.ParamValueConstraint'
+        type: array
+      defaultValue:
+        type: object
+      desc:
+        type: string
+      name:
+        type: string
+      needRestart:
+        type: boolean
+      type:
         type: integer
+      unit:
+        type: string
     type: object
   userapi.LoginInfo:
     properties:
@@ -159,18 +647,693 @@ info:
   contact:
     email: zhangpeijin@pingcap.com
     name: zhangpeijin
-  description: TiCP UI API
+  description: TiEM UI API
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  title: TiCP UI API
+  title: TiEM UI API
   version: "1.0"
 paths:
-  /host:
+  /backups:
+    get:
+      consumes:
+      - application/json
+      description: 查询备份记录
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: clusterId
+        in: query
+        name: clusterId
+        required: true
+        type: string
+      - description: page
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/instanceapi.BackupRecordQueryReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/instanceapi.BackupRecord'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 查询备份记录
+      tags:
+      - cluster backup
     post:
       consumes:
       - application/json
-      description: 将给定的主机信息导入TiCP
+      description: backup
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 要备份的集群信息
+        in: body
+        name: backupReq
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.BackupReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/instanceapi.BackupRecord'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: backup
+      tags:
+      - cluster backup
+  /backups/{backupId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除备份记录
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 删除备份ID
+        in: path
+        name: backupId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: integer
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 删除备份记录
+      tags:
+      - cluster backup
+  /backups/{backupId}/restore:
+    post:
+      consumes:
+      - application/json
+      description: 恢复备份
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: backupId
+        in: path
+        name: backupId
+        required: true
+        type: string
+      - description: 恢复备份请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.BackupRecoverReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.StatusInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 恢复备份
+      tags:
+      - cluster backup
+  /cluster/knowledge:
+    get:
+      consumes:
+      - application/json
+      description: 查看集群基本知识
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/knowledge.ClusterTypeSpec'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 查看集群基本知识
+      tags:
+      - cluster
+  /clusters:
+    get:
+      consumes:
+      - application/json
+      description: 查询集群列表
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - in: query
+        name: clusterId
+        type: string
+      - in: query
+        name: clusterName
+        type: string
+      - in: query
+        name: clusterStatus
+        type: string
+      - in: query
+        name: clusterTag
+        type: string
+      - in: query
+        name: clusterType
+        type: string
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/clusterapi.ClusterDisplayInfo'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 查询集群列表
+      tags:
+      - cluster
+    post:
+      consumes:
+      - application/json
+      description: 创建集群接口
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 创建参数
+        in: body
+        name: createReq
+        required: true
+        schema:
+          $ref: '#/definitions/clusterapi.CreateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/clusterapi.CreateClusterRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 创建集群接口
+      tags:
+      - cluster
+  /clusters/{clusterId}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除集群
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 待删除的集群ID
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/clusterapi.DeleteClusterRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 删除集群
+      tags:
+      - cluster
+    get:
+      consumes:
+      - application/json
+      description: 查看集群详情
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 集群ID
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/clusterapi.DetailClusterRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 查看集群详情
+      tags:
+      - cluster
+  /clusters/{clusterId}/params:
+    get:
+      consumes:
+      - application/json
+      description: 查询集群参数列表
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: pageSize
+        type: integer
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/instanceapi.ParamItem'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 查询集群参数列表
+      tags:
+      - cluster params
+    post:
+      consumes:
+      - application/json
+      description: 提交参数
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 要提交的参数信息
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.ParamUpdateReq'
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/instanceapi.ParamUpdateRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 提交参数
+      tags:
+      - cluster params
+  /clusters/{clusterId}/strategy:
+    put:
+      consumes:
+      - application/json
+      description: 保存备份策略
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: 备份策略信息
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.BackupStrategyUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/instanceapi.BackupStrategy'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 保存备份策略
+      tags:
+      - cluster backup
+  /clusters/{clusterId}/strategy/:
+    get:
+      consumes:
+      - application/json
+      description: 查询备份策略
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/instanceapi.BackupStrategy'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 查询备份策略
+      tags:
+      - cluster backup
+  /resources/allochosts:
+    post:
+      consumes:
+      - application/json
+      description: 按指定的配置分配主机资源
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 主机分配请求
+        in: body
+        name: Alloc
+        required: true
+        schema:
+          $ref: '#/definitions/hostapi.AllocHostsReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/hostapi.AllocHostsRsp'
+              type: object
+      summary: 分配主机接口
+      tags:
+      - resource
+  /resources/failuredomains:
+    get:
+      consumes:
+      - application/json
+      description: 查询指定故障域的资源情况
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 指定故障域类型
+        enum:
+        - 1
+        - 2
+        - 3
+        in: query
+        name: failureDomainType
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/hostapi.DomainResource'
+                  type: array
+              type: object
+      summary: 查询指定故障域的资源
+      tags:
+      - resource
+  /resources/host:
+    post:
+      consumes:
+      - application/json
+      description: 将给定的主机信息导入系统
       parameters:
       - description: 登录token
         in: header
@@ -198,7 +1361,130 @@ paths:
       summary: 导入主机接口
       tags:
       - resource
-  /host/:
+  /resources/hosts:
+    get:
+      consumes:
+      - application/json
+      description: 展示目前所有主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 查询特定用途的主机列表
+        in: query
+        name: purpose
+        type: string
+      - description: 查询特定状态的主机列表
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/hostapi.HostInfo'
+                  type: array
+              type: object
+      summary: 查询主机列表
+      tags:
+      - resource
+    post:
+      consumes:
+      - multipart/form-data
+      description: 通过文件批量导入主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 包含待导入主机信息的文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+      summary: 通过文件批量导入主机
+      tags:
+      - resource
+  /resources/hosts-template/:
+    get:
+      consumes:
+      - application/json
+      description: 将主机信息文件导出到本地
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: 导出主机信息模板文件
+      tags:
+      - resource
+  /resources/hosts/:
+    delete:
+      consumes:
+      - application/json
+      description: 批量删除指定的主机
+      parameters:
+      - description: 登录token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: 待删除的主机ID数组
+        in: body
+        name: hostIds
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: 批量删除指定的主机
+      tags:
+      - resource
+  /resources/hosts/{hostId}:
     delete:
       consumes:
       - application/json
@@ -259,139 +1545,6 @@ paths:
       summary: 查询主机详情
       tags:
       - resource
-  /host/query:
-    post:
-      consumes:
-      - application/json
-      description: 查询主机
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 查询请求
-        in: body
-        name: query
-        required: true
-        schema:
-          $ref: '#/definitions/hostapi.HostQuery'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/hostapi.DemoHostInfo'
-                  type: array
-              type: object
-      summary: 查询主机接口
-      tags:
-      - resource
-  /hosts:
-    get:
-      consumes:
-      - application/json
-      description: 展示目前所有主机
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 可选的查询主机的条件
-        in: body
-        name: query
-        schema:
-          $ref: '#/definitions/hostapi.ListHostCondition'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/hostapi.HostInfo'
-                  type: array
-              type: object
-      summary: 查询主机列表
-      tags:
-      - resource
-  /instance/create:
-    post:
-      consumes:
-      - application/json
-      description: 创建实例
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 创建参数
-        in: body
-        name: createInfo
-        required: true
-        schema:
-          $ref: '#/definitions/instanceapi.InstanceCreate'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/instanceapi.InstanceInfo'
-              type: object
-      summary: 创建实例接口
-      tags:
-      - instance
-  /instance/query:
-    post:
-      consumes:
-      - application/json
-      description: 查询实例
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 查询参数
-        in: body
-        name: query
-        required: true
-        schema:
-          $ref: '#/definitions/instanceapi.InstanceQuery'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/instanceapi.InstanceInfo'
-                  type: array
-              type: object
-      summary: 查询实例接口
-      tags:
-      - instance
   /user/login:
     post:
       consumes:
@@ -416,6 +1569,14 @@ paths:
                 data:
                   $ref: '#/definitions/userapi.UserIdentity'
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 登录接口
       tags:
       - platform
@@ -425,7 +1586,7 @@ paths:
       - application/json
       description: 退出登录
       parameters:
-      - description: 登录token
+      - description: token
         in: header
         name: Token
         required: true
@@ -447,6 +1608,14 @@ paths:
                 data:
                   $ref: '#/definitions/userapi.UserIdentity'
               type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
       summary: 退出登录
       tags:
       - platform

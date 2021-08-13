@@ -2,9 +2,9 @@ package userapi
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/ticp/micro-api/controller"
-	"github.com/pingcap/ticp/micro-manager/client"
-	"github.com/pingcap/ticp/micro-manager/proto"
+	"github.com/pingcap/tiem/micro-api/controller"
+	"github.com/pingcap/tiem/micro-cluster/client"
+	"github.com/pingcap/tiem/micro-cluster/proto"
 	"net/http"
 )
 
@@ -17,6 +17,8 @@ import (
 // @Param loginInfo body LoginInfo true "登录用户信息"
 // @Header 200 {string} Token "DUISAFNDHIGADS"
 // @Success 200 {object} controller.CommonResult{data=UserIdentity}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /user/login [post]
 func Login(c *gin.Context) {
 	var req LoginInfo
@@ -26,7 +28,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	loginReq := manager.LoginRequest{AccountName: req.UserName, Password: req.UserPassword}
+	loginReq := cluster.LoginRequest{AccountName: req.UserName, Password: req.UserPassword}
 	result, err := client.ManagerClient.Login(c, &loginReq)
 
 	if err == nil {
@@ -47,9 +49,11 @@ func Login(c *gin.Context) {
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
-// @Param Token header string true "登录token"
+// @Param Token header string true "token"
 // @Param logoutInfo body LogoutInfo false "退出登录信息"
 // @Success 200 {object} controller.CommonResult{data=UserIdentity}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {
 	var req LogoutInfo
@@ -58,7 +62,7 @@ func Logout(c *gin.Context) {
 		return
 	}
 
-	logoutReq := manager.LogoutRequest{TokenString: c.GetHeader("Token")}
+	logoutReq := cluster.LogoutRequest{TokenString: c.GetHeader("Token")}
 	result, err := client.ManagerClient.Logout(c, &logoutReq)
 
 	if err == nil {

@@ -1,8 +1,7 @@
 package instanceapi
 
-type InstanceInfo struct {
-	InstanceId 		string 	`json:"instanceId"`
-	InstanceName 	string 	`json:"instanceName"`
-	InstanceStatus 	int 	`json:"instanceStatus"`
-	InstanceVersion string 	`json:"instanceVersion"`
+type ParamUpdateRsp struct {
+	Status 			string	`json:"status"`
+	ClusterId 		string	`json:"clusterId"`
+	TaskId			uint	`json:"taskId"`
 }

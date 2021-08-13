@@ -1,18 +1,30 @@
 package instanceapi
 
 import (
-	"github.com/pingcap/ticp/micro-api/controller"
+	"github.com/pingcap/tiem/micro-api/controller"
 )
 
-type InstanceQuery struct {
+type ParamQueryReq struct {
 	controller.PageRequest
 }
 
-type InstanceCreate struct {
-	InstanceName 		string 	`json:"instanceName"`
-	InstanceVersion 	string 	`json:"instanceVersion"`
-	DBPassword 			string 	`json:"dbPassword"`
-	PDCount 			int 	`json:"pdCount"`
-	TiDBCount 			int 	`json:"tiDBCount"`
-	TiKVCount 			int 	`json:"tiKVCount"`
+type ParamUpdateReq struct {
+	Values []ParamInstance `json:"values"`
+}
+
+type BackupRecordQueryReq struct {
+	//StartTime time.Time
+	//EndTime time.Time
+	controller.PageRequest
+}
+
+type BackupStrategyUpdateReq struct {
+	BackupStrategy
+}
+
+type BackupReq struct {
+	ClusterId string `json:"clusterId"`
+}
+type BackupRecoverReq struct {
+	ClusterId string `json:"clusterId"`
 }

@@ -8,7 +8,7 @@ message DbAuthResponseStatus {
 }
 
 message DBTenantDTO {
-	int32 id = 1;
+	string id = 1;
 	string name = 2;
 	int32 type = 3;
 	int32 status = 4;
@@ -24,8 +24,8 @@ message DBFindTenantResponse {
 }
 
 message DBAccountDTO {
-	int32 id = 1;
-	int32 tenantId = 2;
+	string id = 1;
+	string tenantId = 2;
 	string name = 3;
 	string salt = 4;
 	string finalHash = 5;
@@ -45,8 +45,8 @@ message DBFindAccountResponse {
 message DBTokenDTO {
 	string tokenString = 1;
 	string accountName = 2;
-	int32 accountId = 3;
-	int32 tenantId = 4;
+	string accountId = 3;
+	string tenantId = 4;
 	int64 expirationTime = 5;
 }
 
@@ -68,7 +68,7 @@ message DBFindTokenResponse {
 }
 
 message DBPermissionDTO {
-	int32 tenantId = 1;
+	string tenantId = 1;
 	string code = 2;
 	string name = 3;
 	int32 type = 4;
@@ -77,14 +77,14 @@ message DBPermissionDTO {
 }
 
 message DBRoleDTO {
-	int32 tenantId = 1;
+	string tenantId = 1;
 	string name = 2;
 	string desc = 3;
 	int32 status = 4;
 }
 
 message DBFindRolesByPermissionRequest {
-	int32 tenantId = 1;
+	string tenantId = 1;
 	string code = 2;
 }
 

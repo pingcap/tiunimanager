@@ -490,8 +490,11 @@ definitions:
     type: object
   instanceapi.BackupRecoverReq:
     properties:
-      backupRecordId:
-        type: integer
+      clusterId:
+        type: string
+    type: object
+  instanceapi.BackupReq:
+    properties:
       clusterId:
         type: string
     type: object
@@ -502,8 +505,6 @@ definitions:
     type: object
   instanceapi.BackupStrategyUpdateReq:
     properties:
-      clusterId:
-        type: string
       cronString:
         type: string
     type: object
@@ -653,138 +654,8 @@ info:
   title: TiEM UI API
   version: "1.0"
 paths:
-  /backup/{clusterId}:
-    post:
-      consumes:
-      - application/json
-      description: backup
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 要备份的集群ID
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/instanceapi.BackupRecord'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      summary: backup
-      tags:
-      - cluster backup
-  /backup/record/{recordId}:
-    delete:
-      consumes:
-      - application/json
-      description: 删除备份记录
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 删除备份ID
-        in: path
-        name: recordId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  type: integer
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      summary: 删除备份记录
-      tags:
-      - cluster backup
-  /backup/record/recover:
-    post:
-      consumes:
-      - application/json
-      description: 恢复备份
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 恢复备份请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/instanceapi.BackupRecoverReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/controller.StatusInfo'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      summary: 恢复备份
-      tags:
-      - cluster backup
-  /backup/records/{clusterId}:
-    post:
+  /backups:
+    get:
       consumes:
       - application/json
       description: 查询备份记录
@@ -795,7 +666,7 @@ paths:
         required: true
         type: string
       - description: clusterId
-        in: path
+        in: query
         name: clusterId
         required: true
         type: string
@@ -833,23 +704,22 @@ paths:
       summary: 查询备份记录
       tags:
       - cluster backup
-  /backup/strategy:
     post:
       consumes:
       - application/json
-      description: 保存备份策略
+      description: backup
       parameters:
       - description: token
         in: header
         name: Token
         required: true
         type: string
-      - description: 备份策略信息
+      - description: 要备份的集群信息
         in: body
-        name: updateReq
+        name: backupReq
         required: true
         schema:
-          $ref: '#/definitions/instanceapi.BackupStrategyUpdateReq'
+          $ref: '#/definitions/instanceapi.BackupReq'
       produces:
       - application/json
       responses:
@@ -860,7 +730,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/instanceapi.BackupStrategy'
+                  $ref: '#/definitions/instanceapi.BackupRecord'
               type: object
         "401":
           description: Unauthorized
@@ -874,25 +744,25 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 保存备份策略
+      summary: backup
       tags:
       - cluster backup
-  /backup/strategy/{clusterId}:
-    get:
+  /backups/{backupId}:
+    delete:
       consumes:
       - application/json
-      description: 查询备份策略
+      description: 删除备份记录
       parameters:
       - description: token
         in: header
         name: Token
         required: true
         type: string
-      - description: clusterId
+      - description: 删除备份ID
         in: path
-        name: clusterId
+        name: backupId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -903,9 +773,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/instanceapi.BackupStrategy'
-                  type: array
+                  type: integer
               type: object
         "401":
           description: Unauthorized
@@ -919,7 +787,56 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 查询备份策略
+      summary: 删除备份记录
+      tags:
+      - cluster backup
+  /backups/{backupId}/restore:
+    post:
+      consumes:
+      - application/json
+      description: 恢复备份
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: backupId
+        in: path
+        name: backupId
+        required: true
+        type: string
+      - description: 恢复备份请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.BackupRecoverReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.StatusInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 恢复备份
       tags:
       - cluster backup
   /cluster/knowledge:
@@ -1250,6 +1167,100 @@ paths:
       summary: 提交参数
       tags:
       - cluster params
+  /clusters/{clusterId}/strategy:
+    put:
+      consumes:
+      - application/json
+      description: 保存备份策略
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - description: 备份策略信息
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.BackupStrategyUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/instanceapi.BackupStrategy'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 保存备份策略
+      tags:
+      - cluster backup
+  /clusters/{clusterId}/strategy/:
+    get:
+      consumes:
+      - application/json
+      description: 查询备份策略
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/instanceapi.BackupStrategy'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 查询备份策略
+      tags:
+      - cluster backup
   /resources/allochosts:
     post:
       consumes:

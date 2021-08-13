@@ -19,11 +19,12 @@ type BackupRecordQueryReq struct {
 }
 
 type BackupStrategyUpdateReq struct {
-	ClusterId string `json:"clusterId"`
 	BackupStrategy
 }
 
+type BackupReq struct {
+	ClusterId string `json:"clusterId"`
+}
 type BackupRecoverReq struct {
-	ClusterId      string `json:"clusterId"`
-	BackupRecordId int64  `json:"backupRecordId"`
+	ClusterId string `json:"clusterId"`
 }

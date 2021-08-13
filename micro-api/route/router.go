@@ -56,6 +56,11 @@ func Route(g *gin.Engine) {
 			// Params
 			cluster.GET("/:clusterId/params", instanceapi.QueryParams)
 			cluster.POST("/:clusterId/params", instanceapi.SubmitParams)
+
+			// Backup Strategy
+			cluster.GET("/:clusterId/strategy", instanceapi.QueryBackupStrategy)
+			cluster.PUT("/:clusterId/strategy", instanceapi.SaveBackupStrategy)
+			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
 		}
 
 		knowledge := apiV1.Group("/knowledges")
@@ -64,24 +69,15 @@ func Route(g *gin.Engine) {
 			knowledge.GET("/", clusterapi.ClusterKnowledge)
 		}
 
-		//param := apiV1.Group("/params")
-		//{
-		//	param.Use(security.VerifyIdentity)
-		// api/v1/params?clusterId=xxxx
-		//	param.GET("/", instanceapi.QueryParams)
-		//	param.POST("/submit", instanceapi.SubmitParams)
-		//}
-
-		backup := apiV1.Group("/backup")
+		backup := apiV1.Group("/backups")
 		{
 			backup.Use(security.VerifyIdentity)
-			backup.POST("/:clusterId", instanceapi.Backup)
-			backup.GET("/strategy/:clusterId", instanceapi.QueryBackupStrategy)
-			backup.POST("/strategy", instanceapi.SaveBackupStrategy)
-			backup.POST("/records/:clusterId", instanceapi.QueryBackup)
-			backup.POST("/record/recover", instanceapi.RecoverBackup)
 
-			backup.DELETE("/record/:recordId", instanceapi.DeleteBackup)
+			backup.POST("/", instanceapi.Backup)
+			backup.GET("/", instanceapi.QueryBackup)
+			backup.POST("/:backupId/restore", instanceapi.RecoverBackup)
+			backup.DELETE("/:backupId", instanceapi.DeleteBackup)
+			//backup.GET("/:backupId", instanceapi.DetailsBackup)
 		}
 
 		host := apiV1.Group("/resources")

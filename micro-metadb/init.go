@@ -4,7 +4,7 @@ import (
 	cryrand "crypto/rand"
 	"crypto/tls"
 	"encoding/base64"
-	"fmt"
+	"github.com/asim/go-micro/v3"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/v3/registry"
@@ -40,9 +40,10 @@ func initLogger() {
 func initService() {
 	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf(" load certificate file %s failed, error %v", config.GetCertificateCrtFilePath(), err)
 		return
 	}
+	log.Infof(" load certificate file %s successful", config.GetCertificateCrtFilePath())
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	srv := micro.NewService(
 		micro.Name(service.TiEMMetaDBServiceName),
@@ -58,30 +59,33 @@ func initService() {
 	db.RegisterTiEMDBServiceHandler(srv.Server(), new(service.DBServiceHandler))
 
 	if err := srv.Run(); err != nil {
-		log.Fatal(err)
+		log.Fatalf(" Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, config.GetMetaDBServiceAddress(), config.GetRegistryAddress())
 	}
-	log.Info(" Initialization micro service successful")
+	log.Info(" Initialization micro service successful, listening address %s, etcd registry address %s", config.GetMetaDBServiceAddress(), config.GetRegistryAddress())
 }
 
 func initSqliteDB() {
 	var err error
 	dbFile := config.GetSqliteFilePath()
-	log.Record("dbFile", dbFile).Info("init: sqlite.open")
+	logins := log.Record("database file path", dbFile)
 	models.MetaDB, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
-
+	if err != nil || models.MetaDB.Error != nil {
+		logins.Fatalf("open database failed, database error: %v, metadb error: %v", err, models.MetaDB.Error)
+	} else {
+		logins.Infof("open database successful")
+	}
+	err = initTables()
 	if err != nil {
-		log.Fatalf("sqlite open error %v", err)
+		logins.Fatalf(" load system tables from database failed, error: %v", err)
+	} else {
+		logins.Infof(" load system tables from database successful")
 	}
 
-	if models.MetaDB.Error != nil {
-		log.Fatalf("database error %v", models.MetaDB.Error)
-	}
-	log.Info("sqlite.open success")
+	initDataForSystemDefault()
 
-	initTables()
+	logins.Infof(" initialization system default data successful")
 
 	initDataForDemo()
-
 }
 
 func initTables() error {
@@ -108,43 +112,51 @@ func initTables() error {
 	return err
 }
 
-func initDataForDemo() {
-	tenant, _ := models.AddTenant("TiEM系统管理", 1, 0)
-	fmt.Println("tenantId = ", tenant.ID)
+func initDataForSystemDefault() {
+	var err error
+	tenant, err := models.AddTenant("TiEM system administration", 1, 0)
+	//TODO assert(err == nil)
+	if err != nil {
+		log.Fatal(" TODO ")
+	}
+	role1, err := models.AddRole(tenant.ID, "administrators", "administrators", 0)
+	//TODO assert(err == nil)
+	role2, err := models.AddRole(tenant.ID, "DBA", "DBA", 0)
+	//TODO assert(err == nil)
+	userId1, err := initUser(tenant.ID, "admin")
+	//TODO assert(err == nil)
+	userId2, err := initUser(tenant.ID, "nopermission")
+	//TODO assert(err == nil)
 
-	role1, _ := models.AddRole(tenant.ID, "管理员", "管理员", 0)
-	fmt.Println("role1.Id = ", role1.ID)
+	log.Infof("initialization default tencent: %s, roles: %s, %s, users:%s, %s", tenant, role1, role2, userId1, userId2)
 
-	role2, _ := models.AddRole(tenant.ID, "DBA", "DBA", 0)
-	fmt.Println("role2.Id = ", role2.ID)
-
-	userId1 := initUser(tenant.ID, "admin")
-	fmt.Println("user1.Id = ", userId1)
-
-	userId2 := initUser(tenant.ID, "peijin")
-	fmt.Println("user2.Id = ", userId2)
-
-	userId3 := initUser(tenant.ID, "nopermission")
-	fmt.Println("user3.Id = ", userId3)
-
-	models.AddRoleBindings([]models.RoleBinding{
+	err = models.AddRoleBindings([]models.RoleBinding{
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, AccountId: userId1},
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role2.ID, AccountId: userId2},
 	})
+	//TODO assert(err == nil)
 
-	permission1, _ := models.AddPermission(tenant.ID, "/api/v1/host/query", "查询主机", "查询主机", 2, 0)
-	permission2, _ := models.AddPermission(tenant.ID, "/api/v1/instance/query", "查询集群", "查询集群", 2, 0)
-	permission3, _ := models.AddPermission(tenant.ID, "/api/v1/instance/create", "创建集群", "创建集群", 2, 0)
+	permission1, err := models.AddPermission(tenant.ID, "/api/v1/host/query", " Query hosts", "Query hosts", 2, 0)
+	//TODO assert(err == nil)
+	permission2, err := models.AddPermission(tenant.ID, "/api/v1/instance/query", "Query cluster", "Query cluster", 2, 0)
+	//TODO assert(err == nil)
+	permission3, err := models.AddPermission(tenant.ID, "/api/v1/instance/create", "Create cluster", "Create cluster", 2, 0)
+	//TODO assert(err == nil)
 
-	models.AddPermissionBindings([]models.PermissionBinding{
-		// 管理员可做所有事
+	err = models.AddPermissionBindings([]models.PermissionBinding{
+		// Administrators can do everything
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission1.ID},
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission2.ID},
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission3.ID},
-		// 用户可做查询主机
-		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role2.ID, PermissionId: permission1.ID},
-	})
 
+		// User can do query host and cluster
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role2.ID, PermissionId: permission1.ID},
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role2.ID, PermissionId: permission2.ID},
+	})
+	//TODO assert(err == nil)
+}
+
+func initDataForDemo() {
 	// 添加一些demo使用的host和disk数据
 	models.CreateHost(&models.Host{
 		HostName: "主机1",
@@ -250,16 +262,19 @@ func initDataForDemo() {
 	return
 }
 
-func initUser(tenantId string, name string) string {
+func initUser(tenantId string, name string) (string, error) {
 
+	var err error
 	b := make([]byte, 16)
-	_, _ = cryrand.Read(b)
+	_, err = cryrand.Read(b)
+	//TODO assert(err == nil)
 
 	salt := base64.URLEncoding.EncodeToString(b)
 
 	s := salt + name
-	finalSalt, _ := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)
-	account, _ := models.AddAccount(tenantId, name, salt, string(finalSalt), 0)
+	finalSalt, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)
+	//TODO assert(err == nil)
+	account, err := models.AddAccount(tenantId, name, salt, string(finalSalt), 0)
 
-	return account.ID
+	return account.ID, err
 }

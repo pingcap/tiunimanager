@@ -3,8 +3,9 @@ package models
 import (
 	"errors"
 	"fmt"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
 	"time"
+
+	"github.com/pingcap/tiem/library/thirdparty/logger"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -141,6 +142,11 @@ func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
 
 func (h *Host) AfterDelete(tx *gorm.DB) (err error) {
 	err = tx.Where("host_id = ?", h.ID).Delete(&Disk{}).Error
+	if err != nil {
+		return
+	}
+	h.Status = int32(HOST_DELETED)
+	err = tx.Model(&h).Update("Status", h.Status).Error
 	return
 }
 

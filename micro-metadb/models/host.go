@@ -253,7 +253,7 @@ func LockHosts(resources []ResourceLock) (err error) {
 	tx := MetaDB.Begin()
 	for _, v := range resources {
 		var host Host
-		MetaDB.First(&host, "ID = ?", v.HostId)
+		tx.First(&host, "ID = ?", v.HostId)
 		if _, ok := setUpdate[v.HostId]; !ok {
 			if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host).Error; err != nil {
 				tx.Rollback()
@@ -281,7 +281,7 @@ func LockHosts(resources []ResourceLock) (err error) {
 				v.HostId, host.CpuCores+setUpdate[v.HostId].cpuCores, v.OriginCores, host.Memory+setUpdate[v.HostId].mem, v.OriginMem)
 		}
 		var disk Disk
-		MetaDB.First(&disk, "ID = ?", v.DiskId).First(&disk)
+		tx.First(&disk, "ID = ?", v.DiskId).First(&disk)
 		if DiskStatus(disk.Status).IsAvailable() {
 			disk.Status = int32(DISK_INUSED)
 			// Set Disk Status in host - for exaust judgement

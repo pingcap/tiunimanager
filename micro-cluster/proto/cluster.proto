@@ -137,6 +137,11 @@ message DisplayStatusDTO {
     int64 deleteTime = 6;
 }
 
+message RecoverInfoDTO {
+    string sourceClusterId = 1;
+    int64 backupRecordId = 2;
+}
+
 message ClusterBaseInfoDTO {
     string clusterName = 1;
     string dbPassword = 2;
@@ -144,6 +149,7 @@ message ClusterBaseInfoDTO {
     ClusterVersionDTO clusterVersion = 4;
     repeated string tags = 5;
     bool tls = 6;
+    RecoverInfoDTO recoverInfo = 7;
 }
 
 message OperatorDTO {

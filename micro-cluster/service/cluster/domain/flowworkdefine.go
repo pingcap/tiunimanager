@@ -13,7 +13,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
 			"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
 			"deployDone":   {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
-			"startupDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
+			"startupDone":  {"recoverFromSrcCluster", "recoverDone", "fail", PollingTasK, recoverFromSrcCluster},
+			"recoverDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
 		},
 		ContextParser: func(s string) *FlowContext {

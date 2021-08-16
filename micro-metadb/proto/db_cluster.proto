@@ -204,6 +204,16 @@ message DBListBackupRecordsResponse {
     DBPageDTO page = 3;
 }
 
+message DBQueryBackupRecordRequest {
+    string clusterId = 1;
+    int64 recordId = 2;
+}
+
+message DBQueryBackupRecordResponse {
+    DBClusterResponseStatus status = 1;
+    DBDBBackupRecordDisplayDTO backupRecords = 2;
+}
+
 message DBRecoverRecordDTO {
     int64 id = 1;
     string tenantId = 2;

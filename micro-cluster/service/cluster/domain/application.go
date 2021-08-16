@@ -53,6 +53,7 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 		Tls: clusterInfo.Tls,
 		TenantId: operator.TenantId,
 		OwnerId: operator.Id,
+		RecoverInfo: parseRecoverInFoFromDTO(clusterInfo.RecoverInfo),
 	}
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs), len(demandDTOs))
@@ -389,6 +390,14 @@ func parseDistributionItemFromDTO(dto *proto.DistributionItemDTO) (item *Cluster
 		ZoneCode: dto.ZoneCode,
 		SpecCode: dto.SpecCode,
 		Count: int(dto.Count),
+	}
+	return
+}
+
+func parseRecoverInFoFromDTO(dto *proto.RecoverInfoDTO) (info RecoverInfo) {
+	info = RecoverInfo{
+		SourceClusterId: dto.SourceClusterId,
+		BackupRecordId: dto.BackupRecordId,
 	}
 	return
 }

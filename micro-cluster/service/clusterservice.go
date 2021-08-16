@@ -102,9 +102,11 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *cluster.C
 func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluster.CreateBackupRequest, response *cluster.CreateBackupResponse) (err error) {
 	log.Info("backup cluster")
 
-	//todo: param precheck
-	cluster, err := domain.Backup(request.Operator, request.ClusterId, request.BackupRange, request.BackupType, request.FilePath)
+	if err = domain.BackupPreCheck(request); err != nil {
+		return err
+	}
 
+	cluster, err := domain.Backup(request.Operator, request.ClusterId, request.BackupRange, request.BackupType, request.FilePath)
 	if err != nil {
 		log.Info(err)
 		// todo

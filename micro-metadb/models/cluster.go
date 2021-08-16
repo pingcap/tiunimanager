@@ -395,6 +395,25 @@ type BackupRecordFetchResult struct {
 	Flow *FlowDO
 }
 
+func QueryBackupRecord(clusterId string, recordId int64) (*BackupRecordFetchResult, error) {
+	record := BackupRecordDO{}
+	err := MetaDB.Table("backup_records").Where("id = ? and cluster_id", recordId, clusterId).First(&record).Error
+	if err != nil {
+		return nil, err
+	}
+
+	flow := FlowDO{}
+	err = MetaDB.Find(&flow, record.FlowId).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &BackupRecordFetchResult{
+		BackupRecordDO: &record,
+		Flow: &flow,
+	}, nil
+}
+
 func ListBackupRecords(clusterId string,
 	offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
 

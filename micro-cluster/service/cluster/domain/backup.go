@@ -42,6 +42,24 @@ type BackupStrategy struct {
 
 var defaultPathPrefix string = "/tmp/tiem/backup"
 
+func BackupPreCheck(request *proto.CreateBackupRequest) error {
+	if !checkBackupRangeValid(request.GetBackupRange()) {
+		return errors.New("backup range invalid")
+	}
+	if !checkBackupTypeValid(request.GetBackupType()) {
+		return errors.New("backup type invalid")
+	}
+	if request.GetClusterId() == "" {
+		return errors.New("clusterId invalid")
+	}
+	if request.GetFilePath() == "" {
+		return errors.New("filepath invalid")
+	}
+	//todo: check operator is valid
+
+	return nil
+}
+
 func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, filePath string) (*ClusterAggregation, error){
 	operator := parseOperatorFromDTO(ope)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
@@ -120,13 +138,16 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupRange string) string {
 	if filePrefix != "" {
 		//use user spec filepath
-		//local://br_data/xxxxxx_16242354365_ALL/(lock/SST/metadata)
-		return fmt.Sprintf("%s/%s_%s_%s", filePrefix, clusterId, timeStamp, backupRange)
+		//local://br_data/xxxxxx-16242354365-FULL/(lock/SST/metadata)
+		return fmt.Sprintf("%s/%s-%s-%s", filePrefix, clusterId, timeStamp, backupRange)
 	}
-	return fmt.Sprintf("%s/%s_%s_%s", defaultPathPrefix, clusterId, timeStamp, backupRange)
+	return fmt.Sprintf("%s/%s-%s-%s", defaultPathPrefix, clusterId, timeStamp, backupRange)
 }
 
 func backupCluster(task *TaskEntity, context *FlowContext) bool {
+	log.Info("begin backupCluster")
+	defer log.Info("end backupCluster")
+
 	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	record := clusterAggregation.LastBackupRecord
@@ -158,6 +179,8 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 }
 
 func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
+	log.Info("begin updateBackupRecord")
+	defer log.Info("end updateBackupRecord")
 	clusterAggregation := flowContext.value(contextClusterKey).(ClusterAggregation)
 	record := clusterAggregation.LastBackupRecord
 	_, err :=  client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
@@ -168,6 +191,51 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	})
 	if err != nil {
 		log.Errorf("update backup record for cluster[%s] failed, %s", clusterAggregation.Cluster.Id, err.Error())
+		return false
+	}
+	return true
+}
+
+func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
+	log.Info("begin recoverFromSrcCluster")
+	defer log.Info("end recoverFromSrcCluster")
+
+	clusterAggregation := flowContext.value(contextClusterKey).(ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+	recoverInfo := cluster.RecoverInfo
+	if recoverInfo.SourceClusterId == "" || recoverInfo.BackupRecordId == 0 {
+		log.Infof("cluster[%s] no need recover", cluster.Id)
+		return true
+	}
+
+	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	tidbServer := configModel.TiDBServers[0]
+
+	record, err := client.DBClient.QueryBackupRecords(context.TODO(), &db.DBQueryBackupRecordRequest{ClusterId: recoverInfo.SourceClusterId, RecordId: recoverInfo.BackupRecordId})
+	if err != nil {
+		log.Errorf("query backup record failed, %s", err.Error())
+		return false
+	}
+
+	clusterFacade := libbr.ClusterFacade{
+		DbConnParameter: libbr.DbConnParam{
+			Username: "root", //todo: replace admin account
+			Password: "",
+			Ip:	tidbServer.Host,
+			Port: strconv.Itoa(tidbServer.Port),
+		},
+		DbName: "",	//todo: support db table restore
+		TableName: "",
+		ClusterId: cluster.Id,
+		ClusterName: cluster.ClusterName,
+	}
+	storage := libbr.BrStorage{
+		StorageType: libbr.StorageTypeLocal,
+		Root: record.GetBackupRecords().GetBackupRecord().GetFilePath(),
+	}
+	err = libbr.Restore(clusterFacade, storage, task.Id)
+	if err != nil {
+		log.Errorf("call restore api failed, %s", err.Error())
 		return false
 	}
 	return true

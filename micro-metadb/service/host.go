@@ -3,8 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap/tiem/library/knowledge"
 	"strings"
+
+	"github.com/pingcap/tiem/library/knowledge"
 
 	"github.com/pingcap/tiem/micro-metadb/models"
 	"google.golang.org/grpc/codes"
@@ -180,8 +181,16 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 }
 
 func (*DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListHostsRequest, rsp *dbPb.DBListHostsResponse) error {
-	// TODO: proto3 does not support `optional` by now
-	hosts, err := models.ListHosts()
+	var hostReq models.ListHostReq
+	hostReq.Purpose = req.Purpose
+	hostReq.Status = models.HostStatus(req.Status)
+	hostReq.Limit = int(req.Page.PageSize)
+	if req.Page.Page >= 1 {
+		hostReq.Offset = (int(req.Page.Page) - 1) * int(req.Page.PageSize)
+	} else {
+		hostReq.Offset = 0
+	}
+	hosts, err := models.ListHosts(hostReq)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		st, ok := status.FromError(err)
@@ -202,6 +211,10 @@ func (*DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListHostsRequ
 		copyHostInfoToRsp(&v, &host)
 		rsp.HostList = append(rsp.HostList, &host)
 	}
+	rsp.Page = new(dbPb.DBHostPageDTO)
+	rsp.Page.Page = req.Page.Page
+	rsp.Page.PageSize = req.Page.PageSize
+	rsp.Page.Total = int32(len(hosts))
 	rsp.Rs.Code = int32(codes.OK)
 	return nil
 }

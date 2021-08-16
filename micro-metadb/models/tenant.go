@@ -17,20 +17,18 @@ type Tenant struct {
 	Status int8   `gorm:"size:255"`
 }
 
-
 func (e *Tenant) BeforeCreate(tx *gorm.DB) (err error) {
 	e.ID = GenerateID()
 	e.Status = 0
 	return nil
 }
 
-func AddTenant(name string, tenantType, status int8) (tenant Tenant, err error) {
-	tenant.Status = tenantType
-	tenant.Type = tenantType
-	tenant.Name = name
-	MetaDB.Create(&tenant)
-	// 返回ID
-	return
+func AddTenant(name string, tenantType, status int8) (tenant *Tenant, err error) {
+	var tmp Tenant
+	tmp.Status = tenantType
+	tmp.Type = tenantType
+	tmp.Name = name
+	return &tmp, MetaDB.Create(&tmp).Error
 }
 
 func FindTenantById(tenantId string) (tenant Tenant, err error) {

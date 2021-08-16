@@ -33,7 +33,7 @@ func InitForMonolith() {
 		LogLocalTime:  true,
 		LogCompress:   true,
 		RecordSysName: "tiem",
-		RecordModName: "example",
+		RecordModName: "openapi",
 	})
 
 	LocalConfig[KEY_CLUSTER_LOG] = CreateInstance(KEY_CLUSTER_LOG, Log{
@@ -47,7 +47,7 @@ func InitForMonolith() {
 		LogLocalTime:  true,
 		LogCompress:   true,
 		RecordSysName: "tiem",
-		RecordModName: "example",
+		RecordModName: "cluster",
 	})
 
 	LocalConfig[KEY_METADB_LOG] = CreateInstance(KEY_METADB_LOG, Log{
@@ -61,7 +61,7 @@ func InitForMonolith() {
 		LogLocalTime:  true,
 		LogCompress:   true,
 		RecordSysName: "tiem",
-		RecordModName: "example",
+		RecordModName: "metadb",
 	})
 
 	LocalConfig[KEY_API_PORT] = CreateInstance(KEY_API_PORT, 1443)

@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "common.proto";
 option go_package = "./;cluster";
 
 message ResponseStatus {
@@ -94,11 +95,13 @@ message RemoveHostsInBatchResponse {
 message ListHostsRequest {
     int32 status = 1;
     string purpose = 2;
+    PageDTO pageReq = 3;
 }
 
 message ListHostsResponse {
     ResponseStatus rs = 1;
     repeated HostInfo hostList = 2;
+    PageDTO pageReq = 3;
 }
 
 message CheckDetailsRequest {

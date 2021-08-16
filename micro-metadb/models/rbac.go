@@ -3,34 +3,34 @@ package models
 type Account struct {
 	Entity
 
-	Name 			string		`gorm:"size:255"`
-	Salt 			string		`gorm:"size:255"`
-	FinalHash 		string		`gorm:"size:255"`
+	Name      string `gorm:"size:255"`
+	Salt      string `gorm:"size:255"`
+	FinalHash string `gorm:"size:255"`
 }
 
 type Role struct {
 	Entity
-	Name    		string		`gorm:"size:255"`
-	Desc    		string		`gorm:"size:255"`
+	Name string `gorm:"size:255"`
+	Desc string `gorm:"size:255"`
 }
 
 type PermissionBinding struct {
 	Entity
-	RoleId 			string		`gorm:"size:255"`
-	PermissionId	string		`gorm:"size:255"`
+	RoleId       string `gorm:"size:255"`
+	PermissionId string `gorm:"size:255"`
 }
 
 type RoleBinding struct {
 	Entity
-	RoleId 			string		`gorm:"size:255"`
-	AccountId	 	string		`gorm:"size:255"`
+	RoleId    string `gorm:"size:255"`
+	AccountId string `gorm:"size:255"`
 }
 
 type Permission struct {
 	Entity
-	Name  	 		string		`gorm:"size:255"`
-	Type   			int8		`gorm:"size:255"`
-	Desc   			string		`gorm:"size:255"`
+	Name string `gorm:"size:255"`
+	Type int8   `gorm:"size:255"`
+	Desc string `gorm:"size:255"`
 }
 
 func AddAccount(tenantId string, name string, salt string, finalHash string, status int8) (result Account, err error) {
@@ -49,14 +49,13 @@ func FindAccount(name string) (result Account, err error) {
 	return
 }
 
-func AddRole(tenantId string, name string, desc string, status int8) (result Role, err error) {
-	result.TenantId = tenantId
-	result.Name = name
-	result.Desc = desc
-	result.Status = status
-
-	MetaDB.Create(&result)
-	return
+func AddRole(tenantId string, name string, desc string, status int8) (result *Role, err error) {
+	var role Role
+	role.TenantId = tenantId
+	role.Name = name
+	role.Desc = desc
+	role.Status = status
+	return &role, MetaDB.Create(&role).Error
 }
 
 func FetchRole(tenantId string, name string) (result Role, err error) {
@@ -64,16 +63,15 @@ func FetchRole(tenantId string, name string) (result Role, err error) {
 	return
 }
 
-func AddPermission(tenantId, code, name, desc string, permissionType, status int8) (result Permission, err error) {
+func AddPermission(tenantId, code, name, desc string, permissionType, status int8) (r *Permission, err error) {
+	var result Permission
 	result.TenantId = tenantId
 	result.Code = code
 	result.Name = name
 	result.Desc = desc
 	result.Type = permissionType
 	result.Status = status
-
-	MetaDB.Create(&result)
-	return
+	return &result, MetaDB.Create(&result).Error
 }
 
 func FetchPermission(tenantId, code string) (result Permission, err error) {
@@ -96,7 +94,7 @@ func FetchAllRolesByAccount(tenantId string, accountId string) (result []Role, e
 	return
 }
 
-func FetchRolesByIds(roleIds []string) (result []Role, err error){
+func FetchRolesByIds(roleIds []string) (result []Role, err error) {
 	MetaDB.Where("id in ?", roleIds).Find(&result)
 	return
 }
@@ -115,11 +113,9 @@ func FetchAllRolesByPermission(tenantId string, permissionId string) (result []R
 }
 
 func AddPermissionBindings(bindings []PermissionBinding) error {
-	MetaDB.Create(&bindings)
-	return nil
+	return MetaDB.Create(&bindings).Error
 }
 
-func AddRoleBindings(bindings []RoleBinding) error{
-	MetaDB.Create(&bindings)
-	return nil
+func AddRoleBindings(bindings []RoleBinding) error {
+	return MetaDB.Create(&bindings).Error
 }

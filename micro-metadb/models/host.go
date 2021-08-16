@@ -3,8 +3,9 @@ package models
 import (
 	"errors"
 	"fmt"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
 	"time"
+
+	"github.com/pingcap/tiem/library/thirdparty/logger"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -15,7 +16,8 @@ import (
 type HostStatus int32
 
 const (
-	HOST_ONLINE HostStatus = iota
+	HOST_WHATEVER HostStatus = iota - 1
+	HOST_ONLINE
 	HOST_OFFLINE
 	HOST_INUSED
 	HOST_EXHAUST
@@ -87,7 +89,7 @@ type Host struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
-func (h Host) TableName() string {
+func HostTableName() string {
 	return "hosts"
 }
 
@@ -141,6 +143,11 @@ func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
 
 func (h *Host) AfterDelete(tx *gorm.DB) (err error) {
 	err = tx.Where("host_id = ?", h.ID).Delete(&Disk{}).Error
+	if err != nil {
+		return
+	}
+	h.Status = int32(HOST_DELETED)
+	err = tx.Model(&h).Update("Status", h.Status).Error
 	return
 }
 
@@ -196,8 +203,29 @@ func DeleteHostsInBatch(hostIds []string) (err error) {
 	return
 }
 
-func ListHosts() (hosts []Host, err error) {
-	err = MetaDB.Find(&hosts).Error
+type ListHostReq struct {
+	Status  HostStatus
+	Purpose string
+	Offset  int
+	Limit   int
+}
+
+func ListHosts(req ListHostReq) (hosts []Host, err error) {
+	db := MetaDB.Table(HostTableName())
+	if err = db.Error; err != nil {
+		return nil, err
+	}
+	if req.Status != HOST_WHATEVER {
+		if req.Status != HOST_DELETED {
+			db = db.Where("status = ?", req.Status)
+		} else {
+			db = db.Unscoped().Where("status = ?", req.Status)
+		}
+	}
+	if req.Purpose != "" {
+		db = db.Where("purpose = ?", req.Purpose)
+	}
+	err = db.Offset(req.Offset).Limit(req.Limit).Find(&hosts).Error
 	return
 }
 
@@ -247,7 +275,7 @@ func LockHosts(resources []ResourceLock) (err error) {
 	tx := MetaDB.Begin()
 	for _, v := range resources {
 		var host Host
-		MetaDB.First(&host, "ID = ?", v.HostId)
+		tx.First(&host, "ID = ?", v.HostId)
 		if _, ok := setUpdate[v.HostId]; !ok {
 			if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host).Error; err != nil {
 				tx.Rollback()
@@ -275,7 +303,7 @@ func LockHosts(resources []ResourceLock) (err error) {
 				v.HostId, host.CpuCores+setUpdate[v.HostId].cpuCores, v.OriginCores, host.Memory+setUpdate[v.HostId].mem, v.OriginMem)
 		}
 		var disk Disk
-		MetaDB.First(&disk, "ID = ?", v.DiskId).First(&disk)
+		tx.First(&disk, "ID = ?", v.DiskId).First(&disk)
 		if DiskStatus(disk.Status).IsAvailable() {
 			disk.Status = int32(DISK_INUSED)
 			// Set Disk Status in host - for exaust judgement

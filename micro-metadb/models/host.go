@@ -16,7 +16,8 @@ import (
 type HostStatus int32
 
 const (
-	HOST_ONLINE HostStatus = iota
+	HOST_WHATEVER HostStatus = iota - 1
+	HOST_ONLINE
 	HOST_OFFLINE
 	HOST_INUSED
 	HOST_EXHAUST
@@ -88,7 +89,7 @@ type Host struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
-func (h Host) TableName() string {
+func HostTableName() string {
 	return "hosts"
 }
 
@@ -202,8 +203,29 @@ func DeleteHostsInBatch(hostIds []string) (err error) {
 	return
 }
 
-func ListHosts() (hosts []Host, err error) {
-	err = MetaDB.Find(&hosts).Error
+type ListHostReq struct {
+	Status  HostStatus
+	Purpose string
+	Offset  int
+	Limit   int
+}
+
+func ListHosts(req ListHostReq) (hosts []Host, err error) {
+	db := MetaDB.Table(HostTableName())
+	if err = db.Error; err != nil {
+		return nil, err
+	}
+	if req.Status != HOST_WHATEVER {
+		if req.Status != HOST_DELETED {
+			db = db.Where("status = ?", req.Status)
+		} else {
+			db = db.Unscoped().Where("status = ?", req.Status)
+		}
+	}
+	if req.Purpose != "" {
+		db = db.Where("purpose = ?", req.Purpose)
+	}
+	err = db.Offset(req.Offset).Limit(req.Limit).Find(&hosts).Error
 	return
 }
 

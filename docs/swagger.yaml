@@ -1372,14 +1372,18 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 查询特定用途的主机列表
-        in: query
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: pageSize
+        type: integer
+      - in: query
         name: purpose
         type: string
-      - description: 查询特定状态的主机列表
-        in: query
+      - in: query
         name: status
-        type: string
+        type: integer
       produces:
       - application/json
       responses:

@@ -4,6 +4,7 @@ path_to_add := $(addsuffix /bin,$(subst :,/bin:,$(GOPATH)))
 export PATH := $(path_to_add):$(PATH)
 
 TEST_DIR := /tmp/tidb_em_test
+CODECOV_BASH := /tmp/codecovbash
 
 GO       := GO111MODULE=on go
 
@@ -43,7 +44,8 @@ coverage:
 ifeq ("$(JenkinsCI)", "1")
 #	GO111MODULE=off go get github.com/mattn/goveralls
 #	@goveralls -coverprofile=$(TEST_DIR)/all_cov.out -service=jenkins-ci -repotoken $(COVERALLS_TOKEN)
-	bash <(curl -s https://codecov.io/bash) -f $(TEST_DIR)/unit_cov.out -t $(CODECOV_TOKEN)
+	curl -s https://codecov.io/bash > $(CODECOV_BASH)
+	bash $(CODECOV_BASH) -f $(TEST_DIR)/unit_cov.out -t $(CODECOV_TOKEN)
 else
 	go tool cover -html "$(TEST_DIR)/all_cov.out" -o "$(TEST_DIR)/all_cov.html"
 	go tool cover -html "$(TEST_DIR)/unit_cov.out" -o "$(TEST_DIR)/unit_cov.html"

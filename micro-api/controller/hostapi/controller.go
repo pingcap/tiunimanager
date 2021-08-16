@@ -207,28 +207,28 @@ func ImportHosts(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param purpose query string false "查询特定用途的主机列表"
-// @Param status query string false "查询特定状态的主机列表"
+// @Param hostQuery query HostQuery false "主机列表的查询条件"
 // @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
 // @Router /resources/hosts [get]
 func ListHost(c *gin.Context) {
-	const ALL_STATS = "-1"
-	statusStr := c.Query("status")
-	if statusStr == "" {
-		statusStr = ALL_STATS
+	var hostQuery HostQuery
+	if err := c.ShouldBindQuery(&hostQuery); err != nil {
+		_ = c.Error(err)
+		return
 	}
-	queryStatus, err := strconv.Atoi(statusStr)
-	if err != nil {
-		errmsg := fmt.Sprintf("Input Status %s Invalid: %v", c.Query("status"), err)
+	if !HostStatus(hostQuery.Status).IsValid() {
+		errmsg := fmt.Sprintf("Input Status %d is Invalid", hostQuery.Status)
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
-	queryPurpose := c.Query("purpose")
 
 	listHostReq := manager.ListHostsRequest{
-		Purpose: queryPurpose,
-		Status:  int32(queryStatus),
+		Purpose: hostQuery.Purpose,
+		Status:  int32(hostQuery.Status),
 	}
+	listHostReq.PageReq = new(manager.PageDTO)
+	listHostReq.PageReq.Page = int32(hostQuery.Page)
+	listHostReq.PageReq.PageSize = int32(hostQuery.PageSize)
 
 	rsp, err := client.ManagerClient.ListHost(c, &listHostReq)
 	if err != nil {
@@ -245,7 +245,7 @@ func ListHost(c *gin.Context) {
 		CopyHostFromRsp(v, &host)
 		res.Hosts = append(res.Hosts, host)
 	}
-	c.JSON(http.StatusOK, controller.SuccessWithPage(res.Hosts, controller.Page{Page: 1, PageSize: 20, Total: len(res.Hosts)}))
+	c.JSON(http.StatusOK, controller.SuccessWithPage(res.Hosts, controller.Page{Page: int(rsp.PageReq.Page), PageSize: int(rsp.PageReq.PageSize), Total: int(rsp.PageReq.Total)}))
 }
 
 // HostDetails 查询主机详情接口

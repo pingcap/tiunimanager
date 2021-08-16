@@ -6,6 +6,8 @@ import (
 
 type HostQuery struct {
 	controller.PageRequest
+	Purpose string `json:"purpose" form:"purpose"`
+	Status  int    `json:"status" form:"status"`
 }
 
 type Disk struct {
@@ -31,6 +33,21 @@ type HostInfo struct {
 	Nic      string `json:"nic"`     // Host network type: 1GE or 10GE
 	Purpose  string `json:"purpose"` // What Purpose is the host used for? [compute/storage or both]
 	Disks    []Disk `json:"disks"`
+}
+
+type HostStatus int32
+
+const (
+	HOST_WHATEVER HostStatus = iota - 1
+	HOST_ONLINE
+	HOST_OFFLINE
+	HOST_INUSED
+	HOST_EXHAUST
+	HOST_DELETED
+)
+
+func (s HostStatus) IsValid() bool {
+	return (s >= HOST_WHATEVER && s <= HOST_DELETED)
 }
 
 type ExcelField int

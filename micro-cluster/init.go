@@ -2,9 +2,10 @@ package main
 
 import (
 	"crypto/tls"
+	"time"
+
 	"github.com/pingcap/tiem/library/knowledge"
 	"github.com/pingcap/tiem/library/secondparty/libbr"
-	"time"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
@@ -32,10 +33,10 @@ func initConfig() {
 	config.InitForMonolith()
 }
 
-func initLogger() {
-	log = logger.GetLogger()
-	service.InitClusterLogger()
-	service.InitHostLogger()
+func initLogger(key config.Key) {
+	log = logger.GetLogger(key)
+	service.InitClusterLogger(key)
+	service.InitHostLogger(key)
 	log.Debug("init logger completed!")
 }
 

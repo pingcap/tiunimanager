@@ -75,12 +75,10 @@ func (TiupTaskStatus) EnumDescriptor() ([]byte, []int) {
 type TiupTaskType int32
 
 const (
-	TiupTaskType_Deploy  	TiupTaskType = 0
-	TiupTaskType_Start   	TiupTaskType = 1
-	TiupTaskType_Destroy 	TiupTaskType = 2
-	TiupTaskType_List    	TiupTaskType = 3
-	TiupTaskType_Dumpling  	TiupTaskType = 4
-	TiupTaskType_Lightning	TiupTaskType = 5
+	TiupTaskType_Deploy  TiupTaskType = 0
+	TiupTaskType_Start   TiupTaskType = 1
+	TiupTaskType_Destroy TiupTaskType = 2
+	TiupTaskType_List    TiupTaskType = 3
 )
 
 // Enum value maps for TiupTaskType.
@@ -90,16 +88,12 @@ var (
 		1: "Start",
 		2: "Destroy",
 		3: "List",
-		4: "Dumpling",
-		5: "Lightning",
 	}
 	TiupTaskType_value = map[string]int32{
-		"Deploy":   0,
-		"Start":    1,
-		"Destroy":  2,
-		"List":     3,
-		"Dumpling": 4,
-		"Lightning":5,
+		"Deploy":  0,
+		"Start":   1,
+		"Destroy": 2,
+		"List":    3,
 	}
 )
 

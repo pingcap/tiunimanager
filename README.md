@@ -42,19 +42,12 @@ Download the binary from https://github.com/etcd-io/etcd/releases/.
 Setup:
 
 ```
-TOKEN=token-tidb-cloud-platform
-CLUSTER_STATE=new
-NAME_1=machine-1
-HOST_1=127.0.0.1
-CLUSTER=${NAME_1}=http://${HOST_1}:2380
-
-THIS_NAME=${NAME_1}
-THIS_IP=${HOST_1}
-etcd --data-dir=data.etcd1 --name ${THIS_NAME} \
-    --initial-advertise-peer-urls http://${THIS_IP}:2380 --listen-peer-urls http://${THIS_IP}:2380 \
-    --advertise-client-urls http://${THIS_IP}:2379 --listen-client-urls http://${THIS_IP}:2379 \
-    --initial-cluster ${CLUSTER} \
-    --initial-cluster-state ${CLUSTER_STATE} --initial-cluster-token ${TOKEN}
+etcd --data-dir=data.etcd1 --name machine-1 \
+    --initial-advertise-peer-urls http://127.0.0.1:2380 --listen-peer-urls http://127.0.0.1:2380 \
+    --advertise-client-urls http://127.0.0.1:2379 --listen-client-urls http://127.0.0.1:2379 \
+    --initial-cluster machine-1=http://127.0.0.1:2380 \
+    --initial-cluster-state new --initial-cluster-token token-tiem
+    &
 ```
 
 ### Setup Jaeger (for opentracing)

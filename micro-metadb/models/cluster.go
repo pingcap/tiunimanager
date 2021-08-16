@@ -496,7 +496,7 @@ func SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDTO) (*BackupStrategyDO, 
 func QueryBackupStartegy(clusterId string) (*BackupStrategyDO, error) {
 	strategyDO := BackupStrategyDO{}
 	err := MetaDB.Table("backup_strategy").Where("cluster_id = ?", clusterId).First(&strategyDO).Error
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
 

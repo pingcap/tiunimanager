@@ -64,6 +64,34 @@ func InitForMonolith() {
 		RecordModName: "metadb",
 	})
 
+	LocalConfig[KEY_TIUPLIB_LOG] = CreateInstance(KEY_TIUPLIB_LOG, Log{
+		//LogLevel      string
+		LogLevel:      "debug",
+		LogOutput:     "file",
+		LogFilePath:   "../logs/utils-tiup.log",
+		LogMaxSize:    512,
+		LogMaxAge:     30,
+		LogMaxBackups: 0,
+		LogLocalTime:  true,
+		LogCompress:   true,
+		RecordSysName: "tiem",
+		RecordModName: "tiuplib",
+	})
+
+	LocalConfig[KEY_DEFAULT_LOG] = CreateInstance(KEY_DEFAULT_LOG, Log{
+		//LogLevel      string
+		LogLevel:      "debug",
+		LogOutput:     "console,file",
+		LogFilePath:   "../logs/tiem.log",
+		LogMaxSize:    512,
+		LogMaxAge:     30,
+		LogMaxBackups: 0,
+		LogLocalTime:  true,
+		LogCompress:   true,
+		RecordSysName: "tiem",
+		RecordModName: "default",
+	})
+
 	LocalConfig[KEY_API_PORT] = CreateInstance(KEY_API_PORT, 1443)
 	LocalConfig[KEY_CLUSTER_PORT] = CreateInstance(KEY_CLUSTER_PORT, 1444)
 	LocalConfig[KEY_MANAGER_PORT] = CreateInstance(KEY_MANAGER_PORT, 1445)
@@ -90,19 +118,18 @@ func GetMetaDBServiceAddress() string {
 	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_METADB_PORT, 1446))
 }
 
-func GetLogConfig() Log {
-	// todo : get from LocalConfig
-	return Log{
-		LogLevel:      "debug",
-		LogOutput:     "console,file",
-		LogFilePath:   "../logs/tiem.log",
-		LogMaxSize:    512,
-		LogMaxAge:     30,
-		LogMaxBackups: 0,
-		LogLocalTime:  true,
-		LogCompress:   true,
-		RecordSysName: "tiem",
-		RecordModName: "example",
+func GetLogConfig(key Key) Log {
+	switch key {
+	case KEY_API_LOG:
+		return LocalConfig[KEY_API_LOG].Value.(Log)
+	case KEY_CLUSTER_LOG:
+		return LocalConfig[KEY_CLUSTER_LOG].Value.(Log)
+	case KEY_METADB_LOG:
+		return LocalConfig[KEY_METADB_LOG].Value.(Log)
+	case KEY_TIUPLIB_LOG:
+		return LocalConfig[KEY_TIUPLIB_LOG].Value.(Log)
+	default:
+		return LocalConfig[KEY_DEFAULT_LOG].Value.(Log)
 	}
 }
 

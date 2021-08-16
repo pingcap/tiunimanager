@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	config2 "github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap/tiem/library/firstparty/config"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -61,7 +61,7 @@ const (
 
 var mutex = sync.Mutex{}
 
-func Init(key config2.Key) {
+func Init(key config.Key) {
 	if logRecord == nil {
 		mutex.Lock()
 		defer mutex.Unlock()
@@ -73,11 +73,11 @@ func Init(key config2.Key) {
 }
 
 // newLogRecord Get a new log record object
-func newLogRecord(key config2.Key) *LogRecord {
+func newLogRecord(key config.Key) *LogRecord {
 	logger := log.New()
 
 	// Get global log configuration
-	conf := config2.GetLogConfig(key)
+	conf := config.GetLogConfig(key)
 
 	// Set log format
 	logger.SetFormatter(&log.JSONFormatter{})
@@ -109,7 +109,7 @@ func newLogRecord(key config2.Key) *LogRecord {
 }
 
 // Log file output configuration
-func getFileOutput(conf config2.Log) *lumberjack.Logger {
+func getFileOutput(conf config.Log) *lumberjack.Logger {
 	logConfig := &lumberjack.Logger{
 		// Log output file path
 		Filename: conf.LogFilePath,
@@ -151,18 +151,18 @@ func NewContext(ctx context.Context, fields Fields) context.Context {
 func WithContext(ctx context.Context) *log.Entry {
 	if ctx == nil {
 		// default by global log entry
-		Init(config2.KEY_DEFAULT_LOG)
+		Init(config.KEY_DEFAULT_LOG)
 		return logRecord.defaultLogEntry
 	}
 	le, ok := ctx.Value(logCtxKey).(*log.Entry)
 	if ok {
 		return le
 	} else {
-		return newLogRecord(config2.KEY_DEFAULT_LOG).defaultLogEntry
+		return newLogRecord(config.KEY_DEFAULT_LOG).defaultLogEntry
 	}
 }
 
-func GetLogger(key config2.Key) *LogRecord {
+func GetLogger(key config.Key) *LogRecord {
 	if logRecord == nil {
 		Init(key)
 	}

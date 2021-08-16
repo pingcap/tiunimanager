@@ -45,53 +45,55 @@ func Route(g *gin.Engine) {
 			user.POST("/logout", userapi.Logout)
 		}
 
-		cluster := apiV1.Group("/cluster")
+		cluster := apiV1.Group("/clusters")
 		{
 			cluster.Use(security.VerifyIdentity)
 			cluster.GET("/:clusterId", clusterapi.Detail)
-			cluster.POST("", clusterapi.Create)
-			cluster.POST("/query", clusterapi.Query)
+			cluster.POST("/", clusterapi.Create)
+			cluster.GET("/", clusterapi.Query)
 			cluster.DELETE("/:clusterId", clusterapi.Delete)
-
-			cluster.GET("/knowledge", clusterapi.ClusterKnowledge)
 			cluster.GET("/dashboard", clusterapi.DescribeDashboard)
+			// Params
+			cluster.GET("/:clusterId/params", instanceapi.QueryParams)
+			cluster.POST("/:clusterId/params", instanceapi.SubmitParams)
+
+			// Backup Strategy
+			cluster.GET("/:clusterId/strategy", instanceapi.QueryBackupStrategy)
+			cluster.PUT("/:clusterId/strategy", instanceapi.SaveBackupStrategy)
+			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
 		}
 
-		param := apiV1.Group("/params")
+		knowledge := apiV1.Group("/knowledges")
 		{
-			param.Use(security.VerifyIdentity)
-			param.POST("/:clusterId", instanceapi.QueryParams)
-			param.POST("/submit", instanceapi.SubmitParams)
+			// api/v1/knowledges?type=cluster
+			knowledge.GET("/", clusterapi.ClusterKnowledge)
 		}
 
-		backup := apiV1.Group("/backup")
+		backup := apiV1.Group("/backups")
 		{
 			backup.Use(security.VerifyIdentity)
-			backup.POST("/:clusterId", instanceapi.Backup)
-			backup.GET("/strategy/:clusterId", instanceapi.QueryBackupStrategy)
-			backup.POST("/strategy", instanceapi.SaveBackupStrategy)
-			backup.POST("/records/:clusterId", instanceapi.QueryBackup)
-			backup.POST("/record/recover", instanceapi.RecoverBackup)
 
-			backup.DELETE("/record/:recordId", instanceapi.DeleteBackup)
+			backup.POST("/", instanceapi.Backup)
+			backup.GET("/", instanceapi.QueryBackup)
+			backup.POST("/:backupId/restore", instanceapi.RecoverBackup)
+			backup.DELETE("/:backupId", instanceapi.DeleteBackup)
+			//backup.GET("/:backupId", instanceapi.DetailsBackup)
 		}
 
-		demoInstance := apiV1.Group("/instance")
-		{
-			demoInstance.Use(security.VerifyIdentity)
-		}
-
-		host := apiV1.Group("/")
+		host := apiV1.Group("/resources")
 		{
 			host.Use(security.VerifyIdentity)
 			host.POST("host", hostapi.ImportHost)
 			host.POST("hosts", hostapi.ImportHosts)
 			host.GET("hosts", hostapi.ListHost)
-			host.GET("host/:hostId", hostapi.HostDetails)
-			host.DELETE("host/:hostId", hostapi.RemoveHost)
+			host.GET("hosts/:hostId", hostapi.HostDetails)
+			host.DELETE("hosts/:hostId", hostapi.RemoveHost)
 			host.DELETE("hosts", hostapi.RemoveHosts)
-			host.GET("download_template", hostapi.DownloadHostTemplateFile)
+
+			host.GET("hosts-template", hostapi.DownloadHostTemplateFile)
+
 			host.GET("failuredomains", hostapi.GetFailureDomain)
+
 			// Add allochosts API for debugging, not release.
 			host.POST("allochosts", hostapi.AllocHosts)
 		}

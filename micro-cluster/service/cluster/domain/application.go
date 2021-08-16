@@ -260,7 +260,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func buildConfig(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 
 	config := &TiUPConfigRecord {
 		TenantId:    clusterAggregation.Cluster.TenantId,

@@ -550,7 +550,7 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 		//fmt.Println("cmd start err", err)
 		return ret
 	}
-	ret.url = string(data)
+	ret.Url = string(data)
 	return ret
 }
 

@@ -2,13 +2,14 @@ package clusterapi
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pingcap/tiem/library/knowledge"
 	"github.com/pingcap/tiem/micro-api/controller"
 	"github.com/pingcap/tiem/micro-cluster/client"
 	cluster "github.com/pingcap/tiem/micro-cluster/proto"
-	"net/http"
 )
 
 // Create 创建集群接口
@@ -23,7 +24,7 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /cluster [post]
+// @Router /clusters [post]
 func Create(c *gin.Context) {
 	var req CreateReq
 
@@ -38,8 +39,8 @@ func Create(c *gin.Context) {
 
 	reqDTO := &cluster.ClusterCreateReqDTO{
 		Operator: operator.ConvertToDTO(),
-		Cluster: baseInfo,
-		Demands: demand,
+		Cluster:  baseInfo,
+		Demands:  demand,
 	}
 
 	respDTO, err := client.ClusterClient.CreateCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
@@ -50,9 +51,9 @@ func Create(c *gin.Context) {
 		status := respDTO.GetRespStatus()
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, CreateClusterRsp{
-			ClusterId: respDTO.GetClusterId(),
+			ClusterId:       respDTO.GetClusterId(),
 			ClusterBaseInfo: *ParseClusterBaseInfoFromDTO(respDTO.GetBaseInfo()),
-			StatusInfo: *ParseStatusFromDTO(respDTO.GetClusterStatus()),
+			StatusInfo:      *ParseStatusFromDTO(respDTO.GetClusterStatus()),
 		})
 
 		c.JSON(http.StatusOK, result)
@@ -66,17 +67,17 @@ func Create(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param queryReq body QueryReq false "page" default(1)
+// @Param queryReq query QueryReq false "page" default(1)
 // @Success 200 {object} controller.ResultWithPage{data=[]ClusterDisplayInfo}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /cluster/query [post]
+// @Router /clusters [get]
 func Query(c *gin.Context) {
 
 	var queryReq QueryReq
 
-	if err := c.ShouldBindJSON(&queryReq); err != nil {
+	if err := c.ShouldBindQuery(&queryReq); err != nil {
 		_ = c.Error(err)
 		return
 	}
@@ -84,12 +85,12 @@ func Query(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
 	reqDTO := &cluster.ClusterQueryReqDTO{
-		Operator: operator.ConvertToDTO(),
-		PageReq: queryReq.PageRequest.ConvertToDTO(),
-		ClusterId: queryReq.ClusterId,
-		ClusterType: queryReq.ClusterType,
-		ClusterName: queryReq.ClusterName,
-		ClusterTag: queryReq.ClusterTag,
+		Operator:      operator.ConvertToDTO(),
+		PageReq:       queryReq.PageRequest.ConvertToDTO(),
+		ClusterId:     queryReq.ClusterId,
+		ClusterType:   queryReq.ClusterType,
+		ClusterName:   queryReq.ClusterName,
+		ClusterTag:    queryReq.ClusterTag,
 		ClusterStatus: queryReq.ClusterStatus,
 	}
 
@@ -102,7 +103,7 @@ func Query(c *gin.Context) {
 
 		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters), len(respDTO.Clusters))
 
-		for i,v := range respDTO.Clusters {
+		for i, v := range respDTO.Clusters {
 			clusters[i] = *ParseDisplayInfoFromDTO(v)
 		}
 
@@ -124,13 +125,13 @@ func Query(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /cluster/{clusterId} [delete]
-func Delete(c * gin.Context) {
+// @Router /clusters/{clusterId} [delete]
+func Delete(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
 	reqDTO := &cluster.ClusterDeleteReqDTO{
-		Operator: operator.ConvertToDTO(),
+		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
 	}
 
@@ -142,7 +143,7 @@ func Delete(c * gin.Context) {
 		status := respDTO.GetRespStatus()
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, DeleteClusterRsp{
-			ClusterId: respDTO.GetClusterId(),
+			ClusterId:  respDTO.GetClusterId(),
 			StatusInfo: *ParseStatusFromDTO(respDTO.GetClusterStatus()),
 		})
 
@@ -162,12 +163,12 @@ func Delete(c * gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /cluster/{clusterId} [get]
+// @Router /clusters/{clusterId} [get]
 func Detail(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
 	reqDTO := &cluster.ClusterDetailReqDTO{
-		Operator: operator.ConvertToDTO(),
+		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
 	}
 
@@ -183,18 +184,19 @@ func Detail(c *gin.Context) {
 		components := respDTO.GetComponents()
 
 		componentInstances := make([]ComponentInstance, len(components), len(components))
-		for i,v := range components {
+		for i, v := range components {
 			componentInstances[i] = *ParseComponentInfoFromDTO(v)
 		}
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, DetailClusterRsp{
-			ClusterDisplayInfo: *ParseDisplayInfoFromDTO(display),
+			ClusterDisplayInfo:     *ParseDisplayInfoFromDTO(display),
 			ClusterMaintenanceInfo: *ParseMaintenanceInfoFromDTO(maintenance),
-			Components: componentInstances,
+			Components:             componentInstances,
 		})
 
 		c.JSON(http.StatusOK, result)
-	}}
+	}
+}
 
 // ClusterKnowledge 查看集群基本知识
 // @Summary 查看集群基本知识

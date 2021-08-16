@@ -7,6 +7,12 @@ message DBHostResponseStatus {
     string message = 2;
 }
 
+message DBHostPageDTO {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 total = 3;
+}
+
 message DBDiskDTO {
     string diskId = 1;
     string name = 2;            // [sda/sdb/nvmep0...]
@@ -110,11 +116,13 @@ message DBRemoveHostsInBatchResponse {
 message DBListHostsRequest {
     int32 status = 1;
     string purpose = 2;
+    DBHostPageDTO page = 3;
 }
 
 message DBListHostsResponse {
     DBHostResponseStatus rs = 1;
     repeated DBHostInfoDTO hostList = 2;
+    DBHostPageDTO page = 3;
 }
 
 message DBCheckDetailsRequest {

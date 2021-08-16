@@ -6,19 +6,18 @@ import (
 
 type CreateReq struct {
 	ClusterBaseInfo
-	NodeDemandList  []ClusterNodeDemand	`json:"nodeDemandList"`
+	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
 }
-
 
 type QueryReq struct {
 	controller.PageRequest
-	ClusterId 		string	`json:"clusterId"`
-	ClusterName 	string	`json:"clusterName"`
-	ClusterType 	string	`json:"clusterType"`
-	ClusterStatus 	string	`json:"clusterStatus"`
-	ClusterTag 		string	`json:"clusterTag"`
+	ClusterId     string `json:"clusterId" form:"clusterId"`
+	ClusterName   string `json:"clusterName" form:"clusterName"`
+	ClusterType   string `json:"clusterType" form:"clusterType"`
+	ClusterStatus string `json:"clusterStatus" form:"clusterStatus"`
+	ClusterTag    string `json:"clusterTag" form:"clusterTag"`
 }
 
 type DescribeDashboardReq struct {
-	ClusterId 		string 	`json:"clusterId"`
+	ClusterId		string	`json:"clusterId"`
 }

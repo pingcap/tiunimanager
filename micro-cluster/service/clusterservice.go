@@ -103,7 +103,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	log.Info("backup cluster")
 
 	//todo: param precheck
-	cluster, err := domain.Backup(request.Operator, request.ClusterId, request.BackupRange, request.BackupType)
+	cluster, err := domain.Backup(request.Operator, request.ClusterId, request.BackupRange, request.BackupType, request.FilePath)
 
 	if err != nil {
 		log.Info(err)
@@ -146,7 +146,25 @@ func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *
 }
 
 func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *cluster.SaveBackupStrategyRequest, response *cluster.SaveBackupStrategyResponse) (err error) {
-
+	_, err = client.DBClient.SaveBackupStrategy(context.TODO(), &db.DBSaveBackupStrategyRequest{
+		Strategy: &db.DBBackupStrategyDTO{
+			TenantId: request.Operator.TenantId,
+			ClusterId: request.Strategy.ClusterId,
+			BackupDate: request.Strategy.BackupDate,
+			FilePath: request.Strategy.FilePath,
+			BackupRange: request.Strategy.BackupRange,
+			BackupType: request.Strategy.BackupType,
+			Period: request.Strategy.Period,
+		},
+	})
+	if err != nil {
+		log.Error(err)
+		return err
+	} else {
+		response.Status = SuccessResponseStatus
+		return nil
+	}
+	/*
 	cronEntity, err := domain.TaskRepo.QueryCronTask(request.ClusterId, int(domain.CronBackup))
 
 	if err != nil {
@@ -169,10 +187,30 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 	}
 
 	return nil
+	*/
 }
 
 func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *cluster.GetBackupStrategyRequest, response *cluster.GetBackupStrategyResponse) (err error) {
+	resp, err := client.DBClient.QueryBackupStrategy(context.TODO(), &db.DBQueryBackupStrategyRequest{
+		ClusterId: request.ClusterId,
+	})
+	if err != nil {
+		log.Error(err)
+		return err
+	} else {
+		response.Status = SuccessResponseStatus
+		response.Strategy = &cluster.BackupStrategy{
+			ClusterId: resp.GetStrategy().GetClusterId(),
+			BackupDate: resp.GetStrategy().GetBackupDate(),
+			FilePath: resp.GetStrategy().GetFilePath(),
+			BackupRange: resp.GetStrategy().GetBackupRange(),
+			BackupType: resp.GetStrategy().GetBackupType(),
+			Period: resp.GetStrategy().GetPeriod(),
+		}
+		return nil
+	}
 
+	/*
 	cronEntity, err := domain.TaskRepo.QueryCronTask(request.ClusterId, int(domain.CronBackup))
 
 	if err != nil {
@@ -185,6 +223,8 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 	response.Cron = cronEntity.Cron
 
 	return nil
+
+	 */
 }
 
 func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *cluster.QueryBackupRequest, response *cluster.QueryBackupResponse) (err error) {

@@ -183,10 +183,13 @@ func QueryBackupStrategy(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		c.JSON(http.StatusOK, controller.Success([]BackupStrategy{
-			{
-				CronString: resp.Cron,
-			},
+		c.JSON(http.StatusOK, controller.Success(BackupStrategy{
+			ClusterId: resp.GetStrategy().GetClusterId(),
+			FilePath: resp.GetStrategy().GetFilePath(),
+			BackupType: resp.GetStrategy().GetBackupType(),
+			BackupRange: resp.GetStrategy().GetBackupRange(),
+			BackupDate: resp.GetStrategy().GetBackupDate(),
+			Period: resp.GetStrategy().GetPeriod(),
 		}))
 	}
 }
@@ -208,23 +211,26 @@ func QueryBackupStrategy(c *gin.Context) {
 func SaveBackupStrategy(c *gin.Context) {
 	var req BackupStrategyUpdateReq
 	operator := controller.GetOperator(c)
-	clusterId := c.Param("clusterId")
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		_ = c.Error(err)
 		return
 	}
 	_, err := cluster.ClusterClient.SaveBackupStrategy(context.TODO(), &proto.SaveBackupStrategyRequest{
-		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
-		Cron:      req.CronString,
+		Strategy:  &proto.BackupStrategy{
+			ClusterId: req.strategy.ClusterId,
+			BackupType: req.strategy.BackupType,
+			BackupRange: req.strategy.BackupRange,
+			BackupDate: req.strategy.BackupDate,
+			Period: req.strategy.Period,
+			FilePath: req.strategy.FilePath,
+		},
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		c.JSON(http.StatusOK, controller.Success(BackupStrategy{
-			CronString: req.CronString,
-		}))
+		c.JSON(http.StatusOK, controller.Success(nil))
 	}
 }
 
@@ -270,8 +276,8 @@ func QueryBackup(c *gin.Context) {
 				ClusterId: v.ClusterId,
 				StartTime: time.Unix(v.StartTime, 0),
 				EndTime:   time.Unix(v.EndTime, 0),
-				Range:     int(v.Range),
-				Way:       int(v.Way),
+				BackupRange:     v.Range,
+				BackupType:      v.BackupType,
 				Operator: controller.Operator{
 					ManualOperator: true,
 					OperatorId:     v.Operator.Id,

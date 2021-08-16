@@ -44,8 +44,9 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowBackupCluster),
 		TaskNodes: map[string]*TaskDefine {
 			"start":			{"backup", "backupDone", "fail", PollingTasK, backupCluster},
-			"backupDone":		{"end", "", "", SyncFuncTask, backupSuccess},
-			"fail":				{"fail", "", "", SyncFuncTask, backupFail},
+			"backupDone":		{"updateBackupRecord", "updateRecordDone", "fail", SyncFuncTask, updateBackupRecord},
+			"updateRecordDone":	{"end", "", "", SyncFuncTask, DefaultEnd},
+			"fail":				{"fail", "", "", SyncFuncTask, DefaultFail},
 		},
 		ContextParser: func(s string) *FlowContext {
 			// todo parse context

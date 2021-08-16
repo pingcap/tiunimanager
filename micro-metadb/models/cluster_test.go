@@ -527,7 +527,7 @@ func TestListClusterDetails(t *testing.T) {
 
 func TestSaveBackupRecord(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		gotDo, err := SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", "success", 1)
+		gotDo, err := SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", 1)
 		if err != nil {
 			t.Errorf("SaveBackupRecord() error = %v", err)
 			return
@@ -554,7 +554,7 @@ func TestSaveRecoverRecord(t *testing.T) {
 }
 
 func TestDeleteBackupRecord(t *testing.T) {
-	record, _ :=SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", "success", 1)
+	record, _ :=SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", 1)
 	t.Run("normal", func(t *testing.T) {
 		got, err := DeleteBackupRecord(record.ID)
 		if err != nil {
@@ -573,13 +573,13 @@ func TestDeleteBackupRecord(t *testing.T) {
 }
 func TestListBackupRecords(t *testing.T) {
 	flow, _ := CreateFlow("backup", "backup", "111")
-	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", "success", flow.ID)
-	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", "success", flow.ID)
-	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", "success", flow.ID)
-	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", "success", flow.ID)
-	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", "success", flow.ID)
-	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", "success", flow.ID)
-	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", "success", flow.ID)
+	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", flow.ID)
+	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", flow.ID)
+	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", flow.ID)
+	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", flow.ID)
+	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", flow.ID)
+	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", flow.ID)
+	SaveBackupRecord("111", "111", "operator1", "ALL","logic","path1", flow.ID)
 
 	t.Run("normal", func(t *testing.T) {
 		dos , total , err := ListBackupRecords("111", 2,2)

@@ -15,6 +15,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"os"
 	"strconv"
+	"time"
 )
 
 type BackupRecord struct {
@@ -25,7 +26,6 @@ type BackupRecord struct {
 	OperatorId string
 	Size       float32
 	FilePath   string
-	Status 	   string
 }
 
 type RecoverRecord struct {
@@ -40,16 +40,9 @@ type BackupStrategy struct {
 	CronString 			string
 }
 
-var backupPathPrefix string = "/tmp/tiem/backup"
-var localBackupPathPrefix string = "/tmp/tiem/backup"
+var defaultPathPrefix string = "/tmp/tiem/backup"
 
-const (
-	BackupStatusSuccess string = "Success"
-	BackupStatusFailed string = "Failed"
-	BackupStatusRunning string = "Running"
-)
-
-func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string) (*ClusterAggregation, error){
+func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, filePath string) (*ClusterAggregation, error){
 	operator := parseOperatorFromDTO(ope)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil || clusterAggregation == nil {
@@ -63,8 +56,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		Range: BackupRange(backupRange),
 		BackupType: BackupType(backupType),
 		OperatorId: operator.Id,
-		Size: 0,
-		Status: BackupStatusRunning,
+		FilePath: getBackupPath(filePath, clusterId, time.Now().Unix(), backupRange),
 	}
 	resp, err :=  client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
 		BackupRecord: &db.DBBackupRecordDTO{
@@ -73,9 +65,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 			BackupType:  string(record.BackupType),
 			BackupRange: string(record.Range),
 			OperatorId:  record.OperatorId,
-			FilePath:    record.FilePath,
-			//FlowId:      int64(clusterAggregation.CurrentWorkFlow.Id),
-			Status:		 record.Status,
+			FlowId:      int64(clusterAggregation.CurrentWorkFlow.Id),
 		},
 	})
 	if err != nil {
@@ -83,7 +73,6 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		return clusterAggregation, errors.New("create backup record failed")
 	}
 	record.Id = resp.GetBackupRecord().GetId()
-	record.FilePath = getBackupPath(clusterId, record.Id)
 	clusterAggregation.LastBackupRecord = record
 
 	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster)
@@ -128,12 +117,13 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 	return clusterAggregation, nil
 }
 
-func getBackupPath(clusterId string, backupId int64) string {
-	return fmt.Sprintf("%s/%s/%s", backupPathPrefix, clusterId, backupId)
-}
-
-func getLocalBackupPath(clusterId string, backupId int64) string {
-	return fmt.Sprintf("%s/%s/%s", localBackupPathPrefix, clusterId, backupId)
+func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupRange string) string {
+	if filePrefix != "" {
+		//use user spec filepath
+		//local://br_data/xxxxxx_16242354365_ALL/(lock/SST/metadata)
+		return fmt.Sprintf("%s/%s_%s_%s", filePrefix, clusterId, timeStamp, backupRange)
+	}
+	return fmt.Sprintf("%s/%s_%s_%s", defaultPathPrefix, clusterId, timeStamp, backupRange)
 }
 
 func backupCluster(task *TaskEntity, context *FlowContext) bool {
@@ -157,7 +147,7 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 	storage := libbr.BrStorage{
 		StorageType: libbr.StorageTypeLocal,
-		Root: getLocalBackupPath(cluster.Id, record.Id),	//local backup dir
+		Root: record.FilePath,
 	}
 	err := libbr.BackUp(clusterFacade, storage, task.Id)
 	if err != nil {
@@ -167,14 +157,29 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
+func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
+	clusterAggregation := flowContext.value(contextClusterKey).(ClusterAggregation)
+	record := clusterAggregation.LastBackupRecord
+	_, err :=  client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
+		BackupRecord: &db.DBBackupRecordDTO{
+			Id: record.Id,
+			Size: record.Size, //todo: call brmgr get real size
+		},
+	})
+	if err != nil {
+		log.Errorf("update backup record for cluster[%s] failed, %s", clusterAggregation.Cluster.Id, err.Error())
+		return false
+	}
+	return true
+}
+
 //for no nfs storage
 func mergeBackupFiles(task *TaskEntity, context *FlowContext) bool {
 	//copy file from tikv server to backup dir
 	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
-	cluster := clusterAggregation.Cluster
 	record := clusterAggregation.LastBackupRecord
-	tikvDir := getLocalBackupPath(cluster.Id, record.Id)
-	backupDir := getBackupPath(cluster.Id, record.Id)
+	tikvDir := record.FilePath
+	backupDir := record.FilePath
 
 	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
 	tikvServers := configModel.TiKVServers
@@ -222,41 +227,6 @@ func scpTikvBackupFiles(tikv *spec.TiKVSpec, tikvDir, backupDir string, index in
 
 func cleanLocalTikvBackupDir() error {
 	return nil
-}
-
-func backupSuccess(task *TaskEntity, flowContext *FlowContext) bool {
-	clusterAggregation := flowContext.value(contextClusterKey).(ClusterAggregation)
-	record := clusterAggregation.LastBackupRecord
-	record.Status = BackupStatusSuccess
-	_, err :=  client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
-		BackupRecord: &db.DBBackupRecordDTO{
-			Id:			 record.Id,
-			Status:		 BackupStatusSuccess,
-			Size:		 0,//todo: update real size of backup file
-		},
-	})
-	if err != nil {
-		log.Errorf("update backup record failed. %s", err.Error())
-		return false
-	}
-	return DefaultEnd(task, flowContext)
-}
-
-func backupFail(task *TaskEntity, flowContext *FlowContext) bool {
-	clusterAggregation := flowContext.value(contextClusterKey).(ClusterAggregation)
-	record := clusterAggregation.LastBackupRecord
-	record.Status = BackupStatusSuccess
-	_, err :=  client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
-		BackupRecord: &db.DBBackupRecordDTO{
-			Id:			 record.Id,
-			Status:		 BackupStatusFailed,
-		},
-	})
-	if err != nil {
-		log.Errorf("update backup record failed. %s", err.Error())
-		return false
-	}
-	return DefaultFail(task, flowContext)
 }
 
 func recoverCluster(task *TaskEntity, context *FlowContext) bool {

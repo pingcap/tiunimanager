@@ -18,8 +18,17 @@ type BackupRecordQueryReq struct {
 	controller.PageRequest
 }
 
+type BackupStrategy struct {
+	ClusterId 	string 		`json:"clusterId"`
+	BackupDate	string		`json:"backupDate"`
+	FilePath	string 		`json:"filePath"`
+	BackupRange string		`json:"backupRange"`
+	BackupType 	string		`json:"backupType"`
+	Period		string 		`json:"period"`
+}
+
 type BackupStrategyUpdateReq struct {
-	BackupStrategy
+	strategy BackupStrategy		`json:"strategy"`
 }
 
 type BackupReq struct {

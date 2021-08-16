@@ -134,7 +134,7 @@ func (*DBServiceHandler) ListCluster (ctx context.Context, req *dbPb.DBListClust
 func (*DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveBackupRecordRequest, resp *dbPb.DBSaveBackupRecordResponse) (err error) {
 
 	dto := req.BackupRecord
-	result, err := models.SaveBackupRecord(dto.TenantId, dto.ClusterId, dto.OperatorId, dto.BackupRange, dto.BackupType, dto.FilePath, dto.Status, uint(dto.FlowId))
+	result, err := models.SaveBackupRecord(dto.TenantId, dto.ClusterId, dto.OperatorId, dto.BackupRange, dto.BackupType, dto.FilePath, uint(dto.FlowId))
 
 	if err != nil {
 		// todo
@@ -149,7 +149,7 @@ func (*DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveB
 func (*DBServiceHandler) UpdateBackupRecord(ctx context.Context, req *dbPb.DBUpdateBackupRecordRequest, resp *dbPb.DBUpdateBackupRecordResponse) (err error) {
 
 	dto := req.BackupRecord
-	err = models.UpdateBackupRecord(uint(dto.Id), dto.Status, dto.Size)
+	err = models.UpdateBackupRecord(dto)
 	if err != nil {
 		return nil
 	}
@@ -209,6 +209,36 @@ func (*DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbPb.DBSave
 
 	resp.Status = ClusterSuccessResponseStatus
 	resp.RecoverRecord = ConvertToRecoverRecordDTO(result)
+	return nil
+}
+
+func (*DBServiceHandler) SaveBackupStrategy(ctx context.Context, req *dbPb.DBSaveBackupStrategyRequest, resp *dbPb.DBSaveBackupStrategyResponse)  (err error) {
+
+	dto := req.Strategy
+	result, err := models.SaveBackupStrategy(dto)
+
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.Strategy = ConvertToBackupStrategyDTO(result)
+	return nil
+}
+
+func (*DBServiceHandler) QueryBackupStrategy(ctx context.Context, req *dbPb.DBQueryBackupStrategyRequest, resp *dbPb.DBQueryBackupStrategyResponse)  (err error) {
+
+	clusterId := req.ClusterId
+	result, err := models.QueryBackupStartegy(clusterId)
+
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.Strategy = ConvertToBackupStrategyDTO(result)
 	return nil
 }
 
@@ -284,6 +314,25 @@ func ConvertToRecoverRecordDTO(do *models.RecoverRecordDO) (dto *dbPb.DBRecoverR
 		OperatorId:     do.OperatorId,
 		BackupRecordId: int64(do.BackupRecordId),
 		FlowId:         int64(do.FlowId),
+	}
+	return
+}
+
+func ConvertToBackupStrategyDTO(do *models.BackupStrategyDO) (dto *dbPb.DBBackupStrategyDTO) {
+	if do == nil {
+		return nil
+	}
+	dto = &dbPb.DBBackupStrategyDTO{
+		Id:             int64(do.ID),
+		TenantId:       do.TenantId,
+		ClusterId:      do.ClusterId,
+		CreateTime:     do.CreatedAt.Unix(),
+		UpdateTime:  	do.UpdatedAt.Unix(),
+		BackupRange:  	do.BackupRange,
+		BackupType:  	do.BackupType,
+		BackupDate:  	do.BackupDate,
+		Period:  		do.Period,
+		FilePath:  		do.FilePath,
 	}
 	return
 }

@@ -159,8 +159,7 @@ message DBBackupRecordDTO {
     string operatorId = 7;
     string filePath = 8;
     int64 flowId = 9;
-    string status = 10;
-    float size = 11;
+    float size = 10;
 }
 
 message DBSaveBackupRecordRequest {
@@ -222,4 +221,35 @@ message DBSaveRecoverRecordRequest {
 message DBSaveRecoverRecordResponse {
     DBClusterResponseStatus status = 1;
     DBRecoverRecordDTO recoverRecord = 2;
+}
+
+message DBBackupStrategyDTO {
+    int64 id = 1;
+    string tenantId = 2;
+    string clusterId = 3;
+    string backupDate = 4;
+    string filePath = 5;
+    string backupRange = 6;
+    string backupType = 7;
+    string period = 8;
+    int64 createTime = 9;
+    int64 updateTime = 10;
+}
+
+message DBSaveBackupStrategyRequest {
+    DBBackupStrategyDTO strategy = 1;
+}
+
+message DBSaveBackupStrategyResponse {
+    DBClusterResponseStatus status = 1;
+    DBBackupStrategyDTO strategy = 2;
+}
+
+message DBQueryBackupStrategyRequest {
+    string clusterId = 1;
+}
+
+message DBQueryBackupStrategyResponse {
+    DBClusterResponseStatus status = 1;
+    DBBackupStrategyDTO strategy = 2;
 }

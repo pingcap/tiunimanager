@@ -40,7 +40,8 @@ service TiEMDBService {
 	rpc SaveBackupRecord(DBSaveBackupRecordRequest) returns (DBSaveBackupRecordResponse);
 	rpc UpdateBackupRecord(DBUpdateBackupRecordRequest) returns (DBUpdateBackupRecordResponse);
 	rpc DeleteBackupRecord(DBDeleteBackupRecordRequest) returns (DBDeleteBackupRecordResponse);
-
+    rpc SaveBackupStrategy(DBSaveBackupStrategyRequest) returns (DBSaveBackupStrategyResponse);
+    rpc QueryBackupStrategy(DBQueryBackupStrategyRequest) returns (DBQueryBackupStrategyResponse);
 	rpc ListBackupRecords(DBListBackupRecordsRequest) returns (DBListBackupRecordsResponse);
 	rpc SaveRecoverRecord(DBSaveRecoverRecordRequest) returns (DBSaveRecoverRecordResponse);
 	rpc SaveParametersRecord(DBSaveParametersRequest) returns (DBSaveParametersResponse);

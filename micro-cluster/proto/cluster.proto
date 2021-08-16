@@ -213,7 +213,8 @@ message CreateBackupRequest {
     string clusterId = 1;
     string backupType = 2;
     string backupRange = 3;
-    OperatorDTO operator = 4;
+    string filePath = 4;
+    OperatorDTO operator = 5;
 }
 
 message CreateBackupResponse {
@@ -251,11 +252,18 @@ message DeleteBackupResponse {
     ResponseStatusDTO status = 1;
 }
 
-message SaveBackupStrategyRequest {
+message BackupStrategy {
     string clusterId = 1;
-    string cron = 2;
-    OperatorDTO operator = 3;
+    string backupDate = 2;
+    string filePath = 3;
+    string backupRange = 4;
+    string backupType = 5;
+    string period = 6;
+}
 
+message SaveBackupStrategyRequest {
+    OperatorDTO operator = 1;
+    BackupStrategy strategy = 2;
 }
 
 message SaveBackupStrategyResponse {
@@ -270,7 +278,7 @@ message GetBackupStrategyRequest {
 
 message GetBackupStrategyResponse {
     ResponseStatusDTO status = 1;
-    string cron = 2;
+     BackupStrategy strategy = 2;
 }
 
 message QueryClusterParametersRequest {

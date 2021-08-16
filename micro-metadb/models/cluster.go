@@ -2,6 +2,9 @@ package models
 
 import (
 	"errors"
+	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
+	"gorm.io/gorm"
+	"time"
 )
 
 type ClusterDO struct {
@@ -278,7 +281,6 @@ type BackupRecordDO struct {
 	FilePath 		string
 	FlowId			uint
 	Size 		float32
-	Status 		string
 }
 
 func (d BackupRecordDO) TableName() string {
@@ -294,8 +296,26 @@ type RecoverRecordDO struct {
 	FlowId			uint
 }
 
+
+
 func (d RecoverRecordDO) TableName() string {
 	return "recover_records"
+}
+
+type BackupStrategyDO struct {
+	Record
+	ClusterId 		string		`gorm:"not null;type:varchar(36);default:null"`
+	OperatorId 		string		`gorm:"not null;type:varchar(36);default:null"`
+
+	BackupDate  	string
+	FilePath    	string
+	BackupRange 	string
+	BackupType  	string
+	Period      	string
+}
+
+func (d BackupStrategyDO) TableName() string {
+	return "backup_strategy"
 }
 
 type ParametersRecordDO struct {
@@ -344,7 +364,7 @@ func DeleteBackupRecord(id uint) (record *BackupRecordDO, err error) {
 	return
 }
 
-func SaveBackupRecord(tenantId, clusterId, operatorId,backupRange, backupType, filePath, status string, flowId uint) (do *BackupRecordDO, err error){
+func SaveBackupRecord(tenantId, clusterId, operatorId,backupRange, backupType, filePath string, flowId uint) (do *BackupRecordDO, err error){
 	do = &BackupRecordDO{
 		Record: Record{
 			TenantId: tenantId,
@@ -355,15 +375,14 @@ func SaveBackupRecord(tenantId, clusterId, operatorId,backupRange, backupType, f
 		BackupType: backupType,
 		FlowId: flowId,
 		FilePath: filePath,
-		Status: status,
 	}
 
 	err = MetaDB.Create(do).Error
 	return
 }
 
-func UpdateBackupRecord(id uint, status string, size float32) error {
-	err := MetaDB.Model(&BackupRecordDO{}).Where("id = ?", id).Updates(BackupRecordDO{Status: status, Size: size}).Error
+func UpdateBackupRecord(record *dbPb.DBBackupRecordDTO) error {
+	err := MetaDB.Model(&BackupRecordDO{}).Where("id = ?", record.Id).Updates(BackupRecordDO{Size: record.Size}).Error
 
 	if err != nil {
 		return err
@@ -434,3 +453,52 @@ func SaveRecoverRecord(tenantId, clusterId, operatorId string,
 	return
 }
 
+func SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDTO) (*BackupStrategyDO, error) {
+	strategyDO := BackupStrategyDO{
+		ClusterId: strategy.ClusterId,
+		Record: Record{
+			TenantId: strategy.TenantId,
+		},
+		BackupDate: strategy.BackupDate,
+		BackupRange: strategy.BackupRange,
+		BackupType: strategy.BackupType,
+		Period: strategy.Period,
+		FilePath: strategy.FilePath,
+	}
+	result := MetaDB.Table("backup_strategy").Where("cluster_id = ?", strategy.ClusterId).First(&strategyDO)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			strategyDO.CreatedAt = time.Now()
+			strategyDO.UpdatedAt = time.Now()
+			err := MetaDB.Create(&strategyDO).Error
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, result.Error
+		}
+	} else {
+		strategyDO.UpdatedAt = time.Now()
+		err := MetaDB.Model(&BackupStrategyDO{}).Updates(&BackupStrategyDO{
+			BackupDate: strategy.BackupDate,
+			BackupRange: strategy.BackupRange,
+			BackupType: strategy.BackupType,
+			Period: strategy.Period,
+			FilePath: strategy.FilePath,
+		}).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &strategyDO, nil
+}
+
+func QueryBackupStartegy(clusterId string) (*BackupStrategyDO, error) {
+	strategyDO := BackupStrategyDO{}
+	err := MetaDB.Table("backup_strategy").Where("cluster_id = ?", clusterId).First(&strategyDO).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &strategyDO, nil
+}

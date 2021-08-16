@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/pingcap/tiem/library/firstparty/config"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
-	"github.com/asim/go-micro/v3"
 	"github.com/asim/go-micro/v3/transport"
 	"github.com/pingcap/tiem/micro-metadb/models"
 	db "github.com/pingcap/tiem/micro-metadb/proto"
@@ -60,6 +60,7 @@ func initService() {
 	if err := srv.Run(); err != nil {
 		log.Fatal(err)
 	}
+	log.Info(" Initialization micro service successful")
 }
 
 func initSqliteDB() {
@@ -128,7 +129,7 @@ func initDataForDemo() {
 
 	models.AddRoleBindings([]models.RoleBinding{
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, AccountId: userId1},
-		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role2.ID, AccountId: userId2, },
+		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role2.ID, AccountId: userId2},
 	})
 
 	permission1, _ := models.AddPermission(tenant.ID, "/api/v1/host/query", "查询主机", "查询主机", 2, 0)

@@ -9,14 +9,12 @@ function build(){
         go build .
         if [ "$microDir" == "micro-cluster" ]
         then
-            echo "    build tiupmgr ..."
-            cd tiupmgr
-            go build .
-            cd ..
-             echo "    build brmgr ..."
-            cd brmgr
-            go build .
-            cd ..
+            for utils in "tiupmgr" "brmgr"; do
+                echo "    build $utils ..."
+                cd $utils
+                go build .
+                cd ..
+            done
         fi
         cd ..
     done
@@ -30,6 +28,10 @@ function install(){
     srcDir=`pwd`
     mkdir -p "$installDir"
     cd "$installDir"
+    # copy configs
+    configDir="library/firstparty/"
+    mkdir -p $configDir
+    cp -fr "$srcDir"/"library"/"firstparty"/"config" $configDir
     for microDir in micro-api micro-cluster micro-metadb
     do
         mkdir -p "$microDir"
@@ -38,8 +40,10 @@ function install(){
         if [ "$microDir" == "micro-cluster" ]
         then
             cd "$microDir"
-            mkdir -p "tiupmgr"
-            cp -fr "$srcDir"/"$microDir""/tiupmgr/tiupmgr" tiupmgr
+            for utils in "tiupmgr" "brmgr"; do
+                mkdir -p $utils
+                cp -fr "$srcDir"/"$microDir"/"$utils"/"$utils" $utils
+            done
             cd ..
         fi
     done

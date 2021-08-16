@@ -271,12 +271,14 @@ func CreateCluster(
 type BackupRecordDO struct {
 	Record
 	ClusterId   string		`gorm:"not null;type:varchar(36);default:null"`
-	BackupRange int8
-	BackupType  int8
+	BackupRange string
+	BackupType  string
 	OperatorId  string		`gorm:"not null;type:varchar(36);default:null"`
 
 	FilePath 		string
 	FlowId			uint
+	Size 		float32
+	Status 		string
 }
 
 func (d BackupRecordDO) TableName() string {
@@ -342,9 +344,7 @@ func DeleteBackupRecord(id uint) (record *BackupRecordDO, err error) {
 	return
 }
 
-func SaveBackupRecord(tenantId, clusterId, operatorId string,
-	backupRange, backupType int8, flowId uint,
-	filePath string) (do *BackupRecordDO, err error){
+func SaveBackupRecord(tenantId, clusterId, operatorId,backupRange, backupType, filePath, status string, flowId uint) (do *BackupRecordDO, err error){
 	do = &BackupRecordDO{
 		Record: Record{
 			TenantId: tenantId,
@@ -355,12 +355,21 @@ func SaveBackupRecord(tenantId, clusterId, operatorId string,
 		BackupType: backupType,
 		FlowId: flowId,
 		FilePath: filePath,
+		Status: status,
 	}
 
 	err = MetaDB.Create(do).Error
 	return
 }
 
+func UpdateBackupRecord(id uint, status string, size float32) error {
+	err := MetaDB.Model(&BackupRecordDO{}).Where("id = ?", id).Updates(BackupRecordDO{Status: status, Size: size}).Error
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 type BackupRecordFetchResult struct {
 	BackupRecordDO *BackupRecordDO

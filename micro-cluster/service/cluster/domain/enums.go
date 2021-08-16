@@ -117,15 +117,15 @@ const (
 )
 
 
-type BackupRange 		int
-type BackupType int
+type BackupRange string
+type BackupType string
 
 const (
-	BackupRangeWhole BackupRange = 0
-	BackupRangeIncrement = 1
+	BackupRangeAll BackupRange = "ALL"
+	BackupRangeIncrement BackupRange = "INCR"
 )
 
 const (
-	BackupTypeLogic BackupType = 0
-	BackupTypePhysics = 1
+	BackupTypeLogic BackupType = "Logic"
+	BackupTypePhysics BackupType = "Physics"
 )

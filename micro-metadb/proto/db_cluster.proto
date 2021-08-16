@@ -154,11 +154,13 @@ message DBBackupRecordDTO {
     string tenantId = 2;
     string clusterId = 3;
     int64 createTime = 4;
-    int32 backupRange = 5;
-    int32 backupType = 6;
+    string backupRange = 5;
+    string backupType = 6;
     string operatorId = 7;
     string filePath = 8;
     int64 flowId = 9;
+    string status = 10;
+    float size = 11;
 }
 
 message DBSaveBackupRecordRequest {
@@ -168,6 +170,14 @@ message DBSaveBackupRecordRequest {
 message DBSaveBackupRecordResponse {
     DBClusterResponseStatus status = 1;
     DBBackupRecordDTO backupRecord = 2;
+}
+
+message DBUpdateBackupRecordRequest {
+    DBBackupRecordDTO backupRecord = 1;
+}
+
+message DBUpdateBackupRecordResponse {
+    DBClusterResponseStatus status = 1;
 }
 
 message DBDeleteBackupRecordRequest {

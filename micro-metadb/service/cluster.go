@@ -134,7 +134,7 @@ func (*DBServiceHandler) ListCluster (ctx context.Context, req *dbPb.DBListClust
 func (*DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveBackupRecordRequest, resp *dbPb.DBSaveBackupRecordResponse) (err error) {
 
 	dto := req.BackupRecord
-	result, err := models.SaveBackupRecord(dto.TenantId, dto.ClusterId, dto.OperatorId, int8(dto.BackupRange), int8(dto.BackupType), uint(dto.FlowId), dto.FilePath)
+	result, err := models.SaveBackupRecord(dto.TenantId, dto.ClusterId, dto.OperatorId, dto.BackupRange, dto.BackupType, dto.FilePath, dto.Status, uint(dto.FlowId))
 
 	if err != nil {
 		// todo
@@ -143,6 +143,18 @@ func (*DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveB
 
 	resp.Status = ClusterSuccessResponseStatus
 	resp.BackupRecord = ConvertToBackupRecordDTO(result)
+	return nil
+}
+
+func (*DBServiceHandler) UpdateBackupRecord(ctx context.Context, req *dbPb.DBUpdateBackupRecordRequest, resp *dbPb.DBUpdateBackupRecordResponse) (err error) {
+
+	dto := req.BackupRecord
+	err = models.UpdateBackupRecord(uint(dto.Id), dto.Status, dto.Size)
+	if err != nil {
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
 	return nil
 }
 
@@ -238,8 +250,8 @@ func ConvertToBackupRecordDTO(do *models.BackupRecordDO) (dto *dbPb.DBBackupReco
 		TenantId:    do.TenantId,
 		ClusterId:   do.ClusterId,
 		CreateTime:  do.CreatedAt.Unix(),
-		BackupRange: int32(do.BackupRange),
-		BackupType:  int32(do.BackupType),
+		BackupRange: do.BackupRange,
+		BackupType:  do.BackupType,
 		OperatorId:  do.OperatorId,
 		FilePath:    do.FilePath,
 		FlowId: int64(do.FlowId),

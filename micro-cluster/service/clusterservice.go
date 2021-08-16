@@ -102,7 +102,8 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *cluster.C
 func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluster.CreateBackupRequest, response *cluster.CreateBackupResponse) (err error) {
 	log.Info("backup cluster")
 
-	cluster, err := domain.Backup(request.Operator, request.ClusterId)
+	//todo: param precheck
+	cluster, err := domain.Backup(request.Operator, request.ClusterId, request.BackupRange, request.BackupType)
 
 	if err != nil {
 		log.Info(err)
@@ -118,6 +119,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request *cluster.RecoverBackupRequest, response *cluster.RecoverBackupResponse) (err error) {
 	log.Info("recover cluster")
 
+	//todo: param precheck
 	cluster, err := domain.Recover(request.Operator, request.ClusterId, request.BackupRecordId)
 
 	if err != nil {
@@ -211,10 +213,11 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 				Id: v.BackupRecord.Id,
 				ClusterId: v.BackupRecord.ClusterId,
 				Range: v.BackupRecord.BackupRange,
-				Way: v.BackupRecord.BackupType,
+				BackupType: v.BackupRecord.BackupType,
 				FilePath: v.BackupRecord.FilePath,
 				StartTime: v.Flow.CreateTime,
 				EndTime: v.Flow.UpdateTime,
+				Size: v.BackupRecord.Size,
 				Operator: &cluster.OperatorDTO {
 					Id: v.BackupRecord.OperatorId,
 				},

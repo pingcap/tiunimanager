@@ -188,8 +188,8 @@ message BackupRecordDTO {
     string clusterId = 2;
     int64 startTime = 3;
     int64 endTime = 4;
-    int32 range = 5;
-    int32 way = 6;
+    string range = 5;
+    string backupType = 6;
     OperatorDTO operator = 7;
     float size = 8;
     DisplayStatusDTO displayStatus = 9;
@@ -211,7 +211,9 @@ message QueryBackupResponse {
 
 message CreateBackupRequest {
     string clusterId = 1;
-    OperatorDTO operator = 2;
+    string backupType = 2;
+    string backupRange = 3;
+    OperatorDTO operator = 4;
 }
 
 message CreateBackupResponse {

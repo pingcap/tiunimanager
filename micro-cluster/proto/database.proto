@@ -23,7 +23,8 @@ message DataExportRequest {
     string  userName = 3;
     string  password = 4;
     string  fileType = 5;
-    string  filter = 6;
+    string  filePath = 6;
+    string  filter = 7;
 }
 
 message DataExportResponse {

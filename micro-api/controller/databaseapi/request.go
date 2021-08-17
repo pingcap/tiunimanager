@@ -6,6 +6,7 @@ type DataExport struct {
 	Password      string     `json:"password"`
 	FileType      string     `json:"fileType"`
 	Filter 		  string 	 `json:"filter"`
+	FilePath 	  string 	 `json:"filePath"`
 }
 
 type DataImport struct {

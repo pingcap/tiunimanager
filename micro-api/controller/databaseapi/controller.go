@@ -26,6 +26,7 @@ func ExportData(c *gin.Context) {
 		Password: req.Password,
 		FileType: req.FileType,
 		Filter: req.Filter,
+		FilePath: req.FilePath,
 	})
 
 	if err != nil {

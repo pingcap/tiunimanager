@@ -80,7 +80,7 @@ func getDashboardUrl(clusterId string) (string, error) {
 }
 
 func getLoginToken(dashboardUrl, userName, password string) (string, error) {
-	url := fmt.Sprintf("%s/%s", dashboardUrl, loginUrlSuffix)
+	url := fmt.Sprintf("%s%s", dashboardUrl, loginUrlSuffix)
 	body := &LoginRequest{
 		Username: userName,
 		Password: password,
@@ -104,7 +104,7 @@ func getLoginToken(dashboardUrl, userName, password string) (string, error) {
 }
 
 func generateShareCode(dashboardUrl, token string) (string, error) {
-	url := fmt.Sprintf("%s/%s", dashboardUrl, shareCodeUrlSuffix)
+	url := fmt.Sprintf("%s%s", dashboardUrl, shareCodeUrlSuffix)
 	body := &ShareRequest{
 		ExpireInSeconds: defaultExpire,
 		RevokeWritePriv: true,

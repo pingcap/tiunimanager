@@ -2,7 +2,7 @@ package domain
 
 import "testing"
 
-var dashboardUrl string = "http://127.0.0.1:2379/dashboard"
+var dashboardUrl string = "http://127.0.0.1:2379/dashboard/"
 var usrName string = "root"
 var password string = ""
 

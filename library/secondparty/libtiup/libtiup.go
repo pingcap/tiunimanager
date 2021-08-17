@@ -551,8 +551,8 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 		//fmt.Println("cmd start err", err)
 		return ret
 	}
-	result := strings.Split(string(data), " ")
-	ret.Url = result[1]
+	result := strings.Split(strings.Replace(string(data), "\n", "", -1), " ")
+	ret.Url = result[2]
 	return ret
 }
 

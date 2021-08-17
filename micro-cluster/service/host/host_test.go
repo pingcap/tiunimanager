@@ -44,6 +44,36 @@ func genHostInfo(hostName string) *hostPb.HostInfo {
 	})
 	return &host
 }
+
+func genHostRspFromDB(hostId string) *db.DBHostInfoDTO {
+	host := db.DBHostInfoDTO{
+		HostId:   hostId,
+		HostName: "Test_DB2",
+		Ip:       "192.168.56.11",
+		Os:       "Centos",
+		Kernel:   "3.10",
+		Dc:       "TEST_DC",
+		Az:       "TEST_AZ",
+		Rack:     "TEST_RACK",
+		Status:   0,
+		Nic:      "10GE",
+		Purpose:  "Compute",
+	}
+	host.Disks = append(host.Disks, &db.DBDiskDTO{
+		Name:     "sda",
+		Path:     "/",
+		Status:   0,
+		Capacity: 512,
+	})
+	host.Disks = append(host.Disks, &db.DBDiskDTO{
+		Name:     "sdb",
+		Path:     "/mnt/sdb",
+		Status:   0,
+		Capacity: 1024,
+	})
+	return &host
+}
+
 func Test_ImportHost_Succeed(t *testing.T) {
 	initTestLog()
 	fake_str := "import succeed"
@@ -382,5 +412,36 @@ func Test_RemoveHostsInBatch_WithErrCode(t *testing.T) {
 		if out.Rs.Code != int32(codes.InvalidArgument) || out.Rs.Message != fake_str {
 			t.Errorf("Error has wrong type: code: %d, msg: %s", out.Rs.Code, out.Rs.Message)
 		}
+	}
+}
+
+func Test_CheckDetails_Succeed(t *testing.T) {
+	initTestLog()
+	fake_str := "check details succeed"
+	fake_hostId := "this-isxx-axxx-fake"
+	fakeDBClient := InitMockDBClient()
+	fakeDBClient.MockCheckDetails(func(ctx context.Context, in *db.DBCheckDetailsRequest, opts ...client.CallOption) (*db.DBCheckDetailsResponse, error) {
+		if in.HostId == fake_hostId {
+			rsp := new(db.DBCheckDetailsResponse)
+			rsp.Rs = new(db.DBHostResponseStatus)
+			rsp.Rs.Code = int32(codes.OK)
+			rsp.Rs.Message = fake_str
+			rsp.Details = genHostRspFromDB(fake_hostId)
+			return rsp, nil
+		} else {
+			return nil, status.Error(codes.Internal, "BAD REQUEST")
+		}
+	})
+
+	in := new(hostPb.CheckDetailsRequest)
+	in.HostId = fake_hostId
+	out := new(hostPb.CheckDetailsResponse)
+
+	if err := CheckDetails(context.TODO(), in, out); err != nil {
+		t.Errorf("check host details %s failed, err: %v\n", in.HostId, err)
+	}
+
+	if out.Rs.Code != int32(codes.OK) || out.Rs.Message != fake_str || out.Details.HostId != fake_hostId {
+		t.Errorf("Rsp not Expected, code: %d, msg: %s, hostId = %s\n", out.Rs.Code, out.Rs.Message, out.Details.HostId)
 	}
 }

@@ -592,10 +592,6 @@ func TiupMgrRoutine() {
 				resp := mgrHandleCmdDestroyReq(cmd.Content)
 				cmdResp.TypeStr = CmdDestroyRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
-			case CmdGetAllTaskStatusReqTypeStr:
-				resp := mgrHandleCmdGetAllTaskStatusReq(cmd.Content)
-				cmdResp.TypeStr = CmdGetAllTaskStatusRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
 			case CmdDumplingReqTypeStr:
 				resp := mgrHandleCmdDumplingReq(cmd.Content)
 				cmdResp.TypeStr = CmdDumplingRespTypeStr
@@ -607,6 +603,10 @@ func TiupMgrRoutine() {
 			case CmdClusterDisplayReqTypeStr:
 				resp := mgrHandleClusterDisplayReq(cmd.Content)
 				cmdResp.TypeStr = CmdClusterDisplayRespTypeStr
+				cmdResp.Content = string(jsonMustMarshal(&resp))
+			case CmdGetAllTaskStatusReqTypeStr:
+				resp := mgrHandleCmdGetAllTaskStatusReq(cmd.Content)
+				cmdResp.TypeStr = CmdGetAllTaskStatusRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			default:
 				myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))

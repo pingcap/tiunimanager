@@ -81,6 +81,8 @@ const (
 	TiupTaskType_List    	TiupTaskType = 3
 	TiupTaskType_Dumpling  	TiupTaskType = 4
 	TiupTaskType_Lightning	TiupTaskType = 5
+	TiupTaskType_Backup		TiupTaskType = 6
+	TiupTaskType_Restore	TiupTaskType = 7
 )
 
 // Enum value maps for TiupTaskType.
@@ -92,6 +94,8 @@ var (
 		3: "List",
 		4: "Dumpling",
 		5: "Lightning",
+		6: "Backup",
+		7: "Restore",
 	}
 	TiupTaskType_value = map[string]int32{
 		"Deploy":   0,
@@ -100,6 +104,8 @@ var (
 		"List":     3,
 		"Dumpling": 4,
 		"Lightning":5,
+		"Backup":	6,
+		"Restore":	7,
 	}
 )
 

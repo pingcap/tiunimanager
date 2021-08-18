@@ -10,7 +10,7 @@ func TestGenerateID(t *testing.T) {
 		t.Errorf("GenerateID() empty, got = %v", got)
 	}
 
-	if len(got) != 22 {
-		t.Errorf("GenerateID() want len = %v, got = %v", 22, len(got))
+	if len(got) != ID_LENGTH {
+		t.Errorf("GenerateID() want len = %v, got = %v", ID_LENGTH, len(got))
 	}
 }

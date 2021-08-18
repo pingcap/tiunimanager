@@ -23,7 +23,7 @@ func TestAddAccount(t *testing.T) {
 		{"normal", args{tenantId: defaultTenantId, name: "TestAddAccount", salt: "TestAddAccount_salt", finalHash: "TestAddAccount_finalHash"},
 			false,
 			[]func (args args, cluster *AccountDO) bool{
-				func (args args, cluster *AccountDO) bool{return len(cluster.ID) == 22},
+				func (args args, cluster *AccountDO) bool{return len(cluster.ID) == ID_LENGTH},
 				func (args args, cluster *AccountDO) bool{return cluster.Status == 0},
 				func (args args, cluster *AccountDO) bool{return args.name == cluster.Name},
 				func (args args, cluster *AccountDO) bool{return args.tenantId == cluster.TenantId},
@@ -86,7 +86,7 @@ func TestAddPermission(t *testing.T) {
 		{"normal", args{tenantId: defaultTenantId, code: "TestAddPermission_code_normal", name: "TestAddPermission_name_normal", desc: "desc", permissionType: 1, status: 99},
 			false,
 			[]func (args args, p *PermissionDO) bool{
-				func (args args, p *PermissionDO) bool{return len(p.ID) == 22},
+				func (args args, p *PermissionDO) bool{return len(p.ID) == ID_LENGTH},
 				func (args args, p *PermissionDO) bool{return p.Code == args.code},
 				func (args args, p *PermissionDO) bool{return p.Name == args.name},
 				func (args args, p *PermissionDO) bool{return p.Desc == args.desc},
@@ -110,14 +110,14 @@ func TestAddPermission(t *testing.T) {
 		{"without desc", args{tenantId: defaultTenantId, code: "TestAddPermission_code_without_desc", name: "TestAddPermission_name_without_desc", permissionType: 1, status: 99},
 			false,
 			[]func (args args, p *PermissionDO) bool{
-				func (args args, p *PermissionDO) bool{return len(p.ID) == 22},
+				func (args args, p *PermissionDO) bool{return len(p.ID) == ID_LENGTH},
 				func (args args, p *PermissionDO) bool{return p.CreatedAt.Add(time.Second + 2).After(time.Now())},
 			},
 		},
 		{"without permissionType", args{tenantId: defaultTenantId, code: "TestAddPermission_code_without_type", name: "TestAddPermission_name_without_type", desc: "desc", status: 99},
 			false,
 			[]func (args args, p *PermissionDO) bool{
-				func (args args, p *PermissionDO) bool{return len(p.ID) == 22},
+				func (args args, p *PermissionDO) bool{return len(p.ID) == ID_LENGTH},
 				func (args args, p *PermissionDO) bool{return p.Type == 0},
 				func (args args, p *PermissionDO) bool{return p.CreatedAt.Add(time.Second + 2).After(time.Now())},
 			},
@@ -210,7 +210,7 @@ func TestAddRole(t *testing.T) {
 		{"normal", args{tenantId: defaultTenantId, name: "TestAddPermission_name_normal", desc: "desc", status: 99},
 			false,
 			[]func (args args, r *RoleDO) bool{
-				func (args args, r *RoleDO) bool{return len(r.ID) == 22},
+				func (args args, r *RoleDO) bool{return len(r.ID) == ID_LENGTH},
 				func (args args, r *RoleDO) bool{return r.Name == args.name},
 				func (args args, r *RoleDO) bool{return r.Desc == args.desc},
 				func (args args, r *RoleDO) bool{return r.Status == 0},
@@ -228,7 +228,7 @@ func TestAddRole(t *testing.T) {
 		{"without desc", args{tenantId: defaultTenantId, name: "TestAddPermission_name_withoutDesc", status: 99},
 			false,
 			[]func (args args, p *RoleDO) bool{
-				func (args args, p *RoleDO) bool{return len(p.ID) == 22},
+				func (args args, p *RoleDO) bool{return len(p.ID) == ID_LENGTH},
 				func (args args, p *RoleDO) bool{return p.CreatedAt.Add(time.Second + 2).After(time.Now())},
 			},
 		},

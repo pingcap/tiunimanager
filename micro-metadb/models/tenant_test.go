@@ -18,7 +18,7 @@ func TestAddTenant(t *testing.T) {
 		wants 	  []func(a args, tenant Tenant) bool
 	}{
 		{"normal", args{name: "test_add_tenant_name"}, false, []func(a args, tenant Tenant) bool{
-			func(a args, tenant Tenant) bool{return len(tenant.ID) == 22},
+			func(a args, tenant Tenant) bool{return len(tenant.ID) == ID_LENGTH},
 			func(a args, tenant Tenant) bool{return tenant.CreatedAt.Before(time.Now())},
 		}},
 		{"empty", args{}, true, []func(a args, tenant Tenant) bool{}},
@@ -143,8 +143,8 @@ func TestTenant_BeforeCreate(t *testing.T) {
 				t.Errorf("BeforeCreate() error, want status %v, got %v", 0, tenant.Status)
 			}
 
-			if tenant.ID == "" || len(tenant.ID) != 22 {
-				t.Errorf("BeforeCreate() error, want id length %v, got %v", 22, len(tenant.ID))
+			if tenant.ID == "" || len(tenant.ID) != ID_LENGTH {
+				t.Errorf("BeforeCreate() error, want id length %v, got %v", ID_LENGTH, len(tenant.ID))
 			}
 
 			if tenant.Name != "name_test_tenant" {

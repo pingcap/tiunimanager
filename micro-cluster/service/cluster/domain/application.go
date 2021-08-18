@@ -289,7 +289,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 		cfgYamlStr := string(bs)
 		go func() {
 			_, err = libtiup.MicroSrvTiupDeploy(
-				cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/Users/zhangpeijin/.ssh/tiup_rsa"}, uint64(task.Id),
+				cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
 			)
 		}()
 	}

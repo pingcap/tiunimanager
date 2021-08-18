@@ -72,7 +72,7 @@ func getDashboardUrl(clusterId string) (string, error) {
 	//tiup cluster display CLUSTER_NAME --dashboard
 	resp, err := libtiup.MicroSrvTiupClusterDisplay(clusterId, 0, []string{"--dashboard"})
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return resp.Url, nil

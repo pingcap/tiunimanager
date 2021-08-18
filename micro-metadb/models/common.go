@@ -11,10 +11,10 @@ type Entity struct {
 	ID        	string 				`gorm:"primaryKey;"`
 	CreatedAt 	time.Time			`gorm:"<-:create"`
 	UpdatedAt 	time.Time
-	DeletedAt 	gorm.DeletedAt 		`gorm:"uniqueIndex"`
+	DeletedAt 	gorm.DeletedAt 		`gorm:"index"`
 
 	Code		string				`gorm:"uniqueIndex;default:null;not null;<-:create"`
-	TenantId    string				`gorm:"uniqueIndex;default:null;not null;<-:create"`
+	TenantId    string				`gorm:"default:null;not null;<-:create"`
 	Status 		int8				`gorm:"type:SMALLINT;default:0"`
 }
 

@@ -445,3 +445,157 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 		t.Errorf("Rsp not Expected, code: %d, msg: %s, hostId = %s\n", out.Rs.Code, out.Rs.Message, out.Details.HostId)
 	}
 }
+
+func Test_ListHosts_Succeed(t *testing.T) {
+	initTestLog()
+	fake_str := "list hosts succeed"
+	fake_hostId1 := "this-isxf-irst-fake"
+	fake_hostId2 := "this-isse-cond-fake"
+	fakeDBClient := InitMockDBClient()
+	fakeDBClient.MockListHost(func(ctx context.Context, in *db.DBListHostsRequest, opts ...client.CallOption) (*db.DBListHostsResponse, error) {
+		if in.Page.PageSize == 2 {
+			rsp := new(db.DBListHostsResponse)
+			rsp.Rs = new(db.DBHostResponseStatus)
+			rsp.Page = new(db.DBHostPageDTO)
+			rsp.Rs.Code = int32(codes.OK)
+			rsp.Rs.Message = fake_str
+			rsp.HostList = append(rsp.HostList, genHostRspFromDB(fake_hostId1))
+			rsp.HostList = append(rsp.HostList, genHostRspFromDB(fake_hostId2))
+			rsp.Page.Total = 2
+			return rsp, nil
+		} else {
+			return nil, status.Error(codes.Internal, "BAD REQUEST")
+		}
+	})
+
+	in := new(hostPb.ListHostsRequest)
+	in.PageReq = new(hostPb.PageDTO)
+	in.PageReq.PageSize = 2
+	out := new(hostPb.ListHostsResponse)
+
+	if err := ListHost(context.TODO(), in, out); err != nil {
+		t.Errorf("list hosts for pagesize %d failed, err: %v\n", in.PageReq.PageSize, err)
+	}
+
+	if out.Rs.Code != int32(codes.OK) || out.Rs.Message != fake_str || out.PageReq.Total != 2 || out.HostList[0].HostId != fake_hostId1 || out.HostList[1].HostId != fake_hostId2 {
+		t.Errorf("Rsp not Expected, code: %d, msg: %s, total = %d, hostId1 = %s, hostId2 = %s\n", out.Rs.Code, out.Rs.Message, out.PageReq.Total, out.HostList[0].HostId, out.HostList[1].HostId)
+	}
+}
+
+func Test_GetFailureDomain_Succeed(t *testing.T) {
+	initTestLog()
+	fake_str := "get failuredomain succeed"
+	fake_name1 := "TEST_Zone1"
+	fake_name2 := "TEST_Zone2"
+	fakeDBClient := InitMockDBClient()
+	fakeDBClient.MockGetFailureDomain(func(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error) {
+		if in.FailureDomainType == 2 {
+			rsp := new(db.DBGetFailureDomainResponse)
+			rsp.Rs = new(db.DBHostResponseStatus)
+			rsp.Rs.Code = int32(codes.OK)
+			rsp.Rs.Message = fake_str
+			rsp.FdList = append(rsp.FdList, &db.DBFailureDomainResource{
+				FailureDomain: fake_name1,
+				Spec:          "4u8c",
+				Count:         2,
+			})
+			rsp.FdList = append(rsp.FdList, &db.DBFailureDomainResource{
+				FailureDomain: fake_name2,
+				Spec:          "4u8c",
+				Count:         3,
+			})
+			return rsp, nil
+		} else {
+			return nil, status.Error(codes.Internal, "BAD REQUEST")
+		}
+	})
+
+	in := new(hostPb.GetFailureDomainRequest)
+	in.FailureDomainType = 2
+	out := new(hostPb.GetFailureDomainResponse)
+
+	if err := GetFailureDomain(context.TODO(), in, out); err != nil {
+		t.Errorf("get failuredomains %d failed, err: %v\n", in.FailureDomainType, err)
+	}
+
+	if out.Rs.Code != int32(codes.OK) || out.Rs.Message != fake_str || out.FdList[0].FailureDomain != fake_name1 || out.FdList[1].Count != 3 {
+		t.Errorf("Rsp not Expected, code: %d, msg: %s, out.FdList[0].FailureDomamin = %s, out.FdList[1].Count = %d\n", out.Rs.Code, out.Rs.Message, out.FdList[0].FailureDomain, out.FdList[1].Count)
+	}
+}
+
+func Test_AllocHosts_Succeed(t *testing.T) {
+	initTestLog()
+	fake_str := "alloc hosts succeed"
+	fakeDBClient := InitMockDBClient()
+	fakeDBClient.MockPreAllocHosts(func(ctx context.Context, in *db.DBPreAllocHostsRequest, opts ...client.CallOption) (*db.DBPreAllocHostsResponse, error) {
+		rsp := new(db.DBPreAllocHostsResponse)
+		rsp.Rs = new(db.DBHostResponseStatus)
+		if in.Req.FailureDomain == "Zone1" && in.Req.Count == 2 {
+			rsp.Rs.Code = int32(codes.OK)
+			rsp.Rs.Message = "prealloc succeed"
+			rsp.Results = append(rsp.Results, &db.DBPreAllocation{
+				FailureDomain: in.Req.FailureDomain,
+				HostName:      "TEST_HOST1",
+				DiskName:      "sdb",
+			})
+			rsp.Results = append(rsp.Results, &db.DBPreAllocation{
+				FailureDomain: in.Req.FailureDomain,
+				HostName:      "TEST_HOST2",
+				DiskName:      "sdb",
+			})
+			return rsp, nil
+		} else if in.Req.FailureDomain == "Zone2" && in.Req.Count == 1 {
+			rsp.Rs.Code = int32(codes.OK)
+			rsp.Rs.Message = "prealloc succeed"
+			rsp.Results = append(rsp.Results, &db.DBPreAllocation{
+				FailureDomain: in.Req.FailureDomain,
+				HostName:      "TEST_HOST3",
+				DiskName:      "sdb",
+			})
+			return rsp, nil
+		} else {
+			return nil, status.Errorf(codes.Internal, "BAD REQUEST in PreAlloc, zone: %s, count %d", in.Req.FailureDomain, in.Req.Count)
+		}
+	})
+	fakeDBClient.MockLockHosts(func(ctx context.Context, in *db.DBLockHostsRequest, opts ...client.CallOption) (*db.DBLockHostsResponse, error) {
+		rsp := new(db.DBLockHostsResponse)
+		rsp.Rs = new(db.DBHostResponseStatus)
+		if len(in.Req) == 3 {
+			rsp.Rs.Code = int32(codes.OK)
+			rsp.Rs.Message = fake_str
+		} else {
+			return nil, status.Errorf(codes.Internal, "BAD REQUEST in LockHosts, total %d", len(in.Req))
+		}
+		return rsp, nil
+	})
+
+	in := new(hostPb.AllocHostsRequest)
+	in.PdReq = append(in.PdReq, &hostPb.AllocationReq{
+		FailureDomain: "Zone1",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	in.TidbReq = append(in.TidbReq, &hostPb.AllocationReq{
+		FailureDomain: "Zone1",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	in.TikvReq = append(in.TikvReq, &hostPb.AllocationReq{
+		FailureDomain: "Zone2",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	out := new(hostPb.AllocHostResponse)
+
+	if err := AllocHosts(context.TODO(), in, out); err != nil {
+		t.Errorf("alloc hosts failed, err: %v\n", err)
+	}
+
+	if out.Rs.Code != int32(codes.OK) || out.Rs.Message != fake_str || out.PdHosts[0].HostName != "TEST_HOST1" || out.TidbHosts[0].HostName != "TEST_HOST2" || out.TikvHosts[0].HostName != "TEST_HOST3" {
+		t.Errorf("Rsp not Expected, code: %d, msg: %s, out.PdHosts[0].HostName = %s, out.TidbHosts[0].HostName = %s, out.TikvHosts[0].HostName = %s\n",
+			out.Rs.Code, out.Rs.Message, out.PdHosts[0].HostName, out.TidbHosts[0].HostName, out.TikvHosts[0].HostName)
+	}
+}

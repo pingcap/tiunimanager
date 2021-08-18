@@ -7,7 +7,6 @@ import (
 	"github.com/pingcap/errors"
 	"github.com/pingcap/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap/tiem/micro-cluster/proto"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"time"

@@ -22,6 +22,7 @@ var log *logger.LogRecord
 
 func InitClusterLogger() {
 	log = logger.GetLogger()
+	domain.InitDomainLogger()
 }
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *cluster.ClusterCreateReqDTO, resp *cluster.ClusterCreateRespDTO) (err error) {

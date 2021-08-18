@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/pingcap/tiem/library/knowledge"
 	"github.com/pingcap/tiem/library/secondparty/libtiup"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
 	proto "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiem/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -12,6 +13,12 @@ import (
 	"path/filepath"
 	"strconv"
 )
+
+var log *logger.LogRecord
+
+func InitDomainLogger() {
+	log = logger.GetLogger()
+}
 
 type ClusterAggregation struct {
 	Cluster 				*Cluster

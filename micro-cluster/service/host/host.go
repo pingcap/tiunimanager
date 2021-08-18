@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
 
 	hostPb "github.com/pingcap/tiem/micro-cluster/proto"
@@ -14,8 +15,8 @@ import (
 
 var log *logger.LogRecord
 
-func InitLogger() {
-	log = logger.GetLogger()
+func InitLogger(key config.Key) {
+	log = logger.GetLogger(key)
 }
 
 func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {

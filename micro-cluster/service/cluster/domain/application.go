@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"errors"
+	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/knowledge"
 	"github.com/pingcap/tiem/library/secondparty/libtiup"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
@@ -16,8 +17,8 @@ import (
 
 var log *logger.LogRecord
 
-func InitDomainLogger() {
-	log = logger.GetLogger()
+func InitDomainLogger(key config.Key) {
+	log = logger.GetLogger(key)
 }
 
 type ClusterAggregation struct {

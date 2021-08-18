@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
+	"strconv"
+
+	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
 	cluster "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiem/micro-metadb/client"
-	"strconv"
 
 	"github.com/pingcap/tiem/micro-cluster/service/cluster/domain"
 	db "github.com/pingcap/tiem/micro-metadb/proto"
@@ -13,16 +15,16 @@ import (
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
 
-var SuccessResponseStatus = &cluster.ResponseStatusDTO {Code:0}
-var BizErrorResponseStatus = &cluster.ResponseStatusDTO {Code:1}
+var SuccessResponseStatus = &cluster.ResponseStatusDTO{Code: 0}
+var BizErrorResponseStatus = &cluster.ResponseStatusDTO{Code: 1}
 
-type ClusterServiceHandler struct {}
+type ClusterServiceHandler struct{}
 
 var log *logger.LogRecord
 
-func InitClusterLogger() {
-	log = logger.GetLogger()
-	domain.InitDomainLogger()
+func InitClusterLogger(key config.Key) {
+	log = logger.GetLogger(key)
+	domain.InitDomainLogger(key)
 }
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *cluster.ClusterCreateReqDTO, resp *cluster.ClusterCreateRespDTO) (err error) {
@@ -53,19 +55,19 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *cluster.Cl
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.Clusters = make([]*cluster.ClusterDisplayDTO, len(clusters), len(clusters))
-		for i,v := range clusters {
+		for i, v := range clusters {
 			resp.Clusters[i] = v.ExtractDisplayDTO()
 		}
 		resp.Page = &cluster.PageDTO{
 			Page:     req.PageReq.Page,
-			PageSize:  req.PageReq.PageSize,
+			PageSize: req.PageReq.PageSize,
 			Total:    int32(total),
 		}
 		return nil
 	}
 }
 
-func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *cluster.ClusterDeleteReqDTO, resp *cluster.ClusterDeleteRespDTO) (err error ) {
+func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *cluster.ClusterDeleteReqDTO, resp *cluster.ClusterDeleteRespDTO) (err error) {
 	log.Info("delete cluster")
 
 	clusterAggregation, err := domain.DeleteCluster(req.GetOperator(), req.GetClusterId())
@@ -134,7 +136,7 @@ func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request 
 func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *cluster.DeleteBackupRequest, response *cluster.DeleteBackupResponse) (err error) {
 
 	_, err = client.DBClient.DeleteBackupRecord(context.TODO(), &db.DBDeleteBackupRecordRequest{Id: request.GetBackupRecordId()})
-	if err != nil  {
+	if err != nil {
 		// todo
 		log.Info(err)
 		return nil
@@ -156,10 +158,10 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 
 	if cronEntity == nil {
 		cronEntity = &domain.CronTaskEntity{
-			Cron: request.Cron,
-			BizId: request.ClusterId,
+			Cron:         request.Cron,
+			BizId:        request.ClusterId,
 			CronTaskType: domain.CronBackup,
-			Status: domain.CronStatusValid,
+			Status:       domain.CronStatusValid,
 		}
 
 		domain.TaskRepo.AddCronTask(cronEntity)
@@ -191,35 +193,35 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 	result, err := client.DBClient.ListBackupRecords(context.TODO(), &db.DBListBackupRecordsRequest{
 		ClusterId: request.ClusterId,
 		Page: &db.DBPageDTO{
-			Page: request.Page.Page,
+			Page:     request.Page.Page,
 			PageSize: request.Page.PageSize,
 		},
 	})
-	if err != nil  {
+	if err != nil {
 		// todo
 		log.Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
 		response.Page = &cluster.PageDTO{
-			Page: result.Page.Page,
+			Page:     result.Page.Page,
 			PageSize: result.Page.PageSize,
-			Total: result.Page.Total,
+			Total:    result.Page.Total,
 		}
 		response.BackupRecords = make([]*cluster.BackupRecordDTO, len(result.BackupRecords), len(result.BackupRecords))
-		for i,v := range result.BackupRecords {
+		for i, v := range result.BackupRecords {
 			response.BackupRecords[i] = &cluster.BackupRecordDTO{
-				Id: v.BackupRecord.Id,
+				Id:        v.BackupRecord.Id,
 				ClusterId: v.BackupRecord.ClusterId,
-				Range: v.BackupRecord.BackupRange,
-				Way: v.BackupRecord.BackupType,
-				FilePath: v.BackupRecord.FilePath,
+				Range:     v.BackupRecord.BackupRange,
+				Way:       v.BackupRecord.BackupType,
+				FilePath:  v.BackupRecord.FilePath,
 				StartTime: v.Flow.CreateTime,
-				EndTime: v.Flow.UpdateTime,
-				Operator: &cluster.OperatorDTO {
+				EndTime:   v.Flow.UpdateTime,
+				Operator: &cluster.OperatorDTO{
 					Id: v.BackupRecord.OperatorId,
 				},
-				DisplayStatus: &cluster.DisplayStatusDTO {
+				DisplayStatus: &cluster.DisplayStatusDTO{
 					StatusCode:      strconv.Itoa(int(v.Flow.Status)),
 					StatusName:      v.Flow.StatusAlias,
 					InProcessFlowId: int32(v.Flow.Id),

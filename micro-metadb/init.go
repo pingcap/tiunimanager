@@ -4,6 +4,7 @@ import (
 	cryrand "crypto/rand"
 	"crypto/tls"
 	"encoding/base64"
+
 	"github.com/asim/go-micro/v3"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
@@ -30,9 +31,9 @@ func initConfig() {
 	config.InitForMonolith()
 }
 
-func initLogger() {
-	log = logger.GetLogger()
-	service.InitLogger()
+func initLogger(key config.Key) {
+	log = logger.GetLogger(key)
+	service.InitLogger(key)
 	// use log
 	log.Debug("init logger completed!")
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -23,7 +24,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func performRequest(g *gin.Engine, method, path, contentType string, body io.Reader) *httptest.ResponseRecorder {
+func performRequest(method, path, contentType string, body io.Reader) *httptest.ResponseRecorder {
+	gin.SetMode(gin.ReleaseMode)
+	g := gin.New()
+
+	route.Route(g)
+	//g.Group("/api/v1").Group("/").Use(nil)
+
 	req, _ := http.NewRequest(method, path, body)
 	req.Header.Set("Token", "fake-token")
 	req.Header.Set("Content-Type", contentType)
@@ -60,13 +67,7 @@ func Test_ListHosts_Succeed(t *testing.T) {
 		return rsp, nil
 	})
 
-	gin.SetMode(gin.ReleaseMode)
-	g := gin.New()
-
-	route.Route(g)
-	//g.Group("/api/v1").Group("/").Use(nil)
-
-	w := performRequest(g, "GET", "/api/v1/resources/hosts", "application/json", nil)
+	w := performRequest("GET", "/api/v1/resources/hosts", "application/json", nil)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -106,12 +107,6 @@ func Test_ImportHost_Succeed(t *testing.T) {
 		return rsp, nil
 	})
 
-	gin.SetMode(gin.ReleaseMode)
-	g := gin.New()
-
-	route.Route(g)
-	//g.Group("/api/v1").Group("/").Use(nil)
-
 	var hostInfo = []byte(`
 	{
 		"hostName": "TEST_HOST1",
@@ -135,7 +130,7 @@ func Test_ImportHost_Succeed(t *testing.T) {
 		]
 	  }
 	`)
-	w := performRequest(g, "POST", "/api/v1/resources/host", "application/json", bytes.NewBuffer(hostInfo))
+	w := performRequest("POST", "/api/v1/resources/host", "application/json", bytes.NewBuffer(hostInfo))
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -196,13 +191,7 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 		t.Errorf("open template file failed\n")
 	}
 
-	gin.SetMode(gin.ReleaseMode)
-	g := gin.New()
-
-	route.Route(g)
-	//g.Group("/api/v1").Group("/").Use(nil)
-
-	w := performRequest(g, "POST", "/api/v1/resources/hosts", contentType, reader)
+	w := performRequest("POST", "/api/v1/resources/hosts", contentType, reader)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -220,4 +209,102 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 
 	assert.Equal(t, result.Data.HostIds[0], fakeHostId1)
 	assert.Equal(t, result.Data.HostIds[1], fakeHostId2)
+}
+
+func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
+	initConfig()
+	fakeHostId1 := "fake-host-uuid-0001"
+	fakeHostId2 := "fake-host-uuid-0002"
+	fakeHostId3 := "fake-host-uuid-0003"
+	fakeService := InitFakeManagerClient()
+	fakeService.MockRemoveHostsInBatch(func(ctx context.Context, in *managerPb.RemoveHostsInBatchRequest, opts ...client.CallOption) (*managerPb.RemoveHostsInBatchResponse, error) {
+		if in.HostIds[0] != fakeHostId1 || in.HostIds[1] != fakeHostId2 || in.HostIds[2] != fakeHostId3 {
+			return nil, status.Errorf(codes.InvalidArgument, "input hostIds wrong")
+		}
+		rsp := new(managerPb.RemoveHostsInBatchResponse)
+		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp.Rs.Code = int32(codes.OK)
+
+		return rsp, nil
+	})
+
+	var hostIds = []byte(`
+	[
+		"fake-host-uuid-0001",
+		"fake-host-uuid-0002",
+		"fake-host-uuid-0003"
+	]
+	`)
+	w := performRequest("DELETE", "/api/v1/resources/hosts", "application/json", bytes.NewBuffer(hostIds))
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func Test_RemoveHost_Succeed(t *testing.T) {
+	initConfig()
+	fakeHostId1 := "fake-host-uuid-0001"
+	fakeService := InitFakeManagerClient()
+	fakeService.MockRemoveHost(func(ctx context.Context, in *managerPb.RemoveHostRequest, opts ...client.CallOption) (*managerPb.RemoveHostResponse, error) {
+		if in.HostId != fakeHostId1 {
+			return nil, status.Errorf(codes.InvalidArgument, "input hostIds wrong")
+		}
+		rsp := new(managerPb.RemoveHostResponse)
+		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp.Rs.Code = int32(codes.OK)
+
+		return rsp, nil
+	})
+
+	url := fmt.Sprintf("/api/v1/resources/hosts/%s", fakeHostId1)
+	w := performRequest("DELETE", url, "application/json", nil)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func Test_CheckDetails_Succeed(t *testing.T) {
+	initConfig()
+	fakeHostId1 := "fake-host-uuid-0001"
+	fakeHostName := "TEST_HOST1"
+	fakeHostIp := "192.168.56.18"
+	fakeDiskName := "sda"
+	fakeDiskPath := "/"
+	fakeService := InitFakeManagerClient()
+	fakeService.MockCheckDetails(func(ctx context.Context, in *managerPb.CheckDetailsRequest, opts ...client.CallOption) (*managerPb.CheckDetailsResponse, error) {
+		if in.HostId != fakeHostId1 {
+			return nil, status.Errorf(codes.InvalidArgument, "input hostIds wrong")
+		}
+		rsp := new(managerPb.CheckDetailsResponse)
+		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp.Rs.Code = int32(codes.OK)
+		rsp.Details = &managerPb.HostInfo{
+			HostId:   fakeHostId1,
+			HostName: fakeHostName,
+			Ip:       fakeHostIp,
+		}
+		rsp.Details.Disks = append(rsp.Details.Disks, &managerPb.Disk{
+			Name:     fakeDiskName,
+			Path:     fakeDiskPath,
+			Capacity: 256,
+			Status:   0,
+		})
+		return rsp, nil
+	})
+
+	url := fmt.Sprintf("/api/v1/resources/hosts/%s", fakeHostId1)
+	w := performRequest("GET", url, "application/json", nil)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	type CommonResult struct {
+		controller.ResultMark
+		Data hostapi.HostDetailsRsp `json:"data"`
+	}
+	var result CommonResult
+
+	err := json.Unmarshal([]byte(w.Body.String()), &result)
+	assert.Nil(t, err)
+	assert.Equal(t, result.Data.Host.HostName, fakeHostName)
+	assert.Equal(t, result.Data.Host.Ip, fakeHostIp)
+	assert.Equal(t, result.Data.Host.Disks[0].Name, fakeDiskName)
+	assert.Equal(t, result.Data.Host.Disks[0].Path, fakeDiskPath)
 }

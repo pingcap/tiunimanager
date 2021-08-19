@@ -33,7 +33,7 @@ func performRequest(g *gin.Engine, method, path, contentType string, body io.Rea
 	return w
 }
 
-func TestListHosts(t *testing.T) {
+func Test_ListHosts_Succeed(t *testing.T) {
 	initConfig()
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostId2 := "fake-host-uuid-0002"
@@ -87,6 +87,68 @@ func TestListHosts(t *testing.T) {
 	assert.True(t, result.Data[0].Status == 2)
 	assert.True(t, result.Data[1].Status == 2)
 
+}
+
+func Test_ImportHost_Succeed(t *testing.T) {
+	initConfig()
+	fakeHostId1 := "fake-host-uuid-0001"
+	fakeHostIp := "l92.168.56.11"
+	fakeService := InitFakeManagerClient()
+	fakeService.MockImportHost(func(ctx context.Context, in *managerPb.ImportHostRequest, opts ...client.CallOption) (*managerPb.ImportHostResponse, error) {
+		if in.Host.Ip != fakeHostIp || in.Host.Disks[0].Name != "nvme0p1" || in.Host.Disks[1].Path != "/mnt/disk2" {
+			return nil, status.Errorf(codes.InvalidArgument, "import host info failed")
+		}
+		rsp := new(managerPb.ImportHostResponse)
+		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp.Rs.Code = int32(codes.OK)
+		rsp.HostId = fakeHostId1
+
+		return rsp, nil
+	})
+
+	gin.SetMode(gin.ReleaseMode)
+	g := gin.New()
+
+	route.Route(g)
+	//g.Group("/api/v1").Group("/").Use(nil)
+
+	var hostInfo = []byte(`
+	{
+		"hostName": "TEST_HOST1",
+		"ip": "l92.168.56.11",
+		"dc": "TEST_DC",
+		"az": "TEST_ZONE",
+		"rack": "TEST_RACK",
+		"disks": [
+		  {
+			"name": "nvme0p1",
+			"path": "/mnt/disk1",
+			"capacity": 256,
+			"status": 1
+		  },
+		  {
+			"name": "nvme0p2",
+			"path": "/mnt/disk2",
+			"capacity": 256,
+			"status": 1
+		  }
+		]
+	  }
+	`)
+	w := performRequest(g, "POST", "/api/v1/resources/host", "application/json", bytes.NewBuffer(hostInfo))
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	type CommonResult struct {
+		controller.ResultMark
+		Data hostapi.ImportHostRsp `json:"data"`
+	}
+	var result CommonResult
+
+	err := json.Unmarshal([]byte(w.Body.String()), &result)
+	assert.Nil(t, err)
+
+	assert.Equal(t, result.Data.HostId, fakeHostId1)
 }
 
 func createBatchImportBody(filePath string) (string, io.Reader, error) {

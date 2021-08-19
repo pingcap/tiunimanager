@@ -3,6 +3,8 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
+
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
@@ -15,13 +17,22 @@ import (
 	"github.com/pingcap/tiem/library/thirdparty/tracer"
 	"github.com/pingcap/tiem/micro-api/route"
 	"github.com/pingcap/tiem/micro-cluster/client"
-	"log"
 )
 
 var TiEMApiServiceName = "go.micro.tiem.api"
 
 func initConfig() {
-	config.InitForMonolith()
+	srv := micro.NewService(
+		config.GetMicroApiCliArgsOption(),
+	)
+	srv.Init()
+	srv = nil
+
+	config.InitForMonolith(config.MicroApiMod)
+}
+
+func initTracer() {
+	tracer.InitTracer()
 }
 
 func initService() {
@@ -61,7 +72,11 @@ func initGinEngine() {
 
 	route.Route(g)
 
-	addr := fmt.Sprintf(":%d", 8080)
+	port := config.GetClientArgs().RestPort
+	if port <= 0 {
+		port = config.DefaultRestPort
+	}
+	addr := fmt.Sprintf(":%d", port)
 	if err := g.Run(addr); err != nil {
 		log.Fatal(err)
 	}

@@ -133,7 +133,7 @@ func TiupMgrInit() {
 	if len(configPath) == 0 {
 		configPath = "./tiupmgr.log"
 	}
-	config.InitForMonolith()
+	config.InitForMonolith(config.TiUPInternalMod)
 	// TODO: update log path using configPath if necessary
 	log = logger.GetLogger(config.KEY_TIUPLIB_LOG)
 }

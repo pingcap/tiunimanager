@@ -20,45 +20,6 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-// Query 查询主机接口
-// @Summary 查询主机接口
-// @Description 查询主机
-// @Tags resource
-// @Accept json
-// @Produce json
-// @Param Token header string true "登录token"
-// @Param query body HostQuery true "查询请求"
-// @Success 200 {object} controller.ResultWithPage{data=[]DemoHostInfo}
-// @Router /host/query [post]
-func Query(c *gin.Context) {
-	var req HostQuery
-	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
-		return
-	}
-
-	listHostReq := manager.ListHostsRequest{
-		Purpose: "storage",
-		Status:  0,
-	}
-
-	rsp, err := client.ManagerClient.ListHost(c, &listHostReq)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, rsp.Rs.Message))
-	} else {
-		var res []DemoHostInfo
-		for _, v := range rsp.HostList {
-			host := DemoHostInfo{
-				HostId:   v.Ip,
-				HostIp:   v.Ip,
-				HostName: v.HostName,
-			}
-			res = append(res, host)
-		}
-		c.JSON(http.StatusOK, controller.SuccessWithPage(res, controller.Page{Page: 1, PageSize: 20, Total: len(res)}))
-	}
-}
-
 func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	dst.HostId = src.HostId
 	dst.HostName = src.HostName
@@ -141,7 +102,7 @@ func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *manager.ImportHostsI
 // @Param Token header string true "登录token"
 // @Param host body HostInfo true "待导入的主机信息"
 // @Success 200 {object} controller.CommonResult{data=string}
-// @Router /host [post]
+// @Router /resources/host [post]
 func ImportHost(c *gin.Context) {
 	var host HostInfo
 	if err := c.ShouldBindJSON(&host); err != nil {
@@ -211,7 +172,7 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 // @Param Token header string true "登录token"
 // @Param file formData file true "包含待导入主机信息的文件"
 // @Success 200 {object} controller.CommonResult{data=[]string}
-// @Router /hosts [post]
+// @Router /resources/hosts [post]
 func ImportHosts(c *gin.Context) {
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
@@ -246,28 +207,28 @@ func ImportHosts(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "登录token"
-// @Param purpose query string false "查询特定用途的主机列表"
-// @Param status query string false "查询特定状态的主机列表"
+// @Param hostQuery query HostQuery false "主机列表的查询条件"
 // @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
-// @Router /hosts [get]
+// @Router /resources/hosts [get]
 func ListHost(c *gin.Context) {
-	const ALL_STATS = "-1"
-	statusStr := c.Query("status")
-	if statusStr == "" {
-		statusStr = ALL_STATS
+	var hostQuery HostQuery
+	if err := c.ShouldBindQuery(&hostQuery); err != nil {
+		_ = c.Error(err)
+		return
 	}
-	queryStatus, err := strconv.Atoi(statusStr)
-	if err != nil {
-		errmsg := fmt.Sprintf("Input Status %s Invalid: %v", c.Query("status"), err)
+	if !HostStatus(hostQuery.Status).IsValid() {
+		errmsg := fmt.Sprintf("Input Status %d is Invalid", hostQuery.Status)
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
-	queryPurpose := c.Query("purpose")
 
 	listHostReq := manager.ListHostsRequest{
-		Purpose: queryPurpose,
-		Status:  int32(queryStatus),
+		Purpose: hostQuery.Purpose,
+		Status:  int32(hostQuery.Status),
 	}
+	listHostReq.PageReq = new(manager.PageDTO)
+	listHostReq.PageReq.Page = int32(hostQuery.Page)
+	listHostReq.PageReq.PageSize = int32(hostQuery.PageSize)
 
 	rsp, err := client.ManagerClient.ListHost(c, &listHostReq)
 	if err != nil {
@@ -284,7 +245,7 @@ func ListHost(c *gin.Context) {
 		CopyHostFromRsp(v, &host)
 		res.Hosts = append(res.Hosts, host)
 	}
-	c.JSON(http.StatusOK, controller.SuccessWithPage(res.Hosts, controller.Page{Page: 1, PageSize: 20, Total: len(res.Hosts)}))
+	c.JSON(http.StatusOK, controller.SuccessWithPage(res.Hosts, controller.Page{Page: int(rsp.PageReq.Page), PageSize: int(rsp.PageReq.PageSize), Total: int(rsp.PageReq.Total)}))
 }
 
 // HostDetails 查询主机详情接口
@@ -296,7 +257,7 @@ func ListHost(c *gin.Context) {
 // @Param Token header string true "登录token"
 // @Param hostId path string true "主机ID"
 // @Success 200 {object} controller.CommonResult{data=HostInfo}
-// @Router /host/{hostId} [get]
+// @Router /resources/hosts/{hostId} [get]
 func HostDetails(c *gin.Context) {
 
 	hostId := c.Param("hostId")
@@ -328,7 +289,7 @@ func HostDetails(c *gin.Context) {
 // @Param Token header string true "登录token"
 // @Param hostId path string true "待删除的主机ID"
 // @Success 200 {object} controller.CommonResult{data=string}
-// @Router /host/{hostId} [delete]
+// @Router /resources/hosts/{hostId} [delete]
 func RemoveHost(c *gin.Context) {
 
 	hostId := c.Param("hostId")
@@ -374,7 +335,7 @@ func detectDuplicateElement(hostIds []string) (string, bool) {
 // @Param Token header string true "登录token"
 // @Param hostIds body []string true "待删除的主机ID数组"
 // @Success 200 {object} controller.CommonResult{data=string}
-// @Router /hosts/ [delete]
+// @Router /resources/hosts/ [delete]
 func RemoveHosts(c *gin.Context) {
 
 	var hostIds []string
@@ -412,7 +373,7 @@ func RemoveHosts(c *gin.Context) {
 // @Produce octet-stream
 // @Param Token header string true "登录token"
 // @Success 200 {file} file
-// @Router /download_template/ [get]
+// @Router /resources/hosts-template/ [get]
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
 	templateName := "hostInfo_template.xlsx"
@@ -469,7 +430,7 @@ func copyAllocFromRsp(src []*manager.AllocHost, dst *[]AllocateRsp) {
 // @Param Token header string true "登录token"
 // @Param Alloc body AllocHostsReq true "主机分配请求"
 // @Success 200 {object} controller.CommonResult{data=AllocHostsRsp}
-// @Router /allochosts [post]
+// @Router /resources/allochosts [post]
 func AllocHosts(c *gin.Context) {
 	var allocation AllocHostsReq
 	if err := c.ShouldBindJSON(&allocation); err != nil {
@@ -510,7 +471,7 @@ func AllocHosts(c *gin.Context) {
 // @Param Token header string true "登录token"
 // @Param failureDomainType query int false "指定故障域类型" Enums(1, 2, 3)
 // @Success 200 {object} controller.ResultWithPage{data=[]DomainResource}
-// @Router /failuredomains [get]
+// @Router /resources/failuredomains [get]
 func GetFailureDomain(c *gin.Context) {
 	var domain int
 	domainStr := c.Query("failureDomainType")

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/pingcap/tiem/library/firstparty/config"
 	host2 "github.com/pingcap/tiem/micro-cluster/service/host"
 	domain2 "github.com/pingcap/tiem/micro-cluster/service/tenant/domain"
 
@@ -82,8 +83,8 @@ func (*ManagerServiceHandler) VerifyIdentity(ctx context.Context, req *manager.V
 	return nil
 }
 
-func InitHostLogger() {
-	host2.InitLogger()
+func InitHostLogger(key config.Key) {
+	host2.InitLogger(key)
 }
 
 func (*ManagerServiceHandler) ImportHost(ctx context.Context, in *manager.ImportHostRequest, out *manager.ImportHostResponse) error {

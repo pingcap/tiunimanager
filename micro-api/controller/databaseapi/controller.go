@@ -1,6 +1,7 @@
 package databaseapi
 
 import (
+	client2 "github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/tiem/micro-api/controller"
 	"github.com/pingcap/tiem/micro-cluster/client"
@@ -26,7 +27,9 @@ func ExportData(c *gin.Context) {
 		Password: req.Password,
 		FileType: req.FileType,
 		Filter: req.Filter,
-		FilePath: req.FilePath,
+	}, func(o *client2.CallOptions) { //todo: wait async cluster handler
+		o.RequestTimeout = time.Second * 30
+		o.DialTimeout = time.Second * 30
 	})
 
 	if err != nil {
@@ -58,6 +61,9 @@ func ImportData(c *gin.Context) {
 		UserName: req.UserName,
 		Password: req.Password,
 		FilePath: req.FilePath,
+	}, func(o *client2.CallOptions) { //todo: wait async cluster handler
+		o.RequestTimeout = time.Second * 30
+		o.DialTimeout = time.Second * 30
 	})
 
 	if err != nil {

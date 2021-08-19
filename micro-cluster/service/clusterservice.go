@@ -102,7 +102,7 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *cluster.C
 }
 
 func (c ClusterServiceHandler) ExportData(ctx context.Context, req *cluster.DataExportRequest, resp *cluster.DataExportResponse) error {
-	recordId, err := domain.ExportData(req.Operator, req.ClusterId, req.UserName, req.Password, req.FileType, req.FilePath, req.Filter)
+	recordId, err := domain.ExportData(req.Operator, req.ClusterId, req.UserName, req.Password, req.FileType, req.Filter)
 
 	if err != nil {
 		//todo

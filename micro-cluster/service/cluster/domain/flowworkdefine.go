@@ -84,7 +84,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	},
 	FlowExportData: {
 		FlowName:    FlowExportData,
-		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowExportData),
 		TaskNodes: map[string]*TaskDefine{
 			"start":				{"exportDataFromCluster", "exportDataDone", "fail", PollingTasK, exportDataFromCluster},
 			"exportDataDone":		{"compressExportData", "compressDataDone", "fail", SyncFuncTask, compressExportData},
@@ -100,7 +100,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	},
 	FlowImportData: {
 		FlowName:    FlowImportData,
-		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowImportData),
 		TaskNodes: map[string]*TaskDefine{
 			"start":				{"buildDataImportConfig", "buildConfigDone", "fail", SyncFuncTask, buildDataImportConfig},
 			"buildConfigDone":		{"deCompressImportData", "deCompressDataDone", "fail", SyncFuncTask, deCompressImportData},

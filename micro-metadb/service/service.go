@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
 )
 
@@ -10,6 +11,6 @@ type DBServiceHandler struct{}
 
 var log *logger.LogRecord
 
-func InitLogger() {
-	log = logger.GetLogger()
+func InitLogger(key config.Key) {
+	log = logger.GetLogger(key)
 }

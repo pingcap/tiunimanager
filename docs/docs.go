@@ -1191,14 +1191,22 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "查询特定用途的主机列表",
-                        "name": "purpose",
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "pageSize",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "查询特定状态的主机列表",
+                        "name": "purpose",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "name": "status",
                         "in": "query"
                     }

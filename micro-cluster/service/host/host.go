@@ -3,6 +3,8 @@ package host
 import (
 	"context"
 	"fmt"
+
+	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
 
 	hostPb "github.com/pingcap/tiem/micro-cluster/proto"
@@ -13,8 +15,8 @@ import (
 
 var log *logger.LogRecord
 
-func InitLogger() {
-	log = logger.GetLogger()
+func InitLogger(key config.Key) {
+	log = logger.GetLogger(key)
 }
 
 func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
@@ -160,12 +162,16 @@ func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.List
 	var req dbPb.DBListHostsRequest
 	req.Purpose = in.Purpose
 	req.Status = in.Status
+	req.Page = new(dbPb.DBHostPageDTO)
+	req.Page.Page = in.PageReq.Page
+	req.Page.PageSize = in.PageReq.PageSize
 	rsp, err := client.DBClient.ListHost(ctx, &req)
 	if err != nil {
 		log.Errorf("list hosts error, %v", err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
+	out.PageReq = new(hostPb.PageDTO)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 
@@ -180,6 +186,9 @@ func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.List
 		CopyHostFromDBRsp(v, &host)
 		out.HostList = append(out.HostList, &host)
 	}
+	out.PageReq.Page = rsp.Page.Page
+	out.PageReq.PageSize = rsp.Page.PageSize
+	out.PageReq.Total = rsp.Page.Total
 	return nil
 }
 

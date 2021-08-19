@@ -159,14 +159,15 @@ type CmdLightningResp struct {
 }
 
 type CmdClusterDisplayReq struct {
-	clusterName string
+	InstanceName string
 	TimeoutS    int
 	TiupPath    string
 	Flags       []string
 }
 
 type CmdClusterDisplayResp struct {
-	url string
+	url      string
+	Error    error
 }
 
 type TaskStatusMapValue struct {
@@ -205,7 +206,7 @@ func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
 	log.Fatalf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
 	//fmt.Printf("panic: %s, with stack trace: %s\n", s, string(debug.Stack()))
-	panic("unexpected")
+	panic("unexpected" + s)
 }
 
 func jsonMustMarshal(v interface{}) []byte {
@@ -277,7 +278,7 @@ func mgrHandleCmdDeployReq(jsonStr string) CmdDeployResp {
 	return ret
 }
 
-func mgrHandleCmdStarReq(jsonStr string) CmdStartResp {
+func mgrHandleCmdStartReq(jsonStr string) CmdStartResp {
 	ret := CmdStartResp{}
 	var req CmdStartReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
@@ -526,7 +527,7 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 	var ret CmdClusterDisplayResp
 	var args []string
 	args = append(args, "cluster", "display")
-	args = append(args, req.clusterName)
+	args = append(args, req.InstanceName)
 	args = append(args, req.Flags...)
 
 	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
@@ -548,6 +549,7 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 	if data, err = cmd.Output(); err != nil {
 		log.Error("cmd start err", err)
 		//fmt.Println("cmd start err", err)
+		ret.Error = err
 		return ret
 	}
 	ret.url = string(data)
@@ -581,7 +583,7 @@ func TiupMgrRoutine() {
 				cmdResp.TypeStr = CmdDeployRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			case CmdStartReqTypeStr:
-				resp := mgrHandleCmdStarReq(cmd.Content)
+				resp := mgrHandleCmdStartReq(cmd.Content)
 				cmdResp.TypeStr = CmdStartRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			case CmdListReqTypeStr:
@@ -988,15 +990,15 @@ func microSrvTiupClusterDisplay(clusterDisplayReq CmdClusterDisplayReq) CmdClust
 	return resp
 }
 
-func MicroSrvTiupClusterDisplay(clusterName string, timeoutS int, flags []string) (CmdClusterDisplayResp, error) {
+func MicroSrvTiupClusterDisplay(instanceName string, timeoutS int, flags []string) (string, error) {
 	var clusterDisplayResp CmdClusterDisplayResp
 	var clusterDisplayReq CmdClusterDisplayReq
-	clusterDisplayReq.clusterName = clusterName
+	clusterDisplayReq.InstanceName = instanceName
 	clusterDisplayReq.TimeoutS = timeoutS
 	clusterDisplayReq.TiupPath = glTiUPBinPath
 	clusterDisplayReq.Flags = flags
 	clusterDisplayResp = microSrvTiupClusterDisplay(clusterDisplayReq)
-	return clusterDisplayResp, nil
+	return clusterDisplayResp.url, clusterDisplayResp.Error
 }
 
 type CmdChanMember struct {

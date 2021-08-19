@@ -20,6 +20,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/tiup v1.5.3
 	github.com/sirupsen/logrus v1.8.1
+	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.3.0
 	github.com/swaggo/swag v1.7.0

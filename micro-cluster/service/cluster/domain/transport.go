@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -63,13 +64,13 @@ type TransportInfo struct {
 	https://docs.pingcap.com/zh/tidb/dev/deploy-tidb-lightning
 */
 type DataImportConfig struct {
-	Lighting     LightingCfg     `toml:"lighting"`
+	Lightning    LightningCfg    `toml:"lightning"`
 	TikvImporter TikvImporterCfg `toml:"tikv-importer"`
 	MyDumper     MyDumperCfg     `toml:"mydumper"`
 	Tidb         TidbCfg         `toml:"tidb"`
 }
 
-type LightingCfg struct {
+type LightningCfg struct {
 	Level 				string	`toml:"level"` //lighting log level
 	File  				string	`toml:"file"`  //lighting log path
 	CheckRequirements 	bool	`toml:"check-requirements"`	//lightning pre check
@@ -228,6 +229,7 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	if clusterAggregation == nil || clusterAggregation.CurrentTiUPConfigRecord == nil {
 		return nil
 	}
+	cluster := clusterAggregation.Cluster
 	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
 	if configModel == nil || configModel.TiDBServers == nil || configModel.PDServers == nil {
 		return nil
@@ -236,17 +238,17 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	pdServer := configModel.PDServers[0]
 
 	config := &DataImportConfig{
-		Lighting: LightingCfg{
+		Lightning: LightningCfg{
 			Level: "info",
-			File:  fmt.Sprintf("%s/tidb-lighting.log", info.FilePath),
+			File:  fmt.Sprintf("%s/tidb-lightning.log", getDataTransportDir(cluster.Id, TransportTypeImport)),
 			CheckRequirements: false, //todo: need check
 		},
 		TikvImporter: TikvImporterCfg{
 			Backend:     "local",
-			SortedKvDir: "/mnt/ssd/sorted-kv-dir", //todo: replace config item
+			SortedKvDir: getDataTransportDir(cluster.Id, TransportTypeImport), //todo: need check
 		},
 		MyDumper: MyDumperCfg{
-			DataSourceDir: info.FilePath,
+			DataSourceDir: fmt.Sprintf("%s/data", getDataTransportDir(cluster.Id, TransportTypeImport)),
 		},
 		Tidb: TidbCfg{
 			Host:       tidbServer.Host,
@@ -266,7 +268,7 @@ data import && export dir
 	├── import
 	|	├── data
 	|	├── data.zip
-	|	├── tidb-lighting.toml
+	|	├── tidb-lightning.toml
 	|	└── log
 	└── export
 		├── data
@@ -303,7 +305,8 @@ func zipDir(dir string, zipFile string) error {
 
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
-			fDest, err := w.Create(path)
+			relPath := strings.TrimPrefix(path, filepath.Dir(path))
+			fDest, err := w.Create(relPath)
 			if err != nil {
 				return fmt.Errorf("zip Create failed: %s", err.Error())
 			}
@@ -377,7 +380,7 @@ func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 		log.Errorf("[domain] convert toml config failed, cluster: %v", clusterAggregation)
 		return false
 	}
-	filePath := fmt.Sprintf("%s/tidb-lighting.toml", info.FilePath)
+	filePath := fmt.Sprintf("%s/tidb-lightning.toml", getDataTransportDir(cluster.Id, TransportTypeImport))
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0766)
 	if err != nil {
 		log.Errorf("[domain] create import toml config failed, %s", err.Error())
@@ -395,16 +398,19 @@ func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
 	log.Info("begin importDataToCluster")
 	defer log.Info("end importDataToCluster")
-	info := context.value(contextDataTransportKey).(*ImportInfo)
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
 
 	//tiup tidb-lightning -config tidb-lightning.toml
-	_, err := libtiup.MicroSrvTiupLightning(0,
-		[]string{"-config", fmt.Sprintf("%s/tidb-lighting.toml", info.FilePath)},
+	//todo: tiupmgr not return failed err
+	resp, err := libtiup.MicroSrvTiupLightning(0,
+		[]string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", getDataTransportDir(cluster.Id, TransportTypeImport))},
 		uint64(task.Id))
 	if err != nil {
 		log.Errorf("[domain] call tiup lighting api failed, %s", err.Error())
 		return false
 	}
+	log.Infof("call tiupmgr tidb-lighting api success, %v", resp)
 
 	return true
 }
@@ -448,6 +454,7 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 
 	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "user*"
 	//todo: admin root password
+	//todo: tiupmgr not return failed err
 	cmd :=  []string{"-u", info.UserName,
 		"-p", info.Password,
 		"-P", strconv.Itoa(tidbServer.Port),
@@ -517,7 +524,7 @@ func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
 	info := context.value(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
 
-	dataDir := fmt.Sprintf("%s", getDataTransportDir(cluster.Id, TransportTypeImport))
+	dataDir := fmt.Sprintf("%s/data", getDataTransportDir(cluster.Id, TransportTypeImport))
 	dataZipDir := fmt.Sprintf("%s", info.FilePath)
 	if err := unzipDir(dataZipDir, dataDir); err != nil {
 		log.Errorf("[domain] deCompress import data failed, %s", err.Error())

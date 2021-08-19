@@ -106,7 +106,7 @@ func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *manager.ImportHostsI
 func ImportHost(c *gin.Context) {
 	var host HostInfo
 	if err := c.ShouldBindJSON(&host); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 
@@ -213,7 +213,7 @@ func ImportHosts(c *gin.Context) {
 func ListHost(c *gin.Context) {
 	var hostQuery HostQuery
 	if err := c.ShouldBindQuery(&hostQuery); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	if !HostStatus(hostQuery.Status).IsValid() {
@@ -340,7 +340,7 @@ func RemoveHosts(c *gin.Context) {
 
 	var hostIds []string
 	if err := c.ShouldBindJSON(&hostIds); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 
@@ -434,7 +434,7 @@ func copyAllocFromRsp(src []*manager.AllocHost, dst *[]AllocateRsp) {
 func AllocHosts(c *gin.Context) {
 	var allocation AllocHostsReq
 	if err := c.ShouldBindJSON(&allocation); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 

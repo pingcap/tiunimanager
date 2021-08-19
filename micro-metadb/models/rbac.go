@@ -16,8 +16,8 @@ func (d AccountDO) TableName() string {
 
 type RoleDO struct {
 	Entity
-	Name    		string		`gorm:"size:255"`
-	Desc    		string		`gorm:"size:255"`
+	Name    		string		`gorm:"default:null;not null"`
+	Desc    		string
 }
 
 func (d RoleDO) TableName() string {

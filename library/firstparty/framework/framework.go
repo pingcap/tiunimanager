@@ -4,14 +4,26 @@ import (
 	"fmt"
 
 	"github.com/asim/go-micro/v3/server"
+	"github.com/pingcap/tiem/library/firstparty/util"
 )
 
+type Opt func(*framework)
+
 type Framework interface {
-	Run() error
+	InitLogger() error
+	InitConfig() error
+	InitClient() error
+	MustGetLogger() Logger
+	MustGetConfig() Config
+	MustGetClient() Client
+
+	Run(opts ...Opt) error
 }
 
 type framework struct {
-	initFp func() error
+	initLoggerFp func() (Logger, error)
+	initConfigFp func() (Config, error)
+	initClientFp func() (Client, error)
 
 	certificateCrtFilePath string
 	certificateKeyFilePath string
@@ -20,67 +32,101 @@ type framework struct {
 	registryAddrs          []string
 
 	registerServiceHandlerFp func(server server.Server, opts ...server.HandlerOption) error
+
+	config Config
+	logger Logger
+	client Client
 }
 
-func WithInitFp(initFp func() error) func(*framework) {
-	return func(p *framework) {
-		p.initFp = initFp
-	}
-}
-
-func WithCertificateCrtFilePath(path string) func(*framework) {
+func WithCertificateCrtFilePath(path string) Opt {
 	return func(p *framework) {
 		p.certificateCrtFilePath = path
 	}
 }
 
-func WithCertificateKeyFilePath(path string) func(*framework) {
+func WithCertificateKeyFilePath(path string) Opt {
 	return func(p *framework) {
 		p.certificateKeyFilePath = path
 	}
 }
 
-func WithServiceName(serviceName string) func(*framework) {
+func WithServiceName(serviceName string) Opt {
 	return func(p *framework) {
 		p.serviceName = serviceName
 	}
 }
 
-func WithServiceListenAddr(addr string) func(*framework) {
+func WithServiceListenAddr(addr string) Opt {
 	return func(p *framework) {
 		p.serviceListenAddr = addr
 	}
 }
-func WithRegistryAddrs(registryAddrs []string) func(*framework) {
+func WithRegistryAddrs(registryAddrs []string) Opt {
 	return func(p *framework) {
 		p.registryAddrs = registryAddrs
 	}
 }
 
 func WithRegisterServiceHandlerFp(
-	fp func(server server.Server, opts ...server.HandlerOption) error) func(*framework) {
+	fp func(server server.Server, opts ...server.HandlerOption) error) Opt {
 
 	return func(p *framework) {
 		p.registerServiceHandlerFp = fp
 	}
 }
 
-func (p *framework) Run() error {
-	if p.initFp == nil {
-	} else {
-		err := p.initFp()
-		if err != nil {
-			return fmt.Errorf("meet an error when initFp is executing: %s", err)
-		}
-	}
+func (p *framework) InitLogger() error {
+	var err error
+	p.logger, err = p.initLoggerFp()
+	return err
+}
+
+func (p *framework) InitConfig() error {
+	var err error
+	p.config, err = p.initConfigFp()
+	return err
+}
+
+func (p *framework) InitClient() error {
+	var err error
+	p.client, err = p.initClientFp()
+	return err
+}
+
+func (p *framework) MustGetLogger() Logger {
+	ret := p.logger
+	util.Assert(ret != nil)
+	return ret
+}
+
+func (p *framework) MustGetConfig() Config {
+	ret := p.config
+	util.Assert(ret != nil)
+	return ret
+}
+
+func (p *framework) MustGetClient() Client {
+	ret := p.client
+	util.Assert(ret != nil)
+	return ret
+}
+
+func (p *framework) Run(opts ...Opt) error {
 	fmt.Println(p)
+	for _, opt := range opts {
+		opt(p)
+	}
 	// TODO: setup srv
 	return nil
 }
 
 // there is a rather rough usage example in the test
-func NewFramework(opts ...func(*framework)) Framework {
-	p := &framework{}
+func NewFramework(opts ...Opt) Framework {
+	p := &framework{
+		initLoggerFp: initLogger,
+		initConfigFp: initConfig,
+		initClientFp: initClient,
+	}
 
 	for _, opt := range opts {
 		opt(p)

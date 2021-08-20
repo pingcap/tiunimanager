@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
 
 	"github.com/pingcap/tiem/micro-metadb/client"
@@ -191,6 +192,9 @@ func TiupMgrInit() {
 	if len(configPath) == 0 {
 		configPath = "./tiupmgr.log"
 	}
+	config.InitForMonolith()
+	// TODO: update log path using configPath if necessary
+	log = logger.GetLogger(config.KEY_TIUPLIB_LOG)
 }
 
 func assert(b bool) {
@@ -576,6 +580,7 @@ func TiupMgrRoutine() {
 			if err != nil {
 				myPanic(fmt.Sprintln("cmdStr unmarshal failed err:", err, "cmdStr:", cmdStr))
 			}
+			log.Info("rcv req", cmd)
 			var cmdResp CmdReqOrResp
 			switch cmd.TypeStr {
 			case CmdDeployReqTypeStr:
@@ -613,6 +618,7 @@ func TiupMgrRoutine() {
 			default:
 				myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
 			}
+			log.Info("snd rsp", cmdResp)
 			bs := jsonMustMarshal(&cmdResp)
 			bs = append(bs, '\n')
 			//errw.Write([]byte("TiupMgrRoutine write\n"))
@@ -636,7 +642,7 @@ var glTiUPBinPath string
 
 func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
 	// init log
-	log = logger.GetLogger()
+	log = logger.GetLogger(config.KEY_CLUSTER_LOG)
 	glTiUPMgrPath = tiupMgrPath
 	glTiUPBinPath = tiupBinPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)

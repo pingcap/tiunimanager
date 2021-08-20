@@ -5,9 +5,9 @@ import "errors"
 var LocalConfig map[Key]Instance
 
 type Instance struct {
-	Key 		Key
-	Value 		interface{}
-	Version 	int
+	Key     Key
+	Value   interface{}
+	Version int
 }
 
 type Key string
@@ -15,19 +15,21 @@ type Key string
 const (
 	KEY_REGISTRY_ADDRESS Key = "config_registry_address"
 
-	KEY_API_LOG = "config_key_api_log"
+	KEY_API_LOG     = "config_key_api_log"
 	KEY_CLUSTER_LOG = "config_key_cluster_log"
-	KEY_METADB_LOG = "config_key_metadb_log"
+	KEY_METADB_LOG  = "config_key_metadb_log"
+	KEY_TIUPLIB_LOG = "config_key_tiupmgr_log"
+	KEY_DEFAULT_LOG = "config_key_default_log"
 
-	KEY_API_PORT = "config_key_api_port"
+	KEY_API_PORT     = "config_key_api_port"
 	KEY_CLUSTER_PORT = "config_key_cluster_port"
 	KEY_MANAGER_PORT = "config_key_manager_port"
-	KEY_METADB_PORT = "config_key_metadb_port"
+	KEY_METADB_PORT  = "config_key_metadb_port"
 
-	KEY_CERTIFICATES = "config_key_Certificates"
+	KEY_CERTIFICATES     = "config_key_Certificates"
 	KEY_SQLITE_FILE_PATH = "config_key_sqlite_file_path"
 
-	KEY_SERVER_ID = "config_server_id"
+	KEY_SERVER_ID           = "config_server_id"
 	KEY_PREFIX_SERVICE_PORT = "config_service_port"
 )
 

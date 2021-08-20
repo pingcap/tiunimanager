@@ -60,8 +60,8 @@ type TransportInfo struct {
 }
 
 /*
-	data import toml config for lighting
-	https://docs.pingcap.com/zh/tidb/dev/deploy-tidb-lightning
+	data import toml config for lightning
+	https://docs.pingcap.com/zh/tidb/dev/tidb-lightning-configuration
 */
 type DataImportConfig struct {
 	Lightning    LightningCfg    `toml:"lightning"`
@@ -71,10 +71,16 @@ type DataImportConfig struct {
 }
 
 type LightningCfg struct {
-	Level 				string	`toml:"level"` //lighting log level
-	File  				string	`toml:"file"`  //lighting log path
+	Level 				string	`toml:"level"` //lightning log level
+	File  				string	`toml:"file"`  //lightning log path
 	CheckRequirements 	bool	`toml:"check-requirements"`	//lightning pre check
 }
+
+const (
+	BackendLocal string = "local"
+	BackendImport string = "importer"
+	BackendTidb string = "tidb"
+)
 
 type TikvImporterCfg struct {
 	Backend     string `toml:"backend"`       //backend mode: local/normal
@@ -98,12 +104,16 @@ var contextDataTransportKey = "dataTransportInfo"
 var defaultTransportDirPrefix = "/tmp/tiem/datatransport"
 
 func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, fileType string, filter string) (string, error) {
-	log.Infof("[domain] begin exportdata clusterId: %s, userName: %s, password: %s, fileType: %s, filter: %s", clusterId, userName, password, fileType, filter)
-	defer log.Infof("[domain] end exportdata")
+	log.Infof("begin exportdata clusterId: %s, userName: %s, password: %s, fileType: %s, filter: %s", clusterId, userName, password, fileType, filter)
+	defer log.Infof("end exportdata")
 	//todo: check operator
 	operator := parseOperatorFromDTO(ope)
 	log.Info(operator)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	if err != nil {
+		log.Errorf("load cluster[%s] aggregation from metadb failed", clusterId)
+		return "", err
+	}
 
 	req := &db.DBCreateTransportRecordRequest{
 		Record: &db.TransportRecordDTO{
@@ -146,8 +156,8 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 }
 
 func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, filepath string) (string, error) {
-	log.Infof("[domain] begin importdata clusterId: %s, userName: %s, password: %s, datadIR: %s", clusterId, userName, password, filepath)
-	defer log.Infof("[domain] end importdata")
+	log.Infof("begin importdata clusterId: %s, userName: %s, password: %s, datadIR: %s", clusterId, userName, password, filepath)
+	defer log.Infof("end importdata")
 	//todo: check operator
 	operator := parseOperatorFromDTO(ope)
 	log.Info(operator)
@@ -191,8 +201,8 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 }
 
 func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*TransportInfo, error) {
-	log.Infof("[domain] begin DescribeDataTransportRecord clusterId: %s, recordId: %s, page: %d, pageSize: %s", clusterId, recordId, page, pageSize)
-	defer log.Info("[domain] end DescribeDataTransportRecord")
+	log.Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %s, page: %d, pageSize: %s", clusterId, recordId, page, pageSize)
+	defer log.Info("end DescribeDataTransportRecord")
 	req := &db.DBListTransportRecordRequest{
 		Page: &db.DBPageDTO{
 			Page:     page,
@@ -237,15 +247,20 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	tidbServer := configModel.TiDBServers[0]
 	pdServer := configModel.PDServers[0]
 
+	/*
+	 * todo: sorted-kv-dir and data-source-dir in the same disk, may slow down import performance,
+	 *  and check-requirements = true can not pass lighting pre-check
+	 *  in real environment, config data-source-dir = user nfs storage, sorted-kv-dir = other disk, turn on pre-check
+	 */
 	config := &DataImportConfig{
 		Lightning: LightningCfg{
 			Level: "info",
 			File:  fmt.Sprintf("%s/tidb-lightning.log", getDataTransportDir(cluster.Id, TransportTypeImport)),
-			CheckRequirements: false, //todo: need check
+			CheckRequirements: false, //todo: TBD
 		},
 		TikvImporter: TikvImporterCfg{
-			Backend:     "local",
-			SortedKvDir: getDataTransportDir(cluster.Id, TransportTypeImport), //todo: need check
+			Backend:     BackendLocal,
+			SortedKvDir: getDataTransportDir(cluster.Id, TransportTypeImport), //todo: TBD
 		},
 		MyDumper: MyDumperCfg{
 			DataSourceDir: fmt.Sprintf("%s/data", getDataTransportDir(cluster.Id, TransportTypeImport)),
@@ -291,78 +306,6 @@ func cleanDataTransportDir(filepath string) error {
 	return nil
 }
 
-func zipDir(dir string, zipFile string) error {
-	log.Infof("begin zipDir: dir[%s] --> file[%s]", dir, zipFile)
-	defer log.Info("end zipDir")
-	fz, err := os.Create(zipFile)
-	if err != nil {
-		return fmt.Errorf("Create zip file failed: %s", err.Error())
-	}
-	defer fz.Close()
-
-	w := zip.NewWriter(fz)
-	defer w.Close()
-
-	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			relPath := strings.TrimPrefix(path, filepath.Dir(path))
-			fDest, err := w.Create(relPath)
-			if err != nil {
-				return fmt.Errorf("zip Create failed: %s", err.Error())
-			}
-			fSrc, err := os.Open(path)
-			if err != nil {
-				return fmt.Errorf("zip Open failed: %s", err.Error())
-			}
-			defer fSrc.Close()
-			_, err = io.Copy(fDest, fSrc)
-			if err != nil {
-				return fmt.Errorf("zip Copy failed: %s", err.Error())
-			}
-		}
-		return nil
-	})
-
-	return nil
-}
-
-func unzipDir(zipFile string, dir string) error {
-	log.Infof("begin unzipDir: file[%s] --> dir[%s]", zipFile, dir)
-	defer log.Info("end unzipDir")
-	r, err := zip.OpenReader(zipFile)
-	if err != nil {
-		return fmt.Errorf("Open zip file failed: %s", err.Error())
-	}
-	defer r.Close()
-
-	for _, f := range r.File {
-		func() {
-			path := dir + string(filepath.Separator) + f.Name
-			os.MkdirAll(filepath.Dir(path), 0755)
-			fDest, err := os.Create(path)
-			if err != nil {
-				log.Errorf("unzip Create failed: %s", err.Error())
-				return
-			}
-			defer fDest.Close()
-
-			fSrc, err := f.Open()
-			if err != nil {
-				log.Errorf("unzip Open failed: %s", err.Error())
-				return
-			}
-			defer fSrc.Close()
-
-			_, err = io.Copy(fDest, fSrc)
-			if err != nil {
-				log.Errorf("unzip Copy failed: %s", err.Error())
-				return
-			}
-		}()
-	}
-	return nil
-}
-
 func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 	log.Info("begin buildDataImportConfig")
 	defer log.Info("end buildDataImportConfig")
@@ -371,27 +314,27 @@ func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 	cluster := clusterAggregation.Cluster
 
 	if err := cleanDataTransportDir(getDataTransportDir(cluster.Id, TransportTypeImport)); err != nil {
-		log.Errorf("[domain] clean import directory failed, %s", err.Error())
+		log.Errorf("clean import directory failed, %s", err.Error())
 		return false
 	}
 
 	config := convertTomlConfig(clusterAggregation, info)
 	if config == nil {
-		log.Errorf("[domain] convert toml config failed, cluster: %v", clusterAggregation)
+		log.Errorf("convert toml config failed, cluster: %v", clusterAggregation)
 		return false
 	}
 	filePath := fmt.Sprintf("%s/tidb-lightning.toml", getDataTransportDir(cluster.Id, TransportTypeImport))
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0766)
 	if err != nil {
-		log.Errorf("[domain] create import toml config failed, %s", err.Error())
+		log.Errorf("create import toml config failed, %s", err.Error())
 		return false
 	}
 
 	if err = toml.NewEncoder(file).Encode(config); err != nil {
-		log.Errorf("[domain] decode data import toml config failed, %s", err.Error())
+		log.Errorf("decode data import toml config failed, %s", err.Error())
 		return false
 	}
-	log.Infof("build lighting toml file sucess, %v", config)
+	log.Infof("build lightning toml file sucess, %v", config)
 	return true
 }
 
@@ -407,10 +350,10 @@ func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
 		[]string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", getDataTransportDir(cluster.Id, TransportTypeImport))},
 		uint64(task.Id))
 	if err != nil {
-		log.Errorf("[domain] call tiup lighting api failed, %s", err.Error())
+		log.Errorf("call tiup lightning api failed, %s", err.Error())
 		return false
 	}
-	log.Infof("call tiupmgr tidb-lighting api success, %v", resp)
+	log.Infof("call tiupmgr tidb-lightning api success, %v", resp)
 
 	return true
 }
@@ -432,10 +375,10 @@ func updateDataImportRecord(task *TaskEntity, context *FlowContext) bool {
 	}
 	resp, err := client.DBClient.UpdateTransportRecord(ctx.Background(), req)
 	if err != nil {
-		log.Errorf("[domain] update data transport record failed, %s", err.Error())
+		log.Errorf("update data transport record failed, %s", err.Error())
 		return false
 	}
-	log.Infof("[domain] update data transport record success, %v", resp)
+	log.Infof("update data transport record success, %v", resp)
 	return true
 }
 
@@ -448,7 +391,7 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 	tidbServer := configModel.TiDBServers[0]
 
 	if err := cleanDataTransportDir(info.FilePath); err != nil {
-		log.Errorf("[domain] clean export directory failed, %s", err.Error())
+		log.Errorf("clean export directory failed, %s", err.Error())
 		return false
 	}
 
@@ -470,7 +413,7 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 	log.Infof("call tiupmgr dumpling api, cmd: %v", cmd)
 	resp, err := libtiup.MicroSrvTiupDumpling(0, cmd, uint64(task.Id))
 	if err != nil {
-		log.Errorf("[domain] call tiup dumpling api failed, %s", err.Error())
+		log.Errorf("call tiup dumpling api failed, %s", err.Error())
 		return false
 	}
 	log.Infof("call tiupmgr succee, resp: %v", resp)
@@ -495,10 +438,10 @@ func updateDataExportRecord(task *TaskEntity, context *FlowContext) bool {
 	}
 	resp, err := client.DBClient.UpdateTransportRecord(ctx.Background(), req)
 	if err != nil {
-		log.Errorf("[domain] update data transport record failed, %s", err.Error())
+		log.Errorf("update data transport record failed, %s", err.Error())
 		return false
 	}
-	log.Infof("[domain] update data transport record success, %v", resp)
+	log.Infof("update data transport record success, %v", resp)
 	return true
 }
 
@@ -510,7 +453,7 @@ func compressExportData(task *TaskEntity, context *FlowContext) bool {
 	dataDir := fmt.Sprintf("%s/data", info.FilePath)
 	dataZipDir := fmt.Sprintf("%s/data.zip", info.FilePath)
 	if err := zipDir(dataDir, dataZipDir); err != nil {
-		log.Errorf("[domain] compress export data failed, %s", err.Error())
+		log.Errorf("compress export data failed, %s", err.Error())
 		return false
 	}
 
@@ -527,7 +470,7 @@ func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
 	dataDir := fmt.Sprintf("%s/data", getDataTransportDir(cluster.Id, TransportTypeImport))
 	dataZipDir := fmt.Sprintf("%s", info.FilePath)
 	if err := unzipDir(dataZipDir, dataDir); err != nil {
-		log.Errorf("[domain] deCompress import data failed, %s", err.Error())
+		log.Errorf("deCompress import data failed, %s", err.Error())
 		return false
 	}
 
@@ -573,9 +516,81 @@ func updateTransportRecordFailed(recordId, clusterId string) error {
 	}
 	resp, err := client.DBClient.UpdateTransportRecord(ctx.Background(), req)
 	if err != nil {
-		log.Errorf("[domain] update data transport record failed, %s", err.Error())
+		log.Errorf("update data transport record failed, %s", err.Error())
 		return err
 	}
-	log.Infof("[domain] update data transport record success, %v", resp)
+	log.Infof("update data transport record success, %v", resp)
+	return nil
+}
+
+func zipDir(dir string, zipFile string) error {
+	log.Infof("begin zipDir: dir[%s] to file[%s]", dir, zipFile)
+	defer log.Info("end zipDir")
+	fz, err := os.Create(zipFile)
+	if err != nil {
+		return fmt.Errorf("Create zip file failed: %s", err.Error())
+	}
+	defer fz.Close()
+
+	w := zip.NewWriter(fz)
+	defer w.Close()
+
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			relPath := strings.TrimPrefix(path, filepath.Dir(path))
+			fDest, err := w.Create(relPath)
+			if err != nil {
+				return fmt.Errorf("zip Create failed: %s", err.Error())
+			}
+			fSrc, err := os.Open(path)
+			if err != nil {
+				return fmt.Errorf("zip Open failed: %s", err.Error())
+			}
+			defer fSrc.Close()
+			_, err = io.Copy(fDest, fSrc)
+			if err != nil {
+				return fmt.Errorf("zip Copy failed: %s", err.Error())
+			}
+		}
+		return nil
+	})
+
+	return nil
+}
+
+func unzipDir(zipFile string, dir string) error {
+	log.Infof("begin unzipDir: file[%s] to dir[%s]", zipFile, dir)
+	defer log.Info("end unzipDir")
+	r, err := zip.OpenReader(zipFile)
+	if err != nil {
+		return fmt.Errorf("Open zip file failed: %s", err.Error())
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		func() {
+			path := dir + string(filepath.Separator) + f.Name
+			os.MkdirAll(filepath.Dir(path), 0755)
+			fDest, err := os.Create(path)
+			if err != nil {
+				log.Errorf("unzip Create failed: %s", err.Error())
+				return
+			}
+			defer fDest.Close()
+
+			fSrc, err := f.Open()
+			if err != nil {
+				log.Errorf("unzip Open failed: %s", err.Error())
+				return
+			}
+			defer fSrc.Close()
+
+			_, err = io.Copy(fDest, fSrc)
+			if err != nil {
+				log.Errorf("unzip Copy failed: %s", err.Error())
+				return
+			}
+		}()
+	}
 	return nil
 }

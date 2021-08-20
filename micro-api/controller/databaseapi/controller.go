@@ -27,7 +27,7 @@ func ExportData(c *gin.Context) {
 		Password: req.Password,
 		FileType: req.FileType,
 		Filter: req.Filter,
-	}, func(o *client2.CallOptions) { //todo: wait async cluster handler
+	}, func(o *client2.CallOptions) { //todo: wait async cluster handler ready
 		o.RequestTimeout = time.Second * 30
 		o.DialTimeout = time.Second * 30
 	})
@@ -61,7 +61,7 @@ func ImportData(c *gin.Context) {
 		UserName: req.UserName,
 		Password: req.Password,
 		FilePath: req.FilePath,
-	}, func(o *client2.CallOptions) { //todo: wait async cluster handler
+	}, func(o *client2.CallOptions) { //todo: wait async cluster handler ready
 		o.RequestTimeout = time.Second * 30
 		o.DialTimeout = time.Second * 30
 	})

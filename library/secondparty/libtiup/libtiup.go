@@ -561,7 +561,7 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 func TiupMgrRoutine() {
 	inReader := bufio.NewReader(os.Stdin)
 	outWriter := os.Stdout
-	errw := os.Stderr
+	//errw := os.Stderr
 	//errw.Write([]byte("TiupMgrRoutine enter\n"))
 	for {
 		//errw.Write([]byte("TiupMgrRoutine read\n"))
@@ -570,7 +570,7 @@ func TiupMgrRoutine() {
 		if err != nil {
 			myPanic(err)
 		}
-		errw.Write([]byte(input))
+		//errw.Write([]byte(input))
 		if input[len(input)-1] == '\n' {
 			cmdStr := input[:len(input)-1]
 			var cmd CmdReqOrResp

@@ -201,7 +201,7 @@ func Detail(c *gin.Context) {
 // ClusterKnowledge 查看集群基本知识
 // @Summary 查看集群基本知识
 // @Description 查看集群基本知识
-// @Tags cluster
+// @Tags knowledge
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
@@ -209,7 +209,7 @@ func Detail(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /cluster/knowledge [get]
+// @Router /knowledges [get]
 func ClusterKnowledge(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(knowledge.SpecKnowledge.Specs))
 }

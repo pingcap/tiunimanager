@@ -17,7 +17,3 @@ type QueryReq struct {
 	ClusterStatus string `json:"clusterStatus" form:"clusterStatus"`
 	ClusterTag    string `json:"clusterTag" form:"clusterTag"`
 }
-
-type DescribeDashboardReq struct {
-	ClusterId		string	`json:"clusterId"`
-}

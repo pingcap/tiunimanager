@@ -226,19 +226,12 @@ func ClusterKnowledge(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /cluster/knowledge [get]
+// @Router /cluster/dashboard [get]
 func DescribeDashboard(c *gin.Context) {
-	var describeReq DescribeDashboardReq
-
-	if err := c.ShouldBindJSON(&describeReq); err != nil {
-		_ = c.Error(err)
-		return
-	}
-
 	operator := controller.GetOperator(c)
 	reqDTO := &cluster.DescribeDashboardRequest{
 		Operator: operator.ConvertToDTO(),
-		ClusterId: describeReq.ClusterId,
+		ClusterId: c.Param("clusterId"),
 	}
 	respDTO, err := client.ClusterClient.DescribeDashboard(context.TODO(), reqDTO, controller.DefaultTimeout)
 

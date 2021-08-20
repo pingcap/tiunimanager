@@ -52,7 +52,7 @@ func Route(g *gin.Engine) {
 			cluster.POST("/", clusterapi.Create)
 			cluster.GET("/", clusterapi.Query)
 			cluster.DELETE("/:clusterId", clusterapi.Delete)
-			cluster.GET("/dashboard", clusterapi.DescribeDashboard)
+			cluster.GET("/:clusterId/dashboard", clusterapi.DescribeDashboard)
 			// Params
 			cluster.GET("/:clusterId/params", instanceapi.QueryParams)
 			cluster.POST("/:clusterId/params", instanceapi.SubmitParams)

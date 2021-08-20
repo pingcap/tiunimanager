@@ -42,7 +42,7 @@ func initLogger(key config.Key) {
 
 func initClusterOperator() {
 	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup", "")
-	libbr.MicroInit("./brmgr/brmgr", "br", "")
+	libbr.MicroInit("./brmgr/brmgr", "br")
 }
 
 func initService() {

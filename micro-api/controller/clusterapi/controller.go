@@ -213,3 +213,38 @@ func Detail(c *gin.Context) {
 func ClusterKnowledge(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(knowledge.SpecKnowledge.Specs))
 }
+
+
+// DescribeDashboard
+// @Summary 查看集群dashboard信息
+// @Description 查看集群dashboard信息
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Param Token header string true "token"
+// @Success 200 {object} controller.CommonResult{data=DescribeDashboardRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /cluster/dashboard [get]
+func DescribeDashboard(c *gin.Context) {
+	operator := controller.GetOperator(c)
+	reqDTO := &cluster.DescribeDashboardRequest{
+		Operator: operator.ConvertToDTO(),
+		ClusterId: c.Param("clusterId"),
+	}
+	respDTO, err := client.ClusterClient.DescribeDashboard(context.TODO(), reqDTO, controller.DefaultTimeout)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetStatus()
+		result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
+			ClusterId: respDTO.GetClusterId(),
+			Url: respDTO.GetUrl(),
+			ShareCode: respDTO.GetShareCode(),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
+}

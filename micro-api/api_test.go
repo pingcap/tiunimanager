@@ -308,3 +308,172 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 	assert.Equal(t, result.Data.Host.Disks[0].Name, fakeDiskName)
 	assert.Equal(t, result.Data.Host.Disks[0].Path, fakeDiskPath)
 }
+
+func Test_DownloadTemplate_Succeed(t *testing.T) {
+	initConfig()
+
+	w := performRequest("GET", "/api/v1/resources/hosts-template", "application/json", nil)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, w.Header().Get("Content-Type"), "application/octet-stream")
+	templateName := "hostInfo_template.xlsx"
+	assert.Equal(t, w.Header().Get("Content-Disposition"), "attachment; filename="+templateName)
+}
+
+func Test_GetFailureDomain_Succeed(t *testing.T) {
+	initConfig()
+	fakeZone1, fakeSpec1, fakeCount1, fakePurpose1 := "TEST_Zone1", "4u8g", 1, "Compute"
+	fakeZone2, fakeSpec2, fakeCount2, fakePurpose2 := "TEST_Zone2", "8u16g", 2, "Storage"
+	fakeZone3, fakeSpec3, fakeCount3, fakePurpose3 := "TEST_Zone3", "16u64g", 3, "Compute/Storage"
+	fakeService := InitFakeManagerClient()
+	fakeService.MockGetFailureDomain(func(ctx context.Context, in *managerPb.GetFailureDomainRequest, opts ...client.CallOption) (*managerPb.GetFailureDomainResponse, error) {
+		if in.FailureDomainType != 2 {
+			return nil, status.Errorf(codes.InvalidArgument, "input failuredomain type wrong")
+		}
+		rsp := new(managerPb.GetFailureDomainResponse)
+		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp.Rs.Code = int32(codes.OK)
+		rsp.FdList = append(rsp.FdList, &managerPb.FailureDomainResource{
+			FailureDomain: fakeZone1,
+			Spec:          fakeSpec1,
+			Count:         int32(fakeCount1),
+			Purpose:       fakePurpose1,
+		})
+		rsp.FdList = append(rsp.FdList, &managerPb.FailureDomainResource{
+			FailureDomain: fakeZone2,
+			Spec:          fakeSpec2,
+			Count:         int32(fakeCount2),
+			Purpose:       fakePurpose2,
+		})
+		rsp.FdList = append(rsp.FdList, &managerPb.FailureDomainResource{
+			FailureDomain: fakeZone3,
+			Spec:          fakeSpec3,
+			Count:         int32(fakeCount3),
+			Purpose:       fakePurpose3,
+		})
+		return rsp, nil
+	})
+
+	w := performRequest("GET", "/api/v1/resources/failuredomains?failureDomainType=2", "application/json", nil)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	type CommonResult struct {
+		controller.ResultMark
+		Data []hostapi.DomainResource `json:"data"`
+	}
+	var result CommonResult
+
+	err := json.Unmarshal([]byte(w.Body.String()), &result)
+	assert.Nil(t, err)
+	assert.Equal(t, result.Data[0].ZoneName, fakeZone1)
+	assert.Equal(t, result.Data[1].SpecCode, fakeSpec2)
+	assert.Equal(t, result.Data[2].Purpose, fakePurpose3)
+}
+
+func Test_AllocHosts_Succeed(t *testing.T) {
+	initConfig()
+	fakeHostName1, fakeIp1, fakeDiskName1, fakeDiskPath1 := "TEST_HOST1", "192.168.56.11", "vdb", "/mnt/1"
+	fakeHostName2, fakeIp2, fakeDiskName2, fakeDiskPath2 := "TEST_HOST2", "192.168.56.12", "sdb", "/mnt/disk2"
+	fakeHostName3, fakeIp3, fakeDiskName3, fakeDiskPath3 := "TEST_HOST3", "192.168.56.13", "nvmep0", "/mnt/disk3"
+	fakeHostName4, fakeIp4, fakeDiskName4, fakeDiskPath4 := "TEST_HOST4", "192.168.56.14", "sdc", "/mnt/disk4"
+	fakeService := InitFakeManagerClient()
+	fakeService.MockAllocHosts(func(ctx context.Context, in *managerPb.AllocHostsRequest, opts ...client.CallOption) (*managerPb.AllocHostResponse, error) {
+		if in.PdReq[0].FailureDomain != "TEST_Zone1" || in.TidbReq[0].FailureDomain != "TEST_Zone2" || in.TikvReq[0].FailureDomain != "TEST_Zone3" || in.TikvReq[1].Memory != 64 {
+			return nil, status.Errorf(codes.InvalidArgument, "input allocHosts type wrong, %s, %s, %s, %d",
+				in.PdReq[0].FailureDomain, in.TidbReq[0].FailureDomain, in.TikvReq[0].FailureDomain, in.TikvReq[1].Memory)
+		}
+		rsp := new(managerPb.AllocHostResponse)
+		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp.Rs.Code = int32(codes.OK)
+		rsp.PdHosts = append(rsp.PdHosts, &managerPb.AllocHost{
+			HostName: fakeHostName1,
+			Ip:       fakeIp1,
+		})
+		rsp.PdHosts[0].Disk = &managerPb.Disk{
+			Name: fakeDiskName1,
+			Path: fakeDiskPath1,
+		}
+		rsp.TidbHosts = append(rsp.TidbHosts, &managerPb.AllocHost{
+			HostName: fakeHostName2,
+			Ip:       fakeIp2,
+		})
+		rsp.TidbHosts[0].Disk = &managerPb.Disk{
+			Name: fakeDiskName2,
+			Path: fakeDiskPath2,
+		}
+		rsp.TikvHosts = append(rsp.TikvHosts, &managerPb.AllocHost{
+			HostName: fakeHostName3,
+			Ip:       fakeIp3,
+		})
+		rsp.TikvHosts[0].Disk = &managerPb.Disk{
+			Name: fakeDiskName3,
+			Path: fakeDiskPath3,
+		}
+		rsp.TikvHosts = append(rsp.TikvHosts, &managerPb.AllocHost{
+			HostName: fakeHostName4,
+			Ip:       fakeIp4,
+		})
+		rsp.TikvHosts[1].Disk = &managerPb.Disk{
+			Name: fakeDiskName4,
+			Path: fakeDiskPath4,
+		}
+		return rsp, nil
+	})
+
+	var allocReq = []byte(`
+	{
+		"pdReq": [
+		  {
+			"count": 1,
+			"cpuCores": 4,
+			"failureDomain": "TEST_Zone1",
+			"memory": 8
+		  }
+		],
+		"tidbReq": [
+		  {
+			"count": 1,
+			"cpuCores": 8,
+			"failureDomain": "TEST_Zone2",
+			"memory": 16
+		  }
+		],
+		"tikvReq": [
+		  {
+			"count": 1,
+			"cpuCores": 8,
+			"failureDomain": "TEST_Zone3",
+			"memory": 16
+		  },
+		  {
+			"count": 1,
+			"cpuCores": 16,
+			"failureDomain": "TEST_Zone3",
+			"memory": 64
+		  }
+		]
+	  }
+	`)
+	w := performRequest("POST", "/api/v1/resources/allochosts", "application/json", bytes.NewBuffer(allocReq))
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	type CommonResult struct {
+		controller.ResultMark
+		Data hostapi.AllocHostsRsp `json:"data"`
+	}
+	var result CommonResult
+
+	err := json.Unmarshal([]byte(w.Body.String()), &result)
+	assert.Nil(t, err)
+	assert.Equal(t, result.Data.PdHosts[0].HostName, fakeHostName1)
+	assert.Equal(t, result.Data.PdHosts[0].Disk.Name, fakeDiskName1)
+	assert.Equal(t, result.Data.TidbHosts[0].Ip, fakeIp2)
+	assert.Equal(t, result.Data.TidbHosts[0].Disk.Path, fakeDiskPath2)
+	assert.Equal(t, result.Data.TikvHosts[0].HostName, fakeHostName3)
+	assert.Equal(t, result.Data.TikvHosts[1].HostName, fakeHostName4)
+	assert.Equal(t, result.Data.TikvHosts[0].Disk.Name, fakeDiskName3)
+	assert.Equal(t, result.Data.TikvHosts[1].Disk.Path, fakeDiskPath4)
+	assert.Equal(t, result.Data.TikvHosts[1].Ip, fakeIp4)
+}

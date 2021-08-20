@@ -469,7 +469,7 @@ func AllocHosts(c *gin.Context) {
 // @Produce json
 // @Param Token header string true "登录token"
 // @Param failureDomainType query int false "指定故障域类型" Enums(1, 2, 3)
-// @Success 200 {object} controller.ResultWithPage{data=[]DomainResource}
+// @Success 200 {object} controller.CommonResult{data=[]DomainResource}
 // @Router /resources/failuredomains [get]
 func GetFailureDomain(c *gin.Context) {
 	var domain int
@@ -508,5 +508,5 @@ func GetFailureDomain(c *gin.Context) {
 			Count:    v.Count,
 		})
 	}
-	c.JSON(http.StatusOK, controller.SuccessWithPage(res.Resources, controller.Page{Page: 1, PageSize: 20, Total: len(res.Resources)}))
+	c.JSON(http.StatusOK, controller.Success(res.Resources))
 }

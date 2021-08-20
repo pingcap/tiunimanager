@@ -1319,7 +1319,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
+            - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
                   items:

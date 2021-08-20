@@ -1097,7 +1097,7 @@ var doc = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                    "$ref": "#/definitions/controller.CommonResult"
                                 },
                                 {
                                     "type": "object",

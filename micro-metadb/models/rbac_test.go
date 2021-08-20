@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/google/uuid"
 	"reflect"
 	"testing"
 	"time"
@@ -279,6 +280,20 @@ func TestAddRoleBindings(t *testing.T) {
 }
 
 func TestFetchAllRolesByAccount(t *testing.T) {
+	accountId := uuid.New().String()
+	role1, err := AddRole(defaultTenantId, "TestFetchAllRolesByAccount1", "TestFetchAllRolesByAccount", 0)
+	role2, err := AddRole(defaultTenantId, "TestFetchAllRolesByAccount2", "TestFetchAllRolesByAccount", 0)
+
+	if err != nil {
+		t.Errorf("FetchAllRolesByAccount() error = %v", err)
+		return
+	}
+
+	AddRoleBindings([]RoleBindingDO{
+		{Entity: Entity{TenantId: defaultTenantId, Status: 0}, RoleId: role1.ID, AccountId: accountId},
+		{Entity: Entity{TenantId: defaultTenantId, Status: 0}, RoleId: role2.ID, AccountId: accountId},
+	})
+
 	type args struct {
 		tenantId  string
 		accountId string
@@ -286,10 +301,15 @@ func TestFetchAllRolesByAccount(t *testing.T) {
 	tests := []struct {
 		name       string
 		args       args
-		wantResult []RoleDO
 		wantErr    bool
+		wants 	   []func(args2 args, result []RoleDO) bool
 	}{
-		// TODO: Add test cases.
+		{"normal", args{tenantId: defaultTenantId, accountId: accountId}, false, []func(args2 args, result []RoleDO) bool {
+			func(args2 args, result []RoleDO) bool{return len(result) == 2},
+		}},
+		{"empty", args{tenantId: defaultTenantId, accountId: "fetchRoleByAccount_empty"}, false, []func(args2 args, result []RoleDO) bool {
+			func(args2 args, result []RoleDO) bool{return len(result) == 0},
+		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -298,8 +318,11 @@ func TestFetchAllRolesByAccount(t *testing.T) {
 				t.Errorf("FetchAllRolesByAccount() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotResult, tt.wantResult) {
-				t.Errorf("FetchAllRolesByAccount() gotResult = %v, want %v", gotResult, tt.wantResult)
+
+			for i,f := range tt.wants {
+				if !f(tt.args, gotResult) {
+					t.Errorf("FetchAllRolesByAccount() assert got flase, index = %v, gotResult = %v", i,  gotResult)
+				}
 			}
 		})
 	}

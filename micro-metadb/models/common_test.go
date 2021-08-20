@@ -49,6 +49,8 @@ func TestMain(m *testing.M) {
 		&TestRecord{},
 		&TestData{},
 		&DemandRecordDO{},
+		&Host{},
+		&Disk{},
 		&ClusterDO{},
 		&TiUPConfigDO{},
 		&Tenant{},

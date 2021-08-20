@@ -103,7 +103,7 @@ func getLoginToken(dashboardUrl, userName, password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Infof("getLoginToken resp: %v", data)
+	log.Infof("getLoginToken resp: %v", loginResp)
 
 	return loginResp.Token, nil
 }
@@ -130,7 +130,7 @@ func generateShareCode(dashboardUrl, token string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Infof("generateShareCode resp: %v", data)
+	log.Infof("generateShareCode resp: %v", shareResp)
 
 	return shareResp.Code, nil
 }

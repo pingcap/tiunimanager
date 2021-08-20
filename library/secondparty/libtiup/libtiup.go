@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime/debug"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -168,7 +167,7 @@ type CmdClusterDisplayReq struct {
 }
 
 type CmdClusterDisplayResp struct {
-	Url string
+	DisplayRespString string
 }
 
 type TaskStatusMapValue struct {
@@ -555,9 +554,7 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 		//fmt.Println("cmd start err", err)
 		return ret
 	}
-	//data: "Dashboard URL: http://127.0.0.1:2379/dashboard/\n"
-	result := strings.Split(strings.Replace(string(data), "\n", "", -1), " ")
-	ret.Url = result[2]
+	ret.DisplayRespString = string(data)
 	return ret
 }
 

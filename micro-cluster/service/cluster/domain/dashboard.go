@@ -9,6 +9,7 @@ import (
 	proto "github.com/pingcap/tiem/micro-cluster/proto"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -43,7 +44,7 @@ var loginUrlSuffix string = "api/user/login"
 var defaultExpire int64 = 60 * 60 * 3 //3 hour expire
 
 func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
-	//todo: check operator
+	//todo: check operator and clusterId
 	url, err := getDashboardUrl(clusterId)
 	if err != nil {
 		return nil, err
@@ -76,8 +77,10 @@ func getDashboardUrl(clusterId string) (string, error) {
 		log.Errorf("call tiupmgr cluster display failed, %s", err.Error())
 		return "", err
 	}
-	log.Infof("call tiupmgr success, %v", resp)
-	return resp.Url, nil
+	log.Infof("call tiupmgr success, resp: %v", resp)
+	//DisplayRespString: "Dashboard URL: http://127.0.0.1:2379/dashboard/\n"
+	result := strings.Split(strings.Replace(resp.DisplayRespString, "\n", "", -1), " ")
+	return result[2], nil
 }
 
 func getLoginToken(dashboardUrl, userName, password string) (string, error) {
@@ -100,6 +103,7 @@ func getLoginToken(dashboardUrl, userName, password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	log.Infof("getLoginToken resp: %v", data)
 
 	return loginResp.Token, nil
 }
@@ -126,6 +130,7 @@ func generateShareCode(dashboardUrl, token string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	log.Infof("generateShareCode resp: %v", data)
 
 	return shareResp.Code, nil
 }

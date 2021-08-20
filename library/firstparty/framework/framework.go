@@ -3,8 +3,11 @@ package framework
 import (
 	"fmt"
 
+	"github.com/micro/cli/v2"
+
 	"github.com/asim/go-micro/v3/server"
 	"github.com/pingcap/tiem/library/firstparty/util"
+	mysignal "github.com/pingcap/tiem/library/firstparty/util/signal"
 )
 
 type Opt func(*framework)
@@ -13,17 +16,24 @@ type Framework interface {
 	InitLogger() error
 	InitConfig() error
 	InitClient() error
+	ArgsParse() error
+	SetupQuitSignalHandler(quitSignalHandler func()) error
+
 	MustGetLogger() Logger
 	MustGetConfig() Config
 	MustGetClient() Client
 
 	Run(opts ...Opt) error
+	AddOpts(opts ...Opt)
 }
 
 type framework struct {
 	initLoggerFp func() (Logger, error)
 	initConfigFp func() (Config, error)
 	initClientFp func() (Client, error)
+
+	argFlags          []cli.Flag
+	quitSignalHandler func()
 
 	certificateCrtFilePath string
 	certificateKeyFilePath string
@@ -53,6 +63,18 @@ func WithCertificateKeyFilePath(path string) Opt {
 func WithServiceName(serviceName string) Opt {
 	return func(p *framework) {
 		p.serviceName = serviceName
+	}
+}
+
+func WithArgFlags(argFlags []cli.Flag) Opt {
+	return func(p *framework) {
+		p.argFlags = argFlags
+	}
+}
+
+func WithQuitSignalHandler(quitSignalHandler func()) Opt {
+	return func(p *framework) {
+		p.quitSignalHandler = quitSignalHandler
 	}
 }
 
@@ -93,6 +115,22 @@ func (p *framework) InitClient() error {
 	return err
 }
 
+func (p *framework) ArgsParse() error {
+	argsParse(p.argFlags)
+	return nil
+}
+
+func (p *framework) SetupQuitSignalHandler(quitSignalHandler func()) error {
+	if quitSignalHandler == nil {
+		return fmt.Errorf("quitSignalHandler should not be nil")
+	}
+	p.quitSignalHandler = quitSignalHandler
+	mysignal.SetupSignalHandler(func(bool) {
+		quitSignalHandler()
+	})
+	return nil
+}
+
 func (p *framework) MustGetLogger() Logger {
 	ret := p.logger
 	util.Assert(ret != nil)
@@ -118,6 +156,12 @@ func (p *framework) Run(opts ...Opt) error {
 	}
 	// TODO: setup srv
 	return nil
+}
+
+func (p *framework) AddOpts(opts ...Opt) {
+	for _, opt := range opts {
+		opt(p)
+	}
 }
 
 // there is a rather rough usage example in the test

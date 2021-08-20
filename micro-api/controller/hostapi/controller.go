@@ -379,12 +379,11 @@ func DownloadHostTemplateFile(c *gin.Context) {
 	templateName := "hostInfo_template.xlsx"
 	filePath := filepath.Join(curDir, templateName)
 
-	fileTmp, err := os.Open(filePath)
-	if err != nil {
+	_, err := os.Stat(filePath)
+	if err != nil && !os.IsExist(err) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.NotFound), err.Error()))
 		return
 	}
-	defer fileTmp.Close()
 
 	c.Header("Content-Type", "application/octet-stream")
 	c.Header("Content-Disposition", "attachment; filename="+templateName)

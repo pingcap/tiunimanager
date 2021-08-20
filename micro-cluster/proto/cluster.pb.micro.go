@@ -51,6 +51,7 @@ type ClusterService interface {
 	GetBackupStrategy(ctx context.Context, in *GetBackupStrategyRequest, opts ...client.CallOption) (*GetBackupStrategyResponse, error)
 	QueryParameters(ctx context.Context, in *QueryClusterParametersRequest, opts ...client.CallOption) (*QueryClusterParametersResponse, error)
 	SaveParameters(ctx context.Context, in *SaveClusterParametersRequest, opts ...client.CallOption) (*SaveClusterParametersResponse, error)
+	DescribeDashboard(ctx context.Context, in *DescribeDashboardRequest, opts ...client.CallOption) (*DescribeDashboardResponse, error)
 }
 
 type clusterService struct {
@@ -215,6 +216,16 @@ func (c *clusterService) SaveParameters(ctx context.Context, in *SaveClusterPara
 	return out, nil
 }
 
+func (c *clusterService) DescribeDashboard(ctx context.Context, in *DescribeDashboardRequest, opts ...client.CallOption) (*DescribeDashboardResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.DescribeDashboard", in)
+	out := new(DescribeDashboardResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterService service
 
 type ClusterServiceHandler interface {
@@ -233,6 +244,7 @@ type ClusterServiceHandler interface {
 	GetBackupStrategy(context.Context, *GetBackupStrategyRequest, *GetBackupStrategyResponse) error
 	QueryParameters(context.Context, *QueryClusterParametersRequest, *QueryClusterParametersResponse) error
 	SaveParameters(context.Context, *SaveClusterParametersRequest, *SaveClusterParametersResponse) error
+	DescribeDashboard(context.Context, *DescribeDashboardRequest, *DescribeDashboardResponse) error
 }
 
 func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, opts ...server.HandlerOption) error {
@@ -252,6 +264,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		GetBackupStrategy(ctx context.Context, in *GetBackupStrategyRequest, out *GetBackupStrategyResponse) error
 		QueryParameters(ctx context.Context, in *QueryClusterParametersRequest, out *QueryClusterParametersResponse) error
 		SaveParameters(ctx context.Context, in *SaveClusterParametersRequest, out *SaveClusterParametersResponse) error
+		DescribeDashboard(ctx context.Context, in *DescribeDashboardRequest, out *DescribeDashboardResponse) error
 	}
 	type ClusterService struct {
 		clusterService
@@ -322,4 +335,8 @@ func (h *clusterServiceHandler) QueryParameters(ctx context.Context, in *QueryCl
 
 func (h *clusterServiceHandler) SaveParameters(ctx context.Context, in *SaveClusterParametersRequest, out *SaveClusterParametersResponse) error {
 	return h.ClusterServiceHandler.SaveParameters(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) DescribeDashboard(ctx context.Context, in *DescribeDashboardRequest, out *DescribeDashboardResponse) error {
+	return h.ClusterServiceHandler.DescribeDashboard(ctx, in, out)
 }

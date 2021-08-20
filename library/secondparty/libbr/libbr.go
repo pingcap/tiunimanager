@@ -165,14 +165,14 @@ func BrMgrInit() {
 func BrMgrRoutine() {
 	inReader := bufio.NewReader(os.Stdin)
 	outWriter := os.Stdout
-	errw := os.Stderr
+	//errw := os.Stderr
 
 	for {
 		input, err := inReader.ReadString('\n')
 		if err != nil {
 			myPanic(err)
 		}
-		errw.Write([]byte(input))
+		//errw.Write([]byte(input))
 		if input[len(input)-1] == '\n' {
 			cmdStr := input[:len(input)-1]
 			var cmd CmdReqOrResp
@@ -230,7 +230,7 @@ func assert(b bool) {
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
 	//log.Fatalf("panic: %s, with stack trace:", s, string(debug.Stack()))
-	fmt.Printf("panic: %s, with stack trace: %s\n", s, string(debug.Stack()))
+	fmt.Printf("panic: %s, with stack trace: %v\n", s, string(debug.Stack()))
 	panic("unexpected")
 }
 

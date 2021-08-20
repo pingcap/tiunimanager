@@ -160,14 +160,14 @@ type CmdLightningResp struct {
 }
 
 type CmdClusterDisplayReq struct {
-	clusterName string
+	ClusterName string
 	TimeoutS    int
 	TiupPath    string
 	Flags       []string
 }
 
 type CmdClusterDisplayResp struct {
-	url string
+	DisplayRespString string
 }
 
 type TaskStatusMapValue struct {
@@ -530,7 +530,7 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 	var ret CmdClusterDisplayResp
 	var args []string
 	args = append(args, "cluster", "display")
-	args = append(args, req.clusterName)
+	args = append(args, req.ClusterName)
 	args = append(args, req.Flags...)
 
 	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
@@ -554,14 +554,14 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 		//fmt.Println("cmd start err", err)
 		return ret
 	}
-	ret.url = string(data)
+	ret.DisplayRespString = string(data)
 	return ret
 }
 
 func TiupMgrRoutine() {
 	inReader := bufio.NewReader(os.Stdin)
 	outWriter := os.Stdout
-	errw := os.Stderr
+	//errw := os.Stderr
 	//errw.Write([]byte("TiupMgrRoutine enter\n"))
 	for {
 		//errw.Write([]byte("TiupMgrRoutine read\n"))
@@ -570,7 +570,7 @@ func TiupMgrRoutine() {
 		if err != nil {
 			myPanic(err)
 		}
-		errw.Write([]byte(input))
+		//errw.Write([]byte(input))
 		if input[len(input)-1] == '\n' {
 			cmdStr := input[:len(input)-1]
 			var cmd CmdReqOrResp
@@ -997,7 +997,7 @@ func microSrvTiupClusterDisplay(clusterDisplayReq CmdClusterDisplayReq) CmdClust
 func MicroSrvTiupClusterDisplay(clusterName string, timeoutS int, flags []string) (CmdClusterDisplayResp, error) {
 	var clusterDisplayResp CmdClusterDisplayResp
 	var clusterDisplayReq CmdClusterDisplayReq
-	clusterDisplayReq.clusterName = clusterName
+	clusterDisplayReq.ClusterName = clusterName
 	clusterDisplayReq.TimeoutS = timeoutS
 	clusterDisplayReq.TiupPath = glTiUPBinPath
 	clusterDisplayReq.Flags = flags

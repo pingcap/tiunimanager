@@ -106,7 +106,7 @@ func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *manager.ImportHostsI
 func ImportHost(c *gin.Context) {
 	var host HostInfo
 	if err := c.ShouldBindJSON(&host); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 
@@ -213,7 +213,7 @@ func ImportHosts(c *gin.Context) {
 func ListHost(c *gin.Context) {
 	var hostQuery HostQuery
 	if err := c.ShouldBindQuery(&hostQuery); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	if !HostStatus(hostQuery.Status).IsValid() {
@@ -340,7 +340,7 @@ func RemoveHosts(c *gin.Context) {
 
 	var hostIds []string
 	if err := c.ShouldBindJSON(&hostIds); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 
@@ -379,12 +379,11 @@ func DownloadHostTemplateFile(c *gin.Context) {
 	templateName := "hostInfo_template.xlsx"
 	filePath := filepath.Join(curDir, templateName)
 
-	fileTmp, err := os.Open(filePath)
-	if err != nil {
+	_, err := os.Stat(filePath)
+	if err != nil && !os.IsExist(err) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.NotFound), err.Error()))
 		return
 	}
-	defer fileTmp.Close()
 
 	c.Header("Content-Type", "application/octet-stream")
 	c.Header("Content-Disposition", "attachment; filename="+templateName)
@@ -434,7 +433,7 @@ func copyAllocFromRsp(src []*manager.AllocHost, dst *[]AllocateRsp) {
 func AllocHosts(c *gin.Context) {
 	var allocation AllocHostsReq
 	if err := c.ShouldBindJSON(&allocation); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 
@@ -470,7 +469,7 @@ func AllocHosts(c *gin.Context) {
 // @Produce json
 // @Param Token header string true "登录token"
 // @Param failureDomainType query int false "指定故障域类型" Enums(1, 2, 3)
-// @Success 200 {object} controller.ResultWithPage{data=[]DomainResource}
+// @Success 200 {object} controller.CommonResult{data=[]DomainResource}
 // @Router /resources/failuredomains [get]
 func GetFailureDomain(c *gin.Context) {
 	var domain int
@@ -509,5 +508,5 @@ func GetFailureDomain(c *gin.Context) {
 			Count:    v.Count,
 		})
 	}
-	c.JSON(http.StatusOK, controller.SuccessWithPage(res.Resources, controller.Page{Page: 1, PageSize: 20, Total: len(res.Resources)}))
+	c.JSON(http.StatusOK, controller.Success(res.Resources))
 }

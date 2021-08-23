@@ -36,10 +36,12 @@ STATICCHECK     := GO111MODULE=on staticcheck
 TIEM_EDITION    ?= Enterprise
 
 # Ensure TIEM_EDITION is set to Community or Enterprise before running build process.
-ifneq "$(TIEM_EDITION)" "Community"
 ifneq "$(TIEM_EDITION)" "Enterprise"
   $(error Please set the correct environment variable TIEM_EDITION before running `make`)
 endif
+
+ifeq (${PREFIX},)
+    PREFIX := $(CURDIR)/usr/local
 endif
 
 ARCH      := "`uname -s`"
@@ -47,13 +49,13 @@ LINUX     := "Linux"
 MAC       := "Darwin"
 PACKAGE_LIST  := go list ./...| grep -vE "docs|proto"
 PACKAGES  ?= $$($(PACKAGE_LIST))
-#PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/pingcap/$(PROJECT)/||'
-#FILES     := $$(find $$($(PACKAGE_DIRECTORIES)) -name "*.go")
-#UNCONVERT_PACKAGES_LIST := go list ./...| grep -vE "lightning\/checkpoints|lightning\/manual|lightning\/common"
-#UNCONVERT_PACKAGES := $$($(UNCONVERT_PACKAGES_LIST))
+#PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/pingcap/$(PROJECT)||'
+PACKAGE_DIRECTORIES := $(PACKAGE_LIST) 
+FILES     := $$(find $$($(PACKAGE_DIRECTORIES)) -name "*.go")
+UNCONVERT_PACKAGES := go list ./...| grep -vE "docs|proto"
 
-#FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl enable)
-#FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl disable)
+FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git)" | xargs bin/failpoint-ctl enable)
+FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git)" | xargs bin/failpoint-ctl disable)
 
 LDFLAGS += -X "github.com/pingcap/tiem/library/fristparty/util/versioninfo.TiEMReleaseVersion=$(shell git describe --tags --dirty --always)"
 LDFLAGS += -X "github.com/pingcap/tiem/library/firstparty/util/versioninfo.TiEMBuildTS=$(shell date -u '+%Y-%m-%d %H:%M:%S')"
@@ -65,12 +67,6 @@ LDFLAGS += -X "github.com/pingcap/tiem/library/firstparty/util/versioninfo.TiEME
 #TODO COVERAGE_SERVER_LDFLAGS =  -X "github.com/pingcap/tidb/tidb-server.isCoverageServer=1"
 
 # TODO CHECK_LDFLAGS += $(LDFLAGS) ${TEST_LDFLAGS}
-
-TARGET = ""
-
-# VB = Vector Benchmark
-VB_FILE =
-VB_FUNC =
 
 RACE_FLAG =
 ifeq ("$(WITH_RACE)", "1")

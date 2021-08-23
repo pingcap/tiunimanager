@@ -13,6 +13,7 @@ require (
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/uuid v1.3.0
+	github.com/micro/cli/v2 v2.1.2
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/errors v0.11.4
 	github.com/pingcap/tiup v1.5.5

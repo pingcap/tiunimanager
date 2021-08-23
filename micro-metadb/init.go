@@ -28,7 +28,13 @@ import (
 var log *logger.LogRecord
 
 func initConfig() {
-	config.InitForMonolith()
+	srv := micro.NewService(
+		config.GetMicroMetaDBCliArgsOption(),
+	)
+	srv.Init()
+	srv = nil
+
+	config.InitForMonolith(config.MicroMetaDBMod)
 }
 
 func initLogger(key config.Key) {
@@ -36,6 +42,10 @@ func initLogger(key config.Key) {
 	service.InitLogger(key)
 	// use log
 	log.Debug("init logger completed!")
+}
+
+func initTracer() {
+	tracer.InitTracer()
 }
 
 func initService() {

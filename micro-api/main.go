@@ -17,8 +17,9 @@ import (
 
 // @host localhost:8080
 // @BasePath /api/v1/
-func main()  {
+func main() {
 	initConfig()
+	initTracer()
 	//initService()
 	initClient()
 	//initPrometheus()

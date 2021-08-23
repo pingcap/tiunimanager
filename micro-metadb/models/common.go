@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/pingcap/tiem/library/firstparty/util/uuidutil"
 	"gorm.io/gorm"
 	"time"
 )
@@ -17,7 +18,7 @@ type Entity struct {
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = GenerateID()
+	e.ID = uuidutil.GenerateID()
 	if e.Code == "" {
 		e.Code = e.ID
 	}

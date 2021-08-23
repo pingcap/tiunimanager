@@ -13,6 +13,10 @@ require (
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/uuid v1.3.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4 // indirect
+	github.com/hashicorp/consul/api v1.3.0 // indirect
+	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
+	github.com/lithammer/shortuuid v3.0.0+incompatible
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/errors v0.11.4
 	github.com/pingcap/tiup v1.5.5

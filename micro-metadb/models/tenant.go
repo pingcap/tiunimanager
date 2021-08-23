@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/pingcap/tiem/library/firstparty/util/uuidutil"
 	"time"
 
 	"gorm.io/gorm"
@@ -18,7 +19,7 @@ type Tenant struct {
 }
 
 func (e *Tenant) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = GenerateID()
+	e.ID = uuidutil.GenerateID()
 	e.Status = 0
 	return nil
 }

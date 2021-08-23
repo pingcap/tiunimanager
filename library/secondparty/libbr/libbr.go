@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
 	"github.com/pingcap/tiem/micro-metadb/client"
 	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
@@ -187,6 +188,9 @@ func BrMgrInit() {
 	if len(configPath) == 0 {
 		configPath = "./brmgr.log"
 	}
+	config.InitForMonolith()
+	// TODO: update log path using configPath if necessary
+	log = logger.GetLogger(config.KEY_BRLIB_LOG)
 }
 
 func BrMgrRoutine() {
@@ -207,8 +211,7 @@ func BrMgrRoutine() {
 			if err != nil {
 				myPanic(fmt.Sprintln("cmdStr unmarshal failed err:", err, "cmdStr:", cmdStr))
 			}
-			//log.Info("rcv req", cmd)
-			fmt.Println("rcv req: ", cmd)
+			log.Info("rcv req", cmd)
 			var cmdResp CmdReqOrResp
 			switch cmd.TypeStr {
 			//case CmdBackUpPreCheckReqTypeStr:
@@ -236,8 +239,7 @@ func BrMgrRoutine() {
 			default:
 				myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
 			}
-			//log.Info("snd rsp", cmdResp)
-			fmt.Println("snd rsp: ", cmdResp)
+			log.Info("snd rsp", cmdResp)
 			bs := jsonMustMarshal(&cmdResp)
 			bs = append(bs, '\n')
 			ct, err := outWriter.Write(bs)
@@ -252,16 +254,14 @@ func BrMgrRoutine() {
 func assert(b bool) {
 	if b {
 	} else {
-		//log.Fatal("unexpected panic with stack trace:", string(debug.Stack()))
-		fmt.Println("unexpected panic with stack trace:", string(debug.Stack()))
+		log.Fatal("unexpected panic with stack trace:", string(debug.Stack()))
 		panic("unexpected")
 	}
 }
 
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
-	//log.Fatalf("panic: %s, with stack trace:", s, string(debug.Stack()))
-	fmt.Printf("panic: %s, with stack trace: %s\n", s, string(debug.Stack()))
+	log.Fatalf("panic: %s, with stack trace:", s, string(debug.Stack()))
 	panic("unexpected")
 }
 
@@ -417,10 +417,10 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 	resp := CmdShowBackUpInfoResp{}
 	brSQLCmd := "SHOW BACKUPS"
 	dbConnParam := req.DbConnParameter
-	fmt.Println("task start processing:", fmt.Sprintf("brSQLCmd:%s", brSQLCmd))
+	log.Info("task start processing:", fmt.Sprintf("brSQLCmd:%s", brSQLCmd))
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
 	if err != nil {
-		fmt.Println("db connection err", err)
+		log.Error("db connection err:", err)
 		//log.Error("db connection err", err)
 		return resp
 	}
@@ -428,28 +428,25 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 	t0 := time.Now()
 	err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.Queue_time, &resp.Execution_Time, &resp.Finish_Time, &resp.Connection)
 	successFp := func() {
-		fmt.Println("task finished, time cost", time.Now().Sub(t0))
-		//log.Info("task finished, time cost", time.Now().Sub(t0))
+		log.Info("task finished, time cost", time.Now().Sub(t0))
 	}
 	if err != nil {
-		fmt.Println("query sql cmd err", err)
-		//log.Error("query sql cmd err", err)
+		log.Error("query sql cmd err", err)
 		if err.Error() != "sql: no rows in result set" {
 			return resp
 		}
 		if _, str, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
-			fmt.Println("get tiup status error", err)
+			log.Error("get tiup status error", err)
 		} else if err = json.Unmarshal([]byte(str), &resp); err != nil {
-			fmt.Printf("unmarshal %v error %v\n", str, err)
+			log.Error("unmarshal %v error %v\n", str, err)
 		} else {
-			fmt.Println("check resp from metadb successfully", resp)
+			log.Info("check resp from metadb successfully", resp)
 			//log.Info("sql cmd return successfully")
 			successFp()
 		}
 		return resp
 	}
-	fmt.Println("sql cmd return successfully", resp)
-	//log.Info("sql cmd return successfully")
+	log.Info("sql cmd return successfully")
 	successFp()
 	return resp
 }
@@ -487,48 +484,41 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 	resp := CmdShowRestoreInfoResp{}
 	brSQLCmd := "SHOW RESTORES"
 	dbConnParam := req.DbConnParameter
-	fmt.Println("task start processing:", fmt.Sprintf("brSQLCmd:%s", brSQLCmd))
+	log.Infof("task start processing: brSQLCmd:%s", brSQLCmd)
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
 	if err != nil {
-		fmt.Println("db connection err", err)
-		//log.Error("db connection err", err)
+		log.Error("db connection err", err)
 		return resp
 	}
 	defer db.Close()
 	t0 := time.Now()
 	err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.Queue_time, &resp.Execution_Time, &resp.Finish_Time, &resp.Connection)
 	successFp := func() {
-		fmt.Println("task finished, time cost", time.Now().Sub(t0))
-		//log.Info("task finished, time cost", time.Now().Sub(t0))
+		log.Info("task finished, time cost", time.Now().Sub(t0))
 	}
 	if err != nil {
-		fmt.Println("query sql cmd err", err)
-		//log.Error("query sql cmd err", err)
+		log.Error("query sql cmd err", err)
 		if err.Error() != "sql: no rows in result set" {
 			return resp
 		}
 		if _, str, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
-			fmt.Println("get tiup status error", err)
+			log.Error("get tiup status error", err)
 		} else if err = json.Unmarshal([]byte(str), &resp); err != nil {
-			fmt.Printf("unmarshal %v error %v\n", str, err)
+			log.Error("unmarshal %v error %v\n", str, err)
 		} else {
-			fmt.Println("check resp from metadb successfully", resp)
-			//log.Info("sql cmd return successfully")
+			log.Info("sql cmd return successfully")
 			successFp()
 		}
 		return resp
 	}
-	fmt.Println("sql cmd return successfully", resp.Progress)
-	//log.Info("sql cmd return successfully")
+	log.Info("sql cmd return successfully")
 	successFp()
 	return resp
 }
 
 func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd string) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
-	//log := log.Record("task", taskID)
-	fmt.Println("task start processing:", fmt.Sprintf("brSQLCmd:%s", brSQLCmd))
-	//log.Info("task start processing:", fmt.Sprintf("brSQLCmd:%s", brSQLCmd))
+	log.Infof("task start processing: brSQLCmd:%s", brSQLCmd)
 	glMgrTaskStatusCh <- TaskStatusMember{
 		TaskID:   taskID,
 		Status:   TaskStatusProcessing,
@@ -539,8 +529,7 @@ func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd 
 
 		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
 		if err != nil {
-			fmt.Println("db connection err", err)
-			//log.Error("db connection err", err)
+			log.Error("db connection err", err)
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
@@ -553,8 +542,7 @@ func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd 
 		resp := CmdBrResp{}
 		err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.Size, &resp.BackupTS, &resp.Queue_time, &resp.Execution_Time)
 		if err != nil {
-			fmt.Println("query sql cmd err", err)
-			//log.Error("query sql cmd err", err)
+			log.Error("query sql cmd err", err)
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
@@ -563,16 +551,14 @@ func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd 
 			return
 		}
 		successFp := func() {
-			fmt.Println("task finished, time cost", time.Now().Sub(t0))
-			//log.Info("task finished, time cost", time.Now().Sub(t0))
+			log.Info("task finished, time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusFinished,
 				ErrorStr: string(jsonMustMarshal(&resp)),
 			}
 		}
-		fmt.Println("sql cmd return successfully")
-		//log.Info("sql cmd return successfully")
+		log.Info("sql cmd return successfully")
 		successFp()
 		return
 	}()
@@ -713,7 +699,6 @@ func microCmdChanRoutine(cch chan CmdChanMember, outReader io.Reader, inWriter i
 		ct, err := inWriter.Write(bs)
 		assert(ct == len(bs) && err == nil)
 		output, err := outBufReader.ReadString('\n')
-		//fmt.Println(string(output), len(output), err)
 		assert(len(output) > 1 && err == nil && output[len(output)-1] == '\n')
 		var resp CmdReqOrResp
 		err = json.Unmarshal([]byte(output[:len(output)-1]), &resp)

@@ -44,18 +44,18 @@ var defaultPathPrefix string = "/tmp/tiem/backup"
 
 func BackupPreCheck(request *proto.CreateBackupRequest) error {
 	if !checkBackupRangeValid(request.GetBackupRange()) {
-		return errors.New("backup range invalid")
+		return errors.New("backupRange invalid")
 	}
 	if !checkBackupTypeValid(request.GetBackupType()) {
-		return errors.New("backup type invalid")
+		return errors.New("backupType invalid")
 	}
 	if request.GetClusterId() == "" {
 		return errors.New("clusterId invalid")
 	}
 	if request.GetFilePath() == "" {
-		return errors.New("filepath invalid")
+		return errors.New("filePath invalid")
 	}
-	//todo: check operator is valid
+	//todo: check operator is valid, maybe some has default config
 
 	return nil
 }
@@ -67,7 +67,6 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		return nil, errors.New("load cluster aggregation")
 	}
 	clusterAggregation.CurrentOperator = operator
-	cluster := clusterAggregation.Cluster
 
 	record := &BackupRecord {
 		ClusterId: clusterId,
@@ -76,21 +75,6 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		OperatorId: operator.Id,
 		FilePath: getBackupPath(filePath, clusterId, time.Now().Unix(), backupRange),
 	}
-	resp, err :=  client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
-		BackupRecord: &db.DBBackupRecordDTO{
-			TenantId:    cluster.TenantId,
-			ClusterId:   record.ClusterId,
-			BackupType:  string(record.BackupType),
-			BackupRange: string(record.Range),
-			OperatorId:  record.OperatorId,
-			FlowId:      int64(clusterAggregation.CurrentWorkFlow.Id),
-		},
-	})
-	if err != nil {
-		// todo
-		return clusterAggregation, errors.New("create backup record failed")
-	}
-	record.Id = resp.GetBackupRecord().GetId()
 	clusterAggregation.LastBackupRecord = record
 
 	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster)
@@ -138,17 +122,17 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupRange string) string {
 	if filePrefix != "" {
 		//use user spec filepath
-		//local://br_data/xxxxxx-16242354365-FULL/(lock/SST/metadata)
-		return fmt.Sprintf("%s/%s-%s-%s", filePrefix, clusterId, timeStamp, backupRange)
+		//local://br_data/[clusterId]/16242354365-FULL/(lock/SST/metadata)
+		return fmt.Sprintf("%s/%s/%d-%s", filePrefix, clusterId, timeStamp, backupRange)
 	}
-	return fmt.Sprintf("%s/%s-%s-%s", defaultPathPrefix, clusterId, timeStamp, backupRange)
+	return fmt.Sprintf("%s/%s/%d-%s", defaultPathPrefix, clusterId, timeStamp, backupRange)
 }
 
 func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	log.Info("begin backupCluster")
 	defer log.Info("end backupCluster")
 
-	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	record := clusterAggregation.LastBackupRecord
 	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
@@ -185,7 +169,7 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	log.Info("begin updateBackupRecord")
 	defer log.Info("end updateBackupRecord")
-	clusterAggregation := flowContext.value(contextClusterKey).(ClusterAggregation)
+	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
 	record := clusterAggregation.LastBackupRecord
 	/*
 	//todo: update size
@@ -224,7 +208,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	log.Info("begin recoverFromSrcCluster")
 	defer log.Info("end recoverFromSrcCluster")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(ClusterAggregation)
+	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	recoverInfo := cluster.RecoverInfo
 	if recoverInfo.SourceClusterId == "" || recoverInfo.BackupRecordId == 0 {
@@ -269,7 +253,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 //for no nfs storage
 func mergeBackupFiles(task *TaskEntity, context *FlowContext) bool {
 	//copy file from tikv server to backup dir
-	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	record := clusterAggregation.LastBackupRecord
 	tikvDir := record.FilePath
 	backupDir := record.FilePath

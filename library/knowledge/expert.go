@@ -51,7 +51,7 @@ func LoadKnowledge() {
 
 func loadSpecKnowledge () {
 	tidbType := ClusterType{"tidb", "tidb"}
-	tidbV4 := ClusterVersion{"tidbV4", "v4"}
+	tidbv5_1_0 := ClusterVersion{"v5.1.0", "v5.1.0"}
 
 	tidbComponent := ClusterComponent{
 		"tidb", "tidb",
@@ -65,8 +65,8 @@ func loadSpecKnowledge () {
 		"pd", "pd",
 	}
 
-	tidbV4Spec := ClusterVersionSpec{
-		ClusterVersion: tidbV4,
+	tidbV5_1_0Spec := ClusterVersionSpec{
+		ClusterVersion: tidbv5_1_0,
 		ComponentSpecs: []ClusterComponentSpec{
 			{tidbComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(4, 8)}, 1}},
 			{tikvComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(4, 8)}, 1}},
@@ -89,9 +89,9 @@ func loadSpecKnowledge () {
 	}
 
 	SpecKnowledge = &ClusterSpecKnowledge {
-		Specs: []*ClusterTypeSpec{{tidbType, []ClusterVersionSpec{tidbV4Spec}},{dmType, []ClusterVersionSpec{dmVxSpec}}},
+		Specs: []*ClusterTypeSpec{{tidbType, []ClusterVersionSpec{tidbV5_1_0Spec}},{dmType, []ClusterVersionSpec{dmVxSpec}}},
 		Types: map[string]*ClusterType{tidbType.Code:&tidbType, dmType.Code:&dmType},
-		Versions: map[string]*ClusterVersion{tidbV4.Code: &tidbV4, dmVx.Code: &dmVx},
+		Versions: map[string]*ClusterVersion{tidbv5_1_0.Code: &tidbv5_1_0, dmVx.Code: &dmVx},
 		Components: map[string]*ClusterComponent{tidbComponent.ComponentType:&tidbComponent,
 			tikvComponent.ComponentType:&tikvComponent,
 			pdComponent.ComponentType: &pdComponent,

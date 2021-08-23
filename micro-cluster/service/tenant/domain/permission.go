@@ -16,17 +16,17 @@ type Permission struct {
 type PermissionType int
 
 const (
+	UnrecognizedType PermissionType = 0
 	Path             PermissionType = 1
 	Act              PermissionType = 2
 	Data             PermissionType = 3
-	UnrecognizedType PermissionType = 4
 )
 
 func PermissionTypeFromType(pType int32) PermissionType {
 	switch pType {
-		case 0: return Path
-		case 1: return Act
-		case 2: return Data
+		case 1: return Path
+		case 2: return Act
+		case 3: return Data
 		default: return UnrecognizedType
 	}
 }

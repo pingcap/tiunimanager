@@ -109,7 +109,7 @@ func convertFlowToDTO(do *models.FlowDO) (dto *dbPb.DBFlowDTO) {
 	}
 	dto = &dbPb.DBFlowDTO{}
 	dto.Id = int64(do.ID)
-	dto.FlowName = do.FlowName
+	dto.FlowName = do.Name
 	dto.StatusAlias = do.StatusAlias
 	dto.BizId = do.BizId
 	dto.Status = int32(do.Status)
@@ -126,7 +126,7 @@ func parseFlowDTO(dto *dbPb.DBFlowDTO) (do *models.FlowDO) {
 	}
 	do = &models.FlowDO{}
 	do.ID = uint(dto.Id)
-	do.FlowName = dto.FlowName
+	do.Name = dto.FlowName
 	do.StatusAlias = dto.StatusAlias
 	do.BizId = dto.BizId
 	do.Status = int8(dto.Status)
@@ -152,8 +152,8 @@ func convertTaskToDTO(do *models.TaskDO) (dto *dbPb.DBTaskDTO) {
 
 	dto.Parameters = do.Parameters
 	dto.Result = do.Result
-	dto.TaskName = do.TaskName
-	dto.TaskReturnType = do.TaskReturnType
+	dto.TaskName = do.Name
+	dto.TaskReturnType = do.ReturnType
 
 	return
 }
@@ -187,8 +187,8 @@ func parseTaskDTO(dto *dbPb.DBTaskDTO) (do *models.TaskDO) {
 
 	do.Parameters = dto.Parameters
 	do.Result = dto.Result
-	do.TaskName = dto.TaskName
-	do.TaskReturnType = dto.TaskReturnType
+	do.Name = dto.TaskName
+	do.ReturnType = dto.TaskReturnType
 
 	do.ParentId = dto.ParentId
 	do.ParentType = int8(dto.ParentType)

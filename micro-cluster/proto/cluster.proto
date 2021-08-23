@@ -199,7 +199,7 @@ message BackupRecordDTO {
     string range = 5;
     string backupType = 6;
     OperatorDTO operator = 7;
-    float size = 8;
+    uint64 size = 8;
     DisplayStatusDTO displayStatus = 9;
     string filePath = 10;
 }

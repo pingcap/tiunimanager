@@ -23,8 +23,9 @@ type BackupRecord struct {
 	Range      BackupRange
 	BackupType BackupType
 	OperatorId string
-	Size       float32
+	Size       uint64
 	FilePath   string
+	BizId 	   uint64
 }
 
 type RecoverRecord struct {
@@ -164,16 +165,20 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 		TableName: "",
 		ClusterId: cluster.Id,
 		ClusterName: cluster.ClusterName,
+		TaskID: uint64(task.Id),
 	}
 	storage := libbr.BrStorage{
 		StorageType: libbr.StorageTypeLocal,
 		Root: record.FilePath,
 	}
-	err := libbr.BackUp(clusterFacade, storage, task.Id)
+
+	log.Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
+	_, err := libbr.BackUp(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		log.Errorf("call backup api failed, %s", err.Error())
 		return false
 	}
+	record.BizId = uint64(task.Id)
 	return true
 }
 
@@ -182,10 +187,30 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	defer log.Info("end updateBackupRecord")
 	clusterAggregation := flowContext.value(contextClusterKey).(ClusterAggregation)
 	record := clusterAggregation.LastBackupRecord
+	/*
+	//todo: update size
+	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	cluster := clusterAggregation.Cluster
+	tidbServer := configModel.TiDBServers[0]
+
+	clusterFacade := libbr.ClusterFacade{
+		DbConnParameter: libbr.DbConnParam{
+			Username: "root", //todo: replace admin account
+			Password: "",
+			Ip:	tidbServer.Host,
+			Port: strconv.Itoa(tidbServer.Port),
+		},
+		ClusterId: cluster.Id,
+		ClusterName: cluster.ClusterName,
+		TaskID: record.BizId,
+	}
+	resp := libbr.ShowBackUpInfo(clusterFacade, uint64(task.Id))
+	record.Size = resp.Size
+	*/
 	_, err :=  client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
 		BackupRecord: &db.DBBackupRecordDTO{
 			Id: record.Id,
-			Size: record.Size, //todo: call brmgr get real size
+			Size: record.Size,
 		},
 	})
 	if err != nil {
@@ -232,7 +257,8 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		StorageType: libbr.StorageTypeLocal,
 		Root: record.GetBackupRecords().GetBackupRecord().GetFilePath(),
 	}
-	err = libbr.Restore(clusterFacade, storage, task.Id)
+	log.Infof("begin call brmgr restore api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
+	_, err = libbr.Restore(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		log.Errorf("call restore api failed, %s", err.Error())
 		return false

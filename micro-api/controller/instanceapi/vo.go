@@ -24,7 +24,7 @@ type BackupRecord struct {
 	BackupRange 	string		`json:"backupRange"`
 	BackupType		string		`json:"backupType"`
 	Operator 		controller.Operator	`json:"operator"`
-	Size 			float32		`json:"size"`
+	Size 			uint64		`json:"size"`
 	Status 			controller.StatusInfo	`json:"status"`
 	FilePath 		string		`json:"filePath"`
 }

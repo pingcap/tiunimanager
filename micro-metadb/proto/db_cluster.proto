@@ -159,7 +159,7 @@ message DBBackupRecordDTO {
     string operatorId = 7;
     string filePath = 8;
     int64 flowId = 9;
-    float size = 10;
+    uint64 size = 10;
 }
 
 message DBSaveBackupRecordRequest {

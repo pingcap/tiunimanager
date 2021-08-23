@@ -280,7 +280,7 @@ type BackupRecordDO struct {
 
 	FilePath 		string
 	FlowId			uint
-	Size 		float32
+	Size 		uint64
 }
 
 func (d BackupRecordDO) TableName() string {

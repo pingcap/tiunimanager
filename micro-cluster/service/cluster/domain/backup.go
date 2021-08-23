@@ -11,7 +11,6 @@ import (
 	"github.com/pingcap/tiem/micro-metadb/client"
 	db "github.com/pingcap/tiem/micro-metadb/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 	"os"
 	"strconv"

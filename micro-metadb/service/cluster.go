@@ -171,7 +171,7 @@ func (*DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *dbPb.DBDel
 	return nil
 }
 
-func (*DBServiceHandler) QueryBackupRecord(ctx context.Context, req *dbPb.DBQueryBackupRecordRequest, resp *dbPb.DBQueryBackupRecordResponse) (err error) {
+func (*DBServiceHandler) QueryBackupRecords(ctx context.Context, req *dbPb.DBQueryBackupRecordRequest, resp *dbPb.DBQueryBackupRecordResponse) (err error) {
 	result, err := models.QueryBackupRecord(req.ClusterId, req.RecordId)
 	if err != nil {
 		return err

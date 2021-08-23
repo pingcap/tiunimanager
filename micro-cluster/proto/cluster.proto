@@ -20,6 +20,8 @@ service ClusterService {
 
     rpc QueryParameters(QueryClusterParametersRequest) returns (QueryClusterParametersResponse);
     rpc SaveParameters(SaveClusterParametersRequest) returns (SaveClusterParametersResponse);
+
+    rpc DescribeDashboard(DescribeDashboardRequest) returns (DescribeDashboardResponse);
 }
 
 message ClusterCreateReqDTO {
@@ -309,3 +311,14 @@ message SaveClusterParametersResponse {
     DisplayStatusDTO displayInfo = 2;
 }
 
+message DescribeDashboardRequest {
+    string clusterId = 1;
+    OperatorDTO operator = 2;
+}
+
+message DescribeDashboardResponse {
+    ResponseStatusDTO status = 1;
+    string clusterId = 2;
+    string url = 3;
+    string shareCode = 4;
+}

@@ -30,7 +30,13 @@ import (
 var log *logger.LogRecord
 
 func initConfig() {
-	config.InitForMonolith()
+	srv := micro.NewService(
+		config.GetMicroClusterCliArgsOption(),
+	)
+	srv.Init()
+	srv = nil
+
+	config.InitForMonolith(config.MicroClusterMod)
 }
 
 func initLogger(key config.Key) {
@@ -38,6 +44,10 @@ func initLogger(key config.Key) {
 	service.InitClusterLogger(key)
 	service.InitHostLogger(key)
 	log.Debug("init logger completed!")
+}
+
+func initTracer() {
+	tracer.InitTracer()
 }
 
 func initClusterOperator() {

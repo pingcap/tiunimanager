@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/pingcap/tiem/library/firstparty/config"
+
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
@@ -14,8 +16,8 @@ import (
 
 var GlobalTracer opentracing.Tracer
 
-func init() {
-	jaegerTracer, _, err := NewJaegerTracer("tiem", "127.0.0.1:6831")
+func InitTracer() {
+	jaegerTracer, _, err := NewJaegerTracer("tiem", config.GetTracerAddress())
 	if err != nil {
 		log.Fatal(err)
 	}

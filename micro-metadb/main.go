@@ -8,6 +8,7 @@ import (
 func main() {
 	initConfig()
 	initLogger(config.KEY_METADB_LOG)
+	initTracer()
 	initSqliteDB()
 	initService()
 }

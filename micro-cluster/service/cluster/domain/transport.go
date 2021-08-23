@@ -101,7 +101,7 @@ type TidbCfg struct {
 }
 
 var contextDataTransportKey = "dataTransportInfo"
-var defaultTransportDirPrefix = "/tmp/tiem/datatransport"
+var defaultTransportDirPrefix = "/tmp/tiem/datatransport"	//todo: move to config
 
 func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, fileType string, filter string) (string, error) {
 	log.Infof("begin exportdata clusterId: %s, userName: %s, password: %s, fileType: %s, filter: %s", clusterId, userName, password, fileType, filter)

@@ -38,11 +38,31 @@ const (
 	CmdDestroyRespTypeStr          CmdTypeStr = "CmdDestroyResp"
 	CmdGetAllTaskStatusReqTypeStr  CmdTypeStr = "CmdGetAllTaskStatusReq"
 	CmdGetAllTaskStatusRespTypeStr CmdTypeStr = "CmdGetAllTaskStatusResp"
+	CmdDumplingReqTypeStr		   CmdTypeStr = "CmdDumplingReq"
+	CmdDumplingRespTypeStr         CmdTypeStr = "CmdDumplingResp"
+	CmdLightningReqTypeStr		   CmdTypeStr = "CmdLightningReq"
+	CmdLightningRespTypeStr        CmdTypeStr = "CmdLightningResp"
+	CmdClusterDisplayReqTypeStr    CmdTypeStr = "CmdClusterDisplayReq"
+	CmdClusterDisplayRespTypeStr   CmdTypeStr = "CmdClusterDisplayResp"
+)
+
+type FileTypeStr string
+
+const (
+	FileSqlTypeStr	FileTypeStr = "sql"
+	FileCsvTypeStr  FileTypeStr = "csv"
 )
 
 type CmdReqOrResp struct {
 	TypeStr CmdTypeStr
 	Content string
+}
+
+type DbConnParam struct {
+	Username	string
+	Password	string
+	Ip			string
+	Port		string
 }
 
 type CmdDeployReq struct {
@@ -112,6 +132,44 @@ type CmdGetAllTaskStatusResp struct {
 	Stats []TaskStatusMember
 }
 
+type CmdDumplingReq struct {
+	TaskID   	uint64
+	TimeoutS    int
+	TiupPath    string
+	//DbConnParameter		DbConnParam
+	//FileType			FileTypeStr
+	//ThreadCount			uint64
+	//StorageAddress 		string
+	//MaxFileLineCount	uint64
+	//MaxFileSizeM		uint64
+	//Sql 				string
+	Flags        []string
+}
+
+type CmdDumplingResp struct {
+}
+
+type CmdLightningReq struct {
+	TaskID   	uint64
+	TimeoutS    int
+	TiupPath    string
+	Flags       []string
+}
+
+type CmdLightningResp struct {
+}
+
+type CmdClusterDisplayReq struct {
+	ClusterName string
+	TimeoutS    int
+	TiupPath    string
+	Flags       []string
+}
+
+type CmdClusterDisplayResp struct {
+	DisplayRespString string
+}
+
 type TaskStatusMapValue struct {
 	validFlag bool
 	stat      TaskStatusMember
@@ -133,7 +191,7 @@ func TiupMgrInit() {
 	if len(configPath) == 0 {
 		configPath = "./tiupmgr.log"
 	}
-	config.InitForMonolith()
+	config.InitForMonolith(config.TiUPInternalMod)
 	// TODO: update log path using configPath if necessary
 	log = logger.GetLogger(config.KEY_TIUPLIB_LOG)
 }
@@ -142,13 +200,15 @@ func assert(b bool) {
 	if b {
 	} else {
 		log.Fatal("unexpected panic with stack trace:", string(debug.Stack()))
+		//fmt.Println("unexpected panic with stack trace:", string(debug.Stack()))
 		panic("unexpected")
 	}
 }
 
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
-	log.Fatalf("panic: %s, with stack trace:", s, string(debug.Stack()))
+	log.Fatalf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
+	//fmt.Printf("panic: %s, with stack trace: %s\n", s, string(debug.Stack()))
 	panic("unexpected")
 }
 
@@ -266,6 +326,39 @@ func mgrHandleCmdGetAllTaskStatusReq(jsonStr string) CmdGetAllTaskStatusResp {
 	}
 }
 
+func mgrHandleCmdDumplingReq(jsonStr string) CmdDumplingResp {
+	ret := CmdDumplingResp{}
+	var req CmdDumplingReq
+	err := json.Unmarshal([]byte(jsonStr), &req)
+	if err != nil {
+		myPanic(fmt.Sprintln("json.unmarshal cmddumplingreq failed err:", err))
+	}
+	mgrStartNewTiupDumplingTask(req.TaskID, &req)
+	return ret
+}
+
+func mgrHandleCmdLightningReq(jsonStr string) CmdLightningResp {
+	ret := CmdLightningResp{}
+	var req CmdLightningReq
+	err := json.Unmarshal([]byte(jsonStr), &req)
+	if err != nil {
+		myPanic(fmt.Sprintln("json.unmarshal cmdlightningreq failed err:", err))
+	}
+	mgrStartNewTiupLightningTask(req.TaskID, &req)
+	return ret
+}
+
+func mgrHandleClusterDisplayReq(jsonStr string) CmdClusterDisplayResp {
+	var ret CmdClusterDisplayResp
+	var req CmdClusterDisplayReq
+	err := json.Unmarshal([]byte(jsonStr), &req)
+	if err != nil {
+		myPanic(fmt.Sprintln("json.unmarshal cmdclusterdisplayresp failed err:", err))
+	}
+	ret = mgrStartNewTiupClusterDisplayTask(&req)
+	return ret
+}
+
 func newTmpFileWithContent(content []byte) (fileName string, err error) {
 	tmpfile, err := ioutil.TempFile("", "tiem-topology-*.yaml")
 	if err != nil {
@@ -291,6 +384,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 	exitCh = make(chan struct{})
 	log := log.Record("task", taskID)
 	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
+	//fmt.Println("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	glMgrTaskStatusCh <- TaskStatusMember{
 		TaskID:   taskID,
 		Status:   TaskStatusProcessing,
@@ -313,6 +407,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 		t0 := time.Now()
 		if err := cmd.Start(); err != nil {
 			log.Error("cmd start err", err)
+			//fmt.Println("cmd start err", err)
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
@@ -321,8 +416,10 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			return
 		}
 		log.Info("cmd started")
+		//fmt.Println("cmd started")
 		successFp := func() {
 			log.Info("task finished, time cost", time.Now().Sub(t0))
+			//fmt.Println("task finished, time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusFinished,
@@ -330,9 +427,11 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			}
 		}
 		log.Info("cmd wait")
+		//fmt.Println("cmd wait")
 		err := cmd.Wait()
 		if err != nil {
 			log.Error("cmd wait return with err", err)
+			//fmt.Println("cmd wait return with err", err)
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
 					if status.ExitStatus() == 0 {
@@ -342,6 +441,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 				}
 			}
 			log.Error("task err:", err, "time cost", time.Now().Sub(t0))
+			//fmt.Println("task err:", err, "time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
@@ -350,6 +450,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			return
 		} else {
 			log.Info("cmd wait return successfully")
+			//fmt.Println("cmd wait return successfully")
 			successFp()
 			return
 		}
@@ -407,10 +508,60 @@ func mgrStartNewTiupDestroyTask(taskID uint64, req *CmdDestroyReq) {
 	}()
 }
 
+func mgrStartNewTiupDumplingTask(taskID uint64, req *CmdDumplingReq) {
+	go func() {
+		var args []string
+		args = append(args, "dumpling")
+		args = append(args, req.Flags...)
+		<-mgrStartNewTiupTask(taskID, req.TiupPath, args, req.TimeoutS)
+	}()
+}
+
+func mgrStartNewTiupLightningTask(taskID uint64, req *CmdLightningReq) {
+	go func() {
+		var args []string
+		args = append(args, "tidb-lightning")
+		args = append(args, req.Flags...)
+		<-mgrStartNewTiupTask(taskID, req.TiupPath, args, req.TimeoutS)
+	}()
+}
+
+func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisplayResp {
+	var ret CmdClusterDisplayResp
+	var args []string
+	args = append(args, "cluster", "display")
+	args = append(args, req.ClusterName)
+	args = append(args, req.Flags...)
+
+	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
+	//fmt.Println("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
+	var cmd *exec.Cmd
+	var cancelFp context.CancelFunc
+	if req.TimeoutS != 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(req.TimeoutS)*time.Second)
+		cancelFp = cancel
+		exec.CommandContext(ctx, req.TiupPath, args...)
+	} else {
+		cmd = exec.Command(req.TiupPath, args...)
+		cancelFp = func() {}
+	}
+	defer cancelFp()
+	cmd.SysProcAttr = genSysProcAttr()
+	var data []byte
+	var err error
+	if data, err = cmd.Output(); err != nil {
+		log.Error("cmd start err", err)
+		//fmt.Println("cmd start err", err)
+		return ret
+	}
+	ret.DisplayRespString = string(data)
+	return ret
+}
+
 func TiupMgrRoutine() {
 	inReader := bufio.NewReader(os.Stdin)
 	outWriter := os.Stdout
-	errw := os.Stderr
+	//errw := os.Stderr
 	//errw.Write([]byte("TiupMgrRoutine enter\n"))
 	for {
 		//errw.Write([]byte("TiupMgrRoutine read\n"))
@@ -419,7 +570,7 @@ func TiupMgrRoutine() {
 		if err != nil {
 			myPanic(err)
 		}
-		errw.Write([]byte(input))
+		//errw.Write([]byte(input))
 		if input[len(input)-1] == '\n' {
 			cmdStr := input[:len(input)-1]
 			var cmd CmdReqOrResp
@@ -449,6 +600,18 @@ func TiupMgrRoutine() {
 			case CmdGetAllTaskStatusReqTypeStr:
 				resp := mgrHandleCmdGetAllTaskStatusReq(cmd.Content)
 				cmdResp.TypeStr = CmdGetAllTaskStatusRespTypeStr
+				cmdResp.Content = string(jsonMustMarshal(&resp))
+			case CmdDumplingReqTypeStr:
+				resp := mgrHandleCmdDumplingReq(cmd.Content)
+				cmdResp.TypeStr = CmdDumplingRespTypeStr
+				cmdResp.Content = string(jsonMustMarshal(&resp))
+			case CmdLightningReqTypeStr:
+				resp := mgrHandleCmdLightningReq(cmd.Content)
+				cmdResp.TypeStr = CmdLightningRespTypeStr
+				cmdResp.Content = string(jsonMustMarshal(&resp))
+			case CmdClusterDisplayReqTypeStr:
+				resp := mgrHandleClusterDisplayReq(cmd.Content)
+				cmdResp.TypeStr = CmdClusterDisplayRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			default:
 				myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
@@ -734,6 +897,112 @@ func microTiupGetAllTaskStatus() CmdGetAllTaskStatusResp {
 	err := json.Unmarshal([]byte(respCmd.Content), &resp)
 	assert(err == nil)
 	return resp
+}
+
+func microTiupDumpling(dumplingReq CmdDumplingReq) CmdDumplingResp {
+	assert(cap(glMicroCmdChan) > 0)
+	cmdReq := CmdReqOrResp{
+		TypeStr: CmdDumplingReqTypeStr,
+		Content: string(jsonMustMarshal(&dumplingReq)),
+	}
+	respCh := make(chan CmdReqOrResp, 1)
+	glMicroCmdChan <- CmdChanMember{
+		req:    cmdReq,
+		respCh: respCh,
+	}
+	respCmd := <-respCh
+	assert(respCmd.TypeStr == CmdDumplingRespTypeStr)
+	var resp CmdDumplingResp
+	err := json.Unmarshal([]byte(respCmd.Content), &resp)
+	assert(err == nil)
+	return resp
+}
+
+func MicroSrvTiupDumpling(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Dumpling
+	req.BizID = bizID
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	if rsp == nil || err != nil || rsp.ErrCode != 0 {
+		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
+		return 0, err
+	} else {
+		var dumplingReq CmdDumplingReq
+		dumplingReq.TaskID = rsp.Id
+		dumplingReq.TimeoutS = timeoutS
+		dumplingReq.TiupPath = glTiUPBinPath
+		dumplingReq.Flags = flags
+		microTiupDumpling(dumplingReq)
+		return rsp.Id, nil
+	}
+}
+
+func microTiupLightning(lightningReq CmdLightningReq) CmdLightningResp {
+	assert(cap(glMicroCmdChan) > 0)
+	cmdReq := CmdReqOrResp{
+		TypeStr: CmdLightningReqTypeStr,
+		Content: string(jsonMustMarshal(&lightningReq)),
+	}
+	respCh := make(chan CmdReqOrResp, 1)
+	glMicroCmdChan <- CmdChanMember{
+		req:    cmdReq,
+		respCh: respCh,
+	}
+	respCmd := <-respCh
+	assert(respCmd.TypeStr == CmdLightningRespTypeStr)
+	var resp CmdLightningResp
+	err := json.Unmarshal([]byte(respCmd.Content), &resp)
+	assert(err == nil)
+	return resp
+}
+
+func MicroSrvTiupLightning(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Lightning
+	req.BizID = bizID
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	if rsp == nil || err != nil || rsp.ErrCode != 0 {
+		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
+		return 0, err
+	} else {
+		var lightningReq CmdLightningReq
+		lightningReq.TaskID = rsp.Id
+		lightningReq.TimeoutS = timeoutS
+		lightningReq.TiupPath = glTiUPBinPath
+		lightningReq.Flags = flags
+		microTiupLightning(lightningReq)
+		return rsp.Id, nil
+	}
+}
+
+func microSrvTiupClusterDisplay(clusterDisplayReq CmdClusterDisplayReq) CmdClusterDisplayResp {
+	assert(cap(glMicroCmdChan) > 0)
+	cmdReq := CmdReqOrResp{
+		TypeStr: CmdClusterDisplayReqTypeStr,
+		Content: string(jsonMustMarshal(&clusterDisplayReq)),
+	}
+	respCh := make(chan CmdReqOrResp, 1)
+	glMicroCmdChan <- CmdChanMember{
+		req:    cmdReq,
+		respCh: respCh,
+	}
+	respCmd := <-respCh
+	assert(respCmd.TypeStr == CmdClusterDisplayRespTypeStr)
+	var resp CmdClusterDisplayResp
+	err := json.Unmarshal([]byte(respCmd.Content), &resp)
+	assert(err == nil)
+	return resp
+}
+
+func MicroSrvTiupClusterDisplay(clusterName string, timeoutS int, flags []string) (CmdClusterDisplayResp, error) {
+	var clusterDisplayResp CmdClusterDisplayResp
+	var clusterDisplayReq CmdClusterDisplayReq
+	clusterDisplayReq.ClusterName = clusterName
+	clusterDisplayReq.TimeoutS = timeoutS
+	clusterDisplayReq.TiupPath = glTiUPBinPath
+	clusterDisplayReq.Flags = flags
+	clusterDisplayResp = microSrvTiupClusterDisplay(clusterDisplayReq)
+	return clusterDisplayResp, nil
 }
 
 type CmdChanMember struct {

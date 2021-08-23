@@ -30,7 +30,13 @@ import (
 var log *logger.LogRecord
 
 func initConfig() {
-	config.InitForMonolith()
+	srv := micro.NewService(
+		config.GetMicroClusterCliArgsOption(),
+	)
+	srv.Init()
+	srv = nil
+
+	config.InitForMonolith(config.MicroClusterMod)
 }
 
 func initLogger(key config.Key) {
@@ -40,9 +46,13 @@ func initLogger(key config.Key) {
 	log.Debug("init logger completed!")
 }
 
+func initTracer() {
+	tracer.InitTracer()
+}
+
 func initClusterOperator() {
 	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup", "")
-	libbr.MicroInit("./brmgr/brmgr", "br", "")
+	libbr.MicroInit("./brmgr/brmgr", "br")
 }
 
 func initService() {

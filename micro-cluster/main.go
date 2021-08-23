@@ -8,6 +8,7 @@ import (
 func main() {
 	initConfig()
 	initLogger(config.KEY_CLUSTER_LOG)
+	initTracer()
 	initPort()
 	initClient()
 	initClusterOperator()

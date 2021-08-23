@@ -7,6 +7,8 @@ import (
 )
 
 func TestAddToken(t *testing.T) {
+	AddToken("existingToken", "", "", "111", time.Now().Add(10 * time.Second))
+
 	type args struct {
 		tokenString    string
 		accountName    string
@@ -26,6 +28,13 @@ func TestAddToken(t *testing.T) {
 			func(a args, token Token) bool{return token.TenantId == "111"},
 			func(a args, token Token) bool{return token.Status == 0},
 			func(a args, token Token) bool{return token.ExpirationTime.After(time.Now().Add(4 * time.Second))},
+		}},
+		{"existed", args{tokenString: "existingToken", tenantId: "111", expirationTime: time.Now().Add(100 * time.Second)}, false, []func(a args, token Token) bool{
+			func(a args, token Token) bool{return token.ID > 0},
+			func(a args, token Token) bool{return token.TokenString == "existingToken"},
+			func(a args, token Token) bool{return token.TenantId == "111"},
+			func(a args, token Token) bool{return token.Status == 0},
+			func(a args, token Token) bool{return token.ExpirationTime.After(time.Now().Add(50 * time.Second))},
 		}},
 	}
 	for _, tt := range tests {

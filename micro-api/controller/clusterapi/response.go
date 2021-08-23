@@ -18,3 +18,9 @@ type DetailClusterRsp struct {
 	ClusterMaintenanceInfo
 	Components []ComponentInstance	`json:"components"`
 }
+
+type DescribeDashboardRsp struct {
+	ClusterId		string		`json:"clusterId"`
+	Url 			string 		`json:"url"`
+	ShareCode 		string 		`json:"shareCode"`
+}

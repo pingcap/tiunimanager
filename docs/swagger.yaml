@@ -839,46 +839,6 @@ paths:
       summary: 恢复备份
       tags:
       - cluster backup
-  /cluster/knowledge:
-    get:
-      consumes:
-      - application/json
-      description: 查看集群基本知识
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/knowledge.ClusterTypeSpec'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      summary: 查看集群基本知识
-      tags:
-      - cluster
   /clusters:
     get:
       consumes:
@@ -1261,6 +1221,46 @@ paths:
       summary: 查询备份策略
       tags:
       - cluster backup
+  /knowledges:
+    get:
+      consumes:
+      - application/json
+      description: 查看集群基本知识
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/knowledge.ClusterTypeSpec'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 查看集群基本知识
+      tags:
+      - knowledge
   /resources/allochosts:
     post:
       consumes:
@@ -1319,7 +1319,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
+            - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
                   items:

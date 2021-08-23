@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+	"runtime/debug"
 	"strings"
 )
 
@@ -32,13 +34,10 @@ func InitForClientArgs(mod Mod) {
 	switch mod {
 	case MicroMetaDBMod:
 		convInitMicroMetaDBConfig(port, dataDir, logLevel)
-		break
 	case MicroClusterMod:
 		convInitMicroClusterConfig(port, dataDir, logLevel)
-		break
 	case MicroApiMod:
 		convInitMicroApiConfig(port, dataDir, logLevel)
-		break
 	case TiUPInternalMod:
 		// update log config
 		log := LocalConfig[KEY_TIUPLIB_LOG].Value.(Log)
@@ -48,28 +47,21 @@ func InitForClientArgs(mod Mod) {
 		if logLevel != "" {
 			log.LogLevel = logLevel
 		}
-		UpdateLocalConfig(KEY_TIUPLIB_LOG, log, 1)
-		break
+		hasSuc, version := UpdateLocalConfig(KEY_TIUPLIB_LOG, log, 1)
+		assertUpdateLocalConfig(hasSuc, version, 1)
 	default:
-		// update log config
-		log := LocalConfig[KEY_DEFAULT_LOG].Value.(Log)
-		if dataDir != "" {
-			log.LogFilePath = clientArgs.DataDir + LogDirPrefix + DefaultLogFileName
-		}
-		if logLevel != "" {
-			log.LogLevel = logLevel
-		}
-		UpdateLocalConfig(KEY_DEFAULT_LOG, log, 1)
+		convLogConfig(dataDir, KEY_DEFAULT_LOG, logLevel, DefaultLogFileName)
 	}
 }
 
 // convert client-args init cert file config
 func convInitCertConfig(deployDir string) {
 	if deployDir != "" {
-		UpdateLocalConfig(KEY_CERTIFICATES, Certificates{
+		hasSuc, version := UpdateLocalConfig(KEY_CERTIFICATES, Certificates{
 			CrtFilePath: clientArgs.DeployDir + CertDirPrefix + CrtFileName,
 			KeyFilePath: clientArgs.DeployDir + CertDirPrefix + KeyFileName,
 		}, 1)
+		assertUpdateLocalConfig(hasSuc, version, 1)
 	}
 }
 
@@ -81,62 +73,71 @@ func convInitRegistryAddressConfig(registryAddress string) {
 		for i, addr := range addresses {
 			registryAddresses[i] = addr
 		}
-		UpdateLocalConfig(KEY_REGISTRY_ADDRESS, registryAddresses, 1)
+		hasSuc, version := UpdateLocalConfig(KEY_REGISTRY_ADDRESS, registryAddresses, 1)
+		assertUpdateLocalConfig(hasSuc, version, 1)
 	}
 }
 
 // convert client-args init micro-api config
-func convInitMicroApiConfig(port int, dataDir, logLevel string) {
+func convInitMicroApiConfig(port int, dataDir string, logLevel string) {
 	if port > 0 {
 		// micro-api server port
-		UpdateLocalConfig(KEY_API_PORT, port, 1)
+		hasSuc, version := UpdateLocalConfig(KEY_API_PORT, port, 1)
+		assertUpdateLocalConfig(hasSuc, version, 1)
 	}
-	// update micro-api log config
-	log := LocalConfig[KEY_API_LOG].Value.(Log)
-	if dataDir != "" {
-		log.LogFilePath = clientArgs.DataDir + LogDirPrefix + MicroApiLogFileName
-	}
-	if logLevel != "" {
-		log.LogLevel = logLevel
-	}
-	UpdateLocalConfig(KEY_API_LOG, log, 1)
+	// update micro-api log configØ
+	convLogConfig(dataDir, KEY_API_LOG, logLevel, MicroApiLogFileName)
 }
 
 // convert client-args init micro-cluster config
-func convInitMicroClusterConfig(port int, dataDir, logLevel string) {
+func convInitMicroClusterConfig(port int, dataDir string, logLevel string) {
 	if port > 0 {
 		// micro-cluster server port
-		UpdateLocalConfig(KEY_CLUSTER_PORT, port, 1)
+		hasSuc, version := UpdateLocalConfig(KEY_CLUSTER_PORT, port, 1)
+		assertUpdateLocalConfig(hasSuc, version, 1)
 	}
-
 	// update micro-cluster log config
-	log := LocalConfig[KEY_CLUSTER_LOG].Value.(Log)
-	if dataDir != "" {
-		log.LogFilePath = clientArgs.DataDir + LogDirPrefix + MicroClusterLogFileName
-	}
-	if logLevel != "" {
-		log.LogLevel = logLevel
-	}
-	UpdateLocalConfig(KEY_CLUSTER_LOG, log, 1)
+	convLogConfig(dataDir, KEY_CLUSTER_LOG, logLevel, MicroClusterLogFileName)
 }
 
 // convert client-args init micro-metadb config
-func convInitMicroMetaDBConfig(port int, dataDir, logLevel string) {
+func convInitMicroMetaDBConfig(port int, dataDir string, logLevel string) {
 	if port > 0 {
 		// micro-metadb server port
-		UpdateLocalConfig(KEY_METADB_PORT, port, 1)
+		hasSuc, version := UpdateLocalConfig(KEY_METADB_PORT, port, 1)
+		assertUpdateLocalConfig(hasSuc, version, 1)
 	}
-
-	// micro-metadb log config
-	log := LocalConfig[KEY_METADB_LOG].Value.(Log)
 	if dataDir != "" {
 		// sqlite db file path config
-		UpdateLocalConfig(KEY_SQLITE_FILE_PATH, clientArgs.DataDir+"/"+SqliteFileName, 1)
+		hasSuc, version := UpdateLocalConfig(KEY_SQLITE_FILE_PATH, clientArgs.DataDir+"/"+SqliteFileName, 1)
+		assertUpdateLocalConfig(hasSuc, version, 1)
+	}
+	// update micro-metadb log config
+	convLogConfig(dataDir, KEY_METADB_LOG, logLevel, MicroMetaDBLogFileName)
+}
 
-		log.LogFilePath = clientArgs.DataDir + LogDirPrefix + MicroMetaDBLogFileName
+// convert base log config
+func convLogConfig(dataDir string, logKey Key, logLevel, logFileName string) {
+	// update log config
+	log := LocalConfig[logKey].Value.(Log)
+	if dataDir != "" {
+		log.LogFilePath = clientArgs.DataDir + LogDirPrefix + logFileName
 	}
 	if logLevel != "" {
 		log.LogLevel = logLevel
 	}
-	UpdateLocalConfig(KEY_METADB_LOG, log, 1)
+	hasSuc, version := UpdateLocalConfig(logKey, log, 1)
+	assertUpdateLocalConfig(hasSuc, version, 1)
+}
+
+func assertUpdateLocalConfig(hasSuc bool, version, expVersion int) {
+	assert(hasSuc)
+	assert(version == expVersion)
+}
+
+func assert(b bool) {
+	if !b {
+		fmt.Println("unexpected panic with stack trace:", string(debug.Stack()))
+		panic("unexpected")
+	}
 }

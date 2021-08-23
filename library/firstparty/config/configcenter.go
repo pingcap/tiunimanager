@@ -81,17 +81,17 @@ func GetIntegerWithDefault(key Key, value int) int {
 	return result.(int)
 }
 
-func UpdateLocalConfig(key Key, value interface{}, newVersion int) bool {
+func UpdateLocalConfig(key Key, value interface{}, newVersion int) (bool, int) {
 	instance, err := GetInstance(key)
 	if err != nil {
 		log.Fatal(err)
-		return false
+		return false, -1
 	}
 	if newVersion < instance.Version {
-		return false
+		return false, instance.Version
 	}
 	LocalConfig[key] = Instance{key, value, newVersion}
-	return true
+	return true, newVersion
 }
 
 func ModifyLocalServiceConfig(key Key, value interface{}) bool {

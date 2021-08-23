@@ -21,7 +21,7 @@ default: tiupcmd brcmd openapi-server cluster-server metadb-server buildsucc
 buildsucc:
 	@echo Build TiEM server successfully!
 
-all: dev openapi-server cluster-server metadb-server
+all: dev tiupcmd brcmd openapi-server cluster-server metadb-server
 
 dev: checklist check test
 
@@ -41,7 +41,7 @@ check-static: bin/golangci-lint
 	bin/golangci-lint run -v $$($(PACKAGE_DIRECTORIES_WITHOUT_BR))
 
 unconvert:bin/unconvert
-	@echo "unconvert check(skip check the genenrated or copied code in lightning)"
+	@echo "unconvert check"
 	@GO111MODULE=on bin/unconvert $(UNCONVERT_PACKAGES)
 
 gogenerate:
@@ -78,6 +78,25 @@ upload-coverage:
 ifeq ("$(TRAVIS_COVERAGE)", "1")
 	mv overalls.coverprofile coverage.txt
 	bash <(curl -s https://codecov.io/bash)
+endif
+
+unit_test:
+	mkdir -p "$(TEST_DIR)"
+	$(GOTEST) -cover -covermode=atomic -coverprofile="$(TEST_DIR)/cov.unit.out" $(PACKAGES)
+
+coverage:
+#	GO111MODULE=off go get github.com/wadey/gocovmerge
+#	gocovmerge "$(TEST_DIR)"/cov.* | grep -vE ".*.pb.go" > "$(TEST_DIR)/all_cov.out"
+	grep -vE ".*.pb.go" "$(TEST_DIR)/cov.unit.out" > "$(TEST_DIR)/unit_cov.out"
+ifeq ("$(JenkinsCI)", "1")
+#	GO111MODULE=off go get github.com/mattn/goveralls
+#	@goveralls -coverprofile=$(TEST_DIR)/all_cov.out -service=jenkins-ci -repotoken $(COVERALLS_TOKEN)
+	curl -s https://codecov.io/bash > $(CODECOV_BASH)
+	bash $(CODECOV_BASH) -f $(TEST_DIR)/unit_cov.out -t $(CODECOV_TOKEN)
+else
+	go tool cover -html "$(TEST_DIR)/all_cov.out" -o "$(TEST_DIR)/all_cov.html"
+	go tool cover -html "$(TEST_DIR)/unit_cov.out" -o "$(TEST_DIR)/unit_cov.html"
+	go tool cover -func="$(TEST_DIR)/unit_cov.out"
 endif
 
 gotest: failpoint-enable
@@ -117,7 +136,7 @@ ifeq ($(TARGET), "")
 else
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o '$(TARGET)' library/secondparty/tiupcmd/main.go
 endif
-	@echo "build tiupcmd sucessufully."
+	@echo "build tiupcmd successfully."
 
 brcmd:
 	@echo "build brcmd start."
@@ -126,7 +145,7 @@ ifeq ($(TARGET), "")
 else
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o '$(TARGET)' library/secondparty/brcmd/main.go
 endif
-	@echo "build brcmd sucessufully."
+	@echo "build brcmd successfully."
 
 openapi-server:
 	@echo "build openapi-server start."
@@ -135,7 +154,7 @@ ifeq ($(TARGET), "")
 else
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o '$(TARGET)' micro-api/main.go
 endif
-	@echo "build openapi-server sucessufully."
+	@echo "build openapi-server successfully."
 
 cluster-server:
 	@echo "build cluster-server start."
@@ -144,7 +163,7 @@ ifeq ($(TARGET), "")
 else
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o '$(TARGET)' micro-cluster/main.go
 endif
-	@echo "build cluster-server sucessufully."
+	@echo "build cluster-server successfully."
 
 metadb-server:
 	@echo "build metadb-server start."
@@ -153,7 +172,7 @@ ifeq ($(TARGET), "")
 else
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o '$(TARGET)' micro-metadb/main.go
 endif
-	@echo "build metadb-server sucessufully."
+	@echo "build metadb-server successfully."
 
 checklist:
 	cat checklist.md
@@ -168,35 +187,35 @@ failpoint-disable: bin/failpoint-ctl
 
 bin/megacheck: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o bin/megacheck honnef.co/go/build_helper/cmd/megacheck
+	$(GO) build -o ../bin/megacheck honnef.co/go/build_helper/cmd/megacheck
 #TODO
 
 bin/revive: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o bin/revive github.com/mgechev/revive
+	$(GO) build -o ../bin/revive github.com/mgechev/revive
 
 bin/goword: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o bin/goword github.com/chzchzchz/goword
+	$(GO) build -o ../bin/goword github.com/chzchzchz/goword
 
 bin/unconvert: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o bin/unconvert github.com/mdempsky/unconvert
+	$(GO) build -o ../bin/unconvert github.com/mdempsky/unconvert
 
 bin/failpoint-ctl: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o bin/failpoint-ctl github.com/pingcap/failpoint/failpoint-ctl
+	$(GO) build -o ../bin/failpoint-ctl github.com/pingcap/failpoint/failpoint-ctl
 
 bin/errdoc-gen: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o bin/errdoc-gen github.com/pingcap/errors/errdoc-gen
+	$(GO) build -o ../bin/errdoc-gen github.com/pingcap/errors/errdoc-gen
 
 bin/golangci-lint:
-	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ./tools/bin v1.41.1
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ./bin v1.41.1
 
 bin/vfsgendev: build_helper/go.mod
 	cd build_helper; \
-	$(GO) build -o bin/vfsgendev github.com/shurcooL/vfsgen/cmd/vfsgendev
+	$(GO) build -o ../bin/vfsgendev github.com/shurcooL/vfsgen/cmd/vfsgendev
 
 # Usage:
 

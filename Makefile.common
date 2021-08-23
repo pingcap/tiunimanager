@@ -41,6 +41,7 @@ ifneq "$(TIEM_EDITION)" "Enterprise"
   $(error Please set the correct environment variable TIEM_EDITION before running `make`)
 endif
 
+# use 'make <target> PREFIX=/path/for/prefix' to overwrite the PREFIX value
 ifeq (${PREFIX},)
     PREFIX := $(CURDIR)/usr/local
 endif

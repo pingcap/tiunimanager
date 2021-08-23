@@ -17,7 +17,7 @@ package set
 import (
 	"unsafe"
 
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/hack"
+	"github.com/pingcap/tiem/library/firstparty/util/hack"
 )
 
 const (

@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	. "github.com/pingcap/check"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/testleak"
+	"github.com/pingcap/tiem/library/firstparty/util/testleak"
 )
 
 func TestT(t *testing.T) {

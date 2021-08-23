@@ -41,8 +41,8 @@ import (
 	"github.com/pingcap/parser/terror"
 	"github.com/pingcap/tidb/config"
 	"github.com/pingcap/tidb/metrics"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/collate"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/logutil"
+	"github.com/pingcap/tiem/library/firstparty/util/collate"
+	"github.com/pingcap/tiem/library/firstparty/util/logutil"
 	"go.uber.org/zap"
 )
 

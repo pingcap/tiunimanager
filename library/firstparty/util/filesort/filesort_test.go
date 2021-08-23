@@ -23,7 +23,7 @@ import (
 	. "github.com/pingcap/check"
 	"github.com/pingcap/tidb/sessionctx/stmtctx"
 	"github.com/pingcap/tidb/types"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/testleak"
+	"github.com/pingcap/tiem/library/firstparty/util/testleak"
 )
 
 func TestT(t *testing.T) {

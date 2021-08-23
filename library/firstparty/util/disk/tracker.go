@@ -15,7 +15,7 @@
 package disk
 
 import (
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/memory"
+	"github.com/pingcap/tiem/library/firstparty/util/memory"
 )
 
 // Tracker is used to track the disk usage during query execution.

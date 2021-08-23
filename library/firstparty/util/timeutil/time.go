@@ -23,7 +23,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/logutil"
+	"github.com/pingcap/tiem/library/firstparty/util/logutil"
 	"github.com/uber-go/atomic"
 	"go.uber.org/zap"
 )

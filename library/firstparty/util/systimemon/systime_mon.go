@@ -17,7 +17,7 @@ package systimemon
 import (
 	"time"
 
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/logutil"
+	"github.com/pingcap/tiem/library/firstparty/util/logutil"
 	"go.uber.org/zap"
 )
 

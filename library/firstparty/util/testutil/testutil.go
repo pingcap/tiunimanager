@@ -36,8 +36,8 @@ import (
 	"github.com/pingcap/tidb/sessionctx/stmtctx"
 	"github.com/pingcap/tidb/testkit/testdata"
 	"github.com/pingcap/tidb/types"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/codec"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/logutil"
+	"github.com/pingcap/tiem/library/firstparty/util/codec"
+	"github.com/pingcap/tiem/library/firstparty/util/logutil"
 	"go.uber.org/zap"
 )
 

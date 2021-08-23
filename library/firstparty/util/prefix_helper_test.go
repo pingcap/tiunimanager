@@ -22,7 +22,7 @@ import (
 	"github.com/pingcap/parser/terror"
 	"github.com/pingcap/tidb/kv"
 	"github.com/pingcap/tidb/store/mockstore"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util"
+	"github.com/pingcap/tiem/library/firstparty/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

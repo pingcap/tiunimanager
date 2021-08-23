@@ -23,9 +23,9 @@ import (
 
 	"github.com/pingcap/parser/mysql"
 	"github.com/pingcap/tidb/config"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/israce"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/logutil"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/versioninfo"
+	"github.com/pingcap/tiem/library/firstparty/util/israce"
+	"github.com/pingcap/tiem/library/firstparty/util/logutil"
+	"github.com/pingcap/tiem/library/firstparty/util/versioninfo"
 	"go.uber.org/zap"
 )
 

@@ -147,6 +147,9 @@ func Backup(c *gin.Context) {
 
 	resp, err := cluster.ClusterClient.CreateBackup(context.TODO(), &proto.CreateBackupRequest{
 		ClusterId: req.ClusterId,
+		BackupType: req.BackupType,
+		BackupRange: req.BackupRange,
+		FilePath: req.FilePath,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
 	if err != nil {

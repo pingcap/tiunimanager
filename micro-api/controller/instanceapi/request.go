@@ -32,7 +32,10 @@ type BackupStrategyUpdateReq struct {
 }
 
 type BackupReq struct {
-	ClusterId string `json:"clusterId"`
+	ClusterId 	string `json:"clusterId"`
+	BackupType  string `json:"backupType"`
+	BackupRange string `json:"backupRange"`
+	FilePath    string `json:"filePath"`
 }
 type BackupRecoverReq struct {
 	ClusterId string `json:"clusterId"`

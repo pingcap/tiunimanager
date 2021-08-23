@@ -1,180 +1,132 @@
 package framework
 
 import (
-	"fmt"
-
-	"github.com/micro/cli/v2"
-
-	"github.com/asim/go-micro/v3/server"
+	"errors"
+	"github.com/asim/go-micro/v3"
+	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/firstparty/util"
 	mysignal "github.com/pingcap/tiem/library/firstparty/util/signal"
+	"github.com/pingcap/tiem/library/knowledge"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap/tiem/library/thirdparty/tracer"
+	clusterPb "github.com/pingcap/tiem/micro-cluster/proto"
+	clusterSrv "github.com/pingcap/tiem/micro-cluster/service"
+	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
+	dbSrv "github.com/pingcap/tiem/micro-metadb/service"
 )
 
-type Opt func(*framework)
+type Opt func(d *DefaultServiceFramework) error
 
 type Framework interface {
-	InitLogger() error
-	InitConfig() error
-	InitClient() error
-	ArgsParse() error
-	SetupQuitSignalHandler(quitSignalHandler func()) error
+	Init() error
 
-	MustGetLogger() Logger
-	MustGetConfig() Config
-	MustGetClient() Client
+	StartService() error
 
-	Run(opts ...Opt) error
-	AddOpts(opts ...Opt)
+	GetDefaultLogger() *logger.LogRecord
+	GetRegistryAddress() []string
+
+	// registry center operator
+	// config center operator
 }
 
-type framework struct {
-	initLoggerFp func() (Logger, error)
-	initConfigFp func() (Config, error)
-	initClientFp func() (Client, error)
+type DefaultServiceFramework struct {
+	serviceEnum 		MicroServiceEnum
+	flags       		micro.Option
 
-	argFlags          []cli.Flag
-	quitSignalHandler func()
+	initOpts []Opt
 
-	certificateCrtFilePath string
-	certificateKeyFilePath string
-	serviceName            string
-	serviceListenAddr      string
-	registryAddrs          []string
-
-	registerServiceHandlerFp func(server server.Server, opts ...server.HandlerOption) error
-
-	config Config
-	logger Logger
-	client Client
+	log 				*logger.LogRecord
+	service 			micro.Service
 }
 
-func WithCertificateCrtFilePath(path string) Opt {
-	return func(p *framework) {
-		p.certificateCrtFilePath = path
+func (p *DefaultServiceFramework) Init() error {
+	for _, opt := range p.initOpts {
+		util.AssertNoErr(opt(p))
 	}
-}
-
-func WithCertificateKeyFilePath(path string) Opt {
-	return func(p *framework) {
-		p.certificateKeyFilePath = path
-	}
-}
-
-func WithServiceName(serviceName string) Opt {
-	return func(p *framework) {
-		p.serviceName = serviceName
-	}
-}
-
-func WithArgFlags(argFlags []cli.Flag) Opt {
-	return func(p *framework) {
-		p.argFlags = argFlags
-	}
-}
-
-func WithQuitSignalHandler(quitSignalHandler func()) Opt {
-	return func(p *framework) {
-		p.quitSignalHandler = quitSignalHandler
-	}
-}
-
-func WithServiceListenAddr(addr string) Opt {
-	return func(p *framework) {
-		p.serviceListenAddr = addr
-	}
-}
-func WithRegistryAddrs(registryAddrs []string) Opt {
-	return func(p *framework) {
-		p.registryAddrs = registryAddrs
-	}
-}
-
-func WithRegisterServiceHandlerFp(
-	fp func(server server.Server, opts ...server.HandlerOption) error) Opt {
-
-	return func(p *framework) {
-		p.registerServiceHandlerFp = fp
-	}
-}
-
-func (p *framework) InitLogger() error {
-	var err error
-	p.logger, err = p.initLoggerFp()
-	return err
-}
-
-func (p *framework) InitConfig() error {
-	var err error
-	p.config, err = p.initConfigFp()
-	return err
-}
-
-func (p *framework) InitClient() error {
-	var err error
-	p.client, err = p.initClientFp()
-	return err
-}
-
-func (p *framework) ArgsParse() error {
-	argsParse(p.argFlags)
 	return nil
 }
 
-func (p *framework) SetupQuitSignalHandler(quitSignalHandler func()) error {
-	if quitSignalHandler == nil {
-		return fmt.Errorf("quitSignalHandler should not be nil")
-	}
-	p.quitSignalHandler = quitSignalHandler
-	mysignal.SetupSignalHandler(func(bool) {
-		quitSignalHandler()
-	})
-	return nil
+func (p *DefaultServiceFramework) GetDefaultLogger() *logger.LogRecord {
+	return p.log
 }
 
-func (p *framework) MustGetLogger() Logger {
-	ret := p.logger
-	util.Assert(ret != nil)
-	return ret
+func (p *DefaultServiceFramework) GetRegistryAddress() []string {
+	return config.GetRegistryAddress()
 }
 
-func (p *framework) MustGetConfig() Config {
-	ret := p.config
-	util.Assert(ret != nil)
-	return ret
-}
-
-func (p *framework) MustGetClient() Client {
-	ret := p.client
-	util.Assert(ret != nil)
-	return ret
-}
-
-func (p *framework) Run(opts ...Opt) error {
-	fmt.Println(p)
-	for _, opt := range opts {
-		opt(p)
-	}
-	// TODO: setup srv
-	return nil
-}
-
-func (p *framework) AddOpts(opts ...Opt) {
-	for _, opt := range opts {
-		opt(p)
-	}
-}
-
-// there is a rather rough usage example in the test
-func NewFramework(opts ...Opt) Framework {
-	p := &framework{
-		initLoggerFp: initLogger,
-		initConfigFp: initConfig,
-		initClientFp: initClient,
+func NewDefaultFramework(serviceName MicroServiceEnum, initOpt ...Opt) *DefaultServiceFramework {
+	p := &DefaultServiceFramework{
+		serviceEnum: serviceName,
+		initOpts: []Opt{
+			initConfig,
+			initCurrentLogger,
+			initKnowledge,
+			initTracer,
+			initShutdownFunc,
+		},
 	}
 
-	for _, opt := range opts {
-		opt(p)
-	}
+	p.initOpts = append(p.initOpts, initOpt...)
+
+	p.Init()
 
 	return p
+}
+
+func (p *DefaultServiceFramework) StartService() error {
+	p.service = p.serviceEnum.BuildMicroService(p.GetRegistryAddress()...)
+
+	switch p.serviceEnum {
+	case MetaDBService:
+		util.AssertNoErr(dbPb.RegisterTiEMDBServiceHandler(p.service.Server(), new(dbSrv.DBServiceHandler)))
+	case ClusterService:
+		util.AssertNoErr(clusterPb.RegisterClusterServiceHandler(p.service.Server(), new(clusterSrv.ClusterServiceHandler)))
+	default:
+		panic("Illegal MicroServiceEnum")
+	}
+
+	util.Assert(p.service != nil)
+
+	if err := p.service.Run(); err != nil {
+		p.GetDefaultLogger().Fatalf("Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, config.GetMetaDBServiceAddress(), config.GetRegistryAddress())
+		return errors.New("initialization micro service failed")
+	}
+
+	return nil
+}
+
+func initConfig(p *DefaultServiceFramework) error {
+	p.flags = p.serviceEnum.buildArgsOption()
+	srv := micro.NewService(
+		p.flags,
+	)
+	srv.Init()
+	srv = nil
+	config.InitForMonolith(p.serviceEnum.logMod())
+	return nil
+}
+
+func initCurrentLogger(p *DefaultServiceFramework) error {
+	p.log = p.serviceEnum.buildLogger()
+	// use log
+	p.log.Debug("init logger completed!")
+	return nil
+}
+
+func initKnowledge(p *DefaultServiceFramework) error {
+	knowledge.LoadKnowledge()
+	return nil
+
+}
+
+func initTracer(p *DefaultServiceFramework) error {
+	tracer.InitTracer()
+	return nil
+}
+
+func initShutdownFunc(p *DefaultServiceFramework) error {
+	mysignal.SetupSignalHandler(func(bool) {
+		// todo do something before quit
+	})
+	return nil
 }

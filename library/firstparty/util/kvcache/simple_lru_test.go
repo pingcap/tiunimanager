@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/memory"
+	"github.com/pingcap/tiem/library/firstparty/util/memory"
 	"github.com/stretchr/testify/require"
 )
 

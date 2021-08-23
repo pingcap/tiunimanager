@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap/tiem/library/firstparty/config"
 	"io"
 	"os"
 	"path/filepath"
@@ -36,8 +37,8 @@ import (
 	"github.com/pingcap/tidb/sessionctx/stmtctx"
 	"github.com/pingcap/tidb/testkit/testdata"
 	"github.com/pingcap/tidb/types"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/codec"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/logutil"
+	"github.com/pingcap/tiem/library/firstparty/util/codec"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
 	"go.uber.org/zap"
 )
 
@@ -95,7 +96,7 @@ func (checker *datumEqualsChecker) Check(params []interface{}, names []string) (
 		if v := recover(); v != nil {
 			result = false
 			error = fmt.Sprint(v)
-			logutil.BgLogger().Error("panic in datumEqualsChecker.Check",
+			logger.GetLogger(config.KEY_FIRSTPARTY_LOG).Error("panic in datumEqualsChecker.Check",
 				zap.Reflect("r", v),
 				zap.Stack("stack trace"))
 		}

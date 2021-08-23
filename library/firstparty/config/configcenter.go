@@ -20,6 +20,7 @@ const (
 	KEY_METADB_LOG  = "config_key_metadb_log"
 	KEY_TIUPLIB_LOG = "config_key_tiupmgr_log"
 	KEY_DEFAULT_LOG = "config_key_default_log"
+	KEY_FIRSTPARTY_LOG = "config_key_firstparty_log"
 
 	KEY_API_PORT     = "config_key_api_port"
 	KEY_CLUSTER_PORT = "config_key_cluster_port"

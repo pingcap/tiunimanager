@@ -114,6 +114,10 @@ build_vfsgendev: build_helper/go.mod
 	cd build_helper; \
 	$(GO) build -o ${TIEM_BINARY_DIR}/vfsgendev github.com/shurcooL/vfsgen/cmd/vfsgendev
 
+unconvert:bin/unconvert
+	@echo "unconvert check"
+	@GO111MODULE=on bin/unconvert $(UNCONVERT_PACKAGES)
+
 build_megacheck: build_helper/go.mod
 	cd build_helper; \
 	$(GO) build -o ${TIEM_BINARY_DIR}/megacheck honnef.co/go/build_helper/cmd/megacheck
@@ -203,6 +207,23 @@ endif
 
 test:
 	make failpoint-enable
+
+coverage:
+#	GO111MODULE=off go get github.com/wadey/gocovmerge
+#	gocovmerge "$(TEST_DIR)"/cov.* | grep -vE ".*.pb.go" > "$(TEST_DIR)/all_cov.out"
+	grep -vE ".*.pb.go" "$(TEST_DIR)/cov.unit.out" > "$(TEST_DIR)/unit_cov.out"
+ifeq ("$(JenkinsCI)", "1")
+#	GO111MODULE=off go get github.com/mattn/goveralls
+#	@goveralls -coverprofile=$(TEST_DIR)/all_cov.out -service=jenkins-ci -repotoken $(COVERALLS_TOKEN)
+	curl -s https://codecov.io/bash > $(CODECOV_BASH)
+	bash $(CODECOV_BASH) -f $(TEST_DIR)/unit_cov.out -t $(CODECOV_TOKEN)
+else
+	go tool cover -html "$(TEST_DIR)/all_cov.out" -o "$(TEST_DIR)/all_cov.html"
+	go tool cover -html "$(TEST_DIR)/unit_cov.out" -o "$(TEST_DIR)/unit_cov.html"
+	go tool cover -func="$(TEST_DIR)/unit_cov.out"
+endif
+
+gotest: failpoint-enable
 ifeq ("$(TRAVIS_COVERAGE)", "1")
 	@echo "Running in TRAVIS_COVERAGE mode."
 	$(GO) get github.com/go-playground/overalls
@@ -232,6 +253,115 @@ endif
 #	$(GOTEST) -tags leak $(PACKAGES) || { $(FAILPOINT_DISABLE); exit 1; }
 #	@$(FAILPOINT_DISABLE)
 #
+race: failpoint-enable
+	@export log_level=debug; \
+	$(GOTEST) -timeout 20m -race $(PACKAGES) || { $(FAILPOINT_DISABLE); exit 1; }
+	@$(FAILPOINT_DISABLE)
+
+leak: failpoint-enable
+	@export log_level=debug; \
+	$(GOTEST) -tags leak $(PACKAGES) || { $(FAILPOINT_DISABLE); exit 1; }
+	@$(FAILPOINT_DISABLE)
+
+tiupcmd:
+	@echo "build tiupcmd start."
+ifeq ($(TARGET), "")
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o bin/tiupcmd library/secondparty/tiupcmd/main.go
+else
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o '$(TARGET)' library/secondparty/tiupcmd/main.go
+endif
+	@echo "build tiupcmd successfully."
+
+brcmd:
+	@echo "build brcmd start."
+ifeq ($(TARGET), "")
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o bin/brcmd library/secondparty/brcmd/main.go
+else
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o '$(TARGET)' library/secondparty/brcmd/main.go
+endif
+	@echo "build brcmd successfully."
+
+openapi-server:
+	@echo "build openapi-server start."
+ifeq ($(TARGET), "")
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o bin/openapi-server micro-api/main.go
+else
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o '$(TARGET)' micro-api/main.go
+endif
+	@echo "build openapi-server successfully."
+
+cluster-server:
+	@echo "build cluster-server start."
+ifeq ($(TARGET), "")
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o bin/cluster-server micro-cluster/main.go
+else
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o '$(TARGET)' micro-cluster/main.go
+endif
+	@echo "build cluster-server successfully."
+
+metadb-server:
+	@echo "build metadb-server start."
+ifeq ($(TARGET), "")
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o bin/metadb-server micro-metadb/main.go
+else
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o '$(TARGET)' micro-metadb/main.go
+endif
+	@echo "build metadb-server successfully."
+
+checklist:
+	cat checklist.md
+
+failpoint-enable: bin/failpoint-ctl
+# Converting gofail failpoints...
+	@$(FAILPOINT_ENABLE)
+
+failpoint-disable: bin/failpoint-ctl
+# Restoring gofail failpoints...
+	@$(FAILPOINT_DISABLE)
+
+bin/megacheck: build_helper/go.mod
+	cd build_helper; \
+	$(GO) build -o ../bin/megacheck honnef.co/go/build_helper/cmd/megacheck
+#TODO
+
+bin/revive: build_helper/go.mod
+	cd build_helper; \
+	$(GO) build -o ../bin/revive github.com/mgechev/revive
+
+bin/goword: build_helper/go.mod
+	cd build_helper; \
+	$(GO) build -o ../bin/goword github.com/chzchzchz/goword
+
+bin/unconvert: build_helper/go.mod
+	cd build_helper; \
+	$(GO) build -o ../bin/unconvert github.com/mdempsky/unconvert
+
+bin/failpoint-ctl: build_helper/go.mod
+	cd build_helper; \
+	$(GO) build -o ../bin/failpoint-ctl github.com/pingcap/failpoint/failpoint-ctl
+
+bin/errdoc-gen: build_helper/go.mod
+	cd build_helper; \
+	$(GO) build -o ../bin/errdoc-gen github.com/pingcap/errors/errdoc-gen
+
+bin/golangci-lint:
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ./bin v1.41.1
+
+bin/vfsgendev: build_helper/go.mod
+	cd build_helper; \
+	$(GO) build -o ../bin/vfsgendev github.com/shurcooL/vfsgen/cmd/vfsgendev
+
+# Usage:
+
+testpkg: failpoint-enable
+ifeq ("$(pkg)", "")
+	@echo "Require pkg parameter"
+else
+	@echo "Running unit test for github.com/pingcap/tidb/$(pkg)"
+	@export log_level=fatal; export TZ='Asia/Shanghai'; \
+	$(GOTEST) -ldflags '$(TEST_LDFLAGS)' -cover github.com/pingcap/tidb/$(pkg) -check.p true -check.timeout 4s || { $(FAILPOINT_DISABLE); exit 1; }
+endif
+	@$(FAILPOINT_DISABLE)
 
 #checklist:
 #	cat prchecklist.md

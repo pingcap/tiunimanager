@@ -23,15 +23,16 @@ import (
 
 	"github.com/pingcap/parser/mysql"
 	"github.com/pingcap/tidb/config"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/israce"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/logutil"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/versioninfo"
+	configTiem "github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap/tiem/library/firstparty/util/israce"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap/tiem/library/firstparty/util/versioninfo"
 	"go.uber.org/zap"
 )
 
 // PrintTiDBInfo prints the TiDB version information.
 func PrintTiDBInfo() {
-	logutil.BgLogger().Info("Welcome to TiDB.",
+	logger.GetLogger(configTiem.KEY_FIRSTPARTY_LOG).Info("Welcome to TiDB.",
 		zap.String("Release Version", mysql.TiDBReleaseVersion),
 		zap.String("Edition", versioninfo.TiDBEdition),
 		zap.String("Git Commit Hash", versioninfo.TiDBGitHash),

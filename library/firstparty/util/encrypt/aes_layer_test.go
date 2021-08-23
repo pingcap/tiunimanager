@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/pingcap/check"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/checksum"
+	"github.com/pingcap/tiem/library/firstparty/util/checksum"
 )
 
 var _ = check.Suite(&testAesLayerSuite{})

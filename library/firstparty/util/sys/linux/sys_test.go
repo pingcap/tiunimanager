@@ -16,7 +16,7 @@ package linux_test
 import (
 	"testing"
 
-	. "github.com/pingcap-inc/tiem/libarary/firstparty/util/sys/linux"
+	. "github.com/pingcap/tiem/library/firstparty/util/sys/linux"
 	"github.com/stretchr/testify/require"
 )
 

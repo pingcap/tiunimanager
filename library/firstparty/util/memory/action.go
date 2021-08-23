@@ -16,11 +16,12 @@ package memory
 
 import (
 	"fmt"
+	"github.com/pingcap/tiem/library/firstparty/config"
 	"sync"
 
 	"github.com/pingcap/tidb/errno"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/dbterror"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/logutil"
+	"github.com/pingcap/tiem/library/firstparty/util/dbterror"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
 	"go.uber.org/zap"
 )
 
@@ -87,7 +88,7 @@ func (a *LogOnExceed) Action(t *Tracker) {
 	if !a.acted {
 		a.acted = true
 		if a.logHook == nil {
-			logutil.BgLogger().Warn("memory exceeds quota",
+			logger.GetLogger(config.KEY_FIRSTPARTY_LOG).Warn("memory exceeds quota",
 				zap.Error(errMemExceedThreshold.GenWithStackByArgs(t.label, t.BytesConsumed(), t.bytesHardLimit, t.String())))
 			return
 		}

@@ -23,6 +23,7 @@ endif
 FAIL_ON_STDOUT := awk '{ print } END { if (NR > 0) { exit 1 } }'
 
 CURDIR := $(shell pwd)
+TEST_DIR := /tmp/tidb_em_test
 #path_to_add := $(addsuffix /bin,$(subst :,/bin:,$(GOPATH))):$(PWD)/tools/bin
 path_to_add := $(addsuffix /bin,$(subst :,/bin:,$(GOPATH)))
 export PATH := $(path_to_add):$(PATH)
@@ -47,12 +48,11 @@ endif
 ARCH      := "`uname -s`"
 LINUX     := "Linux"
 MAC       := "Darwin"
-PACKAGE_LIST  := go list ./...| grep -vE "docs|proto"
+PACKAGE_LIST  := go list ./...| grep -vE "docs|proto|firstparty"
 PACKAGES  ?= $$($(PACKAGE_LIST))
 #PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/pingcap/$(PROJECT)||'
 PACKAGE_DIRECTORIES := $(PACKAGE_LIST) 
 FILES     := $$(find $$($(PACKAGE_DIRECTORIES)) -name "*.go")
-UNCONVERT_PACKAGES := go list ./...| grep -vE "docs|proto"
 
 FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git)" | xargs bin/failpoint-ctl enable)
 FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git)" | xargs bin/failpoint-ctl disable)

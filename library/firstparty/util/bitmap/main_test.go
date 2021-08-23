@@ -15,9 +15,9 @@
 package bitmap
 
 import (
-	"testing"
-	"github.com/pingcap-inc/tiem/libarary/firstparty/util/testbridge"
+	"github.com/pingcap/tiem/library/firstparty/util/testbridge"
 	"go.uber.org/goleak"
+	"testing"
 )
 
 func TestMain(m *testing.M) {

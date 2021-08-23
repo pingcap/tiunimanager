@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	encrypt2 "github.com/pingcap-inc/tiem/libarary/firstparty/util/encrypt"
+	encrypt2 "github.com/pingcap/tiem/library/firstparty/util/encrypt"
 	"github.com/stretchr/testify/assert"
 )
 

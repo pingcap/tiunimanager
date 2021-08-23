@@ -39,10 +39,11 @@ import (
 	"github.com/pingcap/parser/model"
 	"github.com/pingcap/parser/mysql"
 	"github.com/pingcap/parser/terror"
+	configTiem "github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tidb/config"
 	"github.com/pingcap/tidb/metrics"
 	"github.com/pingcap/tiem/library/firstparty/util/collate"
-	"github.com/pingcap/tiem/library/firstparty/util/logutil"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
 	"go.uber.org/zap"
 )
 
@@ -91,7 +92,7 @@ func WithRecovery(exec func(), recoverFn func(r interface{})) {
 			recoverFn(r)
 		}
 		if r != nil {
-			logutil.BgLogger().Error("panic in the recoverable goroutine",
+			logger.GetLogger(configTiem.KEY_FIRSTPARTY_LOG).Error("panic in the recoverable goroutine",
 				zap.Reflect("r", r),
 				zap.Stack("stack trace"))
 		}

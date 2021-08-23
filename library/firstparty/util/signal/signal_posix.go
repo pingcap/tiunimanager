@@ -16,13 +16,14 @@
 package signal
 
 import (
+	"github.com/pingcap/tiem/library/firstparty/config"
 	"log"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
 
-	"github.com/pingcap/tiem/library/firstparty/util/logutil"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
 	"go.uber.org/zap"
 )
 
@@ -51,7 +52,7 @@ func SetupSignalHandler(shutdownFunc func(bool)) {
 
 	go func() {
 		sig := <-closeSignalChan
-		logutil.BgLogger().Info("got signal to exit", zap.Stringer("signal", sig))
+		logger.GetLogger(config.KEY_FIRSTPARTY_LOG).Info("got signal to exit", zap.Stringer("signal", sig))
 		shutdownFunc(sig == syscall.SIGQUIT)
 	}()
 }

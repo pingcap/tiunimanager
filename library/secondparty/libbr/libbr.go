@@ -261,7 +261,7 @@ func assert(b bool) {
 
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
-	log.Fatalf("panic: %s, with stack trace:", s, string(debug.Stack()))
+	log.Fatalf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
 	panic("unexpected")
 }
 
@@ -438,7 +438,7 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 		if _, str, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
 			log.Error("get tiup status error", err)
 		} else if err = json.Unmarshal([]byte(str), &resp); err != nil {
-			log.Error("unmarshal %v error %v\n", str, err)
+			log.Errorf("unmarshal %v error %v\n", str, err)
 		} else {
 			log.Info("check resp from metadb successfully", resp)
 			//log.Info("sql cmd return successfully")
@@ -504,7 +504,7 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 		if _, str, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
 			log.Error("get tiup status error", err)
 		} else if err = json.Unmarshal([]byte(str), &resp); err != nil {
-			log.Error("unmarshal %v error %v\n", str, err)
+			log.Errorf("unmarshal %v error %v\n", str, err)
 		} else {
 			log.Info("sql cmd return successfully")
 			successFp()

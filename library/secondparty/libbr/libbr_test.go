@@ -9,3 +9,7 @@ func TestBrMgrInit(t *testing.T) {
 		t.Errorf("glMgrTaskStatusCh cap was incorrect, got: %d, want: %d.", mgrTaskStatusChCap, 1024)
 	}
 }
+
+func TestBackUpAndInfo(t *testing.T) {
+
+}

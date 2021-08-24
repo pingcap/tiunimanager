@@ -13,6 +13,7 @@ require (
 	github.com/danjacques/gofslock v0.0.0-20200623023034-5d0bd0fa6ef0
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/juju/errors v0.0.0-20210818161939-5560c4c073ff // indirect
 	github.com/lithammer/shortuuid v3.0.0+incompatible

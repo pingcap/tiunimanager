@@ -17,7 +17,7 @@ import (
 	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
 
-	"github.com/pingcap/tiem/micro-metadb/client"
+	"github.com/pingcap/tiem/library/firstparty/client"
 	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
 )
 

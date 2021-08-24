@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/pingcap/tiem/library/firstparty/client"
 	"io"
 	"net"
 	"net/http"
@@ -14,13 +15,12 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-cluster/client"
-	manager "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiem/micro-metadb/service"
 	"google.golang.org/grpc/codes"
 )
 
-func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
+func CopyHostFromRsp(src *cluster.HostInfo, dst *HostInfo) {
 	dst.HostId = src.HostId
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
@@ -50,7 +50,7 @@ func genHostSpec(cpuCores int32, mem int32) string {
 	return fmt.Sprintf("%dU%dG", cpuCores, mem)
 }
 
-func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
+func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
 	dst.Os = src.Os
@@ -66,7 +66,7 @@ func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
 	dst.Purpose = src.Purpose
 
 	for _, v := range src.Disks {
-		dst.Disks = append(dst.Disks, &manager.Disk{
+		dst.Disks = append(dst.Disks, &cluster.Disk{
 			Name:     v.Name,
 			Capacity: v.Capacity,
 			Status:   v.Status,
@@ -75,18 +75,18 @@ func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
 	}
 }
 
-func doImport(c *gin.Context, host *HostInfo) (rsp *manager.ImportHostResponse, err error) {
-	importReq := manager.ImportHostRequest{}
-	importReq.Host = new(manager.HostInfo)
+func doImport(c *gin.Context, host *HostInfo) (rsp *cluster.ImportHostResponse, err error) {
+	importReq := cluster.ImportHostRequest{}
+	importReq.Host = new(cluster.HostInfo)
 	copyHostToReq(host, importReq.Host)
 	return client.ClusterClient.ImportHost(c, &importReq)
 }
 
-func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *manager.ImportHostsInBatchResponse, err error) {
-	importReq := manager.ImportHostsInBatchRequest{}
-	importReq.Hosts = make([]*manager.HostInfo, len(hosts))
+func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *cluster.ImportHostsInBatchResponse, err error) {
+	importReq := cluster.ImportHostsInBatchRequest{}
+	importReq.Hosts = make([]*cluster.HostInfo, len(hosts))
 	for i, host := range hosts {
-		importReq.Hosts[i] = new(manager.HostInfo)
+		importReq.Hosts[i] = new(cluster.HostInfo)
 		copyHostToReq(host, importReq.Hosts[i])
 	}
 
@@ -222,11 +222,11 @@ func ListHost(c *gin.Context) {
 		return
 	}
 
-	listHostReq := manager.ListHostsRequest{
+	listHostReq := cluster.ListHostsRequest{
 		Purpose: hostQuery.Purpose,
 		Status:  int32(hostQuery.Status),
 	}
-	listHostReq.PageReq = new(manager.PageDTO)
+	listHostReq.PageReq = new(cluster.PageDTO)
 	listHostReq.PageReq.Page = int32(hostQuery.Page)
 	listHostReq.PageReq.PageSize = int32(hostQuery.PageSize)
 
@@ -262,7 +262,7 @@ func HostDetails(c *gin.Context) {
 
 	hostId := c.Param("hostId")
 
-	HostDetailsReq := manager.CheckDetailsRequest{
+	HostDetailsReq := cluster.CheckDetailsRequest{
 		HostId: hostId,
 	}
 
@@ -294,7 +294,7 @@ func RemoveHost(c *gin.Context) {
 
 	hostId := c.Param("hostId")
 
-	RemoveHostReq := manager.RemoveHostRequest{
+	RemoveHostReq := cluster.RemoveHostRequest{
 		HostId: hostId,
 	}
 
@@ -349,7 +349,7 @@ func RemoveHosts(c *gin.Context) {
 		return
 	}
 
-	RemoveHostsReq := manager.RemoveHostsInBatchRequest{
+	RemoveHostsReq := cluster.RemoveHostsInBatchRequest{
 		HostIds: hostIds,
 	}
 
@@ -393,9 +393,9 @@ func DownloadHostTemplateFile(c *gin.Context) {
 	c.File(filePath)
 }
 
-func copyAllocToReq(src []Allocation, dst *[]*manager.AllocationReq) {
+func copyAllocToReq(src []Allocation, dst *[]*cluster.AllocationReq) {
 	for _, req := range src {
-		*dst = append(*dst, &manager.AllocationReq{
+		*dst = append(*dst, &cluster.AllocationReq{
 			FailureDomain: req.FailureDomain,
 			CpuCores:      req.CpuCores,
 			Memory:        req.Memory,
@@ -404,7 +404,7 @@ func copyAllocToReq(src []Allocation, dst *[]*manager.AllocationReq) {
 	}
 }
 
-func copyAllocFromRsp(src []*manager.AllocHost, dst *[]AllocateRsp) {
+func copyAllocFromRsp(src []*cluster.AllocHost, dst *[]AllocateRsp) {
 	for i, host := range src {
 		*dst = append(*dst, AllocateRsp{
 			HostName: host.HostName,
@@ -437,7 +437,7 @@ func AllocHosts(c *gin.Context) {
 		return
 	}
 
-	allocReq := manager.AllocHostsRequest{}
+	allocReq := cluster.AllocHostsRequest{}
 	copyAllocToReq(allocation.PdReq, &allocReq.PdReq)
 	copyAllocToReq(allocation.TidbReq, &allocReq.TidbReq)
 	copyAllocToReq(allocation.TikvReq, &allocReq.TikvReq)
@@ -484,7 +484,7 @@ func GetFailureDomain(c *gin.Context) {
 		return
 	}
 
-	GetDoaminReq := manager.GetFailureDomainRequest{
+	GetDoaminReq := cluster.GetFailureDomainRequest{
 		FailureDomainType: int32(domain),
 	}
 

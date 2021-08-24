@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	tenant "github.com/pingcap/tiem/micro-cluster/service/tenant/domain"
-	"github.com/pingcap/tiem/micro-metadb/client"
+	"github.com/pingcap/tiem/library/firstparty/client"
 	db "github.com/pingcap/tiem/micro-metadb/proto"
 	"time"
 )

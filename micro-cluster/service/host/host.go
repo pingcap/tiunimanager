@@ -8,7 +8,7 @@ import (
 	"github.com/pingcap/tiem/library/thirdparty/logger"
 
 	hostPb "github.com/pingcap/tiem/micro-cluster/proto"
-	"github.com/pingcap/tiem/micro-metadb/client"
+	"github.com/pingcap/tiem/library/firstparty/client"
 	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
 	"google.golang.org/grpc/codes"
 )

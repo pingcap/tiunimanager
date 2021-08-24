@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/asim/go-micro/v3/client"
-	dbclient "github.com/pingcap/tiem/micro-metadb/client"
+	dbclient "github.com/pingcap/tiem/library/firstparty/client"
 	db "github.com/pingcap/tiem/micro-metadb/proto"
 )
 

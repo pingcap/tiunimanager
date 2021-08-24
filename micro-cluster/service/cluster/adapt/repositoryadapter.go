@@ -6,7 +6,7 @@ import (
 	"errors"
 	"github.com/pingcap/tiem/library/knowledge"
 	"github.com/pingcap/tiem/micro-cluster/service/cluster/domain"
-	"github.com/pingcap/tiem/micro-metadb/client"
+	"github.com/pingcap/tiem/library/firstparty/client"
 	db "github.com/pingcap/tiem/micro-metadb/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"strconv"

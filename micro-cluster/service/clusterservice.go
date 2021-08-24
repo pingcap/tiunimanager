@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"strconv"
 
+	dbClient "github.com/pingcap/tiem/library/firstparty/client"
 	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
 	clusterPb "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap/tiem/micro-cluster/service/host"
-	dbClient "github.com/pingcap/tiem/micro-metadb/client"
 	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
 )
 

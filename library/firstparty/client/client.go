@@ -1,8 +1,11 @@
 package client
 
 import (
-	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
+	cluster "github.com/pingcap/tiem/micro-cluster/proto"
 	db "github.com/pingcap/tiem/micro-metadb/proto"
 )
 
 var DBClient db.TiEMDBService
+
+var ClusterClient cluster.ClusterService
+

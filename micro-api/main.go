@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/pingcap/tiem/docs"
+	"github.com/pingcap/tiem/library/firstparty/client"
 	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/firstparty/framework"
 	"github.com/pingcap/tiem/micro-api/route"
-	clusterClient "github.com/pingcap/tiem/micro-cluster/client"
 	cluster "github.com/pingcap/tiem/micro-cluster/proto"
 )
 
@@ -52,6 +52,6 @@ func initGinEngine(d *framework.DefaultServiceFramework) error {
 
 func initClient(d *framework.DefaultServiceFramework) error {
 	srv := framework.ClusterService.BuildMicroService(d.GetRegistryAddress()...)
-	clusterClient.ClusterClient = cluster.NewClusterService(framework.ClusterService.ToString(), srv.Client())
+	client.ClusterClient = cluster.NewClusterService(framework.ClusterService.ToString(), srv.Client())
 	return nil
 }

@@ -605,6 +605,7 @@ type ProgressRate struct {
 }
 
 func MicroInit(brMgrPath, mgrLogFilePath string) {
+	log = logger.GetLogger(config.KEY_CLUSTER_LOG)
 	glBrMgrPath = brMgrPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	glMicroCmdChan = microStartBrMgr(mgrLogFilePath)

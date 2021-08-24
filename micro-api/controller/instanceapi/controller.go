@@ -156,7 +156,14 @@ func Backup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(BackupRecord{
-			ID:     resp.BackupRecord.Id,
+			ID:     		resp.GetBackupRecord().GetId(),
+			ClusterId: 		resp.GetBackupRecord().GetClusterId(),
+			StartTime:		time.Unix(resp.GetBackupRecord().GetStartTime(), 0),
+			EndTime: 		time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
+			BackupRange:	resp.GetBackupRecord().GetRange(),
+			BackupType: 	resp.GetBackupRecord().GetBackupType(),
+			FilePath:  		resp.GetBackupRecord().GetFilePath(),
+			Size:  			resp.GetBackupRecord().GetSize(),
 			Status: *clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
 		}))
 	}

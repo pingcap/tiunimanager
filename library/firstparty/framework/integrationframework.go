@@ -20,7 +20,7 @@ func NewItFramework(serviceName MicroServiceEnum, initOpt ...ItOpt) *ItFramework
 		serviceEnum: serviceName,
 		initOpts: []ItOpt{
 			func(d *ItFramework) error {
-				config.InitForMonolith(d.serviceEnum.logMod())
+				config.InitConfigForDev(d.serviceEnum.logMod())
 				return nil
 			},
 			func(d *ItFramework) error {

@@ -20,7 +20,7 @@ func NewUtFramework(serviceName MicroServiceEnum, initOpt ...UtOpt) *UtFramework
 		serviceEnum: serviceName,
 		initOpts: []UtOpt{
 			func(d *UtFramework) error {
-				config.InitForMonolith(d.serviceEnum.logMod())
+				config.InitConfigForDev(d.serviceEnum.logMod())
 				return nil
 			},
 			func(d *UtFramework) error {

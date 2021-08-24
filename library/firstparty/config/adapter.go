@@ -2,7 +2,7 @@ package config
 
 import "strconv"
 
-func InitForMonolith(mod Mod) {
+func InitConfigForDev(mod Mod) {
 	LocalConfig = make(map[Key]Instance)
 
 	LocalConfig[KEY_REGISTRY_ADDRESS] = Instance{

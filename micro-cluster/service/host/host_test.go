@@ -13,7 +13,7 @@ import (
 )
 
 func initTestLog() {
-	config.InitForMonolith(config.MicroClusterMod)
+	config.InitConfigForDev(config.MicroClusterMod)
 	InitLogger(config.KEY_CLUSTER_LOG)
 }
 

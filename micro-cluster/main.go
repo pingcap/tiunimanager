@@ -28,8 +28,8 @@ func initClient(d *framework.DefaultServiceFramework) error {
 }
 
 func initLib(d *framework.DefaultServiceFramework) error {
-	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup", "")
-	libbr.MicroInit("./brmgr/brmgr", "")
+	libtiup.MicroInit("./tiupcmd", "tiup", "")
+	libbr.MicroInit("./brcmd", "")
 	return nil
 }
 

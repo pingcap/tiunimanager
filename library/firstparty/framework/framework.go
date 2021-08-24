@@ -109,7 +109,7 @@ func initConfig(p *DefaultServiceFramework) error {
 	)
 	srv.Init()
 	srv = nil
-	config.InitForMonolith(p.serviceEnum.logMod())
+	config.InitConfigForDev(p.serviceEnum.logMod())
 	return nil
 }
 

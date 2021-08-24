@@ -7,3 +7,7 @@ logs/
 /micro-cluster/tiupmgr/tiupmgr
 /tiem.sqlite.db
 /micro-cluster/brmgr/brmgr
+/bin
+/micro-api/micro-api
+/micro-cluster/micro-cluster
+/micro-metadb/micro-metadb

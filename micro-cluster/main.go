@@ -13,7 +13,7 @@ import (
 
 func main() {
 	f := framework.NewDefaultFramework(framework.ClusterService,
-		initLib,
+		initLibForDev,
 		initPort,
 		initClient,
 	)
@@ -27,9 +27,9 @@ func initClient(d *framework.DefaultServiceFramework) error {
 	return nil
 }
 
-func initLib(d *framework.DefaultServiceFramework) error {
-	libtiup.MicroInit("./tiupcmd", "tiup", "")
-	libbr.MicroInit("./brcmd", "")
+func initLibForDev(d *framework.DefaultServiceFramework) error {
+	libtiup.MicroInit("./../bin/tiupcmd", "tiup", "")
+	libbr.MicroInit("./../bin/brcmd", "")
 	return nil
 }
 

@@ -2,7 +2,6 @@ package client
 
 import (
 	"crypto/tls"
-	"fmt"
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
@@ -38,5 +37,4 @@ func InitDBClient() {
 
 	DBClient = db.NewTiEMDBService(service.TiEMMetaDBServiceName, srv.Client())
 
-	fmt.Println(DBClient)
 }

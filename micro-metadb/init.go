@@ -102,11 +102,11 @@ func initSqliteDB() {
 func initTables() error {
 	err := models.MetaDB.Migrator().CreateTable(
 		&models.Tenant{},
-		&models.Account{},
-		&models.Role{},
-		&models.Permission{},
-		&models.PermissionBinding{},
-		&models.RoleBinding{},
+		&models.AccountDO{},
+		&models.RoleDO{},
+		&models.PermissionDO{},
+		&models.PermissionBindingDO{},
+		&models.RoleBindingDO{},
 		&models.Token{},
 		&models.ClusterDO{},
 		&models.DemandRecordDO{},
@@ -141,7 +141,7 @@ func initDataForSystemDefault() {
 
 	log.Infof("initialization default tencent: %s, roles: %s, %s, users:%s, %s", tenant, role1, role2, userId1, userId2)
 
-	err = models.AddRoleBindings([]models.RoleBinding{
+	err = models.AddRoleBindings([]models.RoleBindingDO{
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, AccountId: userId1},
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role2.ID, AccountId: userId2},
 	})
@@ -154,7 +154,7 @@ func initDataForSystemDefault() {
 	permission3, err := models.AddPermission(tenant.ID, "/api/v1/instance/create", "Create cluster", "Create cluster", 2, 0)
 	//TODO assert(err == nil)
 
-	err = models.AddPermissionBindings([]models.PermissionBinding{
+	err = models.AddPermissionBindings([]models.PermissionBindingDO{
 		// Administrators can do everything
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission1.ID},
 		{Entity: models.Entity{TenantId: tenant.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission2.ID},
@@ -175,7 +175,7 @@ func initDataForDemo() {
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
-		CpuCores: 4,
+		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
 		AZ:       "Zone1",
@@ -192,7 +192,7 @@ func initDataForDemo() {
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
-		CpuCores: 4,
+		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
 		AZ:       "Zone1",
@@ -209,7 +209,7 @@ func initDataForDemo() {
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
-		CpuCores: 4,
+		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
 		AZ:       "Zone1",
@@ -226,7 +226,7 @@ func initDataForDemo() {
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
-		CpuCores: 4,
+		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
 		AZ:       "Zone2",
@@ -243,7 +243,7 @@ func initDataForDemo() {
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
-		CpuCores: 4,
+		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
 		AZ:       "Zone1",
@@ -260,7 +260,7 @@ func initDataForDemo() {
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
-		CpuCores: 4,
+		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
 		AZ:       "Zone1",

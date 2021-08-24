@@ -11,7 +11,7 @@ import (
 
 func init() {
 	// make sure log would not cause nil pointer problem
-	log = logger.GetLogger()
+	log = logger.GetLogger("config_key_test_log")
 	TiupMgrInit()
 }
 

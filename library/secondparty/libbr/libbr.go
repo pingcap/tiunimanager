@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pingcap/tiem/library/firstparty/config"
@@ -102,6 +103,7 @@ type CmdShowBackUpInfoResp struct {
 	Execution_Time	string
 	Finish_Time		*string
 	Connection		string
+	Error    		error
 }
 
 type CmdRestorePreCheckReq struct {
@@ -140,6 +142,7 @@ type CmdShowRestoreInfoResp struct {
 	Execution_Time	string
 	Finish_Time		string
 	Connection		string
+	Error    		error
 }
 
 type TaskStatusMapValue struct {
@@ -324,7 +327,6 @@ func glMgrStatusMapGetAll() (ret []TaskStatusMember) {
 }
 
 func mgrHandleCmdBackUpReq(jsonStr string) CmdBrResp {
-	// TODO: ret is empty for now, may need to fill it
 	ret := CmdBrResp{}
 	var req CmdBackUpReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
@@ -337,7 +339,6 @@ func mgrHandleCmdBackUpReq(jsonStr string) CmdBrResp {
 }
 
 func mgrHandleCmdShowBackUpInfoReq(jsonStr string) CmdShowBackUpInfoResp {
-	// TODO: ret is empty for now, may need to fill it
 	var ret CmdShowBackUpInfoResp
 	var req CmdShowBackUpInfoReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
@@ -349,7 +350,6 @@ func mgrHandleCmdShowBackUpInfoReq(jsonStr string) CmdShowBackUpInfoResp {
 }
 
 func mgrHandleCmdRestoreReq(jsonStr string) CmdBrResp {
-	// TODO: ret is empty for now, may need to fill it
 	ret := CmdBrResp{}
 	var req CmdRestoreReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
@@ -361,7 +361,6 @@ func mgrHandleCmdRestoreReq(jsonStr string) CmdBrResp {
 }
 
 func mgrHandleCmdShowRestoreInfoReq(jsonStr string) CmdShowRestoreInfoResp {
-	// TODO: ret is empty for now, may need to fill it
 	var ret CmdShowRestoreInfoResp
 	var req CmdShowRestoreInfoReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
@@ -421,28 +420,30 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
 	if err != nil {
 		log.Error("db connection err:", err)
-		//log.Error("db connection err", err)
+		resp.Error = err
 		return resp
 	}
 	defer db.Close()
 	t0 := time.Now()
 	err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.Queue_time, &resp.Execution_Time, &resp.Finish_Time, &resp.Connection)
 	successFp := func() {
-		log.Info("task finished, time cost", time.Now().Sub(t0))
+		log.Info("showbackupinfo task finished, time cost", time.Now().Sub(t0))
 	}
 	if err != nil {
 		log.Error("query sql cmd err", err)
 		if err.Error() != "sql: no rows in result set" {
+			resp.Error = err
 			return resp
 		}
-		if _, str, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
-			log.Error("get tiup status error", err)
-		} else if err = json.Unmarshal([]byte(str), &resp); err != nil {
-			log.Error("unmarshal %v error %v\n", str, err)
+		if stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
+			log.Error("get tiup status from db error", err)
+			resp.Error = err
+		} else if stat != dbPb.TiupTaskStatus_Finished {
+			log.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
+			resp.Error = errors.New(fmt.Sprintf("task has not finished: %d, with err info: %s", stat, errStr))
 		} else {
-			log.Info("check resp from metadb successfully", resp)
-			//log.Info("sql cmd return successfully")
-			successFp()
+			log.Info("task has finished: %d", stat)
+			resp.Progress = 100
 		}
 		return resp
 	}
@@ -488,26 +489,30 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
 	if err != nil {
 		log.Error("db connection err", err)
+		resp.Error = err
 		return resp
 	}
 	defer db.Close()
 	t0 := time.Now()
 	err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.Queue_time, &resp.Execution_Time, &resp.Finish_Time, &resp.Connection)
 	successFp := func() {
-		log.Info("task finished, time cost", time.Now().Sub(t0))
+		log.Info("showretoreinfo task finished, time cost", time.Now().Sub(t0))
 	}
 	if err != nil {
 		log.Error("query sql cmd err", err)
 		if err.Error() != "sql: no rows in result set" {
+			resp.Error = err
 			return resp
 		}
-		if _, str, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
+		if stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
 			log.Error("get tiup status error", err)
-		} else if err = json.Unmarshal([]byte(str), &resp); err != nil {
-			log.Error("unmarshal %v error %v\n", str, err)
+			resp.Error = err
+		} else if stat != dbPb.TiupTaskStatus_Finished {
+			log.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
+			resp.Error = errors.New(fmt.Sprintf("task has not finished: %d, with err info: %s", stat, errStr))
 		} else {
 			log.Info("sql cmd return successfully")
-			successFp()
+			resp.Progress = 100
 		}
 		return resp
 	}

@@ -13,9 +13,8 @@ type ParamUpdateReq struct {
 }
 
 type BackupRecordQueryReq struct {
-	//StartTime time.Time
-	//EndTime time.Time
 	controller.PageRequest
+	ClusterId 	string		`json:"clusterId"`
 }
 
 type BackupStrategy struct {

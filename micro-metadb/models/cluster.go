@@ -279,8 +279,11 @@ type BackupRecordDO struct {
 	OperatorId  string		`gorm:"not null;type:varchar(36);default:null"`
 
 	FilePath 	string
-	FlowId		uint
+	FlowId		int64
 	Size 		uint64
+
+	StartTime	int64
+	EndTime 	int64
 }
 
 func (d BackupRecordDO) TableName() string {
@@ -364,17 +367,20 @@ func DeleteBackupRecord(id uint) (record *BackupRecordDO, err error) {
 	return
 }
 
-func SaveBackupRecord(tenantId, clusterId, operatorId, backupRange, backupType, filePath string, flowId uint) (do *BackupRecordDO, err error){
+func SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do *BackupRecordDO, err error){
 	do = &BackupRecordDO{
 		Record: Record{
-			TenantId: tenantId,
+			TenantId: record.GetClusterId(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
-		ClusterId: clusterId,
-		OperatorId: operatorId,
-		BackupRange: backupRange,
-		BackupType: backupType,
-		FlowId: flowId,
-		FilePath: filePath,
+		ClusterId: record.GetClusterId(),
+		OperatorId: record.GetOperatorId(),
+		BackupRange: record.GetBackupRange(),
+		BackupType: record.GetBackupType(),
+		FlowId: record.GetFlowId(),
+		FilePath: record.GetFilePath(),
+		StartTime: record.GetStartTime(),
 	}
 
 	err = MetaDB.Create(do).Error
@@ -382,7 +388,11 @@ func SaveBackupRecord(tenantId, clusterId, operatorId, backupRange, backupType, 
 }
 
 func UpdateBackupRecord(record *dbPb.DBBackupRecordDTO) error {
-	err := MetaDB.Model(&BackupRecordDO{}).Where("id = ?", record.Id).Updates(BackupRecordDO{Size: record.Size}).Error
+	err := MetaDB.Model(&BackupRecordDO{}).Where("id = ?", record.Id).Updates(BackupRecordDO{
+		Size: record.GetSize(), EndTime: record.GetEndTime(), Record: Record{
+			TenantId: record.GetClusterId(),
+			UpdatedAt: time.Now(),
+		}}).Error
 
 	if err != nil {
 		return err
@@ -426,7 +436,7 @@ func ListBackupRecords(clusterId string,
 
 	if err != nil {return}
 	// query flows
-	flowIds := make([]uint, len(records), len(records))
+	flowIds := make([]int64, len(records), len(records))
 
 	dos = make([]*BackupRecordFetchResult, len(records), len(records))
 
@@ -441,10 +451,10 @@ func ListBackupRecords(clusterId string,
 	err = MetaDB.Find(&flows, flowIds).Error
 	if err != nil {return}
 
-	flowMap := make(map[uint]*FlowDO)
+	flowMap := make(map[int64]*FlowDO)
 
 	for _,v := range flows {
-		flowMap[v.ID] = v
+		flowMap[int64(v.ID)] = v
 	}
 
 	for i,v := range records {

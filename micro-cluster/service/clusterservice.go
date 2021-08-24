@@ -138,8 +138,9 @@ func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request 
 }
 
 func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *cluster.DeleteBackupRequest, response *cluster.DeleteBackupResponse) (err error) {
+	log.Info("delete backup")
 
-	_, err = client.DBClient.DeleteBackupRecord(context.TODO(), &db.DBDeleteBackupRecordRequest{Id: request.GetBackupRecordId()})
+	err = domain.DeleteBackup(request.Operator, request.GetClusterId(), request.GetBackupRecordId())
 	if err != nil {
 		// todo
 		log.Info(err)
@@ -233,7 +234,6 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 }
 
 func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *cluster.QueryBackupRequest, response *cluster.QueryBackupResponse) (err error) {
-
 	result, err := client.DBClient.ListBackupRecords(context.TODO(), &db.DBListBackupRecordsRequest{
 		ClusterId: request.ClusterId,
 		Page: &db.DBPageDTO{

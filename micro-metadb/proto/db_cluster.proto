@@ -153,13 +153,14 @@ message DBBackupRecordDTO {
     int64 id = 1;
     string tenantId = 2;
     string clusterId = 3;
-    int64 createTime = 4;
-    string backupRange = 5;
-    string backupType = 6;
-    string operatorId = 7;
-    string filePath = 8;
-    int64 flowId = 9;
-    uint64 size = 10;
+    int64 startTime = 4;
+    int64 endTime = 5;
+    string backupRange = 6;
+    string backupType = 7;
+    string operatorId = 8;
+    string filePath = 9;
+    int64 flowId = 10;
+    uint64 size = 11;
 }
 
 message DBSaveBackupRecordRequest {

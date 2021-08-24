@@ -183,7 +183,7 @@ func Backup(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/strategy/ [get]
 func QueryBackupStrategy(c *gin.Context) {
-	clusterId := c.Param("clusterId")
+	clusterId := c.Query("clusterId")
 	operator := controller.GetOperator(c)
 
 	resp, err := cluster.ClusterClient.GetBackupStrategy(context.TODO(), &proto.GetBackupStrategyRequest{
@@ -266,9 +266,9 @@ func QueryBackup(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	//operator := controller.GetOperator(c)
-
+	operator := controller.GetOperator(c)
 	reqDTO := &proto.QueryBackupRequest{
+		Operator:  operator.ConvertToDTO(),
 		ClusterId: clusterId,
 		Page:      queryReq.PageRequest.ConvertToDTO(),
 	}

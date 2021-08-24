@@ -18,28 +18,6 @@ import (
 
 var ClusterClient cluster.ClusterService
 
-var ManagerClient cluster.TiEMManagerService
-
-func InitManagerClient() {
-	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
-	if err != nil {
-		mlog.Fatal(err)
-		return
-	}
-	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
-	srv := micro.NewService(
-		micro.Name(service.TiEMManagerServiceName),
-		micro.WrapHandler(prometheus.NewHandlerWrapper()),
-		micro.WrapClient(opentracing.NewClientWrapper(tracer.GlobalTracer)),
-		micro.WrapHandler(opentracing.NewHandlerWrapper(tracer.GlobalTracer)),
-		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
-		micro.Registry(etcd.NewRegistry(registry.Addrs(config.GetRegistryAddress()...))),
-	)
-	srv.Init()
-
-	ManagerClient = cluster.NewTiEMManagerService(service.TiEMManagerServiceName, srv.Client())
-}
-
 func InitClusterClient() {
 	cert, err := tls.LoadX509KeyPair(config.GetCertificateCrtFilePath(), config.GetCertificateKeyFilePath())
 	if err != nil {

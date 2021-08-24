@@ -64,7 +64,7 @@ build_metadb_server:
 
 #2. R&D to test the code themselves for compliance before submitting it
 devselfcheck:
-	cat prechecklist.md
+	cat resource/prechecklist.md
 	make gotool
 	@echo "start self check."
 	make check_fmt

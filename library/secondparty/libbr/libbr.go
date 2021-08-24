@@ -134,13 +134,13 @@ type CmdShowRestoreInfoReq struct {
 
 type CmdShowRestoreInfoResp struct {
 	Destination		string
-	Size			uint64
-	BackupTS		uint64
+	Size            uint64
+	BackupTS        uint64
 	State			string
 	Progress		float32
 	Queue_time		string
 	Execution_Time	string
-	Finish_Time		string
+	Finish_Time		*string
 	Connection		string
 	Error    		error
 }
@@ -183,6 +183,7 @@ var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
 func BrMgrInit() {
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
+	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	// TODO: comprehend this part
 	configPath := ""
 	if len(os.Args) > 1 {
@@ -442,7 +443,7 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 			log.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
 			resp.Error = errors.New(fmt.Sprintf("task has not finished: %d, with err info: %s", stat, errStr))
 		} else {
-			log.Info("task has finished: %d", stat)
+			log.Infof("task has finished: %d", stat)
 			resp.Progress = 100
 		}
 		return resp
@@ -583,7 +584,7 @@ var glMicroTaskStatusMapMutex sync.Mutex
 var glBrMgrPath string
 
 type ClusterFacade struct {
-	TaskID 				uint64
+	TaskID 				uint64 // do not pass this value for br command
 	DbConnParameter		DbConnParam
 	DbName				string
 	TableName 			string

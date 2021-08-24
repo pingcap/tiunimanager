@@ -20,14 +20,10 @@ import (
 	"testing"
 
 	"github.com/pingcap/check"
-	"github.com/pingcap/tidb/config"
 )
 
 func TestT(t *testing.T) {
 	path, _ := os.MkdirTemp("", "tmp-storage-disk-pkg")
-	config.UpdateGlobal(func(conf *config.Config) {
-		conf.TempStoragePath = path
-	})
 	_ = os.RemoveAll(path) // clean the uncleared temp file during the last run.
 	_ = os.MkdirAll(path, 0755)
 	check.TestingT(t)
@@ -42,7 +38,6 @@ func (s *testDiskSerialSuite) TestRemoveDir(c *check.C) {
 	err := CheckAndInitTempDir()
 	c.Assert(err, check.IsNil)
 	c.Assert(checkTempDirExist(), check.Equals, true)
-	c.Assert(os.RemoveAll(config.GetGlobalConfig().TempStoragePath), check.IsNil)
 	c.Assert(checkTempDirExist(), check.Equals, false)
 	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {

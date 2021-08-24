@@ -15,7 +15,6 @@
 package memory
 
 import (
-	"os"
 	"testing"
 
 	"github.com/pingcap/tiem/library/firstparty/util/testbridge"

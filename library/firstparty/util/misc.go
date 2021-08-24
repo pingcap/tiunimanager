@@ -27,7 +27,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -40,9 +39,6 @@ import (
 	"github.com/pingcap/parser/mysql"
 	"github.com/pingcap/parser/terror"
 	configTiem "github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tidb/config"
-	"github.com/pingcap/tidb/metrics"
-	"github.com/pingcap/tiem/library/firstparty/util/collate"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
 	"go.uber.org/zap"
 )
@@ -115,12 +111,12 @@ func Recover(metricsLabel, funcInfo string, recoverFn func(), quit bool) {
 	if recoverFn != nil {
 		recoverFn()
 	}
-	logutil.BgLogger().Error("panic in the recoverable goroutine",
+	/** TODO logutil.BgLogger().Error("panic in the recoverable goroutine",
 		zap.String("label", metricsLabel),
 		zap.String("funcInfo", funcInfo),
 		zap.Reflect("r", r),
 		zap.String("stack", string(GetStack())))
-	metrics.PanicCounter.WithLabelValues(metricsLabel).Inc()
+	metrics.PanicCounter.WithLabelValues(metricsLabel).Inc() **/
 	if quit {
 		// Wait for metrics to be pushed.
 		time.Sleep(time.Second * 15)
@@ -148,7 +144,7 @@ func SyntaxError(err error) error {
 	if err == nil {
 		return nil
 	}
-	logutil.BgLogger().Debug("syntax error", zap.Error(err))
+	// TODO logutil.BgLogger().Debug("syntax error", zap.Error(err))
 
 	// If the error is already a terror with stack, pass it through.
 	if errors.HasStack(err) {
@@ -384,37 +380,6 @@ func TLSCipher2String(n uint16) string {
 	return s
 }
 
-// ColumnsToProto converts a slice of model.ColumnInfo to a slice of tipb.ColumnInfo.
-func ColumnsToProto(columns []*model.ColumnInfo, pkIsHandle bool) []*tipb.ColumnInfo {
-	cols := make([]*tipb.ColumnInfo, 0, len(columns))
-	for _, c := range columns {
-		col := ColumnToProto(c)
-		// TODO: Here `PkHandle`'s meaning is changed, we will change it to `IsHandle` when tikv's old select logic
-		// is abandoned.
-		if (pkIsHandle && mysql.HasPriKeyFlag(c.Flag)) || c.ID == model.ExtraHandleID {
-			col.PkHandle = true
-		} else {
-			col.PkHandle = false
-		}
-		cols = append(cols, col)
-	}
-	return cols
-}
-
-// ColumnToProto converts model.ColumnInfo to tipb.ColumnInfo.
-func ColumnToProto(c *model.ColumnInfo) *tipb.ColumnInfo {
-	pc := &tipb.ColumnInfo{
-		ColumnId:  c.ID,
-		Collation: collate.RewriteNewCollationIDIfNeeded(int32(mysql.CollationNames[c.FieldType.Collate])),
-		ColumnLen: int32(c.FieldType.Flen),
-		Decimal:   int32(c.FieldType.Decimal),
-		Flag:      int32(c.Flag),
-		Elems:     c.Elems,
-	}
-	pc.Tp = int32(c.FieldType.Tp)
-	return pc
-}
-
 func init() {
 	for _, value := range tlsCipherString {
 		SupportCipher[value] = struct{}{}
@@ -441,19 +406,19 @@ type SequenceTable interface {
 
 // LoadTLSCertificates loads CA/KEY/CERT for special paths.
 func LoadTLSCertificates(ca, key, cert string, autoTLS bool) (tlsConfig *tls.Config, autoReload bool, err error) {
-	autoReload = false
+	/*autoReload = false
 	if len(cert) == 0 || len(key) == 0 {
 		if !autoTLS {
-			logutil.BgLogger().Warn("Automatic TLS Certificate creation is disabled", zap.Error(err))
+			// TODO logutil.BgLogger().Warn("Automatic TLS Certificate creation is disabled", zap.Error(err))
 			return
 		}
 		autoReload = true
-		tempStoragePath := config.GetGlobalConfig().TempStoragePath
+		tempStoragePath := "/tmp"// TODO config.GetGlobalConfig().TempStoragePath
 		cert = filepath.Join(tempStoragePath, "/cert.pem")
 		key = filepath.Join(tempStoragePath, "/key.pem")
 		err = createTLSCertificates(cert, key)
 		if err != nil {
-			logutil.BgLogger().Warn("TLS Certificate creation failed", zap.Error(err))
+			// TODO logutil.BgLogger().Warn("TLS Certificate creation failed", zap.Error(err))
 			return
 		}
 	}
@@ -461,12 +426,12 @@ func LoadTLSCertificates(ca, key, cert string, autoTLS bool) (tlsConfig *tls.Con
 	var tlsCert tls.Certificate
 	tlsCert, err = tls.LoadX509KeyPair(cert, key)
 	if err != nil {
-		logutil.BgLogger().Warn("load x509 failed", zap.Error(err))
+		//TODO logutil.BgLogger().Warn("load x509 failed", zap.Error(err))
 		err = errors.Trace(err)
 		return
-	}
+	}*/
 
-	requireTLS := config.GetGlobalConfig().Security.RequireSecureTransport
+	/* TODO requireTLS := config.GetGlobalConfig().Security.RequireSecureTransport
 	var minTLSVersion uint16 = tls.VersionTLS11
 	switch tlsver := config.GetGlobalConfig().Security.MinTLSVersion; tlsver {
 	case "TLSv1.0":
@@ -488,10 +453,10 @@ func LoadTLSCertificates(ca, key, cert string, autoTLS bool) (tlsConfig *tls.Con
 		logutil.BgLogger().Warn(
 			"Minimum TLS version allows pre-TLSv1.2 protocols, this is not recommended",
 		)
-	}
+	} */
 
 	// Try loading CA cert.
-	clientAuthPolicy := tls.NoClientCert
+	/* TODO clientAuthPolicy := tls.NoClientCert
 	if requireTLS {
 		clientAuthPolicy = tls.RequestClientCert
 	}
@@ -512,14 +477,14 @@ func LoadTLSCertificates(ca, key, cert string, autoTLS bool) (tlsConfig *tls.Con
 				clientAuthPolicy = tls.VerifyClientCertIfGiven
 			}
 		}
-	}
+	} */
 	/* #nosec G402 */
-	tlsConfig = &tls.Config{
+	/*tlsConfig = &tls.Config{
 		Certificates: []tls.Certificate{tlsCert},
 		ClientCAs:    certPool,
 		ClientAuth:   clientAuthPolicy,
 		MinVersion:   minTLSVersion,
-	}
+	}*/
 	return
 }
 
@@ -551,7 +516,7 @@ func InternalHTTPSchema() string {
 }
 
 func initInternalClient() {
-	clusterSecurity := config.GetGlobalConfig().Security.ClusterSecurity()
+	/*clusterSecurity := config.GetGlobalConfig().Security.ClusterSecurity()
 	tlsCfg, err := clusterSecurity.ToTLSConfig()
 	if err != nil {
 		logutil.BgLogger().Fatal("could not load cluster ssl", zap.Error(err))
@@ -564,7 +529,7 @@ func initInternalClient() {
 	internalHTTPSchema = "https"
 	internalHTTPClient = &http.Client{
 		Transport: &http.Transport{TLSClientConfig: tlsCfg},
-	}
+	}*/
 }
 
 // GetLocalIP will return a local IP(non-loopback, non 0.0.0.0), if there is one
@@ -649,6 +614,6 @@ func createTLSCertificates(certpath string, keypath string) error {
 		return err
 	}
 
-	logutil.BgLogger().Info("TLS Certificates created", zap.String("cert", certpath), zap.String("key", keypath), zap.Duration("validity", certValidity))
+	// TODO logutil.BgLogger().Info("TLS Certificates created", zap.String("cert", certpath), zap.String("key", keypath), zap.Duration("validity", certValidity))
 	return nil
 }

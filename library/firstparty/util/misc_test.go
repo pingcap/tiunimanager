@@ -17,19 +17,12 @@ package util
 import (
 	"bytes"
 	"crypto/x509/pkix"
-	"testing"
-	"time"
-
 	"github.com/pingcap/errors"
 	"github.com/pingcap/parser"
-	"github.com/pingcap/parser/model"
-	"github.com/pingcap/parser/mysql"
 	"github.com/pingcap/parser/terror"
-	"github.com/pingcap/tidb/sessionctx/stmtctx"
-	"github.com/pingcap/tidb/types"
 	"github.com/pingcap/tiem/library/firstparty/util/fastrand"
-	"github.com/pingcap/tiem/library/firstparty/util/memory"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestRunWithRetry(t *testing.T) {
@@ -126,70 +119,10 @@ func TestBasicFuncSyntaxWarn(t *testing.T) {
 	assert.True(t, terror.ErrorEqual(SyntaxWarn(errors.New("test")), parser.ErrParse))
 }
 
-func TestBasicFuncProcessInfo(t *testing.T) {
-	t.Parallel()
-	pi := ProcessInfo{
-		ID:      1,
-		User:    "test",
-		Host:    "www",
-		DB:      "db",
-		Command: mysql.ComSleep,
-		Plan:    nil,
-		Time:    time.Now(),
-		State:   3,
-		Info:    "test",
-		StmtCtx: &stmtctx.StatementContext{
-			MemTracker: memory.NewTracker(-1, -1),
-		},
-	}
-	row := pi.ToRowForShow(false)
-	row2 := pi.ToRowForShow(true)
-	assert.Equal(t, row2, row)
-	assert.Len(t, row, 8)
-	assert.Equal(t, pi.ID, row[0])
-	assert.Equal(t, pi.User, row[1])
-	assert.Equal(t, pi.Host, row[2])
-	assert.Equal(t, pi.DB, row[3])
-	assert.Equal(t, "Sleep", row[4])
-	assert.Equal(t, uint64(0), row[5])
-	assert.Equal(t, "in transaction; autocommit", row[6])
-	assert.Equal(t, "test", row[7])
-
-	row3 := pi.ToRow(time.UTC)
-	assert.Equal(t, row, row3[:8])
-	assert.Equal(t, int64(0), row3[9])
-}
-
 func TestBasicFuncRandomBuf(t *testing.T) {
 	t.Parallel()
 	buf := fastrand.Buf(5)
 	assert.Len(t, buf, 5)
 	assert.False(t, bytes.Contains(buf, []byte("$")))
 	assert.False(t, bytes.Contains(buf, []byte{0}))
-}
-
-func TestToPB(t *testing.T) {
-	t.Parallel()
-	column := &model.ColumnInfo{
-		ID:           1,
-		Name:         model.NewCIStr("c"),
-		Offset:       0,
-		DefaultValue: 0,
-		FieldType:    *types.NewFieldType(0),
-		Hidden:       true,
-	}
-	column.Collate = "utf8mb4_general_ci"
-
-	column2 := &model.ColumnInfo{
-		ID:           1,
-		Name:         model.NewCIStr("c"),
-		Offset:       0,
-		DefaultValue: 0,
-		FieldType:    *types.NewFieldType(0),
-		Hidden:       true,
-	}
-	column2.Collate = "utf8mb4_bin"
-
-	assert.Equal(t, "column_id:1 collation:45 columnLen:-1 decimal:-1 ", ColumnToProto(column).String())
-	assert.Equal(t, "column_id:1 collation:45 columnLen:-1 decimal:-1 ", ColumnsToProto([]*model.ColumnInfo{column, column2}, false)[0].String())
 }

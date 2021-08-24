@@ -15,6 +15,7 @@
 package fastrand
 
 import (
+	"math/rand"
 	_ "unsafe" // required by go:linkname
 )
 
@@ -33,7 +34,9 @@ func Buf(size int) []byte {
 
 // Uint32 returns a lock free uint32 value.
 //go:linkname Uint32 runtime.fastrand
-func Uint32() uint32
+func Uint32() uint32 {
+	return rand.Uint32()
+}
 
 // Uint32N returns, as an uint32, a pseudo-random number in [0,n).
 func Uint32N(n uint32) uint32 {

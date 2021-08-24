@@ -20,10 +20,9 @@ import (
 	"sort"
 	"strings"
 	"unicode/utf8"
+	"unsafe"
 
 	"github.com/pingcap/errors"
-	"github.com/pingcap/parser/mysql"
-	"github.com/pingcap/tiem/library/firstparty/util/hack"
 )
 
 // ErrSyntax indicates that a value does not have the right syntax for the target type.
@@ -295,7 +294,9 @@ func IsExactMatch(patTypes []byte) bool {
 
 // Copy deep copies a string.
 func Copy(src string) string {
-	return string(hack.Slice(src))
+	b := make([]byte, len(src))
+	copy(b, src)
+	return *(*string)(unsafe.Pointer(&b))
 }
 
 // StringerFunc defines string func implement fmt.Stringer.
@@ -326,13 +327,8 @@ func (i StringerStr) String() string {
 // For instance, the identifier "foo `bar`" will become "`foo ``bar```".
 // The sqlMode controls whether to escape with backquotes (`) or double quotes
 // (`"`) depending on whether mysql.ModeANSIQuotes is enabled.
-func Escape(str string, sqlMode mysql.SQLMode) string {
-	var quote string
-	if sqlMode&mysql.ModeANSIQuotes != 0 {
-		quote = `"`
-	} else {
-		quote = "`"
-	}
+func Escape(str string) string {
+	quote := "`"
 	return quote + strings.Replace(str, quote, quote+quote, -1) + quote
 }
 

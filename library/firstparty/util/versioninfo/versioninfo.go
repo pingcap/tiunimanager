@@ -15,7 +15,7 @@
 package versioninfo
 
 const (
-	// CommunityEdition is the default edition for building.
+	// EnterpriseEdition is the default edition for building.
 	EnterpriseEdition = "Enterprise"
 )
 

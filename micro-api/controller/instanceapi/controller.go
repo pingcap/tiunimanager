@@ -360,11 +360,13 @@ func RecoverBackup(c *gin.Context) {
 // @Router /backups/{backupId} [delete]
 func DeleteBackup(c *gin.Context) {
 	backupId, _ := strconv.Atoi(c.Param("backupId"))
+	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
 
 	_, err := cluster.ClusterClient.DeleteBackupRecord(context.TODO(), &proto.DeleteBackupRequest{
 		BackupRecordId: int64(backupId),
 		Operator:       operator.ConvertToDTO(),
+		ClusterId:  	clusterId,
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))

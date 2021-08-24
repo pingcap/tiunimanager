@@ -3,6 +3,7 @@ package instanceapi
 import (
 	"context"
 	"encoding/json"
+	"google.golang.org/grpc/codes"
 	"net/http"
 	"strconv"
 	"time"
@@ -139,7 +140,7 @@ func Backup(c *gin.Context) {
 
 	var req BackupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 
@@ -223,7 +224,7 @@ func SaveBackupStrategy(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	_, err := cluster.ClusterClient.SaveBackupStrategy(context.TODO(), &proto.SaveBackupStrategyRequest{
@@ -263,7 +264,7 @@ func QueryBackup(c *gin.Context) {
 
 	var queryReq BackupRecordQueryReq
 	if err := c.ShouldBindJSON(&queryReq); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	operator := controller.GetOperator(c)
@@ -321,7 +322,7 @@ func RecoverBackup(c *gin.Context) {
 	backupIdStr := c.Param("backupId")
 	backupId, err := strconv.Atoi(backupIdStr)
 	if err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	var req BackupRecoverReq
@@ -359,16 +360,20 @@ func RecoverBackup(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups/{backupId} [delete]
 func DeleteBackup(c *gin.Context) {
-	backupId, _ := strconv.Atoi(c.Param("backupId"))
+	backupId, err := strconv.Atoi(c.Param("backupId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		return
+	}
 
 	var req BackupDeleteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	operator := controller.GetOperator(c)
 
-	_, err := cluster.ClusterClient.DeleteBackupRecord(context.TODO(), &proto.DeleteBackupRequest{
+	_, err = cluster.ClusterClient.DeleteBackupRecord(context.TODO(), &proto.DeleteBackupRequest{
 		BackupRecordId: int64(backupId),
 		Operator:       operator.ConvertToDTO(),
 		ClusterId:  	req.ClusterId,

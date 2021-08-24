@@ -407,7 +407,7 @@ type BackupRecordFetchResult struct {
 
 func QueryBackupRecord(clusterId string, recordId int64) (*BackupRecordFetchResult, error) {
 	record := BackupRecordDO{}
-	err := MetaDB.Table("backup_records").Where("id = ? and cluster_id", recordId, clusterId).First(&record).Error
+	err := MetaDB.Table("backup_records").Where("id = ? and cluster_id = ?", recordId, clusterId).First(&record).Error
 	if err != nil {
 		return nil, err
 	}

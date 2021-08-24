@@ -17,6 +17,10 @@ type BackupRecordQueryReq struct {
 	ClusterId 	string		`json:"clusterId"`
 }
 
+type BackupDeleteReq struct {
+	ClusterId 	string		`json:"clusterId"`
+}
+
 type BackupStrategy struct {
 	ClusterId 	string 		`json:"clusterId"`
 	BackupDate	string		`json:"backupDate"`

@@ -33,18 +33,11 @@ func interestingGoroutines() (gs []string) {
 	buf := make([]byte, 2<<20)
 	buf = buf[:runtime.Stack(buf, true)]
 	ignoreList := []string{
-		"created by github.com/pingcap/tidb.init",
 		"testing.RunTests",
 		"check.(*resultTracker).start",
 		"check.(*suiteRunner).runFunc",
 		"check.(*suiteRunner).parallelRun",
-		"localstore.(*dbStore).scheduler",
-		"ddl.(*ddl).start",
-		"ddl.(*delRange).startEmulator",
-		"domain.NewDomain",
 		"testing.(*T).Run",
-		"domain.(*Domain).LoadPrivilegeLoop",
-		"domain.(*Domain).UpdateTableStatsLoop",
 		"testing.Main(",
 		"runtime.goexit",
 		"created by runtime.gc",
@@ -56,17 +49,8 @@ func interestingGoroutines() (gs []string) {
 		// false positive leak failures
 		"google.golang.org/grpc.(*addrConn).resetTransport",
 		"google.golang.org/grpc.(*ccBalancerWrapper).watcher",
-		"github.com/pingcap/goleveldb/leveldb/util.(*BufferPool).drain",
-		"github.com/pingcap/goleveldb/leveldb.(*DB).compactionError",
-		"github.com/pingcap/goleveldb/leveldb.(*DB).mpoolDrain",
 		"go.etcd.io/etcd/pkg/logutil.(*MergeLogger).outputLoop",
 		"go.etcd.io/etcd/v3/pkg/logutil.(*MergeLogger).outputLoop",
-		"oracles.(*pdOracle).updateTS",
-		"tikv.(*KVStore).runSafePointChecker",
-		"tikv.(*RegionCache).asyncCheckAndResolveLoop",
-		"github.com/pingcap/badger",
-		"github.com/ngaut/unistore/tikv.(*MVCCStore).runUpdateSafePointLoop",
-		"github.com/tikv/client-go/v2/tikv.(*ttlManager).keepAlive", // See https://github.com/tikv/client-go/issues/174
 	}
 	shouldIgnore := func(stack string) bool {
 		if stack == "" {

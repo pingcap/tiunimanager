@@ -1,4 +1,4 @@
-// Copyright 2019-present PingCAP, Inc.
+// Copyright 2021 PingCAP, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -8,11 +8,19 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package signal
+package errno
 
-// SetupSignalHandler setup signal handler for TiDB Server
-func SetupSignalHandler(shutdownFunc func(bool)) {
+import (
+	"github.com/pingcap-inc/tiem/library/firstparty/util/testbridge"
+	"os"
+	"testing"
+)
+
+func TestMain(m *testing.M) {
+	testbridge.WorkaroundGoCheckFlags()
+	os.Exit(m.Run())
 }

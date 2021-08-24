@@ -14,7 +14,6 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
-	github.com/juju/errors v0.0.0-20210818161939-5560c4c073ff // indirect
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	github.com/micro/cli/v2 v2.1.2
 	github.com/mozillazg/go-pinyin v0.18.0
@@ -22,8 +21,6 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/check v0.0.0-20200212061837-5e12011dc712
 	github.com/pingcap/errors v0.11.4
-	github.com/pingcap/parser v3.1.2+incompatible
-	github.com/pingcap/tidb v2.0.11+incompatible
 	github.com/pingcap/tiup v1.5.5
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
@@ -37,6 +34,7 @@ require (
 	go.uber.org/goleak v1.1.10
 	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210616094352-59db8d763f22
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1

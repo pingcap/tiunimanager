@@ -1,8 +1,8 @@
 package clusterapi
 
 import (
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-api/controller/hostapi"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
 )
 
 type ClusterBaseInfo struct {

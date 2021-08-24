@@ -14,11 +14,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 
-	"github.com/pingcap/tiem/micro-metadb/client"
-	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 // micro service --fork&exec--> tiup manager --fork&exec--> tiup process
@@ -191,7 +191,7 @@ func TiupMgrInit() {
 	if len(configPath) == 0 {
 		configPath = "./tiupmgr.log"
 	}
-	config.InitForMonolith(config.TiUPInternalMod)
+	config.InitConfigForDev(config.TiUPInternalMod)
 	// TODO: update log path using configPath if necessary
 	log = logger.GetLogger(config.KEY_TIUPLIB_LOG)
 }

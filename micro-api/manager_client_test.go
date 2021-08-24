@@ -61,7 +61,7 @@ func (s *ClusterFakeService) GetFailureDomain(ctx context.Context, in *pb.GetFai
 	return s.mockGetFailureDomain(ctx, in, opts...)
 }
 
-func InitFakeManagerClient() *ClusterFakeService {
+func InitFakeClusterClient() *ClusterFakeService {
 
 	fakeClient := &ClusterFakeService{
 		mockLogin: func(ctx context.Context, in *pb.LoginRequest, opts ...client.CallOption) (*pb.LoginResponse, error) {

@@ -29,7 +29,7 @@ func Login(c *gin.Context) {
 	}
 
 	loginReq := cluster.LoginRequest{AccountName: req.UserName, Password: req.UserPassword}
-	result, err := client.ManagerClient.Login(c, &loginReq)
+	result, err := client.ClusterClient.Login(c, &loginReq)
 
 	if err == nil {
 		if result.Status.Code != 0 {
@@ -63,7 +63,7 @@ func Logout(c *gin.Context) {
 	}
 
 	logoutReq := cluster.LogoutRequest{TokenString: c.GetHeader("Token")}
-	result, err := client.ManagerClient.Logout(c, &logoutReq)
+	result, err := client.ClusterClient.Logout(c, &logoutReq)
 
 	if err == nil {
 		c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: result.GetAccountName()}))

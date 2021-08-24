@@ -23,7 +23,7 @@ func main() {
 
 func initClient(d *framework.DefaultServiceFramework) error {
 	srv := framework.MetaDBService.BuildMicroService(d.GetRegistryAddress()...)
-	dbclient.DBClient = db.NewTiEMDBService(string(framework.MetaDBService), srv.Client())
+	dbclient.DBClient = db.NewTiEMDBService(framework.MetaDBService.ToString(), srv.Client())
 	return nil
 }
 

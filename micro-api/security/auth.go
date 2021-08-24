@@ -26,7 +26,7 @@ func VerifyIdentity(c *gin.Context) {
 	path := c.Request.URL
 	req := cluster.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
 
-	result, err := client.ManagerClient.VerifyIdentity(c, &req)
+	result, err := client.ClusterClient.VerifyIdentity(c, &req)
 	if err != nil {
 		c.Error(err)
 		c.Status(http.StatusInternalServerError)

@@ -1,7 +1,7 @@
 package domain
 
 import (
-	copywriting2 "github.com/pingcap/tiem/library/copywriting"
+	copywriting2 "github.com/pingcap-inc/tiem/library/copywriting"
 )
 
 var FlowWorkDefineMap = map[string]*FlowWorkDefine{
@@ -11,8 +11,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		TaskNodes: map[string]*TaskDefine{
 			"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
 			"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
-			"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
-			"deployDone":   {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
+			"configDone":   {"deployCluster", "deployDone", "fail", SyncFuncTask, deployCluster},
+			"deployDone":   {"startupCluster", "startupDone", "fail", SyncFuncTask, startupCluster},
 			"startupDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
 		},

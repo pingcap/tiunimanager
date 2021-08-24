@@ -3,9 +3,9 @@ package databaseapi
 import (
 	client2 "github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-cluster/client"
-	cluster "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"net/http"
 	"time"
 )

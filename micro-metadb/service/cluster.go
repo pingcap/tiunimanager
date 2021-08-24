@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap/tiem/micro-metadb/models"
-	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
+	"github.com/pingcap-inc/tiem/micro-metadb/models"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"gorm.io/gorm"
 )
 
@@ -238,8 +238,8 @@ func ConvertToBackupRecordDTO(do *models.BackupRecordDO) (dto *dbPb.DBBackupReco
 		TenantId:    do.TenantId,
 		ClusterId:   do.ClusterId,
 		CreateTime:  do.CreatedAt.Unix(),
-		BackupRange: int32(do.BackupRange),
-		BackupType:  int32(do.BackupType),
+		BackupRange: int32(do.Range),
+		BackupType:  int32(do.Type),
 		OperatorId:  do.OperatorId,
 		FilePath:    do.FilePath,
 		FlowId: int64(do.FlowId),
@@ -299,11 +299,11 @@ func convertToClusterDTO(do *models.ClusterDO, demand *models.DemandRecordDO) (d
 	dto = &dbPb.DBClusterDTO {
 		Id:          do.ID,
 		Code:        do.Code,
-		Name:        do.ClusterName,
+		Name:        do.Name,
 		TenantId:    do.TenantId,
 		DbPassword:  do.DbPassword,
-		ClusterType: do.ClusterType,
-		VersionCode: do.ClusterVersion,
+		ClusterType: do.Type,
+		VersionCode: do.Version,
 		Status:      int32(do.Status),
 		Tags:        do.Tags,
 		Tls:         do.Tls,

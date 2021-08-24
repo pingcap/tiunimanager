@@ -1,8 +1,8 @@
 package instanceapi
 
 import (
-	"github.com/pingcap/tiem/library/knowledge"
-	"github.com/pingcap/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"time"
 )
 

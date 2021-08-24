@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap/tiem/micro-metadb/models"
-	"github.com/pingcap/tiem/micro-metadb/proto"
+	"github.com/pingcap-inc/tiem/micro-metadb/models"
+	"github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"time"
 )
 

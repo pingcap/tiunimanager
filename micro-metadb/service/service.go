@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 )
 
 var TiEMMetaDBServiceName = "go.micro.tiem.db"

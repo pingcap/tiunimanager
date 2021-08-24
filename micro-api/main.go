@@ -1,8 +1,14 @@
 package main
 
 import (
-	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
-	_ "github.com/pingcap/tiem/docs"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	_ "github.com/pingcap-inc/tiem/docs"
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/firstparty/framework"
+	"github.com/pingcap-inc/tiem/micro-api/route"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // @title TiEM UI API
@@ -17,12 +23,35 @@ import (
 
 // @host localhost:8080
 // @BasePath /api/v1/
-func main()  {
-	initConfig()
-	//initService()
-	initClient()
-	//initPrometheus()
-	initKnowledge()
-	initGinEngine()
+func main() {
+	framework.NewDefaultFramework(framework.ClusterService,
+		initClient,
+		initGinEngine,
+	)
 
+	//f.StartService()
+}
+
+func initGinEngine(d *framework.DefaultServiceFramework) error {
+	gin.SetMode(gin.ReleaseMode)
+	g := gin.New()
+
+	route.Route(g)
+
+	port := config.GetClientArgs().RestPort
+	if port <= 0 {
+		port = config.DefaultRestPort
+	}
+	addr := fmt.Sprintf(":%d", port)
+	if err := g.Run(addr); err != nil {
+		d.GetDefaultLogger().Fatal(err)
+	}
+
+	return nil
+}
+
+func initClient(d *framework.DefaultServiceFramework) error {
+	srv := framework.ClusterService.BuildMicroService(d.GetRegistryAddress()...)
+	client.ClusterClient = cluster.NewClusterService(framework.ClusterService.ToString(), srv.Client())
+	return nil
 }

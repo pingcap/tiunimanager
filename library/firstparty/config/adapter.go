@@ -2,7 +2,7 @@ package config
 
 import "strconv"
 
-func InitForMonolith() {
+func InitConfigForDev(mod Mod) {
 	LocalConfig = make(map[Key]Instance)
 
 	LocalConfig[KEY_REGISTRY_ADDRESS] = Instance{
@@ -10,6 +10,8 @@ func InitForMonolith() {
 		[]string{"127.0.0.1:2379"},
 		0,
 	}
+
+	LocalConfig[KEY_TRACER_ADDRESS] = Instance{KEY_TRACER_ADDRESS, "127.0.0.1:6831", 0}
 
 	LocalConfig[KEY_CERTIFICATES] = Instance{
 		KEY_CERTIFICATES,
@@ -23,7 +25,6 @@ func InitForMonolith() {
 	LocalConfig[KEY_SQLITE_FILE_PATH] = CreateInstance(KEY_SQLITE_FILE_PATH, "./tiem.sqlite.db")
 
 	LocalConfig[KEY_API_LOG] = CreateInstance(KEY_API_LOG, Log{
-		//LogLevel      string
 		LogLevel:      "debug",
 		LogOutput:     "console,file",
 		LogFilePath:   "../logs/micro-api.log",
@@ -37,7 +38,6 @@ func InitForMonolith() {
 	})
 
 	LocalConfig[KEY_CLUSTER_LOG] = CreateInstance(KEY_CLUSTER_LOG, Log{
-		//LogLevel      string
 		LogLevel:      "debug",
 		LogOutput:     "console,file",
 		LogFilePath:   "../logs/micro-cluster.log",
@@ -51,7 +51,6 @@ func InitForMonolith() {
 	})
 
 	LocalConfig[KEY_METADB_LOG] = CreateInstance(KEY_METADB_LOG, Log{
-		//LogLevel      string
 		LogLevel:      "debug",
 		LogOutput:     "console,file",
 		LogFilePath:   "../logs/micro-metadb.log",
@@ -65,7 +64,6 @@ func InitForMonolith() {
 	})
 
 	LocalConfig[KEY_TIUPLIB_LOG] = CreateInstance(KEY_TIUPLIB_LOG, Log{
-		//LogLevel      string
 		LogLevel:      "debug",
 		LogOutput:     "file",
 		LogFilePath:   "../logs/utils-tiup.log",
@@ -79,7 +77,6 @@ func InitForMonolith() {
 	})
 
 	LocalConfig[KEY_DEFAULT_LOG] = CreateInstance(KEY_DEFAULT_LOG, Log{
-		//LogLevel      string
 		LogLevel:      "debug",
 		LogOutput:     "console,file",
 		LogFilePath:   "../logs/tiem.log",
@@ -92,10 +89,13 @@ func InitForMonolith() {
 		RecordModName: "default",
 	})
 
-	LocalConfig[KEY_API_PORT] = CreateInstance(KEY_API_PORT, 1443)
-	LocalConfig[KEY_CLUSTER_PORT] = CreateInstance(KEY_CLUSTER_PORT, 1444)
-	LocalConfig[KEY_MANAGER_PORT] = CreateInstance(KEY_MANAGER_PORT, 1445)
-	LocalConfig[KEY_METADB_PORT] = CreateInstance(KEY_METADB_PORT, 1446)
+	LocalConfig[KEY_API_PORT] = CreateInstance(KEY_API_PORT, DefaultMicroApiPort)
+	LocalConfig[KEY_CLUSTER_PORT] = CreateInstance(KEY_CLUSTER_PORT, DefaultMicroClusterPort)
+	LocalConfig[KEY_MANAGER_PORT] = CreateInstance(KEY_MANAGER_PORT, DefaultMicroManagerPort)
+	LocalConfig[KEY_METADB_PORT] = CreateInstance(KEY_METADB_PORT, DefaultMicroMetaDBPort)
+
+	// Init config for client args
+	InitForClientArgs(mod)
 }
 
 func InitForTiUPCluster() {
@@ -103,19 +103,19 @@ func InitForTiUPCluster() {
 }
 
 func GetApiServiceAddress() string {
-	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_API_PORT, 1443))
+	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_API_PORT, DefaultMicroApiPort))
 }
 
 func GetClusterServiceAddress() string {
-	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_CLUSTER_PORT, 1444))
+	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_CLUSTER_PORT, DefaultMicroClusterPort))
 }
 
 func GetManagerServiceAddress() string {
-	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_MANAGER_PORT, 1445))
+	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_MANAGER_PORT, DefaultMicroManagerPort))
 }
 
 func GetMetaDBServiceAddress() string {
-	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_METADB_PORT, 1446))
+	return ":" + strconv.Itoa(GetIntegerWithDefault(KEY_METADB_PORT, DefaultMicroMetaDBPort))
 }
 
 func GetLogConfig(key Key) Log {
@@ -164,6 +164,14 @@ func GetRegistryAddress() []string {
 	}
 
 	return v.([]string)
+}
+
+func GetTracerAddress() string {
+	v, err := Get(KEY_TRACER_ADDRESS)
+	if err != nil {
+		panic("tracer empty")
+	}
+	return v.(string)
 }
 
 // Log Corresponding to [Log] in cfg.toml configuration

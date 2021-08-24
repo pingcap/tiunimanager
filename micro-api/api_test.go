@@ -14,37 +14,30 @@ import (
 	"testing"
 
 	"github.com/asim/go-micro/v3/client"
-	"github.com/gin-gonic/gin"
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-api/controller/hostapi"
-	"github.com/pingcap/tiem/micro-api/route"
-	managerPb "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
+	managerPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func performRequest(method, path, contentType string, body io.Reader) *httptest.ResponseRecorder {
-	gin.SetMode(gin.ReleaseMode)
-	g := gin.New()
-
-	route.Route(g)
-	//g.Group("/api/v1").Group("/").Use(nil)
-
 	req, _ := http.NewRequest(method, path, body)
 	req.Header.Set("Token", "fake-token")
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("accept", "application/json")
 	w := httptest.NewRecorder()
-	g.ServeHTTP(w, req)
+
+	// todo use httpClient to request
+	//g.ServeHTTP(w, req)
 	return w
 }
 
 func Test_ListHosts_Succeed(t *testing.T) {
-	initConfig()
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostId2 := "fake-host-uuid-0002"
-	fakeService := InitFakeManagerClient()
+	fakeService := InitFakeClusterClient()
 	fakeService.MockListHost(func(ctx context.Context, in *managerPb.ListHostsRequest, opts ...client.CallOption) (*managerPb.ListHostsResponse, error) {
 		if in.Status != 0 {
 			return nil, status.Errorf(codes.InvalidArgument, "file row count wrong")
@@ -70,6 +63,7 @@ func Test_ListHosts_Succeed(t *testing.T) {
 	w := performRequest("GET", "/api/v1/resources/hosts", "application/json", nil)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 
 	type ResultWithPage struct {
 		controller.ResultMark
@@ -91,10 +85,9 @@ func Test_ListHosts_Succeed(t *testing.T) {
 }
 
 func Test_ImportHost_Succeed(t *testing.T) {
-	initConfig()
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostIp := "l92.168.56.11"
-	fakeService := InitFakeManagerClient()
+	fakeService := InitFakeClusterClient()
 	fakeService.MockImportHost(func(ctx context.Context, in *managerPb.ImportHostRequest, opts ...client.CallOption) (*managerPb.ImportHostResponse, error) {
 		if in.Host.Ip != fakeHostIp || in.Host.Disks[0].Name != "nvme0p1" || in.Host.Disks[1].Path != "/mnt/disk2" {
 			return nil, status.Errorf(codes.InvalidArgument, "import host info failed")
@@ -168,7 +161,7 @@ func createBatchImportBody(filePath string) (string, io.Reader, error) {
 func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostId2 := "fake-host-uuid-0002"
-	fakeService := InitFakeManagerClient()
+	fakeService := InitFakeClusterClient()
 	fakeService.MockImportHostsInBatch(func(ctx context.Context, in *managerPb.ImportHostsInBatchRequest, opts ...client.CallOption) (*managerPb.ImportHostsInBatchResponse, error) {
 		if len(in.Hosts) != 2 {
 			return nil, status.Errorf(codes.InvalidArgument, "file row count wrong")
@@ -212,11 +205,10 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 }
 
 func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
-	initConfig()
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostId2 := "fake-host-uuid-0002"
 	fakeHostId3 := "fake-host-uuid-0003"
-	fakeService := InitFakeManagerClient()
+	fakeService := InitFakeClusterClient()
 	fakeService.MockRemoveHostsInBatch(func(ctx context.Context, in *managerPb.RemoveHostsInBatchRequest, opts ...client.CallOption) (*managerPb.RemoveHostsInBatchResponse, error) {
 		if in.HostIds[0] != fakeHostId1 || in.HostIds[1] != fakeHostId2 || in.HostIds[2] != fakeHostId3 {
 			return nil, status.Errorf(codes.InvalidArgument, "input hostIds wrong")
@@ -241,9 +233,8 @@ func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
 }
 
 func Test_RemoveHost_Succeed(t *testing.T) {
-	initConfig()
 	fakeHostId1 := "fake-host-uuid-0001"
-	fakeService := InitFakeManagerClient()
+	fakeService := InitFakeClusterClient()
 	fakeService.MockRemoveHost(func(ctx context.Context, in *managerPb.RemoveHostRequest, opts ...client.CallOption) (*managerPb.RemoveHostResponse, error) {
 		if in.HostId != fakeHostId1 {
 			return nil, status.Errorf(codes.InvalidArgument, "input hostIds wrong")
@@ -262,13 +253,12 @@ func Test_RemoveHost_Succeed(t *testing.T) {
 }
 
 func Test_CheckDetails_Succeed(t *testing.T) {
-	initConfig()
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostName := "TEST_HOST1"
 	fakeHostIp := "192.168.56.18"
 	fakeDiskName := "sda"
 	fakeDiskPath := "/"
-	fakeService := InitFakeManagerClient()
+	fakeService := InitFakeClusterClient()
 	fakeService.MockCheckDetails(func(ctx context.Context, in *managerPb.CheckDetailsRequest, opts ...client.CallOption) (*managerPb.CheckDetailsResponse, error) {
 		if in.HostId != fakeHostId1 {
 			return nil, status.Errorf(codes.InvalidArgument, "input hostIds wrong")
@@ -310,7 +300,6 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 }
 
 func Test_DownloadTemplate_Succeed(t *testing.T) {
-	initConfig()
 
 	w := performRequest("GET", "/api/v1/resources/hosts-template", "application/json", nil)
 
@@ -321,11 +310,10 @@ func Test_DownloadTemplate_Succeed(t *testing.T) {
 }
 
 func Test_GetFailureDomain_Succeed(t *testing.T) {
-	initConfig()
 	fakeZone1, fakeSpec1, fakeCount1, fakePurpose1 := "TEST_Zone1", "4u8g", 1, "Compute"
 	fakeZone2, fakeSpec2, fakeCount2, fakePurpose2 := "TEST_Zone2", "8u16g", 2, "Storage"
 	fakeZone3, fakeSpec3, fakeCount3, fakePurpose3 := "TEST_Zone3", "16u64g", 3, "Compute/Storage"
-	fakeService := InitFakeManagerClient()
+	fakeService := InitFakeClusterClient()
 	fakeService.MockGetFailureDomain(func(ctx context.Context, in *managerPb.GetFailureDomainRequest, opts ...client.CallOption) (*managerPb.GetFailureDomainResponse, error) {
 		if in.FailureDomainType != 2 {
 			return nil, status.Errorf(codes.InvalidArgument, "input failuredomain type wrong")
@@ -372,12 +360,11 @@ func Test_GetFailureDomain_Succeed(t *testing.T) {
 }
 
 func Test_AllocHosts_Succeed(t *testing.T) {
-	initConfig()
 	fakeHostName1, fakeIp1, fakeDiskName1, fakeDiskPath1 := "TEST_HOST1", "192.168.56.11", "vdb", "/mnt/1"
 	fakeHostName2, fakeIp2, fakeDiskName2, fakeDiskPath2 := "TEST_HOST2", "192.168.56.12", "sdb", "/mnt/disk2"
 	fakeHostName3, fakeIp3, fakeDiskName3, fakeDiskPath3 := "TEST_HOST3", "192.168.56.13", "nvmep0", "/mnt/disk3"
 	fakeHostName4, fakeIp4, fakeDiskName4, fakeDiskPath4 := "TEST_HOST4", "192.168.56.14", "sdc", "/mnt/disk4"
-	fakeService := InitFakeManagerClient()
+	fakeService := InitFakeClusterClient()
 	fakeService.MockAllocHosts(func(ctx context.Context, in *managerPb.AllocHostsRequest, opts ...client.CallOption) (*managerPb.AllocHostResponse, error) {
 		if in.PdReq[0].FailureDomain != "TEST_Zone1" || in.TidbReq[0].FailureDomain != "TEST_Zone2" || in.TikvReq[0].FailureDomain != "TEST_Zone3" || in.TikvReq[1].Memory != 64 {
 			return nil, status.Errorf(codes.InvalidArgument, "input allocHosts type wrong, %s, %s, %s, %d",

@@ -3,12 +3,12 @@ package domain
 import (
 	"context"
 	"errors"
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/knowledge"
-	"github.com/pingcap/tiem/library/secondparty/libtiup"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
-	proto "github.com/pingcap/tiem/micro-cluster/proto"
-	"github.com/pingcap/tiem/micro-cluster/service/host"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
+	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
 	"path/filepath"
@@ -212,12 +212,13 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	clusterAggregation.CurrentTiUPConfigRecord = config
+	clusterAggregation.ConfigModified = true
 	task.Success(config.Id)
 	return true
 }
 
 func deployCluster(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	spec := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
 
@@ -229,9 +230,11 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 		}
 
 		cfgYamlStr := string(bs)
-		_, err = libtiup.MicroSrvTiupDeploy(
-			cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"-i", "/root/.ssh/id_rsa_tiup_test"}, uint64(task.Id),
-		)
+		go func() {
+			_, err = libtiup.MicroSrvTiupDeploy(
+				cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
+			)
+		}()
 	}
 
 	return true
@@ -461,8 +464,6 @@ func convertAllocationReq(item *ClusterNodeDistributionItem) *proto.AllocationRe
 }
 
 func convertConfig(resource *proto.AllocHostResponse, cluster *Cluster) *spec.Specification {
-	// todo convertConfig
-	return nil
 
 	tidbHosts := resource.TidbHosts
 	tikvHosts := resource.TikvHosts
@@ -470,44 +471,47 @@ func convertConfig(resource *proto.AllocHostResponse, cluster *Cluster) *spec.Sp
 
 	tiupConfig := new(spec.Specification)
 
-	dataDir := filepath.Join(tidbHosts[0].Disk.Path, "data")
-	deployDir := filepath.Join(tidbHosts[0].Disk.Path, "deploy")
 	// Deal with Global Settings
-	tiupConfig.GlobalOptions.DataDir = dataDir
-	tiupConfig.GlobalOptions.DeployDir = deployDir
+	tiupConfig.GlobalOptions.DataDir = filepath.Join(cluster.Id, "tidb-data")
+	tiupConfig.GlobalOptions.DeployDir = filepath.Join(cluster.Id, "tidb-deploy")
 	tiupConfig.GlobalOptions.User = "tidb"
 	tiupConfig.GlobalOptions.SSHPort = 22
 	tiupConfig.GlobalOptions.Arch = "amd64"
-	tiupConfig.GlobalOptions.LogDir = "/tidb-log"
+	tiupConfig.GlobalOptions.LogDir = filepath.Join(cluster.Id, "tidb-log")
 	// Deal with Promethus, AlertManger, Grafana
 	tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
 		Host: pdHosts[0].Ip,
+		DataDir:   filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "prometheus-data"),
+		DeployDir: filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "prometheus-deploy"),
 	})
 	tiupConfig.Alertmanagers = append(tiupConfig.Alertmanagers, &spec.AlertmanagerSpec{
 		Host: pdHosts[0].Ip,
+		DataDir:   filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "alertmanagers-data"),
+		DeployDir: filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "alertmanagers-deploy"),
 	})
 	tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
 		Host: pdHosts[0].Ip,
+		DeployDir: filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "grafanas-deploy"),
 	})
 	// Deal with PDServers, TiDBServers, TiKVServers
 	for _, v := range pdHosts {
 		tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
 			Host:      v.Ip,
-			DataDir:   v.Disk.Path,
-			DeployDir: v.Disk.Path,
+			DataDir:   filepath.Join(v.Disk.Path, cluster.Id, "pd-data"),
+			DeployDir: filepath.Join(v.Disk.Path, cluster.Id, "pd-deploy"),
 		})
 	}
 	for _, v := range tidbHosts {
 		tiupConfig.TiDBServers = append(tiupConfig.TiDBServers, &spec.TiDBSpec{
 			Host:      v.Ip,
-			DeployDir: v.Disk.Path,
+			DeployDir: filepath.Join(v.Disk.Path, cluster.Id, "tidb-deploy"),
 		})
 	}
 	for _, v := range tikvHosts {
 		tiupConfig.TiKVServers = append(tiupConfig.TiKVServers, &spec.TiKVSpec{
 			Host:      v.Ip,
-			DataDir:   v.Disk.Path,
-			DeployDir: v.Disk.Path,
+			DataDir:   filepath.Join(v.Disk.Path, cluster.Id, "tikv-data"),
+			DeployDir: filepath.Join(v.Disk.Path, cluster.Id, "tikv-deploy"),
 		})
 	}
 

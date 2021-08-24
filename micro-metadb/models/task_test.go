@@ -2,7 +2,6 @@ package models
 
 import (
 	"gorm.io/gorm"
-	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -19,9 +18,9 @@ func TestBatchSaveTasks(t *testing.T) {
 		wants    []func (a args, r []*TaskDO) bool
 	}{
 		{"normal", args{[]*TaskDO{
-			{TaskName: "task1", Data: Data{BizId: "111", Status: 1}},
-			{TaskName: "task2", Data: Data{BizId: "222", Status: 1}},
-			{TaskName: "task3", Data: Data{BizId: "333", Status: 1}},
+			{Name: "task1", Data: Data{BizId: "111", Status: 1}},
+			{Name: "task2", Data: Data{BizId: "222", Status: 1}},
+			{Name: "task3", Data: Data{BizId: "333", Status: 1}},
 		}}, false, []func (a args, r []*TaskDO) bool{
 			func (a args, r []*TaskDO) bool {return len(a.tasks) == len(r)},
 			func (a args, r []*TaskDO) bool {return r[2].ID > 0},
@@ -58,14 +57,14 @@ func TestCreateFlow(t *testing.T) {
 		wants    []func (args args, flow *FlowDO) bool
 	}{
 		{"normal", args{flowName: "testFlow", statusAlias: "创建中", bizId: "TestCreateFlow1"}, false, []func (args args, flow *FlowDO) bool{
-			func (args args, flow *FlowDO) bool {return flow.FlowName == args.flowName},
+			func (args args, flow *FlowDO) bool {return flow.Name == args.flowName},
 			func (args args, flow *FlowDO) bool {return flow.StatusAlias == args.statusAlias},
 			func (args args, flow *FlowDO) bool {return flow.BizId == args.bizId},
 			func (args args, flow *FlowDO) bool {return flow.ID > 0},
 			func (args args, flow *FlowDO) bool {return flow.Status == 0},
 		}},
-		{"empty biz id", args{flowName: "testFlow", statusAlias: "创建中", bizId: ""}, true, []func (args args, flow *FlowDO) bool{
-			func (args args, flow *FlowDO) bool {return flow.ID == 0},
+		{"empty biz id", args{flowName: "testFlow", statusAlias: "创建中", bizId: ""}, false, []func (args args, flow *FlowDO) bool{
+			func (args args, flow *FlowDO) bool {return flow.ID > 0},
 		}},
 	}
 	for _, tt := range tests {
@@ -104,14 +103,14 @@ func TestCreateTask(t *testing.T) {
 			func (args args, r *TaskDO) bool {return r.ID > 0},
 			func (args args, r *TaskDO) bool {return r.ParentType == args.parentType},
 			func (args args, r *TaskDO) bool {return r.ParentId == args.parentId},
-			func (args args, r *TaskDO) bool {return r.TaskName == args.taskName},
+			func (args args, r *TaskDO) bool {return r.Name == args.taskName},
 			func (args args, r *TaskDO) bool {return r.BizId == args.bizId},
-			func (args args, r *TaskDO) bool {return r.TaskReturnType == args.taskReturnType},
+			func (args args, r *TaskDO) bool {return r.ReturnType == args.taskReturnType},
 			func (args args, r *TaskDO) bool {return r.Parameters == args.parameters},
 			func (args args, r *TaskDO) bool {return r.Result == args.result},
 		}},
-		{"empty biz id", args{parentType: 1, parentId: "pi1",taskName: "tn1", bizId: "", taskReturnType: "trt1", parameters: "p1", result: "r1"}, true, []func (a args, r *TaskDO) bool{
-			func (args args, r *TaskDO) bool {return r.ID == 0},
+		{"empty biz id", args{parentType: 1, parentId: "pi1", taskName: "tn1", bizId: "", taskReturnType: "trt1", parameters: "p1", result: "r1"}, false, []func (a args, r *TaskDO) bool{
+			func (args args, r *TaskDO) bool {return r.ID > 0},
 		}},
 	}
 	for _, tt := range tests {
@@ -142,7 +141,7 @@ func TestFetchFlow(t *testing.T) {
 			got.BizId != flow.BizId ||
 			got.Status != flow.Status ||
 			got.CreatedAt.Unix() != flow.CreatedAt.Unix() ||
-			got.FlowName != flow.FlowName {
+			got.Name != flow.Name {
 			t.Errorf("FetchFlow() got = %v, want %v", got, flow)
 		}
 	})
@@ -165,7 +164,7 @@ func TestFetchFlowDetail(t *testing.T) {
 			gotFlow.BizId != flow.BizId ||
 			gotFlow.Status != flow.Status ||
 			gotFlow.CreatedAt.Unix() != flow.CreatedAt.Unix() ||
-			gotFlow.FlowName != flow.FlowName {
+			gotFlow.Name != flow.Name {
 			t.Errorf("FetchFlowDetail() gotFlow = %v, want %v", gotFlow, flow)
 		}
 
@@ -191,7 +190,7 @@ func TestFetchTask(t *testing.T) {
 		}
 
 		if got.ID != task.ID ||
-			got.TaskName != task.TaskName ||
+			got.Name != task.Name ||
 			got.Status != task.Status ||
 			got.CreatedAt.Unix() != task.CreatedAt.Unix() ||
 			got.Result != task.Result {
@@ -221,16 +220,13 @@ func TestFlowDO_BeforeCreate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			do := &FlowDO{
 				Data:        tt.fields.Data,
-				FlowName:    tt.fields.FlowName,
+				Name:        tt.fields.FlowName,
 				StatusAlias: tt.fields.StatusAlias,
 			}
 			if err := do.BeforeCreate(tt.args.tx); (err != nil) != tt.wantErr {
 				t.Errorf("BeforeCreate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if do.Status != 0 {
-				t.Errorf("BeforeCreate() error, status %v", do.Status)
-			}
 		})
 	}
 }
@@ -252,7 +248,7 @@ func TestFlowDO_TableName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			do := FlowDO{
 				Data:        tt.fields.Data,
-				FlowName:    tt.fields.FlowName,
+				Name:        tt.fields.FlowName,
 				StatusAlias: tt.fields.StatusAlias,
 			}
 			if got := do.TableName(); got != tt.want {
@@ -312,20 +308,16 @@ func TestTaskDO_BeforeCreate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			do := &TaskDO{
-				Data:           tt.fields.Data,
-				ParentType:     tt.fields.ParentType,
-				ParentId:       tt.fields.ParentId,
-				TaskName:       tt.fields.TaskName,
-				TaskReturnType: tt.fields.TaskReturnType,
-				Parameters:     tt.fields.Parameters,
-				Result:         tt.fields.Result,
+				Data:       tt.fields.Data,
+				ParentType: tt.fields.ParentType,
+				ParentId:   tt.fields.ParentId,
+				Name:       tt.fields.TaskName,
+				ReturnType: tt.fields.TaskReturnType,
+				Parameters: tt.fields.Parameters,
+				Result:     tt.fields.Result,
 			}
 			if err := do.BeforeCreate(tt.args.tx); (err != nil) != tt.wantErr {
 				t.Errorf("BeforeCreate() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
-			if do.Status != 0 {
-				t.Errorf("BeforeCreate() error, status %v", do.Status)
 			}
 		})
 	}
@@ -351,13 +343,13 @@ func TestTaskDO_TableName(t *testing.T) {
 		for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			do := TaskDO{
-				Data:           tt.fields.Data,
-				ParentType:     tt.fields.ParentType,
-				ParentId:       tt.fields.ParentId,
-				TaskName:       tt.fields.TaskName,
-				TaskReturnType: tt.fields.TaskReturnType,
-				Parameters:     tt.fields.Parameters,
-				Result:         tt.fields.Result,
+				Data:       tt.fields.Data,
+				ParentType: tt.fields.ParentType,
+				ParentId:   tt.fields.ParentId,
+				Name:       tt.fields.TaskName,
+				ReturnType: tt.fields.TaskReturnType,
+				Parameters: tt.fields.Parameters,
+				Result:     tt.fields.Result,
 			}
 			if got := do.TableName(); got != tt.want {
 				t.Errorf("TableName() = %v, want %v", got, tt.want)
@@ -399,39 +391,65 @@ func TestUpdateFlow(t *testing.T) {
 	}
 }
 
-func TestUpdateFlowAndTasks(t *testing.T) {
-	type args struct {
-		flow  FlowDO
-		tasks []TaskDO
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    FlowDO
-		want1   []TaskDO
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := UpdateFlowAndTasks(tt.args.flow, tt.args.tasks)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("UpdateFlowAndTasks() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UpdateFlowAndTasks() got = %v, want %v", got, tt.want)
-			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("UpdateFlowAndTasks() got1 = %v, want %v", got1, tt.want1)
-			}
-		})
-	}
-}
+//func TestUpdateFlowAndTasks(t *testing.T) {
+//	flow, _ := CreateFlow("TestUpdateFlowAndTasks", "TestUpdateFlowAndTasks", "TestUpdateFlowAndTasks")
+//	task, _ := CreateTask(0, strconv.Itoa(int(flow.ID)), "taskName", "bizId" , "taskReturnType" , "parameters", "result" )
+//
+//	type args struct {
+//		flow  FlowDO
+//		tasks []TaskDO
+//	}
+//	tests := []struct {
+//		name    string
+//		args    args
+//		wantErr bool
+//		wants   []func (a args, r FlowDO, tasks []TaskDO, index int) bool
+//	}{
+//		{"normal", args{flow: *flow, tasks: []TaskDO{*task, {Data: Data{BizId: "bizId2222"}, ParentType: 0, ParentId: strconv.Itoa(int(flow.ID)), Name: "newTaskName"}}}, false, []func (a args, r FlowDO, tasks []TaskDO, index int) bool{
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {return r.ID == flow.ID},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {return index == int(r.Status)},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {return 2 == len(tasks)},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {return tasks[0].ID == task.ID},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {
+//				return index == int(tasks[0].Status)
+//			},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {
+//				return tasks[1].ID > task.ID
+//			},
+//		}},
+//		{"no flow", args{flow: FlowDO{Data: Data{ID: 87878787}}, tasks: []TaskDO{}}, true, []func (a args, r FlowDO, tasks []TaskDO, index int) bool{}},
+//		{"no flow id", args{flow: FlowDO{Data: Data{}}, tasks: []TaskDO{}}, true, []func (a args, r FlowDO, tasks []TaskDO, index int) bool{}},
+//		{"no tasks", args{flow: *flow, tasks: []TaskDO{}}, false, []func (a args, r FlowDO, tasks []TaskDO, index int) bool{
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {return r.ID == flow.ID},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {
+//				return index == int(r.Status)
+//			},
+//			func (a args, r FlowDO, tasks []TaskDO, index int) bool {return 0 == len(tasks)},
+//		}},
+//	}
+//	for index, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			tt.args.flow.Status = int8(index + 1)
+//			if len(tt.args.tasks) > 0 {
+//				tt.args.tasks[0].Status = int8(index + 1)
+//			}
+//			gotFlow, gotTasks, err := UpdateFlowAndTasks(tt.args.flow, tt.args.tasks)
+//			if (err != nil) != tt.wantErr {
+//				t.Errorf("UpdateFlowAndTasks() error = %v, wantErr %v", err, tt.wantErr)
+//				return
+//			}
+//			for i, assert := range tt.wants {
+//				if !assert(tt.args, gotFlow, gotTasks, index + 1) {
+//					t.Errorf("UpdateFlowStatus() test error, assert = %v, args = %v, gotFlow = %v, gotTasks = %v", i, tt.args, gotFlow, gotTasks)
+//				}
+//			}
+//		})
+//	}
+//}
 
 func TestUpdateTask(t *testing.T) {
-	now := time.Now()
+	task, _ := CreateTask(0, "28282828", "taskName", "bizId" , "taskReturnType" , "parameters", "result" )
+
 	type args struct {
 		task TaskDO
 	}
@@ -439,22 +457,23 @@ func TestUpdateTask(t *testing.T) {
 		name        string
 		args        args
 		wantErr     bool
-		wants   	[]func (a args, r TaskDO) bool
+		wants   	[]func (a args, r TaskDO, index int) bool
 
 	}{
-		{"normal", args{task: TaskDO{Data: Data{BizId: "TestUpdateTask1"}}}, false, []func (a args, r TaskDO) bool{
-			func (a args, r TaskDO) bool{return r.UpdatedAt.After(now)},
+		{"normal", args{task: *task}, false, []func (a args, r TaskDO, index int) bool{
+			func (a args, r TaskDO, index int) bool{return int(r.Status) == index},
 		}},
 	}
-	for _, tt := range tests {
+	for index, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tt.args.task.Status = int8(index + 1)
 			gotNewTask, err := UpdateTask(tt.args.task)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpdateTask() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			for i, assert := range tt.wants {
-				if !assert(tt.args, gotNewTask) {
+				if !assert(tt.args, gotNewTask, index + 1) {
 					t.Errorf("UpdateFlowStatus() test error, testname = %v, assert = %v, args = %v, gotFlow = %v", tt.name, i, tt.args, gotNewTask)
 				}
 			}
@@ -476,8 +495,8 @@ func TestBatchFetchFlows(t *testing.T) {
 			t.Errorf("FetchFlowDetail() got = %v, want %v", len(got), 2)
 		}
 
-		if got[1].FlowName != "flow2" {
-			t.Errorf("FetchFlowDetail() got = %v, want %v", got[1].FlowName, "flow2")
+		if got[1].Name != "flow2" {
+			t.Errorf("FetchFlowDetail() got = %v, want %v", got[1].Name, "flow2")
 		}
 	})
 }

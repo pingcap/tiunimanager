@@ -1,7 +1,7 @@
 package hostapi
 
 import (
-	"github.com/pingcap/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
 type HostQuery struct {

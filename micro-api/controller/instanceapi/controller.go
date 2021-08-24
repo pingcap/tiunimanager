@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/tiem/library/knowledge"
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-api/controller/clusterapi"
-	cluster "github.com/pingcap/tiem/micro-cluster/client"
-	proto "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/controller/clusterapi"
+	"github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // QueryParams 查询集群参数列表
@@ -38,7 +38,7 @@ func QueryParams(c *gin.Context) {
 	}
 	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
-	resp, err := cluster.ClusterClient.QueryParameters(context.TODO(), &proto.QueryClusterParametersRequest{
+	resp, err := client.ClusterClient.QueryParameters(context.TODO(), &cluster.QueryClusterParametersRequest{
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
@@ -108,7 +108,7 @@ func SubmitParams(c *gin.Context) {
 
 	jsonContent := string(jsonByte)
 
-	resp, err := cluster.ClusterClient.SaveParameters(context.TODO(), &proto.SaveClusterParametersRequest{
+	resp, err := client.ClusterClient.SaveParameters(context.TODO(), &cluster.SaveClusterParametersRequest{
 		ClusterId:      clusterId,
 		ParametersJson: jsonContent,
 		Operator:       operator.ConvertToDTO(),
@@ -146,7 +146,7 @@ func Backup(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	resp, err := cluster.ClusterClient.CreateBackup(context.TODO(), &proto.CreateBackupRequest{
+	resp, err := client.ClusterClient.CreateBackup(context.TODO(), &cluster.CreateBackupRequest{
 		ClusterId: req.ClusterId,
 		BackupType: req.BackupType,
 		BackupRange: req.BackupRange,
@@ -187,7 +187,7 @@ func QueryBackupStrategy(c *gin.Context) {
 	clusterId := c.Query("clusterId")
 	operator := controller.GetOperator(c)
 
-	resp, err := cluster.ClusterClient.GetBackupStrategy(context.TODO(), &proto.GetBackupStrategyRequest{
+	resp, err := client.ClusterClient.GetBackupStrategy(context.TODO(), &cluster.GetBackupStrategyRequest{
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
@@ -227,9 +227,9 @@ func SaveBackupStrategy(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
-	_, err := cluster.ClusterClient.SaveBackupStrategy(context.TODO(), &proto.SaveBackupStrategyRequest{
+	_, err := client.ClusterClient.SaveBackupStrategy(context.TODO(), &cluster.SaveBackupStrategyRequest{
 		Operator:  operator.ConvertToDTO(),
-		Strategy:  &proto.BackupStrategy{
+		Strategy:  &cluster.BackupStrategy{
 			ClusterId: req.strategy.ClusterId,
 			BackupType: req.strategy.BackupType,
 			BackupRange: req.strategy.BackupRange,
@@ -268,13 +268,13 @@ func QueryBackup(c *gin.Context) {
 		return
 	}
 	operator := controller.GetOperator(c)
-	reqDTO := &proto.QueryBackupRequest{
+	reqDTO := &cluster.QueryBackupRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: clusterId,
 		Page:      queryReq.PageRequest.ConvertToDTO(),
 	}
 
-	resp, err := cluster.ClusterClient.QueryBackupRecord(context.TODO(), reqDTO, controller.DefaultTimeout)
+	resp, err := client.ClusterClient.QueryBackupRecord(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -334,7 +334,7 @@ func RecoverBackup(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	resp, err := cluster.ClusterClient.RecoverBackupRecord(context.TODO(), &proto.RecoverBackupRequest{
+	resp, err := client.ClusterClient.RecoverBackupRecord(context.TODO(), &cluster.RecoverBackupRequest{
 		ClusterId:      req.ClusterId,
 		Operator:       operator.ConvertToDTO(),
 		BackupRecordId: int64(backupId),
@@ -373,7 +373,7 @@ func DeleteBackup(c *gin.Context) {
 	}
 	operator := controller.GetOperator(c)
 
-	_, err = cluster.ClusterClient.DeleteBackupRecord(context.TODO(), &proto.DeleteBackupRequest{
+	_, err = client.ClusterClient.DeleteBackupRecord(context.TODO(), &cluster.DeleteBackupRequest{
 		BackupRecordId: int64(backupId),
 		Operator:       operator.ConvertToDTO(),
 		ClusterId:  	req.ClusterId,

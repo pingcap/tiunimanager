@@ -23,10 +23,10 @@ import (
 
 	"github.com/pingcap/parser/mysql"
 	"github.com/pingcap/tidb/config"
-	configTiem "github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/firstparty/util/israce"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
-	"github.com/pingcap/tiem/library/firstparty/util/versioninfo"
+	configTiem "github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/firstparty/util/israce"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/firstparty/util/versioninfo"
 	"go.uber.org/zap"
 )
 

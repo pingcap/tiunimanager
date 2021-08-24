@@ -33,8 +33,8 @@ package testkit
 //	"github.com/pingcap/tidb/session"
 //	"github.com/pingcap/tidb/sessionctx/variable"
 //	"github.com/pingcap/tidb/types"
-//	"github.com/pingcap/tiem/library/firstparty/util/sqlexec"
-//	"github.com/pingcap/tiem/library/firstparty/util/testutil"
+//	"github.com/pingcap-inc/tiem/library/firstparty/util/sqlexec"
+//	"github.com/pingcap-inc/tiem/library/firstparty/util/testutil"
 //)
 //
 //// TestKit is a utility to run sql test.

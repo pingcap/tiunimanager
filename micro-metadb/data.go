@@ -3,11 +3,11 @@ package main
 import (
 	cryrand "crypto/rand"
 	"encoding/base64"
-	"github.com/pingcap/tiem/library/firstparty/framework"
-	"github.com/pingcap/tiem/library/firstparty/util"
+	"github.com/pingcap-inc/tiem/library/firstparty/framework"
+	"github.com/pingcap-inc/tiem/library/firstparty/util"
 
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/micro-metadb/models"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

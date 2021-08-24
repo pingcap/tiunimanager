@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	_ "github.com/pingcap/tiem/docs"
-	"github.com/pingcap/tiem/library/firstparty/client"
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/firstparty/framework"
-	"github.com/pingcap/tiem/micro-api/route"
-	cluster "github.com/pingcap/tiem/micro-cluster/proto"
+	_ "github.com/pingcap-inc/tiem/docs"
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/firstparty/framework"
+	"github.com/pingcap-inc/tiem/micro-api/route"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // @title TiEM UI API

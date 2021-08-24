@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"

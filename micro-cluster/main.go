@@ -2,13 +2,13 @@ package main
 
 import (
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
-	dbclient "github.com/pingcap/tiem/library/firstparty/client"
-	"github.com/pingcap/tiem/library/firstparty/framework"
-	"github.com/pingcap/tiem/library/secondparty/libbr"
-	"github.com/pingcap/tiem/library/secondparty/libtiup"
-	clusterAdapt "github.com/pingcap/tiem/micro-cluster/service/cluster/adapt"
-	tenantAdapt "github.com/pingcap/tiem/micro-cluster/service/tenant/adapt"
-	db "github.com/pingcap/tiem/micro-metadb/proto"
+	dbclient "github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/firstparty/framework"
+	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
+	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
+	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
+	tenantAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/adapt"
+	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 func main() {

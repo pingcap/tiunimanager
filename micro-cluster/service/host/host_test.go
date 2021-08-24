@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/asim/go-micro/v3/client"
-	"github.com/pingcap/tiem/library/firstparty/config"
-	hostPb "github.com/pingcap/tiem/micro-cluster/proto"
-	db "github.com/pingcap/tiem/micro-metadb/proto"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	hostPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

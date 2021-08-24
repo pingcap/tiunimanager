@@ -3,16 +3,16 @@ package framework
 import (
 	"errors"
 	"github.com/asim/go-micro/v3"
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/firstparty/util"
-	mysignal "github.com/pingcap/tiem/library/firstparty/util/signal"
-	"github.com/pingcap/tiem/library/knowledge"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
-	"github.com/pingcap/tiem/library/thirdparty/tracer"
-	clusterPb "github.com/pingcap/tiem/micro-cluster/proto"
-	clusterSrv "github.com/pingcap/tiem/micro-cluster/service"
-	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
-	dbSrv "github.com/pingcap/tiem/micro-metadb/service"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/firstparty/util"
+	mysignal "github.com/pingcap-inc/tiem/library/firstparty/util/signal"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/thirdparty/tracer"
+	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	clusterSrv "github.com/pingcap-inc/tiem/micro-cluster/service"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	dbSrv "github.com/pingcap-inc/tiem/micro-metadb/service"
 )
 
 type Framework interface {

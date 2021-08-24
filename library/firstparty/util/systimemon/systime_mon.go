@@ -15,10 +15,10 @@
 package systimemon
 
 import (
-	"github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
 	"time"
 
-	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 	"go.uber.org/zap"
 )
 

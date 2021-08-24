@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/firstparty/framework"
-	"github.com/pingcap/tiem/micro-api/route"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/firstparty/framework"
+	"github.com/pingcap-inc/tiem/micro-api/route"
 	"testing"
 )
 

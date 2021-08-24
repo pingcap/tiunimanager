@@ -3,8 +3,8 @@ package framework
 import (
 	"context"
 
-	"github.com/pingcap/tiem/library/firstparty/util"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/firstparty/util"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 	log "github.com/sirupsen/logrus"
 )
 

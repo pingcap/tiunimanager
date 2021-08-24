@@ -18,7 +18,7 @@ package testutil
 //	"testing"
 //
 //	. "github.com/pingcap/check"
-//	"github.com/pingcap/tiem/library/firstparty/util/testleak"
+//	"github.com/pingcap-inc/tiem/library/firstparty/util/testleak"
 //)
 //
 //func TestT(t *testing.T) {

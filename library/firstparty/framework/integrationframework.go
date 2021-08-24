@@ -1,9 +1,9 @@
 package framework
 
 import (
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/firstparty/util"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/firstparty/util"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 )
 
 type ItOpt func(d *ItFramework) error

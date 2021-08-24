@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
 
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"

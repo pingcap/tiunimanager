@@ -39,11 +39,11 @@ package util
 //	"github.com/pingcap/parser/model"
 //	"github.com/pingcap/parser/mysql"
 //	"github.com/pingcap/parser/terror"
-//	configTiem "github.com/pingcap/tiem/library/firstparty/config"
+//	configTiem "github.com/pingcap-inc/tiem/library/firstparty/config"
 //	"github.com/pingcap/tidb/config"
 //	"github.com/pingcap/tidb/metrics"
-//	"github.com/pingcap/tiem/library/firstparty/util/collate"
-//	"github.com/pingcap/tiem/library/thirdparty/logger"
+//	"github.com/pingcap-inc/tiem/library/firstparty/util/collate"
+//	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 //	"go.uber.org/zap"
 //)
 //

@@ -20,7 +20,7 @@ import (
 
 	basictracer "github.com/opentracing/basictracer-go"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pingcap/tiem/library/firstparty/util/tracing"
+	"github.com/pingcap-inc/tiem/library/firstparty/util/tracing"
 	"github.com/stretchr/testify/require"
 )
 

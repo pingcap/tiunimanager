@@ -14,9 +14,9 @@ import (
 	"testing"
 
 	"github.com/asim/go-micro/v3/client"
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-api/controller/hostapi"
-	managerPb "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
+	managerPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

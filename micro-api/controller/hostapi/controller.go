@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/pingcap/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
 	"io"
 	"net"
 	"net/http"
@@ -14,9 +14,9 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-cluster/proto"
-	"github.com/pingcap/tiem/micro-metadb/service"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/micro-metadb/service"
 	"google.golang.org/grpc/codes"
 )
 

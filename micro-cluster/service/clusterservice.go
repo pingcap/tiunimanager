@@ -2,17 +2,17 @@ package service
 
 import (
 	"context"
-	domain2 "github.com/pingcap/tiem/micro-cluster/service/tenant/domain"
+	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
 	"net/http"
 	"strconv"
 
-	dbClient "github.com/pingcap/tiem/library/firstparty/client"
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
-	clusterPb "github.com/pingcap/tiem/micro-cluster/proto"
-	"github.com/pingcap/tiem/micro-cluster/service/cluster/domain"
-	"github.com/pingcap/tiem/micro-cluster/service/host"
-	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
+	dbClient "github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
+	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
+	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"

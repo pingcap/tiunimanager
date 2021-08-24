@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/pingcap/tiem/library/firstparty/framework"
+	"github.com/pingcap-inc/tiem/library/firstparty/framework"
 )
 
 func main() {

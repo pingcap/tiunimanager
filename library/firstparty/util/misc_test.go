@@ -27,8 +27,8 @@ package util
 //	"github.com/pingcap/parser/terror"
 //	"github.com/pingcap/tidb/sessionctx/stmtctx"
 //	"github.com/pingcap/tidb/types"
-//	"github.com/pingcap/tiem/library/firstparty/util/fastrand"
-//	"github.com/pingcap/tiem/library/firstparty/util/memory"
+//	"github.com/pingcap-inc/tiem/library/firstparty/util/fastrand"
+//	"github.com/pingcap-inc/tiem/library/firstparty/util/memory"
 //	"github.com/stretchr/testify/assert"
 //)
 //

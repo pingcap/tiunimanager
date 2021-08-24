@@ -20,7 +20,7 @@ package testutil
 //	"bytes"
 //	"encoding/json"
 //	"fmt"
-//	"github.com/pingcap/tiem/library/firstparty/config"
+//	"github.com/pingcap-inc/tiem/library/firstparty/config"
 //	"io"
 //	"os"
 //	"path/filepath"
@@ -37,8 +37,8 @@ package testutil
 //	"github.com/pingcap/tidb/sessionctx/stmtctx"
 //	"github.com/pingcap/tidb/testkit/testdata"
 //	"github.com/pingcap/tidb/types"
-//	"github.com/pingcap/tiem/library/firstparty/util/codec"
-//	"github.com/pingcap/tiem/library/thirdparty/logger"
+//	"github.com/pingcap-inc/tiem/library/firstparty/util/codec"
+//	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 //	"go.uber.org/zap"
 //)
 //

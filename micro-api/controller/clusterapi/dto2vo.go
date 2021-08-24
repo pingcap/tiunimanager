@@ -1,9 +1,9 @@
 package clusterapi
 
 import (
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-api/controller/hostapi"
-	cluster "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"time"
 )
 

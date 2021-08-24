@@ -1,4 +1,4 @@
-module github.com/pingcap/tiem
+module github.com/pingcap-inc/tiem
 
 go 1.16
 

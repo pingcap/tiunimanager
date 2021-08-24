@@ -14,10 +14,8 @@ import (
 	"testing"
 
 	"github.com/asim/go-micro/v3/client"
-	"github.com/gin-gonic/gin"
 	"github.com/pingcap/tiem/micro-api/controller"
 	"github.com/pingcap/tiem/micro-api/controller/hostapi"
-	"github.com/pingcap/tiem/micro-api/route"
 	managerPb "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
@@ -25,23 +23,18 @@ import (
 )
 
 func performRequest(method, path, contentType string, body io.Reader) *httptest.ResponseRecorder {
-	gin.SetMode(gin.ReleaseMode)
-	g := gin.New()
-
-	route.Route(g)
-	//g.Group("/api/v1").Group("/").Use(nil)
-
 	req, _ := http.NewRequest(method, path, body)
 	req.Header.Set("Token", "fake-token")
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("accept", "application/json")
 	w := httptest.NewRecorder()
-	g.ServeHTTP(w, req)
+
+	// todo use httpClient to request
+	//g.ServeHTTP(w, req)
 	return w
 }
 
 func Test_ListHosts_Succeed(t *testing.T) {
-	initConfig()
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostId2 := "fake-host-uuid-0002"
 	fakeService := InitFakeClusterClient()
@@ -70,6 +63,7 @@ func Test_ListHosts_Succeed(t *testing.T) {
 	w := performRequest("GET", "/api/v1/resources/hosts", "application/json", nil)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 
 	type ResultWithPage struct {
 		controller.ResultMark
@@ -91,7 +85,6 @@ func Test_ListHosts_Succeed(t *testing.T) {
 }
 
 func Test_ImportHost_Succeed(t *testing.T) {
-	initConfig()
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostIp := "l92.168.56.11"
 	fakeService := InitFakeClusterClient()
@@ -212,7 +205,6 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 }
 
 func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
-	initConfig()
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostId2 := "fake-host-uuid-0002"
 	fakeHostId3 := "fake-host-uuid-0003"
@@ -241,7 +233,6 @@ func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
 }
 
 func Test_RemoveHost_Succeed(t *testing.T) {
-	initConfig()
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeService := InitFakeClusterClient()
 	fakeService.MockRemoveHost(func(ctx context.Context, in *managerPb.RemoveHostRequest, opts ...client.CallOption) (*managerPb.RemoveHostResponse, error) {
@@ -262,7 +253,6 @@ func Test_RemoveHost_Succeed(t *testing.T) {
 }
 
 func Test_CheckDetails_Succeed(t *testing.T) {
-	initConfig()
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostName := "TEST_HOST1"
 	fakeHostIp := "192.168.56.18"
@@ -310,7 +300,6 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 }
 
 func Test_DownloadTemplate_Succeed(t *testing.T) {
-	initConfig()
 
 	w := performRequest("GET", "/api/v1/resources/hosts-template", "application/json", nil)
 
@@ -321,7 +310,6 @@ func Test_DownloadTemplate_Succeed(t *testing.T) {
 }
 
 func Test_GetFailureDomain_Succeed(t *testing.T) {
-	initConfig()
 	fakeZone1, fakeSpec1, fakeCount1, fakePurpose1 := "TEST_Zone1", "4u8g", 1, "Compute"
 	fakeZone2, fakeSpec2, fakeCount2, fakePurpose2 := "TEST_Zone2", "8u16g", 2, "Storage"
 	fakeZone3, fakeSpec3, fakeCount3, fakePurpose3 := "TEST_Zone3", "16u64g", 3, "Compute/Storage"
@@ -372,7 +360,6 @@ func Test_GetFailureDomain_Succeed(t *testing.T) {
 }
 
 func Test_AllocHosts_Succeed(t *testing.T) {
-	initConfig()
 	fakeHostName1, fakeIp1, fakeDiskName1, fakeDiskPath1 := "TEST_HOST1", "192.168.56.11", "vdb", "/mnt/1"
 	fakeHostName2, fakeIp2, fakeDiskName2, fakeDiskPath2 := "TEST_HOST2", "192.168.56.12", "sdb", "/mnt/disk2"
 	fakeHostName3, fakeIp3, fakeDiskName3, fakeDiskPath3 := "TEST_HOST3", "192.168.56.13", "nvmep0", "/mnt/disk3"

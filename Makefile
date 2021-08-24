@@ -49,17 +49,17 @@ build_brcmd:
 
 build_openapi_server:
 	@echo "build openapi-server start."
-	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${OPENAPI_SERVER_BINARY} micro-api/main.go
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${OPENAPI_SERVER_BINARY} micro-api/*.go
 	@echo "build openapi-server sucessufully."
 
 build_cluster_server:
 	@echo "build cluster-server start."
-	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${CLUSTER_SERVER_BINARY} micro-cluster/main.go
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${CLUSTER_SERVER_BINARY} micro-cluster/*.go
 	@echo "build cluster-server sucessufully."
 
 build_metadb_server:
 	@echo "build metadb-server start."
-	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${METADB_SERVER_BINARY} micro-metadb/main.go
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${METADB_SERVER_BINARY} micro-metadb/*.go
 	@echo "build metadb-server sucessufully."
 
 #2. R&D to test the code themselves for compliance before submitting it

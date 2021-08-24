@@ -43,7 +43,7 @@ endif
 
 # use 'make <target> PREFIX=/path/for/prefix' to overwrite the PREFIX value
 ifeq (${PREFIX},)
-    PREFIX := $(CURDIR)/usr/local
+    PREFIX := /usr/local
 endif
 
 ARCH      := "`uname -s`"

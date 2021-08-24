@@ -156,6 +156,7 @@ install:
 	cp ${CLUSTER_SERVER_BINARY} ${TIEM_INSTALL_PREFIX}/bin
 
 uninstall:
+	@echo "uninstall: remove all files in $(TIEM_INSTALL_PREFIX)"
 	@if [ -d ${TIEM_INSTALL_PREFIX} ] ; then rm ${TIEM_INSTALL_PREFIX} ; fi
 
 clean:

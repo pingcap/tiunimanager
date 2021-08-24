@@ -27,6 +27,12 @@ type Framework interface {
 	// config center operator
 }
 
+var f Framework
+
+func GetDefaultLogger() *logger.LogRecord {
+	return f.GetDefaultLogger()
+}
+
 type Opt func(d *DefaultServiceFramework) error
 
 type DefaultServiceFramework struct {
@@ -70,6 +76,7 @@ func NewDefaultFramework(serviceName MicroServiceEnum, initOpt ...Opt) *DefaultS
 
 	p.Init()
 
+	f = p
 	return p
 }
 
@@ -129,55 +136,4 @@ func initShutdownFunc(p *DefaultServiceFramework) error {
 		// todo do something before quit
 	})
 	return nil
-}
-
-type UtOpt func(d *UtFramework) error
-
-type UtFramework struct {
-	serviceEnum 		MicroServiceEnum
-
-	initOpts 			[]UtOpt
-	log 				*logger.LogRecord
-}
-
-func NewUtFramework(serviceName MicroServiceEnum, initOpt ...UtOpt) *UtFramework {
-	p := &UtFramework{
-		serviceEnum: serviceName,
-		initOpts: []UtOpt{
-			func(d *UtFramework) error {
-				config.InitForMonolith(d.serviceEnum.logMod())
-				return nil
-			},
-			func(d *UtFramework) error {
-				d.log = d.serviceEnum.buildLogger()
-				return nil
-			},
-		},
-	}
-
-
-	p.initOpts = append(p.initOpts, initOpt...)
-
-	p.Init()
-
-	return p
-}
-
-func (u UtFramework) Init() error {
-	for _, opt := range u.initOpts {
-		util.AssertNoErr(opt(&u))
-	}
-	return nil
-}
-
-func (u UtFramework) StartService() error {
-	return nil
-}
-
-func (u UtFramework) GetDefaultLogger() *logger.LogRecord {
-	return u.log
-}
-
-func (u UtFramework) GetRegistryAddress() []string {
-	panic("implement me")
 }

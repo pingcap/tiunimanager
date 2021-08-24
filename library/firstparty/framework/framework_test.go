@@ -1,106 +1,253 @@
 package framework
-//
-//import (
-//	"context"
-//	"fmt"
-//	"os"
-//	"testing"
-//
-//	"github.com/asim/go-micro/v3/server"
-//	"github.com/micro/cli/v2"
-//	"github.com/pingcap/tiem/library/firstparty/util"
-//	cluster "github.com/pingcap/tiem/micro-cluster/proto"
-//	db "github.com/pingcap/tiem/micro-metadb/proto"
-//	"github.com/pingcap/tiem/micro-metadb/service"
-//	"gorm.io/gorm"
-//)
-//
-//// TODO: to be a real and serious test
-//
-//func TestFramework(t *testing.T) {
-//	f := NewDefaultFramework(WithServiceName("go.micro.tiem.test"))
-//	util.AssertNoErr(f.InitLogger())
-//	util.AssertNoErr(f.InitConfig())
-//	util.AssertNoErr(f.InitClient())
-//	cfg := f.MustGetConfig()
-//	fmt.Println(f.Run(
-//		WithRegistryAddrs(cfg.GetRegistryAddress()),
-//		//WithRegistryAddrs([]string{"127.0.0.1:2379"}),
-//		WithServiceListenAddr("127.0.0.1:1234"),
-//		WithCertificateCrtFilePath(cfg.GetCertificateCrtFilePath()),
-//		WithCertificateKeyFilePath(cfg.GetCertificateKeyFilePath()),
-//		WithRegisterServiceHandlerFp(func(server server.Server, opts ...server.HandlerOption) error {
-//			return db.RegisterTiEMDBServiceHandler(server, new(service.DBServiceHandler))
-//		})),
-//	)
-//}
-//
-//type MetaDBFrameWork struct {
-//	Framework
-//	MetaDB *gorm.DB
-//
-//	ArgConfigPath string
-//}
-//
-//func (p *MetaDBFrameWork) InitSqliteDB() error {
-//	// init sqlite db and set p.MetaDB
-//	// NIY!
-//	return nil
-//}
-//
-//func (p *MetaDBFrameWork) MustGetMetaDB() *gorm.DB {
-//	db := p.MetaDB
-//	util.AssertWithInfo(db != nil, "MetaDB should not be nil")
-//	return db
-//}
-//
-//func NewMetaDBFrameWork(opts ...Opt) *MetaDBFrameWork {
-//	f := &MetaDBFrameWork{
-//		Framework: NewDefaultFramework(opts...),
-//	}
-//	return f
-//}
-//
-//func TestMetaDBFramework(t *testing.T) {
-//	f := NewMetaDBFrameWork(WithServiceName("go.micro.tiem.db"))
-//	f.AddOpts(WithArgFlags([]cli.Flag{
-//		&cli.StringFlag{
-//			Name:        "tiem-conf-file",
-//			Value:       "",
-//			Usage:       "specify the configure file path of tidb cloud platform",
-//			Destination: &f.ArgConfigPath,
-//		},
-//	}))
-//	util.AssertNoErr(f.ArgsParse())
-//	util.AssertNoErr(f.InitLogger())
-//	util.AssertNoErr(f.InitConfig())
-//	util.AssertNoErr(f.InitClient())
-//	util.AssertNoErr(f.InitSqliteDB())
-//
-//	log := f.MustGetLogger()
-//	log.GetDefaultLogger().Infoln("ArgConfigPath:", f.ArgConfigPath)
-//
-//	util.AssertNoErr(f.SetupQuitSignalHandler(func() {
-//		log.GetDefaultLogger().Infoln("recieved a quit signal and quit now")
-//		os.Exit(0)
-//	}))
-//
-//	cfg := f.MustGetConfig()
-//	fmt.Println(f.Run(
-//		WithRegistryAddrs(cfg.GetRegistryAddress()),
-//		WithServiceListenAddr("127.0.0.1:1234"),
-//		WithCertificateCrtFilePath(cfg.GetCertificateCrtFilePath()),
-//		WithCertificateKeyFilePath(cfg.GetCertificateKeyFilePath()),
-//		WithRegisterServiceHandlerFp(func(server server.Server, opts ...server.HandlerOption) error {
-//			return db.RegisterTiEMDBServiceHandler(server, new(service.DBServiceHandler))
-//		})),
-//	)
-//	ctx := log.NewContextWithField(context.Background(), "testKey", "testValue")
-//	resp, err := f.MustGetClient().GetClusterClient().Login(
-//		ctx, &cluster.LoginRequest{
-//			AccountName: "whoami",
-//			Password:    "you-know-what",
-//		},
-//	)
-//	log.WithContext(ctx).Infoln("f.MustGetClient().GetClusterClient().Login yield:", resp, err)
-//}
+
+import (
+	"github.com/asim/go-micro/v3"
+	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"reflect"
+	"testing"
+)
+
+func TestDefaultServiceFramework_GetDefaultLogger(t *testing.T) {
+	type fields struct {
+		serviceEnum MicroServiceEnum
+		flags       micro.Option
+		initOpts    []Opt
+		log         *logger.LogRecord
+		service     micro.Service
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   *logger.LogRecord
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &DefaultServiceFramework{
+				serviceEnum: tt.fields.serviceEnum,
+				flags:       tt.fields.flags,
+				initOpts:    tt.fields.initOpts,
+				log:         tt.fields.log,
+				service:     tt.fields.service,
+			}
+			if got := p.GetDefaultLogger(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetDefaultLogger() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDefaultServiceFramework_GetRegistryAddress(t *testing.T) {
+	type fields struct {
+		serviceEnum MicroServiceEnum
+		flags       micro.Option
+		initOpts    []Opt
+		log         *logger.LogRecord
+		service     micro.Service
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &DefaultServiceFramework{
+				serviceEnum: tt.fields.serviceEnum,
+				flags:       tt.fields.flags,
+				initOpts:    tt.fields.initOpts,
+				log:         tt.fields.log,
+				service:     tt.fields.service,
+			}
+			if got := p.GetRegistryAddress(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetRegistryAddress() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDefaultServiceFramework_Init(t *testing.T) {
+	type fields struct {
+		serviceEnum MicroServiceEnum
+		flags       micro.Option
+		initOpts    []Opt
+		log         *logger.LogRecord
+		service     micro.Service
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &DefaultServiceFramework{
+				serviceEnum: tt.fields.serviceEnum,
+				flags:       tt.fields.flags,
+				initOpts:    tt.fields.initOpts,
+				log:         tt.fields.log,
+				service:     tt.fields.service,
+			}
+			if err := p.Init(); (err != nil) != tt.wantErr {
+				t.Errorf("Init() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestDefaultServiceFramework_StartService(t *testing.T) {
+	type fields struct {
+		serviceEnum MicroServiceEnum
+		flags       micro.Option
+		initOpts    []Opt
+		log         *logger.LogRecord
+		service     micro.Service
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &DefaultServiceFramework{
+				serviceEnum: tt.fields.serviceEnum,
+				flags:       tt.fields.flags,
+				initOpts:    tt.fields.initOpts,
+				log:         tt.fields.log,
+				service:     tt.fields.service,
+			}
+			if err := p.StartService(); (err != nil) != tt.wantErr {
+				t.Errorf("StartService() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestNewDefaultFramework(t *testing.T) {
+	type args struct {
+		serviceName MicroServiceEnum
+		initOpt     []Opt
+	}
+	tests := []struct {
+		name string
+		args args
+		want *DefaultServiceFramework
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewDefaultFramework(tt.args.serviceName, tt.args.initOpt...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewDefaultFramework() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_initConfig(t *testing.T) {
+	type args struct {
+		p *DefaultServiceFramework
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := initConfig(tt.args.p); (err != nil) != tt.wantErr {
+				t.Errorf("initConfig() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_initCurrentLogger(t *testing.T) {
+	type args struct {
+		p *DefaultServiceFramework
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := initCurrentLogger(tt.args.p); (err != nil) != tt.wantErr {
+				t.Errorf("initCurrentLogger() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_initKnowledge(t *testing.T) {
+	type args struct {
+		p *DefaultServiceFramework
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := initKnowledge(tt.args.p); (err != nil) != tt.wantErr {
+				t.Errorf("initKnowledge() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_initShutdownFunc(t *testing.T) {
+	type args struct {
+		p *DefaultServiceFramework
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := initShutdownFunc(tt.args.p); (err != nil) != tt.wantErr {
+				t.Errorf("initShutdownFunc() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_initTracer(t *testing.T) {
+	type args struct {
+		p *DefaultServiceFramework
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := initTracer(tt.args.p); (err != nil) != tt.wantErr {
+				t.Errorf("initTracer() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

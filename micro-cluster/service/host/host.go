@@ -6,7 +6,6 @@ import (
 
 	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
-
 	hostPb "github.com/pingcap/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiem/micro-metadb/client"
 	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
@@ -22,6 +21,8 @@ func InitLogger(key config.Key) {
 func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
+	dst.UserName = src.UserName
+	dst.Passwd = src.Passwd
 	dst.Os = src.Os
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int32(src.CpuCores)
@@ -58,6 +59,7 @@ func CopyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
+	dst.CreateAt = src.CreateAt
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &hostPb.Disk{
 			DiskId:   disk.DiskId,
@@ -255,6 +257,9 @@ func fetchResults(zonesRsps map[string]map[string][]*dbPb.DBPreAllocation, reqs 
 			var host hostPb.AllocHost
 			host.HostName = rsp.HostName
 			host.Ip = rsp.Ip
+			host.UserName = rsp.UserName
+			//plain, err := crypto.AesDecryptCFB(rsp.Passwd)
+			host.Passwd = rsp.Passwd
 			host.CpuCores = rsp.RequestCores
 			host.Memory = rsp.RequestMem
 			host.Disk = new(hostPb.Disk)

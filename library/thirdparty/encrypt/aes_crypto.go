@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/hex"
 	"io"
 
 	"google.golang.org/grpc/codes"
@@ -17,7 +18,7 @@ func init() {
 	key = []byte(">]t1emf0rp1nGcap$t!Em@p!ngcap;[<")
 }
 
-func AesEncryptCFB(plain []byte) (encrypted []byte, err error) {
+func aesEncryptCFB(plain []byte) (encrypted []byte, err error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "newCipher err, %s", err)
@@ -32,7 +33,7 @@ func AesEncryptCFB(plain []byte) (encrypted []byte, err error) {
 	return encrypted, nil
 }
 
-func AesDecryptCFB(encrypted []byte) (decrypted []byte, err error) {
+func aesDecryptCFB(encrypted []byte) (decrypted []byte, err error) {
 	block, _ := aes.NewCipher(key)
 	if len(encrypted) < aes.BlockSize {
 		return nil, status.Errorf(codes.Internal, "ciphertext too short, %d < aes.BlockSize(%d)", len(encrypted), aes.BlockSize)
@@ -43,4 +44,24 @@ func AesDecryptCFB(encrypted []byte) (decrypted []byte, err error) {
 	stream := cipher.NewCFBDecrypter(block, iv)
 	stream.XORKeyStream(encrypted, encrypted)
 	return encrypted, nil
+}
+
+func AesEncryptCFB(plainStr string) (encryptedStr string, err error) {
+	encrypted, err := aesEncryptCFB([]byte(plainStr))
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(encrypted), err
+}
+
+func AesDecryptCFB(encryptedStr string) (decryptedStr string, err error) {
+	encrypted, err := hex.DecodeString(encryptedStr)
+	if err != nil {
+		return "", err
+	}
+	decrypted, err := aesDecryptCFB(encrypted)
+	if err != nil {
+		return "", err
+	}
+	return string(decrypted), nil
 }

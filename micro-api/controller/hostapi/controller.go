@@ -13,6 +13,7 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
+	crypto "github.com/pingcap/tiem/library/thirdparty/encrypt"
 	"github.com/pingcap/tiem/micro-api/controller"
 	"github.com/pingcap/tiem/micro-cluster/client"
 	manager "github.com/pingcap/tiem/micro-cluster/proto"
@@ -35,6 +36,7 @@ func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
 	dst.Rack = src.Rack
 	dst.Status = int32(src.Status)
 	dst.Purpose = src.Purpose
+	dst.CreatedAt = src.CreateAt
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, Disk{
 			DiskId:   disk.DiskId,
@@ -50,9 +52,15 @@ func genHostSpec(cpuCores int32, mem int32) string {
 	return fmt.Sprintf("%dU%dG", cpuCores, mem)
 }
 
-func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
+func copyHostToReq(src *HostInfo, dst *manager.HostInfo) error {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
+	dst.UserName = src.UserName
+	passwd, err := crypto.AesEncryptCFB(src.Passwd)
+	if err != nil {
+		return err
+	}
+	dst.Passwd = passwd
 	dst.Os = src.Os
 	dst.Kernel = src.Kernel
 	dst.CpuCores = src.CpuCores
@@ -73,21 +81,37 @@ func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
 			Path:     v.Path,
 		})
 	}
+	return nil
 }
 
 func doImport(c *gin.Context, host *HostInfo) (rsp *manager.ImportHostResponse, err error) {
 	importReq := manager.ImportHostRequest{}
 	importReq.Host = new(manager.HostInfo)
-	copyHostToReq(host, importReq.Host)
+	err = copyHostToReq(host, importReq.Host)
+	if err != nil {
+		return nil, err
+	}
 	return client.ManagerClient.ImportHost(c, &importReq)
 }
 
 func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *manager.ImportHostsInBatchResponse, err error) {
 	importReq := manager.ImportHostsInBatchRequest{}
 	importReq.Hosts = make([]*manager.HostInfo, len(hosts))
+	var userName, passwd string
 	for i, host := range hosts {
+		if i == 0 {
+			userName, passwd = host.UserName, host.Passwd
+		} else {
+			if userName != host.UserName || passwd != host.Passwd {
+				errMsg := fmt.Sprintf("Row %d has a diff user(%s) or passwd(%s)", i, host.UserName, host.Passwd)
+				return nil, errors.New(errMsg)
+			}
+		}
 		importReq.Hosts[i] = new(manager.HostInfo)
-		copyHostToReq(host, importReq.Hosts[i])
+		err = copyHostToReq(host, importReq.Hosts[i])
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return client.ManagerClient.ImportHostsInBatch(c, &importReq)
@@ -137,10 +161,12 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 			host.HostName = row[HOSTNAME_FIELD]
 			addr := net.ParseIP(row[IP_FILED])
 			if addr == nil {
-				errMsg := fmt.Sprintf("Row %d has a Invalid IP Address %s", irow, row[1])
+				errMsg := fmt.Sprintf("Row %d has a Invalid IP Address %s", irow, row[IP_FILED])
 				return nil, errors.New(errMsg)
 			}
 			host.Ip = addr.String()
+			host.UserName = row[USERNAME_FIELD]
+			host.Passwd = row[PASSWD_FIELD]
 			host.Dc = row[DC_FIELD]
 			host.Az = row[ZONE_FIELD]
 			host.Rack = row[RACK_FIELD]
@@ -409,6 +435,8 @@ func copyAllocFromRsp(src []*manager.AllocHost, dst *[]AllocateRsp) {
 		*dst = append(*dst, AllocateRsp{
 			HostName: host.HostName,
 			Ip:       host.Ip,
+			UserName: host.UserName,
+			Passwd:   host.Passwd,
 			CpuCores: host.CpuCores,
 			Memory:   host.Memory,
 		})

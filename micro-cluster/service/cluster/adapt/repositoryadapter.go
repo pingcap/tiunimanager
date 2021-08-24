@@ -133,7 +133,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 			// todo
 			return err
 		}
-		aggregation.LastBackupRecord.Id = resp.BackupRecord.Id
+		record.Id = resp.BackupRecord.Id
 	}
 /*
 	if aggregation.LastRecoverRecord != nil && aggregation.LastRecoverRecord.Id == 0 {

@@ -278,8 +278,8 @@ type BackupRecordDO struct {
 	BackupType  string
 	OperatorId  string		`gorm:"not null;type:varchar(36);default:null"`
 
-	FilePath 		string
-	FlowId			uint
+	FilePath 	string
+	FlowId		uint
 	Size 		uint64
 }
 
@@ -364,7 +364,7 @@ func DeleteBackupRecord(id uint) (record *BackupRecordDO, err error) {
 	return
 }
 
-func SaveBackupRecord(tenantId, clusterId, operatorId,backupRange, backupType, filePath string, flowId uint) (do *BackupRecordDO, err error){
+func SaveBackupRecord(tenantId, clusterId, operatorId, backupRange, backupType, filePath string, flowId uint) (do *BackupRecordDO, err error){
 	do = &BackupRecordDO{
 		Record: Record{
 			TenantId: tenantId,

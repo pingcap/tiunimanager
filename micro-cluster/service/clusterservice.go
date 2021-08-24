@@ -109,14 +109,14 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 		return err
 	}
 
-	cluster, err := domain.Backup(request.Operator, request.ClusterId, request.BackupRange, request.BackupType, request.FilePath)
+	clusterAggregation, err := domain.Backup(request.Operator, request.ClusterId, request.BackupRange, request.BackupType, request.FilePath)
 	if err != nil {
 		log.Info(err)
 		// todo
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
-		response.BackupRecord = cluster.ExtractBackupRecordDTO()
+		response.BackupRecord = clusterAggregation.ExtractBackupRecordDTO()
 		return nil
 	}
 }

@@ -59,10 +59,13 @@ function clean(){
         rm -f $binName
         if [ "$microDir" == "micro-cluster" ]
         then
-            echo "clean tiupmgr ..."
-            cd tiupmgr
-            rm -f tiupmgr
-            cd ..
+            for utils in "tiupmgr" "brmgr"; do
+                echo "    clean $utils ..."
+                cd $utils
+                rm -f $utils
+                go build .
+                cd ..
+            done
         fi
         cd ..
     done

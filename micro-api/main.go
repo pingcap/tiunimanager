@@ -7,6 +7,7 @@ import (
 	"github.com/pingcap/tiem/library/firstparty/client"
 	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/firstparty/framework"
+	framework2 "github.com/pingcap/tiem/library/framework"
 	"github.com/pingcap/tiem/micro-api/route"
 	cluster "github.com/pingcap/tiem/micro-cluster/proto"
 )
@@ -24,7 +25,7 @@ import (
 // @host localhost:8080
 // @BasePath /api/v1/
 func main() {
-	framework.NewDefaultFramework(framework.ClusterService,
+	framework.NewDefaultFramework(framework2.ClusterService,
 		initClient,
 		initGinEngine,
 	)
@@ -51,7 +52,7 @@ func initGinEngine(d *framework.DefaultServiceFramework) error {
 }
 
 func initClient(d *framework.DefaultServiceFramework) error {
-	srv := framework.ClusterService.BuildMicroService(d.GetRegistryAddress()...)
-	client.ClusterClient = cluster.NewClusterService(framework.ClusterService.ToString(), srv.Client())
+	srv := framework2.ClusterService.BuildMicroService(d.GetRegistryAddress()...)
+	client.ClusterClient = cluster.NewClusterService(framework2.ClusterService.ToString(), srv.Client())
 	return nil
 }

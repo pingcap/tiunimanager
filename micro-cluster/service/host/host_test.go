@@ -14,7 +14,7 @@ import (
 
 func initTestLog() {
 	config.InitConfigForDev(config.MicroClusterMod)
-	InitLogger(config.KEY_CLUSTER_LOG)
+	InitLoggerByKey(config.KEY_CLUSTER_LOG)
 }
 
 func genHostInfo(hostName string) *hostPb.HostInfo {

@@ -2,6 +2,7 @@ package framework
 
 import (
 	"errors"
+
 	"github.com/asim/go-micro/v3"
 	"github.com/pingcap-inc/tiem/library/firstparty/config"
 	"github.com/pingcap-inc/tiem/library/firstparty/util"
@@ -36,13 +37,13 @@ func GetDefaultLogger() *logger.LogRecord {
 type Opt func(d *DefaultServiceFramework) error
 
 type DefaultServiceFramework struct {
-	serviceEnum 		MicroServiceEnum
-	flags       		micro.Option
+	serviceEnum MicroServiceEnum
+	flags       micro.Option
 
 	initOpts []Opt
 
-	log 				*logger.LogRecord
-	service 			micro.Service
+	log     *logger.LogRecord
+	service micro.Service
 }
 
 func (p *DefaultServiceFramework) Init() error {
@@ -95,7 +96,7 @@ func (p *DefaultServiceFramework) StartService() error {
 	util.Assert(p.service != nil)
 
 	if err := p.service.Run(); err != nil {
-		p.GetDefaultLogger().Fatalf("Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, config.GetMetaDBServiceAddress(), config.GetRegistryAddress())
+		p.GetDefaultLogger().Fatalf("Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, p.serviceEnum.buildServiceAddress(), config.GetRegistryAddress())
 		return errors.New("initialization micro service failed")
 	}
 

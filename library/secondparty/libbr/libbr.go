@@ -431,21 +431,27 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 		log.Info("showbackupinfo task finished, time cost", time.Now().Sub(t0))
 	}
 	if err != nil {
-		log.Error("query sql cmd err", err)
+		log.Errorf("query sql cmd err: %v", err)
 		if err.Error() != "sql: no rows in result set" {
+			log.Debugf("(%s) != (sql: no rows in result set", err.Error())
 			resp.Error = err
 			return resp
 		}
-		if stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
-			log.Error("get tiup status from db error", err)
-			resp.Error = err
-		} else if stat != dbPb.TiupTaskStatus_Finished {
-			log.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
-			resp.Error = errors.New(fmt.Sprintf("task has not finished: %d, with err info: %s", stat, errStr))
-		} else {
-			log.Infof("task has finished: %d", stat)
-			resp.Progress = 100
-		}
+		log.Debugf("<%s> == <sql: no rows in result set>", err.Error())
+		log.Infof("task has finished without checking db while no rows is result for sql cmd")
+		resp.Progress = 100
+		//stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID)
+		//log.Infof("stat: %v, errStr: %s, err: %v", stat, errStr, err)
+		//if err != nil {
+		//	log.Error("get tiup status from db error", err)
+		//	resp.Error = err
+		//} else if stat != dbPb.TiupTaskStatus_Finished {
+		//	log.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
+		//	resp.Error = errors.New(fmt.Sprintf("task has not finished: %d, with err info: %s", stat, errStr))
+		//} else {
+		//	log.Infof("task has finished: %d", stat)
+		//	resp.Progress = 100
+		//}
 		return resp
 	}
 	log.Info("sql cmd return successfully")
@@ -704,7 +710,14 @@ func microCmdChanRoutine(cch chan CmdChanMember, outReader io.Reader, inWriter i
 		bs = append(bs, '\n')
 		ct, err := inWriter.Write(bs)
 		assert(ct == len(bs) && err == nil)
+		
 		output, err := outBufReader.ReadString('\n')
+		for len(output) == 0 {
+			if err != nil {
+				log.Infof("Error while reading outReader from brmgr: %v\n", err)
+			}
+			output, err = outBufReader.ReadString('\n')
+		}
 		assert(len(output) > 1 && err == nil && output[len(output)-1] == '\n')
 		var resp CmdReqOrResp
 		err = json.Unmarshal([]byte(output[:len(output)-1]), &resp)
@@ -779,7 +792,7 @@ func showBackUpInfo(showBackUpInfoReq CmdShowBackUpInfoReq) CmdShowBackUpInfoRes
 	return resp
 }
 
-func ShowBackUpInfo(cluster ClusterFacade, bizId uint64) CmdShowBackUpInfoResp {
+func ShowBackUpInfo(cluster ClusterFacade) CmdShowBackUpInfoResp {
 	var showBackUpInfoReq CmdShowBackUpInfoReq
 	showBackUpInfoReq.DbConnParameter = cluster.DbConnParameter
 	showBackUpInfoReq.TaskID = cluster.TaskID
@@ -860,7 +873,9 @@ func ShowRestoreInfo(cluster ClusterFacade, bizId uint64) CmdShowRestoreInfoResp
 func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error) {
 	var req dbPb.FindTiupTaskByIDRequest
 	req.Id = taskID
+	log.Debugf("FindTiupTaskByID: %d", taskID)
 	rsp, err := client.DBClient.FindTiupTaskByID(context.Background(), &req)
+	log.Debugf("FindTiupTaskByID: %d. rsp: %v, err: %v", taskID, rsp, err)
 	if err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("err:%s, rsp.ErrCode:%d, rsp.ErrStr:%s", err, rsp.ErrCode, rsp.ErrStr)
 		return stat, "", err

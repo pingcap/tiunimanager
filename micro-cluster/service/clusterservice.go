@@ -24,9 +24,10 @@ type ClusterServiceHandler struct{}
 
 var log *logger.LogRecord
 
-func InitClusterLogger(key config.Key) {
-	log = logger.GetLogger(key)
-	domain.InitDomainLogger(key)
+func InitClusterLogger() {
+	config.InitConfigForDev(config.MicroClusterMod)
+	log = logger.GetLogger(config.KEY_CLUSTER_LOG)
+	domain.InitDomainLogger(config.KEY_CLUSTER_LOG)
 }
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterPb.ClusterCreateReqDTO, resp *clusterPb.ClusterCreateRespDTO) (err error) {

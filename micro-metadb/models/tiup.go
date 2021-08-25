@@ -2,10 +2,10 @@ package models
 
 import (
 	"context"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 	"time"
 
-	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 
 	"gorm.io/gorm"
 )

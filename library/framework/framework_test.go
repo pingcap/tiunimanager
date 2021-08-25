@@ -2,7 +2,7 @@ package framework
 
 import (
 	"github.com/asim/go-micro/v3"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 	"reflect"
 	"testing"
 )

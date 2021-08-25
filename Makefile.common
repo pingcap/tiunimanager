@@ -52,7 +52,7 @@ MAC       := "Darwin"
 PACKAGE_LIST  := go list ./...| grep -vE "docs|proto|firstparty"
 PACKAGES  ?= $$($(PACKAGE_LIST))
 #PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/pingcap/$(PROJECT)||'
-PACKAGE_DIRECTORIES := $(PACKAGE_LIST) 
+PACKAGE_DIRECTORIES := $(PACKAGE_LIST)
 FILES     := $$(find $$($(PACKAGE_DIRECTORIES)) -name "*.go")
 
 FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git)" | xargs bin/failpoint-ctl enable)

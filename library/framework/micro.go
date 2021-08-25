@@ -8,9 +8,9 @@ import (
 	"github.com/asim/go-micro/v3"
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/transport"
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
-	"github.com/pingcap/tiem/library/thirdparty/tracer"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/thirdparty/tracer"
 )
 
 type MicroServiceEnum string

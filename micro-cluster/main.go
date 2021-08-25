@@ -2,18 +2,18 @@ package main
 
 import (
 	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
-	dbclient "github.com/pingcap/tiem/library/firstparty/client"
-	"github.com/pingcap/tiem/library/firstparty/framework"
-	"github.com/pingcap/tiem/library/secondparty/libbr"
-	"github.com/pingcap/tiem/library/secondparty/libtiup"
-	clusterAdapt "github.com/pingcap/tiem/micro-cluster/service/cluster/adapt"
-	tenantAdapt "github.com/pingcap/tiem/micro-cluster/service/tenant/adapt"
-	db "github.com/pingcap/tiem/micro-metadb/proto"
+	dbclient "github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/firstparty/framework"
+	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
+	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
+	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
+	tenantAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/adapt"
+	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 func main() {
 	f := framework.NewDefaultFramework(framework.ClusterService,
-		initLib,
+		initLibForDev,
 		initPort,
 		initClient,
 	)
@@ -27,9 +27,9 @@ func initClient(d *framework.DefaultServiceFramework) error {
 	return nil
 }
 
-func initLib(d *framework.DefaultServiceFramework) error {
-	libtiup.MicroInit("./tiupmgr/tiupmgr", "tiup", "")
-	libbr.MicroInit("./brmgr/brmgr", "")
+func initLibForDev(d *framework.DefaultServiceFramework) error {
+	libtiup.MicroInit("./../bin/tiupcmd", "tiup", "")
+	libbr.MicroInit("./../bin/brcmd", "")
 	return nil
 }
 

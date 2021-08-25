@@ -1,4 +1,4 @@
-// Copyright 2021 PingCAP, Inc.
+// Copyright 2020 PingCAP, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -8,20 +8,11 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package hack
+package errno
 
-import (
-	"testing"
-
-	"github.com/pingcap/tiem/library/firstparty/util/testbridge"
-	"go.uber.org/goleak"
-)
-
-func TestMain(m *testing.M) {
-	testbridge.WorkaroundGoCheckFlags()
-	goleak.VerifyTestMain(m)
+var TiEMErrName = map[uint16]string{
+	TiEM_SUCCESS: "successufl",
 }

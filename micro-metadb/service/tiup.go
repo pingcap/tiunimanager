@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/pingcap/tiem/micro-metadb/models"
-	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
+	"github.com/pingcap-inc/tiem/micro-metadb/models"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 func (d *DBServiceHandler) CreateTiupTask(ctx context.Context, req *dbPb.CreateTiupTaskRequest, rsp *dbPb.CreateTiupTaskResponse) error {

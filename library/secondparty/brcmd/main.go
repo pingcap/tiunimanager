@@ -1,6 +1,6 @@
 package main
 
-import "github.com/pingcap/tiem/library/secondparty/libbr"
+import "github.com/pingcap-inc/tiem/library/secondparty/libbr"
 
 func init() {
 	libbr.BrMgrInit()

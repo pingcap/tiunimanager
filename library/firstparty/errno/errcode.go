@@ -1,4 +1,4 @@
-// Copyright 2021 PingCAP, Inc.
+// Copyright 2020 PingCAP, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dbterror
+package errno
 
-import (
-	"testing"
-
-	"github.com/pingcap/tiem/library/firstparty/util/testbridge"
-	"go.uber.org/goleak"
+// tiem all errno
+const (
+	TiEM_SUCCESS 	= 0
 )
-
-func TestMain(m *testing.M) {
-	testbridge.WorkaroundGoCheckFlags()
-	goleak.VerifyTestMain(m)
-}

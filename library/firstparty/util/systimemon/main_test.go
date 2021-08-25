@@ -17,7 +17,7 @@ package systimemon
 import (
 	"testing"
 
-	"github.com/pingcap/tiem/library/firstparty/util/testbridge"
+	"github.com/pingcap-inc/tiem/library/firstparty/util/testbridge"
 	"go.uber.org/goleak"
 )
 
@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	testbridge.WorkaroundGoCheckFlags()
 
 	opts := []goleak.Option{
-		goleak.IgnoreTopFunction("github.com/pingcap/tiem/library/firstparty/util/systimemon.StartMonitor"),
+		goleak.IgnoreTopFunction("github.com/pingcap-inc/tiem/library/firstparty/util/systimemon.StartMonitor"),
 	}
 
 	goleak.VerifyTestMain(m, opts...)

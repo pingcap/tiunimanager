@@ -2,9 +2,9 @@ package userapi
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/tiem/library/firstparty/client"
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"net/http"
 )
 

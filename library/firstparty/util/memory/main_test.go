@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package set
+package memory
 
 import (
 	"testing"
 
-	"github.com/pingcap/tiem/library/firstparty/util/testbridge"
+	"github.com/pingcap-inc/tiem/library/firstparty/util/testbridge"
 	"go.uber.org/goleak"
 )
 

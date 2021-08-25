@@ -1,4 +1,4 @@
-module github.com/pingcap/tiem
+module github.com/pingcap-inc/tiem
 
 go 1.16
 
@@ -10,12 +10,10 @@ require (
 	github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/v3 v3.5.2
-	github.com/danjacques/gofslock v0.0.0-20200623023034-5d0bd0fa6ef0
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
-	github.com/juju/errors v0.0.0-20210818161939-5560c4c073ff // indirect
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	github.com/micro/cli/v2 v2.1.2
 	github.com/mozillazg/go-pinyin v0.18.0
@@ -23,9 +21,6 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pingcap/check v0.0.0-20200212061837-5e12011dc712
 	github.com/pingcap/errors v0.11.4
-	github.com/pingcap/log v0.0.0-20191012051959-b742a5d432e9
-	github.com/pingcap/parser v3.1.2+incompatible
-	github.com/pingcap/tidb v2.0.11+incompatible
 	github.com/pingcap/tiup v1.5.5
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0

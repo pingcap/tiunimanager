@@ -1,8 +1,8 @@
 package client
 
 import (
-	cluster "github.com/pingcap/tiem/micro-cluster/proto"
-	db "github.com/pingcap/tiem/micro-metadb/proto"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 var DBClient db.TiEMDBService

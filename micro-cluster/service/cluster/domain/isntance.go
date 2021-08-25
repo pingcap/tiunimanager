@@ -1,8 +1,8 @@
 package domain
 
 import (
-	"github.com/pingcap/tiem/library/knowledge"
-	proto "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"math/rand"
 )

@@ -16,23 +16,17 @@ package printer
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	_ "runtime" // import link package
 	_ "unsafe"  // required by go:linkname
 
-	"github.com/pingcap/parser/mysql"
-	"github.com/pingcap/tidb/config"
-	configTiem "github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/firstparty/util/israce"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
-	"github.com/pingcap/tiem/library/firstparty/util/versioninfo"
-	"go.uber.org/zap"
+	"github.com/pingcap-inc/tiem/library/firstparty/util/israce"
+	"github.com/pingcap-inc/tiem/library/firstparty/util/versioninfo"
 )
 
-// PrintTiDBInfo prints the TiDB version information.
-func PrintTiDBInfo() {
-	logger.GetLogger(configTiem.KEY_FIRSTPARTY_LOG).Info("Welcome to TiDB.",
+// PrintTiEMInfo prints the TiEM version information.
+func PrintTiEMInfo() {
+	/**logger.GetLogger(configTiem.KEY_FIRSTPARTY_LOG).Info("Welcome to TiDB.",
 		zap.String("Release Version", mysql.TiDBReleaseVersion),
 		zap.String("Edition", versioninfo.TiDBEdition),
 		zap.String("Git Commit Hash", versioninfo.TiDBGitHash),
@@ -46,29 +40,25 @@ func PrintTiDBInfo() {
 	if err != nil {
 		panic(err)
 	}
-	logutil.BgLogger().Info("loaded config", zap.ByteString("config", configJSON))
+	logutil.BgLogger().Info("loaded config", zap.ByteString("config", configJSON))**/
 }
 
-// GetTiDBInfo returns the git hash and build time of this tidb-server binary.
-func GetTiDBInfo() string {
+// GetTiEMInfo returns the git hash and build time of this tiem servers binary.
+func GetTiEMInfo() string {
 	return fmt.Sprintf("Release Version: %s\n"+
 		"Edition: %s\n"+
 		"Git Commit Hash: %s\n"+
 		"Git Branch: %s\n"+
 		"UTC Build Time: %s\n"+
 		"GoVersion: %s\n"+
-		"Race Enabled: %v\n"+
-		"TiKV Min Version: %s\n"+
-		"Check Table Before Drop: %v",
-		mysql.TiDBReleaseVersion,
-		versioninfo.TiDBEdition,
-		versioninfo.TiDBGitHash,
-		versioninfo.TiDBGitBranch,
-		versioninfo.TiDBBuildTS,
+		"Race Enabled: %v\n",
+		versioninfo.TiEMReleaseVersion,
+		versioninfo.TiEMEdition,
+		versioninfo.TiEMGitHash,
+		versioninfo.TiEMGitBranch,
+		versioninfo.TiEMBuildTS,
 		buildVersion,
-		israce.RaceEnabled,
-		versioninfo.TiKVMinVersion,
-		config.CheckTableBeforeDrop)
+		israce.RaceEnabled)
 }
 
 // checkValidity checks whether cols and every data have the same length.

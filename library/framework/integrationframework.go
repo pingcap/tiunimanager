@@ -1,9 +1,9 @@
 package framework
 
 import (
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/firstparty/util"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/firstparty/util"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 )
 
 type ItOpt func(d *ItFramework) error
@@ -20,7 +20,7 @@ func NewItFramework(serviceName MicroServiceEnum, initOpt ...ItOpt) *ItFramework
 		serviceEnum: serviceName,
 		initOpts: []ItOpt{
 			func(d *ItFramework) error {
-				config.InitForMonolith(d.serviceEnum.logMod())
+				config.InitConfigForDev(d.serviceEnum.logMod())
 				return nil
 			},
 			func(d *ItFramework) error {

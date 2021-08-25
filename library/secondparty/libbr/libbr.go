@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pingcap-inc/tiem/library/firstparty/client"
@@ -437,7 +436,7 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 			resp.Error = err
 			return resp
 		}
-		log.Debugf("<%s> == <sql: no rows in result set>", err.Error())
+		log.Debugf("(%s) == (sql: no rows in result set)", err.Error())
 		log.Infof("task has finished without checking db while no rows is result for sql cmd")
 		resp.Progress = 100
 		//stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID)
@@ -506,21 +505,25 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 		log.Info("showretoreinfo task finished, time cost", time.Now().Sub(t0))
 	}
 	if err != nil {
-		log.Error("query sql cmd err", err)
+		log.Errorf("query sql cmd err: %v", err)
 		if err.Error() != "sql: no rows in result set" {
+			log.Debugf("(%s) != (sql: no rows in result set", err.Error())
 			resp.Error = err
 			return resp
 		}
-		if stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
-			log.Error("get tiup status error", err)
-			resp.Error = err
-		} else if stat != dbPb.TiupTaskStatus_Finished {
-			log.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
-			resp.Error = errors.New(fmt.Sprintf("task has not finished: %d, with err info: %s", stat, errStr))
-		} else {
-			log.Info("sql cmd return successfully")
-			resp.Progress = 100
-		}
+		log.Debugf("(%s) == (sql: no rows in result set)", err.Error())
+		log.Infof("task has finished without checking db while no rows is result for sql cmd")
+		resp.Progress = 100
+		//if stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
+		//	log.Error("get tiup status error", err)
+		//	resp.Error = err
+		//} else if stat != dbPb.TiupTaskStatus_Finished {
+		//	log.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
+		//	resp.Error = errors.New(fmt.Sprintf("task has not finished: %d, with err info: %s", stat, errStr))
+		//} else {
+		//	log.Info("sql cmd return successfully")
+		//	resp.Progress = 100
+		//}
 		return resp
 	}
 	log.Info("sql cmd return successfully")
@@ -864,7 +867,7 @@ func showRestoreInfo(showRestoreInfoReq CmdShowRestoreInfoReq) CmdShowRestoreInf
 	return resp
 }
 
-func ShowRestoreInfo(cluster ClusterFacade, bizId uint64) CmdShowRestoreInfoResp {
+func ShowRestoreInfo(cluster ClusterFacade) CmdShowRestoreInfoResp {
 	var showRestoreInfoReq CmdShowRestoreInfoReq
 	showRestoreInfoReq.DbConnParameter = cluster.DbConnParameter
 	showRestoreInfoResp := showRestoreInfo(showRestoreInfoReq)

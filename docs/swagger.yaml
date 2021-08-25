@@ -661,7 +661,7 @@ definitions:
       userName:
         type: string
     type: object
-host: localhost:8080
+host: localhost:4116
 info:
   contact:
     email: zhangpeijin@pingcap.com

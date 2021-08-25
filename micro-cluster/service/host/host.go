@@ -3,20 +3,19 @@ package host
 import (
 	"context"
 	"fmt"
+	config2 "github.com/pingcap-inc/tiem/library/framework/config"
+	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
 
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
-	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
-
-	hostPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	hostPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"google.golang.org/grpc/codes"
 )
 
-var log *logger.LogRecord
+var log *logger2.LogRecord
 
-func InitLogger(key config.Key) {
-	log = logger.GetLogger(key)
+func InitLogger(key config2.Key) {
+	log = logger2.GetLogger(key)
 }
 
 func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {

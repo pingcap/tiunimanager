@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"github.com/pingcap-inc/tiem/library/firstparty/framework"
 	"github.com/pingcap-inc/tiem/library/firstparty/util"
+	framework2 "github.com/pingcap-inc/tiem/library/framework/framework"
 
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
@@ -15,7 +15,7 @@ import (
 
 func initSqliteDB(f *framework.DefaultServiceFramework) error {
 	var err error
-	dbFile := config.GetSqliteFilePath()
+	dbFile := framework2.GetSqliteFilePath()
 	logins := f.GetDefaultLogger().Record("database file path", dbFile)
 	models.MetaDB, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 	if err != nil || models.MetaDB.Error != nil {

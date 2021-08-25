@@ -2,10 +2,11 @@ package host
 
 import (
 	"context"
+	config2 "github.com/pingcap-inc/tiem/library/framework/config"
+	"github.com/pingcap-inc/tiem/library/framework/framework"
 	"testing"
 
 	"github.com/asim/go-micro/v3/client"
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
 	hostPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"google.golang.org/grpc/codes"
@@ -13,8 +14,8 @@ import (
 )
 
 func initTestLog() {
-	config.InitConfigForDev(config.MicroClusterMod)
-	InitLogger(config.KEY_CLUSTER_LOG)
+	framework.InitConfigForDev(framework.MicroClusterMod)
+	InitLogger(config2.KEY_CLUSTER_LOG)
 }
 
 func genHostInfo(hostName string) *hostPb.HostInfo {

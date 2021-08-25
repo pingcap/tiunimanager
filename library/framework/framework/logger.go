@@ -2,18 +2,18 @@ package framework
 
 import (
 	"context"
+	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
 
 	"github.com/pingcap-inc/tiem/library/firstparty/util"
-	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 	log "github.com/sirupsen/logrus"
 )
 
 type Logger interface {
-	GetDefaultLogger() *logger.LogRecord
-	SetDefaultLogger(*logger.LogRecord)
+	GetDefaultLogger() *logger2.LogRecord
+	SetDefaultLogger(*logger2.LogRecord)
 	// Return the logger which has already stored inside the ctx.
 	// If there is no such logger, return the default logger instead.
-	WithContext(ctx context.Context) *logger.LogRecord
+	WithContext(ctx context.Context) *logger2.LogRecord
 	// Return a new context with extra fields added to the previous logger.
 	// If there is no such previous logger, use the default logger instead.
 	NewContextWithField(ctx context.Context, key string, value interface{}) context.Context

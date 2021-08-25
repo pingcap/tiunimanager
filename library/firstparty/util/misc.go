@@ -23,6 +23,8 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/framework/config"
+	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
 	"math/big"
 	"net"
 	"net/http"
@@ -33,8 +35,6 @@ import (
 	"sync"
 	"time"
 
-	configTiem "github.com/pingcap-inc/tiem/library/firstparty/config"
-	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 	"github.com/pingcap/errors"
 	"go.uber.org/zap"
 )
@@ -84,7 +84,7 @@ func WithRecovery(exec func(), recoverFn func(r interface{})) {
 			recoverFn(r)
 		}
 		if r != nil {
-			logger.GetLogger(configTiem.KEY_FIRSTPARTY_LOG).Error("panic in the recoverable goroutine",
+			logger2.GetLogger(config.KEY_FIRSTPARTY_LOG).Error("panic in the recoverable goroutine",
 				zap.Reflect("r", r),
 				zap.Stack("stack trace"))
 		}
@@ -400,7 +400,7 @@ func LoadTLSCertificates(ca, key, cert string, autoTLS bool) (tlsConfig *tls.Con
 		}
 	} */
 	/* #nosec G402 */
-	/*tlsConfig = &tls.Config{
+	/*tlsConfig = &tls.Configuration{
 		Certificates: []tls.Certificate{tlsCert},
 		ClientCAs:    certPool,
 		ClientAuth:   clientAuthPolicy,

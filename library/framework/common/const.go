@@ -1,4 +1,4 @@
-package config
+package common
 
 // micro service default port
 const (
@@ -18,9 +18,4 @@ const (
 	CrtFileName string = "server.crt"
 	KeyFileName string = "server.key"
 
-	MicroApiLogFileName     string = "micro-api.log"
-	MicroClusterLogFileName string = "micro-cluster.log"
-	MicroMetaDBLogFileName  string = "micro-metadb.log"
-	TiUPLogFileName         string = "utils-tiup.log"
-	DefaultLogFileName      string = "tiem.log"
 )

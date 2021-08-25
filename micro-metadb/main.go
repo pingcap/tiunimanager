@@ -12,5 +12,6 @@ func main() {
 		initResourceDataForDev,
 	)
 
+
 	f.StartService()
 }

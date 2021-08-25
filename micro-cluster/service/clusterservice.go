@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
+	config2 "github.com/pingcap-inc/tiem/library/framework/config"
+	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
 	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
 	"net/http"
 	"strconv"
 
 	dbClient "github.com/pingcap-inc/tiem/library/firstparty/client"
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
-	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
@@ -22,10 +22,10 @@ var BizErrorResponseStatus = &clusterPb.ResponseStatusDTO{Code: 1}
 
 type ClusterServiceHandler struct{}
 
-var log *logger.LogRecord
+var log *logger2.LogRecord
 
-func InitClusterLogger(key config.Key) {
-	log = logger.GetLogger(key)
+func InitClusterLogger(key config2.Key) {
+	log = logger2.GetLogger(key)
 	domain.InitDomainLogger(key)
 }
 
@@ -351,7 +351,7 @@ func (*ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterPb
 	return nil
 }
 
-func InitHostLogger(key config.Key) {
+func InitHostLogger(key config2.Key) {
 	host.InitLogger(key)
 }
 

@@ -1,28 +1,26 @@
 package tracer
 
 import (
+	"github.com/pingcap-inc/tiem/library/framework/args"
 	"io"
 	"log"
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
-
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 )
 
-var GlobalTracer opentracing.Tracer
+type Tracer opentracing.Tracer
 
-func InitTracer() {
-	jaegerTracer, _, err := NewJaegerTracer("tiem", config.GetTracerAddress())
+func NewTracerFromArgs(args *args.ClientArgs) *Tracer {
+	jaegerTracer, _, err := NewJaegerTracer("tiem", args.TracerAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
 	opentracing.SetGlobalTracer(jaegerTracer)
-	GlobalTracer = jaegerTracer
+	return (*Tracer)(&jaegerTracer)
 }
 
 func NewJaegerTracer(serviceName string, addr string) (opentracing.Tracer, io.Closer, error) {
@@ -53,25 +51,26 @@ func NewJaegerTracer(serviceName string, addr string) (opentracing.Tracer, io.Cl
 
 func GinOpenTracing() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var parentSpan opentracing.Span
-
-		tracer := GlobalTracer
-
-		spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(c.Request.Header))
-		if err != nil {
-			parentSpan = tracer.StartSpan(c.Request.URL.Path)
-			defer parentSpan.Finish()
-		} else {
-			parentSpan = opentracing.StartSpan(
-				c.Request.URL.Path,
-				opentracing.ChildOf(spCtx),
-				opentracing.Tag{Key: string(ext.Component), Value: "HTTP"},
-				ext.SpanKindRPCServer,
-			)
-			defer parentSpan.Finish()
-		}
-		c.Set("Tracer", tracer)
-		c.Set("ParentSpan", parentSpan)
-		c.Next()
+		// todo tracer
+		//var parentSpan opentracing.Span
+		//
+		//tracer := GlobalTracer
+		//
+		//spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(c.Request.Header))
+		//if err != nil {
+		//	parentSpan = tracer.StartSpan(c.Request.URL.Path)
+		//	defer parentSpan.Finish()
+		//} else {
+		//	parentSpan = opentracing.StartSpan(
+		//		c.Request.URL.Path,
+		//		opentracing.ChildOf(spCtx),
+		//		opentracing.Tag{Key: string(ext.Component), Value: "HTTP"},
+		//		ext.SpanKindRPCServer,
+		//	)
+		//	defer parentSpan.Finish()
+		//}
+		//c.Set("Tracer", tracer)
+		//c.Set("ParentSpan", parentSpan)
+		//c.Next()
 	}
 }

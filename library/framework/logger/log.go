@@ -2,29 +2,35 @@ package logger
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/framework/args"
+	"github.com/pingcap-inc/tiem/library/framework/common"
 	"io"
 	"os"
 	"path"
 	"runtime"
 	"strings"
-	"sync"
-
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+type LogRecord struct {
+	defaultLogEntry *log.Entry
+
+	LogLevel      string
+	LogOutput     string
+	LogFilePath   string
+	LogMaxSize    int
+	LogMaxAge     int
+	LogMaxBackups int
+	LogLocalTime  bool
+	LogCompress   bool
+}
+
 type logCtxKeyType struct{}
 type Fields log.Fields
 
 var logCtxKey logCtxKeyType
-
-type LogRecord struct {
-	defaultLogEntry *log.Entry
-}
-
-var logRecord *LogRecord
 
 const (
 	// LogDebug debug level
@@ -59,72 +65,61 @@ const (
 	RecordLineField = "line"
 )
 
-var mutex = sync.Mutex{}
+//var mutex = sync.Mutex{}
+//
+//func Init(key config2.Key) {
+//	if logRecord == nil {
+//		mutex.Lock()
+//		defer mutex.Unlock()
+//		if logRecord == nil {
+//			// init LogRecord
+//			logRecord = newLogRecord(key)
+//		}
+//	}
+//}
 
-func Init(key config.Key) {
-	if logRecord == nil {
-		mutex.Lock()
-		defer mutex.Unlock()
-		if logRecord == nil {
-			// init LogRecord
-			logRecord = newLogRecord(key)
-		}
+func NewLogRecordFromArgs(args *args.ClientArgs) *LogRecord {
+	lr := &LogRecord {
+		LogLevel: args.LogLevel,
+		LogOutput: "file",
+		LogFilePath: args.DataDir + common.LogDirPrefix + "default.log",
+		LogMaxSize:    512,
+		LogMaxAge:     30,
+		LogMaxBackups: 0,
+		LogLocalTime:  true,
+		LogCompress:   true,
 	}
-}
 
-// newLogRecord Get a new log record object
-func newLogRecord(key config.Key) *LogRecord {
 	logger := log.New()
-
-	// Get global log configuration
-	conf := config.GetLogConfig(key)
 
 	// Set log format
 	logger.SetFormatter(&log.JSONFormatter{})
 	// Set log level
-	logger.SetLevel(getLogLevel(conf.LogLevel))
+	logger.SetLevel(getLogLevel(args.LogLevel))
 
 	// Define output type writer
 	writers := []io.Writer{os.Stdout}
 
 	// Determine whether the log output contains the file type
-	if strings.Contains(strings.ToLower(conf.LogOutput), OutputFile) {
-		writers = append(writers, getFileOutput(conf))
+	if strings.Contains(strings.ToLower(lr.LogOutput), OutputFile) {
+		writers = append(writers, &lumberjack.Logger{
+			Filename: lr.LogFilePath,
+			MaxSize: lr.LogMaxSize,
+			MaxAge: lr.LogMaxAge,
+			MaxBackups: lr.LogMaxBackups,
+			LocalTime: lr.LogLocalTime,
+			Compress: lr.LogCompress,
+		})
 	}
-	// If console is not included, remove the os.Stdout output
-	if !strings.Contains(strings.ToLower(conf.LogOutput), OutputConsole) {
-		writers = writers[1:]
-	}
+	// remove the os.Stdout output
+	writers = writers[1:]
+
 	// Set log output
 	logger.SetOutput(io.MultiWriter(writers...))
-
-	lr := &LogRecord{
-		defaultLogEntry: log.NewEntry(logger),
-	}
-
 	// Record sys and mod default init
-	lr.defaultLogEntry = lr.defaultLogEntry.
-		WithField(RecordSysField, conf.RecordSysName).WithField(RecordModField, conf.RecordModName)
+	lr.defaultLogEntry = log.NewEntry(logger)
+	//.WithField(RecordSysField, lr.RecordSysName).WithField(RecordModField, lr.RecordModName)
 	return lr
-}
-
-// Log file output configuration
-func getFileOutput(conf config.Log) *lumberjack.Logger {
-	logConfig := &lumberjack.Logger{
-		// Log output file path
-		Filename: conf.LogFilePath,
-		// Maximum log file size, unit: MB
-		MaxSize: conf.LogMaxSize,
-		// Maximum time interval for keeping expired files, unit: days
-		MaxAge: conf.LogMaxAge,
-		// Maximum number of expired logs to backups
-		MaxBackups: conf.LogMaxBackups,
-		// Whether to use local time
-		LocalTime: conf.LogLocalTime,
-		// Do you need to compress the rolling log, use gzip compression
-		Compress: conf.LogCompress,
-	}
-	return logConfig
 }
 
 // Tool method to get log level
@@ -144,29 +139,18 @@ func getLogLevel(level string) log.Level {
 	return log.DebugLevel
 }
 
-func NewContext(ctx context.Context, fields Fields) context.Context {
-	return context.WithValue(ctx, logCtxKey, WithContext(ctx).WithFields(log.Fields(fields)))
-}
-
 func WithContext(ctx context.Context) *log.Entry {
-	if ctx == nil {
-		// default by global log entry
-		Init(config.KEY_DEFAULT_LOG)
-		return logRecord.defaultLogEntry
-	}
 	le, ok := ctx.Value(logCtxKey).(*log.Entry)
 	if ok {
 		return le
 	} else {
-		return newLogRecord(config.KEY_DEFAULT_LOG).defaultLogEntry
+		return GetLogger().defaultLogEntry
 	}
 }
 
-func GetLogger(key config.Key) *LogRecord {
-	if logRecord == nil {
-		Init(key)
-	}
-	return logRecord
+func GetLogger() *LogRecord {
+	// todo get from framework
+	return nil
 }
 
 func (lr *LogRecord) Record(key string, value interface{}) *LogRecord {
@@ -183,6 +167,7 @@ func (lr *LogRecord) RecordSys(sys string) *LogRecord {
 	lr.defaultLogEntry = lr.defaultLogEntry.WithField(RecordSysField, sys)
 	return lr
 }
+
 func (lr *LogRecord) RecordMod(mod string) *LogRecord {
 	lr.defaultLogEntry = lr.defaultLogEntry.WithField(RecordModField, mod)
 	return lr

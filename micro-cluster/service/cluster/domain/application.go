@@ -3,10 +3,10 @@ package domain
 import (
 	"context"
 	"errors"
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	config2 "github.com/pingcap-inc/tiem/library/framework/config"
+	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
-	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -15,10 +15,10 @@ import (
 	"strconv"
 )
 
-var log *logger.LogRecord
+var log *logger2.LogRecord
 
-func InitDomainLogger(key config.Key) {
-	log = logger.GetLogger(key)
+func InitDomainLogger(key config2.Key) {
+	log = logger2.GetLogger(key)
 }
 
 type ClusterAggregation struct {

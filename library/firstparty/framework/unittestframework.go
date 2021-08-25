@@ -4,15 +4,16 @@ import (
 	"github.com/pingcap-inc/tiem/library/firstparty/config"
 	"github.com/pingcap-inc/tiem/library/firstparty/util"
 	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/thirdparty/tracer"
 )
 
 type UtOpt func(d *UtFramework) error
 
 type UtFramework struct {
-	serviceEnum 		MicroServiceEnum
+	serviceEnum MicroServiceEnum
 
-	initOpts 			[]UtOpt
-	log 				*logger.LogRecord
+	initOpts []UtOpt
+	log      *logger.LogRecord
 }
 
 func NewUtFramework(serviceName MicroServiceEnum, initOpt ...UtOpt) *UtFramework {
@@ -27,9 +28,12 @@ func NewUtFramework(serviceName MicroServiceEnum, initOpt ...UtOpt) *UtFramework
 				d.log = d.serviceEnum.buildLogger()
 				return nil
 			},
+			func(d *UtFramework) error {
+				initUTTracer(d)
+				return nil
+			},
 		},
 	}
-
 
 	p.initOpts = append(p.initOpts, initOpt...)
 
@@ -55,4 +59,9 @@ func (u UtFramework) GetDefaultLogger() *logger.LogRecord {
 
 func (u UtFramework) GetRegistryAddress() []string {
 	panic("implement me")
+}
+
+func initUTTracer(u *UtFramework) error {
+	tracer.InitTracer()
+	return nil
 }

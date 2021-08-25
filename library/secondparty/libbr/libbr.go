@@ -716,12 +716,14 @@ func microCmdChanRoutine(cch chan CmdChanMember, outReader io.Reader, inWriter i
 		assert(ct == len(bs) && err == nil)
 		
 		output, err := outBufReader.ReadString('\n')
+		/*
 		for len(output) == 0 {
 			if err != nil {
 				log.Infof("Error while reading outReader from brmgr: %v\n", err)
 			}
 			output, err = outBufReader.ReadString('\n')
 		}
+		*/
 		assert(len(output) > 1 && err == nil && output[len(output)-1] == '\n')
 		var resp CmdReqOrResp
 		err = json.Unmarshal([]byte(output[:len(output)-1]), &resp)

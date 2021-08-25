@@ -1,9 +1,7 @@
-package config
+package framework
 
 import (
 	"errors"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type Configuration map[Key]Instance
@@ -64,7 +62,7 @@ func GetIntegerWithDefault(key Key, value int) int {
 func UpdateLocalConfig(key Key, value interface{}, newVersion int) (bool, int) {
 	instance, err := GetInstance(key)
 	if err != nil {
-		log.Fatal(err)
+		GetLogger().Fatal(err)
 		return false, -1
 	}
 	if newVersion < instance.Version {

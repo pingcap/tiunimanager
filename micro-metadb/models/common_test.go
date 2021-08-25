@@ -2,7 +2,6 @@ package models
 
 import (
 	"github.com/google/uuid"
-	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
@@ -64,7 +63,7 @@ func TestMain(m *testing.M) {
 	if err == nil {
 		m.Run()
 	} else {
-		log.Error(err)
+		getLogger().Error(err)
 	}
 }
 

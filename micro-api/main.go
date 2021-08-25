@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
-	_ "github.com/pingcap/tiem/docs"
-	"github.com/pingcap/tiem/library/firstparty/client"
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/firstparty/framework"
-	framework2 "github.com/pingcap/tiem/library/framework"
-	"github.com/pingcap/tiem/micro-api/route"
-	cluster "github.com/pingcap/tiem/micro-cluster/proto"
+	_ "github.com/pingcap-inc/tiem/docs"
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/micro-api/route"
+	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // @title TiEM UI API
@@ -25,34 +24,33 @@ import (
 // @host localhost:8080
 // @BasePath /api/v1/
 func main() {
-	framework.NewDefaultFramework(framework2.ClusterService,
-		initClient,
+	f := framework.InitBaseFrameworkFromArgs(framework.MetaDBService,
 		initGinEngine,
 	)
 
-	//f.StartService()
+	f.PrepareClientHandler(map[framework.ServiceNameEnum]framework.ClientHandler{
+		framework.ClusterService: func(service micro.Service) error {
+			client.ClusterClient = clusterPb.NewClusterService(string(framework.ClusterService), service.Client())
+			return nil
+		},
+	})
+
+	f.StartService()
 }
 
-func initGinEngine(d *framework.DefaultServiceFramework) error {
+func initGinEngine(d *framework.BaseFramework) error {
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.New()
 
 	route.Route(g)
 
-	port := config.GetClientArgs().RestPort
-	if port <= 0 {
-		port = config.DefaultRestPort
-	}
+	port := d.GetServiceMeta().ServicePort
+
 	addr := fmt.Sprintf(":%d", port)
+
 	if err := g.Run(addr); err != nil {
-		d.GetDefaultLogger().Fatal(err)
+		d.GetLogger().Fatal(err)
 	}
 
-	return nil
-}
-
-func initClient(d *framework.DefaultServiceFramework) error {
-	srv := framework2.ClusterService.BuildMicroService(d.GetRegistryAddress()...)
-	client.ClusterClient = cluster.NewClusterService(framework2.ClusterService.ToString(), srv.Client())
 	return nil
 }

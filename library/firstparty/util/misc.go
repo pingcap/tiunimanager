@@ -23,8 +23,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/framework/config"
-	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"math/big"
 	"net"
 	"net/http"
@@ -84,7 +83,7 @@ func WithRecovery(exec func(), recoverFn func(r interface{})) {
 			recoverFn(r)
 		}
 		if r != nil {
-			logger2.GetLogger(config.KEY_FIRSTPARTY_LOG).Error("panic in the recoverable goroutine",
+			framework.GetLogger().Error("panic in the recoverable goroutine",
 				zap.Reflect("r", r),
 				zap.Stack("stack trace"))
 		}

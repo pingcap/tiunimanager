@@ -1,9 +1,8 @@
-package logger
+package framework
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/framework/args"
-	"github.com/pingcap-inc/tiem/library/framework/common"
+	common2 "github.com/pingcap-inc/tiem/library/common"
 	"io"
 	"os"
 	"path"
@@ -78,11 +77,11 @@ const (
 //	}
 //}
 
-func NewLogRecordFromArgs(args *args.ClientArgs) *LogRecord {
-	lr := &LogRecord {
+func NewLogRecordFromArgs(args *ClientArgs) *LogRecord {
+	lr := &LogRecord{
 		LogLevel: args.LogLevel,
 		LogOutput: "file",
-		LogFilePath: args.DataDir + common.LogDirPrefix + "default.log",
+		LogFilePath: args.DataDir + common2.LogDirPrefix + "default.log",
 		LogMaxSize:    512,
 		LogMaxAge:     30,
 		LogMaxBackups: 0,
@@ -146,11 +145,6 @@ func WithContext(ctx context.Context) *log.Entry {
 	} else {
 		return GetLogger().defaultLogEntry
 	}
-}
-
-func GetLogger() *LogRecord {
-	// todo get from framework
-	return nil
 }
 
 func (lr *LogRecord) Record(key string, value interface{}) *LogRecord {

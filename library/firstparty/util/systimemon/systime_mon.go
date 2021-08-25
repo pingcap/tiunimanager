@@ -15,8 +15,8 @@
 package systimemon
 
 import (
+	"github.com/pingcap-inc/tiem/library/framework"
 	config2 "github.com/pingcap-inc/tiem/library/framework/config"
-	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
 	"time"
 
 	"go.uber.org/zap"
@@ -24,7 +24,7 @@ import (
 
 // StartMonitor calls systimeErrHandler if system time jump backward.
 func StartMonitor(now func() time.Time, systimeErrHandler func(), successCallback func()) {
-	logger2.GetLogger(config2.KEY_FIRSTPARTY_LOG).Info("start system time monitor")
+	framework.GetLogger(config2.KEY_FIRSTPARTY_LOG).Info("start system time monitor")
 	tick := time.NewTicker(100 * time.Millisecond)
 	defer tick.Stop()
 	tickCount := 0
@@ -32,7 +32,7 @@ func StartMonitor(now func() time.Time, systimeErrHandler func(), successCallbac
 		last := now().UnixNano()
 		<-tick.C
 		if now().UnixNano() < last {
-			logger2.GetLogger(config2.KEY_FIRSTPARTY_LOG).Error("system time jump backward", zap.Int64("last", last))
+			framework.GetLogger(config2.KEY_FIRSTPARTY_LOG).Error("system time jump backward", zap.Int64("last", last))
 			systimeErrHandler()
 		}
 		// call successCallback per second.

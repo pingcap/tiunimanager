@@ -5,9 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	config2 "github.com/pingcap-inc/tiem/library/framework/config"
-	"github.com/pingcap-inc/tiem/library/framework/framework"
-	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"io"
 	"io/ioutil"
 	"os"
@@ -179,7 +177,7 @@ type TaskStatusMapValue struct {
 var glMgrTaskStatusCh chan TaskStatusMember
 var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
-var log *logger2.LogRecord
+var log *framework.LogRecord
 
 func TiupMgrInit() {
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
@@ -191,9 +189,8 @@ func TiupMgrInit() {
 	if len(configPath) == 0 {
 		configPath = "./tiupmgr.log"
 	}
-	framework.InitConfigForDev(framework.TiUPInternalMod)
 	// TODO: update log path using configPath if necessary
-	log = logger2.GetLogger(config2.KEY_TIUPLIB_LOG)
+	log = framework.GetLogger()
 }
 
 func assert(b bool) {
@@ -640,7 +637,7 @@ var glTiUPBinPath string
 
 func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
 	// init log
-	log = logger2.GetLogger(config2.KEY_CLUSTER_LOG)
+	log = framework.GetLogger()
 	glTiUPMgrPath = tiupMgrPath
 	glTiUPBinPath = tiupBinPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -679,7 +676,7 @@ func glMicroTaskStatusMapSyncer() {
 			}
 		}
 		glMicroTaskStatusMapMutex.Unlock()
-		log := logger2.WithContext(nil).WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
+		log := framework.WithContext(nil).WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
 			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,

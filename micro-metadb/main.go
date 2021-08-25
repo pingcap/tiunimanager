@@ -1,17 +1,23 @@
 package main
 
 import (
-	"github.com/pingcap-inc/tiem/library/firstparty/framework"
+	"github.com/asim/go-micro/v3"
+	"github.com/pingcap-inc/tiem/library/framework"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	dbService "github.com/pingcap-inc/tiem/micro-metadb/service"
 )
 
 func main() {
-	f := framework.NewDefaultFramework(framework.MetaDBService,
+	f := framework.InitBaseFrameworkFromArgs(framework.MetaDBService,
 		initSqliteDB,
 		initTables,
 		initTenantDataForDev,
 		initResourceDataForDev,
 	)
 
+	f.PrepareServiceHandler(func(service micro.Service) error {
+		return dbPb.RegisterTiEMDBServiceHandler(service.Server(), new(dbService.DBServiceHandler))
+	})
 
 	f.StartService()
 }

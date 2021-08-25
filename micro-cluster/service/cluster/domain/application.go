@@ -3,8 +3,6 @@ package domain
 import (
 	"context"
 	"errors"
-	config2 "github.com/pingcap-inc/tiem/library/framework/config"
-	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
@@ -14,12 +12,6 @@ import (
 	"path/filepath"
 	"strconv"
 )
-
-var log *logger2.LogRecord
-
-func InitDomainLogger(key config2.Key) {
-	log = logger2.GetLogger(key)
-}
 
 type ClusterAggregation struct {
 	Cluster 				*Cluster

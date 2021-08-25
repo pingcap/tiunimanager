@@ -73,7 +73,7 @@ func (*DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("failed to import host(%s) %s, %v", host.HostName, host.IP, err)
 		}
-		log.Warnln(rsp.Rs.Message)
+		getLogger().Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -101,7 +101,7 @@ func (*DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbPb.DBAddHos
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("failed to import hosts, %v", err)
 		}
-		log.Warnln(rsp.Rs.Message)
+		getLogger().Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -124,7 +124,7 @@ func (*DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRemoveHostR
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("failed to delete host(%s), %v", hostId, err)
 		}
-		log.Warnln(rsp.Rs.Message)
+		getLogger().Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -145,7 +145,7 @@ func (*DBServiceHandler) RemoveHostsInBatch(ctx context.Context, req *dbPb.DBRem
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("failed to delete host in batch, %v", err)
 		}
-		log.Warnln(rsp.Rs.Message)
+		getLogger().Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -201,7 +201,7 @@ func (*DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListHostsRequ
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("failed to list hosts, %v", err)
 		}
-		log.Warnln(rsp.Rs.Message)
+		getLogger().Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -230,7 +230,7 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDeta
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("failed to list hosts %s, %v", req.HostId, err)
 		}
-		log.Warnln(rsp.Rs.Message)
+		getLogger().Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -243,7 +243,7 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDeta
 }
 
 func (*DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DBPreAllocHostsRequest, rsp *dbPb.DBPreAllocHostsResponse) error {
-	log.Infof("db service receive alloc host in %s for %d x (%du%dg)", req.Req.FailureDomain, req.Req.Count, req.Req.CpuCores, req.Req.Memory)
+	getLogger().Infof("db service receive alloc host in %s for %d x (%du%dg)", req.Req.FailureDomain, req.Req.Count, req.Req.CpuCores, req.Req.Memory)
 	resources, err := models.PreAllocHosts(req.Req.FailureDomain, int(req.Req.Count), int(req.Req.CpuCores), int(req.Req.Memory))
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
@@ -256,7 +256,7 @@ func (*DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DBPreAlloc
 			rsp.Rs.Message = fmt.Sprintf("db service receive alloc host in %s for %d x (%du%dg) error, %v",
 				req.Req.FailureDomain, req.Req.Count, req.Req.CpuCores, req.Req.Memory, err)
 		}
-		log.Warnln(rsp.Rs.Message)
+		getLogger().Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -264,7 +264,7 @@ func (*DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DBPreAlloc
 
 	if len(resources) < int(req.Req.Count) {
 		errMsg := fmt.Sprintf("no enough host resources(%d/%d) in %s", len(resources), req.Req.Count, req.Req.FailureDomain)
-		log.Errorln(errMsg)
+		getLogger().Errorln(errMsg)
 		rsp.Rs.Code = int32(codes.ResourceExhausted)
 		rsp.Rs.Message = errMsg
 		return nil
@@ -311,7 +311,7 @@ func (*DBServiceHandler) LockHosts(ctx context.Context, req *dbPb.DBLockHostsReq
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("lock hosts failed, err: %v", err)
 		}
-		log.Warnln(rsp.Rs.Message)
+		getLogger().Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -346,7 +346,7 @@ func (*DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb.DBGetFa
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("get failure domain resources failed, err: %v", err)
 		}
-		log.Warnln(rsp.Rs.Message)
+		getLogger().Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -362,7 +362,7 @@ func (*DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb.DBGetFa
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("get failure domain resources failed, err: %v", err)
 		}
-		log.Warnln(rsp.Rs.Message)
+		getLogger().Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil

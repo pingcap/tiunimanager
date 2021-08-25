@@ -1,7 +1,6 @@
-package servicemeta
+package framework
 
 import (
-	"github.com/pingcap-inc/tiem/library/framework/args"
 	"strconv"
 	"strings"
 )
@@ -25,12 +24,12 @@ func (s *ServiceMeta) GetServiceAddress() string {
 	return s.ServiceHost + ":" + strconv.Itoa(s.ServicePort)
 }
 
-func NewServiceMetaFromArgs(serviceName ServiceNameEnum, args *args.ClientArgs) *ServiceMeta {
+func NewServiceMetaFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *ServiceMeta {
 	return &ServiceMeta{
-		ServiceName: serviceName,
+		ServiceName:     serviceName,
 		RegistryAddress: splitRegistryAddress(args.RegistryAddress),
-		ServicePort: args.Port,
-		ServiceHost: args.Host,
+		ServicePort:     args.Port,
+		ServiceHost:     args.Host,
 	}
 }
 

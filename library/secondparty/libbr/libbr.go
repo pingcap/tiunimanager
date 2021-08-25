@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
+	"github.com/pingcap-inc/tiem/library/framework"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"io"
 	"os"
@@ -146,7 +146,7 @@ type TaskStatusMember struct {
 //var glMgrTaskStatusCh chan TaskStatusMember
 //var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
-var log *logger2.LogRecord
+var log *framework.LogRecord
 
 var glMgrTaskStatusCh chan TaskStatusMember
 

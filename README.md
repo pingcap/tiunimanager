@@ -157,9 +157,9 @@ func CheckUser(ctx context.Context, name, passwd string) error {
 	log := logger.WithContext(ctx).WithField("models", "CheckUser").WithField("name", name)
 	u, err := FindUserByName(ctx, name)
 	if err == nil {
-		log.Info("user:", u)
+		getLogger().Info("user:", u)
 		if nil == bcrypt.CompareHashAndPassword([]byte(u.FinalHash), []byte(u.Salt+passwd)) {
-			log.Debug("check success")
+			getLogger().Debug("check success")
 			return nil
 		} else {
 			return fmt.Errorf("failed")
@@ -175,13 +175,13 @@ func init() {
     var err error
     dbFile := "tiem.sqlite.db"
     log := logger.WithContext(nil).WithField("dbFile", dbFile)
-    log.Debug("init: sqlite.open")
+    getLogger().Debug("init: sqlite.open")
     db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
     /* ... */
 }
 ```
 
-Basically, use `logger.WithContext(ctx)` to get the `log` if there is a valid ctx to inherit, or otherwise, use `logger.WithContext(nil)` to get the default log.
+Basically, use `logger.WithContext(ctx)` to get the `log` if there is a valid ctx to inherit, or otherwise, use `logger.WithContext(nil)` to get the default getLogger().
 
 ```go
 func (d *Db) CheckUser(ctx context.Context, req *dbPb.CheckUserRequest, rsp *dbPb.CheckUserResponse) error {
@@ -189,9 +189,9 @@ func (d *Db) CheckUser(ctx context.Context, req *dbPb.CheckUserRequest, rsp *dbP
 	log := logger.WithContext(ctx)
 	e := models.CheckUser(ctx, req.Name, req.Passwd)
 	if e == nil {
-		log.Debug("CheckUser success")
+		getLogger().Debug("CheckUser success")
 	} else {
-		log.Errorf("CheckUser failed: %s", e)
+		getLogger().Errorf("CheckUser failed: %s", e)
 		rsp.ErrCode = 1
 		rsp.ErrStr = e.Error()
 	}

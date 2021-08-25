@@ -1,4 +1,4 @@
-package args
+package framework
 
 import (
 	"github.com/micro/cli/v2"

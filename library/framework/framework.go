@@ -9,13 +9,6 @@ import (
 	"github.com/asim/go-micro/v3"
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/transport"
-	"github.com/pingcap-inc/tiem/library/firstparty/util"
-	"github.com/pingcap-inc/tiem/library/framework/args"
-	"github.com/pingcap-inc/tiem/library/framework/certificate"
-	"github.com/pingcap-inc/tiem/library/framework/config"
-	"github.com/pingcap-inc/tiem/library/framework/logger"
-	"github.com/pingcap-inc/tiem/library/framework/servicemeta"
-	"github.com/pingcap-inc/tiem/library/framework/tracer"
 )
 
 var Current Framework
@@ -24,15 +17,22 @@ type Framework interface {
 	Init() error
 	Shutdown() error
 
-	GetClientArgs() *args.ClientArgs
-	GetConfiguration() *config.Configuration
-	GetLogger() *logger.LogRecord
-	GetTracer() *tracer.Tracer
+	GetClientArgs() *ClientArgs
+	GetConfiguration() *Configuration
+	GetLogger() *LogRecord
+	GetTracer() *Tracer
 
-	GetServiceMeta() servicemeta.ServiceMeta
+	GetServiceMeta() ServiceMeta
 	StartService() error
 	StopService() error
+}
 
+func GetLogger() *LogRecord {
+	if Current != nil {
+		return Current.GetLogger()
+	} else {
+		panic("framework not ")
+	}
 }
 
 type Opt func(d *BaseFramework) error
@@ -40,80 +40,88 @@ type ServiceHandler func(service micro.Service) error
 type ClientHandler func(service micro.Service) error
 
 type BaseFramework struct {
-	args          *args.ClientArgs
-	configuration *config.Configuration
-	log           *logger.LogRecord
-	trace         *tracer.Tracer
-	certificate   *certificate.CertificateInfo
+	args          *ClientArgs
+	configuration *Configuration
+	log           *LogRecord
+	trace         *Tracer
+	certificate   *CertificateInfo
 
-	serviceMeta  *servicemeta.ServiceMeta
+	serviceMeta  *ServiceMeta
 	microService micro.Service
 
 	initOpts 		[]Opt
 	shutdownOpts 	[]Opt
 
-	clientHandler  map[*servicemeta.ServiceMeta]ClientHandler
+	clientHandler  map[ServiceNameEnum]ClientHandler
 	serviceHandler ServiceHandler
 }
 
-func InitBaseFrameworkFromArgs(serviceName servicemeta.ServiceNameEnum, opts ...Opt) *BaseFramework {
+func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
 	f := new(BaseFramework)
 
-	f.args = new(args.ClientArgs)
+	f.args = new(ClientArgs)
 	// receive all falgs
-	micro.Flags(args.AllFlags(f.args)...)
+	micro.Flags(AllFlags(f.args)...)
 
-	f.serviceMeta = servicemeta.NewServiceMetaFromArgs(serviceName, f.args)
-	f.log = logger.NewLogRecordFromArgs(f.args)
-	f.certificate = certificate.NewCertificateFromArgs(f.args)
-	f.trace = tracer.NewTracerFromArgs(f.args)
+	f.serviceMeta = NewServiceMetaFromArgs(serviceName, f.args)
+	f.log = NewLogRecordFromArgs(f.args)
+	f.certificate = NewCertificateFromArgs(f.args)
+	f.trace = NewTracerFromArgs(f.args)
 	// now empty
-	f.configuration = &config.Configuration{}
+	f.configuration = &Configuration{}
 
 	f.Init()
 
 	return f
 }
 
+func (b *BaseFramework) GetDataDir() string {
+	return b.args.DataDir
+}
+
+func (b *BaseFramework) GetDeployDir() string {
+	return b.args.DeployDir
+}
+
 func (b *BaseFramework) PrepareServiceHandler(handler ServiceHandler) {
 	b.serviceHandler = handler
 }
 
-func (b *BaseFramework) PrepareClientHandler(clientHandlerMap map[*servicemeta.ServiceMeta]ClientHandler) {
+func (b *BaseFramework) PrepareClientHandler(clientHandlerMap map[ServiceNameEnum]ClientHandler) {
 	b.clientHandler = clientHandlerMap
 }
 
 func (b *BaseFramework) Init() error {
 	for _, opt := range b.initOpts {
-		util.AssertNoErr(opt(b))
+		AssertNoErr(opt(b))
 	}
 	return nil
 }
 
 func (b *BaseFramework) Shutdown() error {
 	for _, opt := range b.shutdownOpts {
-		util.AssertNoErr(opt(b))
+		AssertNoErr(opt(b))
 	}
 	return nil
 }
 
-func (b *BaseFramework) GetClientArgs() *args.ClientArgs {
+func (b *BaseFramework) GetClientArgs() *ClientArgs {
 	return b.args
 }
 
-func (b *BaseFramework) GetConfiguration() *config.Configuration {
+func (b *BaseFramework) GetConfiguration() *Configuration {
 	return b.configuration
 }
 
-func (b *BaseFramework) GetLogger() *logger.LogRecord {
+func (b *BaseFramework) GetLogger() *LogRecord {
 	return b.log
 }
 
-func (b *BaseFramework) GetTracer() *tracer.Tracer {
+func (b *BaseFramework) GetTracer() *Tracer {
 	return b.trace
 }
 
-func (b *BaseFramework) GetServiceMeta() *servicemeta.ServiceMeta {
+func (b *BaseFramework) GetServiceMeta() *ServiceMeta {
 	return b.serviceMeta
 }
 
@@ -125,13 +133,12 @@ func (b *BaseFramework) initMicroClient() {
 		}
 		tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 		srv := micro.NewService(
-			micro.Name(string(client.ServiceName)),
+			micro.Name(string(client)),
 			micro.WrapHandler(prometheus.NewHandlerWrapper()),
 			micro.WrapClient(opentracing.NewClientWrapper(*b.trace)),
 			micro.WrapHandler(opentracing.NewHandlerWrapper(*b.trace)),
 			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
-			micro.Address(client.GetServiceAddress()),
-			micro.Registry(etcd.NewRegistry(registry.Addrs(client.RegistryAddress...))),
+			micro.Registry(etcd.NewRegistry(registry.Addrs(b.GetServiceMeta().RegistryAddress...))),
 		)
 		srv.Init()
 		handler(srv)
@@ -172,24 +179,6 @@ func (b *BaseFramework) StartService() error {
 }
 
 /*func NewDefaultFramework(serviceName MicroServiceEnum, initOpt ...Opt) *DefaultServiceFramework {
-	p := &DefaultServiceFramework{
-		serviceEnum: serviceName,
-		initOpts: []Opt{
-			initConfig,
-			initCurrentLogger,
-			initKnowledge,
-			initTracer,
-			initShutdownFunc,
-		},
-	}
-
-	p.initOpts = append(p.initOpts, initOpt...)
-
-	p.Init()
-
-	f = p
-	return p
-}
 
 func (p *DefaultServiceFramework) StartService() error {
 	p.service = p.serviceEnum.initMicroService(p.GetRegistryAddress()...)
@@ -227,7 +216,7 @@ func (p *DefaultServiceFramework) StartService() error {
 func initCurrentLogger(p *DefaultServiceFramework) error {
 	p.log = p.serviceEnum.buildLogger()
 	// use log
-	p.log.Debug("init logger completed!")
+	p.getLogger().Debug("init logger completed!")
 	return nil
 }
 

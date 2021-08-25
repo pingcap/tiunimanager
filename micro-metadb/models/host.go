@@ -3,8 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
-	config2 "github.com/pingcap-inc/tiem/library/framework/config"
-	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"time"
 
 	"github.com/google/uuid"
@@ -279,7 +278,7 @@ func LockHosts(resources []ResourceLock) (err error) {
 		if _, ok := setUpdate[v.HostId]; !ok {
 			if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host).Error; err != nil {
 				tx.Rollback()
-				logger2.GetLogger(config2.KEY_METADB_LOG).Errorf("set for update host %s failed", v.HostId)
+				framework.GetLogger().Errorf("set for update host %s failed", v.HostId)
 				return err
 			}
 			setUpdate[v.HostId] = &HostLocked{

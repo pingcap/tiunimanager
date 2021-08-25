@@ -1,9 +1,7 @@
-package tracer
+package framework
 
 import (
-	"github.com/pingcap-inc/tiem/library/framework/args"
 	"io"
-	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,10 +12,10 @@ import (
 
 type Tracer opentracing.Tracer
 
-func NewTracerFromArgs(args *args.ClientArgs) *Tracer {
+func NewTracerFromArgs(args *ClientArgs) *Tracer {
 	jaegerTracer, _, err := NewJaegerTracer("tiem", args.TracerAddress)
 	if err != nil {
-		log.Fatal(err)
+		panic("init tracer failed")
 	}
 	opentracing.SetGlobalTracer(jaegerTracer)
 	return (*Tracer)(&jaegerTracer)

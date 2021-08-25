@@ -16,8 +16,8 @@ package timeutil
 
 import (
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/framework"
 	config2 "github.com/pingcap-inc/tiem/library/framework/config"
-	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
 	"os"
 	"path/filepath"
 	"strings"
@@ -86,7 +86,7 @@ func InferSystemTZ() string {
 			if strings.Contains(path, "posixrules") {
 				path, err1 = inferOneStepLinkForPath("/etc/localtime")
 				if err1 != nil {
-					logger2.GetLogger(config2.KEY_FIRSTPARTY_LOG).Error("locate timezone files failed", zap.Error(err1))
+					framework.GetLogger(config2.KEY_FIRSTPARTY_LOG).Error("locate timezone files failed", zap.Error(err1))
 					return ""
 				}
 			}
@@ -94,9 +94,9 @@ func InferSystemTZ() string {
 			if err2 == nil {
 				return name
 			}
-			logger2.GetLogger(config2.KEY_FIRSTPARTY_LOG).Error("infer timezone failed", zap.Error(err2))
+			framework.GetLogger(config2.KEY_FIRSTPARTY_LOG).Error("infer timezone failed", zap.Error(err2))
 		}
-		logger2.GetLogger(config2.KEY_FIRSTPARTY_LOG).Error("locate timezone files failed", zap.Error(err1))
+		framework.GetLogger(config2.KEY_FIRSTPARTY_LOG).Error("locate timezone files failed", zap.Error(err1))
 	case tz != "" && tz != "UTC":
 		_, err := time.LoadLocation(tz)
 		if err == nil {

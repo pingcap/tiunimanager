@@ -37,7 +37,7 @@ const (
 func CheckAndInitTempDir() (err error) {
 	_, err, _ = sf.Do("tempDir", func() (value interface{}, err error) {
 		if !checkTempDirExist() {
-			// TODO log.Info("Tmp-storage-path not found. Try to initialize TempDir.")
+			// TODO getLogger().Info("Tmp-storage-path not found. Try to initialize TempDir.")
 			err = InitializeTempDir()
 		}
 		return
@@ -68,10 +68,10 @@ func InitializeTempDir() error {
 	if err != nil {
 		switch err {
 		//case fslock.ErrLockHeld:
-			// TODO log.Error("The current temporary storage dir has been occupied by another instance, "+
+			// TODO getLogger().Error("The current temporary storage dir has been occupied by another instance, "+
 			//	"check tmp-storage-path config and make sure they are different.", zap.String("TempStoragePath", tempDir), zap.Error(err))
 		default:
-			// TODO log.Error("Failed to acquire exclusive lock on the temporary storage dir.", zap.String("TempStoragePath", tempDir), zap.Error(err))
+			// TODO getLogger().Error("Failed to acquire exclusive lock on the temporary storage dir.", zap.String("TempStoragePath", tempDir), zap.Error(err))
 		}
 		return err
 	}
@@ -92,7 +92,7 @@ func InitializeTempDir() error {
 				}
 				err := os.RemoveAll(filepath.Join(tempDir, subDir.Name()))
 				if err != nil {
-					// TODO log.Warn("Remove temporary file error",
+					// TODO getLogger().Warn("Remove temporary file error",
 					//	zap.String("tempStorageSubDir", filepath.Join(tempDir, subDir.Name())), zap.Error(err))
 				}
 			}

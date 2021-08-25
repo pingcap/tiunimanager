@@ -1,39 +1,45 @@
 package main
 
 import (
-	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
-	dbclient "github.com/pingcap-inc/tiem/library/firstparty/client"
-	"github.com/pingcap-inc/tiem/library/firstparty/framework"
+	"github.com/asim/go-micro/v3"
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
+	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
 	tenantAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/adapt"
-	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 func main() {
-	f := framework.NewDefaultFramework(framework.ClusterService,
+	f := framework.InitBaseFrameworkFromArgs(framework.MetaDBService,
 		initLibForDev,
 		initPort,
-		initClient,
 	)
+
+	f.PrepareServiceHandler(func(service micro.Service) error {
+		return clusterPb.RegisterClusterServiceHandler(service.Server(), new(clusterService.ClusterServiceHandler))
+	})
+
+	f.PrepareClientHandler(map[framework.ServiceNameEnum]framework.ClientHandler{
+		framework.MetaDBService: func(service micro.Service) error {
+			client.DBClient = dbPb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
+			return nil
+		},
+	})
 
 	f.StartService()
 }
 
-func initClient(d *framework.DefaultServiceFramework) error {
-	srv := framework.MetaDBService.BuildMicroService(d.GetRegistryAddress()...)
-	dbclient.DBClient = db.NewTiEMDBService(framework.MetaDBService.ToString(), srv.Client())
+func initLibForDev(f *framework.BaseFramework) error {
+	libtiup.MicroInit(f.GetDeployDir() + "/tiupcmd", "tiup", "")
+	libbr.MicroInit(f.GetDeployDir() + "/brcmd", "")
 	return nil
 }
 
-func initLibForDev(d *framework.DefaultServiceFramework) error {
-	libtiup.MicroInit("./../bin/tiupcmd", "tiup", "")
-	libbr.MicroInit("./../bin/brcmd", "")
-	return nil
-}
-
-func initPort(d *framework.DefaultServiceFramework) error {
+func initPort(f *framework.BaseFramework) error {
 	tenantAdapt.InjectionMetaDbRepo()
 	clusterAdapt.InjectionMetaDbRepo()
 	return nil

@@ -1,14 +1,14 @@
-package logger
+package framework
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"math"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 )
 
 // Codes below in this file is derived from github.com/toorop/gin-logrus (which is licensed under MIT license):
@@ -34,7 +34,7 @@ func GenGinLogger(notLogged ...string) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		// other handler can change c.Path so:
-		logger := LogRecord{defaultLogEntry: WithContext(c)}
+
 		path := c.Request.URL.Path
 		start := time.Now()
 		c.Next()
@@ -53,7 +53,7 @@ func GenGinLogger(notLogged ...string) gin.HandlerFunc {
 			return
 		}
 
-		entry := logger.Records(log.Fields{
+		entry := GetLogger().Records(log.Fields{
 			"hostname":   hostname,
 			"statusCode": statusCode,
 			"latency":    latency, // time to process

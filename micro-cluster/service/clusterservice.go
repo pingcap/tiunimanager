@@ -2,8 +2,7 @@ package service
 
 import (
 	"context"
-	config2 "github.com/pingcap-inc/tiem/library/framework/config"
-	logger2 "github.com/pingcap-inc/tiem/library/framework/logger"
+	"github.com/pingcap-inc/tiem/library/framework"
 	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
 	"net/http"
 	"strconv"
@@ -22,20 +21,17 @@ var BizErrorResponseStatus = &clusterPb.ResponseStatusDTO{Code: 1}
 
 type ClusterServiceHandler struct{}
 
-var log *logger2.LogRecord
-
-func InitClusterLogger(key config2.Key) {
-	log = logger2.GetLogger(key)
-	domain.InitDomainLogger(key)
+func getLogger() *framework.LogRecord {
+	return framework.GetLogger()
 }
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterPb.ClusterCreateReqDTO, resp *clusterPb.ClusterCreateRespDTO) (err error) {
-	log.Info("create cluster")
+	getLogger().Info("create cluster")
 	clusterAggregation, err := domain.CreateCluster(req.GetOperator(), req.GetCluster(), req.GetDemands())
 
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -48,11 +44,10 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterPb
 }
 
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterPb.ClusterQueryReqDTO, resp *clusterPb.ClusterQueryRespDTO) (err error) {
-	log.Info("query cluster")
+	getLogger().Info("query cluster")
 	clusters, total, err := domain.ListCluster(req.Operator, req)
 	if err != nil {
-		log.Info(err)
-
+		getLogger().Info(err)
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -70,12 +65,12 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterPb.
 }
 
 func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterPb.ClusterDeleteReqDTO, resp *clusterPb.ClusterDeleteRespDTO) (err error) {
-	log.Info("delete cluster")
+	getLogger().Info("delete cluster")
 
 	clusterAggregation, err := domain.DeleteCluster(req.GetOperator(), req.GetClusterId())
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -86,13 +81,13 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterPb
 }
 
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterPb.ClusterDetailReqDTO, resp *clusterPb.ClusterDetailRespDTO) (err error) {
-	log.Info("detail cluster")
+	getLogger().Info("detail cluster")
 
 	cluster, err := domain.GetClusterDetail(req.Operator, req.ClusterId)
 
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -105,12 +100,12 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterPb
 }
 
 func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterPb.CreateBackupRequest, response *clusterPb.CreateBackupResponse) (err error) {
-	log.Info("backup cluster")
+	getLogger().Info("backup cluster")
 
 	cluster, err := domain.Backup(request.Operator, request.ClusterId)
 
 	if err != nil {
-		log.Info(err)
+		getLogger().Info(err)
 		// todo
 		return nil
 	} else {
@@ -121,12 +116,12 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 }
 
 func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request *clusterPb.RecoverBackupRequest, response *clusterPb.RecoverBackupResponse) (err error) {
-	log.Info("recover cluster")
+	getLogger().Info("recover cluster")
 
 	cluster, err := domain.Recover(request.Operator, request.ClusterId, request.BackupRecordId)
 
 	if err != nil {
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
@@ -140,7 +135,7 @@ func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *
 	_, err = dbClient.DBClient.DeleteBackupRecord(context.TODO(), &dbPb.DBDeleteBackupRecordRequest{Id: request.GetBackupRecordId()})
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
@@ -154,7 +149,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return err
 	}
 
@@ -180,7 +175,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return err
 	}
 
@@ -201,7 +196,7 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 	})
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
@@ -239,7 +234,7 @@ func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *clu
 	content, err := domain.GetParameters(request.Operator, request.ClusterId)
 
 	if err != nil {
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
@@ -256,7 +251,7 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
@@ -270,7 +265,7 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *clusterPb.DescribeDashboardRequest, response *clusterPb.DescribeDashboardResponse) (err error) {
 	info, err := domain.DecribeDashboard(request.Operator, request.ClusterId)
 	if err != nil {
-		log.Error(err)
+		getLogger().Error(err)
 		return err
 	}
 
@@ -349,10 +344,6 @@ func (*ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterPb
 	}
 
 	return nil
-}
-
-func InitHostLogger(key config2.Key) {
-	host.InitLogger(key)
 }
 
 func (*ClusterServiceHandler) ImportHost(ctx context.Context, in *clusterPb.ImportHostRequest, out *clusterPb.ImportHostResponse) error {

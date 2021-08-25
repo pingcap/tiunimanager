@@ -52,7 +52,7 @@ func CopyHostFromRsp(src *cluster.HostInfo, dst *HostInfo) {
 }
 
 func genHostSpec(cpuCores int32, mem int32) string {
-	return fmt.Sprintf("%dU%dG", cpuCores, mem)
+	return fmt.Sprintf("%dC%dG", cpuCores, mem)
 }
 
 func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
@@ -435,11 +435,16 @@ func copyAllocToReq(src []Allocation, dst *[]*cluster.AllocationReq) {
 
 func copyAllocFromRsp(src []*cluster.AllocHost, dst *[]AllocateRsp) {
 	for i, host := range src {
+		plainPasswd, err := crypto.AesDecryptCFB(host.Passwd)
+		if err != nil {
+			// AllocHosts API is for internal testing, so just panic if something wrong
+			panic(err)
+		}
 		*dst = append(*dst, AllocateRsp{
 			HostName: host.HostName,
 			Ip:       host.Ip,
 			UserName: host.UserName,
-			Passwd:   host.Passwd,
+			Passwd:   plainPasswd,
 			CpuCores: host.CpuCores,
 			Memory:   host.Memory,
 		})

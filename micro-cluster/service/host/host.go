@@ -224,7 +224,7 @@ func CheckDetails(ctx context.Context, in *hostPb.CheckDetailsRequest, out *host
 }
 
 func getHostSpec(cpuCores int32, mem int32) string {
-	return fmt.Sprintf("%dU%dG", cpuCores, mem)
+	return fmt.Sprintf("%dC%dG", cpuCores, mem)
 }
 
 func mergeReqs(zonesReqs map[string]map[string]*dbPb.DBPreAllocHostsRequest, reqs []*hostPb.AllocationReq) {

@@ -11,17 +11,20 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
+
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
-	crypto "github.com/pingcap/tiem/library/thirdparty/encrypt"
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-cluster/client"
-	manager "github.com/pingcap/tiem/micro-cluster/proto"
-	"github.com/pingcap/tiem/micro-metadb/service"
+
+	crypto "github.com/pingcap-inc/tiem/library/thirdparty/encrypt"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/micro-metadb/service"
+
 	"google.golang.org/grpc/codes"
 )
 
-func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
+func CopyHostFromRsp(src *cluster.HostInfo, dst *HostInfo) {
 	dst.HostId = src.HostId
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
@@ -52,7 +55,7 @@ func genHostSpec(cpuCores int32, mem int32) string {
 	return fmt.Sprintf("%dU%dG", cpuCores, mem)
 }
 
-func copyHostToReq(src *HostInfo, dst *manager.HostInfo) error {
+func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
 	dst.UserName = src.UserName
@@ -74,7 +77,7 @@ func copyHostToReq(src *HostInfo, dst *manager.HostInfo) error {
 	dst.Purpose = src.Purpose
 
 	for _, v := range src.Disks {
-		dst.Disks = append(dst.Disks, &manager.Disk{
+		dst.Disks = append(dst.Disks, &cluster.Disk{
 			Name:     v.Name,
 			Capacity: v.Capacity,
 			Status:   v.Status,
@@ -84,19 +87,19 @@ func copyHostToReq(src *HostInfo, dst *manager.HostInfo) error {
 	return nil
 }
 
-func doImport(c *gin.Context, host *HostInfo) (rsp *manager.ImportHostResponse, err error) {
-	importReq := manager.ImportHostRequest{}
-	importReq.Host = new(manager.HostInfo)
+func doImport(c *gin.Context, host *HostInfo) (rsp *cluster.ImportHostResponse, err error) {
+	importReq := cluster.ImportHostRequest{}
+	importReq.Host = new(cluster.HostInfo)
 	err = copyHostToReq(host, importReq.Host)
 	if err != nil {
 		return nil, err
 	}
-	return client.ManagerClient.ImportHost(c, &importReq)
+	return client.ClusterClient.ImportHost(c, &importReq)
 }
 
-func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *manager.ImportHostsInBatchResponse, err error) {
-	importReq := manager.ImportHostsInBatchRequest{}
-	importReq.Hosts = make([]*manager.HostInfo, len(hosts))
+func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *cluster.ImportHostsInBatchResponse, err error) {
+	importReq := cluster.ImportHostsInBatchRequest{}
+	importReq.Hosts = make([]*cluster.HostInfo, len(hosts))
 	var userName, passwd string
 	for i, host := range hosts {
 		if i == 0 {
@@ -107,14 +110,14 @@ func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *manager.ImportHostsI
 				return nil, errors.New(errMsg)
 			}
 		}
-		importReq.Hosts[i] = new(manager.HostInfo)
+		importReq.Hosts[i] = new(cluster.HostInfo)
 		err = copyHostToReq(host, importReq.Hosts[i])
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return client.ManagerClient.ImportHostsInBatch(c, &importReq)
+	return client.ClusterClient.ImportHostsInBatch(c, &importReq)
 }
 
 // ImportHost 导入主机接口
@@ -248,15 +251,15 @@ func ListHost(c *gin.Context) {
 		return
 	}
 
-	listHostReq := manager.ListHostsRequest{
+	listHostReq := cluster.ListHostsRequest{
 		Purpose: hostQuery.Purpose,
 		Status:  int32(hostQuery.Status),
 	}
-	listHostReq.PageReq = new(manager.PageDTO)
+	listHostReq.PageReq = new(cluster.PageDTO)
 	listHostReq.PageReq.Page = int32(hostQuery.Page)
 	listHostReq.PageReq.PageSize = int32(hostQuery.PageSize)
 
-	rsp, err := client.ManagerClient.ListHost(c, &listHostReq)
+	rsp, err := client.ClusterClient.ListHost(c, &listHostReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -288,11 +291,11 @@ func HostDetails(c *gin.Context) {
 
 	hostId := c.Param("hostId")
 
-	HostDetailsReq := manager.CheckDetailsRequest{
+	HostDetailsReq := cluster.CheckDetailsRequest{
 		HostId: hostId,
 	}
 
-	rsp, err := client.ManagerClient.CheckDetails(c, &HostDetailsReq)
+	rsp, err := client.ClusterClient.CheckDetails(c, &HostDetailsReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -320,11 +323,11 @@ func RemoveHost(c *gin.Context) {
 
 	hostId := c.Param("hostId")
 
-	RemoveHostReq := manager.RemoveHostRequest{
+	RemoveHostReq := cluster.RemoveHostRequest{
 		HostId: hostId,
 	}
 
-	rsp, err := client.ManagerClient.RemoveHost(c, &RemoveHostReq)
+	rsp, err := client.ClusterClient.RemoveHost(c, &RemoveHostReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -375,11 +378,11 @@ func RemoveHosts(c *gin.Context) {
 		return
 	}
 
-	RemoveHostsReq := manager.RemoveHostsInBatchRequest{
+	RemoveHostsReq := cluster.RemoveHostsInBatchRequest{
 		HostIds: hostIds,
 	}
 
-	rsp, err := client.ManagerClient.RemoveHostsInBatch(c, &RemoveHostsReq)
+	rsp, err := client.ClusterClient.RemoveHostsInBatch(c, &RemoveHostsReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -419,9 +422,9 @@ func DownloadHostTemplateFile(c *gin.Context) {
 	c.File(filePath)
 }
 
-func copyAllocToReq(src []Allocation, dst *[]*manager.AllocationReq) {
+func copyAllocToReq(src []Allocation, dst *[]*cluster.AllocationReq) {
 	for _, req := range src {
-		*dst = append(*dst, &manager.AllocationReq{
+		*dst = append(*dst, &cluster.AllocationReq{
 			FailureDomain: req.FailureDomain,
 			CpuCores:      req.CpuCores,
 			Memory:        req.Memory,
@@ -430,7 +433,7 @@ func copyAllocToReq(src []Allocation, dst *[]*manager.AllocationReq) {
 	}
 }
 
-func copyAllocFromRsp(src []*manager.AllocHost, dst *[]AllocateRsp) {
+func copyAllocFromRsp(src []*cluster.AllocHost, dst *[]AllocateRsp) {
 	for i, host := range src {
 		*dst = append(*dst, AllocateRsp{
 			HostName: host.HostName,
@@ -465,12 +468,12 @@ func AllocHosts(c *gin.Context) {
 		return
 	}
 
-	allocReq := manager.AllocHostsRequest{}
+	allocReq := cluster.AllocHostsRequest{}
 	copyAllocToReq(allocation.PdReq, &allocReq.PdReq)
 	copyAllocToReq(allocation.TidbReq, &allocReq.TidbReq)
 	copyAllocToReq(allocation.TikvReq, &allocReq.TikvReq)
 	//fmt.Println(allocReq.PdReq, allocReq.TidbReq, allocReq.TikvReq)
-	rsp, err := client.ManagerClient.AllocHosts(c, &allocReq)
+	rsp, err := client.ClusterClient.AllocHosts(c, &allocReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -512,11 +515,11 @@ func GetFailureDomain(c *gin.Context) {
 		return
 	}
 
-	GetDoaminReq := manager.GetFailureDomainRequest{
+	GetDoaminReq := cluster.GetFailureDomainRequest{
 		FailureDomainType: int32(domain),
 	}
 
-	rsp, err := client.ManagerClient.GetFailureDomain(c, &GetDoaminReq)
+	rsp, err := client.ClusterClient.GetFailureDomain(c, &GetDoaminReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return

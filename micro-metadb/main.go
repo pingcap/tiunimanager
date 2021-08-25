@@ -1,14 +1,16 @@
 package main
 
 import (
-	_ "github.com/asim/go-micro/plugins/registry/etcd/v3"
-	"github.com/pingcap/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/firstparty/framework"
 )
 
 func main() {
-	initConfig()
-	initLogger(config.KEY_METADB_LOG)
-	initTracer()
-	initSqliteDB()
-	initService()
+	f := framework.NewDefaultFramework(framework.MetaDBService,
+		initSqliteDB,
+		initTables,
+		initTenantDataForDev,
+		initResourceDataForDev,
+	)
+
+	f.StartService()
 }

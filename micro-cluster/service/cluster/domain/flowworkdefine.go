@@ -1,7 +1,7 @@
 package domain
 
 import (
-	copywriting2 "github.com/pingcap/tiem/library/copywriting"
+	copywriting2 "github.com/pingcap-inc/tiem/library/copywriting"
 )
 
 var FlowWorkDefineMap = map[string]*FlowWorkDefine{

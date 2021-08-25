@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
-	hostPb "github.com/pingcap/tiem/micro-cluster/proto"
-	"github.com/pingcap/tiem/micro-metadb/client"
-	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
+
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	hostPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"google.golang.org/grpc/codes"
 )
 

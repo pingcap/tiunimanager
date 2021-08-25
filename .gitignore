@@ -3,7 +3,8 @@
 .idea/
 data.etcd1/
 micro-metadb/tiem.sqlite.db
-logs/
 /micro-cluster/tiupmgr/tiupmgr
 /tiem.sqlite.db
 /micro-cluster/brmgr/brmgr
+/bin
+/logs/

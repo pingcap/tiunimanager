@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/asim/go-micro/v3/client"
-	dbclient "github.com/pingcap/tiem/micro-metadb/client"
-	db "github.com/pingcap/tiem/micro-metadb/proto"
+	dbclient "github.com/pingcap-inc/tiem/library/firstparty/client"
+	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 type DBFakeService struct {

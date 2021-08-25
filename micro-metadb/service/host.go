@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pingcap/tiem/library/knowledge"
+	"github.com/pingcap-inc/tiem/library/knowledge"
 
-	"github.com/pingcap/tiem/micro-metadb/models"
+	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 type FailureDomain int32

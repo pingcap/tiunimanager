@@ -185,7 +185,7 @@ upload_coverage: SHELL:=/bin/bash
 upload_coverage:
 ifeq ("$(TRAVIS_COVERAGE)", "1")
 	mv overalls.coverprofile coverage.txt
-	bash <(curl -s https://codecov.io/bash)
+	bash <(curl -s https://codecov.io/bash) -t $(CODECOV_TOKEN)
 endif
 
 test: failpoint-enable
@@ -193,16 +193,16 @@ ifeq ("$(TRAVIS_COVERAGE)", "1")
 	@echo "Running in TRAVIS_COVERAGE mode."
 	$(GO) get github.com/go-playground/overalls
 	@export log_level=info; \
-	$(OVERALLS) -project=github.com/pingcap/tiem\
+	$(OVERALLS) -project=github.com/pingcap-inc/tiem\
 			-covermode=count \
-			-ignore='.git,vendor,cmd,docs,tests,LICENSES' \
+			-ignore='.git,vendor,cmd,docs,proto,tests,LICENSES' \
 			-concurrency=4 \
 			-- -coverpkg=./... \
 			|| { $(FAILPOINT_DISABLE); exit 1; }
 else
 	@echo "Running in native mode."
 	@export log_level=info; export TZ='Asia/Shanghai'; \
-	$(GOTEST) -ldflags '$(TEST_LDFLAGS)' $(EXTRA_TEST_ARGS) -v -cover $(PACKAGES_WITHOUT_BR) -check.p true > gotest.log || { $(FAILPOINT_DISABLE); cat 'gotest.log'; exit 1; }
+	$(GOTEST) -ldflags '$(TEST_LDFLAGS)' $(EXTRA_TEST_ARGS) -v -cover $(PACKAGES) -check.p true > gotest.log || { $(FAILPOINT_DISABLE); cat 'gotest.log'; exit 1; }
 	@echo "timeout-check"
 	grep 'PASS:' gotest.log | go run build_helper/check-timeout.go || { $(FAILPOINT_DISABLE); exit 1; }
 endif
@@ -219,10 +219,10 @@ endif
 #	@$(FAILPOINT_DISABLE)
 #
 
-failpoint-enable: bin/failpoint-ctl
+failpoint-enable: build_failpoint_ctl
 # Converting gofail failpoints...
 	@$(FAILPOINT_ENABLE)
 
-failpoint-disable: bin/failpoint-ctl
+failpoint-disable: build_failpoint_ctl
 # Restoring gofail failpoints...
 	@$(FAILPOINT_DISABLE)

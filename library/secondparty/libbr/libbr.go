@@ -8,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/pingcap/tiem/library/firstparty/config"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
-	"github.com/pingcap/tiem/micro-metadb/client"
-	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"io"
 	"os"
 	"os/exec"
@@ -192,7 +192,7 @@ func BrMgrInit() {
 	if len(configPath) == 0 {
 		configPath = "./brmgr.log"
 	}
-	config.InitForMonolith()
+	config.InitConfigForDev(config.BRInternalMod)
 	// TODO: update log path using configPath if necessary
 	log = logger.GetLogger(config.KEY_BRLIB_LOG)
 }
@@ -611,6 +611,7 @@ type ProgressRate struct {
 }
 
 func MicroInit(brMgrPath, mgrLogFilePath string) {
+	log = logger.GetLogger(config.KEY_CLUSTER_LOG)
 	glBrMgrPath = brMgrPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	glMicroCmdChan = microStartBrMgr(mgrLogFilePath)

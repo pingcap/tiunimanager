@@ -29,7 +29,7 @@ func AddToken(tokenString, accountName string, accountId, tenantId string, expir
 		token.TenantId = tenantId
 		token.ExpirationTime = expirationTime
 		token.AccountName = accountName
-		token.Status = 1
+		token.Status = 0
 
 		MetaDB.Create(&token)
 		return

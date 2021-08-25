@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap/tiem/micro-metadb/models"
-	dbPb "github.com/pingcap/tiem/micro-metadb/proto"
+	"github.com/pingcap-inc/tiem/micro-metadb/models"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"gorm.io/gorm"
 )
 
@@ -134,7 +134,7 @@ func (*DBServiceHandler) ListCluster (ctx context.Context, req *dbPb.DBListClust
 func (*DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveBackupRecordRequest, resp *dbPb.DBSaveBackupRecordResponse) (err error) {
 
 	dto := req.BackupRecord
-	result, err := models.SaveBackupRecord(dto.TenantId, dto.ClusterId, dto.OperatorId, dto.BackupRange, dto.BackupType, dto.FilePath, uint(dto.FlowId))
+	result, err := models.SaveBackupRecord(dto)
 
 	if err != nil {
 		// todo
@@ -290,7 +290,7 @@ func ConvertToBackupRecordDTO(do *models.BackupRecordDO) (dto *dbPb.DBBackupReco
 		Id:          int64(do.ID),
 		TenantId:    do.TenantId,
 		ClusterId:   do.ClusterId,
-		CreateTime:  do.CreatedAt.Unix(),
+		StartTime:   do.StartTime,
 		BackupRange: do.BackupRange,
 		BackupType:  do.BackupType,
 		OperatorId:  do.OperatorId,
@@ -371,11 +371,11 @@ func convertToClusterDTO(do *models.ClusterDO, demand *models.DemandRecordDO) (d
 	dto = &dbPb.DBClusterDTO {
 		Id:          do.ID,
 		Code:        do.Code,
-		Name:        do.ClusterName,
+		Name:        do.Name,
 		TenantId:    do.TenantId,
 		DbPassword:  do.DbPassword,
-		ClusterType: do.ClusterType,
-		VersionCode: do.ClusterVersion,
+		ClusterType: do.Type,
+		VersionCode: do.Version,
 		Status:      int32(do.Status),
 		Tags:        do.Tags,
 		Tls:         do.Tls,

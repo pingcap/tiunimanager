@@ -1,6 +1,10 @@
 package config
 
-import "errors"
+import (
+	"errors"
+
+	log "github.com/sirupsen/logrus"
+)
 
 var LocalConfig map[Key]Instance
 
@@ -14,6 +18,7 @@ type Key string
 
 const (
 	KEY_REGISTRY_ADDRESS Key = "config_registry_address"
+	KEY_TRACER_ADDRESS   Key = "config_tracer_address"
 
 	KEY_API_LOG     = "config_key_api_log"
 	KEY_CLUSTER_LOG = "config_key_cluster_log"
@@ -21,6 +26,7 @@ const (
 	KEY_TIUPLIB_LOG = "config_key_tiupmgr_log"
 	KEY_BRLIB_LOG = "config_key_brmgr_log"
 	KEY_DEFAULT_LOG = "config_key_default_log"
+	KEY_FIRSTPARTY_LOG = "config_key_firstparty_log"
 
 	KEY_API_PORT     = "config_key_api_port"
 	KEY_CLUSTER_PORT = "config_key_cluster_port"
@@ -49,6 +55,15 @@ func Get(key Key) (interface{}, error) {
 	return instance.Value, nil
 }
 
+func GetInstance(key Key) (Instance, error) {
+	instance, ok := LocalConfig[key]
+	if !ok {
+		return instance, errors.New("undefined config")
+	}
+
+	return instance, nil
+}
+
 func GetWithDefault(key Key, value interface{}) interface{} {
 	instance, ok := LocalConfig[key]
 	if !ok {
@@ -68,8 +83,17 @@ func GetIntegerWithDefault(key Key, value int) int {
 	return result.(int)
 }
 
-func UpdateLocal(key Key, value interface{}, newVersion int) bool {
-	return true
+func UpdateLocalConfig(key Key, value interface{}, newVersion int) (bool, int) {
+	instance, err := GetInstance(key)
+	if err != nil {
+		log.Fatal(err)
+		return false, -1
+	}
+	if newVersion < instance.Version {
+		return false, instance.Version
+	}
+	LocalConfig[key] = Instance{key, value, newVersion}
+	return true, newVersion
 }
 
 func ModifyLocalServiceConfig(key Key, value interface{}) bool {

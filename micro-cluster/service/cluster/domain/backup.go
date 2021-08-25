@@ -6,10 +6,10 @@ import (
 	"fmt"
 	scp "github.com/bramvdbogaerde/go-scp"
 	"github.com/bramvdbogaerde/go-scp/auth"
-	"github.com/pingcap/tiem/library/secondparty/libbr"
-	proto "github.com/pingcap/tiem/micro-cluster/proto"
-	"github.com/pingcap/tiem/micro-metadb/client"
-	db "github.com/pingcap/tiem/micro-metadb/proto"
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
+	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"golang.org/x/crypto/ssh"
 	"os"
@@ -25,6 +25,8 @@ type BackupRecord struct {
 	OperatorId string
 	Size       uint64
 	FilePath   string
+	StartTime  int64
+	EndTime    int64
 	BizId 	   uint64
 }
 
@@ -74,6 +76,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		BackupType: BackupType(backupType),
 		OperatorId: operator.Id,
 		FilePath: getBackupPath(filePath, clusterId, time.Now().Unix(), backupRange),
+		StartTime: time.Now().Unix(),
 	}
 	clusterAggregation.LastBackupRecord = record
 
@@ -84,6 +87,31 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
+}
+
+func DeleteBackup(ope *proto.OperatorDTO, clusterId string, bakId int64) error {
+	//todo: parma pre check
+	resp, err := client.DBClient.QueryBackupRecords(context.TODO(), &db.DBQueryBackupRecordRequest{ClusterId: clusterId, RecordId: bakId})
+	if err != nil {
+		log.Errorf("query backup record %d of cluster %s failed, %s", bakId, clusterId, err.Error())
+		return fmt.Errorf("query backup record %d of cluster %s failed, %s", bakId, clusterId, err.Error())
+	}
+	log.Infof("query backup record to be deleted, record: %v", resp.GetBackupRecords().GetBackupRecord())
+	filePath := resp.GetBackupRecords().GetBackupRecord().GetFilePath() //backup dir
+
+	err = os.RemoveAll(filePath)
+	if err != nil {
+		log.Errorf("remove backup filePath failed, %s", err.Error())
+		return fmt.Errorf("remove backup filePath failed, %s", err.Error())
+	}
+
+	_, err = client.DBClient.DeleteBackupRecord(context.TODO(), &db.DBDeleteBackupRecordRequest{Id: bakId})
+	if err != nil{
+		log.Errorf("delete metadb backup record failed, %s", err.Error())
+		return fmt.Errorf("delete metadb backup record failed, %s", err.Error())
+	}
+
+	return nil
 }
 
 func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*ClusterAggregation, error){
@@ -195,6 +223,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		BackupRecord: &db.DBBackupRecordDTO{
 			Id: record.Id,
 			Size: record.Size,
+			EndTime: time.Now().Unix(),
 		},
 	})
 	if err != nil {

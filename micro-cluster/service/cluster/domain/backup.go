@@ -223,6 +223,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		BackupRecord: &db.DBBackupRecordDTO{
 			Id: record.Id,
 			Size: record.Size,
+			EndTime: time.Now().Unix(),
 		},
 	})
 	if err != nil {

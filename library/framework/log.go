@@ -77,11 +77,55 @@ const (
 //	}
 //}
 
-func NewLogRecordFromArgs(args *ClientArgs) *LogRecord {
+func DefaultLog() *LogRecord {
+	lr := &LogRecord{
+		LogLevel: "info",
+		LogOutput: "file",
+		LogFilePath: "." + common2.LogDirPrefix + "default.log",
+		LogMaxSize:    512,
+		LogMaxAge:     30,
+		LogMaxBackups: 0,
+		LogLocalTime:  true,
+		LogCompress:   true,
+	}
+
+	logger := log.New()
+
+	// Set log format
+	logger.SetFormatter(&log.JSONFormatter{})
+	// Set log level
+	logger.SetLevel(getLogLevel(lr.LogLevel))
+
+	// Define output type writer
+	writers := []io.Writer{os.Stdout}
+
+	// Determine whether the log output contains the file type
+	if strings.Contains(strings.ToLower(lr.LogOutput), OutputFile) {
+		writers = append(writers, &lumberjack.Logger{
+			Filename: lr.LogFilePath,
+			MaxSize: lr.LogMaxSize,
+			MaxAge: lr.LogMaxAge,
+			MaxBackups: lr.LogMaxBackups,
+			LocalTime: lr.LogLocalTime,
+			Compress: lr.LogCompress,
+		})
+	}
+	// remove the os.Stdout output
+	writers = writers[1:]
+
+	// Set log output
+	logger.SetOutput(io.MultiWriter(writers...))
+	// Record sys and mod default init
+	lr.defaultLogEntry = log.NewEntry(logger)
+	//.WithField(RecordSysField, lr.RecordSysName).WithField(RecordModField, lr.RecordModName)
+	return lr
+}
+
+func NewLogRecordFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *LogRecord {
 	lr := &LogRecord{
 		LogLevel: args.LogLevel,
 		LogOutput: "file",
-		LogFilePath: args.DataDir + common2.LogDirPrefix + "default.log",
+		LogFilePath: args.DataDir + common2.LogDirPrefix + serviceName.ServerName() + ".log",
 		LogMaxSize:    512,
 		LogMaxAge:     30,
 		LogMaxBackups: 0,

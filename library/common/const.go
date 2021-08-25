@@ -12,8 +12,8 @@ const (
 const (
 	LogDirPrefix  string = "/logs/"
 	CertDirPrefix string = "/cert/"
+	DBDirPrefix	  string = "/"
 
-	SqliteDirPrefix string = "/db/"
 	SqliteFileName string = "tiem.sqlite.db"
 
 	CrtFileName string = "server.crt"

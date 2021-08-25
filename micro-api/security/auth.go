@@ -2,7 +2,7 @@ package security
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	client2 "github.com/pingcap-inc/tiem/library/client"
 	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"net/http"
 )
@@ -26,7 +26,7 @@ func VerifyIdentity(c *gin.Context) {
 	path := c.Request.URL
 	req := cluster.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
 
-	result, err := client.ClusterClient.VerifyIdentity(c, &req)
+	result, err := client2.ClusterClient.VerifyIdentity(c, &req)
 	if err != nil {
 		c.Error(err)
 		c.Status(http.StatusInternalServerError)

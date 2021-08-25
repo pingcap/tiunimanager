@@ -13,6 +13,7 @@ func main() {
 		initTables,
 		initTenantDataForDev,
 		initResourceDataForDev,
+		defaultPortForLocal,
 	)
 
 	f.PrepareService(func(service micro.Service) error {
@@ -20,4 +21,11 @@ func main() {
 	})
 
 	f.StartService()
+}
+
+func defaultPortForLocal(f *framework.BaseFramework) error {
+	if f.GetServiceMeta().ServicePort <= 0 {
+		f.GetServiceMeta().ServicePort = 4013
+	}
+	return nil
 }

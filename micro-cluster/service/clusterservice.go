@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
 	"net/http"
 	"strconv"
 
-	dbClient "github.com/pingcap-inc/tiem/library/firstparty/client"
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
@@ -132,7 +132,7 @@ func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request 
 
 func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *clusterPb.DeleteBackupRequest, response *clusterPb.DeleteBackupResponse) (err error) {
 
-	_, err = dbClient.DBClient.DeleteBackupRecord(context.TODO(), &dbPb.DBDeleteBackupRecordRequest{Id: request.GetBackupRecordId()})
+	_, err = client.DBClient.DeleteBackupRecord(context.TODO(), &dbPb.DBDeleteBackupRecordRequest{Id: request.GetBackupRecordId()})
 	if err != nil {
 		// todo
 		getLogger().Info(err)
@@ -187,7 +187,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 
 func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *clusterPb.QueryBackupRequest, response *clusterPb.QueryBackupResponse) (err error) {
 
-	result, err := dbClient.DBClient.ListBackupRecords(context.TODO(), &dbPb.DBListBackupRecordsRequest{
+	result, err := client.DBClient.ListBackupRecords(context.TODO(), &dbPb.DBListBackupRecordsRequest{
 		ClusterId: request.ClusterId,
 		Page: &dbPb.DBPageDTO{
 			Page:     request.Page.Page,

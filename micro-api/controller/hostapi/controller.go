@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	client2 "github.com/pingcap-inc/tiem/library/client"
 	"io"
 	"net"
 	"net/http"
@@ -79,7 +79,7 @@ func doImport(c *gin.Context, host *HostInfo) (rsp *cluster.ImportHostResponse, 
 	importReq := cluster.ImportHostRequest{}
 	importReq.Host = new(cluster.HostInfo)
 	copyHostToReq(host, importReq.Host)
-	return client.ClusterClient.ImportHost(c, &importReq)
+	return client2.ClusterClient.ImportHost(c, &importReq)
 }
 
 func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *cluster.ImportHostsInBatchResponse, err error) {
@@ -90,7 +90,7 @@ func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *cluster.ImportHostsI
 		copyHostToReq(host, importReq.Hosts[i])
 	}
 
-	return client.ClusterClient.ImportHostsInBatch(c, &importReq)
+	return client2.ClusterClient.ImportHostsInBatch(c, &importReq)
 }
 
 // ImportHost 导入主机接口
@@ -230,7 +230,7 @@ func ListHost(c *gin.Context) {
 	listHostReq.PageReq.Page = int32(hostQuery.Page)
 	listHostReq.PageReq.PageSize = int32(hostQuery.PageSize)
 
-	rsp, err := client.ClusterClient.ListHost(c, &listHostReq)
+	rsp, err := client2.ClusterClient.ListHost(c, &listHostReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -266,7 +266,7 @@ func HostDetails(c *gin.Context) {
 		HostId: hostId,
 	}
 
-	rsp, err := client.ClusterClient.CheckDetails(c, &HostDetailsReq)
+	rsp, err := client2.ClusterClient.CheckDetails(c, &HostDetailsReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -298,7 +298,7 @@ func RemoveHost(c *gin.Context) {
 		HostId: hostId,
 	}
 
-	rsp, err := client.ClusterClient.RemoveHost(c, &RemoveHostReq)
+	rsp, err := client2.ClusterClient.RemoveHost(c, &RemoveHostReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -353,7 +353,7 @@ func RemoveHosts(c *gin.Context) {
 		HostIds: hostIds,
 	}
 
-	rsp, err := client.ClusterClient.RemoveHostsInBatch(c, &RemoveHostsReq)
+	rsp, err := client2.ClusterClient.RemoveHostsInBatch(c, &RemoveHostsReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -442,7 +442,7 @@ func AllocHosts(c *gin.Context) {
 	copyAllocToReq(allocation.TidbReq, &allocReq.TidbReq)
 	copyAllocToReq(allocation.TikvReq, &allocReq.TikvReq)
 	//fmt.Println(allocReq.PdReq, allocReq.TidbReq, allocReq.TikvReq)
-	rsp, err := client.ClusterClient.AllocHosts(c, &allocReq)
+	rsp, err := client2.ClusterClient.AllocHosts(c, &allocReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -488,7 +488,7 @@ func GetFailureDomain(c *gin.Context) {
 		FailureDomainType: int32(domain),
 	}
 
-	rsp, err := client.ClusterClient.GetFailureDomain(c, &GetDoaminReq)
+	rsp, err := client2.ClusterClient.GetFailureDomain(c, &GetDoaminReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return

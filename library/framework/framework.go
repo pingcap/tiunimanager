@@ -22,7 +22,7 @@ type Framework interface {
 	GetLogger() *LogRecord
 	GetTracer() *Tracer
 
-	GetServiceMeta() ServiceMeta
+	GetServiceMeta() *ServiceMeta
 	StartService() error
 	StopService() error
 }
@@ -31,7 +31,7 @@ func GetLogger() *LogRecord {
 	if Current != nil {
 		return Current.GetLogger()
 	} else {
-		panic("framework not ")
+		return DefaultLog()
 	}
 }
 
@@ -59,72 +59,33 @@ type BaseFramework struct {
 func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
 	f := new(BaseFramework)
 
-	f.args = new(ClientArgs)
-	// receive all falgs
-	micro.Flags(AllFlags(f.args)...)
+	f.acceptArgs()
+	f.parseArgs(serviceName)
 
-	f.serviceMeta = NewServiceMetaFromArgs(serviceName, f.args)
-	f.log = NewLogRecordFromArgs(f.args)
-	f.certificate = NewCertificateFromArgs(f.args)
-	f.trace = NewTracerFromArgs(f.args)
-	// now empty
-	f.configuration = &Configuration{}
-
+	f.initOpts = opts
 	f.Init()
 
+	Current = f
 	return f
 }
 
-func (b *BaseFramework) GetDataDir() string {
-	return b.args.DataDir
+func (b *BaseFramework) acceptArgs() {
+	b.args = new(ClientArgs)
+	// receive all falgs
+	srv := micro.NewService(
+		micro.Flags(AllFlags(b.args)...),
+	)
+	srv.Init()
+	srv = nil
 }
 
-func (b *BaseFramework) GetDeployDir() string {
-	return b.args.DeployDir
-}
-
-func (b *BaseFramework) PrepareService(handler ServiceHandler) {
-	b.initMicroService()
-	b.serviceHandler = handler
-}
-
-func (b *BaseFramework) PrepareClientClient(clientHandlerMap map[ServiceNameEnum]ClientHandler) {
-	b.initMicroClient()
-	b.clientHandler = clientHandlerMap
-}
-
-func (b *BaseFramework) Init() error {
-	for _, opt := range b.initOpts {
-		AssertNoErr(opt(b))
-	}
-	return nil
-}
-
-func (b *BaseFramework) Shutdown() error {
-	for _, opt := range b.shutdownOpts {
-		AssertNoErr(opt(b))
-	}
-	return nil
-}
-
-func (b *BaseFramework) GetClientArgs() *ClientArgs {
-	return b.args
-}
-
-func (b *BaseFramework) GetConfiguration() *Configuration {
-	return b.configuration
-}
-
-func (b *BaseFramework) GetLogger() *LogRecord {
-	return b.log
-}
-
-func (b *BaseFramework) GetTracer() *Tracer {
-	return b.trace
-}
-
-func (b *BaseFramework) GetServiceMeta() *ServiceMeta {
-	return b.serviceMeta
+func (b *BaseFramework) parseArgs(serviceName ServiceNameEnum) {
+	b.serviceMeta = NewServiceMetaFromArgs(serviceName, b.args)
+	b.log = NewLogRecordFromArgs(serviceName, b.args)
+	b.certificate = NewCertificateFromArgs(b.args)
+	b.trace = NewTracerFromArgs(b.args)
+	// now empty
+	b.configuration = &Configuration{}
 }
 
 func (b *BaseFramework) initMicroClient() {
@@ -165,6 +126,60 @@ func (b *BaseFramework) initMicroService() {
 	srv.Init()
 
 	b.microService = srv
+
+	b.serviceHandler(b.microService)
+}
+
+func (b *BaseFramework) GetDataDir() string {
+	return b.args.DataDir
+}
+
+func (b *BaseFramework) GetDeployDir() string {
+	return b.args.DeployDir
+}
+
+func (b *BaseFramework) PrepareService(handler ServiceHandler) {
+	b.serviceHandler = handler
+	b.initMicroService()
+}
+
+func (b *BaseFramework) PrepareClientClient(clientHandlerMap map[ServiceNameEnum]ClientHandler) {
+	b.clientHandler = clientHandlerMap
+	b.initMicroClient()
+}
+
+func (b *BaseFramework) Init() error {
+	for _, opt := range b.initOpts {
+		AssertNoErr(opt(b))
+	}
+	return nil
+}
+
+func (b *BaseFramework) Shutdown() error {
+	for _, opt := range b.shutdownOpts {
+		AssertNoErr(opt(b))
+	}
+	return nil
+}
+
+func (b *BaseFramework) GetClientArgs() *ClientArgs {
+	return b.args
+}
+
+func (b *BaseFramework) GetConfiguration() *Configuration {
+	return b.configuration
+}
+
+func (b *BaseFramework) GetLogger() *LogRecord {
+	return b.log
+}
+
+func (b *BaseFramework) GetTracer() *Tracer {
+	return b.trace
+}
+
+func (b *BaseFramework) GetServiceMeta() *ServiceMeta {
+	return b.serviceMeta
 }
 
 func (b *BaseFramework) StopService() error {

@@ -3,12 +3,12 @@ package instanceapi
 import (
 	"context"
 	"encoding/json"
+	client2 "github.com/pingcap-inc/tiem/library/client"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/clusterapi"
@@ -37,7 +37,7 @@ func QueryParams(c *gin.Context) {
 	}
 	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
-	resp, err := client.ClusterClient.QueryParameters(context.TODO(), &cluster.QueryClusterParametersRequest{
+	resp, err := client2.ClusterClient.QueryParameters(context.TODO(), &cluster.QueryClusterParametersRequest{
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
@@ -107,7 +107,7 @@ func SubmitParams(c *gin.Context) {
 
 	jsonContent := string(jsonByte)
 
-	resp, err := client.ClusterClient.SaveParameters(context.TODO(), &cluster.SaveClusterParametersRequest{
+	resp, err := client2.ClusterClient.SaveParameters(context.TODO(), &cluster.SaveClusterParametersRequest{
 		ClusterId:      clusterId,
 		ParametersJson: jsonContent,
 		Operator:       operator.ConvertToDTO(),
@@ -145,7 +145,7 @@ func Backup(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	resp, err := client.ClusterClient.CreateBackup(context.TODO(), &cluster.CreateBackupRequest{
+	resp, err := client2.ClusterClient.CreateBackup(context.TODO(), &cluster.CreateBackupRequest{
 		ClusterId: req.ClusterId,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
@@ -176,7 +176,7 @@ func QueryBackupStrategy(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
 
-	resp, err := client.ClusterClient.GetBackupStrategy(context.TODO(), &cluster.GetBackupStrategyRequest{
+	resp, err := client2.ClusterClient.GetBackupStrategy(context.TODO(), &cluster.GetBackupStrategyRequest{
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
@@ -214,7 +214,7 @@ func SaveBackupStrategy(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	_, err := client.ClusterClient.SaveBackupStrategy(context.TODO(), &cluster.SaveBackupStrategyRequest{
+	_, err := client2.ClusterClient.SaveBackupStrategy(context.TODO(), &cluster.SaveBackupStrategyRequest{
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
 		Cron:      req.CronString,
@@ -257,7 +257,7 @@ func QueryBackup(c *gin.Context) {
 		Page:      queryReq.PageRequest.ConvertToDTO(),
 	}
 
-	resp, err := client.ClusterClient.QueryBackupRecord(context.TODO(), reqDTO, controller.DefaultTimeout)
+	resp, err := client2.ClusterClient.QueryBackupRecord(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -317,7 +317,7 @@ func RecoverBackup(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	resp, err := client.ClusterClient.RecoverBackupRecord(context.TODO(), &cluster.RecoverBackupRequest{
+	resp, err := client2.ClusterClient.RecoverBackupRecord(context.TODO(), &cluster.RecoverBackupRequest{
 		ClusterId:      req.ClusterId,
 		Operator:       operator.ConvertToDTO(),
 		BackupRecordId: int64(backupId),
@@ -346,7 +346,7 @@ func DeleteBackup(c *gin.Context) {
 	backupId, _ := strconv.Atoi(c.Param("backupId"))
 	operator := controller.GetOperator(c)
 
-	_, err := client.ClusterClient.DeleteBackupRecord(context.TODO(), &cluster.DeleteBackupRequest{
+	_, err := client2.ClusterClient.DeleteBackupRecord(context.TODO(), &cluster.DeleteBackupRequest{
 		BackupRecordId: int64(backupId),
 		Operator:       operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)

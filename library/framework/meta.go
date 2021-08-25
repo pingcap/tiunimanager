@@ -13,6 +13,16 @@ const (
 	ApiService     ServiceNameEnum = "go.micro.tiem.api"
 )
 
+func (s ServiceNameEnum) ServerName() string {
+	switch s {
+	case MetaDBService: return "metadb-server"
+	case ClusterService:	return "cluster-server"
+	case ApiService:	return "openapi-server"
+	default:
+		panic("unexpected")
+	}
+}
+
 type ServiceMeta struct {
 	ServiceName     ServiceNameEnum
 	RegistryAddress []string

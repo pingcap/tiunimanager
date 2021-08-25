@@ -2,7 +2,8 @@ package main
 
 import (
 	"github.com/asim/go-micro/v3"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	client2 "github.com/pingcap-inc/tiem/library/client"
+	common "github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
@@ -14,9 +15,10 @@ import (
 )
 
 func main() {
-	f := framework.InitBaseFrameworkFromArgs(framework.MetaDBService,
+	f := framework.InitBaseFrameworkFromArgs(framework.ClusterService,
 		initLibForDev,
-		initPort,
+		initAdapter,
+		defaultPortForLocal,
 	)
 
 	f.PrepareService(func(service micro.Service) error {
@@ -25,7 +27,7 @@ func main() {
 
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.MetaDBService: func(service micro.Service) error {
-			client.DBClient = dbPb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
+			client2.DBClient = dbPb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
 			return nil
 		},
 	})
@@ -34,13 +36,23 @@ func main() {
 }
 
 func initLibForDev(f *framework.BaseFramework) error {
-	libtiup.MicroInit(f.GetDeployDir() + "/tiupcmd", "tiup", "")
-	libbr.MicroInit(f.GetDeployDir() + "/brcmd", "")
+	libtiup.MicroInit(f.GetDeployDir() + "/tiupcmd",
+		"tiup",
+		f.GetDataDir() + common.LogDirPrefix + "tiup.log")
+	libbr.MicroInit(f.GetDeployDir() + "/brcmd",
+		f.GetDataDir() + common.LogDirPrefix + "br.log")
 	return nil
 }
 
-func initPort(f *framework.BaseFramework) error {
+func initAdapter(f *framework.BaseFramework) error {
 	tenantAdapt.InjectionMetaDbRepo()
 	clusterAdapt.InjectionMetaDbRepo()
+	return nil
+}
+
+func defaultPortForLocal(f *framework.BaseFramework) error {
+	if f.GetServiceMeta().ServicePort <= 0 {
+		f.GetServiceMeta().ServicePort = 4012
+	}
 	return nil
 }

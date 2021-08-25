@@ -63,7 +63,7 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 		&cli.StringFlag{
 			Name: "registry-address",
 			// For convenience, set the default value after the embedded etcd is completed
-			//Value:       "127.0.0.1:4101",
+			Value:       "127.0.0.1:4101",
 			Usage:       "Specify the default etcd registry address.",
 			Destination: &receiver.RegistryAddress,
 		},
@@ -74,8 +74,14 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 			Destination: &receiver.TracerAddress,
 		},
 		&cli.StringFlag{
+			Name:        "deploy-dir",
+			Value:       "bin",
+			Usage:       "Specify the binary and configuration files deploy dir.",
+			Destination: &receiver.DeployDir,
+		},
+		&cli.StringFlag{
 			Name:        "data-dir",
-			Value:       "",
+			Value:       ".",
 			Usage:       "Specify the persistent data storage directory.",
 			Destination: &receiver.DataDir,
 		},

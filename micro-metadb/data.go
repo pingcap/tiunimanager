@@ -13,8 +13,9 @@ import (
 
 func initSqliteDB(f *framework.BaseFramework) error {
 	var err error
-	dbFile := f.GetDataDir() + common2.SqliteDirPrefix + common2.SqliteFileName
+	dbFile := f.GetDataDir() + common2.DBDirPrefix + common2.SqliteFileName
 	logins := f.GetLogger().Record("database file path", dbFile)
+
 	models.MetaDB, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 	if err != nil || models.MetaDB.Error != nil {
 		logins.Fatalf("open database failed, database error: %v, metadb error: %v", err, models.MetaDB.Error)

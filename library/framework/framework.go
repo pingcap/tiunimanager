@@ -83,11 +83,13 @@ func (b *BaseFramework) GetDeployDir() string {
 	return b.args.DeployDir
 }
 
-func (b *BaseFramework) PrepareServiceHandler(handler ServiceHandler) {
+func (b *BaseFramework) PrepareService(handler ServiceHandler) {
+	b.initMicroService()
 	b.serviceHandler = handler
 }
 
-func (b *BaseFramework) PrepareClientHandler(clientHandlerMap map[ServiceNameEnum]ClientHandler) {
+func (b *BaseFramework) PrepareClientClient(clientHandlerMap map[ServiceNameEnum]ClientHandler) {
+	b.initMicroClient()
 	b.clientHandler = clientHandlerMap
 }
 
@@ -177,63 +179,3 @@ func (b *BaseFramework) StartService() error {
 
 	return nil
 }
-
-/*func NewDefaultFramework(serviceName MicroServiceEnum, initOpt ...Opt) *DefaultServiceFramework {
-
-func (p *DefaultServiceFramework) StartService() error {
-	p.service = p.serviceEnum.initMicroService(p.GetRegistryAddress()...)
-
-	switch p.serviceEnum {
-	case MetaDBService:
-		util.AssertNoErr(dbPb.RegisterTiEMDBServiceHandler(p.service.Server(), new(dbSrv.DBServiceHandler)))
-	case ClusterService:
-		util.AssertNoErr(clusterPb.RegisterClusterServiceHandler(p.service.Server(), new(clusterSrv.ClusterServiceHandler)))
-	default:
-		panic("Illegal MicroServiceEnum")
-	}
-
-	util.Assert(p.service != nil)
-
-	if err := p.service.Run(); err != nil {
-		p.GetDefaultLogger().Fatalf("Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, config.GetMetaDBServiceAddress(), config.GetRegistryAddress())
-		return errors.New("initialization micro service failed")
-	}
-
-	return nil
-}*/
-
-/*func initConfig(p *DefaultServiceFramework) error {
-	p.flags = p.serviceEnum.buildArgsOption()
-	srv := micro.NewService(
-		p.flags,
-	)
-	srv.Init()
-	srv = nil
-	config.InitForMonolith(p.serviceEnum.logMod())
-	return nil
-}
-
-func initCurrentLogger(p *DefaultServiceFramework) error {
-	p.log = p.serviceEnum.buildLogger()
-	// use log
-	p.getLogger().Debug("init logger completed!")
-	return nil
-}
-
-func initKnowledge(p *DefaultServiceFramework) error {
-	knowledge.LoadKnowledge()
-	return nil
-
-}
-
-func initTracer(p *DefaultServiceFramework) error {
-	tracer.InitTracer()
-	return nil
-}
-
-func initShutdownFunc(p *DefaultServiceFramework) error {
-	mysignal.SetupSignalHandler(func(bool) {
-		// todo do something before quit
-	})
-	return nil
-}*/

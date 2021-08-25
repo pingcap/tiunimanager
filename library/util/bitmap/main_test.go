@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package bitmap
 
 import (
 	testbridge2 "github.com/pingcap-inc/tiem/library/util/testbridge"
-	"os"
+	"go.uber.org/goleak"
 	"testing"
 )
 
 func TestMain(m *testing.M) {
 	testbridge2.WorkaroundGoCheckFlags()
-	os.Exit(m.Run())
+	goleak.VerifyTestMain(m)
 }

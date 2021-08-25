@@ -12,15 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package systimemon
 
 import (
 	testbridge2 "github.com/pingcap-inc/tiem/library/util/testbridge"
-	"os"
 	"testing"
+
+	"go.uber.org/goleak"
 )
 
 func TestMain(m *testing.M) {
 	testbridge2.WorkaroundGoCheckFlags()
-	os.Exit(m.Run())
+
+	opts := []goleak.Option{
+		goleak.IgnoreTopFunction("github.com/pingcap-inc/tiem/library/firstparty/util/systimemon.StartMonitor"),
+	}
+
+	goleak.VerifyTestMain(m, opts...)
 }

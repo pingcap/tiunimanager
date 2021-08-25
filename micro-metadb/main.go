@@ -15,7 +15,7 @@ func main() {
 		initResourceDataForDev,
 	)
 
-	f.PrepareServiceHandler(func(service micro.Service) error {
+	f.PrepareService(func(service micro.Service) error {
 		return dbPb.RegisterTiEMDBServiceHandler(service.Server(), new(dbService.DBServiceHandler))
 	})
 

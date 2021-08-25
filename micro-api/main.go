@@ -28,7 +28,7 @@ func main() {
 		initGinEngine,
 	)
 
-	f.PrepareClientHandler(map[framework.ServiceNameEnum]framework.ClientHandler{
+	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.ClusterService: func(service micro.Service) error {
 			client.ClusterClient = clusterPb.NewClusterService(string(framework.ClusterService), service.Client())
 			return nil

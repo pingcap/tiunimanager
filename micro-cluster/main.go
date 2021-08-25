@@ -19,11 +19,11 @@ func main() {
 		initPort,
 	)
 
-	f.PrepareServiceHandler(func(service micro.Service) error {
+	f.PrepareService(func(service micro.Service) error {
 		return clusterPb.RegisterClusterServiceHandler(service.Server(), new(clusterService.ClusterServiceHandler))
 	})
 
-	f.PrepareClientHandler(map[framework.ServiceNameEnum]framework.ClientHandler{
+	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.MetaDBService: func(service micro.Service) error {
 			client.DBClient = dbPb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
 			return nil

@@ -1,4 +1,4 @@
-// Copyright 2021 PingCAP, Inc.
+// Copyright 2019 PingCAP, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,16 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-package common
+package linux_test
 
 import (
-	testbridge2 "github.com/pingcap-inc/tiem/library/util/testbridge"
-	"os"
+	"github.com/pingcap-inc/tiem/library/util/sys/linux"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-func TestMain(m *testing.M) {
-	testbridge2.WorkaroundGoCheckFlags()
-	os.Exit(m.Run())
+func TestGetOSVersion(t *testing.T) {
+	t.Parallel()
+
+	osRelease, err := linux.OSVersion()
+	require.NoError(t, err)
+	require.NotEmpty(t, osRelease)
 }

@@ -1,4 +1,3 @@
-// Copyright 2021 PingCAP, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,15 +11,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package timeutil
 
 import (
 	testbridge2 "github.com/pingcap-inc/tiem/library/util/testbridge"
-	"os"
 	"testing"
+
+	"go.uber.org/goleak"
 )
 
 func TestMain(m *testing.M) {
 	testbridge2.WorkaroundGoCheckFlags()
-	os.Exit(m.Run())
+	goleak.VerifyTestMain(m)
 }

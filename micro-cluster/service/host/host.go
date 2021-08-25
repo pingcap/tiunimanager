@@ -15,7 +15,11 @@ import (
 
 var log *logger.LogRecord
 
-func InitLogger(key config.Key) {
+func InitLogger(defaultLog *logger.LogRecord) {
+	log = defaultLog
+}
+
+func InitLoggerByKey(key config.Key) {
 	log = logger.GetLogger(key)
 }
 

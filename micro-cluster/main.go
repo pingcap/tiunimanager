@@ -6,6 +6,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/firstparty/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
+	"github.com/pingcap-inc/tiem/micro-cluster/service"
 	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
 	tenantAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/adapt"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
@@ -16,6 +17,7 @@ func main() {
 		initLibForDev,
 		initPort,
 		initClient,
+		initLogger,
 	)
 
 	f.StartService()
@@ -36,5 +38,10 @@ func initLibForDev(d *framework.DefaultServiceFramework) error {
 func initPort(d *framework.DefaultServiceFramework) error {
 	tenantAdapt.InjectionMetaDbRepo()
 	clusterAdapt.InjectionMetaDbRepo()
+	return nil
+}
+
+func initLogger(d *framework.DefaultServiceFramework) error {
+	service.InitClusterLogger(d.GetDefaultLogger())
 	return nil
 }

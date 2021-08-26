@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	client "github.com/pingcap-inc/tiem/library/firstparty/client"
-	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
 	"net/http"
 	"strconv"
 
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	tenantDomain "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
+
+	"github.com/pingcap-inc/tiem/library/firstparty/client"
 	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
@@ -24,10 +24,10 @@ type ClusterServiceHandler struct{}
 
 var log *logger.LogRecord
 
-func InitClusterLogger() {
-	config.InitConfigForDev(config.MicroClusterMod)
-	log = logger.GetLogger(config.KEY_CLUSTER_LOG)
-	domain.InitDomainLogger(config.KEY_CLUSTER_LOG)
+func InitClusterLogger(defaultLog *logger.LogRecord) {
+	log = defaultLog
+	domain.InitDomainLogger(defaultLog)
+	host.InitLogger(defaultLog)
 }
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterPb.ClusterCreateReqDTO, resp *clusterPb.ClusterCreateRespDTO) (err error) {
@@ -328,14 +328,13 @@ func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *c
 	return nil
 }
 
-
 var ManageSuccessResponseStatus = &clusterPb.ManagerResponseStatus{
 	Code: 0,
 }
 
 func (*ClusterServiceHandler) Login(ctx context.Context, req *clusterPb.LoginRequest, resp *clusterPb.LoginResponse) error {
 
-	token, err := domain2.Login(req.GetAccountName(), req.GetPassword())
+	token, err := tenantDomain.Login(req.GetAccountName(), req.GetPassword())
 
 	if err != nil {
 		resp.Status = &clusterPb.ManagerResponseStatus{
@@ -352,7 +351,7 @@ func (*ClusterServiceHandler) Login(ctx context.Context, req *clusterPb.LoginReq
 }
 
 func (*ClusterServiceHandler) Logout(ctx context.Context, req *clusterPb.LogoutRequest, resp *clusterPb.LogoutResponse) error {
-	accountName, err := domain2.Logout(req.TokenString)
+	accountName, err := tenantDomain.Logout(req.TokenString)
 	if err != nil {
 		resp.Status = &clusterPb.ManagerResponseStatus{
 			Code:    http.StatusInternalServerError,
@@ -368,15 +367,15 @@ func (*ClusterServiceHandler) Logout(ctx context.Context, req *clusterPb.LogoutR
 }
 
 func (*ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterPb.VerifyIdentityRequest, resp *clusterPb.VerifyIdentityResponse) error {
-	tenantId, accountId, accountName, err := domain2.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
+	tenantId, accountId, accountName, err := tenantDomain.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
 
 	if err != nil {
-		if _, ok := err.(*domain2.UnauthorizedError); ok {
+		if _, ok := err.(*tenantDomain.UnauthorizedError); ok {
 			resp.Status = &clusterPb.ManagerResponseStatus{
 				Code:    http.StatusUnauthorized,
 				Message: "未登录或登录失效，请重试",
 			}
-		} else if _, ok := err.(*domain2.ForbiddenError); ok {
+		} else if _, ok := err.(*tenantDomain.ForbiddenError); ok {
 			resp.Status = &clusterPb.ManagerResponseStatus{
 				Code:    http.StatusForbidden,
 				Message: "无权限",
@@ -395,10 +394,6 @@ func (*ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterPb
 	}
 
 	return nil
-}
-
-func InitHostLogger(key config.Key) {
-	host.InitLogger(key)
 }
 
 func (*ClusterServiceHandler) ImportHost(ctx context.Context, in *clusterPb.ImportHostRequest, out *clusterPb.ImportHostResponse) error {
@@ -432,4 +427,3 @@ func (*ClusterServiceHandler) AllocHosts(ctx context.Context, in *clusterPb.Allo
 func (*ClusterServiceHandler) GetFailureDomain(ctx context.Context, in *clusterPb.GetFailureDomainRequest, out *clusterPb.GetFailureDomainResponse) error {
 	return host.GetFailureDomain(ctx, in, out)
 }
-

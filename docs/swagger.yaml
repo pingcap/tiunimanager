@@ -184,6 +184,15 @@ definitions:
       updateTime:
         type: string
     type: object
+  clusterapi.DescribeDashboardRsp:
+    properties:
+      clusterId:
+        type: string
+      shareCode:
+        type: string
+      url:
+        type: string
+    type: object
   clusterapi.DetailClusterRsp:
     properties:
       backupFileUsage:
@@ -360,6 +369,10 @@ definitions:
         type: string
       memory:
         type: integer
+      passwd:
+        type: string
+      userName:
+        type: string
     type: object
   hostapi.Allocation:
     properties:
@@ -410,6 +423,8 @@ definitions:
         type: string
       cpuCores:
         type: integer
+      createTime:
+        type: integer
       dc:
         type: string
       disks:
@@ -432,6 +447,8 @@ definitions:
         type: string
       os:
         type: string
+      passwd:
+        type: string
       purpose:
         description: What Purpose is the host used for? [compute/storage or both]
         type: string
@@ -443,6 +460,8 @@ definitions:
       status:
         description: Host Status, 0 for Online, 1 for offline
         type: integer
+      userName:
+        type: string
     type: object
   hostapi.SpecBaseInfo:
     properties:
@@ -632,17 +651,12 @@ definitions:
       userPassword:
         type: string
     type: object
-  userapi.LogoutInfo:
-    properties:
-      userName:
-        type: string
-    type: object
   userapi.UserIdentity:
     properties:
       userName:
         type: string
     type: object
-host: localhost:8080
+host: localhost:4116
 info:
   contact:
     email: zhangpeijin@pingcap.com
@@ -839,6 +853,44 @@ paths:
       summary: 恢复备份
       tags:
       - cluster backup
+  /cluster/dashboard:
+    get:
+      consumes:
+      - application/json
+      description: 查看集群dashboard信息
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/clusterapi.DescribeDashboardRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: 查看集群dashboard信息
+      tags:
+      - cluster
   /clusters:
     get:
       consumes:
@@ -1595,11 +1647,6 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 退出登录信息
-        in: body
-        name: logoutInfo
-        schema:
-          $ref: '#/definitions/userapi.LogoutInfo'
       produces:
       - application/json
       responses:

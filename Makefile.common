@@ -24,6 +24,7 @@ FAIL_ON_STDOUT := awk '{ print } END { if (NR > 0) { exit 1 } }'
 
 CURDIR := $(shell pwd)
 TEST_DIR := /tmp/tidb_em_test
+CODECOV_BASH := /tmp/codecovbash
 #path_to_add := $(addsuffix /bin,$(subst :,/bin:,$(GOPATH))):$(PWD)/tools/bin
 path_to_add := $(addsuffix /bin,$(subst :,/bin:,$(GOPATH)))
 export PATH := $(path_to_add):$(PATH)
@@ -49,7 +50,7 @@ endif
 ARCH      := "`uname -s`"
 LINUX     := "Linux"
 MAC       := "Darwin"
-PACKAGE_LIST  := go list ./...| grep -vE "docs|proto|firstparty"
+PACKAGE_LIST  := go list ./...| grep -vE "docs|proto"
 PACKAGES  ?= $$($(PACKAGE_LIST))
 #PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/pingcap/$(PROJECT)||'
 PACKAGE_DIRECTORIES := $(PACKAGE_LIST)

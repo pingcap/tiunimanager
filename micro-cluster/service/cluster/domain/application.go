@@ -3,7 +3,9 @@ package domain
 import (
 	"context"
 	"errors"
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
+	"path/filepath"
+	"strconv"
+
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
@@ -11,41 +13,39 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
-	"path/filepath"
-	"strconv"
 )
 
 var log *logger.LogRecord
 
-func InitDomainLogger(key config.Key) {
-	log = logger.GetLogger(key)
+func InitDomainLogger(defaultLog *logger.LogRecord) {
+	log = defaultLog
 }
 
 type ClusterAggregation struct {
-	Cluster 				*Cluster
+	Cluster *Cluster
 
 	CurrentTiUPConfigRecord *TiUPConfigRecord
-	CurrentWorkFlow  		*FlowWorkEntity
+	CurrentWorkFlow         *FlowWorkEntity
 
-	CurrentOperator         *Operator
+	CurrentOperator *Operator
 
-	MaintainCronTask 		*CronTaskEntity
-	HistoryWorkFLows 		[]*FlowWorkEntity
+	MaintainCronTask *CronTaskEntity
+	HistoryWorkFLows []*FlowWorkEntity
 
-	UsedResources 			interface{}
-	
-	AvailableResources		*proto.AllocHostResponse
+	UsedResources interface{}
 
-	StatusModified 			bool
-	FlowModified 			bool
+	AvailableResources *proto.AllocHostResponse
 
-	ConfigModified 			bool
+	StatusModified bool
+	FlowModified   bool
 
-	LastBackupRecord 		*BackupRecord
+	ConfigModified bool
 
-	LastRecoverRecord		*RecoverRecord
+	LastBackupRecord *BackupRecord
 
-	LastParameterRecord 	*ParameterRecord
+	LastRecoverRecord *RecoverRecord
+
+	LastParameterRecord *ParameterRecord
 }
 
 var contextClusterKey = "clusterAggregation"
@@ -54,19 +54,18 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 	operator := parseOperatorFromDTO(ope)
 
 	cluster := &Cluster{
-		ClusterName: clusterInfo.ClusterName,
-		DbPassword: clusterInfo.DbPassword,
-		ClusterType: *knowledge.ClusterTypeFromCode(clusterInfo.ClusterType.Code),
+		ClusterName:    clusterInfo.ClusterName,
+		DbPassword:     clusterInfo.DbPassword,
+		ClusterType:    *knowledge.ClusterTypeFromCode(clusterInfo.ClusterType.Code),
 		ClusterVersion: *knowledge.ClusterVersionFromCode(clusterInfo.ClusterVersion.Code),
-		Tls: clusterInfo.Tls,
-		TenantId: operator.TenantId,
-		OwnerId: operator.Id,
-		RecoverInfo: parseRecoverInFoFromDTO(clusterInfo.RecoverInfo),
+		Tls:            clusterInfo.Tls,
+		TenantId:       operator.TenantId,
+		OwnerId:        operator.Id,
 	}
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs), len(demandDTOs))
 
-	for i,v := range demandDTOs {
+	for i, v := range demandDTOs {
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
 
@@ -75,10 +74,10 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 	// persist the cluster into database
 	ClusterRepo.AddCluster(cluster)
 
-	clusterAggregation := &ClusterAggregation {
-		Cluster: cluster,
+	clusterAggregation := &ClusterAggregation{
+		Cluster:          cluster,
 		MaintainCronTask: GetDefaultMaintainTask(),
-		CurrentOperator: operator,
+		CurrentOperator:  operator,
 	}
 
 	// Start the workflow to create a cluster instance
@@ -133,17 +132,15 @@ func GetClusterDetail(ope *proto.OperatorDTO, clusterId string) (*ClusterAggrega
 	return cluster, err
 }
 
-
-
 func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	clusterAggregation.CurrentOperator = operator
 	clusterAggregation.LastParameterRecord = &ParameterRecord{
-		ClusterId: clusterId,
+		ClusterId:  clusterId,
 		OperatorId: operator.Id,
-		Content: content,
+		Content:    content,
 	}
 	if err != nil {
 		return clusterAggregation, errors.New("cluster not exist")
@@ -205,7 +202,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 
-	config := &TiUPConfigRecord {
+	config := &TiUPConfigRecord{
 		TenantId:    clusterAggregation.Cluster.TenantId,
 		ClusterId:   clusterAggregation.Cluster.Id,
 		ConfigModel: convertConfig(clusterAggregation.AvailableResources, clusterAggregation.Cluster),
@@ -275,10 +272,10 @@ func destroyTasks(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func (aggregation *ClusterAggregation) ExtractStatusDTO() *proto.DisplayStatusDTO{
+func (aggregation *ClusterAggregation) ExtractStatusDTO() *proto.DisplayStatusDTO {
 	cluster := aggregation.Cluster
 
-	dto := &proto.DisplayStatusDTO {
+	dto := &proto.DisplayStatusDTO{
 		CreateTime:      cluster.CreateTime.Unix(),
 		UpdateTime:      cluster.UpdateTime.Unix(),
 		DeleteTime:      cluster.DeleteTime.Unix(),
@@ -312,8 +309,8 @@ func (aggregation *ClusterAggregation) GetCurrentWorkFlow() *FlowWorkEntity {
 func (aggregation *ClusterAggregation) ExtractDisplayDTO() *proto.ClusterDisplayDTO {
 	dto := &proto.ClusterDisplayDTO{
 		ClusterId: aggregation.Cluster.Id,
-		BaseInfo: aggregation.ExtractBaseInfoDTO(),
-		Status: aggregation.ExtractStatusDTO(),
+		BaseInfo:  aggregation.ExtractBaseInfoDTO(),
+		Status:    aggregation.ExtractStatusDTO(),
 		Instances: aggregation.ExtractInstancesDTO(),
 	}
 	return dto
@@ -331,10 +328,10 @@ func (aggregation *ClusterAggregation) ExtractMaintenanceDTO() *proto.ClusterMai
 }
 
 func (aggregation *ClusterAggregation) ExtractBaseInfoDTO() *proto.ClusterBaseInfoDTO {
-	cluster :=  aggregation.Cluster
-	return &proto.ClusterBaseInfoDTO {
+	cluster := aggregation.Cluster
+	return &proto.ClusterBaseInfoDTO{
 		ClusterName: cluster.ClusterName,
-		DbPassword: cluster.DbPassword,
+		DbPassword:  cluster.DbPassword,
 		ClusterType: &proto.ClusterTypeDTO{
 			Code: cluster.ClusterType.Code,
 			Name: cluster.ClusterType.Name,
@@ -344,7 +341,7 @@ func (aggregation *ClusterAggregation) ExtractBaseInfoDTO() *proto.ClusterBaseIn
 			Name: cluster.ClusterVersion.Name,
 		},
 		Tags: cluster.Tags,
-		Tls: cluster.Tls,
+		Tls:  cluster.Tls,
 	}
 }
 
@@ -366,9 +363,9 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRec
 			StatusCode:      strconv.Itoa(int(currentFlow.Status)),
 			StatusName:      currentFlow.Status.Display(),
 		},
-		Operator: &proto.OperatorDTO {
-			Id: aggregation.CurrentOperator.Id,
-			Name: aggregation.CurrentOperator.Name,
+		Operator: &proto.OperatorDTO{
+			Id:       aggregation.CurrentOperator.Id,
+			Name:     aggregation.CurrentOperator.Name,
 			TenantId: aggregation.CurrentOperator.TenantId,
 		},
 	}
@@ -380,7 +377,7 @@ func (aggregation *ClusterAggregation) ExtractRecoverRecordDTO() *proto.BackupRe
 	return &proto.BackupRecoverRecordDTO{
 		Id:        int64(record.Id),
 		ClusterId: record.ClusterId,
-		DisplayStatus: &proto.DisplayStatusDTO {
+		DisplayStatus: &proto.DisplayStatusDTO{
 			InProcessFlowId: int32(currentFlow.Id),
 			StatusCode:      strconv.Itoa(int(currentFlow.Status)),
 			StatusName:      currentFlow.Status.Display(),
@@ -391,8 +388,8 @@ func (aggregation *ClusterAggregation) ExtractRecoverRecordDTO() *proto.BackupRe
 
 func parseOperatorFromDTO(dto *proto.OperatorDTO) (operator *Operator) {
 	operator = &Operator{
-		Id: dto.Id,
-		Name: dto.Name,
+		Id:       dto.Id,
+		Name:     dto.Name,
 		TenantId: dto.TenantId,
 	}
 	return
@@ -402,7 +399,7 @@ func parseDistributionItemFromDTO(dto *proto.DistributionItemDTO) (item *Cluster
 	item = &ClusterNodeDistributionItem{
 		ZoneCode: dto.ZoneCode,
 		SpecCode: dto.SpecCode,
-		Count: int(dto.Count),
+		Count:    int(dto.Count),
 	}
 	return
 }
@@ -418,37 +415,37 @@ func parseRecoverInFoFromDTO(dto *proto.RecoverInfoDTO) (info RecoverInfo) {
 func parseNodeDemandFromDTO(dto *proto.ClusterNodeDemandDTO) (demand *ClusterComponentDemand) {
 	items := make([]*ClusterNodeDistributionItem, len(dto.Items), len(dto.Items))
 
-	for i,v := range dto.Items {
+	for i, v := range dto.Items {
 		items[i] = parseDistributionItemFromDTO(v)
 	}
 
 	demand = &ClusterComponentDemand{
-		ComponentType:  knowledge.ClusterComponentFromCode(dto.ComponentType),
-		TotalNodeCount: int(dto.TotalNodeCount),
+		ComponentType:     knowledge.ClusterComponentFromCode(dto.ComponentType),
+		TotalNodeCount:    int(dto.TotalNodeCount),
 		DistributionItems: items,
 	}
 
 	return demand
 }
 
-func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *proto.AllocHostsRequest){
+func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *proto.AllocHostsRequest) {
 	req = &proto.AllocHostsRequest{}
 
-	for _,d := range demands {
+	for _, d := range demands {
 		switch d.ComponentType.ComponentType {
 		case "tidb":
 			req.TidbReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
-			for i,v := range d.DistributionItems {
+			for i, v := range d.DistributionItems {
 				req.TidbReq[i] = convertAllocationReq(v)
 			}
 		case "tikv":
 			req.TikvReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
-			for i,v := range d.DistributionItems {
+			for i, v := range d.DistributionItems {
 				req.TikvReq[i] = convertAllocationReq(v)
 			}
 		case "pd":
 			req.PdReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
-			for i,v := range d.DistributionItems {
+			for i, v := range d.DistributionItems {
 				req.PdReq[i] = convertAllocationReq(v)
 			}
 		}
@@ -457,10 +454,10 @@ func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *proto.All
 }
 
 func convertAllocationReq(item *ClusterNodeDistributionItem) *proto.AllocationReq {
-	return &proto.AllocationReq {
+	return &proto.AllocationReq{
 		FailureDomain: item.ZoneCode,
-		CpuCores: int32(knowledge.ParseCpu(item.SpecCode)),
-		Memory:   int32(knowledge.ParseMemory(item.SpecCode)),
+		CpuCores:      int32(knowledge.ParseCpu(item.SpecCode)),
+		Memory:        int32(knowledge.ParseMemory(item.SpecCode)),
 		Count:         int32(item.Count),
 	}
 }
@@ -482,17 +479,17 @@ func convertConfig(resource *proto.AllocHostResponse, cluster *Cluster) *spec.Sp
 	tiupConfig.GlobalOptions.LogDir = filepath.Join(cluster.Id, "tidb-log")
 	// Deal with Promethus, AlertManger, Grafana
 	tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
-		Host: pdHosts[0].Ip,
+		Host:      pdHosts[0].Ip,
 		DataDir:   filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "prometheus-data"),
 		DeployDir: filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "prometheus-deploy"),
 	})
 	tiupConfig.Alertmanagers = append(tiupConfig.Alertmanagers, &spec.AlertmanagerSpec{
-		Host: pdHosts[0].Ip,
+		Host:      pdHosts[0].Ip,
 		DataDir:   filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "alertmanagers-data"),
 		DeployDir: filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "alertmanagers-deploy"),
 	})
 	tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
-		Host: pdHosts[0].Ip,
+		Host:      pdHosts[0].Ip,
 		DeployDir: filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "grafanas-deploy"),
 	})
 	// Deal with PDServers, TiDBServers, TiKVServers

@@ -17,7 +17,7 @@ func main() {
 		initLibForDev,
 		initPort,
 		initClient,
-		initClusterLogger,
+		initLogger,
 	)
 
 	f.StartService()
@@ -41,7 +41,7 @@ func initPort(d *framework.DefaultServiceFramework) error {
 	return nil
 }
 
-func initClusterLogger(d *framework.DefaultServiceFramework) error {
-	service.InitClusterLogger()
+func initLogger(d *framework.DefaultServiceFramework) error {
+	service.InitClusterLogger(d.GetDefaultLogger())
 	return nil
 }

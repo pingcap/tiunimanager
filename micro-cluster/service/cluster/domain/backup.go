@@ -194,6 +194,45 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
+func UpdateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
+	//log.Info("begin updateBackupRecord")
+	//defer log.Info("end updateBackupRecord")
+	//clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
+	//record := clusterAggregation.LastBackupRecord
+	/*
+		//todo: update size
+		configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+		cluster := clusterAggregation.Cluster
+		tidbServer := configModel.TiDBServers[0]
+
+		clusterFacade := libbr.ClusterFacade{
+			DbConnParameter: libbr.DbConnParam{
+				Username: "root", //todo: replace admin account
+				Password: "",
+				Ip:	tidbServer.Host,
+				Port: strconv.Itoa(tidbServer.Port),
+			},
+			ClusterId: cluster.Id,
+			ClusterName: cluster.ClusterName,
+			TaskID: record.BizId,
+		}
+		resp := libbr.ShowBackUpInfo(clusterFacade, uint64(task.Id))
+		record.Size = resp.Size
+	*/
+	_, err :=  client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
+		BackupRecord: &db.DBBackupRecordDTO{
+			Id: 123,
+			Size: 0,
+			EndTime: time.Now().Unix(),
+		},
+	})
+	if err != nil {
+		log.Errorf("update backup record for cluster failed, %s", err.Error())
+		return false
+	}
+	return true
+}
+
 func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	log.Info("begin updateBackupRecord")
 	defer log.Info("end updateBackupRecord")
@@ -311,21 +350,21 @@ func scpTikvBackupFiles(tikv *spec.TiKVSpec, tikvDir, backupDir string, index in
 	scpClient := scp.NewClient(fmt.Sprintf("%s:22", tikv.Host), &sshConfig)
 	err = scpClient.Connect()
 	if err != nil {
-		log.Error("scp client connect tikv server[%s] failed, %s", tikv.Host, err.Error())
+		log.Errorf("scp client connect tikv server[%s] failed, %s", tikv.Host, err.Error())
 		return err
 	}
 	defer scpClient.Session.Close()
 
-	backupFile, err := os.Open(fmt.Sprintf("%s/tikv-%s.zip", backupDir, index))
+	backupFile, err := os.Open(fmt.Sprintf("%s/tikv-%d.zip", backupDir, index))
 	if err != nil {
-		log.Error("open backup file failed, %s", err.Error())
+		log.Errorf("open backup file failed, %s", err.Error())
 		return err
 	}
 	defer backupFile.Close()
 
 	err = scpClient.CopyFromRemote(backupFile, fmt.Sprintf("%s/tikv.zip", tikvDir))
 	if err != nil {
-		log.Error("copy backup file from tikv server[%s] failed, %s", tikv.Host, err.Error())
+		log.Errorf("copy backup file from tikv server[%s] failed, %s", tikv.Host, err.Error())
 		return err
 	}
 	return nil

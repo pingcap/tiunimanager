@@ -31,7 +31,7 @@ type ServiceMeta struct {
 }
 
 func (s *ServiceMeta) GetServiceAddress() string {
-	return s.ServiceHost + ":" + strconv.Itoa(s.ServicePort)
+	return ":" + strconv.Itoa(s.ServicePort)
 }
 
 func NewServiceMetaFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *ServiceMeta {

@@ -43,9 +43,9 @@ Setup:
 
 ```
 etcd --data-dir=data.etcd1 --name machine-1 \
-    --initial-advertise-peer-urls http://127.0.0.1:2380 --listen-peer-urls http://127.0.0.1:2380 \
-    --advertise-client-urls http://127.0.0.1:2379 --listen-client-urls http://127.0.0.1:2379 \
-    --initial-cluster machine-1=http://127.0.0.1:2380 \
+    --initial-advertise-peer-urls http://127.0.0.1:4102 --listen-peer-urls http://127.0.0.1:4102 \
+    --advertise-client-urls http://127.0.0.1:4101 --listen-client-urls http://127.0.0.1:4101 \
+    --initial-cluster machine-1=http://127.0.0.1:4102 \
     --initial-cluster-state new --initial-cluster-token token-tiem
     &
 ```

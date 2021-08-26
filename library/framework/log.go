@@ -183,12 +183,14 @@ func getLogLevel(level string) log.Level {
 }
 
 func WithContext(ctx context.Context) *log.Entry {
-	le, ok := ctx.Value(logCtxKey).(*log.Entry)
-	if ok {
-		return le
-	} else {
-		return GetLogger().defaultLogEntry
-	}
+	// todo
+	return GetLogger().defaultLogEntry
+	//le, ok := ctx.Value(logCtxKey).(*log.Entry)
+	//if ok {
+	//	return le
+	//} else {
+	//	return GetLogger().defaultLogEntry
+	//}
 }
 
 func (lr *LogRecord) Record(key string, value interface{}) *LogRecord {

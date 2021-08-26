@@ -13,7 +13,7 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:4116",
+    "host": "localhost:8080",
     "basePath": "/api/v1/",
     "paths": {
         "/backups": {

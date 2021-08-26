@@ -6,6 +6,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	f := framework.InitBaseFrameworkForUt(framework.ClusterService)
 	m.Run()
+	f.Shutdown()
 }

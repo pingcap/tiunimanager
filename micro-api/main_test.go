@@ -10,7 +10,7 @@ import (
 var g *gin.Engine
 
 func TestMain(m *testing.M) {
-	framework.InitBaseFrameworkForUt(framework.ApiService)
+	f := framework.InitBaseFrameworkForUt(framework.ApiService)
 
 	gin.SetMode(gin.ReleaseMode)
 	g = gin.New()
@@ -28,5 +28,6 @@ func TestMain(m *testing.M) {
 	//}()
 
 	m.Run()
+	f.Shutdown()
 
 }

@@ -11,8 +11,6 @@ import (
 	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
 var Current Framework
@@ -62,6 +60,7 @@ type BaseFramework struct {
 
 func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
 	f := new(BaseFramework)
+
 	f.args = &ClientArgs{
 		Host: "127.0.0.1",
 		Port: 4116,
@@ -84,11 +83,8 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 		},
 	}
 
-	ss := make(chan os.Signal, 1)
-	signal.Notify(ss, syscall.SIGQUIT)
-	_ = <- ss
-
 	Current = f
+
 	return f
 }
 

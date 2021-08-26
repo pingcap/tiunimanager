@@ -56,6 +56,28 @@ type BaseFramework struct {
 	serviceHandler ServiceHandler
 }
 
+func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
+	f := new(BaseFramework)
+	f.args = &ClientArgs{
+		Host: "127.0.0.1",
+		Port: 8080,
+		MetricsPort: 4121,
+		RegistryClientPort: 4101,
+		RegistryPeerPort: 4102,
+		RegistryAddress: "127.0.0.1:4101",
+		DeployDir: "./../bin",
+		DataDir: "./..",
+		LogLevel: "info",
+	}
+	f.parseArgs(serviceName)
+
+	f.initOpts = opts
+	f.Init()
+
+	Current = f
+	return f
+}
+
 func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
 	f := new(BaseFramework)
 

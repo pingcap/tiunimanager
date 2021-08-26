@@ -3,38 +3,31 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/tiem/library/firstparty/config"
-	framework "github.com/pingcap/tiem/library/framework"
-	"github.com/pingcap/tiem/micro-api/route"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/micro-api/route"
 	"testing"
 )
 
+var g *gin.Engine
+
 func TestMain(m *testing.M) {
-	f := framework.NewUtFramework(framework.ApiService,
-		InitGin)
+	f := framework.InitBaseFrameworkForUt(framework.ApiService)
 
-	err := f.StartService()
-	if err == nil {
-		m.Run()
-	} else {
-		f.GetDefaultLogger().Error(err)
-	}
-}
-
-func InitGin(d *framework.UtFramework) error {
-	gin.SetMode(gin.TestMode)
-	g := gin.New()
+	gin.SetMode(gin.ReleaseMode)
+	g = gin.New()
 
 	route.Route(g)
 
-	port := config.GetClientArgs().RestPort
-	if port <= 0 {
-		port = config.DefaultRestPort
-	}
-	addr := fmt.Sprintf(":%d", port)
-	if err := g.Run(addr); err != nil {
-		d.GetDefaultLogger().Fatal(err)
-	}
+	port := f.GetServiceMeta().ServicePort
 
-	return nil
+	addr := fmt.Sprintf(":%d", port)
+
+	go func() {
+		if err := g.Run(addr); err != nil {
+			f.GetLogger().Fatal(err)
+		}
+	}()
+
+	m.Run()
+
 }

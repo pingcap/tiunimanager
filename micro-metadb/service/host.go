@@ -37,6 +37,8 @@ func GetDomainNameFromCode(failureDomain string) string {
 func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
 	dst.HostName = src.HostName
 	dst.IP = src.Ip
+	dst.UserName = src.UserName
+	dst.Passwd = src.Passwd
 	dst.OS = src.Os
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int(src.CpuCores)
@@ -169,6 +171,7 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.Rack = GetDomainNameFromCode(src.Rack)
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
+	dst.CreateAt = src.CreatedAt.Unix()
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
 			DiskId:   disk.ID,
@@ -280,6 +283,8 @@ func (*DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DBPreAlloc
 			RequestMem:    req.Req.Memory,
 			HostName:      v.HostName,
 			Ip:            v.Ip,
+			UserName:      v.UserName,
+			Passwd:        v.Passwd,
 			DiskName:      v.Name,
 			DiskPath:      v.Path,
 			DiskCap:       int32(v.Capacity),
@@ -328,7 +333,7 @@ func getFailureDomainByType(fd FailureDomain) (domain string, err error) {
 	case RACK:
 		domain = "rack"
 	default:
-		err = status.Errorf(codes.InvalidArgument, "%s is invalid domain type")
+		err = status.Errorf(codes.InvalidArgument, "%d is invalid domain type(1-DataCenter, 2-Zone, 3-Rack)", fd)
 	}
 	return
 }

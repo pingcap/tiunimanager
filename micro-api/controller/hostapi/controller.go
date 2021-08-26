@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	client2 "github.com/pingcap-inc/tiem/library/client"
+	crypto "github.com/pingcap-inc/tiem/library/thirdparty/encrypt"
 	"io"
 	"net"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
+
 	"google.golang.org/grpc/codes"
 )
 
@@ -35,6 +37,7 @@ func CopyHostFromRsp(src *cluster.HostInfo, dst *HostInfo) {
 	dst.Rack = src.Rack
 	dst.Status = int32(src.Status)
 	dst.Purpose = src.Purpose
+	dst.CreatedAt = src.CreateAt
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, Disk{
 			DiskId:   disk.DiskId,
@@ -47,12 +50,18 @@ func CopyHostFromRsp(src *cluster.HostInfo, dst *HostInfo) {
 }
 
 func genHostSpec(cpuCores int32, mem int32) string {
-	return fmt.Sprintf("%dU%dG", cpuCores, mem)
+	return fmt.Sprintf("%dC%dG", cpuCores, mem)
 }
 
-func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) {
+func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
+	dst.UserName = src.UserName
+	passwd, err := crypto.AesEncryptCFB(src.Passwd)
+	if err != nil {
+		return err
+	}
+	dst.Passwd = passwd
 	dst.Os = src.Os
 	dst.Kernel = src.Kernel
 	dst.CpuCores = src.CpuCores
@@ -73,21 +82,37 @@ func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) {
 			Path:     v.Path,
 		})
 	}
+	return nil
 }
 
 func doImport(c *gin.Context, host *HostInfo) (rsp *cluster.ImportHostResponse, err error) {
 	importReq := cluster.ImportHostRequest{}
 	importReq.Host = new(cluster.HostInfo)
-	copyHostToReq(host, importReq.Host)
+	err = copyHostToReq(host, importReq.Host)
+	if err != nil {
+		return nil, err
+	}
 	return client2.ClusterClient.ImportHost(c, &importReq)
 }
 
 func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *cluster.ImportHostsInBatchResponse, err error) {
 	importReq := cluster.ImportHostsInBatchRequest{}
 	importReq.Hosts = make([]*cluster.HostInfo, len(hosts))
+	var userName, passwd string
 	for i, host := range hosts {
+		if i == 0 {
+			userName, passwd = host.UserName, host.Passwd
+		} else {
+			if userName != host.UserName || passwd != host.Passwd {
+				errMsg := fmt.Sprintf("Row %d has a diff user(%s) or passwd(%s)", i, host.UserName, host.Passwd)
+				return nil, errors.New(errMsg)
+			}
+		}
 		importReq.Hosts[i] = new(cluster.HostInfo)
-		copyHostToReq(host, importReq.Hosts[i])
+		err = copyHostToReq(host, importReq.Hosts[i])
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return client2.ClusterClient.ImportHostsInBatch(c, &importReq)
@@ -137,10 +162,12 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 			host.HostName = row[HOSTNAME_FIELD]
 			addr := net.ParseIP(row[IP_FILED])
 			if addr == nil {
-				errMsg := fmt.Sprintf("Row %d has a Invalid IP Address %s", irow, row[1])
+				errMsg := fmt.Sprintf("Row %d has a Invalid IP Address %s", irow, row[IP_FILED])
 				return nil, errors.New(errMsg)
 			}
 			host.Ip = addr.String()
+			host.UserName = row[USERNAME_FIELD]
+			host.Passwd = row[PASSWD_FIELD]
 			host.Dc = row[DC_FIELD]
 			host.Az = row[ZONE_FIELD]
 			host.Rack = row[RACK_FIELD]
@@ -377,7 +404,7 @@ func RemoveHosts(c *gin.Context) {
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
 	templateName := "hostInfo_template.xlsx"
-	filePath := filepath.Join(curDir, templateName)
+	filePath := filepath.Join(curDir, "../etc/", templateName)
 
 	_, err := os.Stat(filePath)
 	if err != nil && !os.IsExist(err) {
@@ -406,9 +433,16 @@ func copyAllocToReq(src []Allocation, dst *[]*cluster.AllocationReq) {
 
 func copyAllocFromRsp(src []*cluster.AllocHost, dst *[]AllocateRsp) {
 	for i, host := range src {
+		plainPasswd, err := crypto.AesDecryptCFB(host.Passwd)
+		if err != nil {
+			// AllocHosts API is for internal testing, so just panic if something wrong
+			panic(err)
+		}
 		*dst = append(*dst, AllocateRsp{
 			HostName: host.HostName,
 			Ip:       host.Ip,
+			UserName: host.UserName,
+			Passwd:   plainPasswd,
 			CpuCores: host.CpuCores,
 			Memory:   host.Memory,
 		})

@@ -17,6 +17,8 @@ func getLogger() *framework.LogRecord {
 func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
+	dst.UserName = src.UserName
+	dst.Passwd = src.Passwd
 	dst.Os = src.Os
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int32(src.CpuCores)
@@ -53,6 +55,7 @@ func CopyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
+	dst.CreateAt = src.CreateAt
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &hostPb.Disk{
 			DiskId:   disk.DiskId,
@@ -212,7 +215,7 @@ func CheckDetails(ctx context.Context, in *hostPb.CheckDetailsRequest, out *host
 }
 
 func getHostSpec(cpuCores int32, mem int32) string {
-	return fmt.Sprintf("%dU%dG", cpuCores, mem)
+	return fmt.Sprintf("%dC%dG", cpuCores, mem)
 }
 
 func mergeReqs(zonesReqs map[string]map[string]*dbPb.DBPreAllocHostsRequest, reqs []*hostPb.AllocationReq) {
@@ -250,6 +253,9 @@ func fetchResults(zonesRsps map[string]map[string][]*dbPb.DBPreAllocation, reqs 
 			var host hostPb.AllocHost
 			host.HostName = rsp.HostName
 			host.Ip = rsp.Ip
+			host.UserName = rsp.UserName
+			//plain, err := crypto.AesDecryptCFB(rsp.Passwd)
+			host.Passwd = rsp.Passwd
 			host.CpuCores = rsp.RequestCores
 			host.Memory = rsp.RequestMem
 			host.Disk = new(hostPb.Disk)

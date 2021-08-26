@@ -277,7 +277,6 @@ func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *c
 	return nil
 }
 
-
 var ManageSuccessResponseStatus = &clusterPb.ManagerResponseStatus{
 	Code: 0,
 }

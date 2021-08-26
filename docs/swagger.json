@@ -13,7 +13,7 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "localhost:4116",
     "basePath": "/api/v1/",
     "paths": {
         "/backups": {
@@ -285,6 +285,68 @@
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/controller.StatusInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/cluster/dashboard": {
+            "get": {
+                "description": "查看集群dashboard信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "查看集群dashboard信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/clusterapi.DescribeDashboardRsp"
                                         }
                                     }
                                 }
@@ -1865,6 +1927,20 @@
                 }
             }
         },
+        "clusterapi.DescribeDashboardRsp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "shareCode": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "clusterapi.DetailClusterRsp": {
             "type": "object",
             "properties": {
@@ -2133,6 +2209,12 @@
                 },
                 "memory": {
                     "type": "integer"
+                },
+                "passwd": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
                 }
             }
         },
@@ -2209,6 +2291,9 @@
                 "cpuCores": {
                     "type": "integer"
                 },
+                "createTime": {
+                    "type": "integer"
+                },
                 "dc": {
                     "type": "string"
                 },
@@ -2241,6 +2326,9 @@
                 "os": {
                     "type": "string"
                 },
+                "passwd": {
+                    "type": "string"
+                },
                 "purpose": {
                     "description": "What Purpose is the host used for? [compute/storage or both]",
                     "type": "string"
@@ -2255,6 +2343,9 @@
                 "status": {
                     "description": "Host Status, 0 for Online, 1 for offline",
                     "type": "integer"
+                },
+                "userName": {
+                    "type": "string"
                 }
             }
         },

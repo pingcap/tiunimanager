@@ -1,10 +1,6 @@
 package models
 
 import (
-	"github.com/google/uuid"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"os"
 	"testing"
 	"time"
 )
@@ -27,44 +23,6 @@ type TestRecord struct {
 type TestData struct {
 	Data
 	name string
-}
-
-func TestMain(m *testing.M) {
-	testFile := uuid.New().String() + ".db"
-	MetaDB, _ = gorm.Open(sqlite.Open(testFile), &gorm.Config{})
-
-	defer func() {
-		os.Remove(testFile)
-	}()
-
-	err := MetaDB.Migrator().CreateTable(
-		&AccountDO{},
-		&RoleBindingDO{},
-		&RoleDO{},
-		&PermissionBindingDO{},
-		&PermissionDO{},
-		&TestEntity{},
-		&TestEntity2{},
-		&TestRecord{},
-		&TestData{},
-		&DemandRecordDO{},
-		&Host{},
-		&Disk{},
-		&ClusterDO{},
-		&TiUPConfigDO{},
-		&Tenant{},
-		&FlowDO{},
-		&TaskDO{},
-		&Token{},
-		&BackupRecordDO{},
-		&RecoverRecordDO{},
-		&ParametersRecordDO{},
-	)
-	if err == nil {
-		m.Run()
-	} else {
-		getLogger().Error(err)
-	}
 }
 
 func TestTime(t *testing.T)  {

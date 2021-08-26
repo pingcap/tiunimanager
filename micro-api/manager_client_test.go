@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	client2 "github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client"
 
 	micro "github.com/asim/go-micro/v3/client"
 	"github.com/pingcap-inc/tiem/micro-cluster/proto"
@@ -105,7 +105,7 @@ func InitFakeClusterClient() *ClusterFakeService {
 			return nil, nil
 		},
 	}
-	client2.ClusterClient = fakeClient
+	client.ClusterClient = fakeClient
 	return fakeClient
 }
 

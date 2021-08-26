@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/asim/go-micro/v3"
-	client2 "github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client"
 	common "github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
@@ -27,7 +27,7 @@ func main() {
 
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.MetaDBService: func(service micro.Service) error {
-			client2.DBClient = dbPb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
+			client.DBClient = dbPb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
 			return nil
 		},
 	})

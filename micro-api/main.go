@@ -5,7 +5,7 @@ import (
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
 	_ "github.com/pingcap-inc/tiem/docs"
-	client2 "github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/route"
@@ -31,7 +31,7 @@ func main() {
 
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.ClusterService: func(service micro.Service) error {
-			client2.ClusterClient = clusterPb.NewClusterService(string(framework.ClusterService), service.Client())
+			client.ClusterClient = clusterPb.NewClusterService(string(framework.ClusterService), service.Client())
 			return nil
 		},
 	})

@@ -651,11 +651,6 @@ definitions:
       userPassword:
         type: string
     type: object
-  userapi.LogoutInfo:
-    properties:
-      userName:
-        type: string
-    type: object
   userapi.UserIdentity:
     properties:
       userName:
@@ -1652,11 +1647,6 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 退出登录信息
-        in: body
-        name: logoutInfo
-        schema:
-          $ref: '#/definitions/userapi.LogoutInfo'
       produces:
       - application/json
       responses:

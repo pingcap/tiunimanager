@@ -9,6 +9,8 @@ import (
 	"github.com/asim/go-micro/v3"
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/transport"
+	"github.com/pingcap-inc/tiem/library/util/signal"
+	"os"
 )
 
 var Current Framework
@@ -66,13 +68,23 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 		RegistryPeerPort: 4102,
 		RegistryAddress: "127.0.0.1:4101",
 		DeployDir: "./../bin",
-		DataDir: "./..",
+		DataDir: "./testdata",
 		LogLevel: "info",
 	}
 	f.parseArgs(serviceName)
 
 	f.initOpts = opts
 	f.Init()
+
+	f.shutdownOpts = []Opt {
+		func(d *BaseFramework) error {
+			return os.RemoveAll(d.GetDataDir())
+		},
+	}
+
+	signal.SetupSignalHandler(func(bool) {
+		f.Shutdown()
+	})
 
 	Current = f
 	return f

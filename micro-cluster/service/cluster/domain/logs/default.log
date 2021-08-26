@@ -1,0 +1,3 @@
+{"file":"dashboard.go","fun":"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain.post","level":"info","line":162,"msg":"POST URL : http://127.0.0.1:2379/dashboard/api/user/login \n","time":"2021-08-26T11:47:17+08:00"}
+{"file":"dashboard.go","fun":"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain.post","level":"info","line":162,"msg":"POST URL : http://127.0.0.1:2379/dashboard/api/user/login \n","time":"2021-08-26T11:47:17+08:00"}
+{"file":"dashboard.go","fun":"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain.post","level":"info","line":162,"msg":"POST URL : http://127.0.0.1:2379/dashboard/api/user/share/code \n","time":"2021-08-26T11:47:17+08:00"}

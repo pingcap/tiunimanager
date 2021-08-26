@@ -327,6 +327,68 @@ var doc = `{
                 }
             }
         },
+        "/cluster/dashboard": {
+            "get": {
+                "description": "查看集群dashboard信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "查看集群dashboard信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/clusterapi.DescribeDashboardRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters": {
             "get": {
                 "description": "查询集群列表",
@@ -1554,14 +1616,6 @@ var doc = `{
                         "name": "Token",
                         "in": "header",
                         "required": true
-                    },
-                    {
-                        "description": "退出登录信息",
-                        "name": "logoutInfo",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/userapi.LogoutInfo"
-                        }
                     }
                 ],
                 "responses": {
@@ -1880,6 +1934,20 @@ var doc = `{
                 }
             }
         },
+        "clusterapi.DescribeDashboardRsp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "shareCode": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "clusterapi.DetailClusterRsp": {
             "type": "object",
             "properties": {
@@ -2148,6 +2216,12 @@ var doc = `{
                 },
                 "memory": {
                     "type": "integer"
+                },
+                "passwd": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
                 }
             }
         },
@@ -2224,6 +2298,9 @@ var doc = `{
                 "cpuCores": {
                     "type": "integer"
                 },
+                "createTime": {
+                    "type": "integer"
+                },
                 "dc": {
                     "type": "string"
                 },
@@ -2256,6 +2333,9 @@ var doc = `{
                 "os": {
                     "type": "string"
                 },
+                "passwd": {
+                    "type": "string"
+                },
                 "purpose": {
                     "description": "What Purpose is the host used for? [compute/storage or both]",
                     "type": "string"
@@ -2270,6 +2350,9 @@ var doc = `{
                 "status": {
                     "description": "Host Status, 0 for Online, 1 for offline",
                     "type": "integer"
+                },
+                "userName": {
+                    "type": "string"
                 }
             }
         },
@@ -2566,14 +2649,6 @@ var doc = `{
                 }
             }
         },
-        "userapi.LogoutInfo": {
-            "type": "object",
-            "properties": {
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
         "userapi.UserIdentity": {
             "type": "object",
             "properties": {
@@ -2597,7 +2672,7 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "localhost:8080",
+	Host:        "localhost:4116",
 	BasePath:    "/api/v1/",
 	Schemes:     []string{},
 	Title:       "TiEM UI API",

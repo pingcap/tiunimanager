@@ -3,6 +3,7 @@ package main
 import (
 	cryrand "crypto/rand"
 	"encoding/base64"
+
 	"github.com/pingcap-inc/tiem/library/firstparty/framework"
 	"github.com/pingcap-inc/tiem/library/firstparty/util"
 
@@ -70,7 +71,7 @@ func initTenantDataForDev(f *framework.DefaultServiceFramework) error {
 	role2, err := models.AddRole(tenant.ID, "DBA", "DBA", 0)
 	util.AssertNoErr(err)
 	userId1 := initUser(tenant.ID, "admin")
-	userId2:= initUser(tenant.ID, "nopermission")
+	userId2 := initUser(tenant.ID, "nopermission")
 
 	f.GetDefaultLogger().Infof("initialization default tencent: %s, roles: %s, %s, users:%s, %s", tenant, role1, role2, userId1, userId2)
 
@@ -102,12 +103,15 @@ func initResourceDataForDev(f *framework.DefaultServiceFramework) error {
 	_, err := models.CreateHost(&models.Host{
 		HostName: "主机1",
 		IP:       "192.168.125.132",
+		UserName: "root",
+		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
 		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
+		DC:       "DataCenter1",
 		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
@@ -120,17 +124,20 @@ func initResourceDataForDev(f *framework.DefaultServiceFramework) error {
 	_, err = models.CreateHost(&models.Host{
 		HostName: "主机2",
 		IP:       "192.168.125.133",
+		UserName: "root",
+		Passwd:   "e446c4324d4c240b4b07a0a738f2820952ebeaa11ad9",
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
 		CpuCores: 5,
 		Memory:   8,
+		DC:       "DataCenter1",
 		Nic:      "1GE",
 		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
-			{Name: "sdb", Path: "/tikv", Capacity: 256, Status: 1},
+			{Name: "sdb", Path: "/tikv", Capacity: 256, Status: 0},
 		},
 	})
 
@@ -138,14 +145,17 @@ func initResourceDataForDev(f *framework.DefaultServiceFramework) error {
 	_, err = models.CreateHost(&models.Host{
 		HostName: "主机3",
 		IP:       "192.168.125.134",
+		UserName: "root",
+		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
 		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
+		DC:       "DataCenter1",
+		AZ:       "Zone2",
+		Rack:     "3-2",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
 			{Name: "sdb", Path: "/pd", Capacity: 256, Status: 1},
@@ -155,31 +165,37 @@ func initResourceDataForDev(f *framework.DefaultServiceFramework) error {
 	_, err = models.CreateHost(&models.Host{
 		HostName: "主机4",
 		IP:       "192.168.125.135",
+		UserName: "root",
+		Passwd:   "431156422e1746bc108e7f334ebfdb080219be9b6f2b",
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
 		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
+		DC:       "DataCenter1",
 		AZ:       "Zone2",
-		Rack:     "3-1",
+		Rack:     "3-2",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
-			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
+			{Name: "sdb", Path: "/www", Capacity: 256, Status: 0},
 		},
 	})
 
 	_, err = models.CreateHost(&models.Host{
-		HostName: "主机4",
+		HostName: "主机5",
 		IP:       "192.168.125.136",
+		UserName: "root",
+		Passwd:   "431156422e1746bc108e7f334ebfdb080219be9b6f2b",
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
 		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
+		DC:       "DataCenter1",
+		AZ:       "Zone3",
+		Rack:     "3-3",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
 			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
@@ -187,19 +203,22 @@ func initResourceDataForDev(f *framework.DefaultServiceFramework) error {
 	})
 
 	_, err = models.CreateHost(&models.Host{
-		HostName: "主机4",
+		HostName: "主机6",
 		IP:       "192.168.125.137",
+		UserName: "root",
+		Passwd:   "e446c4324d4c240b4b07a0a738f2820952ebeaa11ad9",
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
 		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
+		DC:       "DataCenter1",
+		AZ:       "Zone3",
+		Rack:     "3-3",
 		Purpose:  "Compute",
 		Disks: []models.Disk{
-			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
+			{Name: "sdb", Path: "/www", Capacity: 256, Status: 0},
 		},
 	})
 

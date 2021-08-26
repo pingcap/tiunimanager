@@ -30,7 +30,7 @@ func performRequest(method, path, contentType string, body io.Reader) *httptest.
 	w := httptest.NewRecorder()
 
 	// todo use httpClient to request
-	//g.ServeHTTP(w, req)
+	g.ServeHTTP(w, req)
 	return w
 }
 
@@ -179,7 +179,7 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 		return rsp, nil
 	})
 
-	contentType, reader, err := createBatchImportBody("./hostInfo_template.xlsx")
+	contentType, reader, err := createBatchImportBody("../etc/hostInfo_template.xlsx")
 	if err != nil {
 		t.Errorf("open template file failed\n")
 	}
@@ -376,6 +376,8 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 		rsp.PdHosts = append(rsp.PdHosts, &managerPb.AllocHost{
 			HostName: fakeHostName1,
 			Ip:       fakeIp1,
+			UserName: "root",
+			Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428", // "admin2"
 		})
 		rsp.PdHosts[0].Disk = &managerPb.Disk{
 			Name: fakeDiskName1,
@@ -384,6 +386,8 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 		rsp.TidbHosts = append(rsp.TidbHosts, &managerPb.AllocHost{
 			HostName: fakeHostName2,
 			Ip:       fakeIp2,
+			UserName: "root",
+			Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		})
 		rsp.TidbHosts[0].Disk = &managerPb.Disk{
 			Name: fakeDiskName2,
@@ -392,6 +396,8 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 		rsp.TikvHosts = append(rsp.TikvHosts, &managerPb.AllocHost{
 			HostName: fakeHostName3,
 			Ip:       fakeIp3,
+			UserName: "root",
+			Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		})
 		rsp.TikvHosts[0].Disk = &managerPb.Disk{
 			Name: fakeDiskName3,
@@ -400,6 +406,8 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 		rsp.TikvHosts = append(rsp.TikvHosts, &managerPb.AllocHost{
 			HostName: fakeHostName4,
 			Ip:       fakeIp4,
+			UserName: "root",
+			Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		})
 		rsp.TikvHosts[1].Disk = &managerPb.Disk{
 			Name: fakeDiskName4,
@@ -463,4 +471,6 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 	assert.Equal(t, result.Data.TikvHosts[0].Disk.Name, fakeDiskName3)
 	assert.Equal(t, result.Data.TikvHosts[1].Disk.Path, fakeDiskPath4)
 	assert.Equal(t, result.Data.TikvHosts[1].Ip, fakeIp4)
+	assert.Equal(t, result.Data.TidbHosts[0].UserName, "root")
+	assert.Equal(t, result.Data.TikvHosts[0].Passwd, "admin2")
 }

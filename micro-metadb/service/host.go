@@ -333,7 +333,7 @@ func getFailureDomainByType(fd FailureDomain) (domain string, err error) {
 	case RACK:
 		domain = "rack"
 	default:
-		err = status.Errorf(codes.InvalidArgument, "%s is invalid domain type")
+		err = status.Errorf(codes.InvalidArgument, "%d is invalid domain type(1-DataCenter, 2-Zone, 3-Rack)", fd)
 	}
 	return
 }

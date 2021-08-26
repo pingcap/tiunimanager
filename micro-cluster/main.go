@@ -52,7 +52,7 @@ func initAdapter(f *framework.BaseFramework) error {
 
 func defaultPortForLocal(f *framework.BaseFramework) error {
 	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = 4012
+		f.GetServiceMeta().ServicePort = common.DefaultMicroClusterPort
 	}
 	return nil
 }

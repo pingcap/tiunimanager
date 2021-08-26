@@ -64,7 +64,7 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 	f := new(BaseFramework)
 	f.args = &ClientArgs{
 		Host: "127.0.0.1",
-		Port: 8080,
+		Port: 4116,
 		MetricsPort: 4121,
 		RegistryClientPort: 4101,
 		RegistryPeerPort: 4102,

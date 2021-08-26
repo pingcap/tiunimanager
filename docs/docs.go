@@ -1616,14 +1616,6 @@ var doc = `{
                         "name": "Token",
                         "in": "header",
                         "required": true
-                    },
-                    {
-                        "description": "退出登录信息",
-                        "name": "logoutInfo",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/userapi.LogoutInfo"
-                        }
                     }
                 ],
                 "responses": {
@@ -2653,14 +2645,6 @@ var doc = `{
                     "type": "string"
                 },
                 "userPassword": {
-                    "type": "string"
-                }
-            }
-        },
-        "userapi.LogoutInfo": {
-            "type": "object",
-            "properties": {
-                "userName": {
                     "type": "string"
                 }
             }

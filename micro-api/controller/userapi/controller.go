@@ -1,11 +1,12 @@
 package userapi
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"github.com/pingcap-inc/tiem/micro-cluster/proto"
-	"net/http"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // Login 登录接口
@@ -50,18 +51,11 @@ func Login(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param Token header string true "token"
-// @Param logoutInfo body LogoutInfo false "退出登录信息"
 // @Success 200 {object} controller.CommonResult{data=UserIdentity}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {
-	var req LogoutInfo
-	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
-		return
-	}
-
 	logoutReq := cluster.LogoutRequest{TokenString: c.GetHeader("Token")}
 	result, err := client.ClusterClient.Logout(c, &logoutReq)
 

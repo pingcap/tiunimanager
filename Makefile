@@ -180,33 +180,27 @@ help:
 	@echo "make test, test all case"
 	@echo "make upload_coverage, upload coverage information"
 
-# upload coverage information
-upload_coverage: SHELL:=/bin/bash
 upload_coverage:
-ifeq ("$(TRAVIS_COVERAGE)", "1")
-	mv overalls.coverprofile coverage.txt
-	bash <(curl -s https://codecov.io/bash) -t $(CODECOV_TOKEN)
+#	GO111MODULE=off go get github.com/wadey/gocovmerge
+#	gocovmerge "$(TEST_DIR)"/cov.* | grep -vE ".*.pb.go" > "$(TEST_DIR)/all_cov.out"
+	grep -vE ".*.pb.go" "$(TEST_DIR)/cov.unit.out" > "$(TEST_DIR)/unit_cov.out"
+ifeq ("$(JenkinsCI)", "1")
+#	GO111MODULE=off go get github.com/mattn/goveralls
+#	@goveralls -coverprofile=$(TEST_DIR)/all_cov.out -service=jenkins-ci -repotoken $(COVERALLS_TOKEN)
+	curl -s https://codecov.io/bash > $(CODECOV_BASH)
+	bash $(CODECOV_BASH) -f $(TEST_DIR)/unit_cov.out -t $(CODECOV_TOKEN)
+else
+	go tool cover -html "$(TEST_DIR)/all_cov.out" -o "$(TEST_DIR)/all_cov.html"
+	go tool cover -html "$(TEST_DIR)/unit_cov.out" -o "$(TEST_DIR)/unit_cov.html"
+	go tool cover -func="$(TEST_DIR)/unit_cov.out"
 endif
 
 test: failpoint-enable
-ifeq ("$(TRAVIS_COVERAGE)", "1")
-	@echo "Running in TRAVIS_COVERAGE mode."
-	$(GO) get github.com/go-playground/overalls
-	@export log_level=info; \
-	$(OVERALLS) -project=github.com/pingcap-inc/tiem\
-			-covermode=count \
-			-ignore='.git,vendor,cmd,docs,proto,tests,LICENSES' \
-			-concurrency=4 \
-			-- -coverpkg=./... \
-			|| { $(FAILPOINT_DISABLE); exit 1; }
-else
-	@echo "Running in native mode."
-	@export log_level=info; export TZ='Asia/Shanghai'; \
-	$(GOTEST) -ldflags '$(TEST_LDFLAGS)' $(EXTRA_TEST_ARGS) -v -cover $(PACKAGES) -check.p true > gotest.log || { $(FAILPOINT_DISABLE); cat 'gotest.log'; exit 1; }
-	@echo "timeout-check"
-	grep 'PASS:' gotest.log | go run build_helper/check-timeout.go || { $(FAILPOINT_DISABLE); exit 1; }
-endif
-	@$(FAILPOINT_DISABLE)
+	mkdir -p "$(TEST_DIR)"
+	@export log_level=error;\
+	$(GOTEST) -cover -covermode=atomic -coverprofile="$(TEST_DIR)/cov.unit.out" $(PACKAGES) \
+	|| { $(FAILPOINT_DISABLE); exit 1; }
+	$(FAILPOINT_DISABLE)
 
 #race: failpoint-enable
 #   @export log_level=debug; \

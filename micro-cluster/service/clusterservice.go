@@ -2,13 +2,12 @@ package service
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/framework"
+	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
 	"net/http"
 	"strconv"
 
-	tenantDomain "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
-
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
-	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
@@ -22,21 +21,17 @@ var BizErrorResponseStatus = &clusterPb.ResponseStatusDTO{Code: 1}
 
 type ClusterServiceHandler struct{}
 
-var log *logger.LogRecord
-
-func InitClusterLogger(defaultLog *logger.LogRecord) {
-	log = defaultLog
-	domain.InitDomainLogger(defaultLog)
-	host.InitLogger(defaultLog)
+func getLogger() *framework.LogRecord {
+	return framework.GetLogger()
 }
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterPb.ClusterCreateReqDTO, resp *clusterPb.ClusterCreateRespDTO) (err error) {
-	log.Info("create cluster")
+	getLogger().Info("create cluster")
 	clusterAggregation, err := domain.CreateCluster(req.GetOperator(), req.GetCluster(), req.GetDemands())
 
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -49,11 +44,10 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterPb
 }
 
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterPb.ClusterQueryReqDTO, resp *clusterPb.ClusterQueryRespDTO) (err error) {
-	log.Info("query cluster")
+	getLogger().Info("query cluster")
 	clusters, total, err := domain.ListCluster(req.Operator, req)
 	if err != nil {
-		log.Info(err)
-
+		getLogger().Info(err)
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -71,12 +65,12 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterPb.
 }
 
 func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterPb.ClusterDeleteReqDTO, resp *clusterPb.ClusterDeleteRespDTO) (err error) {
-	log.Info("delete cluster")
+	getLogger().Info("delete cluster")
 
 	clusterAggregation, err := domain.DeleteCluster(req.GetOperator(), req.GetClusterId())
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -87,13 +81,13 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterPb
 }
 
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterPb.ClusterDetailReqDTO, resp *clusterPb.ClusterDetailRespDTO) (err error) {
-	log.Info("detail cluster")
+	getLogger().Info("detail cluster")
 
 	cluster, err := domain.GetClusterDetail(req.Operator, req.ClusterId)
 
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -154,7 +148,7 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 }
 
 func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterPb.CreateBackupRequest, response *clusterPb.CreateBackupResponse) (err error) {
-	log.Info("backup cluster")
+	getLogger().Info("backup cluster")
 
 	if err = domain.BackupPreCheck(request); err != nil {
 		return err
@@ -162,7 +156,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 
 	clusterAggregation, err := domain.Backup(request.Operator, request.ClusterId, request.BackupRange, request.BackupType, request.FilePath)
 	if err != nil {
-		log.Info(err)
+		getLogger().Info(err)
 		// todo
 		return nil
 	} else {
@@ -173,13 +167,13 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 }
 
 func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request *clusterPb.RecoverBackupRequest, response *clusterPb.RecoverBackupResponse) (err error) {
-	log.Info("recover cluster")
+	getLogger().Info("recover cluster")
 
 	//todo: param precheck
 	cluster, err := domain.Recover(request.Operator, request.ClusterId, request.BackupRecordId)
 
 	if err != nil {
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
@@ -189,12 +183,12 @@ func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request 
 }
 
 func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *clusterPb.DeleteBackupRequest, response *clusterPb.DeleteBackupResponse) (err error) {
-	log.Info("delete backup")
+	getLogger().Info("delete backup")
 
 	err = domain.DeleteBackup(request.Operator, request.GetClusterId(), request.GetBackupRecordId())
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
@@ -215,7 +209,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 		},
 	})
 	if err != nil {
-		log.Error(err)
+		getLogger().Error(err)
 		return err
 	} else {
 		response.Status = SuccessResponseStatus
@@ -226,7 +220,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return err
 	}
 
@@ -252,7 +246,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 		ClusterId: request.ClusterId,
 	})
 	if err != nil {
-		log.Error(err)
+		getLogger().Error(err)
 		return err
 	} else {
 		response.Status = SuccessResponseStatus
@@ -272,7 +266,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return err
 	}
 
@@ -294,7 +288,7 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 	})
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
@@ -333,7 +327,7 @@ func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *clu
 	content, err := domain.GetParameters(request.Operator, request.ClusterId)
 
 	if err != nil {
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
@@ -350,7 +344,7 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 
 	if err != nil {
 		// todo
-		log.Info(err)
+		getLogger().Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
@@ -364,7 +358,7 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *clusterPb.DescribeDashboardRequest, response *clusterPb.DescribeDashboardResponse) (err error) {
 	info, err := domain.DecribeDashboard(request.Operator, request.ClusterId)
 	if err != nil {
-		log.Error(err)
+		getLogger().Error(err)
 		return err
 	}
 
@@ -382,7 +376,7 @@ var ManageSuccessResponseStatus = &clusterPb.ManagerResponseStatus{
 
 func (*ClusterServiceHandler) Login(ctx context.Context, req *clusterPb.LoginRequest, resp *clusterPb.LoginResponse) error {
 
-	token, err := tenantDomain.Login(req.GetAccountName(), req.GetPassword())
+	token, err := domain2.Login(req.GetAccountName(), req.GetPassword())
 
 	if err != nil {
 		resp.Status = &clusterPb.ManagerResponseStatus{
@@ -399,7 +393,7 @@ func (*ClusterServiceHandler) Login(ctx context.Context, req *clusterPb.LoginReq
 }
 
 func (*ClusterServiceHandler) Logout(ctx context.Context, req *clusterPb.LogoutRequest, resp *clusterPb.LogoutResponse) error {
-	accountName, err := tenantDomain.Logout(req.TokenString)
+	accountName, err := domain2.Logout(req.TokenString)
 	if err != nil {
 		resp.Status = &clusterPb.ManagerResponseStatus{
 			Code:    http.StatusInternalServerError,
@@ -415,15 +409,15 @@ func (*ClusterServiceHandler) Logout(ctx context.Context, req *clusterPb.LogoutR
 }
 
 func (*ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterPb.VerifyIdentityRequest, resp *clusterPb.VerifyIdentityResponse) error {
-	tenantId, accountId, accountName, err := tenantDomain.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
+	tenantId, accountId, accountName, err := domain2.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
 
 	if err != nil {
-		if _, ok := err.(*tenantDomain.UnauthorizedError); ok {
+		if _, ok := err.(*domain2.UnauthorizedError); ok {
 			resp.Status = &clusterPb.ManagerResponseStatus{
 				Code:    http.StatusUnauthorized,
 				Message: "未登录或登录失效，请重试",
 			}
-		} else if _, ok := err.(*tenantDomain.ForbiddenError); ok {
+		} else if _, ok := err.(*domain2.ForbiddenError); ok {
 			resp.Status = &clusterPb.ManagerResponseStatus{
 				Code:    http.StatusForbidden,
 				Message: "无权限",
@@ -475,3 +469,4 @@ func (*ClusterServiceHandler) AllocHosts(ctx context.Context, in *clusterPb.Allo
 func (*ClusterServiceHandler) GetFailureDomain(ctx context.Context, in *clusterPb.GetFailureDomainRequest, out *clusterPb.GetFailureDomainResponse) error {
 	return host.GetFailureDomain(ctx, in, out)
 }
+

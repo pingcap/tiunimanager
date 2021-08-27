@@ -6,7 +6,7 @@ import (
 	"fmt"
 	scp "github.com/bramvdbogaerde/go-scp"
 	"github.com/bramvdbogaerde/go-scp/auth"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
@@ -93,21 +93,21 @@ func DeleteBackup(ope *proto.OperatorDTO, clusterId string, bakId int64) error {
 	//todo: parma pre check
 	resp, err := client.DBClient.QueryBackupRecords(context.TODO(), &db.DBQueryBackupRecordRequest{ClusterId: clusterId, RecordId: bakId})
 	if err != nil {
-		log.Errorf("query backup record %d of cluster %s failed, %s", bakId, clusterId, err.Error())
+		getLogger().Errorf("query backup record %d of cluster %s failed, %s", bakId, clusterId, err.Error())
 		return fmt.Errorf("query backup record %d of cluster %s failed, %s", bakId, clusterId, err.Error())
 	}
-	log.Infof("query backup record to be deleted, record: %v", resp.GetBackupRecords().GetBackupRecord())
+	getLogger().Infof("query backup record to be deleted, record: %v", resp.GetBackupRecords().GetBackupRecord())
 	filePath := resp.GetBackupRecords().GetBackupRecord().GetFilePath() //backup dir
 
 	err = os.RemoveAll(filePath)
 	if err != nil {
-		log.Errorf("remove backup filePath failed, %s", err.Error())
+		getLogger().Errorf("remove backup filePath failed, %s", err.Error())
 		return fmt.Errorf("remove backup filePath failed, %s", err.Error())
 	}
 
 	_, err = client.DBClient.DeleteBackupRecord(context.TODO(), &db.DBDeleteBackupRecordRequest{Id: bakId})
 	if err != nil{
-		log.Errorf("delete metadb backup record failed, %s", err.Error())
+		getLogger().Errorf("delete metadb backup record failed, %s", err.Error())
 		return fmt.Errorf("delete metadb backup record failed, %s", err.Error())
 	}
 
@@ -157,8 +157,8 @@ func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupR
 }
 
 func backupCluster(task *TaskEntity, context *FlowContext) bool {
-	log.Info("begin backupCluster")
-	defer log.Info("end backupCluster")
+	getLogger().Info("begin backupCluster")
+	defer getLogger().Info("end backupCluster")
 
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
@@ -184,10 +184,10 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 		Root: record.FilePath,
 	}
 
-	log.Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
+	getLogger().Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
 	_, err := libbr.BackUp(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
-		log.Errorf("call backup api failed, %s", err.Error())
+		getLogger().Errorf("call backup api failed, %s", err.Error())
 		return false
 	}
 	record.BizId = uint64(task.Id)
@@ -227,15 +227,15 @@ func UpdateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		},
 	})
 	if err != nil {
-		log.Errorf("update backup record for cluster failed, %s", err.Error())
+		getLogger().Errorf("update backup record for cluster failed, %s", err.Error())
 		return false
 	}
 	return true
 }
 
 func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
-	log.Info("begin updateBackupRecord")
-	defer log.Info("end updateBackupRecord")
+	getLogger().Info("begin updateBackupRecord")
+	defer getLogger().Info("end updateBackupRecord")
 	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
 	record := clusterAggregation.LastBackupRecord
 	/*
@@ -266,21 +266,21 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		},
 	})
 	if err != nil {
-		log.Errorf("update backup record for cluster[%s] failed, %s", clusterAggregation.Cluster.Id, err.Error())
+		getLogger().Errorf("update backup record for cluster[%s] failed, %s", clusterAggregation.Cluster.Id, err.Error())
 		return false
 	}
 	return true
 }
 
 func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	log.Info("begin recoverFromSrcCluster")
-	defer log.Info("end recoverFromSrcCluster")
+	getLogger().Info("begin recoverFromSrcCluster")
+	defer getLogger().Info("end recoverFromSrcCluster")
 
 	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	recoverInfo := cluster.RecoverInfo
 	if recoverInfo.SourceClusterId == "" || recoverInfo.BackupRecordId == 0 {
-		log.Infof("cluster[%s] no need recover", cluster.Id)
+		getLogger().Infof("cluster[%s] no need recover", cluster.Id)
 		return true
 	}
 
@@ -289,7 +289,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 
 	record, err := client.DBClient.QueryBackupRecords(context.TODO(), &db.DBQueryBackupRecordRequest{ClusterId: recoverInfo.SourceClusterId, RecordId: recoverInfo.BackupRecordId})
 	if err != nil {
-		log.Errorf("query backup record failed, %s", err.Error())
+		getLogger().Errorf("query backup record failed, %s", err.Error())
 		return false
 	}
 
@@ -309,10 +309,10 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		StorageType: libbr.StorageTypeLocal,
 		Root: record.GetBackupRecords().GetBackupRecord().GetFilePath(),
 	}
-	log.Infof("begin call brmgr restore api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
+	getLogger().Infof("begin call brmgr restore api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
 	_, err = libbr.Restore(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
-		log.Errorf("call restore api failed, %s", err.Error())
+		getLogger().Errorf("call restore api failed, %s", err.Error())
 		return false
 	}
 	return true
@@ -332,7 +332,7 @@ func mergeBackupFiles(task *TaskEntity, context *FlowContext) bool {
 	for index, tikv := range tikvServers {
 		err := scpTikvBackupFiles(tikv, tikvDir, backupDir, index)
 		if err != nil {
-			log.Errorf("scp backup files from tikv server[%s] failed, %s", tikv.Host, err.Error())
+			getLogger().Errorf("scp backup files from tikv server[%s] failed, %s", tikv.Host, err.Error())
 			return false
 		}
 	}
@@ -343,28 +343,28 @@ func mergeBackupFiles(task *TaskEntity, context *FlowContext) bool {
 func scpTikvBackupFiles(tikv *spec.TiKVSpec, tikvDir, backupDir string, index int) error {
 	sshConfig, err := auth.PrivateKey("root", "/root/.ssh/id_rsa_tiup_test", ssh.InsecureIgnoreHostKey())
 	if err != nil {
-		log.Errorf("ssh auth remote host failed, %s", err.Error())
+		getLogger().Errorf("ssh auth remote host failed, %s", err.Error())
 		return err
 	}
 
 	scpClient := scp.NewClient(fmt.Sprintf("%s:22", tikv.Host), &sshConfig)
 	err = scpClient.Connect()
 	if err != nil {
-		log.Errorf("scp client connect tikv server[%s] failed, %s", tikv.Host, err.Error())
+		getLogger().Errorf("scp client connect tikv server[%s] failed, %s", tikv.Host, err.Error())
 		return err
 	}
 	defer scpClient.Session.Close()
 
 	backupFile, err := os.Open(fmt.Sprintf("%s/tikv-%d.zip", backupDir, index))
 	if err != nil {
-		log.Errorf("open backup file failed, %s", err.Error())
+		getLogger().Errorf("open backup file failed, %s", err.Error())
 		return err
 	}
 	defer backupFile.Close()
 
 	err = scpClient.CopyFromRemote(backupFile, fmt.Sprintf("%s/tikv.zip", tikvDir))
 	if err != nil {
-		log.Errorf("copy backup file from tikv server[%s] failed, %s", tikv.Host, err.Error())
+		getLogger().Errorf("copy backup file from tikv server[%s] failed, %s", tikv.Host, err.Error())
 		return err
 	}
 	return nil

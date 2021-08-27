@@ -3,8 +3,8 @@ package adapt
 import (
 	"context"
 	"github.com/google/uuid"
+	"github.com/pingcap-inc/tiem/library/client"
 	tenant "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"time"
 )

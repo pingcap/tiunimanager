@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/client"
+	crypto "github.com/pingcap-inc/tiem/library/thirdparty/encrypt"
 	"io"
 	"net"
 	"net/http"
@@ -11,14 +13,10 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
-
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
-
-	crypto "github.com/pingcap-inc/tiem/library/thirdparty/encrypt"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
 
 	"google.golang.org/grpc/codes"

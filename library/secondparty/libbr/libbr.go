@@ -7,9 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
-	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/framework"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"io"
 	"os"
@@ -175,7 +174,7 @@ type CmdGetAllTaskStatusResp struct {
 //var glMgrTaskStatusCh chan TaskStatusMember
 //var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
-var log *logger.LogRecord
+var log *framework.LogRecord
 
 var glMgrTaskStatusCh chan TaskStatusMember
 var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
@@ -191,9 +190,7 @@ func BrMgrInit() {
 	if len(configPath) == 0 {
 		configPath = "./brmgr.log"
 	}
-	config.InitConfigForDev(config.BRInternalMod)
-	// TODO: update log path using configPath if necessary
-	log = logger.GetLogger(config.KEY_BRLIB_LOG)
+	log = framework.GetLogger()
 }
 
 func BrMgrRoutine() {
@@ -614,7 +611,7 @@ type ProgressRate struct {
 }
 
 func MicroInit(brMgrPath, mgrLogFilePath string) {
-	log = logger.GetLogger(config.KEY_CLUSTER_LOG)
+	log = framework.GetLogger()
 	glBrMgrPath = brMgrPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	glMicroCmdChan = microStartBrMgr(mgrLogFilePath)
@@ -652,7 +649,7 @@ func glMicroTaskStatusMapSyncer() {
 			}
 		}
 		glMicroTaskStatusMapMutex.Unlock()
-		log := logger.WithContext(nil).WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
+		log := framework.WithContext(nil).WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
 			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,

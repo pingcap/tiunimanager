@@ -3,23 +3,15 @@ package domain
 import (
 	"context"
 	"errors"
-	"path/filepath"
-	"strconv"
-
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
-	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
+	"path/filepath"
+	"strconv"
 )
-
-var log *logger.LogRecord
-
-func InitDomainLogger(defaultLog *logger.LogRecord) {
-	log = defaultLog
-}
 
 type ClusterAggregation struct {
 	Cluster *Cluster

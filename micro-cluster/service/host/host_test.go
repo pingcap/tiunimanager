@@ -5,17 +5,11 @@ import (
 	"testing"
 
 	"github.com/asim/go-micro/v3/client"
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
 	hostPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-func initTestLog() {
-	config.InitConfigForDev(config.MicroClusterMod)
-	InitLoggerByKey(config.KEY_CLUSTER_LOG)
-}
 
 func genHostInfo(hostName string) *hostPb.HostInfo {
 	host := hostPb.HostInfo{
@@ -75,7 +69,6 @@ func genHostRspFromDB(hostId string) *db.DBHostInfoDTO {
 }
 
 func Test_ImportHost_Succeed(t *testing.T) {
-	initTestLog()
 	fake_str := "import succeed"
 	fake_hostId := "xxxx-xxxx-yyyy-yyyy"
 	fakeDBClient := InitMockDBClient()
@@ -106,7 +99,6 @@ func Test_ImportHost_Succeed(t *testing.T) {
 }
 
 func Test_ImportHost_WithErr(t *testing.T) {
-	initTestLog()
 	fake_str := "host already exists"
 	fakeDBClient := InitMockDBClient()
 	fakeDBClient.MockAddHost(func(ctx context.Context, in *db.DBAddHostRequest, opts ...client.CallOption) (*db.DBAddHostResponse, error) {
@@ -132,7 +124,6 @@ func Test_ImportHost_WithErr(t *testing.T) {
 }
 
 func Test_ImportHost_WithErrCode(t *testing.T) {
-	initTestLog()
 	fake_str := "Host Ip is not Invalid"
 	fakeDBClient := InitMockDBClient()
 	fakeDBClient.MockAddHost(func(ctx context.Context, in *db.DBAddHostRequest, opts ...client.CallOption) (*db.DBAddHostResponse, error) {
@@ -157,7 +148,6 @@ func Test_ImportHost_WithErrCode(t *testing.T) {
 }
 
 func Test_ImportHostsInBatch_Succeed(t *testing.T) {
-	initTestLog()
 	fake_str := "import succeed"
 	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
 	fake_hostId2 := "yyyy-yyyy-xxxx-xxxx"
@@ -192,7 +182,6 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 }
 
 func Test_ImportHostsInBatch_WithErr(t *testing.T) {
-	initTestLog()
 	fake_str := "host already exists"
 	fakeDBClient := InitMockDBClient()
 	fakeDBClient.MockAddHostsInBatch(func(ctx context.Context, in *db.DBAddHostsInBatchRequest, opts ...client.CallOption) (*db.DBAddHostsInBatchResponse, error) {
@@ -219,7 +208,6 @@ func Test_ImportHostsInBatch_WithErr(t *testing.T) {
 }
 
 func Test_ImportHostsInBatch_WithErrCode(t *testing.T) {
-	initTestLog()
 	fake_str := "Host Ip is not Invalid"
 	fakeDBClient := InitMockDBClient()
 	fakeDBClient.MockAddHostsInBatch(func(ctx context.Context, in *db.DBAddHostsInBatchRequest, opts ...client.CallOption) (*db.DBAddHostsInBatchResponse, error) {
@@ -245,7 +233,6 @@ func Test_ImportHostsInBatch_WithErrCode(t *testing.T) {
 }
 
 func Test_RemoveHost_Succeed(t *testing.T) {
-	initTestLog()
 	fake_str := "remove succeed"
 	fake_hostId := "xxxx-xxxx-yyyy-yyyy"
 	fakeDBClient := InitMockDBClient()
@@ -275,7 +262,6 @@ func Test_RemoveHost_Succeed(t *testing.T) {
 }
 
 func Test_RemoveHost_WithErr(t *testing.T) {
-	initTestLog()
 	fake_hostId := "xxxx-xxxx-yyyy-yyyy"
 	fake_str := "host not exists"
 	fakeDBClient := InitMockDBClient()
@@ -302,7 +288,6 @@ func Test_RemoveHost_WithErr(t *testing.T) {
 }
 
 func Test_RemovetHost_WithErrCode(t *testing.T) {
-	initTestLog()
 	fake_hostId := "xxxx-xxxx-yyyy-yyyy"
 	fake_str := "Host Id is not Invalid"
 	fakeDBClient := InitMockDBClient()
@@ -327,7 +312,6 @@ func Test_RemovetHost_WithErrCode(t *testing.T) {
 	}
 }
 func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
-	initTestLog()
 	fake_str := "remove in batch succeed"
 	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
 	fake_hostId2 := "yyyy-yyyy-xxxx-xxxx"
@@ -359,7 +343,6 @@ func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
 }
 
 func Test_RemoveHostsInBatch_WithErr(t *testing.T) {
-	initTestLog()
 	fake_str := "host already exists"
 	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
 	fake_hostId2 := "yyyy-yyyy-xxxx-xxxx"
@@ -388,7 +371,6 @@ func Test_RemoveHostsInBatch_WithErr(t *testing.T) {
 }
 
 func Test_RemoveHostsInBatch_WithErrCode(t *testing.T) {
-	initTestLog()
 	fake_str := "Host Ip is not Invalid"
 	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
 	fake_hostId2 := "yyyy-yyyy-xxxx-xxxx"
@@ -416,7 +398,6 @@ func Test_RemoveHostsInBatch_WithErrCode(t *testing.T) {
 }
 
 func Test_CheckDetails_Succeed(t *testing.T) {
-	initTestLog()
 	fake_str := "check details succeed"
 	fake_hostId := "this-isxx-axxx-fake"
 	fakeDBClient := InitMockDBClient()
@@ -447,7 +428,6 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 }
 
 func Test_ListHosts_Succeed(t *testing.T) {
-	initTestLog()
 	fake_str := "list hosts succeed"
 	fake_hostId1 := "this-isxf-irst-fake"
 	fake_hostId2 := "this-isse-cond-fake"
@@ -483,7 +463,6 @@ func Test_ListHosts_Succeed(t *testing.T) {
 }
 
 func Test_GetFailureDomain_Succeed(t *testing.T) {
-	initTestLog()
 	fake_str := "get failuredomain succeed"
 	fake_name1 := "TEST_Zone1"
 	fake_name2 := "TEST_Zone2"
@@ -524,7 +503,6 @@ func Test_GetFailureDomain_Succeed(t *testing.T) {
 }
 
 func Test_AllocHosts_Succeed(t *testing.T) {
-	initTestLog()
 	fake_str := "alloc hosts succeed"
 	fakeDBClient := InitMockDBClient()
 	fakeDBClient.MockPreAllocHosts(func(ctx context.Context, in *db.DBPreAllocHostsRequest, opts ...client.CallOption) (*db.DBPreAllocHostsResponse, error) {

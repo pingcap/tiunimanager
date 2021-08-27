@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pingcap-inc/tiem/library/firstparty/config"
 	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
-
-	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -238,6 +237,7 @@ func FindHostById(hostId string) (*Host, error) {
 	return host, err
 }
 
+/*
 // TODO: Just a trick demo function
 type Resource struct {
 	HostId   string
@@ -260,7 +260,9 @@ func PreAllocHosts(failedDomain string, numReps int, cpuCores int, mem int) (res
 		DISK_AVAILABLE, failedDomain, HOST_ONLINE, HOST_INUSED, cpuCores, mem).Group("hosts.id").Scan(&resources).Error
 	return
 }
+*/
 
+/*
 type ResourceLock struct {
 	HostId       string
 	OriginCores  int
@@ -330,6 +332,91 @@ func LockHosts(resources []ResourceLock) (err error) {
 	}
 	tx.Commit()
 	return nil
+}
+*/
+
+type DiskResource struct {
+	HostId   string
+	Ip       string
+	UserName string
+	Passwd   string
+	DiskId   string
+	DiskName string
+	Path     string
+	Capacity int
+}
+
+// For each Request for one compoent in the same FailureDomain, we should alloc disks in different hosts
+type HostAllocReq struct {
+	FailureDomain string
+	CpuCores      int
+	Memory        int
+	Count         int
+}
+
+type AllocReqs map[string][]*HostAllocReq
+type AllocRsps map[string][]*DiskResource
+
+func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, cpuCores int, mem int) (resources []*DiskResource, err error) {
+	err = tx.Order("hosts.cpu_cores desc").Order("hosts.memory desc").Limit(numReps).Model(&Disk{}).Select(
+		"disks.host_id, hosts.ip, hosts.user_name, hosts.passwd, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity").Joins("left join hosts on disks.host_id = hosts.id").Where(
+		"hosts.az = ? and (hosts.status = ? or hosts.status = ?) and hosts.cpu_cores >= ? and memory >= ? and disks.status = ?",
+		failureDomain, HOST_ONLINE, HOST_INUSED, cpuCores, mem, DISK_AVAILABLE).Group("hosts.id").Scan(&resources).Error
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "select resources failed, %v", err)
+	}
+
+	if len(resources) < numReps {
+		return nil, status.Errorf(codes.Internal, "hosts in %s is not enough for allocation(%d|%d)", failureDomain, len(resources), numReps)
+	}
+
+	for _, resource := range resources {
+		var disk Disk
+		tx.First(&disk, "ID = ?", resource.DiskId).First(&disk)
+		if DiskStatus(disk.Status).IsAvailable() {
+			err = tx.Model(&disk).Update("Status", int32(DISK_INUSED)).Error
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "update disk(%s) status err, %v", resource.DiskId, err)
+			}
+		} else {
+			return nil, status.Errorf(codes.FailedPrecondition, "disk %s status not expected(%d)", resource.DiskId, disk.Status)
+		}
+
+		var host Host
+		tx.First(&host, "ID = ?", resource.HostId)
+		host.CpuCores -= cpuCores
+		host.Memory -= mem
+		if host.IsExhaust() {
+			host.Status = int32(HOST_EXHAUST)
+		} else {
+			host.Status = int32(HOST_INUSED)
+		}
+		err = tx.Model(&host).Select("CpuCores", "Memory", "Status").Where("id = ?", resource.HostId).Updates(Host{CpuCores: host.CpuCores, Memory: host.Memory, Status: host.Status}).Error
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "update host(%s) status err, %v", resource.HostId, err)
+		}
+	}
+	return
+}
+
+func AllocHosts(requests AllocReqs) (resources AllocRsps, err error) {
+	log := logger.GetLogger(config.KEY_METADB_LOG)
+	resources = make(AllocRsps)
+	tx := MetaDB.Begin()
+	for component, reqs := range requests {
+		for _, eachReq := range reqs {
+			log.Infof("alloc resources for component %s in %s (%dC%dG) x %d", component, eachReq.FailureDomain, eachReq.CpuCores, eachReq.Memory, eachReq.Count)
+			disks, err := getHostsFromFailureDomain(tx, eachReq.FailureDomain, eachReq.Count, eachReq.CpuCores, eachReq.Memory)
+			if err != nil {
+				log.Errorf("failed to alloc host info for %s in %s, %v", component, eachReq.FailureDomain, err)
+				tx.Rollback()
+				return nil, err
+			}
+			resources[component] = append(resources[component], disks...)
+		}
+	}
+	tx.Commit()
+	return resources, nil
 }
 
 type FailureDomainResource struct {

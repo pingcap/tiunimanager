@@ -17,29 +17,29 @@ func TestCreateCluster(t *testing.T) {
 		TenantId       string
 	}
 	tests := []struct {
-		name        string
-		args        args
-		wantErr     bool
-		wants       []func (args args, cluster *Cluster) bool
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(args args, cluster *Cluster) bool
 	}{
-		{"normal create", args{TenantId: "111", ClusterName: "testCluster", OwnerId: "111"}, false, []func (args args, cluster *Cluster) bool{
-			func (args args, cluster *Cluster) bool{ return args.TenantId == cluster.TenantId},
-			func (args args, cluster *Cluster) bool{ return args.ClusterName == cluster.Name },
-			func (args args, cluster *Cluster) bool{ return cluster.ID != ""},
-			func (args args, cluster *Cluster) bool{ return cluster.Code == "testCluster"},
+		{"normal create", args{TenantId: "111", ClusterName: "testCluster", OwnerId: "111"}, false, []func(args args, cluster *Cluster) bool{
+			func(args args, cluster *Cluster) bool { return args.TenantId == cluster.TenantId },
+			func(args args, cluster *Cluster) bool { return args.ClusterName == cluster.Name },
+			func(args args, cluster *Cluster) bool { return cluster.ID != "" },
+			func(args args, cluster *Cluster) bool { return cluster.Code == "testCluster" },
 		}},
-		{"chinese name", args{TenantId: "111", ClusterName: "中文测试集群", OwnerId: "111"}, false, []func (args args, cluster *Cluster) bool{
-			func (args args, cluster *Cluster) bool{ return args.TenantId == cluster.TenantId},
-			func (args args, cluster *Cluster) bool{ return args.ClusterName == cluster.Name },
-			func (args args, cluster *Cluster) bool{ return cluster.ID != ""},
-			func (args args, cluster *Cluster) bool{ return cluster.Code == "_zhong_wen_ce_shi_ji_qun"},
+		{"chinese name", args{TenantId: "111", ClusterName: "中文测试集群", OwnerId: "111"}, false, []func(args args, cluster *Cluster) bool{
+			func(args args, cluster *Cluster) bool { return args.TenantId == cluster.TenantId },
+			func(args args, cluster *Cluster) bool { return args.ClusterName == cluster.Name },
+			func(args args, cluster *Cluster) bool { return cluster.ID != "" },
+			func(args args, cluster *Cluster) bool { return cluster.Code == "_zhong_wen_ce_shi_ji_qun" },
 		}},
-		{"error", args{TenantId: "111", ClusterName: "中文测试集群"}, true,[]func (args args, cluster *Cluster) bool{}},
+		{"error", args{TenantId: "111", ClusterName: "中文测试集群"}, true, []func(args args, cluster *Cluster) bool{}},
 	}
-	clusterTbl := &Cluster{}
+	clusterTbl := Dao.ClusterManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotCluster, err := clusterTbl.CreateCluster(MetaDB,tt.args.ClusterName, tt.args.DbPassword, tt.args.ClusterType, tt.args.ClusterVersion, tt.args.Tls, tt.args.Tags, tt.args.OwnerId, tt.args.TenantId)
+			gotCluster, err := clusterTbl.CreateCluster(tt.args.ClusterName, tt.args.DbPassword, tt.args.ClusterType, tt.args.ClusterVersion, tt.args.Tls, tt.args.Tags, tt.args.OwnerId, tt.args.TenantId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateCluster() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -56,15 +56,15 @@ func TestCreateCluster(t *testing.T) {
 }
 
 func TestDeleteCluster(t *testing.T) {
-	clusterTbl := &Cluster{}
+	clusterTbl := Dao.ClusterManager()
 	t.Run("normal", func(t *testing.T) {
 		cluster := &Cluster{
-			Entity : Entity{TenantId: "111"},
+			Entity:  Entity{TenantId: "111"},
 			OwnerId: "111",
 		}
 		MetaDB.Create(cluster)
 
-		newCluster, err := clusterTbl.DeleteCluster(MetaDB,cluster.ID)
+		newCluster, err := clusterTbl.DeleteCluster(cluster.ID)
 
 		if err != nil {
 			t.Errorf("DeleteCluster() error = %v", err)
@@ -86,14 +86,14 @@ func TestDeleteCluster(t *testing.T) {
 	})
 
 	t.Run("no record", func(t *testing.T) {
-		_, err := clusterTbl.DeleteCluster(MetaDB,"TestDeleteClusterId")
+		_, err := clusterTbl.DeleteCluster("TestDeleteClusterId")
 
 		if err == nil {
 			t.Errorf("DeleteCluster() error = %v", err)
 		}
 	})
 	t.Run("empty clusterId", func(t *testing.T) {
-		_, err := clusterTbl.DeleteCluster(MetaDB,"")
+		_, err := clusterTbl.DeleteCluster("")
 
 		if err == nil {
 			t.Errorf("DeleteCluster() error = %v", err)
@@ -102,17 +102,17 @@ func TestDeleteCluster(t *testing.T) {
 }
 
 func TestUpdateClusterDemand(t *testing.T) {
-	clusterTbl := &Cluster{}
+	clusterTbl := Dao.ClusterManager()
 	t.Run("normal update demand", func(t *testing.T) {
 		cluster := &Cluster{
-			Entity : Entity{TenantId: "111"},
+			Entity:  Entity{TenantId: "111"},
 			OwnerId: "ttt",
 		}
 		MetaDB.Create(cluster)
 
 		demandId := cluster.CurrentDemandId
 
-		cluster, demand, err := clusterTbl.UpdateClusterDemand(MetaDB,cluster.ID, "aaa", cluster.TenantId)
+		cluster, demand, err := clusterTbl.UpdateClusterDemand(cluster.ID, "aaa", cluster.TenantId)
 		if err != nil {
 			t.Errorf("UpdateClusterDemand() error = %v", err)
 		}
@@ -125,13 +125,13 @@ func TestUpdateClusterDemand(t *testing.T) {
 			t.Errorf("UpdateClusterDemand() new demand id = %v", cluster.CurrentDemandId)
 		}
 
-		if cluster.ID == ""{
+		if cluster.ID == "" {
 			t.Errorf("UpdateClusterDemand() cluster.ID empty")
 		}
 	})
 
 	t.Run("empty clusterId", func(t *testing.T) {
-		_, _, err := clusterTbl.UpdateClusterDemand(MetaDB,"", "aaa", "111")
+		_, _, err := clusterTbl.UpdateClusterDemand("", "aaa", "111")
 		if err == nil {
 			t.Errorf("UpdateClusterDemand() error = %v", err)
 		}
@@ -140,17 +140,17 @@ func TestUpdateClusterDemand(t *testing.T) {
 }
 
 func TestUpdateClusterFlowId(t *testing.T) {
-	clusterTbl := &Cluster{}
+	clusterTbl := Dao.ClusterManager()
 	t.Run("normal update demand", func(t *testing.T) {
 		cluster := &Cluster{
-			Entity : Entity{TenantId: "111"},
+			Entity:  Entity{TenantId: "111"},
 			OwnerId: "ttt",
 		}
 		MetaDB.Create(cluster)
 
 		flowId := uint(111)
 
-		cluster, err := clusterTbl.UpdateClusterFlowId(MetaDB,cluster.ID, flowId)
+		cluster, err := clusterTbl.UpdateClusterFlowId(cluster.ID, flowId)
 
 		if err != nil {
 			t.Errorf("UpdateClusterFlowId() error = %v", err)
@@ -160,13 +160,13 @@ func TestUpdateClusterFlowId(t *testing.T) {
 			t.Errorf("UpdateClusterFlowId() want flowId = %v, got = %v", flowId, cluster.CurrentFlowId)
 		}
 
-		if cluster.ID == ""{
+		if cluster.ID == "" {
 			t.Errorf("UpdateClusterFlowId() cluster.ID empty")
 		}
 	})
 
 	t.Run("empty clusterId", func(t *testing.T) {
-		_, err := clusterTbl.UpdateClusterFlowId(MetaDB,"", 111)
+		_, err := clusterTbl.UpdateClusterFlowId("", 111)
 		if err == nil {
 			t.Errorf("UpdateClusterFlowId() error = %v", err)
 		}
@@ -175,17 +175,17 @@ func TestUpdateClusterFlowId(t *testing.T) {
 }
 
 func TestUpdateClusterStatus(t *testing.T) {
-	clusterTbl := &Cluster{}
+	clusterTbl := Dao.ClusterManager()
 	t.Run("normal update status", func(t *testing.T) {
 		cluster := &Cluster{
-			Entity : Entity{TenantId: "111"},
+			Entity:  Entity{TenantId: "111"},
 			OwnerId: "ttt",
 		}
 		MetaDB.Create(cluster)
 
 		status := int8(2)
 
-		cluster, err := clusterTbl.UpdateClusterStatus(MetaDB,cluster.ID, status)
+		cluster, err := clusterTbl.UpdateClusterStatus(cluster.ID, status)
 
 		if err != nil {
 			t.Errorf("UpdateClusterStatus() error = %v", err)
@@ -195,14 +195,13 @@ func TestUpdateClusterStatus(t *testing.T) {
 			t.Errorf("UpdateClusterFlowId() want status = %v, got = %v", status, cluster.Status)
 		}
 
-
-		if cluster.ID == ""{
+		if cluster.ID == "" {
 			t.Errorf("UpdateClusterFlowId() cluster.ID empty")
 		}
 	})
 
 	t.Run("empty clusterId", func(t *testing.T) {
-		_, err := clusterTbl.UpdateClusterStatus(MetaDB,"", 2)
+		_, err := clusterTbl.UpdateClusterStatus("", 2)
 		if err == nil {
 			t.Errorf("UpdateClusterFlowId() error = %v", err)
 		}
@@ -211,17 +210,17 @@ func TestUpdateClusterStatus(t *testing.T) {
 }
 
 func TestUpdateTiUPConfig(t *testing.T) {
-	clusterTbl := &Cluster{}
+	clusterTbl := Dao.ClusterManager()
 	t.Run("normal update config", func(t *testing.T) {
 		cluster := &Cluster{
-			Entity : Entity{TenantId: "111"},
+			Entity:  Entity{TenantId: "111"},
 			OwnerId: "ttt",
 		}
 		MetaDB.Create(cluster)
 
 		currentConfigId := cluster.CurrentTiupConfigId
 
-		cluster, err := clusterTbl.UpdateTiUPConfig(MetaDB,cluster.ID, "aaa", cluster.TenantId)
+		cluster, err := clusterTbl.UpdateTiUPConfig(cluster.ID, "aaa", cluster.TenantId)
 		if err != nil {
 			t.Errorf("UpdateTiUPConfig() error = %v", err)
 		}
@@ -236,7 +235,7 @@ func TestUpdateTiUPConfig(t *testing.T) {
 	})
 
 	t.Run("empty clusterId", func(t *testing.T) {
-		_, _, err := clusterTbl.UpdateClusterDemand(MetaDB,"", "aaa", "111")
+		_, _, err := clusterTbl.UpdateClusterDemand("", "aaa", "111")
 		if err == nil {
 			t.Errorf("UpdateClusterDemand() error = %v", err)
 		}
@@ -246,28 +245,28 @@ func TestUpdateTiUPConfig(t *testing.T) {
 
 func TestListClusters(t *testing.T) {
 	MetaDB.Create(&Cluster{
-		Entity : Entity{TenantId: "111"},
+		Entity:  Entity{TenantId: "111"},
 		Type:    "test_type_1",
 		Name:    "test_cluster_name",
 		Tags:    ",tag,",
 		OwnerId: "ttt",
 	})
 	MetaDB.Create(&Cluster{
-		Entity : Entity{TenantId: "111"},
+		Entity:  Entity{TenantId: "111"},
 		Type:    "test_type_1",
 		Name:    "1111test",
 		Tags:    "tag,",
 		OwnerId: "ttt",
 	})
 	MetaDB.Create(&Cluster{
-		Entity : Entity{TenantId: "111"},
+		Entity:  Entity{TenantId: "111"},
 		Type:    "whatever",
 		Name:    "test_cluster_name",
 		Tags:    ",tag",
 		OwnerId: "ttt",
 	})
 	cluster := &Cluster{
-		Entity : Entity{TenantId: "111"},
+		Entity:  Entity{TenantId: "111"},
 		Type:    "test_type_1",
 		Name:    "whatever",
 		Tags:    "1,tag,2",
@@ -276,14 +275,13 @@ func TestListClusters(t *testing.T) {
 	MetaDB.Create(cluster)
 
 	MetaDB.Create(&Cluster{
-		Entity : Entity{TenantId: "111"},
+		Entity:  Entity{TenantId: "111"},
 		OwnerId: "ttt",
 	})
 
-	clusterTbl := &Cluster{}
-
+	clusterTbl := Dao.ClusterManager()
 	t.Run("cluster id", func(t *testing.T) {
-		clusters,total,err := clusterTbl.ListClusters(MetaDB,cluster.ID, "", "", "", "", 0, 10)
+		clusters, total, err := clusterTbl.ListClusters(cluster.ID, "", "", "", "", 0, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -302,7 +300,7 @@ func TestListClusters(t *testing.T) {
 	})
 
 	t.Run("cluster name", func(t *testing.T) {
-		clusters,total,err := clusterTbl.ListClusters(MetaDB,"", "test_cluster_name", "", "", "", 0, 10)
+		clusters, total, err := clusterTbl.ListClusters("", "test_cluster_name", "", "", "", 0, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -315,7 +313,7 @@ func TestListClusters(t *testing.T) {
 			t.Errorf("ListClusters() clusters len = %v, want = %v", len(clusters), 2)
 		}
 
-		for _,v := range clusters {
+		for _, v := range clusters {
 			if !strings.Contains(v.Name, "test") {
 				t.Errorf("ListClusters() clusters = %v, want cluster name contains = %v", v, "test")
 			}
@@ -323,7 +321,7 @@ func TestListClusters(t *testing.T) {
 	})
 
 	t.Run("cluster type", func(t *testing.T) {
-		clusters,total,err := clusterTbl.ListClusters(MetaDB,"", "", "test_type_1", "", "", 0, 10)
+		clusters, total, err := clusterTbl.ListClusters("", "", "test_type_1", "", "", 0, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -336,7 +334,7 @@ func TestListClusters(t *testing.T) {
 			t.Errorf("ListClusters() clusters len = %v, want = %v", len(clusters), 3)
 		}
 
-		for _,v := range clusters {
+		for _, v := range clusters {
 			if v.Type != "test_type_1" {
 				t.Errorf("ListClusters() clusters = %v, wantClusterType = %v", v, "type1")
 			}
@@ -344,8 +342,8 @@ func TestListClusters(t *testing.T) {
 	})
 
 	t.Run("cluster status", func(t *testing.T) {
-		clusterTbl.UpdateClusterStatus(MetaDB,cluster.ID, 9)
-		clusters,total,err := clusterTbl.ListClusters(MetaDB,"", "", "", "0", "", 0, 10)
+		clusterTbl.UpdateClusterStatus(cluster.ID, 9)
+		clusters, total, err := clusterTbl.ListClusters("", "", "", "0", "", 0, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -358,7 +356,7 @@ func TestListClusters(t *testing.T) {
 			t.Errorf("ListClusters() clusters len = %v, want %v at least", len(clusters), 4)
 		}
 
-		for _,v := range clusters {
+		for _, v := range clusters {
 			if v.Status != 0 {
 				t.Errorf("ListClusters() clusters = %v, wantClusterType = %v", v, 0)
 			}
@@ -366,7 +364,7 @@ func TestListClusters(t *testing.T) {
 	})
 
 	t.Run("cluster tag", func(t *testing.T) {
-		clusters,total,err := clusterTbl.ListClusters(MetaDB,"", "", "", "", "tag", 0, 10)
+		clusters, total, err := clusterTbl.ListClusters("", "", "", "", "tag", 0, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -379,7 +377,7 @@ func TestListClusters(t *testing.T) {
 			t.Errorf("ListClusters() clusters len = %v, want = %v", len(clusters), 2)
 		}
 
-		for _,v := range clusters {
+		for _, v := range clusters {
 			if !strings.Contains(v.Tags, "tag") {
 				t.Errorf("ListClusters() clusters = %v, want cluster tag contains = %v", clusters[0], "tag")
 			}
@@ -387,7 +385,7 @@ func TestListClusters(t *testing.T) {
 	})
 
 	t.Run("cluster empty", func(t *testing.T) {
-		clusters,total,err := clusterTbl.ListClusters(MetaDB,"", "", "", "", "", 0, 5)
+		clusters, total, err := clusterTbl.ListClusters("", "", "", "", "", 0, 5)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -400,7 +398,7 @@ func TestListClusters(t *testing.T) {
 			t.Errorf("ListClusters() clusters len = %v, want = %v", len(clusters), 5)
 		}
 
-		for _,v := range clusters {
+		for _, v := range clusters {
 			if v.ID == "" {
 				t.Errorf("ListClusters() clusters = %v", v)
 			}
@@ -408,7 +406,7 @@ func TestListClusters(t *testing.T) {
 	})
 
 	t.Run("cluster offset", func(t *testing.T) {
-		clusters,total,err := clusterTbl.ListClusters(MetaDB,"", "", "test_type_1", "", "", 1, 10)
+		clusters, total, err := clusterTbl.ListClusters("", "", "test_type_1", "", "", 1, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -421,7 +419,7 @@ func TestListClusters(t *testing.T) {
 			t.Errorf("ListClusters() clusters len = %v, want = %v", len(clusters), 2)
 		}
 
-		for _,v := range clusters {
+		for _, v := range clusters {
 			if v.Type != "test_type_1" {
 				t.Errorf("ListClusters() clusters = %v, wantClusterType = %v", v, "type1")
 			}
@@ -429,7 +427,7 @@ func TestListClusters(t *testing.T) {
 	})
 
 	t.Run("cluster limit", func(t *testing.T) {
-		clusters,total,err := clusterTbl.ListClusters(MetaDB,"", "", "test_type_1", "", "", 1, 1)
+		clusters, total, err := clusterTbl.ListClusters("", "", "test_type_1", "", "", 1, 1)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -442,7 +440,7 @@ func TestListClusters(t *testing.T) {
 			t.Errorf("ListClusters() clusters len = %v, want = %v", len(clusters), 1)
 		}
 
-		for _,v := range clusters {
+		for _, v := range clusters {
 			if v.Type != "test_type_1" {
 				t.Errorf("ListClusters() clusters = %v, wantClusterType = %v", v, "type1")
 			}
@@ -450,7 +448,7 @@ func TestListClusters(t *testing.T) {
 	})
 
 	t.Run("cluster offset 10", func(t *testing.T) {
-		clusters,total,err := clusterTbl.ListClusters(MetaDB,"", "", "test_type_1", "", "", 10, 10)
+		clusters, total, err := clusterTbl.ListClusters("", "", "test_type_1", "", "", 10, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -466,7 +464,7 @@ func TestListClusters(t *testing.T) {
 	})
 
 	t.Run("cluster no result", func(t *testing.T) {
-		clusters,total,err := clusterTbl.ListClusters(MetaDB,"ffffff", "", "type1", "", "", 0, 10)
+		clusters, total, err := clusterTbl.ListClusters("ffffff", "", "type1", "", "", 0, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -485,31 +483,31 @@ func TestListClusters(t *testing.T) {
 
 func TestListClusterDetails(t *testing.T) {
 	cluster1 := &Cluster{
-		Entity : Entity{TenantId: "111"},
+		Entity:  Entity{TenantId: "111"},
 		Type:    "someType",
 		Name:    "cluster1",
 		Tags:    "",
 		OwnerId: "me",
 	}
 	MetaDB.Create(cluster1)
-	f, _ := CreateFlow(MetaDB,"flow1", "flow1", cluster1.ID)
+	f, _ := CreateFlow(MetaDB, "flow1", "flow1", cluster1.ID)
 
-	clusterTbl := &Cluster{}
-	cluster1 ,_,_ = clusterTbl.UpdateClusterDemand(MetaDB,cluster1.ID, "demand1", "111")
-	cluster1 ,_ = clusterTbl.UpdateClusterFlowId(MetaDB,cluster1.ID, f.ID)
-	cluster1 ,_ = clusterTbl.UpdateTiUPConfig(MetaDB,cluster1.ID, "tiup1", "111")
+	clusterTbl := Dao.ClusterManager()
+	cluster1, _, _ = clusterTbl.UpdateClusterDemand(cluster1.ID, "demand1", "111")
+	cluster1, _ = clusterTbl.UpdateClusterFlowId(cluster1.ID, f.ID)
+	cluster1, _ = clusterTbl.UpdateTiUPConfig(cluster1.ID, "tiup1", "111")
 
 	for i := 0; i < 10; i++ {
 		MetaDB.Create(&Cluster{
-			Entity : Entity{TenantId: "111"},
+			Entity:  Entity{TenantId: "111"},
 			Type:    "someType",
 			Name:    "otherCluster",
 			Tags:    "1,tag,2",
 			OwnerId: "me",
 		})
 	}
-	cluster3 := &Cluster {
-		Entity : Entity{TenantId: "111"},
+	cluster3 := &Cluster{
+		Entity:  Entity{TenantId: "111"},
 		Type:    "otherType",
 		Name:    "whatever",
 		Tags:    "",
@@ -518,7 +516,7 @@ func TestListClusterDetails(t *testing.T) {
 	MetaDB.Create(cluster3)
 
 	t.Run("normal", func(t *testing.T) {
-		results,total,err := clusterTbl.ListClusterDetails(MetaDB,"", "", "someType", "", "", 0, 10)
+		results, total, err := clusterTbl.ListClusterDetails("", "", "someType", "", "", 0, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -552,7 +550,7 @@ func TestListClusterDetails(t *testing.T) {
 func TestSaveBackupRecord(t *testing.T) {
 	brTbl := &BackupRecord{}
 	t.Run("normal", func(t *testing.T) {
-		gotDo, err := brTbl.SaveBackupRecord(MetaDB,"111", "111", "operator1", 1,1,111, "path1")
+		gotDo, err := brTbl.SaveBackupRecord(MetaDB, "111", "111", "operator1", 1, 1, 111, "path1")
 		if err != nil {
 			t.Errorf("SaveBackupRecord() error = %v", err)
 			return
@@ -567,7 +565,7 @@ func TestSaveBackupRecord(t *testing.T) {
 func TestSaveRecoverRecord(t *testing.T) {
 	rrTbl := &RecoverRecord{}
 	t.Run("normal", func(t *testing.T) {
-		gotDo, err := rrTbl.SaveRecoverRecord(MetaDB,"111", "111", "operator1", 1,1)
+		gotDo, err := rrTbl.SaveRecoverRecord(MetaDB, "111", "111", "operator1", 1, 1)
 		if err != nil {
 			t.Errorf("SaveRecoverRecord() error = %v", err)
 			return
@@ -581,9 +579,9 @@ func TestSaveRecoverRecord(t *testing.T) {
 
 func TestDeleteBackupRecord(t *testing.T) {
 	brTbl := &BackupRecord{}
-	record, _ := brTbl.SaveBackupRecord(MetaDB,"111", "222", "operator1", 1,1, 1, "path1")
+	record, _ := brTbl.SaveBackupRecord(MetaDB, "111", "222", "operator1", 1, 1, 1, "path1")
 	t.Run("normal", func(t *testing.T) {
-		got, err := brTbl.DeleteBackupRecord(MetaDB,record.ID)
+		got, err := brTbl.DeleteBackupRecord(MetaDB, record.ID)
 		if err != nil {
 			t.Errorf("DeleteBackupRecord() error = %v", err)
 			return
@@ -593,12 +591,12 @@ func TestDeleteBackupRecord(t *testing.T) {
 			return
 		}
 		if !got.DeletedAt.Valid {
-			t.Errorf("DeleteBackupRecord() error, DeletedAt valid")
+			t.Errorf("DeleteBackupRecord() error, DeletedAt %v valid", got.DeletedAt)
 			return
 		}
 	})
 	t.Run("no record", func(t *testing.T) {
-		_, err := brTbl.DeleteBackupRecord(MetaDB,999999)
+		_, err := brTbl.DeleteBackupRecord(MetaDB, 999999)
 		if err == nil {
 			t.Errorf("DeleteBackupRecord() want error")
 			return
@@ -609,17 +607,17 @@ func TestDeleteBackupRecord(t *testing.T) {
 
 func TestListBackupRecords(t *testing.T) {
 	brTbl := &BackupRecord{}
-	flow, _ := CreateFlow(MetaDB,"backup", "backup", "111")
-	brTbl.SaveBackupRecord(MetaDB,"111", "222", "operator1", 1,1,flow.ID, "path1")
-	brTbl.SaveBackupRecord(MetaDB,"111", "222", "operator1", 1,1,flow.ID, "path2")
-	brTbl.SaveBackupRecord(MetaDB,"111", "11111", "operator1", 1,1,flow.ID, "path3")
-	brTbl.SaveBackupRecord(MetaDB,"111", "11111", "operator1", 1,1,flow.ID, "path4")
-	brTbl.SaveBackupRecord(MetaDB,"111", "11111", "operator1", 1,1,flow.ID, "path5")
-	brTbl.SaveBackupRecord(MetaDB,"111", "11111", "operator1", 1,1,flow.ID, "path6")
-	brTbl.SaveBackupRecord(MetaDB,"111", "11111", "operator1", 1,1,flow.ID, "path7")
+	flow, _ := CreateFlow(MetaDB, "backup", "backup", "111")
+	brTbl.SaveBackupRecord(MetaDB, "111", "222", "operator1", 1, 1, flow.ID, "path1")
+	brTbl.SaveBackupRecord(MetaDB, "111", "222", "operator1", 1, 1, flow.ID, "path2")
+	brTbl.SaveBackupRecord(MetaDB, "111", "11111", "operator1", 1, 1, flow.ID, "path3")
+	brTbl.SaveBackupRecord(MetaDB, "111", "11111", "operator1", 1, 1, flow.ID, "path4")
+	brTbl.SaveBackupRecord(MetaDB, "111", "11111", "operator1", 1, 1, flow.ID, "path5")
+	brTbl.SaveBackupRecord(MetaDB, "111", "11111", "operator1", 1, 1, flow.ID, "path6")
+	brTbl.SaveBackupRecord(MetaDB, "111", "11111", "operator1", 1, 1, flow.ID, "path7")
 
 	t.Run("normal", func(t *testing.T) {
-		dos , total , err := brTbl.ListBackupRecords(MetaDB,"11111", 2,2)
+		dos, total, err := brTbl.ListBackupRecords(MetaDB, "11111", 2, 2)
 		if err != nil {
 			t.Errorf("ListBackupRecords() error = %v", err)
 			return
@@ -639,14 +637,13 @@ func TestListBackupRecords(t *testing.T) {
 			return
 		}
 
-
 		if dos[0].BackupRecord.ID <= dos[1].BackupRecord.ID {
 			t.Errorf("ListBackupRecords() error, want order by id desc, got = %v", dos)
 			return
 		}
 
 		if dos[0].Flow.ID != dos[0].BackupRecord.FlowId {
-			t.Errorf("ListBackupRecords() error, want FlowId = %v, got = %v", dos[0].BackupRecord.FlowId,  dos[0].Flow.ID)
+			t.Errorf("ListBackupRecords() error, want FlowId = %v, got = %v", dos[0].BackupRecord.FlowId, dos[0].Flow.ID)
 			return
 		}
 	})
@@ -655,7 +652,7 @@ func TestListBackupRecords(t *testing.T) {
 func TestSaveParameters(t *testing.T) {
 	prTabl := &ParametersRecord{}
 	t.Run("normal", func(t *testing.T) {
-		gotDo, err := prTabl.SaveParameters(MetaDB,"111", "111", "someone", 1,"content1")
+		gotDo, err := prTabl.SaveParameters(MetaDB, "111", "111", "someone", 1, "content1")
 		if err != nil {
 			t.Errorf("SaveParameters() error = %v", err)
 			return
@@ -670,13 +667,13 @@ func TestSaveParameters(t *testing.T) {
 
 func TestGetCurrentParameters(t *testing.T) {
 	prTabl := &ParametersRecord{}
-	prTabl.SaveParameters(MetaDB,"111", "111", "someone", 1,"content1")
-	prTabl.SaveParameters(MetaDB,"111", "111", "someone", 1,"content2")
-	prTabl.SaveParameters(MetaDB,"111", "111", "someone", 1,"wanted")
-	prTabl.SaveParameters(MetaDB,"111", "222", "someone", 1,"content4")
+	prTabl.SaveParameters(MetaDB, "111", "111", "someone", 1, "content1")
+	prTabl.SaveParameters(MetaDB, "111", "111", "someone", 1, "content2")
+	prTabl.SaveParameters(MetaDB, "111", "111", "someone", 1, "wanted")
+	prTabl.SaveParameters(MetaDB, "111", "222", "someone", 1, "content4")
 
 	t.Run("normal", func(t *testing.T) {
-		gotDo, err := prTabl.GetCurrentParameters(MetaDB,"111")
+		gotDo, err := prTabl.GetCurrentParameters(MetaDB, "111")
 		if err != nil {
 			t.Errorf("SaveRecoverRecord() error = %v", err)
 			return
@@ -696,10 +693,10 @@ func TestGetCurrentParameters(t *testing.T) {
 var defaultTenantId = "defaultTenantId"
 
 func TestFetchCluster(t *testing.T) {
-	clusterTbl := &Cluster{}
-	cluster, _ := clusterTbl.CreateCluster(MetaDB,"TestFetchCluster", "tt.args.DbPassword", "tidb", "v1", true, "","TestFetchCluster.ownerId", defaultTenantId)
+	clusterTbl := Dao.ClusterManager()
+	cluster, _ := clusterTbl.CreateCluster("TestFetchCluster", "tt.args.DbPassword", "tidb", "v1", true, "", "TestFetchCluster.ownerId", defaultTenantId)
 	t.Run("normal", func(t *testing.T) {
-		gotResult, err := clusterTbl.FetchCluster(MetaDB,cluster.ID)
+		gotResult, err := clusterTbl.FetchCluster(cluster.ID)
 		if err != nil {
 			t.Errorf("FetchCluster() error = %v", err)
 			return
@@ -710,15 +707,15 @@ func TestFetchCluster(t *testing.T) {
 		}
 	})
 	t.Run("no result", func(t *testing.T) {
-		_, err := clusterTbl.FetchCluster(MetaDB,"what ever")
+		_, err := clusterTbl.FetchCluster("what ever")
 		if err == nil {
 			t.Errorf("FetchCluster() want error")
 			return
 		}
 	})
 	t.Run("with demand", func(t *testing.T) {
-		cluster, demand, _ :=clusterTbl.UpdateClusterDemand(MetaDB,cluster.ID, "demand content", defaultTenantId)
-		gotResult, err := clusterTbl.FetchCluster(MetaDB,cluster.ID)
+		cluster, demand, _ := clusterTbl.UpdateClusterDemand(cluster.ID, "demand content", defaultTenantId)
+		gotResult, err := clusterTbl.FetchCluster(cluster.ID)
 		if err != nil {
 			t.Errorf("FetchCluster() error = %v", err)
 			return
@@ -741,18 +738,18 @@ func TestFetchCluster(t *testing.T) {
 		}
 	})
 	t.Run("with demand err", func(t *testing.T) {
-		cluster, demand, _ := clusterTbl.UpdateClusterDemand(MetaDB,cluster.ID, "demand content", defaultTenantId)
+		cluster, demand, _ := clusterTbl.UpdateClusterDemand(cluster.ID, "demand content", defaultTenantId)
 		MetaDB.Delete(demand)
-		_, err := clusterTbl.FetchCluster(MetaDB,cluster.ID)
+		_, err := clusterTbl.FetchCluster(cluster.ID)
 		if err == nil {
 			t.Errorf("FetchCluster() want error")
 			return
 		}
-		clusterTbl.UpdateClusterDemand(MetaDB,cluster.ID, "demand content", defaultTenantId)
+		clusterTbl.UpdateClusterDemand(cluster.ID, "demand content", defaultTenantId)
 	})
 	t.Run("with config", func(t *testing.T) {
-		cluster, _ := clusterTbl.UpdateTiUPConfig(MetaDB,cluster.ID, "config content", defaultTenantId)
-		gotResult, err := clusterTbl.FetchCluster(MetaDB,cluster.ID)
+		cluster, _ := clusterTbl.UpdateTiUPConfig(cluster.ID, "config content", defaultTenantId)
+		gotResult, err := clusterTbl.FetchCluster(cluster.ID)
 		if err != nil {
 			t.Errorf("FetchCluster() error = %v", err)
 			return
@@ -775,19 +772,19 @@ func TestFetchCluster(t *testing.T) {
 		}
 	})
 	t.Run("with config err", func(t *testing.T) {
-		cluster, _ := clusterTbl.UpdateTiUPConfig(MetaDB,cluster.ID, "config content", defaultTenantId)
+		cluster, _ := clusterTbl.UpdateTiUPConfig(cluster.ID, "config content", defaultTenantId)
 		MetaDB.Model(&TiUPConfig{}).Where("id = ?", cluster.CurrentTiupConfigId).Delete(&TiUPConfig{})
-		_, err := clusterTbl.FetchCluster(MetaDB,cluster.ID)
+		_, err := clusterTbl.FetchCluster(cluster.ID)
 		if err == nil {
 			t.Errorf("FetchCluster() want error")
 			return
 		}
-		clusterTbl.UpdateTiUPConfig(MetaDB,cluster.ID, "config content", defaultTenantId)
+		clusterTbl.UpdateTiUPConfig(cluster.ID, "config content", defaultTenantId)
 	})
 	t.Run("with flow", func(t *testing.T) {
-		flow, _ := CreateFlow(MetaDB,"whatever", "whatever", "whatever")
-		cluster, _ := clusterTbl.UpdateClusterFlowId(MetaDB,cluster.ID, flow.ID)
-		gotResult, err := clusterTbl.FetchCluster(MetaDB,cluster.ID)
+		flow, _ := CreateFlow(MetaDB, "whatever", "whatever", "whatever")
+		cluster, _ := clusterTbl.UpdateClusterFlowId(cluster.ID, flow.ID)
+		gotResult, err := clusterTbl.FetchCluster(cluster.ID)
 		if err != nil {
 			t.Errorf("FetchCluster() error = %v", err)
 			return
@@ -810,13 +807,13 @@ func TestFetchCluster(t *testing.T) {
 		}
 	})
 	t.Run("with flow error", func(t *testing.T) {
-		cluster, _ := clusterTbl.UpdateClusterFlowId(MetaDB,cluster.ID, 555555)
-		_, err := clusterTbl.FetchCluster(MetaDB,cluster.ID)
+		cluster, _ := clusterTbl.UpdateClusterFlowId(cluster.ID, 555555)
+		_, err := clusterTbl.FetchCluster(cluster.ID)
 		if err == nil {
 			t.Errorf("FetchCluster() want error")
 			return
 		}
-		clusterTbl.UpdateClusterFlowId(MetaDB,cluster.ID, 0)
+		clusterTbl.UpdateClusterFlowId(cluster.ID, 0)
 	})
 
 }

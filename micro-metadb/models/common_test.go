@@ -1,13 +1,8 @@
 package models
 
 import (
-	"os"
 	"testing"
 	"time"
-
-	"github.com/google/uuid"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 type TestEntity struct {
@@ -30,9 +25,9 @@ type TestData struct {
 	name string
 }
 
-var MetaDB *gorm.DB
+//var MetaDB *gorm.DB
 
-func TestMain(m *testing.M) {
+/*func TestMain(m *testing.M) {
 	testFile := uuid.New().String() + ".db"
 	MetaDB, _ = gorm.Open(sqlite.Open(testFile), &gorm.Config{})
 
@@ -68,7 +63,7 @@ func TestMain(m *testing.M) {
 	} else {
 		getLogger().Error(err)
 	}
-}
+}*/
 
 func TestTime(t *testing.T) {
 	t.Run("test time", func(t *testing.T) {

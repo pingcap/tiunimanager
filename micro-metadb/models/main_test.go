@@ -8,42 +8,49 @@ import (
 	"testing"
 )
 
+var MetaDB *gorm.DB
+var Dao *DAOManager
+
 func TestMain(m *testing.M) {
 	testFile := GenerateID() + ".db"
 
 	defer func() {
 		os.Remove(testFile)
 	}()
-	framework.InitBaseFrameworkForUt(framework.MetaDBService,
+	f := framework.InitBaseFrameworkForUt(framework.MetaDBService,
 		func(d *framework.BaseFramework) error {
 			MetaDB, _ = gorm.Open(sqlite.Open(testFile), &gorm.Config{})
 
 			err := MetaDB.Migrator().CreateTable(
-				&AccountDO{},
-				&RoleBindingDO{},
-				&RoleDO{},
-				&PermissionBindingDO{},
-				&PermissionDO{},
+				&Account{},
+				&RoleBinding{},
+				&Role{},
+				&PermissionBinding{},
+				&Permission{},
 				&TestEntity{},
 				&TestEntity2{},
 				&TestRecord{},
 				&TestData{},
-				&DemandRecordDO{},
+				&DemandRecord{},
 				&Host{},
 				&Disk{},
-				&ClusterDO{},
-				&TiUPConfigDO{},
+				&Cluster{},
+				&TiUPConfig{},
 				&Tenant{},
 				&FlowDO{},
 				&TaskDO{},
 				&Token{},
-				&BackupRecordDO{},
-				&RecoverRecordDO{},
-				&ParametersRecordDO{},
+				&BackupRecord{},
+				&RecoverRecord{},
+				&ParametersRecord{},
 			)
 			return err
 		},
 	)
+	Dao = new(DAOManager)
+	Dao.SetDb(MetaDB)
+	Dao.SetFramework(f)
+	Dao.SetClusterManager(new(DAOClusterManager))
+	Dao.ClusterManager().SetDb(MetaDB)
 	m.Run()
 }
-

@@ -2,10 +2,10 @@ package route
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
-	"github.com/pingcap-inc/tiem/library/thirdparty/tracer"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/clusterapi"
+	"github.com/pingcap-inc/tiem/micro-api/controller/databaseapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/instanceapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/userapi"
@@ -36,8 +36,8 @@ func Route(g *gin.Engine) {
 	// api
 	apiV1 := g.Group("/api/v1")
 	{
-		apiV1.Use(logger.GenGinLogger(), gin.Recovery())
-		apiV1.Use(tracer.GinOpenTracing())
+		apiV1.Use(framework.GenGinLogger(), gin.Recovery())
+		apiV1.Use(framework.GinOpenTracing())
 
 		user := apiV1.Group("/user")
 		{
@@ -61,6 +61,11 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId/strategy", instanceapi.QueryBackupStrategy)
 			cluster.PUT("/:clusterId/strategy", instanceapi.SaveBackupStrategy)
 			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
+
+			//Import and Export
+			cluster.POST("/import", databaseapi.ImportData)
+			cluster.POST("/export", databaseapi.ExportData)
+			cluster.GET("/:clusterId/transport", databaseapi.DescribeDataTransport)
 		}
 
 		knowledge := apiV1.Group("/knowledges")
@@ -72,7 +77,6 @@ func Route(g *gin.Engine) {
 		backup := apiV1.Group("/backups")
 		{
 			backup.Use(security.VerifyIdentity)
-
 			backup.POST("/", instanceapi.Backup)
 			backup.GET("/", instanceapi.QueryBackup)
 			backup.POST("/:backupId/restore", instanceapi.RecoverBackup)

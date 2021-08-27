@@ -2,11 +2,11 @@ package clusterapi
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/client"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-cluster/proto"

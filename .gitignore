@@ -6,5 +6,9 @@ micro-metadb/tiem.sqlite.db
 /micro-cluster/tiupmgr/tiupmgr
 /tiem.sqlite.db
 /micro-cluster/brmgr/brmgr
-/bin
 /logs/
+/bin/brcmd
+/bin/cluster-server
+/bin/metadb-server
+/bin/openapi-server
+/bin/tiupcmd

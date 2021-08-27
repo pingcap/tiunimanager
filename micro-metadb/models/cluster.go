@@ -2,6 +2,9 @@ package models
 
 import (
 	"errors"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	"gorm.io/gorm"
+	"time"
 )
 
 type ClusterDO struct {
@@ -266,13 +269,17 @@ func CreateCluster(
 
 type BackupRecordDO struct {
 	Record
-	ClusterId  string		`gorm:"not null;type:varchar(36);default:null"`
-	Range      int8
-	Type       int8
-	OperatorId string		`gorm:"not null;type:varchar(36);default:null"`
+	ClusterId   string		`gorm:"not null;type:varchar(36);default:null"`
+	BackupRange string
+	BackupType  string
+	OperatorId  string		`gorm:"not null;type:varchar(36);default:null"`
 
-	FilePath 		string
-	FlowId			uint
+	FilePath 	string
+	FlowId		int64
+	Size 		uint64
+
+	StartTime	int64
+	EndTime 	int64
 }
 
 func (d BackupRecordDO) TableName() string {
@@ -288,8 +295,26 @@ type RecoverRecordDO struct {
 	FlowId			uint
 }
 
+
+
 func (d RecoverRecordDO) TableName() string {
 	return "recover_records"
+}
+
+type BackupStrategyDO struct {
+	Record
+	ClusterId 		string		`gorm:"not null;type:varchar(36);default:null"`
+	OperatorId 		string		`gorm:"not null;type:varchar(36);default:null"`
+
+	BackupDate  	string
+	FilePath    	string
+	BackupRange 	string
+	BackupType  	string
+	Period      	string
+}
+
+func (d BackupStrategyDO) TableName() string {
+	return "backup_strategy"
 }
 
 type ParametersRecordDO struct {
@@ -338,29 +363,61 @@ func DeleteBackupRecord(id uint) (record *BackupRecordDO, err error) {
 	return
 }
 
-func SaveBackupRecord(tenantId, clusterId, operatorId string,
-	backupRange, backupType int8, flowId uint,
-	filePath string) (do *BackupRecordDO, err error){
+func SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do *BackupRecordDO, err error){
 	do = &BackupRecordDO{
 		Record: Record{
-			TenantId: tenantId,
+			TenantId: record.GetClusterId(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
-		ClusterId:  clusterId,
-		OperatorId: operatorId,
-		Range:      backupRange,
-		Type:       backupType,
-		FlowId:     flowId,
-		FilePath:   filePath,
+		ClusterId: record.GetClusterId(),
+		OperatorId: record.GetOperatorId(),
+		BackupRange: record.GetBackupRange(),
+		BackupType: record.GetBackupType(),
+		FlowId: record.GetFlowId(),
+		FilePath: record.GetFilePath(),
+		StartTime: record.GetStartTime(),
 	}
 
 	err = MetaDB.Create(do).Error
 	return
 }
 
+func UpdateBackupRecord(record *dbPb.DBBackupRecordDTO) error {
+	err := MetaDB.Model(&BackupRecordDO{}).Where("id = ?", record.Id).Updates(BackupRecordDO{
+		Size: record.GetSize(), EndTime: record.GetEndTime(), Record: Record{
+			TenantId: record.GetClusterId(),
+			UpdatedAt: time.Now(),
+		}}).Error
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 type BackupRecordFetchResult struct {
 	BackupRecordDO *BackupRecordDO
 	Flow *FlowDO
+}
+
+func QueryBackupRecord(clusterId string, recordId int64) (*BackupRecordFetchResult, error) {
+	record := BackupRecordDO{}
+	err := MetaDB.Table("backup_records").Where("id = ? and cluster_id = ?", recordId, clusterId).First(&record).Error
+	if err != nil {
+		return nil, err
+	}
+
+	flow := FlowDO{}
+	err = MetaDB.Find(&flow, record.FlowId).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &BackupRecordFetchResult{
+		BackupRecordDO: &record,
+		Flow: &flow,
+	}, nil
 }
 
 func ListBackupRecords(clusterId string,
@@ -375,7 +432,7 @@ func ListBackupRecords(clusterId string,
 
 	if err != nil {return}
 	// query flows
-	flowIds := make([]uint, len(records), len(records))
+	flowIds := make([]int64, len(records), len(records))
 
 	dos = make([]*BackupRecordFetchResult, len(records), len(records))
 
@@ -390,10 +447,10 @@ func ListBackupRecords(clusterId string,
 	err = MetaDB.Find(&flows, flowIds).Error
 	if err != nil {return}
 
-	flowMap := make(map[uint]*FlowDO)
+	flowMap := make(map[int64]*FlowDO)
 
 	for _,v := range flows {
-		flowMap[v.ID] = v
+		flowMap[int64(v.ID)] = v
 	}
 
 	for i,v := range records {
@@ -421,3 +478,52 @@ func SaveRecoverRecord(tenantId, clusterId, operatorId string,
 	return
 }
 
+func SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDTO) (*BackupStrategyDO, error) {
+	strategyDO := BackupStrategyDO{
+		ClusterId: strategy.ClusterId,
+		Record: Record{
+			TenantId: strategy.TenantId,
+		},
+		BackupDate: strategy.BackupDate,
+		BackupRange: strategy.BackupRange,
+		BackupType: strategy.BackupType,
+		Period: strategy.Period,
+		FilePath: strategy.FilePath,
+	}
+	result := MetaDB.Table("backup_strategy").Where("cluster_id = ?", strategy.ClusterId).First(&strategyDO)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			strategyDO.CreatedAt = time.Now()
+			strategyDO.UpdatedAt = time.Now()
+			err := MetaDB.Create(&strategyDO).Error
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, result.Error
+		}
+	} else {
+		strategyDO.UpdatedAt = time.Now()
+		err := MetaDB.Model(&BackupStrategyDO{}).Updates(&BackupStrategyDO{
+			BackupDate: strategy.BackupDate,
+			BackupRange: strategy.BackupRange,
+			BackupType: strategy.BackupType,
+			Period: strategy.Period,
+			FilePath: strategy.FilePath,
+		}).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &strategyDO, nil
+}
+
+func QueryBackupStartegy(clusterId string) (*BackupStrategyDO, error) {
+	strategyDO := BackupStrategyDO{}
+	err := MetaDB.Table("backup_strategy").Where("cluster_id = ?", clusterId).First(&strategyDO).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return &strategyDO, nil
+}

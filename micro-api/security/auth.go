@@ -2,7 +2,7 @@ package security
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
+	"github.com/pingcap-inc/tiem/library/client"
 	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"net/http"
 )

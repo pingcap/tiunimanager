@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"io"
 	"io/ioutil"
 	"os"
@@ -14,10 +16,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
-	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
-
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
@@ -105,6 +103,8 @@ type CmdStartResp struct {
 }
 
 type CmdListResp struct {
+	info      string
+	Error    error
 }
 
 type CmdDestroyResp struct {
@@ -168,6 +168,7 @@ type CmdClusterDisplayReq struct {
 
 type CmdClusterDisplayResp struct {
 	DisplayRespString string
+	Error    error
 }
 
 type TaskStatusMapValue struct {
@@ -179,7 +180,7 @@ type TaskStatusMapValue struct {
 var glMgrTaskStatusCh chan TaskStatusMember
 var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
-var log *logger.LogRecord
+var log *framework.LogRecord
 
 func TiupMgrInit() {
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
@@ -191,9 +192,8 @@ func TiupMgrInit() {
 	if len(configPath) == 0 {
 		configPath = "./tiupmgr.log"
 	}
-	config.InitConfigForDev(config.TiUPInternalMod)
 	// TODO: update log path using configPath if necessary
-	log = logger.GetLogger(config.KEY_TIUPLIB_LOG)
+	log = framework.GetLogger()
 }
 
 func assert(b bool) {
@@ -209,7 +209,7 @@ func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
 	log.Fatalf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
 	//fmt.Printf("panic: %s, with stack trace: %s\n", s, string(debug.Stack()))
-	panic("unexpected")
+	panic("unexpected" + s)
 }
 
 func jsonMustMarshal(v interface{}) []byte {
@@ -281,7 +281,7 @@ func mgrHandleCmdDeployReq(jsonStr string) CmdDeployResp {
 	return ret
 }
 
-func mgrHandleCmdStarReq(jsonStr string) CmdStartResp {
+func mgrHandleCmdStartReq(jsonStr string) CmdStartResp {
 	ret := CmdStartResp{}
 	var req CmdStartReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
@@ -297,9 +297,9 @@ func mgrHandleCmdListReq(jsonStr string) CmdListResp {
 	var req CmdListReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
 	if err != nil {
-		myPanic(fmt.Sprintln("json.Unmarshal CmdListReq failed err:", err))
+		myPanic(fmt.Sprintln("json.unmarshal CmdListReq failed err:", err))
 	}
-	mgrStartNewTiupListTask(req.TaskID, &req)
+	ret = mgrStartNewTiupListTask(req.TaskID, &req)
 	return ret
 }
 
@@ -488,14 +488,37 @@ func mgrStartNewTiupStartTask(taskID uint64, req *CmdStartReq) {
 	}()
 }
 
-func mgrStartNewTiupListTask(taskID uint64, req *CmdListReq) {
-	go func() {
-		var args []string
-		args = append(args, "cluster", "list")
-		args = append(args, req.Flags...)
-		args = append(args, "--yes")
-		<-mgrStartNewTiupTask(taskID, req.TiupPath, args, req.TimeoutS)
-	}()
+func mgrStartNewTiupListTask(taskID uint64, req *CmdListReq) CmdListResp {
+	var ret CmdListResp
+	var args []string
+	args = append(args, "cluster", "list")
+	args = append(args, req.Flags...)
+	args = append(args, "--yes")
+
+	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
+	//fmt.Println("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
+	var cmd *exec.Cmd
+	var cancelFp context.CancelFunc
+	if req.TimeoutS != 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(req.TimeoutS)*time.Second)
+		cancelFp = cancel
+		exec.CommandContext(ctx, req.TiupPath, args...)
+	} else {
+		cmd = exec.Command(req.TiupPath, args...)
+		cancelFp = func() {}
+	}
+	defer cancelFp()
+	cmd.SysProcAttr = genSysProcAttr()
+	var data []byte
+	var err error
+	if data, err = cmd.Output(); err != nil {
+		log.Error("cmd start err", err)
+		//fmt.Println("cmd start err", err)
+		ret.Error = err
+		return ret
+	}
+	ret.info = string(data)
+	return ret
 }
 
 func mgrStartNewTiupDestroyTask(taskID uint64, req *CmdDestroyReq) {
@@ -552,6 +575,7 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 	if data, err = cmd.Output(); err != nil {
 		log.Error("cmd start err", err)
 		//fmt.Println("cmd start err", err)
+		ret.Error = err
 		return ret
 	}
 	ret.DisplayRespString = string(data)
@@ -586,20 +610,16 @@ func TiupMgrRoutine() {
 				cmdResp.TypeStr = CmdDeployRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			case CmdStartReqTypeStr:
-				resp := mgrHandleCmdStarReq(cmd.Content)
+				resp := mgrHandleCmdStartReq(cmd.Content)
 				cmdResp.TypeStr = CmdStartRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			case CmdListReqTypeStr:
-				resp := mgrHandleCmdListReq(cmd.Content)
+				resp := mgrHandleCmdListReq(cmd.Content) // todo: make it sync
 				cmdResp.TypeStr = CmdListRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			case CmdDestroyReqTypeStr:
 				resp := mgrHandleCmdDestroyReq(cmd.Content)
 				cmdResp.TypeStr = CmdDestroyRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			case CmdGetAllTaskStatusReqTypeStr:
-				resp := mgrHandleCmdGetAllTaskStatusReq(cmd.Content)
-				cmdResp.TypeStr = CmdGetAllTaskStatusRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			case CmdDumplingReqTypeStr:
 				resp := mgrHandleCmdDumplingReq(cmd.Content)
@@ -612,6 +632,10 @@ func TiupMgrRoutine() {
 			case CmdClusterDisplayReqTypeStr:
 				resp := mgrHandleClusterDisplayReq(cmd.Content)
 				cmdResp.TypeStr = CmdClusterDisplayRespTypeStr
+				cmdResp.Content = string(jsonMustMarshal(&resp))
+			case CmdGetAllTaskStatusReqTypeStr:
+				resp := mgrHandleCmdGetAllTaskStatusReq(cmd.Content)
+				cmdResp.TypeStr = CmdGetAllTaskStatusRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			default:
 				myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
@@ -640,7 +664,7 @@ var glTiUPBinPath string
 
 func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
 	// init log
-	log = logger.GetLogger(config.KEY_CLUSTER_LOG)
+	log = framework.GetLogger()
 	glTiUPMgrPath = tiupMgrPath
 	glTiUPBinPath = tiupBinPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -679,7 +703,7 @@ func glMicroTaskStatusMapSyncer() {
 			}
 		}
 		glMicroTaskStatusMapMutex.Unlock()
-		log := logger.WithContext(nil).WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
+		log := framework.WithContext(nil).WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
 			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,
@@ -994,7 +1018,7 @@ func microSrvTiupClusterDisplay(clusterDisplayReq CmdClusterDisplayReq) CmdClust
 	return resp
 }
 
-func MicroSrvTiupClusterDisplay(clusterName string, timeoutS int, flags []string) (CmdClusterDisplayResp, error) {
+func MicroSrvTiupClusterDisplay(clusterName string, timeoutS int, flags []string) *CmdClusterDisplayResp {
 	var clusterDisplayResp CmdClusterDisplayResp
 	var clusterDisplayReq CmdClusterDisplayReq
 	clusterDisplayReq.ClusterName = clusterName
@@ -1002,7 +1026,7 @@ func MicroSrvTiupClusterDisplay(clusterName string, timeoutS int, flags []string
 	clusterDisplayReq.TiupPath = glTiUPBinPath
 	clusterDisplayReq.Flags = flags
 	clusterDisplayResp = microSrvTiupClusterDisplay(clusterDisplayReq)
-	return clusterDisplayResp, nil
+	return &clusterDisplayResp
 }
 
 type CmdChanMember struct {

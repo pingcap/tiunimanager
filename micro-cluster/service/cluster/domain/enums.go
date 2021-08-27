@@ -106,6 +106,8 @@ const (
 	FlowBackupCluster = "BackupCluster"
 	FlowRecoverCluster = "RecoverCluster"
 	FlowModifyParameters = "ModifyParameters"
+	FlowExportData = "ExportData"
+	FlowImportData = "ImportData"
 )
 
 type CronTaskType int8
@@ -117,15 +119,31 @@ const (
 )
 
 
-type BackupRange 		int
-type BackupType int
+type BackupRange string
+type BackupType string
 
 const (
-	BackupRangeWhole BackupRange = 0
-	BackupRangeIncrement = 1
+	BackupRangeFull BackupRange = "FULL"
+	BackupRangeIncrement BackupRange = "INCR"
 )
 
 const (
-	BackupTypeLogic BackupType = 0
-	BackupTypePhysics = 1
+	BackupTypeLogic BackupType = "Logic"
+	BackupTypePhysics BackupType = "Physics"
 )
+
+func checkBackupRangeValid(backupRange string) bool {
+	if string(BackupRangeFull) != backupRange &&
+		string(BackupRangeIncrement) != backupRange {
+		return false
+	}
+	return true
+}
+
+func checkBackupTypeValid(backupType string) bool {
+	if string(BackupTypeLogic) != backupType &&
+		string(BackupTypePhysics) != backupType {
+		return false
+	}
+	return true
+}

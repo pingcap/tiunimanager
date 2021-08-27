@@ -3,12 +3,13 @@ package instanceapi
 import (
 	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/library/client"
+	"google.golang.org/grpc/codes"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/clusterapi"
@@ -139,7 +140,7 @@ func Backup(c *gin.Context) {
 
 	var req BackupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 
@@ -147,13 +148,23 @@ func Backup(c *gin.Context) {
 
 	resp, err := client.ClusterClient.CreateBackup(context.TODO(), &cluster.CreateBackupRequest{
 		ClusterId: req.ClusterId,
+		BackupType: req.BackupType,
+		BackupRange: req.BackupRange,
+		FilePath: req.FilePath,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(BackupRecord{
-			ID:     resp.BackupRecord.Id,
+			ID:     		resp.GetBackupRecord().GetId(),
+			ClusterId: 		resp.GetBackupRecord().GetClusterId(),
+			StartTime:		time.Unix(resp.GetBackupRecord().GetStartTime(), 0),
+			EndTime: 		time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
+			BackupRange:	resp.GetBackupRecord().GetRange(),
+			BackupType: 	resp.GetBackupRecord().GetBackupType(),
+			FilePath:  		resp.GetBackupRecord().GetFilePath(),
+			Size:  			resp.GetBackupRecord().GetSize(),
 			Status: *clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
 		}))
 	}
@@ -173,7 +184,7 @@ func Backup(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/strategy/ [get]
 func QueryBackupStrategy(c *gin.Context) {
-	clusterId := c.Param("clusterId")
+	clusterId := c.Query("clusterId")
 	operator := controller.GetOperator(c)
 
 	resp, err := client.ClusterClient.GetBackupStrategy(context.TODO(), &cluster.GetBackupStrategyRequest{
@@ -183,10 +194,13 @@ func QueryBackupStrategy(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		c.JSON(http.StatusOK, controller.Success([]BackupStrategy{
-			{
-				CronString: resp.Cron,
-			},
+		c.JSON(http.StatusOK, controller.Success(BackupStrategy{
+			ClusterId: resp.GetStrategy().GetClusterId(),
+			FilePath: resp.GetStrategy().GetFilePath(),
+			BackupType: resp.GetStrategy().GetBackupType(),
+			BackupRange: resp.GetStrategy().GetBackupRange(),
+			BackupDate: resp.GetStrategy().GetBackupDate(),
+			Period: resp.GetStrategy().GetPeriod(),
 		}))
 	}
 }
@@ -208,23 +222,26 @@ func QueryBackupStrategy(c *gin.Context) {
 func SaveBackupStrategy(c *gin.Context) {
 	var req BackupStrategyUpdateReq
 	operator := controller.GetOperator(c)
-	clusterId := c.Param("clusterId")
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	_, err := client.ClusterClient.SaveBackupStrategy(context.TODO(), &cluster.SaveBackupStrategyRequest{
-		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
-		Cron:      req.CronString,
+		Strategy:  &cluster.BackupStrategy{
+			ClusterId: req.strategy.ClusterId,
+			BackupType: req.strategy.BackupType,
+			BackupRange: req.strategy.BackupRange,
+			BackupDate: req.strategy.BackupDate,
+			Period: req.strategy.Period,
+			FilePath: req.strategy.FilePath,
+		},
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		c.JSON(http.StatusOK, controller.Success(BackupStrategy{
-			CronString: req.CronString,
-		}))
+		c.JSON(http.StatusOK, controller.Success(nil))
 	}
 }
 
@@ -247,12 +264,12 @@ func QueryBackup(c *gin.Context) {
 
 	var queryReq BackupRecordQueryReq
 	if err := c.ShouldBindJSON(&queryReq); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
-	//operator := controller.GetOperator(c)
-
+	operator := controller.GetOperator(c)
 	reqDTO := &cluster.QueryBackupRequest{
+		Operator:  operator.ConvertToDTO(),
 		ClusterId: clusterId,
 		Page:      queryReq.PageRequest.ConvertToDTO(),
 	}
@@ -270,8 +287,8 @@ func QueryBackup(c *gin.Context) {
 				ClusterId: v.ClusterId,
 				StartTime: time.Unix(v.StartTime, 0),
 				EndTime:   time.Unix(v.EndTime, 0),
-				Range:     int(v.Range),
-				Way:       int(v.Way),
+				BackupRange:     v.Range,
+				BackupType:      v.BackupType,
 				Operator: controller.Operator{
 					ManualOperator: true,
 					OperatorId:     v.Operator.Id,
@@ -305,7 +322,7 @@ func RecoverBackup(c *gin.Context) {
 	backupIdStr := c.Param("backupId")
 	backupId, err := strconv.Atoi(backupIdStr)
 	if err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	var req BackupRecoverReq
@@ -343,12 +360,23 @@ func RecoverBackup(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups/{backupId} [delete]
 func DeleteBackup(c *gin.Context) {
-	backupId, _ := strconv.Atoi(c.Param("backupId"))
+	backupId, err := strconv.Atoi(c.Param("backupId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		return
+	}
+
+	var req BackupDeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		return
+	}
 	operator := controller.GetOperator(c)
 
-	_, err := client.ClusterClient.DeleteBackupRecord(context.TODO(), &cluster.DeleteBackupRequest{
+	_, err = client.ClusterClient.DeleteBackupRecord(context.TODO(), &cluster.DeleteBackupRequest{
 		BackupRecordId: int64(backupId),
 		Operator:       operator.ConvertToDTO(),
+		ClusterId:  	req.ClusterId,
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))

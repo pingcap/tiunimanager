@@ -25,6 +25,7 @@ require (
 	github.com/swaggo/swag v1.7.0
 	github.com/uber/jaeger-client-go v2.29.1+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
+	go.etcd.io/etcd/server/v3 v3.5.0
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	google.golang.org/grpc v1.39.0
 	google.golang.org/protobuf v1.27.1

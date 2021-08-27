@@ -3,12 +3,12 @@ package instanceapi
 import (
 	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/library/client"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/clusterapi"

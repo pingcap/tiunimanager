@@ -12,7 +12,6 @@ require (
 	github.com/asim/go-micro/v3 v3.5.2
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	github.com/micro/cli/v2 v2.1.2

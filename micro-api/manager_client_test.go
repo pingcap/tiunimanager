@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/client"
 
 	micro "github.com/asim/go-micro/v3/client"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
 	"github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 

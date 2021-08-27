@@ -104,4 +104,3 @@ case $option in
     exit 1
     ;;
 esac
-

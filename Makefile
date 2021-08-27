@@ -142,7 +142,7 @@ check_vet:
 	@echo "vet check"
 	#$(GO) vet -all $(PACKAGES_WITHOUT_BR) 2>&1 | $(FAIL_ON_STDOUT)
 
-install:
+install: build
 	mkdir -p ${TIEM_INSTALL_PREFIX}
 	mkdir -p ${TIEM_INSTALL_PREFIX}/bin
 	mkdir -p ${TIEM_INSTALL_PREFIX}/etc
@@ -220,3 +220,6 @@ failpoint-enable: build_failpoint_ctl
 failpoint-disable: build_failpoint_ctl
 # Restoring gofail failpoints...
 	@$(FAILPOINT_DISABLE)
+
+build_image: install
+	cp build_helper/docker_start_cmd.sh ${TIEM_INSTALL_PREFIX}/scripts

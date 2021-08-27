@@ -21,7 +21,7 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /databases/export [post]
+// @Router /clusters/export [post]
 func ExportData(c *gin.Context) {
 	var req DataExportReq
 	err := c.ShouldBindJSON(&req)
@@ -66,7 +66,7 @@ func ExportData(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /databases/import [post]
+// @Router /clusters/import [post]
 func ImportData(c *gin.Context) {
 	var req DataImportReq
 	err := c.ShouldBindJSON(&req)
@@ -111,8 +111,9 @@ func ImportData(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /databases/query [get]
+// @Router /clusters/[cluster-id]/transport [get]
 func DescribeDataTransport(c *gin.Context) {
+	clusterId := c.Query("clusterId")
 	var req DataTransportQueryReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
@@ -123,7 +124,7 @@ func DescribeDataTransport(c *gin.Context) {
 	operator := controller.GetOperator(c)
 	respDTO, err := client.ClusterClient.DescribeDataTransport(c, &cluster.DataTransportQueryRequest{
 		Operator: operator.ConvertToDTO(),
-		ClusterId: req.ClusterId,
+		ClusterId: clusterId,
 		RecordId: req.RecordId,
 		PageReq: req.PageRequest.ConvertToDTO(),
 	})

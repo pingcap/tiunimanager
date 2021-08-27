@@ -19,7 +19,6 @@ type DataImportReq struct {
 
 type DataTransportQueryReq struct {
 	controller.PageRequest
-	ClusterId	string		`json:"clusterId"`
 	RecordId	string		`json:"recordId"`
 }
 

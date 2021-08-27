@@ -61,6 +61,11 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId/strategy", instanceapi.QueryBackupStrategy)
 			cluster.PUT("/:clusterId/strategy", instanceapi.SaveBackupStrategy)
 			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
+
+			//Import and Export
+			cluster.POST("/import", databaseapi.ImportData)
+			cluster.POST("/export", databaseapi.ExportData)
+			cluster.GET("/:clusterId/transport", databaseapi.DescribeDataTransport)
 		}
 
 		knowledge := apiV1.Group("/knowledges")
@@ -77,14 +82,6 @@ func Route(g *gin.Engine) {
 			backup.POST("/:backupId/restore", instanceapi.RecoverBackup)
 			backup.DELETE("/:backupId", instanceapi.DeleteBackup)
 			//backup.GET("/:backupId", instanceapi.DetailsBackup)
-		}
-
-		database := apiV1.Group("/database")
-		{
-			database.Use(security.VerifyIdentity)
-			database.POST("/import", databaseapi.ImportData)
-			database.POST("/export", databaseapi.ExportData)
-			database.GET("/query", databaseapi.DescribeDataTransport)
 		}
 
 		host := apiV1.Group("/resources")

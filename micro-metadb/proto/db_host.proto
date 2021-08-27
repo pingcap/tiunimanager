@@ -39,9 +39,11 @@ message DBPreAllocation {
     int32 requestMem = 7;
     string hostName = 8;
     string Ip = 9;
-    string diskName = 10;
-    string diskPath = 11;
-    int32 diskCap = 12;
+    string userName = 10;
+    string passwd = 11;
+    string diskName = 12;
+    string diskPath = 13;
+    int32 diskCap = 14;
 
 }
 
@@ -52,15 +54,18 @@ message DBHostInfoDTO {
     string az = 4;
     string rack = 5;
     string ip = 6;
-    int32 status = 7;
-    string os = 8;                  // Host os
-    string kernel = 9;
-    string spec = 10;               // Host Spec ["4C8G/16C32g"]
-    int32 cpuCores = 11;            // Host cpu Remains
-    int32 memory = 12;              // Host memory Remains, Unit:GB
-    string nic = 13;                // Host network type: 1GE or 10GE
-    string purpose = 14;            // What Purpose is the host used for? [compute/storage or both]
-    repeated DBDiskDTO disks = 15;
+    string userName = 7;
+    string passwd = 8;
+    int32 status = 9;
+    string os = 10;                 // Host os
+    string kernel = 11;
+    string spec = 12;               // Host Spec ["4C8G/16C32g"]
+    int32 cpuCores = 13;            // Host cpu Remains
+    int32 memory = 14;              // Host memory Remains, Unit:GB
+    string nic = 15;                // Host network type: 1GE or 10GE
+    string purpose = 16;            // What Purpose is the host used for? [compute/storage or both]
+    int64 createAt = 17;
+    repeated DBDiskDTO disks = 18;
 }
 
 message DBAllocHostDTO {

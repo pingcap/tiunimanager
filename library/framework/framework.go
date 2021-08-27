@@ -8,7 +8,9 @@ import (
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
 	"github.com/asim/go-micro/v3"
 	"github.com/asim/go-micro/v3/registry"
+	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
+	"os"
 )
 
 var Current Framework
@@ -56,6 +58,36 @@ type BaseFramework struct {
 	serviceHandler ServiceHandler
 }
 
+func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
+	f := new(BaseFramework)
+
+	f.args = &ClientArgs{
+		Host: "127.0.0.1",
+		Port: 4116,
+		MetricsPort: 4121,
+		RegistryClientPort: 4101,
+		RegistryPeerPort: 4102,
+		RegistryAddress: "127.0.0.1:4101",
+		DeployDir: "./../bin",
+		DataDir: "./testdata",
+		LogLevel: "info",
+	}
+	f.parseArgs(serviceName)
+
+	f.initOpts = opts
+	f.Init()
+
+	f.shutdownOpts = []Opt {
+		func(d *BaseFramework) error {
+			return os.RemoveAll(d.GetDataDir())
+		},
+	}
+
+	Current = f
+
+	return f
+}
+
 func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFramework {
 	f := new(BaseFramework)
 
@@ -95,15 +127,17 @@ func (b *BaseFramework) initMicroClient() {
 			panic("load certificate file failed")
 		}
 		tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+
 		srv := micro.NewService(
 			micro.Name(string(client)),
 			micro.WrapHandler(prometheus.NewHandlerWrapper()),
-			micro.WrapClient(opentracing.NewClientWrapper(*b.trace)),
 			micro.WrapHandler(opentracing.NewHandlerWrapper(*b.trace)),
 			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
 			micro.Registry(etcd.NewRegistry(registry.Addrs(b.GetServiceMeta().RegistryAddress...))),
+			micro.WrapClient(opentracing.NewClientWrapper(*b.trace)),
 		)
 		srv.Init()
+
 		handler(srv)
 	}
 }
@@ -114,14 +148,19 @@ func (b *BaseFramework) initMicroService() {
 		panic("load certificate file failed")
 	}
 	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+
+	server := server.NewServer(
+		server.Name(string(b.serviceMeta.ServiceName)),
+		server.WrapHandler(prometheus.NewHandlerWrapper()),
+		server.WrapHandler(opentracing.NewHandlerWrapper(*b.trace)),
+		server.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		server.Address(b.serviceMeta.GetServiceAddress()),
+		server.Registry(etcd.NewRegistry(registry.Addrs(b.serviceMeta.RegistryAddress...))),
+	)
+
 	srv := micro.NewService(
-		micro.Name(string(b.serviceMeta.ServiceName)),
-		micro.WrapHandler(prometheus.NewHandlerWrapper()),
+		micro.Server(server),
 		micro.WrapClient(opentracing.NewClientWrapper(*b.trace)),
-		micro.WrapHandler(opentracing.NewHandlerWrapper(*b.trace)),
-		micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
-		micro.Address(b.serviceMeta.GetServiceAddress()),
-		micro.Registry(etcd.NewRegistry(registry.Addrs(b.serviceMeta.RegistryAddress...))),
 	)
 	srv.Init()
 

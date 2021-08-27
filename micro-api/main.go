@@ -5,7 +5,8 @@ import (
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
 	_ "github.com/pingcap-inc/tiem/docs"
-	client2 "github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/route"
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
@@ -21,7 +22,7 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host localhost:8080
+// @host localhost:4116
 // @BasePath /api/v1/
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ApiService,
@@ -30,7 +31,7 @@ func main() {
 
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.ClusterService: func(service micro.Service) error {
-			client2.ClusterClient = clusterPb.NewClusterService(string(framework.ClusterService), service.Client())
+			client.ClusterClient = clusterPb.NewClusterService(string(framework.ClusterService), service.Client())
 			return nil
 		},
 	})
@@ -61,7 +62,7 @@ func initGinEngine(d *framework.BaseFramework) error {
 
 func defaultPortForLocal(f *framework.BaseFramework) error {
 	if f.GetServiceMeta().ServicePort <= 0 {
-		f.GetServiceMeta().ServicePort = 8080
+		f.GetServiceMeta().ServicePort = common.DefaultMicroApiPort
 	}
 	return nil
 }

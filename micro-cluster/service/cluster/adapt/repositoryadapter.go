@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	client2 "github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
@@ -34,7 +34,7 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 		},
 	}
 
-	resp, err := client2.DBClient.ListCluster(context.TODO(), req)
+	resp, err := client.DBClient.ListCluster(context.TODO(), req)
 
 	if err != nil {
 		return nil, 0, err
@@ -63,7 +63,7 @@ func (c ClusterRepoAdapter) AddCluster(cluster *domain.Cluster) error {
 		Cluster: ConvertClusterToDTO(cluster),
 	}
 
-	resp, err := client2.DBClient.CreateCluster(context.TODO(), req)
+	resp, err := client.DBClient.CreateCluster(context.TODO(), req)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 	cluster := aggregation.Cluster
 
 	if aggregation.StatusModified || aggregation.FlowModified {
-		resp, err := client2.DBClient.UpdateClusterStatus(context.TODO(), &db.DBUpdateClusterStatusRequest{
+		resp, err := client.DBClient.UpdateClusterStatus(context.TODO(), &db.DBUpdateClusterStatusRequest{
 			ClusterId:    cluster.Id,
 			Status:       int32(cluster.Status),
 			UpdateStatus: aggregation.StatusModified,
@@ -103,7 +103,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 	}
 
 	if aggregation.ConfigModified {
-		resp, err := client2.DBClient.UpdateClusterTiupConfig(context.TODO(), &db.DBUpdateTiupConfigRequest{
+		resp, err := client.DBClient.UpdateClusterTiupConfig(context.TODO(), &db.DBUpdateTiupConfigRequest{
 			ClusterId: aggregation.Cluster.Id,
 			Content: aggregation.CurrentTiUPConfigRecord.Content(),
 			TenantId: aggregation.Cluster.TenantId,
@@ -118,7 +118,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 
 	if aggregation.LastBackupRecord != nil && aggregation.LastBackupRecord.Id == 0 {
 		record := aggregation.LastBackupRecord
-		resp, err :=  client2.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
+		resp, err :=  client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
 			BackupRecord: &db.DBBackupRecordDTO{
 				TenantId:    cluster.TenantId,
 				ClusterId:   record.ClusterId,
@@ -138,7 +138,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 
 	if aggregation.LastRecoverRecord != nil && aggregation.LastRecoverRecord.Id == 0 {
 		record := aggregation.LastRecoverRecord
-		resp, err :=  client2.DBClient.SaveRecoverRecord(context.TODO(), &db.DBSaveRecoverRecordRequest{
+		resp, err :=  client.DBClient.SaveRecoverRecord(context.TODO(), &db.DBSaveRecoverRecordRequest{
 			RecoverRecord: &db.DBRecoverRecordDTO{
 				TenantId:       cluster.TenantId,
 				ClusterId:      record.ClusterId,
@@ -156,7 +156,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 
 	if aggregation.LastParameterRecord != nil && aggregation.LastParameterRecord.Id == 0 {
 		record := aggregation.LastParameterRecord
-		resp, err :=  client2.DBClient.SaveParametersRecord(context.TODO(), &db.DBSaveParametersRequest{
+		resp, err :=  client.DBClient.SaveParametersRecord(context.TODO(), &db.DBSaveParametersRequest{
 			Parameters: &db.DBParameterRecordDTO{
 				TenantId:       cluster.TenantId,
 				ClusterId:      record.ClusterId,
@@ -180,7 +180,7 @@ func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation,
 		ClusterId: id,
 	}
 
-	resp, err := client2.DBClient.LoadCluster(context.TODO(), req)
+	resp, err := client.DBClient.LoadCluster(context.TODO(), req)
 
 	if err != nil {
 		return
@@ -202,7 +202,7 @@ func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation,
 type InstanceRepoAdapter struct {}
 
 func (c InstanceRepoAdapter) QueryParameterJson(clusterId string) (content string, err error) {
-	resp, err := client2.DBClient.GetCurrentParametersRecord(context.TODO(), &db.DBGetCurrentParametersRequest{
+	resp, err := client.DBClient.GetCurrentParametersRecord(context.TODO(), &db.DBGetCurrentParametersRequest{
 		ClusterId: clusterId,
 	})
 
@@ -234,7 +234,7 @@ func (t TaskRepoAdapter) PersistCronTask(cronTask *domain.CronTaskEntity) (err e
 }
 
 func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
-	resp, err := client2.DBClient.CreateFlow(context.TODO(), &db.DBCreateFlowRequest{
+	resp, err := client.DBClient.CreateFlow(context.TODO(), &db.DBCreateFlowRequest{
 		Flow: &db.DBFlowDTO{
 			FlowName: flowWork.FlowName,
 			StatusAlias: flowWork.StatusAlias,
@@ -255,7 +255,7 @@ func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
 }
 
 func (t TaskRepoAdapter) AddFlowTask(task *domain.TaskEntity, flowId uint) error {
-	resp, err := client2.DBClient.CreateTask(context.TODO(), &db.DBCreateTaskRequest{
+	resp, err := client.DBClient.CreateTask(context.TODO(), &db.DBCreateTaskRequest{
 		Task: &db.DBTaskDTO{
 			TaskName: task.TaskName,
 			TaskReturnType: strconv.Itoa(int(task.TaskReturnType)),
@@ -312,7 +312,7 @@ func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
 		}
 	}
 
-	_, err := client2.DBClient.UpdateFlow(context.TODO(), req)
+	_, err := client.DBClient.UpdateFlow(context.TODO(), req)
 	return err
 }
 

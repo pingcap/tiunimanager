@@ -2,7 +2,7 @@ package host
 
 import (
 	"context"
-	client2 "github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client"
 
 	"github.com/asim/go-micro/v3/client"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
@@ -286,7 +286,7 @@ func InitMockDBClient() *DBFakeService {
 		},
 	}
 
-	client2.DBClient = fakeDBClient
+	client.DBClient = fakeDBClient
 
 	return fakeDBClient
 }

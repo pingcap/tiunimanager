@@ -4,9 +4,7 @@ package common
 const (
 	DefaultMicroMetaDBPort  int = 4100
 	DefaultMicroClusterPort     = 4110
-	DefaultMicroManagerPort     = 4111
-	DefaultMicroApiPort         = 4115
-	DefaultRestPort             = 4116
+	DefaultMicroApiPort         = 4116
 )
 
 const (

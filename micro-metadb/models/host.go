@@ -70,6 +70,8 @@ func (d *Disk) BeforeCreate(tx *gorm.DB) (err error) {
 type Host struct {
 	ID        string `gorm:"PrimaryKey"`
 	IP        string `gorm:"size:32"`
+	UserName  string `gorm:"size:32"`
+	Passwd    string `gorm:"size:32"`
 	HostName  string `gorm:"size:255"`
 	Status    int32  `gorm:"size:32"`
 	OS        string `gorm:"size:32"`
@@ -242,6 +244,8 @@ type Resource struct {
 	Memory   int
 	HostName string
 	Ip       string
+	UserName string
+	Passwd   string
 	Name     string
 	Path     string
 	Capacity int
@@ -249,7 +253,7 @@ type Resource struct {
 
 func PreAllocHosts(failedDomain string, numReps int, cpuCores int, mem int) (resources []Resource, err error) {
 	err = MetaDB.Order("hosts.cpu_cores").Limit(numReps).Model(&Disk{}).Select(
-		"disks.host_id, disks.id, hosts.cpu_cores, hosts.memory, hosts.host_name, hosts.ip, disks.name, disks.path, disks.capacity").Joins("left join hosts on disks.host_id = hosts.id").Where(
+		"disks.host_id, disks.id, hosts.cpu_cores, hosts.memory, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, disks.name, disks.path, disks.capacity").Joins("left join hosts on disks.host_id = hosts.id").Where(
 		"disks.status = ? and hosts.az = ? and (hosts.status = ? or hosts.status = ?) and hosts.cpu_cores >= ? and memory >= ?",
 		DISK_AVAILABLE, failedDomain, HOST_ONLINE, HOST_INUSED, cpuCores, mem).Group("hosts.id").Scan(&resources).Error
 	return

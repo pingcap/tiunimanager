@@ -2,7 +2,7 @@ package clusterapi
 
 import (
 	"context"
-	client2 "github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -43,7 +43,7 @@ func Create(c *gin.Context) {
 		Demands:  demand,
 	}
 
-	respDTO, err := client2.ClusterClient.CreateCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.CreateCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -94,7 +94,7 @@ func Query(c *gin.Context) {
 		ClusterStatus: queryReq.ClusterStatus,
 	}
 
-	respDTO, err := client2.ClusterClient.QueryCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.QueryCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -135,7 +135,7 @@ func Delete(c *gin.Context) {
 		ClusterId: c.Param("clusterId"),
 	}
 
-	respDTO, err := client2.ClusterClient.DeleteCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.DeleteCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -172,7 +172,7 @@ func Detail(c *gin.Context) {
 		ClusterId: c.Param("clusterId"),
 	}
 
-	respDTO, err := client2.ClusterClient.DetailCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.DetailCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -233,7 +233,7 @@ func DescribeDashboard(c *gin.Context) {
 		Operator: operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
 	}
-	respDTO, err := client2.ClusterClient.DescribeDashboard(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.DescribeDashboard(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))

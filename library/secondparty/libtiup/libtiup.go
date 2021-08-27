@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	client2 "github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"io"
 	"io/ioutil"
@@ -678,7 +678,7 @@ func glMicroTaskStatusMapSyncer() {
 		glMicroTaskStatusMapMutex.Unlock()
 		log := framework.WithContext(nil).WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
-			rsp, err := client2.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
+			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,
 				Status: dbPb.TiupTaskStatus(v.Status),
 				ErrStr: v.ErrorStr,
@@ -715,7 +715,7 @@ func MicroSrvTiupDeploy(instanceName string, version string, configStrYaml strin
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Deploy
 	req.BizID = bizID
-	rsp, err := client2.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
 		return 0, err
@@ -756,7 +756,7 @@ func MicroSrvTiupList(timeoutS int, flags []string, bizID uint64) (taskID uint64
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_List
 	req.BizID = bizID
-	rsp, err := client2.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		//fmt.Println(rsp, err)
 		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
@@ -795,7 +795,7 @@ func MicroSrvTiupStart(instanceName string, timeoutS int, flags []string, bizID 
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Start
 	req.BizID = bizID
-	rsp, err := client2.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
 		return 0, err
@@ -834,7 +834,7 @@ func MicroSrvTiupDestroy(instanceName string, timeoutS int, flags []string, bizI
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Destroy
 	req.BizID = bizID
-	rsp, err := client2.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
 		return 0, err
@@ -853,7 +853,7 @@ func MicroSrvTiupDestroy(instanceName string, timeoutS int, flags []string, bizI
 func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error) {
 	var req dbPb.FindTiupTaskByIDRequest
 	req.Id = taskID
-	rsp, err := client2.DBClient.FindTiupTaskByID(context.Background(), &req)
+	rsp, err := client.DBClient.FindTiupTaskByID(context.Background(), &req)
 	if err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("err:%s, rsp.ErrCode:%d, rsp.ErrStr:%s", err, rsp.ErrCode, rsp.ErrStr)
 		return stat, "", err
@@ -868,7 +868,7 @@ func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr 
 func MicroSrvTiupGetTaskStatusByBizID(bizID uint64) (stat dbPb.TiupTaskStatus, statErrStr string, err error) {
 	var req dbPb.GetTiupTaskStatusByBizIDRequest
 	req.BizID = bizID
-	rsp, err := client2.DBClient.GetTiupTaskStatusByBizID(context.Background(), &req)
+	rsp, err := client.DBClient.GetTiupTaskStatusByBizID(context.Background(), &req)
 	if err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("err:%s, rsp.ErrCode:%d, rsp.ErrStr:%s", err, rsp.ErrCode, rsp.ErrStr)
 		return stat, "", err
@@ -919,7 +919,7 @@ func MicroSrvTiupDumpling(timeoutS int, flags []string, bizID uint64) (taskID ui
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Dumpling
 	req.BizID = bizID
-	rsp, err := client2.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
 		return 0, err
@@ -957,7 +957,7 @@ func MicroSrvTiupLightning(timeoutS int, flags []string, bizID uint64) (taskID u
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Lightning
 	req.BizID = bizID
-	rsp, err := client2.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
 		return 0, err

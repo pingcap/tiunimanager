@@ -27,6 +27,8 @@ type ZoneHostStockRsp struct {
 type AllocateRsp struct {
 	HostName string `json:"hostName"`
 	Ip       string `json:"ip"`
+	UserName string `json:"userName"`
+	Passwd   string `json:"passwd"`
 	CpuCores int32  `json:"cpuCore"`
 	Memory   int32  `json:"memory"`
 	Disk     Disk   `json:"disk"`

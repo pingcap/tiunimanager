@@ -3,7 +3,7 @@ package adapt
 import (
 	"context"
 	"github.com/google/uuid"
-	client2 "github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client"
 	tenant "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"time"
@@ -23,7 +23,7 @@ func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId string, code string)
 		Code: code,
 	}
 
-	resp, err := client2.DBClient.FindRolesByPermission(context.TODO(), &req)
+	resp, err := client.DBClient.FindRolesByPermission(context.TODO(), &req)
 	if err != nil {
 		return
 	}
@@ -67,7 +67,7 @@ func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account tenant.Acc
 		WithRole: true,
 	}
 
-	resp, err := client2.DBClient.FindAccount(context.TODO(), &req)
+	resp, err := client.DBClient.FindAccount(context.TODO(), &req)
 	if err != nil {
 		return
 	}
@@ -111,7 +111,7 @@ func (m MicroMetaDbRepo) Provide(tiEMToken *tenant.TiEMToken) (tokenString strin
 		},
 	}
 
-	_, err = client2.DBClient.SaveToken(context.TODO(), &req)
+	_, err = client.DBClient.SaveToken(context.TODO(), &req)
 
 	return
 }
@@ -127,7 +127,7 @@ func (m MicroMetaDbRepo) Modify(tiEMToken *tenant.TiEMToken) error {
 		},
 	}
 
-	_, err := client2.DBClient.SaveToken(context.TODO(), &req)
+	_, err := client.DBClient.SaveToken(context.TODO(), &req)
 
 	return err
 }
@@ -137,7 +137,7 @@ func (m MicroMetaDbRepo) GetToken(tokenString string) (token tenant.TiEMToken, e
 		TokenString: tokenString,
 	}
 
-	resp, err := client2.DBClient.FindToken(context.TODO(), &req)
+	resp, err := client.DBClient.FindToken(context.TODO(), &req)
 	if err != nil {
 		return
 	}
@@ -175,7 +175,7 @@ func (m MicroMetaDbRepo) LoadAccountByName(name string) (account tenant.Account,
 		WithRole: false,
 	}
 
-	resp, err := client2.DBClient.FindAccount(context.TODO(), &req)
+	resp, err := client.DBClient.FindAccount(context.TODO(), &req)
 	if err != nil {
 		return
 	}

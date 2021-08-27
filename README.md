@@ -43,9 +43,9 @@ Setup:
 
 ```
 etcd --data-dir=data.etcd1 --name machine-1 \
-    --initial-advertise-peer-urls http://127.0.0.1:2380 --listen-peer-urls http://127.0.0.1:2380 \
-    --advertise-client-urls http://127.0.0.1:2379 --listen-client-urls http://127.0.0.1:2379 \
-    --initial-cluster machine-1=http://127.0.0.1:2380 \
+    --initial-advertise-peer-urls http://127.0.0.1:4102 --listen-peer-urls http://127.0.0.1:4102 \
+    --advertise-client-urls http://127.0.0.1:4101 --listen-client-urls http://127.0.0.1:4101 \
+    --initial-cluster machine-1=http://127.0.0.1:4102 \
     --initial-cluster-state new --initial-cluster-token token-tiem
     &
 ```
@@ -112,8 +112,7 @@ or
 $ cd micro-api
 $ go run init.go main.go \
     --host=192.168.1.100 \
-    --port=4115 \
-    --rest-port=4116 \
+    --port=4116 \
     --metrics-port=4121 \
     --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
     --tracer-address=192.168.1.100:4123 \
@@ -123,8 +122,8 @@ $ go run init.go main.go \
 ```
 
 ### Try it out
-via swagger : http://localhost:8080/swagger/index.html
-or : http://localhost:8080/system/check
+via swagger : http://localhost:4116/swagger/index.html
+or : http://localhost:4116/system/check
 
 ### Watch Traces
 

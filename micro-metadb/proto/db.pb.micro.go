@@ -49,8 +49,7 @@ type TiEMDBService interface {
 	RemoveHostsInBatch(ctx context.Context, in *DBRemoveHostsInBatchRequest, opts ...client.CallOption) (*DBRemoveHostsInBatchResponse, error)
 	ListHost(ctx context.Context, in *DBListHostsRequest, opts ...client.CallOption) (*DBListHostsResponse, error)
 	CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, opts ...client.CallOption) (*DBCheckDetailsResponse, error)
-	PreAllocHosts(ctx context.Context, in *DBPreAllocHostsRequest, opts ...client.CallOption) (*DBPreAllocHostsResponse, error)
-	LockHosts(ctx context.Context, in *DBLockHostsRequest, opts ...client.CallOption) (*DBLockHostsResponse, error)
+	AllocHosts(ctx context.Context, in *DBAllocHostsRequest, opts ...client.CallOption) (*DBAllocHostsResponse, error)
 	GetFailureDomain(ctx context.Context, in *DBGetFailureDomainRequest, opts ...client.CallOption) (*DBGetFailureDomainResponse, error)
 	// Cluster
 	CreateCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error)
@@ -202,19 +201,9 @@ func (c *tiEMDBService) CheckDetails(ctx context.Context, in *DBCheckDetailsRequ
 	return out, nil
 }
 
-func (c *tiEMDBService) PreAllocHosts(ctx context.Context, in *DBPreAllocHostsRequest, opts ...client.CallOption) (*DBPreAllocHostsResponse, error) {
-	req := c.c.NewRequest(c.name, "TiEMDBService.PreAllocHosts", in)
-	out := new(DBPreAllocHostsResponse)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *tiEMDBService) LockHosts(ctx context.Context, in *DBLockHostsRequest, opts ...client.CallOption) (*DBLockHostsResponse, error) {
-	req := c.c.NewRequest(c.name, "TiEMDBService.LockHosts", in)
-	out := new(DBLockHostsResponse)
+func (c *tiEMDBService) AllocHosts(ctx context.Context, in *DBAllocHostsRequest, opts ...client.CallOption) (*DBAllocHostsResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.AllocHosts", in)
+	out := new(DBAllocHostsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -468,8 +457,7 @@ type TiEMDBServiceHandler interface {
 	RemoveHostsInBatch(context.Context, *DBRemoveHostsInBatchRequest, *DBRemoveHostsInBatchResponse) error
 	ListHost(context.Context, *DBListHostsRequest, *DBListHostsResponse) error
 	CheckDetails(context.Context, *DBCheckDetailsRequest, *DBCheckDetailsResponse) error
-	PreAllocHosts(context.Context, *DBPreAllocHostsRequest, *DBPreAllocHostsResponse) error
-	LockHosts(context.Context, *DBLockHostsRequest, *DBLockHostsResponse) error
+	AllocHosts(context.Context, *DBAllocHostsRequest, *DBAllocHostsResponse) error
 	GetFailureDomain(context.Context, *DBGetFailureDomainRequest, *DBGetFailureDomainResponse) error
 	// Cluster
 	CreateCluster(context.Context, *DBCreateClusterRequest, *DBCreateClusterResponse) error
@@ -512,8 +500,7 @@ func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, op
 		RemoveHostsInBatch(ctx context.Context, in *DBRemoveHostsInBatchRequest, out *DBRemoveHostsInBatchResponse) error
 		ListHost(ctx context.Context, in *DBListHostsRequest, out *DBListHostsResponse) error
 		CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, out *DBCheckDetailsResponse) error
-		PreAllocHosts(ctx context.Context, in *DBPreAllocHostsRequest, out *DBPreAllocHostsResponse) error
-		LockHosts(ctx context.Context, in *DBLockHostsRequest, out *DBLockHostsResponse) error
+		AllocHosts(ctx context.Context, in *DBAllocHostsRequest, out *DBAllocHostsResponse) error
 		GetFailureDomain(ctx context.Context, in *DBGetFailureDomainRequest, out *DBGetFailureDomainResponse) error
 		CreateCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, out *DBDeleteClusterResponse) error
@@ -593,12 +580,8 @@ func (h *tiEMDBServiceHandler) CheckDetails(ctx context.Context, in *DBCheckDeta
 	return h.TiEMDBServiceHandler.CheckDetails(ctx, in, out)
 }
 
-func (h *tiEMDBServiceHandler) PreAllocHosts(ctx context.Context, in *DBPreAllocHostsRequest, out *DBPreAllocHostsResponse) error {
-	return h.TiEMDBServiceHandler.PreAllocHosts(ctx, in, out)
-}
-
-func (h *tiEMDBServiceHandler) LockHosts(ctx context.Context, in *DBLockHostsRequest, out *DBLockHostsResponse) error {
-	return h.TiEMDBServiceHandler.LockHosts(ctx, in, out)
+func (h *tiEMDBServiceHandler) AllocHosts(ctx context.Context, in *DBAllocHostsRequest, out *DBAllocHostsResponse) error {
+	return h.TiEMDBServiceHandler.AllocHosts(ctx, in, out)
 }
 
 func (h *tiEMDBServiceHandler) GetFailureDomain(ctx context.Context, in *DBGetFailureDomainRequest, out *DBGetFailureDomainResponse) error {

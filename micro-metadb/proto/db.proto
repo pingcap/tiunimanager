@@ -24,8 +24,7 @@ service TiEMDBService {
 	rpc RemoveHostsInBatch(DBRemoveHostsInBatchRequest) returns (DBRemoveHostsInBatchResponse);
 	rpc ListHost(DBListHostsRequest) returns (DBListHostsResponse);
 	rpc CheckDetails(DBCheckDetailsRequest) returns (DBCheckDetailsResponse);
-	rpc PreAllocHosts(DBPreAllocHostsRequest) returns (DBPreAllocHostsResponse);
-	rpc LockHosts(DBLockHostsRequest) returns (DBLockHostsResponse);
+	rpc AllocHosts(DBAllocHostsRequest) returns (DBAllocHostsResponse);
 	rpc GetFailureDomain(DBGetFailureDomainRequest) returns (DBGetFailureDomainResponse);
 
 	// Cluster

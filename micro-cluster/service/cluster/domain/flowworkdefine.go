@@ -11,8 +11,9 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		TaskNodes: map[string]*TaskDefine{
 			"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
 			"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
-			"configDone":   {"deployCluster", "deployDone", "fail", SyncFuncTask, deployCluster},
-			"deployDone":   {"startupCluster", "startupDone", "fail", SyncFuncTask, startupCluster},
+			"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
+			"deployDone":   {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
+			//"startupDone":  {"recoverFromSrcCluster", "recoverDone", "fail", PollingTasK, recoverFromSrcCluster},
 			"startupDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
 		},
@@ -43,10 +44,10 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		FlowName:    FlowBackupCluster,
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowBackupCluster),
 		TaskNodes: map[string]*TaskDefine {
-			"start":              {"backup", "backupDone", "fail", PollingTasK, backupCluster},
-			"backupDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
-			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
-
+			"start":			{"backup", "backupDone", "fail", PollingTasK, backupCluster},
+			"backupDone":		{"updateBackupRecord", "updateRecordDone", "fail", SyncFuncTask, updateBackupRecord},
+			"updateRecordDone":	{"end", "", "", SyncFuncTask, DefaultEnd},
+			"fail":				{"fail", "", "", SyncFuncTask, DefaultFail},
 		},
 		ContextParser: func(s string) *FlowContext {
 			// todo parse context

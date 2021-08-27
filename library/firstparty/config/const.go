@@ -22,5 +22,6 @@ const (
 	MicroClusterLogFileName string = "micro-cluster.log"
 	MicroMetaDBLogFileName  string = "micro-metadb.log"
 	TiUPLogFileName         string = "utils-tiup.log"
+	BRLogFileName         	string = "utils-br.log"
 	DefaultLogFileName      string = "tiem.log"
 )

@@ -134,7 +134,7 @@ func (*DBServiceHandler) ListCluster (ctx context.Context, req *dbPb.DBListClust
 func (*DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveBackupRecordRequest, resp *dbPb.DBSaveBackupRecordResponse) (err error) {
 
 	dto := req.BackupRecord
-	result, err := models.SaveBackupRecord(dto.TenantId, dto.ClusterId, dto.OperatorId, int8(dto.BackupRange), int8(dto.BackupType), uint(dto.FlowId), dto.FilePath)
+	result, err := models.SaveBackupRecord(dto)
 
 	if err != nil {
 		// todo
@@ -143,6 +143,18 @@ func (*DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveB
 
 	resp.Status = ClusterSuccessResponseStatus
 	resp.BackupRecord = ConvertToBackupRecordDTO(result)
+	return nil
+}
+
+func (*DBServiceHandler) UpdateBackupRecord(ctx context.Context, req *dbPb.DBUpdateBackupRecordRequest, resp *dbPb.DBUpdateBackupRecordResponse) (err error) {
+
+	dto := req.BackupRecord
+	err = models.UpdateBackupRecord(dto)
+	if err != nil {
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
 	return nil
 }
 
@@ -156,6 +168,17 @@ func (*DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *dbPb.DBDel
 
 	resp.Status = ClusterSuccessResponseStatus
 	resp.BackupRecord = ConvertToBackupRecordDTO(result)
+	return nil
+}
+
+func (*DBServiceHandler) QueryBackupRecords(ctx context.Context, req *dbPb.DBQueryBackupRecordRequest, resp *dbPb.DBQueryBackupRecordResponse) (err error) {
+	result, err := models.QueryBackupRecord(req.ClusterId, req.RecordId)
+	if err != nil {
+		return err
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.BackupRecords = ConvertToBackupRecordDisplayDTO(result.BackupRecordDO, result.Flow)
 	return nil
 }
 
@@ -200,6 +223,36 @@ func (*DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbPb.DBSave
 	return nil
 }
 
+func (*DBServiceHandler) SaveBackupStrategy(ctx context.Context, req *dbPb.DBSaveBackupStrategyRequest, resp *dbPb.DBSaveBackupStrategyResponse)  (err error) {
+
+	dto := req.Strategy
+	result, err := models.SaveBackupStrategy(dto)
+
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.Strategy = ConvertToBackupStrategyDTO(result)
+	return nil
+}
+
+func (*DBServiceHandler) QueryBackupStrategy(ctx context.Context, req *dbPb.DBQueryBackupStrategyRequest, resp *dbPb.DBQueryBackupStrategyResponse)  (err error) {
+
+	clusterId := req.ClusterId
+	result, err := models.QueryBackupStartegy(clusterId)
+
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	resp.Strategy = ConvertToBackupStrategyDTO(result)
+	return nil
+}
+
 func (*DBServiceHandler) SaveParametersRecord(ctx context.Context, req *dbPb.DBSaveParametersRequest, resp *dbPb.DBSaveParametersResponse)  (err error) {
 
 	dto := req.Parameters
@@ -237,9 +290,9 @@ func ConvertToBackupRecordDTO(do *models.BackupRecordDO) (dto *dbPb.DBBackupReco
 		Id:          int64(do.ID),
 		TenantId:    do.TenantId,
 		ClusterId:   do.ClusterId,
-		CreateTime:  do.CreatedAt.Unix(),
-		BackupRange: int32(do.Range),
-		BackupType:  int32(do.Type),
+		StartTime:   do.StartTime,
+		BackupRange: do.BackupRange,
+		BackupType:  do.BackupType,
 		OperatorId:  do.OperatorId,
 		FilePath:    do.FilePath,
 		FlowId: int64(do.FlowId),
@@ -272,6 +325,25 @@ func ConvertToRecoverRecordDTO(do *models.RecoverRecordDO) (dto *dbPb.DBRecoverR
 		OperatorId:     do.OperatorId,
 		BackupRecordId: int64(do.BackupRecordId),
 		FlowId:         int64(do.FlowId),
+	}
+	return
+}
+
+func ConvertToBackupStrategyDTO(do *models.BackupStrategyDO) (dto *dbPb.DBBackupStrategyDTO) {
+	if do == nil {
+		return nil
+	}
+	dto = &dbPb.DBBackupStrategyDTO{
+		Id:             int64(do.ID),
+		TenantId:       do.TenantId,
+		ClusterId:      do.ClusterId,
+		CreateTime:     do.CreatedAt.Unix(),
+		UpdateTime:  	do.UpdatedAt.Unix(),
+		BackupRange:  	do.BackupRange,
+		BackupType:  	do.BackupType,
+		BackupDate:  	do.BackupDate,
+		Period:  		do.Period,
+		FilePath:  		do.FilePath,
 	}
 	return
 }

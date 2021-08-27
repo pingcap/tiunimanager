@@ -61,7 +61,11 @@ type TiEMDBService interface {
 	ListCluster(ctx context.Context, in *DBListClusterRequest, opts ...client.CallOption) (*DBListClusterResponse, error)
 	// backup & recover & parameters
 	SaveBackupRecord(ctx context.Context, in *DBSaveBackupRecordRequest, opts ...client.CallOption) (*DBSaveBackupRecordResponse, error)
+	UpdateBackupRecord(ctx context.Context, in *DBUpdateBackupRecordRequest, opts ...client.CallOption) (*DBUpdateBackupRecordResponse, error)
 	DeleteBackupRecord(ctx context.Context, in *DBDeleteBackupRecordRequest, opts ...client.CallOption) (*DBDeleteBackupRecordResponse, error)
+	SaveBackupStrategy(ctx context.Context, in *DBSaveBackupStrategyRequest, opts ...client.CallOption) (*DBSaveBackupStrategyResponse, error)
+	QueryBackupStrategy(ctx context.Context, in *DBQueryBackupStrategyRequest, opts ...client.CallOption) (*DBQueryBackupStrategyResponse, error)
+	QueryBackupRecords(ctx context.Context, in *DBQueryBackupRecordRequest, opts ...client.CallOption) (*DBQueryBackupRecordResponse, error)
 	ListBackupRecords(ctx context.Context, in *DBListBackupRecordsRequest, opts ...client.CallOption) (*DBListBackupRecordsResponse, error)
 	SaveRecoverRecord(ctx context.Context, in *DBSaveRecoverRecordRequest, opts ...client.CallOption) (*DBSaveRecoverRecordResponse, error)
 	SaveParametersRecord(ctx context.Context, in *DBSaveParametersRequest, opts ...client.CallOption) (*DBSaveParametersResponse, error)
@@ -307,9 +311,49 @@ func (c *tiEMDBService) SaveBackupRecord(ctx context.Context, in *DBSaveBackupRe
 	return out, nil
 }
 
+func (c *tiEMDBService) UpdateBackupRecord(ctx context.Context, in *DBUpdateBackupRecordRequest, opts ...client.CallOption) (*DBUpdateBackupRecordResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.UpdateBackupRecord", in)
+	out := new(DBUpdateBackupRecordResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tiEMDBService) DeleteBackupRecord(ctx context.Context, in *DBDeleteBackupRecordRequest, opts ...client.CallOption) (*DBDeleteBackupRecordResponse, error) {
 	req := c.c.NewRequest(c.name, "TiEMDBService.DeleteBackupRecord", in)
 	out := new(DBDeleteBackupRecordResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiEMDBService) SaveBackupStrategy(ctx context.Context, in *DBSaveBackupStrategyRequest, opts ...client.CallOption) (*DBSaveBackupStrategyResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.SaveBackupStrategy", in)
+	out := new(DBSaveBackupStrategyResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiEMDBService) QueryBackupStrategy(ctx context.Context, in *DBQueryBackupStrategyRequest, opts ...client.CallOption) (*DBQueryBackupStrategyResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.QueryBackupStrategy", in)
+	out := new(DBQueryBackupStrategyResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiEMDBService) QueryBackupRecords(ctx context.Context, in *DBQueryBackupRecordRequest, opts ...client.CallOption) (*DBQueryBackupRecordResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.QueryBackupRecords", in)
+	out := new(DBQueryBackupRecordResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -525,7 +569,11 @@ type TiEMDBServiceHandler interface {
 	ListCluster(context.Context, *DBListClusterRequest, *DBListClusterResponse) error
 	// backup & recover & parameters
 	SaveBackupRecord(context.Context, *DBSaveBackupRecordRequest, *DBSaveBackupRecordResponse) error
+	UpdateBackupRecord(context.Context, *DBUpdateBackupRecordRequest, *DBUpdateBackupRecordResponse) error
 	DeleteBackupRecord(context.Context, *DBDeleteBackupRecordRequest, *DBDeleteBackupRecordResponse) error
+	SaveBackupStrategy(context.Context, *DBSaveBackupStrategyRequest, *DBSaveBackupStrategyResponse) error
+	QueryBackupStrategy(context.Context, *DBQueryBackupStrategyRequest, *DBQueryBackupStrategyResponse) error
+	QueryBackupRecords(context.Context, *DBQueryBackupRecordRequest, *DBQueryBackupRecordResponse) error
 	ListBackupRecords(context.Context, *DBListBackupRecordsRequest, *DBListBackupRecordsResponse) error
 	SaveRecoverRecord(context.Context, *DBSaveRecoverRecordRequest, *DBSaveRecoverRecordResponse) error
 	SaveParametersRecord(context.Context, *DBSaveParametersRequest, *DBSaveParametersResponse) error
@@ -572,7 +620,11 @@ func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, op
 		LoadCluster(ctx context.Context, in *DBLoadClusterRequest, out *DBLoadClusterResponse) error
 		ListCluster(ctx context.Context, in *DBListClusterRequest, out *DBListClusterResponse) error
 		SaveBackupRecord(ctx context.Context, in *DBSaveBackupRecordRequest, out *DBSaveBackupRecordResponse) error
+		UpdateBackupRecord(ctx context.Context, in *DBUpdateBackupRecordRequest, out *DBUpdateBackupRecordResponse) error
 		DeleteBackupRecord(ctx context.Context, in *DBDeleteBackupRecordRequest, out *DBDeleteBackupRecordResponse) error
+		SaveBackupStrategy(ctx context.Context, in *DBSaveBackupStrategyRequest, out *DBSaveBackupStrategyResponse) error
+		QueryBackupStrategy(ctx context.Context, in *DBQueryBackupStrategyRequest, out *DBQueryBackupStrategyResponse) error
+		QueryBackupRecords(ctx context.Context, in *DBQueryBackupRecordRequest, out *DBQueryBackupRecordResponse) error
 		ListBackupRecords(ctx context.Context, in *DBListBackupRecordsRequest, out *DBListBackupRecordsResponse) error
 		SaveRecoverRecord(ctx context.Context, in *DBSaveRecoverRecordRequest, out *DBSaveRecoverRecordResponse) error
 		SaveParametersRecord(ctx context.Context, in *DBSaveParametersRequest, out *DBSaveParametersResponse) error
@@ -687,8 +739,24 @@ func (h *tiEMDBServiceHandler) SaveBackupRecord(ctx context.Context, in *DBSaveB
 	return h.TiEMDBServiceHandler.SaveBackupRecord(ctx, in, out)
 }
 
+func (h *tiEMDBServiceHandler) UpdateBackupRecord(ctx context.Context, in *DBUpdateBackupRecordRequest, out *DBUpdateBackupRecordResponse) error {
+	return h.TiEMDBServiceHandler.UpdateBackupRecord(ctx, in, out)
+}
+
 func (h *tiEMDBServiceHandler) DeleteBackupRecord(ctx context.Context, in *DBDeleteBackupRecordRequest, out *DBDeleteBackupRecordResponse) error {
 	return h.TiEMDBServiceHandler.DeleteBackupRecord(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) SaveBackupStrategy(ctx context.Context, in *DBSaveBackupStrategyRequest, out *DBSaveBackupStrategyResponse) error {
+	return h.TiEMDBServiceHandler.SaveBackupStrategy(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) QueryBackupStrategy(ctx context.Context, in *DBQueryBackupStrategyRequest, out *DBQueryBackupStrategyResponse) error {
+	return h.TiEMDBServiceHandler.QueryBackupStrategy(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) QueryBackupRecords(ctx context.Context, in *DBQueryBackupRecordRequest, out *DBQueryBackupRecordResponse) error {
+	return h.TiEMDBServiceHandler.QueryBackupRecords(ctx, in, out)
 }
 
 func (h *tiEMDBServiceHandler) ListBackupRecords(ctx context.Context, in *DBListBackupRecordsRequest, out *DBListBackupRecordsResponse) error {

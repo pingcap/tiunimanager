@@ -122,8 +122,8 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 			BackupRecord: &db.DBBackupRecordDTO{
 				TenantId:    cluster.TenantId,
 				ClusterId:   record.ClusterId,
-				BackupType: int32(record.BackupType),
-				BackupRange: int32(record.Range),
+				BackupType: string(record.BackupType),
+				BackupRange: string(record.Range),
 				OperatorId:  record.OperatorId,
 				FilePath:    record.FilePath,
 				FlowId:      int64(aggregation.CurrentWorkFlow.Id),
@@ -133,9 +133,9 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 			// todo
 			return err
 		}
-		aggregation.LastBackupRecord.Id = uint(resp.BackupRecord.Id)
+		record.Id = resp.BackupRecord.Id
 	}
-
+/*
 	if aggregation.LastRecoverRecord != nil && aggregation.LastRecoverRecord.Id == 0 {
 		record := aggregation.LastRecoverRecord
 		resp, err :=  client.DBClient.SaveRecoverRecord(context.TODO(), &db.DBSaveRecoverRecordRequest{
@@ -143,7 +143,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 				TenantId:       cluster.TenantId,
 				ClusterId:      record.ClusterId,
 				OperatorId:     record.OperatorId,
-				BackupRecordId: int64(record.BackupRecord.Id),
+				BackupRecordId: record.BackupRecord.Id,
 				FlowId:         int64(aggregation.CurrentWorkFlow.Id),
 			},
 		})
@@ -152,7 +152,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 			return err
 		}
 		aggregation.LastRecoverRecord.Id = uint(resp.RecoverRecord.Id)
-	}
+	}*/
 
 	if aggregation.LastParameterRecord != nil && aggregation.LastParameterRecord.Id == 0 {
 		record := aggregation.LastParameterRecord

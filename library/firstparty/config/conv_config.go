@@ -14,6 +14,7 @@ const (
 	MicroClusterMod Mod = "micro-cluster"
 	MicroApiMod     Mod = "micro-api"
 	TiUPInternalMod Mod = "tiup"
+	BRInternalMod 	Mod = "br"
 )
 
 // InitForClientArgs Init config for client args
@@ -48,6 +49,17 @@ func InitForClientArgs(mod Mod) {
 			log.LogLevel = logLevel
 		}
 		hasSuc, version := UpdateLocalConfig(KEY_TIUPLIB_LOG, log, 1)
+		assertUpdateLocalConfig(hasSuc, version, 1)
+	case BRInternalMod:
+		// update log config
+		log := LocalConfig[KEY_BRLIB_LOG].Value.(Log)
+		if dataDir != "" {
+			log.LogFilePath = clientArgs.DataDir + LogDirPrefix + BRLogFileName
+		}
+		if logLevel != "" {
+			log.LogLevel = logLevel
+		}
+		hasSuc, version := UpdateLocalConfig(KEY_BRLIB_LOG, log, 1)
 		assertUpdateLocalConfig(hasSuc, version, 1)
 	default:
 		convLogConfig(dataDir, KEY_DEFAULT_LOG, logLevel, DefaultLogFileName)

@@ -76,6 +76,20 @@ func InitConfigForDev(mod Mod) {
 		RecordModName: "tiuplib",
 	})
 
+	LocalConfig[KEY_BRLIB_LOG] = CreateInstance(KEY_BRLIB_LOG, Log{
+		//LogLevel      string
+		LogLevel:      "debug",
+		LogOutput:     "file",
+		LogFilePath:   "../logs/utils-br.log",
+		LogMaxSize:    512,
+		LogMaxAge:     30,
+		LogMaxBackups: 0,
+		LogLocalTime:  true,
+		LogCompress:   true,
+		RecordSysName: "tiem",
+		RecordModName: "brlib",
+	})
+
 	LocalConfig[KEY_DEFAULT_LOG] = CreateInstance(KEY_DEFAULT_LOG, Log{
 		LogLevel:      "debug",
 		LogOutput:     "console,file",
@@ -128,6 +142,8 @@ func GetLogConfig(key Key) Log {
 		return LocalConfig[KEY_METADB_LOG].Value.(Log)
 	case KEY_TIUPLIB_LOG:
 		return LocalConfig[KEY_TIUPLIB_LOG].Value.(Log)
+	case KEY_BRLIB_LOG:
+		return LocalConfig[KEY_BRLIB_LOG].Value.(Log)
 	default:
 		return LocalConfig[KEY_DEFAULT_LOG].Value.(Log)
 	}

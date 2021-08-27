@@ -132,74 +132,6 @@ func GetClusterDetail(ope *proto.OperatorDTO, clusterId string) (*ClusterAggrega
 	return cluster, err
 }
 
-func Backup(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
-	operator := parseOperatorFromDTO(ope)
-	clusterAggregation, err := ClusterRepo.Load(clusterId)
-	clusterAggregation.CurrentOperator = operator
-	clusterAggregation.LastBackupRecord = &BackupRecord{
-		ClusterId:  clusterId,
-		Range:      BackupRangeWhole,
-		BackupType: BackupTypeLogic,
-		OperatorId: operator.Id,
-		// todo how to generate
-	}
-
-	if err != nil {
-		return clusterAggregation, errors.New("cluster not exist")
-	}
-
-	//currentFlow := clusterAggregation.CurrentWorkFlow
-	//if currentFlow != nil && !currentFlow.Finished(){
-	//	return clusterAggregation, errors.New("incomplete processing flow")
-	//}
-
-	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster)
-	filePath := "/" + clusterId + "/" + strconv.Itoa(int(flow.FlowWork.Id))
-
-	clusterAggregation.LastBackupRecord.FilePath = filePath
-
-	flow.AddContext(contextClusterKey, clusterAggregation)
-
-	flow.Start()
-
-	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	ClusterRepo.Persist(clusterAggregation)
-	return clusterAggregation, nil
-}
-
-func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*ClusterAggregation, error) {
-	operator := parseOperatorFromDTO(ope)
-
-	clusterAggregation, err := ClusterRepo.Load(clusterId)
-	clusterAggregation.CurrentOperator = operator
-	clusterAggregation.LastRecoverRecord = &RecoverRecord{
-		ClusterId:    clusterId,
-		OperatorId:   operator.Id,
-		BackupRecord: BackupRecord{Id: uint(backupRecordId)},
-	}
-	if err != nil {
-		return clusterAggregation, errors.New("cluster not exist")
-	}
-
-	//currentFlow := clusterAggregation.CurrentWorkFlow
-	//if currentFlow != nil && !currentFlow.Finished(){
-	//	return clusterAggregation, errors.New("incomplete processing flow")
-	//}
-
-	flow, err := CreateFlowWork(clusterId, FlowRecoverCluster)
-	if err != nil {
-		// todo
-	}
-
-	flow.AddContext(contextClusterKey, clusterAggregation)
-
-	flow.Start()
-
-	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	ClusterRepo.Persist(clusterAggregation)
-	return clusterAggregation, nil
-}
-
 func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
@@ -311,16 +243,6 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func backupCluster(task *TaskEntity, context *FlowContext) bool {
-	task.Success(nil)
-	return true
-}
-
-func recoverCluster(task *TaskEntity, context *FlowContext) bool {
-	task.Success(nil)
-	return true
-}
-
 func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)
 	return true
@@ -428,12 +350,15 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRec
 	currentFlow := aggregation.CurrentWorkFlow
 
 	return &proto.BackupRecordDTO{
-		Id:        int64(record.Id),
+		Id:        record.Id,
 		ClusterId: record.ClusterId,
-		Range:     int32(record.Range),
-		Way:       int32(record.BackupType),
+		Range:     string(record.Range),
+		BackupType: string(record.BackupType),
 		Size:      record.Size,
-		DisplayStatus: &proto.DisplayStatusDTO{
+		StartTime: record.StartTime,
+		EndTime:   record.EndTime,
+		FilePath: record.FilePath,
+		DisplayStatus: &proto.DisplayStatusDTO {
 			InProcessFlowId: int32(currentFlow.Id),
 			StatusCode:      strconv.Itoa(int(currentFlow.Status)),
 			StatusName:      currentFlow.Status.Display(),
@@ -443,7 +368,6 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRec
 			Name:     aggregation.CurrentOperator.Name,
 			TenantId: aggregation.CurrentOperator.TenantId,
 		},
-		FilePath: record.FilePath,
 	}
 }
 
@@ -458,7 +382,7 @@ func (aggregation *ClusterAggregation) ExtractRecoverRecordDTO() *proto.BackupRe
 			StatusCode:      strconv.Itoa(int(currentFlow.Status)),
 			StatusName:      currentFlow.Status.Display(),
 		},
-		BackupRecordId: int64(record.BackupRecord.Id),
+		BackupRecordId: record.BackupRecord.Id,
 	}
 }
 
@@ -476,6 +400,14 @@ func parseDistributionItemFromDTO(dto *proto.DistributionItemDTO) (item *Cluster
 		ZoneCode: dto.ZoneCode,
 		SpecCode: dto.SpecCode,
 		Count:    int(dto.Count),
+	}
+	return
+}
+
+func parseRecoverInFoFromDTO(dto *proto.RecoverInfoDTO) (info RecoverInfo) {
+	info = RecoverInfo{
+		SourceClusterId: dto.SourceClusterId,
+		BackupRecordId: dto.BackupRecordId,
 	}
 	return
 }

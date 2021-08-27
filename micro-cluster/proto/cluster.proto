@@ -162,6 +162,11 @@ message DisplayStatusDTO {
     int64 deleteTime = 6;
 }
 
+message RecoverInfoDTO {
+    string sourceClusterId = 1;
+    int64 backupRecordId = 2;
+}
+
 message ClusterBaseInfoDTO {
     string clusterName = 1;
     string dbPassword = 2;
@@ -169,6 +174,7 @@ message ClusterBaseInfoDTO {
     ClusterVersionDTO clusterVersion = 4;
     repeated string tags = 5;
     bool tls = 6;
+    RecoverInfoDTO recoverInfo = 7;
 }
 
 message ClusterNodeDemandDTO {
@@ -207,19 +213,18 @@ message BackupRecordDTO {
     string clusterId = 2;
     int64 startTime = 3;
     int64 endTime = 4;
-    int32 range = 5;
-    int32 way = 6;
+    string range = 5;
+    string backupType = 6;
     OperatorDTO operator = 7;
-    float size = 8;
+    uint64 size = 8;
     DisplayStatusDTO displayStatus = 9;
     string filePath = 10;
 }
 
 message QueryBackupRequest {
-    string clusterId = 1;
-    int64 startTime = 2;
-    int64 endTime = 3;
-    PageDTO page = 4;
+    OperatorDTO operator = 1;
+    string clusterId = 2;
+    PageDTO page = 3;
 }
 
 message QueryBackupResponse {
@@ -230,7 +235,10 @@ message QueryBackupResponse {
 
 message CreateBackupRequest {
     string clusterId = 1;
-    OperatorDTO operator = 2;
+    string backupType = 2;
+    string backupRange = 3;
+    string filePath = 4;
+    OperatorDTO operator = 5;
 }
 
 message CreateBackupResponse {
@@ -268,11 +276,18 @@ message DeleteBackupResponse {
     ResponseStatusDTO status = 1;
 }
 
-message SaveBackupStrategyRequest {
+message BackupStrategy {
     string clusterId = 1;
-    string cron = 2;
-    OperatorDTO operator = 3;
+    string backupDate = 2;
+    string filePath = 3;
+    string backupRange = 4;
+    string backupType = 5;
+    string period = 6;
+}
 
+message SaveBackupStrategyRequest {
+    OperatorDTO operator = 1;
+    BackupStrategy strategy = 2;
 }
 
 message SaveBackupStrategyResponse {
@@ -287,7 +302,7 @@ message GetBackupStrategyRequest {
 
 message GetBackupStrategyResponse {
     ResponseStatusDTO status = 1;
-    string cron = 2;
+     BackupStrategy strategy = 2;
 }
 
 message QueryClusterParametersRequest {

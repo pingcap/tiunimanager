@@ -245,6 +245,73 @@ func (*DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDeta
 	return nil
 }
 
+func copyAllocReq(component string, req models.AllocReqs, in []*dbPb.DBAllocationReq) {
+	for _, eachReq := range in {
+		if eachReq.Count == 0 {
+			continue
+		}
+		req[component] = append(req[component], &models.HostAllocReq{
+			FailureDomain: eachReq.FailureDomain,
+			CpuCores:      int(eachReq.CpuCores),
+			Memory:        int(eachReq.Memory),
+			Count:         int(eachReq.Count),
+		})
+	}
+}
+
+func buildAllocRsp(componet string, req models.AllocRsps, out *[]*dbPb.DBAllocHostDTO) {
+	for _, result := range req[componet] {
+		*out = append(*out, &dbPb.DBAllocHostDTO{
+			HostName: result.HostName,
+			Ip:       result.Ip,
+			UserName: result.UserName,
+			Passwd:   result.Passwd,
+			CpuCores: int32(result.CpuCores),
+			Memory:   int32(result.Memory),
+			Disk: &dbPb.DBDiskDTO{
+				DiskId:   result.DiskId,
+				Name:     result.DiskName,
+				Path:     result.Path,
+				Capacity: int32(result.Capacity),
+				Status:   int32(models.DISK_AVAILABLE),
+			},
+		})
+	}
+}
+
+func (*DBServiceHandler) AllocHosts(ctx context.Context, in *dbPb.DBAllocHostsRequest, out *dbPb.DBAllocHostsResponse) error {
+	// Build up allocHosts request for model
+	req := make(models.AllocReqs)
+	copyAllocReq("PD", req, in.PdReq)
+	copyAllocReq("TiDB", req, in.TidbReq)
+	copyAllocReq("TiKV", req, in.TikvReq)
+
+	resources, err := models.AllocHosts(req)
+	out.Rs = new(dbPb.DBHostResponseStatus)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			out.Rs.Code = int32(st.Code())
+			out.Rs.Message = st.Message()
+		} else {
+			out.Rs.Code = int32(codes.Internal)
+			out.Rs.Message = fmt.Sprintf("db service receive alloc hosts error, %v", err)
+		}
+		log.Warnln(out.Rs.Message)
+
+		// return nil to use rsp
+		return nil
+	}
+
+	buildAllocRsp("PD", resources, &out.PdHosts)
+	buildAllocRsp("TiDB", resources, &out.TidbHosts)
+	buildAllocRsp("TiKV", resources, &out.TikvHosts)
+
+	out.Rs.Code = int32(codes.OK)
+	return nil
+}
+
+/*
 func (*DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DBPreAllocHostsRequest, rsp *dbPb.DBPreAllocHostsResponse) error {
 	log.Infof("db service receive alloc host in %s for %d x (%du%dg)", req.Req.FailureDomain, req.Req.Count, req.Req.CpuCores, req.Req.Memory)
 	resources, err := models.PreAllocHosts(req.Req.FailureDomain, int(req.Req.Count), int(req.Req.CpuCores), int(req.Req.Memory))
@@ -323,6 +390,7 @@ func (*DBServiceHandler) LockHosts(ctx context.Context, req *dbPb.DBLockHostsReq
 	}
 	return nil
 }
+*/
 
 func getFailureDomainByType(fd FailureDomain) (domain string, err error) {
 	switch fd {

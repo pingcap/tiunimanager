@@ -337,9 +337,12 @@ func LockHosts(resources []ResourceLock) (err error) {
 
 type DiskResource struct {
 	HostId   string
+	HostName string
 	Ip       string
 	UserName string
 	Passwd   string
+	CpuCores int
+	Memory   int
 	DiskId   string
 	DiskName string
 	Path     string
@@ -359,7 +362,8 @@ type AllocRsps map[string][]*DiskResource
 
 func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, cpuCores int, mem int) (resources []*DiskResource, err error) {
 	err = tx.Order("hosts.cpu_cores desc").Order("hosts.memory desc").Limit(numReps).Model(&Disk{}).Select(
-		"disks.host_id, hosts.ip, hosts.user_name, hosts.passwd, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity").Joins("left join hosts on disks.host_id = hosts.id").Where(
+		"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", cpuCores, mem).Joins(
+		"left join hosts on disks.host_id = hosts.id").Where(
 		"hosts.az = ? and (hosts.status = ? or hosts.status = ?) and hosts.cpu_cores >= ? and memory >= ? and disks.status = ?",
 		failureDomain, HOST_ONLINE, HOST_INUSED, cpuCores, mem, DISK_AVAILABLE).Group("hosts.id").Scan(&resources).Error
 	if err != nil {

@@ -33,7 +33,7 @@ var doc = `{
     "paths": {
         "/backups": {
             "get": {
-                "description": "查询备份记录",
+                "description": "query backup records of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -43,7 +43,7 @@ var doc = `{
                 "tags": [
                     "cluster backup"
                 ],
-                "summary": "查询备份记录",
+                "summary": "query backup records of a cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -54,7 +54,7 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "clusterId",
+                        "description": "cluster id",
                         "name": "clusterId",
                         "in": "query",
                         "required": true
@@ -131,7 +131,7 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "description": "要备份的集群信息",
+                        "description": "backup request",
                         "name": "backupReq",
                         "in": "body",
                         "required": true,
@@ -182,7 +182,7 @@ var doc = `{
         },
         "/backups/{backupId}": {
             "delete": {
-                "description": "删除备份记录",
+                "description": "delete backup record",
                 "consumes": [
                     "application/json"
                 ],
@@ -192,7 +192,7 @@ var doc = `{
                 "tags": [
                     "cluster backup"
                 ],
-                "summary": "删除备份记录",
+                "summary": "delete backup record",
                 "parameters": [
                     {
                         "type": "string",
@@ -203,7 +203,7 @@ var doc = `{
                     },
                     {
                         "type": "integer",
-                        "description": "删除备份ID",
+                        "description": "backup record id",
                         "name": "backupId",
                         "in": "path",
                         "required": true
@@ -251,7 +251,7 @@ var doc = `{
         },
         "/backups/{backupId}/restore": {
             "post": {
-                "description": "恢复备份",
+                "description": "recover backup record of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -261,7 +261,7 @@ var doc = `{
                 "tags": [
                     "cluster backup"
                 ],
-                "summary": "恢复备份",
+                "summary": "recover backup record of a cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -278,7 +278,7 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "description": "恢复备份请求",
+                        "description": "backup recover request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -329,7 +329,7 @@ var doc = `{
         },
         "/cluster/dashboard": {
             "get": {
-                "description": "查看集群dashboard信息",
+                "description": "dashboard",
                 "consumes": [
                     "application/json"
                 ],
@@ -339,7 +339,7 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "查看集群dashboard信息",
+                "summary": "dashboard",
                 "parameters": [
                     {
                         "type": "string",
@@ -391,7 +391,7 @@ var doc = `{
         },
         "/clusters": {
             "get": {
-                "description": "查询集群列表",
+                "description": "query clusters",
                 "consumes": [
                     "application/json"
                 ],
@@ -401,7 +401,7 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "查询集群列表",
+                "summary": "query clusters",
                 "parameters": [
                     {
                         "type": "string",
@@ -489,7 +489,7 @@ var doc = `{
                 }
             },
             "post": {
-                "description": "创建集群接口",
+                "description": "create a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -499,7 +499,7 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "创建集群接口",
+                "summary": "create a cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -509,7 +509,7 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "description": "创建参数",
+                        "description": "create request",
                         "name": "createReq",
                         "in": "body",
                         "required": true,
@@ -560,7 +560,7 @@ var doc = `{
         },
         "/clusters/{clusterId}": {
             "get": {
-                "description": "查看集群详情",
+                "description": "show details of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -570,7 +570,7 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "查看集群详情",
+                "summary": "show details of a cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -581,7 +581,7 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "集群ID",
+                        "description": "cluster id",
                         "name": "clusterId",
                         "in": "path",
                         "required": true
@@ -627,7 +627,7 @@ var doc = `{
                 }
             },
             "delete": {
-                "description": "删除集群",
+                "description": "delete cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -637,7 +637,7 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "删除集群",
+                "summary": "delete cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -648,7 +648,7 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "待删除的集群ID",
+                        "description": "cluster id",
                         "name": "clusterId",
                         "in": "path",
                         "required": true
@@ -696,7 +696,7 @@ var doc = `{
         },
         "/clusters/{clusterId}/params": {
             "get": {
-                "description": "查询集群参数列表",
+                "description": "query params of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -706,7 +706,7 @@ var doc = `{
                 "tags": [
                     "cluster params"
                 ],
-                "summary": "查询集群参数列表",
+                "summary": "query params of a cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -776,7 +776,7 @@ var doc = `{
                 }
             },
             "post": {
-                "description": "提交参数",
+                "description": "submit params",
                 "consumes": [
                     "application/json"
                 ],
@@ -786,7 +786,7 @@ var doc = `{
                 "tags": [
                     "cluster params"
                 ],
-                "summary": "提交参数",
+                "summary": "submit params",
                 "parameters": [
                     {
                         "type": "string",
@@ -796,7 +796,7 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "description": "要提交的参数信息",
+                        "description": "update params request",
                         "name": "updateReq",
                         "in": "body",
                         "required": true,
@@ -854,7 +854,7 @@ var doc = `{
         },
         "/clusters/{clusterId}/strategy": {
             "put": {
-                "description": "保存备份策略",
+                "description": "save the backup strategy of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -864,7 +864,7 @@ var doc = `{
                 "tags": [
                     "cluster backup"
                 ],
-                "summary": "保存备份策略",
+                "summary": "save the backup strategy of a cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -932,7 +932,7 @@ var doc = `{
         },
         "/clusters/{clusterId}/strategy/": {
             "get": {
-                "description": "查询备份策略",
+                "description": "show the backup strategy of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -942,7 +942,7 @@ var doc = `{
                 "tags": [
                     "cluster backup"
                 ],
-                "summary": "查询备份策略",
+                "summary": "show the backup strategy of a cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -1002,9 +1002,168 @@ var doc = `{
                 }
             }
         },
+        "/flowwork/{flowWorkId}": {
+            "get": {
+                "description": "show details of a flow work",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "show details of a flow work",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "flow work id",
+                        "name": "flowWorkId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/taskapi.FlowWorkDetailInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/flowworks": {
+            "get": {
+                "description": "query flow works",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "query flow works",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "token",
+                        "name": "Token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "clusterId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/taskapi.FlowWorkDisplayInfo"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/knowledges": {
             "get": {
-                "description": "查看集群基本知识",
+                "description": "show cluster knowledge",
                 "consumes": [
                     "application/json"
                 ],
@@ -1014,7 +1173,7 @@ var doc = `{
                 "tags": [
                     "knowledge"
                 ],
-                "summary": "查看集群基本知识",
+                "summary": "show cluster knowledge",
                 "parameters": [
                     {
                         "type": "string",
@@ -2634,6 +2793,117 @@ var doc = `{
                     "type": "integer"
                 },
                 "unit": {
+                    "type": "string"
+                }
+            }
+        },
+        "taskapi.FlowWorkDetailInfo": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "flowWorkName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "manualOperator": {
+                    "type": "boolean"
+                },
+                "operatorId": {
+                    "type": "string"
+                },
+                "operatorName": {
+                    "type": "string"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/taskapi.FlowWorkTaskInfo"
+                    }
+                },
+                "tenantId": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "taskapi.FlowWorkDisplayInfo": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "flowWorkName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "manualOperator": {
+                    "type": "boolean"
+                },
+                "operatorId": {
+                    "type": "string"
+                },
+                "operatorName": {
+                    "type": "string"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "taskapi.FlowWorkTaskInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "taskName": {
                     "type": "string"
                 }
             }

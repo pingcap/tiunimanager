@@ -1,40 +1,25 @@
-package framework
+package security
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/framework"
 	log "github.com/sirupsen/logrus"
 	"math"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
-// Codes below in this file is derived from github.com/toorop/gin-logrus (which is licensed under MIT license):
-//   https://github.com/toorop/gin-logrus/blob/2c785434f26f7f5fde6ceb86eab20dd18bc14202/logger.go
+var timeFormat = ""
 
-var timeFormat = "02/Jan/2006:15:04:05 -0700"
-
-func GenGinLogger(notLogged ...string) gin.HandlerFunc {
+func AccessLog(notLogged ...string) gin.HandlerFunc {
 	hostname, err := os.Hostname()
 	if err != nil {
-		hostname = "unknow"
-	}
-
-	var skip map[string]struct{}
-
-	if length := len(notLogged); length > 0 {
-		skip = make(map[string]struct{}, length)
-
-		for _, p := range notLogged {
-			skip[p] = struct{}{}
-		}
+		hostname = "unknown"
 	}
 
 	return func(c *gin.Context) {
-		// other handler can change c.Path so:
-
 		path := c.Request.URL.Path
 		start := time.Now()
 		c.Next()
@@ -49,11 +34,7 @@ func GenGinLogger(notLogged ...string) gin.HandlerFunc {
 			dataLength = 0
 		}
 
-		if _, ok := skip[path]; ok {
-			return
-		}
-
-		entry := GetLogger().Records(log.Fields{
+		entry := framework.GetLogger().Records(log.Fields{
 			"hostname":   hostname,
 			"statusCode": statusCode,
 			"latency":    latency, // time to process
@@ -79,3 +60,4 @@ func GenGinLogger(notLogged ...string) gin.HandlerFunc {
 		}
 	}
 }
+

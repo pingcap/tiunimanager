@@ -14,22 +14,24 @@ import (
 )
 
 func Route(g *gin.Engine) {
-	// 系统检查
+	// system check
 	check := g.Group("/system")
 	{
 		check.GET("/check", controller.Hello)
 	}
 
-	// web静态资源
-	web := g.Group("/web")
-	{
-		// 替换成静态文件
-		web.GET("/*any", controller.HelloPage)
-	}
-
+	// support swagger
 	swagger := g.Group("/swagger")
 	{
 		swagger.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
+
+	// web
+	web := g.Group("/web")
+	{
+		web.Use(framework.GenGinLogger(), gin.Recovery())
+		// 替换成静态文件
+		web.GET("/*any", controller.HelloPage)
 	}
 
 	// api

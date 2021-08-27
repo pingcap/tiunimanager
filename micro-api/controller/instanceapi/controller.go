@@ -15,9 +15,9 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
-// QueryParams 查询集群参数列表
-// @Summary 查询集群参数列表
-// @Description 查询集群参数列表
+// QueryParams query params of a cluster
+// @Summary query params of a cluster
+// @Description query params of a cluster
 // @Tags cluster params
 // @Accept json
 // @Produce json
@@ -77,14 +77,14 @@ func QueryParams(c *gin.Context) {
 	}
 }
 
-// SubmitParams 提交参数
-// @Summary 提交参数
-// @Description 提交参数
+// SubmitParams submit params
+// @Summary submit params
+// @Description submit params
 // @Tags cluster params
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param updateReq body ParamUpdateReq true "要提交的参数信息"
+// @Param updateReq body ParamUpdateReq true "update params request"
 // @Param clusterId path string true "clusterId"
 // @Success 200 {object} controller.CommonResult{data=ParamUpdateRsp}
 // @Failure 401 {object} controller.CommonResult
@@ -129,7 +129,7 @@ func SubmitParams(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param backupReq body BackupReq true "要备份的集群信息"
+// @Param backupReq body BackupReq true "backup request"
 // @Success 200 {object} controller.CommonResult{data=BackupRecord}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -159,9 +159,9 @@ func Backup(c *gin.Context) {
 	}
 }
 
-// QueryBackupStrategy
-// @Summary 查询备份策略
-// @Description 查询备份策略
+// QueryBackupStrategy show the backup strategy of a cluster
+// @Summary show the backup strategy of a cluster
+// @Description show the backup strategy of a cluster
 // @Tags cluster backup
 // @Accept json
 // @Produce json
@@ -191,9 +191,9 @@ func QueryBackupStrategy(c *gin.Context) {
 	}
 }
 
-// SaveBackupStrategy
-// @Summary 保存备份策略
-// @Description 保存备份策略
+// SaveBackupStrategy save the backup strategy of a cluster
+// @Summary save the backup strategy of a cluster
+// @Description save the backup strategy of a cluster
 // @Tags cluster backup
 // @Accept json
 // @Produce json
@@ -229,13 +229,13 @@ func SaveBackupStrategy(c *gin.Context) {
 }
 
 // QueryBackup
-// @Summary 查询备份记录
-// @Description 查询备份记录
+// @Summary query backup records of a cluster
+// @Description query backup records of a cluster
 // @Tags cluster backup
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param clusterId query string true "clusterId"
+// @Param clusterId query string true "cluster id"
 // @Param request body BackupRecordQueryReq false "page" default(1)
 // @Success 200 {object} controller.ResultWithPage{data=[]BackupRecord}
 // @Failure 401 {object} controller.CommonResult
@@ -288,14 +288,14 @@ func QueryBackup(c *gin.Context) {
 }
 
 // RecoverBackup
-// @Summary 恢复备份
-// @Description 恢复备份
+// @Summary recover backup record of a cluster
+// @Description recover backup record of a cluster
 // @Tags cluster backup
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
 // @Param backupId path string true "backupId"
-// @Param request body BackupRecoverReq true "恢复备份请求"
+// @Param request body BackupRecoverReq true "backup recover request"
 // @Success 200 {object} controller.CommonResult{data=controller.StatusInfo}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -330,13 +330,13 @@ func RecoverBackup(c *gin.Context) {
 }
 
 // DeleteBackup
-// @Summary 删除备份记录
-// @Description 删除备份记录
+// @Summary delete backup record
+// @Description delete backup record
 // @Tags cluster backup
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param backupId path int true "删除备份ID"
+// @Param backupId path int true "backup record id"
 // @Success 200 {object} controller.CommonResult{data=int}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

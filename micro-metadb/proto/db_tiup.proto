@@ -14,8 +14,10 @@ enum TiupTaskType {
 	Start   = 1;
 	Destroy = 2;
 	List    = 3;
-	Dumpling= 4;
-	Lightning=5;
+	Dumpling = 4;
+	Lightning = 5;
+	Backup = 6;
+	Restore = 7;
 }
 
 message TiupTask {

@@ -50,6 +50,7 @@ func initTables(f *framework.BaseFramework) error {
 		&models.Host{},
 		&models.Disk{},
 		&models.TiupTask{},
+		&models.TransportRecord{},
 		&models.ParametersRecordDO{},
 		&models.BackupRecordDO{},
 		&models.RecoverRecordDO{},

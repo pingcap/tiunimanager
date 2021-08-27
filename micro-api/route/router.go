@@ -5,6 +5,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/clusterapi"
+	"github.com/pingcap-inc/tiem/micro-api/controller/databaseapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/instanceapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/userapi"
@@ -60,6 +61,11 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId/strategy", instanceapi.QueryBackupStrategy)
 			cluster.PUT("/:clusterId/strategy", instanceapi.SaveBackupStrategy)
 			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
+
+			//Import and Export
+			cluster.POST("/import", databaseapi.ImportData)
+			cluster.POST("/export", databaseapi.ExportData)
+			cluster.GET("/:clusterId/transport", databaseapi.DescribeDataTransport)
 		}
 
 		knowledge := apiV1.Group("/knowledges")
@@ -71,7 +77,6 @@ func Route(g *gin.Engine) {
 		backup := apiV1.Group("/backups")
 		{
 			backup.Use(security.VerifyIdentity)
-
 			backup.POST("/", instanceapi.Backup)
 			backup.GET("/", instanceapi.QueryBackup)
 			backup.POST("/:backupId/restore", instanceapi.RecoverBackup)

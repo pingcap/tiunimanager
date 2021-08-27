@@ -72,10 +72,10 @@ func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, err
 func getDashboardUrl(clusterId string) (string, error) {
 	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterId)
 	//tiup cluster display CLUSTER_NAME --dashboard
-	resp, err := libtiup.MicroSrvTiupClusterDisplay(clusterId, 0, []string{"--dashboard"})
-	if err != nil {
-		getLogger().Errorf("call tiupmgr cluster display failed, %s", err.Error())
-		return "", err
+	resp := libtiup.MicroSrvTiupClusterDisplay(clusterId, 0, []string{"--dashboard"})
+	if resp.Error != nil {
+		getLogger().Errorf("call tiupmgr cluster display failed, %s", resp.Error.Error())
+		return "", resp.Error
 	}
 	getLogger().Infof("call tiupmgr success, resp: %v", resp)
 	//DisplayRespString: "Dashboard URL: http://127.0.0.1:2379/dashboard/\n"

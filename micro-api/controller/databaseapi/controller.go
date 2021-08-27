@@ -1,7 +1,6 @@
 package databaseapi
 
 import (
-	client2 "github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/firstparty/client"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
@@ -27,10 +26,7 @@ func ExportData(c *gin.Context) {
 		Password: req.Password,
 		FileType: req.FileType,
 		Filter: req.Filter,
-	}, func(o *client2.CallOptions) { //todo: wait async cluster handler ready
-		o.RequestTimeout = time.Second * 30
-		o.DialTimeout = time.Second * 30
-	})
+	}, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -61,10 +57,7 @@ func ImportData(c *gin.Context) {
 		UserName: req.UserName,
 		Password: req.Password,
 		FilePath: req.FilePath,
-	}, func(o *client2.CallOptions) { //todo: wait async cluster handler ready
-		o.RequestTimeout = time.Second * 30
-		o.DialTimeout = time.Second * 30
-	})
+	}, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))

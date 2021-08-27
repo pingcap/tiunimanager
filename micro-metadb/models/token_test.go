@@ -7,7 +7,8 @@ import (
 )
 
 func TestAddToken(t *testing.T) {
-	AddToken("existingToken", "", "", "111", time.Now().Add(10 * time.Second))
+	tokenTbl := &Token{}
+	tokenTbl.AddToken(MetaDB,"existingToken", "", "", "111", time.Now().Add(10 * time.Second))
 
 	type args struct {
 		tokenString    string
@@ -39,14 +40,14 @@ func TestAddToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotToken, err := AddToken(tt.args.tokenString, tt.args.accountName, tt.args.accountId, tt.args.tenantId, tt.args.expirationTime)
+			gotToken, err := tokenTbl.AddToken(MetaDB,tt.args.tokenString, tt.args.accountName, tt.args.accountId, tt.args.tenantId, tt.args.expirationTime)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AddToken() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
 			for i, assert := range tt.wants {
-				if !assert(tt.args, gotToken) {
+				if !assert(tt.args, *gotToken) {
 					t.Errorf("AddToken() test error, testname = %v, assert %v, args = %v, gotToken = %v", tt.name, i, tt.args, gotToken)
 				}
 			}
@@ -67,9 +68,10 @@ func TestFindToken(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
+	tokenTbl := &Token{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotToken, err := FindToken(tt.args.tokenString)
+			gotToken, err := tokenTbl.FindToken(MetaDB,tt.args.tokenString)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindToken() error = %v, wantErr %v", err, tt.wantErr)
 				return

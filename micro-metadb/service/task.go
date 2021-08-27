@@ -9,8 +9,9 @@ import (
 
 var TaskSuccessResponseStatus = &dbPb.DBTaskResponseStatus{Code: 0}
 
-func (d *DBServiceHandler) CreateFlow(ctx context.Context, req *dbPb.DBCreateFlowRequest, rsp *dbPb.DBCreateFlowResponse) error {
-	flow, err := models.CreateFlow(req.Flow.FlowName, req.Flow.StatusAlias, req.Flow.GetBizId())
+func (handler *DBServiceHandler) CreateFlow(ctx context.Context, req *dbPb.DBCreateFlowRequest, rsp *dbPb.DBCreateFlowResponse) error {
+	db := handler.Dao().Db()
+	flow, err := models.CreateFlow(db,req.Flow.FlowName, req.Flow.StatusAlias, req.Flow.GetBizId())
 	if err != nil {
 		// todo
 
@@ -22,8 +23,9 @@ func (d *DBServiceHandler) CreateFlow(ctx context.Context, req *dbPb.DBCreateFlo
 	return nil
 }
 
-func (d *DBServiceHandler) CreateTask(ctx context.Context, req *dbPb.DBCreateTaskRequest, rsp *dbPb.DBCreateTaskResponse) error {
-	task, err := models.CreateTask(
+func (handler *DBServiceHandler) CreateTask(ctx context.Context, req *dbPb.DBCreateTaskRequest, rsp *dbPb.DBCreateTaskResponse) error {
+	db := handler.Dao().Db()
+	task, err := models.CreateTask(db,
 		int8(req.Task.ParentType),
 		req.Task.ParentId,
 		req.Task.TaskName,
@@ -42,12 +44,13 @@ func (d *DBServiceHandler) CreateTask(ctx context.Context, req *dbPb.DBCreateTas
 	return nil
 }
 
-func (d *DBServiceHandler) UpdateFlow(ctx context.Context, req *dbPb.DBUpdateFlowRequest, rsp *dbPb.DBUpdateFlowResponse) error {
-	flow, err := models.UpdateFlowStatus(*parseFlowDTO(req.FlowWithTasks.Flow))
+func (handler *DBServiceHandler) UpdateFlow(ctx context.Context, req *dbPb.DBUpdateFlowRequest, rsp *dbPb.DBUpdateFlowResponse) error {
+	db := handler.Dao().Db()
+	flow, err := models.UpdateFlowStatus(db,*parseFlowDTO(req.FlowWithTasks.Flow))
 	if err != nil {
 		// todo
 	} else {
-		tasks, err := models.BatchSaveTasks(batchParseTaskDTO(req.FlowWithTasks.Tasks))
+		tasks, err := models.BatchSaveTasks(db,batchParseTaskDTO(req.FlowWithTasks.Tasks))
 		if err != nil {
 			// todo
 
@@ -62,8 +65,9 @@ func (d *DBServiceHandler) UpdateFlow(ctx context.Context, req *dbPb.DBUpdateFlo
 	return nil
 }
 
-func (d *DBServiceHandler) UpdateTask(ctx context.Context, req *dbPb.DBUpdateTaskRequest, rsp *dbPb.DBUpdateTaskResponse) error {
-	task, err := models.UpdateTask(*parseTaskDTO(req.Task))
+func (handler *DBServiceHandler) UpdateTask(ctx context.Context, req *dbPb.DBUpdateTaskRequest, rsp *dbPb.DBUpdateTaskResponse) error {
+	db := handler.Dao().Db()
+	task, err := models.UpdateTask(db,*parseTaskDTO(req.Task))
 	if err != nil {
 		// todo
 
@@ -75,8 +79,9 @@ func (d *DBServiceHandler) UpdateTask(ctx context.Context, req *dbPb.DBUpdateTas
 	return nil
 }
 
-func (d *DBServiceHandler) LoadFlow(ctx context.Context, req *dbPb.DBLoadFlowRequest, rsp *dbPb.DBLoadFlowResponse) error {
-	flow , tasks, err  := models.FetchFlowDetail(uint(req.Id))
+func (handler *DBServiceHandler) LoadFlow(ctx context.Context, req *dbPb.DBLoadFlowRequest, rsp *dbPb.DBLoadFlowResponse) error {
+	db := handler.Dao().Db()
+	flow , tasks, err  := models.FetchFlowDetail(db,uint(req.Id))
 	if err != nil {
 		// todo
 	} else {
@@ -90,8 +95,9 @@ func (d *DBServiceHandler) LoadFlow(ctx context.Context, req *dbPb.DBLoadFlowReq
 	return nil
 }
 
-func (d *DBServiceHandler) LoadTask(ctx context.Context, req *dbPb.DBLoadTaskRequest, rsp *dbPb.DBLoadTaskResponse) error {
-	task, err := models.FetchTask(uint(req.Id))
+func (handler *DBServiceHandler) LoadTask(ctx context.Context, req *dbPb.DBLoadTaskRequest, rsp *dbPb.DBLoadTaskResponse) error {
+	db := handler.Dao().Db()
+	task, err := models.FetchTask(db,uint(req.Id))
 	if err != nil {
 		// todo
 

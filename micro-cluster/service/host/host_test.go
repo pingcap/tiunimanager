@@ -11,6 +11,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func initTestLog() {
+	//framework.InitConfigForDev(framework.MicroClusterMod)
+	//InitLogger(config2.KEY_CLUSTER_LOG)
+}
+
 func genHostInfo(hostName string) *hostPb.HostInfo {
 	host := hostPb.HostInfo{
 		Ip:       "192.168.56.11",

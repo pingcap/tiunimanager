@@ -23,16 +23,17 @@ func TestAddTenant(t *testing.T) {
 		}},
 		{"empty", args{}, true, []func(a args, tenant Tenant) bool{}},
 	}
+	tenantTbl := Tenant{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotTenant, err := AddTenant(tt.args.name, tt.args.tenantType, tt.args.status)
+			gotTenant, err := tenantTbl.AddTenant(MetaDB,tt.args.name, tt.args.tenantType, tt.args.status)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AddTenant() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
 			for i, assert := range tt.wants {
-				if !assert(tt.args, gotTenant) {
+				if !assert(tt.args, *gotTenant) {
 					t.Errorf("AddToken() test error, testname = %v, assert %v, args = %v, gotTenant = %v", tt.name, i, tt.args, gotTenant)
 				}
 			}
@@ -42,10 +43,11 @@ func TestAddTenant(t *testing.T) {
 }
 
 func TestFindTenantById(t *testing.T) {
+	tenantTbl := &Tenant{}
 	t.Run("normal", func(t *testing.T) {
-		tenant, _ := AddTenant("tenantName", 1, 0)
+		tenant, _ := tenantTbl.AddTenant(MetaDB,"tenantName", 1, 0)
 
-		gotTenant, err := FindTenantById(tenant.ID)
+		gotTenant, err := tenantTbl.FindTenantById(MetaDB,tenant.ID)
 		if err != nil {
 			t.Errorf("TestFindTenantById() error = %v", err)
 			return
@@ -61,9 +63,9 @@ func TestFindTenantById(t *testing.T) {
 		}
 	})
 	t.Run("no result", func(t *testing.T) {
-		AddTenant("tenantName", 1, 0)
+		tenantTbl.AddTenant(MetaDB,"tenantName", 1, 0)
 
-		gotTenant, err := FindTenantById("dfsaf")
+		gotTenant, err := tenantTbl.FindTenantById(MetaDB,"dfsaf")
 		if err == nil {
 			t.Errorf("TestFindTenantById() want err")
 			return
@@ -72,7 +74,7 @@ func TestFindTenantById(t *testing.T) {
 			t.Errorf("TestFindTenantById() want empty result, got = %v", gotTenant)
 			return
 		}
-		gotTenant, err = FindTenantById("")
+		gotTenant, err = tenantTbl.FindTenantById(MetaDB,"")
 		if err == nil {
 			t.Errorf("TestFindTenantById() want err")
 			return
@@ -87,10 +89,11 @@ func TestFindTenantById(t *testing.T) {
 }
 
 func TestFindTenantByName(t *testing.T) {
+	tenantTbl := &Tenant{}
 	t.Run("normal", func(t *testing.T) {
-		tenant, _ := AddTenant("testTenantName", 1, 0)
+		tenant, _ := tenantTbl.AddTenant(MetaDB,"testTenantName", 1, 0)
 
-		gotTenant, err := FindTenantByName(tenant.Name)
+		gotTenant, err := tenantTbl.FindTenantByName(MetaDB,tenant.Name)
 		if err != nil {
 			t.Errorf("TestFindTenantByName() error = %v", err)
 			return
@@ -106,9 +109,9 @@ func TestFindTenantByName(t *testing.T) {
 		}
 	})
 	t.Run("no result", func(t *testing.T) {
-		AddTenant("tenantName", 1, 0)
+		tenantTbl.AddTenant(MetaDB,"tenantName", 1, 0)
 
-		gotTenant, err := FindTenantByName("no_result_name")
+		gotTenant, err := tenantTbl.FindTenantByName(MetaDB,"no_result_name")
 		if err == nil {
 			t.Errorf("TestFindTenantByName() want err")
 			return
@@ -117,7 +120,7 @@ func TestFindTenantByName(t *testing.T) {
 			t.Errorf("TestFindTenantByName() want empty result, got = %v", gotTenant)
 			return
 		}
-		gotTenant, err = FindTenantByName("")
+		gotTenant, err = tenantTbl.FindTenantByName(MetaDB,"")
 		if err == nil {
 			t.Errorf("TestFindTenantByName() want err")
 			return

@@ -30,7 +30,7 @@ func TestBatchSaveTasks(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotNewTasks, err := BatchSaveTasks(tt.args.tasks)
+			gotNewTasks, err := BatchSaveTasks(MetaDB,tt.args.tasks)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BatchSaveTasks() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -69,7 +69,7 @@ func TestCreateFlow(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotFlow, err := CreateFlow(tt.args.flowName, tt.args.statusAlias, tt.args.bizId)
+			gotFlow, err := CreateFlow(MetaDB,tt.args.flowName, tt.args.statusAlias, tt.args.bizId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateFlow() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -115,7 +115,7 @@ func TestCreateTask(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotTask, err := CreateTask(tt.args.parentType, tt.args.parentId, tt.args.taskName, tt.args.bizId, tt.args.taskReturnType, tt.args.parameters, tt.args.result)
+			gotTask, err := CreateTask(MetaDB,tt.args.parentType, tt.args.parentId, tt.args.taskName, tt.args.bizId, tt.args.taskReturnType, tt.args.parameters, tt.args.result)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateTask() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -131,8 +131,8 @@ func TestCreateTask(t *testing.T) {
 
 func TestFetchFlow(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		flow, _ := CreateFlow("name", "创建中", "TestFetchFlow1")
-		got, err := FetchFlow(flow.ID)
+		flow, _ := CreateFlow(MetaDB,"name", "创建中", "TestFetchFlow1")
+		got, err := FetchFlow(MetaDB,flow.ID)
 		if err != nil {
 			t.Errorf("TestFetchFlow() error = %v", err)
 		}
@@ -149,13 +149,13 @@ func TestFetchFlow(t *testing.T) {
 
 func TestFetchFlowDetail(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		flow, _ := CreateFlow("name", "创建中", "TestFetchFlowDetail1")
-		CreateTask(0, strconv.Itoa(int(flow.ID)), "task1", "TestFetchFlowDetail1", "trt1", "p1", "r1")
-		CreateTask(0, strconv.Itoa(int(flow.ID)), "task2", "TestFetchFlowDetail2", "trt2", "p2", "r2")
-		CreateTask(0, "22", "task3", "TestFetchFlowDetail3", "trt3", "p3", "r3")
-		CreateTask(1, strconv.Itoa(int(flow.ID)), "task4", "TestFetchFlowDetail4", "trt4", "p4", "r4")
+		flow, _ := CreateFlow(MetaDB,"name", "创建中", "TestFetchFlowDetail1")
+		CreateTask(MetaDB,0, strconv.Itoa(int(flow.ID)), "task1", "TestFetchFlowDetail1", "trt1", "p1", "r1")
+		CreateTask(MetaDB,0, strconv.Itoa(int(flow.ID)), "task2", "TestFetchFlowDetail2", "trt2", "p2", "r2")
+		CreateTask(MetaDB,0, "22", "task3", "TestFetchFlowDetail3", "trt3", "p3", "r3")
+		CreateTask(MetaDB,1, strconv.Itoa(int(flow.ID)), "task4", "TestFetchFlowDetail4", "trt4", "p4", "r4")
 
-		gotFlow, gotTasks, err := FetchFlowDetail(flow.ID)
+		gotFlow, gotTasks, err := FetchFlowDetail(MetaDB,flow.ID)
 		if err != nil {
 			t.Errorf("TestFetchFlow() error = %v", err)
 		}
@@ -182,9 +182,9 @@ func TestFetchFlowDetail(t *testing.T) {
 
 func TestFetchTask(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		task, _ := CreateTask(1, "p1", "tn", "bi", "trt", "p", "r")
+		task, _ := CreateTask(MetaDB,1, "p1", "tn", "bi", "trt", "p", "r")
 
-		got, err := FetchTask(task.ID)
+		got, err := FetchTask(MetaDB,task.ID)
 		if err != nil {
 			t.Errorf("TestFetchFlow() error = %v", err)
 		}
@@ -260,12 +260,12 @@ func TestFlowDO_TableName(t *testing.T) {
 
 func TestQueryTask(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		CreateTask(0, "1", "task1", "TestQueryTask1", "trt1", "p1", "r1")
-		CreateTask(0, "1", "task2", "TestQueryTask2", "trt2", "p2", "r2")
-		CreateTask(0, "1", "task3", "TestQueryTask3", "trt3", "p3", "r3")
-		CreateTask(1, "1", "task4", "TestQueryTask4", "trt4", "p4", "r4")
+		CreateTask(MetaDB,0, "1", "task1", "TestQueryTask1", "trt1", "p1", "r1")
+		CreateTask(MetaDB,0, "1", "task2", "TestQueryTask2", "trt2", "p2", "r2")
+		CreateTask(MetaDB,0, "1", "task3", "TestQueryTask3", "trt3", "p3", "r3")
+		CreateTask(MetaDB,1, "1", "task4", "TestQueryTask4", "trt4", "p4", "r4")
 
-		gotTasks, err := QueryTask("TestQueryTask1", "whatever")
+		gotTasks, err := QueryTask(MetaDB,"TestQueryTask1", "whatever")
 
 		if err != nil {
 			t.Errorf("QueryTask() error = %v", err)
@@ -360,7 +360,7 @@ func TestTaskDO_TableName(t *testing.T) {
 
 func TestUpdateFlow(t *testing.T) {
 	now := time.Now()
-	ff, _ := CreateFlow("test", "", "TestUpdateFlow1")
+	ff, _ := CreateFlow(MetaDB,"test", "", "TestUpdateFlow1")
 	type args struct {
 		flow FlowDO
 	}
@@ -377,7 +377,7 @@ func TestUpdateFlow(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotFlow, err := UpdateFlowStatus(tt.args.flow)
+			gotFlow, err := UpdateFlowStatus(MetaDB,tt.args.flow)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpdateFlowStatus() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -448,7 +448,7 @@ func TestUpdateFlow(t *testing.T) {
 //}
 
 func TestUpdateTask(t *testing.T) {
-	task, _ := CreateTask(0, "28282828", "taskName", "bizId" , "taskReturnType" , "parameters", "result" )
+	task, _ := CreateTask(MetaDB,0, "28282828", "taskName", "bizId" , "taskReturnType" , "parameters", "result" )
 
 	type args struct {
 		task TaskDO
@@ -467,7 +467,7 @@ func TestUpdateTask(t *testing.T) {
 	for index, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.args.task.Status = int8(index + 1)
-			gotNewTask, err := UpdateTask(tt.args.task)
+			gotNewTask, err := UpdateTask(MetaDB,tt.args.task)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpdateTask() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -483,10 +483,10 @@ func TestUpdateTask(t *testing.T) {
 
 func TestBatchFetchFlows(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		flow1, _ := CreateFlow("flow1", "创建中", "121212")
-		flow2, _ := CreateFlow("flow2", "创建中", "121212")
+		flow1, _ := CreateFlow(MetaDB,"flow1", "创建中", "121212")
+		flow2, _ := CreateFlow(MetaDB,"flow2", "创建中", "121212")
 
-		got, err := BatchFetchFlows([]uint{0, flow1.ID, 0, flow2.ID, 0})
+		got, err := BatchFetchFlows(MetaDB,[]uint{0, flow1.ID, 0, flow2.ID, 0})
 		if err != nil {
 			t.Errorf("TestBatchFetchFlows() error = %v", err)
 		}

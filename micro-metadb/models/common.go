@@ -8,6 +8,27 @@ import (
 	"time"
 )
 
+const (
+	TALBE_NAME_CLUSTER = "cluster"
+	TABLE_NAME_DEMAND_RECORD  = "demand_record"
+	TABLE_NAME_ACCOUNT = "account"
+	TABLE_NAME_TENANT  = "tenant"
+	TABLE_NAME_ROLE    = "role"
+	TABLE_NAME_ROLE_BINDING = "role_binding"
+	TABLE_NAME_PERMISSION = "permission"
+	TABLE_NAME_PERMISSION_BINDING = "permission_binding"
+	TABLE_NAME_TOKEN   = "token"
+	TABLE_NAME_TASK    = "task"
+	TABLE_NAME_HOST	   = "host"
+	TABLE_NAME_DISK    = "disk"
+	TABLE_NAME_TIUP_CONFIG    = "tiup_config"
+	TABLE_NAME_TIUP_TASK = "tiup_task"
+	TABLE_NAME_FLOW    = "flow"
+	TABLE_NAME_PARAMETERS_RECORD = "parameters_record"
+	TABLE_NAME_BACKUP_RECORD = "backup_record"
+	TABLE_NAME_RECOVER_RECORD = "recover_record"
+)
+
 func getLogger() *framework.LogRecord {
 	return framework.GetLogger()
 }

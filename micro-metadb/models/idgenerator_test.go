@@ -11,8 +11,8 @@ func TestGenerateID(t *testing.T) {
 		t.Errorf("GenerateID() empty, got = %v", got)
 	}
 
-	if len(got) != ID_LENGTH {
-		t.Errorf("GenerateID() want len = %v, got = %v", ID_LENGTH, len(got))
+	if len(got) != UUID_MAX_LENGTH {
+		t.Errorf("GenerateID() want len = %d, got = %v", UUID_MAX_LENGTH, len(got))
 	}
 
 }

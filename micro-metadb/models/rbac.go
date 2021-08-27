@@ -1,8 +1,12 @@
 package models
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"gorm.io/gorm"
+)
 
-type AccountDO struct {
+type Account struct {
 	Entity
 
 	Name 			string		`gorm:"default:null;not null"`
@@ -10,153 +14,147 @@ type AccountDO struct {
 	FinalHash 		string		`gorm:"default:null;not null"`
 }
 
-func (d AccountDO) TableName() string {
-	return "accounts"
-}
-
-type RoleDO struct {
+type Role struct {
 	Entity
 	Name    		string		`gorm:"default:null;not null"`
 	Desc    		string
 }
 
-func (d RoleDO) TableName() string {
-	return "roles"
-}
-
-type PermissionBindingDO struct {
+type PermissionBinding struct {
 	Entity
 	RoleId 			string		`gorm:"default:null;not null"`
 	PermissionId	string		`gorm:"default:null;not null"`
 }
 
-func (d PermissionBindingDO) TableName() string {
-	return "permission_bindings"
-}
-
-type RoleBindingDO struct {
+type RoleBinding struct {
 	Entity
 	RoleId 			string		`gorm:"size:255"`
 	AccountId	 	string		`gorm:"size:255"`
 }
 
-func (d RoleBindingDO) TableName() string {
-	return "role_bindings"
-}
-
-type PermissionDO struct {
+type Permission struct {
 	Entity
 	Name  	 		string		`gorm:"default:null;not null"`
 	Type   			int8		`gorm:"default:0"`
 	Desc   			string		`gorm:"default:null"`
 }
 
-func (d PermissionDO) TableName() string {
-	return "permissions"
-}
-
-func AddAccount(tenantId string, name string, salt string, finalHash string, status int8) (result AccountDO, err error) {
-	result.TenantId = tenantId
-	result.Name = name
-	result.Salt = salt
-	result.FinalHash = finalHash
-	result.Status = status
-
-	err = MetaDB.Create(&result).Error
-	return
-}
-
-func FindAccount(name string) (result AccountDO, err error) {
-	err = MetaDB.Where(&AccountDO{Name: name}).First(&result).Error
-	return
-}
-
-func AddRole(tenantId string, name string, desc string, status int8) (result RoleDO, err error) {
-	result.TenantId = tenantId
-	result.Name = name
-	result.Desc = desc
-	result.Status = status
-
-	err = MetaDB.Create(&result).Error
-	return
-}
-
-func FetchRole(tenantId string, name string) (result RoleDO, err error) {
-	err = MetaDB.Where(&RoleDO{Entity: Entity{TenantId: tenantId}, Name: name}).First(&result).Error
-	return
-}
-
-func AddPermission(tenantId, code, name, desc string, permissionType, status int8) (result PermissionDO, err error) {
-	if len(code) == 0 {
-		err = errors.New("permission code cannot be empty")
-		return
+func (*Account) Add(db *gorm.DB,tenantId string, name string, salt string, finalHash string, status int8) (rt* Account, err error) {
+	if nil == db || "" == tenantId || "" == name || "" == salt || "" == finalHash {
+		return nil, errors.New(fmt.Sprintf("add account failed, has invalid parameter, tenantID: %s, name: %s, salt: %s, finalHash: %s, status: %d", tenantId, name, salt, finalHash,status))
 	}
-	result.TenantId = tenantId
-	result.Code = code
-	result.Name = name
-	result.Desc = desc
-	result.Type = permissionType
-	result.Status = status
-
-	err = MetaDB.Create(&result).Error
-	return
-}
-
-func FetchPermission(tenantId, code string) (result PermissionDO, err error) {
-	err = MetaDB.Where(&PermissionDO{Entity: Entity{TenantId: tenantId, Code: code}}).First(&result).Error
-	return
-}
-
-func FetchAllRolesByAccount(tenantId string, accountId string) (result []RoleDO, err error) {
-	//service.DB.Where("account_id = ?", accountId).Limit(50).Find(&result)
-
-	var roleBinds []RoleBindingDO
-	err = MetaDB.Where("tenant_id = ? and account_id = ? and status = 0", tenantId, accountId).Limit(50).Find(&roleBinds).Error
-
-	if err != nil {
-		return
+	rt = &Account{
+		Entity: Entity{TenantId:tenantId, Status: status},
+		Name: name,
+		Salt: salt,
+		FinalHash: finalHash,
 	}
+	return rt,db.Create(rt).Error
+}
+
+func (*Account) Find(db *gorm.DB, name string) (result *Account, err error) {
+	if nil == db || "" == name {
+		return nil, errors.New(fmt.Sprintf("find account failed, has invalid parameter, name: %s", name))
+	}
+	result = &Account{Name:name}
+	return result, db.Where(&Account{Name: name}).First(result).Error
+}
+
+func (r* Role) AddRole(db *gorm.DB,tenantId string, name string, desc string, status int8) (result *Role, err error) {
+	//TODO please add desc and status check
+	if nil == db || "" == tenantId || "" == name {
+		return nil, errors.New(fmt.Sprintf("add role failed, has invalid parameter, tenantID: %s, name: %s, desc: %s, status: %d", tenantId, name, desc, status))
+	}
+	result = &Role{Entity: Entity{TenantId:tenantId, Status: status},
+		Name:name,
+		Desc: desc,
+	}
+	return result, db.Create(result).Error
+}
+
+func (r* Role)FetchRole(db * gorm.DB,tenantId string, name string) (result* Role, err error) {
+	if nil == db || "" == tenantId || "" == name {
+		return nil, errors.New(fmt.Sprintf("fetch role failed, has invalid parameter, tenantID: %s, name: %s", tenantId, name))
+	}
+	result = &Role{}
+	return result, db.Where(&Role{Entity: Entity{TenantId: tenantId}, Name: name}).First(result).Error
+}
+
+func (p * Permission) AddPermission(db *gorm.DB,tenantId, code, name, desc string, permissionType, status int8) (result* Permission, err error) {
+	//TODO please add permissionType and status check
+	if nil == db || "" == tenantId || "" == name || "" == code || "" == desc {
+		return nil, errors.New(fmt.Sprintf("add permission failed, has invalid parameter, tenantID: %s, code: %s name: %s, desc: %s, permission type: %d, status: %d", tenantId, code, name, desc, permissionType,status))
+	}
+	result = &Permission{
+		Entity: Entity{TenantId:tenantId, Status:status, Code:code},
+		Name: name,
+		Desc: desc,
+		Type: permissionType,
+	}
+	return result, db.Create(result).Error
+}
+
+func (p *Permission) FetchPermission(db *gorm.DB,tenantId, code string) (result* Permission, err error) {
+	if nil == db || "" == tenantId || "" == code{
+		return nil, errors.New(fmt.Sprintf("FetchPermission failed, has invalid parameter, tenantID: %s, name: %s", tenantId, code))
+	}
+	result = &Permission{}
+	return result, db.Where(&Permission{Entity: Entity{TenantId: tenantId, Code: code}}).First(result).Error
+}
+
+func (r* Role)FetchAllRolesByAccount(db *gorm.DB, tenantId string, accountId string) (result []Role, err error) {
+	if nil == db || "" == tenantId || "" == accountId {
+		return nil, errors.New(fmt.Sprintf("FetchAllRolesByAccount failed, has invalid parameter, tenantID: %s, accountID: %s", tenantId, accountId))
+	}
+
+	var roleBinds []RoleBinding
+	err = db.Where("tenant_id = ? and account_id = ? and status = 0", tenantId, accountId).Limit(1024).Find(&roleBinds).Error
+	if nil != err {
+		return nil, errors.New(fmt.Sprintf("FetchAllRolesByAccount, query database failed, tenantID: %s, accountID: %s", tenantId, accountId))
+	}
+
 	var roleIds []string
 	for _, v := range roleBinds {
 		roleIds = append(roleIds, v.RoleId)
 	}
-
-	result, err = FetchRolesByIds(roleIds)
-	return
+	return r.FetchRolesByIds(db,roleIds)
 }
 
-func FetchRolesByIds(roleIds []string) (result []RoleDO, err error){
-	err = MetaDB.Where("id in ?", roleIds).Find(&result).Error
-	return
+func (r *Role) FetchRolesByIds(db *gorm.DB,roleIds []string) (result []Role, err error){
+	if nil == db || len(roleIds) <= 0 {
+		return nil, errors.New(fmt.Sprintf("FetchRolesByIds failed"))
+	}
+	return result, db.Where("id in ?", roleIds).Find(&result).Error
 }
 
-func FetchAllRolesByPermission(tenantId string, permissionId string) (result []RoleDO, err error) {
-	var permissionBindings []PermissionBindingDO
-	err = MetaDB.Where("tenant_id = ? and permission_id = ? and status = 0", tenantId, permissionId).Limit(50).Find(&permissionBindings).Error
+func (r* Role)FetchAllRolesByPermission(db *gorm.DB,tenantId string, permissionId string) (result []Role, err error) {
+	if nil == db || "" == tenantId || "" == permissionId {
+		return nil, errors.New(fmt.Sprintf("FetchAllRolesByPermission failed, has invalid parameter, tenantID: %s, permissionId: %s", tenantId, permissionId))
+	}
+	var permissionBindings []PermissionBinding
+	err = db.Where("tenant_id = ? and permission_id = ? and status = 0", tenantId, permissionId).Limit(1024).Find(&permissionBindings).Error
 
-	if err != nil {
-		return
+	if nil != err {
+		return nil, errors.New(fmt.Sprintf("FetchAllRolesByPermission, query database failed, tenantID: %s, permissionId: %s", tenantId, permissionId))
 	}
 
 	var roleIds []string
 	for _, v := range permissionBindings {
 		roleIds = append(roleIds, v.RoleId)
 	}
-
-	result, err = FetchRolesByIds(roleIds)
-	return
+	return r.FetchRolesByIds(db, roleIds)
 }
 
-func AddPermissionBindings(bindings []PermissionBindingDO) error {
+func (pb *PermissionBinding) AddPermissionBindings(db* gorm.DB,bindings []PermissionBinding) error {
 	for i,v := range bindings {
 		bindings[i].Code= v.RoleId + "_" + v.PermissionId
 	}
-	return MetaDB.Create(&bindings).Error
+	return db.Create(&bindings).Error
 }
 
-func AddRoleBindings(bindings []RoleBindingDO) error {
+func (rb* RoleBinding) AddRoleBindings(db *gorm.DB,bindings []RoleBinding) error {
 	for i,v := range bindings {
 		bindings[i].Code= v.AccountId + "_" + v.RoleId
 	}
-	return MetaDB.Create(&bindings).Error
+	return db.Create(&bindings).Error
 }

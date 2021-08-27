@@ -1,10 +1,12 @@
 package models
 
 import (
-	"errors"
+	"fmt"
+	"github.com/pingcap/errors"
+	"gorm.io/gorm"
 )
 
-type ClusterDO struct {
+type Cluster struct {
 	Entity
 	Name                string
 	DbPassword          string
@@ -18,295 +20,270 @@ type ClusterDO struct {
 	CurrentFlowId       uint
 }
 
-func (d ClusterDO) TableName() string {
-	return "clusters"
-}
-
-type DemandRecordDO struct {
+type DemandRecord struct {
 	Record
 	ClusterId 			string		`gorm:"not null;type:varchar(36);default:null"`
 	Content 			string		`gorm:"type:text"`
 }
 
-func (d DemandRecordDO) TableName() string {
-	return "demand_records"
-}
-
-type TiUPConfigDO struct {
+type TiUPConfig struct {
 	Record
 	ClusterId			string		`gorm:"not null;type:varchar(36);default:null"`
 	Content 			string		`gorm:"type:text"`
 }
 
-func (d TiUPConfigDO) TableName() string {
-	return "tiup_configs"
-}
-
-func UpdateClusterStatus(clusterId string, status int8) (cluster *ClusterDO, err error) {
-	if clusterId == ""{
-		return nil, errors.New("cluster id is empty")
-	}
-	cluster = &ClusterDO{}
-	err = MetaDB.Model(cluster).Where("id = ?", clusterId).Update("status", status).Find(cluster).Error
-	return
-}
-
-func UpdateClusterDemand(clusterId string, content string, tenantId string) (cluster *ClusterDO, demand *DemandRecordDO, err error) {
-	demand = &DemandRecordDO{
-		ClusterId: clusterId,
-		Content: content,
-		Record: Record{
-			TenantId: tenantId,
-		},
-	}
-
-	err = MetaDB.Create(demand).Error
-	if err != nil {
-		return
-	}
-
-	cluster = &ClusterDO{}
-	err = MetaDB.Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_demand_id", demand.ID).Error
-	return
-}
-
-func UpdateClusterFlowId(clusterId string, flowId uint) (cluster *ClusterDO, err error) {
-	if clusterId == "" {
-		return nil, errors.New("cluster id is empty")
-	}
-	cluster = &ClusterDO{}
-
-	err = MetaDB.Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_flow_id", flowId).Error
-
-	return
-}
-
-func UpdateTiUPConfig(clusterId string, content string, tenantId string) (cluster *ClusterDO, err error) {
-	cluster = &ClusterDO{}
-	record := &TiUPConfigDO{
-		ClusterId: clusterId,
-		Content: content,
-		Record: Record{
-			TenantId: tenantId,
-		},
-	}
-
-	err = MetaDB.Create(record).Error
-	if err != nil {
-		return
-	}
-
-	err = MetaDB.Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_tiup_config_id", record.ID).Error
-
-	return
-}
-
-func DeleteCluster(clusterId string) (cluster *ClusterDO, err error) {
-	if clusterId == "" {
-		 return nil, errors.New("empty cluster id")
-	}
-	cluster = &ClusterDO{}
-	err = MetaDB.First(cluster, "id = ?", clusterId).Delete(cluster).Error
-
-	return
-}
-
-func FetchCluster(clusterId string) (result *ClusterFetchResultDO, err error) {
-	result = &ClusterFetchResultDO{
-		Cluster: &ClusterDO{},
-	}
-
-	err = MetaDB.First(result.Cluster, "id = ?", clusterId).Error
-	if err != nil {
-		return
-	}
-
-	cluster := result.Cluster
-	if cluster.CurrentDemandId > 0 {
-		result.DemandRecord = &DemandRecordDO{}
-		err = MetaDB.First(result.DemandRecord, "id = ?", cluster.CurrentDemandId).Error
-		if err != nil {
-			return
-		}
-	}
-
-	if cluster.CurrentTiupConfigId > 0 {
-		result.TiUPConfig = &TiUPConfigDO{}
-		err = MetaDB.First(result.TiUPConfig, "id = ?", cluster.CurrentTiupConfigId).Error
-		if err != nil {
-			return
-		}
-	}
-
-	if cluster.CurrentFlowId > 0 {
-		result.Flow = &FlowDO{}
-		err = MetaDB.First(result.Flow, "id = ?", cluster.CurrentFlowId).Error
-	}
-	return
-}
-
-type ClusterFetchResultDO struct {
-	Cluster *ClusterDO
+type ClusterFetchResult struct {
+	Cluster *Cluster
 	Flow *FlowDO
-	DemandRecord *DemandRecordDO
-	TiUPConfig *TiUPConfigDO
+	DemandRecord *DemandRecord
+	TiUPConfig *TiUPConfig
 }
 
-func ListClusterDetails(clusterId string,
-	clusterName string,
-	clusterType string,
-	clusterStatus string,
-	clusterTag string,
-	offset int, length int) (result []*ClusterFetchResultDO, total int64, err error){
+type BackupRecord struct {
+	Record
+	ClusterId  string		`gorm:"not null;type:varchar(36);default:null"`
+	Range      int8
+	Type       int8
+	OperatorId string		`gorm:"not null;type:varchar(36);default:null"`
+	FilePath 		string
+	FlowId			uint
+}
 
-	clusters, total, err := ListClusters(clusterId, clusterName, clusterType, clusterStatus, clusterTag, offset, length)
+type RecoverRecord struct {
+	Record
+	ClusterId 		string		`gorm:"not null;type:varchar(36);default:null"`
+	OperatorId 		string		`gorm:"not null;type:varchar(36);default:null"`
+	BackupRecordId  uint
+	FlowId			uint
+}
+
+type ParametersRecord struct {
+	Record
+	ClusterId 		string		`gorm:"not null;type:varchar(36);default:null"`
+	OperatorId 		string		`gorm:"not null;type:varchar(36);default:null"`
+	Content 		string		`gorm:"type:text"`
+	FlowId 			uint
+}
+
+type BackupRecordFetchResult struct {
+	BackupRecord *BackupRecord
+	Flow *FlowDO
+}
+
+
+func (*Cluster) UpdateClusterStatus(db *gorm.DB,clusterId string, status int8) (cluster *Cluster, err error) {
+	if clusterId == "" || nil == db {
+		return nil, errors.New(fmt.Sprintf("UpdateClusterStatus has invalid parameter, clusterId: %s, status: %d", clusterId, status))
+	}
+	cluster = &Cluster{}
+	return cluster,db.Model(cluster).Where("id = ?", clusterId).Update("status", status).Find(cluster).Error
+}
+
+func ( *Cluster) UpdateClusterDemand(db *gorm.DB,clusterId string, content string, tenantId string) (cluster *Cluster, demand *DemandRecord, err error) {
+	if "" == clusterId || "" == tenantId || nil == db {
+		return nil, nil,errors.New(fmt.Sprintf("UpdateClusterDemand has invalid parameter, clusterId: %s, content: %s, content: %s", clusterId, tenantId, content))
+	}
+
+	cluster = &Cluster{}
+	demand = &DemandRecord{
+		ClusterId: clusterId,
+		Content: content,
+		Record: Record{
+			TenantId: tenantId,
+		},
+	}
+
+	err = db.Create(demand).Error
+	if nil == err {
+		err = db.Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_demand_id", demand.ID).Error
+		if nil != err {
+			err = errors.New(fmt.Sprintf("update demand faild, clusterId: %s, tenantId: %s, demandId: %d, error: %v", clusterId,tenantId, demand.ID, err))
+		}
+	} else {
+		err = errors.New(fmt.Sprintf("craete demand faild, clusterId: %s, tenantId: %s, demandId: %d, error: %v", clusterId,tenantId, demand.ID, err))
+	}
+	return cluster, demand, err
+}
+
+func (*Cluster) UpdateClusterFlowId(db *gorm.DB,clusterId string, flowId uint) (cluster *Cluster, err error) {
+	if "" == clusterId || nil == db {
+		return nil,errors.New(fmt.Sprintf("UpdateClusterFlowId has invalid parameter, clusterId: %s, flowId: %d", clusterId, flowId))
+	}
+	cluster = &Cluster{}
+	return cluster,db.Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_flow_id", flowId).Error
+}
+
+func (*Cluster)UpdateTiUPConfig(db *gorm.DB,clusterId string, content string, tenantId string) (cluster *Cluster, err error) {
+	if "" == clusterId || "" == tenantId || "" == content || nil == db {
+		return nil, errors.New(fmt.Sprintf("UpdateTiUPConfig has invalid parameter, clusterId: %s, content: %s", clusterId, content))
+	}
+	cluster = &Cluster{}
+	record := &TiUPConfig{
+		ClusterId: clusterId,
+		Content: content,
+		Record: Record{
+			TenantId: tenantId,
+		},
+	}
+	err = db.Create(record).Error
+	if nil == err {
+		err = db.Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_tiup_config_id", record.ID).Error
+		if nil != err {
+			err = errors.New(fmt.Sprintf("update tiup config faild, clusterId: %s, tenantId: %s, TiUPId: %d, error: %v", clusterId,tenantId, record.ID, err))
+		}
+	} else {
+		err = errors.New(fmt.Sprintf("craete tiup config faild, clusterId: %s, tenantId: %s, TiUPId: %d, error: %v", clusterId,tenantId, record.ID, err))
+	}
+	return cluster, err
+}
+
+func (*Cluster) DeleteCluster(db *gorm.DB,clusterId string) (cluster *Cluster, err error) {
+	if "" == clusterId || nil == db {
+		return nil, errors.New(fmt.Sprintf("DeleteCluster has invalid parameter, clusterId: %s", clusterId))
+	}
+	cluster = &Cluster{}
+	return cluster, db.First(cluster, "id = ?", clusterId).Delete(cluster).Error
+}
+
+func (*Cluster)FetchCluster(db *gorm.DB,clusterId string) (result *ClusterFetchResult, err error) {
+	if "" == clusterId || nil == db {
+		return nil, errors.New(fmt.Sprintf("FetchCluster has invalid parameter, clusterId: %s", clusterId))
+	}
+	result = &ClusterFetchResult{
+		Cluster: &Cluster{},
+	}
+
+	err = db.First(result.Cluster, "id = ?", clusterId).Error
+	if nil == err {
+		cluster := result.Cluster
+		if cluster.CurrentDemandId > 0 {
+			result.DemandRecord = &DemandRecord{}
+			err = db.First(result.DemandRecord, "id = ?", cluster.CurrentDemandId).Error
+			if err != nil {
+				return nil, errors.New(fmt.Sprintf("FetchCluster, query demand record failed, clusterId: %s, demandId: %d, error: %v", clusterId, cluster.CurrentDemandId,err))
+			}
+		}
+
+		if cluster.CurrentTiupConfigId > 0 {
+			result.TiUPConfig = &TiUPConfig{}
+			err = db.First(result.TiUPConfig, "id = ?", cluster.CurrentTiupConfigId).Error
+			if nil != err {
+				return nil, errors.New(fmt.Sprintf("FetchCluster, query demand record failed, clusterId: %s, TiUPID:%d, error: %v", clusterId, cluster.CurrentTiupConfigId,err))
+			}
+		}
+
+		if cluster.CurrentFlowId > 0 {
+			result.Flow = &FlowDO{}
+			err = db.First(result.Flow, "id = ?", cluster.CurrentFlowId).Error
+			if nil != err {
+				return nil, errors.New(fmt.Sprintf("FetchCluster, query workflow failed, clusterId: %s, workflowId:%d, error: %v", clusterId, cluster.CurrentFlowId ,err))
+			}
+		}
+	} else {
+		return nil, errors.New(fmt.Sprintf("FetchCluster, query cluster failed, clusterId: %s, error: %v", clusterId, err))
+	}
+	return result, nil
+}
+
+func (c *Cluster)ListClusterDetails( db *gorm.DB, clusterId, clusterName,clusterType, clusterStatus string,
+	clusterTag string, offset int, length int) (result []*ClusterFetchResult, total int64, err error){
+
+	clusters, total, err := c.ListClusters(db,clusterId, clusterName, clusterType, clusterStatus, clusterTag, offset, length)
+
+	if nil != err {
+		return nil,0,errors.New(fmt.Sprintf("ListClusterDetails, query cluster lists failed, error: %v", err))
+	}
 
 	flowIds := make([]uint, len(clusters), len(clusters))
 	demandIds := make([]uint, len(clusters), len(clusters))
 	tiupConfigIds := make([]uint, len(clusters), len(clusters))
 
-	result = make([]*ClusterFetchResultDO, len(clusters), len(clusters))
-	clusterMap := make(map[string]*ClusterFetchResultDO)
+	result = make([]*ClusterFetchResult, len(clusters), len(clusters))
+	clusterMap := make(map[string]*ClusterFetchResult)
 
 	for i,c := range clusters {
 		flowIds[i] = c.CurrentFlowId
 		demandIds[i] = c.CurrentDemandId
 		tiupConfigIds[i] = c.CurrentTiupConfigId
-		result[i] = &ClusterFetchResultDO{
+		result[i] = &ClusterFetchResult{
 			Cluster: c,
 		}
 		clusterMap[c.ID] = result[i]
 	}
 
 	flows := make([]*FlowDO, len(clusters), len(clusters))
-	err = MetaDB.Find(&flows, flowIds).Error
+	err = db.Find(&flows, flowIds).Error
+	if nil != err {
+		return nil,0,errors.New(fmt.Sprintf("ListClusterDetails, query flow lists failed, error: %v", err))
+	}
 	for _,v := range flows {
 		clusterMap[v.BizId].Flow = v
 	}
 
-	demands := make([]*DemandRecordDO, len(clusters), len(clusters))
-	err = MetaDB.Find(&demands, demandIds).Error
+	demands := make([]*DemandRecord, len(clusters), len(clusters))
+	err = db.Find(&demands, demandIds).Error
+	if nil != err {
+		return nil,0,errors.New(fmt.Sprintf("ListClusterDetails, query demand lists failed, error: %v", err))
+	}
 	for _,v := range demands {
 		clusterMap[v.ClusterId].DemandRecord = v
 	}
 
-	tiupConfigs := make([]*TiUPConfigDO, len(clusters), len(clusters))
-	err = MetaDB.Find(&tiupConfigs, tiupConfigIds).Error
+	tiupConfigs := make([]*TiUPConfig, len(clusters), len(clusters))
+	err = db.Find(&tiupConfigs, tiupConfigIds).Error
+	if nil != err {
+		return nil,0,errors.New(fmt.Sprintf("ListClusterDetails, query TiUP config lists failed, error: %v", err))
+	}
 	for _,v := range tiupConfigs {
 		clusterMap[v.ClusterId].TiUPConfig = v
 	}
-
-	return
+	return result, total, nil
 }
 
-func ListClusters(clusterId string,
-	clusterName string,
-	clusterType string,
-	clusterStatus string,
-	clusterTag string,
-	offset int, length int) (clusters []*ClusterDO, total int64, err error){
+func (*Cluster) ListClusters(db *gorm.DB, clusterId , clusterName , clusterType,clusterStatus string,
+	clusterTag string, offset int, length int) (clusters []*Cluster, total int64, err error) {
 
-	clusters = make([]*ClusterDO, length, length)
-
-	db := MetaDB.Table("clusters")
-
+	clusters = make([]*Cluster, length, length)
+	query := db.Table(TALBE_NAME_CLUSTER)
 	if clusterId != ""{
-		db = db.Where("id = ?", clusterId)
+		query= query.Where("id = ?", clusterId)
 	}
-
 	if clusterName != ""{
-		db = db.Where("name like '%" + clusterName + "%'")
+		query = query.Where("name like '%" + clusterName + "%'")
 	}
-
 	if clusterType != ""{
-		db = db.Where("type = ?", clusterType)
+		query = query.Where("type = ?", clusterType)
 	}
-
 	if clusterStatus != ""{
-		db = db.Where("status = ?", clusterStatus)
+		query = query.Where("status = ?", clusterStatus)
 	}
-
 	if clusterTag != ""{
-		db = db.Where("tags like '%," + clusterTag + ",%'")
+		query = query.Where("tags like '%," + clusterTag + ",%'")
 	}
-
-	err = db.Count(&total).Offset(offset).Limit(length).Find(&clusters).Error
-
-	return
+	return clusters, total,query.Count(&total).Offset(offset).Limit(length).Find(&clusters).Error
 }
 
-func CreateCluster(
-		ClusterName 			string,
-		DbPassword 				string,
-		ClusterType 			string,
-		ClusterVersion 			string,
-		Tls 					bool,
-		Tags           			string,
-		OwnerId 				string,
-		TenantId    			string,
-	) (cluster *ClusterDO, err error){
-	cluster = &ClusterDO{}
-	cluster.Name = ClusterName
-	cluster.Code = generateEntityCode(ClusterName)
-	cluster.DbPassword = DbPassword
-	cluster.Type = ClusterType
-	cluster.Version = ClusterVersion
-	cluster.Tls = Tls
-	cluster.Tags = Tags
-	cluster.OwnerId = OwnerId
-	cluster.TenantId = TenantId
-
-	err = MetaDB.Create(cluster).Error
-	if err != nil {
-		return
+func (*Cluster) CreateCluster(db *gorm.DB, ClusterName, DbPassword, ClusterType, ClusterVersion string,
+	Tls bool, Tags, OwnerId, tenantId string) (cluster *Cluster, err error){
+	cluster = &Cluster{Entity: Entity{TenantId: tenantId},
+	Name: ClusterName,
+	DbPassword: DbPassword,
+	Type: ClusterType,
+	Version: ClusterVersion,
+	Tls: Tls,
+	Tags: Tags,
+	OwnerId: OwnerId,
 	}
-
-	return
+	cluster.Code =  generateEntityCode(ClusterName)
+	return cluster,db.Create(cluster).Error
 }
 
-type BackupRecordDO struct {
-	Record
-	ClusterId  string		`gorm:"not null;type:varchar(36);default:null"`
-	Range      int8
-	Type       int8
-	OperatorId string		`gorm:"not null;type:varchar(36);default:null"`
-
-	FilePath 		string
-	FlowId			uint
-}
-
-func (d BackupRecordDO) TableName() string {
-	return "backup_records"
-}
-
-type RecoverRecordDO struct {
-	Record
-	ClusterId 		string		`gorm:"not null;type:varchar(36);default:null"`
-
-	OperatorId 		string		`gorm:"not null;type:varchar(36);default:null"`
-	BackupRecordId  uint
-	FlowId			uint
-}
-
-func (d RecoverRecordDO) TableName() string {
-	return "recover_records"
-}
-
-type ParametersRecordDO struct {
-	Record
-	ClusterId 		string		`gorm:"not null;type:varchar(36);default:null"`
-
-	OperatorId 		string		`gorm:"not null;type:varchar(36);default:null"`
-	Content 		string		`gorm:"type:text"`
-	FlowId 			uint
-}
-
-func (d ParametersRecordDO) TableName() string {
-	return "parameters_records"
-}
-
-func SaveParameters(tenantId, clusterId, operatorId string, flowId uint, content string) (do *ParametersRecordDO, err error) {
-	do = &ParametersRecordDO {
+func (*ParametersRecord) SaveParameters(db *gorm.DB,tenantId, clusterId, operatorId string, flowId uint, content string) (do *ParametersRecord, err error) {
+	if nil == db || "" == tenantId || "" == clusterId || "" == operatorId || "" == content {
+		return nil, errors.New(fmt.Sprintf("SaveParameters has invalid parameter, tenantId: %s, clusterId:%s, operatorId: %s, content: %s, flowId: %d",
+			tenantId,clusterId, operatorId, content, flowId))
+	}
+	do = &ParametersRecord {
 		Record: Record{
 			TenantId: tenantId,
 		},
@@ -315,33 +292,30 @@ func SaveParameters(tenantId, clusterId, operatorId string, flowId uint, content
 		Content: content,
 		FlowId: flowId,
 	}
-
-	err = MetaDB.Create(do).Error
-	return
+	return do,db.Create(do).Error
 }
 
-func GetCurrentParameters(clusterId string) (do *ParametersRecordDO, err error) {
-	do = &ParametersRecordDO{}
-	err = MetaDB.Where("cluster_id = ?", clusterId).Last(do).Error
-	return
-}
-
-func DeleteBackupRecord(id uint) (record *BackupRecordDO, err error) {
-	record = &BackupRecordDO{}
-	err = MetaDB.First(record, "id = ?", id).Error
-
-	if err != nil {
-		return
+func (*ParametersRecord)GetCurrentParameters(db *gorm.DB,clusterId string) (do *ParametersRecord, err error) {
+	if nil == db || "" == clusterId {
+		return nil, errors.New(fmt.Sprintf("GetCurrentParameters has invalid parameter,clusterId:%s", clusterId))
 	}
-
-	err = MetaDB.Delete(record).Error
-	return
+	do = &ParametersRecord{}
+	return do,db.Where("cluster_id = ?", clusterId).Last(do).Error
 }
 
-func SaveBackupRecord(tenantId, clusterId, operatorId string,
+func (b *BackupRecord) DeleteBackupRecord(db* gorm.DB,id uint) (record *BackupRecord, err error) {
+	record = &BackupRecord{}
+	err = db.First(record, "id = ?", id).Error
+	if err != nil {
+		err = db.Delete(record).Error
+	}
+	return record, err
+}
+
+func (b* BackupRecord)SaveBackupRecord(db* gorm.DB,tenantId, clusterId, operatorId string,
 	backupRange, backupType int8, flowId uint,
-	filePath string) (do *BackupRecordDO, err error){
-	do = &BackupRecordDO{
+	filePath string) (do *BackupRecord, err error){
+	do = &BackupRecord{
 		Record: Record{
 			TenantId: tenantId,
 		},
@@ -352,62 +326,52 @@ func SaveBackupRecord(tenantId, clusterId, operatorId string,
 		FlowId:     flowId,
 		FilePath:   filePath,
 	}
-
-	err = MetaDB.Create(do).Error
-	return
+	return do,db.Create(do).Error
 }
 
-
-type BackupRecordFetchResult struct {
-	BackupRecordDO *BackupRecordDO
-	Flow *FlowDO
-}
-
-func ListBackupRecords(clusterId string,
+func (*BackupRecord)ListBackupRecords(db *gorm.DB,clusterId string,
 	offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
 
-	records := make([]*BackupRecordDO, length, length)
-	err = MetaDB.Table("backup_records").
+	records := make([]*BackupRecord, length, length)
+	err = db.Table(TABLE_NAME_BACKUP_RECORD).
 		Where("cluster_id = ?", clusterId).
 		Count(&total).Order("id desc").Offset(offset).Limit(length).
 		Find(&records).
 		Error
 
-	if err != nil {return}
-	// query flows
-	flowIds := make([]uint, len(records), len(records))
+	if nil == err {
+		// query flows
+		flowIds := make([]uint, len(records), len(records))
+		dos = make([]*BackupRecordFetchResult, len(records), len(records))
+		for i, r := range records {
+			flowIds[i] = r.FlowId
+			dos[i] = &BackupRecordFetchResult{
+				BackupRecord: r,
+			}
+		}
 
-	dos = make([]*BackupRecordFetchResult, len(records), len(records))
+		flows := make([]*FlowDO, len(records), len(records))
+		err = db.Find(&flows, flowIds).Error
+		if err != nil {
+			return nil, 0,errors.New(fmt.Sprintf("ListBackupRecord, query record failed, clusterId: %s, error: %v", clusterId, err))
+		}
 
-	for i,r := range records {
-		flowIds[i] = r.FlowId
-		dos[i] = &BackupRecordFetchResult{
-			BackupRecordDO: r,
+		flowMap := make(map[uint]*FlowDO)
+		for _, v := range flows {
+			flowMap[v.ID] = v
+		}
+		for i, v := range records {
+			dos[i].BackupRecord = v
+			dos[i].Flow = flowMap[v.FlowId]
 		}
 	}
-
-	flows := make([]*FlowDO, len(records), len(records))
-	err = MetaDB.Find(&flows, flowIds).Error
-	if err != nil {return}
-
-	flowMap := make(map[uint]*FlowDO)
-
-	for _,v := range flows {
-		flowMap[v.ID] = v
-	}
-
-	for i,v := range records {
-		dos[i].BackupRecordDO = v
-		dos[i].Flow = flowMap[v.FlowId]
-	}
-
 	return
 }
 
-func SaveRecoverRecord(tenantId, clusterId, operatorId string,
+func (r* RecoverRecord)SaveRecoverRecord(db *gorm.DB,tenantId, clusterId, operatorId string,
 	backupRecordId uint,
-	flowId uint) (do *RecoverRecordDO, err error) {
-	do = &RecoverRecordDO{
+	flowId uint) (do *RecoverRecord, err error) {
+	do = &RecoverRecord{
 		Record: Record{
 			TenantId: tenantId,
 		},
@@ -416,8 +380,6 @@ func SaveRecoverRecord(tenantId, clusterId, operatorId string,
 		FlowId: flowId,
 		BackupRecordId: backupRecordId,
 	}
-
-	err = MetaDB.Create(do).Error
-	return
+	return do,db.Create(do).Error
 }
 

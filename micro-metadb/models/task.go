@@ -36,7 +36,7 @@ func (do *FlowDO) BeforeCreate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-func CreateFlow(flowName string, statusAlias string, bizId string) (flow *FlowDO, err error) {
+func CreateFlow(db *gorm.DB,flowName string, statusAlias string, bizId string) (flow *FlowDO, err error) {
 	flow = &FlowDO{
 		Name:        flowName,
 		StatusAlias: statusAlias,
@@ -44,11 +44,11 @@ func CreateFlow(flowName string, statusAlias string, bizId string) (flow *FlowDO
 			BizId: bizId,
 		},
 	}
-	err = MetaDB.Create(&flow).Error
+	err = db.Create(&flow).Error
 	return
 }
 
-func CreateTask(parentType int8, parentId string, taskName, bizId string, taskReturnType string, parameters, result string) (task *TaskDO, err error) {
+func CreateTask(db *gorm.DB,parentType int8, parentId string, taskName, bizId string, taskReturnType string, parameters, result string) (task *TaskDO, err error) {
 	task = &TaskDO{
 		ParentType: parentType,
 		ParentId:   parentId,
@@ -61,43 +61,43 @@ func CreateTask(parentType int8, parentId string, taskName, bizId string, taskRe
 			BizId: bizId,
 		},
 	}
-	err = MetaDB.Create(&task).Error
+	err = db.Create(&task).Error
 	return
 }
 
-func FetchFlow(id uint) (flow FlowDO, err error) {
-	err = MetaDB.Find(&flow, id).Error
+func FetchFlow(db *gorm.DB,id uint) (flow FlowDO, err error) {
+	err = db.Find(&flow, id).Error
 	return
 }
 
-func BatchFetchFlows(ids []uint) (flows []*FlowDO, err error) {
-	err = MetaDB.Find(&flows, ids).Error
+func BatchFetchFlows(db *gorm.DB,ids []uint) (flows []*FlowDO, err error) {
+	err = db.Find(&flows, ids).Error
 	return
 }
 
-func FetchFlowDetail(id uint) (flow *FlowDO, tasks []*TaskDO, err error) {
+func FetchFlowDetail(db *gorm.DB,id uint) (flow *FlowDO, tasks []*TaskDO, err error) {
 	flow = &FlowDO{}
-	err = MetaDB.Find(flow, id).Error
+	err = db.Find(flow, id).Error
 
 	if err != nil {
 		return
 	}
-	err = MetaDB.Where("parent_type = 0 and parent_id = ?", id).Find(&tasks).Error
+	err = db.Where("parent_type = 0 and parent_id = ?", id).Find(&tasks).Error
 	return
 }
 
-func FetchTask(id uint) (task TaskDO, err error) {
-	err = MetaDB.Find(&task, id).Error
+func FetchTask(db *gorm.DB,id uint) (task TaskDO, err error) {
+	err = db.Find(&task, id).Error
 	return
 }
 
-func QueryTask(bizId string, taskType string) (tasks []TaskDO, err error) {
-	err = MetaDB.Find(&tasks, "biz_id = ?" ,bizId).Error
+func QueryTask(db *gorm.DB,bizId string, taskType string) (tasks []TaskDO, err error) {
+	err = db.Find(&tasks, "biz_id = ?" ,bizId).Error
 	return
 }
 
-func UpdateFlowStatus(flow FlowDO) (FlowDO, error) {
-	err := MetaDB.Model(&flow).Where("id = ?", flow.ID).Update("status", flow.Status).Error
+func UpdateFlowStatus(db *gorm.DB,flow FlowDO) (FlowDO, error) {
+	err := db.Model(&flow).Where("id = ?", flow.ID).Update("status", flow.Status).Error
 
 	if err != nil {
 		return flow, err
@@ -105,8 +105,8 @@ func UpdateFlowStatus(flow FlowDO) (FlowDO, error) {
 	return flow,nil
 }
 
-func BatchSaveTasks(tasks []*TaskDO) (returnTasks []*TaskDO, err error) {
-	err = MetaDB.Save(tasks).Error
+func BatchSaveTasks(db *gorm.DB,tasks []*TaskDO) (returnTasks []*TaskDO, err error) {
+	err = db.Save(tasks).Error
 	if err != nil {
 		return tasks, err
 	}
@@ -141,6 +141,6 @@ func BatchSaveTasks(tasks []*TaskDO) (returnTasks []*TaskDO, err error) {
 //	return flow, tasks, nil
 //}
 
-func UpdateTask(task TaskDO)  (returnTask TaskDO, err error) {
-	return task, MetaDB.Model(task).Where("id = ?", task.ID).Updates(task).First(&returnTask).Error
+func UpdateTask(db *gorm.DB,task TaskDO)  (returnTask TaskDO, err error) {
+	return task, db.Model(task).Where("id = ?", task.ID).Updates(task).First(&returnTask).Error
 }

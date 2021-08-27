@@ -10,16 +10,19 @@ import (
 var ClusterSuccessResponseStatus =  &dbPb.DBClusterResponseStatus{Code: 0}
 var ClusterNoResultResponseStatus =  &dbPb.DBClusterResponseStatus{Code: 1}
 
-func (*DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DBCreateClusterRequest, resp *dbPb.DBCreateClusterResponse) (err error) {
+func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DBCreateClusterRequest, resp *dbPb.DBCreateClusterResponse) (err error) {
+
+	pt := handler.Dao().Tables()[models.TALBE_NAME_CLUSTER].(*models.Cluster)
+	db := handler.Dao().Db()
 
 	dto := req.Cluster
-	cluster, err := models.CreateCluster(dto.Name, dto.DbPassword, dto.ClusterType, dto.VersionCode, dto.Tls, dto.Tags, dto.OwnerId, dto.TenantId)
+	cluster, err := pt.CreateCluster(db,dto.Name, dto.DbPassword, dto.ClusterType, dto.VersionCode, dto.Tls, dto.Tags, dto.OwnerId, dto.TenantId)
 	if err != nil {
 		// todo
 		return nil
 	}
 
-	do, demand, err := models.UpdateClusterDemand(cluster.ID, req.Cluster.Demands, cluster.TenantId)
+	do, demand, err := pt.UpdateClusterDemand(db,cluster.ID, req.Cluster.Demands, cluster.TenantId)
 	if err != nil {
 		// todo
 		return nil
@@ -31,9 +34,10 @@ func (*DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DBCreateCl
 	return nil
 }
 
-func (*DBServiceHandler) DeleteCluster(ctx context.Context, req *dbPb.DBDeleteClusterRequest, resp *dbPb.DBDeleteClusterResponse)  (err error)  {
-
-	cluster, err := models.DeleteCluster(req.ClusterId)
+func (handler *DBServiceHandler) DeleteCluster(ctx context.Context, req *dbPb.DBDeleteClusterRequest, resp *dbPb.DBDeleteClusterResponse)  (err error)  {
+	pt := handler.Dao().Tables()[models.TALBE_NAME_CLUSTER].(*models.Cluster)
+	db := handler.Dao().Db()
+	cluster, err := pt.DeleteCluster(db,req.ClusterId)
 	if err != nil {
 		// todo
 		return nil
@@ -45,9 +49,11 @@ func (*DBServiceHandler) DeleteCluster(ctx context.Context, req *dbPb.DBDeleteCl
 	return nil
 }
 
-func (*DBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, req *dbPb.DBUpdateTiupConfigRequest, resp *dbPb.DBUpdateTiupConfigResponse)  (err error)  {
+func (handler *DBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, req *dbPb.DBUpdateTiupConfigRequest, resp *dbPb.DBUpdateTiupConfigResponse)  (err error)  {
 
-	do, err := models.UpdateTiUPConfig(req.ClusterId, req.Content, req.TenantId)
+	pt := handler.Dao().Tables()[models.TALBE_NAME_CLUSTER].(*models.Cluster)
+	db := handler.Dao().Db()
+	do, err := pt.UpdateTiUPConfig(db,req.ClusterId, req.Content, req.TenantId)
 	if err != nil {
 		// todo
 		return nil
@@ -58,11 +64,12 @@ func (*DBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, req *dbPb.
 	return nil
 }
 
-func (*DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *dbPb.DBUpdateClusterStatusRequest, resp *dbPb.DBUpdateClusterStatusResponse)  (err error)  {
-
-	var do *models.ClusterDO
+func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *dbPb.DBUpdateClusterStatusRequest, resp *dbPb.DBUpdateClusterStatusResponse)  (err error)  {
+	pt := handler.Dao().Tables()[models.TALBE_NAME_CLUSTER].(*models.Cluster)
+	db := handler.Dao().Db()
+	var do *models.Cluster
 	if req.UpdateStatus {
-		do, err = models.UpdateClusterStatus(req.ClusterId, int8(req.Status))
+		do, err = pt.UpdateClusterStatus(db,req.ClusterId, int8(req.Status))
 		if err != nil {
 			// todo
 			return nil
@@ -70,7 +77,7 @@ func (*DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *dbPb.DBUp
 	}
 
 	if req.UpdateFlow {
-		do, err = models.UpdateClusterFlowId(req.ClusterId, uint(req.FlowId))
+		do, err = pt.UpdateClusterFlowId(db,req.ClusterId, uint(req.FlowId))
 		if err != nil {
 			// todo
 			return nil
@@ -83,9 +90,11 @@ func (*DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *dbPb.DBUp
 	return nil
 }
 
-func (*DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLoadClusterRequest, resp *dbPb.DBLoadClusterResponse)  (err error)  {
+func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLoadClusterRequest, resp *dbPb.DBLoadClusterResponse)  (err error)  {
 
-	result, err := models.FetchCluster(req.ClusterId)
+	pt := handler.Dao().Tables()[models.TALBE_NAME_CLUSTER].(*models.Cluster)
+	db := handler.Dao().Db()
+	result, err := pt.FetchCluster(db,req.ClusterId)
 	if err != nil {
 		// todo
 		return nil
@@ -100,9 +109,10 @@ func (*DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLoadCluste
 	return nil
 }
 
-func (*DBServiceHandler) ListCluster (ctx context.Context, req *dbPb.DBListClusterRequest, resp *dbPb.DBListClusterResponse) (err error)  {
-
-	clusters, total ,err  := models.ListClusterDetails(req.ClusterId, req.ClusterName, req.ClusterType, req.ClusterStatus, req.ClusterTag,
+func (handler *DBServiceHandler) ListCluster (ctx context.Context, req *dbPb.DBListClusterRequest, resp *dbPb.DBListClusterResponse) (err error)  {
+	pt := handler.Dao().Tables()[models.TALBE_NAME_CLUSTER].(*models.Cluster)
+	db := handler.Dao().Db()
+	clusters, total ,err  := pt.ListClusterDetails(db,req.ClusterId, req.ClusterName, req.ClusterType, req.ClusterStatus, req.ClusterTag,
 		int((req.PageReq.Page - 1) * req.PageReq.PageSize), int(req.PageReq.PageSize))
 
 	if err != nil {
@@ -131,10 +141,11 @@ func (*DBServiceHandler) ListCluster (ctx context.Context, req *dbPb.DBListClust
 	return nil
 }
 
-func (*DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveBackupRecordRequest, resp *dbPb.DBSaveBackupRecordResponse) (err error) {
-
+func (handler *DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveBackupRecordRequest, resp *dbPb.DBSaveBackupRecordResponse) (err error) {
+	pt := handler.Dao().Tables()[models.TABLE_NAME_BACKUP_RECORD].(*models.BackupRecord)
+	db := handler.Dao().Db()
 	dto := req.BackupRecord
-	result, err := models.SaveBackupRecord(dto.TenantId, dto.ClusterId, dto.OperatorId, int8(dto.BackupRange), int8(dto.BackupType), uint(dto.FlowId), dto.FilePath)
+	result, err := pt.SaveBackupRecord(db,dto.TenantId, dto.ClusterId, dto.OperatorId, int8(dto.BackupRange), int8(dto.BackupType), uint(dto.FlowId), dto.FilePath)
 
 	if err != nil {
 		// todo
@@ -146,9 +157,11 @@ func (*DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveB
 	return nil
 }
 
-func (*DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *dbPb.DBDeleteBackupRecordRequest, resp *dbPb.DBDeleteBackupRecordResponse) (err error) {
+func (handler *DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *dbPb.DBDeleteBackupRecordRequest, resp *dbPb.DBDeleteBackupRecordResponse) (err error) {
 
-	result, err := models.DeleteBackupRecord(uint(req.Id))
+	pt := handler.Dao().Tables()[models.TABLE_NAME_BACKUP_RECORD].(*models.BackupRecord)
+	db := handler.Dao().Db()
+	result, err := pt.DeleteBackupRecord(db,uint(req.Id))
 	if err != nil {
 		// todo
 		return nil
@@ -159,9 +172,10 @@ func (*DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *dbPb.DBDel
 	return nil
 }
 
-func (*DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbPb.DBListBackupRecordsRequest, resp *dbPb.DBListBackupRecordsResponse) (err error) {
-
-	backupRecords, total ,err  := models.ListBackupRecords(req.ClusterId,
+func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbPb.DBListBackupRecordsRequest, resp *dbPb.DBListBackupRecordsResponse) (err error) {
+	pt := handler.Dao().Tables()[models.TABLE_NAME_BACKUP_RECORD].(*models.BackupRecord)
+	db := handler.Dao().Db()
+	backupRecords, total ,err  := pt.ListBackupRecords(db,req.ClusterId,
 		int((req.Page.Page - 1) * req.Page.PageSize), int(req.Page.PageSize))
 
 	if err != nil {
@@ -178,17 +192,18 @@ func (*DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbPb.DBList
 	backupRecordDTOs :=  make([]*dbPb.DBDBBackupRecordDisplayDTO, len(backupRecords), len(backupRecords))
 
 	for i, v := range backupRecords {
-		backupRecordDTOs[i] = ConvertToBackupRecordDisplayDTO(v.BackupRecordDO, v.Flow)
+		backupRecordDTOs[i] = ConvertToBackupRecordDisplayDTO(v.BackupRecord, v.Flow)
 	}
 
 	resp.BackupRecords = backupRecordDTOs
-	return nil
-}
+	return nil }
 
-func (*DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbPb.DBSaveRecoverRecordRequest, resp *dbPb.DBSaveRecoverRecordResponse)  (err error) {
+func (handler *DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbPb.DBSaveRecoverRecordRequest, resp *dbPb.DBSaveRecoverRecordResponse)  (err error) {
 
+	pt := handler.Dao().Tables()[models.TABLE_NAME_RECOVER_RECORD].(*models.RecoverRecord)
+	db := handler.Dao().Db()
 	dto := req.RecoverRecord
-	result, err := models.SaveRecoverRecord(dto.TenantId, dto.ClusterId, dto.OperatorId, uint(dto.BackupRecordId), uint(dto.FlowId))
+	result, err := pt.SaveRecoverRecord(db,dto.TenantId, dto.ClusterId, dto.OperatorId, uint(dto.BackupRecordId), uint(dto.FlowId))
 
 	if err != nil {
 		// todo
@@ -200,10 +215,12 @@ func (*DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbPb.DBSave
 	return nil
 }
 
-func (*DBServiceHandler) SaveParametersRecord(ctx context.Context, req *dbPb.DBSaveParametersRequest, resp *dbPb.DBSaveParametersResponse)  (err error) {
+func (handler *DBServiceHandler) SaveParametersRecord(ctx context.Context, req *dbPb.DBSaveParametersRequest, resp *dbPb.DBSaveParametersResponse)  (err error) {
 
+	pt := handler.Dao().Tables()[models.TABLE_NAME_PARAMETERS_RECORD].(*models.ParametersRecord)
+	db := handler.Dao().Db()
 	dto := req.Parameters
-	result, err := models.SaveParameters(dto.TenantId, dto.ClusterId, dto.OperatorId, uint(dto.FlowId), dto.Content)
+	result, err := pt.SaveParameters(db,dto.TenantId, dto.ClusterId, dto.OperatorId, uint(dto.FlowId), dto.Content)
 
 	if err != nil {
 		// todo
@@ -215,9 +232,11 @@ func (*DBServiceHandler) SaveParametersRecord(ctx context.Context, req *dbPb.DBS
 	return nil
 }
 
-func (*DBServiceHandler) GetCurrentParametersRecord(ctx context.Context, req *dbPb.DBGetCurrentParametersRequest, resp *dbPb.DBGetCurrentParametersResponse) (err error) {
+func (handler *DBServiceHandler) GetCurrentParametersRecord(ctx context.Context, req *dbPb.DBGetCurrentParametersRequest, resp *dbPb.DBGetCurrentParametersResponse) (err error) {
 
-	result, err := models.GetCurrentParameters(req.GetClusterId())
+	pt := handler.Dao().Tables()[models.TABLE_NAME_PARAMETERS_RECORD].(*models.ParametersRecord)
+	db := handler.Dao().Db()
+	result, err := pt.GetCurrentParameters(db,req.GetClusterId())
 
 	if err != nil {
 		resp.Status = ClusterNoResultResponseStatus
@@ -229,7 +248,7 @@ func (*DBServiceHandler) GetCurrentParametersRecord(ctx context.Context, req *db
 	return nil
 }
 
-func ConvertToBackupRecordDTO(do *models.BackupRecordDO) (dto *dbPb.DBBackupRecordDTO) {
+func ConvertToBackupRecordDTO(do *models.BackupRecord) (dto *dbPb.DBBackupRecordDTO) {
 	if do == nil {
 		return nil
 	}
@@ -247,7 +266,7 @@ func ConvertToBackupRecordDTO(do *models.BackupRecordDO) (dto *dbPb.DBBackupReco
 	return
 }
 
-func ConvertToBackupRecordDisplayDTO(do *models.BackupRecordDO, flow *models.FlowDO) (dto *dbPb.DBDBBackupRecordDisplayDTO){
+func ConvertToBackupRecordDisplayDTO(do *models.BackupRecord, flow *models.FlowDO) (dto *dbPb.DBDBBackupRecordDisplayDTO){
 	if do == nil {
 		return nil
 	}
@@ -260,7 +279,7 @@ func ConvertToBackupRecordDisplayDTO(do *models.BackupRecordDO, flow *models.Flo
 	return
 }
 
-func ConvertToRecoverRecordDTO(do *models.RecoverRecordDO) (dto *dbPb.DBRecoverRecordDTO) {
+func ConvertToRecoverRecordDTO(do *models.RecoverRecord) (dto *dbPb.DBRecoverRecordDTO) {
 	if do == nil {
 		return nil
 	}
@@ -276,7 +295,7 @@ func ConvertToRecoverRecordDTO(do *models.RecoverRecordDO) (dto *dbPb.DBRecoverR
 	return
 }
 
-func ConvertToParameterRecordDTO(do *models.ParametersRecordDO) (dto *dbPb.DBParameterRecordDTO) {
+func ConvertToParameterRecordDTO(do *models.ParametersRecord) (dto *dbPb.DBParameterRecordDTO) {
 	if do == nil {
 		return nil
 	}
@@ -292,7 +311,7 @@ func ConvertToParameterRecordDTO(do *models.ParametersRecordDO) (dto *dbPb.DBPar
 	return
 }
 
-func convertToClusterDTO(do *models.ClusterDO, demand *models.DemandRecordDO) (dto *dbPb.DBClusterDTO) {
+func convertToClusterDTO(do *models.Cluster, demand *models.DemandRecord) (dto *dbPb.DBClusterDTO) {
 	if do == nil {
 		return nil
 	}
@@ -320,7 +339,7 @@ func convertToClusterDTO(do *models.ClusterDO, demand *models.DemandRecordDO) (d
 	return
 }
 
-func convertToConfigDTO(do *models.TiUPConfigDO) (dto *dbPb.DBTiUPConfigDTO) {
+func convertToConfigDTO(do *models.TiUPConfig) (dto *dbPb.DBTiUPConfigDTO) {
 	if do == nil {
 		return nil
 	}

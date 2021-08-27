@@ -1,8 +1,13 @@
 package models
 
 import (
+	"os"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type TestEntity struct {
@@ -25,7 +30,47 @@ type TestData struct {
 	name string
 }
 
-func TestTime(t *testing.T)  {
+var MetaDB *gorm.DB
+
+func TestMain(m *testing.M) {
+	testFile := uuid.New().String() + ".db"
+	MetaDB, _ = gorm.Open(sqlite.Open(testFile), &gorm.Config{})
+
+	defer func() {
+		os.Remove(testFile)
+	}()
+
+	err := MetaDB.Migrator().CreateTable(
+		&Account{},
+		&RoleBinding{},
+		&Role{},
+		&PermissionBinding{},
+		&Permission{},
+		&TestEntity{},
+		&TestEntity2{},
+		&TestRecord{},
+		&TestData{},
+		&DemandRecord{},
+		&Host{},
+		&Disk{},
+		&Cluster{},
+		&TiUPConfig{},
+		&Tenant{},
+		&FlowDO{},
+		&TaskDO{},
+		&Token{},
+		&BackupRecord{},
+		&RecoverRecord{},
+		&ParametersRecord{},
+	)
+	if err == nil {
+		m.Run()
+	} else {
+		getLogger().Error(err)
+	}
+}
+
+func TestTime(t *testing.T) {
 	t.Run("test time", func(t *testing.T) {
 		now := time.Now()
 		do := &TestEntity{
@@ -61,7 +106,7 @@ func TestEntityCode(t *testing.T) {
 		err := MetaDB.Create(&TestEntity{
 			Entity{
 				TenantId: "111",
-				Code: "repeated_code",
+				Code:     "repeated_code",
 			},
 			"start",
 		}).Error
@@ -73,7 +118,7 @@ func TestEntityCode(t *testing.T) {
 		err = MetaDB.Create(&TestEntity2{
 			Entity{
 				TenantId: "111",
-				Code: "repeated_code",
+				Code:     "repeated_code",
 			},
 			"start",
 		}).Error
@@ -85,8 +130,7 @@ func TestEntityCode(t *testing.T) {
 		err = MetaDB.Create(&TestEntity2{
 			Entity{
 				TenantId: "111",
-				Code: "repeated_code",
-
+				Code:     "repeated_code",
 			},
 			"start",
 		}).Error
@@ -98,7 +142,7 @@ func TestEntityCode(t *testing.T) {
 	})
 	t.Run("too long", func(t *testing.T) {
 		code := ""
-		for i := 0; i < 128; i++  {
+		for i := 0; i < 128; i++ {
 			code = code + "1"
 		}
 		err := MetaDB.Create(&TestEntity{
@@ -307,7 +351,7 @@ func TestData_BeforeCreate(t *testing.T) {
 	t.Run("test id", func(t *testing.T) {
 		do := &TestData{
 			Data{
-				BizId : "111",
+				BizId: "111",
 			},
 			"start",
 		}

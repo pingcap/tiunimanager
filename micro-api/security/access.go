@@ -13,7 +13,7 @@ import (
 
 var timeFormat = ""
 
-func AccessLog(notLogged ...string) gin.HandlerFunc {
+func AccessLog() gin.HandlerFunc {
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "unknown"

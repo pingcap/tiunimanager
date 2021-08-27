@@ -29,7 +29,7 @@ func Route(g *gin.Engine) {
 	// web
 	web := g.Group("/web")
 	{
-		web.Use(framework.GenGinLogger(), gin.Recovery())
+		web.Use(security.AccessLog(), gin.Recovery())
 		// 替换成静态文件
 		web.GET("/*any", controller.HelloPage)
 	}
@@ -37,7 +37,7 @@ func Route(g *gin.Engine) {
 	// api
 	apiV1 := g.Group("/api/v1")
 	{
-		apiV1.Use(framework.GenGinLogger(), gin.Recovery())
+		apiV1.Use(security.AccessLog(), gin.Recovery())
 		apiV1.Use(framework.GinOpenTracing())
 
 		user := apiV1.Group("/user")

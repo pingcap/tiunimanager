@@ -7,10 +7,4 @@ micro-metadb/tiem.sqlite.db
 /tiem.sqlite.db
 /micro-cluster/brmgr/brmgr
 /bin
-<<<<<<< HEAD
-/micro-api/micro-api
-/micro-cluster/micro-cluster
-/micro-metadb/micro-metadb
-=======
 /logs/
->>>>>>> sprint/20210830/sprint2

@@ -84,7 +84,7 @@ func Route(g *gin.Engine) {
 			database.Use(security.VerifyIdentity)
 			database.POST("/import", databaseapi.ImportData)
 			database.POST("/export", databaseapi.ExportData)
-			database.GET("/describeDataTransport", databaseapi.DescribeDataTransport)
+			database.GET("/query", databaseapi.DescribeDataTransport)
 		}
 
 		host := apiV1.Group("/resources")

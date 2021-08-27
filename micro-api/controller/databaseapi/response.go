@@ -23,7 +23,5 @@ type DataTransportInfo struct {
 }
 
 type DataTransportRecordQueryResp struct {
-	Page 				int32 					`json:"page"`
-	PageSize			int32 					`json:"pageSize"`
 	TransportRecords	[]*DataTransportInfo 	`json:"transportRecords"`
 }

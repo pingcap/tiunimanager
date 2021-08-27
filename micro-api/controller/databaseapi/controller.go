@@ -9,8 +9,21 @@ import (
 	"time"
 )
 
+// ExportData
+// @Summary export data from tidb cluster
+// @Description export
+// @Tags cluster export
+// @Accept json
+// @Produce json
+// @Param Token header string true "token"
+// @Param dataExport body dataExport true "cluster info for data export"
+// @Success 200 {object} controller.CommonResult{data=DataExportResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /databases/export [post]
 func ExportData(c *gin.Context) {
-	var req DataExport
+	var req DataExportReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		_ = c.Error(err)
@@ -41,8 +54,21 @@ func ExportData(c *gin.Context) {
 	}
 }
 
+// ImportData
+// @Summary import data to tidb cluster
+// @Description import
+// @Tags cluster import
+// @Accept json
+// @Produce json
+// @Param Token header string true "token"
+// @Param dataImport body dataImport true "cluster info for import data"
+// @Success 200 {object} controller.CommonResult{data=DataImportResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /databases/import [post]
 func ImportData(c *gin.Context) {
-	var req DataImport
+	var req DataImportReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		_ = c.Error(err)
@@ -72,8 +98,22 @@ func ImportData(c *gin.Context) {
 	}
 }
 
+
+// DescribeDataTransport
+// @Summary query records of import and export
+// @Description query records of import and export
+// @Tags cluster data transport
+// @Accept json
+// @Produce json
+// @Param Token header string true "token"
+// @Param DataTransportQueryReq body DataTransportQueryReq true "cluster info for query records"
+// @Success 200 {object} controller.CommonResult{data=[]DataTransportRecordQueryResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /databases/query [get]
 func DescribeDataTransport(c *gin.Context) {
-	var req DataTransportQuery
+	var req DataTransportQueryReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		_ = c.Error(err)
@@ -85,10 +125,7 @@ func DescribeDataTransport(c *gin.Context) {
 		Operator: operator.ConvertToDTO(),
 		ClusterId: req.ClusterId,
 		RecordId: req.RecordId,
-		PageReq: &cluster.PageDTO{
-			Page: req.Page,
-			PageSize: req.PageSize,
-		},
+		PageReq: req.PageRequest.ConvertToDTO(),
 	})
 
 	if err != nil {
@@ -96,8 +133,6 @@ func DescribeDataTransport(c *gin.Context) {
 	}else {
 		status := respDTO.GetRespStatus()
 		data := &DataTransportRecordQueryResp{
-			Page: req.Page,
-			PageSize: req.PageSize,
 			TransportRecords: make([]*DataTransportInfo, len(respDTO.GetTransportInfos())),
 		}
 		for index := 0; index < len(data.TransportRecords); index++ {
@@ -113,7 +148,7 @@ func DescribeDataTransport(c *gin.Context) {
 
 		}
 
-		result := controller.BuildCommonResult(int(status.Code), status.Message, data)
+		result := controller.BuildResultWithPage(int(status.Code), status.Message, controller.ParsePageFromDTO(respDTO.PageReq), data)
 
 		c.JSON(http.StatusOK, result)
 	}

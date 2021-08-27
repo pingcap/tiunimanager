@@ -1,6 +1,8 @@
 package databaseapi
 
-type DataExport struct {
+import "github.com/pingcap-inc/tiem/micro-api/controller"
+
+type DataExportReq struct {
 	ClusterId     string     `json:"clusterId"`
 	UserName      string     `json:"userName"`
 	Password      string     `json:"password"`
@@ -8,18 +10,17 @@ type DataExport struct {
 	Filter 		  string 	 `json:"filter"`
 }
 
-type DataImport struct {
+type DataImportReq struct {
 	ClusterId     string     `json:"clusterId"`
 	UserName      string     `json:"userName"`
 	Password      string     `json:"password"`
 	FilePath      string     `json:"filePath"`
 }
 
-type DataTransportQuery struct {
+type DataTransportQueryReq struct {
+	controller.PageRequest
 	ClusterId	string		`json:"clusterId"`
 	RecordId	string		`json:"recordId"`
-	Page		int32		`json:"page"`
-	PageSize 	int32		`json:"pageSize"`
 }
 
 

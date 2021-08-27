@@ -7,14 +7,14 @@ import (
 	"fmt"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
+	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
+	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
+	"github.com/asim/go-micro/v3"
 	"github.com/asim/go-micro/v3/registry"
+	"github.com/asim/go-micro/v3/transport"
 	"github.com/pingcap/tiem/library/firstparty/config"
 	"github.com/pingcap/tiem/library/thirdparty/logger"
 	"github.com/pingcap/tiem/library/thirdparty/tracer"
-
-	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
-	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
-	"github.com/asim/go-micro/v3/transport"
 	"github.com/pingcap/tiem/micro-metadb/models"
 	db "github.com/pingcap/tiem/micro-metadb/proto"
 	"github.com/pingcap/tiem/micro-metadb/service"

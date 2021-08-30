@@ -527,46 +527,40 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 	initTestLog()
 	fake_str := "alloc hosts succeed"
 	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockPreAllocHosts(func(ctx context.Context, in *db.DBPreAllocHostsRequest, opts ...client.CallOption) (*db.DBPreAllocHostsResponse, error) {
-		rsp := new(db.DBPreAllocHostsResponse)
+	fakeDBClient.MockAllocHosts(func(ctx context.Context, in *db.DBAllocHostsRequest, opts ...client.CallOption) (*db.DBAllocHostsResponse, error) {
+		rsp := new(db.DBAllocHostsResponse)
 		rsp.Rs = new(db.DBHostResponseStatus)
-		if in.Req.FailureDomain == "Zone1" && in.Req.Count == 2 {
-			rsp.Rs.Code = int32(codes.OK)
-			rsp.Rs.Message = "prealloc succeed"
-			rsp.Results = append(rsp.Results, &db.DBPreAllocation{
-				FailureDomain: in.Req.FailureDomain,
-				HostName:      "TEST_HOST1",
-				DiskName:      "sdb",
-			})
-			rsp.Results = append(rsp.Results, &db.DBPreAllocation{
-				FailureDomain: in.Req.FailureDomain,
-				HostName:      "TEST_HOST2",
-				DiskName:      "sdb",
-			})
-			return rsp, nil
-		} else if in.Req.FailureDomain == "Zone2" && in.Req.Count == 1 {
-			rsp.Rs.Code = int32(codes.OK)
-			rsp.Rs.Message = "prealloc succeed"
-			rsp.Results = append(rsp.Results, &db.DBPreAllocation{
-				FailureDomain: in.Req.FailureDomain,
-				HostName:      "TEST_HOST3",
-				DiskName:      "sdb",
-			})
-			return rsp, nil
-		} else {
-			return nil, status.Errorf(codes.Internal, "BAD REQUEST in PreAlloc, zone: %s, count %d", in.Req.FailureDomain, in.Req.Count)
-		}
-	})
-	fakeDBClient.MockLockHosts(func(ctx context.Context, in *db.DBLockHostsRequest, opts ...client.CallOption) (*db.DBLockHostsResponse, error) {
-		rsp := new(db.DBLockHostsResponse)
-		rsp.Rs = new(db.DBHostResponseStatus)
-		if len(in.Req) == 3 {
+		if in.PdReq[0].FailureDomain == "Zone1" && in.TidbReq[0].Count == 1 && in.TikvReq[0].FailureDomain == "Zone2" {
 			rsp.Rs.Code = int32(codes.OK)
 			rsp.Rs.Message = fake_str
+			rsp.PdHosts = append(rsp.PdHosts, &db.DBAllocHostDTO{
+				HostName: "TEST_HOST1",
+				Ip:       "192.168.56.83",
+			})
+			rsp.PdHosts[0].Disk = &db.DBDiskDTO{
+				Name: "sdb",
+				Path: "/mnt/pd",
+			}
+			rsp.TidbHosts = append(rsp.TidbHosts, &db.DBAllocHostDTO{
+				HostName: "TEST_HOST2",
+				Ip:       "192.168.56.84",
+			})
+			rsp.TidbHosts[0].Disk = &db.DBDiskDTO{
+				Name: "sde",
+				Path: "/mnt/tidb",
+			}
+			rsp.TikvHosts = append(rsp.TikvHosts, &db.DBAllocHostDTO{
+				HostName: "TEST_HOST3",
+				Ip:       "192.168.56.85",
+			})
+			rsp.TikvHosts[0].Disk = &db.DBDiskDTO{
+				Name: "sdf",
+				Path: "/mnt/tikv",
+			}
+			return rsp, nil
 		} else {
-			return nil, status.Errorf(codes.Internal, "BAD REQUEST in LockHosts, total %d", len(in.Req))
+			return nil, status.Errorf(codes.Internal, "BAD REQUEST in Alloc Hosts, pd zone %s, tidb count %d, tikv zone %s", in.PdReq[0].FailureDomain, in.TidbReq[0].Count, in.TikvReq[0].FailureDomain)
 		}
-		return rsp, nil
 	})
 
 	in := new(hostPb.AllocHostsRequest)
@@ -594,7 +588,9 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 		t.Errorf("alloc hosts failed, err: %v\n", err)
 	}
 
-	if out.Rs.Code != int32(codes.OK) || out.Rs.Message != fake_str || out.PdHosts[0].HostName != "TEST_HOST1" || out.TidbHosts[0].HostName != "TEST_HOST2" || out.TikvHosts[0].HostName != "TEST_HOST3" {
+	if out.Rs.Code != int32(codes.OK) || out.Rs.Message != fake_str ||
+		out.PdHosts[0].HostName != "TEST_HOST1" || out.TidbHosts[0].HostName != "TEST_HOST2" || out.TikvHosts[0].HostName != "TEST_HOST3" ||
+		out.PdHosts[0].Disk.Name != "sdb" || out.TidbHosts[0].Disk.Path != "/mnt/tidb" || out.TikvHosts[0].Disk.Name != "sdf" {
 		t.Errorf("Rsp not Expected, code: %d, msg: %s, out.PdHosts[0].HostName = %s, out.TidbHosts[0].HostName = %s, out.TikvHosts[0].HostName = %s\n",
 			out.Rs.Code, out.Rs.Message, out.PdHosts[0].HostName, out.TidbHosts[0].HostName, out.TikvHosts[0].HostName)
 	}

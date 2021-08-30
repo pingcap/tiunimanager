@@ -2,7 +2,6 @@ package host
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pingcap-inc/tiem/library/firstparty/config"
 	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
@@ -223,6 +222,7 @@ func CheckDetails(ctx context.Context, in *hostPb.CheckDetailsRequest, out *host
 	return nil
 }
 
+/*
 func getHostSpec(cpuCores int32, mem int32) string {
 	return fmt.Sprintf("%dC%dG", cpuCores, mem)
 }
@@ -345,6 +345,70 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 	out.PdHosts = fetchResults(zonesRsps, in.PdReq)
 	out.TidbHosts = fetchResults(zonesRsps, in.TidbReq)
 	out.TikvHosts = fetchResults(zonesRsps, in.TikvReq)
+	return nil
+}
+*/
+
+func makeAllocReq(src []*hostPb.AllocationReq) (dst []*dbPb.DBAllocationReq) {
+	for _, req := range src {
+		dst = append(dst, &dbPb.DBAllocationReq{
+			FailureDomain: req.FailureDomain,
+			CpuCores:      req.CpuCores,
+			Memory:        req.Memory,
+			Count:         req.Count,
+			Purpose:       req.Purpose,
+		})
+	}
+	return dst
+}
+
+func buildDiskFromDB(disk *dbPb.DBDiskDTO) *hostPb.Disk {
+	var hd hostPb.Disk
+	hd.DiskId = disk.DiskId
+	hd.Name = disk.Name
+	hd.Path = disk.Path
+	hd.Capacity = disk.Capacity
+	hd.Status = disk.Status
+
+	return &hd
+}
+
+func getAllocRsp(src []*dbPb.DBAllocHostDTO) (dst []*hostPb.AllocHost) {
+	for _, rsp := range src {
+		dst = append(dst, &hostPb.AllocHost{
+			HostName: rsp.HostName,
+			Ip:       rsp.Ip,
+			UserName: rsp.UserName,
+			Passwd:   rsp.Passwd,
+			Disk:     buildDiskFromDB(rsp.Disk),
+		})
+	}
+	return dst
+}
+
+func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.AllocHostResponse) error {
+	req := new(dbPb.DBAllocHostsRequest)
+	req.PdReq = makeAllocReq(in.PdReq)
+	req.TidbReq = makeAllocReq(in.TidbReq)
+	req.TikvReq = makeAllocReq(in.TikvReq)
+
+	rsp, err := client.DBClient.AllocHosts(ctx, req)
+	if err != nil {
+		log.Errorf("alloc hosts error, %v", err)
+		return err
+	}
+	out.Rs = new(hostPb.ResponseStatus)
+	out.Rs.Code = rsp.Rs.Code
+	out.Rs.Message = rsp.Rs.Message
+
+	if rsp.Rs.Code != int32(codes.OK) {
+		log.Warnf("alloc hosts from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		return nil
+	}
+
+	out.PdHosts = getAllocRsp(rsp.PdHosts)
+	out.TidbHosts = getAllocRsp(rsp.TidbHosts)
+	out.TikvHosts = getAllocRsp(rsp.TikvHosts)
 	return nil
 }
 

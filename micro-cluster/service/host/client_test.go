@@ -22,8 +22,7 @@ type DBFakeService struct {
 	mockRemoveHostsInBatch func(ctx context.Context, in *db.DBRemoveHostsInBatchRequest, opts ...client.CallOption) (*db.DBRemoveHostsInBatchResponse, error)
 	mockListHost           func(ctx context.Context, in *db.DBListHostsRequest, opts ...client.CallOption) (*db.DBListHostsResponse, error)
 	mockCheckDetails       func(ctx context.Context, in *db.DBCheckDetailsRequest, opts ...client.CallOption) (*db.DBCheckDetailsResponse, error)
-	mockPreAllocHosts      func(ctx context.Context, in *db.DBPreAllocHostsRequest, opts ...client.CallOption) (*db.DBPreAllocHostsResponse, error)
-	mockLockHosts          func(ctx context.Context, in *db.DBLockHostsRequest, opts ...client.CallOption) (*db.DBLockHostsResponse, error)
+	mockAllocHosts         func(ctx context.Context, in *db.DBAllocHostsRequest, opts ...client.CallOption) (*db.DBAllocHostsResponse, error)
 	mockGetFailureDomain   func(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error)
 	// Cluster
 	mockCreateCluster           func(ctx context.Context, in *db.DBCreateClusterRequest, opts ...client.CallOption) (*db.DBCreateClusterResponse, error)
@@ -89,11 +88,8 @@ func (s *DBFakeService) ListHost(ctx context.Context, in *db.DBListHostsRequest,
 func (s *DBFakeService) CheckDetails(ctx context.Context, in *db.DBCheckDetailsRequest, opts ...client.CallOption) (*db.DBCheckDetailsResponse, error) {
 	return s.mockCheckDetails(ctx, in, opts...)
 }
-func (s *DBFakeService) PreAllocHosts(ctx context.Context, in *db.DBPreAllocHostsRequest, opts ...client.CallOption) (*db.DBPreAllocHostsResponse, error) {
-	return s.mockPreAllocHosts(ctx, in, opts...)
-}
-func (s *DBFakeService) LockHosts(ctx context.Context, in *db.DBLockHostsRequest, opts ...client.CallOption) (*db.DBLockHostsResponse, error) {
-	return s.mockLockHosts(ctx, in, opts...)
+func (s *DBFakeService) AllocHosts(ctx context.Context, in *db.DBAllocHostsRequest, opts ...client.CallOption) (*db.DBAllocHostsResponse, error) {
+	return s.mockAllocHosts(ctx, in, opts...)
 }
 func (s *DBFakeService) GetFailureDomain(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error) {
 	return s.mockGetFailureDomain(ctx, in, opts...)
@@ -209,10 +205,7 @@ func InitMockDBClient() *DBFakeService {
 		mockCheckDetails: func(ctx context.Context, in *db.DBCheckDetailsRequest, opts ...client.CallOption) (*db.DBCheckDetailsResponse, error) {
 			return nil, nil
 		},
-		mockPreAllocHosts: func(ctx context.Context, in *db.DBPreAllocHostsRequest, opts ...client.CallOption) (*db.DBPreAllocHostsResponse, error) {
-			return nil, nil
-		},
-		mockLockHosts: func(ctx context.Context, in *db.DBLockHostsRequest, opts ...client.CallOption) (*db.DBLockHostsResponse, error) {
+		mockAllocHosts: func(ctx context.Context, in *db.DBAllocHostsRequest, opts ...client.CallOption) (*db.DBAllocHostsResponse, error) {
 			return nil, nil
 		},
 		mockGetFailureDomain: func(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error) {
@@ -315,12 +308,8 @@ func (s *DBFakeService) MockCheckDetails(mock func(ctx context.Context, in *db.D
 	s.mockCheckDetails = mock
 }
 
-func (s *DBFakeService) MockPreAllocHosts(mock func(ctx context.Context, in *db.DBPreAllocHostsRequest, opts ...client.CallOption) (*db.DBPreAllocHostsResponse, error)) {
-	s.mockPreAllocHosts = mock
-}
-
-func (s *DBFakeService) MockLockHosts(mock func(ctx context.Context, in *db.DBLockHostsRequest, opts ...client.CallOption) (*db.DBLockHostsResponse, error)) {
-	s.mockLockHosts = mock
+func (s *DBFakeService) MockAllocHosts(mock func(ctx context.Context, in *db.DBAllocHostsRequest, opts ...client.CallOption) (*db.DBAllocHostsResponse, error)) {
+	s.mockAllocHosts = mock
 }
 
 func (s *DBFakeService) MockGetFailureDomain(mock func(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error)) {

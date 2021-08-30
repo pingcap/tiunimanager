@@ -2,13 +2,12 @@ package service
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"time"
 
 	"github.com/pingcap/errors"
 
 	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	proto "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
@@ -18,10 +17,10 @@ func (handler *DBServiceHandler) FindTenant(cxt context.Context, req *proto.DBFi
 	if nil == req || nil == resp {
 		return errors.Errorf("FindTenant has invalid parameter")
 	}
-	log := handler.Log()
-	log.Debug("FindTenant by name : %s", req.GetName())
-	pt := handler.Dao().Tables()[models.TABLE_NAME_TENANT].(*models.Tenant)
-	tenant, err := pt.FindTenantByName(handler.Dao().Db(),req.GetName())
+	log := framework.GetLogger()
+	log.Debugf("FindTenant by name : %s", req.GetName())
+	accountManager := handler.Dao().AccountManager()
+	tenant, err := accountManager.FindTenantByName(req.GetName())
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
@@ -43,10 +42,9 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *proto.DBF
 	if nil == req || nil == resp {
 		return errors.Errorf("FindAccount has invalid parameter")
 	}
-	log := handler.Log()
-	accountTbl := handler.Dao().Tables()[models.TABLE_NAME_ACCOUNT].(*models.Account)
-	framework.Assert(nil != accountTbl)
-	account, err := accountTbl.Find(handler.Dao().Db(),req.GetName())
+	log := framework.GetLogger()
+	accountManager := handler.Dao().AccountManager()
+	account, err := accountManager.Find(req.GetName())
 	if err == nil {
 		resp.Status = SuccessResponseStatus
 		resp.Account = &proto.DBAccountDTO{
@@ -61,11 +59,10 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *proto.DBF
 		resp.Status.Message = err.Error()
 		return errors.Errorf("FindAccount,query database failed, name: %s, error: %v", req.GetName(), err)
 	}
-	log.Debug("find account by name %s, error: %v", req.GetName(), err)
+	log.Debugf("find account by name %s, error: %v", req.GetName(), err)
 
 	if req.WithRole {
-		roleTable := handler.Dao().Tables()[models.TABLE_NAME_ROLE].(*models.Role)
-		roles, err := roleTable.FetchAllRolesByAccount(handler.Dao().Db(), account.TenantId, account.ID)
+		roles, err := accountManager.FetchAllRolesByAccount(account.TenantId, account.ID)
 
 		if err == nil {
 			roleDTOs := make([]*proto.DBRoleDTO, len(roles), cap(roles))
@@ -81,12 +78,12 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *proto.DBF
 		} else {
 			resp.Status.Code = common.TIEM_ACCOUNT_NOT_FOUND
 			resp.Status.Message = err.Error()
-			return errors.Errorf("FindAccount,query database failed, name: %s, tenantId: %s, error: %v", req.GetName(), account.TenantId,err)
+			return errors.Errorf("FindAccount,query database failed, name: %s, tenantId: %s, error: %v", req.GetName(), account.TenantId, err)
 		}
 
-		log.Debug("find account by name %s, tenantId : %s, error: %v", req.GetName(), account.TenantId,err)
+		log.Debugf("find account by name %s, tenantId : %s, error: %v", req.GetName(), account.TenantId, err)
 	}
-	log.Debug("find account by name %s, error: %v", req.GetName(), err)
+	log.Debugf("find account by name %s, error: %v", req.GetName(), err)
 	return err
 }
 
@@ -94,24 +91,22 @@ func (handler *DBServiceHandler) SaveToken(cxt context.Context, req *proto.DBSav
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveToken has invalid parameter, req: %v, resp: %v", req, resp)
 	}
-	log := handler.Log()
-	db := handler.Dao().Db()
-	tokenTbl := handler.Dao().Tables()[models.TABLE_NAME_TOKEN].(*models.Token)
-	framework.Assert(nil != tokenTbl)
-	_, err := tokenTbl.AddToken(db,req.Token.TokenString, req.Token.AccountName, req.Token.AccountId, req.Token.TenantId, time.Unix(req.Token.ExpirationTime, 0))
+	log := framework.GetLogger()
+	accountManager := handler.Dao().AccountManager()
+	_, err := accountManager.AddToken(req.Token.TokenString, req.Token.AccountName, req.Token.AccountId, req.Token.TenantId, time.Unix(req.Token.ExpirationTime, 0))
 
-	log.Debug("AddToKen,write database failed, token: %s, tenantId: %s, accountName: %s, accountId: %s,error: %v",
-		req.GetToken(), req.Token.TenantId, req.Token.AccountName,req.Token.AccountId,err)
+	log.Debugf("AddToKen,write database failed, token: %s, tenantId: %s, accountName: %s, accountId: %s,error: %v",
+		req.GetToken(), req.Token.TenantId, req.Token.AccountName, req.Token.AccountId, err)
 	if err == nil {
 		resp.Status = SuccessResponseStatus
 	} else {
 		resp.Status.Code = common.TIEM_ADD_TOKEN_FAILED
 		resp.Status.Message = err.Error()
 		return errors.Errorf("AddToKen,write database failed, token: %s, tenantId: %s, accountName: %s, accountId: %s,error: %v",
-			req.GetToken(), req.Token.TenantId, req.Token.AccountName,req.Token.AccountId,err)
+			req.GetToken(), req.Token.TenantId, req.Token.AccountName, req.Token.AccountId, err)
 	}
-	log.Debug("AddToKen,write database failed, token: %s, tenantId: %s, accountName: %s, accountId: %s,error: %v",
-		req.GetToken(), req.Token.TenantId, req.Token.AccountName,req.Token.AccountId,err)
+	log.Debugf("AddToKen,write database failed, token: %s, tenantId: %s, accountName: %s, accountId: %s,error: %v",
+		req.GetToken(), req.Token.TenantId, req.Token.AccountName, req.Token.AccountId, err)
 	return err
 }
 
@@ -119,11 +114,9 @@ func (handler *DBServiceHandler) FindToken(cxt context.Context, req *proto.DBFin
 	if nil == req || nil == resp {
 		return errors.Errorf("FindToken has invalid parameter, req: %v, resp: %v", req, resp)
 	}
-	log := handler.Log()
-	db := handler.Dao().Db()
-	tokenTbl := handler.Dao().Tables()[models.TABLE_NAME_TOKEN].(*models.Token)
-	framework.Assert(nil != tokenTbl)
-	token, err := tokenTbl.FindToken(db,req.GetTokenString())
+	log := framework.GetLogger()
+	accountManager := handler.Dao().AccountManager()
+	token, err := accountManager.FindToken(req.GetTokenString())
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
@@ -139,7 +132,7 @@ func (handler *DBServiceHandler) FindToken(cxt context.Context, req *proto.DBFin
 		resp.Status.Message = err.Error()
 		err = errors.Errorf("FindToKen,query database failed, token: %s, error: %v", req.GetTokenString(), err)
 	}
-	log.Debug("FindToKen, token: %s, error: %v", req.GetTokenString(), err)
+	log.Debugf("FindToKen, token: %s, error: %v", req.GetTokenString(), err)
 	return err
 }
 
@@ -147,10 +140,8 @@ func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req 
 	if nil == req || nil == resp {
 		return errors.Errorf("FindRolesByPermission has invalid parameter req: %v, resp: %v", req, resp)
 	}
-	db := handler.Dao().Db()
-	permissionTbl := handler.Dao().Tables()[models.TABLE_NAME_PERMISSION].(*models.Permission)
-	roleTbl := handler.Dao().Tables()[models.TABLE_NAME_ROLE].(*models.Role)
-	permissionDO, err := permissionTbl.FetchPermission(db, req.TenantId, req.Code)
+	accountManager := handler.Dao().AccountManager()
+	permissionDO, err := accountManager.FetchPermission(req.TenantId, req.Code)
 
 	if nil == err {
 		resp.Permission = &proto.DBPermissionDTO{
@@ -167,7 +158,7 @@ func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req 
 		return errors.Errorf("FindRolesByPermission query database failed, tenantId: %s, code: %s, error: %v", req.TenantId, req.Code, err)
 	}
 
-	roles, err := roleTbl.FetchAllRolesByPermission(db,req.TenantId, permissionDO.ID)
+	roles, err := accountManager.FetchAllRolesByPermission(req.TenantId, permissionDO.ID)
 	if nil == err {
 		roleDTOs := make([]*proto.DBRoleDTO, len(roles), cap(roles))
 		for index, role := range roles {

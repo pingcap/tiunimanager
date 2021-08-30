@@ -4,7 +4,6 @@ import (
 	"github.com/asim/go-micro/v3"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	dbService "github.com/pingcap-inc/tiem/micro-metadb/service"
 )
@@ -17,18 +16,8 @@ func main() {
 	log := framework.GetLogger()
 
 	f.PrepareService(func(service micro.Service) error {
-		dao := new (models.DAOManager)
-		dao.SetFramework(f)
-		err := dao.InitDB()
-		if nil != err {
-			return err
-		}
-
-		handler := new (dbService.DBServiceHandler)
-		handler.SetDao(dao)
-		handler.SetLog(log)
-
-		return dbPb.RegisterTiEMDBServiceHandler(service.Server(), handler) })
+		return dbPb.RegisterTiEMDBServiceHandler(service.Server(), dbService.NewDBServiceHandler(f.GetDataDir(), f))
+	})
 
 	err := f.StartService()
 	if nil != err {

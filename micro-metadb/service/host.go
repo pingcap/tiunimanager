@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"strings"
 
 	"github.com/pingcap-inc/tiem/library/knowledge"
@@ -62,10 +63,11 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
 
 func (handler *DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest, rsp *dbPb.DBAddHostResponse) error {
 	db := handler.Dao().Db()
+	login := framework.GetLogger()
 	var host models.Host
 	copyHostInfoFromReq(req.Host, &host)
 
-	hostId, err := models.CreateHost(db,&host)
+	hostId, err := models.CreateHost(db, &host)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		st, ok := status.FromError(err)
@@ -76,7 +78,7 @@ func (handler *DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHos
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("failed to import host(%s) %s, %v", host.HostName, host.IP, err)
 		}
-		handler.Log().Warnln(rsp.Rs.Message)
+		login.Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -88,13 +90,14 @@ func (handler *DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHos
 
 func (handler *DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbPb.DBAddHostsInBatchRequest, rsp *dbPb.DBAddHostsInBatchResponse) error {
 	db := handler.Dao().Db()
+	login := framework.GetLogger()
 	var hosts []*models.Host
 	for _, v := range req.Hosts {
 		var host models.Host
 		copyHostInfoFromReq(v, &host)
 		hosts = append(hosts, &host)
 	}
-	hostIds, err := models.CreateHostsInBatch(db,hosts)
+	hostIds, err := models.CreateHostsInBatch(db, hosts)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		st, ok := status.FromError(err)
@@ -105,7 +108,7 @@ func (handler *DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbPb.
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("failed to import hosts, %v", err)
 		}
-		handler.Log().Warnln(rsp.Rs.Message)
+		login.Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -117,8 +120,9 @@ func (handler *DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbPb.
 
 func (handler *DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRemoveHostRequest, rsp *dbPb.DBRemoveHostResponse) error {
 	db := handler.Dao().Db()
+	login := framework.GetLogger()
 	hostId := req.HostId
-	err := models.DeleteHost(db,hostId)
+	err := models.DeleteHost(db, hostId)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		st, ok := status.FromError(err)
@@ -129,7 +133,7 @@ func (handler *DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRem
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("failed to delete host(%s), %v", hostId, err)
 		}
-		handler.Log().Warnln(rsp.Rs.Message)
+		login.Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -140,7 +144,8 @@ func (handler *DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRem
 
 func (handler *DBServiceHandler) RemoveHostsInBatch(ctx context.Context, req *dbPb.DBRemoveHostsInBatchRequest, rsp *dbPb.DBRemoveHostsInBatchResponse) error {
 	db := handler.Dao().Db()
-	err := models.DeleteHostsInBatch(db,req.HostIds)
+	login := framework.GetLogger()
+	err := models.DeleteHostsInBatch(db, req.HostIds)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		st, ok := status.FromError(err)
@@ -151,7 +156,7 @@ func (handler *DBServiceHandler) RemoveHostsInBatch(ctx context.Context, req *db
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("failed to delete host in batch, %v", err)
 		}
-		handler.Log().Warnln(rsp.Rs.Message)
+		login.Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -189,6 +194,7 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 
 func (handler *DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListHostsRequest, rsp *dbPb.DBListHostsResponse) error {
 	db := handler.Dao().Db()
+	login := framework.GetLogger()
 	var hostReq models.ListHostReq
 	hostReq.Purpose = req.Purpose
 	hostReq.Status = models.HostStatus(req.Status)
@@ -198,7 +204,7 @@ func (handler *DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListH
 	} else {
 		hostReq.Offset = 0
 	}
-	hosts, err := models.ListHosts(db,hostReq)
+	hosts, err := models.ListHosts(db, hostReq)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		st, ok := status.FromError(err)
@@ -209,7 +215,7 @@ func (handler *DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListH
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("failed to list hosts, %v", err)
 		}
-		handler.Log().Warnln(rsp.Rs.Message)
+		login.Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -228,7 +234,8 @@ func (handler *DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListH
 }
 func (handler *DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDetailsRequest, rsp *dbPb.DBCheckDetailsResponse) error {
 	db := handler.Dao().Db()
-	host, err := models.FindHostById(db,req.HostId)
+	login := framework.GetLogger()
+	host, err := models.FindHostById(db, req.HostId)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		st, ok := status.FromError(err)
@@ -239,7 +246,7 @@ func (handler *DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBC
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("failed to list hosts %s, %v", req.HostId, err)
 		}
-		handler.Log().Warnln(rsp.Rs.Message)
+		login.Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -253,8 +260,9 @@ func (handler *DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBC
 
 func (handler *DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DBPreAllocHostsRequest, rsp *dbPb.DBPreAllocHostsResponse) error {
 	db := handler.Dao().Db()
-	handler.Log().Infof("db service receive alloc host in %s for %d x (%du%dg)", req.Req.FailureDomain, req.Req.Count, req.Req.CpuCores, req.Req.Memory)
-	resources, err := models.PreAllocHosts(db,req.Req.FailureDomain, int(req.Req.Count), int(req.Req.CpuCores), int(req.Req.Memory))
+	login := framework.GetLogger()
+	login.Infof("db service receive alloc host in %s for %d x (%du%dg)", req.Req.FailureDomain, req.Req.Count, req.Req.CpuCores, req.Req.Memory)
+	resources, err := models.PreAllocHosts(db, req.Req.FailureDomain, int(req.Req.Count), int(req.Req.CpuCores), int(req.Req.Memory))
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		st, ok := status.FromError(err)
@@ -266,7 +274,7 @@ func (handler *DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DB
 			rsp.Rs.Message = fmt.Sprintf("db service receive alloc host in %s for %d x (%du%dg) error, %v",
 				req.Req.FailureDomain, req.Req.Count, req.Req.CpuCores, req.Req.Memory, err)
 		}
-		handler.Log().Warnln(rsp.Rs.Message)
+		login.Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -274,7 +282,7 @@ func (handler *DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DB
 
 	if len(resources) < int(req.Req.Count) {
 		errMsg := fmt.Sprintf("no enough host resources(%d/%d) in %s", len(resources), req.Req.Count, req.Req.FailureDomain)
-		handler.Log().Errorln(errMsg)
+		login.Errorln(errMsg)
 		rsp.Rs.Code = int32(codes.ResourceExhausted)
 		rsp.Rs.Message = errMsg
 		return nil
@@ -302,6 +310,7 @@ func (handler *DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DB
 
 func (handler *DBServiceHandler) LockHosts(ctx context.Context, req *dbPb.DBLockHostsRequest, rsp *dbPb.DBLockHostsResponse) error {
 	db := handler.Dao().Db()
+	login := framework.GetLogger()
 	var resources []models.ResourceLock
 	for _, v := range req.Req {
 		resources = append(resources, models.ResourceLock{
@@ -314,7 +323,7 @@ func (handler *DBServiceHandler) LockHosts(ctx context.Context, req *dbPb.DBLock
 		})
 	}
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
-	err := models.LockHosts(db,resources)
+	err := models.LockHosts(db, resources)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok {
@@ -324,7 +333,7 @@ func (handler *DBServiceHandler) LockHosts(ctx context.Context, req *dbPb.DBLock
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("lock hosts failed, err: %v", err)
 		}
-		handler.Log().Warnln(rsp.Rs.Message)
+		login.Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
@@ -348,6 +357,7 @@ func getFailureDomainByType(fd FailureDomain) (domain string, err error) {
 
 func (handler *DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb.DBGetFailureDomainRequest, rsp *dbPb.DBGetFailureDomainResponse) error {
 
+	login := framework.GetLogger()
 	domainType := req.FailureDomainType
 	domain, err := getFailureDomainByType(FailureDomain(domainType))
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
@@ -360,14 +370,14 @@ func (handler *DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("get failure domain resources failed, err: %v", err)
 		}
-		handler.Log().Warnln(rsp.Rs.Message)
+		login.Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil
 	}
 
 	db := handler.Dao().Db()
-	resources, err := models.GetFailureDomain(db,domain)
+	resources, err := models.GetFailureDomain(db, domain)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok {
@@ -377,7 +387,7 @@ func (handler *DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb
 			rsp.Rs.Code = int32(codes.Internal)
 			rsp.Rs.Message = fmt.Sprintf("get failure domain resources failed, err: %v", err)
 		}
-		handler.Log().Warnln(rsp.Rs.Message)
+		login.Warnln(rsp.Rs.Message)
 
 		// return nil to use rsp
 		return nil

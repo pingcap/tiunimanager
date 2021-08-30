@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	TALBE_NAME_CLUSTER            = "clusters"
+	TABLE_NAME_CLUSTER            = "clusters"
 	TABLE_NAME_DEMAND_RECORD      = "demand_records"
 	TABLE_NAME_ACCOUNT            = "accounts"
 	TABLE_NAME_TENANT             = "tenants"

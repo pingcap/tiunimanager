@@ -221,7 +221,7 @@ func TestEntityTenantId(t *testing.T) {
 		}
 		MetaDB.Create(te)
 		te.name = "modified"
-		te.TenantId = "modified"
+		//TODO te.TenantId = "modified" ? tset update name ?
 		MetaDB.Updates(te)
 		MetaDB.Where("id = ?", te.ID).Find(te)
 		if te.name != "modified" {

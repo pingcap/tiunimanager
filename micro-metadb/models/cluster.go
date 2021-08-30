@@ -74,6 +74,12 @@ type DAOClusterManager struct {
 	db *gorm.DB
 }
 
+func NewDAOClusterManager(d *gorm.DB) *DAOClusterManager {
+	m := new(DAOClusterManager)
+	m.SetDb(d)
+	return m
+}
+
 func (m *DAOClusterManager) SetDb(db *gorm.DB) {
 	m.db = db
 }
@@ -255,7 +261,7 @@ func (m *DAOClusterManager) ListClusters(clusterId, clusterName, clusterType, cl
 	clusterTag string, offset int, length int) (clusters []*Cluster, total int64, err error) {
 
 	clusters = make([]*Cluster, length, length)
-	query := m.Db().Table(TALBE_NAME_CLUSTER)
+	query := m.Db().Table(TABLE_NAME_CLUSTER)
 	if clusterId != "" {
 		query = query.Where("id = ?", clusterId)
 	}

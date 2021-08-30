@@ -5,9 +5,16 @@ import (
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
 )
 
-type DBServiceHandler struct{
+type DBServiceHandler struct {
 	dao *models.DAOManager
-	log *framework.LogRecord
+}
+
+func NewDBServiceHandler(dataDir string, fw *framework.BaseFramework) *DBServiceHandler {
+	handler := new(DBServiceHandler)
+	dao := new(models.DAOManager)
+	dao.InitDB(dataDir)
+	handler.SetDao(dao)
+	return handler
 }
 
 func (handler *DBServiceHandler) Dao() *models.DAOManager {
@@ -16,12 +23,4 @@ func (handler *DBServiceHandler) Dao() *models.DAOManager {
 
 func (handler *DBServiceHandler) SetDao(dao *models.DAOManager) {
 	handler.dao = dao
-}
-
-func (handler *DBServiceHandler) Log() *framework.LogRecord {
-	return handler.log
-}
-
-func (handler *DBServiceHandler) SetLog(lr *framework.LogRecord) {
-	handler.log = lr
 }

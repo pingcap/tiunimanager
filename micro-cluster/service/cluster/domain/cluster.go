@@ -18,7 +18,7 @@ type Cluster struct {
 	ClusterVersion 		knowledge.ClusterVersion
 	Tags           		[]string
 	Tls            		bool
-
+	RecoverInfo			RecoverInfo
 	Status 				ClusterStatus
 
 	Demands 			[]*ClusterComponentDemand
@@ -62,6 +62,11 @@ type TiUPConfigRecord struct {
 	ClusterId 			string
 	ConfigModel 		*spec.Specification
 	CreateTime 			time.Time
+}
+
+type RecoverInfo struct {
+	SourceClusterId		string
+	BackupRecordId 		int64
 }
 
 func (r TiUPConfigRecord) Content() string {

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
-	"github.com/pingcap-inc/tiem/library/thirdparty/logger"
+	"github.com/pingcap-inc/tiem/library/framework"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -286,7 +286,7 @@ func LockHosts(resources []ResourceLock) (err error) {
 		if _, ok := setUpdate[v.HostId]; !ok {
 			if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host).Error; err != nil {
 				tx.Rollback()
-				logger.GetLogger(config.KEY_METADB_LOG).Errorf("set for update host %s failed", v.HostId)
+				framework.GetLogger().Errorf("set for update host %s failed", v.HostId)
 				return err
 			}
 			setUpdate[v.HostId] = &HostLocked{
@@ -404,7 +404,7 @@ func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, c
 }
 
 func AllocHosts(requests AllocReqs) (resources AllocRsps, err error) {
-	log := logger.GetLogger(config.KEY_METADB_LOG)
+	log := framework.GetLogger()
 	resources = make(AllocRsps)
 	tx := MetaDB.Begin()
 	for component, reqs := range requests {

@@ -51,7 +51,7 @@ func (t *TaskEntity) Success(result interface{}) {
 	if result != nil {
 		r,err := json.Marshal(result)
 		if err != nil {
-			log.Error(err)
+			getLogger().Error(err)
 		} else {
 			t.Result = string(r)
 		}
@@ -144,13 +144,13 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 			// todo check bizId
 			//status, s, err := Operator.CheckProgress(uint64(f.CurrentTask.id))
 			//			if err != nil {
-			//				log.Error(err)
+			//				getLogger().Error(err)
 			//				continue
 			//			}
 			//
 			//			switch status {
 			//			case dbPb.TiupTaskStatus_Init:
-			//				log.Info(s)
+			//			getLogger().Info(s)
 			fmt.Println(bizId)
 			flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
 			break

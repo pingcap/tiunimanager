@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -1084,7 +1083,6 @@ func TestPreAllocHosts(t *testing.T) {
 */
 
 func TestAllocHosts_3Hosts(t *testing.T) {
-	config.InitConfigForDev(config.MicroClusterMod)
 	h := &Host{
 		HostName: "主机1",
 		IP:       "474.111.111.111",
@@ -1213,7 +1211,6 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 }
 
 func TestAllocHosts_1Host(t *testing.T) {
-	config.InitConfigForDev(config.MicroClusterMod)
 	h := &Host{
 		HostName: "主机1",
 		IP:       "192.168.56.99",
@@ -1298,7 +1295,6 @@ func TestAllocHosts_1Host(t *testing.T) {
 }
 
 func TestAllocHosts_1Host_NotEnough(t *testing.T) {
-	config.InitConfigForDev(config.MicroClusterMod)
 	h := &Host{
 		HostName: "主机2",
 		IP:       "192.168.56.100",

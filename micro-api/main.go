@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-
+	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
 	_ "github.com/pingcap-inc/tiem/docs"
-	"github.com/pingcap-inc/tiem/library/firstparty/client"
-	"github.com/pingcap-inc/tiem/library/firstparty/config"
-	"github.com/pingcap-inc/tiem/library/firstparty/framework"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/route"
-	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // @title TiEM UI API
@@ -25,34 +25,44 @@ import (
 // @host localhost:4116
 // @BasePath /api/v1/
 func main() {
-	framework.NewDefaultFramework(framework.ClusterService,
-		initClient,
-		initGinEngine,
+	f := framework.InitBaseFrameworkFromArgs(framework.ApiService,
+		defaultPortForLocal,
 	)
+
+	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
+		framework.ClusterService: func(service micro.Service) error {
+			client.ClusterClient = clusterPb.NewClusterService(string(framework.ClusterService), service.Client())
+			return nil
+		},
+	})
+
+	f.PrepareService(func(service micro.Service) error {
+		return initGinEngine(f)
+	})
 
 	//f.StartService()
 }
 
-func initGinEngine(d *framework.DefaultServiceFramework) error {
+func initGinEngine(d *framework.BaseFramework) error {
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.New()
 
 	route.Route(g)
 
-	port := config.GetClientArgs().RestPort
-	if port <= 0 {
-		port = config.DefaultRestPort
-	}
+	port := d.GetServiceMeta().ServicePort
+
 	addr := fmt.Sprintf(":%d", port)
+
 	if err := g.Run(addr); err != nil {
-		d.GetDefaultLogger().Fatal(err)
+		d.GetLogger().Fatal(err)
 	}
 
 	return nil
 }
 
-func initClient(d *framework.DefaultServiceFramework) error {
-	srv := framework.ClusterService.BuildMicroService(d.GetRegistryAddress()...)
-	client.ClusterClient = cluster.NewClusterService(framework.ClusterService.ToString(), srv.Client())
+func defaultPortForLocal(f *framework.BaseFramework) error {
+	if f.GetServiceMeta().ServicePort <= 0 {
+		f.GetServiceMeta().ServicePort = common.DefaultMicroApiPort
+	}
 	return nil
 }

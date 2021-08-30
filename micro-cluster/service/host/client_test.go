@@ -3,8 +3,8 @@ package host
 import (
 	"context"
 
-	"github.com/asim/go-micro/v3/client"
-	dbclient "github.com/pingcap-inc/tiem/library/firstparty/client"
+	client "github.com/asim/go-micro/v3/client"
+	libClient "github.com/pingcap-inc/tiem/library/client"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
@@ -133,6 +133,31 @@ func (s *DBFakeService) SaveParametersRecord(ctx context.Context, in *db.DBSaveP
 }
 func (s *DBFakeService) GetCurrentParametersRecord(ctx context.Context, in *db.DBGetCurrentParametersRequest, opts ...client.CallOption) (*db.DBGetCurrentParametersResponse, error) {
 	return s.mockGetCurrentParametersRecord(ctx, in, opts...)
+}
+
+func (s *DBFakeService) CreateTransportRecord(ctx context.Context, in *db.DBCreateTransportRecordRequest, opts ...client.CallOption) (*db.DBCreateTransportRecordResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) UpdateTransportRecord(ctx context.Context, in *db.DBUpdateTransportRecordRequest, opts ...client.CallOption) (*db.DBUpdateTransportRecordResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) FindTrasnportRecordByID(ctx context.Context, in *db.DBFindTransportRecordByIDRequest, opts ...client.CallOption) (*db.DBFindTransportRecordByIDResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) ListTrasnportRecord(ctx context.Context, in *db.DBListTransportRecordRequest, opts ...client.CallOption) (*db.DBListTransportRecordResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) QueryBackupRecords(ctx context.Context, in *db.DBQueryBackupRecordRequest, opts ...client.CallOption) (*db.DBQueryBackupRecordResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) QueryBackupStrategy(ctx context.Context, in *db.DBQueryBackupStrategyRequest, opts ...client.CallOption) (*db.DBQueryBackupStrategyResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) SaveBackupStrategy(ctx context.Context, in *db.DBSaveBackupStrategyRequest, opts ...client.CallOption) (*db.DBSaveBackupStrategyResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) UpdateBackupRecord(ctx context.Context, in *db.DBUpdateBackupRecordRequest, opts ...client.CallOption) (*db.DBUpdateBackupRecordResponse, error) {
+	panic("implement me")
 }
 
 // Mock Tiup Task
@@ -279,7 +304,7 @@ func InitMockDBClient() *DBFakeService {
 		},
 	}
 
-	dbclient.DBClient = fakeDBClient
+	libClient.DBClient = fakeDBClient
 
 	return fakeDBClient
 }

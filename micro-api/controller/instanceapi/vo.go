@@ -17,18 +17,14 @@ type ParamInstance struct {
 }
 
 type BackupRecord struct {
-	ID 				int64	`json:"id"`
-	ClusterId 		string	`json:"clusterId"`
+	ID 				int64		`json:"id"`
+	ClusterId 		string		`json:"clusterId"`
 	StartTime 		time.Time	`json:"startTime"`
 	EndTime 		time.Time	`json:"endTime"`
-	Range 			int	`json:"range"`
-	Way 			int	`json:"way"`
+	BackupRange 	string		`json:"backupRange"`
+	BackupType		string		`json:"backupType"`
 	Operator 		controller.Operator	`json:"operator"`
-	Size 			float32	`json:"size"`
+	Size 			uint64		`json:"size"`
 	Status 			controller.StatusInfo	`json:"status"`
-	FilePath 		string	`json:"filePath"`
-}
-
-type BackupStrategy struct {
-	CronString 			string	`json:"cronString"`
+	FilePath 		string		`json:"filePath"`
 }

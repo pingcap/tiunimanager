@@ -153,12 +153,14 @@ message DBBackupRecordDTO {
     int64 id = 1;
     string tenantId = 2;
     string clusterId = 3;
-    int64 createTime = 4;
-    int32 backupRange = 5;
-    int32 backupType = 6;
-    string operatorId = 7;
-    string filePath = 8;
-    int64 flowId = 9;
+    int64 startTime = 4;
+    int64 endTime = 5;
+    string backupRange = 6;
+    string backupType = 7;
+    string operatorId = 8;
+    string filePath = 9;
+    int64 flowId = 10;
+    uint64 size = 11;
 }
 
 message DBSaveBackupRecordRequest {
@@ -168,6 +170,14 @@ message DBSaveBackupRecordRequest {
 message DBSaveBackupRecordResponse {
     DBClusterResponseStatus status = 1;
     DBBackupRecordDTO backupRecord = 2;
+}
+
+message DBUpdateBackupRecordRequest {
+    DBBackupRecordDTO backupRecord = 1;
+}
+
+message DBUpdateBackupRecordResponse {
+    DBClusterResponseStatus status = 1;
 }
 
 message DBDeleteBackupRecordRequest {
@@ -195,6 +205,16 @@ message DBListBackupRecordsResponse {
     DBPageDTO page = 3;
 }
 
+message DBQueryBackupRecordRequest {
+    string clusterId = 1;
+    int64 recordId = 2;
+}
+
+message DBQueryBackupRecordResponse {
+    DBClusterResponseStatus status = 1;
+    DBDBBackupRecordDisplayDTO backupRecords = 2;
+}
+
 message DBRecoverRecordDTO {
     int64 id = 1;
     string tenantId = 2;
@@ -212,4 +232,35 @@ message DBSaveRecoverRecordRequest {
 message DBSaveRecoverRecordResponse {
     DBClusterResponseStatus status = 1;
     DBRecoverRecordDTO recoverRecord = 2;
+}
+
+message DBBackupStrategyDTO {
+    int64 id = 1;
+    string tenantId = 2;
+    string clusterId = 3;
+    string backupDate = 4;
+    string filePath = 5;
+    string backupRange = 6;
+    string backupType = 7;
+    string period = 8;
+    int64 createTime = 9;
+    int64 updateTime = 10;
+}
+
+message DBSaveBackupStrategyRequest {
+    DBBackupStrategyDTO strategy = 1;
+}
+
+message DBSaveBackupStrategyResponse {
+    DBClusterResponseStatus status = 1;
+    DBBackupStrategyDTO strategy = 2;
+}
+
+message DBQueryBackupStrategyRequest {
+    string clusterId = 1;
+}
+
+message DBQueryBackupStrategyResponse {
+    DBClusterResponseStatus status = 1;
+    DBBackupStrategyDTO strategy = 2;
 }

@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap/errors"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	"github.com/pingcap/errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -70,14 +70,14 @@ func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, err
 }
 
 func getDashboardUrl(clusterId string) (string, error) {
-	log.Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterId)
+	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterId)
 	//tiup cluster display CLUSTER_NAME --dashboard
-	resp, err := libtiup.MicroSrvTiupClusterDisplay(clusterId, 0, []string{"--dashboard"})
-	if err != nil {
-		log.Errorf("call tiupmgr cluster display failed, %s", err.Error())
-		return "", err
+	resp := libtiup.MicroSrvTiupClusterDisplay(clusterId, 0, []string{"--dashboard"})
+	if resp.Error != nil {
+		getLogger().Errorf("call tiupmgr cluster display failed, %s", resp.Error.Error())
+		return "", resp.Error
 	}
-	log.Infof("call tiupmgr success, resp: %v", resp)
+	getLogger().Infof("call tiupmgr success, resp: %v", resp)
 	//DisplayRespString: "Dashboard URL: http://127.0.0.1:2379/dashboard/\n"
 	result := strings.Split(strings.Replace(resp.DisplayRespString, "\n", "", -1), " ")
 	return result[2], nil
@@ -103,7 +103,7 @@ func getLoginToken(dashboardUrl, userName, password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Infof("getLoginToken resp: %v", loginResp)
+	getLogger().Infof("getLoginToken resp: %v", loginResp)
 
 	return loginResp.Token, nil
 }
@@ -130,7 +130,7 @@ func generateShareCode(dashboardUrl, token string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	log.Infof("generateShareCode resp: %v", shareResp)
+	getLogger().Infof("generateShareCode resp: %v", shareResp)
 
 	return shareResp.Code, nil
 }
@@ -159,6 +159,6 @@ func post(url string, body interface{}, headers map[string]string) (*http.Respon
 	}
 	//http client
 	client := &http.Client{}
-	log.Infof("%s URL : %s \n", http.MethodPost, req.URL.String())
+	getLogger().Infof("%s URL : %s \n", http.MethodPost, req.URL.String())
 	return client.Do(req)
 }

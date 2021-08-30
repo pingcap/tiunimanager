@@ -3,9 +3,14 @@ package models
 import (
 	"errors"
 	"github.com/mozillazg/go-pinyin"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"gorm.io/gorm"
 	"time"
 )
+
+func getLogger() *framework.LogRecord {
+	return framework.GetLogger()
+}
 
 type Entity struct {
 	ID        	string 				`gorm:"primaryKey;"`

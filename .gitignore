@@ -12,3 +12,5 @@ micro-metadb/tiem.sqlite.db
 /bin/metadb-server
 /bin/openapi-server
 /bin/tiupcmd
+/micro-metadb/models/logs/
+/micro-metadb/models/tmp/

@@ -13,6 +13,8 @@ func NewDBServiceHandler(dataDir string, fw *framework.BaseFramework) *DBService
 	handler := new(DBServiceHandler)
 	dao := new(models.DAOManager)
 	dao.InitDB(dataDir)
+	dao.InitTables()
+	dao.InitData()
 	handler.SetDao(dao)
 	return handler
 }

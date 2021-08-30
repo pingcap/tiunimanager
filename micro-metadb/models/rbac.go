@@ -100,8 +100,8 @@ func (m *DAOAccountManager) FetchRole(tenantId string, name string) (result *Rol
 
 func (m *DAOAccountManager) AddPermission(tenantId, code, name, desc string, permissionType, status int8) (result *Permission, err error) {
 	//TODO please add permissionType and status check
-	if "" == tenantId || "" == name || "" == code || "" == desc {
-		return nil, errors.New(fmt.Sprintf("add permission failed, has invalid parameter, tenantID: %s, code: %s name: %s, desc: %s, permission type: %d, status: %d", tenantId, code, name, desc, permissionType, status))
+	if "" == tenantId || "" == name || "" == code {
+		return nil, errors.New(fmt.Sprintf("add permission failed, has invalid parameter, tenantID: %s, code: %s name: %s, permission type: %d, status: %d", tenantId, code, name, permissionType, status))
 	}
 	result = &Permission{
 		Entity: Entity{TenantId: tenantId, Status: status, Code: code},
@@ -129,6 +129,10 @@ func (m *DAOAccountManager) FetchAllRolesByAccount(tenantId string, accountId st
 	err = m.Db().Where("tenant_id = ? and account_id = ? and status = 0", tenantId, accountId).Limit(1024).Find(&roleBinds).Error
 	if nil != err {
 		return nil, errors.New(fmt.Sprintf("FetchAllRolesByAccount, query database failed, tenantID: %s, accountID: %s", tenantId, accountId))
+	}
+
+	if len(roleBinds) == 0 {
+		return result, nil
 	}
 
 	var roleIds []string

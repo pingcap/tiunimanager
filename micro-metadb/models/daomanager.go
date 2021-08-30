@@ -4,13 +4,13 @@ import (
 	cryrand "crypto/rand"
 	"encoding/base64"
 	"fmt"
+	common2 "github.com/pingcap-inc/tiem/library/common"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	"github.com/pingcap/errors"
 
-	common2 "github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 )
 
@@ -68,23 +68,6 @@ func (dao *DAOManager) InitDB(dataDir string) error {
 	dao.SetAccountManager(NewDAOAccountManager(dao.Db()))
 	dao.SetClusterManager(NewDAOClusterManager(dao.Db()))
 
-	err = dao.initTables()
-	if nil != err {
-		logins.Errorf("initialize TiEM system tables failed, error: %v", err)
-		return err
-	}
-
-	err = dao.initSystemDefaultData()
-	if nil != err {
-		logins.Errorf("initialize TiEM system data failed, error: %v", err)
-	}
-
-	logins.Infof(" initialization system default data successful")
-
-	err = dao.initResourceDataForDev()
-	if nil != err {
-		logins.Errorf("initialize TiEM system test resource failed, error: %v", err)
-	}
 	dao.SetClusterManager(new(DAOClusterManager))
 	dao.ClusterManager().SetDb(dao.Db())
 	dao.SetAccountManager(new(DAOAccountManager))
@@ -92,50 +75,69 @@ func (dao *DAOManager) InitDB(dataDir string) error {
 	return err
 }
 
-func (dao *DAOManager) initTables() error {
+func (dao *DAOManager) InitTables() error {
 	log := framework.GetLogger()
 
 	log.Info("start create TiEM system tables.")
 
 	dao.tables = make(map[string]interface{})
-	dao.tables[TABLE_NAME_CLUSTER] = new(Cluster)
-	dao.tables[TABLE_NAME_DEMAND_RECORD] = new(DemandRecord)
-	dao.tables[TABLE_NAME_ACCOUNT] = new(Account)
-	dao.tables[TABLE_NAME_TENANT] = new(Tenant)
-	dao.tables[TABLE_NAME_ROLE] = new(Role)
-	dao.tables[TABLE_NAME_ROLE_BINDING] = new(RoleBinding)
-	dao.tables[TABLE_NAME_PERMISSION] = new(Permission)
-	dao.tables[TABLE_NAME_PERMISSION_BINDING] = new(PermissionBinding)
-	dao.tables[TABLE_NAME_TOKEN] = new(Token)
-	dao.tables[TABLE_NAME_TASK] = new(TaskDO)
-	dao.tables[TABLE_NAME_HOST] = new(Host)
-	dao.tables[TABLE_NAME_DISK] = new(Disk)
-	dao.tables[TABLE_NAME_TIUP_CONFIG] = new(TiUPConfig)
-	dao.tables[TABLE_NAME_TIUP_TASK] = new(TiupTask)
-	dao.tables[TABLE_NAME_FLOW] = new(FlowDO)
-	dao.tables[TABLE_NAME_PARAMETERS_RECORD] = new(ParametersRecord)
-	dao.tables[TABLE_NAME_BACKUP_RECORD] = new(BackupRecord)
-	dao.tables[TABLE_NAME_RECOVER_RECORD] = new(RecoverRecord)
+	dao.AddTable(TABLE_NAME_CLUSTER, new(Cluster))
+	dao.AddTable(TABLE_NAME_DEMAND_RECORD, new(DemandRecord))
+	dao.AddTable(TABLE_NAME_ACCOUNT, new(Account))
+	dao.AddTable(TABLE_NAME_TENANT, new(Tenant))
+	dao.AddTable(TABLE_NAME_ROLE, new(Role))
+	dao.AddTable(TABLE_NAME_ROLE_BINDING, new(RoleBinding))
+	dao.AddTable(TABLE_NAME_PERMISSION, new(Permission))
+	dao.AddTable(TABLE_NAME_PERMISSION_BINDING, new(PermissionBinding))
+	dao.AddTable(TABLE_NAME_TOKEN, new(Token))
+	dao.AddTable(TABLE_NAME_TASK, new(TaskDO))
+	dao.AddTable(TABLE_NAME_HOST, new(Host))
+	dao.AddTable(TABLE_NAME_DISK, new(Disk))
+	dao.AddTable(TABLE_NAME_TIUP_CONFIG, new(TiUPConfig))
+	dao.AddTable(TABLE_NAME_TIUP_TASK, new(TiupTask))
+	dao.AddTable(TABLE_NAME_FLOW, new(FlowDO))
+	dao.AddTable(TABLE_NAME_PARAMETERS_RECORD, new(ParametersRecord))
+	dao.AddTable(TABLE_NAME_BACKUP_RECORD, new(BackupRecord))
+	dao.AddTable(TABLE_NAME_RECOVER_RECORD, new(RecoverRecord))
+	dao.AddTable(TABLE_NAME_RECOVER_RECORD, new(RecoverRecord))
 
-	var er error
+	log.Info("create TiEM all tables successful.")
+	return nil
+}
 
-	for name := range dao.tables {
-		if !dao.db.Migrator().HasTable(dao.tables[name]) {
-			er = dao.db.Migrator().CreateTable(dao.tables[name])
-			if nil != er {
-				log.Errorf("create table %s failed, error : %v.", name, er)
-				return errors.New(fmt.Sprintf("crete table %s failed, error: %v.", name, er))
-			}
+func (dao *DAOManager) InitData() error {
+
+	err := dao.InitSystemDefaultData()
+	if nil != err {
+		framework.GetLogger().Errorf("initialize TiEM system data failed, error: %v", err)
+	}
+
+	framework.GetLogger().Infof(" initialization system default data successful")
+
+	err = dao.InitResourceDataForDev()
+	if nil != err {
+		framework.GetLogger().Errorf("initialize TiEM system test resource failed, error: %v", err)
+	}
+	return err
+}
+
+func (dao DAOManager) AddTable(tableName string, tableModel interface{}) error {
+	log := framework.GetLogger()
+	dao.tables[tableName] = tableModel
+	if !dao.db.Migrator().HasTable(dao.tables[tableName]) {
+		er := dao.db.Migrator().CreateTable(dao.tables[tableName])
+		if nil != er {
+			log.Errorf("create table %s failed, error : %v.", tableName, er)
+			return errors.New(fmt.Sprintf("crete table %s failed, error: %v.", tableName, er))
 		}
 	}
-	log.Info("create TiEM all tables successful.")
-	return er
+	return nil
 }
 
 /*
 Initial TiEM system default system account and tenant information
 */
-func (dao *DAOManager) initSystemDefaultData() error {
+func (dao *DAOManager) InitSystemDefaultData() error {
 	accountManager := dao.AccountManager()
 	log := framework.GetLogger()
 	rt, err := accountManager.AddTenant("TiEM system administration", 1, 0)
@@ -175,7 +177,7 @@ func (dao *DAOManager) initSystemDefaultData() error {
 	return err
 }
 
-func (dao *DAOManager) initResourceDataForDev() error {
+func (dao *DAOManager) InitResourceDataForDev() error {
 	_, err := CreateHost(dao.Db(), &Host{
 		HostName: "主机1",
 		IP:       "192.168.125.132",

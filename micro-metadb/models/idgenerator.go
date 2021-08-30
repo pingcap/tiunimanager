@@ -10,8 +10,6 @@ const (
 )
 
 func GenerateID() string {
-	//return strings.ReplaceAll(uuid.New().String(), "-", "")
-
 	uuid := uuid.New()
 	encoded := make([]byte, UUID_MAX_LENGTH, UUID_MAX_LENGTH)
 	base64.StdEncoding.WithPadding(base64.NoPadding).Encode(encoded, uuid[0:16])

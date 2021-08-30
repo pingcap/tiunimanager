@@ -25,46 +25,6 @@ type TestData struct {
 	name string
 }
 
-//var MetaDB *gorm.DB
-
-/*func TestMain(m *testing.M) {
-	testFile := uuid.New().String() + ".db"
-	MetaDB, _ = gorm.Open(sqlite.Open(testFile), &gorm.Config{})
-
-	defer func() {
-		os.Remove(testFile)
-	}()
-
-	err := MetaDB.Migrator().CreateTable(
-		&Account{},
-		&RoleBinding{},
-		&Role{},
-		&PermissionBinding{},
-		&Permission{},
-		&TestEntity{},
-		&TestEntity2{},
-		&TestRecord{},
-		&TestData{},
-		&DemandRecord{},
-		&Host{},
-		&Disk{},
-		&Cluster{},
-		&TiUPConfig{},
-		&Tenant{},
-		&FlowDO{},
-		&TaskDO{},
-		&Token{},
-		&BackupRecord{},
-		&RecoverRecord{},
-		&ParametersRecord{},
-	)
-	if err == nil {
-		m.Run()
-	} else {
-		getLogger().Error(err)
-	}
-}*/
-
 func TestTime(t *testing.T) {
 	t.Run("test time", func(t *testing.T) {
 		now := time.Now()

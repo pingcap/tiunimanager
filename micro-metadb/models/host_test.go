@@ -9,7 +9,7 @@ import (
 
 func TestCreateHost(t *testing.T) {
 	h := &Host{
-		HostName: "测试重复",
+		HostName: "TestCreateHostRepeated",
 		IP:       "111.111.111.111",
 		Status:   0,
 		OS:       "CentOS",
@@ -36,7 +36,7 @@ func TestCreateHost(t *testing.T) {
 		assert  func(result string) bool
 	}{
 		{"normal", args{host: &Host{
-			HostName: "主机1",
+			HostName: "TestCreateHost1",
 			IP:       "192.168.125.132",
 			Status:   0,
 			OS:       "CentOS",
@@ -54,7 +54,7 @@ func TestCreateHost(t *testing.T) {
 			return len(result) > 0
 		}},
 		{"same name", args{host: &Host{
-			HostName: "测试重复",
+			HostName: "TestCreateHostRepeated",
 			IP:       "111.111.111.111",
 			Status:   0,
 			OS:       "CentOS",
@@ -99,7 +99,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 	}{
 		{"normal", args{hosts: []*Host{
 			{
-				HostName: "主机1",
+				HostName: "TestCreateHostsInBatch1",
 				IP:       "192.168.11.111",
 				Status:   0,
 				OS:       "CentOS",
@@ -113,7 +113,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 				Disks: []Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
 			},
 			{
-				HostName: "主机2",
+				HostName: "TestCreateHostsInBatch2",
 				IP:       "192.111.125.111",
 				Status:   0,
 				OS:       "CentOS",
@@ -132,7 +132,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 		}},
 		{"same name", args{hosts: []*Host{
 			{
-				HostName: "测试重复",
+				HostName: "TestCreateHostsInBatchRepeated",
 				IP:       "444.555.666.777",
 				Status:   0,
 				OS:       "CentOS",
@@ -146,7 +146,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 				Disks: []Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
 			},
 			{
-				HostName: "测试重复",
+				HostName: "TestCreateHostsInBatchRepeated",
 				IP:       "444.555.666.777",
 				Status:   0,
 				OS:       "CentOS",
@@ -180,7 +180,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 
 func TestDeleteHost(t *testing.T) {
 	h := &Host{
-		HostName: "主机1",
+		HostName: "TestDeleteHost1",
 		IP:       "192.99.999.132",
 		Status:   0,
 		OS:       "CentOS",
@@ -886,7 +886,7 @@ func TestHost_SetDiskStatus(t *testing.T) {
 
 func TestListHosts(t *testing.T) {
 	h := &Host{
-		HostName: "主机1",
+		HostName: "TestListHosts1",
 		IP:       "111.121.999.132",
 		Status:   0,
 		OS:       "CentOS",
@@ -905,7 +905,7 @@ func TestListHosts(t *testing.T) {
 	defer DeleteHost(MetaDB,id1)
 
 	h2 := &Host{
-		HostName: "主机2",
+		HostName: "TestListHosts2",
 		IP:       "222.121.999.132",
 		Status:   0,
 		OS:       "CentOS",
@@ -924,7 +924,7 @@ func TestListHosts(t *testing.T) {
 	defer DeleteHost(MetaDB,id2)
 
 	h3 := &Host{
-		HostName: "主机3",
+		HostName: "TestListHosts3",
 		IP:       "333.121.999.132",
 		Status:   3,
 		OS:       "CentOS",
@@ -1002,7 +1002,7 @@ func TestListHosts(t *testing.T) {
 
 func TestLockHosts(t *testing.T) {
 	h := &Host{
-		HostName: "主机1",
+		HostName: "TestLockHosts1",
 		IP:       "474.111.111.111",
 		Status:   0,
 		OS:       "CentOS",

@@ -297,7 +297,7 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 			PageSize: result.Page.PageSize,
 			Total:    result.Page.Total,
 		}
-		response.BackupRecords = make([]*clusterPb.BackupRecordDTO, len(result.BackupRecords), len(result.BackupRecords))
+		response.BackupRecords = make([]*clusterPb.BackupRecordDTO, len(result.BackupRecords))
 		for i, v := range result.BackupRecords {
 			response.BackupRecords[i] = &clusterPb.BackupRecordDTO{
 				Id:        v.BackupRecord.Id,

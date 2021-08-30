@@ -31,7 +31,7 @@ type BackupStrategy struct {
 }
 
 type BackupStrategyUpdateReq struct {
-	strategy BackupStrategy		`json:"strategy"`
+	Strategy BackupStrategy		`json:"strategy"`
 }
 
 type BackupReq struct {

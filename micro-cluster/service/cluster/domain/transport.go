@@ -200,7 +200,7 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 }
 
 func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*TransportInfo, error) {
-	getLogger().Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %s, page: %d, pageSize: %s", clusterId, recordId, page, pageSize)
+	getLogger().Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %s, page: %d, pageSize: %d", clusterId, recordId, page, pageSize)
 	defer getLogger().Info("end DescribeDataTransportRecord")
 	req := &db.DBListTransportRecordRequest{
 		Page: &db.DBPageDTO{
@@ -467,7 +467,7 @@ func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
 	cluster := clusterAggregation.Cluster
 
 	dataDir := fmt.Sprintf("%s/data", getDataTransportDir(cluster.Id, TransportTypeImport))
-	dataZipDir := fmt.Sprintf("%s", info.FilePath)
+	dataZipDir := info.FilePath
 	if err := unzipDir(dataZipDir, dataDir); err != nil {
 		getLogger().Errorf("deCompress import data failed, %s", err.Error())
 		return false
@@ -534,7 +534,7 @@ func zipDir(dir string, zipFile string) error {
 	w := zip.NewWriter(fz)
 	defer w.Close()
 
-	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			relPath := strings.TrimPrefix(path, filepath.Dir(path))
 			fDest, err := w.Create(relPath)
@@ -553,6 +553,10 @@ func zipDir(dir string, zipFile string) error {
 		}
 		return nil
 	})
+	if err != nil {
+		getLogger().Errorf("filepath walk failed, %s", err.Error())
+		return err
+	}
 
 	return nil
 }
@@ -569,7 +573,10 @@ func unzipDir(zipFile string, dir string) error {
 	for _, f := range r.File {
 		func() {
 			path := dir + string(filepath.Separator) + f.Name
-			os.MkdirAll(filepath.Dir(path), 0755)
+			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil{
+				getLogger().Errorf("make filepath failed: %s", err.Error())
+				return
+			}
 			fDest, err := os.Create(path)
 			if err != nil {
 				getLogger().Errorf("unzip Create failed: %s", err.Error())

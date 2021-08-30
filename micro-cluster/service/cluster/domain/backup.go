@@ -4,14 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	scp "github.com/bramvdbogaerde/go-scp"
-	"github.com/bramvdbogaerde/go-scp/auth"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
-	"github.com/pingcap/tiup/pkg/cluster/spec"
-	"golang.org/x/crypto/ssh"
 	"os"
 	"strconv"
 	"time"
@@ -194,45 +190,6 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func UpdateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
-	//log.Info("begin updateBackupRecord")
-	//defer log.Info("end updateBackupRecord")
-	//clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
-	//record := clusterAggregation.LastBackupRecord
-	/*
-		//todo: update size
-		configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
-		cluster := clusterAggregation.Cluster
-		tidbServer := configModel.TiDBServers[0]
-
-		clusterFacade := libbr.ClusterFacade{
-			DbConnParameter: libbr.DbConnParam{
-				Username: "root", //todo: replace admin account
-				Password: "",
-				Ip:	tidbServer.Host,
-				Port: strconv.Itoa(tidbServer.Port),
-			},
-			ClusterId: cluster.Id,
-			ClusterName: cluster.ClusterName,
-			TaskID: record.BizId,
-		}
-		resp := libbr.ShowBackUpInfo(clusterFacade, uint64(task.Id))
-		record.Size = resp.Size
-	*/
-	_, err :=  client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
-		BackupRecord: &db.DBBackupRecordDTO{
-			Id: 123,
-			Size: 0,
-			EndTime: time.Now().Unix(),
-		},
-	})
-	if err != nil {
-		getLogger().Errorf("update backup record for cluster failed, %s", err.Error())
-		return false
-	}
-	return true
-}
-
 func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	getLogger().Info("begin updateBackupRecord")
 	defer getLogger().Info("end updateBackupRecord")
@@ -271,7 +228,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	}
 	return true
 }
-
+/*
 func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	getLogger().Info("begin recoverFromSrcCluster")
 	defer getLogger().Info("end recoverFromSrcCluster")
@@ -373,6 +330,7 @@ func scpTikvBackupFiles(tikv *spec.TiKVSpec, tikvDir, backupDir string, index in
 func cleanLocalTikvBackupDir() error {
 	return nil
 }
+*/
 
 func recoverCluster(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)

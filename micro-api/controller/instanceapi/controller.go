@@ -230,12 +230,12 @@ func SaveBackupStrategy(c *gin.Context) {
 	_, err := client.ClusterClient.SaveBackupStrategy(context.TODO(), &cluster.SaveBackupStrategyRequest{
 		Operator:  operator.ConvertToDTO(),
 		Strategy:  &cluster.BackupStrategy{
-			ClusterId: req.strategy.ClusterId,
-			BackupType: req.strategy.BackupType,
-			BackupRange: req.strategy.BackupRange,
-			BackupDate: req.strategy.BackupDate,
-			Period: req.strategy.Period,
-			FilePath: req.strategy.FilePath,
+			ClusterId: req.Strategy.ClusterId,
+			BackupType: req.Strategy.BackupType,
+			BackupRange: req.Strategy.BackupRange,
+			BackupDate: req.Strategy.BackupDate,
+			Period: req.Strategy.Period,
+			FilePath: req.Strategy.FilePath,
 		},
 	}, controller.DefaultTimeout)
 	if err != nil {
@@ -279,7 +279,7 @@ func QueryBackup(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		records := make([]BackupRecord, len(resp.BackupRecords), len(resp.BackupRecords))
+		records := make([]BackupRecord, len(resp.BackupRecords))
 
 		for i, v := range resp.BackupRecords {
 			records[i] = BackupRecord{

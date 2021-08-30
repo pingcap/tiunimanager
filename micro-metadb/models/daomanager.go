@@ -98,7 +98,8 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_FLOW, new(FlowDO))
 	dao.AddTable(TABLE_NAME_PARAMETERS_RECORD, new(ParametersRecord))
 	dao.AddTable(TABLE_NAME_BACKUP_RECORD, new(BackupRecord))
-	dao.AddTable(TABLE_NAME_RECOVER_RECORD, new(RecoverRecord))
+	dao.AddTable(TABLE_NAME_BACKUP_STRATEGY, new(BackupStrategy))
+	dao.AddTable(TABLE_NAME_TRANSPORT_RECORD, new(TransportRecord))
 	dao.AddTable(TABLE_NAME_RECOVER_RECORD, new(RecoverRecord))
 
 	log.Info("create TiEM all tables successful.")

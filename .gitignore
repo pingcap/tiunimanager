@@ -14,3 +14,6 @@ micro-metadb/tiem.sqlite.db
 /bin/tiupcmd
 /micro-metadb/models/logs/
 /micro-metadb/models/tmp/
+/micro-metadb/service/logs/
+/micro-metadb/service/tmp/
+/micro-metadb/models/tmp/

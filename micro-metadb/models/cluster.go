@@ -2,8 +2,10 @@ package models
 
 import (
 	"fmt"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/pingcap/errors"
 	"gorm.io/gorm"
+	"time"
 )
 
 type Cluster struct {
@@ -41,12 +43,18 @@ type ClusterFetchResult struct {
 
 type BackupRecord struct {
 	Record
-	ClusterId  string `gorm:"not null;type:varchar(36);default:null"`
-	Range      int8
-	Type       int8
-	OperatorId string `gorm:"not null;type:varchar(36);default:null"`
-	FilePath   string
-	FlowId     uint
+	ClusterId   string		`gorm:"not null;type:varchar(36);default:null"`
+	BackupRange string
+	BackupType  string
+	OperatorId  string		`gorm:"not null;type:varchar(36);default:null"`
+
+	FilePath 	string
+	FlowId		int64
+	Size 		uint64
+
+	StartTime	int64
+	EndTime 	int64
+
 }
 
 type RecoverRecord struct {
@@ -55,6 +63,7 @@ type RecoverRecord struct {
 	OperatorId     string `gorm:"not null;type:varchar(36);default:null"`
 	BackupRecordId uint
 	FlowId         uint
+
 }
 
 type ParametersRecord struct {
@@ -63,6 +72,17 @@ type ParametersRecord struct {
 	OperatorId string `gorm:"not null;type:varchar(36);default:null"`
 	Content    string `gorm:"type:text"`
 	FlowId     uint
+}
+type BackupStrategy struct {
+	Record
+	ClusterId 		string		`gorm:"not null;type:varchar(36);default:null"`
+	OperatorId 		string		`gorm:"not null;type:varchar(36);default:null"`
+
+	BackupDate  	string
+	FilePath    	string
+	BackupRange 	string
+	BackupType  	string
+	Period      	string
 }
 
 type BackupRecordFetchResult struct {
@@ -301,16 +321,18 @@ func (m *DAOClusterManager) SaveParameters(tenantId, clusterId, operatorId strin
 		return nil, errors.New(fmt.Sprintf("SaveParameters has invalid parameter, tenantId: %s, clusterId:%s, operatorId: %s, content: %s, flowId: %d",
 			tenantId, clusterId, operatorId, content, flowId))
 	}
-	do = &ParametersRecord{
+	do = &ParametersRecord {
 		Record: Record{
 			TenantId: tenantId,
 		},
 		OperatorId: operatorId,
-		ClusterId:  clusterId,
-		Content:    content,
-		FlowId:     flowId,
+		ClusterId: clusterId,
+		Content: content,
+		FlowId: flowId,
 	}
-	return do, m.Db().Create(do).Error
+
+	err = m.Db().Create(do).Error
+	return
 }
 
 func (m *DAOClusterManager) GetCurrentParameters(clusterId string) (do *ParametersRecord, err error) {
@@ -325,6 +347,7 @@ func (m *DAOClusterManager) DeleteBackupRecord(id uint) (record *BackupRecord, e
 	if id <= 0 {
 		return nil, errors.New(fmt.Sprintf("DeleteBackupRecord has invalid parameter, Id: %d", id))
 	}
+	record = &BackupRecord{}
 	err = m.Db().First(record, "id = ?", id).Error
 	if err != nil {
 		err = m.Db().Delete(record).Error
@@ -332,23 +355,56 @@ func (m *DAOClusterManager) DeleteBackupRecord(id uint) (record *BackupRecord, e
 	return record, err
 }
 
-func (m *DAOClusterManager) SaveBackupRecord(tenantId, clusterId, operatorId string,
-	backupRange, backupType int8, flowId uint,
-	filePath string) (do *BackupRecord, err error) {
+func (m *DAOClusterManager) SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do *BackupRecord, err error) {
 	do = &BackupRecord{
 		Record: Record{
-			TenantId: tenantId,
+			TenantId: record.GetClusterId(),
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		},
-		ClusterId:  clusterId,
-		OperatorId: operatorId,
-		Range:      backupRange,
-		Type:       backupType,
-		FlowId:     flowId,
-		FilePath:   filePath,
+		ClusterId: record.GetClusterId(),
+		OperatorId: record.GetOperatorId(),
+		BackupRange: record.GetBackupRange(),
+		BackupType: record.GetBackupType(),
+		FlowId: record.GetFlowId(),
+		FilePath: record.GetFilePath(),
+		StartTime: record.GetStartTime(),
 	}
+
 	return do, m.Db().Create(do).Error
 }
 
+func (m *DAOClusterManager) UpdateBackupRecord(record *dbPb.DBBackupRecordDTO) error {
+	err := m.Db().Model(&BackupRecord{}).Where("id = ?", record.Id).Updates(BackupRecord{
+		Size: record.GetSize(), EndTime: record.GetEndTime(), Record: Record{
+			TenantId: record.GetClusterId(),
+			UpdatedAt: time.Now(),
+		}}).Error
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *DAOClusterManager) QueryBackupRecord(clusterId string, recordId int64) (*BackupRecordFetchResult, error) {
+	record := BackupRecord{}
+	err := m.Db().Table("backup_records").Where("id = ? and cluster_id = ?", recordId, clusterId).First(&record).Error
+	if err != nil {
+		return nil, err
+	}
+
+	flow := FlowDO{}
+	err = m.Db().Find(&flow, record.FlowId).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &BackupRecordFetchResult{
+		BackupRecord: &record,
+		Flow: &flow,
+	}, nil
+}
 func (m *DAOClusterManager) ListBackupRecords(clusterId string,
 	offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
 
@@ -361,7 +417,7 @@ func (m *DAOClusterManager) ListBackupRecords(clusterId string,
 
 	if nil == err {
 		// query flows
-		flowIds := make([]uint, len(records), len(records))
+		flowIds := make([]int64, len(records), len(records))
 		dos = make([]*BackupRecordFetchResult, len(records), len(records))
 		for i, r := range records {
 			flowIds[i] = r.FlowId
@@ -376,9 +432,9 @@ func (m *DAOClusterManager) ListBackupRecords(clusterId string,
 			return nil, 0, errors.New(fmt.Sprintf("ListBackupRecord, query record failed, clusterId: %s, error: %v", clusterId, err))
 		}
 
-		flowMap := make(map[uint]*FlowDO)
+		flowMap := make(map[int64]*FlowDO)
 		for _, v := range flows {
-			flowMap[v.ID] = v
+			flowMap[int64(v.ID)] = v
 		}
 		for i, v := range records {
 			dos[i].BackupRecord = v
@@ -401,4 +457,54 @@ func (m *DAOClusterManager) SaveRecoverRecord(tenantId, clusterId, operatorId st
 		BackupRecordId: backupRecordId,
 	}
 	return do, m.Db().Create(do).Error
+}
+
+func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDTO) (*BackupStrategy, error) {
+	strategyDO := BackupStrategy{
+		ClusterId: strategy.ClusterId,
+		Record: Record{
+			TenantId: strategy.TenantId,
+		},
+		BackupDate: strategy.BackupDate,
+		BackupRange: strategy.BackupRange,
+		BackupType: strategy.BackupType,
+		Period: strategy.Period,
+		FilePath: strategy.FilePath,
+	}
+	result := m.Db().Table("backup_strategy").Where("cluster_id = ?", strategy.ClusterId).First(&strategyDO)
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			strategyDO.CreatedAt = time.Now()
+			strategyDO.UpdatedAt = time.Now()
+			err := m.Db().Create(&strategyDO).Error
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, result.Error
+		}
+	} else {
+		strategyDO.UpdatedAt = time.Now()
+		err := m.Db().Model(&BackupStrategy{}).Updates(&BackupStrategy{
+			BackupDate: strategy.BackupDate,
+			BackupRange: strategy.BackupRange,
+			BackupType: strategy.BackupType,
+			Period: strategy.Period,
+			FilePath: strategy.FilePath,
+		}).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &strategyDO, nil
+}
+
+func  (m *DAOClusterManager) QueryBackupStartegy(clusterId string) (*BackupStrategy, error) {
+	strategyDO := BackupStrategy{}
+	err := m.Db().Table("backup_strategy").Where("cluster_id = ?", clusterId).First(&strategyDO).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return &strategyDO, nil
 }

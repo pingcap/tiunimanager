@@ -65,9 +65,9 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *proto.DBF
 	}
 
 	if nil != err {
-		log.Infof("Find account by name %s successful, withRole: %d, error: %v", req.GetName(), req.GetWithRole(), err)
+		log.Infof("Find account by name %s successful, withRole: %t, error: %v", req.GetName(), req.GetWithRole(), err)
 	} else {
-		log.Infof("Find account by name %s failed, withRole: %d, error: %v", req.GetName(), req.GetWithRole(), err)
+		log.Infof("Find account by name %s failed, withRole: %t, error: %v", req.GetName(), req.GetWithRole(), err)
 		return err
 	}
 

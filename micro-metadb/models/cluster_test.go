@@ -1,8 +1,10 @@
 package models
 
 import (
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestCreateCluster(t *testing.T) {
@@ -550,7 +552,19 @@ func TestListClusterDetails(t *testing.T) {
 func TestSaveBackupRecord(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
 	t.Run("normal", func(t *testing.T) {
-		gotDo, err := clusterTbl.SaveBackupRecord("111", "111", "operator1", 1, 1, 111, "path1")
+		record := &dbPb.DBBackupRecordDTO{
+			TenantId:	"111",
+			ClusterId:  "111",
+			StartTime:  time.Now().Unix(),
+			EndTime:    time.Now().Unix(),
+			BackupRange:"FULL",
+			BackupType: "ALL",
+			OperatorId: "operator1",
+			FilePath:   "path1",
+			FlowId: 	1,
+			Size:		0,
+		}
+		gotDo, err := clusterTbl.SaveBackupRecord(record)
 		if err != nil {
 			t.Errorf("SaveBackupRecord() error = %v", err)
 			return
@@ -579,7 +593,19 @@ func TestSaveRecoverRecord(t *testing.T) {
 
 func TestDeleteBackupRecord(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
-	record, _ := clusterTbl.SaveBackupRecord("111", "222", "operator1", 1, 1, 1, "path1")
+	rcd := &dbPb.DBBackupRecordDTO{
+		TenantId:	"111",
+		ClusterId:  "111",
+		StartTime:  time.Now().Unix(),
+		EndTime:    time.Now().Unix(),
+		BackupRange:"FULL",
+		BackupType: "ALL",
+		OperatorId: "operator1",
+		FilePath:   "path1",
+		FlowId: 	1,
+		Size:		0,
+	}
+	record, _ := clusterTbl.SaveBackupRecord(rcd)
 	t.Run("normal", func(t *testing.T) {
 		got, err := clusterTbl.DeleteBackupRecord(record.ID)
 		if err != nil {
@@ -608,22 +634,34 @@ func TestDeleteBackupRecord(t *testing.T) {
 func TestListBackupRecords(t *testing.T) {
 	brTbl := Dao.ClusterManager()
 	flow, _ := CreateFlow(MetaDB, "backup", "backup", "111")
-	brTbl.SaveBackupRecord("111", "222", "operator1", 1, 1, flow.ID, "path1")
-	brTbl.SaveBackupRecord("111", "222", "operator1", 1, 1, flow.ID, "path2")
-	brTbl.SaveBackupRecord("111", "11111", "operator1", 1, 1, flow.ID, "path3")
-	brTbl.SaveBackupRecord("111", "11111", "operator1", 1, 1, flow.ID, "path4")
-	brTbl.SaveBackupRecord("111", "11111", "operator1", 1, 1, flow.ID, "path5")
-	brTbl.SaveBackupRecord("111", "11111", "operator1", 1, 1, flow.ID, "path6")
-	brTbl.SaveBackupRecord("111", "11111", "operator1", 1, 1, flow.ID, "path7")
+	record := &dbPb.DBBackupRecordDTO{
+		TenantId:	"111",
+		ClusterId:  "TestListBackupRecords",
+		StartTime:  time.Now().Unix(),
+		EndTime:    time.Now().Unix(),
+		BackupRange:"FULL",
+		BackupType: "ALL",
+		OperatorId: "operator1",
+		FilePath:   "path1",
+		FlowId: 	int64(flow.ID),
+		Size:		0,
+	}
+	brTbl.SaveBackupRecord(record)
+	brTbl.SaveBackupRecord(record)
+	brTbl.SaveBackupRecord(record)
+	brTbl.SaveBackupRecord(record)
+	brTbl.SaveBackupRecord(record)
+	brTbl.SaveBackupRecord(record)
+	brTbl.SaveBackupRecord(record)
 
 	t.Run("normal", func(t *testing.T) {
-		dos, total, err := brTbl.ListBackupRecords("11111", 2, 2)
+		dos, total, err := brTbl.ListBackupRecords("TestListBackupRecords", 2, 2)
 		if err != nil {
 			t.Errorf("ListBackupRecords() error = %v", err)
 			return
 		}
-		if total != 5 {
-			t.Errorf("ListBackupRecords() error, want total = %v, got = %v", 5, total)
+		if total != 7 {
+			t.Errorf("ListBackupRecords() error, want total = %v, got = %v", 7, total)
 			return
 		}
 
@@ -632,7 +670,7 @@ func TestListBackupRecords(t *testing.T) {
 			return
 		}
 
-		if dos[1].BackupRecord.ClusterId != "11111" {
+		if dos[1].BackupRecord.ClusterId != "TestListBackupRecords" {
 			t.Errorf("ListBackupRecords() error, want ClusterId = %v, got = %v", "111", dos[1].BackupRecord.ClusterId)
 			return
 		}
@@ -642,7 +680,7 @@ func TestListBackupRecords(t *testing.T) {
 			return
 		}
 
-		if dos[0].Flow.ID != dos[0].BackupRecord.FlowId {
+		if int64(dos[0].Flow.ID) != dos[0].BackupRecord.FlowId {
 			t.Errorf("ListBackupRecords() error, want FlowId = %v, got = %v", dos[0].BackupRecord.FlowId, dos[0].Flow.ID)
 			return
 		}

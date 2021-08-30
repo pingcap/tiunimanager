@@ -18,3 +18,9 @@ message UsageDTO {
     float used = 2;
     float usageRate = 3;
 }
+
+message OperatorDTO {
+    string id = 1;
+    string name = 2;
+    string tenantId = 3;
+}

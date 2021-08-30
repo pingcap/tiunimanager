@@ -10,7 +10,7 @@ import (
 
 func (handler *DBServiceHandler) CreateTiupTask(ctx context.Context, req *dbPb.CreateTiupTaskRequest, rsp *dbPb.CreateTiupTaskResponse) error {
 	db := handler.Dao().Db()
-	id, e := models.CreateTiupTask(db,ctx, req.Type, req.BizID)
+	id, e := models.CreateTiupTask(db, ctx, req.Type, req.BizID)
 	if e == nil {
 		rsp.Id = id
 	} else {
@@ -22,7 +22,7 @@ func (handler *DBServiceHandler) CreateTiupTask(ctx context.Context, req *dbPb.C
 
 func (handler *DBServiceHandler) UpdateTiupTask(ctx context.Context, req *dbPb.UpdateTiupTaskRequest, rsp *dbPb.UpdateTiupTaskResponse) error {
 	db := handler.Dao().Db()
-	e := models.UpdateTiupTaskStatus(db,ctx, req.Id, req.Status, req.ErrStr)
+	e := models.UpdateTiupTaskStatus(db, ctx, req.Id, req.Status, req.ErrStr)
 	if e == nil {
 	} else {
 		rsp.ErrCode = 1
@@ -33,7 +33,7 @@ func (handler *DBServiceHandler) UpdateTiupTask(ctx context.Context, req *dbPb.U
 
 func (handler *DBServiceHandler) FindTiupTaskByID(ctx context.Context, req *dbPb.FindTiupTaskByIDRequest, rsp *dbPb.FindTiupTaskByIDResponse) error {
 	db := handler.Dao().Db()
-	task, e := models.FindTiupTaskByID(db,ctx, req.Id)
+	task, e := models.FindTiupTaskByID(db, ctx, req.Id)
 	if e == nil {
 		var deleteAt string
 		if task.DeletedAt.Valid {
@@ -62,7 +62,7 @@ func (handler *DBServiceHandler) GetTiupTaskStatusByBizID(ctx context.Context, r
 	rsp *dbPb.GetTiupTaskStatusByBizIDResponse) error {
 
 	db := handler.Dao().Db()
-	tasks, e := models.FindTiupTasksByBizID(db,ctx, req.BizID)
+	tasks, e := models.FindTiupTasksByBizID(db, ctx, req.BizID)
 	if e == nil {
 		errCt := 0
 		errStatStr := ""

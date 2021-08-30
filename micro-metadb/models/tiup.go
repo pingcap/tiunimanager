@@ -40,7 +40,7 @@ const (
 	TiupTaskTypeDestroy TiupTaskType = "DESTROY"
 )
 
-func CreateTiupTask(db* gorm.DB,ctx context.Context, taskType dbPb.TiupTaskType, bizID uint64) (id uint64, err error) {
+func CreateTiupTask(db *gorm.DB, ctx context.Context, taskType dbPb.TiupTaskType, bizID uint64) (id uint64, err error) {
 	t := TiupTask{
 		Type:     int(taskType),
 		Status:   int(dbPb.TiupTaskStatus_Init),
@@ -59,7 +59,7 @@ func CreateTiupTask(db* gorm.DB,ctx context.Context, taskType dbPb.TiupTaskType,
 	return id, err
 }
 
-func UpdateTiupTaskStatus(db *gorm.DB,ctx context.Context, id uint64, taskStatus dbPb.TiupTaskStatus, errStr string) error {
+func UpdateTiupTaskStatus(db *gorm.DB, ctx context.Context, id uint64, taskStatus dbPb.TiupTaskStatus, errStr string) error {
 	t := TiupTask{
 		ID: id,
 	}
@@ -74,7 +74,7 @@ func UpdateTiupTaskStatus(db *gorm.DB,ctx context.Context, id uint64, taskStatus
 	return err
 }
 
-func FindTiupTaskByID(db *gorm.DB,ctx context.Context, id uint64) (task TiupTask, err error) {
+func FindTiupTaskByID(db *gorm.DB, ctx context.Context, id uint64) (task TiupTask, err error) {
 	log := framework.WithContext(ctx).WithField("models", "FindTiupTaskByID").WithField("id", id)
 	log.Debug("entry")
 	err = db.First(&task, id).Error
@@ -86,7 +86,7 @@ func FindTiupTaskByID(db *gorm.DB,ctx context.Context, id uint64) (task TiupTask
 	return
 }
 
-func FindTiupTasksByBizID(db *gorm.DB,ctx context.Context, bizID uint64) (tasks []TiupTask, err error) {
+func FindTiupTasksByBizID(db *gorm.DB, ctx context.Context, bizID uint64) (tasks []TiupTask, err error) {
 	log := framework.WithContext(ctx).WithField("models", "FindTiupTasksByBizID").WithField("bizID", bizID)
 	log.Debug("entry")
 	err = db.Where(&TiupTask{BizID: bizID}).Find(&tasks).Error

@@ -157,7 +157,7 @@ func (h *Host) AfterFind(tx *gorm.DB) (err error) {
 	return
 }
 
-func CreateHost(db *gorm.DB,host *Host) (id string, err error) {
+func CreateHost(db *gorm.DB, host *Host) (id string, err error) {
 	err = db.Create(host).Error
 	if err != nil {
 		return
@@ -165,7 +165,7 @@ func CreateHost(db *gorm.DB,host *Host) (id string, err error) {
 	return host.ID, err
 }
 
-func CreateHostsInBatch(db *gorm.DB,hosts []*Host) (ids []string, err error) {
+func CreateHostsInBatch(db *gorm.DB, hosts []*Host) (ids []string, err error) {
 	tx := db.Begin()
 	for _, host := range hosts {
 		err = tx.Create(host).Error
@@ -179,14 +179,14 @@ func CreateHostsInBatch(db *gorm.DB,hosts []*Host) (ids []string, err error) {
 	return
 }
 
-func DeleteHost(db *gorm.DB,hostId string) (err error) {
+func DeleteHost(db *gorm.DB, hostId string) (err error) {
 	err = db.Where("ID = ?", hostId).Delete(&Host{
 		ID: hostId,
 	}).Error
 	return
 }
 
-func DeleteHostsInBatch(db *gorm.DB,hostIds []string) (err error) {
+func DeleteHostsInBatch(db *gorm.DB, hostIds []string) (err error) {
 	tx := db.Begin()
 	for _, hostId := range hostIds {
 		var host Host
@@ -211,7 +211,7 @@ type ListHostReq struct {
 	Limit   int
 }
 
-func ListHosts(metaDB *gorm.DB,req ListHostReq) (hosts []Host, err error) {
+func ListHosts(metaDB *gorm.DB, req ListHostReq) (hosts []Host, err error) {
 	db := metaDB.Table(HostTableName())
 	if err = db.Error; err != nil {
 		return nil, err
@@ -230,7 +230,7 @@ func ListHosts(metaDB *gorm.DB,req ListHostReq) (hosts []Host, err error) {
 	return
 }
 
-func FindHostById(db *gorm.DB,hostId string) (*Host, error) {
+func FindHostById(db *gorm.DB, hostId string) (*Host, error) {
 	host := new(Host)
 	err := db.First(host, "ID = ?", hostId).Error
 	return host, err
@@ -251,7 +251,7 @@ type Resource struct {
 	Capacity int
 }
 
-func PreAllocHosts(db *gorm.DB,failedDomain string, numReps int, cpuCores int, mem int) (resources []Resource, err error) {
+func PreAllocHosts(db *gorm.DB, failedDomain string, numReps int, cpuCores int, mem int) (resources []Resource, err error) {
 	err = db.Order("hosts.cpu_cores").Limit(numReps).Model(&Disk{}).Select(
 		"disks.host_id, disks.id, hosts.cpu_cores, hosts.memory, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, disks.name, disks.path, disks.capacity").Joins("left join hosts on disks.host_id = hosts.id").Where(
 		"disks.status = ? and hosts.az = ? and (hosts.status = ? or hosts.status = ?) and hosts.cpu_cores >= ? and memory >= ?",
@@ -273,7 +273,7 @@ type HostLocked struct {
 	mem      int
 }
 
-func LockHosts(db *gorm.DB,resources []ResourceLock) (err error) {
+func LockHosts(db *gorm.DB, resources []ResourceLock) (err error) {
 	var setUpdate map[string]*HostLocked = make(map[string]*HostLocked)
 	tx := db.Begin()
 	for _, v := range resources {
@@ -338,7 +338,7 @@ type FailureDomainResource struct {
 	Count         int
 }
 
-func GetFailureDomain(db *gorm.DB,domain string) (res []FailureDomainResource, err error) {
+func GetFailureDomain(db *gorm.DB, domain string) (res []FailureDomainResource, err error) {
 	selectStr := fmt.Sprintf("%s as FailureDomain, purpose, cpu_cores, memory, count(id) as Count", domain)
 	err = db.Table("hosts").Where("Status = ? or Status = ?", HOST_ONLINE, HOST_INUSED).Select(selectStr).
 		Group(domain).Group("purpose").Group("cpu_cores").Group("memory").Scan(&res).Error

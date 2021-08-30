@@ -296,8 +296,8 @@ func (m *DAOClusterManager) CreateCluster(ClusterName, DbPassword, ClusterType, 
 	return
 }
 
-func (*ParametersRecord) SaveParameters(db *gorm.DB, tenantId, clusterId, operatorId string, flowId uint, content string) (do *ParametersRecord, err error) {
-	if nil == db || "" == tenantId || "" == clusterId || "" == operatorId || "" == content {
+func (m *DAOClusterManager) SaveParameters(tenantId, clusterId, operatorId string, flowId uint, content string) (do *ParametersRecord, err error) {
+	if "" == tenantId || "" == clusterId || "" == operatorId || "" == content {
 		return nil, errors.New(fmt.Sprintf("SaveParameters has invalid parameter, tenantId: %s, clusterId:%s, operatorId: %s, content: %s, flowId: %d",
 			tenantId, clusterId, operatorId, content, flowId))
 	}
@@ -310,27 +310,29 @@ func (*ParametersRecord) SaveParameters(db *gorm.DB, tenantId, clusterId, operat
 		Content:    content,
 		FlowId:     flowId,
 	}
-	return do, db.Create(do).Error
+	return do, m.Db().Create(do).Error
 }
 
-func (*ParametersRecord) GetCurrentParameters(db *gorm.DB, clusterId string) (do *ParametersRecord, err error) {
-	if nil == db || "" == clusterId {
+func (m *DAOClusterManager) GetCurrentParameters(clusterId string) (do *ParametersRecord, err error) {
+	if "" == clusterId {
 		return nil, errors.New(fmt.Sprintf("GetCurrentParameters has invalid parameter,clusterId:%s", clusterId))
 	}
 	do = &ParametersRecord{}
-	return do, db.Where("cluster_id = ?", clusterId).Last(do).Error
+	return do, m.Db().Where("cluster_id = ?", clusterId).Last(do).Error
 }
 
-func (b *BackupRecord) DeleteBackupRecord(db *gorm.DB, id uint) (record *BackupRecord, err error) {
-	record = &BackupRecord{}
-	err = db.First(record, "id = ?", id).Error
+func (m *DAOClusterManager) DeleteBackupRecord(id uint) (record *BackupRecord, err error) {
+	if id <= 0 {
+		return nil, errors.New(fmt.Sprintf("DeleteBackupRecord has invalid parameter, Id: %d", id))
+	}
+	err = m.Db().First(record, "id = ?", id).Error
 	if err != nil {
-		err = db.Delete(record).Error
+		err = m.Db().Delete(record).Error
 	}
 	return record, err
 }
 
-func (b *BackupRecord) SaveBackupRecord(db *gorm.DB, tenantId, clusterId, operatorId string,
+func (m *DAOClusterManager) SaveBackupRecord(tenantId, clusterId, operatorId string,
 	backupRange, backupType int8, flowId uint,
 	filePath string) (do *BackupRecord, err error) {
 	do = &BackupRecord{
@@ -344,14 +346,14 @@ func (b *BackupRecord) SaveBackupRecord(db *gorm.DB, tenantId, clusterId, operat
 		FlowId:     flowId,
 		FilePath:   filePath,
 	}
-	return do, db.Create(do).Error
+	return do, m.Db().Create(do).Error
 }
 
-func (*BackupRecord) ListBackupRecords(db *gorm.DB, clusterId string,
+func (m *DAOClusterManager) ListBackupRecords(clusterId string,
 	offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
 
 	records := make([]*BackupRecord, length, length)
-	err = db.Table(TABLE_NAME_BACKUP_RECORD).
+	err = m.Db().Table(TABLE_NAME_BACKUP_RECORD).
 		Where("cluster_id = ?", clusterId).
 		Count(&total).Order("id desc").Offset(offset).Limit(length).
 		Find(&records).
@@ -369,7 +371,7 @@ func (*BackupRecord) ListBackupRecords(db *gorm.DB, clusterId string,
 		}
 
 		flows := make([]*FlowDO, len(records), len(records))
-		err = db.Find(&flows, flowIds).Error
+		err = m.Db().Find(&flows, flowIds).Error
 		if err != nil {
 			return nil, 0, errors.New(fmt.Sprintf("ListBackupRecord, query record failed, clusterId: %s, error: %v", clusterId, err))
 		}
@@ -386,7 +388,7 @@ func (*BackupRecord) ListBackupRecords(db *gorm.DB, clusterId string,
 	return
 }
 
-func (r *RecoverRecord) SaveRecoverRecord(db *gorm.DB, tenantId, clusterId, operatorId string,
+func (m *DAOClusterManager) SaveRecoverRecord(tenantId, clusterId, operatorId string,
 	backupRecordId uint,
 	flowId uint) (do *RecoverRecord, err error) {
 	do = &RecoverRecord{
@@ -398,5 +400,5 @@ func (r *RecoverRecord) SaveRecoverRecord(db *gorm.DB, tenantId, clusterId, oper
 		FlowId:         flowId,
 		BackupRecordId: backupRecordId,
 	}
-	return do, db.Create(do).Error
+	return do, m.Db().Create(do).Error
 }

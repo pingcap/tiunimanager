@@ -13,12 +13,11 @@ import (
 
 var SuccessResponseStatus = &proto.DbAuthResponseStatus{Code: 0}
 
-func (handler *DBServiceHandler) FindTenant(cxt context.Context, req *proto.DBFindTenantRequest, resp *proto.DBFindTenantResponse) error {
+func (handler *DBServiceHandler) FindTenant(ctx context.Context, req *proto.DBFindTenantRequest, resp *proto.DBFindTenantResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("FindTenant has invalid parameter")
 	}
 	log := framework.GetLogger()
-	log.Debugf("FindTenant by name : %s", req.GetName())
 	accountManager := handler.Dao().AccountManager()
 	tenant, err := accountManager.FindTenantByName(req.GetName())
 
@@ -33,7 +32,12 @@ func (handler *DBServiceHandler) FindTenant(cxt context.Context, req *proto.DBFi
 	} else {
 		resp.Status.Code = common.TIEM_TENANT_NOT_FOUND
 		resp.Status.Message = err.Error()
-		return errors.Errorf("FindTenantByName,query database failed, name: %s, error: %v", req.GetName(), err)
+		err = errors.Errorf("FindTenantByName,query database failed, name: %s, error: %v", req.GetName(), err)
+	}
+	if nil == err {
+		log.Infof("Find tenant by name :%s successful ,error: %v", req.GetName(), err)
+	} else {
+		log.Infof("Find tenant by name :%s failed,error: %v", req.GetName(), err)
 	}
 	return err
 }
@@ -57,13 +61,18 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *proto.DBF
 	} else {
 		resp.Status.Code = common.TIEM_ACCOUNT_NOT_FOUND
 		resp.Status.Message = err.Error()
-		return errors.Errorf("FindAccount,query database failed, name: %s, error: %v", req.GetName(), err)
+		err = errors.Errorf("FindAccount,query database failed, name: %s, error: %v", req.GetName(), err)
 	}
-	log.Debugf("find account by name %s, error: %v", req.GetName(), err)
 
-	if req.WithRole {
+	if nil != err {
+		log.Infof("Find account by name %s successful, withRole: %d, error: %v", req.GetName(), req.GetWithRole(), err)
+	} else {
+		log.Infof("Find account by name %s failed, withRole: %d, error: %v", req.GetName(), req.GetWithRole(), err)
+		return err
+	}
+
+	if req.WithRole && nil == err {
 		roles, err := accountManager.FetchAllRolesByAccount(account.TenantId, account.ID)
-
 		if err == nil {
 			roleDTOs := make([]*proto.DBRoleDTO, len(roles), cap(roles))
 			for index, role := range roles {
@@ -78,12 +87,15 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *proto.DBF
 		} else {
 			resp.Status.Code = common.TIEM_ACCOUNT_NOT_FOUND
 			resp.Status.Message = err.Error()
-			return errors.Errorf("FindAccount,query database failed, name: %s, tenantId: %s, error: %v", req.GetName(), account.TenantId, err)
+			err = errors.Errorf("FindAccount,query database failed, name: %s, tenantId: %s, error: %v", req.GetName(), account.TenantId, err)
 		}
-
-		log.Debugf("find account by name %s, tenantId : %s, error: %v", req.GetName(), account.TenantId, err)
+		if nil == err {
+			log.Infof("Fetch all roles by account name %s successful, tenantId: %s, error: %v", req.GetName(), account.TenantId, err)
+		} else {
+			log.Infof("Fetch all roles by account name %s failed, error: %v", req.GetName(), err)
+			return err
+		}
 	}
-	log.Debugf("find account by name %s, error: %v", req.GetName(), err)
 	return err
 }
 
@@ -95,18 +107,21 @@ func (handler *DBServiceHandler) SaveToken(cxt context.Context, req *proto.DBSav
 	accountManager := handler.Dao().AccountManager()
 	_, err := accountManager.AddToken(req.Token.TokenString, req.Token.AccountName, req.Token.AccountId, req.Token.TenantId, time.Unix(req.Token.ExpirationTime, 0))
 
-	log.Debugf("AddToKen,write database failed, token: %s, tenantId: %s, accountName: %s, accountId: %s,error: %v",
-		req.GetToken(), req.Token.TenantId, req.Token.AccountName, req.Token.AccountId, err)
 	if err == nil {
 		resp.Status = SuccessResponseStatus
 	} else {
 		resp.Status.Code = common.TIEM_ADD_TOKEN_FAILED
 		resp.Status.Message = err.Error()
-		return errors.Errorf("AddToKen,write database failed, token: %s, tenantId: %s, accountName: %s, accountId: %s,error: %v",
+		err = errors.Errorf("AddToKen,write database failed, token: %s, tenantId: %s, accountName: %s, accountId: %s,error: %v",
 			req.GetToken(), req.Token.TenantId, req.Token.AccountName, req.Token.AccountId, err)
 	}
-	log.Debugf("AddToKen,write database failed, token: %s, tenantId: %s, accountName: %s, accountId: %s,error: %v",
-		req.GetToken(), req.Token.TenantId, req.Token.AccountName, req.Token.AccountId, err)
+	if nil == err {
+		log.Infof("AddToken successful, token: %s, tenantId: %s, accountName: %s, accountId: %s,error: %v",
+			req.GetToken(), req.Token.TenantId, req.Token.AccountName, req.Token.AccountId, err)
+	} else {
+		log.Infof("AddToKen failed, token: %s, tenantId: %s, accountName: %s, accountId: %s,error: %v",
+			req.GetToken(), req.Token.TenantId, req.Token.AccountName, req.Token.AccountId, err)
+	}
 	return err
 }
 
@@ -132,7 +147,11 @@ func (handler *DBServiceHandler) FindToken(cxt context.Context, req *proto.DBFin
 		resp.Status.Message = err.Error()
 		err = errors.Errorf("FindToKen,query database failed, token: %s, error: %v", req.GetTokenString(), err)
 	}
-	log.Debugf("FindToKen, token: %s, error: %v", req.GetTokenString(), err)
+	if nil == err {
+		log.Infof("FindToKen successful, token: %s, error: %v", req.GetTokenString(), err)
+	} else {
+		log.Infof("FindToKen failed, token: %s, error: %v", req.GetTokenString(), err)
+	}
 	return err
 }
 
@@ -140,6 +159,7 @@ func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req 
 	if nil == req || nil == resp {
 		return errors.Errorf("FindRolesByPermission has invalid parameter req: %v, resp: %v", req, resp)
 	}
+	log := framework.GetLogger()
 	accountManager := handler.Dao().AccountManager()
 	permissionDO, err := accountManager.FetchPermission(req.TenantId, req.Code)
 
@@ -155,26 +175,34 @@ func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req 
 	} else {
 		resp.Status.Code = common.TIEM_QUERY_PERMISSION_FAILED
 		resp.Status.Message = err.Error()
-		return errors.Errorf("FindRolesByPermission query database failed, tenantId: %s, code: %s, error: %v", req.TenantId, req.Code, err)
+		err = errors.Errorf("FindRolesByPermission query database failed, tenantId: %s, code: %s, error: %v", req.TenantId, req.Code, err)
 	}
 
-	roles, err := accountManager.FetchAllRolesByPermission(req.TenantId, permissionDO.ID)
 	if nil == err {
-		roleDTOs := make([]*proto.DBRoleDTO, len(roles), cap(roles))
-		for index, role := range roles {
-			roleDTOs[index] = &proto.DBRoleDTO{
-				TenantId: role.TenantId,
-				Name:     role.Name,
-				Status:   int32(role.Status),
-				Desc:     role.Desc,
+		roles, err := accountManager.FetchAllRolesByPermission(req.TenantId, permissionDO.ID)
+		if nil == err {
+			roleDTOs := make([]*proto.DBRoleDTO, len(roles), cap(roles))
+			for index, role := range roles {
+				roleDTOs[index] = &proto.DBRoleDTO{
+					TenantId: role.TenantId,
+					Name:     role.Name,
+					Status:   int32(role.Status),
+					Desc:     role.Desc,
+				}
 			}
+			resp.Status = SuccessResponseStatus
+			resp.Roles = roleDTOs
+		} else {
+			resp.Status.Code = common.TIEM_QUERY_PERMISSION_FAILED
+			resp.Status.Message = err.Error()
+			err = errors.Errorf("FindRolesByPermission query database failed, tenantId: %s, code: %s, error: %v", req.TenantId, req.Code, err)
 		}
-		resp.Status = SuccessResponseStatus
-		resp.Roles = roleDTOs
+	}
+
+	if nil == err {
+		log.Infof("FindRolesByPermission successful, tenantId: %s, code: %s, error: %v", req.GetTenantId(), req.GetCode(), err)
 	} else {
-		resp.Status.Code = common.TIEM_QUERY_PERMISSION_FAILED
-		resp.Status.Message = err.Error()
-		err = errors.Errorf("FindRolesByPermission query database failed, tenantId: %s, code: %s, error: %v", req.TenantId, req.Code, err)
+		log.Infof("FindRolesByPermission failed, tenantId: %s, code: %s, error: %v", req.GetTenantId(), req.GetCode(), err)
 	}
 	return err
 }

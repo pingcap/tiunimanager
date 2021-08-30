@@ -144,7 +144,7 @@ func (m *DAOAccountManager) FetchAllRolesByAccount(tenantId string, accountId st
 
 func (m *DAOAccountManager) FetchRolesByIds(roleIds []string) (result []Role, err error) {
 	if len(roleIds) <= 0 {
-		return nil, errors.New(fmt.Sprintf("FetchRolesByIds failed"))
+		return nil, errors.New(fmt.Sprintf("FetchRolesByIds failed, roleIds: %v", roleIds))
 	}
 	return result, m.Db().Where("id in ?", roleIds).Find(&result).Error
 }

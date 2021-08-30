@@ -16,12 +16,12 @@ func (do FlowDO) TableName() string {
 
 type TaskDO struct {
 	Data
-	ParentType int8		`gorm:"default:0"`
-	ParentId   string	`gorm:"default:null"`
-	Name       string	`gorm:"default:null"`
-	ReturnType string	`gorm:"default:null"`
-	Parameters string	`gorm:"default:null"`
-	Result     string	`gorm:"default:null"`
+	ParentType int8   `gorm:"default:0"`
+	ParentId   string `gorm:"default:null"`
+	Name       string `gorm:"default:null"`
+	ReturnType string `gorm:"default:null"`
+	Parameters string `gorm:"default:null"`
+	Result     string `gorm:"default:null"`
 }
 
 func (do TaskDO) TableName() string {
@@ -36,7 +36,7 @@ func (do *FlowDO) BeforeCreate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-func CreateFlow(db *gorm.DB,flowName string, statusAlias string, bizId string) (flow *FlowDO, err error) {
+func CreateFlow(db *gorm.DB, flowName string, statusAlias string, bizId string) (flow *FlowDO, err error) {
 	flow = &FlowDO{
 		Name:        flowName,
 		StatusAlias: statusAlias,
@@ -48,7 +48,7 @@ func CreateFlow(db *gorm.DB,flowName string, statusAlias string, bizId string) (
 	return
 }
 
-func CreateTask(db *gorm.DB,parentType int8, parentId string, taskName, bizId string, taskReturnType string, parameters, result string) (task *TaskDO, err error) {
+func CreateTask(db *gorm.DB, parentType int8, parentId string, taskName, bizId string, taskReturnType string, parameters, result string) (task *TaskDO, err error) {
 	task = &TaskDO{
 		ParentType: parentType,
 		ParentId:   parentId,
@@ -56,7 +56,7 @@ func CreateTask(db *gorm.DB,parentType int8, parentId string, taskName, bizId st
 		ReturnType: taskReturnType,
 
 		Parameters: parameters,
-		Result: result,
+		Result:     result,
 		Data: Data{
 			BizId: bizId,
 		},
@@ -65,17 +65,17 @@ func CreateTask(db *gorm.DB,parentType int8, parentId string, taskName, bizId st
 	return
 }
 
-func FetchFlow(db *gorm.DB,id uint) (flow FlowDO, err error) {
+func FetchFlow(db *gorm.DB, id uint) (flow FlowDO, err error) {
 	err = db.Find(&flow, id).Error
 	return
 }
 
-func BatchFetchFlows(db *gorm.DB,ids []uint) (flows []*FlowDO, err error) {
+func BatchFetchFlows(db *gorm.DB, ids []uint) (flows []*FlowDO, err error) {
 	err = db.Find(&flows, ids).Error
 	return
 }
 
-func FetchFlowDetail(db *gorm.DB,id uint) (flow *FlowDO, tasks []*TaskDO, err error) {
+func FetchFlowDetail(db *gorm.DB, id uint) (flow *FlowDO, tasks []*TaskDO, err error) {
 	flow = &FlowDO{}
 	err = db.Find(flow, id).Error
 
@@ -86,31 +86,31 @@ func FetchFlowDetail(db *gorm.DB,id uint) (flow *FlowDO, tasks []*TaskDO, err er
 	return
 }
 
-func FetchTask(db *gorm.DB,id uint) (task TaskDO, err error) {
+func FetchTask(db *gorm.DB, id uint) (task TaskDO, err error) {
 	err = db.Find(&task, id).Error
 	return
 }
 
-func QueryTask(db *gorm.DB,bizId string, taskType string) (tasks []TaskDO, err error) {
-	err = db.Find(&tasks, "biz_id = ?" ,bizId).Error
+func QueryTask(db *gorm.DB, bizId string, taskType string) (tasks []TaskDO, err error) {
+	err = db.Find(&tasks, "biz_id = ?", bizId).Error
 	return
 }
 
-func UpdateFlowStatus(db *gorm.DB,flow FlowDO) (FlowDO, error) {
+func UpdateFlowStatus(db *gorm.DB, flow FlowDO) (FlowDO, error) {
 	err := db.Model(&flow).Where("id = ?", flow.ID).Update("status", flow.Status).Error
 
 	if err != nil {
 		return flow, err
 	}
-	return flow,nil
+	return flow, nil
 }
 
-func BatchSaveTasks(db *gorm.DB,tasks []*TaskDO) (returnTasks []*TaskDO, err error) {
+func BatchSaveTasks(db *gorm.DB, tasks []*TaskDO) (returnTasks []*TaskDO, err error) {
 	err = db.Save(tasks).Error
 	if err != nil {
 		return tasks, err
 	}
-	return tasks,nil
+	return tasks, nil
 }
 
 //func UpdateFlowAndTasks(flow *FlowDO, tasks []*TaskDO) (*FlowDO, []*TaskDO, error) {
@@ -141,6 +141,6 @@ func BatchSaveTasks(db *gorm.DB,tasks []*TaskDO) (returnTasks []*TaskDO, err err
 //	return flow, tasks, nil
 //}
 
-func UpdateTask(db *gorm.DB,task TaskDO)  (returnTask TaskDO, err error) {
+func UpdateTask(db *gorm.DB, task TaskDO) (returnTask TaskDO, err error) {
 	return task, db.Model(task).Where("id = ?", task.ID).Updates(task).First(&returnTask).Error
 }

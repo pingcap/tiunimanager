@@ -4,14 +4,13 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
-
 )
 
 var TaskSuccessResponseStatus = &dbPb.DBTaskResponseStatus{Code: 0}
 
 func (handler *DBServiceHandler) CreateFlow(ctx context.Context, req *dbPb.DBCreateFlowRequest, rsp *dbPb.DBCreateFlowResponse) error {
 	db := handler.Dao().Db()
-	flow, err := models.CreateFlow(db,req.Flow.FlowName, req.Flow.StatusAlias, req.Flow.GetBizId())
+	flow, err := models.CreateFlow(db, req.Flow.FlowName, req.Flow.StatusAlias, req.Flow.GetBizId())
 	if err != nil {
 		// todo
 
@@ -33,7 +32,7 @@ func (handler *DBServiceHandler) CreateTask(ctx context.Context, req *dbPb.DBCre
 		req.Task.TaskReturnType,
 		req.Task.Parameters,
 		req.Task.Result,
-		)
+	)
 	if err != nil {
 		// todo
 	} else {
@@ -46,11 +45,11 @@ func (handler *DBServiceHandler) CreateTask(ctx context.Context, req *dbPb.DBCre
 
 func (handler *DBServiceHandler) UpdateFlow(ctx context.Context, req *dbPb.DBUpdateFlowRequest, rsp *dbPb.DBUpdateFlowResponse) error {
 	db := handler.Dao().Db()
-	flow, err := models.UpdateFlowStatus(db,*parseFlowDTO(req.FlowWithTasks.Flow))
+	flow, err := models.UpdateFlowStatus(db, *parseFlowDTO(req.FlowWithTasks.Flow))
 	if err != nil {
 		// todo
 	} else {
-		tasks, err := models.BatchSaveTasks(db,batchParseTaskDTO(req.FlowWithTasks.Tasks))
+		tasks, err := models.BatchSaveTasks(db, batchParseTaskDTO(req.FlowWithTasks.Tasks))
 		if err != nil {
 			// todo
 
@@ -67,7 +66,7 @@ func (handler *DBServiceHandler) UpdateFlow(ctx context.Context, req *dbPb.DBUpd
 
 func (handler *DBServiceHandler) UpdateTask(ctx context.Context, req *dbPb.DBUpdateTaskRequest, rsp *dbPb.DBUpdateTaskResponse) error {
 	db := handler.Dao().Db()
-	task, err := models.UpdateTask(db,*parseTaskDTO(req.Task))
+	task, err := models.UpdateTask(db, *parseTaskDTO(req.Task))
 	if err != nil {
 		// todo
 
@@ -81,7 +80,7 @@ func (handler *DBServiceHandler) UpdateTask(ctx context.Context, req *dbPb.DBUpd
 
 func (handler *DBServiceHandler) LoadFlow(ctx context.Context, req *dbPb.DBLoadFlowRequest, rsp *dbPb.DBLoadFlowResponse) error {
 	db := handler.Dao().Db()
-	flow , tasks, err  := models.FetchFlowDetail(db,uint(req.Id))
+	flow, tasks, err := models.FetchFlowDetail(db, uint(req.Id))
 	if err != nil {
 		// todo
 	} else {
@@ -97,7 +96,7 @@ func (handler *DBServiceHandler) LoadFlow(ctx context.Context, req *dbPb.DBLoadF
 
 func (handler *DBServiceHandler) LoadTask(ctx context.Context, req *dbPb.DBLoadTaskRequest, rsp *dbPb.DBLoadTaskResponse) error {
 	db := handler.Dao().Db()
-	task, err := models.FetchTask(db,uint(req.Id))
+	task, err := models.FetchTask(db, uint(req.Id))
 	if err != nil {
 		// todo
 
@@ -167,7 +166,7 @@ func convertTaskToDTO(do *models.TaskDO) (dto *dbPb.DBTaskDTO) {
 func batchConvertTaskToDTO(dos []*models.TaskDO) (dtos []*dbPb.DBTaskDTO) {
 	dtos = make([]*dbPb.DBTaskDTO, len(dos), len(dos))
 
-	for i,v := range dos {
+	for i, v := range dos {
 		dtos[i] = convertTaskToDTO(v)
 	}
 	return
@@ -176,7 +175,7 @@ func batchConvertTaskToDTO(dos []*models.TaskDO) (dtos []*dbPb.DBTaskDTO) {
 func batchParseTaskDTO(dtos []*dbPb.DBTaskDTO) (dos []*models.TaskDO) {
 	dos = make([]*models.TaskDO, len(dtos), len(dtos))
 
-	for i,v := range dtos {
+	for i, v := range dtos {
 		dos[i] = parseTaskDTO(v)
 	}
 	return

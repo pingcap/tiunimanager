@@ -548,9 +548,9 @@ func TestListClusterDetails(t *testing.T) {
 }
 
 func TestSaveBackupRecord(t *testing.T) {
-	brTbl := &BackupRecord{}
+	clusterTbl := Dao.ClusterManager()
 	t.Run("normal", func(t *testing.T) {
-		gotDo, err := brTbl.SaveBackupRecord(MetaDB, "111", "111", "operator1", 1, 1, 111, "path1")
+		gotDo, err := clusterTbl.SaveBackupRecord("111", "111", "operator1", 1, 1, 111, "path1")
 		if err != nil {
 			t.Errorf("SaveBackupRecord() error = %v", err)
 			return
@@ -563,9 +563,9 @@ func TestSaveBackupRecord(t *testing.T) {
 }
 
 func TestSaveRecoverRecord(t *testing.T) {
-	rrTbl := &RecoverRecord{}
+	clusterTbl := Dao.ClusterManager()
 	t.Run("normal", func(t *testing.T) {
-		gotDo, err := rrTbl.SaveRecoverRecord(MetaDB, "111", "111", "operator1", 1, 1)
+		gotDo, err := clusterTbl.SaveRecoverRecord("111", "111", "operator1", 1, 1)
 		if err != nil {
 			t.Errorf("SaveRecoverRecord() error = %v", err)
 			return
@@ -578,10 +578,10 @@ func TestSaveRecoverRecord(t *testing.T) {
 }
 
 func TestDeleteBackupRecord(t *testing.T) {
-	brTbl := &BackupRecord{}
-	record, _ := brTbl.SaveBackupRecord(MetaDB, "111", "222", "operator1", 1, 1, 1, "path1")
+	clusterTbl := Dao.ClusterManager()
+	record, _ := clusterTbl.SaveBackupRecord("111", "222", "operator1", 1, 1, 1, "path1")
 	t.Run("normal", func(t *testing.T) {
-		got, err := brTbl.DeleteBackupRecord(MetaDB, record.ID)
+		got, err := clusterTbl.DeleteBackupRecord(record.ID)
 		if err != nil {
 			t.Errorf("DeleteBackupRecord() error = %v", err)
 			return
@@ -597,28 +597,27 @@ func TestDeleteBackupRecord(t *testing.T) {
 		}*/
 	})
 	t.Run("no record", func(t *testing.T) {
-		_, err := brTbl.DeleteBackupRecord(MetaDB, 999999)
+		_, err := clusterTbl.DeleteBackupRecord(999999)
 		if err == nil {
 			t.Errorf("DeleteBackupRecord() want error")
 			return
 		}
 	})
-
 }
 
 func TestListBackupRecords(t *testing.T) {
-	brTbl := &BackupRecord{}
+	brTbl := Dao.ClusterManager()
 	flow, _ := CreateFlow(MetaDB, "backup", "backup", "111")
-	brTbl.SaveBackupRecord(MetaDB, "111", "222", "operator1", 1, 1, flow.ID, "path1")
-	brTbl.SaveBackupRecord(MetaDB, "111", "222", "operator1", 1, 1, flow.ID, "path2")
-	brTbl.SaveBackupRecord(MetaDB, "111", "11111", "operator1", 1, 1, flow.ID, "path3")
-	brTbl.SaveBackupRecord(MetaDB, "111", "11111", "operator1", 1, 1, flow.ID, "path4")
-	brTbl.SaveBackupRecord(MetaDB, "111", "11111", "operator1", 1, 1, flow.ID, "path5")
-	brTbl.SaveBackupRecord(MetaDB, "111", "11111", "operator1", 1, 1, flow.ID, "path6")
-	brTbl.SaveBackupRecord(MetaDB, "111", "11111", "operator1", 1, 1, flow.ID, "path7")
+	brTbl.SaveBackupRecord("111", "222", "operator1", 1, 1, flow.ID, "path1")
+	brTbl.SaveBackupRecord("111", "222", "operator1", 1, 1, flow.ID, "path2")
+	brTbl.SaveBackupRecord("111", "11111", "operator1", 1, 1, flow.ID, "path3")
+	brTbl.SaveBackupRecord("111", "11111", "operator1", 1, 1, flow.ID, "path4")
+	brTbl.SaveBackupRecord("111", "11111", "operator1", 1, 1, flow.ID, "path5")
+	brTbl.SaveBackupRecord("111", "11111", "operator1", 1, 1, flow.ID, "path6")
+	brTbl.SaveBackupRecord("111", "11111", "operator1", 1, 1, flow.ID, "path7")
 
 	t.Run("normal", func(t *testing.T) {
-		dos, total, err := brTbl.ListBackupRecords(MetaDB, "11111", 2, 2)
+		dos, total, err := brTbl.ListBackupRecords("11111", 2, 2)
 		if err != nil {
 			t.Errorf("ListBackupRecords() error = %v", err)
 			return
@@ -651,9 +650,9 @@ func TestListBackupRecords(t *testing.T) {
 }
 
 func TestSaveParameters(t *testing.T) {
-	prTabl := &ParametersRecord{}
+	brTbl := Dao.ClusterManager()
 	t.Run("normal", func(t *testing.T) {
-		gotDo, err := prTabl.SaveParameters(MetaDB, "111", "111", "someone", 1, "content1")
+		gotDo, err := brTbl.SaveParameters("111", "111", "someone", 1, "content1")
 		if err != nil {
 			t.Errorf("SaveParameters() error = %v", err)
 			return
@@ -667,14 +666,14 @@ func TestSaveParameters(t *testing.T) {
 }
 
 func TestGetCurrentParameters(t *testing.T) {
-	prTabl := &ParametersRecord{}
-	prTabl.SaveParameters(MetaDB, "111", "111", "someone", 1, "content1")
-	prTabl.SaveParameters(MetaDB, "111", "111", "someone", 1, "content2")
-	prTabl.SaveParameters(MetaDB, "111", "111", "someone", 1, "wanted")
-	prTabl.SaveParameters(MetaDB, "111", "222", "someone", 1, "content4")
+	prTbl := Dao.ClusterManager()
+	prTbl.SaveParameters("111", "111", "someone", 1, "content1")
+	prTbl.SaveParameters("111", "111", "someone", 1, "content2")
+	prTbl.SaveParameters("111", "111", "someone", 1, "wanted")
+	prTbl.SaveParameters("111", "222", "someone", 1, "content4")
 
 	t.Run("normal", func(t *testing.T) {
-		gotDo, err := prTabl.GetCurrentParameters(MetaDB, "111")
+		gotDo, err := prTbl.GetCurrentParameters("111")
 		if err != nil {
 			t.Errorf("SaveRecoverRecord() error = %v", err)
 			return

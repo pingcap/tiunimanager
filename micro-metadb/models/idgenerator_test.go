@@ -27,7 +27,7 @@ func TestGenerateIDReplace(t *testing.T) {
 		if strings.Contains(got, "-") {
 			break
 		}
-		time ++
+		time++
 	}
 	for time < 200 {
 		got := GenerateID()
@@ -37,7 +37,7 @@ func TestGenerateIDReplace(t *testing.T) {
 		if strings.Contains(got, "-") {
 			break
 		}
-		time ++
+		time++
 	}
 
 }

@@ -1,6 +1,7 @@
 package userapi
 
 import (
+	"github.com/pingcap-inc/tiem/micro-api/security"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,13 +10,13 @@ import (
 	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
-// Login 登录接口
-// @Summary 登录接口
-// @Description 登录
+// Login login
+// @Summary login
+// @Description login
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
-// @Param loginInfo body LoginInfo true "登录用户信息"
+// @Param loginInfo body LoginInfo true "login info"
 // @Header 200 {string} Token "DUISAFNDHIGADS"
 // @Success 200 {object} controller.CommonResult{data=UserIdentity}
 // @Failure 401 {object} controller.CommonResult
@@ -44,9 +45,9 @@ func Login(c *gin.Context) {
 	}
 }
 
-// Logout 退出登录
-// @Summary 退出登录
-// @Description 退出登录
+// Logout logout
+// @Summary logout
+// @Description logout
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
@@ -64,4 +65,22 @@ func Logout(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, controller.Fail(03, err.Error()))
 	}
+}
+
+// Profile user profile
+// @Summary user profile
+// @Description profile
+// @Tags platform
+// @Accept application/json
+// @Produce application/json
+// @Param Token header string true "token"
+// @Success 200 {object} controller.CommonResult{data=UserIdentity}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /user/profile [get]
+func Profile(c *gin.Context) {
+	v, _ := c.Get(security.VisitorIdentityKey)
+
+	visitor, _ := v.(*security.VisitorIdentity)
+	c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: visitor.AccountName, TenantId: visitor.TenantId}))
 }

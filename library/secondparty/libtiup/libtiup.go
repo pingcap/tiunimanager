@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
@@ -180,26 +181,23 @@ type TaskStatusMapValue struct {
 var glMgrTaskStatusCh chan TaskStatusMember
 var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
-var log *framework.LogRecord
+var logger *log.Entry
 
 func TiupMgrInit() {
-	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
-	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	configPath := ""
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	if len(configPath) == 0 {
-		configPath = "./tiupmgr.log"
-	}
-	// TODO: update log path using configPath if necessary
-	log = framework.GetLogger()
+	logger = framework.GetLogger().ForkFile(configPath + "tiupmgr")
+
+	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
+	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 }
 
 func assert(b bool) {
 	if b {
 	} else {
-		log.Fatal("unexpected panic with stack trace:", string(debug.Stack()))
+		logger.Fatal("unexpected panic with stack trace:", string(debug.Stack()))
 		//fmt.Println("unexpected panic with stack trace:", string(debug.Stack()))
 		panic("unexpected")
 	}
@@ -207,7 +205,7 @@ func assert(b bool) {
 
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
-	log.Fatalf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
+	logger.Fatalf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
 	//fmt.Printf("panic: %s, with stack trace: %s\n", s, string(debug.Stack()))
 	panic("unexpected" + s)
 }
@@ -382,7 +380,7 @@ func newTmpFileWithContent(content []byte) (fileName string, err error) {
 
 func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, TimeoutS int) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
-	log := log.Record("task", taskID)
+	log := logger.WithField("task", taskID)
 	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	//fmt.Println("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	glMgrTaskStatusCh <- TaskStatusMember{
@@ -663,8 +661,12 @@ var glTiUPMgrPath string
 var glTiUPBinPath string
 
 func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
-	// init log
-	log = framework.GetLogger()
+	configPath := ""
+	if len(os.Args) > 1 {
+		configPath = os.Args[1]
+	}
+	logger = framework.GetLogger().ForkFile(configPath + "libtiup")
+
 	glTiUPMgrPath = tiupMgrPath
 	glTiUPBinPath = tiupBinPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -703,7 +705,7 @@ func glMicroTaskStatusMapSyncer() {
 			}
 		}
 		glMicroTaskStatusMapMutex.Unlock()
-		log := framework.WithContext(nil).WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
+		log := logger.WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
 			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,

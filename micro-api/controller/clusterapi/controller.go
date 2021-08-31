@@ -12,14 +12,14 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
-// Create 创建集群接口
-// @Summary 创建集群接口
-// @Description 创建集群接口
+// Create create a cluster
+// @Summary create a cluster
+// @Description create a cluster
 // @Tags cluster
 // @Accept application/json
 // @Produce application/json
 // @Param Token header string true "token"
-// @Param createReq body CreateReq true "创建参数"
+// @Param createReq body CreateReq true "create request"
 // @Success 200 {object} controller.CommonResult{data=CreateClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -60,14 +60,14 @@ func Create(c *gin.Context) {
 	}
 }
 
-// Query 查询集群列表
-// @Summary 查询集群列表
-// @Description 查询集群列表
+// Query query clusters
+// @Summary query clusters
+// @Description query clusters
 // @Tags cluster
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param queryReq query QueryReq false "page" default(1)
+// @Param queryReq query QueryReq false "query request"
 // @Success 200 {object} controller.ResultWithPage{data=[]ClusterDisplayInfo}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -113,14 +113,14 @@ func Query(c *gin.Context) {
 	}
 }
 
-// Delete 删除集群
-// @Summary 删除集群
-// @Description 删除集群
+// Delete delete cluster
+// @Summary delete cluster
+// @Description delete cluster
 // @Tags cluster
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param clusterId path string true "待删除的集群ID"
+// @Param clusterId path string true "cluster id"
 // @Success 200 {object} controller.CommonResult{data=DeleteClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -151,14 +151,14 @@ func Delete(c *gin.Context) {
 	}
 }
 
-// Detail 查看集群详情
-// @Summary 查看集群详情
-// @Description 查看集群详情
+// Detail show details of a cluster
+// @Summary show details of a cluster
+// @Description show details of a cluster
 // @Tags cluster
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param clusterId path string true "集群ID"
+// @Param clusterId path string true "cluster id"
 // @Success 200 {object} controller.CommonResult{data=DetailClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -198,9 +198,9 @@ func Detail(c *gin.Context) {
 	}
 }
 
-// ClusterKnowledge 查看集群基本知识
-// @Summary 查看集群基本知识
-// @Description 查看集群基本知识
+// ClusterKnowledge show cluster knowledge
+// @Summary show cluster knowledge
+// @Description show cluster knowledge
 // @Tags knowledge
 // @Accept json
 // @Produce json
@@ -214,10 +214,9 @@ func ClusterKnowledge(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(knowledge.SpecKnowledge.Specs))
 }
 
-
-// DescribeDashboard
-// @Summary 查看集群dashboard信息
-// @Description 查看集群dashboard信息
+// DescribeDashboard dashboard
+// @Summary dashboard
+// @Description dashboard
 // @Tags cluster
 // @Accept json
 // @Produce json

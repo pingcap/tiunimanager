@@ -15,28 +15,30 @@ import (
 )
 
 func Route(g *gin.Engine) {
-	// 系统检查
+	// system check
 	check := g.Group("/system")
 	{
 		check.GET("/check", controller.Hello)
 	}
 
-	// web静态资源
-	web := g.Group("/web")
-	{
-		// 替换成静态文件
-		web.GET("/*any", controller.HelloPage)
-	}
-
+	// support swagger
 	swagger := g.Group("/swagger")
 	{
 		swagger.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 
+	// web
+	web := g.Group("/web")
+	{
+		web.Use(security.AccessLog(), gin.Recovery())
+		// 替换成静态文件
+		web.GET("/*any", controller.HelloPage)
+	}
+
 	// api
 	apiV1 := g.Group("/api/v1")
 	{
-		apiV1.Use(framework.GenGinLogger(), gin.Recovery())
+		apiV1.Use(security.AccessLog(), gin.Recovery())
 		apiV1.Use(framework.GinOpenTracing())
 
 		user := apiV1.Group("/user")
@@ -45,9 +47,16 @@ func Route(g *gin.Engine) {
 			user.POST("/logout", userapi.Logout)
 		}
 
+		profile := user.Group("")
+		{
+			profile.Use(security.VerifyIdentity)
+			profile.GET("/profile", userapi.Profile)
+		}
+
 		cluster := apiV1.Group("/clusters")
 		{
 			cluster.Use(security.VerifyIdentity)
+			cluster.Use(security.AuditLog())
 			cluster.GET("/:clusterId", clusterapi.Detail)
 			cluster.POST("/", clusterapi.Create)
 			cluster.GET("/", clusterapi.Query)
@@ -70,13 +79,13 @@ func Route(g *gin.Engine) {
 
 		knowledge := apiV1.Group("/knowledges")
 		{
-			// api/v1/knowledges?type=cluster
 			knowledge.GET("/", clusterapi.ClusterKnowledge)
 		}
 
 		backup := apiV1.Group("/backups")
 		{
 			backup.Use(security.VerifyIdentity)
+			backup.Use(security.AuditLog())
 			backup.POST("/", instanceapi.Backup)
 			backup.GET("/", instanceapi.QueryBackup)
 			backup.POST("/:backupId/restore", instanceapi.RecoverBackup)
@@ -87,6 +96,7 @@ func Route(g *gin.Engine) {
 		host := apiV1.Group("/resources")
 		{
 			host.Use(security.VerifyIdentity)
+			host.Use(security.AuditLog())
 			host.POST("host", hostapi.ImportHost)
 			host.POST("hosts", hostapi.ImportHosts)
 			host.GET("hosts", hostapi.ListHost)

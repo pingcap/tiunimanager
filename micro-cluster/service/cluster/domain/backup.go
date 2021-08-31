@@ -195,7 +195,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	defer getLogger().Info("end updateBackupRecord")
 	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
 	record := clusterAggregation.LastBackupRecord
-	/*
+
 	//todo: update size
 	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
 	cluster := clusterAggregation.Cluster
@@ -212,9 +212,9 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		ClusterName: cluster.ClusterName,
 		TaskID: record.BizId,
 	}
-	resp := libbr.ShowBackUpInfo(clusterFacade, uint64(task.Id))
+	resp := libbr.ShowBackUpInfo(clusterFacade)
 	record.Size = resp.Size
-	*/
+
 	_, err :=  client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
 		BackupRecord: &db.DBBackupRecordDTO{
 			Id: record.Id,

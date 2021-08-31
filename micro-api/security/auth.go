@@ -30,7 +30,7 @@ func VerifyIdentity(c *gin.Context) {
 
 	var tokenString string
 	if strings.HasPrefix(bearerTokenString, bearerPrefix) {
-		tokenString = bearerPrefix[len(bearerPrefix):]
+		tokenString = bearerTokenString[len(bearerPrefix):]
 	} else {
 		errMsg := fmt.Sprintf("bad authorization token: %s", bearerTokenString)
 		c.AbortWithStatusJSON(http.StatusUnauthorized, errMsg)

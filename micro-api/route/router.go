@@ -56,6 +56,7 @@ func Route(g *gin.Engine) {
 		cluster := apiV1.Group("/clusters")
 		{
 			cluster.Use(security.VerifyIdentity)
+			cluster.Use(security.AuditLog())
 			cluster.GET("/:clusterId", clusterapi.Detail)
 			cluster.POST("/", clusterapi.Create)
 			cluster.GET("/", clusterapi.Query)
@@ -78,13 +79,13 @@ func Route(g *gin.Engine) {
 
 		knowledge := apiV1.Group("/knowledges")
 		{
-			// api/v1/knowledges?type=cluster
 			knowledge.GET("/", clusterapi.ClusterKnowledge)
 		}
 
 		backup := apiV1.Group("/backups")
 		{
 			backup.Use(security.VerifyIdentity)
+			backup.Use(security.AuditLog())
 			backup.POST("/", instanceapi.Backup)
 			backup.GET("/", instanceapi.QueryBackup)
 			backup.POST("/:backupId/restore", instanceapi.RecoverBackup)
@@ -95,6 +96,7 @@ func Route(g *gin.Engine) {
 		host := apiV1.Group("/resources")
 		{
 			host.Use(security.VerifyIdentity)
+			host.Use(security.AuditLog())
 			host.POST("host", hostapi.ImportHost)
 			host.POST("hosts", hostapi.ImportHosts)
 			host.GET("hosts", hostapi.ListHost)

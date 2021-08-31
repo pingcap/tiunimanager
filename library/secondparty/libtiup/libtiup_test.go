@@ -12,7 +12,7 @@ import (
 
 func init() {
 	// make sure log would not cause nil pointer problem
-	log = framework.GetLogger()
+	logger = framework.GetLogger().ForkFile("tiupmgr")
 	TiupMgrInit()
 }
 

@@ -1,7 +1,6 @@
 package framework
 
 import (
-	"context"
 	common2 "github.com/pingcap-inc/tiem/library/common"
 	"io"
 	"os"
@@ -77,6 +76,7 @@ func DefaultLogRecord() *LogRecord {
 
 	// Record sys and mod default init
 	lr.defaultLogEntry = lr.forkEntry(lr.LogFileName)
+	lr.forkFileEntry = map[string]*log.Entry{lr.LogFileName: lr.defaultLogEntry}
 	//.WithField(RecordSysField, lr.RecordSysName).WithField(RecordModField, lr.RecordModName)
 	return lr
 }
@@ -96,6 +96,8 @@ func NewLogRecordFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *LogRec
 
 	// Record sys and mod default init
 	lr.defaultLogEntry = lr.forkEntry(lr.LogFileName)
+	lr.forkFileEntry = map[string]*log.Entry{lr.LogFileName: lr.defaultLogEntry}
+
 	//.WithField(RecordSysField, lr.RecordSysName).WithField(RecordModField, lr.RecordModName)
 	return lr
 }
@@ -161,23 +163,12 @@ type logCtxKeyType struct{}
 
 var logCtxKey logCtxKeyType
 
-func WithContext(ctx context.Context) *log.Entry {
-	le, ok := ctx.Value(logCtxKey).(*log.Entry)
-	if ok {
-		return le
-	} else {
-		return GetLogger().defaultLogEntry
-	}
+func (lr *LogRecord) Record(key string, value interface{}) *log.Entry {
+	return lr.defaultLogEntry.WithField(key, value)
 }
 
-func (lr *LogRecord) Record(key string, value interface{}) *LogRecord {
-	lr.defaultLogEntry = lr.defaultLogEntry.WithField(key, value)
-	return lr
-}
-
-func (lr *LogRecord) Records(fields log.Fields) *LogRecord {
-	lr.defaultLogEntry = lr.defaultLogEntry.WithFields(fields)
-	return lr
+func (lr *LogRecord) Records(fields log.Fields) *log.Entry {
+	return lr.defaultLogEntry.WithFields(fields)
 }
 
 func (lr *LogRecord) RecordSys(sys string) *LogRecord {

@@ -30,8 +30,10 @@ func (handler *DBServiceHandler) FindTenant(ctx context.Context, req *proto.DBFi
 			Status: int32(tenant.Status),
 		}
 	} else {
-		resp.Status.Code = common.TIEM_TENANT_NOT_FOUND
-		resp.Status.Message = err.Error()
+		resp.Status = &proto.DbAuthResponseStatus{
+			Code: common.TIEM_TENANT_NOT_FOUND,
+			Message: err.Error(),
+		}
 		err = errors.Errorf("FindTenantByName,query database failed, name: %s, error: %v", req.GetName(), err)
 	}
 	if nil == err {
@@ -59,7 +61,11 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *proto.DBF
 			FinalHash: account.FinalHash,
 		}
 	} else {
-		resp.Status.Code = common.TIEM_ACCOUNT_NOT_FOUND
+		resp.Status = &proto.DbAuthResponseStatus{
+			Code: common.TIEM_ACCOUNT_NOT_FOUND,
+			Message: err.Error(),
+		}
+
 		resp.Status.Message = err.Error()
 		err = errors.Errorf("FindAccount,query database failed, name: %s, error: %v", req.GetName(), err)
 	}
@@ -85,8 +91,10 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *proto.DBF
 			}
 			resp.Account.Roles = roleDTOs
 		} else {
-			resp.Status.Code = common.TIEM_ACCOUNT_NOT_FOUND
-			resp.Status.Message = err.Error()
+			resp.Status = &proto.DbAuthResponseStatus{
+				Code: common.TIEM_ACCOUNT_NOT_FOUND,
+				Message: err.Error(),
+			}
 			err = errors.Errorf("FindAccount,query database failed, name: %s, tenantId: %s, error: %v", req.GetName(), account.TenantId, err)
 		}
 		if nil == err {
@@ -110,8 +118,10 @@ func (handler *DBServiceHandler) SaveToken(cxt context.Context, req *proto.DBSav
 	if err == nil {
 		resp.Status = SuccessResponseStatus
 	} else {
-		resp.Status.Code = common.TIEM_ADD_TOKEN_FAILED
-		resp.Status.Message = err.Error()
+		resp.Status = &proto.DbAuthResponseStatus{
+			Code: common.TIEM_ADD_TOKEN_FAILED,
+			Message: err.Error(),
+		}
 		err = errors.Errorf("AddToKen,write database failed, token: %s, tenantId: %s, accountName: %s, accountId: %s,error: %v",
 			req.GetToken(), req.Token.TenantId, req.Token.AccountName, req.Token.AccountId, err)
 	}
@@ -143,8 +153,10 @@ func (handler *DBServiceHandler) FindToken(cxt context.Context, req *proto.DBFin
 			ExpirationTime: token.ExpirationTime.Unix(),
 		}
 	} else {
-		resp.Status.Code = common.TIEM_TOKEN_NOT_FOUND
-		resp.Status.Message = err.Error()
+		resp.Status = &proto.DbAuthResponseStatus{
+			Code: common.TIEM_TOKEN_NOT_FOUND,
+			Message: err.Error(),
+		}
 		err = errors.Errorf("FindToKen,query database failed, token: %s, error: %v", req.GetTokenString(), err)
 	}
 	if nil == err {
@@ -173,8 +185,10 @@ func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req 
 			Status:   int32(permissionDO.Status),
 		}
 	} else {
-		resp.Status.Code = common.TIEM_QUERY_PERMISSION_FAILED
-		resp.Status.Message = err.Error()
+		resp.Status = &proto.DbAuthResponseStatus{
+			Code: common.TIEM_QUERY_PERMISSION_FAILED,
+			Message: err.Error(),
+		}
 		err = errors.Errorf("FindRolesByPermission query database failed, tenantId: %s, code: %s, error: %v", req.TenantId, req.Code, err)
 	}
 
@@ -193,8 +207,10 @@ func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req 
 			resp.Status = SuccessResponseStatus
 			resp.Roles = roleDTOs
 		} else {
-			resp.Status.Code = common.TIEM_QUERY_PERMISSION_FAILED
-			resp.Status.Message = err.Error()
+			resp.Status = &proto.DbAuthResponseStatus{
+				Code: common.TIEM_QUERY_PERMISSION_FAILED,
+				Message: err.Error(),
+			}
 			err = errors.Errorf("FindRolesByPermission query database failed, tenantId: %s, code: %s, error: %v", req.TenantId, req.Code, err)
 		}
 	}

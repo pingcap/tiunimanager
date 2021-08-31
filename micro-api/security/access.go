@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-var timeFormat = ""
-
 func AccessLog() gin.HandlerFunc {
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -34,7 +32,7 @@ func AccessLog() gin.HandlerFunc {
 			dataLength = 0
 		}
 
-		entry := framework.GetLogger().Records(log.Fields{
+		entry := framework.GetLogger().ForkFile("access").WithFields(log.Fields{
 			"hostname":   hostname,
 			"statusCode": statusCode,
 			"latency":    latency, // time to process
@@ -49,7 +47,7 @@ func AccessLog() gin.HandlerFunc {
 		if len(c.Errors) > 0 {
 			entry.Error(c.Errors.ByType(gin.ErrorTypePrivate).String())
 		} else {
-			msg := fmt.Sprintf("%s - %s [%s] \"%s %s\" %d %d \"%s\" \"%s\" (%dms)", clientIP, hostname, time.Now().Format(timeFormat), c.Request.Method, path, statusCode, dataLength, referer, clientUserAgent, latency)
+			msg := fmt.Sprintf("%s - %s \"%s %s\" %d %d \"%s\" \"%s\" (%dms)", clientIP, hostname, c.Request.Method, path, statusCode, dataLength, referer, clientUserAgent, latency)
 			if statusCode >= http.StatusInternalServerError {
 				entry.Error(msg)
 			} else if statusCode >= http.StatusBadRequest {

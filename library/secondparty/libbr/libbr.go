@@ -10,6 +10,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	logrus "github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"os/exec"
@@ -174,23 +175,20 @@ type CmdGetAllTaskStatusResp struct {
 //var glMgrTaskStatusCh chan TaskStatusMember
 //var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
-var log *framework.LogRecord
+var logger *logrus.Entry
 
 var glMgrTaskStatusCh chan TaskStatusMember
 var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
 func BrMgrInit() {
-	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
-	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
-	// TODO: comprehend this part
 	configPath := ""
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	if len(configPath) == 0 {
-		configPath = "./brmgr.log"
-	}
-	log = framework.GetLogger()
+	logger = framework.GetLogger().ForkFile(configPath + "brmgr")
+
+	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
+	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 }
 
 func BrMgrRoutine() {
@@ -211,7 +209,7 @@ func BrMgrRoutine() {
 			if err != nil {
 				myPanic(fmt.Sprintln("cmdStr unmarshal failed err:", err, "cmdStr:", cmdStr))
 			}
-			log.Info("rcv req", cmd)
+			logger.Info("rcv req", cmd)
 			var cmdResp CmdReqOrResp
 			switch cmd.TypeStr {
 			//case CmdBackUpPreCheckReqTypeStr:
@@ -239,7 +237,7 @@ func BrMgrRoutine() {
 			default:
 				myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
 			}
-			log.Info("snd rsp", cmdResp)
+			logger.Info("snd rsp", cmdResp)
 			bs := jsonMustMarshal(&cmdResp)
 			bs = append(bs, '\n')
 			ct, err := outWriter.Write(bs)
@@ -254,14 +252,14 @@ func BrMgrRoutine() {
 func assert(b bool) {
 	if b {
 	} else {
-		log.Fatal("unexpected panic with stack trace:", string(debug.Stack()))
+		logger.Fatal("unexpected panic with stack trace:", string(debug.Stack()))
 		panic("unexpected")
 	}
 }
 
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
-	log.Fatalf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
+	logger.Fatalf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
 	panic("unexpected")
 }
 
@@ -413,10 +411,10 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 	resp := CmdShowBackUpInfoResp{}
 	brSQLCmd := "SHOW BACKUPS"
 	dbConnParam := req.DbConnParameter
-	log.Info("task start processing:", fmt.Sprintf("brSQLCmd:%s", brSQLCmd))
+	logger.Info("task start processing:", fmt.Sprintf("brSQLCmd:%s", brSQLCmd))
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
 	if err != nil {
-		log.Error("db connection err:", err)
+		logger.Error("db connection err:", err)
 		resp.Error = err
 		return resp
 	}
@@ -424,17 +422,17 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 	t0 := time.Now()
 	err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.Queue_time, &resp.Execution_Time, &resp.Finish_Time, &resp.Connection)
 	successFp := func() {
-		log.Info("showbackupinfo task finished, time cost", time.Now().Sub(t0))
+		logger.Info("showbackupinfo task finished, time cost", time.Now().Sub(t0))
 	}
 	if err != nil {
-		log.Errorf("query sql cmd err: %v", err)
+		logger.Errorf("query sql cmd err: %v", err)
 		if err.Error() != "sql: no rows in result set" {
-			log.Debugf("(%s) != (sql: no rows in result set", err.Error())
+			logger.Debugf("(%s) != (sql: no rows in result set", err.Error())
 			resp.Error = err
 			return resp
 		}
-		log.Debugf("(%s) == (sql: no rows in result set)", err.Error())
-		log.Infof("task has finished without checking db while no rows is result for sql cmd")
+		logger.Debugf("(%s) == (sql: no rows in result set)", err.Error())
+		logger.Infof("task has finished without checking db while no rows is result for sql cmd")
 		resp.Progress = 100
 		//stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID)
 		//log.Infof("stat: %v, errStr: %s, err: %v", stat, errStr, err)
@@ -450,7 +448,7 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 		//}
 		return resp
 	}
-	log.Info("sql cmd return successfully")
+	logger.Info("sql cmd return successfully")
 	successFp()
 	return resp
 }
@@ -488,10 +486,10 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 	resp := CmdShowRestoreInfoResp{}
 	brSQLCmd := "SHOW RESTORES"
 	dbConnParam := req.DbConnParameter
-	log.Infof("task start processing: brSQLCmd:%s", brSQLCmd)
+	logger.Infof("task start processing: brSQLCmd:%s", brSQLCmd)
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
 	if err != nil {
-		log.Error("db connection err", err)
+		logger.Error("db connection err", err)
 		resp.Error = err
 		return resp
 	}
@@ -499,17 +497,17 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 	t0 := time.Now()
 	err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.Queue_time, &resp.Execution_Time, &resp.Finish_Time, &resp.Connection)
 	successFp := func() {
-		log.Info("showretoreinfo task finished, time cost", time.Now().Sub(t0))
+		logger.Info("showretoreinfo task finished, time cost", time.Now().Sub(t0))
 	}
 	if err != nil {
-		log.Errorf("query sql cmd err: %v", err)
+		logger.Errorf("query sql cmd err: %v", err)
 		if err.Error() != "sql: no rows in result set" {
-			log.Debugf("(%s) != (sql: no rows in result set", err.Error())
+			logger.Debugf("(%s) != (sql: no rows in result set", err.Error())
 			resp.Error = err
 			return resp
 		}
-		log.Debugf("(%s) == (sql: no rows in result set)", err.Error())
-		log.Infof("task has finished without checking db while no rows is result for sql cmd")
+		logger.Debugf("(%s) == (sql: no rows in result set)", err.Error())
+		logger.Infof("task has finished without checking db while no rows is result for sql cmd")
 		resp.Progress = 100
 		//if stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
 		//	log.Error("get tiup status error", err)
@@ -523,14 +521,14 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 		//}
 		return resp
 	}
-	log.Info("sql cmd return successfully")
+	logger.Info("sql cmd return successfully")
 	successFp()
 	return resp
 }
 
 func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd string) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
-	log.Infof("task start processing: brSQLCmd:%s", brSQLCmd)
+	logger.Infof("task start processing: brSQLCmd:%s", brSQLCmd)
 	glMgrTaskStatusCh <- TaskStatusMember{
 		TaskID:   taskID,
 		Status:   TaskStatusProcessing,
@@ -541,7 +539,7 @@ func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd 
 
 		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
 		if err != nil {
-			log.Error("db connection err", err)
+			logger.Error("db connection err", err)
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
@@ -554,7 +552,7 @@ func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd 
 		resp := CmdBrResp{}
 		err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.Size, &resp.BackupTS, &resp.Queue_time, &resp.Execution_Time)
 		if err != nil {
-			log.Error("query sql cmd err", err)
+			logger.Error("query sql cmd err", err)
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
@@ -563,14 +561,14 @@ func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd 
 			return
 		}
 		successFp := func() {
-			log.Info("task finished, time cost", time.Now().Sub(t0))
+			logger.Info("task finished, time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusFinished,
 				ErrorStr: string(jsonMustMarshal(&resp)),
 			}
 		}
-		log.Info("sql cmd return successfully")
+		logger.Info("sql cmd return successfully")
 		successFp()
 		return
 	}()
@@ -611,7 +609,12 @@ type ProgressRate struct {
 }
 
 func MicroInit(brMgrPath, mgrLogFilePath string) {
-	log = framework.GetLogger()
+	configPath := ""
+	if len(os.Args) > 1 {
+		configPath = os.Args[1]
+	}
+	logger = framework.GetLogger().ForkFile(configPath + "tiupmgr")
+
 	glBrMgrPath = brMgrPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	glMicroCmdChan = microStartBrMgr(mgrLogFilePath)
@@ -649,7 +652,7 @@ func glMicroTaskStatusMapSyncer() {
 			}
 		}
 		glMicroTaskStatusMapMutex.Unlock()
-		log := framework.WithContext(nil).WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
+		log := framework.GetLogger().ForkFile("br").WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
 			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,
@@ -876,9 +879,9 @@ func ShowRestoreInfo(cluster ClusterFacade) CmdShowRestoreInfoResp {
 func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error) {
 	var req dbPb.FindTiupTaskByIDRequest
 	req.Id = taskID
-	log.Debugf("FindTiupTaskByID: %d", taskID)
+	logger.Debugf("FindTiupTaskByID: %d", taskID)
 	rsp, err := client.DBClient.FindTiupTaskByID(context.Background(), &req)
-	log.Debugf("FindTiupTaskByID: %d. rsp: %v, err: %v", taskID, rsp, err)
+	logger.Debugf("FindTiupTaskByID: %d. rsp: %v, err: %v", taskID, rsp, err)
 	if err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("err:%s, rsp.ErrCode:%d, rsp.ErrStr:%s", err, rsp.ErrCode, rsp.ErrStr)
 		return stat, "", err

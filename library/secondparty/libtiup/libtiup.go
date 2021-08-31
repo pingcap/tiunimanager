@@ -665,7 +665,7 @@ func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetLogger().ForkFile(configPath + "tiupmgr")
+	logger = framework.GetLogger().ForkFile(configPath + "libtiup")
 
 	glTiUPMgrPath = tiupMgrPath
 	glTiUPBinPath = tiupBinPath

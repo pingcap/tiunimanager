@@ -613,7 +613,7 @@ func MicroInit(brMgrPath, mgrLogFilePath string) {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetLogger().ForkFile(configPath + "tiupmgr")
+	logger = framework.GetLogger().ForkFile(configPath + "libbr")
 
 	glBrMgrPath = brMgrPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)

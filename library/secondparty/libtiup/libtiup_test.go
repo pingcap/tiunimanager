@@ -2,16 +2,17 @@ package libtiup
 
 import (
 	"fmt"
-	"github.com/pingcap/tiem/library/thirdparty/logger"
 	"os"
 	"os/exec"
 	"testing"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/framework"
 )
 
 func init() {
 	// make sure log would not cause nil pointer problem
-	log = logger.GetLogger("config_key_test_log")
+	log = framework.GetLogger()
 	TiupMgrInit()
 }
 
@@ -59,8 +60,7 @@ func TestMgrHandleCmdDeployReq(t *testing.T) {
 	loopUntilDone()
 	// then check the cluster by command (tiup cluster list AND tiup cluster display test-cluster) for now
 }
- */
-
+*/
 
 // todo: make it standalone(depends on tiup binary), comment out for now
 /**
@@ -74,7 +74,7 @@ func TestMgrHandleCmdStartReq(t *testing.T) {
 	loopUntilDone()
 	// then check the cluster by command (tiup cluster list AND tiup cluster display test-cluster) for now
 }
- */
+*/
 
 // todo: make it standalone(depends on tiup binary), comment out for now
 /**
@@ -88,7 +88,7 @@ func TestMgrHandleCmdDestroyReq(t *testing.T) {
 	loopUntilDone()
 	// then check the cluster by command (tiup cluster list AND tiup cluster display test-cluster) for now
 }
- */
+*/
 
 // todo: make it standalone(depends on tiup binary), comment out for now
 /**

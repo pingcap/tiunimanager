@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
+
 	"github.com/pingcap-inc/tiem/library/client"
 
 	micro "github.com/asim/go-micro/v3/client"
-	"github.com/pingcap-inc/tiem/micro-cluster/proto"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 type ClusterFakeService struct {
@@ -186,3 +187,13 @@ func (s *ClusterFakeService) DescribeDashboard(ctx context.Context, in *cluster.
 	panic("implement me")
 }
 
+func (s *ClusterFakeService) ImportData(ctx context.Context, in *cluster.DataImportRequest, opts ...micro.CallOption) (*cluster.DataImportResponse, error) {
+	panic("implement me")
+}
+func (s *ClusterFakeService) ExportData(ctx context.Context, in *cluster.DataExportRequest, opts ...micro.CallOption) (*cluster.DataExportResponse, error) {
+	panic("implement me")
+}
+
+func (s *ClusterFakeService) DescribeDataTransport(ctx context.Context, in *cluster.DataTransportQueryRequest, opts ...micro.CallOption) (*cluster.DataTransportQueryResponse, error) {
+	panic("implement me")
+}

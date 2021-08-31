@@ -29,24 +29,6 @@ message DBAllocationReq {
     string purpose = 5;
 }
 
-message DBPreAllocation {
-    string failureDomain = 1;
-    string hostId = 2;
-    string diskId = 3;
-    int32 originCores = 4;
-    int32 originMem = 5;
-    int32 requestCores = 6;
-    int32 requestMem = 7;
-    string hostName = 8;
-    string Ip = 9;
-    string userName = 10;
-    string passwd = 11;
-    string diskName = 12;
-    string diskPath = 13;
-    int32 diskCap = 14;
-
-}
-
 message DBHostInfoDTO {
     string hostId = 1;
     string hostName = 2;
@@ -71,10 +53,11 @@ message DBHostInfoDTO {
 message DBAllocHostDTO {
     string hostName = 1;
     string ip = 2;
-    string component = 3;           // Alloc this host for which compoent? [pd/tidb/tikv]
-    int32 cpuCores = 4;
-    int32 memory = 5;
-    DBDiskDTO disk = 6;
+    string userName = 3;
+    string passwd = 4;
+    int32 cpuCores = 5;
+    int32 memory = 6;
+    DBDiskDTO disk = 7;
 }
 
 message DBFailureDomainResource {
@@ -139,21 +122,17 @@ message DBCheckDetailsResponse {
     DBHostInfoDTO details = 2;
 }
 
-message DBPreAllocHostsRequest {
-    DBAllocationReq req = 1;
+message DBAllocHostsRequest {
+    repeated DBAllocationReq pdReq = 1;
+    repeated DBAllocationReq tidbReq = 2;
+    repeated DBAllocationReq tikvReq = 3;
 }
 
-message DBPreAllocHostsResponse {
+message DBAllocHostsResponse {
     DBHostResponseStatus rs = 1;
-    repeated DBPreAllocation results = 2;
-}
-
-message DBLockHostsRequest {
-    repeated DBPreAllocation req = 1;
-}
-
-message DBLockHostsResponse {
-    DBHostResponseStatus rs = 1;
+    repeated DBAllocHostDTO pdHosts = 2;
+    repeated DBAllocHostDTO tidbHosts = 3;
+    repeated DBAllocHostDTO tikvHosts = 4;
 }
 
 message DBGetFailureDomainRequest {

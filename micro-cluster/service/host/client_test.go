@@ -5,6 +5,7 @@ import (
 
 	"github.com/asim/go-micro/v3/client"
 	rpc_client "github.com/pingcap-inc/tiem/library/client"
+
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
@@ -22,8 +23,7 @@ type DBFakeService struct {
 	mockRemoveHostsInBatch func(ctx context.Context, in *db.DBRemoveHostsInBatchRequest, opts ...client.CallOption) (*db.DBRemoveHostsInBatchResponse, error)
 	mockListHost           func(ctx context.Context, in *db.DBListHostsRequest, opts ...client.CallOption) (*db.DBListHostsResponse, error)
 	mockCheckDetails       func(ctx context.Context, in *db.DBCheckDetailsRequest, opts ...client.CallOption) (*db.DBCheckDetailsResponse, error)
-	mockPreAllocHosts      func(ctx context.Context, in *db.DBPreAllocHostsRequest, opts ...client.CallOption) (*db.DBPreAllocHostsResponse, error)
-	mockLockHosts          func(ctx context.Context, in *db.DBLockHostsRequest, opts ...client.CallOption) (*db.DBLockHostsResponse, error)
+	mockAllocHosts         func(ctx context.Context, in *db.DBAllocHostsRequest, opts ...client.CallOption) (*db.DBAllocHostsResponse, error)
 	mockGetFailureDomain   func(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error)
 	// Cluster
 	mockCreateCluster           func(ctx context.Context, in *db.DBCreateClusterRequest, opts ...client.CallOption) (*db.DBCreateClusterResponse, error)
@@ -89,11 +89,8 @@ func (s *DBFakeService) ListHost(ctx context.Context, in *db.DBListHostsRequest,
 func (s *DBFakeService) CheckDetails(ctx context.Context, in *db.DBCheckDetailsRequest, opts ...client.CallOption) (*db.DBCheckDetailsResponse, error) {
 	return s.mockCheckDetails(ctx, in, opts...)
 }
-func (s *DBFakeService) PreAllocHosts(ctx context.Context, in *db.DBPreAllocHostsRequest, opts ...client.CallOption) (*db.DBPreAllocHostsResponse, error) {
-	return s.mockPreAllocHosts(ctx, in, opts...)
-}
-func (s *DBFakeService) LockHosts(ctx context.Context, in *db.DBLockHostsRequest, opts ...client.CallOption) (*db.DBLockHostsResponse, error) {
-	return s.mockLockHosts(ctx, in, opts...)
+func (s *DBFakeService) AllocHosts(ctx context.Context, in *db.DBAllocHostsRequest, opts ...client.CallOption) (*db.DBAllocHostsResponse, error) {
+	return s.mockAllocHosts(ctx, in, opts...)
 }
 func (s *DBFakeService) GetFailureDomain(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error) {
 	return s.mockGetFailureDomain(ctx, in, opts...)
@@ -137,6 +134,31 @@ func (s *DBFakeService) SaveParametersRecord(ctx context.Context, in *db.DBSaveP
 }
 func (s *DBFakeService) GetCurrentParametersRecord(ctx context.Context, in *db.DBGetCurrentParametersRequest, opts ...client.CallOption) (*db.DBGetCurrentParametersResponse, error) {
 	return s.mockGetCurrentParametersRecord(ctx, in, opts...)
+}
+
+func (s *DBFakeService) CreateTransportRecord(ctx context.Context, in *db.DBCreateTransportRecordRequest, opts ...client.CallOption) (*db.DBCreateTransportRecordResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) UpdateTransportRecord(ctx context.Context, in *db.DBUpdateTransportRecordRequest, opts ...client.CallOption) (*db.DBUpdateTransportRecordResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) FindTrasnportRecordByID(ctx context.Context, in *db.DBFindTransportRecordByIDRequest, opts ...client.CallOption) (*db.DBFindTransportRecordByIDResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) ListTrasnportRecord(ctx context.Context, in *db.DBListTransportRecordRequest, opts ...client.CallOption) (*db.DBListTransportRecordResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) QueryBackupRecords(ctx context.Context, in *db.DBQueryBackupRecordRequest, opts ...client.CallOption) (*db.DBQueryBackupRecordResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) QueryBackupStrategy(ctx context.Context, in *db.DBQueryBackupStrategyRequest, opts ...client.CallOption) (*db.DBQueryBackupStrategyResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) SaveBackupStrategy(ctx context.Context, in *db.DBSaveBackupStrategyRequest, opts ...client.CallOption) (*db.DBSaveBackupStrategyResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) UpdateBackupRecord(ctx context.Context, in *db.DBUpdateBackupRecordRequest, opts ...client.CallOption) (*db.DBUpdateBackupRecordResponse, error) {
+	panic("implement me")
 }
 
 // Mock Tiup Task
@@ -209,10 +231,7 @@ func InitMockDBClient() *DBFakeService {
 		mockCheckDetails: func(ctx context.Context, in *db.DBCheckDetailsRequest, opts ...client.CallOption) (*db.DBCheckDetailsResponse, error) {
 			return nil, nil
 		},
-		mockPreAllocHosts: func(ctx context.Context, in *db.DBPreAllocHostsRequest, opts ...client.CallOption) (*db.DBPreAllocHostsResponse, error) {
-			return nil, nil
-		},
-		mockLockHosts: func(ctx context.Context, in *db.DBLockHostsRequest, opts ...client.CallOption) (*db.DBLockHostsResponse, error) {
+		mockAllocHosts: func(ctx context.Context, in *db.DBAllocHostsRequest, opts ...client.CallOption) (*db.DBAllocHostsResponse, error) {
 			return nil, nil
 		},
 		mockGetFailureDomain: func(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error) {
@@ -315,12 +334,8 @@ func (s *DBFakeService) MockCheckDetails(mock func(ctx context.Context, in *db.D
 	s.mockCheckDetails = mock
 }
 
-func (s *DBFakeService) MockPreAllocHosts(mock func(ctx context.Context, in *db.DBPreAllocHostsRequest, opts ...client.CallOption) (*db.DBPreAllocHostsResponse, error)) {
-	s.mockPreAllocHosts = mock
-}
-
-func (s *DBFakeService) MockLockHosts(mock func(ctx context.Context, in *db.DBLockHostsRequest, opts ...client.CallOption) (*db.DBLockHostsResponse, error)) {
-	s.mockLockHosts = mock
+func (s *DBFakeService) MockAllocHosts(mock func(ctx context.Context, in *db.DBAllocHostsRequest, opts ...client.CallOption) (*db.DBAllocHostsResponse, error)) {
+	s.mockAllocHosts = mock
 }
 
 func (s *DBFakeService) MockGetFailureDomain(mock func(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error)) {

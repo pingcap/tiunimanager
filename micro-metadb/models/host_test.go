@@ -1,10 +1,14 @@
 package models
 
 import (
-	"gorm.io/gorm"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
 )
 
 func TestCreateHost(t *testing.T) {
@@ -901,6 +905,7 @@ func TestListHosts(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
+
 	id1, _ := CreateHost(MetaDB, h)
 	defer DeleteHost(MetaDB, id1)
 
@@ -999,6 +1004,7 @@ func TestListHosts(t *testing.T) {
 	}
 }
 
+/*
 func TestLockHosts(t *testing.T) {
 	h := &Host{
 		HostName: "TestLockHosts1",
@@ -1072,6 +1078,289 @@ func TestPreAllocHosts(t *testing.T) {
 			if !reflect.DeepEqual(gotResources, tt.wantResources) {
 				t.Errorf("PreAllocHosts() gotResources = %v, want %v", gotResources, tt.wantResources)
 			}
+		})
+	}
+}
+*/
+
+func TestAllocHosts_3Hosts(t *testing.T) {
+	h := &Host{
+		HostName: "主机1",
+		IP:       "474.111.111.111",
+		UserName: "root",
+		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 17,
+		Memory:   64,
+		Nic:      "1GE",
+		AZ:       "Zone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []Disk{
+			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
+			{Name: "sdb", Path: "/pd", Capacity: 256, Status: 0},
+		},
+	}
+	h2 := &Host{
+		HostName: "主机2",
+		IP:       "474.111.111.112",
+		UserName: "root",
+		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 16,
+		Memory:   64,
+		Nic:      "1GE",
+		AZ:       "Zone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []Disk{
+			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 0},
+			{Name: "sdc", Path: "/tidb2", Capacity: 256, Status: 0},
+		},
+	}
+	h3 := &Host{
+		HostName: "主机3",
+		IP:       "474.111.111.113",
+		UserName: "root",
+		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 15,
+		Memory:   64,
+		Nic:      "1GE",
+		AZ:       "Zone1",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []Disk{
+			{Name: "sdb", Path: "/tikv", Capacity: 256, Status: 0},
+		},
+	}
+	id1, _ := CreateHost(MetaDB, h)
+	id2, _ := CreateHost(MetaDB, h2)
+	id3, _ := CreateHost(MetaDB, h3)
+	// Host Status should be inused or exhausted, so delete would failed
+	defer DeleteHost(MetaDB, id1)
+	defer DeleteHost(MetaDB, id2)
+	defer DeleteHost(MetaDB, id3)
+
+	var m AllocReqs = make(map[string][]*HostAllocReq)
+	m["pd"] = append(m["pd"], &HostAllocReq{
+		FailureDomain: "Zone1",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	m["tidb"] = append(m["tidb"], &HostAllocReq{
+		FailureDomain: "Zone1",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	m["tikv"] = append(m["tikv"], &HostAllocReq{
+		FailureDomain: "Zone1",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	type args struct {
+		req AllocReqs
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"normal", args{
+			req: m,
+		}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rsp, err := AllocHosts(MetaDB, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			pdIp := rsp["pd"][0].Ip
+			tidbIp := rsp["tidb"][0].Ip
+			tikvIp := rsp["tikv"][0].Ip
+			assert.True(t, pdIp != tidbIp && tidbIp != tikvIp && tikvIp != pdIp)
+			assert.True(t, pdIp == "474.111.111.111" || pdIp == "474.111.111.112" || pdIp == "474.111.111.113")
+			assert.True(t, tidbIp == "474.111.111.111" || tidbIp == "474.111.111.112" || tidbIp == "474.111.111.113")
+			assert.True(t, tikvIp == "474.111.111.111" || tikvIp == "474.111.111.112" || tikvIp == "474.111.111.113")
+			var host Host
+			MetaDB.First(&host, "IP = ?", "474.111.111.111")
+			assert.Equal(t, 17-4, host.CpuCores)
+			assert.Equal(t, 64-8, host.Memory)
+			assert.True(t, host.Status == int32(HOST_EXHAUST))
+			var host2 Host
+			MetaDB.First(&host2, "IP = ?", "474.111.111.112")
+			assert.Equal(t, 16-4, host2.CpuCores)
+			assert.Equal(t, 64-8, host2.Memory)
+			assert.True(t, host2.Status == int32(HOST_INUSED))
+			var host3 Host
+			MetaDB.First(&host3, "IP = ?", "474.111.111.113")
+			assert.Equal(t, 15-4, host3.CpuCores)
+			assert.Equal(t, 64-8, host3.Memory)
+			assert.True(t, host3.Status == int32(HOST_EXHAUST))
+		})
+	}
+}
+
+func TestAllocHosts_1Host(t *testing.T) {
+	h := &Host{
+		HostName: "主机1",
+		IP:       "192.168.56.99",
+		UserName: "root",
+		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 17,
+		Memory:   64,
+		Nic:      "1GE",
+		AZ:       "Zone99",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []Disk{
+			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
+			{Name: "sdb", Path: "/mnt1", Capacity: 256, Status: 0},
+			{Name: "sdc", Path: "/mnt2", Capacity: 256, Status: 0},
+			{Name: "sdd", Path: "/mnt3", Capacity: 256, Status: 0},
+		},
+	}
+
+	id1, _ := CreateHost(MetaDB, h)
+	defer DeleteHost(MetaDB, id1)
+
+	var m AllocReqs = make(map[string][]*HostAllocReq)
+	m["pd"] = append(m["pd"], &HostAllocReq{
+		FailureDomain: "Zone99",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	m["tidb"] = append(m["tidb"], &HostAllocReq{
+		FailureDomain: "Zone99",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	m["tikv"] = append(m["tikv"], &HostAllocReq{
+		FailureDomain: "Zone99",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	type args struct {
+		req AllocReqs
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"normal", args{
+			req: m,
+		}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rsp, err := AllocHosts(MetaDB, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			pdIp := rsp["pd"][0].Ip
+			tidbIp := rsp["tidb"][0].Ip
+			tikvIp := rsp["tikv"][0].Ip
+			pdDisk := rsp["pd"][0].DiskName
+			tidbDisk := rsp["tidb"][0].DiskName
+			tikvDisk := rsp["tikv"][0].DiskName
+			assert.True(t, pdIp == "192.168.56.99" && tidbIp == "192.168.56.99" && tikvIp == "192.168.56.99")
+			assert.True(t, pdDisk != tidbDisk && tidbDisk != tikvDisk && tikvDisk != pdDisk)
+			assert.True(t, pdDisk == "sdb" || pdDisk == "sdc" || pdDisk == "sdd")
+			assert.True(t, tidbDisk == "sdb" || tidbDisk == "sdc" || tidbDisk == "sdd")
+			assert.True(t, tikvDisk == "sdb" || tikvDisk == "sdc" || tikvDisk == "sdd")
+			var host Host
+			MetaDB.First(&host, "IP = ?", "192.168.56.99")
+			assert.Equal(t, 17-4-4-4, host.CpuCores)
+			assert.Equal(t, 64-8-8-8, host.Memory)
+			assert.True(t, host.Status == int32(HOST_EXHAUST))
+
+		})
+	}
+}
+
+func TestAllocHosts_1Host_NotEnough(t *testing.T) {
+	h := &Host{
+		HostName: "主机2",
+		IP:       "192.168.56.100",
+		UserName: "root",
+		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:   0,
+		OS:       "CentOS",
+		Kernel:   "5.0.0",
+		CpuCores: 17,
+		Memory:   64,
+		Nic:      "1GE",
+		AZ:       "Zone100",
+		Rack:     "3-1",
+		Purpose:  "Compute",
+		Disks: []Disk{
+			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
+			{Name: "sdb", Path: "/mnt1", Capacity: 256, Status: 0},
+			{Name: "sdc", Path: "/mnt2", Capacity: 256, Status: 0},
+			{Name: "sdd", Path: "/mnt3", Capacity: 256, Status: 0},
+		},
+	}
+
+	id1, _ := CreateHost(MetaDB, h)
+	defer DeleteHost(MetaDB, id1)
+
+	var m AllocReqs = make(map[string][]*HostAllocReq)
+	m["pd"] = append(m["pd"], &HostAllocReq{
+		FailureDomain: "Zone100",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         2,
+	})
+	m["tidb"] = append(m["tidb"], &HostAllocReq{
+		FailureDomain: "Zone100",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	m["tikv"] = append(m["tikv"], &HostAllocReq{
+		FailureDomain: "Zone100",
+		CpuCores:      4,
+		Memory:        8,
+		Count:         1,
+	})
+	type args struct {
+		req AllocReqs
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"normal", args{
+			req: m,
+		}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := AllocHosts(MetaDB, tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			s, ok := status.FromError(err)
+			assert.True(t, true, ok)
+			assert.Equal(t, codes.Internal, s.Code())
 		})
 	}
 }

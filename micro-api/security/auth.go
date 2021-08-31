@@ -1,26 +1,39 @@
 package security
 
 import (
+	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
 	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
-	"net/http"
 )
 
 const VisitorIdentityKey = "VisitorIdentity"
 
 type VisitorIdentity struct {
-	AccountId string
+	AccountId   string
 	AccountName string
-	TenantId string
+	TenantId    string
 }
 
 func VerifyIdentity(c *gin.Context) {
 
-	tokenString := c.GetHeader("Token")
+	bearerTokenString := c.GetHeader("Authorization")
+	bearerPrefix := "Bearer "
 
-	if tokenString == "" {
-		c.JSON(http.StatusUnauthorized, "")
+	if bearerTokenString == "" {
+		errMsg := "authorization token empty"
+		c.AbortWithStatusJSON(http.StatusUnauthorized, errMsg)
+	}
+
+	var tokenString string
+	if strings.HasPrefix(bearerTokenString, bearerPrefix) {
+		tokenString = bearerPrefix[len(bearerPrefix):]
+	} else {
+		errMsg := fmt.Sprintf("bad authorization token: %s", bearerTokenString)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, errMsg)
 	}
 
 	path := c.Request.URL
@@ -36,9 +49,9 @@ func VerifyIdentity(c *gin.Context) {
 		c.Abort()
 	} else {
 		c.Set(VisitorIdentityKey, &VisitorIdentity{
-			AccountId: result.AccountId,
+			AccountId:   result.AccountId,
 			AccountName: result.AccountName,
-			TenantId: result.TenantId,
+			TenantId:    result.TenantId,
 		})
 		c.Next()
 	}

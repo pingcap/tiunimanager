@@ -37,7 +37,7 @@ func Login(c *gin.Context) {
 			c.JSON(http.StatusOK, controller.Fail(int(result.GetStatus().GetCode()), result.GetStatus().GetMessage()))
 		} else {
 			c.Header("Token", result.TokenString)
-			c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: req.UserName}))
+			c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: req.UserName, Token: result.TokenString}))
 		}
 	} else {
 		c.JSON(http.StatusOK, controller.Fail(401, "账号或密码错误"))

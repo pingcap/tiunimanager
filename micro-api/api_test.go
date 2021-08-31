@@ -24,7 +24,7 @@ import (
 
 func performRequest(method, path, contentType string, body io.Reader) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest(method, path, body)
-	req.Header.Set("Token", "fake-token")
+	req.Header.Set("Authorization", "Bearer fake-token")
 	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("accept", "application/json")
 	w := httptest.NewRecorder()

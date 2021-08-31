@@ -2,14 +2,15 @@ package clusterapi
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/client"
 	"net/http"
+
+	"github.com/pingcap-inc/tiem/library/client"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"github.com/pingcap-inc/tiem/micro-cluster/proto"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // Create create a cluster
@@ -18,7 +19,7 @@ import (
 // @Tags cluster
 // @Accept application/json
 // @Produce application/json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Param createReq body CreateReq true "create request"
 // @Success 200 {object} controller.CommonResult{data=CreateClusterRsp}
 // @Failure 401 {object} controller.CommonResult
@@ -66,7 +67,7 @@ func Create(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Param queryReq query QueryReq false "query request"
 // @Success 200 {object} controller.ResultWithPage{data=[]ClusterDisplayInfo}
 // @Failure 401 {object} controller.CommonResult
@@ -119,7 +120,7 @@ func Query(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Param clusterId path string true "cluster id"
 // @Success 200 {object} controller.CommonResult{data=DeleteClusterRsp}
 // @Failure 401 {object} controller.CommonResult
@@ -157,7 +158,7 @@ func Delete(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Param clusterId path string true "cluster id"
 // @Success 200 {object} controller.CommonResult{data=DetailClusterRsp}
 // @Failure 401 {object} controller.CommonResult
@@ -204,7 +205,7 @@ func Detail(c *gin.Context) {
 // @Tags knowledge
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Success 200 {object} controller.CommonResult{data=[]knowledge.ClusterTypeSpec}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -220,7 +221,7 @@ func ClusterKnowledge(c *gin.Context) {
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Success 200 {object} controller.CommonResult{data=DescribeDashboardRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -229,7 +230,7 @@ func ClusterKnowledge(c *gin.Context) {
 func DescribeDashboard(c *gin.Context) {
 	operator := controller.GetOperator(c)
 	reqDTO := &cluster.DescribeDashboardRequest{
-		Operator: operator.ConvertToDTO(),
+		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
 	}
 	respDTO, err := client.ClusterClient.DescribeDashboard(context.TODO(), reqDTO, controller.DefaultTimeout)
@@ -240,7 +241,7 @@ func DescribeDashboard(c *gin.Context) {
 		status := respDTO.GetStatus()
 		result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
 			ClusterId: respDTO.GetClusterId(),
-			Url: respDTO.GetUrl(),
+			Url:       respDTO.GetUrl(),
 			ShareCode: respDTO.GetShareCode(),
 		})
 

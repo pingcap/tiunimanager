@@ -1,12 +1,11 @@
 package security
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
+	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
@@ -20,20 +19,11 @@ type VisitorIdentity struct {
 
 func VerifyIdentity(c *gin.Context) {
 
-	bearerTokenString := c.GetHeader("Authorization")
-	bearerPrefix := "Bearer "
+	bearerTokenStr := c.GetHeader("Authorization")
 
-	if bearerTokenString == "" {
-		errMsg := "authorization token empty"
-		c.AbortWithStatusJSON(http.StatusUnauthorized, errMsg)
-	}
-
-	var tokenString string
-	if strings.HasPrefix(bearerTokenString, bearerPrefix) {
-		tokenString = bearerTokenString[len(bearerPrefix):]
-	} else {
-		errMsg := fmt.Sprintf("bad authorization token: %s", bearerTokenString)
-		c.AbortWithStatusJSON(http.StatusUnauthorized, errMsg)
+	tokenString, err := utils.GetTokenFromBearer(bearerTokenStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
 	}
 
 	path := c.Request.URL

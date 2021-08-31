@@ -8,7 +8,7 @@ import "github.com/gin-gonic/gin"
 // @Tags task
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Param queryReq query QueryReq false "query request"
 // @Success 200 {object} controller.ResultWithPage{data=[]FlowWorkDisplayInfo}
 // @Failure 401 {object} controller.CommonResult
@@ -25,7 +25,7 @@ func Query(c *gin.Context) {
 // @Tags task
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Param flowWorkId path string true "flow work id"
 // @Success 200 {object} controller.CommonResult{data=FlowWorkDetailInfo}
 // @Failure 401 {object} controller.CommonResult

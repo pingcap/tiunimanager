@@ -16,7 +16,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param dataExport body dataExport true "cluster info for data export"
+// @Param dataExport body DataExportReq true "cluster info for data export"
 // @Success 200 {object} controller.CommonResult{data=DataExportResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -61,7 +61,7 @@ func ExportData(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Token header string true "token"
-// @Param dataImport body dataImport true "cluster info for import data"
+// @Param dataImport body DataImportReq true "cluster info for import data"
 // @Success 200 {object} controller.CommonResult{data=DataImportResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -111,7 +111,7 @@ func ImportData(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/[cluster-id]/transport [get]
+// @Router /clusters/{clusterId}/transport [get]
 func DescribeDataTransport(c *gin.Context) {
 	clusterId := c.Query("clusterId")
 	var req DataTransportQueryReq

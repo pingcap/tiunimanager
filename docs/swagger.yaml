@@ -327,6 +327,73 @@ definitions:
       used:
         type: number
     type: object
+  databaseapi.DataExportReq:
+    properties:
+      clusterId:
+        type: string
+      fileType:
+        type: string
+      filter:
+        type: string
+      password:
+        type: string
+      userName:
+        type: string
+    type: object
+  databaseapi.DataExportResp:
+    properties:
+      recordId:
+        type: string
+    type: object
+  databaseapi.DataImportReq:
+    properties:
+      clusterId:
+        type: string
+      filePath:
+        type: string
+      password:
+        type: string
+      userName:
+        type: string
+    type: object
+  databaseapi.DataImportResp:
+    properties:
+      recordId:
+        type: string
+    type: object
+  databaseapi.DataTransportInfo:
+    properties:
+      clusterId:
+        type: string
+      endTime:
+        type: string
+      filePath:
+        type: string
+      recordId:
+        type: string
+      startTime:
+        type: string
+      status:
+        type: string
+      transportType:
+        type: string
+    type: object
+  databaseapi.DataTransportQueryReq:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      recordId:
+        type: string
+    type: object
+  databaseapi.DataTransportRecordQueryResp:
+    properties:
+      transportRecords:
+        items:
+          $ref: '#/definitions/databaseapi.DataTransportInfo'
+        type: array
+    type: object
   hostapi.AllocHostsReq:
     properties:
       pdReq:
@@ -479,6 +546,10 @@ definitions:
     type: object
   instanceapi.BackupRecord:
     properties:
+      backupRange:
+        type: string
+      backupType:
+        type: string
       clusterId:
         type: string
       endTime:
@@ -489,19 +560,17 @@ definitions:
         type: integer
       operator:
         $ref: '#/definitions/controller.Operator'
-      range:
-        type: integer
       size:
-        type: number
+        type: integer
       startTime:
         type: string
       status:
         $ref: '#/definitions/controller.StatusInfo'
-      way:
-        type: integer
     type: object
   instanceapi.BackupRecordQueryReq:
     properties:
+      clusterId:
+        type: string
       page:
         type: integer
       pageSize:
@@ -514,18 +583,34 @@ definitions:
     type: object
   instanceapi.BackupReq:
     properties:
+      backupRange:
+        type: string
+      backupType:
+        type: string
       clusterId:
+        type: string
+      filePath:
         type: string
     type: object
   instanceapi.BackupStrategy:
     properties:
-      cronString:
+      backupDate:
+        type: string
+      backupRange:
+        type: string
+      backupType:
+        type: string
+      clusterId:
+        type: string
+      filePath:
+        type: string
+      period:
         type: string
     type: object
   instanceapi.BackupStrategyUpdateReq:
     properties:
-      cronString:
-        type: string
+      strategy:
+        $ref: '#/definitions/instanceapi.BackupStrategy'
     type: object
   instanceapi.ParamInstance:
     properties:
@@ -726,6 +811,8 @@ definitions:
     type: object
   userapi.UserIdentity:
     properties:
+      tenantId:
+        type: string
       userName:
         type: string
     type: object
@@ -1346,6 +1433,140 @@ paths:
       summary: show the backup strategy of a cluster
       tags:
       - cluster backup
+  /clusters/{clusterId}/transport:
+    get:
+      consumes:
+      - application/json
+      description: query records of import and export
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: cluster info for query records
+        in: body
+        name: DataTransportQueryReq
+        required: true
+        schema:
+          $ref: '#/definitions/databaseapi.DataTransportQueryReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/databaseapi.DataTransportRecordQueryResp'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: query records of import and export
+      tags:
+      - cluster data transport
+  /clusters/export:
+    post:
+      consumes:
+      - application/json
+      description: export
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: cluster info for data export
+        in: body
+        name: dataExport
+        required: true
+        schema:
+          $ref: '#/definitions/databaseapi.DataExportReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/databaseapi.DataExportResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: export data from tidb cluster
+      tags:
+      - cluster export
+  /clusters/import:
+    post:
+      consumes:
+      - application/json
+      description: import
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: cluster info for import data
+        in: body
+        name: dataImport
+        required: true
+        schema:
+          $ref: '#/definitions/databaseapi.DataImportReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/databaseapi.DataImportResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: import data to tidb cluster
+      tags:
+      - cluster import
   /flowwork/{flowWorkId}:
     get:
       consumes:
@@ -1776,9 +1997,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: 登录
+      description: login
       parameters:
-      - description: 登录用户信息
+      - description: login info
         in: body
         name: loginInfo
         required: true
@@ -1804,14 +2025,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 登录接口
+      summary: login
       tags:
       - platform
   /user/logout:
     post:
       consumes:
       - application/json
-      description: 退出登录
+      description: logout
       parameters:
       - description: token
         in: header
@@ -1838,7 +2059,41 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 退出登录
+      summary: logout
+      tags:
+      - platform
+  /user/profile:
+    get:
+      consumes:
+      - application/json
+      description: profile
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/userapi.UserIdentity'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: user profile
       tags:
       - platform
 swagger: "2.0"

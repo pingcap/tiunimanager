@@ -47,6 +47,12 @@ func Route(g *gin.Engine) {
 			user.POST("/logout", userapi.Logout)
 		}
 
+		profile := user.Group("")
+		{
+			profile.Use(security.VerifyIdentity)
+			profile.GET("/profile", userapi.Profile)
+		}
+
 		cluster := apiV1.Group("/clusters")
 		{
 			cluster.Use(security.VerifyIdentity)

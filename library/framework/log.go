@@ -16,20 +16,18 @@ import (
 type LogRecord struct {
 	defaultLogEntry *log.Entry
 
+	forkFileEntry map[string]*log.Entry
+
 	LogLevel      string
 	LogOutput     string
-	LogFilePath   string
+	LogFileRoot   string
+	LogFileName   string
 	LogMaxSize    int
 	LogMaxAge     int
 	LogMaxBackups int
 	LogLocalTime  bool
 	LogCompress   bool
 }
-
-type logCtxKeyType struct{}
-type Fields log.Fields
-
-var logCtxKey logCtxKeyType
 
 const (
 	// LogDebug debug level
@@ -64,24 +62,12 @@ const (
 	RecordLineField = "line"
 )
 
-//var mutex = sync.Mutex{}
-//
-//func Init(key config2.Key) {
-//	if logRecord == nil {
-//		mutex.Lock()
-//		defer mutex.Unlock()
-//		if logRecord == nil {
-//			// init LogRecord
-//			logRecord = newLogRecord(key)
-//		}
-//	}
-//}
-
-func DefaultLog() *LogRecord {
+func DefaultLogRecord() *LogRecord {
 	lr := &LogRecord{
-		LogLevel: "info",
-		LogOutput: "file",
-		LogFilePath: "." + common2.LogDirPrefix + "default.log",
+		LogLevel:      "info",
+		LogOutput:     "file",
+		LogFileRoot:   "." + common2.LogDirPrefix,
+		LogFileName:   "default",
 		LogMaxSize:    512,
 		LogMaxAge:     30,
 		LogMaxBackups: 0,
@@ -89,6 +75,32 @@ func DefaultLog() *LogRecord {
 		LogCompress:   true,
 	}
 
+	// Record sys and mod default init
+	lr.defaultLogEntry = lr.forkEntry(lr.LogFileName)
+	//.WithField(RecordSysField, lr.RecordSysName).WithField(RecordModField, lr.RecordModName)
+	return lr
+}
+
+func NewLogRecordFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *LogRecord {
+	lr := &LogRecord{
+		LogLevel:      args.LogLevel,
+		LogOutput:     "file",
+		LogFileRoot:   args.DataDir + common2.LogDirPrefix,
+		LogFileName:   serviceName.ServerName(),
+		LogMaxSize:    512,
+		LogMaxAge:     30,
+		LogMaxBackups: 0,
+		LogLocalTime:  true,
+		LogCompress:   true,
+	}
+
+	// Record sys and mod default init
+	lr.defaultLogEntry = lr.forkEntry(lr.LogFileName)
+	//.WithField(RecordSysField, lr.RecordSysName).WithField(RecordModField, lr.RecordModName)
+	return lr
+}
+
+func (lr *LogRecord) forkEntry(fileName string) *log.Entry {
 	logger := log.New()
 
 	// Set log format
@@ -102,7 +114,7 @@ func DefaultLog() *LogRecord {
 	// Determine whether the log output contains the file type
 	if strings.Contains(strings.ToLower(lr.LogOutput), OutputFile) {
 		writers = append(writers, &lumberjack.Logger{
-			Filename: lr.LogFilePath,
+			Filename: lr.LogFileRoot + fileName + ".log",
 			MaxSize: lr.LogMaxSize,
 			MaxAge: lr.LogMaxAge,
 			MaxBackups: lr.LogMaxBackups,
@@ -115,54 +127,17 @@ func DefaultLog() *LogRecord {
 
 	// Set log output
 	logger.SetOutput(io.MultiWriter(writers...))
-	// Record sys and mod default init
-	lr.defaultLogEntry = log.NewEntry(logger)
-	//.WithField(RecordSysField, lr.RecordSysName).WithField(RecordModField, lr.RecordModName)
-	return lr
+	return log.NewEntry(logger)
 }
 
-func NewLogRecordFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *LogRecord {
-	lr := &LogRecord{
-		LogLevel: args.LogLevel,
-		LogOutput: "file",
-		LogFilePath: args.DataDir + common2.LogDirPrefix + serviceName.ServerName() + ".log",
-		LogMaxSize:    512,
-		LogMaxAge:     30,
-		LogMaxBackups: 0,
-		LogLocalTime:  true,
-		LogCompress:   true,
+func (lr *LogRecord) ForkFile(fileName string) *log.Entry {
+	if entry, ok := lr.forkFileEntry[fileName]; ok {
+		return entry
+	} else {
+
+		lr.forkFileEntry[fileName] = lr.forkEntry(fileName)
+		return lr.forkFileEntry[fileName]
 	}
-
-	logger := log.New()
-
-	// Set log format
-	logger.SetFormatter(&log.JSONFormatter{})
-	// Set log level
-	logger.SetLevel(getLogLevel(args.LogLevel))
-
-	// Define output type writer
-	writers := []io.Writer{os.Stdout}
-
-	// Determine whether the log output contains the file type
-	if strings.Contains(strings.ToLower(lr.LogOutput), OutputFile) {
-		writers = append(writers, &lumberjack.Logger{
-			Filename: lr.LogFilePath,
-			MaxSize: lr.LogMaxSize,
-			MaxAge: lr.LogMaxAge,
-			MaxBackups: lr.LogMaxBackups,
-			LocalTime: lr.LogLocalTime,
-			Compress: lr.LogCompress,
-		})
-	}
-	// remove the os.Stdout output
-	writers = writers[1:]
-
-	// Set log output
-	logger.SetOutput(io.MultiWriter(writers...))
-	// Record sys and mod default init
-	lr.defaultLogEntry = log.NewEntry(logger)
-	//.WithField(RecordSysField, lr.RecordSysName).WithField(RecordModField, lr.RecordModName)
-	return lr
 }
 
 // Tool method to get log level
@@ -182,15 +157,17 @@ func getLogLevel(level string) log.Level {
 	return log.DebugLevel
 }
 
+type logCtxKeyType struct{}
+
+var logCtxKey logCtxKeyType
+
 func WithContext(ctx context.Context) *log.Entry {
-	// todo
-	return GetLogger().defaultLogEntry
-	//le, ok := ctx.Value(logCtxKey).(*log.Entry)
-	//if ok {
-	//	return le
-	//} else {
-	//	return GetLogger().defaultLogEntry
-	//}
+	le, ok := ctx.Value(logCtxKey).(*log.Entry)
+	if ok {
+		return le
+	} else {
+		return GetLogger().defaultLogEntry
+	}
 }
 
 func (lr *LogRecord) Record(key string, value interface{}) *LogRecord {

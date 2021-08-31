@@ -13,7 +13,7 @@ import (
 
 func TestCreateHost(t *testing.T) {
 	h := &Host{
-		HostName: "测试重复",
+		HostName: "TestCreateHostRepeated",
 		IP:       "111.111.111.111",
 		Status:   0,
 		OS:       "CentOS",
@@ -28,8 +28,8 @@ func TestCreateHost(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id, _ := CreateHost(h)
-	defer DeleteHost(id)
+	id, _ := CreateHost(MetaDB, h)
+	defer DeleteHost(MetaDB, id)
 	type args struct {
 		host *Host
 	}
@@ -40,7 +40,7 @@ func TestCreateHost(t *testing.T) {
 		assert  func(result string) bool
 	}{
 		{"normal", args{host: &Host{
-			HostName: "主机1",
+			HostName: "TestCreateHost1",
 			IP:       "192.168.125.132",
 			Status:   0,
 			OS:       "CentOS",
@@ -58,7 +58,7 @@ func TestCreateHost(t *testing.T) {
 			return len(result) > 0
 		}},
 		{"same name", args{host: &Host{
-			HostName: "测试重复",
+			HostName: "TestCreateHostRepeated",
 			IP:       "111.111.111.111",
 			Status:   0,
 			OS:       "CentOS",
@@ -78,8 +78,8 @@ func TestCreateHost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotId, err := CreateHost(tt.args.host)
-			defer DeleteHost(gotId)
+			gotId, err := CreateHost(MetaDB, tt.args.host)
+			defer DeleteHost(MetaDB, gotId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateHost() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -103,7 +103,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 	}{
 		{"normal", args{hosts: []*Host{
 			{
-				HostName: "主机1",
+				HostName: "TestCreateHostsInBatch1",
 				IP:       "192.168.11.111",
 				Status:   0,
 				OS:       "CentOS",
@@ -117,7 +117,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 				Disks:    []Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
 			},
 			{
-				HostName: "主机2",
+				HostName: "TestCreateHostsInBatch2",
 				IP:       "192.111.125.111",
 				Status:   0,
 				OS:       "CentOS",
@@ -136,7 +136,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 		}},
 		{"same name", args{hosts: []*Host{
 			{
-				HostName: "测试重复",
+				HostName: "TestCreateHostsInBatchRepeated",
 				IP:       "444.555.666.777",
 				Status:   0,
 				OS:       "CentOS",
@@ -150,7 +150,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 				Disks:    []Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
 			},
 			{
-				HostName: "测试重复",
+				HostName: "TestCreateHostsInBatchRepeated",
 				IP:       "444.555.666.777",
 				Status:   0,
 				OS:       "CentOS",
@@ -167,8 +167,8 @@ func TestCreateHostsInBatch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotIds, err := CreateHostsInBatch(tt.args.hosts)
-			defer DeleteHostsInBatch(gotIds)
+			gotIds, err := CreateHostsInBatch(MetaDB, tt.args.hosts)
+			defer DeleteHostsInBatch(MetaDB, gotIds)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateHostsInBatch() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -184,7 +184,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 
 func TestDeleteHost(t *testing.T) {
 	h := &Host{
-		HostName: "主机1",
+		HostName: "TestDeleteHost1",
 		IP:       "192.99.999.132",
 		Status:   0,
 		OS:       "CentOS",
@@ -199,8 +199,8 @@ func TestDeleteHost(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id, _ := CreateHost(h)
-	defer DeleteHost(id)
+	id, _ := CreateHost(MetaDB, h)
+	defer DeleteHost(MetaDB, id)
 	type args struct {
 		hostId string
 	}
@@ -214,7 +214,7 @@ func TestDeleteHost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := DeleteHost(tt.args.hostId); (err != nil) != tt.wantErr {
+			if err := DeleteHost(MetaDB, tt.args.hostId); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteHost() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -238,8 +238,8 @@ func TestDeleteHostsInBatch(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id1, _ := CreateHost(h)
-	defer DeleteHost(id1)
+	id1, _ := CreateHost(MetaDB, h)
+	defer DeleteHost(MetaDB, id1)
 	h2 := &Host{
 		HostName: "主机1",
 		IP:       "222.99.999.132",
@@ -256,8 +256,8 @@ func TestDeleteHostsInBatch(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id2, _ := CreateHost(h2)
-	defer DeleteHost(id2)
+	id2, _ := CreateHost(MetaDB, h2)
+	defer DeleteHost(MetaDB, id2)
 
 	type args struct {
 		hostIds []string
@@ -272,7 +272,7 @@ func TestDeleteHostsInBatch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := DeleteHostsInBatch(tt.args.hostIds); (err != nil) != tt.wantErr {
+			if err := DeleteHostsInBatch(MetaDB, tt.args.hostIds); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteHostsInBatch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -414,8 +414,8 @@ func TestFindHostById(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id1, _ := CreateHost(h)
-	defer DeleteHost(id1)
+	id1, _ := CreateHost(MetaDB, h)
+	defer DeleteHost(MetaDB, id1)
 	type args struct {
 		hostId string
 	}
@@ -432,7 +432,7 @@ func TestFindHostById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := FindHostById(tt.args.hostId)
+			got, err := FindHostById(MetaDB, tt.args.hostId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindHostById() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -460,7 +460,7 @@ func TestGetFailureDomain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := GetFailureDomain(tt.args.domain)
+			gotRes, err := GetFailureDomain(MetaDB, tt.args.domain)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetFailureDomain() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -890,7 +890,7 @@ func TestHost_SetDiskStatus(t *testing.T) {
 
 func TestListHosts(t *testing.T) {
 	h := &Host{
-		HostName: "主机1",
+		HostName: "TestListHosts1",
 		IP:       "111.121.999.132",
 		Status:   0,
 		OS:       "CentOS",
@@ -905,11 +905,12 @@ func TestListHosts(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id1, _ := CreateHost(h)
-	defer DeleteHost(id1)
+
+	id1, _ := CreateHost(MetaDB, h)
+	defer DeleteHost(MetaDB, id1)
 
 	h2 := &Host{
-		HostName: "主机2",
+		HostName: "TestListHosts2",
 		IP:       "222.121.999.132",
 		Status:   0,
 		OS:       "CentOS",
@@ -924,11 +925,11 @@ func TestListHosts(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id2, _ := CreateHost(h2)
-	defer DeleteHost(id2)
+	id2, _ := CreateHost(MetaDB, h2)
+	defer DeleteHost(MetaDB, id2)
 
 	h3 := &Host{
-		HostName: "主机3",
+		HostName: "TestListHosts3",
 		IP:       "333.121.999.132",
 		Status:   3,
 		OS:       "CentOS",
@@ -943,8 +944,8 @@ func TestListHosts(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id3, _ := CreateHost(h3)
-	defer DeleteHost(id3)
+	id3, _ := CreateHost(MetaDB, h3)
+	defer DeleteHost(MetaDB, id3)
 
 	type args struct {
 		req ListHostReq
@@ -989,7 +990,7 @@ func TestListHosts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotHosts, err := ListHosts(tt.args.req)
+			gotHosts, err := ListHosts(MetaDB, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListHosts() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1006,7 +1007,7 @@ func TestListHosts(t *testing.T) {
 /*
 func TestLockHosts(t *testing.T) {
 	h := &Host{
-		HostName: "主机1",
+		HostName: "TestLockHosts1",
 		IP:       "474.111.111.111",
 		Status:   0,
 		OS:       "CentOS",
@@ -1021,8 +1022,8 @@ func TestLockHosts(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 0},
 		},
 	}
-	id1, _ := CreateHost(h)
-	defer DeleteHost(id1)
+	id1, _ := CreateHost(MetaDB, h)
+	defer DeleteHost(MetaDB, id1)
 
 	type args struct {
 		resources []ResourceLock
@@ -1034,18 +1035,18 @@ func TestLockHosts(t *testing.T) {
 	}{
 		{"normal", args{resources: []ResourceLock{
 			{
-				HostId: id1,
-				OriginCores: 4,
-				OriginMem: 8,
+				HostId:       id1,
+				OriginCores:  4,
+				OriginMem:    8,
 				RequestCores: 2,
-				RequestMem: 2,
-				DiskId: h.Disks[0].ID,
+				RequestMem:   2,
+				DiskId:       h.Disks[0].ID,
 			},
 		}}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := LockHosts(tt.args.resources); (err != nil) != tt.wantErr {
+			if err := LockHosts(MetaDB, tt.args.resources); (err != nil) != tt.wantErr {
 				t.Errorf("LockHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1069,7 +1070,7 @@ func TestPreAllocHosts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResources, err := PreAllocHosts(tt.args.failedDomain, tt.args.numReps, tt.args.cpuCores, tt.args.mem)
+			gotResources, err := PreAllocHosts(MetaDB, tt.args.failedDomain, tt.args.numReps, tt.args.cpuCores, tt.args.mem)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PreAllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1139,13 +1140,13 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 			{Name: "sdb", Path: "/tikv", Capacity: 256, Status: 0},
 		},
 	}
-	id1, _ := CreateHost(h)
-	id2, _ := CreateHost(h2)
-	id3, _ := CreateHost(h3)
+	id1, _ := CreateHost(MetaDB, h)
+	id2, _ := CreateHost(MetaDB, h2)
+	id3, _ := CreateHost(MetaDB, h3)
 	// Host Status should be inused or exhausted, so delete would failed
-	defer DeleteHost(id1)
-	defer DeleteHost(id2)
-	defer DeleteHost(id3)
+	defer DeleteHost(MetaDB, id1)
+	defer DeleteHost(MetaDB, id2)
+	defer DeleteHost(MetaDB, id3)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
 	m["pd"] = append(m["pd"], &HostAllocReq{
@@ -1180,7 +1181,7 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp, err := AllocHosts(tt.args.req)
+			rsp, err := AllocHosts(MetaDB, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1233,8 +1234,8 @@ func TestAllocHosts_1Host(t *testing.T) {
 		},
 	}
 
-	id1, _ := CreateHost(h)
-	defer DeleteHost(id1)
+	id1, _ := CreateHost(MetaDB, h)
+	defer DeleteHost(MetaDB, id1)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
 	m["pd"] = append(m["pd"], &HostAllocReq{
@@ -1269,7 +1270,7 @@ func TestAllocHosts_1Host(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp, err := AllocHosts(tt.args.req)
+			rsp, err := AllocHosts(MetaDB, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1317,8 +1318,8 @@ func TestAllocHosts_1Host_NotEnough(t *testing.T) {
 		},
 	}
 
-	id1, _ := CreateHost(h)
-	defer DeleteHost(id1)
+	id1, _ := CreateHost(MetaDB, h)
+	defer DeleteHost(MetaDB, id1)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
 	m["pd"] = append(m["pd"], &HostAllocReq{
@@ -1353,7 +1354,7 @@ func TestAllocHosts_1Host_NotEnough(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := AllocHosts(tt.args.req)
+			_, err := AllocHosts(MetaDB, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}

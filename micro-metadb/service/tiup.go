@@ -8,8 +8,9 @@ import (
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
-func (d *DBServiceHandler) CreateTiupTask(ctx context.Context, req *dbPb.CreateTiupTaskRequest, rsp *dbPb.CreateTiupTaskResponse) error {
-	id, e := models.CreateTiupTask(ctx, req.Type, req.BizID)
+func (handler *DBServiceHandler) CreateTiupTask(ctx context.Context, req *dbPb.CreateTiupTaskRequest, rsp *dbPb.CreateTiupTaskResponse) error {
+	db := handler.Dao().Db()
+	id, e := models.CreateTiupTask(db, ctx, req.Type, req.BizID)
 	if e == nil {
 		rsp.Id = id
 	} else {
@@ -19,8 +20,9 @@ func (d *DBServiceHandler) CreateTiupTask(ctx context.Context, req *dbPb.CreateT
 	return nil
 }
 
-func (d *DBServiceHandler) UpdateTiupTask(ctx context.Context, req *dbPb.UpdateTiupTaskRequest, rsp *dbPb.UpdateTiupTaskResponse) error {
-	e := models.UpdateTiupTaskStatus(ctx, req.Id, req.Status, req.ErrStr)
+func (handler *DBServiceHandler) UpdateTiupTask(ctx context.Context, req *dbPb.UpdateTiupTaskRequest, rsp *dbPb.UpdateTiupTaskResponse) error {
+	db := handler.Dao().Db()
+	e := models.UpdateTiupTaskStatus(db, ctx, req.Id, req.Status, req.ErrStr)
 	if e == nil {
 	} else {
 		rsp.ErrCode = 1
@@ -29,8 +31,9 @@ func (d *DBServiceHandler) UpdateTiupTask(ctx context.Context, req *dbPb.UpdateT
 	return nil
 }
 
-func (d *DBServiceHandler) FindTiupTaskByID(ctx context.Context, req *dbPb.FindTiupTaskByIDRequest, rsp *dbPb.FindTiupTaskByIDResponse) error {
-	task, e := models.FindTiupTaskByID(ctx, req.Id)
+func (handler *DBServiceHandler) FindTiupTaskByID(ctx context.Context, req *dbPb.FindTiupTaskByIDRequest, rsp *dbPb.FindTiupTaskByIDResponse) error {
+	db := handler.Dao().Db()
+	task, e := models.FindTiupTaskByID(db, ctx, req.Id)
 	if e == nil {
 		var deleteAt string
 		if task.DeletedAt.Valid {
@@ -55,10 +58,11 @@ func (d *DBServiceHandler) FindTiupTaskByID(ctx context.Context, req *dbPb.FindT
 	return nil
 }
 
-func (d *DBServiceHandler) GetTiupTaskStatusByBizID(ctx context.Context, req *dbPb.GetTiupTaskStatusByBizIDRequest,
+func (handler *DBServiceHandler) GetTiupTaskStatusByBizID(ctx context.Context, req *dbPb.GetTiupTaskStatusByBizIDRequest,
 	rsp *dbPb.GetTiupTaskStatusByBizIDResponse) error {
 
-	tasks, e := models.FindTiupTasksByBizID(ctx, req.BizID)
+	db := handler.Dao().Db()
+	tasks, e := models.FindTiupTasksByBizID(db, ctx, req.BizID)
 	if e == nil {
 		errCt := 0
 		errStatStr := ""

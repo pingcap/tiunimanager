@@ -5,6 +5,7 @@ import "db_host.proto";
 import "db_cluster.proto";
 import "db_tiup.proto";
 import "db_task.proto";
+import "db_transport.proto";
 
 option go_package = "./;db";
 
@@ -24,22 +25,24 @@ service TiEMDBService {
 	rpc RemoveHostsInBatch(DBRemoveHostsInBatchRequest) returns (DBRemoveHostsInBatchResponse);
 	rpc ListHost(DBListHostsRequest) returns (DBListHostsResponse);
 	rpc CheckDetails(DBCheckDetailsRequest) returns (DBCheckDetailsResponse);
-	rpc PreAllocHosts(DBPreAllocHostsRequest) returns (DBPreAllocHostsResponse);
-	rpc LockHosts(DBLockHostsRequest) returns (DBLockHostsResponse);
+	rpc AllocHosts(DBAllocHostsRequest) returns (DBAllocHostsResponse);
 	rpc GetFailureDomain(DBGetFailureDomainRequest) returns (DBGetFailureDomainResponse);
 
 	// Cluster
 	rpc CreateCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);
 	rpc DeleteCluster(DBDeleteClusterRequest) returns (DBDeleteClusterResponse);
 	rpc UpdateClusterStatus(DBUpdateClusterStatusRequest) returns (DBUpdateClusterStatusResponse);
-	rpc UpdateClusterTiupConfig(DBUpdateTiupConfigRequest) returns (DBUpdateTiupConfigResponse);
+	rpc UpdateClusterTiUPConfigDBUpdateTiupConfigRequest) returns (DBUpdateTiupConfigResponse);
 	rpc LoadCluster(DBLoadClusterRequest) returns (DBLoadClusterResponse);
 	rpc ListCluster(DBListClusterRequest) returns (DBListClusterResponse);
 
 	// backup & recover & parameters
 	rpc SaveBackupRecord(DBSaveBackupRecordRequest) returns (DBSaveBackupRecordResponse);
+	rpc UpdateBackupRecord(DBUpdateBackupRecordRequest) returns (DBUpdateBackupRecordResponse);
 	rpc DeleteBackupRecord(DBDeleteBackupRecordRequest) returns (DBDeleteBackupRecordResponse);
-
+    rpc SaveBackupStrategy(DBSaveBackupStrategyRequest) returns (DBSaveBackupStrategyResponse);
+    rpc QueryBackupStrategy(DBQueryBackupStrategyRequest) returns (DBQueryBackupStrategyResponse);
+    rpc QueryBackupRecords(DBQueryBackupRecordRequest) returns (DBQueryBackupRecordResponse);
 	rpc ListBackupRecords(DBListBackupRecordsRequest) returns (DBListBackupRecordsResponse);
 	rpc SaveRecoverRecord(DBSaveRecoverRecordRequest) returns (DBSaveRecoverRecordResponse);
 	rpc SaveParametersRecord(DBSaveParametersRequest) returns (DBSaveParametersResponse);
@@ -59,4 +62,9 @@ service TiEMDBService {
 	rpc LoadFlow(DBLoadFlowRequest) returns (DBLoadFlowResponse);
 	rpc LoadTask(DBLoadTaskRequest) returns (DBLoadTaskResponse);
 
+	// DataTransport
+	rpc CreateTransportRecord(DBCreateTransportRecordRequest) returns (DBCreateTransportRecordResponse);
+    rpc UpdateTransportRecord(DBUpdateTransportRecordRequest) returns (DBUpdateTransportRecordResponse);
+    rpc FindTrasnportRecordByID(DBFindTransportRecordByIDRequest) returns (DBFindTransportRecordByIDResponse);
+    rpc ListTrasnportRecord(DBListTransportRecordRequest) returns (DBListTransportRecordResponse);
 }

@@ -3,10 +3,11 @@ package models
 import (
 	"errors"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pingcap-inc/tiem/library/framework"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -157,16 +158,16 @@ func (h *Host) AfterFind(tx *gorm.DB) (err error) {
 	return
 }
 
-func CreateHost(host *Host) (id string, err error) {
-	err = MetaDB.Create(host).Error
+func CreateHost(db *gorm.DB, host *Host) (id string, err error) {
+	err = db.Create(host).Error
 	if err != nil {
 		return
 	}
 	return host.ID, err
 }
 
-func CreateHostsInBatch(hosts []*Host) (ids []string, err error) {
-	tx := MetaDB.Begin()
+func CreateHostsInBatch(db *gorm.DB, hosts []*Host) (ids []string, err error) {
+	tx := db.Begin()
 	for _, host := range hosts {
 		err = tx.Create(host).Error
 		if err != nil {
@@ -179,15 +180,15 @@ func CreateHostsInBatch(hosts []*Host) (ids []string, err error) {
 	return
 }
 
-func DeleteHost(hostId string) (err error) {
-	err = MetaDB.Where("ID = ?", hostId).Delete(&Host{
+func DeleteHost(db *gorm.DB, hostId string) (err error) {
+	err = db.Where("ID = ?", hostId).Delete(&Host{
 		ID: hostId,
 	}).Error
 	return
 }
 
-func DeleteHostsInBatch(hostIds []string) (err error) {
-	tx := MetaDB.Begin()
+func DeleteHostsInBatch(db *gorm.DB, hostIds []string) (err error) {
+	tx := db.Begin()
 	for _, hostId := range hostIds {
 		var host Host
 		if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
@@ -211,8 +212,8 @@ type ListHostReq struct {
 	Limit   int
 }
 
-func ListHosts(req ListHostReq) (hosts []Host, err error) {
-	db := MetaDB.Table(HostTableName())
+func ListHosts(metaDB *gorm.DB, req ListHostReq) (hosts []Host, err error) {
+	db := metaDB.Table(HostTableName())
 	if err = db.Error; err != nil {
 		return nil, err
 	}
@@ -230,12 +231,13 @@ func ListHosts(req ListHostReq) (hosts []Host, err error) {
 	return
 }
 
-func FindHostById(hostId string) (*Host, error) {
+func FindHostById(db *gorm.DB, hostId string) (*Host, error) {
 	host := new(Host)
-	err := MetaDB.First(host, "ID = ?", hostId).Error
+	err := db.First(host, "ID = ?", hostId).Error
 	return host, err
 }
 
+/*
 // TODO: Just a trick demo function
 type Resource struct {
 	HostId   string
@@ -251,14 +253,16 @@ type Resource struct {
 	Capacity int
 }
 
-func PreAllocHosts(failedDomain string, numReps int, cpuCores int, mem int) (resources []Resource, err error) {
-	err = MetaDB.Order("hosts.cpu_cores").Limit(numReps).Model(&Disk{}).Select(
+func PreAllocHosts(db *gorm.DB, failedDomain string, numReps int, cpuCores int, mem int) (resources []Resource, err error) {
+	err = db.Order("hosts.cpu_cores").Limit(numReps).Model(&Disk{}).Select(
 		"disks.host_id, disks.id, hosts.cpu_cores, hosts.memory, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, disks.name, disks.path, disks.capacity").Joins("left join hosts on disks.host_id = hosts.id").Where(
 		"disks.status = ? and hosts.az = ? and (hosts.status = ? or hosts.status = ?) and hosts.cpu_cores >= ? and memory >= ?",
 		DISK_AVAILABLE, failedDomain, HOST_ONLINE, HOST_INUSED, cpuCores, mem).Group("hosts.id").Scan(&resources).Error
 	return
 }
+*/
 
+/*
 type ResourceLock struct {
 	HostId       string
 	OriginCores  int
@@ -273,9 +277,9 @@ type HostLocked struct {
 	mem      int
 }
 
-func LockHosts(resources []ResourceLock) (err error) {
+func LockHosts(db *gorm.DB, resources []ResourceLock) (err error) {
 	var setUpdate map[string]*HostLocked = make(map[string]*HostLocked)
-	tx := MetaDB.Begin()
+	tx := db.Begin()
 	for _, v := range resources {
 		var host Host
 		tx.First(&host, "ID = ?", v.HostId)
@@ -329,6 +333,95 @@ func LockHosts(resources []ResourceLock) (err error) {
 	tx.Commit()
 	return nil
 }
+*/
+
+type DiskResource struct {
+	HostId   string
+	HostName string
+	Ip       string
+	UserName string
+	Passwd   string
+	CpuCores int
+	Memory   int
+	DiskId   string
+	DiskName string
+	Path     string
+	Capacity int
+}
+
+// For each Request for one compoent in the same FailureDomain, we should alloc disks in different hosts
+type HostAllocReq struct {
+	FailureDomain string
+	CpuCores      int
+	Memory        int
+	Count         int
+}
+
+type AllocReqs map[string][]*HostAllocReq
+type AllocRsps map[string][]*DiskResource
+
+func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, cpuCores int, mem int) (resources []*DiskResource, err error) {
+	err = tx.Order("hosts.cpu_cores desc").Order("hosts.memory desc").Limit(numReps).Model(&Disk{}).Select(
+		"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", cpuCores, mem).Joins(
+		"left join hosts on disks.host_id = hosts.id").Where(
+		"hosts.az = ? and (hosts.status = ? or hosts.status = ?) and hosts.cpu_cores >= ? and memory >= ? and disks.status = ?",
+		failureDomain, HOST_ONLINE, HOST_INUSED, cpuCores, mem, DISK_AVAILABLE).Group("hosts.id").Scan(&resources).Error
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "select resources failed, %v", err)
+	}
+
+	if len(resources) < numReps {
+		return nil, status.Errorf(codes.Internal, "hosts in %s is not enough for allocation(%d|%d)", failureDomain, len(resources), numReps)
+	}
+
+	for _, resource := range resources {
+		var disk Disk
+		tx.First(&disk, "ID = ?", resource.DiskId).First(&disk)
+		if DiskStatus(disk.Status).IsAvailable() {
+			err = tx.Model(&disk).Update("Status", int32(DISK_INUSED)).Error
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "update disk(%s) status err, %v", resource.DiskId, err)
+			}
+		} else {
+			return nil, status.Errorf(codes.FailedPrecondition, "disk %s status not expected(%d)", resource.DiskId, disk.Status)
+		}
+
+		var host Host
+		tx.First(&host, "ID = ?", resource.HostId)
+		host.CpuCores -= cpuCores
+		host.Memory -= mem
+		if host.IsExhaust() {
+			host.Status = int32(HOST_EXHAUST)
+		} else {
+			host.Status = int32(HOST_INUSED)
+		}
+		err = tx.Model(&host).Select("CpuCores", "Memory", "Status").Where("id = ?", resource.HostId).Updates(Host{CpuCores: host.CpuCores, Memory: host.Memory, Status: host.Status}).Error
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "update host(%s) status err, %v", resource.HostId, err)
+		}
+	}
+	return
+}
+
+func AllocHosts(db *gorm.DB, requests AllocReqs) (resources AllocRsps, err error) {
+	log := framework.GetLogger()
+	resources = make(AllocRsps)
+	tx := db.Begin()
+	for component, reqs := range requests {
+		for _, eachReq := range reqs {
+			log.Infof("alloc resources for component %s in %s (%dC%dG) x %d", component, eachReq.FailureDomain, eachReq.CpuCores, eachReq.Memory, eachReq.Count)
+			disks, err := getHostsFromFailureDomain(tx, eachReq.FailureDomain, eachReq.Count, eachReq.CpuCores, eachReq.Memory)
+			if err != nil {
+				log.Errorf("failed to alloc host info for %s in %s, %v", component, eachReq.FailureDomain, err)
+				tx.Rollback()
+				return nil, err
+			}
+			resources[component] = append(resources[component], disks...)
+		}
+	}
+	tx.Commit()
+	return resources, nil
+}
 
 type FailureDomainResource struct {
 	FailureDomain string
@@ -338,9 +431,9 @@ type FailureDomainResource struct {
 	Count         int
 }
 
-func GetFailureDomain(domain string) (res []FailureDomainResource, err error) {
+func GetFailureDomain(db *gorm.DB, domain string) (res []FailureDomainResource, err error) {
 	selectStr := fmt.Sprintf("%s as FailureDomain, purpose, cpu_cores, memory, count(id) as Count", domain)
-	err = MetaDB.Table("hosts").Where("Status = ? or Status = ?", HOST_ONLINE, HOST_INUSED).Select(selectStr).
+	err = db.Table("hosts").Where("Status = ? or Status = ?", HOST_ONLINE, HOST_INUSED).Select(selectStr).
 		Group(domain).Group("purpose").Group("cpu_cores").Group("memory").Scan(&res).Error
 	return
 }

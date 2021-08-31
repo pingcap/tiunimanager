@@ -11,8 +11,8 @@ func TestGenerateID(t *testing.T) {
 		t.Errorf("GenerateID() empty, got = %v", got)
 	}
 
-	if len(got) != ID_LENGTH {
-		t.Errorf("GenerateID() want len = %v, got = %v", ID_LENGTH, len(got))
+	if len(got) != UUID_MAX_LENGTH {
+		t.Errorf("GenerateID() want len = %d, got = %v", UUID_MAX_LENGTH, len(got))
 	}
 
 }
@@ -27,7 +27,7 @@ func TestGenerateIDReplace(t *testing.T) {
 		if strings.Contains(got, "-") {
 			break
 		}
-		time ++
+		time++
 	}
 	for time < 200 {
 		got := GenerateID()
@@ -37,7 +37,7 @@ func TestGenerateIDReplace(t *testing.T) {
 		if strings.Contains(got, "-") {
 			break
 		}
-		time ++
+		time++
 	}
 
 }

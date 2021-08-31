@@ -8,19 +8,42 @@ import (
 	"time"
 )
 
+const (
+	TABLE_NAME_CLUSTER            = "clusters"
+	TABLE_NAME_DEMAND_RECORD      = "demand_records"
+	TABLE_NAME_ACCOUNT            = "accounts"
+	TABLE_NAME_TENANT             = "tenants"
+	TABLE_NAME_ROLE               = "roles"
+	TABLE_NAME_ROLE_BINDING       = "role_bindings"
+	TABLE_NAME_PERMISSION         = "permissions"
+	TABLE_NAME_PERMISSION_BINDING = "permission_bindings"
+	TABLE_NAME_TOKEN              = "tokens"
+	TABLE_NAME_TASK               = "tasks"
+	TABLE_NAME_HOST               = "hosts"
+	TABLE_NAME_DISK               = "disks"
+	TABLE_NAME_TIUP_CONFIG        = "tiup_configs"
+	TABLE_NAME_TIUP_TASK          = "tiup_tasks"
+	TABLE_NAME_FLOW               = "flows"
+	TABLE_NAME_PARAMETERS_RECORD  = "parameters_records"
+	TABLE_NAME_BACKUP_RECORD      = "backup_records"
+	TABLE_NAME_BACKUP_STRATEGY    = "backup_strategys"
+	TABLE_NAME_TRANSPORT_RECORD    = "transport_records"
+	TABLE_NAME_RECOVER_RECORD     = "recover_records"
+)
+
 func getLogger() *framework.LogRecord {
 	return framework.GetLogger()
 }
 
 type Entity struct {
-	ID        	string 				`gorm:"primaryKey;"`
-	CreatedAt 	time.Time			`gorm:"<-:create"`
-	UpdatedAt 	time.Time
-	DeletedAt 	gorm.DeletedAt 		`gorm:"index"`
+	ID        string    `gorm:"primaryKey;"`
+	CreatedAt time.Time `gorm:"<-:create"`
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 
-	Code		string				`gorm:"uniqueIndex;default:null;not null;<-:create"`
-	TenantId    string				`gorm:"default:null;not null;<-:create"`
-	Status 		int8				`gorm:"type:SMALLINT;default:0"`
+	Code     string `gorm:"uniqueIndex;default:null;not null;<-:create"`
+	TenantId string `gorm:"default:null;not null;<-:create"`
+	Status   int8   `gorm:"type:SMALLINT;default:0"`
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
@@ -38,22 +61,22 @@ func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 type Record struct {
-	ID        	uint 				`gorm:"primaryKey"`
-	CreatedAt 	time.Time			`gorm:"<-:create"`
-	UpdatedAt 	time.Time
-	DeletedAt 	gorm.DeletedAt 		`gorm:"index"`
+	ID        uint      `gorm:"primaryKey"`
+	CreatedAt time.Time `gorm:"<-:create"`
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 
-	TenantId    string				`gorm:"default:null;not null;<-:create"`
+	TenantId string `gorm:"default:null;not null;<-:create"`
 }
 
 type Data struct {
-	ID        	uint 				`gorm:"primaryKey"`
-	CreatedAt 	time.Time			`gorm:"<-:create"`
-	UpdatedAt 	time.Time
-	DeletedAt 	gorm.DeletedAt 		`gorm:"index"`
+	ID        uint      `gorm:"primaryKey"`
+	CreatedAt time.Time `gorm:"<-:create"`
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 
-	BizId       string				`gorm:"default:null;<-:create"`
-	Status 		int8				`gorm:"type:SMALLINT;default:0"`
+	BizId  string `gorm:"default:null;<-:create"`
+	Status int8   `gorm:"type:SMALLINT;default:0"`
 }
 
 var split = []byte("_")
@@ -67,7 +90,7 @@ func generateEntityCode(name string) string {
 
 	code := pinyin.Pinyin(name, a)
 
-	bytes := make([]byte, 0, len(name) * 4)
+	bytes := make([]byte, 0, len(name)*4)
 
 	// split code with "_" before and after chinese word
 	previousSplitFlag := false
@@ -83,4 +106,3 @@ func generateEntityCode(name string) string {
 	}
 	return string(bytes)
 }
-

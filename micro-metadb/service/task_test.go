@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	"os"
 	"testing"
 )
 
@@ -21,18 +23,20 @@ func TestDBServiceHandler_CreateFlow(t *testing.T) {
 		{"normal", args{nil, &dbPb.DBCreateFlowRequest{
 			Flow: &dbPb.DBFlowDTO{FlowName: "aaa"},
 		}, &dbPb.DBCreateFlowResponse{}}, false, []func(args *args) bool{
-			func(args *args) bool{
-				return args.req.Flow.FlowName == args.rsp.Flow.FlowName&& args.rsp.Flow.Id > 0
+			func(args *args) bool {
+				return args.req.Flow.FlowName == args.rsp.Flow.FlowName && args.rsp.Flow.Id > 0
 			},
 		}},
 	}
-		for _, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := new(DBServiceHandler)
+			testFile := "tmp/" + uuidutil.GenerateID()
+			os.MkdirAll(testFile, 0755)
+			d := NewDBServiceHandler(testFile, nil)
 			if err := d.CreateFlow(tt.args.ctx, tt.args.req, tt.args.rsp); (err != nil) != tt.wantErr {
 				t.Errorf("CreateFlow() error = %v, wantErr %v", err, tt.wantErr)
 			} else {
-				for _,f := range tt.asserts {
+				for _, f := range tt.asserts {
 					if !f(&tt.args) {
 						t.Errorf("CreateTask() req = %v, resp %v", tt.args.req, tt.args.rsp)
 					}

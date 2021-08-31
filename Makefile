@@ -64,7 +64,7 @@ build_metadb_server:
 
 #2. R&D to test the code themselves for compliance before submitting it
 devselfcheck:
-	cat resource/prechecklist.md
+	cat resource/prchecklist.md
 	make gotool
 	@echo "start self check."
 	make check_fmt
@@ -171,6 +171,7 @@ clean:
 	@if [ -f ${TIEM_BINARY_DIR}/failpoint-ctl ] ; then rm ${TIEM_BINARY_DIR}/failpoint-ctl; fi
 	@if [ -f ${TIEM_BINARY_DIR}/vfsgendev ] ; then rm ${TIEM_BINARY_DIR}/vfsgendev; fi
 	@if [ -f ${TIEM_BINARY_DIR}/golangci-lint ] ; then rm ${TIEM_BINARY_DIR}/golangci-lint; fi
+	@if [ -f ${TIEM_BINARY_DIR}/errdoc-gen ] ; then rm ${TIEM_BINARY_DIR}/errdoc-gen; fi
 
 help:
 	@echo "make build, build binary for all servers"

@@ -373,6 +373,8 @@ func getAllocRsp(src []*dbPb.DBAllocHostDTO) (dst []*hostPb.AllocHost) {
 			Ip:       rsp.Ip,
 			UserName: rsp.UserName,
 			Passwd:   rsp.Passwd,
+			CpuCores: rsp.CpuCores,
+			Memory:   rsp.Memory,
 			Disk:     buildDiskFromDB(rsp.Disk),
 		})
 	}

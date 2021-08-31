@@ -1192,6 +1192,8 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 			assert.True(t, pdIp == "474.111.111.111" || pdIp == "474.111.111.112" || pdIp == "474.111.111.113")
 			assert.True(t, tidbIp == "474.111.111.111" || tidbIp == "474.111.111.112" || tidbIp == "474.111.111.113")
 			assert.True(t, tikvIp == "474.111.111.111" || tikvIp == "474.111.111.112" || tikvIp == "474.111.111.113")
+			assert.Equal(t, 4, rsp["pd"][0].CpuCores)
+			assert.Equal(t, 8, rsp["pd"][0].Memory)
 			var host Host
 			MetaDB.First(&host, "IP = ?", "474.111.111.111")
 			assert.Equal(t, 17-4, host.CpuCores)

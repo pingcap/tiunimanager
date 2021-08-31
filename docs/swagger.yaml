@@ -1446,7 +1446,7 @@ paths:
         type: string
       - description: cluster info for query records
         in: body
-        name: DataTransportQueryReq
+        name: dataTransportQueryReq
         required: true
         schema:
           $ref: '#/definitions/databaseapi.DataTransportQueryReq'

@@ -1167,7 +1167,7 @@ var doc = `{
                     },
                     {
                         "description": "cluster info for query records",
-                        "name": "DataTransportQueryReq",
+                        "name": "dataTransportQueryReq",
                         "in": "body",
                         "required": true,
                         "schema": {

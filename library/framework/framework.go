@@ -33,7 +33,7 @@ func GetLogger() *LogRecord {
 	if Current != nil {
 		return Current.GetLogger()
 	} else {
-		return DefaultLog()
+		return DefaultLogRecord()
 	}
 }
 

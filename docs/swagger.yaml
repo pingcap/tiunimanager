@@ -327,6 +327,73 @@ definitions:
       used:
         type: number
     type: object
+  databaseapi.DataExportReq:
+    properties:
+      clusterId:
+        type: string
+      fileType:
+        type: string
+      filter:
+        type: string
+      password:
+        type: string
+      userName:
+        type: string
+    type: object
+  databaseapi.DataExportResp:
+    properties:
+      recordId:
+        type: string
+    type: object
+  databaseapi.DataImportReq:
+    properties:
+      clusterId:
+        type: string
+      filePath:
+        type: string
+      password:
+        type: string
+      userName:
+        type: string
+    type: object
+  databaseapi.DataImportResp:
+    properties:
+      recordId:
+        type: string
+    type: object
+  databaseapi.DataTransportInfo:
+    properties:
+      clusterId:
+        type: string
+      endTime:
+        type: string
+      filePath:
+        type: string
+      recordId:
+        type: string
+      startTime:
+        type: string
+      status:
+        type: string
+      transportType:
+        type: string
+    type: object
+  databaseapi.DataTransportQueryReq:
+    properties:
+      page:
+        type: integer
+      pageSize:
+        type: integer
+      recordId:
+        type: string
+    type: object
+  databaseapi.DataTransportRecordQueryResp:
+    properties:
+      transportRecords:
+        items:
+          $ref: '#/definitions/databaseapi.DataTransportInfo'
+        type: array
+    type: object
   hostapi.AllocHostsReq:
     properties:
       pdReq:
@@ -479,6 +546,10 @@ definitions:
     type: object
   instanceapi.BackupRecord:
     properties:
+      backupRange:
+        type: string
+      backupType:
+        type: string
       clusterId:
         type: string
       endTime:
@@ -489,19 +560,17 @@ definitions:
         type: integer
       operator:
         $ref: '#/definitions/controller.Operator'
-      range:
-        type: integer
       size:
-        type: number
+        type: integer
       startTime:
         type: string
       status:
         $ref: '#/definitions/controller.StatusInfo'
-      way:
-        type: integer
     type: object
   instanceapi.BackupRecordQueryReq:
     properties:
+      clusterId:
+        type: string
       page:
         type: integer
       pageSize:
@@ -514,18 +583,34 @@ definitions:
     type: object
   instanceapi.BackupReq:
     properties:
+      backupRange:
+        type: string
+      backupType:
+        type: string
       clusterId:
+        type: string
+      filePath:
         type: string
     type: object
   instanceapi.BackupStrategy:
     properties:
-      cronString:
+      backupDate:
+        type: string
+      backupRange:
+        type: string
+      backupType:
+        type: string
+      clusterId:
+        type: string
+      filePath:
+        type: string
+      period:
         type: string
     type: object
   instanceapi.BackupStrategyUpdateReq:
     properties:
-      cronString:
-        type: string
+      strategy:
+        $ref: '#/definitions/instanceapi.BackupStrategy'
     type: object
   instanceapi.ParamInstance:
     properties:
@@ -644,6 +729,79 @@ definitions:
       unit:
         type: string
     type: object
+  taskapi.FlowWorkDetailInfo:
+    properties:
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      flowWorkName:
+        type: string
+      id:
+        type: integer
+      inProcessFlowId:
+        type: integer
+      manualOperator:
+        type: boolean
+      operatorId:
+        type: string
+      operatorName:
+        type: string
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      tasks:
+        items:
+          $ref: '#/definitions/taskapi.FlowWorkTaskInfo'
+        type: array
+      tenantId:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  taskapi.FlowWorkDisplayInfo:
+    properties:
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      flowWorkName:
+        type: string
+      id:
+        type: integer
+      inProcessFlowId:
+        type: integer
+      manualOperator:
+        type: boolean
+      operatorId:
+        type: string
+      operatorName:
+        type: string
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      tenantId:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  taskapi.FlowWorkTaskInfo:
+    properties:
+      id:
+        type: integer
+      taskName:
+        type: string
+    type: object
   userapi.LoginInfo:
     properties:
       userName:
@@ -653,6 +811,8 @@ definitions:
     type: object
   userapi.UserIdentity:
     properties:
+      tenantId:
+        type: string
       userName:
         type: string
     type: object
@@ -672,14 +832,14 @@ paths:
     get:
       consumes:
       - application/json
-      description: 查询备份记录
+      description: query backup records of a cluster
       parameters:
       - description: token
         in: header
         name: Token
         required: true
         type: string
-      - description: clusterId
+      - description: cluster id
         in: query
         name: clusterId
         required: true
@@ -715,7 +875,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 查询备份记录
+      summary: query backup records of a cluster
       tags:
       - cluster backup
     post:
@@ -728,7 +888,7 @@ paths:
         name: Token
         required: true
         type: string
-      - description: 要备份的集群信息
+      - description: backup request
         in: body
         name: backupReq
         required: true
@@ -765,14 +925,14 @@ paths:
     delete:
       consumes:
       - application/json
-      description: 删除备份记录
+      description: delete backup record
       parameters:
       - description: token
         in: header
         name: Token
         required: true
         type: string
-      - description: 删除备份ID
+      - description: backup record id
         in: path
         name: backupId
         required: true
@@ -801,14 +961,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 删除备份记录
+      summary: delete backup record
       tags:
       - cluster backup
   /backups/{backupId}/restore:
     post:
       consumes:
       - application/json
-      description: 恢复备份
+      description: recover backup record of a cluster
       parameters:
       - description: token
         in: header
@@ -820,7 +980,7 @@ paths:
         name: backupId
         required: true
         type: string
-      - description: 恢复备份请求
+      - description: backup recover request
         in: body
         name: request
         required: true
@@ -850,14 +1010,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 恢复备份
+      summary: recover backup record of a cluster
       tags:
       - cluster backup
   /cluster/dashboard:
     get:
       consumes:
       - application/json
-      description: 查看集群dashboard信息
+      description: dashboard
       parameters:
       - description: token
         in: header
@@ -888,14 +1048,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 查看集群dashboard信息
+      summary: dashboard
       tags:
       - cluster
   /clusters:
     get:
       consumes:
       - application/json
-      description: 查询集群列表
+      description: query clusters
       parameters:
       - description: token
         in: header
@@ -949,20 +1109,20 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 查询集群列表
+      summary: query clusters
       tags:
       - cluster
     post:
       consumes:
       - application/json
-      description: 创建集群接口
+      description: create a cluster
       parameters:
       - description: token
         in: header
         name: Token
         required: true
         type: string
-      - description: 创建参数
+      - description: create request
         in: body
         name: createReq
         required: true
@@ -992,21 +1152,21 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 创建集群接口
+      summary: create a cluster
       tags:
       - cluster
   /clusters/{clusterId}:
     delete:
       consumes:
       - application/json
-      description: 删除集群
+      description: delete cluster
       parameters:
       - description: token
         in: header
         name: Token
         required: true
         type: string
-      - description: 待删除的集群ID
+      - description: cluster id
         in: path
         name: clusterId
         required: true
@@ -1035,20 +1195,20 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 删除集群
+      summary: delete cluster
       tags:
       - cluster
     get:
       consumes:
       - application/json
-      description: 查看集群详情
+      description: show details of a cluster
       parameters:
       - description: token
         in: header
         name: Token
         required: true
         type: string
-      - description: 集群ID
+      - description: cluster id
         in: path
         name: clusterId
         required: true
@@ -1077,14 +1237,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 查看集群详情
+      summary: show details of a cluster
       tags:
       - cluster
   /clusters/{clusterId}/params:
     get:
       consumes:
       - application/json
-      description: 查询集群参数列表
+      description: query params of a cluster
       parameters:
       - description: token
         in: header
@@ -1128,20 +1288,20 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 查询集群参数列表
+      summary: query params of a cluster
       tags:
       - cluster params
     post:
       consumes:
       - application/json
-      description: 提交参数
+      description: submit params
       parameters:
       - description: token
         in: header
         name: Token
         required: true
         type: string
-      - description: 要提交的参数信息
+      - description: update params request
         in: body
         name: updateReq
         required: true
@@ -1176,14 +1336,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 提交参数
+      summary: submit params
       tags:
       - cluster params
   /clusters/{clusterId}/strategy:
     put:
       consumes:
       - application/json
-      description: 保存备份策略
+      description: save the backup strategy of a cluster
       parameters:
       - description: token
         in: header
@@ -1225,14 +1385,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 保存备份策略
+      summary: save the backup strategy of a cluster
       tags:
       - cluster backup
   /clusters/{clusterId}/strategy/:
     get:
       consumes:
       - application/json
-      description: 查询备份策略
+      description: show the backup strategy of a cluster
       parameters:
       - description: token
         in: header
@@ -1270,14 +1430,246 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 查询备份策略
+      summary: show the backup strategy of a cluster
       tags:
       - cluster backup
+  /clusters/{clusterId}/transport:
+    get:
+      consumes:
+      - application/json
+      description: query records of import and export
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: cluster info for query records
+        in: body
+        name: dataTransportQueryReq
+        required: true
+        schema:
+          $ref: '#/definitions/databaseapi.DataTransportQueryReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/databaseapi.DataTransportRecordQueryResp'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: query records of import and export
+      tags:
+      - cluster data transport
+  /clusters/export:
+    post:
+      consumes:
+      - application/json
+      description: export
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: cluster info for data export
+        in: body
+        name: dataExport
+        required: true
+        schema:
+          $ref: '#/definitions/databaseapi.DataExportReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/databaseapi.DataExportResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: export data from tidb cluster
+      tags:
+      - cluster export
+  /clusters/import:
+    post:
+      consumes:
+      - application/json
+      description: import
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: cluster info for import data
+        in: body
+        name: dataImport
+        required: true
+        schema:
+          $ref: '#/definitions/databaseapi.DataImportReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/databaseapi.DataImportResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: import data to tidb cluster
+      tags:
+      - cluster import
+  /flowwork/{flowWorkId}:
+    get:
+      consumes:
+      - application/json
+      description: show details of a flow work
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - description: flow work id
+        in: path
+        name: flowWorkId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/taskapi.FlowWorkDetailInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: show details of a flow work
+      tags:
+      - task
+  /flowworks:
+    get:
+      consumes:
+      - application/json
+      description: query flow works
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      - in: query
+        name: clusterId
+        type: string
+      - in: query
+        name: keyword
+        type: string
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: status
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/taskapi.FlowWorkDisplayInfo'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: query flow works
+      tags:
+      - task
   /knowledges:
     get:
       consumes:
       - application/json
-      description: 查看集群基本知识
+      description: show cluster knowledge
       parameters:
       - description: token
         in: header
@@ -1310,7 +1702,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 查看集群基本知识
+      summary: show cluster knowledge
       tags:
       - knowledge
   /resources/allochosts:
@@ -1605,9 +1997,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: 登录
+      description: login
       parameters:
-      - description: 登录用户信息
+      - description: login info
         in: body
         name: loginInfo
         required: true
@@ -1633,14 +2025,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 登录接口
+      summary: login
       tags:
       - platform
   /user/logout:
     post:
       consumes:
       - application/json
-      description: 退出登录
+      description: logout
       parameters:
       - description: token
         in: header
@@ -1667,7 +2059,41 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
-      summary: 退出登录
+      summary: logout
+      tags:
+      - platform
+  /user/profile:
+    get:
+      consumes:
+      - application/json
+      description: profile
+      parameters:
+      - description: token
+        in: header
+        name: Token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/userapi.UserIdentity'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      summary: user profile
       tags:
       - platform
 swagger: "2.0"

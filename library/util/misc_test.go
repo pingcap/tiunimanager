@@ -17,7 +17,7 @@ package util
 import (
 	"bytes"
 	"crypto/x509/pkix"
-	fastrand2 "github.com/pingcap-inc/tiem/library/util/fastrand"
+	"github.com/pingcap-inc/tiem/library/util/fastrand"
 	"github.com/pingcap/errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -104,10 +104,9 @@ func TestBasicFuncWithRecovery(t *testing.T) {
 	assert.Equal(t, "test", recovery)
 }
 
-
 func TestBasicFuncRandomBuf(t *testing.T) {
 	t.Parallel()
-	buf := fastrand2.Buf(5)
+	buf := fastrand.Buf(5)
 	assert.Len(t, buf, 5)
 	assert.False(t, bytes.Contains(buf, []byte("$")))
 	assert.False(t, bytes.Contains(buf, []byte{0}))

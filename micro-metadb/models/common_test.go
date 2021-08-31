@@ -25,7 +25,7 @@ type TestData struct {
 	name string
 }
 
-func TestTime(t *testing.T)  {
+func TestTime(t *testing.T) {
 	t.Run("test time", func(t *testing.T) {
 		now := time.Now()
 		do := &TestEntity{
@@ -61,7 +61,7 @@ func TestEntityCode(t *testing.T) {
 		err := MetaDB.Create(&TestEntity{
 			Entity{
 				TenantId: "111",
-				Code: "repeated_code",
+				Code:     "repeated_code",
 			},
 			"start",
 		}).Error
@@ -73,7 +73,7 @@ func TestEntityCode(t *testing.T) {
 		err = MetaDB.Create(&TestEntity2{
 			Entity{
 				TenantId: "111",
-				Code: "repeated_code",
+				Code:     "repeated_code",
 			},
 			"start",
 		}).Error
@@ -85,8 +85,7 @@ func TestEntityCode(t *testing.T) {
 		err = MetaDB.Create(&TestEntity2{
 			Entity{
 				TenantId: "111",
-				Code: "repeated_code",
-
+				Code:     "repeated_code",
 			},
 			"start",
 		}).Error
@@ -98,7 +97,7 @@ func TestEntityCode(t *testing.T) {
 	})
 	t.Run("too long", func(t *testing.T) {
 		code := ""
-		for i := 0; i < 128; i++  {
+		for i := 0; i < 128; i++ {
 			code = code + "1"
 		}
 		err := MetaDB.Create(&TestEntity{
@@ -182,7 +181,7 @@ func TestEntityTenantId(t *testing.T) {
 		}
 		MetaDB.Create(te)
 		te.name = "modified"
-		te.TenantId = "modified"
+		//TODO te.TenantId = "modified" ? tset update name ?
 		MetaDB.Updates(te)
 		MetaDB.Where("id = ?", te.ID).Find(te)
 		if te.name != "modified" {
@@ -307,7 +306,7 @@ func TestData_BeforeCreate(t *testing.T) {
 	t.Run("test id", func(t *testing.T) {
 		do := &TestData{
 			Data{
-				BizId : "111",
+				BizId: "111",
 			},
 			"start",
 		}

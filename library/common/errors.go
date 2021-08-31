@@ -16,9 +16,37 @@ package common
 
 // tiem all errno
 const (
-	TiEM_SUCCESS 	= 0
+	TIEM_SUCCESS 	= 0
+	TIEM_PARAMETER_INVALID = 1
+
+	TIEM_ACCOUNT_NOT_FOUND = 100
+	TIME_ACCOUNT_EXIST = 101
+
+	TIEM_TENANT_NOT_FOUND = 200
+	TIEM_TENANT_EXIST =201
+
+	TIEM_QUERY_PERMISSION_FAILED = 300
+
+	TIEM_ADD_TOKEN_FAILED = 400
+	TIEM_TOKEN_NOT_FOUND = 401
 )
 
-var TiEMErrName = map[uint16]string{
-	TiEM_SUCCESS: "successufl",
+var TiEMErrMsg = map[uint32] string {
+	TIEM_PARAMETER_INVALID : "parameter is invalid",
+	TIEM_ACCOUNT_NOT_FOUND : "account is not found",
+	TIME_ACCOUNT_EXIST : "account is exist",
+
+	TIEM_TENANT_NOT_FOUND : "tenant is not found",
+	TIEM_TENANT_EXIST : "tenant is exist",
+
+	TIEM_QUERY_PERMISSION_FAILED :"query permission failed",
+
+	TIEM_ADD_TOKEN_FAILED :"add token failed",
+
+	TIEM_TOKEN_NOT_FOUND : "token not found",
+
+}
+
+var TiEMErrName = map[uint32]string{
+	TIEM_SUCCESS: "successufl",
 }

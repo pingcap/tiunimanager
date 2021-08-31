@@ -10,18 +10,19 @@ import (
 
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.MetaDBService,
-		initSqliteDB,
-		initTables,
-		initTenantDataForDev,
-		initResourceDataForDev,
 		defaultPortForLocal,
 	)
 
+	log := framework.GetLogger()
+
 	f.PrepareService(func(service micro.Service) error {
-		return dbPb.RegisterTiEMDBServiceHandler(service.Server(), new(dbService.DBServiceHandler))
+		return dbPb.RegisterTiEMDBServiceHandler(service.Server(), dbService.NewDBServiceHandler(f.GetDataDir(), f))
 	})
 
-	f.StartService()
+	err := f.StartService()
+	if nil != err {
+		log.Errorf("start meta-server failed, error: %v", err)
+	}
 }
 
 func defaultPortForLocal(f *framework.BaseFramework) error {

@@ -12,25 +12,25 @@ func TestBatchSaveTasks(t *testing.T) {
 		tasks []*TaskDO
 	}
 	tests := []struct {
-		name         string
-		args         args
-		wantErr      bool
-		wants    []func (a args, r []*TaskDO) bool
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(a args, r []*TaskDO) bool
 	}{
 		{"normal", args{[]*TaskDO{
 			{Name: "task1", Data: Data{BizId: "111", Status: 1}},
 			{Name: "task2", Data: Data{BizId: "222", Status: 1}},
 			{Name: "task3", Data: Data{BizId: "333", Status: 1}},
-		}}, false, []func (a args, r []*TaskDO) bool{
-			func (a args, r []*TaskDO) bool {return len(a.tasks) == len(r)},
-			func (a args, r []*TaskDO) bool {return r[2].ID > 0},
-			func (a args, r []*TaskDO) bool {return r[0].Status == a.tasks[0].Status},
-			func (a args, r []*TaskDO) bool {return r[0].Status == 1},
+		}}, false, []func(a args, r []*TaskDO) bool{
+			func(a args, r []*TaskDO) bool { return len(a.tasks) == len(r) },
+			func(a args, r []*TaskDO) bool { return r[2].ID > 0 },
+			func(a args, r []*TaskDO) bool { return r[0].Status == a.tasks[0].Status },
+			func(a args, r []*TaskDO) bool { return r[0].Status == 1 },
 		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotNewTasks, err := BatchSaveTasks(tt.args.tasks)
+			gotNewTasks, err := BatchSaveTasks(MetaDB, tt.args.tasks)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("BatchSaveTasks() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -51,25 +51,25 @@ func TestCreateFlow(t *testing.T) {
 		bizId       string
 	}
 	tests := []struct {
-		name     string
-		args     args
-		wantErr  bool
-		wants    []func (args args, flow *FlowDO) bool
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(args args, flow *FlowDO) bool
 	}{
-		{"normal", args{flowName: "testFlow", statusAlias: "创建中", bizId: "TestCreateFlow1"}, false, []func (args args, flow *FlowDO) bool{
-			func (args args, flow *FlowDO) bool {return flow.Name == args.flowName},
-			func (args args, flow *FlowDO) bool {return flow.StatusAlias == args.statusAlias},
-			func (args args, flow *FlowDO) bool {return flow.BizId == args.bizId},
-			func (args args, flow *FlowDO) bool {return flow.ID > 0},
-			func (args args, flow *FlowDO) bool {return flow.Status == 0},
+		{"normal", args{flowName: "testFlow", statusAlias: "创建中", bizId: "TestCreateFlow1"}, false, []func(args args, flow *FlowDO) bool{
+			func(args args, flow *FlowDO) bool { return flow.Name == args.flowName },
+			func(args args, flow *FlowDO) bool { return flow.StatusAlias == args.statusAlias },
+			func(args args, flow *FlowDO) bool { return flow.BizId == args.bizId },
+			func(args args, flow *FlowDO) bool { return flow.ID > 0 },
+			func(args args, flow *FlowDO) bool { return flow.Status == 0 },
 		}},
-		{"empty biz id", args{flowName: "testFlow", statusAlias: "创建中", bizId: ""}, false, []func (args args, flow *FlowDO) bool{
-			func (args args, flow *FlowDO) bool {return flow.ID > 0},
+		{"empty biz id", args{flowName: "testFlow", statusAlias: "创建中", bizId: ""}, false, []func(args args, flow *FlowDO) bool{
+			func(args args, flow *FlowDO) bool { return flow.ID > 0 },
 		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotFlow, err := CreateFlow(tt.args.flowName, tt.args.statusAlias, tt.args.bizId)
+			gotFlow, err := CreateFlow(MetaDB, tt.args.flowName, tt.args.statusAlias, tt.args.bizId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateFlow() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -94,28 +94,28 @@ func TestCreateTask(t *testing.T) {
 		result         string
 	}
 	tests := []struct {
-		name     string
-		args     args
-		wantErr  bool
-		wants    []func (a args, r *TaskDO) bool
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(a args, r *TaskDO) bool
 	}{
-		{"normal", args{parentType: 1, parentId: "pi1",taskName: "tn1", bizId: "TestCreateTask1", taskReturnType: "trt1", parameters: "p1", result: "r1"}, false, []func (a args, r *TaskDO) bool{
-			func (args args, r *TaskDO) bool {return r.ID > 0},
-			func (args args, r *TaskDO) bool {return r.ParentType == args.parentType},
-			func (args args, r *TaskDO) bool {return r.ParentId == args.parentId},
-			func (args args, r *TaskDO) bool {return r.Name == args.taskName},
-			func (args args, r *TaskDO) bool {return r.BizId == args.bizId},
-			func (args args, r *TaskDO) bool {return r.ReturnType == args.taskReturnType},
-			func (args args, r *TaskDO) bool {return r.Parameters == args.parameters},
-			func (args args, r *TaskDO) bool {return r.Result == args.result},
+		{"normal", args{parentType: 1, parentId: "pi1", taskName: "tn1", bizId: "TestCreateTask1", taskReturnType: "trt1", parameters: "p1", result: "r1"}, false, []func(a args, r *TaskDO) bool{
+			func(args args, r *TaskDO) bool { return r.ID > 0 },
+			func(args args, r *TaskDO) bool { return r.ParentType == args.parentType },
+			func(args args, r *TaskDO) bool { return r.ParentId == args.parentId },
+			func(args args, r *TaskDO) bool { return r.Name == args.taskName },
+			func(args args, r *TaskDO) bool { return r.BizId == args.bizId },
+			func(args args, r *TaskDO) bool { return r.ReturnType == args.taskReturnType },
+			func(args args, r *TaskDO) bool { return r.Parameters == args.parameters },
+			func(args args, r *TaskDO) bool { return r.Result == args.result },
 		}},
-		{"empty biz id", args{parentType: 1, parentId: "pi1", taskName: "tn1", bizId: "", taskReturnType: "trt1", parameters: "p1", result: "r1"}, false, []func (a args, r *TaskDO) bool{
-			func (args args, r *TaskDO) bool {return r.ID > 0},
+		{"empty biz id", args{parentType: 1, parentId: "pi1", taskName: "tn1", bizId: "", taskReturnType: "trt1", parameters: "p1", result: "r1"}, false, []func(a args, r *TaskDO) bool{
+			func(args args, r *TaskDO) bool { return r.ID > 0 },
 		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotTask, err := CreateTask(tt.args.parentType, tt.args.parentId, tt.args.taskName, tt.args.bizId, tt.args.taskReturnType, tt.args.parameters, tt.args.result)
+			gotTask, err := CreateTask(MetaDB, tt.args.parentType, tt.args.parentId, tt.args.taskName, tt.args.bizId, tt.args.taskReturnType, tt.args.parameters, tt.args.result)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateTask() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -131,8 +131,8 @@ func TestCreateTask(t *testing.T) {
 
 func TestFetchFlow(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		flow, _ := CreateFlow("name", "创建中", "TestFetchFlow1")
-		got, err := FetchFlow(flow.ID)
+		flow, _ := CreateFlow(MetaDB, "name", "创建中", "TestFetchFlow1")
+		got, err := FetchFlow(MetaDB, flow.ID)
 		if err != nil {
 			t.Errorf("TestFetchFlow() error = %v", err)
 		}
@@ -149,13 +149,13 @@ func TestFetchFlow(t *testing.T) {
 
 func TestFetchFlowDetail(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		flow, _ := CreateFlow("name", "创建中", "TestFetchFlowDetail1")
-		CreateTask(0, strconv.Itoa(int(flow.ID)), "task1", "TestFetchFlowDetail1", "trt1", "p1", "r1")
-		CreateTask(0, strconv.Itoa(int(flow.ID)), "task2", "TestFetchFlowDetail2", "trt2", "p2", "r2")
-		CreateTask(0, "22", "task3", "TestFetchFlowDetail3", "trt3", "p3", "r3")
-		CreateTask(1, strconv.Itoa(int(flow.ID)), "task4", "TestFetchFlowDetail4", "trt4", "p4", "r4")
+		flow, _ := CreateFlow(MetaDB, "name", "创建中", "TestFetchFlowDetail1")
+		CreateTask(MetaDB, 0, strconv.Itoa(int(flow.ID)), "task1", "TestFetchFlowDetail1", "trt1", "p1", "r1")
+		CreateTask(MetaDB, 0, strconv.Itoa(int(flow.ID)), "task2", "TestFetchFlowDetail2", "trt2", "p2", "r2")
+		CreateTask(MetaDB, 0, "22", "task3", "TestFetchFlowDetail3", "trt3", "p3", "r3")
+		CreateTask(MetaDB, 1, strconv.Itoa(int(flow.ID)), "task4", "TestFetchFlowDetail4", "trt4", "p4", "r4")
 
-		gotFlow, gotTasks, err := FetchFlowDetail(flow.ID)
+		gotFlow, gotTasks, err := FetchFlowDetail(MetaDB, flow.ID)
 		if err != nil {
 			t.Errorf("TestFetchFlow() error = %v", err)
 		}
@@ -182,9 +182,9 @@ func TestFetchFlowDetail(t *testing.T) {
 
 func TestFetchTask(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		task, _ := CreateTask(1, "p1", "tn", "bi", "trt", "p", "r")
+		task, _ := CreateTask(MetaDB, 1, "p1", "tn", "bi", "trt", "p", "r")
 
-		got, err := FetchTask(task.ID)
+		got, err := FetchTask(MetaDB, task.ID)
 		if err != nil {
 			t.Errorf("TestFetchFlow() error = %v", err)
 		}
@@ -260,12 +260,12 @@ func TestFlowDO_TableName(t *testing.T) {
 
 func TestQueryTask(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		CreateTask(0, "1", "task1", "TestQueryTask1", "trt1", "p1", "r1")
-		CreateTask(0, "1", "task2", "TestQueryTask2", "trt2", "p2", "r2")
-		CreateTask(0, "1", "task3", "TestQueryTask3", "trt3", "p3", "r3")
-		CreateTask(1, "1", "task4", "TestQueryTask4", "trt4", "p4", "r4")
+		CreateTask(MetaDB, 0, "1", "task1", "TestQueryTask1", "trt1", "p1", "r1")
+		CreateTask(MetaDB, 0, "1", "task2", "TestQueryTask2", "trt2", "p2", "r2")
+		CreateTask(MetaDB, 0, "1", "task3", "TestQueryTask3", "trt3", "p3", "r3")
+		CreateTask(MetaDB, 1, "1", "task4", "TestQueryTask4", "trt4", "p4", "r4")
 
-		gotTasks, err := QueryTask("TestQueryTask1", "whatever")
+		gotTasks, err := QueryTask(MetaDB, "TestQueryTask1", "whatever")
 
 		if err != nil {
 			t.Errorf("QueryTask() error = %v", err)
@@ -278,7 +278,7 @@ func TestQueryTask(t *testing.T) {
 		}
 
 		if gotTasks[0].BizId != "TestQueryTask1" ||
-			gotTasks[0].Parameters != "p1"{
+			gotTasks[0].Parameters != "p1" {
 			t.Errorf("QueryTask() gotTasks %v", gotTasks)
 		}
 	})
@@ -340,7 +340,7 @@ func TestTaskDO_TableName(t *testing.T) {
 	}{
 		{"normal", fields{}, "tasks"},
 	}
-		for _, tt := range tests {
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			do := TaskDO{
 				Data:       tt.fields.Data,
@@ -360,7 +360,7 @@ func TestTaskDO_TableName(t *testing.T) {
 
 func TestUpdateFlow(t *testing.T) {
 	now := time.Now()
-	ff, _ := CreateFlow("test", "", "TestUpdateFlow1")
+	ff, _ := CreateFlow(MetaDB, "test", "", "TestUpdateFlow1")
 	type args struct {
 		flow FlowDO
 	}
@@ -368,16 +368,16 @@ func TestUpdateFlow(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-		wants   []func (a args, r FlowDO) bool
+		wants   []func(a args, r FlowDO) bool
 	}{
-		{"normal", args{flow: *ff}, false, []func (a args, r FlowDO) bool{
-			func (a args, r FlowDO) bool{return a.flow.ID == r.ID},
-			func (a args, r FlowDO) bool{return r.UpdatedAt.After(now)},
+		{"normal", args{flow: *ff}, false, []func(a args, r FlowDO) bool{
+			func(a args, r FlowDO) bool { return a.flow.ID == r.ID },
+			func(a args, r FlowDO) bool { return r.UpdatedAt.After(now) },
 		}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotFlow, err := UpdateFlowStatus(tt.args.flow)
+			gotFlow, err := UpdateFlowStatus(MetaDB, tt.args.flow)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpdateFlowStatus() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -448,32 +448,31 @@ func TestUpdateFlow(t *testing.T) {
 //}
 
 func TestUpdateTask(t *testing.T) {
-	task, _ := CreateTask(0, "28282828", "taskName", "bizId" , "taskReturnType" , "parameters", "result" )
+	task, _ := CreateTask(MetaDB, 0, "28282828", "taskName", "bizId", "taskReturnType", "parameters", "result")
 
 	type args struct {
 		task TaskDO
 	}
 	tests := []struct {
-		name        string
-		args        args
-		wantErr     bool
-		wants   	[]func (a args, r TaskDO, index int) bool
-
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(a args, r TaskDO, index int) bool
 	}{
-		{"normal", args{task: *task}, false, []func (a args, r TaskDO, index int) bool{
-			func (a args, r TaskDO, index int) bool{return int(r.Status) == index},
+		{"normal", args{task: *task}, false, []func(a args, r TaskDO, index int) bool{
+			func(a args, r TaskDO, index int) bool { return int(r.Status) == index },
 		}},
 	}
 	for index, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.args.task.Status = int8(index + 1)
-			gotNewTask, err := UpdateTask(tt.args.task)
+			gotNewTask, err := UpdateTask(MetaDB, tt.args.task)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpdateTask() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			for i, assert := range tt.wants {
-				if !assert(tt.args, gotNewTask, index + 1) {
+				if !assert(tt.args, gotNewTask, index+1) {
 					t.Errorf("UpdateFlowStatus() test error, testname = %v, assert = %v, args = %v, gotFlow = %v", tt.name, i, tt.args, gotNewTask)
 				}
 			}
@@ -483,10 +482,10 @@ func TestUpdateTask(t *testing.T) {
 
 func TestBatchFetchFlows(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		flow1, _ := CreateFlow("flow1", "创建中", "121212")
-		flow2, _ := CreateFlow("flow2", "创建中", "121212")
+		flow1, _ := CreateFlow(MetaDB, "flow1", "创建中", "121212")
+		flow2, _ := CreateFlow(MetaDB, "flow2", "创建中", "121212")
 
-		got, err := BatchFetchFlows([]uint{0, flow1.ID, 0, flow2.ID, 0})
+		got, err := BatchFetchFlows(MetaDB, []uint{0, flow1.ID, 0, flow2.ID, 0})
 		if err != nil {
 			t.Errorf("TestBatchFetchFlows() error = %v", err)
 		}

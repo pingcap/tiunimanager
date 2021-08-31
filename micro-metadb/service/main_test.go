@@ -1,17 +1,19 @@
-package models
+package service
 
 import (
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	"gorm.io/gorm"
 	"os"
 	"testing"
 )
 
 var MetaDB *gorm.DB
-var Dao *DAOManager
+var Dao *models.DAOManager
+var handler *DBServiceHandler
 
 func TestMain(m *testing.M) {
-	testFilePath := "tmp/" + GenerateID()
+	testFilePath := "tmp/" + models.GenerateID()
 	os.MkdirAll(testFilePath, 0755)
 
 	defer func() {
@@ -21,17 +23,15 @@ func TestMain(m *testing.M) {
 
 	framework.InitBaseFrameworkForUt(framework.MetaDBService,
 		func(d *framework.BaseFramework) error {
-			Dao = new(DAOManager)
+			handler = NewDBServiceHandler(testFilePath, d)
+
+			Dao = handler.Dao()
 			Dao.InitDB(testFilePath)
 			Dao.InitTables()
-			Dao.AddTable("test_entitys", new(TestEntity))
-			Dao.AddTable("test_entity2_s", new(TestEntity2))
-			Dao.AddTable("test_records", new(TestRecord))
-			Dao.AddTable("test_datas", new(TestData))
 
 			MetaDB = Dao.Db()
-			Dao.SetAccountManager(NewDAOAccountManager(Dao.Db()))
-			Dao.SetClusterManager(NewDAOClusterManager(Dao.Db()))
+			Dao.SetAccountManager(models.NewDAOAccountManager(Dao.Db()))
+			Dao.SetClusterManager(models.NewDAOClusterManager(Dao.Db()))
 			return nil
 		},
 	)

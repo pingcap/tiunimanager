@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/pingcap/errors"
 	"gorm.io/gorm"
 	"time"
 )
@@ -8,21 +9,22 @@ import (
 type Token struct {
 	gorm.Model
 
-	TokenString    	string 		`gorm:"size:255"`
-	AccountId      	string  	`gorm:"size:255"`
-	AccountName		string  	`gorm:"size:255"`
-	TenantId       	string  	`gorm:"size:255"`
-	Status 			int8		`gorm:"size:255"`
-	ExpirationTime 	time.Time  	`gorm:"size:255"`
+	TokenString    string    `gorm:"size:255"`
+	AccountId      string    `gorm:"size:255"`
+	AccountName    string    `gorm:"size:255"`
+	TenantId       string    `gorm:"size:255"`
+	Status         int8      `gorm:"size:255"`
+	ExpirationTime time.Time `gorm:"size:255"`
 }
 
-func AddToken(tokenString, accountName string, accountId, tenantId string, expirationTime time.Time) (token Token, err error) {
-	token, err = FindToken(tokenString)
-
-	if err == nil && token.TokenString == tokenString{
+func (m *DAOAccountManager) AddToken(tokenString, accountName string, accountId, tenantId string, expirationTime time.Time) (token *Token, err error) {
+	if "" == tokenString /*|| "" == accountName || "" == accountId || "" == tenantId */ {
+		return nil, errors.Errorf("AddToken has invalid parameter, tokenString: %s, accountName: %s, tenantId: %s, accountId: %s", tokenString, accountName, tenantId, accountId)
+	}
+	token, err = m.FindToken(tokenString)
+	if err == nil && token.TokenString == tokenString {
 		token.ExpirationTime = expirationTime
-		MetaDB.Save(&token)
-		return
+		m.Db().Save(&token)
 	} else {
 		token.TokenString = tokenString
 		token.AccountId = accountId
@@ -30,13 +32,12 @@ func AddToken(tokenString, accountName string, accountId, tenantId string, expir
 		token.ExpirationTime = expirationTime
 		token.AccountName = accountName
 		token.Status = 0
-
-		MetaDB.Create(&token)
-		return
+		m.Db().Create(&token)
 	}
+	return token, err
 }
 
-func FindToken(tokenString string) (token Token, err error) {
-	MetaDB.Where("token_string = ?", tokenString).First(&token)
-	return
+func (m *DAOAccountManager) FindToken(tokenString string) (token *Token, err error) {
+	token = &Token{}
+	return token, m.Db().Where("token_string = ?", tokenString).First(token).Error
 }

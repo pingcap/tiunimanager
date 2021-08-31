@@ -10,13 +10,12 @@ func TestAssert(t *testing.T) {
 		b bool
 	}
 	tests := []struct {
-		name string
-		args args
+		name      string
+		args      args
 		withPanic bool
-
 	}{
 		{"true", args{true}, false},
-		{"false", args{false}, false},
+		{"false", args{false}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -30,8 +29,8 @@ func TestAssertNoErr(t *testing.T) {
 		err error
 	}
 	tests := []struct {
-		name string
-		args args
+		name      string
+		args      args
 		withPanic bool
 	}{
 		{"true", args{nil}, false},
@@ -50,10 +49,9 @@ func TestAssertWithInfo(t *testing.T) {
 		info string
 	}
 	tests := []struct {
-		name string
-		args args
+		name      string
+		args      args
 		withPanic bool
-
 	}{
 		{"true", args{true, "sdf"}, false},
 		{"false", args{false, "sdf"}, false},

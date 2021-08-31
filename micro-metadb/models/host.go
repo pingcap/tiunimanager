@@ -157,16 +157,16 @@ func (h *Host) AfterFind(tx *gorm.DB) (err error) {
 	return
 }
 
-func CreateHost(host *Host) (id string, err error) {
-	err = MetaDB.Create(host).Error
+func CreateHost(db *gorm.DB, host *Host) (id string, err error) {
+	err = db.Create(host).Error
 	if err != nil {
 		return
 	}
 	return host.ID, err
 }
 
-func CreateHostsInBatch(hosts []*Host) (ids []string, err error) {
-	tx := MetaDB.Begin()
+func CreateHostsInBatch(db *gorm.DB, hosts []*Host) (ids []string, err error) {
+	tx := db.Begin()
 	for _, host := range hosts {
 		err = tx.Create(host).Error
 		if err != nil {
@@ -179,15 +179,15 @@ func CreateHostsInBatch(hosts []*Host) (ids []string, err error) {
 	return
 }
 
-func DeleteHost(hostId string) (err error) {
-	err = MetaDB.Where("ID = ?", hostId).Delete(&Host{
+func DeleteHost(db *gorm.DB, hostId string) (err error) {
+	err = db.Where("ID = ?", hostId).Delete(&Host{
 		ID: hostId,
 	}).Error
 	return
 }
 
-func DeleteHostsInBatch(hostIds []string) (err error) {
-	tx := MetaDB.Begin()
+func DeleteHostsInBatch(db *gorm.DB, hostIds []string) (err error) {
+	tx := db.Begin()
 	for _, hostId := range hostIds {
 		var host Host
 		if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
@@ -211,8 +211,8 @@ type ListHostReq struct {
 	Limit   int
 }
 
-func ListHosts(req ListHostReq) (hosts []Host, err error) {
-	db := MetaDB.Table(HostTableName())
+func ListHosts(metaDB *gorm.DB, req ListHostReq) (hosts []Host, err error) {
+	db := metaDB.Table(HostTableName())
 	if err = db.Error; err != nil {
 		return nil, err
 	}
@@ -230,9 +230,9 @@ func ListHosts(req ListHostReq) (hosts []Host, err error) {
 	return
 }
 
-func FindHostById(hostId string) (*Host, error) {
+func FindHostById(db *gorm.DB, hostId string) (*Host, error) {
 	host := new(Host)
-	err := MetaDB.First(host, "ID = ?", hostId).Error
+	err := db.First(host, "ID = ?", hostId).Error
 	return host, err
 }
 
@@ -251,8 +251,8 @@ type Resource struct {
 	Capacity int
 }
 
-func PreAllocHosts(failedDomain string, numReps int, cpuCores int, mem int) (resources []Resource, err error) {
-	err = MetaDB.Order("hosts.cpu_cores").Limit(numReps).Model(&Disk{}).Select(
+func PreAllocHosts(db *gorm.DB, failedDomain string, numReps int, cpuCores int, mem int) (resources []Resource, err error) {
+	err = db.Order("hosts.cpu_cores").Limit(numReps).Model(&Disk{}).Select(
 		"disks.host_id, disks.id, hosts.cpu_cores, hosts.memory, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, disks.name, disks.path, disks.capacity").Joins("left join hosts on disks.host_id = hosts.id").Where(
 		"disks.status = ? and hosts.az = ? and (hosts.status = ? or hosts.status = ?) and hosts.cpu_cores >= ? and memory >= ?",
 		DISK_AVAILABLE, failedDomain, HOST_ONLINE, HOST_INUSED, cpuCores, mem).Group("hosts.id").Scan(&resources).Error
@@ -273,9 +273,9 @@ type HostLocked struct {
 	mem      int
 }
 
-func LockHosts(resources []ResourceLock) (err error) {
+func LockHosts(db *gorm.DB, resources []ResourceLock) (err error) {
 	var setUpdate map[string]*HostLocked = make(map[string]*HostLocked)
-	tx := MetaDB.Begin()
+	tx := db.Begin()
 	for _, v := range resources {
 		var host Host
 		tx.First(&host, "ID = ?", v.HostId)
@@ -338,9 +338,9 @@ type FailureDomainResource struct {
 	Count         int
 }
 
-func GetFailureDomain(domain string) (res []FailureDomainResource, err error) {
+func GetFailureDomain(db *gorm.DB, domain string) (res []FailureDomainResource, err error) {
 	selectStr := fmt.Sprintf("%s as FailureDomain, purpose, cpu_cores, memory, count(id) as Count", domain)
-	err = MetaDB.Table("hosts").Where("Status = ? or Status = ?", HOST_ONLINE, HOST_INUSED).Select(selectStr).
+	err = db.Table("hosts").Where("Status = ? or Status = ?", HOST_ONLINE, HOST_INUSED).Select(selectStr).
 		Group(domain).Group("purpose").Group("cpu_cores").Group("memory").Scan(&res).Error
 	return
 }

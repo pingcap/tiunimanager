@@ -71,7 +71,7 @@ func Test_ListHosts_Succeed(t *testing.T) {
 		Page controller.Page    `json:"page"`
 	}
 	var result ResultWithPage
-	err := json.Unmarshal([]byte(w.Body.String()), &result)
+	err := json.Unmarshal(w.Body.Bytes(), &result)
 	assert.Nil(t, err)
 
 	value := len(result.Data)
@@ -133,7 +133,7 @@ func Test_ImportHost_Succeed(t *testing.T) {
 	}
 	var result CommonResult
 
-	err := json.Unmarshal([]byte(w.Body.String()), &result)
+	err := json.Unmarshal(w.Body.Bytes(), &result)
 	assert.Nil(t, err)
 
 	assert.Equal(t, result.Data.HostId, fakeHostId1)
@@ -194,7 +194,7 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 	}
 	var result CommonResult
 
-	err = json.Unmarshal([]byte(w.Body.String()), &result)
+	err = json.Unmarshal(w.Body.Bytes(), &result)
 	assert.Nil(t, err)
 
 	value := len(result.Data.HostIds)
@@ -291,7 +291,7 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 	}
 	var result CommonResult
 
-	err := json.Unmarshal([]byte(w.Body.String()), &result)
+	err := json.Unmarshal(w.Body.Bytes(), &result)
 	assert.Nil(t, err)
 	assert.Equal(t, result.Data.Host.HostName, fakeHostName)
 	assert.Equal(t, result.Data.Host.Ip, fakeHostIp)
@@ -352,7 +352,7 @@ func Test_GetFailureDomain_Succeed(t *testing.T) {
 	}
 	var result CommonResult
 
-	err := json.Unmarshal([]byte(w.Body.String()), &result)
+	err := json.Unmarshal(w.Body.Bytes(), &result)
 	assert.Nil(t, err)
 	assert.Equal(t, result.Data[0].ZoneName, fakeZone1)
 	assert.Equal(t, result.Data[1].SpecCode, fakeSpec2)
@@ -460,7 +460,7 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 	}
 	var result CommonResult
 
-	err := json.Unmarshal([]byte(w.Body.String()), &result)
+	err := json.Unmarshal(w.Body.Bytes(), &result)
 	assert.Nil(t, err)
 	assert.Equal(t, result.Data.PdHosts[0].HostName, fakeHostName1)
 	assert.Equal(t, result.Data.PdHosts[0].Disk.Name, fakeDiskName1)

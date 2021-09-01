@@ -1003,40 +1003,6 @@ paths:
       summary: recover backup record of a cluster
       tags:
       - cluster backup
-  /cluster/dashboard:
-    get:
-      consumes:
-      - application/json
-      description: dashboard
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/clusterapi.DescribeDashboardRsp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: dashboard
-      tags:
-      - cluster
   /clusters:
     get:
       consumes:
@@ -1212,6 +1178,40 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: show details of a cluster
+      tags:
+      - cluster
+  /clusters/{clusterId}/dashboard:
+    get:
+      consumes:
+      - application/json
+      description: dashboard
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/clusterapi.DescribeDashboardRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: dashboard
       tags:
       - cluster
   /clusters/{clusterId}/params:

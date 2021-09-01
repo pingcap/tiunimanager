@@ -59,6 +59,8 @@ func BackupPreCheck(request *proto.CreateBackupRequest) error {
 }
 
 func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, filePath string) (*ClusterAggregation, error){
+	getLogger().Infof("Begin do Backup, clusterId: %s, backupRange: %s, backupType: %s, filePath: %s", clusterId, backupRange, backupType, filePath)
+	defer getLogger().Infof("End do Backup")
 	operator := parseOperatorFromDTO(ope)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil || clusterAggregation == nil {
@@ -66,12 +68,13 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 	}
 	clusterAggregation.CurrentOperator = operator
 
+	//todo: only support FULL Physics backup now
 	record := &BackupRecord {
 		ClusterId: clusterId,
-		Range: BackupRange(backupRange),
-		BackupType: BackupType(backupType),
+		Range: BackupRangeFull,
+		BackupType: BackupTypePhysics,
 		OperatorId: operator.Id,
-		FilePath: getBackupPath(filePath, clusterId, time.Now().Unix(), backupRange),
+		FilePath: getBackupPath(filePath, clusterId, time.Now().Unix(), string(BackupRangeFull)),
 		StartTime: time.Now().Unix(),
 	}
 	clusterAggregation.LastBackupRecord = record
@@ -86,6 +89,8 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 }
 
 func DeleteBackup(ope *proto.OperatorDTO, clusterId string, bakId int64) error {
+	getLogger().Infof("Begin do DeleteBackup, clusterId: %s, bakId: %d", clusterId, bakId)
+	defer getLogger().Infof("End do DeleteBackup")
 	//todo: parma pre check
 	resp, err := client.DBClient.QueryBackupRecords(context.TODO(), &db.DBQueryBackupRecordRequest{ClusterId: clusterId, RecordId: bakId})
 	if err != nil {

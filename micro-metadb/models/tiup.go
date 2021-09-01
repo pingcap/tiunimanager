@@ -18,7 +18,7 @@ type TiupTask struct {
 	BizID     uint64         `gorm:"index"`
 	Type      int
 	Status    int
-	ErrorStr  string `gorm:"size:4096"`
+	ErrorStr  string `gorm:"size:8192"`
 }
 
 func (t TiupTask) TableName() string {

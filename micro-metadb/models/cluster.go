@@ -52,8 +52,8 @@ type BackupRecord struct {
 	FlowId		int64
 	Size 		uint64
 
-	StartTime	int64
-	EndTime 	int64
+	StartTime	time.Time
+	EndTime 	time.Time
 
 }
 
@@ -368,7 +368,7 @@ func (m *DAOClusterManager) SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do
 		BackupType: record.GetBackupType(),
 		FlowId: record.GetFlowId(),
 		FilePath: record.GetFilePath(),
-		StartTime: record.GetStartTime(),
+		StartTime: time.Unix(record.GetStartTime(), 0),
 	}
 
 	return do, m.Db().Create(do).Error
@@ -376,7 +376,7 @@ func (m *DAOClusterManager) SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do
 
 func (m *DAOClusterManager) UpdateBackupRecord(record *dbPb.DBBackupRecordDTO) error {
 	err := m.Db().Model(&BackupRecord{}).Where("id = ?", record.Id).Updates(BackupRecord{
-		Size: record.GetSize(), EndTime: record.GetEndTime(), Record: Record{
+		Size: record.GetSize(), EndTime: time.Unix(record.GetEndTime(), 0), Record: Record{
 			TenantId: record.GetClusterId(),
 			UpdatedAt: time.Now(),
 		}}).Error

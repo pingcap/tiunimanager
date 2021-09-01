@@ -151,10 +151,6 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterPb.CreateBackupRequest, response *clusterPb.CreateBackupResponse) (err error) {
 	getLogger().Info("backup cluster")
 
-	if err = domain.BackupPreCheck(request); err != nil {
-		return err
-	}
-
 	clusterAggregation, err := domain.Backup(request.Operator, request.ClusterId, request.BackupRange, request.BackupType, request.FilePath)
 	if err != nil {
 		getLogger().Info(err)

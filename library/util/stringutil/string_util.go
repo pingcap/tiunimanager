@@ -360,3 +360,19 @@ func GetTailSpaceCount(str string) int64 {
 	}
 	return int64(len(str) - length)
 }
+
+// Extract Token String from Bearer Token String
+func GetTokenFromBearer(bearerTokenStr string) (token string, err error) {
+	bearerPrefix := "Bearer "
+	if bearerTokenStr == "" {
+		err = errors.New("authorization token empty")
+		return
+	}
+	if strings.HasPrefix(bearerTokenStr, bearerPrefix) {
+		token = bearerTokenStr[len(bearerPrefix):]
+	} else {
+		err = errors.Errorf("bearer token %s should begin with [%s]", bearerTokenStr, bearerPrefix)
+		return
+	}
+	return token, nil
+}

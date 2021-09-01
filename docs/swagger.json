@@ -18,6 +18,11 @@
     "paths": {
         "/backups": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "query backup records of a cluster",
                 "consumes": [
                     "application/json"
@@ -30,13 +35,6 @@
                 ],
                 "summary": "query backup records of a cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "cluster id",
@@ -96,6 +94,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "backup",
                 "consumes": [
                     "application/json"
@@ -108,13 +111,6 @@
                 ],
                 "summary": "backup",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "description": "backup request",
                         "name": "backupReq",
@@ -167,6 +163,11 @@
         },
         "/backups/{backupId}": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "delete backup record",
                 "consumes": [
                     "application/json"
@@ -179,13 +180,6 @@
                 ],
                 "summary": "delete backup record",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "description": "backup record id",
@@ -236,6 +230,11 @@
         },
         "/backups/{backupId}/restore": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "recover backup record of a cluster",
                 "consumes": [
                     "application/json"
@@ -248,13 +247,6 @@
                 ],
                 "summary": "recover backup record of a cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "backupId",
@@ -312,70 +304,13 @@
                 }
             }
         },
-        "/cluster/dashboard": {
-            "get": {
-                "description": "dashboard",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "dashboard",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/clusterapi.DescribeDashboardRsp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
         "/clusters": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "query clusters",
                 "consumes": [
                     "application/json"
@@ -388,13 +323,6 @@
                 ],
                 "summary": "query clusters",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "name": "clusterId",
@@ -474,6 +402,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "create a cluster",
                 "consumes": [
                     "application/json"
@@ -486,13 +419,6 @@
                 ],
                 "summary": "create a cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "description": "create request",
                         "name": "createReq",
@@ -545,6 +471,11 @@
         },
         "/clusters/export": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "export",
                 "consumes": [
                     "application/json"
@@ -557,13 +488,6 @@
                 ],
                 "summary": "export data from tidb cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "description": "cluster info for data export",
                         "name": "dataExport",
@@ -616,6 +540,11 @@
         },
         "/clusters/import": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "import",
                 "consumes": [
                     "application/json"
@@ -628,13 +557,6 @@
                 ],
                 "summary": "import data to tidb cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "description": "cluster info for import data",
                         "name": "dataImport",
@@ -687,6 +609,11 @@
         },
         "/clusters/{clusterId}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "show details of a cluster",
                 "consumes": [
                     "application/json"
@@ -699,13 +626,6 @@
                 ],
                 "summary": "show details of a cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "cluster id",
@@ -754,6 +674,11 @@
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "delete cluster",
                 "consumes": [
                     "application/json"
@@ -766,13 +691,6 @@
                 ],
                 "summary": "delete cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "cluster id",
@@ -821,8 +739,71 @@
                 }
             }
         },
+        "/clusters/{clusterId}/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "dashboard",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/clusterapi.DescribeDashboardRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}/params": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "query params of a cluster",
                 "consumes": [
                     "application/json"
@@ -835,13 +816,6 @@
                 ],
                 "summary": "query params of a cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "name": "page",
@@ -903,6 +877,11 @@
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "submit params",
                 "consumes": [
                     "application/json"
@@ -915,13 +894,6 @@
                 ],
                 "summary": "submit params",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "description": "update params request",
                         "name": "updateReq",
@@ -981,6 +953,11 @@
         },
         "/clusters/{clusterId}/strategy": {
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "save the backup strategy of a cluster",
                 "consumes": [
                     "application/json"
@@ -993,13 +970,6 @@
                 ],
                 "summary": "save the backup strategy of a cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "clusterId",
@@ -1059,6 +1029,11 @@
         },
         "/clusters/{clusterId}/strategy/": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "show the backup strategy of a cluster",
                 "consumes": [
                     "application/json"
@@ -1071,13 +1046,6 @@
                 ],
                 "summary": "show the backup strategy of a cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "clusterId",
@@ -1131,6 +1099,11 @@
         },
         "/clusters/{clusterId}/transport": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "query records of import and export",
                 "consumes": [
                     "application/json"
@@ -1143,13 +1116,6 @@
                 ],
                 "summary": "query records of import and export",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "description": "cluster info for query records",
                         "name": "dataTransportQueryReq",
@@ -1205,6 +1171,11 @@
         },
         "/flowwork/{flowWorkId}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "show details of a flow work",
                 "consumes": [
                     "application/json"
@@ -1217,13 +1188,6 @@
                 ],
                 "summary": "show details of a flow work",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "flow work id",
@@ -1274,6 +1238,11 @@
         },
         "/flowworks": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "query flow works",
                 "consumes": [
                     "application/json"
@@ -1286,13 +1255,6 @@
                 ],
                 "summary": "query flow works",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "name": "clusterId",
@@ -1364,6 +1326,11 @@
         },
         "/knowledges": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "show cluster knowledge",
                 "consumes": [
                     "application/json"
@@ -1375,15 +1342,6 @@
                     "knowledge"
                 ],
                 "summary": "show cluster knowledge",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1429,7 +1387,12 @@
         },
         "/resources/allochosts": {
             "post": {
-                "description": "按指定的配置分配主机资源",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "should be used in testing env",
                 "consumes": [
                     "application/json"
                 ],
@@ -1439,17 +1402,10 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "分配主机接口",
+                "summary": "Alloc host/disk resources for creating tidb cluster",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "主机分配请求",
+                        "description": "location and spec of hosts",
                         "name": "Alloc",
                         "in": "body",
                         "required": true,
@@ -1482,7 +1438,12 @@
         },
         "/resources/failuredomains": {
             "get": {
-                "description": "查询指定故障域的资源情况",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get resource info in each failure domain",
                 "consumes": [
                     "application/json"
                 ],
@@ -1492,15 +1453,8 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "查询指定故障域的资源",
+                "summary": "Show the resources on failure domain view",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "enum": [
                             1,
@@ -1508,7 +1462,7 @@
                             3
                         ],
                         "type": "integer",
-                        "description": "指定故障域类型",
+                        "description": "failure domain type of dc/zone/rack",
                         "name": "failureDomainType",
                         "in": "query"
                     }
@@ -1540,7 +1494,12 @@
         },
         "/resources/host": {
             "post": {
-                "description": "将给定的主机信息导入系统",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "import one host by json",
                 "consumes": [
                     "application/json"
                 ],
@@ -1550,15 +1509,8 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "导入主机接口",
+                "summary": "Import a host to TiEM System",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "description": "待导入的主机信息",
                         "name": "host",
@@ -1593,7 +1545,12 @@
         },
         "/resources/hosts": {
             "get": {
-                "description": "展示目前所有主机",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get hosts lit",
                 "consumes": [
                     "application/json"
                 ],
@@ -1603,15 +1560,8 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "查询主机列表",
+                "summary": "Show all hosts list in TiEM",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "name": "page",
@@ -1658,7 +1608,12 @@
                 }
             },
             "post": {
-                "description": "通过文件批量导入主机",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "import hosts by xlsx file",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -1668,18 +1623,11 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "通过文件批量导入主机",
+                "summary": "Import a batch of hosts to TiEM",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "type": "file",
-                        "description": "包含待导入主机信息的文件",
+                        "description": "hosts information in a xlsx file",
                         "name": "file",
                         "in": "formData",
                         "required": true
@@ -1712,7 +1660,12 @@
         },
         "/resources/hosts-template/": {
             "get": {
-                "description": "将主机信息文件导出到本地",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get host template xlsx file",
                 "consumes": [
                     "application/json"
                 ],
@@ -1722,16 +1675,7 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "导出主机信息模板文件",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
+                "summary": "Download the host information template file for importing",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1744,7 +1688,12 @@
         },
         "/resources/hosts/": {
             "delete": {
-                "description": "批量删除指定的主机",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "remove hosts by a list",
                 "consumes": [
                     "application/json"
                 ],
@@ -1754,17 +1703,10 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "批量删除指定的主机",
+                "summary": "Remove a batch of hosts",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "待删除的主机ID数组",
+                        "description": "list of host IDs",
                         "name": "hostIds",
                         "in": "body",
                         "required": true,
@@ -1800,7 +1742,12 @@
         },
         "/resources/hosts/{hostId}": {
             "get": {
-                "description": "展示指定的主机的详细信息",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get one host by id",
                 "consumes": [
                     "application/json"
                 ],
@@ -1810,18 +1757,11 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "查询主机详情",
+                "summary": "Show a host",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "主机ID",
+                        "description": "host ID",
                         "name": "hostId",
                         "in": "path",
                         "required": true
@@ -1849,7 +1789,12 @@
                 }
             },
             "delete": {
-                "description": "删除指定的主机",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "remove a host by id",
                 "consumes": [
                     "application/json"
                 ],
@@ -1859,18 +1804,11 @@
                 "tags": [
                     "resource"
                 ],
-                "summary": "删除指定的主机",
+                "summary": "Remove a host",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "待删除的主机ID",
+                        "description": "host id",
                         "name": "hostId",
                         "in": "path",
                         "required": true
@@ -1958,6 +1896,11 @@
         },
         "/user/logout": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "logout",
                 "consumes": [
                     "application/json"
@@ -1969,15 +1912,6 @@
                     "platform"
                 ],
                 "summary": "logout",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2014,6 +1948,11 @@
         },
         "/user/profile": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "profile",
                 "consumes": [
                     "application/json"
@@ -2025,15 +1964,6 @@
                     "platform"
                 ],
                 "summary": "user profile",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3313,10 +3243,20 @@
                 "tenantId": {
                     "type": "string"
                 },
+                "token": {
+                    "type": "string"
+                },
                 "userName": {
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

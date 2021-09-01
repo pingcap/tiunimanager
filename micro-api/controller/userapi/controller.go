@@ -1,11 +1,13 @@
 package userapi
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/security"
 	"net/http"
+
+	"github.com/pingcap-inc/tiem/micro-api/security"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
+	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
@@ -38,7 +40,7 @@ func Login(c *gin.Context) {
 			c.JSON(http.StatusOK, controller.Fail(int(result.GetStatus().GetCode()), result.GetStatus().GetMessage()))
 		} else {
 			c.Header("Token", result.TokenString)
-			c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: req.UserName}))
+			c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: req.UserName, Token: result.TokenString}))
 		}
 	} else {
 		c.JSON(http.StatusOK, controller.Fail(401, "账号或密码错误"))
@@ -51,13 +53,18 @@ func Login(c *gin.Context) {
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Success 200 {object} controller.CommonResult{data=UserIdentity}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {
-	logoutReq := cluster.LogoutRequest{TokenString: c.GetHeader("Token")}
+	bearerStr := c.GetHeader("Authorization")
+	tokenStr, err := utils.GetTokenFromBearer(bearerStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
+	}
+	logoutReq := cluster.LogoutRequest{TokenString: tokenStr}
 	result, err := client.ClusterClient.Logout(c, &logoutReq)
 
 	if err == nil {
@@ -73,7 +80,7 @@ func Logout(c *gin.Context) {
 // @Tags platform
 // @Accept application/json
 // @Produce application/json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Success 200 {object} controller.CommonResult{data=UserIdentity}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult

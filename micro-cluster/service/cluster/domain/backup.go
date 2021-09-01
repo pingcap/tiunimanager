@@ -212,8 +212,10 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		ClusterName: cluster.ClusterName,
 		TaskID: record.BizId,
 	}
+	getLogger().Infof("begin call libbr api ShowBackUpInfo, %v", clusterFacade)
 	resp := libbr.ShowBackUpInfo(clusterFacade)
 	record.Size = resp.Size
+	getLogger().Infof("call libbr api ShowBackUpInfo resp, %v", resp)
 
 	_, err :=  client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
 		BackupRecord: &db.DBBackupRecordDTO{

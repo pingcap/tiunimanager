@@ -67,6 +67,9 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		return nil, errors.New("load cluster aggregation")
 	}
 	clusterAggregation.CurrentOperator = operator
+	cluster := clusterAggregation.Cluster
+
+	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster)
 
 	//todo: only support FULL Physics backup now
 	record := &BackupRecord {
@@ -78,8 +81,22 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		StartTime: time.Now().Unix(),
 	}
 	clusterAggregation.LastBackupRecord = record
+	_, err =  client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
+		BackupRecord: &db.DBBackupRecordDTO{
+			TenantId:    cluster.TenantId,
+			ClusterId:   record.ClusterId,
+			BackupType: string(record.BackupType),
+			BackupRange: string(record.Range),
+			OperatorId:  record.OperatorId,
+			FilePath:    record.FilePath,
+			FlowId:      int64(flow.FlowWork.Id),
+		},
+	})
+	if err != nil {
+		getLogger().Errorf("save backup record failed, %s", err.Error())
+		return nil, errors.New("save backup record failed")
+	}
 
-	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster)
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()
 
@@ -202,6 +219,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	record := clusterAggregation.LastBackupRecord
 
 	//todo: update size
+	/*
 	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
 	cluster := clusterAggregation.Cluster
 	tidbServer := configModel.TiDBServers[0]
@@ -221,7 +239,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	resp := libbr.ShowBackUpInfo(clusterFacade)
 	record.Size = resp.Size
 	getLogger().Infof("call libbr api ShowBackUpInfo resp, %v", resp)
-
+	*/
 	_, err :=  client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
 		BackupRecord: &db.DBBackupRecordDTO{
 			Id: record.Id,

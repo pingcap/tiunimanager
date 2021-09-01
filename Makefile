@@ -22,9 +22,9 @@ TIEM_INSTALL_PREFIX = ${PREFIX}/tiem
 
 include Makefile.common
 
-.PHONY: all clean test gotest gotool help
-all:
-	build
+.PHONY: all clean test gotest gotool help tiup
+
+all: build tiup
 
 # 1. build binary
 build:
@@ -61,6 +61,9 @@ build_metadb_server:
 	@echo "build metadb-server start."
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${METADB_SERVER_BINARY} micro-metadb/*.go
 	@echo "build metadb-server sucessufully."
+
+tiup:
+	$(MAKE) -C tiup ${MAKECMDGOALS}
 
 #2. R&D to test the code themselves for compliance before submitting it
 devselfcheck:
@@ -173,6 +176,7 @@ clean:
 	@if [ -f ${TIEM_BINARY_DIR}/vfsgendev ] ; then rm ${TIEM_BINARY_DIR}/vfsgendev; fi
 	@if [ -f ${TIEM_BINARY_DIR}/golangci-lint ] ; then rm ${TIEM_BINARY_DIR}/golangci-lint; fi
 	@if [ -f ${TIEM_BINARY_DIR}/errdoc-gen ] ; then rm ${TIEM_BINARY_DIR}/errdoc-gen; fi
+	$(MAKE) -C tiup ${MAKECMDGOALS}
 
 help:
 	@echo "make build, build binary for all servers"

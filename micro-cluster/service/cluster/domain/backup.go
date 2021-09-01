@@ -80,8 +80,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		FilePath: getBackupPath(filePath, clusterId, time.Now().Unix(), string(BackupRangeFull)),
 		StartTime: time.Now().Unix(),
 	}
-	clusterAggregation.LastBackupRecord = record
-	_, err =  client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
+	resp, err :=  client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
 		BackupRecord: &db.DBBackupRecordDTO{
 			TenantId:    cluster.TenantId,
 			ClusterId:   record.ClusterId,
@@ -98,6 +97,8 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		getLogger().Errorf("save backup record failed, %s", err.Error())
 		return nil, errors.New("save backup record failed")
 	}
+	record.Id = resp.GetBackupRecord().GetId()
+	clusterAggregation.LastBackupRecord = record
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()

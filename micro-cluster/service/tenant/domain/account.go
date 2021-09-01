@@ -83,10 +83,8 @@ func CreateAccount(tenant *Tenant, name, passwd string) (*Account, error) {
 
 	existed, e := findAccountByName(name)
 
-	if e != nil {
-		return nil, e
-	} else if !(nil == existed) {
-		return nil, fmt.Errorf("account already exist")
+	if e == nil && existed != nil {
+		return existed, fmt.Errorf("account already exist")
 	}
 
 	account := Account{Name: name, Status: Valid}
@@ -99,7 +97,7 @@ func CreateAccount(tenant *Tenant, name, passwd string) (*Account, error) {
 
 // findAccountByName 根据名称获取账号
 func findAccountByName(name string) (*Account, error) {
-	a,err := RbacRepo.LoadAccountByName(name)
+	a, err := RbacRepo.LoadAccountByName(name)
 	if err != nil {
 		return nil, err
 	}

@@ -11,10 +11,6 @@ func TestMain(m *testing.M) {
 			setupMockAdapter()
 			return nil
 		},
-		func(d *framework.BaseFramework) error {
-			initFlow()
-			return nil
-		},
 	)
 	m.Run()
 }

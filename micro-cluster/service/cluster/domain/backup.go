@@ -59,24 +59,47 @@ func BackupPreCheck(request *proto.CreateBackupRequest) error {
 }
 
 func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, filePath string) (*ClusterAggregation, error){
+	getLogger().Infof("Begin do Backup, clusterId: %s, backupRange: %s, backupType: %s, filePath: %s", clusterId, backupRange, backupType, filePath)
+	defer getLogger().Infof("End do Backup")
 	operator := parseOperatorFromDTO(ope)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil || clusterAggregation == nil {
 		return nil, errors.New("load cluster aggregation")
 	}
 	clusterAggregation.CurrentOperator = operator
-
-	record := &BackupRecord {
-		ClusterId: clusterId,
-		Range: BackupRange(backupRange),
-		BackupType: BackupType(backupType),
-		OperatorId: operator.Id,
-		FilePath: getBackupPath(filePath, clusterId, time.Now().Unix(), backupRange),
-		StartTime: time.Now().Unix(),
-	}
-	clusterAggregation.LastBackupRecord = record
+	cluster := clusterAggregation.Cluster
 
 	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster)
+
+	//todo: only support FULL Physics backup now
+	record := &BackupRecord {
+		ClusterId: clusterId,
+		Range: BackupRangeFull,
+		BackupType: BackupTypePhysics,
+		OperatorId: operator.Id,
+		FilePath: getBackupPath(filePath, clusterId, time.Now().Unix(), string(BackupRangeFull)),
+		StartTime: time.Now().Unix(),
+	}
+	resp, err :=  client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
+		BackupRecord: &db.DBBackupRecordDTO{
+			TenantId:    cluster.TenantId,
+			ClusterId:   record.ClusterId,
+			BackupType:  string(record.BackupType),
+			BackupRange: string(record.Range),
+			OperatorId:  record.OperatorId,
+			FilePath:    record.FilePath,
+			FlowId:      int64(flow.FlowWork.Id),
+			StartTime:   time.Now().Unix(),
+			EndTime:     time.Now().Unix(),
+		},
+	})
+	if err != nil {
+		getLogger().Errorf("save backup record failed, %s", err.Error())
+		return nil, errors.New("save backup record failed")
+	}
+	record.Id = resp.GetBackupRecord().GetId()
+	clusterAggregation.LastBackupRecord = record
+
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()
 
@@ -86,6 +109,8 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 }
 
 func DeleteBackup(ope *proto.OperatorDTO, clusterId string, bakId int64) error {
+	getLogger().Infof("Begin do DeleteBackup, clusterId: %s, bakId: %d", clusterId, bakId)
+	defer getLogger().Infof("End do DeleteBackup")
 	//todo: parma pre check
 	resp, err := client.DBClient.QueryBackupRecords(context.TODO(), &db.DBQueryBackupRecordRequest{ClusterId: clusterId, RecordId: bakId})
 	if err != nil {
@@ -195,8 +220,9 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	defer getLogger().Info("end updateBackupRecord")
 	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
 	record := clusterAggregation.LastBackupRecord
-	/*
+
 	//todo: update size
+	/*
 	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
 	cluster := clusterAggregation.Cluster
 	tidbServer := configModel.TiDBServers[0]
@@ -212,8 +238,10 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		ClusterName: cluster.ClusterName,
 		TaskID: record.BizId,
 	}
-	resp := libbr.ShowBackUpInfo(clusterFacade, uint64(task.Id))
+	getLogger().Infof("begin call libbr api ShowBackUpInfo, %v", clusterFacade)
+	resp := libbr.ShowBackUpInfo(clusterFacade)
 	record.Size = resp.Size
+	getLogger().Infof("call libbr api ShowBackUpInfo resp, %v", resp)
 	*/
 	_, err :=  client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
 		BackupRecord: &db.DBBackupRecordDTO{

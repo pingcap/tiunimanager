@@ -352,7 +352,7 @@ func ConvertToBackupRecordDTO(do *models.BackupRecord) (dto *dbPb.DBBackupRecord
 		Id:          int64(do.ID),
 		TenantId:    do.TenantId,
 		ClusterId:   do.ClusterId,
-		StartTime:   do.StartTime,
+		StartTime:   do.StartTime.Unix(),
 		BackupRange: do.BackupRange,
 		BackupType:  do.BackupType,
 		OperatorId:  do.OperatorId,

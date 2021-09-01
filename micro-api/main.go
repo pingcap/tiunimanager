@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
 	_ "github.com/pingcap-inc/tiem/docs"
@@ -24,6 +25,9 @@ import (
 
 // @host localhost:4116
 // @BasePath /api/v1/
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ApiService,
 		defaultPortForLocal,

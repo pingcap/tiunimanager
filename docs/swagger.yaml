@@ -813,6 +813,8 @@ definitions:
     properties:
       tenantId:
         type: string
+      token:
+        type: string
       userName:
         type: string
     type: object
@@ -834,11 +836,6 @@ paths:
       - application/json
       description: query backup records of a cluster
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: cluster id
         in: query
         name: clusterId
@@ -875,6 +872,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: query backup records of a cluster
       tags:
       - cluster backup
@@ -883,11 +882,6 @@ paths:
       - application/json
       description: backup
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: backup request
         in: body
         name: backupReq
@@ -918,6 +912,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: backup
       tags:
       - cluster backup
@@ -927,11 +923,6 @@ paths:
       - application/json
       description: delete backup record
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: backup record id
         in: path
         name: backupId
@@ -961,6 +952,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: delete backup record
       tags:
       - cluster backup
@@ -970,11 +963,6 @@ paths:
       - application/json
       description: recover backup record of a cluster
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: backupId
         in: path
         name: backupId
@@ -1010,6 +998,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: recover backup record of a cluster
       tags:
       - cluster backup
@@ -1018,12 +1008,6 @@ paths:
       consumes:
       - application/json
       description: dashboard
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1048,6 +1032,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: dashboard
       tags:
       - cluster
@@ -1057,11 +1043,6 @@ paths:
       - application/json
       description: query clusters
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - in: query
         name: clusterId
         type: string
@@ -1109,6 +1090,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: query clusters
       tags:
       - cluster
@@ -1117,11 +1100,6 @@ paths:
       - application/json
       description: create a cluster
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: create request
         in: body
         name: createReq
@@ -1152,6 +1130,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: create a cluster
       tags:
       - cluster
@@ -1161,11 +1141,6 @@ paths:
       - application/json
       description: delete cluster
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: cluster id
         in: path
         name: clusterId
@@ -1195,6 +1170,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: delete cluster
       tags:
       - cluster
@@ -1203,11 +1180,6 @@ paths:
       - application/json
       description: show details of a cluster
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: cluster id
         in: path
         name: clusterId
@@ -1237,6 +1209,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: show details of a cluster
       tags:
       - cluster
@@ -1246,11 +1220,6 @@ paths:
       - application/json
       description: query params of a cluster
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - in: query
         name: page
         type: integer
@@ -1288,6 +1257,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: query params of a cluster
       tags:
       - cluster params
@@ -1296,11 +1267,6 @@ paths:
       - application/json
       description: submit params
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: update params request
         in: body
         name: updateReq
@@ -1336,6 +1302,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: submit params
       tags:
       - cluster params
@@ -1345,11 +1313,6 @@ paths:
       - application/json
       description: save the backup strategy of a cluster
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: clusterId
         in: path
         name: clusterId
@@ -1385,6 +1348,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: save the backup strategy of a cluster
       tags:
       - cluster backup
@@ -1394,11 +1359,6 @@ paths:
       - application/json
       description: show the backup strategy of a cluster
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: clusterId
         in: path
         name: clusterId
@@ -1430,6 +1390,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: show the backup strategy of a cluster
       tags:
       - cluster backup
@@ -1439,11 +1401,6 @@ paths:
       - application/json
       description: query records of import and export
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: cluster info for query records
         in: body
         name: dataTransportQueryReq
@@ -1476,6 +1433,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: query records of import and export
       tags:
       - cluster data transport
@@ -1485,11 +1444,6 @@ paths:
       - application/json
       description: export
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: cluster info for data export
         in: body
         name: dataExport
@@ -1520,6 +1474,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: export data from tidb cluster
       tags:
       - cluster export
@@ -1529,11 +1485,6 @@ paths:
       - application/json
       description: import
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: cluster info for import data
         in: body
         name: dataImport
@@ -1564,6 +1515,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: import data to tidb cluster
       tags:
       - cluster import
@@ -1573,11 +1526,6 @@ paths:
       - application/json
       description: show details of a flow work
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: flow work id
         in: path
         name: flowWorkId
@@ -1607,6 +1555,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: show details of a flow work
       tags:
       - task
@@ -1616,11 +1566,6 @@ paths:
       - application/json
       description: query flow works
       parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       - in: query
         name: clusterId
         type: string
@@ -1662,6 +1607,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: query flow works
       tags:
       - task
@@ -1670,12 +1617,6 @@ paths:
       consumes:
       - application/json
       description: show cluster knowledge
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1702,6 +1643,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: show cluster knowledge
       tags:
       - knowledge
@@ -1709,14 +1652,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: 按指定的配置分配主机资源
+      description: should be used in testing env
       parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 主机分配请求
+      - description: location and spec of hosts
         in: body
         name: Alloc
         required: true
@@ -1734,21 +1672,18 @@ paths:
                 data:
                   $ref: '#/definitions/hostapi.AllocHostsRsp'
               type: object
-      summary: 分配主机接口
+      security:
+      - ApiKeyAuth: []
+      summary: Alloc host/disk resources for creating tidb cluster
       tags:
       - resource
   /resources/failuredomains:
     get:
       consumes:
       - application/json
-      description: 查询指定故障域的资源情况
+      description: get resource info in each failure domain
       parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 指定故障域类型
+      - description: failure domain type of dc/zone/rack
         enum:
         - 1
         - 2
@@ -1770,20 +1705,17 @@ paths:
                     $ref: '#/definitions/hostapi.DomainResource'
                   type: array
               type: object
-      summary: 查询指定故障域的资源
+      security:
+      - ApiKeyAuth: []
+      summary: Show the resources on failure domain view
       tags:
       - resource
   /resources/host:
     post:
       consumes:
       - application/json
-      description: 将给定的主机信息导入系统
+      description: import one host by json
       parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
       - description: 待导入的主机信息
         in: body
         name: host
@@ -1802,20 +1734,17 @@ paths:
                 data:
                   type: string
               type: object
-      summary: 导入主机接口
+      security:
+      - ApiKeyAuth: []
+      summary: Import a host to TiEM System
       tags:
       - resource
   /resources/hosts:
     get:
       consumes:
       - application/json
-      description: 展示目前所有主机
+      description: get hosts lit
       parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
       - in: query
         name: page
         type: integer
@@ -1842,20 +1771,17 @@ paths:
                     $ref: '#/definitions/hostapi.HostInfo'
                   type: array
               type: object
-      summary: 查询主机列表
+      security:
+      - ApiKeyAuth: []
+      summary: Show all hosts list in TiEM
       tags:
       - resource
     post:
       consumes:
       - multipart/form-data
-      description: 通过文件批量导入主机
+      description: import hosts by xlsx file
       parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 包含待导入主机信息的文件
+      - description: hosts information in a xlsx file
         in: formData
         name: file
         required: true
@@ -1874,20 +1800,16 @@ paths:
                     type: string
                   type: array
               type: object
-      summary: 通过文件批量导入主机
+      security:
+      - ApiKeyAuth: []
+      summary: Import a batch of hosts to TiEM
       tags:
       - resource
   /resources/hosts-template/:
     get:
       consumes:
       - application/json
-      description: 将主机信息文件导出到本地
-      parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
+      description: get host template xlsx file
       produces:
       - application/octet-stream
       responses:
@@ -1895,21 +1817,18 @@ paths:
           description: OK
           schema:
             type: file
-      summary: 导出主机信息模板文件
+      security:
+      - ApiKeyAuth: []
+      summary: Download the host information template file for importing
       tags:
       - resource
   /resources/hosts/:
     delete:
       consumes:
       - application/json
-      description: 批量删除指定的主机
+      description: remove hosts by a list
       parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 待删除的主机ID数组
+      - description: list of host IDs
         in: body
         name: hostIds
         required: true
@@ -1929,21 +1848,18 @@ paths:
                 data:
                   type: string
               type: object
-      summary: 批量删除指定的主机
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a batch of hosts
       tags:
       - resource
   /resources/hosts/{hostId}:
     delete:
       consumes:
       - application/json
-      description: 删除指定的主机
+      description: remove a host by id
       parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 待删除的主机ID
+      - description: host id
         in: path
         name: hostId
         required: true
@@ -1960,20 +1876,17 @@ paths:
                 data:
                   type: string
               type: object
-      summary: 删除指定的主机
+      security:
+      - ApiKeyAuth: []
+      summary: Remove a host
       tags:
       - resource
     get:
       consumes:
       - application/json
-      description: 展示指定的主机的详细信息
+      description: get one host by id
       parameters:
-      - description: 登录token
-        in: header
-        name: Token
-        required: true
-        type: string
-      - description: 主机ID
+      - description: host ID
         in: path
         name: hostId
         required: true
@@ -1990,7 +1903,9 @@ paths:
                 data:
                   $ref: '#/definitions/hostapi.HostInfo'
               type: object
-      summary: 查询主机详情
+      security:
+      - ApiKeyAuth: []
+      summary: Show a host
       tags:
       - resource
   /user/login:
@@ -2033,12 +1948,6 @@ paths:
       consumes:
       - application/json
       description: logout
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -2059,6 +1968,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: logout
       tags:
       - platform
@@ -2067,12 +1978,6 @@ paths:
       consumes:
       - application/json
       description: profile
-      parameters:
-      - description: token
-        in: header
-        name: Token
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -2093,7 +1998,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
       summary: user profile
       tags:
       - platform
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

@@ -1,26 +1,29 @@
 package security
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
+	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
-	"net/http"
 )
 
 const VisitorIdentityKey = "VisitorIdentity"
 
 type VisitorIdentity struct {
-	AccountId string
+	AccountId   string
 	AccountName string
-	TenantId string
+	TenantId    string
 }
 
 func VerifyIdentity(c *gin.Context) {
 
-	tokenString := c.GetHeader("Token")
+	bearerTokenStr := c.GetHeader("Authorization")
 
-	if tokenString == "" {
-		c.JSON(http.StatusUnauthorized, "")
+	tokenString, err := utils.GetTokenFromBearer(bearerTokenStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
 	}
 
 	path := c.Request.URL
@@ -36,9 +39,9 @@ func VerifyIdentity(c *gin.Context) {
 		c.Abort()
 	} else {
 		c.Set(VisitorIdentityKey, &VisitorIdentity{
-			AccountId: result.AccountId,
+			AccountId:   result.AccountId,
 			AccountName: result.AccountName,
-			TenantId: result.TenantId,
+			TenantId:    result.TenantId,
 		})
 		c.Next()
 	}

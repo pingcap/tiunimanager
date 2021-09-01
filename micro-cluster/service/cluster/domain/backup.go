@@ -85,11 +85,13 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		BackupRecord: &db.DBBackupRecordDTO{
 			TenantId:    cluster.TenantId,
 			ClusterId:   record.ClusterId,
-			BackupType: string(record.BackupType),
+			BackupType:  string(record.BackupType),
 			BackupRange: string(record.Range),
 			OperatorId:  record.OperatorId,
 			FilePath:    record.FilePath,
 			FlowId:      int64(flow.FlowWork.Id),
+			StartTime:   time.Now().Unix(),
+			EndTime:     time.Now().Unix(),
 		},
 	})
 	if err != nil {

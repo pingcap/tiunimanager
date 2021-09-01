@@ -1,8 +1,11 @@
 package framework
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
+	"os"
+
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
@@ -10,7 +13,7 @@ import (
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
-	"os"
+	log "github.com/sirupsen/logrus"
 )
 
 var Current Framework
@@ -22,6 +25,7 @@ type Framework interface {
 	GetClientArgs() *ClientArgs
 	GetConfiguration() *Configuration
 	GetLogger() *LogRecord
+	GetLoggerWithContext(context.Context) *log.Entry
 	GetTracer() *Tracer
 
 	GetServiceMeta() *ServiceMeta
@@ -34,6 +38,19 @@ func GetLogger() *LogRecord {
 		return Current.GetLogger()
 	} else {
 		return DefaultLogRecord()
+	}
+}
+
+func GetLoggerWithContext(ctx context.Context) *log.Entry {
+	if Current != nil {
+		return Current.GetLoggerWithContext(ctx)
+	} else {
+		id := GetTraceIDFromContext(ctx)
+		if len(id) <= 0 {
+			return DefaultLogRecord().defaultLogEntry
+		} else {
+			return DefaultLogRecord().Record(TiEM_X_TRACE_ID_NAME, id)
+		}
 	}
 }
 
@@ -51,8 +68,8 @@ type BaseFramework struct {
 	serviceMeta  *ServiceMeta
 	microService micro.Service
 
-	initOpts 		[]Opt
-	shutdownOpts 	[]Opt
+	initOpts     []Opt
+	shutdownOpts []Opt
 
 	clientHandler  map[ServiceNameEnum]ClientHandler
 	serviceHandler ServiceHandler
@@ -62,22 +79,22 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 	f := new(BaseFramework)
 
 	f.args = &ClientArgs{
-		Host: "127.0.0.1",
-		Port: 4116,
-		MetricsPort: 4121,
+		Host:               "127.0.0.1",
+		Port:               4116,
+		MetricsPort:        4121,
 		RegistryClientPort: 4101,
-		RegistryPeerPort: 4102,
-		RegistryAddress: "127.0.0.1:4101",
-		DeployDir: "./../bin",
-		DataDir: "./testdata",
-		LogLevel: "info",
+		RegistryPeerPort:   4102,
+		RegistryAddress:    "127.0.0.1:4101",
+		DeployDir:          "./../bin",
+		DataDir:            "./testdata",
+		LogLevel:           "info",
 	}
 	f.parseArgs(serviceName)
 
 	f.initOpts = opts
 	f.Init()
 
-	f.shutdownOpts = []Opt {
+	f.shutdownOpts = []Opt{
 		func(d *BaseFramework) error {
 			return os.RemoveAll(d.GetDataDir())
 		},
@@ -211,6 +228,16 @@ func (b *BaseFramework) GetConfiguration() *Configuration {
 
 func (b *BaseFramework) GetLogger() *LogRecord {
 	return b.log
+}
+
+func (b *BaseFramework) GetLoggerWithContext(ctx context.Context) *log.Entry {
+	l := b.GetLogger()
+	id := GetTraceIDFromContext(ctx)
+	if len(id) <= 0 {
+		return l.defaultLogEntry
+	} else {
+		return l.Record(TiEM_X_TRACE_ID_NAME, id)
+	}
 }
 
 func (b *BaseFramework) GetTracer() *Tracer {

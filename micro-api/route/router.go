@@ -38,6 +38,7 @@ func Route(g *gin.Engine) {
 	// api
 	apiV1 := g.Group("/api/v1")
 	{
+		apiV1.Use(framework.GinTraceIDHandler())
 		apiV1.Use(security.AccessLog(), gin.Recovery())
 		apiV1.Use(framework.GinOpenTracing())
 

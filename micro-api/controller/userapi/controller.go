@@ -1,11 +1,13 @@
 package userapi
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/security"
 	"net/http"
+
+	"github.com/pingcap-inc/tiem/micro-api/security"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
@@ -31,7 +33,7 @@ func Login(c *gin.Context) {
 	}
 
 	loginReq := cluster.LoginRequest{AccountName: req.UserName, Password: req.UserPassword}
-	result, err := client.ClusterClient.Login(c, &loginReq)
+	result, err := client.ClusterClient.Login(framework.NewMicroCtxFromGinCtx(c), &loginReq)
 
 	if err == nil {
 		if result.Status.Code != 0 {

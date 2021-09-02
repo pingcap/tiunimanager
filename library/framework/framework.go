@@ -10,6 +10,8 @@ import (
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
+	"github.com/pingcap-inc/tiem/library/common"
+	log "github.com/sirupsen/logrus"
 	"os"
 )
 
@@ -21,7 +23,7 @@ type Framework interface {
 
 	GetClientArgs() *ClientArgs
 	GetConfiguration() *Configuration
-	GetLogger() *LogRecord
+	GetRootLogger() *RootLogger
 	GetTracer() *Tracer
 
 	GetServiceMeta() *ServiceMeta
@@ -29,11 +31,19 @@ type Framework interface {
 	StopService() error
 }
 
-func GetLogger() *LogRecord {
+func GetRootLogger() *RootLogger {
 	if Current != nil {
-		return Current.GetLogger()
+		return Current.GetRootLogger()
 	} else {
 		return DefaultLogRecord()
+	}
+}
+
+func Log() *log.Entry {
+	if Current != nil {
+		return Current.GetRootLogger().RecordFun()
+	} else {
+		return DefaultLogRecord().RecordFun()
 	}
 }
 
@@ -44,7 +54,7 @@ type ClientHandler func(service micro.Service) error
 type BaseFramework struct {
 	args          *ClientArgs
 	configuration *Configuration
-	log           *LogRecord
+	log           *RootLogger
 	trace         *Tracer
 	certificate   *CertificateInfo
 
@@ -209,7 +219,7 @@ func (b *BaseFramework) GetConfiguration() *Configuration {
 	return b.configuration
 }
 
-func (b *BaseFramework) GetLogger() *LogRecord {
+func (b *BaseFramework) GetRootLogger() *RootLogger {
 	return b.log
 }
 
@@ -227,7 +237,7 @@ func (b *BaseFramework) StopService() error {
 
 func (b *BaseFramework) StartService() error {
 	if err := b.microService.Run(); err != nil {
-		b.GetLogger().Fatalf("Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, b.serviceMeta.GetServiceAddress(), b.serviceMeta.RegistryAddress)
+		b.GetRootLogger().ForkFile(common.LOG_FILE_SYSTEM).Fatalf("Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, b.serviceMeta.GetServiceAddress(), b.serviceMeta.RegistryAddress)
 		return errors.New("initialization micro service failed")
 	}
 

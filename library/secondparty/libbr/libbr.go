@@ -8,6 +8,7 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	logrus "github.com/sirupsen/logrus"
@@ -185,7 +186,7 @@ func BrMgrInit() {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetLogger().ForkFile(configPath + "brmgr")
+	logger = framework.GetRootLogger().ForkFile(configPath + common.LOG_FILE_BR_MGR)
 
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
 	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -613,7 +614,7 @@ func MicroInit(brMgrPath, mgrLogFilePath string) {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetLogger().ForkFile(configPath + "libbr")
+	logger = framework.GetRootLogger().ForkFile(configPath + common.LOG_FILE_LIB_BR)
 
 	glBrMgrPath = brMgrPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -652,7 +653,7 @@ func glMicroTaskStatusMapSyncer() {
 			}
 		}
 		glMicroTaskStatusMapMutex.Unlock()
-		log := framework.GetLogger().ForkFile("br").WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
+		log := framework.GetRootLogger().ForkFile(common.LOG_FILE_LIB_BR).WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
 			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,

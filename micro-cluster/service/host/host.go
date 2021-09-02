@@ -2,6 +2,7 @@ package host
 
 import (
 	"context"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -11,8 +12,8 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func getLogger() *framework.LogRecord {
-	return framework.GetLogger()
+func getLogger() *log.Entry {
+	return framework.Log()
 }
 
 func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
@@ -382,7 +383,7 @@ func getAllocRsp(src []*dbPb.DBAllocHostDTO) (dst []*hostPb.AllocHost) {
 }
 
 func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.AllocHostResponse) error {
-	log := framework.GetLogger()
+	log := framework.Log()
 	req := new(dbPb.DBAllocHostsRequest)
 	req.PdReq = makeAllocReq(in.PdReq)
 	req.TidbReq = makeAllocReq(in.TidbReq)

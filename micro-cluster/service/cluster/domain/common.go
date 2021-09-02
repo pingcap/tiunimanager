@@ -2,9 +2,10 @@ package domain
 
 import (
 	"github.com/pingcap-inc/tiem/library/framework"
+	log "github.com/sirupsen/logrus"
 )
 
-func getLogger() *framework.LogRecord {
-	return framework.GetLogger()
+func getLogger() *log.Entry {
+	return framework.Log()
 }
 

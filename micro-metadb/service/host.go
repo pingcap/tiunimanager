@@ -63,7 +63,7 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
 
 func (handler *DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest, rsp *dbPb.DBAddHostResponse) error {
 	db := handler.Dao().Db()
-	login := framework.GetLogger()
+	login := framework.Log()
 	var host models.Host
 	copyHostInfoFromReq(req.Host, &host)
 
@@ -90,7 +90,7 @@ func (handler *DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHos
 
 func (handler *DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbPb.DBAddHostsInBatchRequest, rsp *dbPb.DBAddHostsInBatchResponse) error {
 	db := handler.Dao().Db()
-	login := framework.GetLogger()
+	login := framework.Log()
 	var hosts []*models.Host
 	for _, v := range req.Hosts {
 		var host models.Host
@@ -120,7 +120,7 @@ func (handler *DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbPb.
 
 func (handler *DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRemoveHostRequest, rsp *dbPb.DBRemoveHostResponse) error {
 	db := handler.Dao().Db()
-	login := framework.GetLogger()
+	login := framework.Log()
 	hostId := req.HostId
 	err := models.DeleteHost(db, hostId)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
@@ -144,7 +144,7 @@ func (handler *DBServiceHandler) RemoveHost(ctx context.Context, req *dbPb.DBRem
 
 func (handler *DBServiceHandler) RemoveHostsInBatch(ctx context.Context, req *dbPb.DBRemoveHostsInBatchRequest, rsp *dbPb.DBRemoveHostsInBatchResponse) error {
 	db := handler.Dao().Db()
-	login := framework.GetLogger()
+	login := framework.Log()
 	err := models.DeleteHostsInBatch(db, req.HostIds)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
@@ -194,7 +194,7 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 
 func (handler *DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListHostsRequest, rsp *dbPb.DBListHostsResponse) error {
 	db := handler.Dao().Db()
-	login := framework.GetLogger()
+	login := framework.Log()
 	var hostReq models.ListHostReq
 	hostReq.Purpose = req.Purpose
 	hostReq.Status = models.HostStatus(req.Status)
@@ -234,7 +234,7 @@ func (handler *DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListH
 }
 func (handler *DBServiceHandler) CheckDetails(ctx context.Context, req *dbPb.DBCheckDetailsRequest, rsp *dbPb.DBCheckDetailsResponse) error {
 	db := handler.Dao().Db()
-	login := framework.GetLogger()
+	login := framework.Log()
 	host, err := models.FindHostById(db, req.HostId)
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
@@ -294,7 +294,7 @@ func buildAllocRsp(componet string, req models.AllocRsps, out *[]*dbPb.DBAllocHo
 
 func (handler *DBServiceHandler) AllocHosts(ctx context.Context, in *dbPb.DBAllocHostsRequest, out *dbPb.DBAllocHostsResponse) error {
 	db := handler.Dao().Db()
-	log := framework.GetLogger()
+	log := framework.Log()
 	// Build up allocHosts request for model
 	req := make(models.AllocReqs)
 	copyAllocReq("PD", req, in.PdReq)
@@ -329,7 +329,7 @@ func (handler *DBServiceHandler) AllocHosts(ctx context.Context, in *dbPb.DBAllo
 /*
 func (handler *DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DBPreAllocHostsRequest, rsp *dbPb.DBPreAllocHostsResponse) error {
 	db := handler.Dao().Db()
-	login := framework.GetLogger()
+	login := framework.GetRootLogger()
 	login.Infof("db service receive alloc host in %s for %d x (%du%dg)", req.Req.FailureDomain, req.Req.Count, req.Req.CpuCores, req.Req.Memory)
 	resources, err := models.PreAllocHosts(db, req.Req.FailureDomain, int(req.Req.Count), int(req.Req.CpuCores), int(req.Req.Memory))
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
@@ -379,7 +379,7 @@ func (handler *DBServiceHandler) PreAllocHosts(ctx context.Context, req *dbPb.DB
 
 func (handler *DBServiceHandler) LockHosts(ctx context.Context, req *dbPb.DBLockHostsRequest, rsp *dbPb.DBLockHostsResponse) error {
 	db := handler.Dao().Db()
-	login := framework.GetLogger()
+	login := framework.GetRootLogger()
 	var resources []models.ResourceLock
 	for _, v := range req.Req {
 		resources = append(resources, models.ResourceLock{
@@ -427,7 +427,7 @@ func getFailureDomainByType(fd FailureDomain) (domain string, err error) {
 
 func (handler *DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb.DBGetFailureDomainRequest, rsp *dbPb.DBGetFailureDomainResponse) error {
 
-	login := framework.GetLogger()
+	login := framework.Log()
 	domainType := req.FailureDomainType
 	domain, err := getFailureDomainByType(FailureDomain(domainType))
 	rsp.Rs = new(dbPb.DBHostResponseStatus)

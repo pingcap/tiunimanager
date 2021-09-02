@@ -5,6 +5,7 @@ import (
 	"github.com/mozillazg/go-pinyin"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"time"
 )
@@ -32,8 +33,8 @@ const (
 	TABLE_NAME_RECOVER_RECORD     = "recover_records"
 )
 
-func getLogger() *framework.LogRecord {
-	return framework.GetLogger()
+func getLogger() *log.Entry {
+	return framework.Log()
 }
 
 type Entity struct {

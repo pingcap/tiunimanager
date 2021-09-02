@@ -26,7 +26,7 @@ import (
 
 // PrintTiEMInfo prints the TiEM version information.
 func PrintTiEMInfo() {
-	/**logger.GetLogger(configTiem.KEY_FIRSTPARTY_LOG).Info("Welcome to TiDB.",
+	/**logger.GetRootLogger(configTiem.KEY_FIRSTPARTY_LOG).Info("Welcome to TiDB.",
 		zap.String("Release Version", mysql.TiDBReleaseVersion),
 		zap.String("Edition", versioninfo.TiDBEdition),
 		zap.String("Git Commit Hash", versioninfo.TiDBGitHash),

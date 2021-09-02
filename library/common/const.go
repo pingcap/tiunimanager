@@ -18,3 +18,14 @@ const (
 	KeyFileName string = "server.key"
 
 )
+
+const (
+	LOG_FILE_SYSTEM = "system"
+	LOG_FILE_TIUP_MGR = "tiupmgr"
+	LOG_FILE_BR_MGR = "tiupmgr"
+	LOG_FILE_LIB_TIUP = "libtiup"
+	LOG_FILE_LIB_BR = "tiupmgr"
+
+	LOG_FILE_ACCESS = "access"
+	LOG_FILE_AUDIT = "audit"
+)

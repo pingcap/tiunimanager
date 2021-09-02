@@ -286,7 +286,7 @@ func LockHosts(db *gorm.DB, resources []ResourceLock) (err error) {
 		if _, ok := setUpdate[v.HostId]; !ok {
 			if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host).Error; err != nil {
 				tx.Rollback()
-				framework.GetLogger().Errorf("set for update host %s failed", v.HostId)
+				framework.GetRootLogger().Errorf("set for update host %s failed", v.HostId)
 				return err
 			}
 			setUpdate[v.HostId] = &HostLocked{
@@ -404,7 +404,7 @@ func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, c
 }
 
 func AllocHosts(db *gorm.DB, requests AllocReqs) (resources AllocRsps, err error) {
-	log := framework.GetLogger()
+	log := framework.Log()
 	resources = make(AllocRsps)
 	tx := db.Begin()
 	for component, reqs := range requests {

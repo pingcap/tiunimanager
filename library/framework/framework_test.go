@@ -6,7 +6,7 @@ import (
 
 func TestInitBaseFrameworkForUt(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		f := InitBaseFrameworkFromArgs(MetaDBService,
+		f := InitBaseFrameworkForUt(MetaDBService,
 			func(d *BaseFramework) error {
 				d.GetServiceMeta().ServicePort = 99999
 				return nil

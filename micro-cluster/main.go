@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/asim/go-micro/v3"
 	"github.com/pingcap-inc/tiem/library/client"
-	common "github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"

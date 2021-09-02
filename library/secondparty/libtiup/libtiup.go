@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -188,7 +189,7 @@ func TiupMgrInit() {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetLogger().ForkFile(configPath + "tiupmgr")
+	logger = framework.GetRootLogger().ForkFile(configPath + common.LOG_FILE_TIUP_MGR)
 
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
 	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -665,7 +666,7 @@ func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetLogger().ForkFile(configPath + "libtiup")
+	logger = framework.GetRootLogger().ForkFile(configPath + common.LOG_FILE_LIB_TIUP)
 
 	glTiUPMgrPath = tiupMgrPath
 	glTiUPBinPath = tiupBinPath

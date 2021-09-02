@@ -1,10 +1,11 @@
 package models
 
 import (
-	"github.com/pingcap-inc/tiem/library/framework"
-	"gorm.io/gorm"
 	"os"
 	"testing"
+
+	"github.com/pingcap-inc/tiem/library/framework"
+	"gorm.io/gorm"
 )
 
 var MetaDB *gorm.DB
@@ -32,6 +33,7 @@ func TestMain(m *testing.M) {
 			MetaDB = Dao.Db()
 			Dao.SetAccountManager(NewDAOAccountManager(Dao.Db()))
 			Dao.SetClusterManager(NewDAOClusterManager(Dao.Db()))
+			Dao.SetResourceManager(NewDAOResourceManager(Dao.Db()))
 			return nil
 		},
 	)

@@ -1,14 +1,15 @@
-package security
+package interceptor
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/framework"
-	log "github.com/sirupsen/logrus"
 	"math"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/framework"
+	log "github.com/sirupsen/logrus"
 )
 
 func AccessLog() gin.HandlerFunc {
@@ -58,4 +59,3 @@ func AccessLog() gin.HandlerFunc {
 		}
 	}
 }
-

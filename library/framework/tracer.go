@@ -8,7 +8,6 @@ import (
 	"github.com/asim/go-micro/v3/metadata"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 )
@@ -139,19 +138,6 @@ func getTraceIDFromNormalContext(ctx context.Context) string {
 		return s
 	} else {
 		return ""
-	}
-}
-
-// Tiem-X-Trace-ID
-func GinTraceIDHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.GetHeader(TiEM_X_TRACE_ID_NAME)
-		if len(id) <= 0 {
-			id = uuidutil.GenerateID()
-		}
-		c.Set(TiEM_X_TRACE_ID_NAME, id)
-		c.Header(TiEM_X_TRACE_ID_NAME, id)
-		c.Next()
 	}
 }
 

@@ -3,7 +3,7 @@ package userapi
 import (
 	"net/http"
 
-	"github.com/pingcap-inc/tiem/micro-api/security"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
@@ -87,8 +87,8 @@ func Logout(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /user/profile [get]
 func Profile(c *gin.Context) {
-	v, _ := c.Get(security.VisitorIdentityKey)
+	v, _ := c.Get(interceptor.VisitorIdentityKey)
 
-	visitor, _ := v.(*security.VisitorIdentity)
+	visitor, _ := v.(*interceptor.VisitorIdentity)
 	c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: visitor.AccountName, TenantId: visitor.TenantId}))
 }

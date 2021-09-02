@@ -8,7 +8,7 @@ import (
 	"github.com/asim/go-micro/v3/metadata"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
-	uuid "github.com/satori/go.uuid"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 )
@@ -147,7 +147,7 @@ func GinTraceIDHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.GetHeader(TiEM_X_TRACE_ID_NAME)
 		if len(id) <= 0 {
-			id = uuid.NewV4().String()
+			id = uuidutil.GenerateID()
 		}
 		c.Set(TiEM_X_TRACE_ID_NAME, id)
 		c.Header(TiEM_X_TRACE_ID_NAME, id)

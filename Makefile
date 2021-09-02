@@ -221,3 +221,4 @@ failpoint-enable: build_failpoint_ctl
 failpoint-disable: build_failpoint_ctl
 # Restoring gofail failpoints...
 	@$(FAILPOINT_DISABLE)
+

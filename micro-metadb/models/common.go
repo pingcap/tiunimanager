@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/mozillazg/go-pinyin"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 	"time"
 )
@@ -47,7 +48,7 @@ type Entity struct {
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = GenerateID()
+	e.ID = uuidutil.GenerateID()
 	if e.Code == "" {
 		e.Code = e.ID
 	}

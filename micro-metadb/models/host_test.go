@@ -23,7 +23,7 @@ func TestCreateHost(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone1",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
@@ -50,7 +50,7 @@ func TestCreateHost(t *testing.T) {
 			Nic:      "1GE",
 			AZ:       "Zone1",
 			Rack:     "3-1",
-			Purpose:  "Compute",
+			Purpose:  "TestCompute",
 			Disks: []Disk{
 				{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 			},
@@ -68,7 +68,7 @@ func TestCreateHost(t *testing.T) {
 			Nic:      "1GE",
 			AZ:       "Zone1",
 			Rack:     "3-1",
-			Purpose:  "Compute",
+			Purpose:  "TestCompute",
 			Disks: []Disk{
 				{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 			},
@@ -113,7 +113,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 				Nic:      "1GE",
 				AZ:       "Zone1",
 				Rack:     "3-1",
-				Purpose:  "Compute",
+				Purpose:  "TestCompute",
 				Disks:    []Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
 			},
 			{
@@ -127,7 +127,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 				Nic:      "1GE",
 				AZ:       "Zone1",
 				Rack:     "3-1",
-				Purpose:  "Compute",
+				Purpose:  "TestCompute",
 				Disks:    []Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
 			},
 		}}, false, []func(result []string) bool{
@@ -146,7 +146,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 				Nic:      "1GE",
 				AZ:       "Zone1",
 				Rack:     "3-1",
-				Purpose:  "Compute",
+				Purpose:  "TestCompute",
 				Disks:    []Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
 			},
 			{
@@ -160,7 +160,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 				Nic:      "1GE",
 				AZ:       "Zone1",
 				Rack:     "3-1",
-				Purpose:  "Compute",
+				Purpose:  "TestCompute",
 				Disks:    []Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
 			},
 		}}, true, []func(result []string) bool{}},
@@ -194,7 +194,7 @@ func TestDeleteHost(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone1",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
@@ -233,7 +233,7 @@ func TestDeleteHostsInBatch(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone1",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
@@ -251,7 +251,7 @@ func TestDeleteHostsInBatch(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone1",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
@@ -409,7 +409,7 @@ func TestFindHostById(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone1",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
@@ -900,7 +900,7 @@ func TestListHosts(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone1",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
@@ -920,7 +920,7 @@ func TestListHosts(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone1",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
@@ -958,16 +958,16 @@ func TestListHosts(t *testing.T) {
 	}{
 		{"normal", args{req: ListHostReq{
 			Status:  0,
-			Purpose: "Compute",
+			Purpose: "TestCompute",
 			Offset:  0,
 			Limit:   2,
 		}}, false, []func(a args, result []Host) bool{
 			func(a args, result []Host) bool { return len(result) == 2 },
-			func(a args, result []Host) bool { return result[1].Purpose == "Compute" },
+			func(a args, result []Host) bool { return result[1].Purpose == "TestCompute" },
 		}},
 		{"offset", args{req: ListHostReq{
 			Status:  0,
-			Purpose: "Compute",
+			Purpose: "TestCompute",
 			Offset:  1,
 			Limit:   2,
 		}}, false, []func(a args, result []Host) bool{
@@ -978,14 +978,15 @@ func TestListHosts(t *testing.T) {
 			Offset: 0,
 			Limit:  5,
 		}}, false, []func(a args, result []Host) bool{
-			func(a args, result []Host) bool { return len(result) == 2 },
+			func(a args, result []Host) bool { return len(result) >= 2 },
 		}},
 		{"without status", args{req: ListHostReq{
 			Status: HOST_WHATEVER,
+			Purpose: "TestCompute",
 			Offset: 0,
 			Limit:  5,
 		}}, false, []func(a args, result []Host) bool{
-			func(a args, result []Host) bool { return len(result) == 3 },
+			func(a args, result []Host) bool { return len(result) == 2},
 		}},
 	}
 	for _, tt := range tests {
@@ -1017,7 +1018,7 @@ func TestLockHosts(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone1",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 0},
 		},
@@ -1097,7 +1098,7 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone1",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
 			{Name: "sdb", Path: "/pd", Capacity: 256, Status: 0},
@@ -1116,7 +1117,7 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone1",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 0},
 			{Name: "sdc", Path: "/tidb2", Capacity: 256, Status: 0},
@@ -1135,7 +1136,7 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone1",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sdb", Path: "/tikv", Capacity: 256, Status: 0},
 		},
@@ -1227,7 +1228,7 @@ func TestAllocHosts_1Host(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone99",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
 			{Name: "sdb", Path: "/mnt1", Capacity: 256, Status: 0},
@@ -1311,7 +1312,7 @@ func TestAllocHosts_1Host_NotEnough(t *testing.T) {
 		Nic:      "1GE",
 		AZ:       "Zone100",
 		Rack:     "3-1",
-		Purpose:  "Compute",
+		Purpose:  "TestCompute",
 		Disks: []Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
 			{Name: "sdb", Path: "/mnt1", Capacity: 256, Status: 0},

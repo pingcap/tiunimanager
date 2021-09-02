@@ -108,14 +108,14 @@ func (dao *DAOManager) InitTables() error {
 
 func (dao *DAOManager) InitData() error {
 
-	err := dao.InitSystemDefaultData()
+	err := dao.initSystemDefaultData()
 	if nil != err {
 		framework.GetLogger().Errorf("initialize TiEM system data failed, error: %v", err)
 	}
 
 	framework.GetLogger().Infof(" initialization system default data successful")
 
-	err = dao.InitResourceDataForDev()
+	err = dao.initResourceDataForDev()
 	if nil != err {
 		framework.GetLogger().Errorf("initialize TiEM system test resource failed, error: %v", err)
 	}
@@ -138,7 +138,7 @@ func (dao DAOManager) AddTable(tableName string, tableModel interface{}) error {
 /*
 Initial TiEM system default system account and tenant information
 */
-func (dao *DAOManager) InitSystemDefaultData() error {
+func (dao *DAOManager) initSystemDefaultData() error {
 	accountManager := dao.AccountManager()
 	log := framework.GetLogger()
 	rt, err := accountManager.AddTenant("TiEM system administration", 1, 0)
@@ -178,7 +178,7 @@ func (dao *DAOManager) InitSystemDefaultData() error {
 	return err
 }
 
-func (dao *DAOManager) InitResourceDataForDev() error {
+func (dao *DAOManager) initResourceDataForDev() error {
 	_, err := CreateHost(dao.Db(), &Host{
 		HostName: "主机1",
 		IP:       "192.168.125.132",

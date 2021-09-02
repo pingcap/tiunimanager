@@ -161,6 +161,10 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	operator := parseOperatorFromDTO(ope)
 	getLogger().Info(operator)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	if err != nil {
+		getLogger().Errorf("load cluster[%s] aggregation from metadb failed", clusterId)
+		return "", err
+	}
 
 	req := &db.DBCreateTransportRecordRequest{
 		Record: &db.TransportRecordDTO{
@@ -248,7 +252,7 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 
 	/*
 	 * todo: sorted-kv-dir and data-source-dir in the same disk, may slow down import performance,
-	 *  and check-requirements = true can not pass lighting pre-check
+	 *  and check-requirements = true can not pass lightning pre-check
 	 *  in real environment, config data-source-dir = user nfs storage, sorted-kv-dir = other disk, turn on pre-check
 	 */
 	config := &DataImportConfig{

@@ -3,6 +3,8 @@ package framework
 import (
 	"crypto/tls"
 	"errors"
+	"os"
+
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
@@ -10,7 +12,6 @@ import (
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
-	"os"
 )
 
 var Current Framework
@@ -23,6 +24,7 @@ type Framework interface {
 	GetConfiguration() *Configuration
 	GetLogger() *LogRecord
 	GetTracer() *Tracer
+	GetEtcdClient() *EtcdClient
 
 	GetServiceMeta() *ServiceMeta
 	StartService() error
@@ -46,13 +48,14 @@ type BaseFramework struct {
 	configuration *Configuration
 	log           *LogRecord
 	trace         *Tracer
+	etcdClient    *EtcdClient
 	certificate   *CertificateInfo
 
 	serviceMeta  *ServiceMeta
 	microService micro.Service
 
-	initOpts 		[]Opt
-	shutdownOpts 	[]Opt
+	initOpts     []Opt
+	shutdownOpts []Opt
 
 	clientHandler  map[ServiceNameEnum]ClientHandler
 	serviceHandler ServiceHandler
@@ -62,22 +65,22 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 	f := new(BaseFramework)
 
 	f.args = &ClientArgs{
-		Host: "127.0.0.1",
-		Port: 4116,
-		MetricsPort: 4121,
+		Host:               "127.0.0.1",
+		Port:               4116,
+		MetricsPort:        4121,
 		RegistryClientPort: 4101,
-		RegistryPeerPort: 4102,
-		RegistryAddress: "127.0.0.1:4101",
-		DeployDir: "./../bin",
-		DataDir: "./testdata",
-		LogLevel: "info",
+		RegistryPeerPort:   4102,
+		RegistryAddress:    "127.0.0.1:4101",
+		DeployDir:          "./../bin",
+		DataDir:            "./testdata",
+		LogLevel:           "info",
 	}
 	f.parseArgs(serviceName)
 
 	f.initOpts = opts
 	f.Init()
 
-	f.shutdownOpts = []Opt {
+	f.shutdownOpts = []Opt{
 		func(d *BaseFramework) error {
 			return os.RemoveAll(d.GetDataDir())
 		},
@@ -96,8 +99,9 @@ func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFr
 
 	f.initOpts = opts
 	f.Init()
-
 	Current = f
+
+	f.initEtcdClient()
 	return f
 }
 
@@ -173,6 +177,10 @@ func (b *BaseFramework) GetDataDir() string {
 	return b.args.DataDir
 }
 
+func (b *BaseFramework) initEtcdClient() {
+	b.etcdClient = InitEtcdClient(b.GetServiceMeta().RegistryAddress)
+}
+
 func (b *BaseFramework) GetDeployDir() string {
 	return b.args.DeployDir
 }
@@ -215,6 +223,10 @@ func (b *BaseFramework) GetLogger() *LogRecord {
 
 func (b *BaseFramework) GetTracer() *Tracer {
 	return b.trace
+}
+
+func (b *BaseFramework) GetEtcdClient() *EtcdClient {
+	return b.etcdClient
 }
 
 func (b *BaseFramework) GetServiceMeta() *ServiceMeta {

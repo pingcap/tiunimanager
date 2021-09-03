@@ -8,6 +8,7 @@ import (
 	"github.com/asim/go-micro/v3/metadata"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 )
@@ -64,27 +65,26 @@ func NewJaegerTracer(serviceName string, addr string) (opentracing.Tracer, io.Cl
 
 func GinOpenTracing() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// todo tracer
-		//var parentSpan opentracing.Span
-		//
-		//tracer := GlobalTracer
-		//
-		//spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(c.Request.Header))
-		//if err != nil {
-		//	parentSpan = tracer.StartSpan(c.Request.URL.Path)
-		//	defer parentSpan.Finish()
-		//} else {
-		//	parentSpan = opentracing.StartSpan(
-		//		c.Request.URL.Path,
-		//		opentracing.ChildOf(spCtx),
-		//		opentracing.Tag{Key: string(ext.Component), Value: "HTTP"},
-		//		ext.SpanKindRPCServer,
-		//	)
-		//	defer parentSpan.Finish()
-		//}
-		//c.Set("Tracer", tracer)
-		//c.Set("ParentSpan", parentSpan)
-		//c.Next()
+		var parentSpan opentracing.Span
+
+		tracer := opentracing.GlobalTracer()
+
+		spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(c.Request.Header))
+		if err != nil {
+			parentSpan = tracer.StartSpan(c.Request.URL.Path)
+			defer parentSpan.Finish()
+		} else {
+			parentSpan = opentracing.StartSpan(
+				c.Request.URL.Path,
+				opentracing.ChildOf(spCtx),
+				opentracing.Tag{Key: string(ext.Component), Value: "HTTP"},
+				ext.SpanKindRPCServer,
+			)
+			defer parentSpan.Finish()
+		}
+		c.Set("Tracer", tracer)
+		c.Set("ParentSpan", parentSpan)
+		c.Next()
 	}
 }
 

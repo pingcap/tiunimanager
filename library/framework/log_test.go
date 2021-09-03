@@ -18,6 +18,7 @@ func TestDefaultLogRecord(t *testing.T) {
 func TestRootLogger_ForkFile(t *testing.T) {
 	InitBaseFrameworkForUt(MetaDBService)
 	GetRootLogger().ForkFile("aaa").Info("some")
+	GetRootLogger().ForkFile("aaa").Info("another")
 }
 
 func TestRootLogger_RecordFun(t *testing.T) {

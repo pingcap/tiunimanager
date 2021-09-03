@@ -68,6 +68,7 @@ func TestBaseFramework_Get(t *testing.T) {
 	assert.NotNil(t, f.GetDeployDir())
 
 	assert.NotNil(t, f.GetServiceMeta())
+	assert.NoError(t, f.Shutdown())
 	assert.NoError(t, f.StopService())
 
 	ctx := &gin.Context{}

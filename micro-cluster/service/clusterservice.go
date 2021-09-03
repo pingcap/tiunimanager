@@ -21,7 +21,24 @@ var TiEMClusterServiceName = "go.micro.tiem.cluster"
 var SuccessResponseStatus = &clusterPb.ResponseStatusDTO{Code: 0}
 var BizErrorResponseStatus = &clusterPb.ResponseStatusDTO{Code: 1}
 
-type ClusterServiceHandler struct{}
+type ClusterServiceHandler struct {
+	resourceManager *host.ResourceManager
+}
+
+func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
+	handler := new(ClusterServiceHandler)
+	resourceManager := host.NewResourceManager(fw.GetRootLogger())
+	handler.SetResourceManager(resourceManager)
+	return handler
+}
+
+func (handler *ClusterServiceHandler) SetResourceManager(resourceManager *host.ResourceManager) {
+	handler.resourceManager = resourceManager
+}
+
+func (handler *ClusterServiceHandler) ResourceManager() *host.ResourceManager {
+	return handler.resourceManager
+}
 
 func getLogger() *log.Entry {
 	return framework.Log()
@@ -441,34 +458,34 @@ func (*ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterPb
 	return nil
 }
 
-func (*ClusterServiceHandler) ImportHost(ctx context.Context, in *clusterPb.ImportHostRequest, out *clusterPb.ImportHostResponse) error {
-	return host.ImportHost(ctx, in, out)
+func (clusterManager *ClusterServiceHandler) ImportHost(ctx context.Context, in *clusterPb.ImportHostRequest, out *clusterPb.ImportHostResponse) error {
+	return clusterManager.resourceManager.ImportHost(ctx, in, out)
 }
 
-func (*ClusterServiceHandler) ImportHostsInBatch(ctx context.Context, in *clusterPb.ImportHostsInBatchRequest, out *clusterPb.ImportHostsInBatchResponse) error {
-	return host.ImportHostsInBatch(ctx, in, out)
+func (clusterManager *ClusterServiceHandler) ImportHostsInBatch(ctx context.Context, in *clusterPb.ImportHostsInBatchRequest, out *clusterPb.ImportHostsInBatchResponse) error {
+	return clusterManager.resourceManager.ImportHostsInBatch(ctx, in, out)
 }
 
-func (*ClusterServiceHandler) RemoveHost(ctx context.Context, in *clusterPb.RemoveHostRequest, out *clusterPb.RemoveHostResponse) error {
-	return host.RemoveHost(ctx, in, out)
+func (clusterManager *ClusterServiceHandler) RemoveHost(ctx context.Context, in *clusterPb.RemoveHostRequest, out *clusterPb.RemoveHostResponse) error {
+	return clusterManager.resourceManager.RemoveHost(ctx, in, out)
 }
 
-func (*ClusterServiceHandler) RemoveHostsInBatch(ctx context.Context, in *clusterPb.RemoveHostsInBatchRequest, out *clusterPb.RemoveHostsInBatchResponse) error {
-	return host.RemoveHostsInBatch(ctx, in, out)
+func (clusterManager *ClusterServiceHandler) RemoveHostsInBatch(ctx context.Context, in *clusterPb.RemoveHostsInBatchRequest, out *clusterPb.RemoveHostsInBatchResponse) error {
+	return clusterManager.resourceManager.RemoveHostsInBatch(ctx, in, out)
 }
 
-func (*ClusterServiceHandler) ListHost(ctx context.Context, in *clusterPb.ListHostsRequest, out *clusterPb.ListHostsResponse) error {
-	return host.ListHost(ctx, in, out)
+func (clusterManager *ClusterServiceHandler) ListHost(ctx context.Context, in *clusterPb.ListHostsRequest, out *clusterPb.ListHostsResponse) error {
+	return clusterManager.resourceManager.ListHost(ctx, in, out)
 }
 
-func (*ClusterServiceHandler) CheckDetails(ctx context.Context, in *clusterPb.CheckDetailsRequest, out *clusterPb.CheckDetailsResponse) error {
-	return host.CheckDetails(ctx, in, out)
+func (clusterManager *ClusterServiceHandler) CheckDetails(ctx context.Context, in *clusterPb.CheckDetailsRequest, out *clusterPb.CheckDetailsResponse) error {
+	return clusterManager.resourceManager.CheckDetails(ctx, in, out)
 }
 
-func (*ClusterServiceHandler) AllocHosts(ctx context.Context, in *clusterPb.AllocHostsRequest, out *clusterPb.AllocHostResponse) error {
-	return host.AllocHosts(ctx, in, out)
+func (clusterManager *ClusterServiceHandler) AllocHosts(ctx context.Context, in *clusterPb.AllocHostsRequest, out *clusterPb.AllocHostResponse) error {
+	return clusterManager.resourceManager.AllocHosts(ctx, in, out)
 }
 
-func (*ClusterServiceHandler) GetFailureDomain(ctx context.Context, in *clusterPb.GetFailureDomainRequest, out *clusterPb.GetFailureDomainResponse) error {
-	return host.GetFailureDomain(ctx, in, out)
+func (clusterManager *ClusterServiceHandler) GetFailureDomain(ctx context.Context, in *clusterPb.GetFailureDomainRequest, out *clusterPb.GetFailureDomainResponse) error {
+	return clusterManager.resourceManager.GetFailureDomain(ctx, in, out)
 }

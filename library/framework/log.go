@@ -170,3 +170,7 @@ func (lr *RootLogger) RecordFun() *log.Entry {
 	}
 	return logEntry
 }
+
+func (lr *RootLogger) GetLogEntry() *log.Entry {
+	return lr.RecordFun()
+}

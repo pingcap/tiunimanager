@@ -5,11 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -18,6 +16,7 @@ type BackupRecord struct {
 	ClusterId  string
 	Range      BackupRange
 	BackupType BackupType
+	BackupMode BackupMode
 	OperatorId string
 	Size       uint64
 	FilePath   string
@@ -62,9 +61,18 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 	getLogger().Infof("Begin do Backup, clusterId: %s, backupRange: %s, backupType: %s, filePath: %s", clusterId, backupRange, backupType, filePath)
 	defer getLogger().Infof("End do Backup")
 	operator := parseOperatorFromDTO(ope)
+	//todo: mock
+	/*
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil || clusterAggregation == nil {
 		return nil, errors.New("load cluster aggregation")
+	}
+	*/
+	clusterAggregation := &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: clusterId,
+			TenantId: "test-tenant",
+		},
 	}
 	clusterAggregation.CurrentOperator = operator
 	cluster := clusterAggregation.Cluster
@@ -76,6 +84,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		ClusterId:  clusterId,
 		Range:      BackupRangeFull,
 		BackupType: BackupTypePhysics,
+		BackupMode: BackupModeManual,
 		OperatorId: operator.Id,
 		FilePath:   getBackupPath(filePath, clusterId, time.Now().Unix(), string(BackupRangeFull)),
 		StartTime:  time.Now().Unix(),
@@ -86,6 +95,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 			ClusterId:   record.ClusterId,
 			BackupType:  string(record.BackupType),
 			BackupRange: string(record.Range),
+			BackupMode:  string(record.BackupMode),
 			OperatorId:  record.OperatorId,
 			FilePath:    record.FilePath,
 			FlowId:      int64(flow.FlowWork.Id),
@@ -104,7 +114,8 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	ClusterRepo.Persist(clusterAggregation)
+	//todo: mock
+	//ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }
 
@@ -180,7 +191,8 @@ func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupR
 func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin backupCluster")
 	defer getLogger().Info("end backupCluster")
-
+	//todo mock
+	/*
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	record := clusterAggregation.LastBackupRecord
@@ -212,6 +224,7 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 	record.BizId = uint64(task.Id)
+	*/
 	return true
 }
 

@@ -348,11 +348,12 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRec
 		ClusterId:  record.ClusterId,
 		Range:      string(record.Range),
 		BackupType: string(record.BackupType),
-		Size:       record.Size,
-		StartTime:  record.StartTime,
-		EndTime:    record.EndTime,
-		FilePath:   record.FilePath,
-		DisplayStatus: &proto.DisplayStatusDTO{
+		Mode:		string(record.BackupMode),
+		Size:      record.Size,
+		StartTime: record.StartTime,
+		EndTime:   record.EndTime,
+		FilePath: record.FilePath,
+		DisplayStatus: &proto.DisplayStatusDTO {
 			InProcessFlowId: int32(currentFlow.Id),
 			StatusCode:      strconv.Itoa(int(currentFlow.Status)),
 			StatusName:      currentFlow.Status.Display(),

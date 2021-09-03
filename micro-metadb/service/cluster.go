@@ -354,6 +354,7 @@ func ConvertToBackupRecordDTO(do *models.BackupRecord) (dto *dbPb.DBBackupRecord
 		ClusterId:   do.ClusterId,
 		StartTime:   do.StartTime.Unix(),
 		BackupRange: do.BackupRange,
+		BackupMode:  do.BackupMode,
 		BackupType:  do.BackupType,
 		OperatorId:  do.OperatorId,
 		FilePath:    do.FilePath,

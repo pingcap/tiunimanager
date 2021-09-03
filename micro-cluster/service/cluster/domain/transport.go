@@ -4,15 +4,12 @@ import (
 	"archive/zip"
 	ctx "context"
 	"fmt"
-	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -108,10 +105,18 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	//todo: check operator
 	operator := parseOperatorFromDTO(ope)
 	getLogger().Info(operator)
+	//todo: mock
+	/*
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil {
 		getLogger().Errorf("load cluster[%s] aggregation from metadb failed", clusterId)
 		return "", err
+	}
+	*/
+	clusterAggregation := &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: clusterId,
+		},
 	}
 
 	req := &db.DBCreateTransportRecordRequest{
@@ -160,10 +165,17 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	//todo: check operator
 	operator := parseOperatorFromDTO(ope)
 	getLogger().Info(operator)
+	/*
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil {
 		getLogger().Errorf("load cluster[%s] aggregation from metadb failed", clusterId)
 		return "", err
+	}
+	*/
+	clusterAggregation := &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: clusterId,
+		},
 	}
 
 	req := &db.DBCreateTransportRecordRequest{
@@ -203,7 +215,7 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	return info.RecordId, nil
 }
 
-func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*TransportInfo, error) {
+func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*db.TransportRecordDTO, *db.DBPageDTO, error) {
 	getLogger().Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %s, page: %d, pageSize: %d", clusterId, recordId, page, pageSize)
 	defer getLogger().Info("end DescribeDataTransportRecord")
 	req := &db.DBListTransportRecordRequest{
@@ -216,24 +228,10 @@ func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId str
 	}
 	resp, err := client.DBClient.ListTrasnportRecord(ctx.Background(), req)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	records := resp.GetRecords()
-	info := make([]*TransportInfo, len(records))
-	for index := 0; index < len(info); index++ {
-		info[index] = &TransportInfo{
-			RecordId:      records[index].GetID(),
-			TransportType: records[index].GetTransportType(),
-			ClusterId:     records[index].GetClusterId(),
-			Status:        records[index].GetStatus(),
-			FilePath:      records[index].GetFilePath(),
-			StartTime:     records[index].GetStartTime(),
-			EndTime:       records[index].GetEndTime(),
-		}
-	}
-
-	return info, nil
+	return resp.GetRecords(), resp.GetPage(), nil
 }
 
 func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo) *DataImportConfig {
@@ -312,6 +310,8 @@ func cleanDataTransportDir(filepath string) error {
 func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin buildDataImportConfig")
 	defer getLogger().Info("end buildDataImportConfig")
+	//todo: mock
+	/*
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
@@ -338,12 +338,15 @@ func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 	getLogger().Infof("build lightning toml file sucess, %v", config)
+	*/
 	return true
 }
 
 func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin importDataToCluster")
 	defer getLogger().Info("end importDataToCluster")
+	//todo: mock
+	/*
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
@@ -357,7 +360,7 @@ func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 	getLogger().Infof("call tiupmgr tidb-lightning api success, %v", resp)
-
+	*/
 	return true
 }
 
@@ -388,6 +391,8 @@ func updateDataImportRecord(task *TaskEntity, context *FlowContext) bool {
 func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin exportDataFromCluster")
 	defer getLogger().Info("end exportDataFromCluster")
+	//todo: mock
+	/*
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ExportInfo)
 	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
@@ -419,7 +424,9 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 		getLogger().Errorf("call tiup dumpling api failed, %s", err.Error())
 		return false
 	}
+
 	getLogger().Infof("call tiupmgr succee, resp: %v", resp)
+	*/
 
 	return true
 }
@@ -451,6 +458,8 @@ func updateDataExportRecord(task *TaskEntity, context *FlowContext) bool {
 func compressExportData(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin compressExportData")
 	defer getLogger().Info("end compressExportData")
+	//todo: mock
+	/*
 	info := context.value(contextDataTransportKey).(*ExportInfo)
 
 	dataDir := fmt.Sprintf("%s/data", info.FilePath)
@@ -459,13 +468,15 @@ func compressExportData(task *TaskEntity, context *FlowContext) bool {
 		getLogger().Errorf("compress export data failed, %s", err.Error())
 		return false
 	}
-
+	*/
 	return true
 }
 
 func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin deCompressImportData")
 	defer getLogger().Info("end deCompressImportData")
+	//todo: mock
+	/*
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
@@ -476,7 +487,7 @@ func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
 		getLogger().Errorf("deCompress import data failed, %s", err.Error())
 		return false
 	}
-
+	*/
 	return true
 }
 

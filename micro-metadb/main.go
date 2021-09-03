@@ -25,7 +25,7 @@ func main() {
 			return nil
 		},
 	)
-	log := framework.LogWithCaller()
+	log := framework.Log()
 	log.Info("etcd client connect success")
 
 	f.PrepareService(func(service micro.Service) error {

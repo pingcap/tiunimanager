@@ -31,6 +31,7 @@ type Framework interface {
 	GetClientArgs() *ClientArgs
 	GetConfiguration() *Configuration
 	GetRootLogger() *RootLogger
+	Log() *log.Entry
 	LogWithContext(context.Context) *log.Entry
 	GetTracer() *Tracer
 	GetEtcdClient() *EtcdClient
@@ -48,13 +49,17 @@ func GetRootLogger() *RootLogger {
 	}
 }
 
-func LogWithCaller() *log.Entry {
-	return GetRootLogger().withCaller()
+func Log() *log.Entry {
+	return GetRootLogger().defaultLogEntry
 }
 
 func LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return GetRootLogger().withCaller().WithField(TiEM_X_TRACE_ID_NAME, id)
+	return GetRootLogger().defaultLogEntry.WithField(TiEM_X_TRACE_ID_NAME, id)
+}
+
+func LogForkFile(fileName string) *log.Entry {
+	return GetRootLogger().ForkFile(fileName)
 }
 
 type Opt func(d *BaseFramework) error
@@ -238,9 +243,13 @@ func (b *BaseFramework) GetRootLogger() *RootLogger {
 	return b.log
 }
 
+func (b *BaseFramework) Log() *log.Entry {
+	return b.GetRootLogger().defaultLogEntry
+}
+
 func (b *BaseFramework) LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return b.GetRootLogger().withCaller().WithField(TiEM_X_TRACE_ID_NAME, id)
+	return b.Log().WithField(TiEM_X_TRACE_ID_NAME, id)
 }
 
 func (b *BaseFramework) GetTracer() *Tracer {
@@ -288,10 +297,10 @@ func (b *BaseFramework) prometheusBoot() {
 		if metricsPort <= 0 {
 			metricsPort = common.DefaultMetricsPort
 		}
-		LogWithCaller().Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
+		Log().Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
 		err := http.ListenAndServe(common.LocalAddress+":"+strconv.Itoa(metricsPort), nil)
 		if err != nil {
-			LogWithCaller().Errorf("prometheus listen and serve error: %v", err)
+			Log().Errorf("prometheus listen and serve error: %v", err)
 			panic("ListenAndServe: " + err.Error())
 		}
 	}()

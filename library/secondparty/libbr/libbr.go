@@ -187,7 +187,7 @@ func BrMgrInit() {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetRootLogger().ForkFile(configPath + common.LogFileBrMgr)
+	logger = framework.LogForkFile(configPath + common.LogFileBrMgr)
 
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
 	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -615,7 +615,7 @@ func MicroInit(brMgrPath, mgrLogFilePath string) {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetRootLogger().ForkFile(configPath + common.LogFileLibBr)
+	logger = framework.LogForkFile(configPath + common.LogFileLibBr)
 
 	glBrMgrPath = brMgrPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)

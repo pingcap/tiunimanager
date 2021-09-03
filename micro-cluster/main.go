@@ -22,7 +22,7 @@ func main() {
 	)
 
 	f.PrepareService(func(service micro.Service) error {
-		return clusterPb.RegisterClusterServiceHandler(service.Server(), new(clusterService.ClusterServiceHandler))
+		return clusterPb.RegisterClusterServiceHandler(service.Server(), clusterService.NewClusterServiceHandler(f))
 	})
 
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{

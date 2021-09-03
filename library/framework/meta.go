@@ -1,6 +1,7 @@
 package framework
 
 import (
+	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 )
@@ -22,7 +23,8 @@ func (s ServiceNameEnum) ServerName() string {
 	case ApiService:
 		return "openapi-server"
 	default:
-		panic("unexpected")
+		log.Error("unexpected ServiceName")
+		return ""
 	}
 }
 

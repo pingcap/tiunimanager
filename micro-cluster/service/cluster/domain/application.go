@@ -3,14 +3,16 @@ package domain
 import (
 	"context"
 	"errors"
+	"path/filepath"
+	"strconv"
+
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
-	"path/filepath"
-	"strconv"
 )
 
 type ClusterAggregation struct {
@@ -181,7 +183,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	demands := clusterAggregation.Cluster.Demands
 
 	clusterAggregation.AvailableResources = &proto.AllocHostResponse{}
-	err := host.AllocHosts(context.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
+	err := host.NewResourceManager(framework.GetRootLogger()).AllocHosts(context.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
 
 	if err != nil {
 		// todo
@@ -342,11 +344,11 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRec
 	currentFlow := aggregation.CurrentWorkFlow
 
 	return &proto.BackupRecordDTO{
-		Id:        record.Id,
-		ClusterId: record.ClusterId,
-		Range:     string(record.Range),
+		Id:         record.Id,
+		ClusterId:  record.ClusterId,
+		Range:      string(record.Range),
 		BackupType: string(record.BackupType),
-		Mode: 		string(record.BackupMode),
+		Mode:		string(record.BackupMode),
 		Size:      record.Size,
 		StartTime: record.StartTime,
 		EndTime:   record.EndTime,
@@ -400,7 +402,7 @@ func parseDistributionItemFromDTO(dto *proto.DistributionItemDTO) (item *Cluster
 func parseRecoverInFoFromDTO(dto *proto.RecoverInfoDTO) (info RecoverInfo) {
 	info = RecoverInfo{
 		SourceClusterId: dto.SourceClusterId,
-		BackupRecordId: dto.BackupRecordId,
+		BackupRecordId:  dto.BackupRecordId,
 	}
 	return
 }

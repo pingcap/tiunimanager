@@ -324,7 +324,7 @@ func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, c
 }
 
 func (m *DAOResourceManager) AllocHosts(requests AllocReqs) (resources AllocRsps, err error) {
-	log := framework.Log()
+	log := framework.LogWithCaller()
 	resources = make(AllocRsps)
 	tx := m.getDb().Begin()
 	for component, reqs := range requests {

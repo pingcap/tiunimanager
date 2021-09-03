@@ -200,7 +200,7 @@ test: failpoint-enable
 	GO111MODULE=off go get github.com/axw/gocov/gocov
 	GO111MODULE=off go get github.com/jstemmer/go-junit-report
 	GO111MODULE=off go get github.com/AlekSi/gocov-xml
-	go test -coverpkg=./... -coverprofile=cover.out $(PACKAGES) | go-junit-report > test.xml
+	go test -coverprofile=cover.out $(PACKAGES) | go-junit-report > test.xml
 	gocov convert cover.out | gocov-xml > coverage.xml \
 	|| { $(FAILPOINT_DISABLE); exit 1; }
 	$(FAILPOINT_DISABLE)

@@ -346,6 +346,7 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRec
 		ClusterId: record.ClusterId,
 		Range:     string(record.Range),
 		BackupType: string(record.BackupType),
+		Mode: 		string(record.BackupMode),
 		Size:      record.Size,
 		StartTime: record.StartTime,
 		EndTime:   record.EndTime,

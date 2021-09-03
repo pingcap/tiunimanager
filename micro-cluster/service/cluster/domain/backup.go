@@ -16,6 +16,7 @@ type BackupRecord struct {
 	ClusterId  string
 	Range      BackupRange
 	BackupType BackupType
+	BackupMode BackupMode
 	OperatorId string
 	Size       uint64
 	FilePath   string
@@ -83,6 +84,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		ClusterId:  clusterId,
 		Range:      BackupRangeFull,
 		BackupType: BackupTypePhysics,
+		BackupMode: BackupModeManual,
 		OperatorId: operator.Id,
 		FilePath:   getBackupPath(filePath, clusterId, time.Now().Unix(), string(BackupRangeFull)),
 		StartTime:  time.Now().Unix(),
@@ -93,7 +95,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 			ClusterId:   record.ClusterId,
 			BackupType:  string(record.BackupType),
 			BackupRange: string(record.Range),
-			BackupMode:  string(BackupModeManual),
+			BackupMode:  string(record.BackupMode),
 			OperatorId:  record.OperatorId,
 			FilePath:    record.FilePath,
 			FlowId:      int64(flow.FlowWork.Id),
@@ -112,7 +114,8 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	ClusterRepo.Persist(clusterAggregation)
+	//todo: mock
+	//ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }
 

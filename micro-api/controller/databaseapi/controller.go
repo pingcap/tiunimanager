@@ -136,17 +136,16 @@ func DescribeDataTransport(c *gin.Context) {
 		data := &DataTransportRecordQueryResp{
 			TransportRecords: make([]*DataTransportInfo, len(respDTO.GetTransportInfos())),
 		}
-		for index := 0; index < len(data.TransportRecords); index++ {
+		for index, value := range respDTO.GetTransportInfos() {
 			data.TransportRecords[index] = &DataTransportInfo{
-				RecordId:      respDTO.GetTransportInfos()[index].GetRecordId(),
-				ClusterId:     respDTO.GetTransportInfos()[index].GetClusterId(),
-				TransportType: respDTO.GetTransportInfos()[index].GetTransportType(),
-				Status:        respDTO.GetTransportInfos()[index].GetStatus(),
-				FilePath:      respDTO.GetTransportInfos()[index].GetFilePath(),
-				StartTime:     time.Unix(respDTO.GetTransportInfos()[index].GetStartTime(), 0),
-				EndTime:       time.Unix(respDTO.GetTransportInfos()[index].GetEndTime(), 0),
+				RecordId:      value.GetRecordId(),
+				ClusterId:     value.GetClusterId(),
+				TransportType: value.GetTransportType(),
+				Status:        value.GetStatus(),
+				FilePath:      value.GetFilePath(),
+				StartTime:     time.Unix(value.GetStartTime(), 0),
+				EndTime:       time.Unix(value.GetEndTime(), 0),
 			}
-
 		}
 
 		result := controller.SuccessWithPage(data, *controller.ParsePageFromDTO(respDTO.PageReq))

@@ -8,7 +8,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
@@ -182,7 +182,7 @@ type TaskStatusMapValue struct {
 var glMgrTaskStatusCh chan TaskStatusMember
 var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
-var logger *log.Entry
+var logger *logrus.Entry
 
 func TiupMgrInit() {
 	configPath := ""
@@ -381,8 +381,8 @@ func newTmpFileWithContent(content []byte) (fileName string, err error) {
 
 func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, TimeoutS int) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
-	log := logger.WithField("task", taskID)
-	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
+	logInFunc := logger.WithField("task", taskID)
+	logInFunc.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	//fmt.Println("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	glMgrTaskStatusCh <- TaskStatusMember{
 		TaskID:   taskID,
@@ -405,7 +405,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 		cmd.SysProcAttr = genSysProcAttr()
 		t0 := time.Now()
 		if err := cmd.Start(); err != nil {
-			log.Error("cmd start err", err)
+			logInFunc.Error("cmd start err", err)
 			//fmt.Println("cmd start err", err)
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
@@ -414,10 +414,10 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			}
 			return
 		}
-		log.Info("cmd started")
+		logInFunc.Info("cmd started")
 		//fmt.Println("cmd started")
 		successFp := func() {
-			log.Info("task finished, time cost", time.Now().Sub(t0))
+			logInFunc.Info("task finished, time cost", time.Now().Sub(t0))
 			//fmt.Println("task finished, time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
@@ -425,11 +425,11 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 				ErrorStr: "",
 			}
 		}
-		log.Info("cmd wait")
+		logInFunc.Info("cmd wait")
 		//fmt.Println("cmd wait")
 		err := cmd.Wait()
 		if err != nil {
-			log.Error("cmd wait return with err", err)
+			logInFunc.Error("cmd wait return with err", err)
 			//fmt.Println("cmd wait return with err", err)
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
@@ -439,7 +439,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 					}
 				}
 			}
-			log.Error("task err:", err, "time cost", time.Now().Sub(t0))
+			logInFunc.Error("task err:", err, "time cost", time.Now().Sub(t0))
 			//fmt.Println("task err:", err, "time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
@@ -448,7 +448,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			}
 			return
 		} else {
-			log.Info("cmd wait return successfully")
+			logInFunc.Info("cmd wait return successfully")
 			//fmt.Println("cmd wait return successfully")
 			successFp()
 			return
@@ -494,7 +494,7 @@ func mgrStartNewTiupListTask(taskID uint64, req *CmdListReq) CmdListResp {
 	args = append(args, req.Flags...)
 	args = append(args, "--yes")
 
-	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
+	logger.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
 	//fmt.Println("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	var cmd *exec.Cmd
 	var cancelFp context.CancelFunc
@@ -511,7 +511,7 @@ func mgrStartNewTiupListTask(taskID uint64, req *CmdListReq) CmdListResp {
 	var data []byte
 	var err error
 	if data, err = cmd.Output(); err != nil {
-		log.Error("cmd start err", err)
+		logger.Error("cmd start err", err)
 		//fmt.Println("cmd start err", err)
 		ret.Error = err
 		return ret
@@ -555,7 +555,7 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 	args = append(args, req.ClusterName)
 	args = append(args, req.Flags...)
 
-	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
+	logger.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
 	//fmt.Println("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	var cmd *exec.Cmd
 	var cancelFp context.CancelFunc
@@ -572,7 +572,7 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 	var data []byte
 	var err error
 	if data, err = cmd.Output(); err != nil {
-		log.Error("cmd start err", err)
+		logger.Error("cmd start err", err)
 		//fmt.Println("cmd start err", err)
 		ret.Error = err
 		return ret
@@ -601,7 +601,7 @@ func TiupMgrRoutine() {
 			if err != nil {
 				myPanic(fmt.Sprintln("cmdStr unmarshal failed err:", err, "cmdStr:", cmdStr))
 			}
-			log.Info("rcv req", cmd)
+			logger.Info("rcv req", cmd)
 			var cmdResp CmdReqOrResp
 			switch cmd.TypeStr {
 			case CmdDeployReqTypeStr:
@@ -639,7 +639,7 @@ func TiupMgrRoutine() {
 			default:
 				myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
 			}
-			log.Info("snd rsp", cmdResp)
+			logger.Info("snd rsp", cmdResp)
 			bs := jsonMustMarshal(&cmdResp)
 			bs = append(bs, '\n')
 			//errw.Write([]byte("TiupMgrRoutine write\n"))
@@ -706,7 +706,7 @@ func glMicroTaskStatusMapSyncer() {
 			}
 		}
 		glMicroTaskStatusMapMutex.Unlock()
-		log := logger.WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
+		logInFunc := logger.WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
 			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,
@@ -714,9 +714,9 @@ func glMicroTaskStatusMapSyncer() {
 				ErrStr: v.ErrorStr,
 			})
 			if rsp == nil || err != nil || rsp.ErrCode != 0 {
-				log.Error("rsp:", rsp, "err:", err, "v:", v)
+				logInFunc.Error("rsp:", rsp, "err:", err, "v:", v)
 			} else {
-				log.Debug("update succes:", v)
+				logInFunc.Debug("update succes:", v)
 			}
 		}
 	}

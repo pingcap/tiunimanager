@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/common"
+
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	etcd "go.etcd.io/etcd/server/v3/embed"
@@ -16,7 +18,6 @@ const (
 	NamePrefix   = "etcd"
 	DirPrefix    = "data_"
 	HttpProtocol = "http://"
-	LocalAddress = "0.0.0.0"
 )
 
 type EmbedEtcdConfig struct {
@@ -57,11 +58,11 @@ func startEmbedEtcd(embedEtcdConfig *EmbedEtcdConfig) error {
 	// advertise peer urls, e.g.: 192.168.1.101:2380,192.168.1.102:2380,192.168.1.102:2380
 	cfg.APUrls = parsePeers([]string{embedEtcdConfig.PeerUrl})
 	// listen peer urls, e.g.: 0.0.0.0:2380
-	cfg.LPUrls = parsePeers([]string{LocalAddress + ":" + strings.Split(embedEtcdConfig.PeerUrl, ":")[1]})
+	cfg.LPUrls = parsePeers([]string{common.LocalAddress + ":" + strings.Split(embedEtcdConfig.PeerUrl, ":")[1]})
 	// advertise client urls, e.g.: 192.168.1.101:2379,192.168.1.102:2379,192.168.1.102:2379
 	cfg.ACUrls = parseClients(embedEtcdConfig.EtcdClientUrls)
 	// listen client urls, e.g.: 0.0.0.0:2379
-	cfg.LCUrls = parseClients([]string{LocalAddress + ":" + strings.Split(embedEtcdConfig.ClientUrl, ":")[1]})
+	cfg.LCUrls = parseClients([]string{common.LocalAddress + ":" + strings.Split(embedEtcdConfig.ClientUrl, ":")[1]})
 
 	cfg.InitialCluster = parseInitialCluster(embedEtcdConfig.EtcdPeerUrls)
 	log.Debugf("initial LPUrls: %v, ACUrls: %v, LCUrls: %v, InitialCluster: %v:",

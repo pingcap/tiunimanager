@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/pingcap-inc/tiem/micro-api/metrics"
+
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
 	_ "github.com/pingcap-inc/tiem/docs"
@@ -50,6 +52,9 @@ func main() {
 func initGinEngine(d *framework.BaseFramework) error {
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.New()
+
+	monitor := metrics.NewPrometheusMonitor(common.TiEM, d.GetServiceMeta().ServiceName.ServerName())
+	g.Use(monitor.PromMiddleware())
 
 	route.Route(g)
 

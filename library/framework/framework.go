@@ -3,7 +3,13 @@ package framework
 import (
 	"crypto/tls"
 	"errors"
+	"net/http"
 	"os"
+	"strconv"
+
+	"github.com/pingcap-inc/tiem/library/common"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
@@ -168,6 +174,9 @@ func (b *BaseFramework) initMicroService() {
 	)
 	srv.Init()
 
+	// listen prometheus metrics
+	go b.prometheusBoot()
+
 	b.microService = srv
 
 	b.serviceHandler(b.microService)
@@ -244,4 +253,21 @@ func (b *BaseFramework) StartService() error {
 	}
 
 	return nil
+}
+
+func (b *BaseFramework) prometheusBoot() {
+	http.Handle("/metrics", promhttp.Handler())
+	// 启动web服务，监听8085端口
+	go func() {
+		metricsPort := b.GetClientArgs().MetricsPort
+		if metricsPort <= 0 {
+			metricsPort = common.DefaultMetricsPort
+		}
+		b.GetLogger().Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
+		err := http.ListenAndServe(common.LocalAddress+":"+strconv.Itoa(metricsPort), nil)
+		if err != nil {
+			b.GetLogger().Errorf("prometheus listen and serve error: %v", err)
+			panic("ListenAndServe: " + err.Error())
+		}
+	}()
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
+	log "github.com/sirupsen/logrus"
 
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
@@ -22,8 +23,8 @@ var BizErrorResponseStatus = &clusterPb.ResponseStatusDTO{Code: 1}
 
 type ClusterServiceHandler struct{}
 
-func getLogger() *framework.LogRecord {
-	return framework.GetLogger()
+func getLogger() *log.Entry {
+	return framework.Log()
 }
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterPb.ClusterCreateReqDTO, resp *clusterPb.ClusterCreateRespDTO) (err error) {

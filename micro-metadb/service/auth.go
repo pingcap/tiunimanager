@@ -17,7 +17,7 @@ func (handler *DBServiceHandler) FindTenant(ctx context.Context, req *proto.DBFi
 	if nil == req || nil == resp {
 		return errors.Errorf("FindTenant has invalid parameter")
 	}
-	log := framework.GetLogger()
+	log := framework.Log()
 	accountManager := handler.Dao().AccountManager()
 	tenant, err := accountManager.FindTenantByName(req.GetName())
 
@@ -48,7 +48,7 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *proto.DBF
 	if nil == req || nil == resp {
 		return errors.Errorf("FindAccount has invalid parameter")
 	}
-	log := framework.GetLogger()
+	log := framework.Log()
 	accountManager := handler.Dao().AccountManager()
 	account, err := accountManager.Find(req.GetName())
 	if err == nil {
@@ -111,7 +111,7 @@ func (handler *DBServiceHandler) SaveToken(cxt context.Context, req *proto.DBSav
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveToken has invalid parameter, req: %v, resp: %v", req, resp)
 	}
-	log := framework.GetLogger()
+	log := framework.Log()
 	accountManager := handler.Dao().AccountManager()
 	_, err := accountManager.AddToken(req.Token.TokenString, req.Token.AccountName, req.Token.AccountId, req.Token.TenantId, time.Unix(req.Token.ExpirationTime, 0))
 
@@ -139,7 +139,7 @@ func (handler *DBServiceHandler) FindToken(cxt context.Context, req *proto.DBFin
 	if nil == req || nil == resp {
 		return errors.Errorf("FindToken has invalid parameter, req: %v, resp: %v", req, resp)
 	}
-	log := framework.GetLogger()
+	log := framework.Log()
 	accountManager := handler.Dao().AccountManager()
 	token, err := accountManager.FindToken(req.GetTokenString())
 
@@ -171,7 +171,7 @@ func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req 
 	if nil == req || nil == resp {
 		return errors.Errorf("FindRolesByPermission has invalid parameter req: %v, resp: %v", req, resp)
 	}
-	log := framework.GetLogger()
+	log := framework.Log()
 	accountManager := handler.Dao().AccountManager()
 	permissionDO, err := accountManager.FetchPermission(req.TenantId, req.Code)
 

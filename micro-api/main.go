@@ -58,7 +58,7 @@ func initGinEngine(d *framework.BaseFramework) error {
 	addr := fmt.Sprintf(":%d", port)
 
 	if err := g.Run(addr); err != nil {
-		d.GetLogger().Fatal(err)
+		d.GetRootLogger().ForkFile(common.LOG_FILE_SYSTEM).Fatal(err)
 	}
 
 	return nil

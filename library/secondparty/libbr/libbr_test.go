@@ -43,7 +43,7 @@ func init() {
 		TaskID: 0,
 		DbConnParameter: dbConnParam,
 	}
-	//log = logger.GetLogger("config_key_test_log")
+	//log = logger.GetRootLogger("config_key_test_log")
 	BrMgrInit()
 	// MicroInit("../../../bin/micro-cluster/brmgr/brmgr", "/tmp/log/br/")
 }

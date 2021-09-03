@@ -336,5 +336,6 @@ message DescribeDashboardResponse {
     ResponseStatusDTO status = 1;
     string clusterId = 2;
     string url = 3;
-    string shareCode = 4;
+    string token = 4;
+    string shareCode = 5;
 }

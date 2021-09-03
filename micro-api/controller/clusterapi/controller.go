@@ -222,6 +222,7 @@ func ClusterKnowledge(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
 // @Success 200 {object} controller.CommonResult{data=DescribeDashboardRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -242,6 +243,7 @@ func DescribeDashboard(c *gin.Context) {
 		result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
 			ClusterId: respDTO.GetClusterId(),
 			Url:       respDTO.GetUrl(),
+			Token:     respDTO.GetToken(),
 			ShareCode: respDTO.GetShareCode(),
 		})
 

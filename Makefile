@@ -200,7 +200,7 @@ test: add_test_file
 	GO111MODULE=off go get github.com/axw/gocov/gocov
 	GO111MODULE=off go get github.com/jstemmer/go-junit-report
 	GO111MODULE=off go get github.com/AlekSi/gocov-xml
-	go test -v ./... -coverprofile=cover.out -coverpkg=./... |go-junit-report > test.xml
+	go test -v ./... -coverprofile=cover.out |go-junit-report > test.xml
 	gocov convert cover.out | gocov-xml > coverage.xml
 
 #race: failpoint-enable

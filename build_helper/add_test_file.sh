@@ -3,5 +3,6 @@ find . -name "*.go" | grep -vE "proto|docs|library/util" | while read fname; do
     firstline=$(head -n 1 $fname)
     if [ ! -f "$fpath/main_test.go" ]; then
       echo $firstline > $fpath/main_test.go
+      echo -e "\nimport \"testing\"\n\nfunc TestMain(m *testing.M) {}" >> $fpath/main_test.go
     fi
 done

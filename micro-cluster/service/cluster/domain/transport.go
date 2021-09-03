@@ -4,14 +4,12 @@ import (
 	"archive/zip"
 	ctx "context"
 	"fmt"
-	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/library/client"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -311,6 +309,8 @@ func cleanDataTransportDir(filepath string) error {
 func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin buildDataImportConfig")
 	defer getLogger().Info("end buildDataImportConfig")
+	//todo: mock
+	/*
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
@@ -337,6 +337,7 @@ func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 	getLogger().Infof("build lightning toml file sucess, %v", config)
+	*/
 	return true
 }
 
@@ -389,6 +390,8 @@ func updateDataImportRecord(task *TaskEntity, context *FlowContext) bool {
 func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin exportDataFromCluster")
 	defer getLogger().Info("end exportDataFromCluster")
+	//todo: mock
+	/*
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ExportInfo)
 	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
@@ -415,8 +418,6 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 		cmd = append(cmd, "--filter", fmt.Sprintf("\"%s\"", info.Filter))
 	}
 	getLogger().Infof("call tiupmgr dumpling api, cmd: %v", cmd)
-	//todo: mock
-	/*
 	resp, err := libtiup.MicroSrvTiupDumpling(0, cmd, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call tiup dumpling api failed, %s", err.Error())

@@ -5,11 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -181,7 +179,8 @@ func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupR
 func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin backupCluster")
 	defer getLogger().Info("end backupCluster")
-
+	//todo mock
+	/*
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	record := clusterAggregation.LastBackupRecord
@@ -207,7 +206,6 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	getLogger().Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
-	/*
 	_, err := libbr.BackUp(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call backup api failed, %s", err.Error())

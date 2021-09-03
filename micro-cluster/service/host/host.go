@@ -2,7 +2,6 @@ package host
 
 import (
 	"context"
-
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 
@@ -11,19 +10,14 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-type ResourceManager struct {
-	log *framework.RootLogger
-}
+type ResourceManager struct {}
 
 func NewResourceManager(log *framework.RootLogger) *ResourceManager {
 	m := new(ResourceManager)
-	m.setLogger(log)
 	return m
 }
 
-func (m *ResourceManager) setLogger(log *framework.RootLogger) {
-	m.log = log
-}
+func (m *ResourceManager) setLogger(log *framework.RootLogger) {}
 
 func copyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.HostName = src.HostName
@@ -85,17 +79,17 @@ func (m *ResourceManager) ImportHost(ctx context.Context, in *hostPb.ImportHostR
 	var err error
 	rsp, err := client.DBClient.AddHost(ctx, &req)
 	if err != nil {
-		m.log.GetLogEntry().Errorf("import host %s error, %v", req.Host.Ip, err)
+		framework.LogWithCaller().Errorf("import host %s error, %v", req.Host.Ip, err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		m.log.GetLogEntry().Warnf("import host failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithCaller().Warnf("import host failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
-	m.log.GetLogEntry().Infof("import host(%s) succeed from db service: %s", in.Host.Ip, rsp.HostId)
+	framework.LogWithCaller().Infof("import host(%s) succeed from db service: %s", in.Host.Ip, rsp.HostId)
 	out.HostId = rsp.HostId
 
 	return nil
@@ -111,17 +105,17 @@ func (m *ResourceManager) ImportHostsInBatch(ctx context.Context, in *hostPb.Imp
 	var err error
 	rsp, err := client.DBClient.AddHostsInBatch(ctx, &req)
 	if err != nil {
-		m.log.GetLogEntry().Errorf("import hosts in batch error, %v", err)
+		framework.LogWithCaller().Errorf("import hosts in batch error, %v", err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		m.log.GetLogEntry().Warnf("import hosts in batch failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithCaller().Warnf("import hosts in batch failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
-	m.log.GetLogEntry().Infof("import %d hosts in batch succeed from db service.", len(rsp.HostIds))
+	framework.LogWithCaller().Infof("import %d hosts in batch succeed from db service.", len(rsp.HostIds))
 	out.HostIds = rsp.HostIds
 
 	return nil
@@ -132,18 +126,18 @@ func (m *ResourceManager) RemoveHost(ctx context.Context, in *hostPb.RemoveHostR
 	req.HostId = in.HostId
 	rsp, err := client.DBClient.RemoveHost(ctx, &req)
 	if err != nil {
-		m.log.GetLogEntry().Errorf("remove host %s error, %v", req.HostId, err)
+		framework.LogWithCaller().Errorf("remove host %s error, %v", req.HostId, err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		m.log.GetLogEntry().Warnf("remove host %s failed from db service: %d, %s", req.HostId, rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithCaller().Warnf("remove host %s failed from db service: %d, %s", req.HostId, rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	m.log.GetLogEntry().Infof("remove host %s succeed from db service", req.HostId)
+	framework.LogWithCaller().Infof("remove host %s succeed from db service", req.HostId)
 	return nil
 }
 
@@ -152,18 +146,18 @@ func (m *ResourceManager) RemoveHostsInBatch(ctx context.Context, in *hostPb.Rem
 	req.HostIds = in.HostIds
 	rsp, err := client.DBClient.RemoveHostsInBatch(ctx, &req)
 	if err != nil {
-		m.log.GetLogEntry().Errorf("remove hosts in batch error, %v", err)
+		framework.LogWithCaller().Errorf("remove hosts in batch error, %v", err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		m.log.GetLogEntry().Warnf("remove hosts in batch failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithCaller().Warnf("remove hosts in batch failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	m.log.GetLogEntry().Infof("remove %d hosts succeed from db service", len(req.HostIds))
+	framework.LogWithCaller().Infof("remove %d hosts succeed from db service", len(req.HostIds))
 	return nil
 }
 
@@ -176,7 +170,7 @@ func (m *ResourceManager) ListHost(ctx context.Context, in *hostPb.ListHostsRequ
 	req.Page.PageSize = in.PageReq.PageSize
 	rsp, err := client.DBClient.ListHost(ctx, &req)
 	if err != nil {
-		m.log.GetLogEntry().Errorf("list hosts error, %v", err)
+		framework.LogWithCaller().Errorf("list hosts error, %v", err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
@@ -185,11 +179,11 @@ func (m *ResourceManager) ListHost(ctx context.Context, in *hostPb.ListHostsRequ
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		m.log.GetLogEntry().Warnf("list hosts info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithCaller().Warnf("list hosts info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	m.log.GetLogEntry().Infof("list %d hosts info from db service succeed", len(rsp.HostList))
+	framework.LogWithCaller().Infof("list %d hosts info from db service succeed", len(rsp.HostList))
 	for _, v := range rsp.HostList {
 		var host hostPb.HostInfo
 		copyHostFromDBRsp(v, &host)
@@ -206,7 +200,7 @@ func (m *ResourceManager) CheckDetails(ctx context.Context, in *hostPb.CheckDeta
 	req.HostId = in.HostId
 	rsp, err := client.DBClient.CheckDetails(ctx, &req)
 	if err != nil {
-		m.log.GetLogEntry().Errorf("check host %s details failed, %v", req.HostId, err)
+		framework.LogWithCaller().Errorf("check host %s details failed, %v", req.HostId, err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
@@ -214,11 +208,11 @@ func (m *ResourceManager) CheckDetails(ctx context.Context, in *hostPb.CheckDeta
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		m.log.GetLogEntry().Warnf("check host %s details from db service failed: %d, %s", req.HostId, rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithCaller().Warnf("check host %s details from db service failed: %d, %s", req.HostId, rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	m.log.GetLogEntry().Infof("check host %s details from db service succeed", req.HostId)
+	framework.LogWithCaller().Infof("check host %s details from db service succeed", req.HostId)
 	out.Details = new(hostPb.HostInfo)
 	copyHostFromDBRsp(rsp.Details, out.Details)
 
@@ -272,7 +266,7 @@ func (m *ResourceManager) AllocHosts(ctx context.Context, in *hostPb.AllocHostsR
 
 	rsp, err := client.DBClient.AllocHosts(ctx, req)
 	if err != nil {
-		m.log.GetLogEntry().Errorf("alloc hosts error, %v", err)
+		framework.LogWithCaller().Errorf("alloc hosts error, %v", err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
@@ -280,7 +274,7 @@ func (m *ResourceManager) AllocHosts(ctx context.Context, in *hostPb.AllocHostsR
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		m.log.GetLogEntry().Warnf("alloc hosts from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithCaller().Warnf("alloc hosts from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
@@ -295,7 +289,7 @@ func (m *ResourceManager) GetFailureDomain(ctx context.Context, in *hostPb.GetFa
 	req.FailureDomainType = in.FailureDomainType
 	rsp, err := client.DBClient.GetFailureDomain(ctx, &req)
 	if err != nil {
-		m.log.GetLogEntry().Errorf("get failure domains error, %v", err)
+		framework.LogWithCaller().Errorf("get failure domains error, %v", err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
@@ -303,11 +297,11 @@ func (m *ResourceManager) GetFailureDomain(ctx context.Context, in *hostPb.GetFa
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		m.log.GetLogEntry().Warnf("get failure domains info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithCaller().Warnf("get failure domains info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	m.log.GetLogEntry().Infof("get failure domain type %d from db service succeed", req.FailureDomainType)
+	framework.LogWithCaller().Infof("get failure domain type %d from db service succeed", req.FailureDomainType)
 	for _, v := range rsp.FdList {
 		out.FdList = append(out.FdList, &hostPb.FailureDomainResource{
 			FailureDomain: v.FailureDomain,

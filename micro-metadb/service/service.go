@@ -16,7 +16,7 @@ func NewDBServiceHandler(dataDir string, fw *framework.BaseFramework) *DBService
 
 	dao.InitDB(dataDir)
 	if dao.Db().Migrator().HasTable(&models.Tenant{}) {
-		framework.Log().Warn("data existed, skip initialization")
+		framework.LogWithCaller().Warn("data existed, skip initialization")
 		return handler
 	} else {
 		dao.InitTables()

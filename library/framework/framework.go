@@ -153,7 +153,8 @@ func (b *BaseFramework) initMicroClient() {
 		handler(srv)
 	}
 }
-func (b *BaseFramework) loadCert() *tls.Config{
+
+func (b *BaseFramework) loadCert() *tls.Config {
 	cert, err := tls.LoadX509KeyPair(b.certificate.CertificateCrtFilePath, b.certificate.CertificateKeyFilePath)
 	if err != nil {
 		panic("load certificate file failed")
@@ -162,7 +163,6 @@ func (b *BaseFramework) loadCert() *tls.Config{
 }
 
 func (b *BaseFramework) initMicroService() {
-
 	server := server.NewServer(
 		server.Name(string(b.serviceMeta.ServiceName)),
 		server.WrapHandler(prometheus.NewHandlerWrapper()),

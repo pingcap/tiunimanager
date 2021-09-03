@@ -70,4 +70,9 @@ func TestRootLogger_forkEntry(t *testing.T) {
 
 func Test_getLogLevel(t *testing.T) {
 	Assert(getLogLevel("info") == log.InfoLevel)
+	Assert(getLogLevel("debug") == log.DebugLevel)
+	Assert(getLogLevel("warn") == log.WarnLevel)
+	Assert(getLogLevel("error") == log.ErrorLevel)
+	Assert(getLogLevel("fatal") == log.FatalLevel)
+	Assert(getLogLevel("aaaa") == log.DebugLevel)
 }

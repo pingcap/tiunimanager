@@ -73,6 +73,7 @@ func TestServiceNameEnum_ServerName(t *testing.T) {
 		{"MetaDBService", MetaDBService, "metadb-server"},
 		{"ClusterService", ClusterService, "cluster-server"},
 		{"ApiService", ApiService, "openapi-server"},
+		{"other", "other", ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

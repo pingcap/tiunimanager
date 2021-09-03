@@ -76,6 +76,14 @@ func TestBaseFramework_Get(t *testing.T) {
 	assert.Equal(t, "111", f.GetLoggerWithContext(ctx).Data[TiEM_X_TRACE_ID_NAME])
 }
 
-func TestBaseFramework_parseArgs(t *testing.T) {
 
+func TestBaseFramework_loadCert(t *testing.T) {
+	b := BaseFramework{
+		certificate: &CertificateInfo{
+			"./../../bin/cert/server.crt",
+			"./../../bin/cert/server.key",
+		},
+	}
+	got := b.loadCert()
+	assert.NotNil(t, got)
 }

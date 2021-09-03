@@ -100,3 +100,15 @@ func Test_MicroContextWithTraceID(t *testing.T) {
 	got := newMicroContextWithTraceID(&gin.Context{}, "111")
 	assert.Equal(t, "111", getTraceIDFromMicroContext(got))
 }
+
+func Test_getParentSpanFromGinContext1(t *testing.T) {
+	t.Run("nil", func(t *testing.T) {
+		got := getParentSpanFromGinContext(nil)
+		assert.Equal(t, nil, got)
+	})
+	t.Run("micro", func(t *testing.T) {
+		micro := newMicroContextWithTraceID(&gin.Context{}, "111")
+		got := getParentSpanFromGinContext(micro)
+		assert.Equal(t, nil, got)
+	})
+}

@@ -347,10 +347,7 @@ func (m *DAOClusterManager) DeleteBackupRecord(id uint) (record *BackupRecord, e
 		return nil, errors.New(fmt.Sprintf("DeleteBackupRecord has invalid parameter, Id: %d", id))
 	}
 	record = &BackupRecord{}
-	err = m.Db().First(record, "id = ?", id).Error
-	if err != nil {
-		err = m.Db().Delete(record).Error
-	}
+	err = m.Db().Where("id = ?", id).Delete(record).Error
 	return record, err
 }
 

@@ -17,6 +17,7 @@ import (
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
+	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 )
@@ -289,6 +290,18 @@ func (b *BaseFramework) StartService() error {
 }
 
 func (b *BaseFramework) prometheusBoot() {
+	// add boot_time metrics
+	bootTime := prom.NewGaugeVec(
+		prom.GaugeOpts{
+			Namespace: common.TiEM,
+			Name:      "boot_time",
+			Help:      "A gauge of micro service boot time.",
+		},
+		[]string{"service"},
+	)
+	prom.MustRegister(bootTime)
+	bootTime.With(prom.Labels{"service": b.GetServiceMeta().ServiceName.ServerName()}).SetToCurrentTime()
+
 	http.Handle("/metrics", promhttp.Handler())
 	// 启动web服务，监听8085端口
 	go func() {

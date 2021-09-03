@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"testing"
 	"time"
 )
@@ -18,7 +19,7 @@ func TestAddTenant(t *testing.T) {
 		wants   []func(a args, tenant Tenant) bool
 	}{
 		{"normal", args{name: "test_add_tenant_name"}, false, []func(a args, tenant Tenant) bool{
-			func(a args, tenant Tenant) bool { return len(tenant.ID) == UUID_MAX_LENGTH },
+			func(a args, tenant Tenant) bool { return len(tenant.ID) == uuidutil.ENTITY_UUID_LENGTH },
 			func(a args, tenant Tenant) bool { return tenant.CreatedAt.Before(time.Now()) },
 		}},
 		{"empty", args{}, true, []func(a args, tenant Tenant) bool{}},
@@ -145,8 +146,8 @@ func TestTenant_BeforeCreate(t *testing.T) {
 			t.Errorf("BeforeCreate() error, want status %v, got %v", 0, tenant.Status)
 		}
 
-		if tenant.ID == "" || len(tenant.ID) != UUID_MAX_LENGTH {
-			t.Errorf("BeforeCreate() error, want id length %v, got %v", UUID_MAX_LENGTH, len(tenant.ID))
+		if tenant.ID == "" || len(tenant.ID) != uuidutil.ENTITY_UUID_LENGTH {
+			t.Errorf("BeforeCreate() error, want id length %v, got %v", uuidutil.ENTITY_UUID_LENGTH, len(tenant.ID))
 		}
 
 		if tenant.Name != "name_test_tenant" {

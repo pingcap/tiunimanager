@@ -17,14 +17,15 @@ func main() {
 				// init embed etcd.
 				err := registry.InitEmbedEtcd(b)
 				if err != nil {
-					b.GetLogger().Errorf("init embed etcd failed, error: %v", err)
+					b.GetRootLogger().ForkFile(b.GetServiceMeta().ServiceName.ServerName()).
+						Errorf("init embed etcd failed, error: %v", err)
 					return
 				}
 			}()
 			return nil
 		},
 	)
-	log := f.GetLogger()
+	log := framework.Log()
 	log.Info("etcd client connect success")
 
 	f.PrepareService(func(service micro.Service) error {

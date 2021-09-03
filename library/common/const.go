@@ -21,3 +21,14 @@ const (
 
 	LocalAddress string = "0.0.0.0"
 )
+
+const (
+	LogFileSystem  = "system"
+	LogFileTiupMgr = "tiupmgr"
+	LogFileBrMgr   = "tiupmgr"
+	LogFileLibTiup = "libtiup"
+	LogFileLibBr   = "tiupmgr"
+
+	LogFileAccess = "access"
+	LogFileAudit  = "audit"
+)

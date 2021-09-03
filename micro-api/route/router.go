@@ -9,7 +9,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/instanceapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/userapi"
-	"github.com/pingcap-inc/tiem/micro-api/security"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -30,7 +30,7 @@ func Route(g *gin.Engine) {
 	// web
 	web := g.Group("/web")
 	{
-		web.Use(security.AccessLog(), gin.Recovery())
+		web.Use(interceptor.AccessLog(), gin.Recovery())
 		// 替换成静态文件
 		web.GET("/*any", controller.HelloPage)
 	}
@@ -38,7 +38,8 @@ func Route(g *gin.Engine) {
 	// api
 	apiV1 := g.Group("/api/v1")
 	{
-		apiV1.Use(security.AccessLog(), gin.Recovery())
+		apiV1.Use(interceptor.GinTraceIDHandler())
+		apiV1.Use(interceptor.AccessLog(), gin.Recovery())
 		apiV1.Use(framework.GinOpenTracing())
 
 		user := apiV1.Group("/user")
@@ -49,14 +50,14 @@ func Route(g *gin.Engine) {
 
 		profile := user.Group("")
 		{
-			profile.Use(security.VerifyIdentity)
+			profile.Use(interceptor.VerifyIdentity)
 			profile.GET("/profile", userapi.Profile)
 		}
 
 		cluster := apiV1.Group("/clusters")
 		{
-			cluster.Use(security.VerifyIdentity)
-			cluster.Use(security.AuditLog())
+			cluster.Use(interceptor.VerifyIdentity)
+			cluster.Use(interceptor.AuditLog())
 			cluster.GET("/:clusterId", clusterapi.Detail)
 			cluster.POST("/", clusterapi.Create)
 			cluster.GET("/", clusterapi.Query)
@@ -84,8 +85,8 @@ func Route(g *gin.Engine) {
 
 		backup := apiV1.Group("/backups")
 		{
-			backup.Use(security.VerifyIdentity)
-			backup.Use(security.AuditLog())
+			backup.Use(interceptor.VerifyIdentity)
+			backup.Use(interceptor.AuditLog())
 			backup.POST("/", instanceapi.Backup)
 			backup.GET("/", instanceapi.QueryBackup)
 			backup.POST("/:backupId/restore", instanceapi.RecoverBackup)
@@ -95,8 +96,8 @@ func Route(g *gin.Engine) {
 
 		host := apiV1.Group("/resources")
 		{
-			host.Use(security.VerifyIdentity)
-			host.Use(security.AuditLog())
+			host.Use(interceptor.VerifyIdentity)
+			host.Use(interceptor.AuditLog())
 			host.POST("host", hostapi.ImportHost)
 			host.POST("hosts", hostapi.ImportHosts)
 			host.GET("hosts", hostapi.ListHost)

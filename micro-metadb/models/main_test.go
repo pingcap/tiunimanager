@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 	"os"
 	"testing"
@@ -11,7 +12,7 @@ var MetaDB *gorm.DB
 var Dao *DAOManager
 
 func TestMain(m *testing.M) {
-	testFilePath := "tmp/" + GenerateID()
+	testFilePath := "testdata/" + uuidutil.ShortId()
 	os.MkdirAll(testFilePath, 0755)
 
 	defer func() {
@@ -32,6 +33,7 @@ func TestMain(m *testing.M) {
 			MetaDB = Dao.Db()
 			Dao.SetAccountManager(NewDAOAccountManager(Dao.Db()))
 			Dao.SetClusterManager(NewDAOClusterManager(Dao.Db()))
+			Dao.SetResourceManager(NewDAOResourceManager(Dao.Db()))
 			return nil
 		},
 	)

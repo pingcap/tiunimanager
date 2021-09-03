@@ -1,4 +1,4 @@
-package security
+package interceptor
 
 import (
 	"net/http"

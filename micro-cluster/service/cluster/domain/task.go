@@ -9,11 +9,11 @@ import (
 
 // FlowWorkEntity
 type FlowWorkEntity struct {
-	Id          uint
-	FlowName    string
-	StatusAlias string
-	BizId       string
-	Status      TaskStatus
+	Id             uint
+	FlowName       string
+	StatusAlias    string
+	BizId          string
+	Status         TaskStatus
 	ContextContent string
 }
 
@@ -49,7 +49,7 @@ func (t *TaskEntity) Processing() {
 func (t *TaskEntity) Success(result interface{}) {
 	t.Status = TaskStatusFinished
 	if result != nil {
-		r,err := json.Marshal(result)
+		r, err := json.Marshal(result)
 		if err != nil {
 			getLogger().Error(err)
 		} else {
@@ -65,14 +65,14 @@ func (t *TaskEntity) Fail(e error) {
 
 // FlowWorkAggregation
 type FlowWorkAggregation struct {
-	FlowWork 	*FlowWorkEntity
-	Define 		*FlowWorkDefine
+	FlowWork    *FlowWorkEntity
+	Define      *FlowWorkDefine
 	CurrentTask *TaskEntity
-	Tasks    	[]*TaskEntity
+	Tasks       []*TaskEntity
 	Context     FlowContext
 }
 
-func CreateFlowWork(bizId string, defineName string) (*FlowWorkAggregation, error){
+func CreateFlowWork(bizId string, defineName string) (*FlowWorkAggregation, error) {
 	define := FlowWorkDefineMap[defineName]
 	if define == nil {
 		return nil, errors.New("workflow undefined")
@@ -101,29 +101,34 @@ func (flow *FlowWorkAggregation) AddContext(key string, value interface{}) {
 	flow.Context.put(key, value)
 }
 
+func (flow *FlowWorkAggregation) executeTask(task *TaskEntity, taskDefine *TaskDefine) bool {
+	flow.CurrentTask = task
+	flow.Tasks = append(flow.Tasks, task)
+	task.Processing()
+	return taskDefine.Executor(task, &flow.Context)
+}
+
 func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 	if taskDefine == nil {
 		flow.FlowWork.Status = TaskStatusFinished
 		return
 	}
 	task := &TaskEntity{
-		Status:   TaskStatusInit,
-		TaskName: taskDefine.Name,
+		Status:         TaskStatusInit,
+		TaskName:       taskDefine.Name,
 		TaskReturnType: taskDefine.ReturnType,
 	}
 
 	TaskRepo.AddFlowTask(task, flow.FlowWork.Id)
-	flow.Tasks = append(flow.Tasks, task)
-	task.Processing()
-
-	handleSuccess := taskDefine.Executor(task, &flow.Context)
+	handleSuccess := flow.executeTask(task, taskDefine)
 
 	if !handleSuccess {
 		if "" == taskDefine.FailEvent {
 			return
 		}
-		if e,ok := flow.Define.TaskNodes[taskDefine.FailEvent]; ok {
+		if e, ok := flow.Define.TaskNodes[taskDefine.FailEvent]; ok {
 			flow.handle(e)
+			return
 		}
 		panic("workflow define error")
 	}
@@ -138,7 +143,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 
 	case PollingTasK:
 		// receive the taskId and start ticker
-		ticker := time.NewTicker(5 * time.Second)
+		ticker := time.NewTicker(1 * time.Second)
 		bizId := task.Id
 		for _ = range ticker.C {
 			// todo check bizId
@@ -159,14 +164,14 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 }
 
 type CronTaskEntity struct {
-	ID uint
-	Name string
-	BizId string
+	ID           uint
+	Name         string
+	BizId        string
 	CronTaskType CronTaskType
-	Cron string
-	Parameter string
-	NextTime time.Time
-	Status CronStatus
+	Cron         string
+	Parameter    string
+	NextTime     time.Time
+	Status       CronStatus
 }
 
 type CronTaskAggregation struct {
@@ -176,10 +181,8 @@ type CronTaskAggregation struct {
 
 func GetDefaultMaintainTask() *CronTaskEntity {
 	return &CronTaskEntity{
-		Name: "maintain",
-		Cron: "0 0 21 ? ? ? ",
+		Name:   "maintain",
+		Cron:   "0 0 21 ? ? ? ",
 		Status: CronStatusValid,
 	}
 }
-
-

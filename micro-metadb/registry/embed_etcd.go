@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -30,12 +32,12 @@ type EmbedEtcdConfig struct {
 	EtcdPeerUrls   []string
 }
 
-var log *framework.LogRecord
+var log *logrus.Entry
 var clientArgs *framework.ClientArgs
 
 func InitEmbedEtcd(b *framework.BaseFramework) error {
 	// init log and client args
-	log = b.GetLogger()
+	log = b.GetRootLogger().ForkFile(b.GetServiceMeta().ServiceName.ServerName())
 	clientArgs = b.GetClientArgs()
 
 	// parse client inject param config

@@ -1,6 +1,7 @@
 package framework
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"net/http"
@@ -9,8 +10,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/library/common"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
 	"github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3"
@@ -18,6 +17,8 @@ import (
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
 )
 
 var Current Framework
@@ -28,7 +29,8 @@ type Framework interface {
 
 	GetClientArgs() *ClientArgs
 	GetConfiguration() *Configuration
-	GetLogger() *LogRecord
+	GetRootLogger() *RootLogger
+	GetLoggerWithContext(context.Context) *log.Entry
 	GetTracer() *Tracer
 	GetEtcdClient() *EtcdClient
 
@@ -37,11 +39,32 @@ type Framework interface {
 	StopService() error
 }
 
-func GetLogger() *LogRecord {
+func GetRootLogger() *RootLogger {
 	if Current != nil {
-		return Current.GetLogger()
+		return Current.GetRootLogger()
 	} else {
 		return DefaultLogRecord()
+	}
+}
+
+func Log() *log.Entry {
+	if Current != nil {
+		return Current.GetRootLogger().RecordFun()
+	} else {
+		return DefaultLogRecord().RecordFun()
+	}
+}
+
+func GetLoggerWithContext(ctx context.Context) *log.Entry {
+	if Current != nil {
+		return Current.GetLoggerWithContext(ctx)
+	} else {
+		id := GetTraceIDFromContext(ctx)
+		if len(id) <= 0 {
+			return DefaultLogRecord().defaultLogEntry
+		} else {
+			return DefaultLogRecord().defaultLogEntry.WithField(TiEM_X_TRACE_ID_NAME, id)
+		}
 	}
 }
 
@@ -52,7 +75,7 @@ type ClientHandler func(service micro.Service) error
 type BaseFramework struct {
 	args          *ClientArgs
 	configuration *Configuration
-	log           *LogRecord
+	log           *RootLogger
 	trace         *Tracer
 	etcdClient    *EtcdClient
 	certificate   *CertificateInfo
@@ -226,8 +249,18 @@ func (b *BaseFramework) GetConfiguration() *Configuration {
 	return b.configuration
 }
 
-func (b *BaseFramework) GetLogger() *LogRecord {
+func (b *BaseFramework) GetRootLogger() *RootLogger {
 	return b.log
+}
+
+func (b *BaseFramework) GetLoggerWithContext(ctx context.Context) *log.Entry {
+	l := b.GetRootLogger()
+	id := GetTraceIDFromContext(ctx)
+	if len(id) <= 0 {
+		return l.defaultLogEntry
+	} else {
+		return l.defaultLogEntry.WithField(TiEM_X_TRACE_ID_NAME, id)
+	}
 }
 
 func (b *BaseFramework) GetTracer() *Tracer {
@@ -248,7 +281,7 @@ func (b *BaseFramework) StopService() error {
 
 func (b *BaseFramework) StartService() error {
 	if err := b.microService.Run(); err != nil {
-		b.GetLogger().Fatalf("Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, b.serviceMeta.GetServiceAddress(), b.serviceMeta.RegistryAddress)
+		b.GetRootLogger().ForkFile(common.LogFileSystem).Fatalf("Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, b.serviceMeta.GetServiceAddress(), b.serviceMeta.RegistryAddress)
 		return errors.New("initialization micro service failed")
 	}
 
@@ -263,10 +296,10 @@ func (b *BaseFramework) prometheusBoot() {
 		if metricsPort <= 0 {
 			metricsPort = common.DefaultMetricsPort
 		}
-		b.GetLogger().Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
+		Log().Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
 		err := http.ListenAndServe(common.LocalAddress+":"+strconv.Itoa(metricsPort), nil)
 		if err != nil {
-			b.GetLogger().Errorf("prometheus listen and serve error: %v", err)
+			Log().Errorf("prometheus listen and serve error: %v", err)
 			panic("ListenAndServe: " + err.Error())
 		}
 	}()

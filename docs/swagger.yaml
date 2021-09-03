@@ -1716,7 +1716,7 @@ paths:
       - application/json
       description: import one host by json
       parameters:
-      - description: 待导入的主机信息
+      - description: Host information
         in: body
         name: host
         required: true

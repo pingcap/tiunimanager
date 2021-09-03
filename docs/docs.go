@@ -1527,7 +1527,7 @@ var doc = `{
                 "summary": "Import a host to TiEM System",
                 "parameters": [
                     {
-                        "description": "待导入的主机信息",
+                        "description": "Host information",
                         "name": "host",
                         "in": "body",
                         "required": true,

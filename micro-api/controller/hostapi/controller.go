@@ -126,7 +126,7 @@ func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *cluster.ImportHostsI
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param host body HostInfo true "待导入的主机信息"
+// @Param host body HostInfo true "Host information"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /resources/host [post]
 func ImportHost(c *gin.Context) {

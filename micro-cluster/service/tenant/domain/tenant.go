@@ -20,10 +20,8 @@ func (t *Tenant) persist() error{
 func CreateTenant(name string) (*Tenant, error) {
 	existed, e := FindTenant(name)
 
-	if e != nil {
-		return nil, e
-	} else if !(nil == existed) {
-		return nil, fmt.Errorf("tenant already exist")
+	if e == nil && existed != nil {
+		return existed, fmt.Errorf("tenant already exist")
 	}
 
 	tenant := Tenant{Name: name, Type: InstanceWorkspace, Status: Valid}

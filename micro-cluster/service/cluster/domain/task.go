@@ -101,6 +101,13 @@ func (flow *FlowWorkAggregation) AddContext(key string, value interface{}) {
 	flow.Context.put(key, value)
 }
 
+func (flow *FlowWorkAggregation) executeTask(task *TaskEntity, taskDefine *TaskDefine) bool {
+	flow.CurrentTask = task
+	flow.Tasks = append(flow.Tasks, task)
+	task.Processing()
+	return taskDefine.Executor(task, &flow.Context)
+}
+
 func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 	if taskDefine == nil {
 		flow.FlowWork.Status = TaskStatusFinished
@@ -113,10 +120,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 	}
 
 	TaskRepo.AddFlowTask(task, flow.FlowWork.Id)
-	flow.Tasks = append(flow.Tasks, task)
-	task.Processing()
-
-	handleSuccess := taskDefine.Executor(task, &flow.Context)
+	handleSuccess := flow.executeTask(task, taskDefine)
 
 	if !handleSuccess {
 		if "" == taskDefine.FailEvent {
@@ -124,6 +128,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 		}
 		if e,ok := flow.Define.TaskNodes[taskDefine.FailEvent]; ok {
 			flow.handle(e)
+			return
 		}
 		panic("workflow define error")
 	}
@@ -138,7 +143,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 
 	case PollingTasK:
 		// receive the taskId and start ticker
-		ticker := time.NewTicker(5 * time.Second)
+		ticker := time.NewTicker(1 * time.Second)
 		bizId := task.Id
 		for _ = range ticker.C {
 			// todo check bizId

@@ -2,6 +2,7 @@ package libtiup
 
 import (
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/common"
 	"os"
 	"os/exec"
 	"testing"
@@ -12,7 +13,7 @@ import (
 
 func init() {
 	// make sure log would not cause nil pointer problem
-	logger = framework.GetLogger().ForkFile("tiupmgr")
+	logger = framework.GetRootLogger().ForkFile(common.LOG_FILE_TIUP_MGR)
 	TiupMgrInit()
 }
 

@@ -16,13 +16,14 @@ func createRole(tenant *Tenant, name string, desc string) (*Role, error) {
 	if tenant == nil || !tenant.Status.IsValid(){
 		return nil, fmt.Errorf("tenant not valid")
 	}
+	if name == "" {
+		return nil, fmt.Errorf("empty role name")
+	}
 
 	existed, e := findRoleByName(tenant, name)
 
-	if e != nil {
-		return nil, e
-	} else if !(nil == existed) {
-		return nil, fmt.Errorf("role already exist")
+	if e == nil && existed != nil {
+		return existed, fmt.Errorf("role already exist")
 	}
 
 	role := Role{TenantId: tenant.Id, Name: name, Desc: desc, Status: Valid}

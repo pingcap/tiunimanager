@@ -13,7 +13,7 @@ func main() {
 		defaultPortForLocal,
 	)
 
-	log := framework.GetLogger()
+	log := framework.Log()
 
 	f.PrepareService(func(service micro.Service) error {
 		return dbPb.RegisterTiEMDBServiceHandler(service.Server(), dbService.NewDBServiceHandler(f.GetDataDir(), f))

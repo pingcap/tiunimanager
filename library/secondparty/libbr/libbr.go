@@ -8,9 +8,10 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
-	logrus "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"os/exec"
@@ -185,7 +186,7 @@ func BrMgrInit() {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetLogger().ForkFile(configPath + "brmgr")
+	logger = framework.GetRootLogger().ForkFile(configPath + common.LOG_FILE_BR_MGR)
 
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
 	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -435,15 +436,15 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 		logger.Infof("task has finished without checking db while no rows is result for sql cmd")
 		resp.Progress = 100
 		//stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID)
-		//log.Infof("stat: %v, errStr: %s, err: %v", stat, errStr, err)
+		//logger.Infof("stat: %v, errStr: %s, err: %v", stat, errStr, err)
 		//if err != nil {
-		//	log.Error("get tiup status from db error", err)
+		//	logger.Error("get tiup status from db error", err)
 		//	resp.Error = err
 		//} else if stat != dbPb.TiupTaskStatus_Finished {
-		//	log.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
+		//	logger.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
 		//	resp.Error = errors.New(fmt.Sprintf("task has not finished: %d, with err info: %s", stat, errStr))
 		//} else {
-		//	log.Infof("task has finished: %d", stat)
+		//	logger.Infof("task has finished: %d", stat)
 		//	resp.Progress = 100
 		//}
 		return resp
@@ -510,13 +511,13 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 		logger.Infof("task has finished without checking db while no rows is result for sql cmd")
 		resp.Progress = 100
 		//if stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
-		//	log.Error("get tiup status error", err)
+		//	logger.Error("get tiup status error", err)
 		//	resp.Error = err
 		//} else if stat != dbPb.TiupTaskStatus_Finished {
-		//	log.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
+		//	logger.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
 		//	resp.Error = errors.New(fmt.Sprintf("task has not finished: %d, with err info: %s", stat, errStr))
 		//} else {
-		//	log.Info("sql cmd return successfully")
+		//	logger.Info("sql cmd return successfully")
 		//	resp.Progress = 100
 		//}
 		return resp
@@ -613,7 +614,7 @@ func MicroInit(brMgrPath, mgrLogFilePath string) {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetLogger().ForkFile(configPath + "libbr")
+	logger = framework.GetRootLogger().ForkFile(configPath + common.LOG_FILE_LIB_BR)
 
 	glBrMgrPath = brMgrPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -652,7 +653,7 @@ func glMicroTaskStatusMapSyncer() {
 			}
 		}
 		glMicroTaskStatusMapMutex.Unlock()
-		log := framework.GetLogger().ForkFile("br").WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
+		logInFunc := logger.WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
 			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,
@@ -660,9 +661,9 @@ func glMicroTaskStatusMapSyncer() {
 				ErrStr: v.ErrorStr,
 			})
 			if rsp == nil || err != nil || rsp.ErrCode != 0 {
-				log.Error("rsp:", rsp, "err:", err, "v:", v)
+				logInFunc.Error("rsp:", rsp, "err:", err, "v:", v)
 			} else {
-				log.Debug("update succes:", v)
+				logInFunc.Debug("update succes:", v)
 			}
 		}
 	}
@@ -719,7 +720,7 @@ func microCmdChanRoutine(cch chan CmdChanMember, outReader io.Reader, inWriter i
 		/*
 		for len(output) == 0 {
 			if err != nil {
-				log.Infof("Error while reading outReader from brmgr: %v\n", err)
+				logger.Infof("Error while reading outReader from brmgr: %v\n", err)
 			}
 			output, err = outBufReader.ReadString('\n')
 		}

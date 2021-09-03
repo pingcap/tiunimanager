@@ -8,6 +8,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
+	log "github.com/sirupsen/logrus"
 
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
@@ -26,7 +27,7 @@ type ClusterServiceHandler struct {
 
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
 	handler := new(ClusterServiceHandler)
-	resourceManager := host.NewResourceManager(fw.GetLogger())
+	resourceManager := host.NewResourceManager(fw.GetRootLogger())
 	handler.SetResourceManager(resourceManager)
 	return handler
 }
@@ -39,8 +40,8 @@ func (handler *ClusterServiceHandler) ResourceManager() *host.ResourceManager {
 	return handler.resourceManager
 }
 
-func getLogger() *framework.LogRecord {
-	return framework.GetLogger()
+func getLogger() *log.Entry {
+	return framework.Log()
 }
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterPb.ClusterCreateReqDTO, resp *clusterPb.ClusterCreateRespDTO) (err error) {

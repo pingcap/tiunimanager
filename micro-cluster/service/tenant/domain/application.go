@@ -61,6 +61,8 @@ func Logout(tokenString string) (string, error) {
 	}
 }
 
+var SkipAuth = true
+
 // Accessible 路径鉴权
 func Accessible(pathType string, path string, tokenString string) (tenantId string, accountId, accountName string, err error) {
 	if path == "" {
@@ -78,7 +80,7 @@ func Accessible(pathType string, path string, tokenString string) (tenantId stri
 	accountName = token.AccountName
 	tenantId = token.TenantId
 
-	if (true) {
+	if (SkipAuth) {
 		// todo checkAuth switch
 		return
 	}

@@ -183,7 +183,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	demands := clusterAggregation.Cluster.Demands
 
 	clusterAggregation.AvailableResources = &proto.AllocHostResponse{}
-	err := host.NewResourceManager(framework.GetLogger()).AllocHosts(context.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
+	err := host.NewResourceManager(framework.GetRootLogger()).AllocHosts(context.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
 
 	if err != nil {
 		// todo

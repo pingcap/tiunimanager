@@ -215,7 +215,7 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	return info.RecordId, nil
 }
 
-func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*TransportInfo, error) {
+func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*db.TransportRecordDTO, *db.DBPageDTO, error) {
 	getLogger().Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %s, page: %d, pageSize: %d", clusterId, recordId, page, pageSize)
 	defer getLogger().Info("end DescribeDataTransportRecord")
 	req := &db.DBListTransportRecordRequest{
@@ -228,24 +228,10 @@ func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId str
 	}
 	resp, err := client.DBClient.ListTrasnportRecord(ctx.Background(), req)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	records := resp.GetRecords()
-	info := make([]*TransportInfo, len(records))
-	for index := 0; index < len(info); index++ {
-		info[index] = &TransportInfo{
-			RecordId:      records[index].GetID(),
-			TransportType: records[index].GetTransportType(),
-			ClusterId:     records[index].GetClusterId(),
-			Status:        records[index].GetStatus(),
-			FilePath:      records[index].GetFilePath(),
-			StartTime:     records[index].GetStartTime(),
-			EndTime:       records[index].GetEndTime(),
-		}
-	}
-
-	return info, nil
+	return resp.GetRecords(), resp.GetPage(), nil
 }
 
 func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo) *DataImportConfig {

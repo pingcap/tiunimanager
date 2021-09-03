@@ -128,16 +128,21 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterPb.Da
 }
 
 func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *clusterPb.DataTransportQueryRequest, resp *clusterPb.DataTransportQueryResponse) error {
-	infos, err := domain.DescribeDataTransportRecord(req.GetOperator(), req.GetRecordId(), req.GetClusterId(), req.GetPageReq().GetPage(), req.GetPageReq().GetPageSize())
+	infos, page, err := domain.DescribeDataTransportRecord(req.GetOperator(), req.GetRecordId(), req.GetClusterId(), req.GetPageReq().GetPage(), req.GetPageReq().GetPageSize())
 	if err != nil {
 		//todo
 		return err
 	}
 	resp.RespStatus = SuccessResponseStatus
+	resp.PageReq = &clusterPb.PageDTO{
+		Page: page.GetPage(),
+		PageSize: page.GetPageSize(),
+		Total: page.GetTotal(),
+	}
 	resp.TransportInfos = make([]*clusterPb.DataTransportInfo, len(infos))
 	for index := 0; index < len(infos); index++ {
 		resp.TransportInfos[index] = &clusterPb.DataTransportInfo{
-			RecordId:      infos[index].RecordId,
+			RecordId:      infos[index].ID,
 			ClusterId:     infos[index].ClusterId,
 			TransportType: infos[index].TransportType,
 			FilePath:      infos[index].FilePath,

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"io"
@@ -344,6 +343,8 @@ func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin importDataToCluster")
 	defer getLogger().Info("end importDataToCluster")
+	//todo: mock
+	/*
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
@@ -357,7 +358,7 @@ func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 	getLogger().Infof("call tiupmgr tidb-lightning api success, %v", resp)
-
+	*/
 	return true
 }
 
@@ -414,12 +415,16 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 		cmd = append(cmd, "--filter", fmt.Sprintf("\"%s\"", info.Filter))
 	}
 	getLogger().Infof("call tiupmgr dumpling api, cmd: %v", cmd)
+	//todo: mock
+	/*
 	resp, err := libtiup.MicroSrvTiupDumpling(0, cmd, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call tiup dumpling api failed, %s", err.Error())
 		return false
 	}
+
 	getLogger().Infof("call tiupmgr succee, resp: %v", resp)
+	*/
 
 	return true
 }
@@ -451,6 +456,8 @@ func updateDataExportRecord(task *TaskEntity, context *FlowContext) bool {
 func compressExportData(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin compressExportData")
 	defer getLogger().Info("end compressExportData")
+	//todo: mock
+	/*
 	info := context.value(contextDataTransportKey).(*ExportInfo)
 
 	dataDir := fmt.Sprintf("%s/data", info.FilePath)
@@ -459,13 +466,15 @@ func compressExportData(task *TaskEntity, context *FlowContext) bool {
 		getLogger().Errorf("compress export data failed, %s", err.Error())
 		return false
 	}
-
+	*/
 	return true
 }
 
 func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin deCompressImportData")
 	defer getLogger().Info("end deCompressImportData")
+	//todo: mock
+	/*
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
@@ -476,7 +485,7 @@ func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
 		getLogger().Errorf("deCompress import data failed, %s", err.Error())
 		return false
 	}
-
+	*/
 	return true
 }
 

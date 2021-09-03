@@ -302,6 +302,7 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 				ClusterId:  v.BackupRecord.ClusterId,
 				Range:      v.BackupRecord.BackupRange,
 				BackupType: v.BackupRecord.BackupType,
+				Mode:  		v.BackupRecord.BackupMode,
 				FilePath:   v.BackupRecord.FilePath,
 				StartTime:  v.Flow.CreateTime,
 				EndTime:    v.Flow.UpdateTime,

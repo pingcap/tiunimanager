@@ -215,10 +215,11 @@ message BackupRecordDTO {
     int64 endTime = 4;
     string range = 5;
     string backupType = 6;
-    OperatorDTO operator = 7;
-    uint64 size = 8;
-    DisplayStatusDTO displayStatus = 9;
-    string filePath = 10;
+    string mode = 7;
+    OperatorDTO operator = 8;
+    uint64 size = 9;
+    DisplayStatusDTO displayStatus = 10;
+    string filePath = 11;
 }
 
 message QueryBackupRequest {

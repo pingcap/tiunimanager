@@ -23,6 +23,7 @@ type BackupRecord struct {
 	EndTime 		time.Time	`json:"endTime"`
 	BackupRange 	string		`json:"backupRange"`
 	BackupType		string		`json:"backupType"`
+	BackupMode 		string 		`json:"backupMode"`
 	Operator 		controller.Operator	`json:"operator"`
 	Size 			uint64		`json:"size"`
 	Status 			controller.StatusInfo	`json:"status"`

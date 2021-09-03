@@ -121,10 +121,16 @@ const (
 
 type BackupRange string
 type BackupType string
+type BackupMode string
 
 const (
 	BackupRangeFull BackupRange = "FULL"
 	BackupRangeIncrement BackupRange = "INCR"
+)
+
+const (
+	BackupModeAuto BackupMode = "Auto"
+	BackupModeManual BackupMode = "Manual"
 )
 
 const (

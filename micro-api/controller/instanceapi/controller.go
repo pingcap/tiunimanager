@@ -164,6 +164,7 @@ func Backup(c *gin.Context) {
 			EndTime:     time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
 			BackupRange: resp.GetBackupRecord().GetRange(),
 			BackupType:  resp.GetBackupRecord().GetBackupType(),
+			BackupMode:  resp.GetBackupRecord().GetMode(),
 			FilePath:    resp.GetBackupRecord().GetFilePath(),
 			Size:        resp.GetBackupRecord().GetSize(),
 			Status:      *clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),

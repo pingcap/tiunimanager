@@ -86,6 +86,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 			ClusterId:   record.ClusterId,
 			BackupType:  string(record.BackupType),
 			BackupRange: string(record.Range),
+			BackupMode:  string(BackupModeManual),
 			OperatorId:  record.OperatorId,
 			FilePath:    record.FilePath,
 			FlowId:      int64(flow.FlowWork.Id),
@@ -206,12 +207,14 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	getLogger().Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
+	/*
 	_, err := libbr.BackUp(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call backup api failed, %s", err.Error())
 		return false
 	}
 	record.BizId = uint64(task.Id)
+	*/
 	return true
 }
 

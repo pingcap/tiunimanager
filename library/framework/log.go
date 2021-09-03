@@ -66,7 +66,7 @@ func DefaultLogRecord() *RootLogger {
 		LogLevel:      "info",
 		LogOutput:     "file",
 		LogFileRoot:   "." + common2.LogDirPrefix,
-		LogFileName:   "default",
+		LogFileName:   "service",
 		LogMaxSize:    512,
 		LogMaxAge:     30,
 		LogMaxBackups: 0,
@@ -159,7 +159,7 @@ func getLogLevel(level string) log.Level {
 	return log.DebugLevel
 }
 
-func (lr *RootLogger) RecordFun() *log.Entry {
+func (lr *RootLogger) DefaultRecord() *log.Entry {
 	logEntry := lr.defaultLogEntry
 	if pc, file, line, ok := runtime.Caller(2); ok {
 		ptr := runtime.FuncForPC(pc)

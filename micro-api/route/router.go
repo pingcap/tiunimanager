@@ -2,7 +2,6 @@ package route
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/clusterapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/databaseapi"
@@ -40,7 +39,6 @@ func Route(g *gin.Engine) {
 	{
 		apiV1.Use(interceptor.GinTraceIDHandler())
 		apiV1.Use(interceptor.AccessLog(), gin.Recovery())
-		apiV1.Use(framework.GinOpenTracing())
 
 		user := apiV1.Group("/user")
 		{
@@ -51,6 +49,7 @@ func Route(g *gin.Engine) {
 		profile := user.Group("")
 		{
 			profile.Use(interceptor.VerifyIdentity)
+			profile.Use(interceptor.AuditLog())
 			profile.GET("/profile", userapi.Profile)
 		}
 

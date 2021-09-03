@@ -1,4 +1,4 @@
-package security
+package interceptor
 
 import (
 	"fmt"
@@ -59,4 +59,3 @@ func AccessLog() gin.HandlerFunc {
 		}
 	}
 }
-

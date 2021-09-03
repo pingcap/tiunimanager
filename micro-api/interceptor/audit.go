@@ -1,8 +1,7 @@
-package security
+package interceptor
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	log "github.com/sirupsen/logrus"
 )
@@ -22,16 +21,16 @@ func AuditLog() gin.HandlerFunc {
 
 		path := c.Request.URL.Path
 
-		entry := framework.GetRootLogger().ForkFile(common.LOG_FILE_AUDIT).WithFields(log.Fields{
-			"operatorId": visitor.AccountId,
-			"operatorName": visitor.AccountName,
+		entry := framework.GetRootLogger().ForkFile("audit").WithFields(log.Fields{
+			"operatorId":       visitor.AccountId,
+			"operatorName":     visitor.AccountName,
 			"operatorTenantId": visitor.TenantId,
 
-			"clientIP":   c.ClientIP(),
-			"method":     c.Request.Method,
-			"path":       path,
-			"referer":    c.Request.Referer(),
-			"userAgent":  c.Request.UserAgent(),
+			"clientIP":  c.ClientIP(),
+			"method":    c.Request.Method,
+			"path":      path,
+			"referer":   c.Request.Referer(),
+			"userAgent": c.Request.UserAgent(),
 		})
 		entry.Info("some do something")
 	}

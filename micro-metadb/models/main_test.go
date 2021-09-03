@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 	"os"
 	"testing"
+
 )
 
 var MetaDB *gorm.DB
@@ -33,6 +34,7 @@ func TestMain(m *testing.M) {
 			MetaDB = Dao.Db()
 			Dao.SetAccountManager(NewDAOAccountManager(Dao.Db()))
 			Dao.SetClusterManager(NewDAOClusterManager(Dao.Db()))
+			Dao.SetResourceManager(NewDAOResourceManager(Dao.Db()))
 			return nil
 		},
 	)

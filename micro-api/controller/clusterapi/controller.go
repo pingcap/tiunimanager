@@ -226,7 +226,7 @@ func ClusterKnowledge(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /cluster/dashboard [get]
+// @Router /clusters/{clusterId}/dashboard [get]
 func DescribeDashboard(c *gin.Context) {
 	operator := controller.GetOperator(c)
 	reqDTO := &cluster.DescribeDashboardRequest{

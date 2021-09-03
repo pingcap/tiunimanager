@@ -152,11 +152,11 @@ func post(url string, body interface{}, headers map[string]string) (*http.Respon
 	}
 	req.Header.Set("Content-type", "application/json")
 	//add headers
-	if headers != nil {
-		for key, val := range headers {
-			req.Header.Add(key, val)
-		}
+
+	for key, val := range headers {
+		req.Header.Add(key, val)
 	}
+
 	//http client
 	client := &http.Client{}
 	getLogger().Infof("%s URL : %s \n", http.MethodPost, req.URL.String())

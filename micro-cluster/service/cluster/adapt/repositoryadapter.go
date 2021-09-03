@@ -115,7 +115,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 		}
 		aggregation.CurrentTiUPConfigRecord = parseConfigRecordDTO(resp.TiupConfigRecord)
 	}
-
+	/*
 	if aggregation.LastBackupRecord != nil && aggregation.LastBackupRecord.Id == 0 {
 		record := aggregation.LastBackupRecord
 		resp, err :=  client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
@@ -135,7 +135,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 		}
 		record.Id = resp.BackupRecord.Id
 	}
-/*
+
 	if aggregation.LastRecoverRecord != nil && aggregation.LastRecoverRecord.Id == 0 {
 		record := aggregation.LastRecoverRecord
 		resp, err :=  client.DBClient.SaveRecoverRecord(context.TODO(), &db.DBSaveRecoverRecordRequest{

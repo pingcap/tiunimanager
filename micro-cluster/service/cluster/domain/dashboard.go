@@ -36,6 +36,7 @@ type ShareResponse struct {
 type Dashboard struct {
 	ClusterId string `json:"clusterId"`
 	Url       string `json:"url"`
+	Token 	  string `json:"token"`
 	ShareCode string `json:"shareCode"`
 }
 
@@ -63,6 +64,7 @@ func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, err
 	dashboard := &Dashboard{
 		ClusterId: clusterId,
 		Url:       url,
+		Token:     token,
 		ShareCode: shareCode,
 	}
 

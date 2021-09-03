@@ -4,7 +4,6 @@ import (
 	cryrand "crypto/rand"
 	"encoding/base64"
 	"fmt"
-
 	common2 "github.com/pingcap-inc/tiem/library/common"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
@@ -69,6 +68,7 @@ func (dao *DAOManager) InitDB(dataDir string) error {
 	dbFile := dataDir + common2.DBDirPrefix + common2.SqliteFileName
 	logins := framework.Log().WithField("database file path", dbFile)
 	dao.db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+
 	if err != nil || dao.db.Error != nil {
 		logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, dao.db.Error)
 	} else {
@@ -114,7 +114,6 @@ func (dao *DAOManager) InitTables() error {
 }
 
 func (dao *DAOManager) InitData() error {
-
 	err := dao.initSystemDefaultData()
 	if nil != err {
 		framework.Log().Errorf("initialize TiEM system data failed, error: %v", err)

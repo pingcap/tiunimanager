@@ -19,7 +19,7 @@ type EtcdClient struct {
 var etcdClient *EtcdClient
 
 func InitEtcdClient(etcdAddress []string) *EtcdClient {
-	log := Log()
+	log := LogWithCaller()
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   etcdAddress,
 		DialTimeout: 5 * time.Second,

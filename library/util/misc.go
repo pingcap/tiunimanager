@@ -83,7 +83,7 @@ func WithRecovery(exec func(), recoverFn func(r interface{})) {
 			recoverFn(r)
 		}
 		if r != nil {
-			framework.Log().Error("panic in the recoverable goroutine",
+			framework.LogWithCaller().Error("panic in the recoverable goroutine",
 				zap.Reflect("r", r),
 				zap.Stack("stack trace"))
 		}

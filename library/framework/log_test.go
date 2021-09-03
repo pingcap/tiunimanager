@@ -8,7 +8,7 @@ import (
 
 func TestDefaultLogRecord(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		got := DefaultLogRecord()
+		got := DefaultRootLogger()
 		Assert(got != nil)
 		Assert(got.LogLevel == "info")
 		Assert(got.LogLevel == "info")
@@ -57,7 +57,7 @@ func TestRootLogger_RecordFun(t *testing.T) {
 				LogLocalTime:    tt.fields.LogLocalTime,
 				LogCompress:     tt.fields.LogCompress,
 			}
-			if got := lr.defaultRecord(); !reflect.DeepEqual(got, tt.want) {
+			if got := lr.withCaller(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("defaultRecord() = %v, want %v", got, tt.want)
 			}
 		})

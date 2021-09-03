@@ -31,7 +31,7 @@ type Framework interface {
 	GetClientArgs() *ClientArgs
 	GetConfiguration() *Configuration
 	GetRootLogger() *RootLogger
-	GetLoggerWithContext(context.Context) *log.Entry
+	LogWithContext(context.Context) *log.Entry
 	GetTracer() *Tracer
 	GetEtcdClient() *EtcdClient
 
@@ -44,21 +44,17 @@ func GetRootLogger() *RootLogger {
 	if Current != nil {
 		return Current.GetRootLogger()
 	} else {
-		return DefaultLogRecord()
+		return DefaultRootLogger()
 	}
 }
 
-func Log() *log.Entry {
-	if Current != nil {
-		return Current.GetRootLogger().defaultRecord()
-	} else {
-		return DefaultLogRecord().defaultRecord()
-	}
+func LogWithCaller() *log.Entry {
+	return GetRootLogger().withCaller()
 }
 
-func GetLoggerWithContext(ctx context.Context) *log.Entry {
+func LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return Log().WithField(TiEM_X_TRACE_ID_NAME, id)
+	return GetRootLogger().withCaller().WithField(TiEM_X_TRACE_ID_NAME, id)
 }
 
 type Opt func(d *BaseFramework) error
@@ -242,9 +238,9 @@ func (b *BaseFramework) GetRootLogger() *RootLogger {
 	return b.log
 }
 
-func (b *BaseFramework) GetLoggerWithContext(ctx context.Context) *log.Entry {
+func (b *BaseFramework) LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return b.GetRootLogger().defaultRecord().WithField(TiEM_X_TRACE_ID_NAME, id)
+	return b.GetRootLogger().withCaller().WithField(TiEM_X_TRACE_ID_NAME, id)
 }
 
 func (b *BaseFramework) GetTracer() *Tracer {
@@ -292,10 +288,10 @@ func (b *BaseFramework) prometheusBoot() {
 		if metricsPort <= 0 {
 			metricsPort = common.DefaultMetricsPort
 		}
-		Log().Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
+		LogWithCaller().Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
 		err := http.ListenAndServe(common.LocalAddress+":"+strconv.Itoa(metricsPort), nil)
 		if err != nil {
-			Log().Errorf("prometheus listen and serve error: %v", err)
+			LogWithCaller().Errorf("prometheus listen and serve error: %v", err)
 			panic("ListenAndServe: " + err.Error())
 		}
 	}()

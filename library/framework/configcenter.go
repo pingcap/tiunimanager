@@ -62,7 +62,7 @@ func GetIntegerWithDefault(key Key, value int) int {
 func UpdateLocalConfig(key Key, value interface{}, newVersion int) (bool, int) {
 	instance, err := GetInstance(key)
 	if err != nil {
-		Log().Error(err)
+		LogWithCaller().Error(err)
 		return false, -1
 	}
 	if newVersion < instance.Version {

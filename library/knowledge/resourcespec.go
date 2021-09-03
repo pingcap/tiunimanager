@@ -39,7 +39,7 @@ type ResourceSpecItem struct {
 func ParseCpu(specCode string) int {
 	cpu, err := strconv.Atoi(strings.Split(specCode, "C")[0])
 	if err != nil {
-		framework.Log().Errorf("ParseCpu error, specCode = %s", specCode)
+		framework.LogWithCaller().Errorf("ParseCpu error, specCode = %s", specCode)
 	}
 	return cpu
 }
@@ -47,7 +47,7 @@ func ParseCpu(specCode string) int {
 func ParseMemory(specCode string) int {
 	memory, err := strconv.Atoi(strings.Split(strings.Split(specCode, "C")[1], "G")[0])
 	if err != nil {
-		framework.Log().Errorf("ParseMemory error, specCode = %s", specCode)
+		framework.LogWithCaller().Errorf("ParseMemory error, specCode = %s", specCode)
 	}
 	return memory
 }

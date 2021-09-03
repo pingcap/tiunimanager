@@ -41,7 +41,7 @@ func (handler *ClusterServiceHandler) ResourceManager() *host.ResourceManager {
 }
 
 func getLogger() *log.Entry {
-	return framework.Log()
+	return framework.LogWithCaller()
 }
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterPb.ClusterCreateReqDTO, resp *clusterPb.ClusterCreateRespDTO) (err error) {
@@ -391,8 +391,7 @@ var ManageSuccessResponseStatus = &clusterPb.ManagerResponseStatus{
 }
 
 func (*ClusterServiceHandler) Login(ctx context.Context, req *clusterPb.LoginRequest, resp *clusterPb.LoginResponse) error {
-
-	log := framework.GetLoggerWithContext(ctx).WithField("fp", "ClusterServiceHandler.Login")
+	log := framework.LogWithContext(ctx).WithField("fp", "ClusterServiceHandler.Login")
 	log.Debug("req:", req)
 	token, err := domain2.Login(req.GetAccountName(), req.GetPassword())
 

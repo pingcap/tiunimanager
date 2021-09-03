@@ -66,7 +66,7 @@ func (dao *DAOManager) Tables() map[string]interface{} {
 func (dao *DAOManager) InitDB(dataDir string) error {
 	var err error
 	dbFile := dataDir + common2.DBDirPrefix + common2.SqliteFileName
-	logins := framework.Log().WithField("database file path", dbFile)
+	logins := framework.LogWithCaller().WithField("database file path", dbFile)
 	dao.db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 	if err != nil || dao.db.Error != nil {
@@ -83,7 +83,7 @@ func (dao *DAOManager) InitDB(dataDir string) error {
 }
 
 func (dao *DAOManager) InitTables() error {
-	log := framework.Log()
+	log := framework.LogWithCaller()
 
 	log.Info("start create TiEM system tables.")
 
@@ -116,20 +116,20 @@ func (dao *DAOManager) InitTables() error {
 func (dao *DAOManager) InitData() error {
 	err := dao.initSystemDefaultData()
 	if nil != err {
-		framework.Log().Errorf("initialize TiEM system data failed, error: %v", err)
+		framework.LogWithCaller().Errorf("initialize TiEM system data failed, error: %v", err)
 	}
 
-	framework.Log().Infof(" initialization system default data successful")
+	framework.LogWithCaller().Infof(" initialization system default data successful")
 
 	err = dao.initResourceDataForDev()
 	if nil != err {
-		framework.Log().Errorf("initialize TiEM system test resource failed, error: %v", err)
+		framework.LogWithCaller().Errorf("initialize TiEM system test resource failed, error: %v", err)
 	}
 	return err
 }
 
 func (dao DAOManager) AddTable(tableName string, tableModel interface{}) error {
-	log := framework.Log()
+	log := framework.LogWithCaller()
 	dao.tables[tableName] = tableModel
 	if !dao.db.Migrator().HasTable(dao.tables[tableName]) {
 		er := dao.db.Migrator().CreateTable(dao.tables[tableName])
@@ -146,7 +146,7 @@ Initial TiEM system default system account and tenant information
 */
 func (dao *DAOManager) initSystemDefaultData() error {
 	accountManager := dao.AccountManager()
-	log := framework.Log()
+	log := framework.LogWithCaller()
 	rt, err := accountManager.AddTenant("TiEM system administration", 1, 0)
 	framework.AssertNoErr(err)
 	role1, err := accountManager.AddRole(rt.ID, "administrators", "administrators", 0)
@@ -189,7 +189,7 @@ func (dao *DAOManager) initSystemDefaultData() error {
 }
 
 func (dao *DAOManager) initResourceDataForDev() error {
-	log := framework.Log()
+	log := framework.LogWithCaller()
 	id1, err := dao.ResourceManager().CreateHost(&Host{
 		HostName: "TEST_HOST1",
 		IP:       "168.168.168.1",
@@ -274,7 +274,7 @@ func (dao *DAOManager) initResourceDataForDev() error {
 }
 
 func (dao *DAOManager) initUser(tenantId string, name string) (string, error) {
-	log := framework.Log()
+	log := framework.LogWithCaller()
 	accountManager := dao.AccountManager()
 
 	b := make([]byte, 16)

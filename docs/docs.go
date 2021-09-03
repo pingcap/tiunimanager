@@ -772,6 +772,15 @@ var doc = `{
                     "cluster"
                 ],
                 "summary": "dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1131,6 +1140,13 @@ var doc = `{
                 ],
                 "summary": "query records of import and export",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "description": "cluster info for query records",
                         "name": "dataTransportQueryReq",
@@ -2302,6 +2318,9 @@ var doc = `{
                     "type": "string"
                 },
                 "shareCode": {
+                    "type": "string"
+                },
+                "token": {
                     "type": "string"
                 },
                 "url": {

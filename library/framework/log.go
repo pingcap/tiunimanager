@@ -50,15 +50,15 @@ const (
 
 const (
 	// RecordSysField record sys name
-	RecordSysField = "sys"
+	RecordSysField = "source_sys"
 	// RecordModField record mod name
-	RecordModField = "mod"
-	// RecordFunField record fun name
-	RecordFunField = "fun"
+	RecordModField = "source_mod"
 	// RecordFileField record file name
-	RecordFileField = "file"
+	RecordFileField = "source_file"
+	// RecordFunField record fun name
+	RecordFunField = "source_fun"
 	// RecordLineField record line number
-	RecordLineField = "line"
+	RecordLineField = "source_line"
 )
 
 func DefaultLogRecord() *RootLogger {
@@ -159,7 +159,7 @@ func getLogLevel(level string) log.Level {
 	return log.DebugLevel
 }
 
-func (lr *RootLogger) DefaultRecord() *log.Entry {
+func (lr *RootLogger) defaultRecord() *log.Entry {
 	logEntry := lr.defaultLogEntry
 	if pc, file, line, ok := runtime.Caller(2); ok {
 		ptr := runtime.FuncForPC(pc)

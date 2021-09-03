@@ -57,8 +57,8 @@ func TestRootLogger_RecordFun(t *testing.T) {
 				LogLocalTime:    tt.fields.LogLocalTime,
 				LogCompress:     tt.fields.LogCompress,
 			}
-			if got := lr.DefaultRecord(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("DefaultRecord() = %v, want %v", got, tt.want)
+			if got := lr.defaultRecord(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("defaultRecord() = %v, want %v", got, tt.want)
 			}
 		})
 	}

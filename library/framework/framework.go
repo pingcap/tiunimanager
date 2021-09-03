@@ -44,9 +44,9 @@ func GetRootLogger() *RootLogger {
 
 func Log() *log.Entry {
 	if Current != nil {
-		return Current.GetRootLogger().DefaultRecord()
+		return Current.GetRootLogger().defaultRecord()
 	} else {
-		return DefaultLogRecord().DefaultRecord()
+		return DefaultLogRecord().defaultRecord()
 	}
 }
 
@@ -229,7 +229,7 @@ func (b *BaseFramework) GetRootLogger() *RootLogger {
 
 func (b *BaseFramework) GetLoggerWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	return b.GetRootLogger().DefaultRecord().WithField(TiEM_X_TRACE_ID_NAME, id)
+	return b.GetRootLogger().defaultRecord().WithField(TiEM_X_TRACE_ID_NAME, id)
 }
 
 func (b *BaseFramework) GetTracer() *Tracer {

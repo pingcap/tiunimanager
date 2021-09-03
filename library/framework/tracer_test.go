@@ -18,6 +18,7 @@ func TestNewTracerFromArgs(t *testing.T) {
 		fmt.Println(got)
 	})
 }
+
 type MyContext struct {}
 
 func (m MyContext) Deadline() (deadline time.Time, ok bool) {

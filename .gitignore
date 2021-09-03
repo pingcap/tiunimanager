@@ -8,3 +8,5 @@ data.etcd1/
 /micro-metadb/service/tmp/
 /micro-metadb/models/tmp/
 *.log
+/micro-metadb/models/testdata/
+etcd/

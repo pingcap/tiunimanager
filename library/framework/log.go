@@ -1,12 +1,13 @@
 package framework
 
 import (
-	common2 "github.com/pingcap-inc/tiem/library/common"
 	"io"
 	"os"
 	"path"
 	"runtime"
 	"strings"
+
+	common2 "github.com/pingcap-inc/tiem/library/common"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -66,7 +67,7 @@ func DefaultLogRecord() *RootLogger {
 		LogLevel:      "info",
 		LogOutput:     "file",
 		LogFileRoot:   "." + common2.LogDirPrefix,
-		LogFileName:   "service",
+		LogFileName:   "default-server",
 		LogMaxSize:    512,
 		LogMaxAge:     30,
 		LogMaxBackups: 0,
@@ -116,12 +117,12 @@ func (lr *RootLogger) forkEntry(fileName string) *log.Entry {
 	// Determine whether the log output contains the file type
 	if strings.Contains(strings.ToLower(lr.LogOutput), OutputFile) {
 		writers = append(writers, &lumberjack.Logger{
-			Filename: lr.LogFileRoot + fileName + ".log",
-			MaxSize: lr.LogMaxSize,
-			MaxAge: lr.LogMaxAge,
+			Filename:   lr.LogFileRoot + fileName + ".log",
+			MaxSize:    lr.LogMaxSize,
+			MaxAge:     lr.LogMaxAge,
 			MaxBackups: lr.LogMaxBackups,
-			LocalTime: lr.LogLocalTime,
-			Compress: lr.LogCompress,
+			LocalTime:  lr.LogLocalTime,
+			Compress:   lr.LogCompress,
 		})
 	}
 	// remove the os.Stdout output
@@ -168,4 +169,8 @@ func (lr *RootLogger) defaultRecord() *log.Entry {
 			WithField(RecordFileField, path.Base(file)).WithField(RecordLineField, line)
 	}
 	return logEntry
+}
+
+func (lr *RootLogger) GetLogEntry() *log.Entry {
+	return lr.RecordFun()
 }

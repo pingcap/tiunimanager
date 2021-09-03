@@ -6,7 +6,7 @@ func setupMockAdapter() {
 	InstanceRepo = MockInstanceRepo{}
 }
 
-type MockTaskRepo struct {}
+type MockTaskRepo struct{}
 
 var id uint = 0
 
@@ -48,7 +48,7 @@ func (m MockTaskRepo) PersistCronTask(cronTask *CronTaskEntity) (err error) {
 	panic("implement me")
 }
 
-type MockClusterRepo struct {}
+type MockClusterRepo struct{}
 
 func (m MockClusterRepo) AddCluster(cluster *Cluster) error {
 	panic("implement me")
@@ -66,9 +66,8 @@ func (m MockClusterRepo) Query(clusterId, clusterName, clusterType, clusterStatu
 	panic("implement me")
 }
 
-type MockInstanceRepo struct {}
+type MockInstanceRepo struct{}
 
 func (m MockInstanceRepo) QueryParameterJson(clusterId string) (string, error) {
 	panic("implement me")
 }
-

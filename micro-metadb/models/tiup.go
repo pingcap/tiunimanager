@@ -2,9 +2,10 @@ package models
 
 import (
 	"context"
+	"time"
+
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"time"
 
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 
@@ -48,7 +49,7 @@ func CreateTiupTask(db *gorm.DB, ctx context.Context, taskType dbPb.TiupTaskType
 		ErrorStr: "",
 		BizID:    bizID,
 	}
-	log := framework.GetRootLogger().ForkFile(common.LOG_FILE_LIB_TIUP).WithField("models", "CreateTiupTask").WithField("TiupTask", t)
+	log := framework.GetRootLogger().ForkFile(common.LogFileLibTiup).WithField("models", "CreateTiupTask").WithField("TiupTask", t)
 	log.Debug("entry")
 	err = db.Select("Type", "Status", "ErrorStr", "BizID").Create(&t).Error
 	id = t.ID
@@ -64,7 +65,7 @@ func UpdateTiupTaskStatus(db *gorm.DB, ctx context.Context, id uint64, taskStatu
 	t := TiupTask{
 		ID: id,
 	}
-	log := framework.GetRootLogger().ForkFile(common.LOG_FILE_LIB_TIUP).WithField("models", "UpdateTiupTaskStatus").WithField("TiupTask", t)
+	log := framework.GetRootLogger().ForkFile(common.LogFileLibTiup).WithField("models", "UpdateTiupTaskStatus").WithField("TiupTask", t)
 	log.Debug("entry")
 	err := db.Model(&t).Updates(map[string]interface{}{"Status": taskStatus, "ErrorStr": errStr}).Error
 	if err != nil {
@@ -76,7 +77,7 @@ func UpdateTiupTaskStatus(db *gorm.DB, ctx context.Context, id uint64, taskStatu
 }
 
 func FindTiupTaskByID(db *gorm.DB, ctx context.Context, id uint64) (task TiupTask, err error) {
-	log := framework.GetRootLogger().ForkFile(common.LOG_FILE_LIB_TIUP).WithField("models", "FindTiupTaskByID").WithField("id", id)
+	log := framework.GetRootLogger().ForkFile(common.LogFileLibTiup).WithField("models", "FindTiupTaskByID").WithField("id", id)
 	log.Debug("entry")
 	err = db.First(&task, id).Error
 	if err != nil {
@@ -88,7 +89,7 @@ func FindTiupTaskByID(db *gorm.DB, ctx context.Context, id uint64) (task TiupTas
 }
 
 func FindTiupTasksByBizID(db *gorm.DB, ctx context.Context, bizID uint64) (tasks []TiupTask, err error) {
-	log := framework.GetRootLogger().ForkFile(common.LOG_FILE_LIB_TIUP).WithField("models", "FindTiupTasksByBizID").WithField("bizID", bizID)
+	log := framework.GetRootLogger().ForkFile(common.LogFileLibTiup).WithField("models", "FindTiupTasksByBizID").WithField("bizID", bizID)
 	log.Debug("entry")
 	err = db.Where(&TiupTask{BizID: bizID}).Find(&tasks).Error
 

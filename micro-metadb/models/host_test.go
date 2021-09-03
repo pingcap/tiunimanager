@@ -949,12 +949,12 @@ func TestListHosts(t *testing.T) {
 			func(a args, result []Host) bool { return len(result) >= 2 },
 		}},
 		{"without status", args{req: ListHostReq{
-			Status: HOST_WHATEVER,
+			Status:  HOST_WHATEVER,
 			Purpose: "TestCompute",
-			Offset: 0,
-			Limit:  5,
+			Offset:  0,
+			Limit:   5,
 		}}, false, []func(a args, result []Host) bool{
-			func(a args, result []Host) bool { return len(result) == 2},
+			func(a args, result []Host) bool { return len(result) == 2 },
 		}},
 	}
 	for _, tt := range tests {

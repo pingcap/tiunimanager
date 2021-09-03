@@ -67,8 +67,7 @@ func TestUpdateTiupTaskStatus(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-	}{
-	}
+	}{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := UpdateTiupTaskStatus(tt.args.db, tt.args.ctx, tt.args.id, tt.args.taskStatus, tt.args.errStr); (err != nil) != tt.wantErr {

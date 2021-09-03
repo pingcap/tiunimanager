@@ -16,13 +16,13 @@ func TestNewServiceMetaFromArgs(t *testing.T) {
 		want *ServiceMeta
 	}{
 		{"normal", args{"TestNewServiceMetaFromArgs", &ClientArgs{
-			Port: 111,
-			Host: "127.0.0.1",
+			Port:            111,
+			Host:            "127.0.0.1",
 			RegistryAddress: "11111,22222",
 		}}, &ServiceMeta{
-			ServiceName: "TestNewServiceMetaFromArgs",
-			ServicePort: 111,
-			ServiceHost: "127.0.0.1",
+			ServiceName:     "TestNewServiceMetaFromArgs",
+			ServicePort:     111,
+			ServiceHost:     "127.0.0.1",
 			RegistryAddress: []string{"11111", "22222"},
 		}},
 	}
@@ -83,4 +83,3 @@ func TestServiceNameEnum_ServerName(t *testing.T) {
 		})
 	}
 }
-

@@ -2,7 +2,6 @@ package host
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -12,11 +11,21 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func getLogger() *log.Entry {
-	return framework.Log()
+type ResourceManager struct {
+	log *framework.RootLogger
 }
 
-func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
+func NewResourceManager(log *framework.RootLogger) *ResourceManager {
+	m := new(ResourceManager)
+	m.setLogger(log)
+	return m
+}
+
+func (m *ResourceManager) setLogger(log *framework.RootLogger) {
+	m.log = log
+}
+
+func copyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
 	dst.UserName = src.UserName
@@ -42,7 +51,7 @@ func CopyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	}
 }
 
-func CopyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
+func copyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.HostId = src.HostId
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
@@ -69,96 +78,96 @@ func CopyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	}
 }
 
-func ImportHost(ctx context.Context, in *hostPb.ImportHostRequest, out *hostPb.ImportHostResponse) error {
+func (m *ResourceManager) ImportHost(ctx context.Context, in *hostPb.ImportHostRequest, out *hostPb.ImportHostResponse) error {
 	var req dbPb.DBAddHostRequest
 	req.Host = new(dbPb.DBHostInfoDTO)
-	CopyHostToDBReq(in.Host, req.Host)
+	copyHostToDBReq(in.Host, req.Host)
 	var err error
 	rsp, err := client.DBClient.AddHost(ctx, &req)
 	if err != nil {
-		getLogger().Errorf("import host %s error, %v", req.Host.Ip, err)
+		m.log.GetLogEntry().Errorf("import host %s error, %v", req.Host.Ip, err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		getLogger().Warnf("import host failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		m.log.GetLogEntry().Warnf("import host failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
-	getLogger().Infof("import host(%s) succeed from db service: %s", in.Host.Ip, rsp.HostId)
+	m.log.GetLogEntry().Infof("import host(%s) succeed from db service: %s", in.Host.Ip, rsp.HostId)
 	out.HostId = rsp.HostId
 
 	return nil
 }
 
-func ImportHostsInBatch(ctx context.Context, in *hostPb.ImportHostsInBatchRequest, out *hostPb.ImportHostsInBatchResponse) error {
+func (m *ResourceManager) ImportHostsInBatch(ctx context.Context, in *hostPb.ImportHostsInBatchRequest, out *hostPb.ImportHostsInBatchResponse) error {
 	var req dbPb.DBAddHostsInBatchRequest
 	for _, v := range in.Hosts {
 		var host dbPb.DBHostInfoDTO
-		CopyHostToDBReq(v, &host)
+		copyHostToDBReq(v, &host)
 		req.Hosts = append(req.Hosts, &host)
 	}
 	var err error
 	rsp, err := client.DBClient.AddHostsInBatch(ctx, &req)
 	if err != nil {
-		getLogger().Errorf("import hosts in batch error, %v", err)
+		m.log.GetLogEntry().Errorf("import hosts in batch error, %v", err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		getLogger().Warnf("import hosts in batch failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		m.log.GetLogEntry().Warnf("import hosts in batch failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
-	getLogger().Infof("import %d hosts in batch succeed from db service.", len(rsp.HostIds))
+	m.log.GetLogEntry().Infof("import %d hosts in batch succeed from db service.", len(rsp.HostIds))
 	out.HostIds = rsp.HostIds
 
 	return nil
 }
 
-func RemoveHost(ctx context.Context, in *hostPb.RemoveHostRequest, out *hostPb.RemoveHostResponse) error {
+func (m *ResourceManager) RemoveHost(ctx context.Context, in *hostPb.RemoveHostRequest, out *hostPb.RemoveHostResponse) error {
 	var req dbPb.DBRemoveHostRequest
 	req.HostId = in.HostId
 	rsp, err := client.DBClient.RemoveHost(ctx, &req)
 	if err != nil {
-		getLogger().Errorf("remove host %s error, %v", req.HostId, err)
+		m.log.GetLogEntry().Errorf("remove host %s error, %v", req.HostId, err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		getLogger().Warnf("remove host %s failed from db service: %d, %s", req.HostId, rsp.Rs.Code, rsp.Rs.Message)
+		m.log.GetLogEntry().Warnf("remove host %s failed from db service: %d, %s", req.HostId, rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	getLogger().Infof("remove host %s succeed from db service", req.HostId)
+	m.log.GetLogEntry().Infof("remove host %s succeed from db service", req.HostId)
 	return nil
 }
 
-func RemoveHostsInBatch(ctx context.Context, in *hostPb.RemoveHostsInBatchRequest, out *hostPb.RemoveHostsInBatchResponse) error {
+func (m *ResourceManager) RemoveHostsInBatch(ctx context.Context, in *hostPb.RemoveHostsInBatchRequest, out *hostPb.RemoveHostsInBatchResponse) error {
 	var req dbPb.DBRemoveHostsInBatchRequest
 	req.HostIds = in.HostIds
 	rsp, err := client.DBClient.RemoveHostsInBatch(ctx, &req)
 	if err != nil {
-		getLogger().Errorf("remove hosts in batch error, %v", err)
+		m.log.GetLogEntry().Errorf("remove hosts in batch error, %v", err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		getLogger().Warnf("remove hosts in batch failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		m.log.GetLogEntry().Warnf("remove hosts in batch failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	getLogger().Infof("remove %d hosts succeed from db service", len(req.HostIds))
+	m.log.GetLogEntry().Infof("remove %d hosts succeed from db service", len(req.HostIds))
 	return nil
 }
 
-func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.ListHostsResponse) error {
+func (m *ResourceManager) ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.ListHostsResponse) error {
 	var req dbPb.DBListHostsRequest
 	req.Purpose = in.Purpose
 	req.Status = in.Status
@@ -167,7 +176,7 @@ func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.List
 	req.Page.PageSize = in.PageReq.PageSize
 	rsp, err := client.DBClient.ListHost(ctx, &req)
 	if err != nil {
-		getLogger().Errorf("list hosts error, %v", err)
+		m.log.GetLogEntry().Errorf("list hosts error, %v", err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
@@ -176,14 +185,14 @@ func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.List
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		getLogger().Warnf("list hosts info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		m.log.GetLogEntry().Warnf("list hosts info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	getLogger().Infof("list %d hosts info from db service succeed", len(rsp.HostList))
+	m.log.GetLogEntry().Infof("list %d hosts info from db service succeed", len(rsp.HostList))
 	for _, v := range rsp.HostList {
 		var host hostPb.HostInfo
-		CopyHostFromDBRsp(v, &host)
+		copyHostFromDBRsp(v, &host)
 		out.HostList = append(out.HostList, &host)
 	}
 	out.PageReq.Page = rsp.Page.Page
@@ -192,12 +201,12 @@ func ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.List
 	return nil
 }
 
-func CheckDetails(ctx context.Context, in *hostPb.CheckDetailsRequest, out *hostPb.CheckDetailsResponse) error {
+func (m *ResourceManager) CheckDetails(ctx context.Context, in *hostPb.CheckDetailsRequest, out *hostPb.CheckDetailsResponse) error {
 	var req dbPb.DBCheckDetailsRequest
 	req.HostId = in.HostId
 	rsp, err := client.DBClient.CheckDetails(ctx, &req)
 	if err != nil {
-		getLogger().Errorf("check host %s details failed, %v", req.HostId, err)
+		m.log.GetLogEntry().Errorf("check host %s details failed, %v", req.HostId, err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
@@ -205,143 +214,16 @@ func CheckDetails(ctx context.Context, in *hostPb.CheckDetailsRequest, out *host
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		getLogger().Warnf("check host %s details from db service failed: %d, %s", req.HostId, rsp.Rs.Code, rsp.Rs.Message)
+		m.log.GetLogEntry().Warnf("check host %s details from db service failed: %d, %s", req.HostId, rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	getLogger().Infof("check host %s details from db service succeed", req.HostId)
+	m.log.GetLogEntry().Infof("check host %s details from db service succeed", req.HostId)
 	out.Details = new(hostPb.HostInfo)
-	CopyHostFromDBRsp(rsp.Details, out.Details)
+	copyHostFromDBRsp(rsp.Details, out.Details)
 
 	return nil
 }
-
-/*
-func getHostSpec(cpuCores int32, mem int32) string {
-	return fmt.Sprintf("%dC%dG", cpuCores, mem)
-}
-
-func mergeReqs(zonesReqs map[string]map[string]*dbPb.DBPreAllocHostsRequest, reqs []*hostPb.AllocationReq) {
-	for _, eachReq := range reqs {
-		if eachReq.Count == 0 {
-			continue
-		}
-		spec := getHostSpec(eachReq.CpuCores, eachReq.Memory)
-		if r, ok := zonesReqs[eachReq.FailureDomain][spec]; ok {
-			r.Req.Count += eachReq.Count
-		} else {
-			var req dbPb.DBPreAllocHostsRequest
-			req.Req = new(dbPb.DBAllocationReq)
-			req.Req.FailureDomain = eachReq.FailureDomain
-			req.Req.CpuCores = eachReq.CpuCores
-			req.Req.Memory = eachReq.Memory
-			req.Req.Count = eachReq.Count
-			if zonesReqs[eachReq.FailureDomain] == nil {
-				zonesReqs[eachReq.FailureDomain] = make(map[string]*dbPb.DBPreAllocHostsRequest)
-			}
-			zonesReqs[eachReq.FailureDomain][spec] = &req
-		}
-	}
-}
-
-func fetchResults(zonesRsps map[string]map[string][]*dbPb.DBPreAllocation, reqs []*hostPb.AllocationReq) (res []*hostPb.AllocHost) {
-	for _, eachReq := range reqs {
-		if eachReq.Count == 0 {
-			continue
-		}
-		spec := getHostSpec(eachReq.CpuCores, eachReq.Memory)
-		zone := eachReq.FailureDomain
-		for i := 0; i < int(eachReq.Count); i++ {
-			rsp := zonesRsps[zone][spec][i]
-			var host hostPb.AllocHost
-			host.HostName = rsp.HostName
-			host.Ip = rsp.Ip
-			host.UserName = rsp.UserName
-			//plain, err := crypto.AesDecryptCFB(rsp.Passwd)
-			host.Passwd = rsp.Passwd
-			host.CpuCores = rsp.RequestCores
-			host.Memory = rsp.RequestMem
-			host.Disk = new(hostPb.Disk)
-			host.Disk.Name = rsp.DiskName
-			host.Disk.Capacity = rsp.DiskCap
-			host.Disk.Path = rsp.DiskPath
-			host.Disk.Status = 0
-			host.Disk.DiskId = rsp.DiskId
-			res = append(res, &host)
-		}
-		zonesRsps[zone][spec] = zonesRsps[zone][spec][eachReq.Count:]
-	}
-	return
-}
-
-func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.AllocHostResponse) error {
-	var zonesReqs map[string]map[string]*dbPb.DBPreAllocHostsRequest = make(map[string]map[string]*dbPb.DBPreAllocHostsRequest)
-	var zonesRsps map[string]map[string][]*dbPb.DBPreAllocation = make(map[string]map[string][]*dbPb.DBPreAllocation)
-
-	mergeReqs(zonesReqs, in.PdReq)
-	mergeReqs(zonesReqs, in.TidbReq)
-	mergeReqs(zonesReqs, in.TikvReq)
-
-	out.Rs = new(hostPb.ResponseStatus)
-	var lockReq dbPb.DBLockHostsRequest
-
-	const MaxRetries = 5
-	retry := 0
-	for {
-		for zone, specReqs := range zonesReqs {
-			for spec, req := range specReqs {
-				rsp, err := client.DBClient.PreAllocHosts(ctx, req)
-				// if PreAllocHosts failed, maybe no enough resources, no need to retry
-				if err != nil {
-					getLogger().Errorf("pre-alloc %d hosts with spec(%du%dg) in %s failed, err: %v",
-						req.Req.Count, req.Req.CpuCores, req.Req.Memory, req.Req.FailureDomain, err)
-					return err
-				}
-				out.Rs.Message = rsp.Rs.Message
-				out.Rs.Code = rsp.Rs.Code
-				if rsp.Rs.Code != int32(codes.OK) {
-					getLogger().Errorf("pre-alloc %d hosts with spec(%du%dg) in %s failed: %d, %s",
-						req.Req.Count, req.Req.CpuCores, req.Req.Memory, req.Req.FailureDomain, rsp.Rs.Code, rsp.Rs.Message)
-					return nil
-				}
-				if zonesRsps[zone] == nil {
-					zonesRsps[zone] = make(map[string][]*dbPb.DBPreAllocation)
-				}
-				zonesRsps[zone][spec] = append(zonesRsps[zone][spec], rsp.Results...)
-				lockReq.Req = append(lockReq.Req, rsp.Results...)
-			}
-		}
-
-		rsp, err := client.DBClient.LockHosts(ctx, &lockReq)
-		if err != nil {
-			getLogger().Warnf("lock pre-alloced resources failed in turn(%d), err: %v", retry, err)
-			return err
-		}
-		out.Rs.Code = rsp.Rs.Code
-		out.Rs.Message = rsp.Rs.Message
-		// if lock resources failed, maybe some tx do allocation concurrently, retry...
-		if rsp.Rs.Code != int32(codes.OK) {
-			getLogger().Errorf("lock hosts failed for %d times: %d, %s", retry, rsp.Rs.Code, rsp.Rs.Message)
-			retry++
-			if retry < MaxRetries {
-				zonesRsps = make(map[string]map[string][]*dbPb.DBPreAllocation)
-				continue
-			} else {
-				getLogger().Errorln("lock pre-alloced resource retry too many times...")
-				return nil
-			}
-
-		} else {
-			break
-		}
-	}
-
-	out.PdHosts = fetchResults(zonesRsps, in.PdReq)
-	out.TidbHosts = fetchResults(zonesRsps, in.TidbReq)
-	out.TikvHosts = fetchResults(zonesRsps, in.TikvReq)
-	return nil
-}
-*/
 
 func makeAllocReq(src []*hostPb.AllocationReq) (dst []*dbPb.DBAllocationReq) {
 	for _, req := range src {
@@ -382,8 +264,7 @@ func getAllocRsp(src []*dbPb.DBAllocHostDTO) (dst []*hostPb.AllocHost) {
 	return dst
 }
 
-func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.AllocHostResponse) error {
-	log := framework.Log()
+func (m *ResourceManager) AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.AllocHostResponse) error {
 	req := new(dbPb.DBAllocHostsRequest)
 	req.PdReq = makeAllocReq(in.PdReq)
 	req.TidbReq = makeAllocReq(in.TidbReq)
@@ -391,7 +272,7 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 
 	rsp, err := client.DBClient.AllocHosts(ctx, req)
 	if err != nil {
-		log.Errorf("alloc hosts error, %v", err)
+		m.log.GetLogEntry().Errorf("alloc hosts error, %v", err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
@@ -399,7 +280,7 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		log.Warnf("alloc hosts from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		m.log.GetLogEntry().Warnf("alloc hosts from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
@@ -409,12 +290,12 @@ func AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.A
 	return nil
 }
 
-func GetFailureDomain(ctx context.Context, in *hostPb.GetFailureDomainRequest, out *hostPb.GetFailureDomainResponse) error {
+func (m *ResourceManager) GetFailureDomain(ctx context.Context, in *hostPb.GetFailureDomainRequest, out *hostPb.GetFailureDomainResponse) error {
 	var req dbPb.DBGetFailureDomainRequest
 	req.FailureDomainType = in.FailureDomainType
 	rsp, err := client.DBClient.GetFailureDomain(ctx, &req)
 	if err != nil {
-		getLogger().Errorf("get failure domains error, %v", err)
+		m.log.GetLogEntry().Errorf("get failure domains error, %v", err)
 		return err
 	}
 	out.Rs = new(hostPb.ResponseStatus)
@@ -422,11 +303,11 @@ func GetFailureDomain(ctx context.Context, in *hostPb.GetFailureDomainRequest, o
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		getLogger().Warnf("get failure domains info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		m.log.GetLogEntry().Warnf("get failure domains info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	getLogger().Infof("get failure domain type %d from db service succeed", req.FailureDomainType)
+	m.log.GetLogEntry().Infof("get failure domain type %d from db service succeed", req.FailureDomainType)
 	for _, v := range rsp.FdList {
 		out.FdList = append(out.FdList, &hostPb.FailureDomainResource{
 			FailureDomain: v.FailureDomain,

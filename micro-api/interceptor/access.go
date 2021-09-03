@@ -2,14 +2,15 @@ package interceptor
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-	log "github.com/sirupsen/logrus"
 	"math"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	log "github.com/sirupsen/logrus"
 )
 
 func AccessLog() gin.HandlerFunc {
@@ -33,7 +34,7 @@ func AccessLog() gin.HandlerFunc {
 			dataLength = 0
 		}
 
-		entry := framework.GetRootLogger().ForkFile(common.LOG_FILE_ACCESS).WithFields(log.Fields{
+		entry := framework.GetRootLogger().ForkFile(common.LogFileAccess).WithFields(log.Fields{
 			"hostname":   hostname,
 			"statusCode": statusCode,
 			"latency":    latency, // time to process

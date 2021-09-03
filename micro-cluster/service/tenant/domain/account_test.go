@@ -1,12 +1,12 @@
 package domain
+
 import (
 	"reflect"
 	"testing"
 )
 
 func TestAccount_checkPassword(t *testing.T) {
-	ac := Account{
-	}
+	ac := Account{}
 	ac.genSaltAndHash(testMyPassword)
 	type fields struct {
 		Id        string
@@ -29,7 +29,7 @@ func TestAccount_checkPassword(t *testing.T) {
 		{
 			"testNormal",
 			fields{
-				Salt: ac.Salt,
+				Salt:      ac.Salt,
 				FinalHash: ac.FinalHash,
 			},
 			args{
@@ -41,7 +41,7 @@ func TestAccount_checkPassword(t *testing.T) {
 		{
 			"testWrongPassword",
 			fields{
-				Salt: ac.Salt,
+				Salt:      ac.Salt,
 				FinalHash: ac.FinalHash,
 			},
 			args{
@@ -53,7 +53,7 @@ func TestAccount_checkPassword(t *testing.T) {
 		{
 			"testEmptyPassword",
 			fields{
-				Salt: ac.Salt,
+				Salt:      ac.Salt,
 				FinalHash: ac.FinalHash,
 			},
 			args{
@@ -65,7 +65,7 @@ func TestAccount_checkPassword(t *testing.T) {
 		{
 			"testTooLongPassword",
 			fields{
-				Salt: ac.Salt,
+				Salt:      ac.Salt,
 				FinalHash: ac.FinalHash,
 			},
 			args{
@@ -74,7 +74,6 @@ func TestAccount_checkPassword(t *testing.T) {
 			false,
 			true,
 		},
-
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -122,7 +121,7 @@ func TestAccount_genSaltAndHash(t *testing.T) {
 			args{
 				"normal",
 			},
-		false,
+			false,
 		},
 		{
 			"testPasswordEmpty",
@@ -375,9 +374,7 @@ func Test_checkAuth(t *testing.T) {
 					},
 				},
 				&PermissionAggregation{
-					Roles: []Role{
-
-					},
+					Roles: []Role{},
 				},
 			},
 			false,
@@ -437,7 +434,7 @@ func Test_finalHash(t *testing.T) {
 			false},
 		{"testEmptyPassword",
 			args{
-				salt: "1111111",
+				salt:   "1111111",
 				passwd: "",
 			},
 			true},
@@ -486,8 +483,8 @@ func Test_findAccountAggregation(t *testing.T) {
 				TenantId: "1",
 			},
 			Roles: []Role{
-				{Id: "1", Name: "admin",TenantId: "1"},
-				{Id: "2", Name: "dba",TenantId: "1"},
+				{Id: "1", Name: "admin", TenantId: "1"},
+				{Id: "2", Name: "dba", TenantId: "1"},
 			},
 		}, wantErr: false},
 	}
@@ -592,7 +589,7 @@ func TestCreateAccount1(t *testing.T) {
 		wants   []func(args args, account *Account) bool
 	}{
 		{"normal", args{&Tenant{Id: "111", Status: Valid}, "name", "password"}, false, []func(args args, account *Account) bool{
-			func(args args, account *Account) bool {return true},
+			func(args args, account *Account) bool { return true },
 		}},
 		{"tenantInvalid", args{&Tenant{Id: "111", Status: Invalid}, "name", "password"}, true, []func(args args, account *Account) bool{}},
 		{"accountExisted", args{&Tenant{Id: "111", Status: Invalid}, testMyName, testMyPassword}, true, []func(args args, account *Account) bool{}},

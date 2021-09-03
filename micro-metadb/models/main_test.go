@@ -6,7 +6,6 @@ import (
 	"gorm.io/gorm"
 	"os"
 	"testing"
-
 )
 
 var MetaDB *gorm.DB

@@ -67,7 +67,7 @@ func DefaultLogRecord() *RootLogger {
 		LogLevel:      "info",
 		LogOutput:     "file",
 		LogFileRoot:   "." + common2.LogDirPrefix,
-		LogFileName:   "default",
+		LogFileName:   "default-server",
 		LogMaxSize:    512,
 		LogMaxAge:     30,
 		LogMaxBackups: 0,

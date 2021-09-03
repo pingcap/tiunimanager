@@ -29,10 +29,10 @@ func initFlow() {
 			FlowName:    "testFlow",
 			StatusAlias: "test",
 			TaskNodes: map[string]*TaskDefine{
-				"start":        {"doStart", "startDone", "fail", SyncFuncTask, testStart},
+				"start":     {"doStart", "startDone", "fail", SyncFuncTask, testStart},
 				"startDone": {"doSomething", "done", "fail", SyncFuncTask, testDoing},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":        {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done":      {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail":      {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -44,10 +44,10 @@ func initFlow() {
 			FlowName:    "testFlow2",
 			StatusAlias: "test2",
 			TaskNodes: map[string]*TaskDefine{
-				"start":        {"doStart", "startDone", "fail", CallbackTask, testStart},
+				"start":     {"doStart", "startDone", "fail", CallbackTask, testStart},
 				"startDone": {"doSomething", "done", "fail", SyncFuncTask, testDoing},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":        {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done":      {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail":      {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -59,9 +59,9 @@ func initFlow() {
 			FlowName:    "testFlow3",
 			StatusAlias: "test3",
 			TaskNodes: map[string]*TaskDefine{
-				"start":        {"doStart", "startDone", "fail", SyncFuncTask, testError},
+				"start":     {"doStart", "startDone", "fail", SyncFuncTask, testError},
 				"startDone": {"doSomething", "done", "fail", SyncFuncTask, testDoing},
-				"fail":        {"fail", "", "", SyncFuncTask, DefaultFail},
+				"fail":      {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -73,10 +73,10 @@ func initFlow() {
 			FlowName:    "testFlow4",
 			StatusAlias: "test4",
 			TaskNodes: map[string]*TaskDefine{
-				"start":        {"doStart", "startDone", "fail", PollingTasK, testStart},
+				"start":     {"doStart", "startDone", "fail", PollingTasK, testStart},
 				"startDone": {"doSomething", "done", "fail", SyncFuncTask, testDoing},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":        {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done":      {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail":      {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -99,8 +99,8 @@ func TestCreateFlowWork(t *testing.T) {
 		asserts []func(args args, a *FlowWorkAggregation) bool
 	}{
 		{"normal", args{"1111", "testFlow"}, false, []func(args args, a *FlowWorkAggregation) bool{
-			func(args args, a *FlowWorkAggregation) bool{return a.FlowWork.Id > 0},
-			func(args args, a *FlowWorkAggregation) bool{return a.Define.FlowName == "testFlow"},
+			func(args args, a *FlowWorkAggregation) bool { return a.FlowWork.Id > 0 },
+			func(args args, a *FlowWorkAggregation) bool { return a.Define.FlowName == "testFlow" },
 		}},
 		{"define not existed", args{"1111", "not existed"}, true, []func(args args, a *FlowWorkAggregation) bool{}},
 	}
@@ -229,8 +229,8 @@ func TestGetDefaultMaintainTask(t *testing.T) {
 		want *CronTaskEntity
 	}{
 		{"mock", &CronTaskEntity{
-			Name: "maintain",
-			Cron: "0 0 21 ? ? ? ",
+			Name:   "maintain",
+			Cron:   "0 0 21 ? ? ? ",
 			Status: CronStatusValid,
 		}},
 	}

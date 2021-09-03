@@ -50,7 +50,7 @@ func TestAccessible(t *testing.T) {
 func TestErrors(t *testing.T) {
 	tests := []struct {
 		name string
-		err error
+		err  error
 		want string
 	}{
 		{"testError", &UnauthorizedError{}, "Unauthorized"},
@@ -71,9 +71,9 @@ func TestLogin(t *testing.T) {
 		password string
 	}
 	tests := []struct {
-		name            string
-		args            args
-		wantErr         bool
+		name    string
+		args    args
+		wantErr bool
 	}{
 		{"test login without argument", args{}, true},
 		{"test login empty password", args{userName: testMyName, password: ""}, true},

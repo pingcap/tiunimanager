@@ -29,7 +29,7 @@ const (
 	TABLE_NAME_PARAMETERS_RECORD  = "parameters_records"
 	TABLE_NAME_BACKUP_RECORD      = "backup_records"
 	TABLE_NAME_BACKUP_STRATEGY    = "backup_strategys"
-	TABLE_NAME_TRANSPORT_RECORD    = "transport_records"
+	TABLE_NAME_TRANSPORT_RECORD   = "transport_records"
 	TABLE_NAME_RECOVER_RECORD     = "recover_records"
 )
 

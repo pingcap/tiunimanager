@@ -21,7 +21,6 @@ import (
 	versioninfo2 "github.com/pingcap-inc/tiem/library/util/versioninfo"
 	_ "runtime" // import link package
 	_ "unsafe"  // required by go:linkname
-
 )
 
 // PrintTiEMInfo prints the TiEM version information.

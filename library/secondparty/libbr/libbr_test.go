@@ -15,32 +15,32 @@ var cmdShowRestoreInfoReq CmdShowRestoreInfoReq
 
 func init() {
 	fmt.Println("init before test")
-	dbConnParam = DbConnParam {
+	dbConnParam = DbConnParam{
 		Username: "root",
-		Ip: "127.0.0.1",
-		Port: "57395",
+		Ip:       "127.0.0.1",
+		Port:     "57395",
 	}
-	storage = BrStorage {
+	storage = BrStorage{
 		StorageType: StorageTypeLocal,
-		Root: "/tmp/backup",
+		Root:        "/tmp/backup",
 	}
 
 	cmdBackUpReq = CmdBackUpReq{
-		TaskID: 0,
+		TaskID:          0,
 		DbConnParameter: dbConnParam,
-		StorageAddress: fmt.Sprintf("%s://%s", string(storage.StorageType), storage.Root),
+		StorageAddress:  fmt.Sprintf("%s://%s", string(storage.StorageType), storage.Root),
 	}
-	cmdShowBackUpInfoReq = CmdShowBackUpInfoReq {
-		TaskID: 0,
+	cmdShowBackUpInfoReq = CmdShowBackUpInfoReq{
+		TaskID:          0,
 		DbConnParameter: dbConnParam,
 	}
 	cmdRestoreReq = CmdRestoreReq{
-		TaskID: 0,
+		TaskID:          0,
 		DbConnParameter: dbConnParam,
-		StorageAddress: fmt.Sprintf("%s://%s", string(storage.StorageType), storage.Root),
+		StorageAddress:  fmt.Sprintf("%s://%s", string(storage.StorageType), storage.Root),
 	}
 	cmdShowRestoreInfoReq = CmdShowRestoreInfoReq{
-		TaskID: 0,
+		TaskID:          0,
 		DbConnParameter: dbConnParam,
 	}
 	//log = logger.GetRootLogger("config_key_test_log")

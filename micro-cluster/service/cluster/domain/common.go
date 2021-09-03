@@ -8,4 +8,3 @@ import (
 func getLogger() *log.Entry {
 	return framework.Log()
 }
-

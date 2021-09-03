@@ -19,17 +19,17 @@ func InjectionMetaDbRepo() {
 	domain.InstanceRepo = InstanceRepoAdapter{}
 }
 
-type ClusterRepoAdapter struct {}
+type ClusterRepoAdapter struct{}
 
 func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*domain.ClusterAggregation, int, error) {
-	req := &db.DBListClusterRequest {
-		ClusterName: clusterName,
-		ClusterId: clusterId,
-		ClusterTag: clusterTag,
+	req := &db.DBListClusterRequest{
+		ClusterName:   clusterName,
+		ClusterId:     clusterId,
+		ClusterTag:    clusterTag,
 		ClusterStatus: clusterStatus,
-		ClusterType: clusterType,
+		ClusterType:   clusterType,
 		PageReq: &db.DBPageDTO{
-			Page: int32(page),
+			Page:     int32(page),
 			PageSize: int32(pageSize),
 		},
 	}
@@ -39,13 +39,13 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 	if err != nil {
 		return nil, 0, err
 	}
-	if resp.Status.Code != 0  {
+	if resp.Status.Code != 0 {
 		err = errors.New(resp.Status.Message)
 		return nil, 0, err
 	}
 
 	clusters := make([]*domain.ClusterAggregation, len(resp.Clusters), len(resp.Clusters))
-	for i,v := range resp.Clusters {
+	for i, v := range resp.Clusters {
 		cluster := &domain.ClusterAggregation{}
 		cluster.Cluster = ParseFromClusterDTO(v.Cluster)
 		cluster.CurrentTiUPConfigRecord = parseConfigRecordDTO(v.TiupConfigRecord)
@@ -68,7 +68,7 @@ func (c ClusterRepoAdapter) AddCluster(cluster *domain.Cluster) error {
 		return err
 	}
 
-	if resp.Status.Code != 0  {
+	if resp.Status.Code != 0 {
 		return errors.New(resp.Status.Message)
 	} else {
 		dto := resp.Cluster
@@ -89,7 +89,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 			ClusterId:    cluster.Id,
 			Status:       int32(cluster.Status),
 			UpdateStatus: aggregation.StatusModified,
-			FlowId: int64(aggregation.CurrentWorkFlow.Id),
+			FlowId:       int64(aggregation.CurrentWorkFlow.Id),
 			UpdateFlow:   aggregation.FlowModified,
 		})
 
@@ -105,8 +105,8 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 	if aggregation.ConfigModified {
 		resp, err := client.DBClient.UpdateClusterTiupConfig(context.TODO(), &db.DBUpdateTiupConfigRequest{
 			ClusterId: aggregation.Cluster.Id,
-			Content: aggregation.CurrentTiUPConfigRecord.Content(),
-			TenantId: aggregation.Cluster.TenantId,
+			Content:   aggregation.CurrentTiUPConfigRecord.Content(),
+			TenantId:  aggregation.Cluster.TenantId,
 		})
 
 		if err != nil {
@@ -116,53 +116,53 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 		aggregation.CurrentTiUPConfigRecord = parseConfigRecordDTO(resp.TiupConfigRecord)
 	}
 	/*
-	if aggregation.LastBackupRecord != nil && aggregation.LastBackupRecord.Id == 0 {
-		record := aggregation.LastBackupRecord
-		resp, err :=  client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
-			BackupRecord: &db.DBBackupRecordDTO{
-				TenantId:    cluster.TenantId,
-				ClusterId:   record.ClusterId,
-				BackupType: string(record.BackupType),
-				BackupRange: string(record.Range),
-				OperatorId:  record.OperatorId,
-				FilePath:    record.FilePath,
-				FlowId:      int64(aggregation.CurrentWorkFlow.Id),
-			},
-		})
-		if err != nil {
-			// todo
-			return err
+		if aggregation.LastBackupRecord != nil && aggregation.LastBackupRecord.Id == 0 {
+			record := aggregation.LastBackupRecord
+			resp, err :=  client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
+				BackupRecord: &db.DBBackupRecordDTO{
+					TenantId:    cluster.TenantId,
+					ClusterId:   record.ClusterId,
+					BackupType: string(record.BackupType),
+					BackupRange: string(record.Range),
+					OperatorId:  record.OperatorId,
+					FilePath:    record.FilePath,
+					FlowId:      int64(aggregation.CurrentWorkFlow.Id),
+				},
+			})
+			if err != nil {
+				// todo
+				return err
+			}
+			record.Id = resp.BackupRecord.Id
 		}
-		record.Id = resp.BackupRecord.Id
-	}
 
-	if aggregation.LastRecoverRecord != nil && aggregation.LastRecoverRecord.Id == 0 {
-		record := aggregation.LastRecoverRecord
-		resp, err :=  client.DBClient.SaveRecoverRecord(context.TODO(), &db.DBSaveRecoverRecordRequest{
-			RecoverRecord: &db.DBRecoverRecordDTO{
-				TenantId:       cluster.TenantId,
-				ClusterId:      record.ClusterId,
-				OperatorId:     record.OperatorId,
-				BackupRecordId: record.BackupRecord.Id,
-				FlowId:         int64(aggregation.CurrentWorkFlow.Id),
-			},
-		})
-		if err != nil {
-			// todo
-			return err
-		}
-		aggregation.LastRecoverRecord.Id = uint(resp.RecoverRecord.Id)
-	}*/
+		if aggregation.LastRecoverRecord != nil && aggregation.LastRecoverRecord.Id == 0 {
+			record := aggregation.LastRecoverRecord
+			resp, err :=  client.DBClient.SaveRecoverRecord(context.TODO(), &db.DBSaveRecoverRecordRequest{
+				RecoverRecord: &db.DBRecoverRecordDTO{
+					TenantId:       cluster.TenantId,
+					ClusterId:      record.ClusterId,
+					OperatorId:     record.OperatorId,
+					BackupRecordId: record.BackupRecord.Id,
+					FlowId:         int64(aggregation.CurrentWorkFlow.Id),
+				},
+			})
+			if err != nil {
+				// todo
+				return err
+			}
+			aggregation.LastRecoverRecord.Id = uint(resp.RecoverRecord.Id)
+		}*/
 
 	if aggregation.LastParameterRecord != nil && aggregation.LastParameterRecord.Id == 0 {
 		record := aggregation.LastParameterRecord
-		resp, err :=  client.DBClient.SaveParametersRecord(context.TODO(), &db.DBSaveParametersRequest{
+		resp, err := client.DBClient.SaveParametersRecord(context.TODO(), &db.DBSaveParametersRequest{
 			Parameters: &db.DBParameterRecordDTO{
-				TenantId:       cluster.TenantId,
-				ClusterId:      record.ClusterId,
-				OperatorId:     record.OperatorId,
-				Content: 		record.Content,
-				FlowId:         int64(aggregation.CurrentWorkFlow.Id),
+				TenantId:   cluster.TenantId,
+				ClusterId:  record.ClusterId,
+				OperatorId: record.OperatorId,
+				Content:    record.Content,
+				FlowId:     int64(aggregation.CurrentWorkFlow.Id),
 			},
 		})
 		if err != nil {
@@ -186,7 +186,7 @@ func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation,
 		return
 	}
 
-	if resp.Status.Code != 0  {
+	if resp.Status.Code != 0 {
 		err = errors.New(resp.Status.Message)
 		return
 	} else {
@@ -199,7 +199,7 @@ func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation,
 	}
 }
 
-type InstanceRepoAdapter struct {}
+type InstanceRepoAdapter struct{}
 
 func (c InstanceRepoAdapter) QueryParameterJson(clusterId string) (content string, err error) {
 	resp, err := client.DBClient.GetCurrentParametersRecord(context.TODO(), &db.DBGetCurrentParametersRequest{
@@ -222,7 +222,8 @@ func (c InstanceRepoAdapter) QueryParameterJson(clusterId string) (content strin
 	}
 	return
 }
-type TaskRepoAdapter struct {}
+
+type TaskRepoAdapter struct{}
 
 func (t TaskRepoAdapter) QueryCronTask(bizId string, cronTaskType int) (cronTask *domain.CronTaskEntity, err error) {
 	cronTask = domain.GetDefaultMaintainTask()
@@ -236,9 +237,9 @@ func (t TaskRepoAdapter) PersistCronTask(cronTask *domain.CronTaskEntity) (err e
 func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
 	resp, err := client.DBClient.CreateFlow(context.TODO(), &db.DBCreateFlowRequest{
 		Flow: &db.DBFlowDTO{
-			FlowName: flowWork.FlowName,
+			FlowName:    flowWork.FlowName,
 			StatusAlias: flowWork.StatusAlias,
-			BizId: flowWork.BizId,
+			BizId:       flowWork.BizId,
 		},
 	})
 
@@ -257,12 +258,12 @@ func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
 func (t TaskRepoAdapter) AddFlowTask(task *domain.TaskEntity, flowId uint) error {
 	resp, err := client.DBClient.CreateTask(context.TODO(), &db.DBCreateTaskRequest{
 		Task: &db.DBTaskDTO{
-			TaskName: task.TaskName,
+			TaskName:       task.TaskName,
 			TaskReturnType: strconv.Itoa(int(task.TaskReturnType)),
-			BizId: task.BizId,
-			Parameters: task.Parameters,
-			ParentId: strconv.Itoa(int(flowId)),
-			ParentType: 0,
+			BizId:          task.BizId,
+			Parameters:     task.Parameters,
+			ParentId:       strconv.Itoa(int(flowId)),
+			ParentType:     0,
 		},
 	})
 
@@ -283,13 +284,13 @@ func (t TaskRepoAdapter) AddCronTask(cronTask *domain.CronTaskEntity) error {
 }
 
 func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
-	req :=  &db.DBUpdateFlowRequest{
+	req := &db.DBUpdateFlowRequest{
 		FlowWithTasks: &db.DBFlowWithTaskDTO{
 			Flow: &db.DBFlowDTO{
-				Id:     int64(flowWork.FlowWork.Id),
-				BizId:  flowWork.FlowWork.BizId,
-				Status: int32(flowWork.FlowWork.Status),
-				FlowName: flowWork.FlowWork.FlowName,
+				Id:          int64(flowWork.FlowWork.Id),
+				BizId:       flowWork.FlowWork.BizId,
+				Status:      int32(flowWork.FlowWork.Status),
+				FlowName:    flowWork.FlowWork.FlowName,
 				StatusAlias: flowWork.FlowWork.StatusAlias,
 			},
 		},
@@ -307,8 +308,8 @@ func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
 			TaskName:       v.TaskName,
 			BizId:          v.BizId,
 			Parameters:     v.Parameters,
-			ParentId: strconv.Itoa(int(flowWork.FlowWork.Id)),
-			ParentType: 0,
+			ParentId:       strconv.Itoa(int(flowWork.FlowWork.Id)),
+			ParentType:     0,
 		}
 	}
 
@@ -329,7 +330,7 @@ func ConvertClusterToDTO(cluster *domain.Cluster) (dto *db.DBClusterDTO) {
 		return
 	}
 	dto = &db.DBClusterDTO{
-		Id :         cluster.Id,
+		Id:          cluster.Id,
 		Code:        cluster.Code,
 		Name:        cluster.ClusterName,
 		TenantId:    cluster.TenantId,
@@ -360,7 +361,7 @@ func ParseFromClusterDTO(dto *db.DBClusterDTO) (cluster *domain.Cluster) {
 		return nil
 	}
 	cluster = &domain.Cluster{
-		Id: dto.Id,
+		Id:             dto.Id,
 		Code:           dto.Code,
 		TenantId:       dto.TenantId,
 		ClusterName:    dto.Name,
@@ -369,7 +370,7 @@ func ParseFromClusterDTO(dto *db.DBClusterDTO) (cluster *domain.Cluster) {
 		ClusterVersion: *knowledge.ClusterVersionFromCode(dto.VersionCode),
 		Tls:            dto.Tls,
 		Status:         domain.ClusterStatusFromValue(int(dto.Status)),
-		WorkFlowId: uint(dto.WorkFlowId),
+		WorkFlowId:     uint(dto.WorkFlowId),
 		OwnerId:        dto.OwnerId,
 		CreateTime:     time.Unix(dto.CreateTime, 0),
 		UpdateTime:     time.Unix(dto.UpdateTime, 0),
@@ -387,7 +388,7 @@ func parseConfigRecordDTO(dto *db.DBTiUPConfigDTO) (record *domain.TiUPConfigRec
 		return nil
 	}
 	record = &domain.TiUPConfigRecord{
-		Id: uint(dto.Id),
+		Id:         uint(dto.Id),
 		TenantId:   dto.TenantId,
 		ClusterId:  dto.ClusterId,
 		CreateTime: time.Unix(dto.CreateTime, 0),
@@ -403,8 +404,8 @@ func parseFlowFromDTO(dto *db.DBFlowDTO) (flow *domain.FlowWorkEntity) {
 	if dto == nil {
 		return nil
 	}
-	flow = &domain.FlowWorkEntity {
-		Id: uint(dto.Id),
+	flow = &domain.FlowWorkEntity{
+		Id:          uint(dto.Id),
 		FlowName:    dto.FlowName,
 		StatusAlias: dto.StatusAlias,
 		BizId:       dto.BizId,

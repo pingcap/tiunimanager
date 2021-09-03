@@ -380,6 +380,7 @@ func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *c
 	response.Status = SuccessResponseStatus
 	response.ClusterId = info.ClusterId
 	response.Url = info.Url
+	response.Token = info.Token
 	response.ShareCode = info.ShareCode
 
 	return nil

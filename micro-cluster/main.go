@@ -22,7 +22,7 @@ func main() {
 	)
 
 	f.PrepareService(func(service micro.Service) error {
-		return clusterPb.RegisterClusterServiceHandler(service.Server(), new(clusterService.ClusterServiceHandler))
+		return clusterPb.RegisterClusterServiceHandler(service.Server(), clusterService.NewClusterServiceHandler(f))
 	})
 
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
@@ -36,11 +36,11 @@ func main() {
 }
 
 func initLibForDev(f *framework.BaseFramework) error {
-	libtiup.MicroInit(f.GetDeployDir() + "/tiupcmd",
+	libtiup.MicroInit(f.GetDeployDir()+"/tiupcmd",
 		"tiup",
-		f.GetDataDir() + common.LogDirPrefix)
-	libbr.MicroInit(f.GetDeployDir() + "/brcmd",
-		f.GetDataDir() + common.LogDirPrefix)
+		f.GetDataDir()+common.LogDirPrefix)
+	libbr.MicroInit(f.GetDeployDir()+"/brcmd",
+		f.GetDataDir()+common.LogDirPrefix)
 	return nil
 }
 

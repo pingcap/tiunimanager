@@ -11,11 +11,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func initTestLog() {
-	//framework.InitConfigForDev(framework.MicroClusterMod)
-	//InitLogger(config2.KEY_CLUSTER_LOG)
-}
-
 func genHostInfo(hostName string) *hostPb.HostInfo {
 	host := hostPb.HostInfo{
 		Ip:       "192.168.56.11",
@@ -94,7 +89,7 @@ func Test_ImportHost_Succeed(t *testing.T) {
 	in.Host = genHostInfo("TEST_HOST1")
 	out := new(hostPb.ImportHostResponse)
 
-	if err := ImportHost(context.TODO(), in, out); err != nil {
+	if err := resourceManager.ImportHost(context.TODO(), in, out); err != nil {
 		t.Errorf("import host %s failed, err: %v\n", in.Host.HostName, err)
 	}
 
@@ -114,7 +109,7 @@ func Test_ImportHost_WithErr(t *testing.T) {
 	in.Host = genHostInfo("TEST_HOST1")
 	out := new(hostPb.ImportHostResponse)
 
-	if err := ImportHost(context.TODO(), in, out); err != nil {
+	if err := resourceManager.ImportHost(context.TODO(), in, out); err != nil {
 		st, ok := status.FromError(err)
 		if ok {
 			if st.Code() != codes.AlreadyExists || st.Message() != fake_str {
@@ -143,7 +138,7 @@ func Test_ImportHost_WithErrCode(t *testing.T) {
 	in.Host = genHostInfo("TEST_HOST1")
 	out := new(hostPb.ImportHostResponse)
 
-	if err := ImportHost(context.TODO(), in, out); err != nil {
+	if err := resourceManager.ImportHost(context.TODO(), in, out); err != nil {
 		t.Errorf("Should not Have a Error")
 	} else {
 		if out.Rs.Code != int32(codes.InvalidArgument) || out.Rs.Message != fake_str {
@@ -177,7 +172,7 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 	in.Hosts = append(in.Hosts, genHostInfo("TEST_HOST2"))
 	out := new(hostPb.ImportHostsInBatchResponse)
 
-	if err := ImportHostsInBatch(context.TODO(), in, out); err != nil {
+	if err := resourceManager.ImportHostsInBatch(context.TODO(), in, out); err != nil {
 		t.Errorf("import host in batch failed, err: %v\n", err)
 	}
 
@@ -198,7 +193,7 @@ func Test_ImportHostsInBatch_WithErr(t *testing.T) {
 	in.Hosts = append(in.Hosts, genHostInfo("TEST_HOST2"))
 	out := new(hostPb.ImportHostsInBatchResponse)
 
-	if err := ImportHostsInBatch(context.TODO(), in, out); err != nil {
+	if err := resourceManager.ImportHostsInBatch(context.TODO(), in, out); err != nil {
 		st, ok := status.FromError(err)
 		if ok {
 			if st.Code() != codes.AlreadyExists || st.Message() != fake_str {
@@ -228,7 +223,7 @@ func Test_ImportHostsInBatch_WithErrCode(t *testing.T) {
 	in.Hosts = append(in.Hosts, genHostInfo("TEST_HOST2"))
 	out := new(hostPb.ImportHostsInBatchResponse)
 
-	if err := ImportHostsInBatch(context.TODO(), in, out); err != nil {
+	if err := resourceManager.ImportHostsInBatch(context.TODO(), in, out); err != nil {
 		t.Errorf("Should not Have a Error")
 	} else {
 		if out.Rs.Code != int32(codes.InvalidArgument) || out.Rs.Message != fake_str {
@@ -257,7 +252,7 @@ func Test_RemoveHost_Succeed(t *testing.T) {
 	in.HostId = fake_hostId
 	out := new(hostPb.RemoveHostResponse)
 
-	if err := RemoveHost(context.TODO(), in, out); err != nil {
+	if err := resourceManager.RemoveHost(context.TODO(), in, out); err != nil {
 		t.Errorf("remove host %s failed, err: %v\n", in.HostId, err)
 	}
 
@@ -278,7 +273,7 @@ func Test_RemoveHost_WithErr(t *testing.T) {
 	in.HostId = fake_hostId
 	out := new(hostPb.RemoveHostResponse)
 
-	if err := RemoveHost(context.TODO(), in, out); err != nil {
+	if err := resourceManager.RemoveHost(context.TODO(), in, out); err != nil {
 		st, ok := status.FromError(err)
 		if ok {
 			if st.Code() != codes.NotFound || st.Message() != fake_str {
@@ -308,7 +303,7 @@ func Test_RemovetHost_WithErrCode(t *testing.T) {
 	in.HostId = fake_hostId
 	out := new(hostPb.RemoveHostResponse)
 
-	if err := RemoveHost(context.TODO(), in, out); err != nil {
+	if err := resourceManager.RemoveHost(context.TODO(), in, out); err != nil {
 		t.Errorf("Should not Have a Error")
 	} else {
 		if out.Rs.Code != int32(codes.InvalidArgument) || out.Rs.Message != fake_str {
@@ -338,7 +333,7 @@ func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
 	in.HostIds = append(in.HostIds, fake_hostId2)
 	out := new(hostPb.RemoveHostsInBatchResponse)
 
-	if err := RemoveHostsInBatch(context.TODO(), in, out); err != nil {
+	if err := resourceManager.RemoveHostsInBatch(context.TODO(), in, out); err != nil {
 		t.Errorf("remove host in batch failed, err: %v\n", err)
 	}
 
@@ -361,7 +356,7 @@ func Test_RemoveHostsInBatch_WithErr(t *testing.T) {
 	in.HostIds = append(in.HostIds, fake_hostId2)
 	out := new(hostPb.RemoveHostsInBatchResponse)
 
-	if err := RemoveHostsInBatch(context.TODO(), in, out); err != nil {
+	if err := resourceManager.RemoveHostsInBatch(context.TODO(), in, out); err != nil {
 		st, ok := status.FromError(err)
 		if ok {
 			if st.Code() != codes.NotFound || st.Message() != fake_str {
@@ -393,7 +388,7 @@ func Test_RemoveHostsInBatch_WithErrCode(t *testing.T) {
 	in.HostIds = append(in.HostIds, fake_hostId2)
 	out := new(hostPb.RemoveHostsInBatchResponse)
 
-	if err := RemoveHostsInBatch(context.TODO(), in, out); err != nil {
+	if err := resourceManager.RemoveHostsInBatch(context.TODO(), in, out); err != nil {
 		t.Errorf("Should not Have a Error")
 	} else {
 		if out.Rs.Code != int32(codes.InvalidArgument) || out.Rs.Message != fake_str {
@@ -423,7 +418,7 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 	in.HostId = fake_hostId
 	out := new(hostPb.CheckDetailsResponse)
 
-	if err := CheckDetails(context.TODO(), in, out); err != nil {
+	if err := resourceManager.CheckDetails(context.TODO(), in, out); err != nil {
 		t.Errorf("check host details %s failed, err: %v\n", in.HostId, err)
 	}
 
@@ -458,7 +453,7 @@ func Test_ListHosts_Succeed(t *testing.T) {
 	in.PageReq.PageSize = 2
 	out := new(hostPb.ListHostsResponse)
 
-	if err := ListHost(context.TODO(), in, out); err != nil {
+	if err := resourceManager.ListHost(context.TODO(), in, out); err != nil {
 		t.Errorf("list hosts for pagesize %d failed, err: %v\n", in.PageReq.PageSize, err)
 	}
 
@@ -498,7 +493,7 @@ func Test_GetFailureDomain_Succeed(t *testing.T) {
 	in.FailureDomainType = 2
 	out := new(hostPb.GetFailureDomainResponse)
 
-	if err := GetFailureDomain(context.TODO(), in, out); err != nil {
+	if err := resourceManager.GetFailureDomain(context.TODO(), in, out); err != nil {
 		t.Errorf("get failuredomains %d failed, err: %v\n", in.FailureDomainType, err)
 	}
 
@@ -567,7 +562,7 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 	})
 	out := new(hostPb.AllocHostResponse)
 
-	if err := AllocHosts(context.TODO(), in, out); err != nil {
+	if err := resourceManager.AllocHosts(context.TODO(), in, out); err != nil {
 		t.Errorf("alloc hosts failed, err: %v\n", err)
 	}
 

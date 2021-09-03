@@ -196,7 +196,7 @@ else
 	go tool cover -func="$(TEST_DIR)/unit_cov.out"
 endif
 
-test:
+test: add_test_file
 	GO111MODULE=off go get github.com/axw/gocov/gocov
 	GO111MODULE=off go get github.com/jstemmer/go-junit-report
 	GO111MODULE=off go get github.com/AlekSi/gocov-xml
@@ -224,3 +224,6 @@ failpoint-disable: build_failpoint_ctl
 
 lint:
 	golangci-lint run  --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml
+
+add_test_file:
+	build_helper/add_test_file.sh

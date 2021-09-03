@@ -291,6 +291,7 @@ func QueryBackup(c *gin.Context) {
 				EndTime:     time.Unix(v.EndTime, 0),
 				BackupRange: v.Range,
 				BackupType:  v.BackupType,
+				BackupMode:  v.Mode,
 				Operator: controller.Operator{
 					ManualOperator: true,
 					OperatorId:     v.Operator.Id,

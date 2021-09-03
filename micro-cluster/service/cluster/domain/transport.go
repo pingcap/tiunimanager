@@ -105,10 +105,18 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	//todo: check operator
 	operator := parseOperatorFromDTO(ope)
 	getLogger().Info(operator)
+	//todo: mock
+	/*
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil {
 		getLogger().Errorf("load cluster[%s] aggregation from metadb failed", clusterId)
 		return "", err
+	}
+	*/
+	clusterAggregation := &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: clusterId,
+		},
 	}
 
 	req := &db.DBCreateTransportRecordRequest{
@@ -157,10 +165,17 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	//todo: check operator
 	operator := parseOperatorFromDTO(ope)
 	getLogger().Info(operator)
+	/*
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil {
 		getLogger().Errorf("load cluster[%s] aggregation from metadb failed", clusterId)
 		return "", err
+	}
+	*/
+	clusterAggregation := &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: clusterId,
+		},
 	}
 
 	req := &db.DBCreateTransportRecordRequest{

@@ -60,9 +60,17 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 	getLogger().Infof("Begin do Backup, clusterId: %s, backupRange: %s, backupType: %s, filePath: %s", clusterId, backupRange, backupType, filePath)
 	defer getLogger().Infof("End do Backup")
 	operator := parseOperatorFromDTO(ope)
+	//todo: mock
+	/*
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil || clusterAggregation == nil {
 		return nil, errors.New("load cluster aggregation")
+	}
+	*/
+	clusterAggregation := &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: clusterId,
+		},
 	}
 	clusterAggregation.CurrentOperator = operator
 	cluster := clusterAggregation.Cluster

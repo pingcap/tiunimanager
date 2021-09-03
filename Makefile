@@ -197,9 +197,11 @@ else
 endif
 
 test: failpoint-enable
-	mkdir -p "$(TEST_DIR)"
-	@export log_level=error;\
-	$(GOTEST) -cover -covermode=atomic -coverprofile="$(TEST_DIR)/cov.unit.out" $(PACKAGES) \
+	GO111MODULE=off go get github.com/axw/gocov/gocov
+	GO111MODULE=off go get github.com/jstemmer/go-junit-report
+	GO111MODULE=off go get github.com/AlekSi/gocov-xml
+	go test -coverpkg=./... -coverprofile=cover.out $(PACKAGES) | go-junit-report > test.xml
+	gocov convert cover.out | gocov-xml > coverage.xml \
 	|| { $(FAILPOINT_DISABLE); exit 1; }
 	$(FAILPOINT_DISABLE)
 
@@ -222,3 +224,5 @@ failpoint-disable: build_failpoint_ctl
 # Restoring gofail failpoints...
 	@$(FAILPOINT_DISABLE)
 
+lint:
+	golangci-lint run  --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml

@@ -5,9 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/framework"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
@@ -16,6 +13,11 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/sirupsen/logrus"
 
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
@@ -37,9 +39,9 @@ const (
 	CmdDestroyRespTypeStr          CmdTypeStr = "CmdDestroyResp"
 	CmdGetAllTaskStatusReqTypeStr  CmdTypeStr = "CmdGetAllTaskStatusReq"
 	CmdGetAllTaskStatusRespTypeStr CmdTypeStr = "CmdGetAllTaskStatusResp"
-	CmdDumplingReqTypeStr		   CmdTypeStr = "CmdDumplingReq"
+	CmdDumplingReqTypeStr          CmdTypeStr = "CmdDumplingReq"
 	CmdDumplingRespTypeStr         CmdTypeStr = "CmdDumplingResp"
-	CmdLightningReqTypeStr		   CmdTypeStr = "CmdLightningReq"
+	CmdLightningReqTypeStr         CmdTypeStr = "CmdLightningReq"
 	CmdLightningRespTypeStr        CmdTypeStr = "CmdLightningResp"
 	CmdClusterDisplayReqTypeStr    CmdTypeStr = "CmdClusterDisplayReq"
 	CmdClusterDisplayRespTypeStr   CmdTypeStr = "CmdClusterDisplayResp"
@@ -48,8 +50,8 @@ const (
 type FileTypeStr string
 
 const (
-	FileSqlTypeStr	FileTypeStr = "sql"
-	FileCsvTypeStr  FileTypeStr = "csv"
+	FileSqlTypeStr FileTypeStr = "sql"
+	FileCsvTypeStr FileTypeStr = "csv"
 )
 
 type CmdReqOrResp struct {
@@ -58,10 +60,10 @@ type CmdReqOrResp struct {
 }
 
 type DbConnParam struct {
-	Username	string
-	Password	string
-	Ip			string
-	Port		string
+	Username string
+	Password string
+	Ip       string
+	Port     string
 }
 
 type CmdDeployReq struct {
@@ -104,8 +106,8 @@ type CmdStartResp struct {
 }
 
 type CmdListResp struct {
-	info      string
-	Error    error
+	info  string
+	Error error
 }
 
 type CmdDestroyResp struct {
@@ -134,9 +136,9 @@ type CmdGetAllTaskStatusResp struct {
 }
 
 type CmdDumplingReq struct {
-	TaskID   	uint64
-	TimeoutS    int
-	TiupPath    string
+	TaskID   uint64
+	TimeoutS int
+	TiupPath string
 	//DbConnParameter		DbConnParam
 	//FileType			FileTypeStr
 	//ThreadCount			uint64
@@ -144,17 +146,17 @@ type CmdDumplingReq struct {
 	//MaxFileLineCount	uint64
 	//MaxFileSizeM		uint64
 	//Sql 				string
-	Flags        []string
+	Flags []string
 }
 
 type CmdDumplingResp struct {
 }
 
 type CmdLightningReq struct {
-	TaskID   	uint64
-	TimeoutS    int
-	TiupPath    string
-	Flags       []string
+	TaskID   uint64
+	TimeoutS int
+	TiupPath string
+	Flags    []string
 }
 
 type CmdLightningResp struct {
@@ -169,7 +171,7 @@ type CmdClusterDisplayReq struct {
 
 type CmdClusterDisplayResp struct {
 	DisplayRespString string
-	Error    error
+	Error             error
 }
 
 type TaskStatusMapValue struct {
@@ -181,14 +183,14 @@ type TaskStatusMapValue struct {
 var glMgrTaskStatusCh chan TaskStatusMember
 var glMgrTaskStatusMap map[uint64]TaskStatusMapValue
 
-var logger *log.Entry
+var logger *logrus.Entry
 
 func TiupMgrInit() {
 	configPath := ""
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetLogger().ForkFile(configPath + "tiupmgr")
+	logger = framework.GetRootLogger().ForkFile(configPath + common.LogFileTiupMgr)
 
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
 	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -380,8 +382,8 @@ func newTmpFileWithContent(content []byte) (fileName string, err error) {
 
 func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, TimeoutS int) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
-	log := logger.WithField("task", taskID)
-	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
+	logInFunc := logger.WithField("task", taskID)
+	logInFunc.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	//fmt.Println("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	glMgrTaskStatusCh <- TaskStatusMember{
 		TaskID:   taskID,
@@ -404,7 +406,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 		cmd.SysProcAttr = genSysProcAttr()
 		t0 := time.Now()
 		if err := cmd.Start(); err != nil {
-			log.Error("cmd start err", err)
+			logInFunc.Error("cmd start err", err)
 			//fmt.Println("cmd start err", err)
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
@@ -413,10 +415,10 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			}
 			return
 		}
-		log.Info("cmd started")
+		logInFunc.Info("cmd started")
 		//fmt.Println("cmd started")
 		successFp := func() {
-			log.Info("task finished, time cost", time.Now().Sub(t0))
+			logInFunc.Info("task finished, time cost", time.Now().Sub(t0))
 			//fmt.Println("task finished, time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
@@ -424,11 +426,11 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 				ErrorStr: "",
 			}
 		}
-		log.Info("cmd wait")
+		logInFunc.Info("cmd wait")
 		//fmt.Println("cmd wait")
 		err := cmd.Wait()
 		if err != nil {
-			log.Error("cmd wait return with err", err)
+			logInFunc.Error("cmd wait return with err", err)
 			//fmt.Println("cmd wait return with err", err)
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
@@ -438,7 +440,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 					}
 				}
 			}
-			log.Error("task err:", err, "time cost", time.Now().Sub(t0))
+			logInFunc.Error("task err:", err, "time cost", time.Now().Sub(t0))
 			//fmt.Println("task err:", err, "time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
@@ -447,7 +449,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			}
 			return
 		} else {
-			log.Info("cmd wait return successfully")
+			logInFunc.Info("cmd wait return successfully")
 			//fmt.Println("cmd wait return successfully")
 			successFp()
 			return
@@ -493,7 +495,7 @@ func mgrStartNewTiupListTask(taskID uint64, req *CmdListReq) CmdListResp {
 	args = append(args, req.Flags...)
 	args = append(args, "--yes")
 
-	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
+	logger.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
 	//fmt.Println("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	var cmd *exec.Cmd
 	var cancelFp context.CancelFunc
@@ -510,7 +512,7 @@ func mgrStartNewTiupListTask(taskID uint64, req *CmdListReq) CmdListResp {
 	var data []byte
 	var err error
 	if data, err = cmd.Output(); err != nil {
-		log.Error("cmd start err", err)
+		logger.Error("cmd start err", err)
 		//fmt.Println("cmd start err", err)
 		ret.Error = err
 		return ret
@@ -554,7 +556,7 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 	args = append(args, req.ClusterName)
 	args = append(args, req.Flags...)
 
-	log.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
+	logger.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
 	//fmt.Println("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
 	var cmd *exec.Cmd
 	var cancelFp context.CancelFunc
@@ -571,7 +573,7 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 	var data []byte
 	var err error
 	if data, err = cmd.Output(); err != nil {
-		log.Error("cmd start err", err)
+		logger.Error("cmd start err", err)
 		//fmt.Println("cmd start err", err)
 		ret.Error = err
 		return ret
@@ -600,7 +602,7 @@ func TiupMgrRoutine() {
 			if err != nil {
 				myPanic(fmt.Sprintln("cmdStr unmarshal failed err:", err, "cmdStr:", cmdStr))
 			}
-			log.Info("rcv req", cmd)
+			logger.Info("rcv req", cmd)
 			var cmdResp CmdReqOrResp
 			switch cmd.TypeStr {
 			case CmdDeployReqTypeStr:
@@ -638,7 +640,7 @@ func TiupMgrRoutine() {
 			default:
 				myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
 			}
-			log.Info("snd rsp", cmdResp)
+			logger.Info("snd rsp", cmdResp)
 			bs := jsonMustMarshal(&cmdResp)
 			bs = append(bs, '\n')
 			//errw.Write([]byte("TiupMgrRoutine write\n"))
@@ -665,7 +667,7 @@ func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetLogger().ForkFile(configPath + "libtiup")
+	logger = framework.GetRootLogger().ForkFile(configPath + common.LogFileLibTiup)
 
 	glTiUPMgrPath = tiupMgrPath
 	glTiUPBinPath = tiupBinPath
@@ -705,7 +707,7 @@ func glMicroTaskStatusMapSyncer() {
 			}
 		}
 		glMicroTaskStatusMapMutex.Unlock()
-		log := logger.WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
+		logInFunc := logger.WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
 			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,
@@ -713,9 +715,9 @@ func glMicroTaskStatusMapSyncer() {
 				ErrStr: v.ErrorStr,
 			})
 			if rsp == nil || err != nil || rsp.ErrCode != 0 {
-				log.Error("rsp:", rsp, "err:", err, "v:", v)
+				logInFunc.Error("rsp:", rsp, "err:", err, "v:", v)
 			} else {
-				log.Debug("update succes:", v)
+				logInFunc.Debug("update succes:", v)
 			}
 		}
 	}

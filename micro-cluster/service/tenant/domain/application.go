@@ -43,7 +43,7 @@ func Login(userName, password string) (tokenString string, err error) {
 
 // Logout 退出登录
 func Logout(tokenString string) (string, error) {
-	token,err := TokenMNG.GetToken(tokenString)
+	token, err := TokenMNG.GetToken(tokenString)
 
 	if err != nil {
 		return "", &UnauthorizedError{}
@@ -52,14 +52,16 @@ func Logout(tokenString string) (string, error) {
 	} else {
 		accountName := token.AccountName
 		err := token.destroy()
-		
+
 		if err != nil {
 			return "", err
 		}
-		
+
 		return accountName, nil
 	}
 }
+
+var SkipAuth = true
 
 // Accessible 路径鉴权
 func Accessible(pathType string, path string, tokenString string) (tenantId string, accountId, accountName string, err error) {
@@ -69,7 +71,7 @@ func Accessible(pathType string, path string, tokenString string) (tenantId stri
 	}
 
 	token, err := TokenMNG.GetToken(tokenString)
-	
+
 	if err != nil {
 		return
 	}
@@ -78,14 +80,14 @@ func Accessible(pathType string, path string, tokenString string) (tenantId stri
 	accountName = token.AccountName
 	tenantId = token.TenantId
 
-	if (true) {
+	if SkipAuth {
 		// todo checkAuth switch
 		return
 	}
 
 	// 校验token有效
 	if !token.isValid() {
-		err =  &UnauthorizedError{}
+		err = &UnauthorizedError{}
 		return
 	}
 
@@ -116,7 +118,7 @@ func Accessible(pathType string, path string, tokenString string) (tenantId stri
 
 // findAccountExtendInfo 根据名称获取账号及扩展信息
 func findAccountAggregation(name string) (*AccountAggregation, error) {
-	a,err := RbacRepo.LoadAccountAggregation(name)
+	a, err := RbacRepo.LoadAccountAggregation(name)
 	if err != nil {
 		return nil, err
 	}
@@ -125,12 +127,12 @@ func findAccountAggregation(name string) (*AccountAggregation, error) {
 }
 
 func findPermissionAggregationByCode(tenantId string, code string) (*PermissionAggregation, error) {
-	a,e := RbacRepo.LoadPermissionAggregation(tenantId, code)
+	a, e := RbacRepo.LoadPermissionAggregation(tenantId, code)
 	return &a, e
 }
 
 // checkAuth 校验权限
-func checkAuth(account *AccountAggregation, permission *PermissionAggregation) (bool, error){
+func checkAuth(account *AccountAggregation, permission *PermissionAggregation) (bool, error) {
 
 	accountRoles := account.Roles
 
@@ -140,7 +142,7 @@ func checkAuth(account *AccountAggregation, permission *PermissionAggregation) (
 
 	accountRoleMap := make(map[string]bool)
 
-	for _,r := range accountRoles {
+	for _, r := range accountRoles {
 		accountRoleMap[r.Id] = true
 	}
 
@@ -150,8 +152,8 @@ func checkAuth(account *AccountAggregation, permission *PermissionAggregation) (
 		return false, nil
 	}
 
-	for _,r := range allowedRoles {
-		if _,exist := accountRoleMap[r.Id]; exist  {
+	for _, r := range allowedRoles {
+		if _, exist := accountRoleMap[r.Id]; exist {
 			return true, nil
 		}
 	}
@@ -159,13 +161,14 @@ func checkAuth(account *AccountAggregation, permission *PermissionAggregation) (
 	return false, nil
 }
 
-type UnauthorizedError struct {}
-func (*UnauthorizedError) Error() string{
+type UnauthorizedError struct{}
+
+func (*UnauthorizedError) Error() string {
 	return "Unauthorized"
 }
 
-type ForbiddenError struct {}
-func (*ForbiddenError) Error() string{
+type ForbiddenError struct{}
+
+func (*ForbiddenError) Error() string {
 	return "Access Forbidden"
 }
-

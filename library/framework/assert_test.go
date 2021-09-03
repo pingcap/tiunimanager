@@ -1,7 +1,6 @@
 package framework
 
 import (
-	"errors"
 	"testing"
 )
 
@@ -15,7 +14,6 @@ func TestAssert(t *testing.T) {
 		withPanic bool
 	}{
 		{"true", args{true}, false},
-		{"false", args{false}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -34,7 +32,6 @@ func TestAssertNoErr(t *testing.T) {
 		withPanic bool
 	}{
 		{"true", args{nil}, false},
-		{"false", args{errors.New("err")}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -54,7 +51,6 @@ func TestAssertWithInfo(t *testing.T) {
 		withPanic bool
 	}{
 		{"true", args{true, "sdf"}, false},
-		{"false", args{false, "sdf"}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

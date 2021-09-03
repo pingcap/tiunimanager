@@ -31,15 +31,6 @@ func ClusterComponentFromCode(componentType string) *ClusterComponent {
 	return SpecKnowledge.Components[componentType]
 }
 
-func SortedTypesKnowledge() []*ClusterTypeSpec {
-	slice := make([]*ClusterTypeSpec, len(SpecKnowledge.Specs), len(SpecKnowledge.Specs))
-	for _, v := range SpecKnowledge.Specs  {
-		slice = append(slice, v)
-	}
-
-	return slice
-}
-
 func ParameterFromName(name string) *Parameter {
 	return ParameterKnowledge.Names[name]
 }

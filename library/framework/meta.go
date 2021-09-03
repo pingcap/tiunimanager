@@ -1,6 +1,7 @@
 package framework
 
 import (
+	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 )
@@ -15,11 +16,15 @@ const (
 
 func (s ServiceNameEnum) ServerName() string {
 	switch s {
-	case MetaDBService: return "metadb-server"
-	case ClusterService:	return "cluster-server"
-	case ApiService:	return "openapi-server"
+	case MetaDBService:
+		return "metadb-server"
+	case ClusterService:
+		return "cluster-server"
+	case ApiService:
+		return "openapi-server"
 	default:
-		panic("unexpected")
+		log.Error("unexpected ServiceName")
+		return ""
 	}
 }
 
@@ -51,4 +56,3 @@ func splitRegistryAddress(argAddress string) []string {
 	}
 	return registryAddresses
 }
-

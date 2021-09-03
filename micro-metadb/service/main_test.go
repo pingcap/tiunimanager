@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	"gorm.io/gorm"
 	"os"
@@ -13,7 +14,7 @@ var Dao *models.DAOManager
 var handler *DBServiceHandler
 
 func TestMain(m *testing.M) {
-	testFilePath := "tmp/" + models.GenerateID()
+	testFilePath := "tmp/" + uuidutil.GenerateID()
 	os.MkdirAll(testFilePath, 0755)
 
 	defer func() {

@@ -85,7 +85,7 @@ func InferSystemTZ() string {
 			if strings.Contains(path, "posixrules") {
 				path, err1 = inferOneStepLinkForPath("/etc/localtime")
 				if err1 != nil {
-					framework.GetLogger().Error("locate timezone files failed", zap.Error(err1))
+					framework.LogWithCaller().Error("locate timezone files failed", zap.Error(err1))
 					return ""
 				}
 			}
@@ -93,9 +93,9 @@ func InferSystemTZ() string {
 			if err2 == nil {
 				return name
 			}
-			framework.GetLogger().Error("infer timezone failed", zap.Error(err2))
+			framework.LogWithCaller().Error("infer timezone failed", zap.Error(err2))
 		}
-		framework.GetLogger().Error("locate timezone files failed", zap.Error(err1))
+		framework.LogWithCaller().Error("locate timezone files failed", zap.Error(err1))
 	case tz != "" && tz != "UTC":
 		_, err := time.LoadLocation(tz)
 		if err == nil {

@@ -1,13 +1,12 @@
 package domain
+
 import (
 	"reflect"
 	"testing"
 )
 
-
 func TestAccount_checkPassword(t *testing.T) {
-	ac := Account{
-	}
+	ac := Account{}
 	ac.genSaltAndHash(testMyPassword)
 	type fields struct {
 		Id        string
@@ -30,7 +29,7 @@ func TestAccount_checkPassword(t *testing.T) {
 		{
 			"testNormal",
 			fields{
-				Salt: ac.Salt,
+				Salt:      ac.Salt,
 				FinalHash: ac.FinalHash,
 			},
 			args{
@@ -42,7 +41,7 @@ func TestAccount_checkPassword(t *testing.T) {
 		{
 			"testWrongPassword",
 			fields{
-				Salt: ac.Salt,
+				Salt:      ac.Salt,
 				FinalHash: ac.FinalHash,
 			},
 			args{
@@ -54,7 +53,7 @@ func TestAccount_checkPassword(t *testing.T) {
 		{
 			"testEmptyPassword",
 			fields{
-				Salt: ac.Salt,
+				Salt:      ac.Salt,
 				FinalHash: ac.FinalHash,
 			},
 			args{
@@ -66,7 +65,7 @@ func TestAccount_checkPassword(t *testing.T) {
 		{
 			"testTooLongPassword",
 			fields{
-				Salt: ac.Salt,
+				Salt:      ac.Salt,
 				FinalHash: ac.FinalHash,
 			},
 			args{
@@ -75,7 +74,6 @@ func TestAccount_checkPassword(t *testing.T) {
 			false,
 			true,
 		},
-
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -123,7 +121,7 @@ func TestAccount_genSaltAndHash(t *testing.T) {
 			args{
 				"normal",
 			},
-		false,
+			false,
 		},
 		{
 			"testPasswordEmpty",
@@ -376,9 +374,7 @@ func Test_checkAuth(t *testing.T) {
 					},
 				},
 				&PermissionAggregation{
-					Roles: []Role{
-
-					},
+					Roles: []Role{},
 				},
 			},
 			false,
@@ -438,7 +434,7 @@ func Test_finalHash(t *testing.T) {
 			false},
 		{"testEmptyPassword",
 			args{
-				salt: "1111111",
+				salt:   "1111111",
 				passwd: "",
 			},
 			true},
@@ -469,7 +465,6 @@ func Test_finalHash(t *testing.T) {
 }
 
 func Test_findAccountAggregation(t *testing.T) {
-	setupMockAdapter()
 	type args struct {
 		name string
 	}
@@ -488,8 +483,8 @@ func Test_findAccountAggregation(t *testing.T) {
 				TenantId: "1",
 			},
 			Roles: []Role{
-				{Id: "1", Name: "admin",TenantId: "1"},
-				{Id: "2", Name: "dba",TenantId: "1"},
+				{Id: "1", Name: "admin", TenantId: "1"},
+				{Id: "2", Name: "dba", TenantId: "1"},
 			},
 		}, wantErr: false},
 	}
@@ -535,6 +530,81 @@ func Test_findAccountByName(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("findAccountByName() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAccount_assignRoles(t *testing.T) {
+	type fields struct {
+		Id        string
+		TenantId  string
+		Name      string
+		Salt      string
+		FinalHash string
+		Status    CommonStatus
+	}
+	type args struct {
+		roles []Role
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{"normal",
+			fields{"id1", "tenantid", "name", "salt", "finalhash", Valid},
+			args{[]Role{{"tenantid", "id2", "name1", "desc", Valid}, {"tenantid", "id3", "name2", "desc", Valid}}},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			account := &Account{
+				Id:        tt.fields.Id,
+				TenantId:  tt.fields.TenantId,
+				Name:      tt.fields.Name,
+				Salt:      tt.fields.Salt,
+				FinalHash: tt.fields.FinalHash,
+				Status:    tt.fields.Status,
+			}
+			if err := account.assignRoles(tt.args.roles); (err != nil) != tt.wantErr {
+				t.Errorf("assignRoles() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestCreateAccount1(t *testing.T) {
+	type args struct {
+		tenant *Tenant
+		name   string
+		passwd string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		wants   []func(args args, account *Account) bool
+	}{
+		{"normal", args{&Tenant{Id: "111", Status: Valid}, "name", "password"}, false, []func(args args, account *Account) bool{
+			func(args args, account *Account) bool { return true },
+		}},
+		{"tenantInvalid", args{&Tenant{Id: "111", Status: Invalid}, "name", "password"}, true, []func(args args, account *Account) bool{}},
+		{"accountExisted", args{&Tenant{Id: "111", Status: Invalid}, testMyName, testMyPassword}, true, []func(args args, account *Account) bool{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := CreateAccount(tt.args.tenant, tt.args.name, tt.args.passwd)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateAccount() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, assert := range tt.wants {
+				if !assert(tt.args, got) {
+					t.Errorf("CreateAccount() assert got false, index = %v, got = %v", i, got)
+				}
 			}
 		})
 	}

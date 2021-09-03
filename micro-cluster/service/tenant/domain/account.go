@@ -39,7 +39,7 @@ func (account *Account) genSaltAndHash(passwd string) error {
 	return nil
 }
 
-func  (account *Account) checkPassword(passwd string) (bool, error) {
+func (account *Account) checkPassword(passwd string) (bool, error) {
 	if passwd == "" {
 		return false, errors.New("password cannot be empty")
 	}
@@ -51,7 +51,7 @@ func  (account *Account) checkPassword(passwd string) (bool, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(account.FinalHash), []byte(s))
 
 	if err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword  {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return false, nil
 		} else {
 			return false, err
@@ -71,22 +71,20 @@ func finalHash(salt string, passwd string) ([]byte, error) {
 	return finalSalt, err
 }
 
-func (account *Account) persist() error{
+func (account *Account) persist() error {
 	return RbacRepo.AddAccount(account)
 }
 
 // CreateAccount 创建账号
 func CreateAccount(tenant *Tenant, name, passwd string) (*Account, error) {
-	if tenant == nil || !tenant.Status.IsValid(){
+	if tenant == nil || !tenant.Status.IsValid() {
 		return nil, fmt.Errorf("tenant not valid")
 	}
 
 	existed, e := findAccountByName(name)
 
-	if e != nil {
-		return nil, e
-	} else if !(nil == existed) {
-		return nil, fmt.Errorf("account already exist")
+	if e == nil && existed != nil {
+		return existed, fmt.Errorf("account already exist")
 	}
 
 	account := Account{Name: name, Status: Valid}
@@ -99,7 +97,7 @@ func CreateAccount(tenant *Tenant, name, passwd string) (*Account, error) {
 
 // findAccountByName 根据名称获取账号
 func findAccountByName(name string) (*Account, error) {
-	a,err := RbacRepo.LoadAccountByName(name)
+	a, err := RbacRepo.LoadAccountByName(name)
 	if err != nil {
 		return nil, err
 	}
@@ -111,9 +109,8 @@ func findAccountByName(name string) (*Account, error) {
 func (account *Account) assignRoles(roles []Role) error {
 	bindings := make([]RoleBinding, len(roles), len(roles))
 
-	for index,r := range roles {
+	for index, r := range roles {
 		bindings[index] = RoleBinding{Account: account, Role: &r, Status: Valid}
 	}
 	return RbacRepo.AddRoleBindings(bindings)
 }
-

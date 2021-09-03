@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 )
 
 func setupMockAdapter() {
@@ -19,12 +20,14 @@ var me *Account
 // 没有role
 var other *Account
 
-var tokens = []*TiEMToken{{}}
+var tokens = make([]*TiEMToken, 0, 2)
 
 var roles []Role
+
 // testPath1 赋给两个role, testPath2
 const testPath1 = "testPath1"
 const testPath2 = "testPath2"
+
 var permissions []PermissionAggregation
 
 const testMyName = "testMyName"
@@ -65,11 +68,17 @@ func (m MockRepo) AddTenant(tenant *Tenant) error {
 }
 
 func (m MockRepo) LoadTenantByName(name string) (Tenant, error) {
-	panic("implement me")
+	if name == "notExisted" {
+		return Tenant{}, errors.New("tenant not existed")
+	}
+	return Tenant{Name: name}, nil
 }
 
 func (m MockRepo) LoadTenantById(id string) (Tenant, error) {
-	panic("implement me")
+	if id == "notExisted" {
+		return Tenant{}, errors.New("tenant not existed")
+	}
+	return Tenant{Id: id}, nil
 }
 
 func (m MockRepo) LoadAccountByName(name string) (Account, error) {
@@ -85,7 +94,7 @@ func (m MockRepo) LoadAccountByName(name string) (Account, error) {
 		return *other, nil
 	}
 
-	return Account{}, errors.New("noaccount")
+	return Account{}, errors.New("no account found")
 }
 
 func (m MockRepo) LoadAccountAggregation(name string) (AccountAggregation, error) {
@@ -115,11 +124,19 @@ func (m MockRepo) LoadAccountById(id string) (Account, error) {
 }
 
 func (m MockRepo) LoadRole(tenantId string, name string) (Role, error) {
-	panic("implement me")
+	if name == "" {
+		return Role{}, errors.New("name empty")
+	}
+
+	if name == "notExisted" {
+		return Role{}, errors.New("no role found")
+	}
+
+	return Role{TenantId: tenantId, Id: uuidutil.GenerateID(), Name: name, Status: Valid}, nil
 }
 
 func (m MockRepo) LoadPermissionAggregation(tenantId string, code string) (PermissionAggregation, error) {
-	for _,p := range permissions {
+	for _, p := range permissions {
 		if p.Code == code {
 			return p, nil
 		}
@@ -140,11 +157,13 @@ func (m MockRepo) LoadAllRolesByPermission(permission *Permission) ([]Role, erro
 }
 
 func (m MockRepo) AddAccount(a *Account) error {
-	panic("implement me")
+	a.Id = uuidutil.GenerateID()
+	return nil
 }
 
 func (m MockRepo) AddRole(r *Role) error {
-	panic("implement me")
+	r.Id = uuidutil.GenerateID()
+	return nil
 }
 
 func (m MockRepo) AddPermission(r *Permission) error {
@@ -152,23 +171,23 @@ func (m MockRepo) AddPermission(r *Permission) error {
 }
 
 func (m MockRepo) AddPermissionBindings(bindings []PermissionBinding) error {
-	panic("implement me")
+	return nil
 }
 
 func (m MockRepo) AddRoleBindings(bindings []RoleBinding) error {
-	panic("implement me")
+	return nil
 }
 
 func (m MockRepo) Provide(tiEMToken *TiEMToken) (string, error) {
-	tiEMToken.TokenString = tiEMToken.AccountName
+	tiEMToken.TokenString = uuidutil.GenerateID()
 
-	tokens[0] = tiEMToken
+	tokens = append(tokens, tiEMToken)
 
 	return tiEMToken.TokenString, nil
 }
 
 func (m MockRepo) Modify(tiEMToken *TiEMToken) error {
-	for index,token := range tokens {
+	for index, token := range tokens {
 		if token.TokenString == tiEMToken.TokenString {
 			tokens[index] = tiEMToken
 			return nil
@@ -179,7 +198,7 @@ func (m MockRepo) Modify(tiEMToken *TiEMToken) error {
 }
 
 func (m MockRepo) GetToken(tokenString string) (TiEMToken, error) {
-	for _,token := range tokens {
+	for _, token := range tokens {
 		if token.TokenString == tokenString {
 			return *token, nil
 		}

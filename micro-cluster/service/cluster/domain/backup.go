@@ -70,6 +70,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 	clusterAggregation := &ClusterAggregation{
 		Cluster: &Cluster{
 			Id: clusterId,
+			TenantId: "test-tenant",
 		},
 	}
 	clusterAggregation.CurrentOperator = operator

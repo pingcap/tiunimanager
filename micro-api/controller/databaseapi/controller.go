@@ -133,7 +133,6 @@ func DescribeDataTransport(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		status := respDTO.GetRespStatus()
 		data := &DataTransportRecordQueryResp{
 			TransportRecords: make([]*DataTransportInfo, len(respDTO.GetTransportInfos())),
 		}
@@ -150,7 +149,7 @@ func DescribeDataTransport(c *gin.Context) {
 
 		}
 
-		result := controller.BuildResultWithPage(int(status.Code), status.Message, controller.ParsePageFromDTO(respDTO.PageReq), data)
+		result := controller.SuccessWithPage(data, *controller.ParsePageFromDTO(respDTO.PageReq))
 
 		c.JSON(http.StatusOK, result)
 	}

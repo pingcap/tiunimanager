@@ -56,7 +56,7 @@ func TestRole_persist(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			role := &Role {
+			role := &Role{
 				TenantId: tt.fields.TenantId,
 				Id:       tt.fields.Id,
 				Name:     tt.fields.Name,
@@ -82,12 +82,12 @@ func Test_createRole(t *testing.T) {
 		wantErr bool
 		asserts []func(args args, role *Role) bool
 	}{
-		{"normal", args{&Tenant{Id: "tenantId", Status: Valid}, "notExisted","role1"}, false, []func(args args, role *Role) bool{
-			func(args args, role *Role) bool{return len(role.Id) > 0},
-			func(args args, role *Role) bool{return role.Name == "notExisted"},
+		{"normal", args{&Tenant{Id: "tenantId", Status: Valid}, "notExisted", "role1"}, false, []func(args args, role *Role) bool{
+			func(args args, role *Role) bool { return len(role.Id) > 0 },
+			func(args args, role *Role) bool { return role.Name == "notExisted" },
 		}},
-		{"existed", args{&Tenant{Id: "tenantId", Status: Valid}, "existed","role1"}, true, []func(args args, role *Role) bool{}},
-		{"empty name", args{&Tenant{Id: "tenantId", Status: Valid}, "","role1"}, true, []func(args args, role *Role) bool{}},
+		{"existed", args{&Tenant{Id: "tenantId", Status: Valid}, "existed", "role1"}, true, []func(args args, role *Role) bool{}},
+		{"empty name", args{&Tenant{Id: "tenantId", Status: Valid}, "", "role1"}, true, []func(args args, role *Role) bool{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -114,15 +114,13 @@ func Test_findRoleByName(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-		asserts   []func(args args, role *Role) bool
-
+		asserts []func(args args, role *Role) bool
 	}{
 		{"normal", args{tenant: &Tenant{Id: "111"}, name: "existed"}, false, []func(args args, role *Role) bool{
-			func(args args, role *Role) bool{return role.Name == "existed"},
-			func(args args, role *Role) bool{return len(role.Id) > 0},
+			func(args args, role *Role) bool { return role.Name == "existed" },
+			func(args args, role *Role) bool { return len(role.Id) > 0 },
 		}},
-		{"not existed", args{tenant: &Tenant{Id: "111"}, name: "notExisted"}, true, []func(args args, role *Role) bool{
-		}},
+		{"not existed", args{tenant: &Tenant{Id: "111"}, name: "notExisted"}, true, []func(args args, role *Role) bool{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

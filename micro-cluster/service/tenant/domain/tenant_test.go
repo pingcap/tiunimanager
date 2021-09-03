@@ -88,7 +88,6 @@ func TestFindTenant(t *testing.T) {
 	}{
 		{"normal", args{name: "111"}, &Tenant{Name: "111"}, false},
 		{"notExisted", args{name: "notExisted"}, &Tenant{}, true},
-
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

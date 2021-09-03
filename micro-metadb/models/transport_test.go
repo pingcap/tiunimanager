@@ -8,16 +8,16 @@ import (
 func TestDAOClusterManager_CreateTransportRecord(t *testing.T) {
 	record := &TransportRecord{
 		Record: Record{
-			ID: 11,
+			ID:       11,
 			TenantId: "tenant-cc",
 		},
-		ClusterId: "tc-123",
+		ClusterId:     "tc-123",
 		TransportType: "import",
-		FilePath: "path1",
-		TenantId: "tenant-cc",
-		Status: "Running",
-		StartTime: time.Now(),
-		EndTime: time.Now(),
+		FilePath:      "path1",
+		TenantId:      "tenant-cc",
+		Status:        "Running",
+		StartTime:     time.Now(),
+		EndTime:       time.Now(),
 	}
 	id, err := Dao.ClusterManager().CreateTransportRecord(record)
 	if err != nil {
@@ -30,16 +30,16 @@ func TestDAOClusterManager_CreateTransportRecord(t *testing.T) {
 func TestDAOClusterManager_UpdateTransportRecord(t *testing.T) {
 	record := &TransportRecord{
 		Record: Record{
-			ID: 22,
+			ID:       22,
 			TenantId: "tenant-cc",
 		},
-		ClusterId: "tc-123",
+		ClusterId:     "tc-123",
 		TransportType: "import",
-		FilePath: "path1",
-		TenantId: "tenant-cc",
-		Status: "Running",
-		StartTime: time.Now(),
-		EndTime: time.Now(),
+		FilePath:      "path1",
+		TenantId:      "tenant-cc",
+		Status:        "Running",
+		StartTime:     time.Now(),
+		EndTime:       time.Now(),
 	}
 	id, err := Dao.ClusterManager().CreateTransportRecord(record)
 	if err != nil {
@@ -58,16 +58,16 @@ func TestDAOClusterManager_UpdateTransportRecord(t *testing.T) {
 func TestDAOClusterManager_FindTransportRecordById(t *testing.T) {
 	record := &TransportRecord{
 		Record: Record{
-			ID: 33,
+			ID:       33,
 			TenantId: "tenant-cc",
 		},
-		ClusterId: "tc-123",
+		ClusterId:     "tc-123",
 		TransportType: "import",
-		FilePath: "path1",
-		TenantId: "tenant-cc",
-		Status: "Running",
-		StartTime: time.Now(),
-		EndTime: time.Now(),
+		FilePath:      "path1",
+		TenantId:      "tenant-cc",
+		Status:        "Running",
+		StartTime:     time.Now(),
+		EndTime:       time.Now(),
 	}
 	id, err := Dao.ClusterManager().CreateTransportRecord(record)
 	if err != nil {
@@ -86,16 +86,16 @@ func TestDAOClusterManager_FindTransportRecordById(t *testing.T) {
 func TestDAOClusterManager_ListTransportRecord(t *testing.T) {
 	record := &TransportRecord{
 		Record: Record{
-			ID: 44,
+			ID:       44,
 			TenantId: "tenant-cc",
 		},
-		ClusterId: "tc-123",
+		ClusterId:     "tc-123",
 		TransportType: "import",
-		FilePath: "path1",
-		TenantId: "tenant-cc",
-		Status: "Running",
-		StartTime: time.Now(),
-		EndTime: time.Now(),
+		FilePath:      "path1",
+		TenantId:      "tenant-cc",
+		Status:        "Running",
+		StartTime:     time.Now(),
+		EndTime:       time.Now(),
 	}
 	_, err := Dao.ClusterManager().CreateTransportRecord(record)
 	if err != nil {

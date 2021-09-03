@@ -4,7 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"net/http"
 	"os"
+	"strconv"
+
+	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
 	"github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3"
@@ -13,7 +17,7 @@ import (
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -28,6 +32,7 @@ type Framework interface {
 	GetRootLogger() *RootLogger
 	GetLoggerWithContext(context.Context) *log.Entry
 	GetTracer() *Tracer
+	GetEtcdClient() *EtcdClient
 
 	GetServiceMeta() *ServiceMeta
 	StartService() error
@@ -72,6 +77,7 @@ type BaseFramework struct {
 	configuration *Configuration
 	log           *RootLogger
 	trace         *Tracer
+	etcdClient    *EtcdClient
 	certificate   *CertificateInfo
 
 	serviceMeta  *ServiceMeta
@@ -122,8 +128,9 @@ func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFr
 
 	f.initOpts = opts
 	f.Init()
-
 	Current = f
+
+	f.initEtcdClient()
 	return f
 }
 
@@ -190,6 +197,9 @@ func (b *BaseFramework) initMicroService() {
 	)
 	srv.Init()
 
+	// listen prometheus metrics
+	go b.prometheusBoot()
+
 	b.microService = srv
 
 	b.serviceHandler(b.microService)
@@ -197,6 +207,10 @@ func (b *BaseFramework) initMicroService() {
 
 func (b *BaseFramework) GetDataDir() string {
 	return b.args.DataDir
+}
+
+func (b *BaseFramework) initEtcdClient() {
+	b.etcdClient = InitEtcdClient(b.GetServiceMeta().RegistryAddress)
 }
 
 func (b *BaseFramework) GetDeployDir() string {
@@ -253,6 +267,10 @@ func (b *BaseFramework) GetTracer() *Tracer {
 	return b.trace
 }
 
+func (b *BaseFramework) GetEtcdClient() *EtcdClient {
+	return b.etcdClient
+}
+
 func (b *BaseFramework) GetServiceMeta() *ServiceMeta {
 	return b.serviceMeta
 }
@@ -263,9 +281,26 @@ func (b *BaseFramework) StopService() error {
 
 func (b *BaseFramework) StartService() error {
 	if err := b.microService.Run(); err != nil {
-		b.GetRootLogger().ForkFile(common.LOG_FILE_SYSTEM).Fatalf("Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, b.serviceMeta.GetServiceAddress(), b.serviceMeta.RegistryAddress)
+		b.GetRootLogger().ForkFile(common.LogFileSystem).Fatalf("Initialization micro service failed, error %v, listening address %s, etcd registry address %s", err, b.serviceMeta.GetServiceAddress(), b.serviceMeta.RegistryAddress)
 		return errors.New("initialization micro service failed")
 	}
 
 	return nil
+}
+
+func (b *BaseFramework) prometheusBoot() {
+	http.Handle("/metrics", promhttp.Handler())
+	// 启动web服务，监听8085端口
+	go func() {
+		metricsPort := b.GetClientArgs().MetricsPort
+		if metricsPort <= 0 {
+			metricsPort = common.DefaultMetricsPort
+		}
+		Log().Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
+		err := http.ListenAndServe(common.LocalAddress+":"+strconv.Itoa(metricsPort), nil)
+		if err != nil {
+			Log().Errorf("prometheus listen and serve error: %v", err)
+			panic("ListenAndServe: " + err.Error())
+		}
+	}()
 }

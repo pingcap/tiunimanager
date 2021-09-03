@@ -23,9 +23,11 @@ var other *Account
 var tokens = make([]*TiEMToken, 0, 2)
 
 var roles []Role
+
 // testPath1 赋给两个role, testPath2
 const testPath1 = "testPath1"
 const testPath2 = "testPath2"
+
 var permissions []PermissionAggregation
 
 const testMyName = "testMyName"
@@ -134,7 +136,7 @@ func (m MockRepo) LoadRole(tenantId string, name string) (Role, error) {
 }
 
 func (m MockRepo) LoadPermissionAggregation(tenantId string, code string) (PermissionAggregation, error) {
-	for _,p := range permissions {
+	for _, p := range permissions {
 		if p.Code == code {
 			return p, nil
 		}
@@ -185,7 +187,7 @@ func (m MockRepo) Provide(tiEMToken *TiEMToken) (string, error) {
 }
 
 func (m MockRepo) Modify(tiEMToken *TiEMToken) error {
-	for index,token := range tokens {
+	for index, token := range tokens {
 		if token.TokenString == tiEMToken.TokenString {
 			tokens[index] = tiEMToken
 			return nil
@@ -196,7 +198,7 @@ func (m MockRepo) Modify(tiEMToken *TiEMToken) error {
 }
 
 func (m MockRepo) GetToken(tokenString string) (TiEMToken, error) {
-	for _,token := range tokens {
+	for _, token := range tokens {
 		if token.TokenString == tokenString {
 			return *token, nil
 		}

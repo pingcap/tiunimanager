@@ -7,21 +7,20 @@ import (
 	"time"
 )
 
-
 func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
 	record := &db.TransportRecordDTO{
-		ID: "1111",
-		ClusterId: "tc-123",
+		ID:            "1111",
+		ClusterId:     "tc-123",
 		TransportType: "import",
-		FilePath: "/tmp/tiem/datatransport/tc-123/import",
-		TenantId: "admin",
-		Status: "Running",
-		StartTime: time.Now().Unix(),
+		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
+		TenantId:      "admin",
+		Status:        "Running",
+		StartTime:     time.Now().Unix(),
 	}
 	in := &db.DBCreateTransportRecordRequest{
 		Record: record,
 	}
-	out :=  &db.DBCreateTransportRecordResponse{}
+	out := &db.DBCreateTransportRecordResponse{}
 
 	err := handler.CreateTransportRecord(context.TODO(), in, out)
 	if err != nil {
@@ -33,13 +32,13 @@ func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
 
 func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 	record := &db.TransportRecordDTO{
-		ID: "2222",
-		ClusterId: "tc-123",
+		ID:            "2222",
+		ClusterId:     "tc-123",
 		TransportType: "import",
-		FilePath: "/tmp/tiem/datatransport/tc-123/import",
-		TenantId: "admin",
-		Status: "Running",
-		StartTime: time.Now().Unix(),
+		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
+		TenantId:      "admin",
+		Status:        "Running",
+		StartTime:     time.Now().Unix(),
 	}
 	createIn := &db.DBCreateTransportRecordRequest{
 		Record: record,
@@ -58,9 +57,9 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 	updateIn := &db.DBUpdateTransportRecordRequest{
 		Record: record,
 	}
-	updateOut :=  &db.DBUpdateTransportRecordResponse{}
+	updateOut := &db.DBUpdateTransportRecordResponse{}
 	err = handler.UpdateTransportRecord(context.TODO(), updateIn, updateOut)
-	if err != nil{
+	if err != nil {
 		t.Errorf("TestDBServiceHandler_UpdateTransportRecord failed: %s", err.Error())
 		return
 	}
@@ -69,13 +68,13 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 
 func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 	record := &db.TransportRecordDTO{
-		ID: "3333",
-		ClusterId: "tc-123",
+		ID:            "3333",
+		ClusterId:     "tc-123",
 		TransportType: "import",
-		FilePath: "/tmp/tiem/datatransport/tc-123/import",
-		TenantId: "admin",
-		Status: "Running",
-		StartTime: time.Now().Unix(),
+		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
+		TenantId:      "admin",
+		Status:        "Running",
+		StartTime:     time.Now().Unix(),
 	}
 	createIn := &db.DBCreateTransportRecordRequest{
 		Record: record,
@@ -91,9 +90,9 @@ func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 	in := &db.DBFindTransportRecordByIDRequest{
 		RecordId: "3333",
 	}
-	out :=  &db.DBFindTransportRecordByIDResponse{}
+	out := &db.DBFindTransportRecordByIDResponse{}
 	err = handler.FindTrasnportRecordByID(context.TODO(), in, out)
-	if err != nil{
+	if err != nil {
 		t.Errorf("TestDBServiceHandler_FindTrasnportRecordByID failed: %s", err.Error())
 		return
 	}
@@ -102,13 +101,13 @@ func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 
 func TestDBServiceHandler_ListTrasnportRecord(t *testing.T) {
 	record := &db.TransportRecordDTO{
-		ID: "4444",
-		ClusterId: "tc-123",
+		ID:            "4444",
+		ClusterId:     "tc-123",
 		TransportType: "import",
-		FilePath: "/tmp/tiem/datatransport/tc-123/import",
-		TenantId: "admin",
-		Status: "Running",
-		StartTime: time.Now().Unix(),
+		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
+		TenantId:      "admin",
+		Status:        "Running",
+		StartTime:     time.Now().Unix(),
 	}
 	createIn := &db.DBCreateTransportRecordRequest{
 		Record: record,
@@ -124,9 +123,9 @@ func TestDBServiceHandler_ListTrasnportRecord(t *testing.T) {
 	in := &db.DBListTransportRecordRequest{
 		ClusterId: "tc-123",
 	}
-	out :=  &db.DBListTransportRecordResponse{}
+	out := &db.DBListTransportRecordResponse{}
 	err = handler.ListTrasnportRecord(context.TODO(), in, out)
-	if err != nil{
+	if err != nil {
 		t.Errorf("TestDBServiceHandler_ListTrasnportRecord failed: %s", err.Error())
 		return
 	}

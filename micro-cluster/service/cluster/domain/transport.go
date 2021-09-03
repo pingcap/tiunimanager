@@ -70,15 +70,15 @@ type DataImportConfig struct {
 }
 
 type LightningCfg struct {
-	Level 				string	`toml:"level"` //lightning log level
-	File  				string	`toml:"file"`  //lightning log path
-	CheckRequirements 	bool	`toml:"check-requirements"`	//lightning pre check
+	Level             string `toml:"level"`              //lightning log level
+	File              string `toml:"file"`               //lightning log path
+	CheckRequirements bool   `toml:"check-requirements"` //lightning pre check
 }
 
 const (
-	BackendLocal string = "local"
+	BackendLocal  string = "local"
 	BackendImport string = "importer"
-	BackendTidb string = "tidb"
+	BackendTidb   string = "tidb"
 )
 
 type TikvImporterCfg struct {
@@ -100,7 +100,7 @@ type TidbCfg struct {
 }
 
 var contextDataTransportKey = "dataTransportInfo"
-var defaultTransportDirPrefix = "/tmp/tiem/datatransport"	//todo: move to config
+var defaultTransportDirPrefix = "/tmp/tiem/datatransport" //todo: move to config
 
 func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, fileType string, filter string) (string, error) {
 	getLogger().Infof("begin exportdata clusterId: %s, userName: %s, password: %s, fileType: %s, filter: %s", clusterId, userName, password, fileType, filter)
@@ -136,8 +136,8 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 		Password:  password, //todo: need encrypt
 		FileType:  fileType,
 		RecordId:  resp.GetId(),
-		FilePath: getDataTransportDir(clusterId, TransportTypeExport),
-		Filter: filter,
+		FilePath:  getDataTransportDir(clusterId, TransportTypeExport),
+		Filter:    filter,
 	}
 
 	// Start the workflow
@@ -257,8 +257,8 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	 */
 	config := &DataImportConfig{
 		Lightning: LightningCfg{
-			Level: "info",
-			File:  fmt.Sprintf("%s/tidb-lightning.log", getDataTransportDir(cluster.Id, TransportTypeImport)),
+			Level:             "info",
+			File:              fmt.Sprintf("%s/tidb-lightning.log", getDataTransportDir(cluster.Id, TransportTypeImport)),
 			CheckRequirements: false, //todo: TBD
 		},
 		TikvImporter: TikvImporterCfg{
@@ -401,13 +401,13 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "user*"
 	//todo: admin root password
 	//todo: tiupmgr not return failed err
-	cmd :=  []string{"-u", info.UserName,
+	cmd := []string{"-u", info.UserName,
 		"-p", info.Password,
 		"-P", strconv.Itoa(tidbServer.Port),
 		"--host", tidbServer.Host,
 		"--filetype", info.FileType,
 		"-t", "8",
-		"-o", fmt.Sprintf("%s/data" ,info.FilePath),
+		"-o", fmt.Sprintf("%s/data", info.FilePath),
 		"-r", "200000",
 		"-F", "256MiB"}
 	if info.Filter != "" {
@@ -577,7 +577,7 @@ func unzipDir(zipFile string, dir string) error {
 	for _, f := range r.File {
 		func() {
 			path := dir + string(filepath.Separator) + f.Name
-			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil{
+			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 				getLogger().Errorf("make filepath failed: %s", err.Error())
 				return
 			}

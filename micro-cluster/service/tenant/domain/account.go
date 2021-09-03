@@ -39,7 +39,7 @@ func (account *Account) genSaltAndHash(passwd string) error {
 	return nil
 }
 
-func  (account *Account) checkPassword(passwd string) (bool, error) {
+func (account *Account) checkPassword(passwd string) (bool, error) {
 	if passwd == "" {
 		return false, errors.New("password cannot be empty")
 	}
@@ -51,7 +51,7 @@ func  (account *Account) checkPassword(passwd string) (bool, error) {
 	err := bcrypt.CompareHashAndPassword([]byte(account.FinalHash), []byte(s))
 
 	if err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword  {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
 			return false, nil
 		} else {
 			return false, err
@@ -71,13 +71,13 @@ func finalHash(salt string, passwd string) ([]byte, error) {
 	return finalSalt, err
 }
 
-func (account *Account) persist() error{
+func (account *Account) persist() error {
 	return RbacRepo.AddAccount(account)
 }
 
 // CreateAccount 创建账号
 func CreateAccount(tenant *Tenant, name, passwd string) (*Account, error) {
-	if tenant == nil || !tenant.Status.IsValid(){
+	if tenant == nil || !tenant.Status.IsValid() {
 		return nil, fmt.Errorf("tenant not valid")
 	}
 
@@ -109,9 +109,8 @@ func findAccountByName(name string) (*Account, error) {
 func (account *Account) assignRoles(roles []Role) error {
 	bindings := make([]RoleBinding, len(roles), len(roles))
 
-	for index,r := range roles {
+	for index, r := range roles {
 		bindings[index] = RoleBinding{Account: account, Role: &r, Status: Valid}
 	}
 	return RbacRepo.AddRoleBindings(bindings)
 }
-

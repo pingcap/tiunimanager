@@ -6,12 +6,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
-	"github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"os/exec"
@@ -19,25 +13,32 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	"github.com/sirupsen/logrus"
 )
 
 type CmdTypeStr string
 
 const (
-	CmdBackUpPreCheckReqTypeStr            	CmdTypeStr = "CmdBackUpPreCheckReq"
-	CmdBackUpPreCheckRespTypeStr           	CmdTypeStr = "CmdBackUpPreCheckResp"
-	CmdBackUpReqTypeStr             		CmdTypeStr = "CmdBackUpReq"
-	CmdBackUpRespTypeStr            		CmdTypeStr = "CmdBackUpResp"
-	CmdShowBackUpInfoReqTypeStr             CmdTypeStr = "CmdShowBackUpInfoReq"
-	CmdShowBackUpInfoRespTypeStr            CmdTypeStr = "CmdShowBackUpInfoResp"
-	CmdRestorePreCheckReqTypeStr           	CmdTypeStr = "CmdRestorePreCheckReq"
-	CmdRestorePreCheckRespTypeStr          	CmdTypeStr = "CmdRestorePreCheckResp"
-	CmdRestoreReqTypeStr  					CmdTypeStr = "CmdRestoreReq"
-	CmdRestoreRespTypeStr 					CmdTypeStr = "CmdRestoreResp"
-	CmdShowRestoreInfoReqTypeStr  			CmdTypeStr = "CmdShowRestoreInfoReq"
-	CmdShowRestoreInfoRespTypeStr 			CmdTypeStr = "CmdShowRestoreInfoResp"
-	CmdGetAllTaskStatusReqTypeStr  			CmdTypeStr = "CmdGetAllTaskStatusReq"
-	CmdGetAllTaskStatusRespTypeStr 			CmdTypeStr = "CmdGetAllTaskStatusResp"
+	CmdBackUpPreCheckReqTypeStr    CmdTypeStr = "CmdBackUpPreCheckReq"
+	CmdBackUpPreCheckRespTypeStr   CmdTypeStr = "CmdBackUpPreCheckResp"
+	CmdBackUpReqTypeStr            CmdTypeStr = "CmdBackUpReq"
+	CmdBackUpRespTypeStr           CmdTypeStr = "CmdBackUpResp"
+	CmdShowBackUpInfoReqTypeStr    CmdTypeStr = "CmdShowBackUpInfoReq"
+	CmdShowBackUpInfoRespTypeStr   CmdTypeStr = "CmdShowBackUpInfoResp"
+	CmdRestorePreCheckReqTypeStr   CmdTypeStr = "CmdRestorePreCheckReq"
+	CmdRestorePreCheckRespTypeStr  CmdTypeStr = "CmdRestorePreCheckResp"
+	CmdRestoreReqTypeStr           CmdTypeStr = "CmdRestoreReq"
+	CmdRestoreRespTypeStr          CmdTypeStr = "CmdRestoreResp"
+	CmdShowRestoreInfoReqTypeStr   CmdTypeStr = "CmdShowRestoreInfoReq"
+	CmdShowRestoreInfoRespTypeStr  CmdTypeStr = "CmdShowRestoreInfoResp"
+	CmdGetAllTaskStatusReqTypeStr  CmdTypeStr = "CmdGetAllTaskStatusReq"
+	CmdGetAllTaskStatusRespTypeStr CmdTypeStr = "CmdGetAllTaskStatusResp"
 )
 
 type CmdReqOrResp struct {
@@ -46,17 +47,17 @@ type CmdReqOrResp struct {
 }
 
 type DbConnParam struct {
-	Username	string
-	Password	string
-	Ip			string
-	Port		string
+	Username string
+	Password string
+	Ip       string
+	Port     string
 }
 
 type StorageType string
 
 const (
-	StorageTypeLocal 	StorageType = "local"
-	StorageTypeS3 		StorageType = "s3"
+	StorageTypeLocal StorageType = "local"
+	StorageTypeS3    StorageType = "s3"
 )
 
 type CmdBackUpPreCheckReq struct {
@@ -66,44 +67,44 @@ type CmdBackUpPreCheckResp struct {
 }
 
 type CmdBackUpReq struct {
-	TaskID 				uint64
-	DbName				string
-	TableName 			string
-	FilterDbTableName 	string // used in br command, pending for use in SQL command
-	StorageAddress 		string
-	DbConnParameter		DbConnParam // only for SQL command, not used in br command
-	RateLimitM      	string
-	Concurrency         string // only for SQL command, not used in br command
-	CheckSum            string // only for SQL command, not used in br command
-	LogFile				string // used in br command, pending for use in SQL command
-	TimeoutS 			int // used in br command, pending for use in SQL command
-	Flags 				[]string // used in br command, pending for use in SQL command
+	TaskID            uint64
+	DbName            string
+	TableName         string
+	FilterDbTableName string // used in br command, pending for use in SQL command
+	StorageAddress    string
+	DbConnParameter   DbConnParam // only for SQL command, not used in br command
+	RateLimitM        string
+	Concurrency       string   // only for SQL command, not used in br command
+	CheckSum          string   // only for SQL command, not used in br command
+	LogFile           string   // used in br command, pending for use in SQL command
+	TimeoutS          int      // used in br command, pending for use in SQL command
+	Flags             []string // used in br command, pending for use in SQL command
 }
 
 type CmdBrResp struct {
-	Destination		string
-	Size			uint64
-	BackupTS		uint64
-	Queue_time		string
-	Execution_Time	string
+	Destination    string
+	Size           uint64
+	BackupTS       uint64
+	Queue_time     string
+	Execution_Time string
 }
 
 type CmdShowBackUpInfoReq struct {
-	TaskID 				uint64
-	DbConnParameter		DbConnParam
+	TaskID          uint64
+	DbConnParameter DbConnParam
 }
 
 type CmdShowBackUpInfoResp struct {
-	Destination		string
-	Size			uint64
-	BackupTS		uint64
-	State			string
-	Progress		float32
-	Queue_time		string
-	Execution_Time	string
-	Finish_Time		*string
-	Connection		string
-	Error    		error
+	Destination    string
+	Size           uint64
+	BackupTS       uint64
+	State          string
+	Progress       float32
+	Queue_time     string
+	Execution_Time string
+	Finish_Time    *string
+	Connection     string
+	Error          error
 }
 
 type CmdRestorePreCheckReq struct {
@@ -113,36 +114,36 @@ type CmdRestorePreCheckResp struct {
 }
 
 type CmdRestoreReq struct {
-	TaskID 				uint64
-	DbName				string
-	TableName 			string
-	FilterDbTableName 	string // used in br command, pending for use in SQL command
-	StorageAddress 		string
-	DbConnParameter		DbConnParam // only for SQL command, not used in br command
-	RateLimitM      	string
-	Concurrency         string // only for SQL command, not used in br command
-	CheckSum            string // only for SQL command, not used in br command
-	LogFile				string // used in br command, pending for use in SQL command
-	TimeoutS 			int // used in br command, pending for use in SQL command
-	Flags 				[]string // used in br command, pending for use in SQL command
+	TaskID            uint64
+	DbName            string
+	TableName         string
+	FilterDbTableName string // used in br command, pending for use in SQL command
+	StorageAddress    string
+	DbConnParameter   DbConnParam // only for SQL command, not used in br command
+	RateLimitM        string
+	Concurrency       string   // only for SQL command, not used in br command
+	CheckSum          string   // only for SQL command, not used in br command
+	LogFile           string   // used in br command, pending for use in SQL command
+	TimeoutS          int      // used in br command, pending for use in SQL command
+	Flags             []string // used in br command, pending for use in SQL command
 }
 
 type CmdShowRestoreInfoReq struct {
-	TaskID 				uint64
-	DbConnParameter		DbConnParam
+	TaskID          uint64
+	DbConnParameter DbConnParam
 }
 
 type CmdShowRestoreInfoResp struct {
-	Destination		string
-	Size            uint64
-	BackupTS        uint64
-	State			string
-	Progress		float32
-	Queue_time		string
-	Execution_Time	string
-	Finish_Time		*string
-	Connection		string
-	Error    		error
+	Destination    string
+	Size           uint64
+	BackupTS       uint64
+	State          string
+	Progress       float32
+	Queue_time     string
+	Execution_Time string
+	Finish_Time    *string
+	Connection     string
+	Error          error
 }
 
 type TaskStatusMapValue struct {
@@ -186,7 +187,7 @@ func BrMgrInit() {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetRootLogger().ForkFile(configPath + common.LOG_FILE_BR_MGR)
+	logger = framework.GetRootLogger().ForkFile(configPath + common.LogFileBrMgr)
 
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
 	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -589,24 +590,24 @@ var glMicroTaskStatusMapMutex sync.Mutex
 var glBrMgrPath string
 
 type ClusterFacade struct {
-	TaskID 				uint64 // do not pass this value for br command
-	DbConnParameter		DbConnParam
-	DbName				string
-	TableName 			string
-	ClusterId 			string // todo: need to know the usage
-	ClusterName 		string // todo: need to know the usage
+	TaskID          uint64 // do not pass this value for br command
+	DbConnParameter DbConnParam
+	DbName          string
+	TableName       string
+	ClusterId       string // todo: need to know the usage
+	ClusterName     string // todo: need to know the usage
 	//PdAddress 			string
 }
 
 type BrStorage struct {
 	StorageType StorageType
-	Root string // "/tmp/backup"
+	Root        string // "/tmp/backup"
 }
 
 type ProgressRate struct {
-	Rate 	float32 // 0.99 means 99%
+	Rate    float32 // 0.99 means 99%
 	Checked bool
-	Error 	error
+	Error   error
 }
 
 func MicroInit(brMgrPath, mgrLogFilePath string) {
@@ -614,7 +615,7 @@ func MicroInit(brMgrPath, mgrLogFilePath string) {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetRootLogger().ForkFile(configPath + common.LOG_FILE_LIB_BR)
+	logger = framework.GetRootLogger().ForkFile(configPath + common.LogFileLibBr)
 
 	glBrMgrPath = brMgrPath
 	glMicroTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -715,15 +716,15 @@ func microCmdChanRoutine(cch chan CmdChanMember, outReader io.Reader, inWriter i
 		bs = append(bs, '\n')
 		ct, err := inWriter.Write(bs)
 		assert(ct == len(bs) && err == nil)
-		
+
 		output, err := outBufReader.ReadString('\n')
 		/*
-		for len(output) == 0 {
-			if err != nil {
-				logger.Infof("Error while reading outReader from brmgr: %v\n", err)
+			for len(output) == 0 {
+				if err != nil {
+					logger.Infof("Error while reading outReader from brmgr: %v\n", err)
+				}
+				output, err = outBufReader.ReadString('\n')
 			}
-			output, err = outBufReader.ReadString('\n')
-		}
 		*/
 		assert(len(output) > 1 && err == nil && output[len(output)-1] == '\n')
 		var resp CmdReqOrResp

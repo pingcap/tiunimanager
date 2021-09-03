@@ -275,7 +275,7 @@ func (handler *DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbP
 	return err
 }
 
-func (handler *DBServiceHandler) SaveBackupStrategy(ctx context.Context, req *dbPb.DBSaveBackupStrategyRequest, resp *dbPb.DBSaveBackupStrategyResponse)  (err error) {
+func (handler *DBServiceHandler) SaveBackupStrategy(ctx context.Context, req *dbPb.DBSaveBackupStrategyRequest, resp *dbPb.DBSaveBackupStrategyResponse) (err error) {
 	dto := req.Strategy
 	result, err := handler.Dao().ClusterManager().SaveBackupStrategy(dto)
 
@@ -289,7 +289,7 @@ func (handler *DBServiceHandler) SaveBackupStrategy(ctx context.Context, req *db
 	return nil
 }
 
-func (handler *DBServiceHandler) QueryBackupStrategy(ctx context.Context, req *dbPb.DBQueryBackupStrategyRequest, resp *dbPb.DBQueryBackupStrategyResponse)  (err error) {
+func (handler *DBServiceHandler) QueryBackupStrategy(ctx context.Context, req *dbPb.DBQueryBackupStrategyRequest, resp *dbPb.DBQueryBackupStrategyResponse) (err error) {
 
 	clusterId := req.ClusterId
 	result, err := handler.Dao().ClusterManager().QueryBackupStartegy(clusterId)
@@ -395,16 +395,16 @@ func ConvertToBackupStrategyDTO(do *models.BackupStrategy) (dto *dbPb.DBBackupSt
 		return nil
 	}
 	dto = &dbPb.DBBackupStrategyDTO{
-		Id:             int64(do.ID),
-		TenantId:       do.TenantId,
-		ClusterId:      do.ClusterId,
-		CreateTime:     do.CreatedAt.Unix(),
-		UpdateTime:  	do.UpdatedAt.Unix(),
-		BackupRange:  	do.BackupRange,
-		BackupType:  	do.BackupType,
-		BackupDate:  	do.BackupDate,
-		Period:  		do.Period,
-		FilePath:  		do.FilePath,
+		Id:          int64(do.ID),
+		TenantId:    do.TenantId,
+		ClusterId:   do.ClusterId,
+		CreateTime:  do.CreatedAt.Unix(),
+		UpdateTime:  do.UpdatedAt.Unix(),
+		BackupRange: do.BackupRange,
+		BackupType:  do.BackupType,
+		BackupDate:  do.BackupDate,
+		Period:      do.Period,
+		FilePath:    do.FilePath,
 	}
 	return
 }

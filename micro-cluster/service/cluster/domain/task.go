@@ -9,11 +9,11 @@ import (
 
 // FlowWorkEntity
 type FlowWorkEntity struct {
-	Id          uint
-	FlowName    string
-	StatusAlias string
-	BizId       string
-	Status      TaskStatus
+	Id             uint
+	FlowName       string
+	StatusAlias    string
+	BizId          string
+	Status         TaskStatus
 	ContextContent string
 }
 
@@ -49,7 +49,7 @@ func (t *TaskEntity) Processing() {
 func (t *TaskEntity) Success(result interface{}) {
 	t.Status = TaskStatusFinished
 	if result != nil {
-		r,err := json.Marshal(result)
+		r, err := json.Marshal(result)
 		if err != nil {
 			getLogger().Error(err)
 		} else {
@@ -65,14 +65,14 @@ func (t *TaskEntity) Fail(e error) {
 
 // FlowWorkAggregation
 type FlowWorkAggregation struct {
-	FlowWork 	*FlowWorkEntity
-	Define 		*FlowWorkDefine
+	FlowWork    *FlowWorkEntity
+	Define      *FlowWorkDefine
 	CurrentTask *TaskEntity
-	Tasks    	[]*TaskEntity
+	Tasks       []*TaskEntity
 	Context     FlowContext
 }
 
-func CreateFlowWork(bizId string, defineName string) (*FlowWorkAggregation, error){
+func CreateFlowWork(bizId string, defineName string) (*FlowWorkAggregation, error) {
 	define := FlowWorkDefineMap[defineName]
 	if define == nil {
 		return nil, errors.New("workflow undefined")
@@ -114,8 +114,8 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 		return
 	}
 	task := &TaskEntity{
-		Status:   TaskStatusInit,
-		TaskName: taskDefine.Name,
+		Status:         TaskStatusInit,
+		TaskName:       taskDefine.Name,
 		TaskReturnType: taskDefine.ReturnType,
 	}
 
@@ -126,7 +126,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 		if "" == taskDefine.FailEvent {
 			return
 		}
-		if e,ok := flow.Define.TaskNodes[taskDefine.FailEvent]; ok {
+		if e, ok := flow.Define.TaskNodes[taskDefine.FailEvent]; ok {
 			flow.handle(e)
 			return
 		}
@@ -164,14 +164,14 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 }
 
 type CronTaskEntity struct {
-	ID uint
-	Name string
-	BizId string
+	ID           uint
+	Name         string
+	BizId        string
 	CronTaskType CronTaskType
-	Cron string
-	Parameter string
-	NextTime time.Time
-	Status CronStatus
+	Cron         string
+	Parameter    string
+	NextTime     time.Time
+	Status       CronStatus
 }
 
 type CronTaskAggregation struct {
@@ -181,10 +181,8 @@ type CronTaskAggregation struct {
 
 func GetDefaultMaintainTask() *CronTaskEntity {
 	return &CronTaskEntity{
-		Name: "maintain",
-		Cron: "0 0 21 ? ? ? ",
+		Name:   "maintain",
+		Cron:   "0 0 21 ? ? ? ",
 		Status: CronStatusValid,
 	}
 }
-
-

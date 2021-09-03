@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/pingcap-inc/tiem/micro-api/metrics"
+
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
 	_ "github.com/pingcap-inc/tiem/docs"
@@ -51,6 +53,9 @@ func initGinEngine(d *framework.BaseFramework) error {
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.New()
 
+	monitor := metrics.NewPrometheusMonitor(common.TiEM, d.GetServiceMeta().ServiceName.ServerName())
+	g.Use(monitor.PromMiddleware())
+
 	route.Route(g)
 
 	port := d.GetServiceMeta().ServicePort
@@ -58,7 +63,7 @@ func initGinEngine(d *framework.BaseFramework) error {
 	addr := fmt.Sprintf(":%d", port)
 
 	if err := g.Run(addr); err != nil {
-		d.GetRootLogger().ForkFile(common.LOG_FILE_SYSTEM).Fatal(err)
+		d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
 	}
 
 	return nil

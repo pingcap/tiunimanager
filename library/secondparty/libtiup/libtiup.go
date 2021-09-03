@@ -5,10 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
@@ -17,6 +13,11 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/sirupsen/logrus"
 
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
@@ -38,9 +39,9 @@ const (
 	CmdDestroyRespTypeStr          CmdTypeStr = "CmdDestroyResp"
 	CmdGetAllTaskStatusReqTypeStr  CmdTypeStr = "CmdGetAllTaskStatusReq"
 	CmdGetAllTaskStatusRespTypeStr CmdTypeStr = "CmdGetAllTaskStatusResp"
-	CmdDumplingReqTypeStr		   CmdTypeStr = "CmdDumplingReq"
+	CmdDumplingReqTypeStr          CmdTypeStr = "CmdDumplingReq"
 	CmdDumplingRespTypeStr         CmdTypeStr = "CmdDumplingResp"
-	CmdLightningReqTypeStr		   CmdTypeStr = "CmdLightningReq"
+	CmdLightningReqTypeStr         CmdTypeStr = "CmdLightningReq"
 	CmdLightningRespTypeStr        CmdTypeStr = "CmdLightningResp"
 	CmdClusterDisplayReqTypeStr    CmdTypeStr = "CmdClusterDisplayReq"
 	CmdClusterDisplayRespTypeStr   CmdTypeStr = "CmdClusterDisplayResp"
@@ -49,8 +50,8 @@ const (
 type FileTypeStr string
 
 const (
-	FileSqlTypeStr	FileTypeStr = "sql"
-	FileCsvTypeStr  FileTypeStr = "csv"
+	FileSqlTypeStr FileTypeStr = "sql"
+	FileCsvTypeStr FileTypeStr = "csv"
 )
 
 type CmdReqOrResp struct {
@@ -59,10 +60,10 @@ type CmdReqOrResp struct {
 }
 
 type DbConnParam struct {
-	Username	string
-	Password	string
-	Ip			string
-	Port		string
+	Username string
+	Password string
+	Ip       string
+	Port     string
 }
 
 type CmdDeployReq struct {
@@ -105,8 +106,8 @@ type CmdStartResp struct {
 }
 
 type CmdListResp struct {
-	info      string
-	Error    error
+	info  string
+	Error error
 }
 
 type CmdDestroyResp struct {
@@ -135,9 +136,9 @@ type CmdGetAllTaskStatusResp struct {
 }
 
 type CmdDumplingReq struct {
-	TaskID   	uint64
-	TimeoutS    int
-	TiupPath    string
+	TaskID   uint64
+	TimeoutS int
+	TiupPath string
 	//DbConnParameter		DbConnParam
 	//FileType			FileTypeStr
 	//ThreadCount			uint64
@@ -145,17 +146,17 @@ type CmdDumplingReq struct {
 	//MaxFileLineCount	uint64
 	//MaxFileSizeM		uint64
 	//Sql 				string
-	Flags        []string
+	Flags []string
 }
 
 type CmdDumplingResp struct {
 }
 
 type CmdLightningReq struct {
-	TaskID   	uint64
-	TimeoutS    int
-	TiupPath    string
-	Flags       []string
+	TaskID   uint64
+	TimeoutS int
+	TiupPath string
+	Flags    []string
 }
 
 type CmdLightningResp struct {
@@ -170,7 +171,7 @@ type CmdClusterDisplayReq struct {
 
 type CmdClusterDisplayResp struct {
 	DisplayRespString string
-	Error    error
+	Error             error
 }
 
 type TaskStatusMapValue struct {
@@ -189,7 +190,7 @@ func TiupMgrInit() {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetRootLogger().ForkFile(configPath + common.LOG_FILE_TIUP_MGR)
+	logger = framework.GetRootLogger().ForkFile(configPath + common.LogFileTiupMgr)
 
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
 	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -666,7 +667,7 @@ func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetRootLogger().ForkFile(configPath + common.LOG_FILE_LIB_TIUP)
+	logger = framework.GetRootLogger().ForkFile(configPath + common.LogFileLibTiup)
 
 	glTiUPMgrPath = tiupMgrPath
 	glTiUPBinPath = tiupBinPath

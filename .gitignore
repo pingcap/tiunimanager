@@ -18,3 +18,4 @@ micro-metadb/tiem.sqlite.db
 /micro-metadb/service/tmp/
 /micro-metadb/models/tmp/
 /micro-metadb/models/testdata/
+etcd/

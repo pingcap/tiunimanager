@@ -75,9 +75,9 @@ func getDashboardUrl(clusterId string) (string, error) {
 	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterId)
 	//tiup cluster display CLUSTER_NAME --dashboard
 	resp := libtiup.MicroSrvTiupClusterDisplay(clusterId, 0, []string{"--dashboard"})
-	if resp.Error != nil {
-		getLogger().Errorf("call tiupmgr cluster display failed, %s", resp.Error.Error())
-		return "", resp.Error
+	if resp.ErrorStr != "" {
+		getLogger().Errorf("call tiupmgr cluster display failed, %s", resp.ErrorStr)
+		return "", errors.New(resp.ErrorStr)
 	}
 	getLogger().Infof("call tiupmgr success, resp: %v", resp)
 	//DisplayRespString: "Dashboard URL: http://127.0.0.1:2379/dashboard/\n"

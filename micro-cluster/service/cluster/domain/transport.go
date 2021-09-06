@@ -72,6 +72,10 @@ type LightningCfg struct {
 	CheckRequirements bool   `toml:"check-requirements"` //lightning pre check
 }
 
+/*
+	tidb-lightning backend
+	https://docs.pingcap.com/zh/tidb/stable/tidb-lightning-backends#tidb-lightning-backend
+ */
 const (
 	BackendLocal  string = "local"
 	BackendImport string = "importer"

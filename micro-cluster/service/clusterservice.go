@@ -377,7 +377,7 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 }
 
 func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *clusterPb.DescribeDashboardRequest, response *clusterPb.DescribeDashboardResponse) (err error) {
-	info, err := domain.DecribeDashboard(request.Operator, request.ClusterId)
+	info, err := domain.DescribeDashboard(request.Operator, request.ClusterId)
 	if err != nil {
 		getLogger().Error(err)
 		return err

@@ -44,7 +44,7 @@ var shareCodeUrlSuffix string = "api/user/share/code"
 var loginUrlSuffix string = "api/user/login"
 var defaultExpire int64 = 60 * 60 * 3 //3 hour expire
 
-func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
+func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
 	//todo: check operator and clusterId
 	url, err := getDashboardUrl(clusterId)
 	if err != nil {

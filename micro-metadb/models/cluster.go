@@ -112,7 +112,8 @@ func (m *DAOClusterManager) UpdateClusterStatus(clusterId string, status int8) (
 		return nil, errors.New(fmt.Sprintf("UpdateClusterStatus has invalid parameter, clusterId: %s, status: %d", clusterId, status))
 	}
 	cluster = &Cluster{}
-	return cluster, m.Db().Model(cluster).Where("id = ?", clusterId).Update("status", status).Find(cluster).Error
+	err = m.Db().Model(cluster).Where("id = ?", clusterId).First(cluster).Update("status", status).Error
+	return cluster, err
 }
 
 func (m *DAOClusterManager) UpdateClusterDemand(clusterId string, content string, tenantId string) (cluster *Cluster, demand *DemandRecord, err error) {

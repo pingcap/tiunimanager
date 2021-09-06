@@ -91,11 +91,14 @@ func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *d
 
 	if req.GetUpdateStatus() {
 		do, err = clusterManager.UpdateClusterStatus(req.ClusterId, int8(req.Status))
-		if nil == err {
-			if req.GetUpdateFlow() {
-				do, err = clusterManager.UpdateClusterFlowId(req.ClusterId, uint(req.FlowId))
-			}
+		if nil != err {
+			log.Error("UpdateClusterStatus failed, clusterId: %s flowId: %d, ,error: %v",
+				req.GetClusterId(), req.GetFlowId(), err)
+			return err
 		}
+	}
+	if req.GetUpdateFlow() {
+		do, err = clusterManager.UpdateClusterFlowId(req.ClusterId, uint(req.FlowId))
 	}
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
@@ -103,7 +106,7 @@ func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *d
 		log.Infof("UpdateClusterStatus successful, clusterId: %s flowId: %d, error: %v",
 			req.GetClusterId(), req.GetFlowId(), err)
 	} else {
-		log.Infof("UpdateClusterStatus failed, clusterId: %s flowId: %d, ,error: %v",
+		log.Error("UpdateClusterStatus failed, clusterId: %s flowId: %d, ,error: %v",
 			req.GetClusterId(), req.GetFlowId(), err)
 	}
 

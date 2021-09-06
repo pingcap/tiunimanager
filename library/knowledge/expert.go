@@ -31,15 +31,6 @@ func ClusterComponentFromCode(componentType string) *ClusterComponent {
 	return SpecKnowledge.Components[componentType]
 }
 
-func SortedTypesKnowledge() []*ClusterTypeSpec {
-	slice := make([]*ClusterTypeSpec, len(SpecKnowledge.Specs), len(SpecKnowledge.Specs))
-	for _, v := range SpecKnowledge.Specs  {
-		slice = append(slice, v)
-	}
-
-	return slice
-}
-
 func ParameterFromName(name string) *Parameter {
 	return ParameterKnowledge.Names[name]
 }
@@ -68,9 +59,9 @@ func loadSpecKnowledge () {
 	tidbV5_1_0Spec := ClusterVersionSpec{
 		ClusterVersion: tidbv5_1_0,
 		ComponentSpecs: []ClusterComponentSpec{
-			{tidbComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(4, 8)}, 1}},
-			{tikvComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(4, 8)}, 1}},
-			{pdComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(16, 32)}, 1}},
+			{tidbComponent, ComponentConstraint{true,[]int{3}, []string{GenSpecCode(4, 8)}, 1}},
+			{tikvComponent, ComponentConstraint{true,[]int{3}, []string{GenSpecCode(4, 8)}, 1}},
+			{pdComponent, ComponentConstraint{true,[]int{3}, []string{GenSpecCode(8, 16)}, 1}},
 		},
 	}
 

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"testing"
 	"time"
@@ -8,20 +9,20 @@ import (
 
 func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
 	record := &db.TransportRecordDTO{
-		ID: "uuid-abc",
-		ClusterId: "tc-123",
+		ID:            "1111",
+		ClusterId:     "tc-123",
 		TransportType: "import",
-		FilePath: "/tmp/tiem/datatransport/tc-123/import",
-		TenantId: "admin",
-		Status: "Running",
-		StartTime: time.Now().Unix(),
+		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
+		TenantId:      "admin",
+		Status:        "Running",
+		StartTime:     time.Now().Unix(),
 	}
 	in := &db.DBCreateTransportRecordRequest{
 		Record: record,
 	}
-	out :=  &db.DBCreateTransportRecordResponse{}
+	out := &db.DBCreateTransportRecordResponse{}
 
-	err := handler.CreateTransportRecord(nil, in, out)
+	err := handler.CreateTransportRecord(context.TODO(), in, out)
 	if err != nil {
 		t.Errorf("TestDBServiceHandler_CreateTransportRecord failed: %s", err.Error())
 		return
@@ -31,17 +32,34 @@ func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
 
 func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 	record := &db.TransportRecordDTO{
-		ID: "uuid-abcd",
-		ClusterId: "tc-123",
-		Status: "Finish",
-		EndTime: time.Now().Unix(),
+		ID:            "2222",
+		ClusterId:     "tc-123",
+		TransportType: "import",
+		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
+		TenantId:      "admin",
+		Status:        "Running",
+		StartTime:     time.Now().Unix(),
 	}
-	in := &db.DBUpdateTransportRecordRequest{
+	createIn := &db.DBCreateTransportRecordRequest{
 		Record: record,
 	}
-	out :=  &db.DBUpdateTransportRecordResponse{}
-	err := handler.UpdateTransportRecord(nil, in, out)
-	if err != nil{
+	createOut := &db.DBCreateTransportRecordResponse{}
+
+	err := handler.CreateTransportRecord(context.TODO(), createIn, createOut)
+	if err != nil {
+		t.Errorf("TestDBServiceHandler_UpdateTransportRecord create record failed: %s", err.Error())
+		return
+	}
+
+	record.Status = "Finish"
+	record.EndTime = time.Now().Unix()
+
+	updateIn := &db.DBUpdateTransportRecordRequest{
+		Record: record,
+	}
+	updateOut := &db.DBUpdateTransportRecordResponse{}
+	err = handler.UpdateTransportRecord(context.TODO(), updateIn, updateOut)
+	if err != nil {
 		t.Errorf("TestDBServiceHandler_UpdateTransportRecord failed: %s", err.Error())
 		return
 	}
@@ -49,12 +67,32 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 }
 
 func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
-	in := &db.DBFindTransportRecordByIDRequest{
-		RecordId: "uuid-abcd",
+	record := &db.TransportRecordDTO{
+		ID:            "3333",
+		ClusterId:     "tc-123",
+		TransportType: "import",
+		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
+		TenantId:      "admin",
+		Status:        "Running",
+		StartTime:     time.Now().Unix(),
 	}
-	out :=  &db.DBFindTransportRecordByIDResponse{}
-	err := handler.FindTrasnportRecordByID(nil, in, out)
-	if err != nil{
+	createIn := &db.DBCreateTransportRecordRequest{
+		Record: record,
+	}
+	createOut := &db.DBCreateTransportRecordResponse{}
+
+	err := handler.CreateTransportRecord(context.TODO(), createIn, createOut)
+	if err != nil {
+		t.Errorf("TestDBServiceHandler_FindTrasnportRecordByID create record failed: %s", err.Error())
+		return
+	}
+
+	in := &db.DBFindTransportRecordByIDRequest{
+		RecordId: "3333",
+	}
+	out := &db.DBFindTransportRecordByIDResponse{}
+	err = handler.FindTrasnportRecordByID(context.TODO(), in, out)
+	if err != nil {
 		t.Errorf("TestDBServiceHandler_FindTrasnportRecordByID failed: %s", err.Error())
 		return
 	}
@@ -62,12 +100,32 @@ func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 }
 
 func TestDBServiceHandler_ListTrasnportRecord(t *testing.T) {
+	record := &db.TransportRecordDTO{
+		ID:            "4444",
+		ClusterId:     "tc-123",
+		TransportType: "import",
+		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
+		TenantId:      "admin",
+		Status:        "Running",
+		StartTime:     time.Now().Unix(),
+	}
+	createIn := &db.DBCreateTransportRecordRequest{
+		Record: record,
+	}
+	createOut := &db.DBCreateTransportRecordResponse{}
+
+	err := handler.CreateTransportRecord(context.TODO(), createIn, createOut)
+	if err != nil {
+		t.Errorf("TestDBServiceHandler_ListTrasnportRecord create record failed: %s", err.Error())
+		return
+	}
+
 	in := &db.DBListTransportRecordRequest{
 		ClusterId: "tc-123",
 	}
-	out :=  &db.DBListTransportRecordResponse{}
-	err := handler.ListTrasnportRecord(nil, in, out)
-	if err != nil{
+	out := &db.DBListTransportRecordResponse{}
+	err = handler.ListTrasnportRecord(context.TODO(), in, out)
+	if err != nil {
 		t.Errorf("TestDBServiceHandler_ListTrasnportRecord failed: %s", err.Error())
 		return
 	}

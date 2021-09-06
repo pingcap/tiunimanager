@@ -772,6 +772,15 @@ var doc = `{
                     "cluster"
                 ],
                 "summary": "dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1131,6 +1140,13 @@ var doc = `{
                 ],
                 "summary": "query records of import and export",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "description": "cluster info for query records",
                         "name": "dataTransportQueryReq",
@@ -1527,7 +1543,7 @@ var doc = `{
                 "summary": "Import a host to TiEM System",
                 "parameters": [
                     {
-                        "description": "待导入的主机信息",
+                        "description": "Host information",
                         "name": "host",
                         "in": "body",
                         "required": true,
@@ -2304,6 +2320,9 @@ var doc = `{
                 "shareCode": {
                     "type": "string"
                 },
+                "token": {
+                    "type": "string"
+                },
                 "url": {
                     "type": "string"
                 }
@@ -2518,6 +2537,9 @@ var doc = `{
             "type": "object",
             "properties": {
                 "clusterId": {
+                    "type": "string"
+                },
+                "filePath": {
                     "type": "string"
                 },
                 "fileType": {
@@ -2846,6 +2868,9 @@ var doc = `{
         "instanceapi.BackupRecord": {
             "type": "object",
             "properties": {
+                "backupMode": {
+                    "type": "string"
+                },
                 "backupRange": {
                     "type": "string"
                 },

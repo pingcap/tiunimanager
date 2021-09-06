@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+
+	"github.com/pingcap-inc/tiem/micro-api/metrics"
 
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
@@ -30,6 +33,7 @@ import (
 // @name Authorization
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ApiService,
+		loadKnowledge,
 		defaultPortForLocal,
 	)
 
@@ -51,6 +55,9 @@ func initGinEngine(d *framework.BaseFramework) error {
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.New()
 
+	monitor := metrics.NewPrometheusMonitor(common.TiEM, d.GetServiceMeta().ServiceName.ServerName())
+	g.Use(monitor.PromMiddleware())
+
 	route.Route(g)
 
 	port := d.GetServiceMeta().ServicePort
@@ -58,9 +65,14 @@ func initGinEngine(d *framework.BaseFramework) error {
 	addr := fmt.Sprintf(":%d", port)
 
 	if err := g.Run(addr); err != nil {
-		d.GetLogger().Fatal(err)
+		d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
 	}
 
+	return nil
+}
+
+func loadKnowledge(f *framework.BaseFramework) error {
+	knowledge.LoadKnowledge()
 	return nil
 }
 

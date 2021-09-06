@@ -3,10 +3,11 @@ package userapi
 import (
 	"net/http"
 
-	"github.com/pingcap-inc/tiem/micro-api/security"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/framework"
 	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
@@ -33,7 +34,7 @@ func Login(c *gin.Context) {
 	}
 
 	loginReq := cluster.LoginRequest{AccountName: req.UserName, Password: req.UserPassword}
-	result, err := client.ClusterClient.Login(c, &loginReq)
+	result, err := client.ClusterClient.Login(framework.NewMicroCtxFromGinCtx(c), &loginReq)
 
 	if err == nil {
 		if result.Status.Code != 0 {
@@ -86,8 +87,8 @@ func Logout(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /user/profile [get]
 func Profile(c *gin.Context) {
-	v, _ := c.Get(security.VisitorIdentityKey)
+	v, _ := c.Get(interceptor.VisitorIdentityKey)
 
-	visitor, _ := v.(*security.VisitorIdentity)
+	visitor, _ := v.(*interceptor.VisitorIdentity)
 	c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: visitor.AccountName, TenantId: visitor.TenantId}))
 }

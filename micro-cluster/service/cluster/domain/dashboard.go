@@ -36,6 +36,7 @@ type ShareResponse struct {
 type Dashboard struct {
 	ClusterId string `json:"clusterId"`
 	Url       string `json:"url"`
+	Token 	  string `json:"token"`
 	ShareCode string `json:"shareCode"`
 }
 
@@ -63,6 +64,7 @@ func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, err
 	dashboard := &Dashboard{
 		ClusterId: clusterId,
 		Url:       url,
+		Token:     token,
 		ShareCode: shareCode,
 	}
 
@@ -152,11 +154,11 @@ func post(url string, body interface{}, headers map[string]string) (*http.Respon
 	}
 	req.Header.Set("Content-type", "application/json")
 	//add headers
-	if headers != nil {
-		for key, val := range headers {
-			req.Header.Add(key, val)
-		}
+
+	for key, val := range headers {
+		req.Header.Add(key, val)
 	}
+
 	//http client
 	client := &http.Client{}
 	getLogger().Infof("%s URL : %s \n", http.MethodPost, req.URL.String())

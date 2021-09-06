@@ -13,16 +13,17 @@ type Role struct {
 }
 
 func createRole(tenant *Tenant, name string, desc string) (*Role, error) {
-	if tenant == nil || !tenant.Status.IsValid(){
+	if tenant == nil || !tenant.Status.IsValid() {
 		return nil, fmt.Errorf("tenant not valid")
+	}
+	if name == "" {
+		return nil, fmt.Errorf("empty role name")
 	}
 
 	existed, e := findRoleByName(tenant, name)
 
-	if e != nil {
-		return nil, e
-	} else if !(nil == existed) {
-		return nil, fmt.Errorf("role already exist")
+	if e == nil && existed != nil {
+		return existed, fmt.Errorf("role already exist")
 	}
 
 	role := Role{TenantId: tenant.Id, Name: name, Desc: desc, Status: Valid}
@@ -32,13 +33,13 @@ func createRole(tenant *Tenant, name string, desc string) (*Role, error) {
 
 }
 
-func (role *Role) persist() error{
+func (role *Role) persist() error {
 	RbacRepo.AddRole(role)
 	return nil
 }
 
 func findRoleByName(tenant *Tenant, name string) (*Role, error) {
-	r,e := RbacRepo.LoadRole(tenant.Id, name)
+	r, e := RbacRepo.LoadRole(tenant.Id, name)
 	return &r, e
 }
 
@@ -57,7 +58,7 @@ type RoleBinding struct {
 func (role *Role) empower(permissions []Permission) error {
 	bindings := make([]PermissionBinding, len(permissions), len(permissions))
 
-	for index,r := range permissions {
+	for index, r := range permissions {
 		bindings[index] = PermissionBinding{Role: role, Permission: &r, Status: Valid}
 	}
 	return RbacRepo.AddPermissionBindings(bindings)

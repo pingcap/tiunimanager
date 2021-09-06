@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/google/uuid"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"reflect"
 	"testing"
 	"time"
@@ -26,7 +27,7 @@ func TestAddAccount(t *testing.T) {
 		{"normal", args{tenantId: defaultTenantId, name: "TestAddAccount", salt: "TestAddAccount_salt", finalHash: "TestAddAccount_finalHash"},
 			false,
 			[]func(args args, cluster *Account) bool{
-				func(args args, cluster *Account) bool { return len(cluster.ID) == UUID_MAX_LENGTH },
+				func(args args, cluster *Account) bool { return len(cluster.ID) == uuidutil.ENTITY_UUID_LENGTH },
 				func(args args, cluster *Account) bool { return cluster.Status == 0 },
 				func(args args, cluster *Account) bool { return args.name == cluster.Name },
 				func(args args, cluster *Account) bool { return args.tenantId == cluster.TenantId },
@@ -91,7 +92,7 @@ func TestAddPermission(t *testing.T) {
 		{"normal", args{tenantId: defaultTenantId, code: "TestAddPermission_code_normal", name: "TestAddPermission_name_normal", desc: "desc", permissionType: 1, status: 99},
 			false,
 			[]func(args args, p *Permission) bool{
-				func(args args, p *Permission) bool { return len(p.ID) == UUID_MAX_LENGTH },
+				func(args args, p *Permission) bool { return len(p.ID) == uuidutil.ENTITY_UUID_LENGTH },
 				func(args args, p *Permission) bool { return p.Code == args.code },
 				func(args args, p *Permission) bool { return p.Name == args.name },
 				func(args args, p *Permission) bool { return p.Desc == args.desc },
@@ -115,14 +116,14 @@ func TestAddPermission(t *testing.T) {
 		{"without desc", args{tenantId: defaultTenantId, code: "TestAddPermission_code_without_desc", name: "TestAddPermission_name_without_desc", permissionType: 1, status: 99},
 			false,
 			[]func(args args, p *Permission) bool{
-				func(args args, p *Permission) bool { return len(p.ID) == UUID_MAX_LENGTH },
+				func(args args, p *Permission) bool { return len(p.ID) == uuidutil.ENTITY_UUID_LENGTH },
 				func(args args, p *Permission) bool { return p.CreatedAt.Add(time.Second + 2).After(time.Now()) },
 			},
 		},
 		{"without permissionType", args{tenantId: defaultTenantId, code: "TestAddPermission_code_without_type", name: "TestAddPermission_name_without_type", desc: "desc", status: 99},
 			false,
 			[]func(args args, p *Permission) bool{
-				func(args args, p *Permission) bool { return len(p.ID) == UUID_MAX_LENGTH },
+				func(args args, p *Permission) bool { return len(p.ID) == uuidutil.ENTITY_UUID_LENGTH },
 				func(args args, p *Permission) bool { return p.Type == 0 },
 				func(args args, p *Permission) bool { return p.CreatedAt.Add(time.Second + 2).After(time.Now()) },
 			},
@@ -217,7 +218,7 @@ func TestAddRole(t *testing.T) {
 		{"normal", args{tenantId: defaultTenantId, name: "TestAddPermission_name_normal", desc: "desc", status: 99},
 			false,
 			[]func(args args, r *Role) bool{
-				func(args args, r *Role) bool { return len(r.ID) == UUID_MAX_LENGTH },
+				func(args args, r *Role) bool { return len(r.ID) == uuidutil.ENTITY_UUID_LENGTH },
 				func(args args, r *Role) bool { return r.Name == args.name },
 				func(args args, r *Role) bool { return r.Desc == args.desc },
 				func(args args, r *Role) bool { return r.Status == 0 },
@@ -235,7 +236,7 @@ func TestAddRole(t *testing.T) {
 		{"without desc", args{tenantId: defaultTenantId, name: "TestAddPermission_name_withoutDesc", status: 99},
 			false,
 			[]func(args args, p *Role) bool{
-				func(args args, p *Role) bool { return len(p.ID) == UUID_MAX_LENGTH },
+				func(args args, p *Role) bool { return len(p.ID) == uuidutil.ENTITY_UUID_LENGTH },
 				func(args args, p *Role) bool { return p.CreatedAt.Add(time.Second + 2).After(time.Now()) },
 			},
 		},

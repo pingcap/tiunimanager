@@ -21,7 +21,7 @@ import (
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/micro-api/security"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
@@ -119,9 +119,9 @@ type Operator struct {
 }
 
 func GetOperator(c *gin.Context) *Operator {
-	v, _ := c.Get(security.VisitorIdentityKey)
+	v, _ := c.Get(interceptor.VisitorIdentityKey)
 
-	visitor, _ := v.(*security.VisitorIdentity)
+	visitor, _ := v.(*interceptor.VisitorIdentity)
 
 	return &Operator{
 		ManualOperator: true,

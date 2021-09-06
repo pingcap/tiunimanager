@@ -5,11 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -18,24 +16,25 @@ type BackupRecord struct {
 	ClusterId  string
 	Range      BackupRange
 	BackupType BackupType
+	BackupMode BackupMode
 	OperatorId string
 	Size       uint64
 	FilePath   string
 	StartTime  int64
 	EndTime    int64
-	BizId 	   uint64
+	BizId      uint64
 }
 
 type RecoverRecord struct {
-	Id         uint
-	ClusterId  string
-	OperatorId string
-	BackupRecord   BackupRecord
+	Id           uint
+	ClusterId    string
+	OperatorId   string
+	BackupRecord BackupRecord
 }
 
 type BackupStrategy struct {
-	ValidityPeriod  	int64
-	CronString 			string
+	ValidityPeriod int64
+	CronString     string
 }
 
 var defaultPathPrefix string = "/tmp/tiem/backup"
@@ -58,34 +57,71 @@ func BackupPreCheck(request *proto.CreateBackupRequest) error {
 	return nil
 }
 
-func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, filePath string) (*ClusterAggregation, error){
+func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, filePath string) (*ClusterAggregation, error) {
+	getLogger().Infof("Begin do Backup, clusterId: %s, backupRange: %s, backupType: %s, filePath: %s", clusterId, backupRange, backupType, filePath)
+	defer getLogger().Infof("End do Backup")
 	operator := parseOperatorFromDTO(ope)
+	//todo: mock
+	/*
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil || clusterAggregation == nil {
 		return nil, errors.New("load cluster aggregation")
 	}
-	clusterAggregation.CurrentOperator = operator
-
-	record := &BackupRecord {
-		ClusterId: clusterId,
-		Range: BackupRange(backupRange),
-		BackupType: BackupType(backupType),
-		OperatorId: operator.Id,
-		FilePath: getBackupPath(filePath, clusterId, time.Now().Unix(), backupRange),
-		StartTime: time.Now().Unix(),
+	*/
+	clusterAggregation := &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: clusterId,
+			TenantId: "test-tenant",
+		},
 	}
-	clusterAggregation.LastBackupRecord = record
+	clusterAggregation.CurrentOperator = operator
+	cluster := clusterAggregation.Cluster
 
 	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster)
+
+	//todo: only support FULL Physics backup now
+	record := &BackupRecord{
+		ClusterId:  clusterId,
+		Range:      BackupRangeFull,
+		BackupType: BackupTypePhysics,
+		BackupMode: BackupModeManual,
+		OperatorId: operator.Id,
+		FilePath:   getBackupPath(filePath, clusterId, time.Now().Unix(), string(BackupRangeFull)),
+		StartTime:  time.Now().Unix(),
+	}
+	resp, err := client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
+		BackupRecord: &db.DBBackupRecordDTO{
+			TenantId:    cluster.TenantId,
+			ClusterId:   record.ClusterId,
+			BackupType:  string(record.BackupType),
+			BackupRange: string(record.Range),
+			BackupMode:  string(record.BackupMode),
+			OperatorId:  record.OperatorId,
+			FilePath:    record.FilePath,
+			FlowId:      int64(flow.FlowWork.Id),
+			StartTime:   time.Now().Unix(),
+			EndTime:     time.Now().Unix(),
+		},
+	})
+	if err != nil {
+		getLogger().Errorf("save backup record failed, %s", err.Error())
+		return nil, errors.New("save backup record failed")
+	}
+	record.Id = resp.GetBackupRecord().GetId()
+	clusterAggregation.LastBackupRecord = record
+
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	ClusterRepo.Persist(clusterAggregation)
+	//todo: mock
+	//ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }
 
 func DeleteBackup(ope *proto.OperatorDTO, clusterId string, bakId int64) error {
+	getLogger().Infof("Begin do DeleteBackup, clusterId: %s, bakId: %d", clusterId, bakId)
+	defer getLogger().Infof("End do DeleteBackup")
 	//todo: parma pre check
 	resp, err := client.DBClient.QueryBackupRecords(context.TODO(), &db.DBQueryBackupRecordRequest{ClusterId: clusterId, RecordId: bakId})
 	if err != nil {
@@ -102,7 +138,7 @@ func DeleteBackup(ope *proto.OperatorDTO, clusterId string, bakId int64) error {
 	}
 
 	_, err = client.DBClient.DeleteBackupRecord(context.TODO(), &db.DBDeleteBackupRecordRequest{Id: bakId})
-	if err != nil{
+	if err != nil {
 		getLogger().Errorf("delete metadb backup record failed, %s", err.Error())
 		return fmt.Errorf("delete metadb backup record failed, %s", err.Error())
 	}
@@ -110,7 +146,7 @@ func DeleteBackup(ope *proto.OperatorDTO, clusterId string, bakId int64) error {
 	return nil
 }
 
-func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*ClusterAggregation, error){
+func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
@@ -119,8 +155,8 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 	}
 	clusterAggregation.CurrentOperator = operator
 	clusterAggregation.LastRecoverRecord = &RecoverRecord{
-		ClusterId: clusterId,
-		OperatorId: operator.Id,
+		ClusterId:    clusterId,
+		OperatorId:   operator.Id,
 		BackupRecord: BackupRecord{Id: backupRecordId},
 	}
 
@@ -155,7 +191,8 @@ func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupR
 func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin backupCluster")
 	defer getLogger().Info("end backupCluster")
-
+	//todo mock
+	/*
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	record := clusterAggregation.LastBackupRecord
@@ -166,18 +203,18 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 		DbConnParameter: libbr.DbConnParam{
 			Username: "root", //todo: replace admin account
 			Password: "",
-			Ip:	tidbServer.Host,
-			Port: strconv.Itoa(tidbServer.Port),
+			Ip:       tidbServer.Host,
+			Port:     strconv.Itoa(tidbServer.Port),
 		},
-		DbName: "",	//todo: support db table backup
-		TableName: "",
-		ClusterId: cluster.Id,
+		DbName:      "", //todo: support db table backup
+		TableName:   "",
+		ClusterId:   cluster.Id,
 		ClusterName: cluster.ClusterName,
-		TaskID: uint64(task.Id),
+		TaskID:      uint64(task.Id),
 	}
 	storage := libbr.BrStorage{
 		StorageType: libbr.StorageTypeLocal,
-		Root: record.FilePath,
+		Root:        record.FilePath,
 	}
 
 	getLogger().Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
@@ -187,6 +224,7 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 	record.BizId = uint64(task.Id)
+	*/
 	return true
 }
 
@@ -195,30 +233,33 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	defer getLogger().Info("end updateBackupRecord")
 	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
 	record := clusterAggregation.LastBackupRecord
-	/*
-	//todo: update size
-	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
-	cluster := clusterAggregation.Cluster
-	tidbServer := configModel.TiDBServers[0]
 
-	clusterFacade := libbr.ClusterFacade{
-		DbConnParameter: libbr.DbConnParam{
-			Username: "root", //todo: replace admin account
-			Password: "",
-			Ip:	tidbServer.Host,
-			Port: strconv.Itoa(tidbServer.Port),
-		},
-		ClusterId: cluster.Id,
-		ClusterName: cluster.ClusterName,
-		TaskID: record.BizId,
-	}
-	resp := libbr.ShowBackUpInfo(clusterFacade, uint64(task.Id))
-	record.Size = resp.Size
+	//todo: update size
+	/*
+		configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+		cluster := clusterAggregation.Cluster
+		tidbServer := configModel.TiDBServers[0]
+
+		clusterFacade := libbr.ClusterFacade{
+			DbConnParameter: libbr.DbConnParam{
+				Username: "root", //todo: replace admin account
+				Password: "",
+				Ip:	tidbServer.Host,
+				Port: strconv.Itoa(tidbServer.Port),
+			},
+			ClusterId: cluster.Id,
+			ClusterName: cluster.ClusterName,
+			TaskID: record.BizId,
+		}
+		getLogger().Infof("begin call libbr api ShowBackUpInfo, %v", clusterFacade)
+		resp := libbr.ShowBackUpInfo(clusterFacade)
+		record.Size = resp.Size
+		getLogger().Infof("call libbr api ShowBackUpInfo resp, %v", resp)
 	*/
-	_, err :=  client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
+	_, err := client.DBClient.UpdateBackupRecord(context.TODO(), &db.DBUpdateBackupRecordRequest{
 		BackupRecord: &db.DBBackupRecordDTO{
-			Id: record.Id,
-			Size: record.Size,
+			Id:      record.Id,
+			Size:    record.Size,
 			EndTime: time.Now().Unix(),
 		},
 	})
@@ -228,6 +269,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	}
 	return true
 }
+
 /*
 func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	getLogger().Info("begin recoverFromSrcCluster")

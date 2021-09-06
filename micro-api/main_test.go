@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 	//
 	//go func() {
 	//	if err := g.Run(addr); err != nil {
-	//		f.GetLogger().Fatal(err)
+	//		f.GetRootLogger().Fatal(err)
 	//	}
 	//}()
 

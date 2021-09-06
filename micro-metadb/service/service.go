@@ -12,10 +12,16 @@ type DBServiceHandler struct {
 func NewDBServiceHandler(dataDir string, fw *framework.BaseFramework) *DBServiceHandler {
 	handler := new(DBServiceHandler)
 	dao := new(models.DAOManager)
-	dao.InitDB(dataDir)
-	dao.InitTables()
-	dao.InitData()
 	handler.SetDao(dao)
+
+	dao.InitDB(dataDir)
+	if dao.Db().Migrator().HasTable(&models.Tenant{}) {
+		framework.LogWithCaller().Warn("data existed, skip initialization")
+		return handler
+	} else {
+		dao.InitTables()
+		dao.InitData()
+	}
 	return handler
 }
 

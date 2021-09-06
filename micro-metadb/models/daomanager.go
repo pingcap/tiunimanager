@@ -15,10 +15,11 @@ import (
 )
 
 type DAOManager struct {
-	db             *gorm.DB
-	tables         map[string]interface{}
-	clusterManager *DAOClusterManager
-	accountManager *DAOAccountManager
+	db              *gorm.DB
+	tables          map[string]interface{}
+	clusterManager  *DAOClusterManager
+	accountManager  *DAOAccountManager
+	resourceManager *DAOResourceManager
 }
 
 func NewDAOManager(d *gorm.DB) *DAOManager {
@@ -42,6 +43,14 @@ func (dao *DAOManager) SetClusterManager(clusterManager *DAOClusterManager) {
 	dao.clusterManager = clusterManager
 }
 
+func (dao *DAOManager) ResourceManager() *DAOResourceManager {
+	return dao.resourceManager
+}
+
+func (dao *DAOManager) SetResourceManager(resourceManager *DAOResourceManager) {
+	dao.resourceManager = resourceManager
+}
+
 func (dao *DAOManager) Db() *gorm.DB {
 	return dao.db
 }
@@ -57,8 +66,9 @@ func (dao *DAOManager) Tables() map[string]interface{} {
 func (dao *DAOManager) InitDB(dataDir string) error {
 	var err error
 	dbFile := dataDir + common2.DBDirPrefix + common2.SqliteFileName
-	logins := framework.GetLogger().Record("database file path", dbFile)
+	logins := framework.LogWithCaller().WithField("database file path", dbFile)
 	dao.db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+
 	if err != nil || dao.db.Error != nil {
 		logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, dao.db.Error)
 	} else {
@@ -67,16 +77,13 @@ func (dao *DAOManager) InitDB(dataDir string) error {
 
 	dao.SetAccountManager(NewDAOAccountManager(dao.Db()))
 	dao.SetClusterManager(NewDAOClusterManager(dao.Db()))
+	dao.SetResourceManager(NewDAOResourceManager(dao.Db()))
 
-	dao.SetClusterManager(new(DAOClusterManager))
-	dao.ClusterManager().SetDb(dao.Db())
-	dao.SetAccountManager(new(DAOAccountManager))
-	dao.AccountManager().SetDb(dao.Db())
 	return err
 }
 
 func (dao *DAOManager) InitTables() error {
-	log := framework.GetLogger()
+	log := framework.LogWithCaller()
 
 	log.Info("start create TiEM system tables.")
 
@@ -107,23 +114,22 @@ func (dao *DAOManager) InitTables() error {
 }
 
 func (dao *DAOManager) InitData() error {
-
-	err := dao.InitSystemDefaultData()
+	err := dao.initSystemDefaultData()
 	if nil != err {
-		framework.GetLogger().Errorf("initialize TiEM system data failed, error: %v", err)
+		framework.LogWithCaller().Errorf("initialize TiEM system data failed, error: %v", err)
 	}
 
-	framework.GetLogger().Infof(" initialization system default data successful")
+	framework.LogWithCaller().Infof(" initialization system default data successful")
 
-	err = dao.InitResourceDataForDev()
+	err = dao.initResourceDataForDev()
 	if nil != err {
-		framework.GetLogger().Errorf("initialize TiEM system test resource failed, error: %v", err)
+		framework.LogWithCaller().Errorf("initialize TiEM system test resource failed, error: %v", err)
 	}
 	return err
 }
 
 func (dao DAOManager) AddTable(tableName string, tableModel interface{}) error {
-	log := framework.GetLogger()
+	log := framework.LogWithCaller()
 	dao.tables[tableName] = tableModel
 	if !dao.db.Migrator().HasTable(dao.tables[tableName]) {
 		er := dao.db.Migrator().CreateTable(dao.tables[tableName])
@@ -138,9 +144,9 @@ func (dao DAOManager) AddTable(tableName string, tableModel interface{}) error {
 /*
 Initial TiEM system default system account and tenant information
 */
-func (dao *DAOManager) InitSystemDefaultData() error {
+func (dao *DAOManager) initSystemDefaultData() error {
 	accountManager := dao.AccountManager()
-	log := framework.GetLogger()
+	log := framework.LogWithCaller()
 	rt, err := accountManager.AddTenant("TiEM system administration", 1, 0)
 	framework.AssertNoErr(err)
 	role1, err := accountManager.AddRole(rt.ID, "administrators", "administrators", 0)
@@ -159,10 +165,14 @@ func (dao *DAOManager) InitSystemDefaultData() error {
 		{Entity: Entity{TenantId: rt.ID, Status: 0}, RoleId: role1.ID, AccountId: userId1},
 		{Entity: Entity{TenantId: rt.ID, Status: 0}, RoleId: role2.ID, AccountId: userId2},
 	})
+	framework.AssertNoErr(err)
 
 	permission1, err := accountManager.AddPermission(rt.ID, "/api/v1/host/query", " Query hosts", "Query hosts", 2, 0)
+	framework.AssertNoErr(err)
 	permission2, err := accountManager.AddPermission(rt.ID, "/api/v1/instance/query", "Query cluster", "Query cluster", 2, 0)
+	framework.AssertNoErr(err)
 	permission3, err := accountManager.AddPermission(rt.ID, "/api/v1/instance/create", "Create cluster", "Create cluster", 2, 0)
+	framework.AssertNoErr(err)
 
 	err = accountManager.AddPermissionBindings([]PermissionBinding{
 		// Administrators can do everything
@@ -178,115 +188,93 @@ func (dao *DAOManager) InitSystemDefaultData() error {
 	return err
 }
 
-func (dao *DAOManager) InitResourceDataForDev() error {
-	_, err := CreateHost(dao.Db(), &Host{
-		HostName: "主机1",
-		IP:       "192.168.125.132",
+func (dao *DAOManager) initResourceDataForDev() error {
+	log := framework.LogWithCaller()
+	id1, err := dao.ResourceManager().CreateHost(&Host{
+		HostName: "TEST_HOST1",
+		IP:       "168.168.168.1",
+		UserName: "root",
+		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
 		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
+		DC:       "DataCenter1",
 		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []Disk{
-			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
+			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
+			{Name: "sdb", Path: "/mnt/pd", Capacity: 256, Status: 0},
+			{Name: "sdc", Path: "/mnt/tidb", Capacity: 256, Status: 0},
+			{Name: "sdd", Path: "/mnt/tikv", Capacity: 1024, Status: 0},
 		},
 	})
-
-	_, err = CreateHost(dao.Db(), &Host{
-		HostName: "主机2",
-		IP:       "192.168.125.133",
+	if err != nil {
+		log.Errorf("create TEST_HOST1 failed, %v\n", err)
+		return err
+	}
+	id2, err := dao.ResourceManager().CreateHost(&Host{
+		HostName: "TEST_HOST2",
+		IP:       "168.168.168.2",
+		UserName: "root",
+		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
 		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
+		DC:       "DataCenter1",
 		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []Disk{
-			{Name: "sdb", Path: "/tikv", Capacity: 256, Status: 1},
+			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
+			{Name: "sdb", Path: "/mnt/pd", Capacity: 256, Status: 0},
+			{Name: "sdc", Path: "/mnt/tidb", Capacity: 256, Status: 0},
+			{Name: "sdd", Path: "/mnt/tikv", Capacity: 1024, Status: 0},
 		},
 	})
-
-	_, err = CreateHost(dao.Db(), &Host{
-		HostName: "主机3",
-		IP:       "192.168.125.134",
+	if err != nil {
+		log.Errorf("create TEST_HOST2 failed, %v\n", err)
+		return err
+	}
+	id3, err := dao.ResourceManager().CreateHost(&Host{
+		HostName: "TEST_HOST3",
+		IP:       "168.168.168.3",
+		UserName: "root",
+		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:   0,
 		OS:       "CentOS",
 		Kernel:   "5.0.0",
 		CpuCores: 5,
 		Memory:   8,
 		Nic:      "1GE",
+		DC:       "DataCenter1",
 		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
 		Disks: []Disk{
-			{Name: "sdb", Path: "/pd", Capacity: 256, Status: 1},
+			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
+			{Name: "sdb", Path: "/mnt/pd", Capacity: 256, Status: 0},
+			{Name: "sdc", Path: "/mnt/tidb", Capacity: 256, Status: 0},
+			{Name: "sdd", Path: "/mnt/tikv", Capacity: 1024, Status: 0},
 		},
 	})
+	if err != nil {
+		log.Errorf("create TEST_HOST3 failed, %v\n", err)
+		return err
+	}
 
-	_, err = CreateHost(dao.Db(), &Host{
-		HostName: "主机4",
-		IP:       "192.168.125.135",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		AZ:       "Zone2",
-		Rack:     "3-1",
-		Purpose:  "Compute",
-		Disks: []Disk{
-			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
-		},
-	})
-
-	_, err = CreateHost(dao.Db(), &Host{
-		HostName: "主机4",
-		IP:       "192.168.125.136",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "Compute",
-		Disks: []Disk{
-			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
-		},
-	})
-
-	_, err = CreateHost(dao.Db(), &Host{
-		HostName: "主机4",
-		IP:       "192.168.125.137",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "Compute",
-		Disks: []Disk{
-			{Name: "sdb", Path: "/www", Capacity: 256, Status: 1},
-		},
-	})
-
-	framework.GetLogger().Error(err)
+	log.Infof("insert 3 test hosts[%s, %s, %s] completed.\n", id1, id2, id3)
 	return nil
 }
 
 func (dao *DAOManager) initUser(tenantId string, name string) (string, error) {
-	log := framework.GetLogger()
+	log := framework.LogWithCaller()
 	accountManager := dao.AccountManager()
 
 	b := make([]byte, 16)

@@ -12,7 +12,7 @@ type Tenant struct {
 	Status CommonStatus
 }
 
-func (t *Tenant) persist() error{
+func (t *Tenant) persist() error {
 	return nil
 }
 
@@ -20,10 +20,8 @@ func (t *Tenant) persist() error{
 func CreateTenant(name string) (*Tenant, error) {
 	existed, e := FindTenant(name)
 
-	if e != nil {
-		return nil, e
-	} else if !(nil == existed) {
-		return nil, fmt.Errorf("tenant already exist")
+	if e == nil && existed != nil {
+		return existed, fmt.Errorf("tenant already exist")
 	}
 
 	tenant := Tenant{Name: name, Type: InstanceWorkspace, Status: Valid}
@@ -34,14 +32,15 @@ func CreateTenant(name string) (*Tenant, error) {
 
 // FindTenant 查找租户
 func FindTenant(name string) (*Tenant, error) {
-	tenant,err := TenantRepo.LoadTenantByName(name)
+	tenant, err := TenantRepo.LoadTenantByName(name)
 	return &tenant, err
 }
 
 func FindTenantById(id string) (*Tenant, error) {
-	tenant,err := TenantRepo.LoadTenantById(id)
+	tenant, err := TenantRepo.LoadTenantById(id)
 	return &tenant, err
 }
+
 type TenantType int
 
 const (
@@ -65,9 +64,13 @@ func (s CommonStatus) IsValid() bool {
 
 func CommonStatusFromStatus(status int32) CommonStatus {
 	switch status {
-		case 0: return Valid
-		case 1: return Invalid
-		case 2: return Deleted
-		default: return UnrecognizedStatus
+	case 0:
+		return Valid
+	case 1:
+		return Invalid
+	case 2:
+		return Deleted
+	default:
+		return UnrecognizedStatus
 	}
 }

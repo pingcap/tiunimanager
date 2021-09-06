@@ -4,6 +4,8 @@ import (
 	"errors"
 	"github.com/mozillazg/go-pinyin"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"time"
 )
@@ -27,12 +29,12 @@ const (
 	TABLE_NAME_PARAMETERS_RECORD  = "parameters_records"
 	TABLE_NAME_BACKUP_RECORD      = "backup_records"
 	TABLE_NAME_BACKUP_STRATEGY    = "backup_strategys"
-	TABLE_NAME_TRANSPORT_RECORD    = "transport_records"
+	TABLE_NAME_TRANSPORT_RECORD   = "transport_records"
 	TABLE_NAME_RECOVER_RECORD     = "recover_records"
 )
 
-func getLogger() *framework.LogRecord {
-	return framework.GetLogger()
+func getLogger() *log.Entry {
+	return framework.LogWithCaller()
 }
 
 type Entity struct {
@@ -47,7 +49,7 @@ type Entity struct {
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = GenerateID()
+	e.ID = uuidutil.GenerateID()
 	if e.Code == "" {
 		e.Code = e.ID
 	}

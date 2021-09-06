@@ -6,6 +6,15 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			setupMockAdapter()
+			return nil
+		},
+		func(d *framework.BaseFramework) error {
+			initFlow()
+			return nil
+		},
+	)
 	m.Run()
 }

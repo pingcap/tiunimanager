@@ -7,12 +7,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/common"
+
 	"github.com/pingcap-inc/tiem/library/framework"
 )
 
 func init() {
 	// make sure log would not cause nil pointer problem
-	logger = framework.GetLogger().ForkFile("tiupmgr")
+	logger = framework.GetRootLogger().ForkFile(common.LogFileTiupMgr)
 	TiupMgrInit()
 }
 

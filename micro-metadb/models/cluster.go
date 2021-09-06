@@ -2,10 +2,11 @@ package models
 
 import (
 	"fmt"
+	"time"
+
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/pingcap/errors"
 	"gorm.io/gorm"
-	"time"
 )
 
 type Cluster struct {
@@ -347,7 +348,8 @@ func (m *DAOClusterManager) DeleteBackupRecord(id uint) (record *BackupRecord, e
 		return nil, errors.New(fmt.Sprintf("DeleteBackupRecord has invalid parameter, Id: %d", id))
 	}
 	record = &BackupRecord{}
-	err = m.Db().Where("id = ?", id).Delete(record).Error
+	record.ID = id
+	err = m.Db().Where("id = ?", record.ID).Delete(record).Error
 	return record, err
 }
 

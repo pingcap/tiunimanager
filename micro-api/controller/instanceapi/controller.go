@@ -266,7 +266,11 @@ func QueryBackup(c *gin.Context) {
 
 	var queryReq BackupRecordQueryReq
 	if err := c.ShouldBindJSON(&queryReq); err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		//c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		queryReq = BackupRecordQueryReq{
+			PageRequest: controller.DefaultPageRequest,
+			ClusterId: clusterId,
+		}
 		return
 	}
 	operator := controller.GetOperator(c)

@@ -339,12 +339,13 @@ func (handler *DBServiceHandler) GetCurrentParametersRecord(ctx context.Context,
 		resp.Parameters = ConvertToParameterRecordDTO(result)
 		log.Infof("GetCurrentParametersRecord successful, clusterId: %s, error: %v",
 			req.GetClusterId(), err)
+		return nil
 	} else {
 		resp.Status = ClusterNoResultResponseStatus
-		log.Infof("GetCurrentParametersRecord failed, clusterId: %s, error: %v",
+		log.Warnf("GetCurrentParametersRecord failed, clusterId: %s, error: %v",
 			req.GetClusterId(), err)
+		return nil
 	}
-	return err
 }
 
 func ConvertToBackupRecordDTO(do *models.BackupRecord) (dto *dbPb.DBBackupRecordDTO) {

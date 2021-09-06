@@ -89,6 +89,11 @@ type Page struct {
 	Total    int `json:"total"`
 }
 
+var DefaultPageRequest PageRequest = PageRequest{
+	1,
+	20,
+}
+
 type PageRequest struct {
 	Page     int `json:"page" form:"page"`
 	PageSize int `json:"pageSize" form:"pageSize"`

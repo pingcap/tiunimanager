@@ -114,7 +114,7 @@ func ImportData(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/transport [get]
 func DescribeDataTransport(c *gin.Context) {
-	clusterId := c.Query("clusterId")
+	clusterId := c.Param("clusterId")
 	var req DataTransportQueryReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {

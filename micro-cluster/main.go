@@ -5,6 +5,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
@@ -16,6 +17,7 @@ import (
 
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ClusterService,
+		loadKnowledge,
 		initLibForDev,
 		initAdapter,
 		defaultPortForLocal,
@@ -41,6 +43,11 @@ func initLibForDev(f *framework.BaseFramework) error {
 		f.GetDataDir()+common.LogDirPrefix)
 	libbr.MicroInit(f.GetDeployDir()+"/brcmd",
 		f.GetDataDir()+common.LogDirPrefix)
+	return nil
+}
+
+func loadKnowledge(f *framework.BaseFramework) error {
+	knowledge.LoadKnowledge()
 	return nil
 }
 

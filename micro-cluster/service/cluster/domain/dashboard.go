@@ -73,6 +73,8 @@ func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, er
 
 func getDashboardUrl(clusterId string) (string, error) {
 	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterId)
+	//todo: mock
+	clusterId = "test-tidb"
 	//tiup cluster display CLUSTER_NAME --dashboard
 	resp := libtiup.MicroSrvTiupClusterDisplay(clusterId, 0, []string{"--dashboard"})
 	if resp.ErrorStr != "" {

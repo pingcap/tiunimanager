@@ -271,7 +271,6 @@ func QueryBackup(c *gin.Context) {
 			PageRequest: controller.DefaultPageRequest,
 			ClusterId: clusterId,
 		}
-		return
 	}
 	operator := controller.GetOperator(c)
 	reqDTO := &cluster.QueryBackupRequest{

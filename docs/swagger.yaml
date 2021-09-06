@@ -333,6 +333,8 @@ definitions:
     properties:
       clusterId:
         type: string
+      filePath:
+        type: string
       fileType:
         type: string
       filter:
@@ -548,6 +550,8 @@ definitions:
     type: object
   instanceapi.BackupRecord:
     properties:
+      backupMode:
+        type: string
       backupRange:
         type: string
       backupType:

@@ -44,7 +44,7 @@ var shareCodeUrlSuffix string = "api/user/share/code"
 var loginUrlSuffix string = "api/user/login"
 var defaultExpire int64 = 60 * 60 * 3 //3 hour expire
 
-func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
+func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
 	//todo: check operator and clusterId
 	url, err := getDashboardUrl(clusterId)
 	if err != nil {
@@ -75,9 +75,9 @@ func getDashboardUrl(clusterId string) (string, error) {
 	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterId)
 	//tiup cluster display CLUSTER_NAME --dashboard
 	resp := libtiup.MicroSrvTiupClusterDisplay(clusterId, 0, []string{"--dashboard"})
-	if resp.Error != nil {
-		getLogger().Errorf("call tiupmgr cluster display failed, %s", resp.Error.Error())
-		return "", resp.Error
+	if resp.ErrorStr != "" {
+		getLogger().Errorf("call tiupmgr cluster display failed, %s", resp.ErrorStr)
+		return "", errors.New(resp.ErrorStr)
 	}
 	getLogger().Infof("call tiupmgr success, resp: %v", resp)
 	//DisplayRespString: "Dashboard URL: http://127.0.0.1:2379/dashboard/\n"

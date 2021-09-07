@@ -201,6 +201,15 @@ var doc = `{
                         "name": "backupId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "backup delete request",
+                        "name": "backupDeleteReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.BackupDeleteReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -2865,6 +2874,14 @@ var doc = `{
                 }
             }
         },
+        "instanceapi.BackupDeleteReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                }
+            }
+        },
         "instanceapi.BackupRecord": {
             "type": "object",
             "properties": {
@@ -2906,13 +2923,16 @@ var doc = `{
         "instanceapi.BackupRecordQueryReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
+                "endTime": {
+                    "type": "integer"
                 },
                 "page": {
                     "type": "integer"
                 },
                 "pageSize": {
+                    "type": "integer"
+                },
+                "startTime": {
                     "type": "integer"
                 }
             }

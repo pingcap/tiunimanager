@@ -287,19 +287,6 @@ func (aggregation *ClusterAggregation) ExtractStatusDTO() *proto.DisplayStatusDT
 	return dto
 }
 
-func (aggregation *ClusterAggregation) GetCurrentWorkFlow() *FlowWorkEntity {
-	if aggregation.CurrentWorkFlow != nil {
-		return aggregation.CurrentWorkFlow
-	}
-
-	if aggregation.Cluster.WorkFlowId > 0 {
-		// todo 从DB获取
-		return nil
-	}
-
-	return nil
-}
-
 func (aggregation *ClusterAggregation) ExtractDisplayDTO() *proto.ClusterDisplayDTO {
 	dto := &proto.ClusterDisplayDTO{
 		ClusterId: aggregation.Cluster.Id,

@@ -3,11 +3,7 @@ package framework
 import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"reflect"
 	"testing"
-
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDefaultLogRecord(t *testing.T) {

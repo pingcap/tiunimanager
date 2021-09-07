@@ -14,7 +14,7 @@ import (
 
 func init() {
 	// make sure log would not cause nil pointer problem
-	logger = framework.GetRootLogger().ForkFile(common.LogFileTiupMgr)
+	logger = framework.LogForkFile(common.LogFileTiupMgr)
 	TiupMgrInit()
 }
 

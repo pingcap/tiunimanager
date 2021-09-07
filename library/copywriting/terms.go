@@ -15,7 +15,7 @@ var CopyWritingContainer = map[string]map[string]string{
 	"cn":{
 		CWClusterStatusUnlined: "未上线",
 		CWClusterStatusOnline:  "运行中",
-		CWClusterStatusOffline: "已停止",
+		CWClusterStatusOffline: "已下线",
 		CWClusterStatusDeleted: "已删除",
 		CWFlowCreateCluster:    "创建中",
 		CWFlowDeleteCluster:    "删除中",

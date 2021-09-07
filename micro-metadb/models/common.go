@@ -34,7 +34,7 @@ const (
 )
 
 func getLogger() *log.Entry {
-	return framework.LogWithCaller()
+	return framework.Log()
 }
 
 type Entity struct {

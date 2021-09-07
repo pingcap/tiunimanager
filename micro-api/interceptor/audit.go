@@ -22,7 +22,7 @@ func AuditLog() gin.HandlerFunc {
 
 		path := c.Request.URL.Path
 
-		entry := framework.GetRootLogger().ForkFile(common.LogFileAudit).WithFields(log.Fields{
+		entry := framework.LogForkFile(common.LogFileAudit).WithFields(log.Fields{
 			"operatorId":       visitor.AccountId,
 			"operatorName":     visitor.AccountName,
 			"operatorTenantId": visitor.TenantId,

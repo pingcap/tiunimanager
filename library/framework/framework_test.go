@@ -38,14 +38,14 @@ func TestGetRootLogger(t *testing.T) {
 func TestLog(t *testing.T) {
 	t.Run("default", func(t *testing.T) {
 		Current = nil
-		entry := LogWithCaller()
+		entry := Log().WithFields(Caller())
 		_, ok := entry.Data[RecordFunField]
 		assert.True(t, ok, "RecordFunField not found")
 	})
 	t.Run("service", func(t *testing.T) {
 		Current = nil
 		InitBaseFrameworkForUt(MetaDBService)
-		entry := LogWithCaller()
+		entry := Log().WithFields(Caller())
 		_, ok := entry.Data[RecordFunField]
 		assert.True(t, ok, "RecordFunField not found")
 
@@ -74,8 +74,9 @@ func TestBaseFramework_Get(t *testing.T) {
 
 	ctx := &gin.Context{}
 	ctx.Set(TiEM_X_TRACE_ID_NAME, "111")
-	assert.Equal(t, "111", LogWithContext(ctx).Data[TiEM_X_TRACE_ID_NAME])
+	assert.Equal(t, "111", f.LogWithContext(ctx).Data[TiEM_X_TRACE_ID_NAME])
 }
+
 
 func TestBaseFramework_loadCert(t *testing.T) {
 	b := BaseFramework{

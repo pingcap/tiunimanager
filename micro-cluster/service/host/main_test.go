@@ -9,7 +9,7 @@ import (
 var resourceManager *ResourceManager
 
 func TestMain(m *testing.M) {
-	f_ut := framework.InitBaseFrameworkForUt(framework.ClusterService)
-	resourceManager = NewResourceManager(f_ut.GetRootLogger())
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	resourceManager = NewResourceManager()
 	m.Run()
 }

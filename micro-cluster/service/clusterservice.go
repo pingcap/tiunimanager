@@ -27,7 +27,7 @@ type ClusterServiceHandler struct {
 
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
 	handler := new(ClusterServiceHandler)
-	resourceManager := host.NewResourceManager(fw.GetRootLogger())
+	resourceManager := host.NewResourceManager()
 	handler.SetResourceManager(resourceManager)
 	return handler
 }
@@ -41,7 +41,7 @@ func (handler *ClusterServiceHandler) ResourceManager() *host.ResourceManager {
 }
 
 func getLogger() *log.Entry {
-	return framework.LogWithCaller()
+	return framework.Log()
 }
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterPb.ClusterCreateReqDTO, resp *clusterPb.ClusterCreateRespDTO) (err error) {

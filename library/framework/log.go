@@ -9,14 +9,14 @@ import (
 
 	common2 "github.com/pingcap-inc/tiem/library/common"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 type RootLogger struct {
-	defaultLogEntry *log.Entry
+	defaultLogEntry *logrus.Entry
 
-	forkFileEntry map[string]*log.Entry
+	forkFileEntry map[string]*logrus.Entry
 
 	LogLevel      string
 	LogOutput     string
@@ -77,7 +77,7 @@ func DefaultRootLogger() *RootLogger {
 
 	// WithField sys and mod default init
 	lr.defaultLogEntry = lr.forkEntry(lr.LogFileName)
-	lr.forkFileEntry = map[string]*log.Entry{lr.LogFileName: lr.defaultLogEntry}
+	lr.forkFileEntry = map[string]*logrus.Entry{lr.LogFileName: lr.defaultLogEntry}
 	//.WithField(RecordSysField, lr.RecordSysName).WithField(RecordModField, lr.RecordModName)
 	return lr
 }
@@ -97,13 +97,13 @@ func NewLogRecordFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *RootLo
 
 	// WithField sys and mod default init
 	lr.defaultLogEntry = lr.forkEntry(lr.LogFileName)
-	lr.forkFileEntry = map[string]*log.Entry{lr.LogFileName: lr.defaultLogEntry}
+	lr.forkFileEntry = map[string]*logrus.Entry{lr.LogFileName: lr.defaultLogEntry}
 
 	//.WithField(RecordSysField, lr.RecordSysName).WithField(RecordModField, lr.RecordModName)
 	return lr
 }
 
-func (lr *RootLogger) ForkFile(fileName string) *log.Entry {
+func (lr *RootLogger) ForkFile(fileName string) *logrus.Entry {
 	if entry, ok := lr.forkFileEntry[fileName]; ok {
 		return entry
 	} else {
@@ -113,26 +113,27 @@ func (lr *RootLogger) ForkFile(fileName string) *log.Entry {
 	}
 }
 
-func (lr *RootLogger) Entry() *log.Entry {
+func (lr *RootLogger) Entry() *logrus.Entry {
 	return lr.defaultLogEntry
 }
 
-func (lr *RootLogger) withCaller() *log.Entry {
-	logEntry := lr.defaultLogEntry
-	if pc, file, line, ok := runtime.Caller(2); ok {
+func Caller() logrus.Fields {
+	if pc, file, line, ok := runtime.Caller(1); ok {
 		ptr := runtime.FuncForPC(pc)
-		//fmt.Println(ptr.Name(), file, line)
-		logEntry = lr.defaultLogEntry.WithField(RecordFunField, ptr.Name()).
-			WithField(RecordFileField, path.Base(file)).WithField(RecordLineField, line)
+		return map[string]interface{}{
+			RecordFunField: ptr.Name(),
+			RecordFileField: path.Base(file),
+			RecordLineField: line,
+		}
 	}
-	return logEntry
+	return map[string]interface{}{}
 }
 
-func (lr *RootLogger) forkEntry(fileName string) *log.Entry {
-	logger := log.New()
+func (lr *RootLogger) forkEntry(fileName string) *logrus.Entry {
+	logger := logrus.New()
 
 	// Set log format
-	logger.SetFormatter(&log.JSONFormatter{})
+	logger.SetFormatter(&logrus.JSONFormatter{})
 	// Set log level
 	logger.SetLevel(getLogLevel(lr.LogLevel))
 
@@ -155,22 +156,22 @@ func (lr *RootLogger) forkEntry(fileName string) *log.Entry {
 
 	// Set log output
 	logger.SetOutput(io.MultiWriter(writers...))
-	return log.NewEntry(logger)
+	return logrus.NewEntry(logger)
 }
 
 // Tool method to get log level
-func getLogLevel(level string) log.Level {
+func getLogLevel(level string) logrus.Level {
 	switch strings.ToLower(level) {
 	case LogDebug:
-		return log.DebugLevel
+		return logrus.DebugLevel
 	case LogInfo:
-		return log.InfoLevel
+		return logrus.InfoLevel
 	case LogWarn:
-		return log.WarnLevel
+		return logrus.WarnLevel
 	case LogError:
-		return log.ErrorLevel
+		return logrus.ErrorLevel
 	case LogFatal:
-		return log.FatalLevel
+		return logrus.FatalLevel
 	}
-	return log.DebugLevel
+	return logrus.DebugLevel
 }

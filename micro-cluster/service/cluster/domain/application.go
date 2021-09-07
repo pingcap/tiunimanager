@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
@@ -186,7 +185,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	demands := clusterAggregation.Cluster.Demands
 
 	clusterAggregation.AvailableResources = &proto.AllocHostResponse{}
-	err := host.NewResourceManager(framework.GetRootLogger()).AllocHosts(ctx.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
+	err := host.NewResourceManager().AllocHosts(ctx.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
 
 	if err != nil {
 		// todo
@@ -314,19 +313,6 @@ func (aggregation *ClusterAggregation) ExtractStatusDTO() *proto.DisplayStatusDT
 	}
 
 	return dto
-}
-
-func (aggregation *ClusterAggregation) GetCurrentWorkFlow() *FlowWorkEntity {
-	if aggregation.CurrentWorkFlow != nil {
-		return aggregation.CurrentWorkFlow
-	}
-
-	if aggregation.Cluster.WorkFlowId > 0 {
-		// todo 从DB获取
-		return nil
-	}
-
-	return nil
 }
 
 func (aggregation *ClusterAggregation) ExtractDisplayDTO() *proto.ClusterDisplayDTO {

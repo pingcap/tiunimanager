@@ -15,9 +15,9 @@
 package systimemon
 
 import (
-	"github.com/pingcap-inc/tiem/library/framework"
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/framework"
 	"go.uber.org/zap"
 )
 

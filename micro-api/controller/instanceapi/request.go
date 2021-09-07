@@ -14,7 +14,9 @@ type ParamUpdateReq struct {
 
 type BackupRecordQueryReq struct {
 	controller.PageRequest
-	ClusterId 	string		`json:"clusterId"`
+	ClusterId 	string 		`json:"clusterId" form:"clusterId"`
+	StartTime 	int64		`json:"startTime" form:"startTime"`
+	EndTime 	int64 		`json:"endTime" form:"endTime"`
 }
 
 type BackupDeleteReq struct {

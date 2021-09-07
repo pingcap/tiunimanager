@@ -3,14 +3,17 @@ package framework
 import (
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDefaultLogRecord(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		got := DefaultRootLogger()
-		Assert(got != nil)
-		Assert(got.LogLevel == "info")
+		assert.NotNil(t, got)
 		Assert(got.LogLevel == "info")
 	})
 }

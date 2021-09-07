@@ -3,12 +3,13 @@ package framework
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/opentracing/opentracing-go"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewTracerFromArgs(t *testing.T) {
@@ -19,7 +20,7 @@ func TestNewTracerFromArgs(t *testing.T) {
 	})
 }
 
-type MyContext struct {}
+type MyContext struct{}
 
 func (m MyContext) Deadline() (deadline time.Time, ok bool) {
 	panic("implement me")
@@ -57,10 +58,6 @@ func TestGetTraceIDFromContext(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		got := GetTraceIDFromContext(MyContext{})
 		assert.Equal(t, "traceIDCtxValue", got)
-	})
-	t.Run("nil", func(t *testing.T) {
-		got := GetTraceIDFromContext(nil)
-		assert.Equal(t, "", got)
 	})
 }
 
@@ -103,10 +100,6 @@ func Test_MicroContextWithTraceID(t *testing.T) {
 }
 
 func Test_getParentSpanFromGinContext1(t *testing.T) {
-	t.Run("nil", func(t *testing.T) {
-		got := getParentSpanFromGinContext(nil)
-		assert.Equal(t, nil, got)
-	})
 	t.Run("micro", func(t *testing.T) {
 		micro := newMicroContextWithTraceID(&gin.Context{}, "111")
 		got := getParentSpanFromGinContext(micro)

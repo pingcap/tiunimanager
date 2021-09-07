@@ -225,7 +225,9 @@ message BackupRecordDTO {
 message QueryBackupRequest {
     OperatorDTO operator = 1;
     string clusterId = 2;
-    PageDTO page = 3;
+    int64 startTime = 3;
+    int64 endTime = 4;
+    PageDTO page = 5;
 }
 
 message QueryBackupResponse {

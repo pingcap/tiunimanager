@@ -301,6 +301,8 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *clusterPb.QueryBackupRequest, response *clusterPb.QueryBackupResponse) (err error) {
 	result, err := client.DBClient.ListBackupRecords(context.TODO(), &dbPb.DBListBackupRecordsRequest{
 		ClusterId: request.ClusterId,
+		StartTime: request.StartTime,
+		EndTime: request.EndTime,
 		Page: &dbPb.DBPageDTO{
 			Page:     request.Page.Page,
 			PageSize: request.Page.PageSize,

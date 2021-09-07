@@ -116,9 +116,7 @@ func getTraceIDFromNormalContext(ctx context.Context) string {
 }
 
 func GetTraceIDFromContext(ctx context.Context) string {
-	if ctx == nil {
-		return ""
-	}
+	AssertWithInfo(ctx != nil, "ctx should not be nil")
 	switch v := ctx.(type) {
 	case *gin.Context:
 		return getTraceIDFromGinContext(v)
@@ -132,9 +130,7 @@ func GetTraceIDFromContext(ctx context.Context) string {
 }
 
 func getParentSpanFromGinContext(ctx context.Context) opentracing.Span {
-	if ctx == nil {
-		return nil
-	}
+	AssertWithInfo(ctx != nil, "ctx should not be nil")
 	switch v := ctx.(type) {
 	case *gin.Context:
 		span, existFlag := v.Get("ParentSpan")

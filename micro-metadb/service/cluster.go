@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+
 	"gorm.io/gorm"
 
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -92,7 +93,7 @@ func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *d
 	if req.GetUpdateStatus() {
 		do, err = clusterManager.UpdateClusterStatus(req.ClusterId, int8(req.Status))
 		if nil != err {
-			log.Error("UpdateClusterStatus failed, clusterId: %s flowId: %d, ,error: %v",
+			log.Errorf("UpdateClusterStatus failed, clusterId: %s flowId: %d, ,error: %v",
 				req.GetClusterId(), req.GetFlowId(), err)
 			return err
 		}
@@ -106,7 +107,7 @@ func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *d
 		log.Infof("UpdateClusterStatus successful, clusterId: %s flowId: %d, error: %v",
 			req.GetClusterId(), req.GetFlowId(), err)
 	} else {
-		log.Error("UpdateClusterStatus failed, clusterId: %s flowId: %d, ,error: %v",
+		log.Errorf("UpdateClusterStatus failed, clusterId: %s flowId: %d, ,error: %v",
 			req.GetClusterId(), req.GetFlowId(), err)
 	}
 
@@ -234,7 +235,7 @@ func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbP
 	}
 	log := framework.Log()
 	clusterManager := handler.Dao().ClusterManager()
-	backupRecords, total, err := clusterManager.ListBackupRecords(req.ClusterId,
+	backupRecords, total, err := clusterManager.ListBackupRecords(req.ClusterId, req.StartTime, req.EndTime,
 		int((req.Page.Page-1)*req.Page.PageSize), int(req.Page.PageSize))
 
 	if nil == err {

@@ -164,6 +164,7 @@ func Backup(c *gin.Context) {
 			EndTime:     time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
 			BackupRange: resp.GetBackupRecord().GetRange(),
 			BackupType:  resp.GetBackupRecord().GetBackupType(),
+			BackupMode:  resp.GetBackupRecord().GetMode(),
 			FilePath:    resp.GetBackupRecord().GetFilePath(),
 			Size:        resp.GetBackupRecord().GetSize(),
 			Status:      *clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
@@ -265,8 +266,11 @@ func QueryBackup(c *gin.Context) {
 
 	var queryReq BackupRecordQueryReq
 	if err := c.ShouldBindJSON(&queryReq); err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
-		return
+		//c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		queryReq = BackupRecordQueryReq{
+			PageRequest: controller.DefaultPageRequest,
+			ClusterId: clusterId,
+		}
 	}
 	operator := controller.GetOperator(c)
 	reqDTO := &cluster.QueryBackupRequest{
@@ -290,6 +294,7 @@ func QueryBackup(c *gin.Context) {
 				EndTime:     time.Unix(v.EndTime, 0),
 				BackupRange: v.Range,
 				BackupType:  v.BackupType,
+				BackupMode:  v.Mode,
 				Operator: controller.Operator{
 					ManualOperator: true,
 					OperatorId:     v.Operator.Id,

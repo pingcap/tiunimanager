@@ -1,9 +1,10 @@
 package framework
 
 import (
+	"testing"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestInitBaseFrameworkForUt(t *testing.T) {

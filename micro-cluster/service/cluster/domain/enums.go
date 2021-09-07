@@ -121,15 +121,21 @@ const (
 
 type BackupRange string
 type BackupType string
+type BackupMode string
 
 const (
-	BackupRangeFull BackupRange = "FULL"
-	BackupRangeIncrement BackupRange = "INCR"
+	BackupRangeFull BackupRange = "full"
+	BackupRangeIncrement BackupRange = "incr"
 )
 
 const (
-	BackupTypeLogic BackupType = "Logic"
-	BackupTypePhysics BackupType = "Physics"
+	BackupModeAuto BackupMode = "auto"
+	BackupModeManual BackupMode = "manual"
+)
+
+const (
+	BackupTypeLogic BackupType = "logical"
+	BackupTypePhysics BackupType = "physical"
 )
 
 func checkBackupRangeValid(backupRange string) bool {

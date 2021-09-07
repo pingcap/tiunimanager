@@ -114,7 +114,7 @@ func ImportData(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/transport [get]
 func DescribeDataTransport(c *gin.Context) {
-	clusterId := c.Query("clusterId")
+	clusterId := c.Param("clusterId")
 	var req DataTransportQueryReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
@@ -133,24 +133,22 @@ func DescribeDataTransport(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		status := respDTO.GetRespStatus()
 		data := &DataTransportRecordQueryResp{
 			TransportRecords: make([]*DataTransportInfo, len(respDTO.GetTransportInfos())),
 		}
-		for index := 0; index < len(data.TransportRecords); index++ {
+		for index, value := range respDTO.GetTransportInfos() {
 			data.TransportRecords[index] = &DataTransportInfo{
-				RecordId:      respDTO.GetTransportInfos()[index].GetRecordId(),
-				ClusterId:     respDTO.GetTransportInfos()[index].GetClusterId(),
-				TransportType: respDTO.GetTransportInfos()[index].GetTransportType(),
-				Status:        respDTO.GetTransportInfos()[index].GetStatus(),
-				FilePath:      respDTO.GetTransportInfos()[index].GetFilePath(),
-				StartTime:     time.Unix(respDTO.GetTransportInfos()[index].GetStartTime(), 0),
-				EndTime:       time.Unix(respDTO.GetTransportInfos()[index].GetEndTime(), 0),
+				RecordId:      value.GetRecordId(),
+				ClusterId:     value.GetClusterId(),
+				TransportType: value.GetTransportType(),
+				Status:        value.GetStatus(),
+				FilePath:      value.GetFilePath(),
+				StartTime:     time.Unix(value.GetStartTime(), 0),
+				EndTime:       time.Unix(value.GetEndTime(), 0),
 			}
-
 		}
 
-		result := controller.BuildResultWithPage(int(status.Code), status.Message, controller.ParsePageFromDTO(respDTO.PageReq), data)
+		result := controller.SuccessWithPage(data, *controller.ParsePageFromDTO(respDTO.PageReq))
 
 		c.JSON(http.StatusOK, result)
 	}

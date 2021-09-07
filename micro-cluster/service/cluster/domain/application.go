@@ -221,6 +221,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 
 		cfgYamlStr := string(bs)
 		go func() {
+			getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
 			_, err = libtiup.MicroSrvTiupDeploy(
 				cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
 			)
@@ -347,11 +348,12 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRec
 		ClusterId:  record.ClusterId,
 		Range:      string(record.Range),
 		BackupType: string(record.BackupType),
-		Size:       record.Size,
-		StartTime:  record.StartTime,
-		EndTime:    record.EndTime,
-		FilePath:   record.FilePath,
-		DisplayStatus: &proto.DisplayStatusDTO{
+		Mode:		string(record.BackupMode),
+		Size:      record.Size,
+		StartTime: record.StartTime,
+		EndTime:   record.EndTime,
+		FilePath: record.FilePath,
+		DisplayStatus: &proto.DisplayStatusDTO {
 			InProcessFlowId: int32(currentFlow.Id),
 			StatusCode:      strconv.Itoa(int(currentFlow.Status)),
 			StatusName:      currentFlow.Status.Display(),

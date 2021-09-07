@@ -32,7 +32,7 @@ func InitEtcdClient(etcdAddress []string) *EtcdClient {
 		_, err = cli.MemberList(ctx)
 		cancel()
 		if err != nil {
-			Log().Warnf("connect etcd server [%v] failed, err: %v", etcdAddress, err)
+			Log().Warnf("connect etcd server [%v] failed, err: %v\n", etcdAddress, err)
 			continue
 		}
 		break

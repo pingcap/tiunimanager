@@ -46,6 +46,7 @@ type BackupRecord struct {
 	ClusterId   string `gorm:"not null;type:varchar(36);default:null"`
 	BackupRange string
 	BackupType  string
+	BackupMode  string
 	OperatorId  string `gorm:"not null;type:varchar(36);default:null"`
 
 	FilePath string
@@ -111,7 +112,8 @@ func (m *DAOClusterManager) UpdateClusterStatus(clusterId string, status int8) (
 		return nil, errors.New(fmt.Sprintf("UpdateClusterStatus has invalid parameter, clusterId: %s, status: %d", clusterId, status))
 	}
 	cluster = &Cluster{}
-	return cluster, m.Db().Model(cluster).Where("id = ?", clusterId).Update("status", status).Find(cluster).Error
+	err = m.Db().Model(cluster).Where("id = ?", clusterId).First(cluster).Update("status", status).Error
+	return cluster, err
 }
 
 func (m *DAOClusterManager) UpdateClusterDemand(clusterId string, content string, tenantId string) (cluster *Cluster, demand *DemandRecord, err error) {
@@ -346,10 +348,7 @@ func (m *DAOClusterManager) DeleteBackupRecord(id uint) (record *BackupRecord, e
 		return nil, errors.New(fmt.Sprintf("DeleteBackupRecord has invalid parameter, Id: %d", id))
 	}
 	record = &BackupRecord{}
-	err = m.Db().First(record, "id = ?", id).Error
-	if err != nil {
-		err = m.Db().Delete(record).Error
-	}
+	err = m.Db().Where("id = ?", id).Delete(record).Error
 	return record, err
 }
 
@@ -364,6 +363,7 @@ func (m *DAOClusterManager) SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do
 		OperatorId:  record.GetOperatorId(),
 		BackupRange: record.GetBackupRange(),
 		BackupType:  record.GetBackupType(),
+		BackupMode:  record.GetBackupMode(),
 		FlowId:      record.GetFlowId(),
 		FilePath:    record.GetFilePath(),
 		StartTime:   time.Unix(record.GetStartTime(), 0),

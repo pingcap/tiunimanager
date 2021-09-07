@@ -340,5 +340,4 @@ message DescribeDashboardResponse {
     string clusterId = 2;
     string url = 3;
     string token = 4;
-    string shareCode = 5;
 }

@@ -244,7 +244,6 @@ func DescribeDashboard(c *gin.Context) {
 			ClusterId: respDTO.GetClusterId(),
 			Url:       respDTO.GetUrl(),
 			Token:     respDTO.GetToken(),
-			ShareCode: respDTO.GetShareCode(),
 		})
 
 		c.JSON(http.StatusOK, result)

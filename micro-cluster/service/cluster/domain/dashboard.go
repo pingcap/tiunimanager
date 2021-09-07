@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiup/pkg/utils/rand"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -37,26 +36,21 @@ type Dashboard struct {
 	ClusterId string `json:"clusterId"`
 	Url       string `json:"url"`
 	Token 	  string `json:"token"`
-	ShareCode string `json:"shareCode"`
 }
 
-var shareCodeUrlSuffix string = "api/user/share/code"
 var loginUrlSuffix string = "api/user/login"
 var defaultExpire int64 = 60 * 60 * 3 //3 hour expire
 
 func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
 	//todo: check operator and clusterId
-	url, err := getDashboardUrl(clusterId)
-	if err != nil {
-		return nil, err
+	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	if err != nil || clusterAggregation == nil {
+		return nil, errors.New("load cluster aggregation")
 	}
+
+	url := getDashboardUrl(clusterAggregation)
 
 	token, err := getLoginToken(url, "root", "") //todo: replace by real data
-	if err != nil {
-		return nil, err
-	}
-
-	shareCode, err := generateShareCode(url, token)
 	if err != nil {
 		return nil, err
 	}
@@ -65,18 +59,21 @@ func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, er
 		ClusterId: clusterId,
 		Url:       url,
 		Token:     token,
-		ShareCode: shareCode,
 	}
 
 	return dashboard, nil
 }
 
-func getDashboardUrl(clusterId string) (string, error) {
-	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterId)
-	//todo: mock
-	clusterId = "test-tidb"
+func getDashboardUrl(clusterAggregation *ClusterAggregation) string {
+	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	pdNum := len(configModel.PDServers)
+	pdServer := configModel.PDServers[rand.Intn(pdNum)]
+	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.Host, pdServer.ClientPort)
+	/*
+	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterName)
+
 	//tiup cluster display CLUSTER_NAME --dashboard
-	resp := libtiup.MicroSrvTiupClusterDisplay(clusterId, 0, []string{"--dashboard"})
+	resp := libtiup.MicroSrvTiupClusterDisplay(clusterName, 0, []string{"--dashboard"})
 	if resp.ErrorStr != "" {
 		getLogger().Errorf("call tiupmgr cluster display failed, %s", resp.ErrorStr)
 		return "", errors.New(resp.ErrorStr)
@@ -85,6 +82,7 @@ func getDashboardUrl(clusterId string) (string, error) {
 	//DisplayRespString: "Dashboard URL: http://127.0.0.1:2379/dashboard/\n"
 	result := strings.Split(strings.Replace(resp.DisplayRespString, "\n", "", -1), " ")
 	return result[2], nil
+	*/
 }
 
 func getLoginToken(dashboardUrl, userName, password string) (string, error) {
@@ -110,33 +108,6 @@ func getLoginToken(dashboardUrl, userName, password string) (string, error) {
 	getLogger().Infof("getLoginToken resp: %v", loginResp)
 
 	return loginResp.Token, nil
-}
-
-func generateShareCode(dashboardUrl, token string) (string, error) {
-	url := fmt.Sprintf("%s%s", dashboardUrl, shareCodeUrlSuffix)
-	body := &ShareRequest{
-		ExpireInSeconds: defaultExpire,
-		RevokeWritePriv: true,
-	}
-	headers := make(map[string]string)
-	headers["Authorization"] = fmt.Sprintf("Bearer %s", token)
-	resp, err := post(url, body, headers)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	var shareResp ShareResponse
-	err = json.Unmarshal(data, &shareResp)
-	if err != nil {
-		return "", err
-	}
-	getLogger().Infof("generateShareCode resp: %v", shareResp)
-
-	return shareResp.Code, nil
 }
 
 func post(url string, body interface{}, headers map[string]string) (*http.Response, error) {

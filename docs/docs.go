@@ -52,18 +52,28 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "cluster id",
                         "name": "clusterId",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
-                        "description": "page",
-                        "name": "request",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.BackupRecordQueryReq"
-                        }
+                        "type": "integer",
+                        "name": "endTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "startTime",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1157,13 +1167,19 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "description": "cluster info for query records",
-                        "name": "dataTransportQueryReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/databaseapi.DataTransportQueryReq"
-                        }
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "recordId",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2624,20 +2640,6 @@ var doc = `{
                 }
             }
         },
-        "databaseapi.DataTransportQueryReq": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
-                },
-                "recordId": {
-                    "type": "string"
-                }
-            }
-        },
         "databaseapi.DataTransportRecordQueryResp": {
             "type": "object",
             "properties": {
@@ -2917,23 +2919,6 @@ var doc = `{
                 },
                 "status": {
                     "$ref": "#/definitions/controller.StatusInfo"
-                }
-            }
-        },
-        "instanceapi.BackupRecordQueryReq": {
-            "type": "object",
-            "properties": {
-                "endTime": {
-                    "type": "integer"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
-                },
-                "startTime": {
-                    "type": "integer"
                 }
             }
         },

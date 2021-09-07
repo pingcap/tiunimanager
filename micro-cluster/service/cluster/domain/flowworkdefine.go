@@ -13,7 +13,6 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
 			"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
 			"deployDone":   {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
-			//"startupDone":  {"recoverFromSrcCluster", "recoverDone", "fail", PollingTasK, recoverFromSrcCluster},
 			"startupDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
 		},

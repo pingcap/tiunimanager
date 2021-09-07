@@ -1,10 +1,13 @@
 package domain
 
 import (
-	"context"
+	ctx "context"
 	"errors"
+	"github.com/pingcap-inc/tiem/library/client"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
@@ -221,12 +224,11 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 		}
 
 		cfgYamlStr := string(bs)
-		go func() {
-			getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
-			_, err = libtiup.MicroSrvTiupDeploy(
-				cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
-			)
-		}()
+		getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
+		deployTaskId, err := libtiup.MicroSrvTiupDeploy(
+			cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
+		)
+		context.put("deployTaskId", deployTaskId)
 	}
 
 	return true
@@ -235,10 +237,28 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
-	go func() {
-		getLogger().Infof("start cluster %s", cluster.ClusterName)
-		libtiup.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
-	}()
+
+	var req dbPb.FindTiupTaskByIDRequest
+	req.Id = context.value("deployTaskId").(uint64)
+	for i := 0; i < 30; i++ {
+		time.Sleep(10 * time.Second)
+		rsp, err := client.DBClient.FindTiupTaskByID(ctx.TODO(), &req)
+		if err != nil {
+			getLogger().Errorf("get deploy task err = %s", err.Error())
+			task.Fail(err)
+			return false
+		}
+		if rsp.TiupTask.Status == dbPb.TiupTaskStatus_Error{
+			getLogger().Errorf("deploy cluster error, %s", rsp.TiupTask.ErrorStr)
+			task.Fail(errors.New(rsp.TiupTask.ErrorStr))
+			return false
+		}
+		if rsp.TiupTask.Status == dbPb.TiupTaskStatus_Finished {
+			break
+		}
+	}
+	getLogger().Infof("start cluster %s", cluster.ClusterName)
+	libtiup.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
 
 	task.Success(nil)
 	return true

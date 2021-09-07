@@ -2524,6 +2524,9 @@
                 "clusterId": {
                     "type": "string"
                 },
+                "filePath": {
+                    "type": "string"
+                },
                 "fileType": {
                     "type": "string"
                 },
@@ -2850,6 +2853,9 @@
         "instanceapi.BackupRecord": {
             "type": "object",
             "properties": {
+                "backupMode": {
+                    "type": "string"
+                },
                 "backupRange": {
                     "type": "string"
                 },

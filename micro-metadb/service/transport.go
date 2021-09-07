@@ -29,7 +29,7 @@ func (d *DBServiceHandler)CreateTransportRecord(ctx context.Context, in *db.DBCr
 		return err
 	}
 	out.Id = id
-	log.Errorf("CreateTransportRecord success")
+	log.Infof("CreateTransportRecord success")
 	return nil
 }
 
@@ -40,7 +40,7 @@ func (d *DBServiceHandler)UpdateTransportRecord(ctx context.Context, in *db.DBUp
 		log.Errorf("UpdateTransportRecord failed, %s", err.Error())
 		return err
 	}
-	log.Errorf("UpdateTransportRecord success")
+	log.Infof("UpdateTransportRecord success")
 	return nil
 }
 
@@ -52,13 +52,13 @@ func (d *DBServiceHandler)FindTrasnportRecordByID(ctx context.Context, in *db.DB
 		return err
 	}
 	out.Record = convertRecordDTO(record)
-	log.Errorf("FindTrasnportRecordByID success, %v", out)
+	log.Infof("FindTrasnportRecordByID success, %v", out)
 	return nil
 }
 
 func (d *DBServiceHandler)ListTrasnportRecord(ctx context.Context, in *db.DBListTransportRecordRequest, out *db.DBListTransportRecordResponse) error {
 	log := framework.LogWithCaller()
-	records, total, err := d.Dao().ClusterManager().ListTransportRecord(in.GetClusterId(), in.GetRecordId(), in.GetPage().GetPage(), in.GetPage().GetPageSize())
+	records, total, err := d.Dao().ClusterManager().ListTransportRecord(in.GetClusterId(), in.GetRecordId(), (in.GetPage().GetPage() - 1) * in.GetPage().GetPageSize(), in.GetPage().GetPageSize())
 	if err != nil {
 		log.Errorf("ListTrasnportRecord failed, %s", err.Error())
 		return err
@@ -72,7 +72,7 @@ func (d *DBServiceHandler)ListTrasnportRecord(ctx context.Context, in *db.DBList
 		PageSize: in.GetPage().GetPageSize(),
 		Total: int32(total),
 	}
-	log.Errorf("ListTrasnportRecord success, %v", out)
+	log.Infof("ListTrasnportRecord success, %v", out)
 	return nil
 }
 

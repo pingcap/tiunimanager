@@ -2539,6 +2539,9 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
+                "filePath": {
+                    "type": "string"
+                },
                 "fileType": {
                     "type": "string"
                 },
@@ -2865,6 +2868,9 @@ var doc = `{
         "instanceapi.BackupRecord": {
             "type": "object",
             "properties": {
+                "backupMode": {
+                    "type": "string"
+                },
                 "backupRange": {
                     "type": "string"
                 },

@@ -266,17 +266,16 @@ func QueryBackup(c *gin.Context) {
 
 	var queryReq BackupRecordQueryReq
 	if err := c.ShouldBindJSON(&queryReq); err != nil {
-		//c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
-		queryReq = BackupRecordQueryReq{
-			PageRequest: controller.DefaultPageRequest,
-			ClusterId: clusterId,
-		}
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		return
 	}
 	operator := controller.GetOperator(c)
 	reqDTO := &cluster.QueryBackupRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: clusterId,
-		Page:      queryReq.PageRequest.ConvertToDTO(),
+		Operator:  	operator.ConvertToDTO(),
+		ClusterId: 	clusterId,
+		Page:      	queryReq.PageRequest.ConvertToDTO(),
+		StartTime: 	queryReq.StartTime,
+		EndTime: 	queryReq.EndTime,
 	}
 
 	resp, err := client.ClusterClient.QueryBackupRecord(context.TODO(), reqDTO, controller.DefaultTimeout)

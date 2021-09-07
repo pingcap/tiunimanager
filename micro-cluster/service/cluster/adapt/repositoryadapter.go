@@ -397,6 +397,7 @@ func parseConfigRecordDTO(dto *db.DBTiUPConfigDTO) (record *domain.TiUPConfigRec
 	spec := &spec.Specification{}
 	json.Unmarshal([]byte(dto.Content), spec)
 
+	record.ConfigModel = spec
 	return
 }
 

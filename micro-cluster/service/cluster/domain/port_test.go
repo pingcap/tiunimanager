@@ -51,7 +51,8 @@ func (m MockTaskRepo) PersistCronTask(cronTask *CronTaskEntity) (err error) {
 type MockClusterRepo struct{}
 
 func (m MockClusterRepo) AddCluster(cluster *Cluster) error {
-	panic("implement me")
+	cluster.Id = "newCluster"
+	return nil
 }
 
 func (m MockClusterRepo) Persist(aggregation *ClusterAggregation) error {
@@ -59,7 +60,12 @@ func (m MockClusterRepo) Persist(aggregation *ClusterAggregation) error {
 }
 
 func (m MockClusterRepo) Load(id string) (cluster *ClusterAggregation, err error) {
-	panic("implement me")
+	return &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: "testCluster",
+			ClusterName: "testCluster",
+		},
+	}, nil
 }
 
 func (m MockClusterRepo) Query(clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error) {

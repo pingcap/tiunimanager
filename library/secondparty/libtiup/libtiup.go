@@ -190,7 +190,7 @@ func TiupMgrInit() {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetRootLogger().ForkFile(configPath + common.LogFileTiupMgr)
+	logger = framework.LogForkFile(configPath + common.LogFileTiupMgr)
 
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
 	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -667,7 +667,7 @@ func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetRootLogger().ForkFile(configPath + common.LogFileLibTiup)
+	logger = framework.LogForkFile(configPath + common.LogFileLibTiup)
 
 	glTiUPMgrPath = tiupMgrPath
 	glTiUPBinPath = tiupBinPath

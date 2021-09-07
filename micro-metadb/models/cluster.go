@@ -411,10 +411,10 @@ func (m *DAOClusterManager) ListBackupRecords(clusterId string, startTime, endTi
 	records := make([]*BackupRecord, length, length)
 	db := m.Db().Table(TABLE_NAME_BACKUP_RECORD).Where("cluster_id = ?", clusterId)
 	if startTime > 0 {
-		db = db.Where("start_time >= %s", time.Unix(startTime, 0))
+		db = db.Where("start_time >= ?", time.Unix(startTime, 0))
 	}
 	if endTime > 0 {
-		db = db.Where("end_time <= %s", time.Unix(endTime, 0))
+		db = db.Where("end_time <= ?", time.Unix(endTime, 0))
 	}
 
 	err =db.Count(&total).Order("id desc").Offset(offset).Limit(length).

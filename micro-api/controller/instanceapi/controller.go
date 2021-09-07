@@ -359,6 +359,7 @@ func RecoverBackup(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param backupId path int true "backup record id"
+// @Param backupDeleteReq body BackupDeleteReq true "backup delete request"
 // @Success 200 {object} controller.CommonResult{data=int}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

@@ -548,6 +548,11 @@ definitions:
       zoneName:
         type: string
     type: object
+  instanceapi.BackupDeleteReq:
+    properties:
+      clusterId:
+        type: string
+    type: object
   instanceapi.BackupRecord:
     properties:
       backupMode:
@@ -575,11 +580,13 @@ definitions:
     type: object
   instanceapi.BackupRecordQueryReq:
     properties:
-      clusterId:
-        type: string
+      endTime:
+        type: integer
       page:
         type: integer
       pageSize:
+        type: integer
+      startTime:
         type: integer
     type: object
   instanceapi.BackupRecoverReq:
@@ -934,6 +941,12 @@ paths:
         name: backupId
         required: true
         type: integer
+      - description: backup delete request
+        in: body
+        name: backupDeleteReq
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.BackupDeleteReq'
       produces:
       - application/json
       responses:

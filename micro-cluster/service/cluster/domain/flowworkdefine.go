@@ -11,9 +11,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		TaskNodes: map[string]*TaskDefine{
 			"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
 			"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
-			"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
-			"deployDone":   {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
-			//"startupDone":  {"recoverFromSrcCluster", "recoverDone", "fail", PollingTasK, recoverFromSrcCluster},
+			"configDone":   {"deployCluster", "deployDone", "fail", SyncFuncTask, deployCluster},
+			"deployDone":   {"startupCluster", "startupDone", "fail", SyncFuncTask, startupCluster},
 			"startupDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
 		},

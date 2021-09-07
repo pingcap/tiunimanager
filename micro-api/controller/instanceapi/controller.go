@@ -261,8 +261,6 @@ func SaveBackupStrategy(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups [get]
 func QueryBackup(c *gin.Context) {
-	//clusterId := c.Query("clusterId")
-
 	var queryReq BackupRecordQueryReq
 	if err := c.ShouldBindQuery(&queryReq); err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))

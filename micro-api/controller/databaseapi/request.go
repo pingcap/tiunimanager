@@ -20,7 +20,5 @@ type DataImportReq struct {
 
 type DataTransportQueryReq struct {
 	controller.PageRequest
-	RecordId	string		`json:"recordId"`
+	RecordId	string		`json:"recordId" form:"recordId"`
 }
-
-

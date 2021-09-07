@@ -73,6 +73,7 @@ devselfcheck:
 	make check_unconvert
 	make check_lint
 	make check_vet
+	make local_test
 	@echo "self check complete."
 
 gotool:
@@ -202,6 +203,12 @@ test: add_test_file
 	GO111MODULE=off go get github.com/AlekSi/gocov-xml
 	go test -v ./... -coverprofile=cover.out |go-junit-report > test.xml
 	gocov convert cover.out | gocov-xml > coverage.xml
+
+local_test:
+	mkdir -p "$(TEST_DIR)"
+	-go test -v ./... -coverprofile="$(TEST_DIR)/cover.out"
+	go tool cover -html "$(TEST_DIR)/cover.out" -o "$(TEST_DIR)/cover.html"
+	echo "check coverage info by opening $(TEST_DIR)/cover.html through browser"
 
 #race: failpoint-enable
 #   @export log_level=debug; \

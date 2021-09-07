@@ -25,7 +25,7 @@ func main() {
 			return nil
 		},
 	)
-	log := framework.Log()
+	log := f.GetRootLogger().ForkFile(common.LogFileSystem)
 	log.Info("etcd client connect success")
 
 	f.PrepareService(func(service micro.Service) error {

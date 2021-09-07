@@ -60,7 +60,7 @@ func (d *DBServiceHandler)ListTrasnportRecord(ctx context.Context, in *db.DBList
 	log := framework.Log()
 	records, total, err := d.Dao().ClusterManager().ListTransportRecord(in.GetClusterId(), in.GetRecordId(), (in.GetPage().GetPage() - 1) * in.GetPage().GetPageSize(), in.GetPage().GetPageSize())
 	if err != nil {
-		log.WithFields(framework.Caller()).Errorf("ListTrasnportRecord failed, %s", err.Error())
+		log.Errorf("ListTrasnportRecord failed, %s", err.Error())
 		return err
 	}
 	out.Records = make([]*db.TransportRecordDTO, len(records))

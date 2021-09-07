@@ -233,7 +233,13 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 }
 
 func startupCluster(task *TaskEntity, context *FlowContext) bool {
-	// todo
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+	go func() {
+		getLogger().Infof("start cluster %s", cluster.ClusterName)
+		libtiup.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
+	}()
+
 	task.Success(nil)
 	return true
 }

@@ -229,6 +229,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 			cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
 		)
 		context.put("deployTaskId", deployTaskId)
+		getLogger().Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
 	}
 
 	return true
@@ -240,6 +241,7 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 
 	var req dbPb.FindTiupTaskByIDRequest
 	req.Id = context.value("deployTaskId").(uint64)
+
 	for i := 0; i < 30; i++ {
 		time.Sleep(10 * time.Second)
 		rsp, err := client.DBClient.FindTiupTaskByID(ctx.TODO(), &req)

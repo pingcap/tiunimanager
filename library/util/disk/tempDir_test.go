@@ -38,7 +38,7 @@ func (s *testDiskSerialSuite) TestRemoveDir(c *check.C) {
 	err := CheckAndInitTempDir()
 	c.Assert(err, check.IsNil)
 	c.Assert(checkTempDirExist(), check.Equals, true)
-	c.Assert(checkTempDirExist(), check.Equals, false)
+	//c.Assert(checkTempDirExist(), check.Equals, false)
 	wg := sync.WaitGroup{}
 	for i := 0; i < 10; i++ {
 		wg.Add(1)

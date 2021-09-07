@@ -4,12 +4,15 @@ import (
 	"archive/zip"
 	ctx "context"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -82,6 +85,12 @@ const (
 	BackendTidb   string = "tidb"
 )
 
+const (
+	DefaultTidbPort int = 4000
+	DefaultTidbStatusPort int = 10080
+	DefaultPDClientPort int = 2379
+)
+
 type TikvImporterCfg struct {
 	Backend     string `toml:"backend"`       //backend mode: local/normal
 	SortedKvDir string `toml:"sorted-kv-dir"` //temp store path
@@ -109,18 +118,10 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	//todo: check operator
 	operator := parseOperatorFromDTO(ope)
 	getLogger().Info(operator)
-	//todo: mock
-	/*
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil {
 		getLogger().Errorf("load cluster[%s] aggregation from metadb failed", clusterId)
 		return "", err
-	}
-	*/
-	clusterAggregation := &ClusterAggregation{
-		Cluster: &Cluster{
-			Id: clusterId,
-		},
 	}
 
 	req := &db.DBCreateTransportRecordRequest{
@@ -169,17 +170,11 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	//todo: check operator
 	operator := parseOperatorFromDTO(ope)
 	getLogger().Info(operator)
-	/*
+
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil {
 		getLogger().Errorf("load cluster[%s] aggregation from metadb failed", clusterId)
 		return "", err
-	}
-	*/
-	clusterAggregation := &ClusterAggregation{
-		Cluster: &Cluster{
-			Id: clusterId,
-		},
 	}
 
 	req := &db.DBCreateTransportRecordRequest{
@@ -252,6 +247,21 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	tidbServer := configModel.TiDBServers[0]
 	pdServer := configModel.PDServers[0]
 
+	tidbServerPort := tidbServer.Port
+	if tidbServerPort == 0 {
+		tidbServerPort = DefaultTidbPort
+	}
+
+	tidbStatusPort := tidbServer.StatusPort
+	if tidbStatusPort == 0 {
+		tidbStatusPort = DefaultTidbStatusPort
+	}
+
+	pdClientPort := pdServer.ClientPort
+	if pdClientPort == 0 {
+		pdClientPort = DefaultPDClientPort
+	}
+
 	/*
 	 * todo: sorted-kv-dir and data-source-dir in the same disk, may slow down import performance,
 	 *  and check-requirements = true can not pass lightning pre-check
@@ -272,11 +282,11 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 		},
 		Tidb: TidbCfg{
 			Host:       tidbServer.Host,
-			Port:       tidbServer.Port,
+			Port:       tidbServerPort,
 			User:       info.UserName,
 			Password:   info.Password,
-			StatusPort: tidbServer.StatusPort,
-			PdAddr:     fmt.Sprintf("%s:%d", pdServer.Host, pdServer.ClientPort),
+			StatusPort: tidbStatusPort,
+			PdAddr:     fmt.Sprintf("%s:%d", pdServer.Host, pdClientPort),
 		},
 	}
 	return config
@@ -314,8 +324,7 @@ func cleanDataTransportDir(filepath string) error {
 func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin buildDataImportConfig")
 	defer getLogger().Info("end buildDataImportConfig")
-	//todo: mock
-	/*
+
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
@@ -342,15 +351,14 @@ func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 	getLogger().Infof("build lightning toml file sucess, %v", config)
-	*/
+
 	return true
 }
 
 func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin importDataToCluster")
 	defer getLogger().Info("end importDataToCluster")
-	//todo: mock
-	/*
+
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
@@ -364,7 +372,7 @@ func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 	getLogger().Infof("call tiupmgr tidb-lightning api success, %v", resp)
-	*/
+
 	return true
 }
 
@@ -395,12 +403,15 @@ func updateDataImportRecord(task *TaskEntity, context *FlowContext) bool {
 func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin exportDataFromCluster")
 	defer getLogger().Info("end exportDataFromCluster")
-	//todo: mock
-	/*
+
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ExportInfo)
 	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
+	tidbServerPort := tidbServer.Port
+	if tidbServerPort == 0 {
+		tidbServerPort = DefaultTidbPort
+	}
 
 	if err := cleanDataTransportDir(info.FilePath); err != nil {
 		getLogger().Errorf("clean export directory failed, %s", err.Error())
@@ -412,7 +423,7 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 	//todo: tiupmgr not return failed err
 	cmd := []string{"-u", info.UserName,
 		"-p", info.Password,
-		"-P", strconv.Itoa(tidbServer.Port),
+		"-P", strconv.Itoa(tidbServerPort),
 		"--host", tidbServer.Host,
 		"--filetype", info.FileType,
 		"-t", "8",
@@ -430,7 +441,6 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	getLogger().Infof("call tiupmgr succee, resp: %v", resp)
-	*/
 
 	return true
 }
@@ -462,8 +472,7 @@ func updateDataExportRecord(task *TaskEntity, context *FlowContext) bool {
 func compressExportData(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin compressExportData")
 	defer getLogger().Info("end compressExportData")
-	//todo: mock
-	/*
+
 	info := context.value(contextDataTransportKey).(*ExportInfo)
 
 	dataDir := fmt.Sprintf("%s/data", info.FilePath)
@@ -472,15 +481,14 @@ func compressExportData(task *TaskEntity, context *FlowContext) bool {
 		getLogger().Errorf("compress export data failed, %s", err.Error())
 		return false
 	}
-	*/
+
 	return true
 }
 
 func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin deCompressImportData")
 	defer getLogger().Info("end deCompressImportData")
-	//todo: mock
-	/*
+
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
@@ -491,7 +499,7 @@ func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
 		getLogger().Errorf("deCompress import data failed, %s", err.Error())
 		return false
 	}
-	*/
+
 	return true
 }
 

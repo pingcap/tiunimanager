@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -39,41 +41,15 @@ type BackupStrategy struct {
 
 var defaultPathPrefix string = "/tmp/tiem/backup"
 
-func BackupPreCheck(request *proto.CreateBackupRequest) error {
-	if !checkBackupRangeValid(request.GetBackupRange()) {
-		return errors.New("backupRange invalid")
-	}
-	if !checkBackupTypeValid(request.GetBackupType()) {
-		return errors.New("backupType invalid")
-	}
-	if request.GetClusterId() == "" {
-		return errors.New("clusterId invalid")
-	}
-	if request.GetFilePath() == "" {
-		return errors.New("filePath invalid")
-	}
-	//todo: check operator is valid, maybe some has default config
-
-	return nil
-}
-
 func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, filePath string) (*ClusterAggregation, error) {
 	getLogger().Infof("Begin do Backup, clusterId: %s, backupRange: %s, backupType: %s, filePath: %s", clusterId, backupRange, backupType, filePath)
 	defer getLogger().Infof("End do Backup")
 	operator := parseOperatorFromDTO(ope)
-	//todo: mock
-	/*
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil || clusterAggregation == nil {
 		return nil, errors.New("load cluster aggregation")
 	}
-	*/
-	clusterAggregation := &ClusterAggregation{
-		Cluster: &Cluster{
-			Id: clusterId,
-			TenantId: "test-tenant",
-		},
-	}
+
 	clusterAggregation.CurrentOperator = operator
 	cluster := clusterAggregation.Cluster
 
@@ -114,8 +90,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	//todo: mock
-	//ClusterRepo.Persist(clusterAggregation)
+	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }
 
@@ -191,20 +166,23 @@ func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupR
 func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin backupCluster")
 	defer getLogger().Info("end backupCluster")
-	//todo mock
-	/*
+
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	record := clusterAggregation.LastBackupRecord
 	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
+	tidbServerPort := tidbServer.Port
+	if tidbServerPort == 0 {
+		tidbServerPort = DefaultTidbPort
+	}
 
 	clusterFacade := libbr.ClusterFacade{
 		DbConnParameter: libbr.DbConnParam{
 			Username: "root", //todo: replace admin account
 			Password: "",
 			Ip:       tidbServer.Host,
-			Port:     strconv.Itoa(tidbServer.Port),
+			Port:     strconv.Itoa(tidbServerPort),
 		},
 		DbName:      "", //todo: support db table backup
 		TableName:   "",
@@ -224,7 +202,7 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 	record.BizId = uint64(task.Id)
-	*/
+
 	return true
 }
 

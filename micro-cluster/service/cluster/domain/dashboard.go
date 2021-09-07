@@ -7,6 +7,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiup/pkg/utils/rand"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -49,10 +50,12 @@ func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, er
 		return nil, errors.New("load cluster aggregation")
 	}
 
+	/*
 	url, err := getDashboardUrl(clusterAggregation)
 	if err != nil {
 		return nil, err
-	}
+	}*/
+	url := getDashboardUrlFromCluser(clusterAggregation)
 
 	token, err := getLoginToken(url, "root", "") //todo: replace by real data
 	if err != nil {
@@ -66,6 +69,17 @@ func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, er
 	}
 
 	return dashboard, nil
+}
+
+func getDashboardUrlFromCluser(clusterAggregation *ClusterAggregation) string {
+	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	pdNum := len(configModel.PDServers)
+	pdServer := configModel.PDServers[rand.Intn(pdNum)]
+	pdClientPort := pdServer.ClientPort
+	if pdClientPort == 0 {
+		pdClientPort = DefaultPDClientPort
+	}
+	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.Host, pdClientPort)
 }
 
 func getDashboardUrl(clusterAggregation *ClusterAggregation) (string, error) {

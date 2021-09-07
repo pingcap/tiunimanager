@@ -254,25 +254,22 @@ func SaveBackupStrategy(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param clusterId query string true "cluster id"
-// @Param request body BackupRecordQueryReq false "page" default(1)
+// @Param backupRecordQuery query BackupRecordQueryReq true "backup records query condition"
 // @Success 200 {object} controller.ResultWithPage{data=[]BackupRecord}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups [get]
 func QueryBackup(c *gin.Context) {
-	clusterId := c.Query("clusterId")
-
 	var queryReq BackupRecordQueryReq
-	if err := c.ShouldBindJSON(&queryReq); err != nil {
+	if err := c.ShouldBindQuery(&queryReq); err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	operator := controller.GetOperator(c)
 	reqDTO := &cluster.QueryBackupRequest{
 		Operator:  	operator.ConvertToDTO(),
-		ClusterId: 	clusterId,
+		ClusterId: 	queryReq.ClusterId,
 		Page:      	queryReq.PageRequest.ConvertToDTO(),
 		StartTime: 	queryReq.StartTime,
 		EndTime: 	queryReq.EndTime,

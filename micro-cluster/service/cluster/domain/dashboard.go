@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap/errors"
-	"github.com/pingcap/tiup/pkg/utils/rand"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -44,11 +45,14 @@ var defaultExpire int64 = 60 * 60 * 3 //3 hour expire
 func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
 	//todo: check operator and clusterId
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
-	if err != nil || clusterAggregation == nil {
+	if err != nil || clusterAggregation == nil || clusterAggregation.Cluster == nil {
 		return nil, errors.New("load cluster aggregation")
 	}
 
-	url := getDashboardUrl(clusterAggregation)
+	url, err := getDashboardUrl(clusterAggregation)
+	if err != nil {
+		return nil, err
+	}
 
 	token, err := getLoginToken(url, "root", "") //todo: replace by real data
 	if err != nil {
@@ -64,12 +68,8 @@ func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, er
 	return dashboard, nil
 }
 
-func getDashboardUrl(clusterAggregation *ClusterAggregation) string {
-	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
-	pdNum := len(configModel.PDServers)
-	pdServer := configModel.PDServers[rand.Intn(pdNum)]
-	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.Host, pdServer.ClientPort)
-	/*
+func getDashboardUrl(clusterAggregation *ClusterAggregation) (string, error) {
+	clusterName := clusterAggregation.Cluster.ClusterName
 	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterName)
 
 	//tiup cluster display CLUSTER_NAME --dashboard
@@ -82,7 +82,6 @@ func getDashboardUrl(clusterAggregation *ClusterAggregation) string {
 	//DisplayRespString: "Dashboard URL: http://127.0.0.1:2379/dashboard/\n"
 	result := strings.Split(strings.Replace(resp.DisplayRespString, "\n", "", -1), " ")
 	return result[2], nil
-	*/
 }
 
 func getLoginToken(dashboardUrl, userName, password string) (string, error) {

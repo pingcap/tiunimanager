@@ -192,7 +192,9 @@ message DBDeleteBackupRecordResponse {
 
 message DBListBackupRecordsRequest {
     string clusterId = 1;
-    DBPageDTO page = 2;
+    int64 startTime = 2;
+    int64 endTime = 3;
+    DBPageDTO page = 4;
 }
 
 message DBDBBackupRecordDisplayDTO {

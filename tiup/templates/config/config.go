@@ -11,13 +11,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package config
 
 import (
-	"github.com/pingcap/tiup/pkg/tui"
+	"path/filepath"
+
+	"github.com/pingcap-inc/tiem/tiup/templates/embed"
 )
 
-func main() {
-	tui.RegisterArg0("tiup tiem")
-	Execute()
+// GetConfig returns a raw config file from embed templates
+func GetConfig(filename string) ([]byte, error) {
+	fp := filepath.Join("configs", filename)
+	return embed.ReadConfigTemplate(fp)
 }

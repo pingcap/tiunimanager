@@ -43,8 +43,6 @@ LDFLAGS += -X "github.com/pingcap-inc/tiem/tiup/version.ReleaseVersion=$(shell g
 LDFLAGS += -X "github.com/pingcap-inc/tiem/tiup/version.GitHash=$(shell git rev-parse HEAD)"
 LDFLAGS += -X "github.com/pingcap-inc/tiem/tiup/version.GitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
 
-CHECK_LDFLAGS += $(LDFLAGS)
-
 all: fmt build
 
 build: tiup
@@ -56,22 +54,31 @@ fmt:
 	@echo "gofmt (simplify)"
 	@gofmt -s -l -w $(FILES) 2>&1 | $(FAIL_ON_STDOUT)
 
-RACE_FLAG =
-ifeq ("$(WITH_RACE)", "1")
-	RACE_FLAG = -race
-	GOBUILD   = GOPATH=$(GOPATH) CGO_ENABLED=1 $(GO) build
-endif
-
-CHECK_FLAG =
-ifeq ("$(WITH_CHECK)", "1")
-	CHECK_FLAG = $(TEST_LDFLAGS)
-endif
-
 tiup:
-	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o bin/tiup-tiem cmd/*.go
+	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/tiup-tiem cmd/*.go
 
-check-%:
-	@ if [ "${${*}}" = "" ]; then \
-		echo "variable $* not set"; \
-		exit 1; \
-	fi
+test: failpoint-enable run-tests failpoint-disable
+	@# Target: run tests with failpoint enabled
+
+# run-tests: unit-test integration_test
+run-tests: unit-test
+	@# Target: run the unit tests
+
+# Run tests
+unit-test:
+	@# Target: run the code coverage test phase
+	mkdir -p cover
+	TIUP_HOME=$(shell pwd)/tests/tiup $(GOTEST) ./... -covermode=count -coverprofile cover/cov.unit-test.out
+
+failpoint-enable: tools/bin/failpoint-ctl
+	@# Target: enable failpoint
+	@$(FAILPOINT_ENABLE)
+
+failpoint-disable: tools/bin/failpoint-ctl
+	@# Target: disable failpoint
+	@$(FAILPOINT_DISABLE)
+
+tools/bin/failpoint-ctl: go.mod
+	@# Target: build the failpoint-ctl utility
+	$(GO) build -o $@ github.com/pingcap/failpoint/failpoint-ctl
+

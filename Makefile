@@ -207,6 +207,7 @@ test: add_test_file
 	GO111MODULE=off go get github.com/AlekSi/gocov-xml
 	go test -v ${PACKAGES} -coverprofile=cover.out |go-junit-report > test.xml
 	gocov convert cover.out | gocov-xml > coverage.xml
+	$(MAKE) -C tiup ${MAKECMDGOALS}
 
 local_test:
 	mkdir -p "$(TEST_DIR)"

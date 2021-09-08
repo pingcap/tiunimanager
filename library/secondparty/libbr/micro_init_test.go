@@ -55,5 +55,18 @@ func Test_glMicroTaskStatusMapSyncer_NeedUpdate(t *testing.T) {
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
+
+	//sync part mock
+	syncReq := dbPb.UpdateTiupTaskRequest{
+		Id:     1,
+		Status: dbPb.TiupTaskStatus_Error,
+		ErrStr: "dial tcp 127.0.0.1:4000: connect: connection refused\n" ,
+	}
+	syncResp := dbPb.UpdateTiupTaskResponse{
+		ErrCode: 0,
+		ErrStr: "",
+	}
+	mockDBClient.EXPECT().UpdateTiupTask(context.Background(), &syncReq).Return(&syncResp, nil)
+
 	time.Sleep(1500*time.Millisecond)
 }

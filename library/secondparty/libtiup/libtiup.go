@@ -199,7 +199,7 @@ func TiupMgrInit() {
 func assert(b bool) {
 	if b {
 	} else {
-		logger.Fatal("unexpected panic with stack trace:", string(debug.Stack()))
+		logger.Error("unexpected panic with stack trace:", string(debug.Stack()))
 		//fmt.Println("unexpected panic with stack trace:", string(debug.Stack()))
 		panic("unexpected")
 	}
@@ -207,8 +207,7 @@ func assert(b bool) {
 
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
-	logger.Fatalf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
-	//fmt.Printf("panic: %s, with stack trace: %s\n", s, string(debug.Stack()))
+	logger.Errorf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
 	panic("unexpected" + s)
 }
 
@@ -585,72 +584,69 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 func TiupMgrRoutine() {
 	inReader := bufio.NewReader(os.Stdin)
 	outWriter := os.Stdout
-	//errw := os.Stderr
-	//errw.Write([]byte("TiupMgrRoutine enter\n"))
-	for {
-		//errw.Write([]byte("TiupMgrRoutine read\n"))
-		input, err := inReader.ReadString('\n')
-		//fmt.Println("input:", input, len(input), input[:len(input)-1], len(input[:len(input)-1]))
+
+	for { recvReqAndSndResp(inReader, outWriter) }
+}
+
+func recvReqAndSndResp(inReader *bufio.Reader, outWriter *os.File) {
+	input, err := inReader.ReadString('\n')
+	if err != nil {
+		myPanic(err)
+	}
+
+	if input[len(input)-1] == '\n' {
+		cmdStr := input[:len(input)-1]
+		var cmd CmdReqOrResp
+		err := json.Unmarshal([]byte(cmdStr), &cmd)
 		if err != nil {
-			myPanic(err)
+			myPanic(fmt.Sprintln("cmdStr unmarshal failed err:", err, "cmdStr:", cmdStr))
 		}
-		//errw.Write([]byte(input))
-		if input[len(input)-1] == '\n' {
-			cmdStr := input[:len(input)-1]
-			var cmd CmdReqOrResp
-			err := json.Unmarshal([]byte(cmdStr), &cmd)
-			if err != nil {
-				myPanic(fmt.Sprintln("cmdStr unmarshal failed err:", err, "cmdStr:", cmdStr))
-			}
-			logger.Info("rcv req", cmd)
-			var cmdResp CmdReqOrResp
-			switch cmd.TypeStr {
-			case CmdDeployReqTypeStr:
-				resp := mgrHandleCmdDeployReq(cmd.Content)
-				cmdResp.TypeStr = CmdDeployRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			case CmdStartReqTypeStr:
-				resp := mgrHandleCmdStartReq(cmd.Content)
-				cmdResp.TypeStr = CmdStartRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			case CmdListReqTypeStr:
-				resp := mgrHandleCmdListReq(cmd.Content) // todo: make it sync
-				cmdResp.TypeStr = CmdListRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			case CmdDestroyReqTypeStr:
-				resp := mgrHandleCmdDestroyReq(cmd.Content)
-				cmdResp.TypeStr = CmdDestroyRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			case CmdDumplingReqTypeStr:
-				resp := mgrHandleCmdDumplingReq(cmd.Content)
-				cmdResp.TypeStr = CmdDumplingRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			case CmdLightningReqTypeStr:
-				resp := mgrHandleCmdLightningReq(cmd.Content)
-				cmdResp.TypeStr = CmdLightningRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			case CmdClusterDisplayReqTypeStr:
-				resp := mgrHandleClusterDisplayReq(cmd.Content)
-				cmdResp.TypeStr = CmdClusterDisplayRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			case CmdGetAllTaskStatusReqTypeStr:
-				resp := mgrHandleCmdGetAllTaskStatusReq(cmd.Content)
-				cmdResp.TypeStr = CmdGetAllTaskStatusRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			default:
-				myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
-			}
-			logger.Info("snd rsp", cmdResp)
-			bs := jsonMustMarshal(&cmdResp)
-			bs = append(bs, '\n')
-			//errw.Write([]byte("TiupMgrRoutine write\n"))
-			ct, err := outWriter.Write(bs)
-			//errw.Write([]byte(fmt.Sprintf("TiupMgrRoutine write finished %s %d %d %d %v\n", bs, len(bs), ct, err == nil, err)))
-			assert(ct == len(bs))
-			assert(err == nil)
-		} else {
-			myPanic("unexpected")
+		logger.Info("rcv req", cmd)
+		var cmdResp CmdReqOrResp
+		switch cmd.TypeStr {
+		case CmdDeployReqTypeStr:
+			resp := mgrHandleCmdDeployReq(cmd.Content)
+			cmdResp.TypeStr = CmdDeployRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		case CmdStartReqTypeStr:
+			resp := mgrHandleCmdStartReq(cmd.Content)
+			cmdResp.TypeStr = CmdStartRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		case CmdListReqTypeStr:
+			resp := mgrHandleCmdListReq(cmd.Content) // todo: make it sync
+			cmdResp.TypeStr = CmdListRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		case CmdDestroyReqTypeStr:
+			resp := mgrHandleCmdDestroyReq(cmd.Content)
+			cmdResp.TypeStr = CmdDestroyRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		case CmdDumplingReqTypeStr:
+			resp := mgrHandleCmdDumplingReq(cmd.Content)
+			cmdResp.TypeStr = CmdDumplingRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		case CmdLightningReqTypeStr:
+			resp := mgrHandleCmdLightningReq(cmd.Content)
+			cmdResp.TypeStr = CmdLightningRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		case CmdClusterDisplayReqTypeStr:
+			resp := mgrHandleClusterDisplayReq(cmd.Content)
+			cmdResp.TypeStr = CmdClusterDisplayRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		case CmdGetAllTaskStatusReqTypeStr:
+			resp := mgrHandleCmdGetAllTaskStatusReq(cmd.Content)
+			cmdResp.TypeStr = CmdGetAllTaskStatusRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		default:
+			myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
 		}
+		logger.Info("snd rsp", cmdResp)
+		bs := jsonMustMarshal(&cmdResp)
+		bs = append(bs, '\n')
+		ct, err := outWriter.Write(bs)
+		assert(ct == len(bs))
+		assert(err == nil)
+	} else {
+		myPanic("unexpected")
 	}
 }
 

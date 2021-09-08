@@ -196,72 +196,74 @@ func BrMgrInit() {
 func BrMgrRoutine() {
 	inReader := bufio.NewReader(os.Stdin)
 	outWriter := os.Stdout
-	//errw := os.Stderr
 
-	for {
-		input, err := inReader.ReadString('\n')
+	for { recvReqAndSndResp(inReader, outWriter) }
+}
+
+func recvReqAndSndResp(inReader *bufio.Reader, outWriter *os.File) {
+	input, err := inReader.ReadString('\n')
+	if err != nil {
+		myPanic(err)
+	}
+	//errw.Write([]byte(input))
+	if input[len(input)-1] == '\n' {
+		cmdStr := input[:len(input)-1]
+		var cmd CmdReqOrResp
+		err := json.Unmarshal([]byte(cmdStr), &cmd)
 		if err != nil {
-			myPanic(err)
+			myPanic(fmt.Sprintln("cmdStr unmarshal failed err:", err, "cmdStr:", cmdStr))
 		}
-		//errw.Write([]byte(input))
-		if input[len(input)-1] == '\n' {
-			cmdStr := input[:len(input)-1]
-			var cmd CmdReqOrResp
-			err := json.Unmarshal([]byte(cmdStr), &cmd)
-			if err != nil {
-				myPanic(fmt.Sprintln("cmdStr unmarshal failed err:", err, "cmdStr:", cmdStr))
-			}
-			logger.Info("rcv req", cmd)
-			var cmdResp CmdReqOrResp
-			switch cmd.TypeStr {
-			//case CmdBackUpPreCheckReqTypeStr:
-			case CmdBackUpReqTypeStr:
-				resp := mgrHandleCmdBackUpReq(cmd.Content)
-				cmdResp.TypeStr = CmdBackUpRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			case CmdShowBackUpInfoReqTypeStr:
-				resp := mgrHandleCmdShowBackUpInfoReq(cmd.Content)
-				cmdResp.TypeStr = CmdShowBackUpInfoRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			//case CmdRestorePreCheckReqTypeStr:
-			case CmdRestoreReqTypeStr:
-				resp := mgrHandleCmdRestoreReq(cmd.Content)
-				cmdResp.TypeStr = CmdRestoreRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			case CmdShowRestoreInfoReqTypeStr:
-				resp := mgrHandleCmdShowRestoreInfoReq(cmd.Content)
-				cmdResp.TypeStr = CmdShowRestoreInfoRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			case CmdGetAllTaskStatusReqTypeStr:
-				resp := mgrHandleCmdGetAllTaskStatusReq(cmd.Content)
-				cmdResp.TypeStr = CmdGetAllTaskStatusRespTypeStr
-				cmdResp.Content = string(jsonMustMarshal(&resp))
-			default:
-				myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
-			}
-			logger.Info("snd rsp", cmdResp)
-			bs := jsonMustMarshal(&cmdResp)
-			bs = append(bs, '\n')
-			ct, err := outWriter.Write(bs)
-			assert(ct == len(bs))
-			assert(err == nil)
-		} else {
-			myPanic("unexpected")
+
+		logger.Info("rcv req", cmd)
+		var cmdResp CmdReqOrResp
+		switch cmd.TypeStr {
+		//case CmdBackUpPreCheckReqTypeStr:
+		case CmdBackUpReqTypeStr:
+			resp := mgrHandleCmdBackUpReq(cmd.Content)
+			cmdResp.TypeStr = CmdBackUpRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		case CmdShowBackUpInfoReqTypeStr:
+			resp := mgrHandleCmdShowBackUpInfoReq(cmd.Content)
+			cmdResp.TypeStr = CmdShowBackUpInfoRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		//case CmdRestorePreCheckReqTypeStr:
+		case CmdRestoreReqTypeStr:
+			resp := mgrHandleCmdRestoreReq(cmd.Content)
+			cmdResp.TypeStr = CmdRestoreRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		case CmdShowRestoreInfoReqTypeStr:
+			resp := mgrHandleCmdShowRestoreInfoReq(cmd.Content)
+			cmdResp.TypeStr = CmdShowRestoreInfoRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		case CmdGetAllTaskStatusReqTypeStr:
+			resp := mgrHandleCmdGetAllTaskStatusReq(cmd.Content)
+			cmdResp.TypeStr = CmdGetAllTaskStatusRespTypeStr
+			cmdResp.Content = string(jsonMustMarshal(&resp))
+		default:
+			myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
 		}
+		logger.Info("snd rsp", cmdResp)
+		bs := jsonMustMarshal(&cmdResp)
+		bs = append(bs, '\n')
+		ct, err := outWriter.Write(bs)
+		assert(ct == len(bs))
+		assert(err == nil)
+	} else {
+		myPanic("unexpected")
 	}
 }
 
 func assert(b bool) {
 	if b {
 	} else {
-		logger.Fatal("unexpected panic with stack trace:", string(debug.Stack()))
+		logger.Error("unexpected panic with stack trace:", string(debug.Stack()))
 		panic("unexpected")
 	}
 }
 
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
-	logger.Fatalf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
+	logger.Errorf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
 	panic("unexpected")
 }
 
@@ -436,18 +438,6 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 		logger.Debugf("(%s) == (sql: no rows in result set)", err.Error())
 		logger.Infof("task has finished without checking db while no rows is result for sql cmd")
 		resp.Progress = 100
-		//stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID)
-		//logger.Infof("stat: %v, errStr: %s, err: %v", stat, errStr, err)
-		//if err != nil {
-		//	logger.Error("get tiup status from db error", err)
-		//	resp.Error = err
-		//} else if stat != dbPb.TiupTaskStatus_Finished {
-		//	logger.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
-		//	resp.Error = errors.New(fmt.Sprintf("task has not finished: %d, with err info: %s", stat, errStr))
-		//} else {
-		//	logger.Infof("task has finished: %d", stat)
-		//	resp.Progress = 100
-		//}
 		return resp
 	}
 	logger.Info("sql cmd return successfully")
@@ -511,16 +501,6 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 		logger.Debugf("(%s) == (sql: no rows in result set)", err.Error())
 		logger.Infof("task has finished without checking db while no rows is result for sql cmd")
 		resp.Progress = 100
-		//if stat, errStr, err := MicroSrvTiupGetTaskStatus(req.TaskID); err != nil {
-		//	logger.Error("get tiup status error", err)
-		//	resp.Error = err
-		//} else if stat != dbPb.TiupTaskStatus_Finished {
-		//	logger.Errorf("task has not finished: %d, with err info: %s", stat, errStr)
-		//	resp.Error = errors.New(fmt.Sprintf("task has not finished: %d, with err info: %s", stat, errStr))
-		//} else {
-		//	logger.Info("sql cmd return successfully")
-		//	resp.Progress = 100
-		//}
 		return resp
 	}
 	logger.Info("sql cmd return successfully")

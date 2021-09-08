@@ -26,7 +26,6 @@ var cmdRestoreReq CmdRestoreReq
 var cmdShowRestoreInfoReq CmdShowRestoreInfoReq
 
 func init() {
-	fmt.Println("init before test")
 	brMicro = BrMicro{}
 	dbConnParam = DbConnParam{
 		Username: "root",
@@ -61,19 +60,6 @@ func init() {
 	}
 	//log = logger.GetRootLogger("config_key_test_log")
 	// MicroInit("../../../bin/micro-cluster/brmgr/brmgr", "/tmp/log/br/")
-	fmt.Println("initialized")
-}
-
-func TestBrCmd_BrMgrInit(t *testing.T) {
-	BrMgrInit()
-	mgrTaskStatusChCap := cap(glMgrTaskStatusCh)
-	mgrTaskStatusMapLen := len(glMgrTaskStatusMap)
-	if mgrTaskStatusChCap != 1024 {
-		t.Errorf("glMgrTaskStatusCh cap was incorrect, got: %d, want: %d.", mgrTaskStatusChCap, 1024)
-	}
-	if mgrTaskStatusMapLen != 0 {
-		t.Errorf("mgrTaskStatusMap len was incorrect, got: %d, want: %d.", mgrTaskStatusMapLen, 0)
-	}
 }
 
 //func TestBrMicro_MicroInit(t *testing.T) {

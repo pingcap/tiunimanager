@@ -8,6 +8,10 @@ func setupMockAdapter() {
 
 type MockTaskRepo struct{}
 
+func (m MockTaskRepo) ListFlows(bizId, keyword string, status int, page int, pageSize int) ([]*FlowWorkEntity, int, error) {
+	return []*FlowWorkEntity{}, 0, nil
+}
+
 var id uint = 0
 
 func getId() uint {

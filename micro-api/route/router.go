@@ -7,6 +7,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller/databaseapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/instanceapi"
+	"github.com/pingcap-inc/tiem/micro-api/controller/taskapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/userapi"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
@@ -92,6 +93,13 @@ func Route(g *gin.Engine) {
 			backup.POST("/:backupId/restore", instanceapi.RecoverBackup)
 			backup.DELETE("/:backupId", instanceapi.DeleteBackup)
 			//backup.GET("/:backupId", instanceapi.DetailsBackup)
+		}
+
+		flowworks := apiV1.Group("/flowworks")
+		{
+			flowworks.Use(interceptor.VerifyIdentity)
+			flowworks.Use(interceptor.AuditLog())
+			flowworks.GET("/", taskapi.Query)
 		}
 
 		host := apiV1.Group("/resources")

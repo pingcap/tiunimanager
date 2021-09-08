@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 	"strconv"
 	"testing"
@@ -69,7 +70,7 @@ func TestCreateFlow(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotFlow, err := CreateFlow(MetaDB, tt.args.flowName, tt.args.statusAlias, tt.args.bizId)
+			gotFlow, err := CreateFlow(MetaDB, tt.args.flowName, tt.args.statusAlias, tt.args.bizId, "111")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateFlow() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -131,7 +132,7 @@ func TestCreateTask(t *testing.T) {
 
 func TestFetchFlow(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		flow, _ := CreateFlow(MetaDB, "name", "创建中", "TestFetchFlow1")
+		flow, _ := CreateFlow(MetaDB, "name", "创建中", "TestFetchFlow1", "111")
 		got, err := FetchFlow(MetaDB, flow.ID)
 		if err != nil {
 			t.Errorf("TestFetchFlow() error = %v", err)
@@ -149,7 +150,7 @@ func TestFetchFlow(t *testing.T) {
 
 func TestFetchFlowDetail(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		flow, _ := CreateFlow(MetaDB, "name", "创建中", "TestFetchFlowDetail1")
+		flow, _ := CreateFlow(MetaDB, "name", "创建中", "TestFetchFlowDetail1", "111")
 		CreateTask(MetaDB, 0, strconv.Itoa(int(flow.ID)), "task1", "TestFetchFlowDetail1", "trt1", "p1", "r1")
 		CreateTask(MetaDB, 0, strconv.Itoa(int(flow.ID)), "task2", "TestFetchFlowDetail2", "trt2", "p2", "r2")
 		CreateTask(MetaDB, 0, "22", "task3", "TestFetchFlowDetail3", "trt3", "p3", "r3")
@@ -360,7 +361,7 @@ func TestTaskDO_TableName(t *testing.T) {
 
 func TestUpdateFlow(t *testing.T) {
 	now := time.Now()
-	ff, _ := CreateFlow(MetaDB, "test", "", "TestUpdateFlow1")
+	ff, _ := CreateFlow(MetaDB, "test", "", "TestUpdateFlow1", "111")
 	type args struct {
 		flow FlowDO
 	}
@@ -482,8 +483,8 @@ func TestUpdateTask(t *testing.T) {
 
 func TestBatchFetchFlows(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		flow1, _ := CreateFlow(MetaDB, "flow1", "创建中", "121212")
-		flow2, _ := CreateFlow(MetaDB, "flow2", "创建中", "121212")
+		flow1, _ := CreateFlow(MetaDB, "flow1", "创建中", "121212", "111")
+		flow2, _ := CreateFlow(MetaDB, "flow2", "创建中", "121212", "111")
 
 		got, err := BatchFetchFlows(MetaDB, []uint{0, flow1.ID, 0, flow2.ID, 0})
 		if err != nil {
@@ -497,5 +498,50 @@ func TestBatchFetchFlows(t *testing.T) {
 		if got[1].Name != "flow2" {
 			t.Errorf("FetchFlowDetail() got = %v, want %v", got[1].Name, "flow2")
 		}
+	})
+}
+
+func TestListFlows(t *testing.T) {
+	flow1, _ := CreateFlow(MetaDB, "flow1", "TestListFlows", "121212", "111")
+	flow2, _ := CreateFlow(MetaDB, "TestListFlows", "TestListFlows", "9999999", "111")
+
+	t.Run("normal", func(t *testing.T) {
+		got, total, err := ListFlows(MetaDB, "", "", -1, 0, 10)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(2), total)
+		assert.Equal(t, flow1.StatusAlias, got[0].StatusAlias)
+		assert.Equal(t, flow2.Name, got[1].StatusAlias)
+	})
+	t.Run("status", func(t *testing.T) {
+		got, total, err := ListFlows(MetaDB, "", "", 2, 0, 10)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(0), total)
+		assert.Equal(t, 0, len(got))
+	})
+	t.Run("bizId", func(t *testing.T) {
+		got, total, err := ListFlows(MetaDB, "9999999", "", -1, 0, 10)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(1), total)
+		assert.Equal(t, flow2.StatusAlias, got[0].StatusAlias)
+		assert.Equal(t, "9999999", got[0].BizId)
+	})
+	t.Run("keyword", func(t *testing.T) {
+		got, total, err := ListFlows(MetaDB, "", "TestList", -1, 0, 10)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(1), total)
+		assert.Equal(t, flow2.StatusAlias, got[0].StatusAlias)
+		assert.Equal(t, "9999999", got[0].BizId)
+	})
+	t.Run("length", func(t *testing.T) {
+		_, total, err := ListFlows(MetaDB, "", "", 0, 0, 1)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(2), total)
+	})
+	t.Run("offset", func(t *testing.T) {
+		got, total, err := ListFlows(MetaDB, "", "", 0, 1, 1)
+		assert.NoError(t, err)
+		assert.Equal(t, int64(2), total)
+		assert.Equal(t, flow2.StatusAlias, got[0].StatusAlias)
+		assert.Equal(t, "9999999", got[0].BizId)
 	})
 }

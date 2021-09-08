@@ -8,6 +8,7 @@ type FlowDO struct {
 	Data
 	Name        string
 	StatusAlias string
+	Operator  string `gorm:"not null;type:varchar(36);default:null"`
 }
 
 func (do FlowDO) TableName() string {
@@ -36,10 +37,11 @@ func (do *FlowDO) BeforeCreate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-func CreateFlow(db *gorm.DB, flowName string, statusAlias string, bizId string) (flow *FlowDO, err error) {
+func CreateFlow(db *gorm.DB, flowName string, statusAlias string, bizId string, Operator string) (flow *FlowDO, err error) {
 	flow = &FlowDO{
 		Name:        flowName,
 		StatusAlias: statusAlias,
+		Operator: Operator,
 		Data: Data{
 			BizId: bizId,
 		},
@@ -68,6 +70,22 @@ func CreateTask(db *gorm.DB, parentType int8, parentId string, taskName, bizId s
 func FetchFlow(db *gorm.DB, id uint) (flow FlowDO, err error) {
 	err = db.Find(&flow, id).Error
 	return
+}
+
+func ListFlows(db *gorm.DB, bizId, keyword string, status int, offset int, length int) (flows []*FlowDO, total int64, err error) {
+	flows = make([]*FlowDO, length, length)
+	query := db.Table(TABLE_NAME_FLOW)
+	if bizId != "" {
+		query = query.Where("biz_id = ?", bizId)
+	}
+	if keyword != "" {
+		query = query.Where("name like '%" + keyword + "%'")
+	}
+	if status >= 0 {
+		query = query.Where("status = ?", status)
+	}
+	err = query.Count(&total).Offset(offset).Limit(length).Find(&flows).Error
+	return flows, total, err
 }
 
 func BatchFetchFlows(db *gorm.DB, ids []uint) (flows []*FlowDO, err error) {

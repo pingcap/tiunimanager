@@ -76,7 +76,7 @@ func TestClusterAggregation_ExtractDisplayDTO(t *testing.T) {
 	dto := aggregation.ExtractDisplayDTO()
 	assert.Equal(t, strconv.Itoa(int(aggregation.Cluster.Status)), dto.Status.StatusCode)
 	assert.Equal(t, aggregation.Cluster.ClusterName, dto.BaseInfo.ClusterName)
-	assert.Equal(t, int32(22), dto.Instances.Port)
+	assert.Equal(t, int64(4000), dto.Instances.PortList[0])
 }
 
 func TestClusterAggregation_ExtractMaintenanceDTO(t *testing.T) {
@@ -248,22 +248,22 @@ func TestCreateCluster(t *testing.T) {
 			Name: "tidb",
 		},
 		ClusterVersion: &proto.ClusterVersionDTO{
-			Code: "v5.1.0",
-			Name: "v5.1.0",
+			Code: "v5.0.0",
+			Name: "v5.0.0",
 		},
 	},
 	[]*proto.ClusterNodeDemandDTO{
-		{ComponentType: "tidb", TotalNodeCount: 3, Items: []*proto.DistributionItemDTO{
+		{ComponentType: "TiDB", TotalNodeCount: 3, Items: []*proto.DistributionItemDTO{
 			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
 			{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
 			{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
 		}},
-		{ComponentType: "tikv", TotalNodeCount: 3, Items: []*proto.DistributionItemDTO{
+		{ComponentType: "TiKV", TotalNodeCount: 3, Items: []*proto.DistributionItemDTO{
 			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
 			{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
 			{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
 		}},
-		{ComponentType: "pd", TotalNodeCount: 3, Items: []*proto.DistributionItemDTO{
+		{ComponentType: "PD", TotalNodeCount: 3, Items: []*proto.DistributionItemDTO{
 			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
 		}},
 	})
@@ -308,8 +308,4 @@ func Test_freedResource(t *testing.T) {
 
 func Test_modifyParameters(t *testing.T) {
 	assert.True(t, modifyParameters(&TaskEntity{}, nil))
-}
-
-func Test_startupCluster(t *testing.T) {
-	assert.True(t, startupCluster(&TaskEntity{}, nil))
 }

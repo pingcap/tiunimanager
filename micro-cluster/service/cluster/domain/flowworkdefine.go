@@ -124,7 +124,7 @@ type FlowWorkDefine struct {
 	ContextParser func(string) *FlowContext
 }
 
-func (define *FlowWorkDefine) getInstance(bizId string, context map[string]interface{}) *FlowWorkAggregation{
+func (define *FlowWorkDefine) getInstance(bizId string, context map[string]interface{}, operator *Operator) *FlowWorkAggregation{
 
 	if context == nil {
 		context = make(map[string]interface{})
@@ -136,6 +136,7 @@ func (define *FlowWorkDefine) getInstance(bizId string, context map[string]inter
 			StatusAlias: define.StatusAlias,
 			BizId: bizId,
 			Status: TaskStatusInit,
+			Operator: operator,
 		},
 		Tasks: make([]*TaskEntity, 0 ,4),
 		Context: context,

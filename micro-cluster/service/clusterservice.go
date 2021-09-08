@@ -19,7 +19,7 @@ import (
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
 
 var SuccessResponseStatus = &clusterPb.ResponseStatusDTO{Code: 0}
-var BizErrorResponseStatus = &clusterPb.ResponseStatusDTO{Code: 1}
+var BizErrorResponseStatus = &clusterPb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
 	resourceManager *host.ResourceManager
@@ -49,8 +49,9 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterPb
 	clusterAggregation, err := domain.CreateCluster(req.GetOperator(), req.GetCluster(), req.GetDemands())
 
 	if err != nil {
-		// todo
 		getLogger().Info(err)
+		resp.RespStatus = BizErrorResponseStatus
+		resp.RespStatus.Message = err.Error()
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -59,7 +60,6 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterPb
 		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 		return nil
 	}
-
 }
 
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterPb.ClusterQueryReqDTO, resp *clusterPb.ClusterQueryRespDTO) (err error) {

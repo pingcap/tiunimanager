@@ -68,8 +68,11 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 	cluster.Demands = demands
 
 	// persist the cluster into database
-	ClusterRepo.AddCluster(cluster)
+	err := ClusterRepo.AddCluster(cluster)
 
+	if err != nil {
+		return nil, err
+	}
 	clusterAggregation := &ClusterAggregation{
 		Cluster:          cluster,
 		MaintainCronTask: GetDefaultMaintainTask(),
@@ -80,7 +83,7 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 
 	flow, err := CreateFlowWork(cluster.Id, FlowCreateCluster, operator)
 	if err != nil {
-		// todo
+		return nil, err
 	}
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
@@ -443,21 +446,23 @@ func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *proto.All
 
 	for _, d := range demands {
 		switch d.ComponentType.ComponentType {
-		case "tidb":
+		case "TiDB":
 			req.TidbReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.TidbReq[i] = convertAllocationReq(v)
 			}
-		case "tikv":
+		case "TiKV":
 			req.TikvReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.TikvReq[i] = convertAllocationReq(v)
 			}
-		case "pd":
+		case "PD":
 			req.PdReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.PdReq[i] = convertAllocationReq(v)
 			}
+		default:
+
 		}
 	}
 	return

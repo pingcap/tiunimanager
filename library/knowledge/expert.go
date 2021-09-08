@@ -143,6 +143,8 @@ func loadSpecKnowledge () {
 		Components: map[string]*ClusterComponent{tidbComponent.ComponentType:&tidbComponent,
 			tikvComponent.ComponentType:&tikvComponent,
 			pdComponent.ComponentType: &pdComponent,
+			tiFlashComponent.ComponentType: &tiFlashComponent,
+			tiCdcComponent.ComponentType: &tiCdcComponent,
 		},
 	}
 }

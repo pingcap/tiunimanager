@@ -8,6 +8,7 @@ import (
 	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 // Query query flow works
@@ -52,6 +53,9 @@ func Query(c *gin.Context) {
 				FlowWorkName: v.FlowName,
 				ClusterId:    v.BizId,
 				StatusInfo: controller.StatusInfo{
+					CreateTime:	time.Unix(v.CreateTime, 0),
+					UpdateTime:	time.Unix(v.UpdateTime, 0),
+					DeleteTime:	time.Unix(v.DeleteTime, 0),
 					StatusCode: strconv.Itoa(int(v.Status)),
 					StatusName: v.StatusName,
 				},

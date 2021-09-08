@@ -16,6 +16,8 @@ type FlowWorkEntity struct {
 	Status         TaskStatus
 	ContextContent string
 	Operator	*Operator
+	CreateTime time.Time
+	UpdateTime time.Time
 }
 
 type FlowContext map[string]interface{}

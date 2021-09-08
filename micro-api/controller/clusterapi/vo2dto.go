@@ -11,7 +11,7 @@ func (req *CreateReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, d
 
 	demandsDTO = make([]*cluster.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))
 
-	for i,demand := range req.NodeDemandList {
+	for _,demand := range req.NodeDemandList {
 		if demand.TotalNodeCount <= 0 {
 			framework.Log().Infof("Skip empty demand for component %s", demand.ComponentType)
 			continue
@@ -26,11 +26,11 @@ func (req *CreateReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, d
 			}
 		}
 
-		demandsDTO[i] = &cluster.ClusterNodeDemandDTO{
+		demandsDTO = append(demandsDTO, &cluster.ClusterNodeDemandDTO{
 			ComponentType:  demand.ComponentType,
 			TotalNodeCount: int32(demand.TotalNodeCount),
 			Items:          items,
-		}
+		})
 	}
 	return
 }

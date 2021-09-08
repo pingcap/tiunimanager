@@ -20,10 +20,12 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/joomcode/errorx"
+	"github.com/pingcap-inc/tiem/tiup/spec"
 	"github.com/pingcap-inc/tiem/tiup/version"
 	"github.com/pingcap/tiup/pkg/cluster/executor"
+	"github.com/pingcap/tiup/pkg/cluster/manager"
 	operator "github.com/pingcap/tiup/pkg/cluster/operation"
-	"github.com/pingcap/tiup/pkg/cluster/spec"
+	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
 	tiupmeta "github.com/pingcap/tiup/pkg/environment"
 	"github.com/pingcap/tiup/pkg/localdata"
 	"github.com/pingcap/tiup/pkg/logger"
@@ -38,6 +40,8 @@ var (
 	rootCmd     *cobra.Command
 	gOpt        operator.Options
 	skipConfirm bool
+	cm          *manager.Manager
+	tiemspec    *cspec.SpecManager
 )
 
 func init() {
@@ -54,7 +58,7 @@ func init() {
 
 	rootCmd = &cobra.Command{
 		Use:           tui.OsArgs0(),
-		Short:         "Collect metrics and information from a TiDB cluster",
+		Short:         "Deploy and manage TiEM clusters",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Version:       version.NewComponentVersion().String(),
@@ -63,9 +67,13 @@ func init() {
 			var env *tiupmeta.Environment
 			// unset component data dir to use clusters'
 			os.Unsetenv(localdata.EnvNameComponentDataDir)
-			if err = spec.Initialize("cluster"); err != nil {
+			if err = cspec.Initialize("tiem"); err != nil {
 				return err
 			}
+
+			tiemspec = cspec.GetSpecManager()
+			logger.EnableAuditLog(cspec.AuditDir())
+			cm = manager.NewManager("tiem", tiemspec, spec.TiEMComponentVersion)
 
 			// Running in other OS/ARCH Should be fine we only download manifest file.
 			env, err = tiupmeta.InitEnv(repository.Options{
@@ -79,7 +87,7 @@ func init() {
 
 			if gOpt.NativeSSH {
 				gOpt.SSHType = executor.SSHTypeSystem
-				zap.L().Info("System ssh client will be used",
+				zap.L().Info("System SSH client will be used",
 					zap.String(localdata.EnvNameNativeSSHClient, os.Getenv(localdata.EnvNameNativeSSHClient)))
 				fmt.Println("The --native-ssh flag has been deprecated, please use --ssh=system")
 			}
@@ -103,8 +111,10 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&gOpt.Concurrency, "concurrency", "c", 5, "max number of parallel tasks allowed")
 	_ = rootCmd.PersistentFlags().MarkHidden("native-ssh")
 
-	//rootCmd.AddCommand(
-	//)
+	rootCmd.AddCommand(
+		newDisplayCmd(),
+		newDeployCmd(),
+	)
 }
 
 func printErrorMessageForNormalError(err error) {
@@ -198,12 +208,6 @@ func Execute() {
 				_, _ = fmt.Fprintf(os.Stderr, "\n%s\n", suggestion)
 			}
 		}
-	}
-
-	err = logger.OutputAuditLogIfEnabled()
-	if err != nil {
-		zap.L().Warn("Write audit log file failed", zap.Error(err))
-		code = 1
 	}
 
 	color.Unset()

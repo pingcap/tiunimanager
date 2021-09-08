@@ -14,8 +14,16 @@
 package spec
 
 import (
+	"context"
 	"crypto/tls"
+	"fmt"
+	"path/filepath"
+	"time"
 
+	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
+	"github.com/pingcap/tiup/pkg/cluster/ctxt"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"github.com/pingcap/tiup/pkg/logger/log"
 	"github.com/pingcap/tiup/pkg/meta"
 )
 
@@ -42,7 +50,7 @@ func (s *ElasticSearchSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 
 // Role returns the component role of the instance
 func (s *ElasticSearchSpec) Role() string {
-	return ComponentTiEMClusterServer
+	return ComponentElasticSearchServer
 }
 
 // SSH returns the host and SSH port of the instance
@@ -63,4 +71,134 @@ func (s *ElasticSearchSpec) IsImported() bool {
 // IgnoreMonitorAgent returns if the node does not have monitor agents available
 func (s *ElasticSearchSpec) IgnoreMonitorAgent() bool {
 	return false
+}
+
+// ElasticSearchComponent represents TiEM component.
+type ElasticSearchComponent struct{ Topology *Specification }
+
+// Name implements Component interface.
+func (c *ElasticSearchComponent) Name() string {
+	return ComponentElasticSearchServer
+}
+
+// Role implements Component interface.
+func (c *ElasticSearchComponent) Role() string {
+	return RoleTiEMAPI
+}
+
+// Instances implements Component interface.
+func (c *ElasticSearchComponent) Instances() []Instance {
+	ins := make([]Instance, 0)
+	for _, s := range c.Topology.ElasticSearchServers {
+		s := s
+		ins = append(ins, &ElasticSearchInstance{
+			Name: s.Name,
+			BaseInstance: spec.BaseInstance{
+				InstanceSpec: s,
+				Name:         c.Name(),
+				Host:         s.Host,
+				Port:         s.Port,
+				SSHP:         s.SSHPort,
+
+				Ports: []int{
+					s.Port,
+				},
+				Dirs: []string{
+					s.DeployDir,
+					s.DataDir,
+				},
+				StatusFn: s.Status,
+				UptimeFn: func(tlsCfg *tls.Config) time.Duration {
+					return spec.UptimeByHost(s.Host, s.Port, tlsCfg)
+				},
+			},
+			topo: c.Topology,
+		})
+	}
+	return ins
+}
+
+// ElasticSearchInstance represent the TiEM instance
+type ElasticSearchInstance struct {
+	Name string
+	spec.BaseInstance
+	topo *Specification
+}
+
+// InitConfig implement Instance interface
+func (i *ElasticSearchInstance) InitConfig(
+	ctx context.Context,
+	e ctxt.Executor,
+	clusterName,
+	clusterVersion,
+	deployUser string,
+	paths meta.DirPaths,
+) error {
+	if err := i.BaseInstance.InitConfig(ctx, e, i.topo.GlobalOptions, deployUser, paths); err != nil {
+		return err
+	}
+
+	spec := i.InstanceSpec.(*ElasticSearchSpec)
+	scpt := scripts.NewElasticSearchScript(
+		i.GetHost(),
+		paths.Deploy,
+		paths.Data[0],
+		paths.Log,
+	).
+		WithPort(spec.Port)
+
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_elasticsearch_%s_%d.sh", i.GetHost(), i.GetPort()))
+	if err := scpt.ScriptToFile(fp); err != nil {
+		return err
+	}
+	dst := filepath.Join(paths.Deploy, "scripts", "run_elasticsearch.sh")
+	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
+		return err
+	}
+	if _, _, err := e.Execute(ctx, "chmod +x "+dst, false); err != nil {
+		return err
+	}
+
+	// no config file needed
+	return nil
+}
+
+// ScaleConfig deploy temporary config on scaling
+func (i *ElasticSearchInstance) ScaleConfig(
+	ctx context.Context,
+	e ctxt.Executor,
+	topo spec.Topology,
+	clusterName,
+	clusterVersion,
+	deployUser string,
+	paths meta.DirPaths,
+) error {
+	if err := i.InitConfig(ctx, e, clusterName, clusterVersion, deployUser, paths); err != nil {
+		return err
+	}
+
+	spec := i.InstanceSpec.(*ElasticSearchSpec)
+	scpt := scripts.NewElasticSearchScript(
+		i.GetHost(),
+		paths.Deploy,
+		paths.Data[0],
+		paths.Log,
+	).
+		WithPort(spec.Port)
+
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_elasticsearch_%s_%d.sh", i.GetHost(), i.GetPort()))
+	log.Infof("script path: %s", fp)
+	if err := scpt.ScriptToFile(fp); err != nil {
+		return err
+	}
+
+	dst := filepath.Join(paths.Deploy, "scripts", "run_elasticsearch.sh")
+	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
+		return err
+	}
+	if _, _, err := e.Execute(ctx, "chmod +x "+dst, false); err != nil {
+		return err
+	}
+
+	return nil
 }

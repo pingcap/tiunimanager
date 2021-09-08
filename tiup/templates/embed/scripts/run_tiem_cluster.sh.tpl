@@ -3,17 +3,17 @@ set -e
 
 # WARNING: This file was auto-generated. Do not edit!
 #          All your edit might be overwritten!
-DEPLOY_DIR={{.deploy_dir}}
+DEPLOY_DIR={{.DeployDir}}
 
 cd "${DEPLOY_DIR}" || exit 1
 
 LANG=en_US.UTF-8 \
 exec env GODEBUG=madvdontneed=1 bin/cluster-server \
-    --host="{{.tiem_cluster_servers.host}}" \
-    --port="{{.tiem_cluster_servers.port}}" \
-    --metrics-port="{{.global.metrics_port}}" \
-    --registry-address="{{.registry_endpoints}}" \
+    --host="{{.Host}}" \
+    --port="{{.Port}}" \
+    --metrics-port="{{.Metrics}}" \
+    --registry-address="{{.registry_endpoint}}" \
     --tracer-address="{{.tracer_servers.host}}:{{.tracer_servers.port}}" \
-    --deploy-dir="{{.tiem_cluster_servers.deploy_dir}}" \
-    --data-dir="{{.tiem_cluster_servers.data_dir}}" \
+    --deploy-dir="{{.DeployDir}}" \
+    --data-dir="{{.DataDir}}" \
     --log-level="{{.global.log_level}}"

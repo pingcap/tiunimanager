@@ -14,6 +14,7 @@ import (
 
 var ClusterSuccessResponseStatus = &dbPb.DBClusterResponseStatus{Code: 0}
 var ClusterNoResultResponseStatus = &dbPb.DBClusterResponseStatus{Code: 1}
+var BizErrResponseStatus = &dbPb.DBClusterResponseStatus{Code: 2}
 
 func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DBCreateClusterRequest, resp *dbPb.DBCreateClusterResponse) (err error) {
 	if nil == req || nil == resp {
@@ -35,9 +36,11 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DB
 	if nil == err {
 		log.Infof("CreateCluster successful, clusterId: %s, tenantId: %s, error: %v", cluster.ID, cluster.TenantId, err)
 	} else {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = "CreateCluster failed"
 		log.Infof("CreateCluster failed, clusterId: %s, tenantId: %s, error: %v", cluster.ID, cluster.TenantId, err)
 	}
-	return err
+	return nil
 }
 
 func (handler *DBServiceHandler) DeleteCluster(ctx context.Context, req *dbPb.DBDeleteClusterRequest, resp *dbPb.DBDeleteClusterResponse) (err error) {

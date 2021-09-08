@@ -68,8 +68,11 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 	cluster.Demands = demands
 
 	// persist the cluster into database
-	ClusterRepo.AddCluster(cluster)
+	err := ClusterRepo.AddCluster(cluster)
 
+	if err != nil {
+		return nil, err
+	}
 	clusterAggregation := &ClusterAggregation{
 		Cluster:          cluster,
 		MaintainCronTask: GetDefaultMaintainTask(),
@@ -78,9 +81,9 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 
 	// Start the workflow to create a cluster instance
 
-	flow, err := CreateFlowWork(cluster.Id, FlowCreateCluster)
+	flow, err := CreateFlowWork(cluster.Id, FlowCreateCluster, operator)
 	if err != nil {
-		// todo
+		return nil, err
 	}
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
@@ -107,7 +110,7 @@ func DeleteCluster(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregatio
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster)
+	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster, operator)
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()
 
@@ -124,7 +127,7 @@ func ListCluster(ope *proto.OperatorDTO, req *proto.ClusterQueryReqDTO) ([]*Clus
 
 func GetClusterDetail(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
 	cluster, err := ClusterRepo.Load(clusterId)
-	// todo 补充其他的信息
+
 	return cluster, err
 }
 
@@ -147,7 +150,7 @@ func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) 
 	//	return clusterAggregation, errors.New("incomplete processing flow")
 	//}
 
-	flow, err := CreateFlowWork(clusterId, FlowModifyParameters)
+	flow, err := CreateFlowWork(clusterId, FlowModifyParameters, operator)
 	if err != nil {
 		// todo
 	}
@@ -443,21 +446,23 @@ func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *proto.All
 
 	for _, d := range demands {
 		switch d.ComponentType.ComponentType {
-		case "tidb":
+		case "TiDB":
 			req.TidbReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.TidbReq[i] = convertAllocationReq(v)
 			}
-		case "tikv":
+		case "TiKV":
 			req.TikvReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.TikvReq[i] = convertAllocationReq(v)
 			}
-		case "pd":
+		case "PD":
 			req.PdReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.PdReq[i] = convertAllocationReq(v)
 			}
+		default:
+
 		}
 	}
 	return
@@ -470,6 +475,10 @@ func convertAllocationReq(item *ClusterNodeDistributionItem) *proto.AllocationRe
 		Memory:        int32(knowledge.ParseMemory(item.SpecCode)),
 		Count:         int32(item.Count),
 	}
+}
+
+func tidbPort() int {
+	return 4000
 }
 
 func convertConfig(resource *proto.AllocHostResponse, cluster *Cluster) *spec.Specification {
@@ -508,6 +517,7 @@ func convertConfig(resource *proto.AllocHostResponse, cluster *Cluster) *spec.Sp
 			Host:      v.Ip,
 			DataDir:   filepath.Join(v.Disk.Path, cluster.Id, "pd-data"),
 			DeployDir: filepath.Join(v.Disk.Path, cluster.Id, "pd-deploy"),
+			ClientPort: tidbPort(),
 		})
 	}
 	for _, v := range tidbHosts {

@@ -5,7 +5,7 @@ package db
 
 import (
 	fmt "fmt"
-	proto "google.golang.org/protobuf/proto"
+	proto "github.com/golang/protobuf/proto"
 	math "math"
 )
 
@@ -20,6 +20,12 @@ import (
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ api.Endpoint
@@ -81,6 +87,7 @@ type TiEMDBService interface {
 	UpdateTask(ctx context.Context, in *DBUpdateTaskRequest, opts ...client.CallOption) (*DBUpdateTaskResponse, error)
 	LoadFlow(ctx context.Context, in *DBLoadFlowRequest, opts ...client.CallOption) (*DBLoadFlowResponse, error)
 	LoadTask(ctx context.Context, in *DBLoadTaskRequest, opts ...client.CallOption) (*DBLoadTaskResponse, error)
+	ListFlows(ctx context.Context, in *DBListFlowsRequest, opts ...client.CallOption) (*DBListFlowsResponse, error)
 	// DataTransport
 	CreateTransportRecord(ctx context.Context, in *DBCreateTransportRecordRequest, opts ...client.CallOption) (*DBCreateTransportRecordResponse, error)
 	UpdateTransportRecord(ctx context.Context, in *DBUpdateTransportRecordRequest, opts ...client.CallOption) (*DBUpdateTransportRecordResponse, error)
@@ -490,6 +497,16 @@ func (c *tiEMDBService) LoadTask(ctx context.Context, in *DBLoadTaskRequest, opt
 	return out, nil
 }
 
+func (c *tiEMDBService) ListFlows(ctx context.Context, in *DBListFlowsRequest, opts ...client.CallOption) (*DBListFlowsResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.ListFlows", in)
+	out := new(DBListFlowsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tiEMDBService) CreateTransportRecord(ctx context.Context, in *DBCreateTransportRecordRequest, opts ...client.CallOption) (*DBCreateTransportRecordResponse, error) {
 	req := c.c.NewRequest(c.name, "TiEMDBService.CreateTransportRecord", in)
 	out := new(DBCreateTransportRecordResponse)
@@ -578,6 +595,7 @@ type TiEMDBServiceHandler interface {
 	UpdateTask(context.Context, *DBUpdateTaskRequest, *DBUpdateTaskResponse) error
 	LoadFlow(context.Context, *DBLoadFlowRequest, *DBLoadFlowResponse) error
 	LoadTask(context.Context, *DBLoadTaskRequest, *DBLoadTaskResponse) error
+	ListFlows(context.Context, *DBListFlowsRequest, *DBListFlowsResponse) error
 	// DataTransport
 	CreateTransportRecord(context.Context, *DBCreateTransportRecordRequest, *DBCreateTransportRecordResponse) error
 	UpdateTransportRecord(context.Context, *DBUpdateTransportRecordRequest, *DBUpdateTransportRecordResponse) error
@@ -626,6 +644,7 @@ func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, op
 		UpdateTask(ctx context.Context, in *DBUpdateTaskRequest, out *DBUpdateTaskResponse) error
 		LoadFlow(ctx context.Context, in *DBLoadFlowRequest, out *DBLoadFlowResponse) error
 		LoadTask(ctx context.Context, in *DBLoadTaskRequest, out *DBLoadTaskResponse) error
+		ListFlows(ctx context.Context, in *DBListFlowsRequest, out *DBListFlowsResponse) error
 		CreateTransportRecord(ctx context.Context, in *DBCreateTransportRecordRequest, out *DBCreateTransportRecordResponse) error
 		UpdateTransportRecord(ctx context.Context, in *DBUpdateTransportRecordRequest, out *DBUpdateTransportRecordResponse) error
 		FindTrasnportRecordByID(ctx context.Context, in *DBFindTransportRecordByIDRequest, out *DBFindTransportRecordByIDResponse) error
@@ -796,6 +815,10 @@ func (h *tiEMDBServiceHandler) LoadFlow(ctx context.Context, in *DBLoadFlowReque
 
 func (h *tiEMDBServiceHandler) LoadTask(ctx context.Context, in *DBLoadTaskRequest, out *DBLoadTaskResponse) error {
 	return h.TiEMDBServiceHandler.LoadTask(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) ListFlows(ctx context.Context, in *DBListFlowsRequest, out *DBListFlowsResponse) error {
+	return h.TiEMDBServiceHandler.ListFlows(ctx, in, out)
 }
 
 func (h *tiEMDBServiceHandler) CreateTransportRecord(ctx context.Context, in *DBCreateTransportRecordRequest, out *DBCreateTransportRecordResponse) error {

@@ -25,9 +25,9 @@ var CopyWritingContainer = map[string]map[string]string{
 		CWFlowExportData: 		"数据导出中",
 		CWFlowImportData: 		"数据导出中",
 		CWTaskStatusInit:       "未开始",
-		CWTaskStatusProcessing: "处理中",
-		CWTaskStatusFinished:   "已完成",
-		CWTaskStatusError:      "已失败",
+		CWTaskStatusProcessing: "进行中",
+		CWTaskStatusFinished:   "完成",
+		CWTaskStatusError:      "失败",
 	},
 }
 

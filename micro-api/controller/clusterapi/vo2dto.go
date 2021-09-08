@@ -1,6 +1,7 @@
 package clusterapi
 
 import (
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
@@ -8,9 +9,13 @@ import (
 func (req *CreateReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, demandsDTO []*cluster.ClusterNodeDemandDTO) {
 	baseInfoDTO = req.ClusterBaseInfo.ConvertToDTO()
 
-	demandsDTO = make([]*cluster.ClusterNodeDemandDTO, len(req.NodeDemandList), len(req.NodeDemandList))
+	demandsDTO = make([]*cluster.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))
 
-	for i,demand := range req.NodeDemandList {
+	for _,demand := range req.NodeDemandList {
+		if demand.TotalNodeCount <= 0 {
+			framework.Log().Infof("Skip empty demand for component %s", demand.ComponentType)
+			continue
+		}
 		items := make([]*cluster.DistributionItemDTO, len(demand.DistributionItems), len(demand.DistributionItems))
 
 		for j, item := range demand.DistributionItems {
@@ -21,11 +26,11 @@ func (req *CreateReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, d
 			}
 		}
 
-		demandsDTO[i] = &cluster.ClusterNodeDemandDTO{
+		demandsDTO = append(demandsDTO, &cluster.ClusterNodeDemandDTO{
 			ComponentType:  demand.ComponentType,
 			TotalNodeCount: int32(demand.TotalNodeCount),
 			Items:          items,
-		}
+		})
 	}
 	return
 }

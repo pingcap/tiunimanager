@@ -5,7 +5,7 @@ package cluster
 
 import (
 	fmt "fmt"
-	proto "google.golang.org/protobuf/proto"
+	proto "github.com/golang/protobuf/proto"
 	math "math"
 )
 
@@ -20,6 +20,12 @@ import (
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ api.Endpoint
@@ -66,6 +72,8 @@ type ClusterService interface {
 	CheckDetails(ctx context.Context, in *CheckDetailsRequest, opts ...client.CallOption) (*CheckDetailsResponse, error)
 	AllocHosts(ctx context.Context, in *AllocHostsRequest, opts ...client.CallOption) (*AllocHostResponse, error)
 	GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, opts ...client.CallOption) (*GetFailureDomainResponse, error)
+	// task manager
+	ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...client.CallOption) (*ListFlowsResponse, error)
 }
 
 type clusterService struct {
@@ -350,6 +358,16 @@ func (c *clusterService) GetFailureDomain(ctx context.Context, in *GetFailureDom
 	return out, nil
 }
 
+func (c *clusterService) ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...client.CallOption) (*ListFlowsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.ListFlows", in)
+	out := new(ListFlowsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterService service
 
 type ClusterServiceHandler interface {
@@ -383,6 +401,8 @@ type ClusterServiceHandler interface {
 	CheckDetails(context.Context, *CheckDetailsRequest, *CheckDetailsResponse) error
 	AllocHosts(context.Context, *AllocHostsRequest, *AllocHostResponse) error
 	GetFailureDomain(context.Context, *GetFailureDomainRequest, *GetFailureDomainResponse) error
+	// task manager
+	ListFlows(context.Context, *ListFlowsRequest, *ListFlowsResponse) error
 }
 
 func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, opts ...server.HandlerOption) error {
@@ -414,6 +434,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		CheckDetails(ctx context.Context, in *CheckDetailsRequest, out *CheckDetailsResponse) error
 		AllocHosts(ctx context.Context, in *AllocHostsRequest, out *AllocHostResponse) error
 		GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, out *GetFailureDomainResponse) error
+		ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error
 	}
 	type ClusterService struct {
 		clusterService
@@ -532,4 +553,8 @@ func (h *clusterServiceHandler) AllocHosts(ctx context.Context, in *AllocHostsRe
 
 func (h *clusterServiceHandler) GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, out *GetFailureDomainResponse) error {
 	return h.ClusterServiceHandler.GetFailureDomain(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error {
+	return h.ClusterServiceHandler.ListFlows(ctx, in, out)
 }

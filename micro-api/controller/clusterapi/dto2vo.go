@@ -109,11 +109,15 @@ func ParseComponentBaseInfoFromDTO(dto *cluster.ComponentBaseInfoDTO) (baseInfo 
 }
 
 func ParseInstanceInfoFromDTO(dto *cluster.ClusterInstanceDTO) (instance *ClusterInstanceInfo) {
+	portList := make([]int, len(dto.PortList), len(dto.PortList))
+	for i,v := range dto.PortList {
+		portList[i] = int(v)
+	}
 	instance = &ClusterInstanceInfo{
 		IntranetConnectAddresses: dto.IntranetConnectAddresses,
 		ExtranetConnectAddresses: dto.ExtranetConnectAddresses,
 		Whitelist:                dto.Whitelist,
-		Port: int(dto.Port),
+		PortList: portList,
 		DiskUsage: *controller.ParseUsageFromDTO(dto.DiskUsage),
 		CpuUsage: *controller.ParseUsageFromDTO(dto.CpuUsage),
 		MemoryUsage: *controller.ParseUsageFromDTO(dto.MemoryUsage),

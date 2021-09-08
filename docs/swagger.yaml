@@ -34,8 +34,10 @@ definitions:
         type: array
       memoryUsage:
         $ref: '#/definitions/controller.Usage'
-      port:
-        type: integer
+      portList:
+        items:
+          type: integer
+        type: array
       statusCode:
         type: string
       statusName:
@@ -188,8 +190,6 @@ definitions:
     properties:
       clusterId:
         type: string
-      shareCode:
-        type: string
       token:
         type: string
       url:
@@ -235,8 +235,10 @@ definitions:
         type: string
       memoryUsage:
         $ref: '#/definitions/controller.Usage'
-      port:
-        type: integer
+      portList:
+        items:
+          type: integer
+        type: array
       statusCode:
         type: string
       statusName:

@@ -493,7 +493,7 @@ func TestListClusterDetails(t *testing.T) {
 		OwnerId: "me",
 	}
 	MetaDB.Create(cluster1)
-	f, _ := CreateFlow(MetaDB, "flow1", "flow1", cluster1.ID)
+	f, _ := CreateFlow(MetaDB, "flow1", "flow1", cluster1.ID, "111")
 
 	clusterTbl := Dao.ClusterManager()
 	cluster1, _, _ = clusterTbl.UpdateClusterDemand(cluster1.ID, "demand1", "111")
@@ -635,7 +635,7 @@ func TestDeleteBackupRecord(t *testing.T) {
 
 func TestListBackupRecords(t *testing.T) {
 	brTbl := Dao.ClusterManager()
-	flow, _ := CreateFlow(MetaDB, "backup", "backup", "111")
+	flow, _ := CreateFlow(MetaDB, "backup", "backup", "111", "111")
 	record := &dbPb.DBBackupRecordDTO{
 		TenantId:    "111",
 		ClusterId:   "TestListBackupRecords",
@@ -822,7 +822,7 @@ func TestFetchCluster(t *testing.T) {
 		clusterTbl.UpdateTiUPConfig(cluster.ID, "config content", defaultTenantId)
 	})
 	t.Run("with flow", func(t *testing.T) {
-		flow, _ := CreateFlow(MetaDB, "whatever", "whatever", "whatever")
+		flow, _ := CreateFlow(MetaDB, "whatever", "whatever", "whatever", "111")
 		cluster, _ := clusterTbl.UpdateClusterFlowId(cluster.ID, flow.ID)
 		gotResult, err := clusterTbl.FetchCluster(cluster.ID)
 		if err != nil {

@@ -54,7 +54,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 	clusterAggregation.CurrentOperator = operator
 	cluster := clusterAggregation.Cluster
 
-	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster)
+	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster, operator)
 
 	//todo: only support FULL Physics backup now
 	record := &BackupRecord{
@@ -141,7 +141,7 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 	//	return clusterAggregation, errors.New("incomplete processing flow")
 	//}
 
-	flow, err := CreateFlowWork(clusterId, FlowRecoverCluster)
+	flow, err := CreateFlowWork(clusterId, FlowRecoverCluster, operator)
 	if err != nil {
 		// todo
 	}

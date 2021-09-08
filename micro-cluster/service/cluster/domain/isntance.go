@@ -44,9 +44,12 @@ func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int64) {
 func (aggregation *ClusterAggregation) ExtractComponentDTOs() []*proto.ComponentInstanceDTO {
 	//if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
 	//	config := record.ConfigModel
-	//	var knowledge *knowledge.ClusterVersionSpec
-	//
-	//	return appendAllComponentInstances(config, knowledge)
+	//	knowledge := knowledge.ClusterTypeSpecFromCode(aggregation.Cluster.ClusterType.Code)
+	//	for _, v := range knowledge.VersionSpecs {
+	//		if v.ClusterVersion.Code == aggregation.Cluster.ClusterVersion.Code {
+	//			return appendAllComponentInstances(config, &v)
+	//		}
+	//	}
 	//}
 	return make([]*proto.ComponentInstanceDTO, 0)
 }

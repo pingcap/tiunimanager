@@ -124,7 +124,7 @@ func ListCluster(ope *proto.OperatorDTO, req *proto.ClusterQueryReqDTO) ([]*Clus
 
 func GetClusterDetail(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
 	cluster, err := ClusterRepo.Load(clusterId)
-	// todo 补充其他的信息
+
 	return cluster, err
 }
 

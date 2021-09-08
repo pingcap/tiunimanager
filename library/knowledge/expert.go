@@ -1,5 +1,7 @@
 package knowledge
 
+import "github.com/pingcap-inc/tiem/library/framework"
+
 var SpecKnowledge *ClusterSpecKnowledge
 var ParameterKnowledge *ClusterParameterKnowledge
 
@@ -17,6 +19,16 @@ type ClusterSpecKnowledge struct {
 
 type ResourceSpecKnowledge struct {
 	Specs 		[]*ResourceSpec
+}
+
+func ClusterTypeSpecFromCode(code string) *ClusterTypeSpec {
+	for _, v := range SpecKnowledge.Specs {
+		if code == v.ClusterType.Code {
+			return v
+		}
+	}
+	framework.Log().Errorf("Wrong code of cluster type: %s", code)
+	return nil
 }
 
 func ClusterTypeFromCode(code string) *ClusterType {

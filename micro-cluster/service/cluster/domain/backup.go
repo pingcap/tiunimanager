@@ -39,7 +39,8 @@ type BackupStrategy struct {
 	CronString     string
 }
 
-var defaultPathPrefix string = "/tmp/tiem/backup"
+//var defaultPathPrefix string = "/tmp/tiem/backup"
+var defaultPathPrefix string = "nfs/tiem/backup"
 
 func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, filePath string) (*ClusterAggregation, error) {
 	getLogger().Infof("Begin do Backup, clusterId: %s, backupRange: %s, backupType: %s, filePath: %s", clusterId, backupRange, backupType, filePath)
@@ -160,6 +161,8 @@ func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupR
 		//local://br_data/[clusterId]/16242354365-FULL/(lock/SST/metadata)
 		return fmt.Sprintf("%s/%s/%d-%s", filePrefix, clusterId, timeStamp, backupRange)
 	}
+	//return fmt.Sprintf("%s/%s/%d-%s", defaultPathPrefix, clusterId, timeStamp, backupRange)
+	//todo: test env s3 config
 	return fmt.Sprintf("%s/%s/%d-%s", defaultPathPrefix, clusterId, timeStamp, backupRange)
 }
 
@@ -191,8 +194,8 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 		TaskID:      uint64(task.Id),
 	}
 	storage := libbr.BrStorage{
-		StorageType: libbr.StorageTypeLocal,
-		Root:        record.FilePath,
+		StorageType: libbr.StorageTypeS3,
+		Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
 
 	getLogger().Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)

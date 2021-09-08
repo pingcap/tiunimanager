@@ -411,7 +411,7 @@ func (m *DAOClusterManager) QueryBackupRecord(clusterId string, recordId int64) 
 func (m *DAOClusterManager) ListBackupRecords(clusterId string, startTime, endTime int64,offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
 
 	records := make([]*BackupRecord, length, length)
-	db := m.Db().Table(TABLE_NAME_BACKUP_RECORD).Where("cluster_id = ?", clusterId)
+	db := m.Db().Table(TABLE_NAME_BACKUP_RECORD).Where("cluster_id = ? and deleted_at is null", clusterId)
 	if startTime > 0 {
 		db = db.Where("start_time >= ?", time.Unix(startTime, 0))
 	}

@@ -197,16 +197,16 @@ else
 	go tool cover -func="$(TEST_DIR)/unit_cov.out"
 endif
 
-test: add_test_file
+test: add_test_file build
 	GO111MODULE=off go get github.com/axw/gocov/gocov
 	GO111MODULE=off go get github.com/jstemmer/go-junit-report
 	GO111MODULE=off go get github.com/AlekSi/gocov-xml
 	go test -v ${PACKAGES} -coverprofile=cover.out |go-junit-report > test.xml
 	gocov convert cover.out | gocov-xml > coverage.xml
 
-local_test:
+local_test: build
 	mkdir -p "$(TEST_DIR)"
-	-go test -v ./... -coverprofile="$(TEST_DIR)/cover.out"
+	-go test -v ${PACKAGES} -coverprofile="$(TEST_DIR)/cover.out"
 	go tool cover -html "$(TEST_DIR)/cover.out" -o "$(TEST_DIR)/cover.html"
 	echo "check coverage info by opening $(TEST_DIR)/cover.html through browser"
 

@@ -87,7 +87,8 @@ func getDashboardUrl(clusterAggregation *ClusterAggregation) (string, error) {
 	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterName)
 
 	//tiup cluster display CLUSTER_NAME --dashboard
-	resp := libtiup.MicroSrvTiupClusterDisplay(clusterName, 0, []string{"--dashboard"})
+	tiUPMicro := libtiup.TiUPMicro{}
+	resp := tiUPMicro.MicroSrvTiupClusterDisplay(clusterName, 0, []string{"--dashboard"})
 	if resp.ErrorStr != "" {
 		getLogger().Errorf("call tiupmgr cluster display failed, %s", resp.ErrorStr)
 		return "", errors.New(resp.ErrorStr)

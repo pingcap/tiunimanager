@@ -364,7 +364,8 @@ func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
 
 	//tiup tidb-lightning -config tidb-lightning.toml
 	//todo: tiupmgr not return failed err
-	resp, err := libtiup.MicroSrvTiupLightning(0,
+	tiUPMicro := libtiup.TiUPMicro{}
+	resp, err := tiUPMicro.MicroSrvTiupLightning(0,
 		[]string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", getDataTransportDir(cluster.Id, TransportTypeImport))},
 		uint64(task.Id))
 	if err != nil {
@@ -434,7 +435,8 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 		cmd = append(cmd, "--filter", fmt.Sprintf("\"%s\"", info.Filter))
 	}
 	getLogger().Infof("call tiupmgr dumpling api, cmd: %v", cmd)
-	resp, err := libtiup.MicroSrvTiupDumpling(0, cmd, uint64(task.Id))
+	tiUPMicro := libtiup.TiUPMicro{}
+	resp, err := tiUPMicro.MicroSrvTiupDumpling(0, cmd, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call tiup dumpling api failed, %s", err.Error())
 		return false

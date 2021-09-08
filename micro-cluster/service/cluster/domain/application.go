@@ -224,7 +224,8 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 
 		cfgYamlStr := string(bs)
 		getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
-		deployTaskId, err := libtiup.MicroSrvTiupDeploy(
+		tiUPMicro := libtiup.TiUPMicro{}
+		deployTaskId, err := tiUPMicro.MicroSrvTiupDeploy(
 			cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
 		)
 		context.put("deployTaskId", deployTaskId)
@@ -259,7 +260,8 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 		}
 	}
 	getLogger().Infof("start cluster %s", cluster.ClusterName)
-	libtiup.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
+	tiUPMicro := libtiup.TiUPMicro{}
+	tiUPMicro.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
 
 	task.Success(nil)
 	return true

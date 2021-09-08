@@ -654,6 +654,11 @@ func TiupMgrRoutine() {
 	}
 }
 
+// micro service part
+type TiUPMicro struct {
+
+}
+
 var glMicroCmdChan chan CmdChanMember
 
 var glMicroTaskStatusMap map[uint64]TaskStatusMapValue
@@ -662,7 +667,7 @@ var glMicroTaskStatusMapMutex sync.Mutex
 var glTiUPMgrPath string
 var glTiUPBinPath string
 
-func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
+func (tiUPMicro *TiUPMicro) MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
 	configPath := ""
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
@@ -742,7 +747,7 @@ func microTiupDeploy(deployReq CmdDeployReq) CmdDeployResp {
 	return resp
 }
 
-func MicroSrvTiupDeploy(instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+func (tiUPMicro *TiUPMicro) MicroSrvTiupDeploy(instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Deploy
 	req.BizID = bizID
@@ -783,7 +788,7 @@ func microTiupList(req CmdListReq) CmdListResp {
 	return resp
 }
 
-func MicroSrvTiupList(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+func (tiUPMicro *TiUPMicro) MicroSrvTiupList(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_List
 	req.BizID = bizID
@@ -822,7 +827,7 @@ func microTiupStart(req CmdStartReq) CmdStartResp {
 	return resp
 }
 
-func MicroSrvTiupStart(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+func (tiUPMicro *TiUPMicro) MicroSrvTiupStart(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Start
 	req.BizID = bizID
@@ -861,7 +866,7 @@ func microTiupDestroy(req CmdDestroyReq) CmdDestroyResp {
 	return resp
 }
 
-func MicroSrvTiupDestroy(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+func (tiUPMicro *TiUPMicro) MicroSrvTiupDestroy(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Destroy
 	req.BizID = bizID
@@ -879,52 +884,6 @@ func MicroSrvTiupDestroy(instanceName string, timeoutS int, flags []string, bizI
 		microTiupDestroy(req)
 		return rsp.Id, nil
 	}
-}
-
-func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error) {
-	var req dbPb.FindTiupTaskByIDRequest
-	req.Id = taskID
-	rsp, err := client.DBClient.FindTiupTaskByID(context.Background(), &req)
-	if err != nil || rsp.ErrCode != 0 {
-		err = fmt.Errorf("err:%s, rsp.ErrCode:%d, rsp.ErrStr:%s", err, rsp.ErrCode, rsp.ErrStr)
-		return stat, "", err
-	} else {
-		assert(rsp.TiupTask != nil && rsp.TiupTask.ID == taskID)
-		stat = rsp.TiupTask.Status
-		errStr = rsp.TiupTask.ErrorStr
-		return stat, errStr, nil
-	}
-}
-
-func MicroSrvTiupGetTaskStatusByBizID(bizID uint64) (stat dbPb.TiupTaskStatus, statErrStr string, err error) {
-	var req dbPb.GetTiupTaskStatusByBizIDRequest
-	req.BizID = bizID
-	rsp, err := client.DBClient.GetTiupTaskStatusByBizID(context.Background(), &req)
-	if err != nil || rsp.ErrCode != 0 {
-		err = fmt.Errorf("err:%s, rsp.ErrCode:%d, rsp.ErrStr:%s", err, rsp.ErrCode, rsp.ErrStr)
-		return stat, "", err
-	} else {
-		return rsp.Stat, rsp.StatErrStr, nil
-	}
-}
-
-func microTiupGetAllTaskStatus() CmdGetAllTaskStatusResp {
-	assert(cap(glMicroCmdChan) > 0)
-	cmdReq := CmdReqOrResp{
-		TypeStr: CmdGetAllTaskStatusReqTypeStr,
-		Content: string(jsonMustMarshal(&CmdGetAllTaskStatusReq{})),
-	}
-	respCh := make(chan CmdReqOrResp, 1)
-	glMicroCmdChan <- CmdChanMember{
-		req:    cmdReq,
-		respCh: respCh,
-	}
-	respCmd := <-respCh
-	assert(respCmd.TypeStr == CmdGetAllTaskStatusRespTypeStr)
-	var resp CmdGetAllTaskStatusResp
-	err := json.Unmarshal([]byte(respCmd.Content), &resp)
-	assert(err == nil)
-	return resp
 }
 
 func microTiupDumpling(dumplingReq CmdDumplingReq) CmdDumplingResp {
@@ -946,7 +905,7 @@ func microTiupDumpling(dumplingReq CmdDumplingReq) CmdDumplingResp {
 	return resp
 }
 
-func MicroSrvTiupDumpling(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+func (tiUPMicro *TiUPMicro) MicroSrvTiupDumpling(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Dumpling
 	req.BizID = bizID
@@ -984,7 +943,7 @@ func microTiupLightning(lightningReq CmdLightningReq) CmdLightningResp {
 	return resp
 }
 
-func MicroSrvTiupLightning(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+func (tiUPMicro *TiUPMicro) MicroSrvTiupLightning(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Lightning
 	req.BizID = bizID
@@ -1022,7 +981,7 @@ func microSrvTiupClusterDisplay(clusterDisplayReq CmdClusterDisplayReq) CmdClust
 	return resp
 }
 
-func MicroSrvTiupClusterDisplay(clusterName string, timeoutS int, flags []string) *CmdClusterDisplayResp {
+func (tiUPMicro *TiUPMicro) MicroSrvTiupClusterDisplay(clusterName string, timeoutS int, flags []string) *CmdClusterDisplayResp {
 	var clusterDisplayResp CmdClusterDisplayResp
 	var clusterDisplayReq CmdClusterDisplayReq
 	clusterDisplayReq.ClusterName = clusterName
@@ -1031,6 +990,52 @@ func MicroSrvTiupClusterDisplay(clusterName string, timeoutS int, flags []string
 	clusterDisplayReq.Flags = flags
 	clusterDisplayResp = microSrvTiupClusterDisplay(clusterDisplayReq)
 	return &clusterDisplayResp
+}
+
+func (tiUPMicro *TiUPMicro) MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error) {
+	var req dbPb.FindTiupTaskByIDRequest
+	req.Id = taskID
+	rsp, err := client.DBClient.FindTiupTaskByID(context.Background(), &req)
+	if err != nil || rsp.ErrCode != 0 {
+		err = fmt.Errorf("err:%s, rsp.ErrCode:%d, rsp.ErrStr:%s", err, rsp.ErrCode, rsp.ErrStr)
+		return stat, "", err
+	} else {
+		assert(rsp.TiupTask != nil && rsp.TiupTask.ID == taskID)
+		stat = rsp.TiupTask.Status
+		errStr = rsp.TiupTask.ErrorStr
+		return stat, errStr, nil
+	}
+}
+
+func (tiUPMicro *TiUPMicro) MicroSrvTiupGetTaskStatusByBizID(bizID uint64) (stat dbPb.TiupTaskStatus, statErrStr string, err error) {
+	var req dbPb.GetTiupTaskStatusByBizIDRequest
+	req.BizID = bizID
+	rsp, err := client.DBClient.GetTiupTaskStatusByBizID(context.Background(), &req)
+	if err != nil || rsp.ErrCode != 0 {
+		err = fmt.Errorf("err:%s, rsp.ErrCode:%d, rsp.ErrStr:%s", err, rsp.ErrCode, rsp.ErrStr)
+		return stat, "", err
+	} else {
+		return rsp.Stat, rsp.StatErrStr, nil
+	}
+}
+
+func microTiupGetAllTaskStatus() CmdGetAllTaskStatusResp {
+	assert(cap(glMicroCmdChan) > 0)
+	cmdReq := CmdReqOrResp{
+		TypeStr: CmdGetAllTaskStatusReqTypeStr,
+		Content: string(jsonMustMarshal(&CmdGetAllTaskStatusReq{})),
+	}
+	respCh := make(chan CmdReqOrResp, 1)
+	glMicroCmdChan <- CmdChanMember{
+		req:    cmdReq,
+		respCh: respCh,
+	}
+	respCmd := <-respCh
+	assert(respCmd.TypeStr == CmdGetAllTaskStatusRespTypeStr)
+	var resp CmdGetAllTaskStatusResp
+	err := json.Unmarshal([]byte(respCmd.Content), &resp)
+	assert(err == nil)
+	return resp
 }
 
 type CmdChanMember struct {

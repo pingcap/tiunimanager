@@ -69,7 +69,7 @@ func TestBrCmd_BrMgrInit(t *testing.T) {
 		t.Errorf("glMgrTaskStatusCh cap was incorrect, got: %d, want: %d.", mgrTaskStatusChCap, 1024)
 	}
 	if mgrTaskStatusMapLen != 0 {
-		t.Errorf("mgrTaskStatusMap len war incorrect, got: %d, want: %d.", mgrTaskStatusMapLen, 0)
+		t.Errorf("mgrTaskStatusMap len was incorrect, got: %d, want: %d.", mgrTaskStatusMapLen, 0)
 	}
 }
 
@@ -81,7 +81,7 @@ func TestBrMicro_MicroInit(t *testing.T) {
 		t.Errorf("glMicroCmdChan cap was incorrect, got: %d, want: %d.", glMicroCmdChanCap, 1024)
 	}
 	if glMicroTaskStatusMapLen != 0 {
-		t.Errorf("glMicroTaskStatusMap len war incorrect, got: %d, want: %d.", glMicroTaskStatusMapLen, 0)
+		t.Errorf("glMicroTaskStatusMap len was incorrect, got: %d, want: %d.", glMicroTaskStatusMapLen, 0)
 	}
 }
 
@@ -180,6 +180,50 @@ func TestBrMicro_ShowRestoreInfo(t *testing.T) {
 	resp := brMicro.ShowRestoreInfo(clusterFacade)
 	if resp.Destination == "" && resp.ErrorStr == "" {
 		t.Errorf("case: show restore info. either Destination(%s) or ErrorStr(%v) should have zero value", resp.Destination, resp.ErrorStr)
+	}
+}
+
+func TestBrMicro_MicroSrvTiupGetTaskStatus_Fail(t *testing.T) {
+	var req dbPb.FindTiupTaskByIDRequest
+	req.Id = 1
+
+	var resp dbPb.FindTiupTaskByIDResponse
+	resp.ErrCode = 1
+	resp.ErrStr = "Fail Find tiup task by Id"
+
+	expectedErr := errors.New("Fail Find tiup task by Id")
+
+	mockCtl := gomock.NewController(t)
+	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().FindTiupTaskByID(context.Background(), gomock.Eq(&req)).Return(&resp, expectedErr)
+
+	_, errStr, err := brMicro.MicroSrvTiupGetTaskStatus(1)
+	if errStr != "" || err == nil {
+		t.Errorf("case: fail find tiup task by id intentionally. errStr(expected: %s, actual: %s), err(expected: %v, actual: %v)", "", errStr, expectedErr, err)
+	}
+}
+
+func TestBrMicro_MicroSrvTiupGetTaskStatus_Success(t *testing.T) {
+	var req dbPb.FindTiupTaskByIDRequest
+	req.Id = 1
+
+	var resp dbPb.FindTiupTaskByIDResponse
+	resp.ErrCode = 0
+	resp.ErrStr = ""
+	resp.TiupTask = &dbPb.TiupTask{
+		ID: 1,
+		Status: dbPb.TiupTaskStatus_Init,
+	}
+
+	mockCtl := gomock.NewController(t)
+	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().FindTiupTaskByID(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
+
+	stat, errStr, err := brMicro.MicroSrvTiupGetTaskStatus(1)
+	if stat != dbPb.TiupTaskStatus_Init || errStr != "" || err != nil {
+		t.Errorf("case: find tiup task by id successfully. stat(expected: %d, actual: %d), errStr(expected: %s, actual: %s), err(expected: %v, actual: %v)", dbPb.TiupTaskStatus_Init, stat, "", errStr, nil, err)
 	}
 }
 

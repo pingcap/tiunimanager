@@ -13,7 +13,7 @@ message DBFlowDTO {
     string statusAlias = 3;
     string bizId = 4;
     int32 status = 5;
-    string operatorId = 6;
+    string operator = 6;
     int64 createTime = 7;
     int64 updateTime = 8;
     int64 deleteTime = 9;

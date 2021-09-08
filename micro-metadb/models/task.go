@@ -8,7 +8,7 @@ type FlowDO struct {
 	Data
 	Name        string
 	StatusAlias string
-	OperatorId  string `gorm:"not null;type:varchar(36);default:null"`
+	Operator  string `gorm:"not null;type:varchar(36);default:null"`
 }
 
 func (do FlowDO) TableName() string {
@@ -37,11 +37,11 @@ func (do *FlowDO) BeforeCreate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-func CreateFlow(db *gorm.DB, flowName string, statusAlias string, bizId string, OperatorId string) (flow *FlowDO, err error) {
+func CreateFlow(db *gorm.DB, flowName string, statusAlias string, bizId string, Operator string) (flow *FlowDO, err error) {
 	flow = &FlowDO{
 		Name:        flowName,
 		StatusAlias: statusAlias,
-		OperatorId: OperatorId,
+		Operator: Operator,
 		Data: Data{
 			BizId: bizId,
 		},
@@ -84,7 +84,8 @@ func ListFlows(db *gorm.DB, bizId, keyword string, status int, offset int, lengt
 	if status >= 0 {
 		query = query.Where("status = ?", status)
 	}
-	return flows, total, query.Count(&total).Offset(offset).Limit(length).Find(&flows).Error
+	err = query.Count(&total).Offset(offset).Limit(length).Find(&flows).Error
+	return flows, total, err
 }
 
 func BatchFetchFlows(db *gorm.DB, ids []uint) (flows []*FlowDO, err error) {

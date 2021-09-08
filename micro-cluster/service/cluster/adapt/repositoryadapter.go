@@ -249,9 +249,12 @@ func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, 
 			StatusAlias: v.StatusAlias,
 			BizId:       v.BizId,
 			Status: domain.TaskStatus(v.Status),
+			Operator: domain.Operator{
+				Name: v.Operator,
+			},
 		}
 	}
-	// todo operator
+
 	return flows, int(resp.Page.Total), err
 }
 

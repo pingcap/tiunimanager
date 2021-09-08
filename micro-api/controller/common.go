@@ -89,7 +89,7 @@ type Page struct {
 	Total    int `json:"total"`
 }
 
-var DefaultPageRequest PageRequest = PageRequest{
+var DefaultPageRequest = PageRequest{
 	1,
 	20,
 }

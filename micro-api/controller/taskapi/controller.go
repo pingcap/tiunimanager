@@ -55,12 +55,12 @@ func Query(c *gin.Context) {
 					StatusCode: strconv.Itoa(int(v.Status)),
 					StatusName: v.StatusName,
 				},
-				Operator: controller.Operator{
-					ManualOperator: true,
-					OperatorName: v.Operator.Name,
-					OperatorId: v.Operator.Id,
-					TenantId: v.Operator.TenantId,
-				},
+			}
+			if v.Operator != nil {
+				flows[i].ManualOperator = true
+				flows[i].OperatorName = v.Operator.Name
+				flows[i].OperatorId = v.Operator.Id
+				flows[i].TenantId = v.Operator.TenantId
 			}
 		}
 

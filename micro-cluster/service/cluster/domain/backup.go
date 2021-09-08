@@ -195,7 +195,7 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 	storage := libbr.BrStorage{
 		StorageType: libbr.StorageTypeS3,
-		Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin&secret-access-key=minioadmin&endpoint=http://minio.pingcap.net:9000&force-path-style=true"), //todo: test env s3 ak sk
+		Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
 
 	getLogger().Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)

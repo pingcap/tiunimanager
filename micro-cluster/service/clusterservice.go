@@ -416,6 +416,8 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterPb.Lis
 			BizId:       v.BizId,
 			Status: int32(v.Status),
 			StatusName: v.Status.Display(),
+			CreateTime: v.CreateTime.Unix(),
+			UpdateTime: v.UpdateTime.Unix(),
 		}
 	}
 	return err

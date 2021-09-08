@@ -252,6 +252,8 @@ func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, 
 			Operator: &domain.Operator{
 				Name: v.Operator,
 			},
+			CreateTime: time.Unix(v.CreateTime, 0),
+			UpdateTime: time.Unix(v.UpdateTime, 0),
 		}
 	}
 

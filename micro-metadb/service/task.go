@@ -143,6 +143,7 @@ func convertFlowToDTO(do *models.FlowDO) (dto *dbPb.DBFlowDTO) {
 	dto.Status = int32(do.Status)
 	dto.CreateTime = do.CreatedAt.Unix()
 	dto.UpdateTime = do.UpdatedAt.Unix()
+	dto.Operator = do.Operator
 
 	dto.DeleteTime = deletedAtUnix(do.DeletedAt)
 	return

@@ -114,6 +114,8 @@ func init() {
 	rootCmd.AddCommand(
 		newDisplayCmd(),
 		newDeployCmd(),
+		newScaleInCmd(),
+		newScaleOutCmd(),
 	)
 }
 

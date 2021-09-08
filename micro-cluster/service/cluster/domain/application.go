@@ -472,6 +472,10 @@ func convertAllocationReq(item *ClusterNodeDistributionItem) *proto.AllocationRe
 	}
 }
 
+func tidbPort() int {
+	return 4000
+}
+
 func convertConfig(resource *proto.AllocHostResponse, cluster *Cluster) *spec.Specification {
 
 	tidbHosts := resource.TidbHosts
@@ -508,6 +512,7 @@ func convertConfig(resource *proto.AllocHostResponse, cluster *Cluster) *spec.Sp
 			Host:      v.Ip,
 			DataDir:   filepath.Join(v.Disk.Path, cluster.Id, "pd-data"),
 			DeployDir: filepath.Join(v.Disk.Path, cluster.Id, "pd-deploy"),
+			ClientPort: tidbPort(),
 		})
 	}
 	for _, v := range tidbHosts {

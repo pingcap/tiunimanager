@@ -202,7 +202,7 @@ message ClusterInstanceDTO {
     repeated string intranetConnectAddresses = 1;
     repeated string extranetConnectAddresses = 2;
     repeated string whitelist = 3;
-    int32 port = 4;
+    repeated int64 portList = 4;
     UsageDTO diskUsage = 5;
     UsageDTO cpuUsage = 6;
     UsageDTO memoryUsage = 7;

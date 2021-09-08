@@ -2107,8 +2107,11 @@ var doc = `{
                 "memoryUsage": {
                     "$ref": "#/definitions/controller.Usage"
                 },
-                "port": {
-                    "type": "integer"
+                "portList": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "statusCode": {
                     "type": "string"
@@ -2342,9 +2345,6 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
-                "shareCode": {
-                    "type": "string"
-                },
                 "token": {
                     "type": "string"
                 },
@@ -2413,8 +2413,11 @@ var doc = `{
                 "memoryUsage": {
                     "$ref": "#/definitions/controller.Usage"
                 },
-                "port": {
-                    "type": "integer"
+                "portList": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "statusCode": {
                     "type": "string"

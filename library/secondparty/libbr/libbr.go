@@ -104,7 +104,7 @@ type CmdShowBackUpInfoResp struct {
 	Execution_Time string
 	Finish_Time    *string
 	Connection     string
-	Error          error
+	ErrorStr       string
 }
 
 type CmdRestorePreCheckReq struct {
@@ -143,7 +143,7 @@ type CmdShowRestoreInfoResp struct {
 	Execution_Time string
 	Finish_Time    *string
 	Connection     string
-	Error          error
+	ErrorStr       string
 }
 
 type TaskStatusMapValue struct {
@@ -417,7 +417,7 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
 	if err != nil {
 		logger.Error("db connection err:", err)
-		resp.Error = err
+		resp.ErrorStr = err.Error()
 		return resp
 	}
 	defer db.Close()
@@ -430,7 +430,7 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 		logger.Errorf("query sql cmd err: %v", err)
 		if err.Error() != "sql: no rows in result set" {
 			logger.Debugf("(%s) != (sql: no rows in result set", err.Error())
-			resp.Error = err
+			resp.ErrorStr = err.Error()
 			return resp
 		}
 		logger.Debugf("(%s) == (sql: no rows in result set)", err.Error())
@@ -492,7 +492,7 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
 	if err != nil {
 		logger.Error("db connection err", err)
-		resp.Error = err
+		resp.ErrorStr = err.Error()
 		return resp
 	}
 	defer db.Close()
@@ -505,7 +505,7 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 		logger.Errorf("query sql cmd err: %v", err)
 		if err.Error() != "sql: no rows in result set" {
 			logger.Debugf("(%s) != (sql: no rows in result set", err.Error())
-			resp.Error = err
+			resp.ErrorStr = err.Error()
 			return resp
 		}
 		logger.Debugf("(%s) == (sql: no rows in result set)", err.Error())
@@ -578,6 +578,10 @@ func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd 
 }
 
 // micro service part
+type BrMicro struct {
+
+}
+
 type CmdChanMember struct {
 	req    CmdReqOrResp
 	respCh chan CmdReqOrResp
@@ -610,7 +614,7 @@ type ProgressRate struct {
 	Error   error
 }
 
-func MicroInit(brMgrPath, mgrLogFilePath string) {
+func (brMicro *BrMicro) MicroInit(brMgrPath, mgrLogFilePath string) {
 	configPath := ""
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
@@ -737,10 +741,9 @@ func microCmdChanRoutine(cch chan CmdChanMember, outReader io.Reader, inWriter i
 	}
 }
 
-// TODO: backup precheck command not found in BR, may need to check later
-func BackUpPreCheck(cluster ClusterFacade, storage BrStorage, bizId uint64) error {
-	return nil
-}
+//func BackUpPreCheck(cluster ClusterFacade, storage BrStorage, bizId uint64) error {
+//	return nil
+//}
 
 func backUp(backUpReq CmdBackUpReq) CmdBrResp {
 	assert(cap(glMicroCmdChan) > 0)
@@ -761,7 +764,7 @@ func backUp(backUpReq CmdBackUpReq) CmdBrResp {
 	return resp
 }
 
-func BackUp(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error) {
+func (brMicro *BrMicro) BackUp(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Backup
 	req.BizID = bizId
@@ -800,7 +803,7 @@ func showBackUpInfo(showBackUpInfoReq CmdShowBackUpInfoReq) CmdShowBackUpInfoRes
 	return resp
 }
 
-func ShowBackUpInfo(cluster ClusterFacade) CmdShowBackUpInfoResp {
+func (brMicro *BrMicro) ShowBackUpInfo(cluster ClusterFacade) CmdShowBackUpInfoResp {
 	var showBackUpInfoReq CmdShowBackUpInfoReq
 	showBackUpInfoReq.DbConnParameter = cluster.DbConnParameter
 	showBackUpInfoReq.TaskID = cluster.TaskID
@@ -808,10 +811,9 @@ func ShowBackUpInfo(cluster ClusterFacade) CmdShowBackUpInfoResp {
 	return showBackUpInfoResp
 }
 
-// TODO: restore precheck command not found in BR, may need to check later
-func RestorePreCheck(cluster ClusterFacade, storage BrStorage, bizId uint64) error {
-	return nil
-}
+//func RestorePreCheck(cluster ClusterFacade, storage BrStorage, bizId uint64) error {
+//	return nil
+//}
 
 func restore(restoreReq CmdRestoreReq) CmdBrResp {
 	assert(cap(glMicroCmdChan) > 0)
@@ -832,7 +834,7 @@ func restore(restoreReq CmdRestoreReq) CmdBrResp {
 	return resp
 }
 
-func Restore(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error) {
+func (brMicro *BrMicro) Restore(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Restore
 	req.BizID = bizId
@@ -871,14 +873,14 @@ func showRestoreInfo(showRestoreInfoReq CmdShowRestoreInfoReq) CmdShowRestoreInf
 	return resp
 }
 
-func ShowRestoreInfo(cluster ClusterFacade) CmdShowRestoreInfoResp {
+func (brMicro *BrMicro) ShowRestoreInfo(cluster ClusterFacade) CmdShowRestoreInfoResp {
 	var showRestoreInfoReq CmdShowRestoreInfoReq
 	showRestoreInfoReq.DbConnParameter = cluster.DbConnParameter
 	showRestoreInfoResp := showRestoreInfo(showRestoreInfoReq)
 	return showRestoreInfoResp
 }
 
-func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error) {
+func (brMicro *BrMicro) MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error) {
 	var req dbPb.FindTiupTaskByIDRequest
 	req.Id = taskID
 	logger.Debugf("FindTiupTaskByID: %d", taskID)

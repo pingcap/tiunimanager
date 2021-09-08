@@ -41,7 +41,8 @@ func initLibForDev(f *framework.BaseFramework) error {
 	libtiup.MicroInit(f.GetDeployDir()+"/tiupcmd",
 		"tiup",
 		f.GetDataDir()+common.LogDirPrefix)
-	libbr.MicroInit(f.GetDeployDir()+"/brcmd",
+	brMicro := libbr.BrMicro{}
+	brMicro.MicroInit(f.GetDeployDir()+"/brcmd",
 		f.GetDataDir()+common.LogDirPrefix)
 	return nil
 }

@@ -196,7 +196,8 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	getLogger().Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
-	_, err := libbr.BackUp(clusterFacade, storage, uint64(task.Id))
+	brMicro := libbr.BrMicro{}
+	_, err := brMicro.BackUp(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call backup api failed, %s", err.Error())
 		return false

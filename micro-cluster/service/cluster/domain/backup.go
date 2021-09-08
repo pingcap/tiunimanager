@@ -194,7 +194,7 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 		TaskID:      uint64(task.Id),
 	}
 	storage := libbr.BrStorage{
-		StorageType: libbr.StorageTypeLocal,
+		StorageType: libbr.StorageTypeS3,
 		Root:        record.FilePath,
 	}
 

@@ -418,6 +418,11 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterPb.Lis
 			StatusName: v.Status.Display(),
 			CreateTime: v.CreateTime.Unix(),
 			UpdateTime: v.UpdateTime.Unix(),
+			Operator: &clusterPb.OperatorDTO{
+				Name: v.Operator.Name,
+				Id: v.Operator.Id,
+				TenantId: v.Operator.TenantId,
+			},
 		}
 	}
 	return err

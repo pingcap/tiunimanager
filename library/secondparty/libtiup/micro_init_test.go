@@ -22,7 +22,7 @@ func init() {
 }
 
 func TestTiUPMicro_MicroInit(t *testing.T) {
-	tiUPMicro2.MicroInit("../../../bin/tiupcmd", "tiup", "")
+	tiUPMicro2.MicroInit("../../../bin/tiupcmd", "", "")
 	glMicroTaskStatusMapLen := len(glMicroTaskStatusMap)
 	glMicroCmdChanCap := cap(glMicroCmdChan)
 	if glMicroCmdChanCap != 1024 {
@@ -59,8 +59,8 @@ func Test_glMicroTaskStatusMapSyncer_NeedUpdate(t *testing.T) {
 	//sync part mock
 	syncReq := dbPb.UpdateTiupTaskRequest{
 		Id:     1,
-		Status: dbPb.TiupTaskStatus_Processing,
-		ErrStr: "" ,
+		Status: dbPb.TiupTaskStatus_Error,
+		ErrStr: "fork/exec : no such file or directory\n" ,
 	}
 	syncResp := dbPb.UpdateTiupTaskResponse{
 		ErrCode: 0,

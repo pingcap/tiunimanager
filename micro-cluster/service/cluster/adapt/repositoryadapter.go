@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
@@ -225,6 +226,35 @@ func (c InstanceRepoAdapter) QueryParameterJson(clusterId string) (content strin
 
 type TaskRepoAdapter struct{}
 
+func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, pageSize int) ([]*domain.FlowWorkEntity, int, error) {
+	resp, err :=client.DBClient.ListFlows(context.TODO(), &db.DBListFlowsRequest{
+		BizId:   bizId,
+		Keyword: keyword,
+		Status: int64(status),
+		Page: &db.DBTaskPageDTO{
+			Page:     int32(page),
+			PageSize: int32(pageSize),
+		},
+	})
+
+	if err != nil {
+		framework.Log().Errorf("AddFlowWork error = %s", err.Error())
+		return nil, 0, err
+	}
+	flows := make([]*domain.FlowWorkEntity, len(resp.Flows), len(resp.Flows))
+	for i, v := range resp.Flows {
+		flows[i] = &domain.FlowWorkEntity{
+			Id:          uint(v.Id),
+			FlowName:    v.FlowName,
+			StatusAlias: v.StatusAlias,
+			BizId:       v.BizId,
+			Status: domain.TaskStatus(v.Status),
+		}
+	}
+	// todo operator
+	return flows, int(resp.Page.Total), err
+}
+
 func (t TaskRepoAdapter) QueryCronTask(bizId string, cronTaskType int) (cronTask *domain.CronTaskEntity, err error) {
 	cronTask = domain.GetDefaultMaintainTask()
 	return
@@ -244,7 +274,7 @@ func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
 	})
 
 	if err != nil {
-		// todo
+		framework.Log().Errorf("AddFlowWork error = %s", err.Error())
 	}
 
 	if resp.Status.Code != 0 {

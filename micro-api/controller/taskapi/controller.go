@@ -1,6 +1,14 @@
 package taskapi
 
-import "github.com/gin-gonic/gin"
+import (
+	"context"
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	"net/http"
+	"strconv"
+)
 
 // Query query flow works
 // @Summary query flow works
@@ -16,7 +24,50 @@ import "github.com/gin-gonic/gin"
 // @Failure 500 {object} controller.CommonResult
 // @Router /flowworks [get]
 func Query(c *gin.Context) {
+	var queryReq QueryReq
+	if err := c.ShouldBindQuery(&queryReq); err != nil {
+		_ = c.Error(err)
+		return
+	}
 
+	reqDTO := &cluster.ListFlowsRequest{
+		BizId:   queryReq.ClusterId,
+		Keyword: queryReq.Keyword,
+		Status: int64(queryReq.Status),
+		Page: queryReq.PageRequest.ConvertToDTO(),
+	}
+
+	respDTO, err := client.ClusterClient.ListFlows(context.TODO(), reqDTO, controller.DefaultTimeout)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetStatus()
+
+		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows), len(respDTO.Flows))
+
+		for i, v := range respDTO.Flows {
+			flows[i] = FlowWorkDisplayInfo{
+				Id: uint(v.Id),
+				FlowWorkName: v.FlowName,
+				ClusterId:    v.BizId,
+				StatusInfo: controller.StatusInfo{
+					StatusCode: strconv.Itoa(int(v.Status)),
+					StatusName: v.StatusName,
+				},
+				Operator: controller.Operator{
+					ManualOperator: true,
+					OperatorName: v.Operator.Name,
+					OperatorId: v.Operator.Id,
+					TenantId: v.Operator.TenantId,
+				},
+			}
+		}
+
+		result := controller.BuildResultWithPage(int(status.Code), status.Message, controller.ParsePageFromDTO(respDTO.Page), flows)
+
+		c.JSON(http.StatusOK, result)
+	}
 }
 
 // Detail show details of a flow work

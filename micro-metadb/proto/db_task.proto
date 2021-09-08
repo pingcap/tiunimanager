@@ -13,9 +13,10 @@ message DBFlowDTO {
     string statusAlias = 3;
     string bizId = 4;
     int32 status = 5;
-    int64 createTime = 6;
-    int64 updateTime = 7;
-    int64 deleteTime = 8;
+    string operatorId = 6;
+    int64 createTime = 7;
+    int64 updateTime = 8;
+    int64 deleteTime = 9;
 }
 
 message DBTaskDTO {
@@ -100,4 +101,23 @@ message DBQueryTaskRequest {
 message DBQueryTaskResponse {
     DBTaskResponseStatus status = 1;
     repeated DBTaskDTO tasks = 2;
+}
+
+message DBListFlowsRequest {
+    string bizId = 1;
+    string keyword = 2;
+    int64 status = 3;
+    DBTaskPageDTO page = 4;
+}
+
+message DBListFlowsResponse {
+    DBTaskResponseStatus status = 1;
+    repeated DBFlowDTO flows = 2;
+    DBTaskPageDTO page = 3;
+}
+
+message DBTaskPageDTO {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 total = 3;
 }

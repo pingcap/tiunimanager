@@ -15,6 +15,7 @@ type FlowWorkEntity struct {
 	BizId          string
 	Status         TaskStatus
 	ContextContent string
+	Operator	Operator
 }
 
 type FlowContext map[string]interface{}

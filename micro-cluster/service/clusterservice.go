@@ -393,6 +393,34 @@ func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *c
 	return nil
 }
 
+func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterPb.ListFlowsRequest, response *clusterPb.ListFlowsResponse) (err error) {
+	flows, total, err := domain.TaskRepo.ListFlows(req.BizId, req.Keyword, int(req.Status), int(req.Page.Page), int(req.Page.PageSize))
+	if err != nil {
+		getLogger().Error(err)
+		return err
+	}
+
+	response.Status = SuccessResponseStatus
+	response.Page = &clusterPb.PageDTO{
+		Page:     req.Page.Page,
+		PageSize: req.Page.PageSize,
+		Total: int32(total),
+	}
+
+	response.Flows = make([]*clusterPb.FlowDTO, len(flows), len(flows))
+	for i, v := range flows {
+		response.Flows[i] = &clusterPb.FlowDTO{
+			Id:          int64(v.Id),
+			FlowName:    v.FlowName,
+			StatusAlias: v.StatusAlias,
+			BizId:       v.BizId,
+			Status: int32(v.Status),
+			StatusName: v.Status.Display(),
+		}
+	}
+	return err
+}
+
 var ManageSuccessResponseStatus = &clusterPb.ManagerResponseStatus{
 	Code: 0,
 }

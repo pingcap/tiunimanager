@@ -239,7 +239,9 @@ func ImportHosts(c *gin.Context) {
 // @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
 // @Router /resources/hosts [get]
 func ListHost(c *gin.Context) {
-	var hostQuery HostQuery
+	hostQuery := HostQuery{
+		Status: -1,
+	}
 	if err := c.ShouldBindQuery(&hostQuery); err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return

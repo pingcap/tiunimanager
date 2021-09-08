@@ -249,7 +249,7 @@ func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, 
 			StatusAlias: v.StatusAlias,
 			BizId:       v.BizId,
 			Status: domain.TaskStatus(v.Status),
-			Operator: domain.Operator{
+			Operator: &domain.Operator{
 				Name: v.Operator,
 			},
 		}
@@ -273,6 +273,7 @@ func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
 			FlowName:    flowWork.FlowName,
 			StatusAlias: flowWork.StatusAlias,
 			BizId:       flowWork.BizId,
+			Operator: flowWork.Operator.Name,
 		},
 	})
 

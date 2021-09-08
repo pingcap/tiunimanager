@@ -78,7 +78,7 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 
 	// Start the workflow to create a cluster instance
 
-	flow, err := CreateFlowWork(cluster.Id, FlowCreateCluster)
+	flow, err := CreateFlowWork(cluster.Id, FlowCreateCluster, operator)
 	if err != nil {
 		// todo
 	}
@@ -107,7 +107,7 @@ func DeleteCluster(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregatio
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster)
+	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster, operator)
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()
 
@@ -147,7 +147,7 @@ func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) 
 	//	return clusterAggregation, errors.New("incomplete processing flow")
 	//}
 
-	flow, err := CreateFlowWork(clusterId, FlowModifyParameters)
+	flow, err := CreateFlowWork(clusterId, FlowModifyParameters, operator)
 	if err != nil {
 		// todo
 	}

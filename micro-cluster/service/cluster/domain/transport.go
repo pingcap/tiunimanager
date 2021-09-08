@@ -150,7 +150,7 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	}
 
 	// Start the workflow
-	flow, err := CreateFlowWork(clusterId, FlowExportData)
+	flow, err := CreateFlowWork(clusterId, FlowExportData, operator)
 	if err != nil {
 		return "", err
 	}
@@ -206,7 +206,7 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	}
 
 	// Start the workflow
-	flow, err := CreateFlowWork(clusterId, FlowImportData)
+	flow, err := CreateFlowWork(clusterId, FlowImportData, operator)
 	if err != nil {
 		return "", err
 	}

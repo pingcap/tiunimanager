@@ -4,6 +4,12 @@ import (
 	copywriting2 "github.com/pingcap-inc/tiem/library/copywriting"
 )
 
+func defaultContextParser(s string) *FlowContext {
+	// todo parse context
+	c := make(FlowContext)
+	return &c
+}
+
 var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 	FlowCreateCluster: {
 		FlowName:    FlowCreateCluster,
@@ -16,11 +22,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"startupDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
 		},
-		ContextParser: func(s string) *FlowContext {
-			// todo parse context
-			c := make(FlowContext)
-			return &c
-		},
+		ContextParser: defaultContextParser,
 	},
 	FlowDeleteCluster: {
 		FlowName:    FlowDeleteCluster,
@@ -33,11 +35,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"freedResourceDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
 		},
-		ContextParser: func(s string) *FlowContext {
-			// todo parse context
-			c := make(FlowContext)
-			return &c
-		},
+		ContextParser: defaultContextParser,
+
 	},
 	FlowBackupCluster: {
 		FlowName:    FlowBackupCluster,
@@ -48,11 +47,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"updateRecordDone":	{"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":				{"fail", "", "", SyncFuncTask, DefaultFail},
 		},
-		ContextParser: func(s string) *FlowContext {
-			// todo parse context
-			c := make(FlowContext)
-			return &c
-		},
+		ContextParser: defaultContextParser,
+
 	},
 	FlowRecoverCluster: {
 		FlowName:    FlowRecoverCluster,
@@ -62,11 +58,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"recoverDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
 		},
-		ContextParser: func(s string) *FlowContext {
-			// todo parse context
-			c := make(FlowContext)
-			return &c
-		},
+		ContextParser: defaultContextParser,
+
 	},
 	FlowModifyParameters: {
 		FlowName:    FlowModifyParameters,
@@ -76,11 +69,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"modifyDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
 		},
-		ContextParser: func(s string) *FlowContext {
-			// todo parse context
-			c := make(FlowContext)
-			return &c
-		},
+		ContextParser: defaultContextParser,
+
 	},
 	FlowExportData: {
 		FlowName:    FlowExportData,
@@ -92,11 +82,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"updateRecordDone":		{"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":					{"fail", "", "", SyncFuncTask, exportDataFailed},
 		},
-		ContextParser: func(s string) *FlowContext {
-			// todo parse context
-			c := make(FlowContext)
-			return &c
-		},
+		ContextParser: defaultContextParser,
+
 	},
 	FlowImportData: {
 		FlowName:    FlowImportData,
@@ -109,11 +96,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"updateRecordDone":		{"end", "", "", SyncFuncTask, DefaultEnd},
 			"fail":					{"fail", "", "", SyncFuncTask, importDataFailed},
 		},
-		ContextParser: func(s string) *FlowContext {
-			// todo parse context
-			c := make(FlowContext)
-			return &c
-		},
+		ContextParser: defaultContextParser,
+
 	},
 }
 
@@ -154,11 +138,17 @@ type TaskDefine struct {
 
 func DefaultEnd(task *TaskEntity, context *FlowContext) bool {
 	task.Status = TaskStatusFinished
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation.Cluster.WorkFlowId = 0
+	clusterAggregation.FlowModified = true
 	return true
 }
 
 func DefaultFail(task *TaskEntity, context *FlowContext) bool {
 	task.Status = TaskStatusError
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation.Cluster.WorkFlowId = 0
+	clusterAggregation.FlowModified = true
 	return true
 }
 

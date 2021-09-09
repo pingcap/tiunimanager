@@ -193,9 +193,11 @@ func Detail(c *gin.Context) {
 		maintenance := respDTO.GetMaintenanceInfo()
 		components := respDTO.GetComponents()
 
-		componentInstances := make([]ComponentInstance, len(components), len(components))
-		for i, v := range components {
-			componentInstances[i] = *ParseComponentInfoFromDTO(v)
+		componentInstances := make([]ComponentInstance, 0, 0)
+		for _, v := range components {
+			if len(v.Nodes) > 0 {
+				componentInstances = append(componentInstances, *ParseComponentInfoFromDTO(v))
+			}
 		}
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, DetailClusterRsp{

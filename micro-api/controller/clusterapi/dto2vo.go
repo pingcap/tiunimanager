@@ -66,6 +66,9 @@ func ParseComponentInfoFromDTO(dto *cluster.ComponentInstanceDTO) (instance *Com
 }
 
 func ParseComponentNodeFromDTO(dto *cluster.ComponentNodeDisplayInfoDTO) (node *ComponentNodeDisplayInfo) {
+	if dto == nil || dto.Instance == nil {
+		return &ComponentNodeDisplayInfo{}
+	}
 	node = &ComponentNodeDisplayInfo{
 		NodeId: dto.NodeId,
 		Version: dto.Version,

@@ -2890,13 +2890,16 @@ var doc = `{
         "instanceapi.BackupRecord": {
             "type": "object",
             "properties": {
-                "backupMode": {
+                "backupMethod": {
+                    "description": "物理/逻辑",
                     "type": "string"
                 },
-                "backupRange": {
+                "backupMode": {
+                    "description": "手动/自动",
                     "type": "string"
                 },
                 "backupType": {
+                    "description": "全量/增量",
                     "type": "string"
                 },
                 "clusterId": {

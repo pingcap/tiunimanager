@@ -407,7 +407,8 @@ func RemoveHosts(c *gin.Context) {
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
 	templateName := "hostInfo_template.xlsx"
-	filePath := filepath.Join(curDir, "../etc/", templateName)
+	// The template file should be on tiem/etc/hostInfo_template.xlsx
+	filePath := filepath.Join(curDir, "./etc/", templateName)
 
 	_, err := os.Stat(filePath)
 	if err != nil && !os.IsExist(err) {

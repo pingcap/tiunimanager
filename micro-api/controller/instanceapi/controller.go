@@ -158,16 +158,16 @@ func Backup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(BackupRecord{
-			ID:          resp.GetBackupRecord().GetId(),
-			ClusterId:   resp.GetBackupRecord().GetClusterId(),
-			StartTime:   time.Unix(resp.GetBackupRecord().GetStartTime(), 0),
-			EndTime:     time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
-			BackupRange: resp.GetBackupRecord().GetRange(),
-			BackupType:  resp.GetBackupRecord().GetBackupType(),
-			BackupMode:  resp.GetBackupRecord().GetMode(),
-			FilePath:    resp.GetBackupRecord().GetFilePath(),
-			Size:        resp.GetBackupRecord().GetSize(),
-			Status:      *clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
+			ID:          	resp.GetBackupRecord().GetId(),
+			ClusterId:   	resp.GetBackupRecord().GetClusterId(),
+			StartTime:   	time.Unix(resp.GetBackupRecord().GetStartTime(), 0),
+			EndTime:     	time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
+			BackupType:  	resp.GetBackupRecord().GetRange(),
+			BackupMethod:  	resp.GetBackupRecord().GetBackupType(),
+			BackupMode:  	resp.GetBackupRecord().GetMode(),
+			FilePath:    	resp.GetBackupRecord().GetFilePath(),
+			Size:        	resp.GetBackupRecord().GetSize(),
+			Status:      	*clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
 		}))
 	}
 }
@@ -284,13 +284,13 @@ func QueryBackup(c *gin.Context) {
 
 		for i, v := range resp.BackupRecords {
 			records[i] = BackupRecord{
-				ID:          v.Id,
-				ClusterId:   v.ClusterId,
-				StartTime:   time.Unix(v.StartTime, 0),
-				EndTime:     time.Unix(v.EndTime, 0),
-				BackupRange: v.Range,
-				BackupType:  v.BackupType,
-				BackupMode:  v.Mode,
+				ID:          	v.Id,
+				ClusterId:   	v.ClusterId,
+				StartTime:   	time.Unix(v.StartTime, 0),
+				EndTime:     	time.Unix(v.EndTime, 0),
+				BackupType:  	v.Range,
+				BackupMethod:  	v.BackupType,
+				BackupMode:  	v.Mode,
 				Operator: controller.Operator{
 					ManualOperator: true,
 					OperatorId:     v.Operator.Id,

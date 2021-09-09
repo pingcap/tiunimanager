@@ -116,6 +116,10 @@ func init() {
 		newDeployCmd(),
 		newScaleInCmd(),
 		newScaleOutCmd(),
+		newStartCmd(),
+		newStopCmd(),
+		newRestartCmd(),
+		newUpgradeCmd(),
 	)
 }
 

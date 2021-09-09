@@ -32,3 +32,8 @@ const (
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"
 )
+
+const (
+	RegistryMicroServicePrefix = "/micro/registry/"
+	HttpProtocol               = "http://"
+)

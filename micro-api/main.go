@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/pingcap-inc/tiem/library/thirdparty/etcd_clientv2"
+
 	"github.com/pingcap-inc/tiem/library/knowledge"
 
 	"github.com/pingcap-inc/tiem/micro-api/metrics"
@@ -63,6 +67,8 @@ func initGinEngine(d *framework.BaseFramework) error {
 	port := d.GetServiceMeta().ServicePort
 
 	addr := fmt.Sprintf(":%d", port)
+	// openapi-server service registry
+	serviceRegistry(d)
 
 	if err := g.Run(addr); err != nil {
 		d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
@@ -71,6 +77,22 @@ func initGinEngine(d *framework.BaseFramework) error {
 	return nil
 }
 
+// serviceRegistry registry openapi-server service
+func serviceRegistry(f *framework.BaseFramework) {
+	etcdClient := etcd_clientv2.InitEtcdClient(f.GetServiceMeta().RegistryAddress)
+	address := f.GetClientArgs().Host + f.GetServiceMeta().GetServiceAddress()
+	key := common.RegistryMicroServicePrefix + f.GetServiceMeta().ServiceName.ServerName() + "/" + address
+	// Register openapi-server every TTL-2 seconds, default TTL is 5s
+	go func() {
+		for {
+			err := etcdClient.SetWithTtl(key, "{\"weight\":1, \"max_fails\":2, \"fail_timeout\":10}", 5)
+			if err != nil {
+				f.Log().Errorf("regitry openapi-server failed! error: %v", err)
+			}
+			time.Sleep(time.Second * 3)
+		}
+	}()
+}
 func loadKnowledge(f *framework.BaseFramework) error {
 	knowledge.LoadKnowledge()
 	return nil

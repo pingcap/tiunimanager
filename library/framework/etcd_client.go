@@ -54,3 +54,12 @@ func (etcd *EtcdClient) Get(key string) (*clientv3.GetResponse, error) {
 	defer cancel()
 	return resp, err
 }
+
+func (etcd *EtcdClient) Watch(key string, ops ...clientv3.OpOption) (clientv3.WatchChan, error) {
+	rch := etcd.cli.Watch(context.Background(), key, ops...)
+	return rch, nil
+}
+
+func (etcd *EtcdClient) Lease() clientv3.Lease {
+	return clientv3.NewLease(etcd.cli)
+}

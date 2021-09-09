@@ -17,9 +17,8 @@ import (
 )
 
 const (
-	NamePrefix   = "etcd"
-	DirPrefix    = "data_"
-	HttpProtocol = "http://"
+	NamePrefix = "etcd"
+	DirPrefix  = "data_"
 )
 
 type EmbedEtcdConfig struct {
@@ -136,7 +135,7 @@ func parseEtcdConfig() (*EmbedEtcdConfig, error) {
 func parsePeers(eps []string) []url.URL {
 	urls := make([]url.URL, len(eps))
 	for i, ep := range eps {
-		u, err := url.Parse(HttpProtocol + ep)
+		u, err := url.Parse(common.HttpProtocol + ep)
 		if err != nil {
 			return []url.URL{}
 		}
@@ -149,7 +148,7 @@ func parsePeers(eps []string) []url.URL {
 func parseClients(eps []string) []url.URL {
 	urls := make([]url.URL, len(eps))
 	for i, ep := range eps {
-		u, err := url.Parse(HttpProtocol + ep)
+		u, err := url.Parse(common.HttpProtocol + ep)
 		if err != nil {
 			return []url.URL{}
 		}
@@ -162,7 +161,7 @@ func parseClients(eps []string) []url.URL {
 func parseInitialCluster(eps []string) string {
 	urls := ""
 	for i, ep := range eps {
-		urls += NamePrefix + strconv.Itoa(i) + "=" + HttpProtocol + ep
+		urls += NamePrefix + strconv.Itoa(i) + "=" + common.HttpProtocol + ep
 		if i+1 < len(eps) {
 			urls += ","
 		}

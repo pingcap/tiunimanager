@@ -75,9 +75,9 @@ func TestTaskStatus_Display(t *testing.T) {
 		want string
 	}{
 		{"TaskStatusInit", TaskStatusInit, "未开始"},
-		{"TaskStatusProcessing", TaskStatusProcessing, "处理中"},
-		{"TaskStatusFinished", TaskStatusFinished, "已完成"},
-		{"TaskStatusError", TaskStatusError, "已失败"},
+		{"TaskStatusProcessing", TaskStatusProcessing, "进行中"},
+		{"TaskStatusFinished", TaskStatusFinished, "完成"},
+		{"TaskStatusError", TaskStatusError, "失败"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

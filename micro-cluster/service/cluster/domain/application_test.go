@@ -96,8 +96,8 @@ func Test_convertAllocHostsRequest(t *testing.T) {
 	demands := []*ClusterComponentDemand{
 		{
 			ComponentType: &knowledge.ClusterComponent{
-				"tidb",
-				"tidb",
+				"TiDB",
+				"TiDB",
 			},
 			TotalNodeCount: 999,
 			DistributionItems: []*ClusterNodeDistributionItem{
@@ -110,8 +110,8 @@ func Test_convertAllocHostsRequest(t *testing.T) {
 		},
 		{
 			ComponentType: &knowledge.ClusterComponent{
-				"tikv",
-				"tikv",
+				"TiKV",
+				"TiKV",
 			},
 			TotalNodeCount: 3,
 			DistributionItems: []*ClusterNodeDistributionItem{
@@ -124,8 +124,8 @@ func Test_convertAllocHostsRequest(t *testing.T) {
 		},
 		{
 			ComponentType: &knowledge.ClusterComponent{
-				"pd",
-				"pd",
+				"PD",
+				"PD",
 			},
 			TotalNodeCount: 3,
 			DistributionItems: []*ClusterNodeDistributionItem{

@@ -12,9 +12,9 @@ exec env GODEBUG=madvdontneed=1 bin/openapi-server \
     --host="{{.Host}}" \
     --port="{{.Port}}" \
     --metrics-port="{{.MetricsPort}}" \
-    --registry-address="{{.registry_endpoints}}" \
-    --tracer-address="{{.tracer_servers.host}}:{{.tracer_servers.port}}" \
-    --elasticsearch-address="{{.elasticsearch_servers.host}}:{{.elasticsearch_servers.port}}" \
+    --registry-address="{{.RegistryEndpoints}}" \
+    --tracer-address="{{.TracerAddress}}" \
+    --elasticsearch-address="{{.ElasticSearchAddress}}" \
     --deploy-dir="{{.DeployDir}}" \
     --data-dir="{{.DataDir}}" \
-    --log-level="{{.global.log_level}}"
+    --log-level="{{.LogLevel}}"

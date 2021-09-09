@@ -24,16 +24,20 @@ import (
 
 // TiEMAPIServerScript represent the data to generate TiEMAPIServer config
 type TiEMAPIServerScript struct {
-	IP          string
-	Port        int
-	MetricsPort int
-	DeployDir   string
-	DataDir     string
-	LogDir      string
+	IP                   string
+	Port                 int
+	MetricsPort          int
+	DeployDir            string
+	DataDir              string
+	LogDir               string
+	LogLevel             string
+	RegistryEndpoints    string
+	TracerAddress        string
+	ElasticSearchAddress string
 }
 
 // NewTiEMAPIServerScript returns a TiEMAPIServerScript with given arguments
-func NewTiEMAPIServerScript(ip, deployDir, dataDir, logDir string) *TiEMAPIServerScript {
+func NewTiEMAPIServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMAPIServerScript {
 	return &TiEMAPIServerScript{
 		IP:          ip,
 		Port:        4116,
@@ -41,6 +45,7 @@ func NewTiEMAPIServerScript(ip, deployDir, dataDir, logDir string) *TiEMAPIServe
 		DeployDir:   deployDir,
 		DataDir:     dataDir,
 		LogDir:      logDir,
+		LogLevel:    logLevel,
 	}
 }
 
@@ -53,6 +58,24 @@ func (c *TiEMAPIServerScript) WithPort(port int) *TiEMAPIServerScript {
 // WithMetricsPort set PeerPort field of TiEMAPIServerScript
 func (c *TiEMAPIServerScript) WithMetricsPort(port int) *TiEMAPIServerScript {
 	c.MetricsPort = port
+	return c
+}
+
+// WithRegistry set RegistryEndpoints
+func (c *TiEMAPIServerScript) WithRegistry(addr string) *TiEMAPIServerScript {
+	c.RegistryEndpoints = addr
+	return c
+}
+
+// WithTracer set TracerAddress
+func (c *TiEMAPIServerScript) WithTracer(addr string) *TiEMAPIServerScript {
+	c.TracerAddress = addr
+	return c
+}
+
+// WithElasticSearch set ElasticSearchAddress
+func (c *TiEMAPIServerScript) WithElasticSearch(addr string) *TiEMAPIServerScript {
+	c.ElasticSearchAddress = addr
 	return c
 }
 

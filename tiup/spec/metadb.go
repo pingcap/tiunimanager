@@ -43,6 +43,7 @@ type MetaDBServerSpec struct {
 	Config          map[string]interface{} `yaml:"config,omitempty" validate:"config:ignore"`
 	Arch            string                 `yaml:"arch,omitempty"`
 	OS              string                 `yaml:"os,omitempty"`
+	LogLevel        string                 `yaml:"log_level,omitempty" default:"info" validate:"log_level:editable"`
 	ResourceControl *meta.ResourceControl  `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
 }
 
@@ -148,6 +149,7 @@ func (i *MetaDBInstance) InitConfig(
 		paths.Deploy,
 		paths.Data[0],
 		paths.Log,
+		spec.LogLevel,
 	).
 		WithPort(spec.Port).
 		WithPeerPort(spec.PeerPort).
@@ -190,6 +192,7 @@ func (i *MetaDBInstance) ScaleConfig(
 		paths.Deploy,
 		paths.Data[0],
 		paths.Log,
+		spec.LogLevel,
 	).
 		WithPort(spec.Port).
 		WithPeerPort(spec.PeerPort).

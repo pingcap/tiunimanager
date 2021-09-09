@@ -24,18 +24,21 @@ import (
 
 // TiEMMetaDBScript represent the data to generate TiEMMetaDB config
 type TiEMMetaDBScript struct {
-	IP          string
-	Port        int
-	ClientPort  int
-	PeerPort    int
-	MetricsPort int
-	DeployDir   string
-	DataDir     string
-	LogDir      string
+	IP                string
+	Port              int
+	ClientPort        int
+	PeerPort          int
+	MetricsPort       int
+	DeployDir         string
+	DataDir           string
+	LogDir            string
+	LogLevel          string
+	RegistryEndpoints string
+	TracerAddress     string
 }
 
 // NewTiEMMetaDBScript returns a TiEMMetaDBScript with given arguments
-func NewTiEMMetaDBScript(ip, deployDir, dataDir, logDir string) *TiEMMetaDBScript {
+func NewTiEMMetaDBScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMMetaDBScript {
 	return &TiEMMetaDBScript{
 		IP:          ip,
 		Port:        4100,
@@ -45,6 +48,7 @@ func NewTiEMMetaDBScript(ip, deployDir, dataDir, logDir string) *TiEMMetaDBScrip
 		DeployDir:   deployDir,
 		DataDir:     dataDir,
 		LogDir:      logDir,
+		LogLevel:    logLevel,
 	}
 }
 
@@ -69,6 +73,18 @@ func (c *TiEMMetaDBScript) WithPeerPort(port int) *TiEMMetaDBScript {
 // WithMetricsPort set PeerPort field of TiEMMetaDBScript
 func (c *TiEMMetaDBScript) WithMetricsPort(port int) *TiEMMetaDBScript {
 	c.MetricsPort = port
+	return c
+}
+
+// WithRegistry set RegistryEndpoints
+func (c *TiEMMetaDBScript) WithRegistry(addr string) *TiEMMetaDBScript {
+	c.RegistryEndpoints = addr
+	return c
+}
+
+// WithTracer set TracerAddress
+func (c *TiEMMetaDBScript) WithTracer(addr string) *TiEMMetaDBScript {
+	c.TracerAddress = addr
 	return c
 }
 

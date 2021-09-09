@@ -106,6 +106,7 @@ func (topo *Specification) ComponentsByStartOrder() (comps []Component) {
 	comps = append(comps, &spec.MonitorComponent{Topology: topo})
 	comps = append(comps, &spec.GrafanaComponent{Topology: topo})
 	comps = append(comps, &spec.AlertManagerComponent{Topology: topo})
+	// TODO: add tracer
 	comps = append(comps, &MetaDBComponent{topo})
 	comps = append(comps, &APIServerComponent{topo})
 	comps = append(comps, &WebServerComponent{topo})
@@ -120,6 +121,7 @@ func (topo *Specification) ComponentsByUpdateOrder() (comps []Component) {
 	comps = append(comps, &APIServerComponent{topo})
 	comps = append(comps, &WebServerComponent{topo})
 	comps = append(comps, &ClusterServerComponent{topo})
+	// TODO: add tracer
 	comps = append(comps, &spec.MonitorComponent{Topology: topo})
 	comps = append(comps, &spec.GrafanaComponent{Topology: topo})
 	comps = append(comps, &spec.AlertManagerComponent{Topology: topo})

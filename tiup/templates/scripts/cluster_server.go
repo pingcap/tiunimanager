@@ -24,16 +24,19 @@ import (
 
 // TiEMClusterServerScript represent the data to generate TiEMClusterServer config
 type TiEMClusterServerScript struct {
-	IP          string
-	Port        int
-	MetricsPort int
-	DeployDir   string
-	DataDir     string
-	LogDir      string
+	IP                string
+	Port              int
+	MetricsPort       int
+	DeployDir         string
+	DataDir           string
+	LogDir            string
+	LogLevel          string
+	RegistryEndpoints string
+	TracerAddress     string
 }
 
 // NewTiEMClusterServerScript returns a TiEMClusterServerScript with given arguments
-func NewTiEMClusterServerScript(ip, deployDir, dataDir, logDir string) *TiEMClusterServerScript {
+func NewTiEMClusterServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMClusterServerScript {
 	return &TiEMClusterServerScript{
 		IP:          ip,
 		Port:        4110,
@@ -41,6 +44,7 @@ func NewTiEMClusterServerScript(ip, deployDir, dataDir, logDir string) *TiEMClus
 		DeployDir:   deployDir,
 		DataDir:     dataDir,
 		LogDir:      logDir,
+		LogLevel:    logLevel,
 	}
 }
 
@@ -53,6 +57,18 @@ func (c *TiEMClusterServerScript) WithPort(port int) *TiEMClusterServerScript {
 // WithMetricsPort set PeerPort field of TiEMClusterServerScript
 func (c *TiEMClusterServerScript) WithMetricsPort(port int) *TiEMClusterServerScript {
 	c.MetricsPort = port
+	return c
+}
+
+// WithRegistry set RegistryEndpoints
+func (c *TiEMClusterServerScript) WithRegistry(addr string) *TiEMClusterServerScript {
+	c.RegistryEndpoints = addr
+	return c
+}
+
+// WithTracer set TracerAddress
+func (c *TiEMClusterServerScript) WithTracer(addr string) *TiEMClusterServerScript {
+	c.TracerAddress = addr
 	return c
 }
 

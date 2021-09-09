@@ -53,7 +53,7 @@ func LoadKnowledge() {
 }
 
 func loadSpecKnowledge () {
-	tidbType := ClusterType{"tidb", "tidb"}
+	tidbType := ClusterType{"TiDB", "TiDB"}
 	tidbV4_0_12 := ClusterVersion{"v4.0.12", "v4.0.12"}
 	tidbV5_0_0 := ClusterVersion{"v5.0.0", "v5.0.0"}
 

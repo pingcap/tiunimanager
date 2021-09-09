@@ -6,22 +6,22 @@ import (
 )
 
 func TestClusterComponentFromCode(t *testing.T) {
-	t.Run("tidb", func(t *testing.T) {
-		got := ClusterComponentFromCode("tidb")
-		if got.ComponentType != "tidb" {
-			t.Errorf("ClusterComponentFromCode() = %v, want code = %v", got, "tidb")
+	t.Run("TiDB", func(t *testing.T) {
+		got := ClusterComponentFromCode("TiDB")
+		if got.ComponentType != "TiDB" {
+			t.Errorf("ClusterComponentFromCode() = %v, want code = %v", got, "TiDB")
 		}
 	})
-	t.Run("tidb", func(t *testing.T) {
-		got := ClusterComponentFromCode("tikv")
-		if got.ComponentType != "tikv" {
-			t.Errorf("ClusterComponentFromCode() = %v, want code = %v", got, "tikv")
+	t.Run("TiKV", func(t *testing.T) {
+		got := ClusterComponentFromCode("TiKV")
+		if got.ComponentType != "TiKV" {
+			t.Errorf("ClusterComponentFromCode() = %v, want code = %v", got, "TiKV")
 		}
 	})
-	t.Run("tidb", func(t *testing.T) {
-		got := ClusterComponentFromCode("pd")
-		if got.ComponentType != "pd" {
-			t.Errorf("ClusterComponentFromCode() = %v, want code = %v", got, "pd")
+	t.Run("PD", func(t *testing.T) {
+		got := ClusterComponentFromCode("PD")
+		if got.ComponentType != "PD" {
+			t.Errorf("ClusterComponentFromCode() = %v, want code = %v", got, "PD")
 		}
 	})
 	t.Run("nil", func(t *testing.T) {
@@ -33,16 +33,10 @@ func TestClusterComponentFromCode(t *testing.T) {
 }
 
 func TestClusterTypeFromCode(t *testing.T) {
-	t.Run("tidb", func(t *testing.T) {
-		got := ClusterTypeFromCode("tidb")
-		if got.Code != "tidb" {
-			t.Errorf("ClusterTypeFromCode() = %v, want code = %v", got, "tidb")
-		}
-	})
-	t.Run("dm", func(t *testing.T) {
-		got := ClusterTypeFromCode("dm")
-		if got.Code != "dm" {
-			t.Errorf("ClusterTypeFromCode() = %v, want code = %v", got, "dm")
+	t.Run("TiDB", func(t *testing.T) {
+		got := ClusterTypeFromCode("TiDB")
+		if got.Code != "TiDB" {
+			t.Errorf("ClusterTypeFromCode() = %v, want code = %v", got, "TiDB")
 		}
 	})
 	t.Run("nil", func(t *testing.T) {

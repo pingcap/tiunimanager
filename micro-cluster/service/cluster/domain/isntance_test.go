@@ -17,7 +17,7 @@ func buildAggregation() *ClusterAggregation {
 		Cluster: &Cluster{
 			Id: "111",
 			TenantId: "222",
-			ClusterType: *knowledge.ClusterTypeFromCode("tidb"),
+			ClusterType: *knowledge.ClusterTypeFromCode("TiDB"),
 			ClusterVersion: *knowledge.ClusterVersionFromCode("v5.0.0"),
 		},
 		AvailableResources: &proto.AllocHostResponse{

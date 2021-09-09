@@ -193,7 +193,7 @@ func Test_parseDistributionItemFromDTO(t *testing.T) {
 
 func Test_parseNodeDemandFromDTO(t *testing.T) {
 	r := parseNodeDemandFromDTO(&proto.ClusterNodeDemandDTO{
-		ComponentType: "tidb",
+		ComponentType: "TiDB",
 		TotalNodeCount: 3,
 		Items: []*proto.DistributionItemDTO{
 			{
@@ -244,8 +244,8 @@ func TestCreateCluster(t *testing.T) {
 	&proto.ClusterBaseInfoDTO{
 		ClusterName: "testCluster",
 		ClusterType: &proto.ClusterTypeDTO{
-			Code: "tidb",
-			Name: "tidb",
+			Code: "TiDB",
+			Name: "TiDB",
 		},
 		ClusterVersion: &proto.ClusterVersionDTO{
 			Code: "v5.0.0",

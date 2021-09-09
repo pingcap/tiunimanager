@@ -734,7 +734,7 @@ var defaultTenantId = "defaultTenantId"
 
 func TestFetchCluster(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
-	cluster, _ := clusterTbl.CreateCluster("TestFetchCluster", "tt.args.DbPassword", "tidb", "v1", true, "", "TestFetchCluster.ownerId", defaultTenantId)
+	cluster, _ := clusterTbl.CreateCluster("TestFetchCluster", "tt.args.DbPassword", "TiDB", "v5.0.0", true, "", "TestFetchCluster.ownerId", defaultTenantId)
 	t.Run("normal", func(t *testing.T) {
 		gotResult, err := clusterTbl.FetchCluster(cluster.ID)
 		if err != nil {

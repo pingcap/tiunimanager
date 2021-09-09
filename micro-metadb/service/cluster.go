@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+
 	"gorm.io/gorm"
 
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -13,6 +14,7 @@ import (
 
 var ClusterSuccessResponseStatus = &dbPb.DBClusterResponseStatus{Code: 0}
 var ClusterNoResultResponseStatus = &dbPb.DBClusterResponseStatus{Code: 1}
+var BizErrResponseStatus = &dbPb.DBClusterResponseStatus{Code: 2}
 
 func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DBCreateClusterRequest, resp *dbPb.DBCreateClusterResponse) (err error) {
 	if nil == req || nil == resp {
@@ -34,9 +36,11 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DB
 	if nil == err {
 		log.Infof("CreateCluster successful, clusterId: %s, tenantId: %s, error: %v", cluster.ID, cluster.TenantId, err)
 	} else {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = "CreateCluster failed"
 		log.Infof("CreateCluster failed, clusterId: %s, tenantId: %s, error: %v", cluster.ID, cluster.TenantId, err)
 	}
-	return err
+	return nil
 }
 
 func (handler *DBServiceHandler) DeleteCluster(ctx context.Context, req *dbPb.DBDeleteClusterRequest, resp *dbPb.DBDeleteClusterResponse) (err error) {
@@ -91,11 +95,14 @@ func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *d
 
 	if req.GetUpdateStatus() {
 		do, err = clusterManager.UpdateClusterStatus(req.ClusterId, int8(req.Status))
-		if nil == err {
-			if req.GetUpdateFlow() {
-				do, err = clusterManager.UpdateClusterFlowId(req.ClusterId, uint(req.FlowId))
-			}
+		if nil != err {
+			log.Errorf("UpdateClusterStatus failed, clusterId: %s flowId: %d, ,error: %v",
+				req.GetClusterId(), req.GetFlowId(), err)
+			return err
 		}
+	}
+	if req.GetUpdateFlow() {
+		do, err = clusterManager.UpdateClusterFlowId(req.ClusterId, uint(req.FlowId))
 	}
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
@@ -103,7 +110,7 @@ func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *d
 		log.Infof("UpdateClusterStatus successful, clusterId: %s flowId: %d, error: %v",
 			req.GetClusterId(), req.GetFlowId(), err)
 	} else {
-		log.Infof("UpdateClusterStatus failed, clusterId: %s flowId: %d, ,error: %v",
+		log.Errorf("UpdateClusterStatus failed, clusterId: %s flowId: %d, ,error: %v",
 			req.GetClusterId(), req.GetFlowId(), err)
 	}
 
@@ -231,7 +238,7 @@ func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbP
 	}
 	log := framework.Log()
 	clusterManager := handler.Dao().ClusterManager()
-	backupRecords, total, err := clusterManager.ListBackupRecords(req.ClusterId,
+	backupRecords, total, err := clusterManager.ListBackupRecords(req.ClusterId, req.StartTime, req.EndTime,
 		int((req.Page.Page-1)*req.Page.PageSize), int(req.Page.PageSize))
 
 	if nil == err {
@@ -336,12 +343,13 @@ func (handler *DBServiceHandler) GetCurrentParametersRecord(ctx context.Context,
 		resp.Parameters = ConvertToParameterRecordDTO(result)
 		log.Infof("GetCurrentParametersRecord successful, clusterId: %s, error: %v",
 			req.GetClusterId(), err)
+		return nil
 	} else {
 		resp.Status = ClusterNoResultResponseStatus
-		log.Infof("GetCurrentParametersRecord failed, clusterId: %s, error: %v",
+		log.Warnf("GetCurrentParametersRecord failed, clusterId: %s, error: %v",
 			req.GetClusterId(), err)
+		return nil
 	}
-	return err
 }
 
 func ConvertToBackupRecordDTO(do *models.BackupRecord) (dto *dbPb.DBBackupRecordDTO) {
@@ -354,6 +362,7 @@ func ConvertToBackupRecordDTO(do *models.BackupRecord) (dto *dbPb.DBBackupRecord
 		ClusterId:   do.ClusterId,
 		StartTime:   do.StartTime.Unix(),
 		BackupRange: do.BackupRange,
+		BackupMode:  do.BackupMode,
 		BackupType:  do.BackupType,
 		OperatorId:  do.OperatorId,
 		FilePath:    do.FilePath,

@@ -18,11 +18,9 @@ func (aggregation *ClusterAggregation) ExtractInstancesDTO() *proto.ClusterInsta
 	}
 
 	if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
-		dto.Port = int32(record.ConfigModel.GlobalOptions.SSHPort)
-		dto.IntranetConnectAddresses = ConnectAddresses(record.ConfigModel)
-		dto.ExtranetConnectAddresses = ConnectAddresses(record.ConfigModel)
+		dto.IntranetConnectAddresses, dto.ExtranetConnectAddresses, dto.PortList = ConnectAddresses(record.ConfigModel)
 	} else {
-		dto.Port = 22
+		dto.PortList = []int64{4000}
 		dto.IntranetConnectAddresses = []string{"127.0.0.1"}
 		dto.ExtranetConnectAddresses = []string{"127.0.0.1"}
 	}
@@ -30,23 +28,29 @@ func (aggregation *ClusterAggregation) ExtractInstancesDTO() *proto.ClusterInsta
 	return dto
 }
 
-func ConnectAddresses(spec *spec.Specification) []string {
+func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int64) {
 	servers := spec.TiDBServers
 
-	list := make([]string, len(servers), len(servers))
+	addressList := make([]string, len(servers), len(servers))
+	portList := make([]int64, len(servers), len(servers))
+
 	for i,v := range servers {
-		list[i] = v.Host
+		addressList[i] = v.Host
+		portList[i] = int64(v.Port)
 	}
-	return list
+	return addressList, addressList, portList
 }
 
 func (aggregation *ClusterAggregation) ExtractComponentDTOs() []*proto.ComponentInstanceDTO {
-	if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
-		config := record.ConfigModel
-		var knowledge *knowledge.ClusterVersionSpec
-
-		return appendAllComponentInstances(config, knowledge)
-	}
+	//if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
+	//	config := record.ConfigModel
+	//	knowledge := knowledge.ClusterTypeSpecFromCode(aggregation.Cluster.ClusterType.Code)
+	//	for _, v := range knowledge.VersionSpecs {
+	//		if v.ClusterVersion.Code == aggregation.Cluster.ClusterVersion.Code {
+	//			return appendAllComponentInstances(config, &v)
+	//		}
+	//	}
+	//}
 	return make([]*proto.ComponentInstanceDTO, 0)
 }
 

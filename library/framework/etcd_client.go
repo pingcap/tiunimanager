@@ -19,7 +19,6 @@ type EtcdClient struct {
 var etcdClient *EtcdClient
 
 func InitEtcdClient(etcdAddress []string) *EtcdClient {
-	log := Log()
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   etcdAddress,
 		DialTimeout: 5 * time.Second,
@@ -33,7 +32,7 @@ func InitEtcdClient(etcdAddress []string) *EtcdClient {
 		_, err = cli.MemberList(ctx)
 		cancel()
 		if err != nil {
-			log.Warn("connect etcd server [%v] failed, err: %v", etcdAddress, err)
+			Log().Warnf("connect etcd server [%v] failed, err: %v\n", etcdAddress, err)
 			continue
 		}
 		break

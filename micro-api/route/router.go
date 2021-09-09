@@ -2,12 +2,12 @@ package route
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/clusterapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/databaseapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/instanceapi"
+	"github.com/pingcap-inc/tiem/micro-api/controller/taskapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/userapi"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
@@ -38,9 +38,9 @@ func Route(g *gin.Engine) {
 	// api
 	apiV1 := g.Group("/api/v1")
 	{
+		apiV1.Use(interceptor.GinOpenTracing())
 		apiV1.Use(interceptor.GinTraceIDHandler())
 		apiV1.Use(interceptor.AccessLog(), gin.Recovery())
-		apiV1.Use(framework.GinOpenTracing())
 
 		user := apiV1.Group("/user")
 		{
@@ -51,6 +51,7 @@ func Route(g *gin.Engine) {
 		profile := user.Group("")
 		{
 			profile.Use(interceptor.VerifyIdentity)
+			profile.Use(interceptor.AuditLog())
 			profile.GET("/profile", userapi.Profile)
 		}
 
@@ -92,6 +93,13 @@ func Route(g *gin.Engine) {
 			backup.POST("/:backupId/restore", instanceapi.RecoverBackup)
 			backup.DELETE("/:backupId", instanceapi.DeleteBackup)
 			//backup.GET("/:backupId", instanceapi.DetailsBackup)
+		}
+
+		flowworks := apiV1.Group("/flowworks")
+		{
+			flowworks.Use(interceptor.VerifyIdentity)
+			flowworks.Use(interceptor.AuditLog())
+			flowworks.GET("/", taskapi.Query)
 		}
 
 		host := apiV1.Group("/resources")

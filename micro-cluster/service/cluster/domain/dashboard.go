@@ -7,6 +7,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiup/pkg/utils/rand"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -36,26 +37,27 @@ type ShareResponse struct {
 type Dashboard struct {
 	ClusterId string `json:"clusterId"`
 	Url       string `json:"url"`
-	ShareCode string `json:"shareCode"`
+	Token 	  string `json:"token"`
 }
 
-var shareCodeUrlSuffix string = "api/user/share/code"
 var loginUrlSuffix string = "api/user/login"
 var defaultExpire int64 = 60 * 60 * 3 //3 hour expire
 
-func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
+func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
 	//todo: check operator and clusterId
-	url, err := getDashboardUrl(clusterId)
+	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	if err != nil || clusterAggregation == nil || clusterAggregation.Cluster == nil {
+		return nil, errors.New("load cluster aggregation")
+	}
+
+	/*
+	url, err := getDashboardUrl(clusterAggregation)
 	if err != nil {
 		return nil, err
-	}
+	}*/
+	url := getDashboardUrlFromCluser(clusterAggregation)
 
 	token, err := getLoginToken(url, "root", "") //todo: replace by real data
-	if err != nil {
-		return nil, err
-	}
-
-	shareCode, err := generateShareCode(url, token)
 	if err != nil {
 		return nil, err
 	}
@@ -63,19 +65,32 @@ func DecribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, err
 	dashboard := &Dashboard{
 		ClusterId: clusterId,
 		Url:       url,
-		ShareCode: shareCode,
+		Token:     token,
 	}
 
 	return dashboard, nil
 }
 
-func getDashboardUrl(clusterId string) (string, error) {
-	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterId)
+func getDashboardUrlFromCluser(clusterAggregation *ClusterAggregation) string {
+	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	pdNum := len(configModel.PDServers)
+	pdServer := configModel.PDServers[rand.Intn(pdNum)]
+	pdClientPort := pdServer.ClientPort
+	if pdClientPort == 0 {
+		pdClientPort = DefaultPDClientPort
+	}
+	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.Host, pdClientPort)
+}
+
+func getDashboardUrl(clusterAggregation *ClusterAggregation) (string, error) {
+	clusterName := clusterAggregation.Cluster.ClusterName
+	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterName)
+
 	//tiup cluster display CLUSTER_NAME --dashboard
-	resp := libtiup.MicroSrvTiupClusterDisplay(clusterId, 0, []string{"--dashboard"})
-	if resp.Error != nil {
-		getLogger().Errorf("call tiupmgr cluster display failed, %s", resp.Error.Error())
-		return "", resp.Error
+	resp := libtiup.MicroSrvTiupClusterDisplay(clusterName, 0, []string{"--dashboard"})
+	if resp.ErrorStr != "" {
+		getLogger().Errorf("call tiupmgr cluster display failed, %s", resp.ErrorStr)
+		return "", errors.New(resp.ErrorStr)
 	}
 	getLogger().Infof("call tiupmgr success, resp: %v", resp)
 	//DisplayRespString: "Dashboard URL: http://127.0.0.1:2379/dashboard/\n"
@@ -106,33 +121,6 @@ func getLoginToken(dashboardUrl, userName, password string) (string, error) {
 	getLogger().Infof("getLoginToken resp: %v", loginResp)
 
 	return loginResp.Token, nil
-}
-
-func generateShareCode(dashboardUrl, token string) (string, error) {
-	url := fmt.Sprintf("%s%s", dashboardUrl, shareCodeUrlSuffix)
-	body := &ShareRequest{
-		ExpireInSeconds: defaultExpire,
-		RevokeWritePriv: true,
-	}
-	headers := make(map[string]string)
-	headers["Authorization"] = fmt.Sprintf("Bearer %s", token)
-	resp, err := post(url, body, headers)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	var shareResp ShareResponse
-	err = json.Unmarshal(data, &shareResp)
-	if err != nil {
-		return "", err
-	}
-	getLogger().Infof("generateShareCode resp: %v", shareResp)
-
-	return shareResp.Code, nil
 }
 
 func post(url string, body interface{}, headers map[string]string) (*http.Response, error) {

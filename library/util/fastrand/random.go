@@ -16,7 +16,6 @@ package fastrand
 
 import (
 	"math/rand"
-	_ "unsafe" // required by go:linkname
 )
 
 // Buf generates a random string using ASCII characters but avoid separator character.
@@ -33,7 +32,6 @@ func Buf(size int) []byte {
 }
 
 // Uint32 returns a lock free uint32 value.
-//go:linkname Uint32 runtime.fastrand
 func Uint32() uint32 {
 	return rand.Uint32()
 }

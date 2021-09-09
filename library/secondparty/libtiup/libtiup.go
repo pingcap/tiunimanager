@@ -107,7 +107,7 @@ type CmdStartResp struct {
 
 type CmdListResp struct {
 	info  string
-	Error error
+	ErrorStr string
 }
 
 type CmdDestroyResp struct {
@@ -171,7 +171,7 @@ type CmdClusterDisplayReq struct {
 
 type CmdClusterDisplayResp struct {
 	DisplayRespString string
-	Error             error
+	ErrorStr             string
 }
 
 type TaskStatusMapValue struct {
@@ -190,7 +190,7 @@ func TiupMgrInit() {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetRootLogger().ForkFile(configPath + common.LogFileTiupMgr)
+	logger = framework.LogForkFile(configPath + common.LogFileTiupMgr)
 
 	glMgrTaskStatusCh = make(chan TaskStatusMember, 1024)
 	glMgrTaskStatusMap = make(map[uint64]TaskStatusMapValue)
@@ -514,7 +514,7 @@ func mgrStartNewTiupListTask(taskID uint64, req *CmdListReq) CmdListResp {
 	if data, err = cmd.Output(); err != nil {
 		logger.Error("cmd start err", err)
 		//fmt.Println("cmd start err", err)
-		ret.Error = err
+		ret.ErrorStr = err.Error()
 		return ret
 	}
 	ret.info = string(data)
@@ -575,7 +575,7 @@ func mgrStartNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) CmdClusterDisp
 	if data, err = cmd.Output(); err != nil {
 		logger.Error("cmd start err", err)
 		//fmt.Println("cmd start err", err)
-		ret.Error = err
+		ret.ErrorStr = err.Error()
 		return ret
 	}
 	ret.DisplayRespString = string(data)
@@ -667,7 +667,7 @@ func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.GetRootLogger().ForkFile(configPath + common.LogFileLibTiup)
+	logger = framework.LogForkFile(configPath + common.LogFileLibTiup)
 
 	glTiUPMgrPath = tiupMgrPath
 	glTiUPBinPath = tiupBinPath

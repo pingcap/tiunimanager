@@ -158,15 +158,16 @@ func Backup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(BackupRecord{
-			ID:          resp.GetBackupRecord().GetId(),
-			ClusterId:   resp.GetBackupRecord().GetClusterId(),
-			StartTime:   time.Unix(resp.GetBackupRecord().GetStartTime(), 0),
-			EndTime:     time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
-			BackupRange: resp.GetBackupRecord().GetRange(),
-			BackupType:  resp.GetBackupRecord().GetBackupType(),
-			FilePath:    resp.GetBackupRecord().GetFilePath(),
-			Size:        resp.GetBackupRecord().GetSize(),
-			Status:      *clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
+			ID:          	resp.GetBackupRecord().GetId(),
+			ClusterId:   	resp.GetBackupRecord().GetClusterId(),
+			StartTime:   	time.Unix(resp.GetBackupRecord().GetStartTime(), 0),
+			EndTime:     	time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
+			BackupType:  	resp.GetBackupRecord().GetRange(),
+			BackupMethod:  	resp.GetBackupRecord().GetBackupType(),
+			BackupMode:  	resp.GetBackupRecord().GetMode(),
+			FilePath:    	resp.GetBackupRecord().GetFilePath(),
+			Size:        	resp.GetBackupRecord().GetSize(),
+			Status:      	*clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
 		}))
 	}
 }
@@ -253,26 +254,25 @@ func SaveBackupStrategy(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param clusterId query string true "cluster id"
-// @Param request body BackupRecordQueryReq false "page" default(1)
+// @Param backupRecordQuery query BackupRecordQueryReq true "backup records query condition"
 // @Success 200 {object} controller.ResultWithPage{data=[]BackupRecord}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups [get]
 func QueryBackup(c *gin.Context) {
-	clusterId := c.Query("clusterId")
-
 	var queryReq BackupRecordQueryReq
-	if err := c.ShouldBindJSON(&queryReq); err != nil {
+	if err := c.ShouldBindQuery(&queryReq); err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	operator := controller.GetOperator(c)
 	reqDTO := &cluster.QueryBackupRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: clusterId,
-		Page:      queryReq.PageRequest.ConvertToDTO(),
+		Operator:  	operator.ConvertToDTO(),
+		ClusterId: 	queryReq.ClusterId,
+		Page:      	queryReq.PageRequest.ConvertToDTO(),
+		StartTime: 	queryReq.StartTime,
+		EndTime: 	queryReq.EndTime,
 	}
 
 	resp, err := client.ClusterClient.QueryBackupRecord(context.TODO(), reqDTO, controller.DefaultTimeout)
@@ -284,12 +284,13 @@ func QueryBackup(c *gin.Context) {
 
 		for i, v := range resp.BackupRecords {
 			records[i] = BackupRecord{
-				ID:          v.Id,
-				ClusterId:   v.ClusterId,
-				StartTime:   time.Unix(v.StartTime, 0),
-				EndTime:     time.Unix(v.EndTime, 0),
-				BackupRange: v.Range,
-				BackupType:  v.BackupType,
+				ID:          	v.Id,
+				ClusterId:   	v.ClusterId,
+				StartTime:   	time.Unix(v.StartTime, 0),
+				EndTime:     	time.Unix(v.EndTime, 0),
+				BackupType:  	v.Range,
+				BackupMethod:  	v.BackupType,
+				BackupMode:  	v.Mode,
 				Operator: controller.Operator{
 					ManualOperator: true,
 					OperatorId:     v.Operator.Id,
@@ -355,6 +356,7 @@ func RecoverBackup(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param backupId path int true "backup record id"
+// @Param backupDeleteReq body BackupDeleteReq true "backup delete request"
 // @Success 200 {object} controller.CommonResult{data=int}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

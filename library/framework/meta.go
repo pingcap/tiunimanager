@@ -3,6 +3,8 @@ package framework
 import (
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type ServiceNameEnum string
@@ -22,7 +24,8 @@ func (s ServiceNameEnum) ServerName() string {
 	case ApiService:
 		return "openapi-server"
 	default:
-		panic("unexpected")
+		log.Error("unexpected ServiceName")
+		return ""
 	}
 }
 
@@ -49,8 +52,9 @@ func NewServiceMetaFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *Serv
 func splitRegistryAddress(argAddress string) []string {
 	addresses := strings.Split(argAddress, ",")
 	registryAddresses := make([]string, len(addresses))
-	for i, addr := range addresses {
-		registryAddresses[i] = addr
+	if l := copy(registryAddresses, addresses); l != len(addresses) {
+		log.Errorf("copy address failed, copied count(%d) not expected(%d)\n", l, len(addresses))
+		return nil
 	}
 	return registryAddresses
 }

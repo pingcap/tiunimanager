@@ -1,5 +1,7 @@
 package knowledge
 
+import "github.com/pingcap-inc/tiem/library/framework"
+
 var SpecKnowledge *ClusterSpecKnowledge
 var ParameterKnowledge *ClusterParameterKnowledge
 
@@ -19,6 +21,16 @@ type ResourceSpecKnowledge struct {
 	Specs 		[]*ResourceSpec
 }
 
+func ClusterTypeSpecFromCode(code string) *ClusterTypeSpec {
+	for _, v := range SpecKnowledge.Specs {
+		if code == v.ClusterType.Code {
+			return v
+		}
+	}
+	framework.Log().Errorf("Unexpected code of cluster type: %s", code)
+	return nil
+}
+
 func ClusterTypeFromCode(code string) *ClusterType {
 	return SpecKnowledge.Types[code]
 }
@@ -29,15 +41,6 @@ func ClusterVersionFromCode(code string) *ClusterVersion {
 
 func ClusterComponentFromCode(componentType string) *ClusterComponent {
 	return SpecKnowledge.Components[componentType]
-}
-
-func SortedTypesKnowledge() []*ClusterTypeSpec {
-	slice := make([]*ClusterTypeSpec, len(SpecKnowledge.Specs), len(SpecKnowledge.Specs))
-	for _, v := range SpecKnowledge.Specs  {
-		slice = append(slice, v)
-	}
-
-	return slice
 }
 
 func ParameterFromName(name string) *Parameter {
@@ -51,51 +54,97 @@ func LoadKnowledge() {
 
 func loadSpecKnowledge () {
 	tidbType := ClusterType{"tidb", "tidb"}
-	tidbv5_1_0 := ClusterVersion{"v5.1.0", "v5.1.0"}
+	tidbV4_0_12 := ClusterVersion{"v4.0.12", "v4.0.12"}
+	tidbV5_0_0 := ClusterVersion{"v5.0.0", "v5.0.0"}
 
 	tidbComponent := ClusterComponent{
-		"tidb", "tidb",
+		"TiDB", "TiDB",
 	}
 
 	tikvComponent := ClusterComponent{
-		"tikv", "tikv",
+		"TiKV", "TiKV",
 	}
 
 	pdComponent := ClusterComponent{
-		"pd", "pd",
+		"PD", "PD",
 	}
 
-	tidbV5_1_0Spec := ClusterVersionSpec{
-		ClusterVersion: tidbv5_1_0,
+	tiFlashComponent := ClusterComponent{
+		"TiFlash", "TiFlash",
+	}
+
+	tiCdcComponent := ClusterComponent{
+		"TiCDC", "TiCDC",
+	}
+
+	tidbV4_0_12_Spec := ClusterVersionSpec{
+		ClusterVersion: tidbV4_0_12,
 		ComponentSpecs: []ClusterComponentSpec{
-			{tidbComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(4, 8)}, 1}},
-			{tikvComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(4, 8)}, 1}},
-			{pdComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(16, 32)}, 1}},
+			{tidbComponent, ComponentConstraint{true,[]int{3}, []string{
+				GenSpecCode(4, 8),
+				GenSpecCode(8, 16),
+				GenSpecCode(8, 32),
+				GenSpecCode(16, 32),
+			}, 1}},
+			{tikvComponent, ComponentConstraint{true,[]int{3}, []string{
+				GenSpecCode(8, 32),
+				GenSpecCode(8, 64),
+				GenSpecCode(16, 128),
+			}, 1}},
+			{pdComponent, ComponentConstraint{true,[]int{3}, []string{
+				GenSpecCode(4, 8),
+				GenSpecCode(8, 16),
+			}, 1}},
+			{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
+				GenSpecCode(4, 32),
+				GenSpecCode(8, 64),
+				GenSpecCode(16, 128),
+			}, 0}},
+			{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
+				GenSpecCode(8, 16),
+				GenSpecCode(16, 64),
+			}, 0}},
+		},
+	}
+	tidbV5_0_0_Spec := ClusterVersionSpec{
+		ClusterVersion: tidbV5_0_0,
+		ComponentSpecs: []ClusterComponentSpec{
+			{tidbComponent, ComponentConstraint{true,[]int{3}, []string{
+				GenSpecCode(4, 8),
+				GenSpecCode(8, 16),
+				GenSpecCode(8, 32),
+				GenSpecCode(16, 32),
+			}, 1}},
+			{tikvComponent, ComponentConstraint{true,[]int{3}, []string{
+				GenSpecCode(8, 32),
+				GenSpecCode(8, 64),
+				GenSpecCode(16, 128),
+			}, 1}},
+			{pdComponent, ComponentConstraint{true,[]int{3}, []string{
+				GenSpecCode(4, 8),
+				GenSpecCode(8, 16),
+			}, 1}},
+			{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
+				GenSpecCode(4, 32),
+				GenSpecCode(8, 64),
+				GenSpecCode(16, 128),
+			}, 0}},
+			{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
+				GenSpecCode(8, 16),
+				GenSpecCode(16, 64),
+			}, 0}},
 		},
 	}
 
-	dmType := ClusterType{"dm", "dm"}
-	dmVx := ClusterVersion{"dmVx", "测试版本"}
-
-	dmComponent := ClusterComponent{
-		"dm", "dm",
-	}
-
-	dmVxSpec := ClusterVersionSpec{
-		ClusterVersion: dmVx,
-		ComponentSpecs: []ClusterComponentSpec{
-			{dmComponent, ComponentConstraint{true,[]int{2}, []string{GenSpecCode(4, 8)}, 1}},
-			},
-	}
-
 	SpecKnowledge = &ClusterSpecKnowledge {
-		Specs: []*ClusterTypeSpec{{tidbType, []ClusterVersionSpec{tidbV5_1_0Spec}},{dmType, []ClusterVersionSpec{dmVxSpec}}},
-		Types: map[string]*ClusterType{tidbType.Code:&tidbType, dmType.Code:&dmType},
-		Versions: map[string]*ClusterVersion{tidbv5_1_0.Code: &tidbv5_1_0, dmVx.Code: &dmVx},
+		Specs: []*ClusterTypeSpec{{tidbType, []ClusterVersionSpec{tidbV4_0_12_Spec, tidbV5_0_0_Spec}}},
+		Types: map[string]*ClusterType{tidbType.Code:&tidbType},
+		Versions: map[string]*ClusterVersion{tidbV4_0_12.Code: &tidbV4_0_12, tidbV5_0_0.Code: &tidbV5_0_0},
 		Components: map[string]*ClusterComponent{tidbComponent.ComponentType:&tidbComponent,
 			tikvComponent.ComponentType:&tikvComponent,
 			pdComponent.ComponentType: &pdComponent,
-			dmComponent.ComponentType: &dmComponent,
+			tiFlashComponent.ComponentType: &tiFlashComponent,
+			tiCdcComponent.ComponentType: &tiCdcComponent,
 		},
 	}
 }

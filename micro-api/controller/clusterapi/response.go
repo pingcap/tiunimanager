@@ -22,5 +22,5 @@ type DetailClusterRsp struct {
 type DescribeDashboardRsp struct {
 	ClusterId		string		`json:"clusterId"`
 	Url 			string 		`json:"url"`
-	ShareCode 		string 		`json:"shareCode"`
+	Token 			string 		`json:"token"`
 }

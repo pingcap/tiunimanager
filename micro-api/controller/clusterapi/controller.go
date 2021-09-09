@@ -45,11 +45,14 @@ func Create(c *gin.Context) {
 	}
 
 	respDTO, err := client.ClusterClient.CreateCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		status := respDTO.GetRespStatus()
+		if status.Code != 0 {
+			c.JSON(http.StatusInternalServerError, controller.Fail(500, status.Message))
+			return
+		}
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, CreateClusterRsp{
 			ClusterId:       respDTO.GetClusterId(),
@@ -222,6 +225,7 @@ func ClusterKnowledge(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
 // @Success 200 {object} controller.CommonResult{data=DescribeDashboardRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -242,7 +246,7 @@ func DescribeDashboard(c *gin.Context) {
 		result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
 			ClusterId: respDTO.GetClusterId(),
 			Url:       respDTO.GetUrl(),
-			ShareCode: respDTO.GetShareCode(),
+			Token:     respDTO.GetToken(),
 		})
 
 		c.JSON(http.StatusOK, result)

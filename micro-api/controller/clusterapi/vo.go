@@ -18,7 +18,7 @@ type ClusterInstanceInfo struct {
 	IntranetConnectAddresses	[]string	`json:"intranetConnectAddresses"`
 	ExtranetConnectAddresses	[]string	`json:"extranetConnectAddresses"`
 	Whitelist					[]string	`json:"whitelist"`
-	Port 						int			`json:"port"`
+	PortList 					[]int			`json:"portList"`
 	DiskUsage           		controller.Usage	`json:"diskUsage"`
 	CpuUsage    				controller.Usage	`json:"cpuUsage"`
 	MemoryUsage 				controller.Usage	`json:"memoryUsage"`

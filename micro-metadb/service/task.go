@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
@@ -10,7 +11,7 @@ var TaskSuccessResponseStatus = &dbPb.DBTaskResponseStatus{Code: 0}
 
 func (handler *DBServiceHandler) CreateFlow(ctx context.Context, req *dbPb.DBCreateFlowRequest, rsp *dbPb.DBCreateFlowResponse) error {
 	db := handler.Dao().Db()
-	flow, err := models.CreateFlow(db, req.Flow.FlowName, req.Flow.StatusAlias, req.Flow.GetBizId())
+	flow, err := models.CreateFlow(db, req.Flow.FlowName, req.Flow.StatusAlias, req.Flow.GetBizId(), req.Flow.GetOperator())
 	if err != nil {
 		// todo
 
@@ -108,6 +109,28 @@ func (handler *DBServiceHandler) LoadTask(ctx context.Context, req *dbPb.DBLoadT
 	return nil
 }
 
+func (handler *DBServiceHandler) ListFlows(ctx context.Context, req *dbPb.DBListFlowsRequest, rsp *dbPb.DBListFlowsResponse) error {
+	db := handler.Dao().Db()
+	flows, total, err := models.ListFlows(db, req.BizId, req.Keyword, int(req.Status), int(req.Page.Page - 1) * int(req.Page.PageSize), int(req.Page.PageSize))
+	if nil == err {
+		rsp.Status = TaskSuccessResponseStatus
+		rsp.Page = &dbPb.DBTaskPageDTO{
+			Page:     req.Page.Page,
+			PageSize: req.Page.PageSize,
+			Total:    int32(total),
+		}
+		flowDTOs := make([]*dbPb.DBFlowDTO, len(flows), len(flows))
+		for i, v := range flows {
+			flowDTOs[i] = convertFlowToDTO(v)
+		}
+		rsp.Flows = flowDTOs
+		framework.Log().Infof("ListFlows successful, total: %d", total)
+	} else {
+		framework.Log().Infof("ListFlows failed, error: %s", err.Error())
+	}
+	return err
+}
+
 func convertFlowToDTO(do *models.FlowDO) (dto *dbPb.DBFlowDTO) {
 	if do == nil {
 		return
@@ -120,6 +143,7 @@ func convertFlowToDTO(do *models.FlowDO) (dto *dbPb.DBFlowDTO) {
 	dto.Status = int32(do.Status)
 	dto.CreateTime = do.CreatedAt.Unix()
 	dto.UpdateTime = do.UpdatedAt.Unix()
+	dto.Operator = do.Operator
 
 	dto.DeleteTime = deletedAtUnix(do.DeletedAt)
 	return

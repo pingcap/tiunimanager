@@ -52,18 +52,28 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "cluster id",
                         "name": "clusterId",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
-                        "description": "page",
-                        "name": "request",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.BackupRecordQueryReq"
-                        }
+                        "type": "integer",
+                        "name": "endTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "startTime",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -201,6 +211,15 @@ var doc = `{
                         "name": "backupId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "backup delete request",
+                        "name": "backupDeleteReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.BackupDeleteReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -772,6 +791,15 @@ var doc = `{
                     "cluster"
                 ],
                 "summary": "dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1132,13 +1160,26 @@ var doc = `{
                 "summary": "query records of import and export",
                 "parameters": [
                     {
-                        "description": "cluster info for query records",
-                        "name": "dataTransportQueryReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/databaseapi.DataTransportQueryReq"
-                        }
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "recordId",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2066,8 +2107,11 @@ var doc = `{
                 "memoryUsage": {
                     "$ref": "#/definitions/controller.Usage"
                 },
-                "port": {
-                    "type": "integer"
+                "portList": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "statusCode": {
                     "type": "string"
@@ -2301,7 +2345,7 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
-                "shareCode": {
+                "token": {
                     "type": "string"
                 },
                 "url": {
@@ -2369,8 +2413,11 @@ var doc = `{
                 "memoryUsage": {
                     "$ref": "#/definitions/controller.Usage"
                 },
-                "port": {
-                    "type": "integer"
+                "portList": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "statusCode": {
                     "type": "string"
@@ -2520,6 +2567,9 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
+                "filePath": {
+                    "type": "string"
+                },
                 "fileType": {
                     "type": "string"
                 },
@@ -2589,20 +2639,6 @@ var doc = `{
                     "type": "string"
                 },
                 "transportType": {
-                    "type": "string"
-                }
-            }
-        },
-        "databaseapi.DataTransportQueryReq": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
-                },
-                "recordId": {
                     "type": "string"
                 }
             }
@@ -2843,13 +2879,27 @@ var doc = `{
                 }
             }
         },
+        "instanceapi.BackupDeleteReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                }
+            }
+        },
         "instanceapi.BackupRecord": {
             "type": "object",
             "properties": {
-                "backupRange": {
+                "backupMethod": {
+                    "description": "物理/逻辑",
+                    "type": "string"
+                },
+                "backupMode": {
+                    "description": "手动/自动",
                     "type": "string"
                 },
                 "backupType": {
+                    "description": "全量/增量",
                     "type": "string"
                 },
                 "clusterId": {
@@ -2875,20 +2925,6 @@ var doc = `{
                 },
                 "status": {
                     "$ref": "#/definitions/controller.StatusInfo"
-                }
-            }
-        },
-        "instanceapi.BackupRecordQueryReq": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
                 }
             }
         },

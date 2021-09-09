@@ -31,7 +31,8 @@ type Framework interface {
 	GetClientArgs() *ClientArgs
 	GetConfiguration() *Configuration
 	GetRootLogger() *RootLogger
-	GetLoggerWithContext(context.Context) *log.Entry
+	Log() *log.Entry
+	LogWithContext(context.Context) *log.Entry
 	GetTracer() *Tracer
 	GetEtcdClient() *EtcdClient
 
@@ -44,29 +45,21 @@ func GetRootLogger() *RootLogger {
 	if Current != nil {
 		return Current.GetRootLogger()
 	} else {
-		return DefaultLogRecord()
+		return DefaultRootLogger()
 	}
 }
 
 func Log() *log.Entry {
-	if Current != nil {
-		return Current.GetRootLogger().RecordFun()
-	} else {
-		return DefaultLogRecord().RecordFun()
-	}
+	return GetRootLogger().defaultLogEntry
 }
 
-func GetLoggerWithContext(ctx context.Context) *log.Entry {
-	if Current != nil {
-		return Current.GetLoggerWithContext(ctx)
-	} else {
-		id := GetTraceIDFromContext(ctx)
-		if len(id) <= 0 {
-			return DefaultLogRecord().defaultLogEntry
-		} else {
-			return DefaultLogRecord().defaultLogEntry.WithField(TiEM_X_TRACE_ID_NAME, id)
-		}
-	}
+func LogWithContext(ctx context.Context) *log.Entry {
+	id := GetTraceIDFromContext(ctx)
+	return GetRootLogger().defaultLogEntry.WithField(TiEM_X_TRACE_ID_NAME, id)
+}
+
+func LogForkFile(fileName string) *log.Entry {
+	return GetRootLogger().ForkFile(fileName)
 }
 
 type Opt func(d *BaseFramework) error
@@ -156,17 +149,11 @@ func (b *BaseFramework) parseArgs(serviceName ServiceNameEnum) {
 
 func (b *BaseFramework) initMicroClient() {
 	for client, handler := range b.clientHandler {
-		cert, err := tls.LoadX509KeyPair(b.certificate.CertificateCrtFilePath, b.certificate.CertificateKeyFilePath)
-		if err != nil {
-			panic("load certificate file failed")
-		}
-		tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
-
 		srv := micro.NewService(
 			micro.Name(string(client)),
 			micro.WrapHandler(prometheus.NewHandlerWrapper()),
 			micro.WrapHandler(opentracing.NewHandlerWrapper(*b.trace)),
-			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+			micro.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(b.loadCert()))),
 			micro.Registry(etcd.NewRegistry(registry.Addrs(b.GetServiceMeta().RegistryAddress...))),
 			micro.WrapClient(opentracing.NewClientWrapper(*b.trace)),
 		)
@@ -176,18 +163,20 @@ func (b *BaseFramework) initMicroClient() {
 	}
 }
 
-func (b *BaseFramework) initMicroService() {
+func (b *BaseFramework) loadCert() *tls.Config {
 	cert, err := tls.LoadX509KeyPair(b.certificate.CertificateCrtFilePath, b.certificate.CertificateKeyFilePath)
 	if err != nil {
 		panic("load certificate file failed")
 	}
-	tlsConfigPtr := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+}
 
+func (b *BaseFramework) initMicroService() {
 	server := server.NewServer(
 		server.Name(string(b.serviceMeta.ServiceName)),
 		server.WrapHandler(prometheus.NewHandlerWrapper()),
 		server.WrapHandler(opentracing.NewHandlerWrapper(*b.trace)),
-		server.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(tlsConfigPtr))),
+		server.Transport(transport.NewHTTPTransport(transport.Secure(true), transport.TLSConfig(b.loadCert()))),
 		server.Address(b.serviceMeta.GetServiceAddress()),
 		server.Registry(etcd.NewRegistry(registry.Addrs(b.serviceMeta.RegistryAddress...))),
 	)
@@ -254,14 +243,13 @@ func (b *BaseFramework) GetRootLogger() *RootLogger {
 	return b.log
 }
 
-func (b *BaseFramework) GetLoggerWithContext(ctx context.Context) *log.Entry {
-	l := b.GetRootLogger()
+func (b *BaseFramework) Log() *log.Entry {
+	return b.GetRootLogger().defaultLogEntry
+}
+
+func (b *BaseFramework) LogWithContext(ctx context.Context) *log.Entry {
 	id := GetTraceIDFromContext(ctx)
-	if len(id) <= 0 {
-		return l.defaultLogEntry
-	} else {
-		return l.defaultLogEntry.WithField(TiEM_X_TRACE_ID_NAME, id)
-	}
+	return b.Log().WithField(TiEM_X_TRACE_ID_NAME, id)
 }
 
 func (b *BaseFramework) GetTracer() *Tracer {
@@ -277,7 +265,7 @@ func (b *BaseFramework) GetServiceMeta() *ServiceMeta {
 }
 
 func (b *BaseFramework) StopService() error {
-	panic("implement me")
+	return nil
 }
 
 func (b *BaseFramework) StartService() error {

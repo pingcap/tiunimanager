@@ -2,10 +2,11 @@ package models
 
 import (
 	"fmt"
+	"time"
+
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/pingcap/errors"
 	"gorm.io/gorm"
-	"time"
 )
 
 type Cluster struct {
@@ -46,6 +47,7 @@ type BackupRecord struct {
 	ClusterId   string `gorm:"not null;type:varchar(36);default:null"`
 	BackupRange string
 	BackupType  string
+	BackupMode  string
 	OperatorId  string `gorm:"not null;type:varchar(36);default:null"`
 
 	FilePath string
@@ -111,7 +113,8 @@ func (m *DAOClusterManager) UpdateClusterStatus(clusterId string, status int8) (
 		return nil, errors.New(fmt.Sprintf("UpdateClusterStatus has invalid parameter, clusterId: %s, status: %d", clusterId, status))
 	}
 	cluster = &Cluster{}
-	return cluster, m.Db().Model(cluster).Where("id = ?", clusterId).Update("status", status).Find(cluster).Error
+	err = m.Db().Model(cluster).Where("id = ?", clusterId).First(cluster).Update("status", status).Error
+	return cluster, err
 }
 
 func (m *DAOClusterManager) UpdateClusterDemand(clusterId string, content string, tenantId string) (cluster *Cluster, demand *DemandRecord, err error) {
@@ -346,10 +349,8 @@ func (m *DAOClusterManager) DeleteBackupRecord(id uint) (record *BackupRecord, e
 		return nil, errors.New(fmt.Sprintf("DeleteBackupRecord has invalid parameter, Id: %d", id))
 	}
 	record = &BackupRecord{}
-	err = m.Db().First(record, "id = ?", id).Error
-	if err != nil {
-		err = m.Db().Delete(record).Error
-	}
+	record.ID = id
+	err = m.Db().Where("id = ?", record.ID).Delete(record).Error
 	return record, err
 }
 
@@ -364,6 +365,7 @@ func (m *DAOClusterManager) SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do
 		OperatorId:  record.GetOperatorId(),
 		BackupRange: record.GetBackupRange(),
 		BackupType:  record.GetBackupType(),
+		BackupMode:  record.GetBackupMode(),
 		FlowId:      record.GetFlowId(),
 		FilePath:    record.GetFilePath(),
 		StartTime:   time.Unix(record.GetStartTime(), 0),
@@ -406,13 +408,18 @@ func (m *DAOClusterManager) QueryBackupRecord(clusterId string, recordId int64) 
 		Flow:         &flow,
 	}, nil
 }
-func (m *DAOClusterManager) ListBackupRecords(clusterId string,
-	offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
+func (m *DAOClusterManager) ListBackupRecords(clusterId string, startTime, endTime int64,offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
 
 	records := make([]*BackupRecord, length, length)
-	err = m.Db().Table(TABLE_NAME_BACKUP_RECORD).
-		Where("cluster_id = ?", clusterId).
-		Count(&total).Order("id desc").Offset(offset).Limit(length).
+	db := m.Db().Table(TABLE_NAME_BACKUP_RECORD).Where("cluster_id = ? and deleted_at is null", clusterId)
+	if startTime > 0 {
+		db = db.Where("start_time >= ?", time.Unix(startTime, 0))
+	}
+	if endTime > 0 {
+		db = db.Where("end_time <= ?", time.Unix(endTime, 0))
+	}
+
+	err =db.Count(&total).Order("id desc").Offset(offset).Limit(length).
 		Find(&records).
 		Error
 

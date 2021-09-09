@@ -239,7 +239,9 @@ func ImportHosts(c *gin.Context) {
 // @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
 // @Router /resources/hosts [get]
 func ListHost(c *gin.Context) {
-	var hostQuery HostQuery
+	hostQuery := HostQuery{
+		Status: -1,
+	}
 	if err := c.ShouldBindQuery(&hostQuery); err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
@@ -405,7 +407,8 @@ func RemoveHosts(c *gin.Context) {
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
 	templateName := "hostInfo_template.xlsx"
-	filePath := filepath.Join(curDir, "../etc/", templateName)
+	// The template file should be on tiem/etc/hostInfo_template.xlsx
+	filePath := filepath.Join(curDir, "./etc/", templateName)
 
 	_, err := os.Stat(filePath)
 	if err != nil && !os.IsExist(err) {

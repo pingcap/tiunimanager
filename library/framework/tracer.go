@@ -62,32 +62,6 @@ func NewJaegerTracer(serviceName string, addr string) (opentracing.Tracer, io.Cl
 	return tracer, closer, err
 }
 
-func GinOpenTracing() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// todo tracer
-		//var parentSpan opentracing.Span
-		//
-		//tracer := GlobalTracer
-		//
-		//spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(c.Request.Header))
-		//if err != nil {
-		//	parentSpan = tracer.StartSpan(c.Request.URL.Path)
-		//	defer parentSpan.Finish()
-		//} else {
-		//	parentSpan = opentracing.StartSpan(
-		//		c.Request.URL.Path,
-		//		opentracing.ChildOf(spCtx),
-		//		opentracing.Tag{Key: string(ext.Component), Value: "HTTP"},
-		//		ext.SpanKindRPCServer,
-		//	)
-		//	defer parentSpan.Finish()
-		//}
-		//c.Set("Tracer", tracer)
-		//c.Set("ParentSpan", parentSpan)
-		//c.Next()
-	}
-}
-
 // make a new micro ctx base on the gin ctx
 func NewMicroCtxFromGinCtx(c *gin.Context) context.Context {
 	var ctx context.Context
@@ -142,9 +116,7 @@ func getTraceIDFromNormalContext(ctx context.Context) string {
 }
 
 func GetTraceIDFromContext(ctx context.Context) string {
-	if ctx == nil {
-		return ""
-	}
+	AssertWithInfo(ctx != nil, "ctx should not be nil")
 	switch v := ctx.(type) {
 	case *gin.Context:
 		return getTraceIDFromGinContext(v)
@@ -158,9 +130,7 @@ func GetTraceIDFromContext(ctx context.Context) string {
 }
 
 func getParentSpanFromGinContext(ctx context.Context) opentracing.Span {
-	if ctx == nil {
-		return nil
-	}
+	AssertWithInfo(ctx != nil, "ctx should not be nil")
 	switch v := ctx.(type) {
 	case *gin.Context:
 		span, existFlag := v.Get("ParentSpan")

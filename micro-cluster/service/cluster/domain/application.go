@@ -1,16 +1,20 @@
 package domain
 
 import (
-	"context"
+	ctx "context"
 	"errors"
+	"github.com/pingcap-inc/tiem/library/client"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	"path/filepath"
+	"strconv"
+	"time"
+
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
-	"path/filepath"
-	"strconv"
 )
 
 type ClusterAggregation struct {
@@ -64,8 +68,11 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 	cluster.Demands = demands
 
 	// persist the cluster into database
-	ClusterRepo.AddCluster(cluster)
+	err := ClusterRepo.AddCluster(cluster)
 
+	if err != nil {
+		return nil, err
+	}
 	clusterAggregation := &ClusterAggregation{
 		Cluster:          cluster,
 		MaintainCronTask: GetDefaultMaintainTask(),
@@ -74,9 +81,9 @@ func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO
 
 	// Start the workflow to create a cluster instance
 
-	flow, err := CreateFlowWork(cluster.Id, FlowCreateCluster)
+	flow, err := CreateFlowWork(cluster.Id, FlowCreateCluster, operator)
 	if err != nil {
-		// todo
+		return nil, err
 	}
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
@@ -103,7 +110,7 @@ func DeleteCluster(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregatio
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster)
+	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster, operator)
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()
 
@@ -120,7 +127,7 @@ func ListCluster(ope *proto.OperatorDTO, req *proto.ClusterQueryReqDTO) ([]*Clus
 
 func GetClusterDetail(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
 	cluster, err := ClusterRepo.Load(clusterId)
-	// todo 补充其他的信息
+
 	return cluster, err
 }
 
@@ -143,7 +150,7 @@ func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) 
 	//	return clusterAggregation, errors.New("incomplete processing flow")
 	//}
 
-	flow, err := CreateFlowWork(clusterId, FlowModifyParameters)
+	flow, err := CreateFlowWork(clusterId, FlowModifyParameters, operator)
 	if err != nil {
 		// todo
 	}
@@ -181,7 +188,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	demands := clusterAggregation.Cluster.Demands
 
 	clusterAggregation.AvailableResources = &proto.AllocHostResponse{}
-	err := host.AllocHosts(context.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
+	err := host.NewResourceManager().AllocHosts(ctx.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
 
 	if err != nil {
 		// todo
@@ -219,18 +226,44 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 		}
 
 		cfgYamlStr := string(bs)
-		go func() {
-			_, err = libtiup.MicroSrvTiupDeploy(
-				cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
-			)
-		}()
+		getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
+		deployTaskId, err := libtiup.MicroSrvTiupDeploy(
+			cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
+		)
+		context.put("deployTaskId", deployTaskId)
+		getLogger().Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
 	}
 
 	return true
 }
 
 func startupCluster(task *TaskEntity, context *FlowContext) bool {
-	// todo
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	var req dbPb.FindTiupTaskByIDRequest
+	req.Id = context.value("deployTaskId").(uint64)
+
+	for i := 0; i < 30; i++ {
+		time.Sleep(10 * time.Second)
+		rsp, err := client.DBClient.FindTiupTaskByID(ctx.TODO(), &req)
+		if err != nil {
+			getLogger().Errorf("get deploy task err = %s", err.Error())
+			task.Fail(err)
+			return false
+		}
+		if rsp.TiupTask.Status == dbPb.TiupTaskStatus_Error{
+			getLogger().Errorf("deploy cluster error, %s", rsp.TiupTask.ErrorStr)
+			task.Fail(errors.New(rsp.TiupTask.ErrorStr))
+			return false
+		}
+		if rsp.TiupTask.Status == dbPb.TiupTaskStatus_Finished {
+			break
+		}
+	}
+	getLogger().Infof("start cluster %s", cluster.ClusterName)
+	libtiup.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
+
 	task.Success(nil)
 	return true
 }
@@ -285,19 +318,6 @@ func (aggregation *ClusterAggregation) ExtractStatusDTO() *proto.DisplayStatusDT
 	return dto
 }
 
-func (aggregation *ClusterAggregation) GetCurrentWorkFlow() *FlowWorkEntity {
-	if aggregation.CurrentWorkFlow != nil {
-		return aggregation.CurrentWorkFlow
-	}
-
-	if aggregation.Cluster.WorkFlowId > 0 {
-		// todo 从DB获取
-		return nil
-	}
-
-	return nil
-}
-
 func (aggregation *ClusterAggregation) ExtractDisplayDTO() *proto.ClusterDisplayDTO {
 	dto := &proto.ClusterDisplayDTO{
 		ClusterId: aggregation.Cluster.Id,
@@ -342,10 +362,11 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRec
 	currentFlow := aggregation.CurrentWorkFlow
 
 	return &proto.BackupRecordDTO{
-		Id:        record.Id,
-		ClusterId: record.ClusterId,
-		Range:     string(record.Range),
+		Id:         record.Id,
+		ClusterId:  record.ClusterId,
+		Range:      string(record.Range),
 		BackupType: string(record.BackupType),
+		Mode:		string(record.BackupMode),
 		Size:      record.Size,
 		StartTime: record.StartTime,
 		EndTime:   record.EndTime,
@@ -399,7 +420,7 @@ func parseDistributionItemFromDTO(dto *proto.DistributionItemDTO) (item *Cluster
 func parseRecoverInFoFromDTO(dto *proto.RecoverInfoDTO) (info RecoverInfo) {
 	info = RecoverInfo{
 		SourceClusterId: dto.SourceClusterId,
-		BackupRecordId: dto.BackupRecordId,
+		BackupRecordId:  dto.BackupRecordId,
 	}
 	return
 }
@@ -425,21 +446,23 @@ func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *proto.All
 
 	for _, d := range demands {
 		switch d.ComponentType.ComponentType {
-		case "tidb":
+		case "TiDB":
 			req.TidbReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.TidbReq[i] = convertAllocationReq(v)
 			}
-		case "tikv":
+		case "TiKV":
 			req.TikvReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.TikvReq[i] = convertAllocationReq(v)
 			}
-		case "pd":
+		case "PD":
 			req.PdReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.PdReq[i] = convertAllocationReq(v)
 			}
+		default:
+
 		}
 	}
 	return
@@ -452,6 +475,10 @@ func convertAllocationReq(item *ClusterNodeDistributionItem) *proto.AllocationRe
 		Memory:        int32(knowledge.ParseMemory(item.SpecCode)),
 		Count:         int32(item.Count),
 	}
+}
+
+func tidbPort() int {
+	return DefaultTidbPort
 }
 
 func convertConfig(resource *proto.AllocHostResponse, cluster *Cluster) *spec.Specification {
@@ -496,6 +523,7 @@ func convertConfig(resource *proto.AllocHostResponse, cluster *Cluster) *spec.Sp
 		tiupConfig.TiDBServers = append(tiupConfig.TiDBServers, &spec.TiDBSpec{
 			Host:      v.Ip,
 			DeployDir: filepath.Join(v.Disk.Path, cluster.Id, "tidb-deploy"),
+			Port: tidbPort(),
 		})
 	}
 	for _, v := range tikvHosts {

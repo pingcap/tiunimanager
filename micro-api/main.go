@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/knowledge"
 
 	"github.com/pingcap-inc/tiem/micro-api/metrics"
 
@@ -32,6 +33,7 @@ import (
 // @name Authorization
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.ApiService,
+		loadKnowledge,
 		defaultPortForLocal,
 	)
 
@@ -66,6 +68,11 @@ func initGinEngine(d *framework.BaseFramework) error {
 		d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
 	}
 
+	return nil
+}
+
+func loadKnowledge(f *framework.BaseFramework) error {
+	knowledge.LoadKnowledge()
 	return nil
 }
 

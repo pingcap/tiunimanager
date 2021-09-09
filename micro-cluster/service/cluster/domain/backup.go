@@ -18,6 +18,7 @@ type BackupRecord struct {
 	ClusterId  string
 	Range      BackupRange
 	BackupType BackupType
+	BackupMode BackupMode
 	OperatorId string
 	Size       uint64
 	FilePath   string
@@ -38,25 +39,8 @@ type BackupStrategy struct {
 	CronString     string
 }
 
-var defaultPathPrefix string = "/tmp/tiem/backup"
-
-func BackupPreCheck(request *proto.CreateBackupRequest) error {
-	if !checkBackupRangeValid(request.GetBackupRange()) {
-		return errors.New("backupRange invalid")
-	}
-	if !checkBackupTypeValid(request.GetBackupType()) {
-		return errors.New("backupType invalid")
-	}
-	if request.GetClusterId() == "" {
-		return errors.New("clusterId invalid")
-	}
-	if request.GetFilePath() == "" {
-		return errors.New("filePath invalid")
-	}
-	//todo: check operator is valid, maybe some has default config
-
-	return nil
-}
+//var defaultPathPrefix string = "/tmp/tiem/backup"
+var defaultPathPrefix string = "nfs/tiem/backup"
 
 func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, filePath string) (*ClusterAggregation, error) {
 	getLogger().Infof("Begin do Backup, clusterId: %s, backupRange: %s, backupType: %s, filePath: %s", clusterId, backupRange, backupType, filePath)
@@ -66,16 +50,18 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 	if err != nil || clusterAggregation == nil {
 		return nil, errors.New("load cluster aggregation")
 	}
+
 	clusterAggregation.CurrentOperator = operator
 	cluster := clusterAggregation.Cluster
 
-	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster)
+	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster, operator)
 
 	//todo: only support FULL Physics backup now
 	record := &BackupRecord{
 		ClusterId:  clusterId,
 		Range:      BackupRangeFull,
 		BackupType: BackupTypePhysics,
+		BackupMode: BackupModeManual,
 		OperatorId: operator.Id,
 		FilePath:   getBackupPath(filePath, clusterId, time.Now().Unix(), string(BackupRangeFull)),
 		StartTime:  time.Now().Unix(),
@@ -86,6 +72,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 			ClusterId:   record.ClusterId,
 			BackupType:  string(record.BackupType),
 			BackupRange: string(record.Range),
+			BackupMode:  string(record.BackupMode),
 			OperatorId:  record.OperatorId,
 			FilePath:    record.FilePath,
 			FlowId:      int64(flow.FlowWork.Id),
@@ -154,7 +141,7 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 	//	return clusterAggregation, errors.New("incomplete processing flow")
 	//}
 
-	flow, err := CreateFlowWork(clusterId, FlowRecoverCluster)
+	flow, err := CreateFlowWork(clusterId, FlowRecoverCluster, operator)
 	if err != nil {
 		// todo
 	}
@@ -174,6 +161,8 @@ func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupR
 		//local://br_data/[clusterId]/16242354365-FULL/(lock/SST/metadata)
 		return fmt.Sprintf("%s/%s/%d-%s", filePrefix, clusterId, timeStamp, backupRange)
 	}
+	//return fmt.Sprintf("%s/%s/%d-%s", defaultPathPrefix, clusterId, timeStamp, backupRange)
+	//todo: test env s3 config
 	return fmt.Sprintf("%s/%s/%d-%s", defaultPathPrefix, clusterId, timeStamp, backupRange)
 }
 
@@ -186,13 +175,17 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 	record := clusterAggregation.LastBackupRecord
 	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
+	tidbServerPort := tidbServer.Port
+	if tidbServerPort == 0 {
+		tidbServerPort = DefaultTidbPort
+	}
 
 	clusterFacade := libbr.ClusterFacade{
 		DbConnParameter: libbr.DbConnParam{
 			Username: "root", //todo: replace admin account
 			Password: "",
 			Ip:       tidbServer.Host,
-			Port:     strconv.Itoa(tidbServer.Port),
+			Port:     strconv.Itoa(tidbServerPort),
 		},
 		DbName:      "", //todo: support db table backup
 		TableName:   "",
@@ -201,8 +194,8 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 		TaskID:      uint64(task.Id),
 	}
 	storage := libbr.BrStorage{
-		StorageType: libbr.StorageTypeLocal,
-		Root:        record.FilePath,
+		StorageType: libbr.StorageTypeS3,
+		Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
 
 	getLogger().Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
@@ -212,6 +205,7 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 	record.BizId = uint64(task.Id)
+
 	return true
 }
 

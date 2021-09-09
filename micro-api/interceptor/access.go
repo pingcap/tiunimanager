@@ -34,7 +34,7 @@ func AccessLog() gin.HandlerFunc {
 			dataLength = 0
 		}
 
-		entry := framework.GetRootLogger().ForkFile(common.LogFileAccess).WithFields(log.Fields{
+		entry := framework.LogForkFile(common.LogFileAccess).WithFields(log.Fields{
 			"hostname":   hostname,
 			"statusCode": statusCode,
 			"latency":    latency, // time to process

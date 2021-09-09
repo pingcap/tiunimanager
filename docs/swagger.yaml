@@ -34,8 +34,10 @@ definitions:
         type: array
       memoryUsage:
         $ref: '#/definitions/controller.Usage'
-      port:
-        type: integer
+      portList:
+        items:
+          type: integer
+        type: array
       statusCode:
         type: string
       statusName:
@@ -188,7 +190,7 @@ definitions:
     properties:
       clusterId:
         type: string
-      shareCode:
+      token:
         type: string
       url:
         type: string
@@ -233,8 +235,10 @@ definitions:
         type: string
       memoryUsage:
         $ref: '#/definitions/controller.Usage'
-      port:
-        type: integer
+      portList:
+        items:
+          type: integer
+        type: array
       statusCode:
         type: string
       statusName:
@@ -331,6 +335,8 @@ definitions:
     properties:
       clusterId:
         type: string
+      filePath:
+        type: string
       fileType:
         type: string
       filter:
@@ -376,15 +382,6 @@ definitions:
       status:
         type: string
       transportType:
-        type: string
-    type: object
-  databaseapi.DataTransportQueryReq:
-    properties:
-      page:
-        type: integer
-      pageSize:
-        type: integer
-      recordId:
         type: string
     type: object
   databaseapi.DataTransportRecordQueryResp:
@@ -544,11 +541,21 @@ definitions:
       zoneName:
         type: string
     type: object
+  instanceapi.BackupDeleteReq:
+    properties:
+      clusterId:
+        type: string
+    type: object
   instanceapi.BackupRecord:
     properties:
-      backupRange:
+      backupMethod:
+        description: 物理/逻辑
+        type: string
+      backupMode:
+        description: 手动/自动
         type: string
       backupType:
+        description: 全量/增量
         type: string
       clusterId:
         type: string
@@ -566,15 +573,6 @@ definitions:
         type: string
       status:
         $ref: '#/definitions/controller.StatusInfo'
-    type: object
-  instanceapi.BackupRecordQueryReq:
-    properties:
-      clusterId:
-        type: string
-      page:
-        type: integer
-      pageSize:
-        type: integer
     type: object
   instanceapi.BackupRecoverReq:
     properties:
@@ -836,16 +834,21 @@ paths:
       - application/json
       description: query backup records of a cluster
       parameters:
-      - description: cluster id
-        in: query
+      - in: query
         name: clusterId
-        required: true
         type: string
-      - description: page
-        in: body
-        name: request
-        schema:
-          $ref: '#/definitions/instanceapi.BackupRecordQueryReq'
+      - in: query
+        name: endTime
+        type: integer
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: startTime
+        type: integer
       produces:
       - application/json
       responses:
@@ -928,6 +931,12 @@ paths:
         name: backupId
         required: true
         type: integer
+      - description: backup delete request
+        in: body
+        name: backupDeleteReq
+        required: true
+        schema:
+          $ref: '#/definitions/instanceapi.BackupDeleteReq'
       produces:
       - application/json
       responses:
@@ -1185,6 +1194,12 @@ paths:
       consumes:
       - application/json
       description: dashboard
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -1401,12 +1416,20 @@ paths:
       - application/json
       description: query records of import and export
       parameters:
-      - description: cluster info for query records
-        in: body
-        name: dataTransportQueryReq
+      - description: cluster id
+        in: path
+        name: clusterId
         required: true
-        schema:
-          $ref: '#/definitions/databaseapi.DataTransportQueryReq'
+        type: string
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: recordId
+        type: string
       produces:
       - application/json
       responses:

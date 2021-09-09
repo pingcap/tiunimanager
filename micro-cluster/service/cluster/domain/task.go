@@ -15,6 +15,9 @@ type FlowWorkEntity struct {
 	BizId          string
 	Status         TaskStatus
 	ContextContent string
+	Operator	*Operator
+	CreateTime time.Time
+	UpdateTime time.Time
 }
 
 type FlowContext map[string]interface{}
@@ -72,14 +75,14 @@ type FlowWorkAggregation struct {
 	Context     FlowContext
 }
 
-func CreateFlowWork(bizId string, defineName string) (*FlowWorkAggregation, error) {
+func CreateFlowWork(bizId string, defineName string, operator *Operator) (*FlowWorkAggregation, error) {
 	define := FlowWorkDefineMap[defineName]
 	if define == nil {
 		return nil, errors.New("workflow undefined")
 	}
 	context := make(map[string]interface{})
 
-	flow := define.getInstance(bizId, context)
+	flow := define.getInstance(bizId, context, operator)
 	TaskRepo.AddFlowWork(flow.FlowWork)
 	return flow, nil
 }

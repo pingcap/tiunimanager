@@ -75,10 +75,20 @@ type LightningCfg struct {
 	CheckRequirements bool   `toml:"check-requirements"` //lightning pre check
 }
 
+/*
+	tidb-lightning backend
+	https://docs.pingcap.com/zh/tidb/stable/tidb-lightning-backends#tidb-lightning-backend
+ */
 const (
 	BackendLocal  string = "local"
 	BackendImport string = "importer"
 	BackendTidb   string = "tidb"
+)
+
+const (
+	DefaultTidbPort int = 4000
+	DefaultTidbStatusPort int = 10080
+	DefaultPDClientPort int = 2379
 )
 
 type TikvImporterCfg struct {
@@ -141,7 +151,7 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	}
 
 	// Start the workflow
-	flow, err := CreateFlowWork(clusterId, FlowExportData)
+	flow, err := CreateFlowWork(clusterId, FlowExportData, operator)
 	if err != nil {
 		return "", err
 	}
@@ -160,6 +170,7 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	//todo: check operator
 	operator := parseOperatorFromDTO(ope)
 	getLogger().Info(operator)
+
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil {
 		getLogger().Errorf("load cluster[%s] aggregation from metadb failed", clusterId)
@@ -190,7 +201,7 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	}
 
 	// Start the workflow
-	flow, err := CreateFlowWork(clusterId, FlowImportData)
+	flow, err := CreateFlowWork(clusterId, FlowImportData, operator)
 	if err != nil {
 		return "", err
 	}
@@ -203,7 +214,7 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 	return info.RecordId, nil
 }
 
-func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*TransportInfo, error) {
+func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*db.TransportRecordDTO, *db.DBPageDTO, error) {
 	getLogger().Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %s, page: %d, pageSize: %d", clusterId, recordId, page, pageSize)
 	defer getLogger().Info("end DescribeDataTransportRecord")
 	req := &db.DBListTransportRecordRequest{
@@ -216,24 +227,10 @@ func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId str
 	}
 	resp, err := client.DBClient.ListTrasnportRecord(ctx.Background(), req)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	records := resp.GetRecords()
-	info := make([]*TransportInfo, len(records))
-	for index := 0; index < len(info); index++ {
-		info[index] = &TransportInfo{
-			RecordId:      records[index].GetID(),
-			TransportType: records[index].GetTransportType(),
-			ClusterId:     records[index].GetClusterId(),
-			Status:        records[index].GetStatus(),
-			FilePath:      records[index].GetFilePath(),
-			StartTime:     records[index].GetStartTime(),
-			EndTime:       records[index].GetEndTime(),
-		}
-	}
-
-	return info, nil
+	return resp.GetRecords(), resp.GetPage(), nil
 }
 
 func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo) *DataImportConfig {
@@ -249,6 +246,21 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	}
 	tidbServer := configModel.TiDBServers[0]
 	pdServer := configModel.PDServers[0]
+
+	tidbServerPort := tidbServer.Port
+	if tidbServerPort == 0 {
+		tidbServerPort = DefaultTidbPort
+	}
+
+	tidbStatusPort := tidbServer.StatusPort
+	if tidbStatusPort == 0 {
+		tidbStatusPort = DefaultTidbStatusPort
+	}
+
+	pdClientPort := pdServer.ClientPort
+	if pdClientPort == 0 {
+		pdClientPort = DefaultPDClientPort
+	}
 
 	/*
 	 * todo: sorted-kv-dir and data-source-dir in the same disk, may slow down import performance,
@@ -270,11 +282,11 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 		},
 		Tidb: TidbCfg{
 			Host:       tidbServer.Host,
-			Port:       tidbServer.Port,
+			Port:       tidbServerPort,
 			User:       info.UserName,
 			Password:   info.Password,
-			StatusPort: tidbServer.StatusPort,
-			PdAddr:     fmt.Sprintf("%s:%d", pdServer.Host, pdServer.ClientPort),
+			StatusPort: tidbStatusPort,
+			PdAddr:     fmt.Sprintf("%s:%d", pdServer.Host, pdClientPort),
 		},
 	}
 	return config
@@ -312,6 +324,7 @@ func cleanDataTransportDir(filepath string) error {
 func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin buildDataImportConfig")
 	defer getLogger().Info("end buildDataImportConfig")
+
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
@@ -338,12 +351,14 @@ func buildDataImportConfig(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 	getLogger().Infof("build lightning toml file sucess, %v", config)
+
 	return true
 }
 
 func importDataToCluster(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin importDataToCluster")
 	defer getLogger().Info("end importDataToCluster")
+
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
@@ -388,10 +403,15 @@ func updateDataImportRecord(task *TaskEntity, context *FlowContext) bool {
 func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin exportDataFromCluster")
 	defer getLogger().Info("end exportDataFromCluster")
+
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ExportInfo)
 	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
+	tidbServerPort := tidbServer.Port
+	if tidbServerPort == 0 {
+		tidbServerPort = DefaultTidbPort
+	}
 
 	if err := cleanDataTransportDir(info.FilePath); err != nil {
 		getLogger().Errorf("clean export directory failed, %s", err.Error())
@@ -403,7 +423,7 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 	//todo: tiupmgr not return failed err
 	cmd := []string{"-u", info.UserName,
 		"-p", info.Password,
-		"-P", strconv.Itoa(tidbServer.Port),
+		"-P", strconv.Itoa(tidbServerPort),
 		"--host", tidbServer.Host,
 		"--filetype", info.FileType,
 		"-t", "8",
@@ -419,6 +439,7 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 		getLogger().Errorf("call tiup dumpling api failed, %s", err.Error())
 		return false
 	}
+
 	getLogger().Infof("call tiupmgr succee, resp: %v", resp)
 
 	return true
@@ -451,6 +472,7 @@ func updateDataExportRecord(task *TaskEntity, context *FlowContext) bool {
 func compressExportData(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin compressExportData")
 	defer getLogger().Info("end compressExportData")
+
 	info := context.value(contextDataTransportKey).(*ExportInfo)
 
 	dataDir := fmt.Sprintf("%s/data", info.FilePath)
@@ -466,6 +488,7 @@ func compressExportData(task *TaskEntity, context *FlowContext) bool {
 func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin deCompressImportData")
 	defer getLogger().Info("end deCompressImportData")
+
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster

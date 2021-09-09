@@ -535,7 +535,9 @@ func GetFailureDomain(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}
-	var res DomainResourceRsp
+	res := DomainResourceRsp {
+		Resources: make([]DomainResource, 0, len(rsp.FdList)),
+	}
 	for _, v := range rsp.FdList {
 		res.Resources = append(res.Resources, DomainResource{
 			ZoneName: service.GetDomainNameFromCode(v.FailureDomain),

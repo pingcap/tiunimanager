@@ -121,7 +121,7 @@ func (dao *DAOManager) InitData() error {
 
 	framework.Log().Infof(" initialization system default data successful")
 
-	err = dao.initResourceDataForDev()
+	//err = dao.initResourceDataForDev()
 	if nil != err {
 		framework.Log().Errorf("initialize TiEM system test resource failed, error: %v", err)
 	}

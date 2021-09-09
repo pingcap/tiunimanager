@@ -64,7 +64,7 @@ func appendAllComponentInstances(config *spec.Specification, knowledge *knowledg
 				ComponentType: code,
 				ComponentName: v.ClusterComponent.ComponentName,
 			},
-			Nodes: ComponentAppender[code](config),
+			Nodes: ComponentAppender[code](config, knowledge.ClusterVersion.Code),
 		}
 
 		components = append(components, componentDTO)
@@ -72,7 +72,7 @@ func appendAllComponentInstances(config *spec.Specification, knowledge *knowledg
 	return components
 }
 
-var ComponentAppender = map[string]func (*spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
+var ComponentAppender = map[string]func (*spec.Specification, string) []*proto.ComponentNodeDisplayInfoDTO {
 	"TiDB": tiDBComponent,
 	"TiKV": tiKVComponent,
 	"PD": pDComponent,
@@ -80,13 +80,13 @@ var ComponentAppender = map[string]func (*spec.Specification) []*proto.Component
 	"TiCDC": tiCDCComponent,
 }
 
-func tiDBComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
+func tiDBComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
 	servers := config.TiDBServers
 	dto := make([]*proto.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
 	for i, v := range servers {
 		dto[i] = &proto.ComponentNodeDisplayInfoDTO{
 			NodeId: v.Host,
-			Version: "version", // todo
+			Version: version, // todo
 			Status: "运行中", // todo
 			Instance: &proto.ComponentNodeInstanceDTO{
 				HostId: v.Host,
@@ -108,22 +108,68 @@ func tiDBComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfo
 	return dto
 }
 
-func tiKVComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
+func tiKVComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
 	servers := config.TiKVServers
 	dto := make([]*proto.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	for i, v := range servers {
+		dto[i] = &proto.ComponentNodeDisplayInfoDTO{
+			NodeId: v.Host,
+			Version: version, // todo
+			Status: "运行中", // todo
+			Instance: &proto.ComponentNodeInstanceDTO{
+				HostId: v.Host,
+				Port: 20160,
+				Role: mockRole(),
+				Spec: mockSpec(),
+				Zone: mockZone(),
+			},
+
+			Usages: &proto.ComponentNodeUsageDTO{
+				IoUtil:       mockIoUtil(),
+				Iops:         mockIops(),
+				CpuUsage:     MockUsage(),
+				MemoryUsage:  MockUsage(),
+				StoregeUsage: MockUsage(),
+			},
+		}
+	}
 	return dto
 }
 
-func pDComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
+func pDComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
 	servers := config.PDServers
 	dto := make([]*proto.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	for i, v := range servers {
+		dto[i] = &proto.ComponentNodeDisplayInfoDTO{
+			NodeId: v.Host,
+			Version: version, // todo
+			Status: "运行中", // todo
+			Instance: &proto.ComponentNodeInstanceDTO{
+				HostId: v.Host,
+				Port: 2379,
+				Role: mockRole(),
+				Spec: mockSpec(),
+				Zone: mockZone(),
+			},
+
+			Usages: &proto.ComponentNodeUsageDTO{
+				IoUtil:       mockIoUtil(),
+				Iops:         mockIops(),
+				CpuUsage:     MockUsage(),
+				MemoryUsage:  MockUsage(),
+				StoregeUsage: MockUsage(),
+			},
+		}
+	}
 	return dto
 }
-func tiCDCComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
+
+func tiCDCComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
 	dto := make([]*proto.ComponentNodeDisplayInfoDTO, 0, 0)
+
 	return dto
 }
-func tiFlashComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
+func tiFlashComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
 	dto := make([]*proto.ComponentNodeDisplayInfoDTO, 0, 0)
 	return dto
 }

@@ -101,22 +101,24 @@ func (topo *Specification) ComponentsByStopOrder() (comps []Component) {
 
 // ComponentsByStartOrder return component in the order need to start.
 func (topo *Specification) ComponentsByStartOrder() (comps []Component) {
-	// "elasticsearch", "monitor", "metadb", "api-server", "cluster-server"
+	// "elasticsearch", "monitor", "metadb", "api-server", "web", "cluster-server"
 	comps = append(comps, &ElasticSearchComponent{topo})
 	comps = append(comps, &spec.MonitorComponent{Topology: topo})
 	comps = append(comps, &spec.GrafanaComponent{Topology: topo})
 	comps = append(comps, &spec.AlertManagerComponent{Topology: topo})
 	comps = append(comps, &MetaDBComponent{topo})
 	comps = append(comps, &APIServerComponent{topo})
+	comps = append(comps, &WebServerComponent{topo})
 	comps = append(comps, &ClusterServerComponent{topo})
 	return
 }
 
 // ComponentsByUpdateOrder return component in the order need to be updated.
 func (topo *Specification) ComponentsByUpdateOrder() (comps []Component) {
-	// "metadb", "api-server", "cluster-server", "monitor", "elasticsearch"
+	// "metadb", "api-server", "web", "cluster-server", "monitor", "elasticsearch"
 	comps = append(comps, &MetaDBComponent{topo})
 	comps = append(comps, &APIServerComponent{topo})
+	comps = append(comps, &WebServerComponent{topo})
 	comps = append(comps, &ClusterServerComponent{topo})
 	comps = append(comps, &spec.MonitorComponent{Topology: topo})
 	comps = append(comps, &spec.GrafanaComponent{Topology: topo})

@@ -9,7 +9,8 @@ cd "${DEPLOY_DIR}" || exit 1
 
 LANG=en_US.UTF-8 \
 exec env GODEBUG=madvdontneed=1 bin/web-server \
-    --host="{{.tiem_web_servers.host}}" \
-    --port="{{.tiem_web_servers.port}}" \
+    --host="{{.Host}}" \
+    --port="{{.Port}}" \
     --registry-address="{{.registry_endpoints}}" \
-    --deploy-dir="{{.tiem_web_servers.DeployDir}}"
+    --deploy-dir="$DEPLOY_DIR"
+

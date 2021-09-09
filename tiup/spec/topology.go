@@ -38,12 +38,14 @@ const (
 	ComponentTiEMClusterServer   = "tiem-cluster"
 	ComponentTiEMAPIServer       = "tiem-api"
 	ComponentTiEMTracerServer    = "tiem-tracer"
+	ComponentTiEMWebServer       = "tiem-web"
 	ComponentElasticSearchServer = "elasticsearch"
 
 	RoleTiEMMetaDB  = "metadb"
 	RoleTiEMCluster = "cluster"
 	RoleTiEMAPI     = "api"
 	RoleTiEMTracer  = "tracer"
+	RoleTiEMWeb     = "web"
 	RoleLogServer   = "log"
 	RoleMonitor     = "monitor"
 
@@ -57,6 +59,7 @@ type Specification struct {
 	MetaDBServers        []*MetaDBServerSpec      `yaml:"tiem_metadb_servers"`
 	ClusterServers       []*ClusterServerSpec     `yaml:"tiem_cluster_servers"`
 	APIServers           []*APIServerSpec         `yaml:"tiem_api_servers"`
+	WebServers           []*WebServerSpec         `yaml:"tiem_web_servers"`
 	TracerServers        []*TracerServerSpec      `yaml:"tracer_servers"`
 	ElasticSearchServers []*ElasticSearchSpec     `yaml:"elasticsearch_servers"`
 	Monitors             []*spec.PrometheusSpec   `yaml:"monitoring_servers"`
@@ -506,6 +509,7 @@ func (s *Specification) Merge(that spec.Topology) spec.Topology {
 		MetaDBServers:        append(s.MetaDBServers, spec.MetaDBServers...),
 		ClusterServers:       append(s.ClusterServers, spec.ClusterServers...),
 		APIServers:           append(s.APIServers, spec.APIServers...),
+		WebServers:           append(s.WebServers, spec.WebServers...),
 		TracerServers:        append(s.TracerServers, spec.TracerServers...),
 		ElasticSearchServers: append(s.ElasticSearchServers, spec.ElasticSearchServers...),
 		Monitors:             append(s.Monitors, spec.Monitors...),

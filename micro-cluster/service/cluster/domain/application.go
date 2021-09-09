@@ -234,6 +234,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 		getLogger().Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
 	}
 
+	task.Success(nil)
 	return true
 }
 
@@ -263,6 +264,8 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 	getLogger().Infof("start cluster %s", cluster.ClusterName)
 	libtiup.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
+	clusterAggregation.StatusModified = true
+	clusterAggregation.Cluster.Online()
 
 	task.Success(nil)
 	return true

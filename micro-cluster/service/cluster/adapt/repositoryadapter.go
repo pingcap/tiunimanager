@@ -90,7 +90,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 			ClusterId:    cluster.Id,
 			Status:       int32(cluster.Status),
 			UpdateStatus: aggregation.StatusModified,
-			FlowId:       int64(aggregation.CurrentWorkFlow.Id),
+			FlowId:       int64(aggregation.Cluster.WorkFlowId),
 			UpdateFlow:   aggregation.FlowModified,
 		})
 

@@ -32,6 +32,9 @@ type Cluster struct {
 	DeleteTime 			time.Time
 }
 
+func (c *Cluster) Online()  {
+	c.Status = ClusterStatusOnline
+}
 func (c *Cluster) Delete()  {
 	c.Status = ClusterStatusDeleted
 }

@@ -200,8 +200,8 @@ func mockSpec() *proto.SpecBaseInfoDTO {
 
 func mockZone() *proto.ZoneBaseInfoDTO {
 	return &proto.ZoneBaseInfoDTO{
-		ZoneCode: "AZ1",
-		ZoneName: "AZ1",
+		ZoneCode: "TEST_Zone1",
+		ZoneName: "TEST_Zone1",
 	}
 }
 

@@ -42,20 +42,20 @@ func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int64) {
 }
 
 func (aggregation *ClusterAggregation) ExtractComponentDTOs() []*proto.ComponentInstanceDTO {
-	//if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
-	//	config := record.ConfigModel
-	//	knowledge := knowledge.ClusterTypeSpecFromCode(aggregation.Cluster.ClusterType.Code)
-	//	for _, v := range knowledge.VersionSpecs {
-	//		if v.ClusterVersion.Code == aggregation.Cluster.ClusterVersion.Code {
-	//			return appendAllComponentInstances(config, &v)
-	//		}
-	//	}
-	//}
+	if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
+		config := record.ConfigModel
+		knowledge := knowledge.ClusterTypeSpecFromCode(aggregation.Cluster.ClusterType.Code)
+		for _, v := range knowledge.VersionSpecs {
+			if v.ClusterVersion.Code == aggregation.Cluster.ClusterVersion.Code {
+				return appendAllComponentInstances(config, &v)
+			}
+		}
+	}
 	return make([]*proto.ComponentInstanceDTO, 0)
 }
 
 func appendAllComponentInstances(config *spec.Specification, knowledge *knowledge.ClusterVersionSpec) []*proto.ComponentInstanceDTO{
-	components := make([]*proto.ComponentInstanceDTO, len(knowledge.ComponentSpecs), len(knowledge.ComponentSpecs))
+	components := make([]*proto.ComponentInstanceDTO, 0, len(knowledge.ComponentSpecs))
 
 	for _, v := range knowledge.ComponentSpecs {
 		code := v.ClusterComponent.ComponentType
@@ -73,9 +73,11 @@ func appendAllComponentInstances(config *spec.Specification, knowledge *knowledg
 }
 
 var ComponentAppender = map[string]func (*spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
-	"tidb": tiDBComponent,
-	"tikv": tiKVComponent,
-	"pd": pDComponent,
+	"TiDB": tiDBComponent,
+	"TiKV": tiKVComponent,
+	"PD": pDComponent,
+	"TiFlash": tiFlashComponent,
+	"TiCDC": tiCDCComponent,
 }
 
 func tiDBComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
@@ -115,6 +117,14 @@ func tiKVComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfo
 func pDComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
 	servers := config.PDServers
 	dto := make([]*proto.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	return dto
+}
+func tiCDCComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
+	dto := make([]*proto.ComponentNodeDisplayInfoDTO, 0, 0)
+	return dto
+}
+func tiFlashComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
+	dto := make([]*proto.ComponentNodeDisplayInfoDTO, 0, 0)
 	return dto
 }
 

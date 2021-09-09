@@ -514,7 +514,7 @@ func importDataFailed(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 
-	return DefaultFail(task, context)
+	return ClusterFail(task, context)
 }
 
 func exportDataFailed(task *TaskEntity, context *FlowContext) bool {
@@ -528,7 +528,7 @@ func exportDataFailed(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 
-	return DefaultFail(task, context)
+	return ClusterFail(task, context)
 }
 
 func updateTransportRecordFailed(recordId, clusterId string) error {

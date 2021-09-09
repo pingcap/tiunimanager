@@ -1039,19 +1039,19 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 	defer Dao.ResourceManager().DeleteHost(id3)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
-	m["pd"] = append(m["pd"], &HostAllocReq{
+	m["PD"] = append(m["PD"], &HostAllocReq{
 		FailureDomain: "Zone1",
 		CpuCores:      4,
 		Memory:        8,
 		Count:         1,
 	})
-	m["tidb"] = append(m["tidb"], &HostAllocReq{
+	m["TiDB"] = append(m["TiDB"], &HostAllocReq{
 		FailureDomain: "Zone1",
 		CpuCores:      4,
 		Memory:        8,
 		Count:         1,
 	})
-	m["tikv"] = append(m["tikv"], &HostAllocReq{
+	m["TiKV"] = append(m["TiKV"], &HostAllocReq{
 		FailureDomain: "Zone1",
 		CpuCores:      4,
 		Memory:        8,
@@ -1075,15 +1075,14 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			pdIp := rsp["pd"][0].Ip
-			tidbIp := rsp["tidb"][0].Ip
-			tikvIp := rsp["tikv"][0].Ip
-			assert.True(t, pdIp != tidbIp && tidbIp != tikvIp && tikvIp != pdIp)
+			pdIp := rsp["PD"][0].Ip
+			tidbIp := rsp["TiDB"][0].Ip
+			tikvIp := rsp["TiDB"][0].Ip
 			assert.True(t, pdIp == "474.111.111.111" || pdIp == "474.111.111.112" || pdIp == "474.111.111.113")
 			assert.True(t, tidbIp == "474.111.111.111" || tidbIp == "474.111.111.112" || tidbIp == "474.111.111.113")
 			assert.True(t, tikvIp == "474.111.111.111" || tikvIp == "474.111.111.112" || tikvIp == "474.111.111.113")
-			assert.Equal(t, 4, rsp["pd"][0].CpuCores)
-			assert.Equal(t, 8, rsp["pd"][0].Memory)
+			assert.Equal(t, 4, rsp["PD"][0].CpuCores)
+			assert.Equal(t, 8, rsp["PD"][0].Memory)
 			var host Host
 			MetaDB.First(&host, "IP = ?", "474.111.111.111")
 			assert.Equal(t, 17-4, host.CpuCores)
@@ -1130,19 +1129,19 @@ func TestAllocHosts_1Host(t *testing.T) {
 	defer Dao.ResourceManager().DeleteHost(id1)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
-	m["pd"] = append(m["pd"], &HostAllocReq{
+	m["PD"] = append(m["PD"], &HostAllocReq{
 		FailureDomain: "Zone99",
 		CpuCores:      4,
 		Memory:        8,
 		Count:         1,
 	})
-	m["tidb"] = append(m["tidb"], &HostAllocReq{
+	m["TiDB"] = append(m["TiDB"], &HostAllocReq{
 		FailureDomain: "Zone99",
 		CpuCores:      4,
 		Memory:        8,
 		Count:         1,
 	})
-	m["tikv"] = append(m["tikv"], &HostAllocReq{
+	m["TiKV"] = append(m["TiKV"], &HostAllocReq{
 		FailureDomain: "Zone99",
 		CpuCores:      4,
 		Memory:        8,
@@ -1166,12 +1165,12 @@ func TestAllocHosts_1Host(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			pdIp := rsp["pd"][0].Ip
-			tidbIp := rsp["tidb"][0].Ip
-			tikvIp := rsp["tikv"][0].Ip
-			pdDisk := rsp["pd"][0].DiskName
-			tidbDisk := rsp["tidb"][0].DiskName
-			tikvDisk := rsp["tikv"][0].DiskName
+			pdIp := rsp["PD"][0].Ip
+			tidbIp := rsp["TiDB"][0].Ip
+			tikvIp := rsp["TiKV"][0].Ip
+			pdDisk := rsp["PD"][0].DiskName
+			tidbDisk := rsp["TiDB"][0].DiskName
+			tikvDisk := rsp["TiKV"][0].DiskName
 			assert.True(t, pdIp == "192.168.56.99" && tidbIp == "192.168.56.99" && tikvIp == "192.168.56.99")
 			assert.True(t, pdDisk != tidbDisk && tidbDisk != tikvDisk && tikvDisk != pdDisk)
 			assert.True(t, pdDisk == "sdb" || pdDisk == "sdc" || pdDisk == "sdd")
@@ -1214,19 +1213,19 @@ func TestAllocHosts_1Host_NotEnough(t *testing.T) {
 	defer Dao.ResourceManager().DeleteHost(id1)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
-	m["pd"] = append(m["pd"], &HostAllocReq{
+	m["PD"] = append(m["PD"], &HostAllocReq{
 		FailureDomain: "Zone100",
 		CpuCores:      4,
 		Memory:        8,
 		Count:         2,
 	})
-	m["tidb"] = append(m["tidb"], &HostAllocReq{
+	m["TiDB"] = append(m["TiDB"], &HostAllocReq{
 		FailureDomain: "Zone100",
 		CpuCores:      4,
 		Memory:        8,
 		Count:         1,
 	})
-	m["tikv"] = append(m["tikv"], &HostAllocReq{
+	m["TiKV"] = append(m["TiKV"], &HostAllocReq{
 		FailureDomain: "Zone100",
 		CpuCores:      4,
 		Memory:        8,

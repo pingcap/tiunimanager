@@ -53,6 +53,10 @@ type DBFakeService struct {
 	mockLoadTask   func(ctx context.Context, in *db.DBLoadTaskRequest, opts ...client.CallOption) (*db.DBLoadTaskResponse, error)
 }
 
+func (s *DBFakeService) ListFlows(ctx context.Context, in *db.DBListFlowsRequest, opts ...client.CallOption) (*db.DBListFlowsResponse, error) {
+	panic("implement me")
+}
+
 // Mock Auth Module
 func (s *DBFakeService) FindTenant(ctx context.Context, in *db.DBFindTenantRequest, opts ...client.CallOption) (*db.DBFindTenantResponse, error) {
 	return s.mockFindTenant(ctx, in, opts...)

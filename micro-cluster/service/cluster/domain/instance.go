@@ -76,8 +76,8 @@ var ComponentAppender = map[string]func (*spec.Specification, string) []*proto.C
 	"TiDB": tiDBComponent,
 	"TiKV": tiKVComponent,
 	"PD": pDComponent,
-	"TiFlash": tiFlashComponent,
-	"TiCDC": tiCDCComponent,
+	//"TiFlash": tiFlashComponent,
+	//"TiCDC": tiCDCComponent,
 }
 
 func tiDBComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {

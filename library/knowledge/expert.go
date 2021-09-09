@@ -69,13 +69,13 @@ func loadSpecKnowledge () {
 		"PD", "PD",
 	}
 
-	tiFlashComponent := ClusterComponent{
-		"TiFlash", "TiFlash",
-	}
-
-	tiCdcComponent := ClusterComponent{
-		"TiCDC", "TiCDC",
-	}
+	//tiFlashComponent := ClusterComponent{
+	//	"TiFlash", "TiFlash",
+	//}
+	//
+	//tiCdcComponent := ClusterComponent{
+	//	"TiCDC", "TiCDC",
+	//}
 
 	tidbV4_0_12_Spec := ClusterVersionSpec{
 		ClusterVersion: tidbV4_0_12,
@@ -95,15 +95,15 @@ func loadSpecKnowledge () {
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 			}, 1}},
-			{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
-				GenSpecCode(4, 32),
-				GenSpecCode(8, 64),
-				GenSpecCode(16, 128),
-			}, 0}},
-			{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
-				GenSpecCode(8, 16),
-				GenSpecCode(16, 64),
-			}, 0}},
+			//{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
+			//	GenSpecCode(4, 32),
+			//	GenSpecCode(8, 64),
+			//	GenSpecCode(16, 128),
+			//}, 0}},
+			//{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
+			//	GenSpecCode(8, 16),
+			//	GenSpecCode(16, 64),
+			//}, 0}},
 		},
 	}
 	tidbV5_0_0_Spec := ClusterVersionSpec{
@@ -124,15 +124,15 @@ func loadSpecKnowledge () {
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 			}, 1}},
-			{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
-				GenSpecCode(4, 32),
-				GenSpecCode(8, 64),
-				GenSpecCode(16, 128),
-			}, 0}},
-			{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
-				GenSpecCode(8, 16),
-				GenSpecCode(16, 64),
-			}, 0}},
+			//{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
+			//	GenSpecCode(4, 32),
+			//	GenSpecCode(8, 64),
+			//	GenSpecCode(16, 128),
+			//}, 0}},
+			//{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
+			//	GenSpecCode(8, 16),
+			//	GenSpecCode(16, 64),
+			//}, 0}},
 		},
 	}
 
@@ -143,8 +143,8 @@ func loadSpecKnowledge () {
 		Components: map[string]*ClusterComponent{tidbComponent.ComponentType:&tidbComponent,
 			tikvComponent.ComponentType:&tikvComponent,
 			pdComponent.ComponentType: &pdComponent,
-			tiFlashComponent.ComponentType: &tiFlashComponent,
-			tiCdcComponent.ComponentType: &tiCdcComponent,
+			//tiFlashComponent.ComponentType: &tiFlashComponent,
+			//tiCdcComponent.ComponentType: &tiCdcComponent,
 		},
 	}
 }

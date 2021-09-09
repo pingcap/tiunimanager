@@ -25,6 +25,10 @@ type ClusterFakeService struct {
 	mockGetFailureDomain   func(ctx context.Context, in *cluster.GetFailureDomainRequest, opts ...micro.CallOption) (*cluster.GetFailureDomainResponse, error)
 }
 
+func (s *ClusterFakeService) ListFlows(ctx context.Context, in *cluster.ListFlowsRequest, opts ...micro.CallOption) (*cluster.ListFlowsResponse, error) {
+	panic("implement me")
+}
+
 func (s *ClusterFakeService) Login(ctx context.Context, in *cluster.LoginRequest, opts ...micro.CallOption) (*cluster.LoginResponse, error) {
 	return s.mockLogin(ctx, in, opts...)
 }

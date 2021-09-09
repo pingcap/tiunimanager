@@ -53,6 +53,9 @@ func InitEmbedEtcd(b *framework.BaseFramework) error {
 func startEmbedEtcd(embedEtcdConfig *EmbedEtcdConfig) error {
 	cfg := etcd.NewConfig()
 
+	// enable v2 http api
+	cfg.EnableV2 = true
+
 	cfg.Dir = embedEtcdConfig.Dir
 	cfg.Name = embedEtcdConfig.Name
 	log.Debugf("start embed etcd name: %s, dir: %s", cfg.Dir, cfg.Name)

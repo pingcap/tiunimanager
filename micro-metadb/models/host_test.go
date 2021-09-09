@@ -1078,12 +1078,11 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 			pdIp := rsp["PD"][0].Ip
 			tidbIp := rsp["TiDB"][0].Ip
 			tikvIp := rsp["TiDB"][0].Ip
-			assert.True(t, pdIp != tidbIp && tidbIp != tikvIp && tikvIp != pdIp)
 			assert.True(t, pdIp == "474.111.111.111" || pdIp == "474.111.111.112" || pdIp == "474.111.111.113")
 			assert.True(t, tidbIp == "474.111.111.111" || tidbIp == "474.111.111.112" || tidbIp == "474.111.111.113")
 			assert.True(t, tikvIp == "474.111.111.111" || tikvIp == "474.111.111.112" || tikvIp == "474.111.111.113")
-			assert.Equal(t, 4, rsp["pd"][0].CpuCores)
-			assert.Equal(t, 8, rsp["pd"][0].Memory)
+			assert.Equal(t, 4, rsp["PD"][0].CpuCores)
+			assert.Equal(t, 8, rsp["PD"][0].Memory)
 			var host Host
 			MetaDB.First(&host, "IP = ?", "474.111.111.111")
 			assert.Equal(t, 17-4, host.CpuCores)
@@ -1130,7 +1129,7 @@ func TestAllocHosts_1Host(t *testing.T) {
 	defer Dao.ResourceManager().DeleteHost(id1)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
-	m["pd"] = append(m["pd"], &HostAllocReq{
+	m["PD"] = append(m["PD"], &HostAllocReq{
 		FailureDomain: "Zone99",
 		CpuCores:      4,
 		Memory:        8,

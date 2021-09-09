@@ -19,8 +19,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
 			"configDone":   {"deployCluster", "deployDone", "fail", SyncFuncTask, deployCluster},
 			"deployDone":   {"startupCluster", "startupDone", "fail", SyncFuncTask, startupCluster},
-			"startupDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
-			"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
+			"startupDone":  {"end", "", "", SyncFuncTask, ClusterEnd},
+			"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
 		},
 		ContextParser: defaultContextParser,
 	},
@@ -32,8 +32,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", PollingTasK, destroyCluster},
 			"destroyClusterDone": {"deleteCluster", "deleteClusterDone", "fail", SyncFuncTask, deleteCluster},
 			"deleteClusterDone":  {"freedResource", "freedResourceDone", "fail", SyncFuncTask, freedResource},
-			"freedResourceDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
-			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
+			"freedResourceDone":  {"end", "", "", SyncFuncTask, ClusterEnd},
+			"fail":               {"fail", "", "", SyncFuncTask, ClusterFail},
 		},
 		ContextParser: defaultContextParser,
 
@@ -44,8 +44,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		TaskNodes: map[string]*TaskDefine {
 			"start":			{"backup", "backupDone", "fail", PollingTasK, backupCluster},
 			"backupDone":		{"updateBackupRecord", "updateRecordDone", "fail", SyncFuncTask, updateBackupRecord},
-			"updateRecordDone":	{"end", "", "", SyncFuncTask, DefaultEnd},
-			"fail":				{"fail", "", "", SyncFuncTask, DefaultFail},
+			"updateRecordDone":	{"end", "", "", SyncFuncTask, ClusterEnd},
+			"fail":				{"fail", "", "", SyncFuncTask, ClusterFail},
 		},
 		ContextParser: defaultContextParser,
 
@@ -55,8 +55,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowRecoverCluster),
 		TaskNodes: map[string]*TaskDefine {
 			"start":              {"recover", "recoverDone", "fail", PollingTasK, recoverCluster},
-			"recoverDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
-			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
+			"recoverDone":  {"end", "", "", SyncFuncTask, ClusterEnd},
+			"fail":               {"fail", "", "", SyncFuncTask, ClusterFail},
 		},
 		ContextParser: defaultContextParser,
 
@@ -66,8 +66,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowModifyParameters),
 		TaskNodes: map[string]*TaskDefine {
 			"start":              {"modifyParameter", "modifyDone", "fail", PollingTasK, modifyParameters},
-			"modifyDone":  {"end", "", "", SyncFuncTask, DefaultEnd},
-			"fail":               {"fail", "", "", SyncFuncTask, DefaultFail},
+			"modifyDone":  {"end", "", "", SyncFuncTask, ClusterEnd},
+			"fail":               {"fail", "", "", SyncFuncTask, ClusterFail},
 		},
 		ContextParser: defaultContextParser,
 
@@ -79,7 +79,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"start":				{"exportDataFromCluster", "exportDataDone", "fail", PollingTasK, exportDataFromCluster},
 			"exportDataDone":		{"compressExportData", "compressDataDone", "fail", SyncFuncTask, compressExportData},
 			"compressDataDone":		{"updateDataExportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataExportRecord},
-			"updateRecordDone":		{"end", "", "", SyncFuncTask, DefaultEnd},
+			"updateRecordDone":		{"end", "", "", SyncFuncTask, ClusterEnd},
 			"fail":					{"fail", "", "", SyncFuncTask, exportDataFailed},
 		},
 		ContextParser: defaultContextParser,
@@ -93,7 +93,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"buildConfigDone":		{"deCompressImportData", "deCompressDataDone", "fail", SyncFuncTask, deCompressImportData},
 			"deCompressDataDone":	{"importDataToCluster", "importDataDone", "fail", PollingTasK, importDataToCluster},
 			"importDataDone":		{"updateDataImportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataImportRecord},
-			"updateRecordDone":		{"end", "", "", SyncFuncTask, DefaultEnd},
+			"updateRecordDone":		{"end", "", "", SyncFuncTask, ClusterEnd},
 			"fail":					{"fail", "", "", SyncFuncTask, importDataFailed},
 		},
 		ContextParser: defaultContextParser,
@@ -136,7 +136,7 @@ type TaskDefine struct {
 	Executor 		func(task *TaskEntity, context *FlowContext) bool
 }
 
-func DefaultEnd(task *TaskEntity, context *FlowContext) bool {
+func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
 	task.Status = TaskStatusFinished
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.Cluster.WorkFlowId = 0
@@ -144,11 +144,21 @@ func DefaultEnd(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func DefaultFail(task *TaskEntity, context *FlowContext) bool {
+func ClusterFail(task *TaskEntity, context *FlowContext) bool {
 	task.Status = TaskStatusError
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.Cluster.WorkFlowId = 0
 	clusterAggregation.FlowModified = true
+	return true
+}
+
+func DefaultEnd(task *TaskEntity, context *FlowContext) bool {
+	task.Status = TaskStatusFinished
+	return true
+}
+
+func DefaultFail(task *TaskEntity, context *FlowContext) bool {
+	task.Status = TaskStatusError
 	return true
 }
 

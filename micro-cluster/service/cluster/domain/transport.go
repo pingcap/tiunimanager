@@ -116,7 +116,8 @@ type TidbCfg struct {
 
 var contextDataTransportKey = "dataTransportInfo"
 var defaultTransportNfsDirPrefix = "/tmp/tiem/transport" //todo: move to config
-var defaultTransportS3DirPrefix = "s3://nfs/tiem/transport?access-key=minioadmin&secret-access-key=minioadmin&endpoint=http://minio.pingcap.net:9000&force-path-style=true" //todo: test env ak sk
+var defaultTransportS3DirPrefix = "s3://nfs/tiem/transport"
+var defaultTransportS3AkSk = "?access-key=minioadmin&secret-access-key=minioadmin&endpoint=http://minio.pingcap.net:9000&force-path-style=true" //todo: test env ak sk
 
 func ExportDataPreCheck(req *proto.DataExportRequest) error {
 	if req.GetFilePath() == "" {
@@ -367,7 +368,7 @@ func getDataTransportDir(clusterId string, transportType TransportType, filePath
 		if filePath != "" {
 			return fmt.Sprintf("%s/%s/%s", filePath, clusterId, transportType)
 		} else {
-			return fmt.Sprintf("%s/%s/%s", defaultTransportS3DirPrefix, clusterId, transportType)
+			return fmt.Sprintf("%s/%s/%s/%s", defaultTransportS3DirPrefix, clusterId, transportType, defaultTransportS3AkSk)
 		}
 	} else {
 		if filePath != "" {

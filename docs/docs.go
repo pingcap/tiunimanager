@@ -2579,6 +2579,9 @@ var doc = `{
                 "password": {
                     "type": "string"
                 },
+                "storageType": {
+                    "type": "string"
+                },
                 "userName": {
                     "type": "string"
                 }
@@ -2602,6 +2605,9 @@ var doc = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "storageType": {
                     "type": "string"
                 },
                 "userName": {

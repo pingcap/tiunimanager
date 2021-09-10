@@ -3,6 +3,7 @@ package domain
 import (
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
@@ -30,11 +31,8 @@ func TestImportDataPreCheck(t *testing.T) {
 		FilePath: "filePath",
 		StorageType: S3StorageType,
 	}
-	if err := ImportDataPreCheck(req); err != nil {
-		t.Errorf("TestImportDataPreCheck failed, %s", err.Error())
-		return
-	}
-	t.Log("TestImportDataPreCheck success")
+	err := ImportDataPreCheck(req)
+	assert.NoError(t, err)
 }
 
 func TestBuildDataImportConfig(t *testing.T) {
@@ -65,10 +63,8 @@ func TestBuildDataImportConfig(t *testing.T) {
 			},
 		},
 	})
-	if ret := buildDataImportConfig(task, context); !ret {
-		t.Error("TestBuildDataImportConfig failed")
-	}
+	ret := buildDataImportConfig(task, context)
+	assert.Equal(t, true, ret)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
 	os.RemoveAll(info.ConfigPath)
-	t.Log("TestBuildDataImportConfig success")
 }

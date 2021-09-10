@@ -2764,6 +2764,14 @@ var doc = `{
                 "status": {
                     "description": "Disk Status, 0 for available, 1 for inused",
                     "type": "integer"
+                },
+                "type": {
+                    "description": "Disk type: [nvme-ssd/ssd/sata]",
+                    "type": "string"
+                },
+                "usedby": {
+                    "description": "Disk is used by which cluster",
+                    "type": "string"
                 }
             }
         },
@@ -2837,8 +2845,12 @@ var doc = `{
                 "passwd": {
                     "type": "string"
                 },
+                "performance": {
+                    "description": "Performance type of this host [High/Medium/Low]",
+                    "type": "string"
+                },
                 "purpose": {
-                    "description": "What Purpose is the host used for? [compute/storage or both]",
+                    "description": "What Purpose is the host used for? [compute/storage/general]",
                     "type": "string"
                 },
                 "rack": {

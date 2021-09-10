@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/asim/go-micro/v3/client"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
 	managerPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
@@ -39,7 +40,7 @@ func Test_ListHosts_Succeed(t *testing.T) {
 	fakeHostId2 := "fake-host-uuid-0002"
 	fakeService := InitFakeClusterClient()
 	fakeService.MockListHost(func(ctx context.Context, in *managerPb.ListHostsRequest, opts ...client.CallOption) (*managerPb.ListHostsResponse, error) {
-		if in.Status != 0 {
+		if in.Status != -1 {
 			return nil, status.Errorf(codes.InvalidArgument, "file row count wrong")
 		}
 		rsp := new(managerPb.ListHostsResponse)
@@ -163,7 +164,7 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 	fakeHostId2 := "fake-host-uuid-0002"
 	fakeService := InitFakeClusterClient()
 	fakeService.MockImportHostsInBatch(func(ctx context.Context, in *managerPb.ImportHostsInBatchRequest, opts ...client.CallOption) (*managerPb.ImportHostsInBatchResponse, error) {
-		if len(in.Hosts) != 2 {
+		if len(in.Hosts) != 3 {
 			return nil, status.Errorf(codes.InvalidArgument, "file row count wrong")
 		}
 		if in.Hosts[0].Ip != "192.168.56.11" || in.Hosts[1].Ip != "192.168.56.12" {
@@ -300,7 +301,7 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 }
 
 func Test_DownloadTemplate_Succeed(t *testing.T) {
-
+	common.TemplateFilePath = "../etc"
 	w := performRequest("GET", "/api/v1/resources/hosts-template", "application/json", nil)
 
 	assert.Equal(t, http.StatusOK, w.Code)

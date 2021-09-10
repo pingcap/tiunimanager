@@ -12,6 +12,7 @@ import (
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/common"
 	crypto "github.com/pingcap-inc/tiem/library/thirdparty/encrypt"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
@@ -38,6 +39,7 @@ func copyHostFromRsp(src *cluster.HostInfo, dst *HostInfo) {
 	dst.Rack = src.Rack
 	dst.Status = int32(src.Status)
 	dst.Purpose = src.Purpose
+	dst.Performance = src.Performance
 	dst.CreatedAt = src.CreateAt
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, Disk{
@@ -46,6 +48,8 @@ func copyHostFromRsp(src *cluster.HostInfo, dst *HostInfo) {
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
 			Status:   int32(disk.Status),
+			Type:     disk.Type,
+			UsedBy:   disk.UsedBy,
 		})
 	}
 }
@@ -74,6 +78,7 @@ func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
+	dst.Performance = src.Performance
 
 	for _, v := range src.Disks {
 		dst.Disks = append(dst.Disks, &cluster.Disk{
@@ -81,6 +86,7 @@ func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
 			Capacity: v.Capacity,
 			Status:   v.Status,
 			Path:     v.Path,
+			Type:     v.Type,
 		})
 	}
 	return nil
@@ -135,6 +141,11 @@ func ImportHost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
+	for i := range host.Disks {
+		if host.Disks[i].Type == "" {
+			host.Disks[i].Type = string(common.Sata)
+		}
+	}
 
 	rsp, err := doImport(c, &host)
 	if err != nil {
@@ -180,10 +191,16 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 			host.Memory = int32(mem)
 			host.Nic = row[NIC_FIELD]
 			host.Purpose = row[PURPOSE_FIELD]
+			host.Performance = row[PERF_FIELD]
 			disksStr := row[DISKS_FIELD]
 			if err = json.Unmarshal([]byte(disksStr), &host.Disks); err != nil {
 				errMsg := fmt.Sprintf("Row %d has a Invalid Disk Json Format, %v", irow, err)
 				return nil, errors.New(errMsg)
+			}
+			for i := range host.Disks {
+				if host.Disks[i].Type == "" {
+					host.Disks[i].Type = string(common.Sata)
+				}
 			}
 			hosts = append(hosts, &host)
 		}
@@ -246,7 +263,7 @@ func ListHost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
-	if !HostStatus(hostQuery.Status).IsValid() {
+	if !common.HostStatus(hostQuery.Status).IsValid() {
 		errmsg := fmt.Sprintf("Input Status %d is Invalid", hostQuery.Status)
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
@@ -406,9 +423,9 @@ func RemoveHosts(c *gin.Context) {
 // @Router /resources/hosts-template/ [get]
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
-	templateName := "hostInfo_template.xlsx"
+	templateName := common.TemplateFileName
 	// The template file should be on tiem/etc/hostInfo_template.xlsx
-	filePath := filepath.Join(curDir, "./etc/", templateName)
+	filePath := filepath.Join(curDir, common.TemplateFilePath, templateName)
 
 	_, err := os.Stat(filePath)
 	if err != nil && !os.IsExist(err) {
@@ -535,7 +552,7 @@ func GetFailureDomain(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}
-	res := DomainResourceRsp {
+	res := DomainResourceRsp{
 		Resources: make([]DomainResource, 0, len(rsp.FdList)),
 	}
 	for _, v := range rsp.FdList {

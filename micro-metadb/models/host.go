@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"google.golang.org/grpc/codes"
@@ -31,47 +32,16 @@ func (m *DAOResourceManager) getDb() *gorm.DB {
 	return m.db
 }
 
-type HostStatus int32
-
-const (
-	HOST_WHATEVER HostStatus = iota - 1
-	HOST_ONLINE
-	HOST_OFFLINE
-	HOST_INUSED
-	HOST_EXHAUST
-	HOST_DELETED
-)
-
-func (s HostStatus) IsInused() bool {
-	return s == HOST_INUSED || s == HOST_EXHAUST
-}
-
-func (s HostStatus) IsAvailable() bool {
-	return (s == HOST_ONLINE || s == HOST_INUSED)
-}
-
-type DiskStatus int32
-
-const (
-	DISK_AVAILABLE DiskStatus = iota
-	DISK_INUSED
-)
-
-func (s DiskStatus) IsInused() bool {
-	return s == DISK_INUSED
-}
-
-func (s DiskStatus) IsAvailable() bool {
-	return s == DISK_AVAILABLE
-}
-
 type Disk struct {
 	ID        string `gorm:"PrimaryKey"`
 	HostId    string
 	Name      string `gorm:"size:255"`
 	Capacity  int32
 	Path      string `gorm:"size:255"`
+	Type      string
 	Status    int32
+	UsedBy    string
+	RequestId string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
@@ -87,26 +57,27 @@ func (d *Disk) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 type Host struct {
-	ID        string `gorm:"PrimaryKey"`
-	IP        string `gorm:"size:32"`
-	UserName  string `gorm:"size:32"`
-	Passwd    string `gorm:"size:32"`
-	HostName  string `gorm:"size:255"`
-	Status    int32  `gorm:"size:32"`
-	OS        string `gorm:"size:32"`
-	Kernel    string `gorm:"size:32"`
-	CpuCores  int
-	Memory    int
-	Spec      string
-	Nic       string `gorm:"size:32"`
-	DC        string `gorm:"size:32"`
-	AZ        string `gorm:"size:32"`
-	Rack      string `gorm:"size:32"`
-	Purpose   string `gorm:"size:32"`
-	Disks     []Disk
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID          string `gorm:"PrimaryKey"`
+	IP          string `gorm:"size:32"`
+	UserName    string `gorm:"size:32"`
+	Passwd      string `gorm:"size:32"`
+	HostName    string `gorm:"size:255"`
+	Status      int32  `gorm:"size:32"`
+	OS          string `gorm:"size:32"`
+	Kernel      string `gorm:"size:32"`
+	CpuCores    int
+	Memory      int
+	Spec        string
+	Nic         string `gorm:"size:32"`
+	DC          string `gorm:"size:32"`
+	AZ          string `gorm:"size:32"`
+	Rack        string `gorm:"size:32"`
+	Purpose     string `gorm:"size:32"`
+	Performance string
+	Disks       []Disk
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
 
 func HostTableName() string {
@@ -116,7 +87,7 @@ func HostTableName() string {
 func (h Host) IsExhaust() bool {
 	diskExaust := true
 	for _, disk := range h.Disks {
-		if disk.Status == int32(DISK_AVAILABLE) {
+		if disk.Status == int32(common.DISK_AVAILABLE) {
 			diskExaust = false
 			break
 		}
@@ -124,7 +95,7 @@ func (h Host) IsExhaust() bool {
 	return diskExaust || h.CpuCores == 0 || h.Memory == 0
 }
 
-func (h *Host) SetDiskStatus(diskId string, s DiskStatus) {
+func (h *Host) SetDiskStatus(diskId string, s common.DiskStatus) {
 	for i := range h.Disks {
 		if h.Disks[i].ID == diskId {
 			h.Disks[i].Status = int32(s)
@@ -153,7 +124,7 @@ func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
 			return status.Errorf(codes.NotFound, "host %s is not found", h.ID)
 		}
 	} else {
-		if HostStatus(h.Status).IsInused() {
+		if common.HostStatus(h.Status).IsInused() {
 			return status.Errorf(codes.PermissionDenied, "host %s is still in used", h.ID)
 		}
 	}
@@ -166,7 +137,7 @@ func (h *Host) AfterDelete(tx *gorm.DB) (err error) {
 	if err != nil {
 		return
 	}
-	h.Status = int32(HOST_DELETED)
+	h.Status = int32(common.HOST_DELETED)
 	err = tx.Model(&h).Update("Status", h.Status).Error
 	return
 }
@@ -224,7 +195,7 @@ func (m *DAOResourceManager) DeleteHostsInBatch(hostIds []string) (err error) {
 }
 
 type ListHostReq struct {
-	Status  HostStatus
+	Status  common.HostStatus
 	Purpose string
 	Offset  int
 	Limit   int
@@ -235,8 +206,8 @@ func (m *DAOResourceManager) ListHosts(req ListHostReq) (hosts []Host, err error
 	if err = db.Error; err != nil {
 		return nil, err
 	}
-	if req.Status != HOST_WHATEVER {
-		if req.Status != HOST_DELETED {
+	if req.Status != common.HOST_WHATEVER {
+		if req.Status != common.HOST_DELETED {
 			db = db.Where("status = ?", req.Status)
 		} else {
 			db = db.Unscoped().Where("status = ?", req.Status)
@@ -285,7 +256,7 @@ func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, c
 		"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", cpuCores, mem).Joins(
 		"left join hosts on disks.host_id = hosts.id").Where(
 		"hosts.az = ? and (hosts.status = ? or hosts.status = ?) and hosts.cpu_cores >= ? and memory >= ? and disks.status = ?",
-		failureDomain, HOST_ONLINE, HOST_INUSED, cpuCores, mem, DISK_AVAILABLE).Group("hosts.id").Scan(&resources).Error
+		failureDomain, common.HOST_ONLINE, common.HOST_INUSED, cpuCores, mem, common.DISK_AVAILABLE).Group("hosts.id").Scan(&resources).Error
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "select resources failed, %v", err)
 	}
@@ -297,8 +268,8 @@ func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, c
 	for _, resource := range resources {
 		var disk Disk
 		tx.First(&disk, "ID = ?", resource.DiskId).First(&disk)
-		if DiskStatus(disk.Status).IsAvailable() {
-			err = tx.Model(&disk).Update("Status", int32(DISK_INUSED)).Error
+		if common.DiskStatus(disk.Status).IsAvailable() {
+			err = tx.Model(&disk).Update("Status", int32(common.DISK_INUSED)).Error
 			if err != nil {
 				return nil, status.Errorf(codes.Internal, "update disk(%s) status err, %v", resource.DiskId, err)
 			}
@@ -311,9 +282,9 @@ func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, c
 		host.CpuCores -= cpuCores
 		host.Memory -= mem
 		if host.IsExhaust() {
-			host.Status = int32(HOST_EXHAUST)
+			host.Status = int32(common.HOST_EXHAUST)
 		} else {
-			host.Status = int32(HOST_INUSED)
+			host.Status = int32(common.HOST_INUSED)
 		}
 		err = tx.Model(&host).Select("CpuCores", "Memory", "Status").Where("id = ?", resource.HostId).Updates(Host{CpuCores: host.CpuCores, Memory: host.Memory, Status: host.Status}).Error
 		if err != nil {
@@ -353,7 +324,7 @@ type FailureDomainResource struct {
 
 func (m *DAOResourceManager) GetFailureDomain(domain string) (res []FailureDomainResource, err error) {
 	selectStr := fmt.Sprintf("%s as FailureDomain, purpose, cpu_cores, memory, count(id) as Count", domain)
-	err = m.getDb().Table("hosts").Where("Status = ? or Status = ?", HOST_ONLINE, HOST_INUSED).Select(selectStr).
+	err = m.getDb().Table("hosts").Where("Status = ? or Status = ?", common.HOST_ONLINE, common.HOST_INUSED).Select(selectStr).
 		Group(domain).Group("purpose").Group("cpu_cores").Group("memory").Scan(&res).Error
 	return
 }

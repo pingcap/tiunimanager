@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -282,10 +283,10 @@ func TestDeleteHostsInBatch(t *testing.T) {
 func TestDiskStatus_IsAvailable(t *testing.T) {
 	tests := []struct {
 		name string
-		s    DiskStatus
+		s    common.DiskStatus
 		want bool
 	}{
-		{"normal", DISK_AVAILABLE, true},
+		{"normal", common.DISK_AVAILABLE, true},
 		{"want false", 999, false},
 	}
 	for _, tt := range tests {
@@ -300,10 +301,10 @@ func TestDiskStatus_IsAvailable(t *testing.T) {
 func TestDiskStatus_IsInused(t *testing.T) {
 	tests := []struct {
 		name string
-		s    DiskStatus
+		s    common.DiskStatus
 		want bool
 	}{
-		{"normal", DISK_INUSED, true},
+		{"normal", common.DISK_INUSED, true},
 		{"want false", 999, false},
 	}
 	for _, tt := range tests {
@@ -475,11 +476,11 @@ func TestGetFailureDomain(t *testing.T) {
 func TestHostStatus_IsAvailable(t *testing.T) {
 	tests := []struct {
 		name string
-		s    HostStatus
+		s    common.HostStatus
 		want bool
 	}{
-		{"normal_online", HOST_ONLINE, true},
-		{"normal_inused", HOST_INUSED, true},
+		{"normal_online", common.HOST_ONLINE, true},
+		{"normal_inused", common.HOST_INUSED, true},
 		{"want false", 999, false},
 	}
 	for _, tt := range tests {
@@ -494,10 +495,10 @@ func TestHostStatus_IsAvailable(t *testing.T) {
 func TestHostStatus_IsInused(t *testing.T) {
 	tests := []struct {
 		name string
-		s    HostStatus
+		s    common.HostStatus
 		want bool
 	}{
-		{"normal_inused", HOST_INUSED, true},
+		{"normal_inused", common.HOST_INUSED, true},
 		{"want false", 999, false},
 	}
 	for _, tt := range tests {
@@ -795,10 +796,10 @@ func TestHost_IsExhaust(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		{"normal", fields{CpuCores: 4, Memory: 8, Disks: []Disk{{Status: int32(DISK_AVAILABLE)}}}, false},
+		{"normal", fields{CpuCores: 4, Memory: 8, Disks: []Disk{{Status: int32(common.DISK_AVAILABLE)}}}, false},
 		{"without_disk", fields{CpuCores: 4, Memory: 8}, true},
-		{"without_cpu", fields{CpuCores: 0, Memory: 8, Disks: []Disk{{Status: int32(DISK_AVAILABLE)}}}, true},
-		{"without_momery", fields{CpuCores: 4, Memory: 0, Disks: []Disk{{Status: int32(DISK_AVAILABLE)}}}, true},
+		{"without_cpu", fields{CpuCores: 0, Memory: 8, Disks: []Disk{{Status: int32(common.DISK_AVAILABLE)}}}, true},
+		{"without_momery", fields{CpuCores: 4, Memory: 0, Disks: []Disk{{Status: int32(common.DISK_AVAILABLE)}}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -835,15 +836,15 @@ func TestHost_SetDiskStatus(t *testing.T) {
 	}
 	type args struct {
 		diskId string
-		s      DiskStatus
+		s      common.DiskStatus
 	}
 	tests := []struct {
 		name   string
 		fields fields
 		args   args
-		wanted DiskStatus
+		wanted common.DiskStatus
 	}{
-		{"normal", fields{[]Disk{{ID: "fake1", Status: int32(DISK_AVAILABLE)}, {ID: "fake2", Status: int32(DISK_AVAILABLE)}}}, args{"fake2", DISK_INUSED}, DISK_INUSED},
+		{"normal", fields{[]Disk{{ID: "fake1", Status: int32(common.DISK_AVAILABLE)}, {ID: "fake2", Status: int32(common.DISK_AVAILABLE)}}}, args{"fake2", common.DISK_INUSED}, common.DISK_INUSED},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -942,14 +943,14 @@ func TestListHosts(t *testing.T) {
 			func(a args, result []Host) bool { return len(result) == 1 },
 		}},
 		{"without Purpose", args{req: ListHostReq{
-			Status: HOST_ONLINE,
+			Status: common.HOST_ONLINE,
 			Offset: 0,
 			Limit:  5,
 		}}, false, []func(a args, result []Host) bool{
 			func(a args, result []Host) bool { return len(result) >= 2 },
 		}},
 		{"without status", args{req: ListHostReq{
-			Status:  HOST_WHATEVER,
+			Status:  common.HOST_WHATEVER,
 			Purpose: "TestCompute",
 			Offset:  0,
 			Limit:   5,
@@ -1087,17 +1088,17 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 			MetaDB.First(&host, "IP = ?", "474.111.111.111")
 			assert.Equal(t, 17-4, host.CpuCores)
 			assert.Equal(t, 64-8, host.Memory)
-			assert.True(t, host.Status == int32(HOST_EXHAUST))
+			assert.True(t, host.Status == int32(common.HOST_EXHAUST))
 			var host2 Host
 			MetaDB.First(&host2, "IP = ?", "474.111.111.112")
 			assert.Equal(t, 16-4, host2.CpuCores)
 			assert.Equal(t, 64-8, host2.Memory)
-			assert.True(t, host2.Status == int32(HOST_INUSED))
+			assert.True(t, host2.Status == int32(common.HOST_INUSED))
 			var host3 Host
 			MetaDB.First(&host3, "IP = ?", "474.111.111.113")
 			assert.Equal(t, 15-4, host3.CpuCores)
 			assert.Equal(t, 64-8, host3.Memory)
-			assert.True(t, host3.Status == int32(HOST_EXHAUST))
+			assert.True(t, host3.Status == int32(common.HOST_EXHAUST))
 		})
 	}
 }
@@ -1180,7 +1181,7 @@ func TestAllocHosts_1Host(t *testing.T) {
 			MetaDB.First(&host, "IP = ?", "192.168.56.99")
 			assert.Equal(t, 17-4-4-4, host.CpuCores)
 			assert.Equal(t, 64-8-8-8, host.Memory)
-			assert.True(t, host.Status == int32(HOST_EXHAUST))
+			assert.True(t, host.Status == int32(common.HOST_EXHAUST))
 
 		})
 	}

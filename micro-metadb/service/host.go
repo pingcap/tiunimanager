@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
-
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -51,12 +51,14 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
 	dst.Rack = genDomainCodeByName(dst.AZ, src.Rack)
 	dst.Status = int32(src.Status)
 	dst.Purpose = src.Purpose
+	dst.Performance = src.Performance
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, models.Disk{
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Status:   int32(disk.Status),
 			Capacity: disk.Capacity,
+			Type:     disk.Type,
 		})
 	}
 }
@@ -180,6 +182,7 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.Rack = GetDomainNameFromCode(src.Rack)
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
+	dst.Performance = src.Performance
 	dst.CreateAt = src.CreatedAt.Unix()
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
@@ -188,6 +191,8 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
 			Status:   disk.Status,
+			Type:     disk.Type,
+			UsedBy:   disk.UsedBy,
 		})
 	}
 }
@@ -197,7 +202,7 @@ func (handler *DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListH
 	log := framework.Log()
 	var hostReq models.ListHostReq
 	hostReq.Purpose = req.Purpose
-	hostReq.Status = models.HostStatus(req.Status)
+	hostReq.Status = common.HostStatus(req.Status)
 	hostReq.Limit = int(req.Page.PageSize)
 	if req.Page.Page >= 1 {
 		hostReq.Offset = (int(req.Page.Page) - 1) * int(req.Page.PageSize)
@@ -286,7 +291,7 @@ func buildAllocRsp(componet string, req models.AllocRsps, out *[]*dbPb.DBAllocHo
 				Name:     result.DiskName,
 				Path:     result.Path,
 				Capacity: int32(result.Capacity),
-				Status:   int32(models.DISK_AVAILABLE),
+				Status:   int32(common.DISK_AVAILABLE),
 			},
 		})
 	}

@@ -119,7 +119,11 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterPb
 }
 
 func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterPb.DataExportRequest, resp *clusterPb.DataExportResponse) error {
-	recordId, err := domain.ExportData(req.Operator, req.ClusterId, req.UserName, req.Password, req.FileType, req.Filter)
+	if err := domain.ExportDataPreCheck(req); err != nil {
+		return err
+	}
+
+	recordId, err := domain.ExportData(req.GetOperator(), req.GetClusterId(), req.GetFilePath(), req.GetStorageType(), req.GetUserName(), req.GetPassword(), req.GetFileType(), req.GetFilter())
 
 	if err != nil {
 		//todo
@@ -132,7 +136,11 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterPb.Da
 }
 
 func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterPb.DataImportRequest, resp *clusterPb.DataImportResponse) error {
-	recordId, err := domain.ImportData(req.Operator, req.ClusterId, req.UserName, req.Password, req.FilePath)
+	if err := domain.ImportDataPreCheck(req); err != nil {
+		return err
+	}
+
+	recordId, err := domain.ImportData(req.GetOperator(), req.GetClusterId(), req.GetUserName(), req.GetPassword(), req.GetFilePath(), req.GetStorageType())
 
 	if err != nil {
 		//todo

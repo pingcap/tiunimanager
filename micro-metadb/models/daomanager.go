@@ -4,7 +4,9 @@ import (
 	cryrand "crypto/rand"
 	"encoding/base64"
 	"fmt"
+
 	common2 "github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -98,8 +100,8 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_PERMISSION_BINDING, new(PermissionBinding))
 	dao.AddTable(TABLE_NAME_TOKEN, new(Token))
 	dao.AddTable(TABLE_NAME_TASK, new(TaskDO))
-	dao.AddTable(TABLE_NAME_HOST, new(Host))
-	dao.AddTable(TABLE_NAME_DISK, new(Disk))
+	dao.AddTable(TABLE_NAME_HOST, new(resource.Host))
+	dao.AddTable(TABLE_NAME_DISK, new(resource.Disk))
 	dao.AddTable(TABLE_NAME_TIUP_CONFIG, new(TiUPConfig))
 	dao.AddTable(TABLE_NAME_TIUP_TASK, new(TiupTask))
 	dao.AddTable(TABLE_NAME_FLOW, new(FlowDO))
@@ -190,7 +192,7 @@ func (dao *DAOManager) initSystemDefaultData() error {
 
 func (dao *DAOManager) initResourceDataForDev() error {
 	log := framework.Log()
-	id1, err := dao.ResourceManager().CreateHost(&Host{
+	id1, err := dao.ResourceManager().CreateHost(&resource.Host{
 		HostName: "TEST_HOST1",
 		IP:       "168.168.168.1",
 		UserName: "root",
@@ -205,7 +207,7 @@ func (dao *DAOManager) initResourceDataForDev() error {
 		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
-		Disks: []Disk{
+		Disks: []resource.Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
 			{Name: "sdb", Path: "/mnt/pd", Capacity: 256, Status: 0},
 			{Name: "sdc", Path: "/mnt/tidb", Capacity: 256, Status: 0},
@@ -216,7 +218,7 @@ func (dao *DAOManager) initResourceDataForDev() error {
 		log.Errorf("create TEST_HOST1 failed, %v\n", err)
 		return err
 	}
-	id2, err := dao.ResourceManager().CreateHost(&Host{
+	id2, err := dao.ResourceManager().CreateHost(&resource.Host{
 		HostName: "TEST_HOST2",
 		IP:       "168.168.168.2",
 		UserName: "root",
@@ -231,7 +233,7 @@ func (dao *DAOManager) initResourceDataForDev() error {
 		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
-		Disks: []Disk{
+		Disks: []resource.Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
 			{Name: "sdb", Path: "/mnt/pd", Capacity: 256, Status: 0},
 			{Name: "sdc", Path: "/mnt/tidb", Capacity: 256, Status: 0},
@@ -242,7 +244,7 @@ func (dao *DAOManager) initResourceDataForDev() error {
 		log.Errorf("create TEST_HOST2 failed, %v\n", err)
 		return err
 	}
-	id3, err := dao.ResourceManager().CreateHost(&Host{
+	id3, err := dao.ResourceManager().CreateHost(&resource.Host{
 		HostName: "TEST_HOST3",
 		IP:       "168.168.168.3",
 		UserName: "root",
@@ -257,7 +259,7 @@ func (dao *DAOManager) initResourceDataForDev() error {
 		AZ:       "Zone1",
 		Rack:     "3-1",
 		Purpose:  "Compute",
-		Disks: []Disk{
+		Disks: []resource.Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
 			{Name: "sdb", Path: "/mnt/pd", Capacity: 256, Status: 0},
 			{Name: "sdc", Path: "/mnt/tidb", Capacity: 256, Status: 0},

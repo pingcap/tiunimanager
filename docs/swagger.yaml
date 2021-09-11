@@ -426,7 +426,7 @@ definitions:
       cpuCore:
         type: integer
       disk:
-        $ref: '#/definitions/hostapi.Disk'
+        $ref: '#/definitions/resource.Disk'
       hostName:
         type: string
       ip:
@@ -449,29 +449,6 @@ definitions:
       memory:
         type: integer
     type: object
-  hostapi.Disk:
-    properties:
-      capacity:
-        description: 'Disk size, Unit: GB'
-        type: integer
-      diskId:
-        type: string
-      name:
-        description: '[sda/sdb/nvmep0...]'
-        type: string
-      path:
-        description: 'Disk mount path: [/data1]'
-        type: string
-      status:
-        description: Disk Status, 0 for available, 1 for inused
-        type: integer
-      type:
-        description: 'Disk type: [nvme-ssd/ssd/sata]'
-        type: string
-      usedby:
-        description: Disk is used by which cluster
-        type: string
-    type: object
   hostapi.DomainResource:
     properties:
       count:
@@ -485,55 +462,6 @@ definitions:
       zoneCode:
         type: string
       zoneName:
-        type: string
-    type: object
-  hostapi.HostInfo:
-    properties:
-      az:
-        type: string
-      cpuCores:
-        type: integer
-      createTime:
-        type: integer
-      dc:
-        type: string
-      disks:
-        items:
-          $ref: '#/definitions/hostapi.Disk'
-        type: array
-      hostId:
-        type: string
-      hostName:
-        type: string
-      ip:
-        type: string
-      kernel:
-        type: string
-      memory:
-        description: Host memory size, Unit:GB
-        type: integer
-      nic:
-        description: 'Host network type: 1GE or 10GE'
-        type: string
-      os:
-        type: string
-      passwd:
-        type: string
-      performance:
-        description: Performance type of this host [High/Medium/Low]
-        type: string
-      purpose:
-        description: What Purpose is the host used for? [compute/storage/general]
-        type: string
-      rack:
-        type: string
-      spec:
-        description: Host Spec, init while importing
-        type: string
-      status:
-        description: Host Status, 0 for Online, 1 for offline
-        type: integer
-      userName:
         type: string
     type: object
   hostapi.SpecBaseInfo:
@@ -734,6 +662,80 @@ definitions:
       type:
         type: integer
       unit:
+        type: string
+    type: object
+  resource.Disk:
+    properties:
+      capacity:
+        description: 'Disk size, Unit: GB'
+        type: integer
+      diskId:
+        type: string
+      name:
+        description: '[sda/sdb/nvmep0...]'
+        type: string
+      omitempty:
+        type: string
+      path:
+        description: 'Disk mount path: [/data1]'
+        type: string
+      status:
+        description: Disk Status, 0 for available, 1 for inused
+        type: integer
+      type:
+        description: 'Disk type: [nvme-ssd/ssd/sata]'
+        type: string
+      usedby:
+        description: Disk is used by which cluster
+        type: string
+    type: object
+  resource.Host:
+    properties:
+      az:
+        type: string
+      cpuCores:
+        type: integer
+      createTime:
+        type: integer
+      dc:
+        type: string
+      disks:
+        items:
+          $ref: '#/definitions/resource.Disk'
+        type: array
+      hostId:
+        type: string
+      hostName:
+        type: string
+      ip:
+        type: string
+      kernel:
+        type: string
+      memory:
+        description: Host memory size, Unit:GB
+        type: integer
+      nic:
+        description: 'Host network type: 1GE or 10GE'
+        type: string
+      os:
+        type: string
+      passwd:
+        type: string
+      performance:
+        description: Performance type of this host [High/Medium/Low]
+        type: string
+      purpose:
+        description: What Purpose is the host used for? [compute/storage/general]
+        type: string
+      rack:
+        type: string
+      spec:
+        description: Host Spec, init while importing
+        type: string
+      status:
+        description: Host Status, 0 for Online, 1 for offline
+        type: integer
+      userName:
         type: string
     type: object
   taskapi.FlowWorkDetailInfo:
@@ -1753,7 +1755,7 @@ paths:
         name: host
         required: true
         schema:
-          $ref: '#/definitions/hostapi.HostInfo'
+          $ref: '#/definitions/resource.Host'
       produces:
       - application/json
       responses:
@@ -1800,7 +1802,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/hostapi.HostInfo'
+                    $ref: '#/definitions/resource.Host'
                   type: array
               type: object
       security:
@@ -1933,7 +1935,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/hostapi.HostInfo'
+                  $ref: '#/definitions/resource.Host'
               type: object
       security:
       - ApiKeyAuth: []

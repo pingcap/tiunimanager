@@ -35,27 +35,29 @@ func (s HostStatus) IsAvailable() bool {
 }
 
 type Host struct {
-	ID          string         `json:"hostId" gorm:"PrimaryKey"`
-	IP          string         `json:"ip" gorm:"not null"`
-	UserName    string         `json:"userName,omitempty" gorm:"size:32"`
-	Passwd      string         `json:"passwd,omitempty" gorm:"size:32"`
-	HostName    string         `json:"hostName" gorm:"size:255"`
-	Status      int32          `json:"status" gorm:"index"` // Host Status, 0 for Online, 1 for offline
-	OS          string         `json:"os" gorm:"size:32"`
-	Kernel      string         `json:"kernel" gorm:"size:32"`
-	CpuCores    int32          `json:"cpuCores"`
-	Memory      int32          `json:"memory"`             // Host memory size, Unit:GB
-	Spec        string         `json:"spec"`               // Host Spec, init while importing
-	Nic         string         `json:"nic" gorm:"size:32"` // Host network type: 1GE or 10GE
-	DC          string         `json:"dc" gorm:"size:32"`
-	AZ          string         `json:"az" gorm:"index"`
-	Rack        string         `json:"rack" gorm:"size:32"`
-	Purpose     string         `json:"purpose" gorm:"index"`     // What Purpose is the host used for? [compute/storage/general]
-	Performance string         `json:"performance" gorm:"index"` // Performance type of this host [High/Medium/Low]
-	Disks       []Disk         `json:"disks"`
-	CreatedAt   int64          `json:"createTime" gorm:"autoCreateTime"`
-	UpdatedAt   time.Time      `json:"-"`
-	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+	ID           string         `json:"hostId" gorm:"PrimaryKey"`
+	IP           string         `json:"ip" gorm:"not null"`
+	UserName     string         `json:"userName,omitempty" gorm:"size:32"`
+	Passwd       string         `json:"passwd,omitempty" gorm:"size:32"`
+	HostName     string         `json:"hostName" gorm:"size:255"`
+	Status       int32          `json:"status" gorm:"index"` // Host Status, 0 for Online, 1 for offline
+	OS           string         `json:"os" gorm:"size:32"`
+	Kernel       string         `json:"kernel" gorm:"size:32"`
+	CpuCores     int32          `json:"cpuCores"`
+	Memory       int32          `json:"memory"`             // Host memory size, Unit:GB
+	Spec         string         `json:"spec"`               // Host Spec, init while importing
+	Nic          string         `json:"nic" gorm:"size:32"` // Host network type: 1GE or 10GE
+	DC           string         `json:"dc" gorm:"size:32"`
+	AZ           string         `json:"az" gorm:"index"`
+	Rack         string         `json:"rack" gorm:"size:32"`
+	Purpose      string         `json:"purpose" gorm:"index"`     // What Purpose is the host used for? [compute/storage/general]
+	Performance  string         `json:"performance" gorm:"index"` // Performance type of this host [High/Medium/Low]
+	Disks        []Disk         `json:"disks"`
+	UsedComputes []UsedCompute  `json:"-"`
+	UsedPorts    []UsedPort     `json:"-"`
+	CreatedAt    int64          `json:"createTime" gorm:"autoCreateTime"`
+	UpdatedAt    time.Time      `json:"-"`
+	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 func HostTableName() string {

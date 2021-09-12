@@ -60,10 +60,6 @@ type Host struct {
 	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
-func HostTableName() string {
-	return "hosts"
-}
-
 func (h Host) IsExhaust() bool {
 	diskExaust := true
 	for _, disk := range h.Disks {

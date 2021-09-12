@@ -359,45 +359,6 @@ func TestDisk_BeforeCreate(t *testing.T) {
 	}
 }
 
-func TestDisk_TableName(t *testing.T) {
-	type fields struct {
-		ID        string
-		HostId    string
-		Name      string
-		Capacity  int32
-		Path      string
-		Status    int32
-		CreatedAt time.Time
-		UpdatedAt time.Time
-		DeletedAt gorm.DeletedAt
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := resource.Disk{
-				ID:        tt.fields.ID,
-				HostId:    tt.fields.HostId,
-				Name:      tt.fields.Name,
-				Capacity:  tt.fields.Capacity,
-				Path:      tt.fields.Path,
-				Status:    tt.fields.Status,
-				CreatedAt: tt.fields.CreatedAt,
-				UpdatedAt: tt.fields.UpdatedAt,
-				DeletedAt: tt.fields.DeletedAt,
-			}
-			if got := d.TableName(); got != tt.want {
-				t.Errorf("TableName() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestFindHostById(t *testing.T) {
 	h := &resource.Host{
 		HostName: "主机1",
@@ -519,7 +480,7 @@ func TestHostTableName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := resource.HostTableName(); got != tt.want {
+			if got := TABLE_NAME_HOST; got != tt.want {
 				t.Errorf("HostTableName() = %v, want %v", got, tt.want)
 			}
 		})

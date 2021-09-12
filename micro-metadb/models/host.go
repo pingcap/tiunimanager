@@ -84,7 +84,7 @@ type ListHostReq struct {
 }
 
 func (m *DAOResourceManager) ListHosts(req ListHostReq) (hosts []rt.Host, err error) {
-	db := m.getDb().Table(rt.HostTableName())
+	db := m.getDb().Table(TABLE_NAME_HOST)
 	if err = db.Error; err != nil {
 		return nil, err
 	}

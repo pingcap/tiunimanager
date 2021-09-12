@@ -45,10 +45,6 @@ type Disk struct {
 	DeletedAt gorm.DeletedAt `json:"-"`
 }
 
-func (d Disk) TableName() string {
-	return "disks"
-}
-
 func (d *Disk) BeforeCreate(tx *gorm.DB) (err error) {
 	d.ID = uuid.New().String()
 	return nil

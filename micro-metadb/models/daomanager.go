@@ -102,6 +102,8 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_TASK, new(TaskDO))
 	dao.AddTable(TABLE_NAME_HOST, new(resource.Host))
 	dao.AddTable(TABLE_NAME_DISK, new(resource.Disk))
+	dao.AddTable(TABLE_NAME_USED_COMPUTE, new(resource.UsedCompute))
+	dao.AddTable(TABLE_NAME_USED_PORT, new(resource.UsedPort))
 	dao.AddTable(TABLE_NAME_TIUP_CONFIG, new(TiUPConfig))
 	dao.AddTable(TABLE_NAME_TIUP_TASK, new(TiupTask))
 	dao.AddTable(TABLE_NAME_FLOW, new(FlowDO))

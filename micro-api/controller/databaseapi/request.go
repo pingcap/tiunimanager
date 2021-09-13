@@ -9,6 +9,7 @@ type DataExportReq struct {
 	FileType      string     `json:"fileType"`
 	Filter 		  string 	 `json:"filter"`
 	FilePath 	  string 	 `json:"filePath"`
+	StorageType   string 	 `json:"storageType"`
 }
 
 type DataImportReq struct {
@@ -16,6 +17,7 @@ type DataImportReq struct {
 	UserName      string     `json:"userName"`
 	Password      string     `json:"password"`
 	FilePath      string     `json:"filePath"`
+	StorageType   string 	 `json:"storageType"`
 }
 
 type DataTransportQueryReq struct {

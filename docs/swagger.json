@@ -2564,6 +2564,9 @@
                 "password": {
                     "type": "string"
                 },
+                "storageType": {
+                    "type": "string"
+                },
                 "userName": {
                     "type": "string"
                 }
@@ -2587,6 +2590,9 @@
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "storageType": {
                     "type": "string"
                 },
                 "userName": {

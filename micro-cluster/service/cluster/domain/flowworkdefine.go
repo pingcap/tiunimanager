@@ -77,8 +77,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowExportData),
 		TaskNodes: map[string]*TaskDefine{
 			"start":				{"exportDataFromCluster", "exportDataDone", "fail", PollingTasK, exportDataFromCluster},
-			"exportDataDone":		{"compressExportData", "compressDataDone", "fail", SyncFuncTask, compressExportData},
-			"compressDataDone":		{"updateDataExportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataExportRecord},
+			"exportDataDone":		{"updateDataExportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataExportRecord},
 			"updateRecordDone":		{"end", "", "", SyncFuncTask, ClusterEnd},
 			"fail":					{"fail", "", "", SyncFuncTask, exportDataFailed},
 		},
@@ -90,8 +89,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowImportData),
 		TaskNodes: map[string]*TaskDefine{
 			"start":				{"buildDataImportConfig", "buildConfigDone", "fail", SyncFuncTask, buildDataImportConfig},
-			"buildConfigDone":		{"deCompressImportData", "deCompressDataDone", "fail", SyncFuncTask, deCompressImportData},
-			"deCompressDataDone":	{"importDataToCluster", "importDataDone", "fail", PollingTasK, importDataToCluster},
+			"buildConfigDone":		{"importDataToCluster", "importDataDone", "fail", PollingTasK, importDataToCluster},
 			"importDataDone":		{"updateDataImportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataImportRecord},
 			"updateRecordDone":		{"end", "", "", SyncFuncTask, ClusterEnd},
 			"fail":					{"fail", "", "", SyncFuncTask, importDataFailed},

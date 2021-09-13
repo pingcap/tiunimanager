@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
-
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -35,15 +35,15 @@ func GetDomainNameFromCode(failureDomain string) string {
 	return failureDomain[pos+1:]
 }
 
-func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
+func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *resource.Host) {
 	dst.HostName = src.HostName
 	dst.IP = src.Ip
 	dst.UserName = src.UserName
 	dst.Passwd = src.Passwd
 	dst.OS = src.Os
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int(src.CpuCores)
-	dst.Memory = int(src.Memory)
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Spec = src.Spec
 	dst.Nic = src.Nic
 	dst.DC = src.Dc
@@ -51,12 +51,14 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
 	dst.Rack = genDomainCodeByName(dst.AZ, src.Rack)
 	dst.Status = int32(src.Status)
 	dst.Purpose = src.Purpose
+	dst.Performance = src.Performance
 	for _, disk := range src.Disks {
-		dst.Disks = append(dst.Disks, models.Disk{
+		dst.Disks = append(dst.Disks, resource.Disk{
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Status:   int32(disk.Status),
 			Capacity: disk.Capacity,
+			Type:     disk.Type,
 		})
 	}
 }
@@ -64,7 +66,7 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
 func (handler *DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest, rsp *dbPb.DBAddHostResponse) error {
 	resourceManager := handler.Dao().ResourceManager()
 	log := framework.Log()
-	var host models.Host
+	var host resource.Host
 	copyHostInfoFromReq(req.Host, &host)
 
 	hostId, err := resourceManager.CreateHost(&host)
@@ -91,9 +93,9 @@ func (handler *DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHos
 func (handler *DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbPb.DBAddHostsInBatchRequest, rsp *dbPb.DBAddHostsInBatchResponse) error {
 	resourceManager := handler.Dao().ResourceManager()
 	log := framework.Log()
-	var hosts []*models.Host
+	var hosts []*resource.Host
 	for _, v := range req.Hosts {
-		var host models.Host
+		var host resource.Host
 		copyHostInfoFromReq(v, &host)
 		hosts = append(hosts, &host)
 	}
@@ -165,7 +167,7 @@ func (handler *DBServiceHandler) RemoveHostsInBatch(ctx context.Context, req *db
 	return nil
 }
 
-func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
+func copyHostInfoToRsp(src *resource.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.HostId = src.ID
 	dst.HostName = src.HostName
 	dst.Ip = src.IP
@@ -180,7 +182,8 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.Rack = GetDomainNameFromCode(src.Rack)
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
-	dst.CreateAt = src.CreatedAt.Unix()
+	dst.Performance = src.Performance
+	dst.CreateAt = src.CreatedAt
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
 			DiskId:   disk.ID,
@@ -188,6 +191,8 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
 			Status:   disk.Status,
+			Type:     disk.Type,
+			UsedBy:   disk.UsedBy,
 		})
 	}
 }
@@ -197,7 +202,7 @@ func (handler *DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListH
 	log := framework.Log()
 	var hostReq models.ListHostReq
 	hostReq.Purpose = req.Purpose
-	hostReq.Status = models.HostStatus(req.Status)
+	hostReq.Status = resource.HostStatus(req.Status)
 	hostReq.Limit = int(req.Page.PageSize)
 	if req.Page.Page >= 1 {
 		hostReq.Offset = (int(req.Page.Page) - 1) * int(req.Page.PageSize)
@@ -265,8 +270,8 @@ func copyAllocReq(component string, req models.AllocReqs, in []*dbPb.DBAllocatio
 		}
 		req[component] = append(req[component], &models.HostAllocReq{
 			FailureDomain: eachReq.FailureDomain,
-			CpuCores:      int(eachReq.CpuCores),
-			Memory:        int(eachReq.Memory),
+			CpuCores:      eachReq.CpuCores,
+			Memory:        eachReq.Memory,
 			Count:         int(eachReq.Count),
 		})
 	}
@@ -286,7 +291,7 @@ func buildAllocRsp(componet string, req models.AllocRsps, out *[]*dbPb.DBAllocHo
 				Name:     result.DiskName,
 				Path:     result.Path,
 				Capacity: int32(result.Capacity),
-				Status:   int32(models.DISK_AVAILABLE),
+				Status:   int32(resource.DISK_AVAILABLE),
 			},
 		})
 	}

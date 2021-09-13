@@ -14,6 +14,8 @@ import (
 	"testing"
 
 	"github.com/asim/go-micro/v3/client"
+	"github.com/pingcap-inc/tiem/library/common"
+	rt "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
 	managerPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
@@ -39,7 +41,7 @@ func Test_ListHosts_Succeed(t *testing.T) {
 	fakeHostId2 := "fake-host-uuid-0002"
 	fakeService := InitFakeClusterClient()
 	fakeService.MockListHost(func(ctx context.Context, in *managerPb.ListHostsRequest, opts ...client.CallOption) (*managerPb.ListHostsResponse, error) {
-		if in.Status != 0 {
+		if in.Status != -1 {
 			return nil, status.Errorf(codes.InvalidArgument, "file row count wrong")
 		}
 		rsp := new(managerPb.ListHostsResponse)
@@ -67,8 +69,8 @@ func Test_ListHosts_Succeed(t *testing.T) {
 
 	type ResultWithPage struct {
 		controller.ResultMark
-		Data []hostapi.HostInfo `json:"data"`
-		Page controller.Page    `json:"page"`
+		Data []rt.Host       `json:"data"`
+		Page controller.Page `json:"page"`
 	}
 	var result ResultWithPage
 	err := json.Unmarshal(w.Body.Bytes(), &result)
@@ -77,8 +79,8 @@ func Test_ListHosts_Succeed(t *testing.T) {
 	value := len(result.Data)
 	assert.Equal(t, 2, value)
 
-	assert.Equal(t, result.Data[0].HostId, fakeHostId1)
-	assert.Equal(t, result.Data[1].HostId, fakeHostId2)
+	assert.Equal(t, result.Data[0].ID, fakeHostId1)
+	assert.Equal(t, result.Data[1].ID, fakeHostId2)
 	assert.True(t, result.Data[0].Status == 2)
 	assert.True(t, result.Data[1].Status == 2)
 
@@ -163,7 +165,7 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 	fakeHostId2 := "fake-host-uuid-0002"
 	fakeService := InitFakeClusterClient()
 	fakeService.MockImportHostsInBatch(func(ctx context.Context, in *managerPb.ImportHostsInBatchRequest, opts ...client.CallOption) (*managerPb.ImportHostsInBatchResponse, error) {
-		if len(in.Hosts) != 2 {
+		if len(in.Hosts) != 3 {
 			return nil, status.Errorf(codes.InvalidArgument, "file row count wrong")
 		}
 		if in.Hosts[0].Ip != "192.168.56.11" || in.Hosts[1].Ip != "192.168.56.12" {
@@ -294,13 +296,13 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &result)
 	assert.Nil(t, err)
 	assert.Equal(t, result.Data.Host.HostName, fakeHostName)
-	assert.Equal(t, result.Data.Host.Ip, fakeHostIp)
+	assert.Equal(t, result.Data.Host.IP, fakeHostIp)
 	assert.Equal(t, result.Data.Host.Disks[0].Name, fakeDiskName)
 	assert.Equal(t, result.Data.Host.Disks[0].Path, fakeDiskPath)
 }
 
 func Test_DownloadTemplate_Succeed(t *testing.T) {
-
+	common.TemplateFilePath = "../etc"
 	w := performRequest("GET", "/api/v1/resources/hosts-template", "application/json", nil)
 
 	assert.Equal(t, http.StatusOK, w.Code)

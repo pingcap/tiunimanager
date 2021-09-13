@@ -1,5 +1,9 @@
 package hostapi
 
+import (
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
+)
+
 type DemoHostInfo struct {
 	HostId   string `json:"hostId"`
 	HostName string `json:"hostName"`
@@ -14,24 +18,24 @@ type ImportHostsRsp struct {
 	HostIds []string `json:"hostIds"`
 }
 type ListHostRsp struct {
-	Hosts []HostInfo `json:"hosts"`
+	Hosts []resource.Host `json:"hosts"`
 }
 
 type HostDetailsRsp struct {
-	Host HostInfo `json:"host"`
+	Host resource.Host `json:"host"`
 }
 
 type ZoneHostStockRsp struct {
 	AvailableStocks map[string][]ZoneHostStock
 }
 type AllocateRsp struct {
-	HostName string `json:"hostName"`
-	Ip       string `json:"ip"`
-	UserName string `json:"userName"`
-	Passwd   string `json:"passwd"`
-	CpuCores int32  `json:"cpuCore"`
-	Memory   int32  `json:"memory"`
-	Disk     Disk   `json:"disk"`
+	HostName string        `json:"hostName"`
+	Ip       string        `json:"ip"`
+	UserName string        `json:"userName"`
+	Passwd   string        `json:"passwd"`
+	CpuCores int32         `json:"cpuCore"`
+	Memory   int32         `json:"memory"`
+	Disk     resource.Disk `json:"disk"`
 }
 
 type AllocHostsRsp struct {

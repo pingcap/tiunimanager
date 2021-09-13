@@ -2,6 +2,7 @@ package host
 
 import (
 	"context"
+
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 
@@ -10,7 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-type ResourceManager struct {}
+type ResourceManager struct{}
 
 func NewResourceManager() *ResourceManager {
 	m := new(ResourceManager)
@@ -33,12 +34,14 @@ func copyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
+	dst.Performance = src.Performance
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
 			Status:   disk.Status,
+			Type:     disk.Type,
 		})
 	}
 }
@@ -58,6 +61,7 @@ func copyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
+	dst.Performance = src.Performance
 	dst.CreateAt = src.CreateAt
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &hostPb.Disk{
@@ -66,6 +70,8 @@ func copyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
 			Status:   disk.Status,
+			Type:     disk.Type,
+			UsedBy:   disk.UsedBy,
 		})
 	}
 }

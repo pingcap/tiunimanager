@@ -18,7 +18,9 @@ message DBDiskDTO {
     string name = 2;            // [sda/sdb/nvmep0...]
     int32 capacity = 3;         // Disk size, Unit: GB
     string path = 4;            // Disk mount path: [/data1]
-    int32 status = 5;
+    string type = 5;
+    string usedBy = 6;
+    int32 status = 7;
 }
 
 message DBAllocationReq {
@@ -45,9 +47,10 @@ message DBHostInfoDTO {
     int32 cpuCores = 13;            // Host cpu Remains
     int32 memory = 14;              // Host memory Remains, Unit:GB
     string nic = 15;                // Host network type: 1GE or 10GE
-    string purpose = 16;            // What Purpose is the host used for? [compute/storage or both]
-    int64 createAt = 17;
-    repeated DBDiskDTO disks = 18;
+    string purpose = 16;            // What Purpose is the host used for? [compute/storage or general]
+    string performance = 17;
+    int64 createAt = 18;
+    repeated DBDiskDTO disks = 19;
 }
 
 message DBAllocHostDTO {

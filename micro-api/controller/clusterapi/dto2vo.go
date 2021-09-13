@@ -1,9 +1,9 @@
 package clusterapi
 
 import (
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-api/controller/hostapi"
-	cluster "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"time"
 )
 
@@ -66,6 +66,9 @@ func ParseComponentInfoFromDTO(dto *cluster.ComponentInstanceDTO) (instance *Com
 }
 
 func ParseComponentNodeFromDTO(dto *cluster.ComponentNodeDisplayInfoDTO) (node *ComponentNodeDisplayInfo) {
+	if dto == nil || dto.Instance == nil {
+		return &ComponentNodeDisplayInfo{}
+	}
 	node = &ComponentNodeDisplayInfo{
 		NodeId: dto.NodeId,
 		Version: dto.Version,
@@ -109,11 +112,15 @@ func ParseComponentBaseInfoFromDTO(dto *cluster.ComponentBaseInfoDTO) (baseInfo 
 }
 
 func ParseInstanceInfoFromDTO(dto *cluster.ClusterInstanceDTO) (instance *ClusterInstanceInfo) {
+	portList := make([]int, len(dto.PortList), len(dto.PortList))
+	for i,v := range dto.PortList {
+		portList[i] = int(v)
+	}
 	instance = &ClusterInstanceInfo{
 		IntranetConnectAddresses: dto.IntranetConnectAddresses,
 		ExtranetConnectAddresses: dto.ExtranetConnectAddresses,
 		Whitelist:                dto.Whitelist,
-		Port: int(dto.Port),
+		PortList: portList,
 		DiskUsage: *controller.ParseUsageFromDTO(dto.DiskUsage),
 		CpuUsage: *controller.ParseUsageFromDTO(dto.CpuUsage),
 		MemoryUsage: *controller.ParseUsageFromDTO(dto.MemoryUsage),

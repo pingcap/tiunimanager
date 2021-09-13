@@ -2,7 +2,7 @@ package domain
 
 import (
 	"encoding/json"
-	"github.com/pingcap/tiem/library/knowledge"
+	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"time"
 )
@@ -18,7 +18,7 @@ type Cluster struct {
 	ClusterVersion 		knowledge.ClusterVersion
 	Tags           		[]string
 	Tls            		bool
-
+	RecoverInfo			RecoverInfo
 	Status 				ClusterStatus
 
 	Demands 			[]*ClusterComponentDemand
@@ -32,6 +32,9 @@ type Cluster struct {
 	DeleteTime 			time.Time
 }
 
+func (c *Cluster) Online()  {
+	c.Status = ClusterStatusOnline
+}
 func (c *Cluster) Delete()  {
 	c.Status = ClusterStatusDeleted
 }
@@ -62,6 +65,11 @@ type TiUPConfigRecord struct {
 	ClusterId 			string
 	ConfigModel 		*spec.Specification
 	CreateTime 			time.Time
+}
+
+type RecoverInfo struct {
+	SourceClusterId		string
+	BackupRecordId 		int64
 }
 
 func (r TiUPConfigRecord) Content() string {

@@ -1,7 +1,7 @@
 package domain
 
 import (
-	commons2 "github.com/pingcap/tiem/micro-cluster/service/tenant/commons"
+	commons2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/commons"
 	"time"
 )
 

@@ -11,103 +11,141 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
+	crypto "github.com/pingcap-inc/tiem/library/thirdparty/encrypt"
+
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-cluster/client"
-	manager "github.com/pingcap/tiem/micro-cluster/proto"
-	"github.com/pingcap/tiem/micro-metadb/service"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/micro-metadb/service"
+
 	"google.golang.org/grpc/codes"
 )
 
-func CopyHostFromRsp(src *manager.HostInfo, dst *HostInfo) {
-	dst.HostId = src.HostId
+func copyHostFromRsp(src *cluster.HostInfo, dst *resource.Host) {
+	dst.ID = src.HostId
 	dst.HostName = src.HostName
-	dst.Ip = src.Ip
-	dst.Os = src.Os
+	dst.IP = src.Ip
+	dst.OS = src.Os
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
 	dst.Spec = src.Spec
 	dst.Nic = src.Nic
-	dst.Dc = src.Dc
-	dst.Az = src.Az
+	dst.DC = src.Dc
+	dst.AZ = src.Az
 	dst.Rack = src.Rack
 	dst.Status = int32(src.Status)
 	dst.Purpose = src.Purpose
+	dst.Performance = src.Performance
+	dst.CreatedAt = src.CreateAt
 	for _, disk := range src.Disks {
-		dst.Disks = append(dst.Disks, Disk{
-			DiskId:   disk.DiskId,
+		dst.Disks = append(dst.Disks, resource.Disk{
+			ID:       disk.DiskId,
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
 			Status:   int32(disk.Status),
+			Type:     disk.Type,
+			UsedBy:   disk.UsedBy,
 		})
 	}
 }
 
 func genHostSpec(cpuCores int32, mem int32) string {
-	return fmt.Sprintf("%dU%dG", cpuCores, mem)
+	return fmt.Sprintf("%dC%dG", cpuCores, mem)
 }
 
-func copyHostToReq(src *HostInfo, dst *manager.HostInfo) {
+func copyHostToReq(src *resource.Host, dst *cluster.HostInfo) error {
 	dst.HostName = src.HostName
-	dst.Ip = src.Ip
-	dst.Os = src.Os
+	dst.Ip = src.IP
+	dst.UserName = src.UserName
+	passwd, err := crypto.AesEncryptCFB(src.Passwd)
+	if err != nil {
+		return err
+	}
+	dst.Passwd = passwd
+	dst.Os = src.OS
 	dst.Kernel = src.Kernel
 	dst.CpuCores = src.CpuCores
 	dst.Memory = src.Memory
 	dst.Spec = genHostSpec(src.CpuCores, src.Memory)
 	dst.Nic = src.Nic
-	dst.Dc = src.Dc
-	dst.Az = src.Az
+	dst.Dc = src.DC
+	dst.Az = src.AZ
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
+	dst.Performance = src.Performance
 
 	for _, v := range src.Disks {
-		dst.Disks = append(dst.Disks, &manager.Disk{
+		dst.Disks = append(dst.Disks, &cluster.Disk{
 			Name:     v.Name,
 			Capacity: v.Capacity,
 			Status:   v.Status,
 			Path:     v.Path,
+			Type:     v.Type,
 		})
 	}
+	return nil
 }
 
-func doImport(c *gin.Context, host *HostInfo) (rsp *manager.ImportHostResponse, err error) {
-	importReq := manager.ImportHostRequest{}
-	importReq.Host = new(manager.HostInfo)
-	copyHostToReq(host, importReq.Host)
-	return client.ManagerClient.ImportHost(c, &importReq)
+func doImport(c *gin.Context, host *resource.Host) (rsp *cluster.ImportHostResponse, err error) {
+	importReq := cluster.ImportHostRequest{}
+	importReq.Host = new(cluster.HostInfo)
+	err = copyHostToReq(host, importReq.Host)
+	if err != nil {
+		return nil, err
+	}
+	return client.ClusterClient.ImportHost(c, &importReq)
 }
 
-func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *manager.ImportHostsInBatchResponse, err error) {
-	importReq := manager.ImportHostsInBatchRequest{}
-	importReq.Hosts = make([]*manager.HostInfo, len(hosts))
+func doImportBatch(c *gin.Context, hosts []*resource.Host) (rsp *cluster.ImportHostsInBatchResponse, err error) {
+	importReq := cluster.ImportHostsInBatchRequest{}
+	importReq.Hosts = make([]*cluster.HostInfo, len(hosts))
+	var userName, passwd string
 	for i, host := range hosts {
-		importReq.Hosts[i] = new(manager.HostInfo)
-		copyHostToReq(host, importReq.Hosts[i])
+		if i == 0 {
+			userName, passwd = host.UserName, host.Passwd
+		} else {
+			if userName != host.UserName || passwd != host.Passwd {
+				errMsg := fmt.Sprintf("Row %d has a diff user(%s) or passwd(%s)", i, host.UserName, host.Passwd)
+				return nil, errors.New(errMsg)
+			}
+		}
+		importReq.Hosts[i] = new(cluster.HostInfo)
+		err = copyHostToReq(host, importReq.Hosts[i])
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return client.ManagerClient.ImportHostsInBatch(c, &importReq)
+	return client.ClusterClient.ImportHostsInBatch(c, &importReq)
 }
 
-// ImportHost 导入主机接口
-// @Summary 导入主机接口
-// @Description 将给定的主机信息导入系统
+// ImportHost godoc
+// @Summary Import a host to TiEM System
+// @Description import one host by json
 // @Tags resource
 // @Accept json
 // @Produce json
-// @Param Token header string true "登录token"
-// @Param host body HostInfo true "待导入的主机信息"
+// @Security ApiKeyAuth
+// @Param host body resource.Host true "Host information"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /resources/host [post]
 func ImportHost(c *gin.Context) {
-	var host HostInfo
+	var host resource.Host
 	if err := c.ShouldBindJSON(&host); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
+	}
+	for i := range host.Disks {
+		if host.Disks[i].Type == "" {
+			host.Disks[i].Type = string(resource.Sata)
+		}
 	}
 
 	rsp, err := doImport(c, &host)
@@ -124,27 +162,29 @@ func ImportHost(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(ImportHostRsp{HostId: rsp.HostId}))
 }
 
-func importExcelFile(r io.Reader) ([]*HostInfo, error) {
+func importExcelFile(r io.Reader) ([]*resource.Host, error) {
 	xlsx, err := excelize.OpenReader(r)
 	if err != nil {
 		return nil, err
 	}
 	rows := xlsx.GetRows("主机信息")
-	var hosts []*HostInfo
+	var hosts []*resource.Host
 	for irow, row := range rows {
 		if irow > 0 {
-			var host HostInfo
+			var host resource.Host
 			host.HostName = row[HOSTNAME_FIELD]
 			addr := net.ParseIP(row[IP_FILED])
 			if addr == nil {
-				errMsg := fmt.Sprintf("Row %d has a Invalid IP Address %s", irow, row[1])
+				errMsg := fmt.Sprintf("Row %d has a Invalid IP Address %s", irow, row[IP_FILED])
 				return nil, errors.New(errMsg)
 			}
-			host.Ip = addr.String()
-			host.Dc = row[DC_FIELD]
-			host.Az = row[ZONE_FIELD]
+			host.IP = addr.String()
+			host.UserName = row[USERNAME_FIELD]
+			host.Passwd = row[PASSWD_FIELD]
+			host.DC = row[DC_FIELD]
+			host.AZ = row[ZONE_FIELD]
 			host.Rack = row[RACK_FIELD]
-			host.Os = row[OS_FIELD]
+			host.OS = row[OS_FIELD]
 			host.Kernel = row[KERNEL_FIELD]
 			coreNum, _ := (strconv.Atoi(row[CPU_FIELD]))
 			host.CpuCores = int32(coreNum)
@@ -152,10 +192,16 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 			host.Memory = int32(mem)
 			host.Nic = row[NIC_FIELD]
 			host.Purpose = row[PURPOSE_FIELD]
+			host.Performance = row[PERF_FIELD]
 			disksStr := row[DISKS_FIELD]
 			if err = json.Unmarshal([]byte(disksStr), &host.Disks); err != nil {
 				errMsg := fmt.Sprintf("Row %d has a Invalid Disk Json Format, %v", irow, err)
 				return nil, errors.New(errMsg)
+			}
+			for i := range host.Disks {
+				if host.Disks[i].Type == "" {
+					host.Disks[i].Type = string(resource.Sata)
+				}
 			}
 			hosts = append(hosts, &host)
 		}
@@ -163,14 +209,14 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 	return hosts, nil
 }
 
-// ImportHosts 批量导入主机接口
-// @Summary 通过文件批量导入主机
-// @Description 通过文件批量导入主机
+// ImportHosts godoc
+// @Summary Import a batch of hosts to TiEM
+// @Description import hosts by xlsx file
 // @Tags resource
 // @Accept mpfd
 // @Produce json
-// @Param Token header string true "登录token"
-// @Param file formData file true "包含待导入主机信息的文件"
+// @Security ApiKeyAuth
+// @Param file formData file true "hosts information in a xlsx file"
 // @Success 200 {object} controller.CommonResult{data=[]string}
 // @Router /resources/hosts [post]
 func ImportHosts(c *gin.Context) {
@@ -200,37 +246,39 @@ func ImportHosts(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(ImportHostsRsp{HostIds: rsp.HostIds}))
 }
 
-// ListHost 查询主机列表接口
-// @Summary 查询主机列表
-// @Description 展示目前所有主机
+// ListHost godoc
+// @Summary Show all hosts list in TiEM
+// @Description get hosts lit
 // @Tags resource
 // @Accept json
 // @Produce json
-// @Param Token header string true "登录token"
-// @Param purpose query string false "查询特定用途的主机列表"
-// @Param status query string false "查询特定状态的主机列表"
-// @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
+// @Security ApiKeyAuth
+// @Param hostQuery query HostQuery false "list condition"
+// @Success 200 {object} controller.ResultWithPage{data=[]resource.Host}
 // @Router /resources/hosts [get]
 func ListHost(c *gin.Context) {
-	const ALL_STATS = "-1"
-	statusStr := c.Query("status")
-	if statusStr == "" {
-		statusStr = ALL_STATS
+	hostQuery := HostQuery{
+		Status: -1,
 	}
-	queryStatus, err := strconv.Atoi(statusStr)
-	if err != nil {
-		errmsg := fmt.Sprintf("Input Status %s Invalid: %v", c.Query("status"), err)
+	if err := c.ShouldBindQuery(&hostQuery); err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		return
+	}
+	if !resource.HostStatus(hostQuery.Status).IsValid() {
+		errmsg := fmt.Sprintf("Input Status %d is Invalid", hostQuery.Status)
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
-	queryPurpose := c.Query("purpose")
 
-	listHostReq := manager.ListHostsRequest{
-		Purpose: queryPurpose,
-		Status:  int32(queryStatus),
+	listHostReq := cluster.ListHostsRequest{
+		Purpose: hostQuery.Purpose,
+		Status:  int32(hostQuery.Status),
 	}
+	listHostReq.PageReq = new(cluster.PageDTO)
+	listHostReq.PageReq.Page = int32(hostQuery.Page)
+	listHostReq.PageReq.PageSize = int32(hostQuery.PageSize)
 
-	rsp, err := client.ManagerClient.ListHost(c, &listHostReq)
+	rsp, err := client.ClusterClient.ListHost(c, &listHostReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -241,32 +289,32 @@ func ListHost(c *gin.Context) {
 	}
 	var res ListHostRsp
 	for _, v := range rsp.HostList {
-		var host HostInfo
-		CopyHostFromRsp(v, &host)
+		var host resource.Host
+		copyHostFromRsp(v, &host)
 		res.Hosts = append(res.Hosts, host)
 	}
-	c.JSON(http.StatusOK, controller.SuccessWithPage(res.Hosts, controller.Page{Page: 1, PageSize: 20, Total: len(res.Hosts)}))
+	c.JSON(http.StatusOK, controller.SuccessWithPage(res.Hosts, controller.Page{Page: int(rsp.PageReq.Page), PageSize: int(rsp.PageReq.PageSize), Total: int(rsp.PageReq.Total)}))
 }
 
-// HostDetails 查询主机详情接口
-// @Summary 查询主机详情
-// @Description 展示指定的主机的详细信息
+// HostDetails godoc
+// @Summary Show a host
+// @Description get one host by id
 // @Tags resource
 // @Accept json
 // @Produce json
-// @Param Token header string true "登录token"
-// @Param hostId path string true "主机ID"
-// @Success 200 {object} controller.CommonResult{data=HostInfo}
+// @Security ApiKeyAuth
+// @Param hostId path string true "host ID"
+// @Success 200 {object} controller.CommonResult{data=resource.Host}
 // @Router /resources/hosts/{hostId} [get]
 func HostDetails(c *gin.Context) {
 
 	hostId := c.Param("hostId")
 
-	HostDetailsReq := manager.CheckDetailsRequest{
+	HostDetailsReq := cluster.CheckDetailsRequest{
 		HostId: hostId,
 	}
 
-	rsp, err := client.ManagerClient.CheckDetails(c, &HostDetailsReq)
+	rsp, err := client.ClusterClient.CheckDetails(c, &HostDetailsReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -276,29 +324,29 @@ func HostDetails(c *gin.Context) {
 		return
 	}
 	var res HostDetailsRsp
-	CopyHostFromRsp(rsp.Details, &(res.Host))
+	copyHostFromRsp(rsp.Details, &(res.Host))
 	c.JSON(http.StatusOK, controller.Success(res))
 }
 
-// RemoveHost 删除主机接口
-// @Summary 删除指定的主机
-// @Description 删除指定的主机
+// RemoveHost godoc
+// @Summary Remove a host
+// @Description remove a host by id
 // @Tags resource
 // @Accept json
 // @Produce json
-// @Param Token header string true "登录token"
-// @Param hostId path string true "待删除的主机ID"
+// @Security ApiKeyAuth
+// @Param hostId path string true "host id"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /resources/hosts/{hostId} [delete]
 func RemoveHost(c *gin.Context) {
 
 	hostId := c.Param("hostId")
 
-	RemoveHostReq := manager.RemoveHostRequest{
+	RemoveHostReq := cluster.RemoveHostRequest{
 		HostId: hostId,
 	}
 
-	rsp, err := client.ManagerClient.RemoveHost(c, &RemoveHostReq)
+	rsp, err := client.ClusterClient.RemoveHost(c, &RemoveHostReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -326,21 +374,21 @@ func detectDuplicateElement(hostIds []string) (string, bool) {
 	return duplicateStr, hasDuplicate
 }
 
-// RemoveHosts 批量删除主机接口
-// @Summary 批量删除指定的主机
-// @Description 批量删除指定的主机
+// RemoveHosts godoc
+// @Summary Remove a batch of hosts
+// @Description remove hosts by a list
 // @Tags resource
 // @Accept json
 // @Produce json
-// @Param Token header string true "登录token"
-// @Param hostIds body []string true "待删除的主机ID数组"
+// @Security ApiKeyAuth
+// @Param hostIds body []string true "list of host IDs"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /resources/hosts/ [delete]
 func RemoveHosts(c *gin.Context) {
 
 	var hostIds []string
 	if err := c.ShouldBindJSON(&hostIds); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 
@@ -349,11 +397,11 @@ func RemoveHosts(c *gin.Context) {
 		return
 	}
 
-	RemoveHostsReq := manager.RemoveHostsInBatchRequest{
+	RemoveHostsReq := cluster.RemoveHostsInBatchRequest{
 		HostIds: hostIds,
 	}
 
-	rsp, err := client.ManagerClient.RemoveHostsInBatch(c, &RemoveHostsReq)
+	rsp, err := client.ClusterClient.RemoveHostsInBatch(c, &RemoveHostsReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -365,26 +413,26 @@ func RemoveHosts(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
 }
 
-// DownloadHostTemplateFile 导出主机信息模板文件
-// @Summary 导出主机信息模板文件
-// @Description 将主机信息文件导出到本地
+// DownloadHostTemplateFile godoc
+// @Summary Download the host information template file for importing
+// @Description get host template xlsx file
 // @Tags resource
 // @Accept json
 // @Produce octet-stream
-// @Param Token header string true "登录token"
+// @Security ApiKeyAuth
 // @Success 200 {file} file
 // @Router /resources/hosts-template/ [get]
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
-	templateName := "hostInfo_template.xlsx"
-	filePath := filepath.Join(curDir, templateName)
+	templateName := common.TemplateFileName
+	// The template file should be on tiem/etc/hostInfo_template.xlsx
+	filePath := filepath.Join(curDir, common.TemplateFilePath, templateName)
 
-	fileTmp, err := os.Open(filePath)
-	if err != nil {
+	_, err := os.Stat(filePath)
+	if err != nil && !os.IsExist(err) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.NotFound), err.Error()))
 		return
 	}
-	defer fileTmp.Close()
 
 	c.Header("Content-Type", "application/octet-stream")
 	c.Header("Content-Disposition", "attachment; filename="+templateName)
@@ -394,9 +442,9 @@ func DownloadHostTemplateFile(c *gin.Context) {
 	c.File(filePath)
 }
 
-func copyAllocToReq(src []Allocation, dst *[]*manager.AllocationReq) {
+func copyAllocToReq(src []Allocation, dst *[]*cluster.AllocationReq) {
 	for _, req := range src {
-		*dst = append(*dst, &manager.AllocationReq{
+		*dst = append(*dst, &cluster.AllocationReq{
 			FailureDomain: req.FailureDomain,
 			CpuCores:      req.CpuCores,
 			Memory:        req.Memory,
@@ -405,15 +453,22 @@ func copyAllocToReq(src []Allocation, dst *[]*manager.AllocationReq) {
 	}
 }
 
-func copyAllocFromRsp(src []*manager.AllocHost, dst *[]AllocateRsp) {
+func copyAllocFromRsp(src []*cluster.AllocHost, dst *[]AllocateRsp) {
 	for i, host := range src {
+		plainPasswd, err := crypto.AesDecryptCFB(host.Passwd)
+		if err != nil {
+			// AllocHosts API is for internal testing, so just panic if something wrong
+			panic(err)
+		}
 		*dst = append(*dst, AllocateRsp{
 			HostName: host.HostName,
 			Ip:       host.Ip,
+			UserName: host.UserName,
+			Passwd:   plainPasswd,
 			CpuCores: host.CpuCores,
 			Memory:   host.Memory,
 		})
-		(*dst)[i].Disk.DiskId = host.Disk.DiskId
+		(*dst)[i].Disk.ID = host.Disk.DiskId
 		(*dst)[i].Disk.Name = host.Disk.Name
 		(*dst)[i].Disk.Path = host.Disk.Path
 		(*dst)[i].Disk.Capacity = host.Disk.Capacity
@@ -421,29 +476,29 @@ func copyAllocFromRsp(src []*manager.AllocHost, dst *[]AllocateRsp) {
 	}
 }
 
-// AllocHosts 分配主机接口
-// @Summary 分配主机接口
-// @Description 按指定的配置分配主机资源
+// AllocHosts godoc
+// @Summary Alloc host/disk resources for creating tidb cluster
+// @Description should be used in testing env
 // @Tags resource
 // @Accept json
 // @Produce json
-// @Param Token header string true "登录token"
-// @Param Alloc body AllocHostsReq true "主机分配请求"
+// @Security ApiKeyAuth
+// @Param Alloc body AllocHostsReq true "location and spec of hosts"
 // @Success 200 {object} controller.CommonResult{data=AllocHostsRsp}
 // @Router /resources/allochosts [post]
 func AllocHosts(c *gin.Context) {
 	var allocation AllocHostsReq
 	if err := c.ShouldBindJSON(&allocation); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 
-	allocReq := manager.AllocHostsRequest{}
+	allocReq := cluster.AllocHostsRequest{}
 	copyAllocToReq(allocation.PdReq, &allocReq.PdReq)
 	copyAllocToReq(allocation.TidbReq, &allocReq.TidbReq)
 	copyAllocToReq(allocation.TikvReq, &allocReq.TikvReq)
 	//fmt.Println(allocReq.PdReq, allocReq.TidbReq, allocReq.TikvReq)
-	rsp, err := client.ManagerClient.AllocHosts(c, &allocReq)
+	rsp, err := client.ClusterClient.AllocHosts(c, &allocReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -462,15 +517,15 @@ func AllocHosts(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(res))
 }
 
-// GetFailureDomain 查询指定故障域里的资源情况
-// @Summary 查询指定故障域的资源
-// @Description 查询指定故障域的资源情况
+// GetFailureDomain godoc
+// @Summary Show the resources on failure domain view
+// @Description get resource info in each failure domain
 // @Tags resource
 // @Accept json
 // @Produce json
-// @Param Token header string true "登录token"
-// @Param failureDomainType query int false "指定故障域类型" Enums(1, 2, 3)
-// @Success 200 {object} controller.ResultWithPage{data=[]DomainResource}
+// @Security ApiKeyAuth
+// @Param failureDomainType query int false "failure domain type of dc/zone/rack" Enums(1, 2, 3)
+// @Success 200 {object} controller.CommonResult{data=[]DomainResource}
 // @Router /resources/failuredomains [get]
 func GetFailureDomain(c *gin.Context) {
 	var domain int
@@ -485,11 +540,11 @@ func GetFailureDomain(c *gin.Context) {
 		return
 	}
 
-	GetDoaminReq := manager.GetFailureDomainRequest{
+	GetDoaminReq := cluster.GetFailureDomainRequest{
 		FailureDomainType: int32(domain),
 	}
 
-	rsp, err := client.ManagerClient.GetFailureDomain(c, &GetDoaminReq)
+	rsp, err := client.ClusterClient.GetFailureDomain(c, &GetDoaminReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -498,7 +553,9 @@ func GetFailureDomain(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}
-	var res DomainResourceRsp
+	res := DomainResourceRsp{
+		Resources: make([]DomainResource, 0, len(rsp.FdList)),
+	}
 	for _, v := range rsp.FdList {
 		res.Resources = append(res.Resources, DomainResource{
 			ZoneName: service.GetDomainNameFromCode(v.FailureDomain),
@@ -509,5 +566,5 @@ func GetFailureDomain(c *gin.Context) {
 			Count:    v.Count,
 		})
 	}
-	c.JSON(http.StatusOK, controller.SuccessWithPage(res.Resources, controller.Page{Page: 1, PageSize: 20, Total: len(res.Resources)}))
+	c.JSON(http.StatusOK, controller.Success(res.Resources))
 }

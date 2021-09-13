@@ -2,14 +2,21 @@ syntax = "proto3";
 
 import "common.proto";
 import "softwarespec.proto";
-
+import "database.proto";
+import "mng_auth.proto";
+import "mng_host.proto";
 option go_package = "./;cluster";
 
 service ClusterService {
+    // Cluster manager module
     rpc CreateCluster(ClusterCreateReqDTO) returns (ClusterCreateRespDTO);
     rpc QueryCluster(ClusterQueryReqDTO) returns (ClusterQueryRespDTO);
     rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
     rpc DetailCluster(ClusterDetailReqDTO) returns (ClusterDetailRespDTO);
+
+    rpc ImportData(DataImportRequest) returns (DataImportResponse);
+    rpc ExportData(DataExportRequest) returns (DataExportResponse);
+    rpc DescribeDataTransport(DataTransportQueryRequest) returns (DataTransportQueryResponse);
 
     rpc QueryBackupRecord(QueryBackupRequest) returns (QueryBackupResponse);
     rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
@@ -20,6 +27,26 @@ service ClusterService {
 
     rpc QueryParameters(QueryClusterParametersRequest) returns (QueryClusterParametersResponse);
     rpc SaveParameters(SaveClusterParametersRequest) returns (SaveClusterParametersResponse);
+
+    rpc DescribeDashboard(DescribeDashboardRequest) returns (DescribeDashboardResponse);
+
+    // Auth manager module
+    rpc Login(LoginRequest) returns (LoginResponse);
+    rpc Logout(LogoutRequest) returns (LogoutResponse);
+    rpc VerifyIdentity(VerifyIdentityRequest) returns (VerifyIdentityResponse);
+
+    // host manager module
+    rpc ImportHost(ImportHostRequest) returns (ImportHostResponse);
+    rpc ImportHostsInBatch(ImportHostsInBatchRequest) returns (ImportHostsInBatchResponse);
+    rpc RemoveHost(RemoveHostRequest) returns (RemoveHostResponse);
+    rpc RemoveHostsInBatch(RemoveHostsInBatchRequest) returns (RemoveHostsInBatchResponse);
+    rpc ListHost(ListHostsRequest) returns (ListHostsResponse);
+    rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
+    rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);
+    rpc GetFailureDomain(GetFailureDomainRequest) returns (GetFailureDomainResponse);
+
+    // task manager
+    rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);
 }
 
 message ClusterCreateReqDTO {
@@ -137,6 +164,11 @@ message DisplayStatusDTO {
     int64 deleteTime = 6;
 }
 
+message RecoverInfoDTO {
+    string sourceClusterId = 1;
+    int64 backupRecordId = 2;
+}
+
 message ClusterBaseInfoDTO {
     string clusterName = 1;
     string dbPassword = 2;
@@ -144,12 +176,7 @@ message ClusterBaseInfoDTO {
     ClusterVersionDTO clusterVersion = 4;
     repeated string tags = 5;
     bool tls = 6;
-}
-
-message OperatorDTO {
-    string id = 1;
-    string name = 2;
-    string tenantId = 3;
+    RecoverInfoDTO recoverInfo = 7;
 }
 
 message ClusterNodeDemandDTO {
@@ -175,7 +202,7 @@ message ClusterInstanceDTO {
     repeated string intranetConnectAddresses = 1;
     repeated string extranetConnectAddresses = 2;
     repeated string whitelist = 3;
-    int32 port = 4;
+    repeated int64 portList = 4;
     UsageDTO diskUsage = 5;
     UsageDTO cpuUsage = 6;
     UsageDTO memoryUsage = 7;
@@ -188,19 +215,21 @@ message BackupRecordDTO {
     string clusterId = 2;
     int64 startTime = 3;
     int64 endTime = 4;
-    int32 range = 5;
-    int32 way = 6;
-    OperatorDTO operator = 7;
-    float size = 8;
-    DisplayStatusDTO displayStatus = 9;
-    string filePath = 10;
+    string range = 5;
+    string backupType = 6;
+    string mode = 7;
+    OperatorDTO operator = 8;
+    uint64 size = 9;
+    DisplayStatusDTO displayStatus = 10;
+    string filePath = 11;
 }
 
 message QueryBackupRequest {
-    string clusterId = 1;
-    int64 startTime = 2;
-    int64 endTime = 3;
-    PageDTO page = 4;
+    OperatorDTO operator = 1;
+    string clusterId = 2;
+    int64 startTime = 3;
+    int64 endTime = 4;
+    PageDTO page = 5;
 }
 
 message QueryBackupResponse {
@@ -211,7 +240,10 @@ message QueryBackupResponse {
 
 message CreateBackupRequest {
     string clusterId = 1;
-    OperatorDTO operator = 2;
+    string backupType = 2;
+    string backupRange = 3;
+    string filePath = 4;
+    OperatorDTO operator = 5;
 }
 
 message CreateBackupResponse {
@@ -249,11 +281,18 @@ message DeleteBackupResponse {
     ResponseStatusDTO status = 1;
 }
 
-message SaveBackupStrategyRequest {
+message BackupStrategy {
     string clusterId = 1;
-    string cron = 2;
-    OperatorDTO operator = 3;
+    string backupDate = 2;
+    string filePath = 3;
+    string backupRange = 4;
+    string backupType = 5;
+    string period = 6;
+}
 
+message SaveBackupStrategyRequest {
+    OperatorDTO operator = 1;
+    BackupStrategy strategy = 2;
 }
 
 message SaveBackupStrategyResponse {
@@ -268,7 +307,7 @@ message GetBackupStrategyRequest {
 
 message GetBackupStrategyResponse {
     ResponseStatusDTO status = 1;
-    string cron = 2;
+     BackupStrategy strategy = 2;
 }
 
 message QueryClusterParametersRequest {
@@ -291,5 +330,43 @@ message SaveClusterParametersRequest {
 message SaveClusterParametersResponse {
     ResponseStatusDTO status = 1;
     DisplayStatusDTO displayInfo = 2;
+}
+
+message DescribeDashboardRequest {
+    string clusterId = 1;
+    OperatorDTO operator = 2;
+}
+
+message DescribeDashboardResponse {
+    ResponseStatusDTO status = 1;
+    string clusterId = 2;
+    string url = 3;
+    string token = 4;
+}
+
+message FlowDTO {
+    int64 id = 1;
+    string flowName = 2;
+    string statusAlias = 3;
+    string bizId = 4;
+    int32 status = 5;
+    string statusName = 6;
+    OperatorDTO operator = 7;
+    int64 createTime = 8;
+    int64 updateTime = 9;
+    int64 deleteTime = 10;
+}
+
+message ListFlowsRequest {
+    string bizId = 1;
+    string keyword = 2;
+    int64 status = 3;
+    PageDTO page = 4;
+}
+
+message ListFlowsResponse {
+    ResponseStatusDTO status = 1;
+    repeated FlowDTO flows = 2;
+    PageDTO page = 3;
 }
 

@@ -7,21 +7,23 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/client"
+	"google.golang.org/grpc/codes"
+
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/tiem/library/knowledge"
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-api/controller/clusterapi"
-	cluster "github.com/pingcap/tiem/micro-cluster/client"
-	proto "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/controller/clusterapi"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
-// QueryParams 查询集群参数列表
-// @Summary 查询集群参数列表
-// @Description 查询集群参数列表
+// QueryParams query params of a cluster
+// @Summary query params of a cluster
+// @Description query params of a cluster
 // @Tags cluster params
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Param queryReq query ParamQueryReq false "page" default(1)
 // @Param clusterId path string true "clusterId"
 // @Success 200 {object} controller.ResultWithPage{data=[]ParamItem}
@@ -37,7 +39,7 @@ func QueryParams(c *gin.Context) {
 	}
 	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
-	resp, err := cluster.ClusterClient.QueryParameters(context.TODO(), &proto.QueryClusterParametersRequest{
+	resp, err := client.ClusterClient.QueryParameters(context.TODO(), &cluster.QueryClusterParametersRequest{
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
@@ -77,14 +79,14 @@ func QueryParams(c *gin.Context) {
 	}
 }
 
-// SubmitParams 提交参数
-// @Summary 提交参数
-// @Description 提交参数
+// SubmitParams submit params
+// @Summary submit params
+// @Description submit params
 // @Tags cluster params
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
-// @Param updateReq body ParamUpdateReq true "要提交的参数信息"
+// @Security ApiKeyAuth
+// @Param updateReq body ParamUpdateReq true "update params request"
 // @Param clusterId path string true "clusterId"
 // @Success 200 {object} controller.CommonResult{data=ParamUpdateRsp}
 // @Failure 401 {object} controller.CommonResult
@@ -107,7 +109,7 @@ func SubmitParams(c *gin.Context) {
 
 	jsonContent := string(jsonByte)
 
-	resp, err := cluster.ClusterClient.SaveParameters(context.TODO(), &proto.SaveClusterParametersRequest{
+	resp, err := client.ClusterClient.SaveParameters(context.TODO(), &cluster.SaveClusterParametersRequest{
 		ClusterId:      clusterId,
 		ParametersJson: jsonContent,
 		Operator:       operator.ConvertToDTO(),
@@ -128,8 +130,8 @@ func SubmitParams(c *gin.Context) {
 // @Tags cluster backup
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
-// @Param backupReq body BackupReq true "要备份的集群信息"
+// @Security ApiKeyAuth
+// @Param backupReq body BackupReq true "backup request"
 // @Success 200 {object} controller.CommonResult{data=BackupRecord}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -139,33 +141,44 @@ func Backup(c *gin.Context) {
 
 	var req BackupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 
 	operator := controller.GetOperator(c)
 
-	resp, err := cluster.ClusterClient.CreateBackup(context.TODO(), &proto.CreateBackupRequest{
-		ClusterId: req.ClusterId,
-		Operator:  operator.ConvertToDTO(),
+	resp, err := client.ClusterClient.CreateBackup(context.TODO(), &cluster.CreateBackupRequest{
+		ClusterId:   req.ClusterId,
+		BackupType:  req.BackupType,
+		BackupRange: req.BackupRange,
+		FilePath:    req.FilePath,
+		Operator:    operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(BackupRecord{
-			ID:     resp.BackupRecord.Id,
-			Status: *clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
+			ID:          	resp.GetBackupRecord().GetId(),
+			ClusterId:   	resp.GetBackupRecord().GetClusterId(),
+			StartTime:   	time.Unix(resp.GetBackupRecord().GetStartTime(), 0),
+			EndTime:     	time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
+			BackupType:  	resp.GetBackupRecord().GetRange(),
+			BackupMethod:  	resp.GetBackupRecord().GetBackupType(),
+			BackupMode:  	resp.GetBackupRecord().GetMode(),
+			FilePath:    	resp.GetBackupRecord().GetFilePath(),
+			Size:        	resp.GetBackupRecord().GetSize(),
+			Status:      	*clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
 		}))
 	}
 }
 
-// QueryBackupStrategy
-// @Summary 查询备份策略
-// @Description 查询备份策略
+// QueryBackupStrategy show the backup strategy of a cluster
+// @Summary show the backup strategy of a cluster
+// @Description show the backup strategy of a cluster
 // @Tags cluster backup
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Param clusterId path string true "clusterId"
 // @Success 200 {object} controller.CommonResult{data=[]BackupStrategy}
 // @Failure 401 {object} controller.CommonResult
@@ -173,31 +186,34 @@ func Backup(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/strategy/ [get]
 func QueryBackupStrategy(c *gin.Context) {
-	clusterId := c.Param("clusterId")
+	clusterId := c.Query("clusterId")
 	operator := controller.GetOperator(c)
 
-	resp, err := cluster.ClusterClient.GetBackupStrategy(context.TODO(), &proto.GetBackupStrategyRequest{
+	resp, err := client.ClusterClient.GetBackupStrategy(context.TODO(), &cluster.GetBackupStrategyRequest{
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		c.JSON(http.StatusOK, controller.Success([]BackupStrategy{
-			{
-				CronString: resp.Cron,
-			},
+		c.JSON(http.StatusOK, controller.Success(BackupStrategy{
+			ClusterId:   resp.GetStrategy().GetClusterId(),
+			FilePath:    resp.GetStrategy().GetFilePath(),
+			BackupType:  resp.GetStrategy().GetBackupType(),
+			BackupRange: resp.GetStrategy().GetBackupRange(),
+			BackupDate:  resp.GetStrategy().GetBackupDate(),
+			Period:      resp.GetStrategy().GetPeriod(),
 		}))
 	}
 }
 
-// SaveBackupStrategy
-// @Summary 保存备份策略
-// @Description 保存备份策略
+// SaveBackupStrategy save the backup strategy of a cluster
+// @Summary save the backup strategy of a cluster
+// @Description save the backup strategy of a cluster
 // @Tags cluster backup
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Param clusterId path string true "clusterId"
 // @Param updateReq body BackupStrategyUpdateReq true "备份策略信息"
 // @Success 200 {object} controller.CommonResult{data=BackupStrategy}
@@ -208,70 +224,73 @@ func QueryBackupStrategy(c *gin.Context) {
 func SaveBackupStrategy(c *gin.Context) {
 	var req BackupStrategyUpdateReq
 	operator := controller.GetOperator(c)
-	clusterId := c.Param("clusterId")
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
-	_, err := cluster.ClusterClient.SaveBackupStrategy(context.TODO(), &proto.SaveBackupStrategyRequest{
-		ClusterId: clusterId,
-		Operator:  operator.ConvertToDTO(),
-		Cron:      req.CronString,
+	_, err := client.ClusterClient.SaveBackupStrategy(context.TODO(), &cluster.SaveBackupStrategyRequest{
+		Operator: operator.ConvertToDTO(),
+		Strategy: &cluster.BackupStrategy{
+			ClusterId:   req.Strategy.ClusterId,
+			BackupType:  req.Strategy.BackupType,
+			BackupRange: req.Strategy.BackupRange,
+			BackupDate:  req.Strategy.BackupDate,
+			Period:      req.Strategy.Period,
+			FilePath:    req.Strategy.FilePath,
+		},
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		c.JSON(http.StatusOK, controller.Success(BackupStrategy{
-			CronString: req.CronString,
-		}))
+		c.JSON(http.StatusOK, controller.Success(nil))
 	}
 }
 
 // QueryBackup
-// @Summary 查询备份记录
-// @Description 查询备份记录
+// @Summary query backup records of a cluster
+// @Description query backup records of a cluster
 // @Tags cluster backup
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
-// @Param clusterId query string true "clusterId"
-// @Param request body BackupRecordQueryReq false "page" default(1)
+// @Security ApiKeyAuth
+// @Param backupRecordQuery query BackupRecordQueryReq true "backup records query condition"
 // @Success 200 {object} controller.ResultWithPage{data=[]BackupRecord}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups [get]
 func QueryBackup(c *gin.Context) {
-	clusterId := c.Query("clusterId")
-
 	var queryReq BackupRecordQueryReq
-	if err := c.ShouldBindJSON(&queryReq); err != nil {
-		_ = c.Error(err)
+	if err := c.ShouldBindQuery(&queryReq); err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
-	//operator := controller.GetOperator(c)
-
-	reqDTO := &proto.QueryBackupRequest{
-		ClusterId: clusterId,
-		Page:      queryReq.PageRequest.ConvertToDTO(),
+	operator := controller.GetOperator(c)
+	reqDTO := &cluster.QueryBackupRequest{
+		Operator:  	operator.ConvertToDTO(),
+		ClusterId: 	queryReq.ClusterId,
+		Page:      	queryReq.PageRequest.ConvertToDTO(),
+		StartTime: 	queryReq.StartTime,
+		EndTime: 	queryReq.EndTime,
 	}
 
-	resp, err := cluster.ClusterClient.QueryBackupRecord(context.TODO(), reqDTO, controller.DefaultTimeout)
+	resp, err := client.ClusterClient.QueryBackupRecord(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		records := make([]BackupRecord, len(resp.BackupRecords), len(resp.BackupRecords))
+		records := make([]BackupRecord, len(resp.BackupRecords))
 
 		for i, v := range resp.BackupRecords {
 			records[i] = BackupRecord{
-				ID:        v.Id,
-				ClusterId: v.ClusterId,
-				StartTime: time.Unix(v.StartTime, 0),
-				EndTime:   time.Unix(v.EndTime, 0),
-				Range:     int(v.Range),
-				Way:       int(v.Way),
+				ID:          	v.Id,
+				ClusterId:   	v.ClusterId,
+				StartTime:   	time.Unix(v.StartTime, 0),
+				EndTime:     	time.Unix(v.EndTime, 0),
+				BackupType:  	v.Range,
+				BackupMethod:  	v.BackupType,
+				BackupMode:  	v.Mode,
 				Operator: controller.Operator{
 					ManualOperator: true,
 					OperatorId:     v.Operator.Id,
@@ -288,14 +307,14 @@ func QueryBackup(c *gin.Context) {
 }
 
 // RecoverBackup
-// @Summary 恢复备份
-// @Description 恢复备份
+// @Summary recover backup record of a cluster
+// @Description recover backup record of a cluster
 // @Tags cluster backup
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Param backupId path string true "backupId"
-// @Param request body BackupRecoverReq true "恢复备份请求"
+// @Param request body BackupRecoverReq true "backup recover request"
 // @Success 200 {object} controller.CommonResult{data=controller.StatusInfo}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -305,7 +324,7 @@ func RecoverBackup(c *gin.Context) {
 	backupIdStr := c.Param("backupId")
 	backupId, err := strconv.Atoi(backupIdStr)
 	if err != nil {
-		_ = c.Error(err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	var req BackupRecoverReq
@@ -317,7 +336,7 @@ func RecoverBackup(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	resp, err := cluster.ClusterClient.RecoverBackupRecord(context.TODO(), &proto.RecoverBackupRequest{
+	resp, err := client.ClusterClient.RecoverBackupRecord(context.TODO(), &cluster.RecoverBackupRequest{
 		ClusterId:      req.ClusterId,
 		Operator:       operator.ConvertToDTO(),
 		BackupRecordId: int64(backupId),
@@ -330,25 +349,37 @@ func RecoverBackup(c *gin.Context) {
 }
 
 // DeleteBackup
-// @Summary 删除备份记录
-// @Description 删除备份记录
+// @Summary delete backup record
+// @Description delete backup record
 // @Tags cluster backup
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
-// @Param backupId path int true "删除备份ID"
+// @Security ApiKeyAuth
+// @Param backupId path int true "backup record id"
+// @Param backupDeleteReq body BackupDeleteReq true "backup delete request"
 // @Success 200 {object} controller.CommonResult{data=int}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups/{backupId} [delete]
 func DeleteBackup(c *gin.Context) {
-	backupId, _ := strconv.Atoi(c.Param("backupId"))
+	backupId, err := strconv.Atoi(c.Param("backupId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		return
+	}
+
+	var req BackupDeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		return
+	}
 	operator := controller.GetOperator(c)
 
-	_, err := cluster.ClusterClient.DeleteBackupRecord(context.TODO(), &proto.DeleteBackupRequest{
+	_, err = client.ClusterClient.DeleteBackupRecord(context.TODO(), &cluster.DeleteBackupRequest{
 		BackupRecordId: int64(backupId),
 		Operator:       operator.ConvertToDTO(),
+		ClusterId:      req.ClusterId,
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))

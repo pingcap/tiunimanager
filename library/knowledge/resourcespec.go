@@ -3,6 +3,9 @@ package knowledge
 import (
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"strconv"
+	"strings"
 )
 
 type ResourceSpec struct {
@@ -34,13 +37,19 @@ type ResourceSpecItem struct {
 }
 
 func ParseCpu(specCode string) int {
-	// todo
-	return 4
+	cpu, err := strconv.Atoi(strings.Split(specCode, "C")[0])
+	if err != nil {
+		framework.Log().Errorf("ParseCpu error, specCode = %s", specCode)
+	}
+	return cpu
 }
 
 func ParseMemory(specCode string) int {
-	// todo
-	return 8
+	memory, err := strconv.Atoi(strings.Split(strings.Split(specCode, "C")[1], "G")[0])
+	if err != nil {
+		framework.Log().Errorf("ParseMemory error, specCode = %s", specCode)
+	}
+	return memory
 }
 
 func GenSpecCode(cpuCores int32, mem int32) string {

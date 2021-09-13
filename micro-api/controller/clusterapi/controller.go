@@ -3,23 +3,26 @@ package clusterapi
 import (
 	"context"
 	"net/http"
+	"time"
+
+	cli "github.com/asim/go-micro/v3/client"
+	"github.com/pingcap-inc/tiem/library/client"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"github.com/pingcap/tiem/library/knowledge"
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-cluster/client"
-	cluster "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
-// Create 创建集群接口
-// @Summary 创建集群接口
-// @Description 创建集群接口
+// Create create a cluster
+// @Summary create a cluster
+// @Description create a cluster
 // @Tags cluster
 // @Accept application/json
 // @Produce application/json
-// @Param Token header string true "token"
-// @Param createReq body CreateReq true "创建参数"
+// @Security ApiKeyAuth
+// @Param createReq body CreateReq true "create request"
 // @Success 200 {object} controller.CommonResult{data=CreateClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -43,12 +46,19 @@ func Create(c *gin.Context) {
 		Demands:  demand,
 	}
 
-	respDTO, err := client.ClusterClient.CreateCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.CreateCluster(context.TODO(), reqDTO, func(o *cli.CallOptions) {
+		o.RequestTimeout = time.Minute * 5
+		o.DialTimeout = time.Minute * 5
+	})
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		status := respDTO.GetRespStatus()
+		if status.Code != 0 {
+			c.JSON(http.StatusInternalServerError, controller.Fail(500, status.Message))
+			return
+		}
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, CreateClusterRsp{
 			ClusterId:       respDTO.GetClusterId(),
@@ -60,14 +70,14 @@ func Create(c *gin.Context) {
 	}
 }
 
-// Query 查询集群列表
-// @Summary 查询集群列表
-// @Description 查询集群列表
+// Query query clusters
+// @Summary query clusters
+// @Description query clusters
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
-// @Param queryReq query QueryReq false "page" default(1)
+// @Security ApiKeyAuth
+// @Param queryReq query QueryReq false "query request"
 // @Success 200 {object} controller.ResultWithPage{data=[]ClusterDisplayInfo}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -113,14 +123,14 @@ func Query(c *gin.Context) {
 	}
 }
 
-// Delete 删除集群
-// @Summary 删除集群
-// @Description 删除集群
+// Delete delete cluster
+// @Summary delete cluster
+// @Description delete cluster
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
-// @Param clusterId path string true "待删除的集群ID"
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
 // @Success 200 {object} controller.CommonResult{data=DeleteClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -151,14 +161,14 @@ func Delete(c *gin.Context) {
 	}
 }
 
-// Detail 查看集群详情
-// @Summary 查看集群详情
-// @Description 查看集群详情
+// Detail show details of a cluster
+// @Summary show details of a cluster
+// @Description show details of a cluster
 // @Tags cluster
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
-// @Param clusterId path string true "集群ID"
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
 // @Success 200 {object} controller.CommonResult{data=DetailClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -183,9 +193,11 @@ func Detail(c *gin.Context) {
 		maintenance := respDTO.GetMaintenanceInfo()
 		components := respDTO.GetComponents()
 
-		componentInstances := make([]ComponentInstance, len(components), len(components))
-		for i, v := range components {
-			componentInstances[i] = *ParseComponentInfoFromDTO(v)
+		componentInstances := make([]ComponentInstance, 0, 0)
+		for _, v := range components {
+			if len(v.Nodes) > 0 {
+				componentInstances = append(componentInstances, *ParseComponentInfoFromDTO(v))
+			}
 		}
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, DetailClusterRsp{
@@ -198,18 +210,53 @@ func Detail(c *gin.Context) {
 	}
 }
 
-// ClusterKnowledge 查看集群基本知识
-// @Summary 查看集群基本知识
-// @Description 查看集群基本知识
-// @Tags cluster
+// ClusterKnowledge show cluster knowledge
+// @Summary show cluster knowledge
+// @Description show cluster knowledge
+// @Tags knowledge
 // @Accept json
 // @Produce json
-// @Param Token header string true "token"
+// @Security ApiKeyAuth
 // @Success 200 {object} controller.CommonResult{data=[]knowledge.ClusterTypeSpec}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /cluster/knowledge [get]
+// @Router /knowledges [get]
 func ClusterKnowledge(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(knowledge.SpecKnowledge.Specs))
+}
+
+// DescribeDashboard dashboard
+// @Summary dashboard
+// @Description dashboard
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
+// @Success 200 {object} controller.CommonResult{data=DescribeDashboardRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/dashboard [get]
+func DescribeDashboard(c *gin.Context) {
+	operator := controller.GetOperator(c)
+	reqDTO := &cluster.DescribeDashboardRequest{
+		Operator:  operator.ConvertToDTO(),
+		ClusterId: c.Param("clusterId"),
+	}
+	respDTO, err := client.ClusterClient.DescribeDashboard(context.TODO(), reqDTO, controller.DefaultTimeout)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetStatus()
+		result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
+			ClusterId: respDTO.GetClusterId(),
+			Url:       respDTO.GetUrl(),
+			Token:     respDTO.GetToken(),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
 }

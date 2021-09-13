@@ -2,8 +2,11 @@
 .DS_Store
 .idea/
 data.etcd1/
-micro-metadb/tiem.sqlite.db
-logs/
-/micro-cluster/tiupmgr/tiupmgr
-/tiem.sqlite.db
-/micro-cluster/brmgr/brmgr
+*.db
+/bin
+/micro-metadb/models/tmp
+/micro-metadb/service/tmp/
+/micro-metadb/models/tmp/
+*.log
+/micro-metadb/models/testdata/
+etcd/

@@ -366,7 +366,7 @@ data import && export dir
 func getDataTransportDir(clusterId string, transportType TransportType, filePath string, storageType string) string {
 	if S3StorageType == storageType {
 		if filePath != "" {
-			return fmt.Sprintf("%s/%s/%s", filePath, clusterId, transportType)
+			return filePath
 		} else {
 			return fmt.Sprintf("%s/%s/%s/%s", defaultTransportS3DirPrefix, clusterId, transportType, defaultTransportS3AkSk)
 		}
@@ -481,9 +481,11 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 		tidbServerPort = DefaultTidbPort
 	}
 
-	if err := cleanDataTransportDir(info.FilePath); err != nil {
-		getLogger().Errorf("clean export directory failed, %s", err.Error())
-		return false
+	if NfsStorageType == info.StorageType {
+		if err := cleanDataTransportDir(info.FilePath); err != nil {
+			getLogger().Errorf("clean export directory failed, %s", err.Error())
+			return false
+		}
 	}
 
 	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "user*"

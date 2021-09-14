@@ -29,10 +29,8 @@ import (
 
 // ClusterServerSpec represents the Master topology specification in topology.yaml
 type ClusterServerSpec struct {
-	Host    string `yaml:"host"`
-	SSHPort int    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
-	// Use Name to get the name with a default value if it's empty.
-	Name            string                 `yaml:"name,omitempty"`
+	Host            string                 `yaml:"host"`
+	SSHPort         int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
 	Port            int                    `yaml:"port,omitempty" default:"4110"`
 	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4121"`
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
@@ -85,7 +83,7 @@ func (c *ClusterServerComponent) Name() string {
 
 // Role implements Component interface.
 func (c *ClusterServerComponent) Role() string {
-	return RoleTiEMAPI
+	return RoleTiEMCluster
 }
 
 // Instances implements Component interface.
@@ -94,7 +92,6 @@ func (c *ClusterServerComponent) Instances() []Instance {
 	for _, s := range c.Topology.ClusterServers {
 		s := s
 		ins = append(ins, &ClusterServerInstance{
-			Name: s.Name,
 			BaseInstance: spec.BaseInstance{
 				InstanceSpec: s,
 				Name:         c.Name(),
@@ -122,7 +119,6 @@ func (c *ClusterServerComponent) Instances() []Instance {
 
 // ClusterServerInstance represent the TiEM instance
 type ClusterServerInstance struct {
-	Name string
 	spec.BaseInstance
 	topo *Specification
 }
@@ -149,7 +145,9 @@ func (i *ClusterServerInstance) InitConfig(
 		spec.LogLevel,
 	).
 		WithPort(spec.Port).
-		WithMetricsPort(spec.MetricsPort)
+		WithMetricsPort(spec.MetricsPort).
+		WithRegistry(i.topo.RegistryEndpoints()).
+		WithTracer(i.topo.TracerEndpoints())
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_cluster_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {

@@ -29,10 +29,8 @@ import (
 
 // MetaDBServerSpec represents the Master topology specification in topology.yaml
 type MetaDBServerSpec struct {
-	Host    string `yaml:"host"`
-	SSHPort int    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
-	// Use Name to get the name with a default value if it's empty.
-	Name            string                 `yaml:"name,omitempty"`
+	Host            string                 `yaml:"host"`
+	SSHPort         int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
 	Port            int                    `yaml:"port,omitempty" default:"4100"`
 	ClientPort      int                    `yaml:"registry_client_port,omitempty" default:"4101"`
 	PeerPort        int                    `yaml:"registry_peer_port,omitempty" default:"4102"`
@@ -96,7 +94,6 @@ func (c *MetaDBComponent) Instances() []Instance {
 	for _, s := range c.Topology.MetaDBServers {
 		s := s
 		ins = append(ins, &MetaDBInstance{
-			Name: s.Name,
 			BaseInstance: spec.BaseInstance{
 				InstanceSpec: s,
 				Name:         c.Name(),
@@ -125,7 +122,6 @@ func (c *MetaDBComponent) Instances() []Instance {
 
 // MetaDBInstance represent the TiEM instance
 type MetaDBInstance struct {
-	Name string
 	spec.BaseInstance
 	topo *Specification
 }
@@ -154,7 +150,9 @@ func (i *MetaDBInstance) InitConfig(
 		WithPort(spec.Port).
 		WithPeerPort(spec.PeerPort).
 		WithClientPort(spec.ClientPort).
-		WithMetricsPort(spec.MetricsPort)
+		WithMetricsPort(spec.MetricsPort).
+		WithRegistry(i.topo.RegistryEndpoints()).
+		WithTracer(i.topo.TracerEndpoints())
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_metadb_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {

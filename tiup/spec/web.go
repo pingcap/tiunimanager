@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/pingcap-inc/tiem/tiup/templates/config"
 	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -29,19 +30,15 @@ import (
 
 // WebServerSpec represents the Master topology specification in topology.yaml
 type WebServerSpec struct {
-	Host    string `yaml:"host"`
-	SSHPort int    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
-	// Use Name to get the name with a default value if it's empty.
-	Name            string                 `yaml:"name,omitempty"`
-	Port            int                    `yaml:"port,omitempty" default:"4120"`
-	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4121"`
-	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
-	DataDir         string                 `yaml:"data_dir,omitempty"`
-	LogDir          string                 `yaml:"log_dir,omitempty"`
-	Config          map[string]interface{} `yaml:"config,omitempty" validate:"config:ignore"`
-	Arch            string                 `yaml:"arch,omitempty"`
-	OS              string                 `yaml:"os,omitempty"`
-	ResourceControl *meta.ResourceControl  `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
+	Host            string                `yaml:"host"`
+	SSHPort         int                   `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
+	ServerName      string                `yaml:"server_name,omitempty" default:"localhost" validate:"server_name:editable"`
+	Port            int                   `yaml:"port,omitempty" default:"4120"`
+	DeployDir       string                `yaml:"deploy_dir,omitempty"`
+	LogDir          string                `yaml:"log_dir,omitempty"`
+	Arch            string                `yaml:"arch,omitempty"`
+	OS              string                `yaml:"os,omitempty"`
+	ResourceControl *meta.ResourceControl `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
 }
 
 // Status queries current status of the instance
@@ -84,7 +81,7 @@ func (c *WebServerComponent) Name() string {
 
 // Role implements Component interface.
 func (c *WebServerComponent) Role() string {
-	return RoleTiEMAPI
+	return RoleTiEMWeb
 }
 
 // Instances implements Component interface.
@@ -93,7 +90,7 @@ func (c *WebServerComponent) Instances() []Instance {
 	for _, s := range c.Topology.WebServers {
 		s := s
 		ins = append(ins, &WebServerInstance{
-			Name: s.Name,
+			ServerName: s.ServerName,
 			BaseInstance: spec.BaseInstance{
 				InstanceSpec: s,
 				Name:         c.Name(),
@@ -106,7 +103,7 @@ func (c *WebServerComponent) Instances() []Instance {
 				},
 				Dirs: []string{
 					s.DeployDir,
-					s.DataDir,
+					s.LogDir,
 				},
 				StatusFn: s.Status,
 				UptimeFn: func(tlsCfg *tls.Config) time.Duration {
@@ -121,7 +118,7 @@ func (c *WebServerComponent) Instances() []Instance {
 
 // WebServerInstance represent the TiEM instance
 type WebServerInstance struct {
-	Name string
+	ServerName string
 	spec.BaseInstance
 	topo *Specification
 }
@@ -139,15 +136,11 @@ func (i *WebServerInstance) InitConfig(
 		return err
 	}
 
-	spec := i.InstanceSpec.(*WebServerSpec)
+	// render startup script
 	scpt := scripts.NewTiEMWebServerScript(
 		i.GetHost(),
 		paths.Deploy,
-		paths.Data[0],
-		paths.Log,
-	).
-		WithPort(spec.Port).
-		WithMetricsPort(spec.MetricsPort)
+	)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_web_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
@@ -161,8 +154,31 @@ func (i *WebServerInstance) InitConfig(
 		return err
 	}
 
-	// no config file needed
-	return nil
+	// render config file
+	cfg := config.NewNginxConfig(
+		i.GetHost(),
+		paths.Deploy,
+		paths.Log,
+	).WithPort(i.Port).
+		WithServerName(i.ServerName).
+		WithRegistryEndpoints(i.topo.RegistryEndpoints())
+
+	fp = filepath.Join(paths.Cache, fmt.Sprintf("nginx_%s_%d.conf", i.GetHost(), i.GetPort()))
+	if err := cfg.ConfigToFile(fp); err != nil {
+		return err
+	}
+	dst = filepath.Join(paths.Deploy, "conf", "nginx.conf")
+	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
+		return err
+	}
+
+	srvList := config.NewNginxServerList(i.topo.APIServerEndpoints())
+	fp = filepath.Join(paths.Cache, fmt.Sprintf("nginx_server_config_%s_%d.conf", i.GetHost(), i.GetPort()))
+	if err := srvList.ConfigToFile(fp); err != nil {
+		return err
+	}
+	dst = filepath.Join(paths.Deploy, "conf", "server_config.conf")
+	return e.Transfer(ctx, fp, dst, false, 0)
 }
 
 // ScaleConfig deploy temporary config on scaling
@@ -179,15 +195,11 @@ func (i *WebServerInstance) ScaleConfig(
 		return err
 	}
 
-	spec := i.InstanceSpec.(*WebServerSpec)
+	//spec := i.InstanceSpec.(*WebServerSpec)
 	scpt := scripts.NewTiEMWebServerScript(
 		i.GetHost(),
 		paths.Deploy,
-		paths.Data[0],
-		paths.Log,
-	).
-		WithPort(spec.Port).
-		WithMetricsPort(spec.MetricsPort)
+	)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_web_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)
@@ -203,5 +215,29 @@ func (i *WebServerInstance) ScaleConfig(
 		return err
 	}
 
-	return nil
+	// render config file
+	cfg := config.NewNginxConfig(
+		i.GetHost(),
+		paths.Deploy,
+		paths.Log,
+	).WithPort(i.Port).
+		WithServerName(i.ServerName).
+		WithRegistryEndpoints(i.topo.RegistryEndpoints())
+
+	fp = filepath.Join(paths.Cache, fmt.Sprintf("nginx_%s_%d.conf", i.GetHost(), i.GetPort()))
+	if err := cfg.ConfigToFile(fp); err != nil {
+		return err
+	}
+	dst = filepath.Join(paths.Deploy, "conf", "nginx.conf")
+	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
+		return err
+	}
+
+	srvList := config.NewNginxServerList(i.topo.APIServerEndpoints())
+	fp = filepath.Join(paths.Cache, fmt.Sprintf("nginx_server_config_%s_%d.conf", i.GetHost(), i.GetPort()))
+	if err := srvList.ConfigToFile(fp); err != nil {
+		return err
+	}
+	dst = filepath.Join(paths.Deploy, "conf", "server_config.conf")
+	return e.Transfer(ctx, fp, dst, false, 0)
 }

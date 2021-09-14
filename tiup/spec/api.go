@@ -29,10 +29,8 @@ import (
 
 // APIServerSpec represents the Master topology specification in topology.yaml
 type APIServerSpec struct {
-	Host    string `yaml:"host"`
-	SSHPort int    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
-	// Use Name to get the name with a default value if it's empty.
-	Name            string                 `yaml:"name,omitempty"`
+	Host            string                 `yaml:"host"`
+	SSHPort         int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
 	Port            int                    `yaml:"port,omitempty" default:"4116"`
 	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4121"`
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
@@ -94,7 +92,6 @@ func (c *APIServerComponent) Instances() []Instance {
 	for _, s := range c.Topology.APIServers {
 		s := s
 		ins = append(ins, &APIServerInstance{
-			Name: s.Name,
 			BaseInstance: spec.BaseInstance{
 				InstanceSpec: s,
 				Name:         c.Name(),
@@ -122,7 +119,6 @@ func (c *APIServerComponent) Instances() []Instance {
 
 // APIServerInstance represent the TiEM instance
 type APIServerInstance struct {
-	Name string
 	spec.BaseInstance
 	topo *Specification
 }
@@ -149,7 +145,10 @@ func (i *APIServerInstance) InitConfig(
 		spec.LogLevel,
 	).
 		WithPort(spec.Port).
-		WithMetricsPort(spec.MetricsPort)
+		WithMetricsPort(spec.MetricsPort).
+		WithRegistry(i.topo.RegistryEndpoints()).
+		WithTracer(i.topo.TracerEndpoints()).
+		WithElasticSearch(i.topo.ElasticSearchAddress())
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_api_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {

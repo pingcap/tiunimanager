@@ -83,7 +83,7 @@ func (c *ElasticSearchComponent) Name() string {
 
 // Role implements Component interface.
 func (c *ElasticSearchComponent) Role() string {
-	return RoleTiEMAPI
+	return RoleLogServer
 }
 
 // Instances implements Component interface.

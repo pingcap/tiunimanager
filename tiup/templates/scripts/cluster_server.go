@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"os"
 	"path"
+	"strings"
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/tiup/templates/embed"
@@ -61,14 +62,14 @@ func (c *TiEMClusterServerScript) WithMetricsPort(port int) *TiEMClusterServerSc
 }
 
 // WithRegistry set RegistryEndpoints
-func (c *TiEMClusterServerScript) WithRegistry(addr string) *TiEMClusterServerScript {
-	c.RegistryEndpoints = addr
+func (c *TiEMClusterServerScript) WithRegistry(addr []string) *TiEMClusterServerScript {
+	c.RegistryEndpoints = strings.Join(addr, ",")
 	return c
 }
 
 // WithTracer set TracerAddress
-func (c *TiEMClusterServerScript) WithTracer(addr string) *TiEMClusterServerScript {
-	c.TracerAddress = addr
+func (c *TiEMClusterServerScript) WithTracer(addr []string) *TiEMClusterServerScript {
+	c.TracerAddress = strings.Join(addr, ",")
 	return c
 }
 

@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"os"
 	"path"
+	"strings"
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/tiup/templates/embed"
@@ -77,14 +78,14 @@ func (c *TiEMMetaDBScript) WithMetricsPort(port int) *TiEMMetaDBScript {
 }
 
 // WithRegistry set RegistryEndpoints
-func (c *TiEMMetaDBScript) WithRegistry(addr string) *TiEMMetaDBScript {
-	c.RegistryEndpoints = addr
+func (c *TiEMMetaDBScript) WithRegistry(addr []string) *TiEMMetaDBScript {
+	c.RegistryEndpoints = strings.Join(addr, ",")
 	return c
 }
 
 // WithTracer set TracerAddress
-func (c *TiEMMetaDBScript) WithTracer(addr string) *TiEMMetaDBScript {
-	c.TracerAddress = addr
+func (c *TiEMMetaDBScript) WithTracer(addr []string) *TiEMMetaDBScript {
+	c.TracerAddress = strings.Join(addr, ",")
 	return c
 }
 

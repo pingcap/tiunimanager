@@ -70,9 +70,9 @@ func TestDefaultDataDir(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, "/gloable_data", topo.GlobalOptions.DataDir)
-	assert.Equal(t, "/gloable_data/tiem-metadb-1111", topo.MetaDBServers[0].DataDir)
+	assert.Equal(t, "/gloable_data/metadb-server-1111", topo.MetaDBServers[0].DataDir)
 	assert.Equal(t, "/my_data", topo.MetaDBServers[1].DataDir)
-	assert.Equal(t, "/gloable_data/tiem-cluster-2221", topo.ClusterServers[0].DataDir)
+	assert.Equal(t, "/gloable_data/cluster-server-2221", topo.ClusterServers[0].DataDir)
 	assert.Equal(t, "/my_data", topo.ClusterServers[1].DataDir)
 }
 
@@ -86,11 +86,11 @@ global:
   data_dir: "test-data"
 tiem_metadb_servers:
   - host: 172.16.5.138
-    deploy_dir: "tiem-metadb-deploy"
+    deploy_dir: "metadb-server-deploy"
     metrics_port: 8111
 tiem_cluster_servers:
   - host: 172.16.5.53
-    data_dir: "worker-data"
+    data_dir: "metadb-data"
     metrics_port: 8112
 `), &topo)
 	assert.Nil(t, err)
@@ -98,11 +98,11 @@ tiem_cluster_servers:
 
 	assert.Equal(t, 220, topo.GlobalOptions.SSHPort)
 	assert.Equal(t, 220, topo.MetaDBServers[0].SSHPort)
-	assert.Equal(t, "tiem-metadb-deploy", topo.MetaDBServers[0].DeployDir)
+	assert.Equal(t, "metadb-server-deploy", topo.MetaDBServers[0].DeployDir)
 
 	assert.Equal(t, 220, topo.ClusterServers[0].SSHPort)
-	assert.Equal(t, "test-deploy/tiem-cluster-4110", topo.ClusterServers[0].DeployDir)
-	assert.Equal(t, "worker-data", topo.ClusterServers[0].DataDir)
+	assert.Equal(t, "test-deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
+	assert.Equal(t, "metadb-data", topo.ClusterServers[0].DataDir)
 }
 
 func TestDirectoryConflicts(t *testing.T) {
@@ -227,7 +227,7 @@ global:
 tiem_metadb_servers:
   - host: 172.16.5.138
     metrics_port: 8111
-    deploy_dir: "tiem-metadb-deploy"
+    deploy_dir: "metadb-server-deploy"
     data_dir: "/test-data/data-1"
 tiem_cluster_servers:
   - host: 172.16.5.53
@@ -235,7 +235,7 @@ tiem_cluster_servers:
     data_dir: "test-1"
 `), &topo)
 	assert.Nil(t, err)
-	cnt := topo.CountDir("172.16.5.53", "test-deploy/tiem-cluster-4110")
+	cnt := topo.CountDir("172.16.5.53", "test-deploy/cluster-server-4110")
 	assert.Equal(t, 3, cnt)
 	cnt = topo.CountDir("172.16.5.138", "/test-data/data")
 	assert.Equal(t, 0, cnt) // should not match partial path
@@ -248,7 +248,7 @@ global:
 tiem_metadb_servers:
   - host: 172.16.5.138
     metrics_port: 8111
-    deploy_dir: "tiem-metadb-deploy"
+    deploy_dir: "metadb-server-deploy"
     data_dir: "/test-data/data-1"
 tiem_cluster_servers:
   - host: 172.16.5.138
@@ -256,7 +256,7 @@ tiem_cluster_servers:
     data_dir: "/test-data/data-2"
 `), &topo)
 	assert.Nil(t, err)
-	cnt = topo.CountDir("172.16.5.138", "/test-deploy/tiem-cluster-4110")
+	cnt = topo.CountDir("172.16.5.138", "/test-deploy/cluster-server-4110")
 	assert.Equal(t, 2, cnt)
 	cnt = topo.CountDir("172.16.5.138", "")
 	assert.Equal(t, 2, cnt)
@@ -284,7 +284,7 @@ tiem_cluster_servers:
 	assert.Nil(t, err)
 	// if per-instance data_dir is set, the global data_dir is ignored, and if it
 	// is a relative path, it will be under the instance's deploy_dir
-	cnt = topo.CountDir("172.16.5.138", "/test-deploy/tiem-cluster-4110")
+	cnt = topo.CountDir("172.16.5.138", "/test-deploy/cluster-server-4110")
 	assert.Equal(t, 3, cnt)
 	cnt = topo.CountDir("172.16.5.138", "")
 	assert.Equal(t, 0, cnt)
@@ -349,8 +349,8 @@ tiem_cluster_servers:
 		err := spec.ParseTopologyYaml(file, &topo)
 		assert.Nil(t, err)
 		spec.ExpandRelativeDir(&topo)
-		assert.Equal(t, "/home/tidb/deploy/tiem-metadb-4100", topo.MetaDBServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/deploy/tiem-cluster-4110", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tidb/deploy/metadb-server-4100", topo.MetaDBServers[0].DeployDir)
+		assert.Equal(t, "/home/tidb/deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
 	})
 
 	// test data dir & log dir
@@ -383,8 +383,8 @@ tiem_metadb_servers:
 		assert.Nil(t, err)
 		spec.ExpandRelativeDir(&topo)
 
-		assert.Equal(t, "/home/tidb/my-deploy/tiem-metadb-4100", topo.MetaDBServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/my-deploy/tiem-metadb-4100/data", topo.MetaDBServers[0].DataDir)
+		assert.Equal(t, "/home/tidb/my-deploy/metadb-server-4100", topo.MetaDBServers[0].DeployDir)
+		assert.Equal(t, "/home/tidb/my-deploy/metadb-server-4100/data", topo.MetaDBServers[0].DataDir)
 		assert.Equal(t, "", topo.MetaDBServers[0].LogDir)
 	})
 
@@ -411,11 +411,11 @@ tiem_cluster_servers:
 		assert.Equal(t, "my-deploy", topo.GlobalOptions.DeployDir)
 		assert.Equal(t, "data", topo.GlobalOptions.DataDir)
 
-		assert.Equal(t, "/home/tidb/my-deploy/tiem-cluster-20160", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/my-deploy/tiem-cluster-20160/data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20160/data", topo.ClusterServers[0].DataDir)
 
-		assert.Equal(t, "/home/tidb/my-deploy/tiem-cluster-20161", topo.ClusterServers[1].DeployDir)
-		assert.Equal(t, "/home/tidb/my-deploy/tiem-cluster-20161/data", topo.ClusterServers[1].DataDir)
+		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
+		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20161/data", topo.ClusterServers[1].DataDir)
 	})
 
 	// test global options, case 3
@@ -443,12 +443,12 @@ tiem_cluster_servers:
 		assert.Equal(t, "my-deploy", topo.GlobalOptions.DeployDir)
 		assert.Equal(t, "data", topo.GlobalOptions.DataDir)
 
-		assert.Equal(t, "/home/tidb/my-deploy/tiem-cluster-20160", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/my-deploy/tiem-cluster-20160/my-data", topo.ClusterServers[0].DataDir)
-		assert.Equal(t, "/home/tidb/my-deploy/tiem-cluster-20160/my-log", topo.ClusterServers[0].LogDir)
+		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20160/my-data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20160/my-log", topo.ClusterServers[0].LogDir)
 
-		assert.Equal(t, "/home/tidb/my-deploy/tiem-cluster-20161", topo.ClusterServers[1].DeployDir)
-		assert.Equal(t, "/home/tidb/my-deploy/tiem-cluster-20161/data", topo.ClusterServers[1].DataDir)
+		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
+		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20161/data", topo.ClusterServers[1].DataDir)
 		assert.Equal(t, "", topo.ClusterServers[1].LogDir)
 	})
 
@@ -479,13 +479,13 @@ tiem_cluster_servers:
 		assert.Equal(t, "my-global-data", topo.GlobalOptions.DataDir)
 		assert.Equal(t, "my-global-log", topo.GlobalOptions.LogDir)
 
-		assert.Equal(t, "/home/tidb/deploy/tiem-cluster-20160", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/deploy/tiem-cluster-20160/my-local-data", topo.ClusterServers[0].DataDir)
-		assert.Equal(t, "/home/tidb/deploy/tiem-cluster-20160/my-local-log", topo.ClusterServers[0].LogDir)
+		assert.Equal(t, "/home/tidb/deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tidb/deploy/cluster-server-20160/my-local-data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tidb/deploy/cluster-server-20160/my-local-log", topo.ClusterServers[0].LogDir)
 
-		assert.Equal(t, "/home/tidb/deploy/tiem-cluster-20161", topo.ClusterServers[1].DeployDir)
-		assert.Equal(t, "/home/tidb/deploy/tiem-cluster-20161/my-global-data", topo.ClusterServers[1].DataDir)
-		assert.Equal(t, "/home/tidb/deploy/tiem-cluster-20161/my-global-log", topo.ClusterServers[1].LogDir)
+		assert.Equal(t, "/home/tidb/deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
+		assert.Equal(t, "/home/tidb/deploy/cluster-server-20161/my-global-data", topo.ClusterServers[1].DataDir)
+		assert.Equal(t, "/home/tidb/deploy/cluster-server-20161/my-global-log", topo.ClusterServers[1].LogDir)
 	})
 }
 
@@ -506,12 +506,12 @@ tiem_cluster_servers:
 		assert.Nil(t, err)
 		spec.ExpandRelativeDir(topo)
 
-		assert.Equal(t, "/home/tidb/deploy/tiem-cluster-4110", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/deploy/tiem-cluster-4110/data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tidb/deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tidb/deploy/cluster-server-4110/data", topo.ClusterServers[0].DataDir)
 		assert.Equal(t, "", topo.ClusterServers[0].LogDir)
 
-		assert.Equal(t, "/home/tidb/deploy/tiem-cluster-4110", topo.ClusterServers[1].DeployDir)
-		assert.Equal(t, "/home/tidb/deploy/tiem-cluster-4110/data", topo.ClusterServers[1].DataDir)
+		assert.Equal(t, "/home/tidb/deploy/cluster-server-4110", topo.ClusterServers[1].DeployDir)
+		assert.Equal(t, "/home/tidb/deploy/cluster-server-4110/data", topo.ClusterServers[1].DataDir)
 		assert.Equal(t, "", topo.ClusterServers[1].LogDir)
 	})
 
@@ -542,19 +542,19 @@ tiem_cluster_servers:
 
 		spec.ExpandRelativeDir(topo)
 
-		assert.Equal(t, "/my-global-deploy/tiem-cluster-4110", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/my-global-deploy/tiem-cluster-4110/my-local-data", topo.ClusterServers[0].DataDir)
-		assert.Equal(t, "/my-global-deploy/tiem-cluster-4110/my-local-log", topo.ClusterServers[0].LogDir)
+		assert.Equal(t, "/my-global-deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/my-global-deploy/cluster-server-4110/my-local-data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/my-global-deploy/cluster-server-4110/my-local-log", topo.ClusterServers[0].LogDir)
 
 		assert.Equal(t, "/home/test/flash-deploy", topo.ClusterServers[1].DeployDir)
 		assert.Equal(t, "/home/test/flash-deploy/data", topo.ClusterServers[1].DataDir)
 		assert.Equal(t, "/home/test/flash-deploy", topo.ClusterServers[3].DeployDir)
 		assert.Equal(t, "/home/test/flash-deploy/data", topo.ClusterServers[3].DataDir)
 
-		assert.Equal(t, "/my-global-deploy/tiem-cluster-4110", topo.ClusterServers[2].DeployDir)
-		assert.Equal(t, "/my-global-deploy/tiem-cluster-4110/data", topo.ClusterServers[2].DataDir)
-		assert.Equal(t, "/my-global-deploy/tiem-cluster-4110", topo.ClusterServers[4].DeployDir)
-		assert.Equal(t, "/my-global-deploy/tiem-cluster-4110/data", topo.ClusterServers[4].DataDir)
+		assert.Equal(t, "/my-global-deploy/cluster-server-4110", topo.ClusterServers[2].DeployDir)
+		assert.Equal(t, "/my-global-deploy/cluster-server-4110/data", topo.ClusterServers[2].DataDir)
+		assert.Equal(t, "/my-global-deploy/cluster-server-4110", topo.ClusterServers[4].DeployDir)
+		assert.Equal(t, "/my-global-deploy/cluster-server-4110/data", topo.ClusterServers[4].DataDir)
 	})
 }
 

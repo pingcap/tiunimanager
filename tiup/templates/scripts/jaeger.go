@@ -22,23 +22,33 @@ import (
 	"github.com/pingcap-inc/tiem/tiup/templates/embed"
 )
 
-// TiEMWebServerScript represent the data to generate TiEMWebServer config
-type TiEMWebServerScript struct {
+// JaegerScript represent the data to generate Jaeger config
+type JaegerScript struct {
 	IP        string
+	Port      int
 	DeployDir string
+	LogDir    string
 }
 
-// NewTiEMWebServerScript returns a TiEMWebServerScript with given arguments
-func NewTiEMWebServerScript(ip, deployDir string) *TiEMWebServerScript {
-	return &TiEMWebServerScript{
+// NewJaegerScript returns a JaegerScript with given arguments
+func NewJaegerScript(ip, deployDir, logDir string) *JaegerScript {
+	return &JaegerScript{
 		IP:        ip,
+		Port:      4122,
 		DeployDir: deployDir,
+		LogDir:    logDir,
 	}
 }
 
+// WithPort set Port field of JaegerScript
+func (c *JaegerScript) WithPort(port int) *JaegerScript {
+	c.Port = port
+	return c
+}
+
 // Script generate the config file data.
-func (c *TiEMWebServerScript) Script() ([]byte, error) {
-	fp := path.Join("scripts", "run_tiem_metadb.sh.tpl")
+func (c *JaegerScript) Script() ([]byte, error) {
+	fp := path.Join("scripts", "run_jaeger.sh.tpl")
 	tpl, err := embed.ReadScriptTemplate(fp)
 	if err != nil {
 		return nil, err
@@ -47,7 +57,7 @@ func (c *TiEMWebServerScript) Script() ([]byte, error) {
 }
 
 // ScriptToFile write config content to specific path
-func (c *TiEMWebServerScript) ScriptToFile(file string) error {
+func (c *JaegerScript) ScriptToFile(file string) error {
 	config, err := c.Script()
 	if err != nil {
 		return err
@@ -55,9 +65,9 @@ func (c *TiEMWebServerScript) ScriptToFile(file string) error {
 	return os.WriteFile(file, config, 0755)
 }
 
-// ScriptWithTemplate generate the TiEMWebServer config content by tpl
-func (c *TiEMWebServerScript) ScriptWithTemplate(tpl string) ([]byte, error) {
-	tmpl, err := template.New("TiEMWebServer").Parse(tpl)
+// ScriptWithTemplate generate the Jaeger config content by tpl
+func (c *JaegerScript) ScriptWithTemplate(tpl string) ([]byte, error) {
+	tmpl, err := template.New("Jaeger").Parse(tpl)
 	if err != nil {
 		return nil, err
 	}

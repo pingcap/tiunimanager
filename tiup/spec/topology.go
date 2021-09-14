@@ -34,12 +34,15 @@ const (
 
 // Component names and roles
 const (
-	ComponentTiEMMetaDBServer    = "tiem-metadb"
-	ComponentTiEMClusterServer   = "tiem-cluster"
-	ComponentTiEMAPIServer       = "tiem-api"
-	ComponentTiEMTracerServer    = "tiem-tracer"
-	ComponentTiEMWebServer       = "tiem-web"
-	ComponentElasticSearchServer = "elasticsearch"
+	ComponentTiEMMetaDBServer    = "metadb-server"  // tiem-metadb
+	ComponentTiEMClusterServer   = "cluster-server" // tiem-cluster
+	ComponentTiEMAPIServer       = "openapi-server" // tiem-api
+	ComponentTiEMTracerServer    = "jaeger"         // tiem-tracer
+	ComponentTiEMWebServer       = "nginx"          // tiem-web
+	ComponentElasticSearchServer = "elasticsearch"  // es
+	ComponentKibana              = "kibana"         // kibana
+	ComponentFilebeat            = "filebeat"       // filebeat
+	ComponentNodeExporter        = "node-exporter"  // different with in tiup-cluster (node_exporter)
 
 	RoleTiEMMetaDB  = "metadb"
 	RoleTiEMCluster = "cluster"
@@ -433,6 +436,42 @@ func (s *Specification) CountDir(targetHost, dirPrefix string) int {
 	}
 
 	return count
+}
+
+// RegistryEndpoints return the list of registry endpoints in the specification
+func (s *Specification) RegistryEndpoints() []string {
+	result := make([]string, 0)
+	for _, inst := range s.MetaDBServers {
+		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.PeerPort))
+	}
+	return result
+}
+
+// APIServerEndpoints return the list of registry endpoints in the specification
+func (s *Specification) APIServerEndpoints() []string {
+	result := make([]string, 0)
+	for _, inst := range s.APIServers {
+		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.Port))
+	}
+	return result
+}
+
+// TracerEndpoints return the list of jaeger endpoints in the specification
+func (s *Specification) TracerEndpoints() []string {
+	result := make([]string, 0)
+	for _, inst := range s.TracerServers {
+		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.Port))
+	}
+	return result
+}
+
+// ElasticSearchAddress return the list of es endpoints in the specification
+func (s *Specification) ElasticSearchAddress() []string {
+	result := make([]string, 0)
+	for _, inst := range s.ElasticSearchServers {
+		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.Port))
+	}
+	return result
 }
 
 // TLSConfig generates a tls.Config for the specification as needed

@@ -11,7 +11,7 @@ LANG=en_US.UTF-8 \
 exec env GODEBUG=madvdontneed=1 bin/cluster-server \
     --host="{{.Host}}" \
     --port="{{.Port}}" \
-    --metrics-port="{{.Metrics}}" \
+    --metrics-port="{{.MetricsPort}}" \
     --registry-address="{{.RegistryEndpoints}}" \
     --tracer-address="{{.TracerAddress}}" \
     --deploy-dir="{{.DeployDir}}" \

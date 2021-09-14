@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"os"
 	"path"
+	"strings"
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/tiup/templates/embed"
@@ -62,20 +63,20 @@ func (c *TiEMAPIServerScript) WithMetricsPort(port int) *TiEMAPIServerScript {
 }
 
 // WithRegistry set RegistryEndpoints
-func (c *TiEMAPIServerScript) WithRegistry(addr string) *TiEMAPIServerScript {
-	c.RegistryEndpoints = addr
+func (c *TiEMAPIServerScript) WithRegistry(addr []string) *TiEMAPIServerScript {
+	c.RegistryEndpoints = strings.Join(addr, ",")
 	return c
 }
 
 // WithTracer set TracerAddress
-func (c *TiEMAPIServerScript) WithTracer(addr string) *TiEMAPIServerScript {
-	c.TracerAddress = addr
+func (c *TiEMAPIServerScript) WithTracer(addr []string) *TiEMAPIServerScript {
+	c.TracerAddress = strings.Join(addr, ",")
 	return c
 }
 
 // WithElasticSearch set ElasticSearchAddress
-func (c *TiEMAPIServerScript) WithElasticSearch(addr string) *TiEMAPIServerScript {
-	c.ElasticSearchAddress = addr
+func (c *TiEMAPIServerScript) WithElasticSearch(addr []string) *TiEMAPIServerScript {
+	c.ElasticSearchAddress = strings.Join(addr, ",")
 	return c
 }
 

@@ -122,6 +122,7 @@ const (
 type BackupRange string
 type BackupType string
 type BackupMode string
+type StorageType string
 
 const (
 	BackupRangeFull BackupRange = "full"
@@ -136,6 +137,11 @@ const (
 const (
 	BackupTypeLogic BackupType = "logical"
 	BackupTypePhysics BackupType = "physical"
+)
+
+const (
+	StorageTypeLocal StorageType = "local"
+	StorageTypeS3 StorageType = "s3"
 )
 
 func checkBackupRangeValid(backupRange string) bool {

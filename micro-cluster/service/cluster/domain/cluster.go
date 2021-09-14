@@ -72,7 +72,11 @@ type RecoverInfo struct {
 	BackupRecordId 		int64
 }
 
-func (r TiUPConfigRecord) Content() string {
+func (r *TiUPConfigRecord) Content() string {
 	bytes, _ := json.Marshal(r.ConfigModel)
 	return string(bytes)
+}
+
+func (r *TiUPConfigRecord) ContainsTiFlash() bool {
+	return len(r.ConfigModel.TiFlashServers) > 0
 }

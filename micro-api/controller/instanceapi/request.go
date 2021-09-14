@@ -42,6 +42,3 @@ type BackupReq struct {
 	BackupRange string `json:"backupRange"`
 	FilePath    string `json:"filePath"`
 }
-type BackupRecoverReq struct {
-	ClusterId string `json:"clusterId"`
-}

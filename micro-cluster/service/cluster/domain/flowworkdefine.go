@@ -54,9 +54,13 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		FlowName:    FlowRecoverCluster,
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowRecoverCluster),
 		TaskNodes: map[string]*TaskDefine {
-			"start":              {"recover", "recoverDone", "fail", PollingTasK, recoverCluster},
+			"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
+			"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
+			"configDone":   {"deployCluster", "deployDone", "fail", SyncFuncTask, deployCluster},
+			"deployDone":   {"startupCluster", "startupDone", "fail", SyncFuncTask, startupCluster},
+			"startupDone":  {"recoverFromSrcCluster", "recoverDone", "fail", SyncFuncTask, recoverFromSrcCluster},
 			"recoverDone":  {"end", "", "", SyncFuncTask, ClusterEnd},
-			"fail":               {"fail", "", "", SyncFuncTask, ClusterFail},
+			"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
 		},
 		ContextParser: defaultContextParser,
 

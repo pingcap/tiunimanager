@@ -194,18 +194,25 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	}
 }
 
-func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request *clusterPb.RecoverBackupRequest, response *clusterPb.RecoverBackupResponse) (err error) {
+func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterPb.RecoverRequest, resp *clusterPb.RecoverResponse) (err error) {
 	getLogger().Info("recover cluster")
 
-	//todo: param precheck
-	cluster, err := domain.Recover(request.Operator, request.ClusterId, request.BackupRecordId)
+	if err = domain.RecoverPreCheck(req); err != nil {
+		getLogger().Errorf("recover cluster pre check failed, %s", err.Error())
+		return err
+	}
 
+	clusterAggregation, err := domain.Recover(req.GetOperator(), req.GetCluster(), req.GetDemands())
 	if err != nil {
 		getLogger().Info(err)
-		return nil
+		resp.RespStatus = BizErrorResponseStatus
+		resp.RespStatus.Message = err.Error()
+		return err
 	} else {
-		response.Status = SuccessResponseStatus
-		response.RecoverRecord = cluster.ExtractRecoverRecordDTO()
+		resp.RespStatus = SuccessResponseStatus
+		resp.ClusterId = clusterAggregation.Cluster.Id
+		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
+		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 		return nil
 	}
 }

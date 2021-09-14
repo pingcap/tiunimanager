@@ -48,6 +48,7 @@ type BackupRecord struct {
 	BackupRange string
 	BackupType  string
 	BackupMode  string
+	StorageType string
 	OperatorId  string `gorm:"not null;type:varchar(36);default:null"`
 
 	FilePath string
@@ -366,6 +367,7 @@ func (m *DAOClusterManager) SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do
 		BackupRange: record.GetBackupRange(),
 		BackupType:  record.GetBackupType(),
 		BackupMode:  record.GetBackupMode(),
+		StorageType: record.GetStorageType(),
 		FlowId:      record.GetFlowId(),
 		FilePath:    record.GetFilePath(),
 		StartTime:   time.Unix(record.GetStartTime(), 0),

@@ -8,6 +8,12 @@ type CreateClusterRsp struct {
 	controller.StatusInfo
 }
 
+type RecoverClusterRsp struct {
+	ClusterId 			string	`json:"clusterId"`
+	ClusterBaseInfo
+	controller.StatusInfo
+}
+
 type DeleteClusterRsp struct {
 	ClusterId 			string	`json:"clusterId"`
 	controller.StatusInfo

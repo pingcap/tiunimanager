@@ -392,3 +392,10 @@ func (handler *DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb
 	}
 	return nil
 }
+
+func (handler *DBServiceHandler) AllocResources(ctx context.Context, in *dbPb.AllocReq, out *dbPb.AllocRsp) error {
+	log := framework.Log()
+	log.Infof("Receive %d allocation requirement from %s in requestID %s\n", len(in.Requires), in.Applicant.HolderId, in.Applicant.RequestId)
+
+	return nil
+}

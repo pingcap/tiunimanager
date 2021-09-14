@@ -2,10 +2,12 @@ package models
 
 import (
 	"fmt"
+	"strings"
 
 	rt "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -208,5 +210,34 @@ func (m *DAOResourceManager) GetFailureDomain(domain string) (res []FailureDomai
 	selectStr := fmt.Sprintf("%s as FailureDomain, purpose, cpu_cores, memory, count(id) as Count", domain)
 	err = m.getDb().Table("hosts").Where("Status = ? or Status = ?", rt.HOST_ONLINE, rt.HOST_INUSED).Select(selectStr).
 		Group(domain).Group("purpose").Group("cpu_cores").Group("memory").Scan(&res).Error
+	return
+}
+
+func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, require *dbPb.AllocRequirement) (results []rt.HostResource, err error) {
+	excludedStr := strings.Join(require.HostExcluded.Hosts, ",")
+
+	return
+}
+
+func (m *DAOResourceManager) AllocResources(req *dbPb.AllocReq) (results []rt.HostResource, err error) {
+	tx := m.getDb().Begin()
+	for i, require := range req.Requires {
+		switch rt.AllocStrategy(require.Strategy) {
+		case rt.RandomRack:
+			res, err := allocResourceWithRR(tx, req.Applicant, i, require)
+			if err != nil {
+				tx.Rollback()
+				return nil, status.Errorf(codes.Internal, "alloc with RandomRack %dth require failed, %v", i, err)
+			}
+			results = append(results, res...)
+		case rt.DiffRackBestEffort:
+		case rt.UserSpecifyRack:
+		case rt.UserSpecifyHost:
+		default:
+			tx.Rollback()
+			return nil, status.Errorf(codes.InvalidArgument, "bad alloc strategy %d", require.Strategy)
+		}
+	}
+	tx.Commit()
 	return
 }

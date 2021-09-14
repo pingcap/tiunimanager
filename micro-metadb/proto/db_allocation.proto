@@ -93,5 +93,5 @@ message HostResource {
 
 message AllocRsp {
     DBAllocResponseStatus rs = 1;
-	repeated HostResource results = 2;
+    repeated HostResource results = 2;
 }

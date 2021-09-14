@@ -51,6 +51,7 @@ type TiEMDBService interface {
 	CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, opts ...client.CallOption) (*DBCheckDetailsResponse, error)
 	AllocHosts(ctx context.Context, in *DBAllocHostsRequest, opts ...client.CallOption) (*DBAllocHostsResponse, error)
 	GetFailureDomain(ctx context.Context, in *DBGetFailureDomainRequest, opts ...client.CallOption) (*DBGetFailureDomainResponse, error)
+	AllocResources(ctx context.Context, in *AllocReq, opts ...client.CallOption) (*AllocRsp, error)
 	// Cluster
 	CreateCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, opts ...client.CallOption) (*DBDeleteClusterResponse, error)
@@ -224,6 +225,16 @@ func (c *tiEMDBService) AllocHosts(ctx context.Context, in *DBAllocHostsRequest,
 func (c *tiEMDBService) GetFailureDomain(ctx context.Context, in *DBGetFailureDomainRequest, opts ...client.CallOption) (*DBGetFailureDomainResponse, error) {
 	req := c.c.NewRequest(c.name, "TiEMDBService.GetFailureDomain", in)
 	out := new(DBGetFailureDomainResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiEMDBService) AllocResources(ctx context.Context, in *AllocReq, opts ...client.CallOption) (*AllocRsp, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.AllocResources", in)
+	out := new(AllocRsp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -559,6 +570,7 @@ type TiEMDBServiceHandler interface {
 	CheckDetails(context.Context, *DBCheckDetailsRequest, *DBCheckDetailsResponse) error
 	AllocHosts(context.Context, *DBAllocHostsRequest, *DBAllocHostsResponse) error
 	GetFailureDomain(context.Context, *DBGetFailureDomainRequest, *DBGetFailureDomainResponse) error
+	AllocResources(context.Context, *AllocReq, *AllocRsp) error
 	// Cluster
 	CreateCluster(context.Context, *DBCreateClusterRequest, *DBCreateClusterResponse) error
 	DeleteCluster(context.Context, *DBDeleteClusterRequest, *DBDeleteClusterResponse) error
@@ -612,6 +624,7 @@ func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, op
 		CheckDetails(ctx context.Context, in *DBCheckDetailsRequest, out *DBCheckDetailsResponse) error
 		AllocHosts(ctx context.Context, in *DBAllocHostsRequest, out *DBAllocHostsResponse) error
 		GetFailureDomain(ctx context.Context, in *DBGetFailureDomainRequest, out *DBGetFailureDomainResponse) error
+		AllocResources(ctx context.Context, in *AllocReq, out *AllocRsp) error
 		CreateCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, out *DBDeleteClusterResponse) error
 		UpdateClusterStatus(ctx context.Context, in *DBUpdateClusterStatusRequest, out *DBUpdateClusterStatusResponse) error
@@ -705,6 +718,10 @@ func (h *tiEMDBServiceHandler) AllocHosts(ctx context.Context, in *DBAllocHostsR
 
 func (h *tiEMDBServiceHandler) GetFailureDomain(ctx context.Context, in *DBGetFailureDomainRequest, out *DBGetFailureDomainResponse) error {
 	return h.TiEMDBServiceHandler.GetFailureDomain(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) AllocResources(ctx context.Context, in *AllocReq, out *AllocRsp) error {
+	return h.TiEMDBServiceHandler.AllocResources(ctx, in, out)
 }
 
 func (h *tiEMDBServiceHandler) CreateCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error {

@@ -245,9 +245,10 @@ message DBBackupStrategyDTO {
     string filePath = 5;
     string backupRange = 6;
     string backupType = 7;
-    string period = 8;
-    int64 createTime = 9;
-    int64 updateTime = 10;
+    uint32 startHour = 8;
+    uint32 endHour = 9;
+    int64 createTime = 10;
+    int64 updateTime = 11;
 }
 
 message DBSaveBackupStrategyRequest {
@@ -266,4 +267,14 @@ message DBQueryBackupStrategyRequest {
 message DBQueryBackupStrategyResponse {
     DBClusterResponseStatus status = 1;
     DBBackupStrategyDTO strategy = 2;
+}
+
+message DBQueryBackupStrategyByTimeRequest {
+    string weekday = 1;
+    uint32 startHour = 2;
+}
+
+message DBQueryBackupStrategyByTimeResponse {
+    DBClusterResponseStatus status = 1;
+    repeated DBBackupStrategyDTO strategys = 2;
 }

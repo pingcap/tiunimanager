@@ -79,10 +79,11 @@ type BackupStrategy struct {
 	OperatorId string `gorm:"not null;type:varchar(36);default:null"`
 
 	BackupDate  string
+	StartHour   uint32
+	EndHour 	uint32
 	FilePath    string
 	BackupRange string
 	BackupType  string
-	Period      string
 }
 
 type BackupRecordFetchResult struct {
@@ -469,15 +470,16 @@ func (m *DAOClusterManager) SaveRecoverRecord(tenantId, clusterId, operatorId st
 
 func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDTO) (*BackupStrategy, error) {
 	strategyDO := BackupStrategy{
-		ClusterId: strategy.ClusterId,
+		ClusterId: strategy.GetClusterId(),
 		Record: Record{
-			TenantId: strategy.TenantId,
+			TenantId: strategy.GetTenantId(),
 		},
-		BackupDate:  strategy.BackupDate,
-		BackupRange: strategy.BackupRange,
-		BackupType:  strategy.BackupType,
-		Period:      strategy.Period,
-		FilePath:    strategy.FilePath,
+		BackupDate:  strategy.GetBackupDate(),
+		BackupRange: strategy.GetBackupRange(),
+		BackupType:  strategy.GetBackupType(),
+		StartHour:   strategy.GetStartHour(),
+		EndHour:     strategy.GetEndHour(),
+		FilePath:    strategy.GetFilePath(),
 	}
 	result := m.Db().Table("backup_strategy").Where("cluster_id = ?", strategy.ClusterId).First(&strategyDO)
 	if result.Error != nil {
@@ -494,11 +496,12 @@ func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDT
 	} else {
 		strategyDO.UpdatedAt = time.Now()
 		err := m.Db().Model(&BackupStrategy{}).Updates(&BackupStrategy{
-			BackupDate:  strategy.BackupDate,
-			BackupRange: strategy.BackupRange,
-			BackupType:  strategy.BackupType,
-			Period:      strategy.Period,
-			FilePath:    strategy.FilePath,
+			BackupDate:  strategy.GetBackupDate(),
+			BackupRange: strategy.GetBackupRange(),
+			BackupType:  strategy.GetBackupType(),
+			StartHour:   strategy.GetStartHour(),
+			EndHour:     strategy.GetEndHour(),
+			FilePath:    strategy.GetFilePath(),
 		}).Error
 		if err != nil {
 			return nil, err
@@ -515,4 +518,15 @@ func (m *DAOClusterManager) QueryBackupStartegy(clusterId string) (*BackupStrate
 	}
 
 	return &strategyDO, nil
+}
+
+
+func (m *DAOClusterManager) QueryBackupStartegyByTime(weekday string, startHour uint32) ([]*BackupStrategy, error) {
+	var strategyListDO []*BackupStrategy
+	err := m.Db().Table("backup_strategy").Where("startHour = ? and backup_date like *?* group by cluster_id", startHour, weekday).First(&strategyListDO).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return strategyListDO, nil
 }

@@ -10,6 +10,7 @@ import (
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -34,15 +35,10 @@ type RecoverRecord struct {
 	BackupRecord BackupRecord
 }
 
-type BackupStrategy struct {
-	ValidityPeriod int64
-	CronString     string
-}
-
 //var defaultPathPrefix string = "/tmp/tiem/backup"
 var defaultPathPrefix string = "nfs/tiem/backup"
 
-func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, filePath string) (*ClusterAggregation, error) {
+func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, backupMode BackupMode, filePath string) (*ClusterAggregation, error) {
 	getLogger().Infof("Begin do Backup, clusterId: %s, backupRange: %s, backupType: %s, filePath: %s", clusterId, backupRange, backupType, filePath)
 	defer getLogger().Infof("End do Backup")
 	operator := parseOperatorFromDTO(ope)
@@ -61,7 +57,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		ClusterId:  clusterId,
 		Range:      BackupRangeFull,
 		BackupType: BackupTypePhysics,
-		BackupMode: BackupModeManual,
+		BackupMode: backupMode,
 		OperatorId: operator.Id,
 		FilePath:   getBackupPath(filePath, clusterId, time.Now().Unix(), string(BackupRangeFull)),
 		StartTime:  time.Now().Unix(),
@@ -153,6 +149,45 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
+}
+
+func SaveBackupStrategy(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) error {
+	period := strings.Split(strategy.GetPeriod(), "-")
+	if len(period) != 2 {
+		getLogger().Errorf("invalid param period, %s", strategy.GetPeriod())
+		return fmt.Errorf("invalid param period, %s", strategy.GetPeriod())
+	}
+
+	startHour, err := time.ParseInLocation("00:00", period[0], time.Local)
+	if err != nil {
+		getLogger().Errorf("invalid param period, %s", strategy.GetPeriod())
+		return fmt.Errorf("invalid param period, %s", strategy.GetPeriod())
+	}
+
+	endHour, err := time.ParseInLocation("00:00", period[1], time.Local)
+	if err != nil {
+		getLogger().Errorf("invalid param period, %s", strategy.GetPeriod())
+		return fmt.Errorf("invalid param period, %s", strategy.GetPeriod())
+	}
+
+	_, err = client.DBClient.SaveBackupStrategy(context.TODO(), &db.DBSaveBackupStrategyRequest{
+		Strategy: &db.DBBackupStrategyDTO{
+			TenantId:    ope.TenantId,
+			ClusterId:   strategy.ClusterId,
+			BackupDate:  strategy.BackupDate,
+			FilePath:    strategy.FilePath,
+			BackupRange: strategy.BackupRange,
+			BackupType:  strategy.BackupType,
+			StartHour:   uint32(startHour.Hour()),
+			EndHour:     uint32(endHour.Hour()),
+		},
+	})
+	if err != nil {
+		getLogger().Error(err)
+		return err
+	}
+
+	return nil
 }
 
 func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupRange string) string {

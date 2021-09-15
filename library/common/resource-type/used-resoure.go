@@ -3,7 +3,7 @@ package resource
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 )
 
@@ -24,7 +24,7 @@ type UsedCompute struct {
 }
 
 func (d *UsedCompute) BeforeCreate(tx *gorm.DB) (err error) {
-	d.ID = uuid.New().String()
+	d.ID = uuidutil.GenerateID()
 	return nil
 }
 
@@ -36,7 +36,7 @@ type UsedPort struct {
 }
 
 func (d *UsedPort) BeforeCreate(tx *gorm.DB) (err error) {
-	d.ID = uuid.New().String()
+	d.ID = uuidutil.GenerateID()
 	return nil
 }
 
@@ -49,6 +49,6 @@ type UsedDisk struct {
 }
 
 func (d *UsedDisk) BeforeCreate(tx *gorm.DB) (err error) {
-	d.ID = uuid.New().String()
+	d.ID = uuidutil.GenerateID()
 	return nil
 }

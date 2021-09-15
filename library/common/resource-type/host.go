@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -118,7 +118,7 @@ func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 		return status.Errorf(codes.AlreadyExists, "host %s(%s) is existed", h.HostName, h.IP)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		h.ID = uuid.New().String()
+		h.ID = uuidutil.GenerateID()
 		return nil
 	} else {
 		return err

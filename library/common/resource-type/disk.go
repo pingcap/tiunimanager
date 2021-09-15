@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 )
 
@@ -54,6 +54,6 @@ type Disk struct {
 }
 
 func (d *Disk) BeforeCreate(tx *gorm.DB) (err error) {
-	d.ID = uuid.New().String()
+	d.ID = uuidutil.GenerateID()
 	return nil
 }

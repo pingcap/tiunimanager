@@ -16,9 +16,9 @@ package main
 import (
 	"path/filepath"
 
-	"github.com/pingcap/tiup/pkg/cluster/manager"
-	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
-	"github.com/pingcap/tiup/pkg/cluster/task"
+	"github.com/pingcap-inc/tiem/tiup/manager"
+	cspec "github.com/pingcap-inc/tiem/tiup/spec"
+	"github.com/pingcap-inc/tiem/tiup/task"
 	"github.com/pingcap/tiup/pkg/utils"
 	"github.com/spf13/cobra"
 )

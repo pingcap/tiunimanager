@@ -93,7 +93,7 @@ func (c *ElasticSearchComponent) Instances() []Instance {
 		s := s
 		ins = append(ins, &ElasticSearchInstance{
 			Name: s.Name,
-			BaseInstance: spec.BaseInstance{
+			BaseInstance: BaseInstance{
 				InstanceSpec: s,
 				Name:         c.Name(),
 				Host:         s.Host,
@@ -121,7 +121,7 @@ func (c *ElasticSearchComponent) Instances() []Instance {
 // ElasticSearchInstance represent the TiEM instance
 type ElasticSearchInstance struct {
 	Name string
-	spec.BaseInstance
+	BaseInstance
 	topo *Specification
 }
 
@@ -167,7 +167,7 @@ func (i *ElasticSearchInstance) InitConfig(
 func (i *ElasticSearchInstance) ScaleConfig(
 	ctx context.Context,
 	e ctxt.Executor,
-	topo spec.Topology,
+	topo Topology,
 	clusterName,
 	clusterVersion,
 	deployUser string,

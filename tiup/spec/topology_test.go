@@ -14,12 +14,9 @@
 package spec
 
 import (
-	"fmt"
-	"os"
 	"testing"
 
 	. "github.com/pingcap/check"
-	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 )
@@ -292,49 +289,6 @@ tiem_cluster_servers:
 	assert.Equal(t, 1, cnt)
 }
 
-func withTempFile(content string, fn func(string)) {
-	file, err := os.CreateTemp("/tmp", "topology-test")
-	if err != nil {
-		panic(fmt.Sprintf("create temp file: %s", err))
-	}
-	defer os.Remove(file.Name())
-
-	_, err = file.WriteString(content)
-	if err != nil {
-		panic(fmt.Sprintf("write temp file: %s", err))
-	}
-	file.Close()
-
-	fn(file.Name())
-}
-
-func with2TempFile(content1, content2 string, fn func(string, string)) {
-	withTempFile(content1, func(file1 string) {
-		withTempFile(content2, func(file2 string) {
-			fn(file1, file2)
-		})
-	})
-}
-
-func merge4test(base, scale string) (*Specification, error) {
-	baseTopo := Specification{}
-	if err := spec.ParseTopologyYaml(base, &baseTopo); err != nil {
-		return nil, err
-	}
-
-	scaleTopo := baseTopo.NewPart()
-	if err := spec.ParseTopologyYaml(scale, scaleTopo); err != nil {
-		return nil, err
-	}
-
-	mergedTopo := baseTopo.MergeTopo(scaleTopo)
-	if err := mergedTopo.Validate(); err != nil {
-		return nil, err
-	}
-
-	return mergedTopo.(*Specification), nil
-}
-
 func TestRelativePath(t *testing.T) {
 	// base test
 	withTempFile(`
@@ -346,11 +300,11 @@ tiem_cluster_servers:
     metrics_port: 8112
 `, func(file string) {
 		topo := Specification{}
-		err := spec.ParseTopologyYaml(file, &topo)
+		err := ParseTopologyYaml(file, &topo)
 		assert.Nil(t, err)
-		spec.ExpandRelativeDir(&topo)
-		assert.Equal(t, "/home/tidb/deploy/metadb-server-4100", topo.MetaDBServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
+		ExpandRelativeDir(&topo)
+		assert.Equal(t, "/home/tiem/deploy/metadb-server-4100", topo.MetaDBServers[0].DeployDir)
+		assert.Equal(t, "/home/tiem/deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
 	})
 
 	// test data dir & log dir
@@ -362,13 +316,13 @@ tiem_metadb_servers:
     log_dir: my-log
 `, func(file string) {
 		topo := Specification{}
-		err := spec.ParseTopologyYaml(file, &topo)
+		err := ParseTopologyYaml(file, &topo)
 		assert.Nil(t, err)
-		spec.ExpandRelativeDir(&topo)
+		ExpandRelativeDir(&topo)
 
-		assert.Equal(t, "/home/tidb/my-deploy", topo.MetaDBServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/my-deploy/my-data", topo.MetaDBServers[0].DataDir)
-		assert.Equal(t, "/home/tidb/my-deploy/my-log", topo.MetaDBServers[0].LogDir)
+		assert.Equal(t, "/home/tiem/my-deploy", topo.MetaDBServers[0].DeployDir)
+		assert.Equal(t, "/home/tiem/my-deploy/my-data", topo.MetaDBServers[0].DataDir)
+		assert.Equal(t, "/home/tiem/my-deploy/my-log", topo.MetaDBServers[0].LogDir)
 	})
 
 	// test global options, case 1
@@ -379,12 +333,12 @@ tiem_metadb_servers:
   - host: 172.16.5.140
 `, func(file string) {
 		topo := Specification{}
-		err := spec.ParseTopologyYaml(file, &topo)
+		err := ParseTopologyYaml(file, &topo)
 		assert.Nil(t, err)
-		spec.ExpandRelativeDir(&topo)
+		ExpandRelativeDir(&topo)
 
-		assert.Equal(t, "/home/tidb/my-deploy/metadb-server-4100", topo.MetaDBServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/my-deploy/metadb-server-4100/data", topo.MetaDBServers[0].DataDir)
+		assert.Equal(t, "/home/tiem/my-deploy/metadb-server-4100", topo.MetaDBServers[0].DeployDir)
+		assert.Equal(t, "/home/tiem/my-deploy/metadb-server-4100/data", topo.MetaDBServers[0].DataDir)
 		assert.Equal(t, "", topo.MetaDBServers[0].LogDir)
 	})
 
@@ -404,18 +358,18 @@ tiem_cluster_servers:
     metrics_port: 8113
 `, func(file string) {
 		topo := Specification{}
-		err := spec.ParseTopologyYaml(file, &topo)
+		err := ParseTopologyYaml(file, &topo)
 		assert.Nil(t, err)
-		spec.ExpandRelativeDir(&topo)
+		ExpandRelativeDir(&topo)
 
 		assert.Equal(t, "my-deploy", topo.GlobalOptions.DeployDir)
 		assert.Equal(t, "data", topo.GlobalOptions.DataDir)
 
-		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20160/data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20160/data", topo.ClusterServers[0].DataDir)
 
-		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
-		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20161/data", topo.ClusterServers[1].DataDir)
+		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
+		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20161/data", topo.ClusterServers[1].DataDir)
 	})
 
 	// test global options, case 3
@@ -436,19 +390,19 @@ tiem_cluster_servers:
     metrics_port: 8113
 `, func(file string) {
 		topo := Specification{}
-		err := spec.ParseTopologyYaml(file, &topo)
+		err := ParseTopologyYaml(file, &topo)
 		assert.Nil(t, err)
-		spec.ExpandRelativeDir(&topo)
+		ExpandRelativeDir(&topo)
 
 		assert.Equal(t, "my-deploy", topo.GlobalOptions.DeployDir)
 		assert.Equal(t, "data", topo.GlobalOptions.DataDir)
 
-		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20160/my-data", topo.ClusterServers[0].DataDir)
-		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20160/my-log", topo.ClusterServers[0].LogDir)
+		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20160/my-data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20160/my-log", topo.ClusterServers[0].LogDir)
 
-		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
-		assert.Equal(t, "/home/tidb/my-deploy/cluster-server-20161/data", topo.ClusterServers[1].DataDir)
+		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
+		assert.Equal(t, "/home/tiem/my-deploy/cluster-server-20161/data", topo.ClusterServers[1].DataDir)
 		assert.Equal(t, "", topo.ClusterServers[1].LogDir)
 	})
 
@@ -471,21 +425,21 @@ tiem_cluster_servers:
     metrics_port: 8113
 `, func(file string) {
 		topo := Specification{}
-		err := spec.ParseTopologyYaml(file, &topo)
+		err := ParseTopologyYaml(file, &topo)
 		assert.Nil(t, err)
-		spec.ExpandRelativeDir(&topo)
+		ExpandRelativeDir(&topo)
 
 		assert.Equal(t, "deploy", topo.GlobalOptions.DeployDir)
 		assert.Equal(t, "my-global-data", topo.GlobalOptions.DataDir)
 		assert.Equal(t, "my-global-log", topo.GlobalOptions.LogDir)
 
-		assert.Equal(t, "/home/tidb/deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/deploy/cluster-server-20160/my-local-data", topo.ClusterServers[0].DataDir)
-		assert.Equal(t, "/home/tidb/deploy/cluster-server-20160/my-local-log", topo.ClusterServers[0].LogDir)
+		assert.Equal(t, "/home/tiem/deploy/cluster-server-20160", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiem/deploy/cluster-server-20160/my-local-data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tiem/deploy/cluster-server-20160/my-local-log", topo.ClusterServers[0].LogDir)
 
-		assert.Equal(t, "/home/tidb/deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
-		assert.Equal(t, "/home/tidb/deploy/cluster-server-20161/my-global-data", topo.ClusterServers[1].DataDir)
-		assert.Equal(t, "/home/tidb/deploy/cluster-server-20161/my-global-log", topo.ClusterServers[1].LogDir)
+		assert.Equal(t, "/home/tiem/deploy/cluster-server-20161", topo.ClusterServers[1].DeployDir)
+		assert.Equal(t, "/home/tiem/deploy/cluster-server-20161/my-global-data", topo.ClusterServers[1].DataDir)
+		assert.Equal(t, "/home/tiem/deploy/cluster-server-20161/my-global-log", topo.ClusterServers[1].LogDir)
 	})
 }
 
@@ -504,14 +458,14 @@ tiem_cluster_servers:
 `, func(base, scale string) {
 		topo, err := merge4test(base, scale)
 		assert.Nil(t, err)
-		spec.ExpandRelativeDir(topo)
+		ExpandRelativeDir(topo)
 
-		assert.Equal(t, "/home/tidb/deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
-		assert.Equal(t, "/home/tidb/deploy/cluster-server-4110/data", topo.ClusterServers[0].DataDir)
+		assert.Equal(t, "/home/tiem/deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
+		assert.Equal(t, "/home/tiem/deploy/cluster-server-4110/data", topo.ClusterServers[0].DataDir)
 		assert.Equal(t, "", topo.ClusterServers[0].LogDir)
 
-		assert.Equal(t, "/home/tidb/deploy/cluster-server-4110", topo.ClusterServers[1].DeployDir)
-		assert.Equal(t, "/home/tidb/deploy/cluster-server-4110/data", topo.ClusterServers[1].DataDir)
+		assert.Equal(t, "/home/tiem/deploy/cluster-server-4110", topo.ClusterServers[1].DeployDir)
+		assert.Equal(t, "/home/tiem/deploy/cluster-server-4110/data", topo.ClusterServers[1].DataDir)
 		assert.Equal(t, "", topo.ClusterServers[1].LogDir)
 	})
 
@@ -540,7 +494,7 @@ tiem_cluster_servers:
 		topo, err := merge4test(base, scale)
 		assert.Nil(t, err)
 
-		spec.ExpandRelativeDir(topo)
+		ExpandRelativeDir(topo)
 
 		assert.Equal(t, "/my-global-deploy/cluster-server-4110", topo.ClusterServers[0].DeployDir)
 		assert.Equal(t, "/my-global-deploy/cluster-server-4110/my-local-data", topo.ClusterServers[0].DataDir)
@@ -567,7 +521,7 @@ monitored:
   log_dir: "test-deploy/log"
 `, func(file string) {
 		topo := Specification{}
-		err := spec.ParseTopologyYaml(file, &topo)
+		err := ParseTopologyYaml(file, &topo)
 		assert.Nil(t, err)
 		assert.Equal(t, 39100, topo.MonitoredOptions.NodeExporterPort)
 		assert.Equal(t, 39115, topo.MonitoredOptions.BlackboxExporterPort)

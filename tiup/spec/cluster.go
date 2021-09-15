@@ -92,7 +92,7 @@ func (c *ClusterServerComponent) Instances() []Instance {
 	for _, s := range c.Topology.ClusterServers {
 		s := s
 		ins = append(ins, &ClusterServerInstance{
-			BaseInstance: spec.BaseInstance{
+			BaseInstance: BaseInstance{
 				InstanceSpec: s,
 				Name:         c.Name(),
 				Host:         s.Host,
@@ -119,7 +119,7 @@ func (c *ClusterServerComponent) Instances() []Instance {
 
 // ClusterServerInstance represent the TiEM instance
 type ClusterServerInstance struct {
-	spec.BaseInstance
+	BaseInstance
 	topo *Specification
 }
 
@@ -169,7 +169,7 @@ func (i *ClusterServerInstance) InitConfig(
 func (i *ClusterServerInstance) ScaleConfig(
 	ctx context.Context,
 	e ctxt.Executor,
-	topo spec.Topology,
+	topo Topology,
 	clusterName,
 	clusterVersion,
 	deployUser string,

@@ -17,10 +17,10 @@ import (
 	"context"
 	"path"
 
-	"github.com/pingcap/tiup/pkg/cluster/manager"
-	operator "github.com/pingcap/tiup/pkg/cluster/operation"
-	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
-	"github.com/pingcap/tiup/pkg/cluster/task"
+	"github.com/pingcap-inc/tiem/tiup/manager"
+	operator "github.com/pingcap-inc/tiem/tiup/operation"
+	"github.com/pingcap-inc/tiem/tiup/spec"
+	"github.com/pingcap-inc/tiem/tiup/task"
 	"github.com/pingcap/tiup/pkg/tui"
 	"github.com/pingcap/tiup/pkg/utils"
 	"github.com/spf13/cobra"
@@ -75,7 +75,7 @@ func supportVersion(vs string) error {
 	return nil
 }
 
-func postDeployHook(builder *task.Builder, topo cspec.Topology) {
+func postDeployHook(builder *task.Builder, topo spec.Topology) {
 	enableTask := task.NewBuilder().Func("Setting service auto start on boot", func(ctx context.Context) error {
 		return operator.Enable(ctx, topo, operator.Options{}, true)
 	}).BuildAsStep("Enable service").SetHidden(true)

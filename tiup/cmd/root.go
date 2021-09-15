@@ -20,12 +20,12 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/joomcode/errorx"
+	"github.com/pingcap-inc/tiem/tiup/manager"
+	operator "github.com/pingcap-inc/tiem/tiup/operation"
 	"github.com/pingcap-inc/tiem/tiup/spec"
+	cspec "github.com/pingcap-inc/tiem/tiup/spec"
 	"github.com/pingcap-inc/tiem/tiup/version"
 	"github.com/pingcap/tiup/pkg/cluster/executor"
-	"github.com/pingcap/tiup/pkg/cluster/manager"
-	operator "github.com/pingcap/tiup/pkg/cluster/operation"
-	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
 	tiupmeta "github.com/pingcap/tiup/pkg/environment"
 	"github.com/pingcap/tiup/pkg/localdata"
 	"github.com/pingcap/tiup/pkg/logger"
@@ -41,7 +41,7 @@ var (
 	gOpt        operator.Options
 	skipConfirm bool
 	cm          *manager.Manager
-	tiemspec    *cspec.SpecManager
+	tiemspec    *spec.SpecManager
 )
 
 func init() {
@@ -71,7 +71,7 @@ func init() {
 				return err
 			}
 
-			tiemspec = cspec.GetSpecManager()
+			tiemspec = spec.GetSpecManager()
 			logger.EnableAuditLog(cspec.AuditDir())
 			cm = manager.NewManager("tiem", tiemspec, spec.TiEMComponentVersion)
 

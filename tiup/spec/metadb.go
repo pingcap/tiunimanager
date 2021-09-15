@@ -94,7 +94,7 @@ func (c *MetaDBComponent) Instances() []Instance {
 	for _, s := range c.Topology.MetaDBServers {
 		s := s
 		ins = append(ins, &MetaDBInstance{
-			BaseInstance: spec.BaseInstance{
+			BaseInstance: BaseInstance{
 				InstanceSpec: s,
 				Name:         c.Name(),
 				Host:         s.Host,
@@ -122,7 +122,7 @@ func (c *MetaDBComponent) Instances() []Instance {
 
 // MetaDBInstance represent the TiEM instance
 type MetaDBInstance struct {
-	spec.BaseInstance
+	BaseInstance
 	topo *Specification
 }
 
@@ -174,7 +174,7 @@ func (i *MetaDBInstance) InitConfig(
 func (i *MetaDBInstance) ScaleConfig(
 	ctx context.Context,
 	e ctxt.Executor,
-	topo spec.Topology,
+	topo Topology,
 	clusterName,
 	clusterVersion,
 	deployUser string,

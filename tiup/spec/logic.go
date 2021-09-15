@@ -14,49 +14,15 @@
 package spec
 
 import (
-	"fmt"
-	"path/filepath"
 	"reflect"
 
-	"github.com/creasty/defaults"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
 var (
-	globalOptionTypeName  = reflect.TypeOf(spec.GlobalOptions{}).Name()
+	globalOptionTypeName  = reflect.TypeOf(GlobalOptions{}).Name()
 	monitorOptionTypeName = reflect.TypeOf(spec.MonitoredOptions{}).Name()
 )
-
-func setDefaultDir(parent, role, port string, field reflect.Value) {
-	if field.String() != "" {
-		return
-	}
-	if defaults.CanUpdate(field.Interface()) {
-		dir := fmt.Sprintf("%s-%s", role, port)
-		field.Set(reflect.ValueOf(filepath.Join(parent, dir)))
-	}
-}
-
-func findField(v reflect.Value, fieldName string) (int, bool) {
-	for i := 0; i < v.NumField(); i++ {
-		if v.Type().Field(i).Name == fieldName {
-			return i, true
-		}
-	}
-	return -1, false
-}
-
-// Skip global/monitored/job options
-func isSkipField(field reflect.Value) bool {
-	if field.Kind() == reflect.Ptr {
-		if field.IsZero() {
-			return true
-		}
-		field = field.Elem()
-	}
-	tp := field.Type().Name()
-	return tp == globalOptionTypeName || tp == monitorOptionTypeName
-}
 
 type (
 	// InstanceSpec represent a instance specification
@@ -69,14 +35,8 @@ type (
 	}
 )
 
-// Component represents a component of the cluster.
-type Component = spec.Component
-
-// Instance represents an instance
-type Instance = spec.Instance
-
 // GetGlobalOptions returns cluster topology
-func (topo *Specification) GetGlobalOptions() spec.GlobalOptions {
+func (topo *Specification) GetGlobalOptions() GlobalOptions {
 	return topo.GlobalOptions
 }
 
@@ -103,9 +63,9 @@ func (topo *Specification) ComponentsByStopOrder() (comps []Component) {
 func (topo *Specification) ComponentsByStartOrder() (comps []Component) {
 	// "elasticsearch", "monitor", "metadb", "api-server", "web", "cluster-server"
 	comps = append(comps, &ElasticSearchComponent{topo})
-	comps = append(comps, &spec.MonitorComponent{Topology: topo})
-	comps = append(comps, &spec.GrafanaComponent{Topology: topo})
-	comps = append(comps, &spec.AlertManagerComponent{Topology: topo})
+	comps = append(comps, &MonitorComponent{Topology: topo})
+	comps = append(comps, &GrafanaComponent{Topology: topo})
+	comps = append(comps, &AlertManagerComponent{Topology: topo})
 	// TODO: add tracer
 	comps = append(comps, &MetaDBComponent{topo})
 	comps = append(comps, &APIServerComponent{topo})
@@ -122,11 +82,21 @@ func (topo *Specification) ComponentsByUpdateOrder() (comps []Component) {
 	comps = append(comps, &WebServerComponent{topo})
 	comps = append(comps, &ClusterServerComponent{topo})
 	// TODO: add tracer
-	comps = append(comps, &spec.MonitorComponent{Topology: topo})
-	comps = append(comps, &spec.GrafanaComponent{Topology: topo})
-	comps = append(comps, &spec.AlertManagerComponent{Topology: topo})
+	comps = append(comps, &MonitorComponent{Topology: topo})
+	comps = append(comps, &GrafanaComponent{Topology: topo})
+	comps = append(comps, &AlertManagerComponent{Topology: topo})
 	comps = append(comps, &ElasticSearchComponent{topo})
 	return
+}
+
+// FindComponent returns the Component corresponding the name
+func FindComponent(topo Topology, name string) Component {
+	for _, com := range topo.ComponentsByStartOrder() {
+		if com.Name() == name {
+			return com
+		}
+	}
+	return nil
 }
 
 // IterComponent iterates all components in component starting order

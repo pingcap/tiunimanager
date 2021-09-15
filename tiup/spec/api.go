@@ -92,7 +92,7 @@ func (c *APIServerComponent) Instances() []Instance {
 	for _, s := range c.Topology.APIServers {
 		s := s
 		ins = append(ins, &APIServerInstance{
-			BaseInstance: spec.BaseInstance{
+			BaseInstance: BaseInstance{
 				InstanceSpec: s,
 				Name:         c.Name(),
 				Host:         s.Host,
@@ -119,7 +119,7 @@ func (c *APIServerComponent) Instances() []Instance {
 
 // APIServerInstance represent the TiEM instance
 type APIServerInstance struct {
-	spec.BaseInstance
+	BaseInstance
 	topo *Specification
 }
 
@@ -170,7 +170,7 @@ func (i *APIServerInstance) InitConfig(
 func (i *APIServerInstance) ScaleConfig(
 	ctx context.Context,
 	e ctxt.Executor,
-	topo spec.Topology,
+	topo Topology,
 	clusterName,
 	clusterVersion,
 	deployUser string,

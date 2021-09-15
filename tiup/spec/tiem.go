@@ -18,63 +18,68 @@ import (
 	"path/filepath"
 	"reflect"
 
-	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
-var specManager *cspec.SpecManager
+var (
+	specManager *SpecManager
+)
 
-// Metadata is the specification of generic cluster metadata
-type Metadata struct {
-	User    string `yaml:"user"`       // the user to run and manage cluster on remote
-	Version string `yaml:"dm_version"` // the version of TiDB cluster
-	// EnableFirewall bool   `yaml:"firewall"`
+// TiEMMeta is the specification of generic cluster metadata
+type TiEMMeta struct {
+	User    string `yaml:"user"`                   // the user to run and manage cluster on remote
+	Version string `yaml:"tiem_version"`           // the version of TiEM
+	OpsVer  string `yaml:"last_ops_ver,omitempty"` // the version of ourself that updated the meta last time
 
 	Topology *Specification `yaml:"topology"`
 }
 
-var _ cspec.UpgradableMetadata = &Metadata{}
+var _ UpgradableMetadata = &TiEMMeta{}
 
-// SetVersion implement UpgradableMetadata interface.
-func (m *Metadata) SetVersion(s string) {
+// SetVersion implement UpgradableTiEMMeta interface.
+func (m *TiEMMeta) SetVersion(s string) {
 	m.Version = s
 }
 
-// SetUser implement UpgradableMetadata interface.
-func (m *Metadata) SetUser(s string) {
+// SetUser implement UpgradableTiEMMeta interface.
+func (m *TiEMMeta) SetUser(s string) {
 	m.User = s
 }
 
-// GetTopology implements Metadata interface.
-func (m *Metadata) GetTopology() cspec.Topology {
+// GetTopology implements TiEMMeta interface.
+func (m *TiEMMeta) GetTopology() Topology {
 	return m.Topology
 }
 
-// SetTopology implements Metadata interface.
-func (m *Metadata) SetTopology(topo cspec.Topology) {
-	dmTopo, ok := topo.(*Specification)
+// SetTopology implements TiEMMeta interface.
+func (m *TiEMMeta) SetTopology(topo Topology) {
+	tiemTopo, ok := topo.(*Specification)
 	if !ok {
 		panic(fmt.Sprintln("wrong type: ", reflect.TypeOf(topo)))
 	}
 
-	m.Topology = dmTopo
+	m.Topology = tiemTopo
 }
 
-// GetBaseMeta implements Metadata interface.
-func (m *Metadata) GetBaseMeta() *cspec.BaseMeta {
-	return &cspec.BaseMeta{
+// GetBaseMeta implements TiEMMeta interface.
+func (m *TiEMMeta) GetBaseMeta() *BaseMeta {
+	return &BaseMeta{
 		Version: m.Version,
 		User:    m.User,
 	}
 }
 
 // GetSpecManager return the spec manager of dm cluster.
-func GetSpecManager() *cspec.SpecManager {
+func GetSpecManager() *SpecManager {
 	if specManager == nil {
-		specManager = cspec.NewSpec(filepath.Join(cspec.ProfileDir(), cspec.TiUPClusterDir), func() cspec.Metadata {
-			return &Metadata{
-				Topology: new(Specification),
-			}
-		})
+		specManager = NewSpec(
+			filepath.Join(spec.ProfileDir(), spec.TiUPClusterDir),
+			func() Metadata {
+				return &TiEMMeta{
+					Topology: new(Specification),
+				}
+			},
+		)
 	}
 	return specManager
 }

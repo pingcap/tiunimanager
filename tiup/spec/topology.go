@@ -14,7 +14,6 @@
 package spec
 
 import (
-	"crypto/tls"
 	"fmt"
 	"path/filepath"
 	"reflect"
@@ -23,6 +22,7 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/pingcap/errors"
+	"github.com/pingcap/tiup/pkg/cluster/executor"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/meta"
 	"github.com/pingcap/tiup/pkg/set"
@@ -43,6 +43,10 @@ const (
 	ComponentKibana              = "kibana"         // kibana
 	ComponentFilebeat            = "filebeat"       // filebeat
 	ComponentNodeExporter        = "node-exporter"  // different with in tiup-cluster (node_exporter)
+	ComponentBlackboxExporter    = "blackbox_exporter"
+	ComponentGrafana             = "grafana"
+	ComponentAlertmanager        = "alertmanager"
+	ComponentPrometheus          = "prometheus"
 
 	RoleTiEMMetaDB  = "metadb"
 	RoleTiEMCluster = "cluster"
@@ -55,19 +59,45 @@ const (
 	TopoTypeTiEM = "tiem"
 )
 
+// GlobalOptions represents the global options for all groups in topology
+// specification in topology.yaml
+type GlobalOptions struct {
+	User            string               `yaml:"user,omitempty" default:"tiem"`
+	Group           string               `yaml:"group,omitempty"`
+	SSHPort         int                  `yaml:"ssh_port,omitempty" default:"22" validate:"ssh_port:editable"`
+	SSHType         executor.SSHType     `yaml:"ssh_type,omitempty" default:"builtin"`
+	DeployDir       string               `yaml:"deploy_dir,omitempty" default:"deploy"`
+	DataDir         string               `yaml:"data_dir,omitempty" default:"data"`
+	LogDir          string               `yaml:"log_dir,omitempty"`
+	ResourceControl meta.ResourceControl `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
+	OS              string               `yaml:"os,omitempty" default:"linux"`
+	Arch            string               `yaml:"arch,omitempty"`
+}
+
+// BaseTopo is the base info to topology.
+type BaseTopo struct {
+	GlobalOptions    *GlobalOptions
+	MonitoredOptions *spec.MonitoredOptions
+	MasterList       []string
+
+	Monitors      []*PrometheusSpec
+	Grafanas      []*GrafanaSpec
+	Alertmanagers []*AlertmanagerSpec
+}
+
 // Specification represents the specification of topology.yaml
 type Specification struct {
-	GlobalOptions        spec.GlobalOptions       `yaml:"global,omitempty" validate:"global:editable"`
-	MonitoredOptions     *spec.MonitoredOptions   `yaml:"monitored,omitempty" validate:"monitored:editable"`
-	MetaDBServers        []*MetaDBServerSpec      `yaml:"tiem_metadb_servers"`
-	ClusterServers       []*ClusterServerSpec     `yaml:"tiem_cluster_servers"`
-	APIServers           []*APIServerSpec         `yaml:"tiem_api_servers"`
-	WebServers           []*WebServerSpec         `yaml:"tiem_web_servers"`
-	TracerServers        []*TracerServerSpec      `yaml:"tracer_servers"`
-	ElasticSearchServers []*ElasticSearchSpec     `yaml:"elasticsearch_servers"`
-	Monitors             []*spec.PrometheusSpec   `yaml:"monitoring_servers"`
-	Grafanas             []*spec.GrafanaSpec      `yaml:"grafana_servers,omitempty"`
-	Alertmanagers        []*spec.AlertmanagerSpec `yaml:"alertmanager_servers,omitempty"`
+	GlobalOptions        GlobalOptions          `yaml:"global,omitempty" validate:"global:editable"`
+	MonitoredOptions     *spec.MonitoredOptions `yaml:"monitored,omitempty" validate:"monitored:editable"`
+	MetaDBServers        []*MetaDBServerSpec    `yaml:"tiem_metadb_servers"`
+	ClusterServers       []*ClusterServerSpec   `yaml:"tiem_cluster_servers"`
+	APIServers           []*APIServerSpec       `yaml:"tiem_api_servers"`
+	WebServers           []*WebServerSpec       `yaml:"tiem_web_servers"`
+	TracerServers        []*TracerServerSpec    `yaml:"tracer_servers"`
+	ElasticSearchServers []*ElasticSearchSpec   `yaml:"elasticsearch_servers"`
+	Monitors             []*PrometheusSpec      `yaml:"monitoring_servers"`
+	Grafanas             []*GrafanaSpec         `yaml:"grafana_servers,omitempty"`
+	Alertmanagers        []*AlertmanagerSpec    `yaml:"alertmanager_servers,omitempty"`
 }
 
 // UnmarshalYAML sets default values when unmarshaling the topology file
@@ -474,14 +504,6 @@ func (s *Specification) ElasticSearchAddress() []string {
 	return result
 }
 
-// TLSConfig generates a tls.Config for the specification as needed
-func (s *Specification) TLSConfig(dir string) (*tls.Config, error) {
-	if !s.GlobalOptions.TLSEnabled {
-		return nil, nil
-	}
-	return spec.LoadClientCert(dir)
-}
-
 // Validate validates the topology specification and produce error if the
 // specification invalid (e.g: port conflicts or directory conflicts)
 func (s *Specification) Validate() error {
@@ -506,8 +528,8 @@ func (s *Specification) Type() string {
 }
 
 // BaseTopo implements Topology interface.
-func (s *Specification) BaseTopo() *spec.BaseTopo {
-	return &spec.BaseTopo{
+func (s *Specification) BaseTopo() *BaseTopo {
+	return &BaseTopo{
 		GlobalOptions:    &s.GlobalOptions,
 		MonitoredOptions: s.GetMonitoredOptions(),
 		Monitors:         s.Monitors,
@@ -517,7 +539,7 @@ func (s *Specification) BaseTopo() *spec.BaseTopo {
 }
 
 // NewPart implements ScaleOutTopology interface.
-func (s *Specification) NewPart() spec.Topology {
+func (s *Specification) NewPart() Topology {
 	return &Specification{
 		GlobalOptions:    s.GlobalOptions,
 		MonitoredOptions: s.MonitoredOptions,
@@ -525,7 +547,7 @@ func (s *Specification) NewPart() spec.Topology {
 }
 
 // MergeTopo implements ScaleOutTopology interface.
-func (s *Specification) MergeTopo(rhs spec.Topology) spec.Topology {
+func (s *Specification) MergeTopo(rhs Topology) Topology {
 	other, ok := rhs.(*Specification)
 	if !ok {
 		panic("topo should be TiEM Topology")
@@ -540,7 +562,7 @@ func (s *Specification) FillHostArch(hostArch map[string]string) error {
 }
 
 // Merge returns a new Topology which sum old ones
-func (s *Specification) Merge(that spec.Topology) spec.Topology {
+func (s *Specification) Merge(that Topology) Topology {
 	spec := that.(*Specification)
 	return &Specification{
 		GlobalOptions:        s.GlobalOptions,
@@ -558,7 +580,7 @@ func (s *Specification) Merge(that spec.Topology) spec.Topology {
 }
 
 // fillDefaults tries to fill custom fields to their default values
-func fillTiEMCustomDefaults(globalOptions *spec.GlobalOptions, data interface{}) error {
+func fillTiEMCustomDefaults(globalOptions *GlobalOptions, data interface{}) error {
 	v := reflect.ValueOf(data).Elem()
 	t := v.Type()
 
@@ -572,7 +594,7 @@ func fillTiEMCustomDefaults(globalOptions *spec.GlobalOptions, data interface{})
 	return nil
 }
 
-func setTiEMCustomDefaults(globalOptions *spec.GlobalOptions, field reflect.Value) error {
+func setTiEMCustomDefaults(globalOptions *GlobalOptions, field reflect.Value) error {
 	if !field.CanSet() || isSkipField(field) {
 		return nil
 	}

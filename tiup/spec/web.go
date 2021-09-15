@@ -91,7 +91,7 @@ func (c *WebServerComponent) Instances() []Instance {
 		s := s
 		ins = append(ins, &WebServerInstance{
 			ServerName: s.ServerName,
-			BaseInstance: spec.BaseInstance{
+			BaseInstance: BaseInstance{
 				InstanceSpec: s,
 				Name:         c.Name(),
 				Host:         s.Host,
@@ -119,7 +119,7 @@ func (c *WebServerComponent) Instances() []Instance {
 // WebServerInstance represent the TiEM instance
 type WebServerInstance struct {
 	ServerName string
-	spec.BaseInstance
+	BaseInstance
 	topo *Specification
 }
 
@@ -185,7 +185,7 @@ func (i *WebServerInstance) InitConfig(
 func (i *WebServerInstance) ScaleConfig(
 	ctx context.Context,
 	e ctxt.Executor,
-	topo spec.Topology,
+	topo Topology,
 	clusterName,
 	clusterVersion,
 	deployUser string,

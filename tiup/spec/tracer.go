@@ -89,7 +89,7 @@ func (c *JaegerComponent) Instances() []Instance {
 	for _, s := range c.Topology.TracerServers {
 		s := s
 		ins = append(ins, &JaegerInstance{
-			BaseInstance: spec.BaseInstance{
+			BaseInstance: BaseInstance{
 				InstanceSpec: s,
 				Name:         c.Name(),
 				Host:         s.Host,
@@ -115,7 +115,7 @@ func (c *JaegerComponent) Instances() []Instance {
 
 // JaegerInstance represent the TiEM instance
 type JaegerInstance struct {
-	spec.BaseInstance
+	BaseInstance
 	topo *Specification
 }
 
@@ -160,7 +160,7 @@ func (i *JaegerInstance) InitConfig(
 func (i *JaegerInstance) ScaleConfig(
 	ctx context.Context,
 	e ctxt.Executor,
-	topo spec.Topology,
+	topo Topology,
 	clusterName,
 	clusterVersion,
 	deployUser string,

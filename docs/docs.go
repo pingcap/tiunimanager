@@ -1573,7 +1573,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/resource.Host"
+                            "$ref": "#/definitions/hostapi.HostInfo"
                         }
                     }
                 ],
@@ -1653,7 +1653,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/resource.Host"
+                                                "$ref": "#/definitions/hostapi.HostInfo"
                                             }
                                         }
                                     }
@@ -1835,7 +1835,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/resource.Host"
+                                            "$ref": "#/definitions/hostapi.HostInfo"
                                         }
                                     }
                                 }
@@ -2713,7 +2713,7 @@ var doc = `{
                     "type": "integer"
                 },
                 "disk": {
-                    "$ref": "#/definitions/resource.Disk"
+                    "$ref": "#/definitions/hostapi.DiskInfo"
                 },
                 "hostName": {
                     "type": "string"
@@ -2749,6 +2749,40 @@ var doc = `{
                 }
             }
         },
+        "hostapi.DiskInfo": {
+            "type": "object",
+            "properties": {
+                "capacity": {
+                    "description": "Disk size, Unit: GB",
+                    "type": "integer"
+                },
+                "diskId": {
+                    "type": "string"
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "[sda/sdb/nvmep0...]",
+                    "type": "string"
+                },
+                "path": {
+                    "description": "Disk mount path: [/data1]",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Disk Status, 0 for available, 1 for inused",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Disk type: [nvme-ssd/ssd/sata]",
+                    "type": "string"
+                },
+                "usedBy": {
+                    "type": "string"
+                }
+            }
+        },
         "hostapi.DomainResource": {
             "type": "object",
             "properties": {
@@ -2768,6 +2802,85 @@ var doc = `{
                     "type": "string"
                 },
                 "zoneName": {
+                    "type": "string"
+                }
+            }
+        },
+        "hostapi.HostInfo": {
+            "type": "object",
+            "properties": {
+                "arch": {
+                    "description": "x86 or arm64",
+                    "type": "string"
+                },
+                "az": {
+                    "type": "string"
+                },
+                "cpuCores": {
+                    "type": "integer"
+                },
+                "createTime": {
+                    "type": "integer"
+                },
+                "diskType": {
+                    "description": "Disk type of this host [sata/ssd/nvme_ssd]",
+                    "type": "string"
+                },
+                "disks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.DiskInfo"
+                    }
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "hostName": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "kernel": {
+                    "type": "string"
+                },
+                "memory": {
+                    "description": "Host memory size, Unit:GB",
+                    "type": "integer"
+                },
+                "nic": {
+                    "description": "Host network type: 1GE or 10GE",
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "passwd": {
+                    "type": "string"
+                },
+                "purpose": {
+                    "description": "What Purpose is the host used for? [compute/storage/general]",
+                    "type": "string"
+                },
+                "rack": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "reserved": {
+                    "description": "Whether this host is reserved - will not be allocated",
+                    "type": "boolean"
+                },
+                "spec": {
+                    "description": "Host Spec, init while importing",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Host Status, 0 for Online, 1 for offline",
+                    "type": "integer"
+                },
+                "userName": {
                     "type": "string"
                 }
             }
@@ -3077,112 +3190,6 @@ var doc = `{
                     "type": "integer"
                 },
                 "unit": {
-                    "type": "string"
-                }
-            }
-        },
-        "resource.Disk": {
-            "type": "object",
-            "properties": {
-                "capacity": {
-                    "description": "Disk size, Unit: GB",
-                    "type": "integer"
-                },
-                "diskId": {
-                    "type": "string"
-                },
-                "name": {
-                    "description": "[sda/sdb/nvmep0...]",
-                    "type": "string"
-                },
-                "omitempty": {
-                    "type": "string"
-                },
-                "path": {
-                    "description": "Disk mount path: [/data1]",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Disk Status, 0 for available, 1 for inused",
-                    "type": "integer"
-                },
-                "type": {
-                    "description": "Disk type: [nvme-ssd/ssd/sata]",
-                    "type": "string"
-                },
-                "usedby": {
-                    "description": "Disk is used by which cluster",
-                    "type": "string"
-                }
-            }
-        },
-        "resource.Host": {
-            "type": "object",
-            "properties": {
-                "az": {
-                    "type": "string"
-                },
-                "cpuCores": {
-                    "type": "integer"
-                },
-                "createTime": {
-                    "type": "integer"
-                },
-                "dc": {
-                    "type": "string"
-                },
-                "disks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/resource.Disk"
-                    }
-                },
-                "hostId": {
-                    "type": "string"
-                },
-                "hostName": {
-                    "type": "string"
-                },
-                "ip": {
-                    "type": "string"
-                },
-                "kernel": {
-                    "type": "string"
-                },
-                "memory": {
-                    "description": "Host memory size, Unit:GB",
-                    "type": "integer"
-                },
-                "nic": {
-                    "description": "Host network type: 1GE or 10GE",
-                    "type": "string"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "passwd": {
-                    "type": "string"
-                },
-                "performance": {
-                    "description": "Performance type of this host [High/Medium/Low]",
-                    "type": "string"
-                },
-                "purpose": {
-                    "description": "What Purpose is the host used for? [compute/storage/general]",
-                    "type": "string"
-                },
-                "rack": {
-                    "type": "string"
-                },
-                "spec": {
-                    "description": "Host Spec, init while importing",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Host Status, 0 for Online, 1 for offline",
-                    "type": "integer"
-                },
-                "userName": {
                     "type": "string"
                 }
             }

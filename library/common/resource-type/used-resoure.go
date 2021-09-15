@@ -10,7 +10,7 @@ import (
 type Holder struct {
 	HolderId  string `gorm:"index"` // who(clusterId) hold the resource
 	RequestId string `gorm:"index"` // the resource is allocated in which request
-	CreatedAt int64  `gorm:"autoCreateTime"`
+	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
@@ -36,6 +36,19 @@ type UsedPort struct {
 }
 
 func (d *UsedPort) BeforeCreate(tx *gorm.DB) (err error) {
+	d.ID = uuid.New().String()
+	return nil
+}
+
+type UsedDisk struct {
+	Holder
+	ID       string `gorm:"PrimaryKey"`
+	HostId   string `gorm:"not null"`
+	DiskId   string `gorm:"not null"`
+	Capacity int32
+}
+
+func (d *UsedDisk) BeforeCreate(tx *gorm.DB) (err error) {
 	d.ID = uuid.New().String()
 	return nil
 }

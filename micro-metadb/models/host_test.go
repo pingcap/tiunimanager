@@ -499,12 +499,12 @@ func TestHost_AfterDelete(t *testing.T) {
 		Memory    int32
 		Spec      string
 		Nic       string
-		DC        string
+		Region    string
 		AZ        string
 		Rack      string
 		Purpose   string
 		Disks     []resource.Disk
-		CreatedAt int64
+		CreatedAt time.Time
 		UpdatedAt time.Time
 		DeletedAt gorm.DeletedAt
 	}
@@ -532,7 +532,7 @@ func TestHost_AfterDelete(t *testing.T) {
 				Memory:    tt.fields.Memory,
 				Spec:      tt.fields.Spec,
 				Nic:       tt.fields.Nic,
-				DC:        tt.fields.DC,
+				Region:    tt.fields.Region,
 				AZ:        tt.fields.AZ,
 				Rack:      tt.fields.Rack,
 				Purpose:   tt.fields.Purpose,
@@ -560,12 +560,12 @@ func TestHost_AfterFind(t *testing.T) {
 		Memory    int32
 		Spec      string
 		Nic       string
-		DC        string
+		Region    string
 		AZ        string
 		Rack      string
 		Purpose   string
 		Disks     []resource.Disk
-		CreatedAt int64
+		CreatedAt time.Time
 		UpdatedAt time.Time
 		DeletedAt gorm.DeletedAt
 	}
@@ -593,7 +593,7 @@ func TestHost_AfterFind(t *testing.T) {
 				Memory:    tt.fields.Memory,
 				Spec:      tt.fields.Spec,
 				Nic:       tt.fields.Nic,
-				DC:        tt.fields.DC,
+				Region:    tt.fields.Region,
 				AZ:        tt.fields.AZ,
 				Rack:      tt.fields.Rack,
 				Purpose:   tt.fields.Purpose,
@@ -621,12 +621,12 @@ func TestHost_BeforeCreate(t *testing.T) {
 		Memory    int32
 		Spec      string
 		Nic       string
-		DC        string
+		Region    string
 		AZ        string
 		Rack      string
 		Purpose   string
 		Disks     []resource.Disk
-		CreatedAt int64
+		CreatedAt time.Time
 		UpdatedAt time.Time
 		DeletedAt gorm.DeletedAt
 	}
@@ -654,7 +654,7 @@ func TestHost_BeforeCreate(t *testing.T) {
 				Memory:    tt.fields.Memory,
 				Spec:      tt.fields.Spec,
 				Nic:       tt.fields.Nic,
-				DC:        tt.fields.DC,
+				Region:    tt.fields.Region,
 				AZ:        tt.fields.AZ,
 				Rack:      tt.fields.Rack,
 				Purpose:   tt.fields.Purpose,
@@ -682,12 +682,12 @@ func TestHost_BeforeDelete(t *testing.T) {
 		Memory    int32
 		Spec      string
 		Nic       string
-		DC        string
+		Region    string
 		AZ        string
 		Rack      string
 		Purpose   string
 		Disks     []resource.Disk
-		CreatedAt int64
+		CreatedAt time.Time
 		UpdatedAt time.Time
 		DeletedAt gorm.DeletedAt
 	}
@@ -715,7 +715,7 @@ func TestHost_BeforeDelete(t *testing.T) {
 				Memory:    tt.fields.Memory,
 				Spec:      tt.fields.Spec,
 				Nic:       tt.fields.Nic,
-				DC:        tt.fields.DC,
+				Region:    tt.fields.Region,
 				AZ:        tt.fields.AZ,
 				Rack:      tt.fields.Rack,
 				Purpose:   tt.fields.Purpose,
@@ -743,12 +743,12 @@ func TestHost_IsExhaust(t *testing.T) {
 		Memory    int32
 		Spec      string
 		Nic       string
-		DC        string
+		Region    string
 		AZ        string
 		Rack      string
 		Purpose   string
 		Disks     []resource.Disk
-		CreatedAt int64
+		CreatedAt time.Time
 		UpdatedAt time.Time
 		DeletedAt gorm.DeletedAt
 	}
@@ -775,7 +775,7 @@ func TestHost_IsExhaust(t *testing.T) {
 				Memory:    tt.fields.Memory,
 				Spec:      tt.fields.Spec,
 				Nic:       tt.fields.Nic,
-				DC:        tt.fields.DC,
+				Region:    tt.fields.Region,
 				AZ:        tt.fields.AZ,
 				Rack:      tt.fields.Rack,
 				Purpose:   tt.fields.Purpose,

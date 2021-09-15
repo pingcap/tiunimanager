@@ -23,18 +23,20 @@ func copyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.Ip = src.Ip
 	dst.UserName = src.UserName
 	dst.Passwd = src.Passwd
+	dst.Arch = src.Arch
 	dst.Os = src.Os
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
 	dst.Spec = src.Spec
 	dst.Nic = src.Nic
-	dst.Dc = src.Dc
+	dst.Region = src.Region
 	dst.Az = src.Az
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
-	dst.Performance = src.Performance
+	dst.DiskType = src.DiskType
+	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
 			Name:     disk.Name,
@@ -50,19 +52,21 @@ func copyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.HostId = src.HostId
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
+	dst.Arch = src.Arch
 	dst.Os = src.Os
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
 	dst.Spec = src.Spec
 	dst.Nic = src.Nic
-	dst.Dc = src.Dc
+	dst.Region = src.Region
 	dst.Az = src.Az
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
-	dst.Performance = src.Performance
+	dst.DiskType = src.DiskType
 	dst.CreateAt = src.CreateAt
+	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &hostPb.Disk{
 			DiskId:   disk.DiskId,

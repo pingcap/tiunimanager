@@ -10,6 +10,13 @@ import (
 	"gorm.io/gorm"
 )
 
+type ArchType string
+
+const (
+	Arm64 ArchType = "arm64"
+	X86   ArchType = "x86"
+)
+
 type HostStatus int32
 
 const (
@@ -41,21 +48,24 @@ type Host struct {
 	Passwd       string         `json:"passwd,omitempty" gorm:"size:32"`
 	HostName     string         `json:"hostName" gorm:"size:255"`
 	Status       int32          `json:"status" gorm:"index"` // Host Status, 0 for Online, 1 for offline
+	Arch         string         `json:"arch" gorm:"index"`   // x86 or arm64
 	OS           string         `json:"os" gorm:"size:32"`
 	Kernel       string         `json:"kernel" gorm:"size:32"`
 	CpuCores     int32          `json:"cpuCores"`
 	Memory       int32          `json:"memory"`             // Host memory size, Unit:GB
 	Spec         string         `json:"spec"`               // Host Spec, init while importing
 	Nic          string         `json:"nic" gorm:"size:32"` // Host network type: 1GE or 10GE
-	DC           string         `json:"dc" gorm:"size:32"`
+	Region       string         `json:"region" gorm:"size:32"`
 	AZ           string         `json:"az" gorm:"index"`
-	Rack         string         `json:"rack" gorm:"size:32"`
-	Purpose      string         `json:"purpose" gorm:"index"`     // What Purpose is the host used for? [compute/storage/general]
-	Performance  string         `json:"performance" gorm:"index"` // Performance type of this host [High/Medium/Low]
+	Rack         string         `json:"rack" gorm:"index"`
+	Purpose      string         `json:"purpose" gorm:"index"`  // What Purpose is the host used for? [compute/storage/general]
+	DiskType     string         `json:"diskType" gorm:"index"` // Disk type of this host [sata/ssd/nvme_ssd]
+	Reserved     bool           `json:"reserved" gorm:"index"` // Whether this host is reserved - will not be allocated
 	Disks        []Disk         `json:"disks"`
+	UsedDisks    []UsedDisk     `json:"-"`
 	UsedComputes []UsedCompute  `json:"-"`
 	UsedPorts    []UsedPort     `json:"-"`
-	CreatedAt    int64          `json:"createTime" gorm:"autoCreateTime"`
+	CreatedAt    time.Time      `json:"createTime"`
 	UpdatedAt    time.Time      `json:"-"`
 	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
 }

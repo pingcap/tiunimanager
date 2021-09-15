@@ -40,18 +40,20 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *resource.Host) {
 	dst.IP = src.Ip
 	dst.UserName = src.UserName
 	dst.Passwd = src.Passwd
+	dst.Arch = src.Arch
 	dst.OS = src.Os
 	dst.Kernel = src.Kernel
 	dst.CpuCores = src.CpuCores
 	dst.Memory = src.Memory
 	dst.Spec = src.Spec
 	dst.Nic = src.Nic
-	dst.DC = src.Dc
-	dst.AZ = genDomainCodeByName(dst.DC, src.Az)
+	dst.Region = src.Region
+	dst.AZ = genDomainCodeByName(dst.Region, src.Az)
 	dst.Rack = genDomainCodeByName(dst.AZ, src.Rack)
 	dst.Status = int32(src.Status)
 	dst.Purpose = src.Purpose
-	dst.Performance = src.Performance
+	dst.DiskType = src.DiskType
+	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, resource.Disk{
 			Name:     disk.Name,
@@ -171,19 +173,21 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.HostId = src.ID
 	dst.HostName = src.HostName
 	dst.Ip = src.IP
+	dst.Arch = src.Arch
 	dst.Os = src.OS
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
 	dst.Spec = src.Spec
 	dst.Nic = src.Nic
-	dst.Dc = src.DC
+	dst.Region = src.Region
 	dst.Az = GetDomainNameFromCode(src.AZ)
 	dst.Rack = GetDomainNameFromCode(src.Rack)
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
-	dst.Performance = src.Performance
-	dst.CreateAt = src.CreatedAt
+	dst.DiskType = src.DiskType
+	dst.Reserved = src.Reserved
+	dst.CreateAt = src.CreatedAt.Unix()
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
 			DiskId:   disk.ID,
@@ -192,7 +196,6 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbPb.DBHostInfoDTO) {
 			Capacity: disk.Capacity,
 			Status:   disk.Status,
 			Type:     disk.Type,
-			UsedBy:   disk.UsedBy,
 		})
 	}
 }

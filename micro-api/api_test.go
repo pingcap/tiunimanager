@@ -15,7 +15,7 @@ import (
 
 	"github.com/asim/go-micro/v3/client"
 	"github.com/pingcap-inc/tiem/library/common"
-	rt "github.com/pingcap-inc/tiem/library/common/resource-type"
+
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
 	managerPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
@@ -69,8 +69,8 @@ func Test_ListHosts_Succeed(t *testing.T) {
 
 	type ResultWithPage struct {
 		controller.ResultMark
-		Data []rt.Host       `json:"data"`
-		Page controller.Page `json:"page"`
+		Data []hostapi.HostInfo `json:"data"`
+		Page controller.Page    `json:"page"`
 	}
 	var result ResultWithPage
 	err := json.Unmarshal(w.Body.Bytes(), &result)

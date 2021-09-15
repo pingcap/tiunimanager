@@ -25,32 +25,33 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func copyHostFromRsp(src *cluster.HostInfo, dst *resource.Host) {
+func copyHostFromRsp(src *cluster.HostInfo, dst *HostInfo) {
 	dst.ID = src.HostId
 	dst.HostName = src.HostName
 	dst.IP = src.Ip
+	dst.Arch = src.Arch
 	dst.OS = src.Os
 	dst.Kernel = src.Kernel
 	dst.CpuCores = int32(src.CpuCores)
 	dst.Memory = int32(src.Memory)
 	dst.Spec = src.Spec
 	dst.Nic = src.Nic
-	dst.DC = src.Dc
+	dst.Region = src.Region
 	dst.AZ = src.Az
 	dst.Rack = src.Rack
 	dst.Status = int32(src.Status)
 	dst.Purpose = src.Purpose
-	dst.Performance = src.Performance
+	dst.DiskType = src.DiskType
 	dst.CreatedAt = src.CreateAt
+	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
-		dst.Disks = append(dst.Disks, resource.Disk{
+		dst.Disks = append(dst.Disks, DiskInfo{
 			ID:       disk.DiskId,
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
 			Status:   int32(disk.Status),
 			Type:     disk.Type,
-			UsedBy:   disk.UsedBy,
 		})
 	}
 }
@@ -59,7 +60,7 @@ func genHostSpec(cpuCores int32, mem int32) string {
 	return fmt.Sprintf("%dC%dG", cpuCores, mem)
 }
 
-func copyHostToReq(src *resource.Host, dst *cluster.HostInfo) error {
+func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
 	dst.HostName = src.HostName
 	dst.Ip = src.IP
 	dst.UserName = src.UserName
@@ -68,18 +69,20 @@ func copyHostToReq(src *resource.Host, dst *cluster.HostInfo) error {
 		return err
 	}
 	dst.Passwd = passwd
+	dst.Arch = src.Arch
 	dst.Os = src.OS
 	dst.Kernel = src.Kernel
 	dst.CpuCores = src.CpuCores
 	dst.Memory = src.Memory
 	dst.Spec = genHostSpec(src.CpuCores, src.Memory)
 	dst.Nic = src.Nic
-	dst.Dc = src.DC
+	dst.Region = src.Region
 	dst.Az = src.AZ
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
-	dst.Performance = src.Performance
+	dst.DiskType = src.DiskType
+	dst.Reserved = src.Reserved
 
 	for _, v := range src.Disks {
 		dst.Disks = append(dst.Disks, &cluster.Disk{
@@ -93,7 +96,7 @@ func copyHostToReq(src *resource.Host, dst *cluster.HostInfo) error {
 	return nil
 }
 
-func doImport(c *gin.Context, host *resource.Host) (rsp *cluster.ImportHostResponse, err error) {
+func doImport(c *gin.Context, host *HostInfo) (rsp *cluster.ImportHostResponse, err error) {
 	importReq := cluster.ImportHostRequest{}
 	importReq.Host = new(cluster.HostInfo)
 	err = copyHostToReq(host, importReq.Host)
@@ -103,7 +106,7 @@ func doImport(c *gin.Context, host *resource.Host) (rsp *cluster.ImportHostRespo
 	return client.ClusterClient.ImportHost(c, &importReq)
 }
 
-func doImportBatch(c *gin.Context, hosts []*resource.Host) (rsp *cluster.ImportHostsInBatchResponse, err error) {
+func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *cluster.ImportHostsInBatchResponse, err error) {
 	importReq := cluster.ImportHostsInBatchRequest{}
 	importReq.Hosts = make([]*cluster.HostInfo, len(hosts))
 	var userName, passwd string
@@ -133,11 +136,11 @@ func doImportBatch(c *gin.Context, hosts []*resource.Host) (rsp *cluster.ImportH
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param host body resource.Host true "Host information"
+// @Param host body HostInfo true "Host information"
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /resources/host [post]
 func ImportHost(c *gin.Context) {
-	var host resource.Host
+	var host HostInfo
 	if err := c.ShouldBindJSON(&host); err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
@@ -162,16 +165,16 @@ func ImportHost(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(ImportHostRsp{HostId: rsp.HostId}))
 }
 
-func importExcelFile(r io.Reader) ([]*resource.Host, error) {
+func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 	xlsx, err := excelize.OpenReader(r)
 	if err != nil {
 		return nil, err
 	}
 	rows := xlsx.GetRows("主机信息")
-	var hosts []*resource.Host
+	var hosts []*HostInfo
 	for irow, row := range rows {
 		if irow > 0 {
-			var host resource.Host
+			var host HostInfo
 			host.HostName = row[HOSTNAME_FIELD]
 			addr := net.ParseIP(row[IP_FILED])
 			if addr == nil {
@@ -181,7 +184,7 @@ func importExcelFile(r io.Reader) ([]*resource.Host, error) {
 			host.IP = addr.String()
 			host.UserName = row[USERNAME_FIELD]
 			host.Passwd = row[PASSWD_FIELD]
-			host.DC = row[DC_FIELD]
+			host.Region = row[REGION_FIELD]
 			host.AZ = row[ZONE_FIELD]
 			host.Rack = row[RACK_FIELD]
 			host.OS = row[OS_FIELD]
@@ -192,7 +195,7 @@ func importExcelFile(r io.Reader) ([]*resource.Host, error) {
 			host.Memory = int32(mem)
 			host.Nic = row[NIC_FIELD]
 			host.Purpose = row[PURPOSE_FIELD]
-			host.Performance = row[PERF_FIELD]
+			host.DiskType = row[DISKTYPE_FIELD]
 			disksStr := row[DISKS_FIELD]
 			if err = json.Unmarshal([]byte(disksStr), &host.Disks); err != nil {
 				errMsg := fmt.Sprintf("Row %d has a Invalid Disk Json Format, %v", irow, err)
@@ -254,7 +257,7 @@ func ImportHosts(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param hostQuery query HostQuery false "list condition"
-// @Success 200 {object} controller.ResultWithPage{data=[]resource.Host}
+// @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
 // @Router /resources/hosts [get]
 func ListHost(c *gin.Context) {
 	hostQuery := HostQuery{
@@ -289,7 +292,7 @@ func ListHost(c *gin.Context) {
 	}
 	var res ListHostRsp
 	for _, v := range rsp.HostList {
-		var host resource.Host
+		var host HostInfo
 		copyHostFromRsp(v, &host)
 		res.Hosts = append(res.Hosts, host)
 	}
@@ -304,7 +307,7 @@ func ListHost(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param hostId path string true "host ID"
-// @Success 200 {object} controller.CommonResult{data=resource.Host}
+// @Success 200 {object} controller.CommonResult{data=HostInfo}
 // @Router /resources/hosts/{hostId} [get]
 func HostDetails(c *gin.Context) {
 

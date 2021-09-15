@@ -158,15 +158,14 @@ func SaveBackupStrategy(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) 
 	}
 
 	starts := strings.Split(period[0], ":")
-	startHour, err := time.ParseInLocation("2021-01-01 00:00", fmt.Sprintf("2021-01-01 %s:00", starts[0]), time.Local)
-	if err != nil {
-		return fmt.Errorf("invalid param period startHour, %s", period[0])
-	}
-
 	ends := strings.Split(period[1], ":")
-	endHour, err := time.ParseInLocation("2021-01-01 00:00", fmt.Sprintf("2021-01-01 %s:00", ends[0]), time.Local)
+	startHour, err := strconv.Atoi(starts[0])
 	if err != nil {
-		return fmt.Errorf("invalid param period endHour, %s", period[1])
+		return fmt.Errorf("invalid param start hour, %s", err.Error())
+	}
+	endHour, err := strconv.Atoi(ends[0])
+	if err != nil {
+		return fmt.Errorf("invalid param end hour, %s", err.Error())
 	}
 
 	_, err = client.DBClient.SaveBackupStrategy(context.TODO(), &db.DBSaveBackupStrategyRequest{
@@ -177,8 +176,8 @@ func SaveBackupStrategy(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) 
 			FilePath:    strategy.FilePath,
 			BackupRange: strategy.BackupRange,
 			BackupType:  strategy.BackupType,
-			StartHour:   uint32(startHour.Hour()),
-			EndHour:     uint32(endHour.Hour()),
+			StartHour:   uint32(startHour),
+			EndHour:     uint32(endHour),
 		},
 	})
 	if err != nil {

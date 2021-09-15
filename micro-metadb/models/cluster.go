@@ -523,7 +523,7 @@ func (m *DAOClusterManager) QueryBackupStartegy(clusterId string) (*BackupStrate
 
 func (m *DAOClusterManager) QueryBackupStartegyByTime(weekday string, startHour uint32) ([]*BackupStrategy, error) {
 	var strategyListDO []*BackupStrategy
-	err := m.Db().Table(TABLE_NAME_BACKUP_STRATEGY).Where("startHour = ?", startHour).Where("backup_date like '%" + weekday + "%'").Find(&strategyListDO).Error
+	err := m.Db().Table(TABLE_NAME_BACKUP_STRATEGY).Where("start_hour = ?", startHour).Where("backup_date like '%" + weekday + "%'").Find(&strategyListDO).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

@@ -171,6 +171,7 @@ func SaveBackupStrategy(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) 
 	_, err = client.DBClient.SaveBackupStrategy(context.TODO(), &db.DBSaveBackupStrategyRequest{
 		Strategy: &db.DBBackupStrategyDTO{
 			TenantId:    ope.TenantId,
+			OperatorId:  ope.GetId(),
 			ClusterId:   strategy.ClusterId,
 			BackupDate:  strategy.BackupDate,
 			FilePath:    strategy.FilePath,

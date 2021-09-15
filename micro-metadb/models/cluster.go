@@ -471,6 +471,7 @@ func (m *DAOClusterManager) SaveRecoverRecord(tenantId, clusterId, operatorId st
 func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDTO) (*BackupStrategy, error) {
 	strategyDO := BackupStrategy{
 		ClusterId: strategy.GetClusterId(),
+		OperatorId: strategy.GetOperatorId(),
 		Record: Record{
 			TenantId: strategy.GetTenantId(),
 		},

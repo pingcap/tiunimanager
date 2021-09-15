@@ -240,15 +240,16 @@ message DBSaveRecoverRecordResponse {
 message DBBackupStrategyDTO {
     int64 id = 1;
     string tenantId = 2;
-    string clusterId = 3;
-    string backupDate = 4;
-    string filePath = 5;
-    string backupRange = 6;
-    string backupType = 7;
-    uint32 startHour = 8;
-    uint32 endHour = 9;
-    int64 createTime = 10;
-    int64 updateTime = 11;
+    string operatorId = 3;
+    string clusterId = 4;
+    string backupDate = 5;
+    string filePath = 6;
+    string backupRange = 7;
+    string backupType = 8;
+    uint32 startHour = 9;
+    uint32 endHour = 10;
+    int64 createTime = 11;
+    int64 updateTime = 12;
 }
 
 message DBSaveBackupStrategyRequest {

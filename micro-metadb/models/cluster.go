@@ -512,7 +512,7 @@ func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDT
 
 func (m *DAOClusterManager) QueryBackupStartegy(clusterId string) (*BackupStrategy, error) {
 	strategyDO := BackupStrategy{}
-	err := m.Db().Table("backup_strategy").Where("cluster_id = ?", clusterId).First(&strategyDO).Error
+	err := m.Db().Table(TABLE_NAME_BACKUP_STRATEGY).Where("cluster_id = ?", clusterId).First(&strategyDO).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -523,7 +523,7 @@ func (m *DAOClusterManager) QueryBackupStartegy(clusterId string) (*BackupStrate
 
 func (m *DAOClusterManager) QueryBackupStartegyByTime(weekday string, startHour uint32) ([]*BackupStrategy, error) {
 	var strategyListDO []*BackupStrategy
-	err := m.Db().Table("backup_strategy").Where("startHour = ? and backup_date like *?* group by cluster_id", startHour, weekday).First(&strategyListDO).Error
+	err := m.Db().Table(TABLE_NAME_BACKUP_STRATEGY).Where("startHour = ?", startHour).Where("backup_date like '%" + weekday + "%'").Find(&strategyListDO).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

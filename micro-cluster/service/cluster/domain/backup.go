@@ -154,20 +154,19 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 func SaveBackupStrategy(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) error {
 	period := strings.Split(strategy.GetPeriod(), "-")
 	if len(period) != 2 {
-		getLogger().Errorf("invalid param period, %s", strategy.GetPeriod())
 		return fmt.Errorf("invalid param period, %s", strategy.GetPeriod())
 	}
 
-	startHour, err := time.ParseInLocation("00:00", period[0], time.Local)
+	starts := strings.Split(period[0], ":")
+	startHour, err := time.ParseInLocation("2021-01-01 00:00", fmt.Sprintf("2021-01-01 %s:00", starts[0]), time.Local)
 	if err != nil {
-		getLogger().Errorf("invalid param period, %s", strategy.GetPeriod())
-		return fmt.Errorf("invalid param period, %s", strategy.GetPeriod())
+		return fmt.Errorf("invalid param period startHour, %s", period[0])
 	}
 
-	endHour, err := time.ParseInLocation("00:00", period[1], time.Local)
+	ends := strings.Split(period[1], ":")
+	endHour, err := time.ParseInLocation("2021-01-01 00:00", fmt.Sprintf("2021-01-01 %s:00", ends[0]), time.Local)
 	if err != nil {
-		getLogger().Errorf("invalid param period, %s", strategy.GetPeriod())
-		return fmt.Errorf("invalid param period, %s", strategy.GetPeriod())
+		return fmt.Errorf("invalid param period endHour, %s", period[1])
 	}
 
 	_, err = client.DBClient.SaveBackupStrategy(context.TODO(), &db.DBSaveBackupStrategyRequest{

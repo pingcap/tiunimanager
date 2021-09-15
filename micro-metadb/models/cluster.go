@@ -496,7 +496,7 @@ func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDT
 		}
 	} else {
 		strategyDO.UpdatedAt = time.Now()
-		err := m.Db().Model(&BackupStrategy{}).Updates(&BackupStrategy{
+		err := m.Db().Model(&strategyDO).Updates(&BackupStrategy{
 			BackupDate:  strategy.GetBackupDate(),
 			BackupRange: strategy.GetBackupRange(),
 			BackupType:  strategy.GetBackupType(),

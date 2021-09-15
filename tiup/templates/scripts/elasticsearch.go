@@ -24,7 +24,7 @@ import (
 
 // ElasticSearchScript represent the data to generate ElasticSearch config
 type ElasticSearchScript struct {
-	IP        string
+	Host      string
 	Port      int
 	DeployDir string
 	DataDir   string
@@ -34,7 +34,7 @@ type ElasticSearchScript struct {
 // NewElasticSearchScript returns a ElasticSearchScript with given arguments
 func NewElasticSearchScript(ip, deployDir, dataDir, logDir string) *ElasticSearchScript {
 	return &ElasticSearchScript{
-		IP:        ip,
+		Host:      ip,
 		Port:      4122,
 		DeployDir: deployDir,
 		DataDir:   dataDir,

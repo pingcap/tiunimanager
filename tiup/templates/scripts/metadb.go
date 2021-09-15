@@ -25,7 +25,7 @@ import (
 
 // TiEMMetaDBScript represent the data to generate TiEMMetaDB config
 type TiEMMetaDBScript struct {
-	IP                string
+	Host              string
 	Port              int
 	ClientPort        int
 	PeerPort          int
@@ -41,7 +41,7 @@ type TiEMMetaDBScript struct {
 // NewTiEMMetaDBScript returns a TiEMMetaDBScript with given arguments
 func NewTiEMMetaDBScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMMetaDBScript {
 	return &TiEMMetaDBScript{
-		IP:          ip,
+		Host:        ip,
 		Port:        4100,
 		ClientPort:  4101,
 		PeerPort:    4102,

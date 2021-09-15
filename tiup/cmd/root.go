@@ -120,6 +120,7 @@ func init() {
 		newStopCmd(),
 		newRestartCmd(),
 		newUpgradeCmd(),
+		newDestroyCmd(),
 	)
 }
 

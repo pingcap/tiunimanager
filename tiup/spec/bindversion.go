@@ -1,18 +1,19 @@
 package spec
 
-import "github.com/pingcap/tiup/pkg/cluster/spec"
-
 // TiEMComponentVersion maps the dm version to the third components binding version
 // Empty version means the latest stable one
 func TiEMComponentVersion(comp, version string) string {
 	switch comp {
-	case spec.ComponentAlertmanager,
-		spec.ComponentGrafana,
-		spec.ComponentPrometheus,
-		spec.ComponentBlackboxExporter,
-		spec.ComponentNodeExporter:
+	case ComponentAlertmanager,
+		ComponentGrafana,
+		ComponentPrometheus,
+		ComponentBlackboxExporter,
+		ComponentNodeExporter,
+		ComponentTiEMTracerServer:
 		return ""
-	case ComponentElasticSearchServer:
+	case ComponentElasticSearchServer,
+		ComponentKibana,
+		ComponentTiEMWebServer:
 		return ""
 	default:
 		return version

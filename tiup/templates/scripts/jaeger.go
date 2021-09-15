@@ -24,7 +24,7 @@ import (
 
 // JaegerScript represent the data to generate Jaeger config
 type JaegerScript struct {
-	IP        string
+	Host      string
 	Port      int
 	DeployDir string
 	LogDir    string
@@ -33,7 +33,7 @@ type JaegerScript struct {
 // NewJaegerScript returns a JaegerScript with given arguments
 func NewJaegerScript(ip, deployDir, logDir string) *JaegerScript {
 	return &JaegerScript{
-		IP:        ip,
+		Host:      ip,
 		Port:      4122,
 		DeployDir: deployDir,
 		LogDir:    logDir,

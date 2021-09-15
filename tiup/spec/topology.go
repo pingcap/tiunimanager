@@ -43,7 +43,7 @@ const (
 	ComponentKibana              = "kibana"         // kibana
 	ComponentFilebeat            = "filebeat"       // filebeat
 	ComponentNodeExporter        = "node-exporter"  // different with in tiup-cluster (node_exporter)
-	ComponentBlackboxExporter    = "blackbox_exporter"
+	ComponentBlackboxExporter    = "blackbox-exporter"
 	ComponentGrafana             = "grafana"
 	ComponentAlertmanager        = "alertmanager"
 	ComponentPrometheus          = "prometheus"

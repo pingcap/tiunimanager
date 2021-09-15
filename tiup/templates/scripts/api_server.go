@@ -25,8 +25,9 @@ import (
 
 // TiEMAPIServerScript represent the data to generate TiEMAPIServer config
 type TiEMAPIServerScript struct {
-	IP                   string
+	Host                 string
 	Port                 int
+	ClientPort           int
 	MetricsPort          int
 	DeployDir            string
 	DataDir              string
@@ -40,7 +41,7 @@ type TiEMAPIServerScript struct {
 // NewTiEMAPIServerScript returns a TiEMAPIServerScript with given arguments
 func NewTiEMAPIServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMAPIServerScript {
 	return &TiEMAPIServerScript{
-		IP:          ip,
+		Host:        ip,
 		Port:        4116,
 		MetricsPort: 4121,
 		DeployDir:   deployDir,
@@ -82,7 +83,7 @@ func (c *TiEMAPIServerScript) WithElasticSearch(addr []string) *TiEMAPIServerScr
 
 // Script generate the config file data.
 func (c *TiEMAPIServerScript) Script() ([]byte, error) {
-	fp := path.Join("scripts", "run_tiem_metadb.sh.tpl")
+	fp := path.Join("scripts", "run_tiem_api.sh.tpl")
 	tpl, err := embed.ReadScriptTemplate(fp)
 	if err != nil {
 		return nil, err

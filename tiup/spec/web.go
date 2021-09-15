@@ -30,15 +30,15 @@ import (
 
 // WebServerSpec represents the Master topology specification in topology.yaml
 type WebServerSpec struct {
-	Host            string                `yaml:"host"`
-	SSHPort         int                   `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
-	ServerName      string                `yaml:"server_name,omitempty" default:"localhost" validate:"server_name:editable"`
-	Port            int                   `yaml:"port,omitempty" default:"4120"`
-	DeployDir       string                `yaml:"deploy_dir,omitempty"`
-	LogDir          string                `yaml:"log_dir,omitempty"`
-	Arch            string                `yaml:"arch,omitempty"`
-	OS              string                `yaml:"os,omitempty"`
-	ResourceControl *meta.ResourceControl `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
+	Host            string               `yaml:"host"`
+	SSHPort         int                  `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
+	ServerName      string               `yaml:"server_name,omitempty" default:"localhost" validate:"server_name:editable"`
+	Port            int                  `yaml:"port,omitempty" default:"4120"`
+	DeployDir       string               `yaml:"deploy_dir,omitempty"`
+	LogDir          string               `yaml:"log_dir,omitempty"`
+	Arch            string               `yaml:"arch,omitempty"`
+	OS              string               `yaml:"os,omitempty"`
+	ResourceControl meta.ResourceControl `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
 }
 
 // Status queries current status of the instance

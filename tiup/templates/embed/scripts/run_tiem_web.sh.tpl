@@ -3,7 +3,7 @@ set -e
 
 # WARNING: This file was auto-generated. Do not edit!
 #          All your edit might be overwritten!
-DEPLOY_DIR={{.deploy_dir}}
+DEPLOY_DIR={{.DeployDir}}
 
 cd "${DEPLOY_DIR}" || exit 1
 

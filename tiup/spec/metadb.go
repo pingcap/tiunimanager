@@ -42,7 +42,7 @@ type MetaDBServerSpec struct {
 	Arch            string                 `yaml:"arch,omitempty"`
 	OS              string                 `yaml:"os,omitempty"`
 	LogLevel        string                 `yaml:"log_level,omitempty" default:"info" validate:"log_level:editable"`
-	ResourceControl *meta.ResourceControl  `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
+	ResourceControl meta.ResourceControl   `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
 }
 
 // Status queries current status of the instance

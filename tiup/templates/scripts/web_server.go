@@ -24,21 +24,21 @@ import (
 
 // TiEMWebServerScript represent the data to generate TiEMWebServer config
 type TiEMWebServerScript struct {
-	IP        string
+	Host      string
 	DeployDir string
 }
 
 // NewTiEMWebServerScript returns a TiEMWebServerScript with given arguments
 func NewTiEMWebServerScript(ip, deployDir string) *TiEMWebServerScript {
 	return &TiEMWebServerScript{
-		IP:        ip,
+		Host:      ip,
 		DeployDir: deployDir,
 	}
 }
 
 // Script generate the config file data.
 func (c *TiEMWebServerScript) Script() ([]byte, error) {
-	fp := path.Join("scripts", "run_tiem_metadb.sh.tpl")
+	fp := path.Join("scripts", "run_tiem_web.sh.tpl")
 	tpl, err := embed.ReadScriptTemplate(fp)
 	if err != nil {
 		return nil, err

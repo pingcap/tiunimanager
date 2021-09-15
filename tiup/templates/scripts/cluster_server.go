@@ -25,7 +25,7 @@ import (
 
 // TiEMClusterServerScript represent the data to generate TiEMClusterServer config
 type TiEMClusterServerScript struct {
-	IP                string
+	Host              string
 	Port              int
 	MetricsPort       int
 	DeployDir         string
@@ -39,7 +39,7 @@ type TiEMClusterServerScript struct {
 // NewTiEMClusterServerScript returns a TiEMClusterServerScript with given arguments
 func NewTiEMClusterServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMClusterServerScript {
 	return &TiEMClusterServerScript{
-		IP:          ip,
+		Host:        ip,
 		Port:        4110,
 		MetricsPort: 4121,
 		DeployDir:   deployDir,

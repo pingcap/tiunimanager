@@ -37,7 +37,7 @@ type TracerServerSpec struct {
 	Config          map[string]interface{} `yaml:"config,omitempty" validate:"config:ignore"`
 	Arch            string                 `yaml:"arch,omitempty"`
 	OS              string                 `yaml:"os,omitempty"`
-	ResourceControl *meta.ResourceControl  `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
+	ResourceControl meta.ResourceControl   `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
 }
 
 // Status queries current status of the instance

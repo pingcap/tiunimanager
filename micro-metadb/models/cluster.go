@@ -481,7 +481,7 @@ func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDT
 		EndHour:     strategy.GetEndHour(),
 		FilePath:    strategy.GetFilePath(),
 	}
-	result := m.Db().Table("backup_strategy").Where("cluster_id = ?", strategy.ClusterId).First(&strategyDO)
+	result := m.Db().Table(TABLE_NAME_BACKUP_STRATEGY).Where("cluster_id = ?", strategy.ClusterId).First(&strategyDO)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			strategyDO.CreatedAt = time.Now()

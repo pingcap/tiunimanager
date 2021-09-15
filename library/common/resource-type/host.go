@@ -13,9 +13,31 @@ import (
 type ArchType string
 
 const (
-	Arm64 ArchType = "arm64"
-	X86   ArchType = "x86"
+	Arm64 ArchType = "ARM64"
+	X86   ArchType = "X86"
 )
+
+func ValidArch(arch string) error {
+	if arch == string(X86) || arch == string(Arm64) {
+		return nil
+	}
+	return errors.New("valid arch type: [ARM64 | X86]")
+}
+
+type Purpose string
+
+const (
+	Compute Purpose = "Compute"
+	Storage Purpose = "Storage"
+	General Purpose = "General"
+)
+
+func ValidPurposeType(p string) error {
+	if p == string(Compute) || p == string(Storage) || p == string(General) {
+		return nil
+	}
+	return errors.New("valid purpose: [Compute | Storage | General]")
+}
 
 type HostStatus int32
 

@@ -15,6 +15,7 @@ import (
 
 	"github.com/asim/go-micro/v3/client"
 	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
@@ -168,11 +169,17 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 		if len(in.Hosts) != 3 {
 			return nil, status.Errorf(codes.InvalidArgument, "file row count wrong")
 		}
-		if in.Hosts[0].Ip != "192.168.56.11" || in.Hosts[1].Ip != "192.168.56.12" {
+		if in.Hosts[0].Ip != "192.168.56.11" || in.Hosts[1].Ip != "192.168.56.12" || in.Hosts[2].Ip != "192.168.56.13" {
 			return nil, status.Errorf(codes.Internal, "Ip wrong")
 		}
-		if in.Hosts[0].Disks[0].Name != "vda" || in.Hosts[1].Disks[2].Path != "/mnt/path2" {
+		if in.Hosts[0].Disks[0].Name != "vda" || in.Hosts[0].Disks[0].Type != string(resource.Sata) || in.Hosts[1].Disks[2].Path != "/mnt/path2" || in.Hosts[2].Disks[0].Type != string(resource.Sata) {
 			return nil, status.Errorf(codes.Internal, "Disk wrong")
+		}
+		if in.Hosts[0].Reserved != false || in.Hosts[1].Reserved != false || in.Hosts[2].Reserved != false {
+			return nil, status.Errorf(codes.Internal, "Reserved error")
+		}
+		if in.Hosts[0].Region != "Region1" || in.Hosts[1].Arch != "X86" {
+			return nil, status.Errorf(codes.Internal, "Field error")
 		}
 		rsp := new(managerPb.ImportHostsInBatchResponse)
 		rsp.Rs = new(managerPb.ResponseStatus)

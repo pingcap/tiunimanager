@@ -170,7 +170,7 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	rows := xlsx.GetRows("主机信息")
+	rows := xlsx.GetRows("Host Information")
 	var hosts []*HostInfo
 	for irow, row := range rows {
 		if irow > 0 {
@@ -187,14 +187,40 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 			host.Region = row[REGION_FIELD]
 			host.AZ = row[ZONE_FIELD]
 			host.Rack = row[RACK_FIELD]
+			if err = resource.ValidArch(row[ARCH_FIELD]); err != nil {
+				errMsg := fmt.Sprintf("Row %d get arch(%s) failed, %v", irow, row[ARCH_FIELD], err)
+				return nil, errors.New(errMsg)
+			}
+			host.Arch = row[ARCH_FIELD]
 			host.OS = row[OS_FIELD]
 			host.Kernel = row[KERNEL_FIELD]
-			coreNum, _ := (strconv.Atoi(row[CPU_FIELD]))
+			coreNum, err := (strconv.Atoi(row[CPU_FIELD]))
+			if err != nil {
+				errMsg := fmt.Sprintf("Row %d get coreNum(%s) failed, %v", irow, row[CPU_FIELD], err)
+				return nil, errors.New(errMsg)
+			}
 			host.CpuCores = int32(coreNum)
-			mem, _ := (strconv.Atoi(row[MEM_FIELD]))
+			mem, err := (strconv.Atoi(row[MEM_FIELD]))
+			if err != nil {
+				errMsg := fmt.Sprintf("Row %d get memory(%s) failed, %v", irow, row[MEM_FIELD], err)
+				return nil, errors.New(errMsg)
+			}
 			host.Memory = int32(mem)
 			host.Nic = row[NIC_FIELD]
+			host.Reserved, err = strconv.ParseBool(row[RESERVED_FIELD])
+			if err != nil {
+				errMsg := fmt.Sprintf("Row %d get boolean reserved failed, %v", irow, err)
+				return nil, errors.New(errMsg)
+			}
+			if err = resource.ValidPurposeType(row[PURPOSE_FIELD]); err != nil {
+				errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, row[PURPOSE_FIELD], err)
+				return nil, errors.New(errMsg)
+			}
 			host.Purpose = row[PURPOSE_FIELD]
+			if err = resource.ValidDiskType(row[DISKTYPE_FIELD]); err != nil {
+				errMsg := fmt.Sprintf("Row %d get disk type(%s) failed, %v", irow, row[DISKTYPE_FIELD], err)
+				return nil, errors.New(errMsg)
+			}
 			host.DiskType = row[DISKTYPE_FIELD]
 			disksStr := row[DISKS_FIELD]
 			if err = json.Unmarshal([]byte(disksStr), &host.Disks); err != nil {
@@ -203,7 +229,7 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 			}
 			for i := range host.Disks {
 				if host.Disks[i].Type == "" {
-					host.Disks[i].Type = string(resource.Sata)
+					host.Disks[i].Type = string(resource.DiskType(host.DiskType))
 				}
 			}
 			hosts = append(hosts, &host)

@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +15,13 @@ const (
 	SSD     DiskType = "ssd"
 	Sata    DiskType = "sata"
 )
+
+func ValidDiskType(diskType string) error {
+	if diskType == string(NvmeSSD) || diskType == string(SSD) || diskType == string(Sata) {
+		return nil
+	}
+	return errors.New("valid disk type: [nvme_ssd | ssd | sata]")
+}
 
 type DiskStatus int32
 

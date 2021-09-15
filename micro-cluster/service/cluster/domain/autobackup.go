@@ -3,6 +3,7 @@ package domain
 import (
 	ctx "context"
 	"github.com/pingcap-inc/tiem/library/client"
+	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/robfig/cron"
 	"time"
@@ -68,7 +69,11 @@ func (auto *autoBackupHandler) doBackup(straegy *db.DBBackupStrategyDTO) {
 	getLogger().Infof("begin do auto backup for cluster %s", straegy.GetClusterId())
 	defer getLogger().Infof("end do auto backup for cluster %s", straegy.GetClusterId())
 
-	_, err := Backup(nil, straegy.GetClusterId(), straegy.GetBackupRange(), straegy.GetBackupType(), BackupModeAuto, "")
+	ope := &proto.OperatorDTO{
+		Id: straegy.GetOperatorId(),
+		TenantId: straegy.GetTenantId(),
+	}
+	_, err := Backup(ope, straegy.GetClusterId(), straegy.GetBackupRange(), straegy.GetBackupType(), BackupModeAuto, "")
 	if err != nil {
 		getLogger().Errorf("do backup for cluster %s failed, %s", straegy.GetClusterId(), err.Error())
 		return

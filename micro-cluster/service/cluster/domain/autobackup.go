@@ -18,10 +18,7 @@ type autoBackupHandler struct {
 
 func InitAutoBackupCronJob() {
 	mgr := NewAutoBackupManager()
-	mgr.JobCron.Start()
-	defer mgr.JobCron.Stop()
-
-	select {}
+	go mgr.Start()
 }
 
 func NewAutoBackupManager() *AutoBackupManager{
@@ -36,6 +33,13 @@ func NewAutoBackupManager() *AutoBackupManager{
 	}
 
 	return mgr
+}
+
+func (mgr *AutoBackupManager) Start() {
+	mgr.JobCron.Start()
+	defer mgr.JobCron.Stop()
+
+	select {}
 }
 
 func (auto *autoBackupHandler) Run() {

@@ -34,23 +34,25 @@ message DBAllocationReq {
 message DBHostInfoDTO {
     string hostId = 1;
     string hostName = 2;
-    string dc = 3;
+    string region = 3;
     string az = 4;
     string rack = 5;
     string ip = 6;
     string userName = 7;
     string passwd = 8;
     int32 status = 9;
-    string os = 10;                 // Host os
-    string kernel = 11;
-    string spec = 12;               // Host Spec ["4C8G/16C32g"]
-    int32 cpuCores = 13;            // Host cpu Remains
-    int32 memory = 14;              // Host memory Remains, Unit:GB
-    string nic = 15;                // Host network type: 1GE or 10GE
-    string purpose = 16;            // What Purpose is the host used for? [compute/storage or general]
-    string performance = 17;
-    int64 createAt = 18;
-    repeated DBDiskDTO disks = 19;
+    string arch = 10;
+    string os = 11;                 // Host os
+    string kernel = 12;
+    string spec = 13;               // Host Spec ["4C8G/16C32g"]
+    int32 cpuCores = 14;            // Host cpu Remains
+    int32 memory = 15;              // Host memory Remains, Unit:GB
+    string nic = 16;                // Host network type: 1GE or 10GE
+    string purpose = 17;            // What Purpose is the host used for? [compute/storage or general]
+    string diskType = 18;
+    bool reserved = 19;
+    int64 createAt = 20;
+    repeated DBDiskDTO disks = 21;
 }
 
 message DBAllocHostDTO {

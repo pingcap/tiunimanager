@@ -32,9 +32,11 @@ func copyHostFromRsp(src *cluster.HostInfo, dst *HostInfo) {
 	dst.Arch = src.Arch
 	dst.OS = src.Os
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int32(src.CpuCores)
-	dst.Memory = int32(src.Memory)
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
 	dst.Spec = src.Spec
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Nic = src.Nic
 	dst.Region = src.Region
 	dst.AZ = src.Az
@@ -72,9 +74,11 @@ func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
 	dst.Arch = src.Arch
 	dst.Os = src.OS
 	dst.Kernel = src.Kernel
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
+	dst.Spec = genHostSpec(src.CpuCores, src.Memory)
 	dst.CpuCores = src.CpuCores
 	dst.Memory = src.Memory
-	dst.Spec = genHostSpec(src.CpuCores, src.Memory)
 	dst.Nic = src.Nic
 	dst.Region = src.Region
 	dst.Az = src.AZ
@@ -200,12 +204,14 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 				return nil, errors.New(errMsg)
 			}
 			host.CpuCores = int32(coreNum)
+			host.FreeCpuCores = host.CpuCores
 			mem, err := (strconv.Atoi(row[MEM_FIELD]))
 			if err != nil {
 				errMsg := fmt.Sprintf("Row %d get memory(%s) failed, %v", irow, row[MEM_FIELD], err)
 				return nil, errors.New(errMsg)
 			}
 			host.Memory = int32(mem)
+			host.FreeMemory = host.Memory
 			host.Nic = row[NIC_FIELD]
 			host.Reserved, err = strconv.ParseBool(row[RESERVED_FIELD])
 			if err != nil {

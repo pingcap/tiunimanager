@@ -2817,6 +2817,7 @@ var doc = `{
                     "type": "string"
                 },
                 "cpuCores": {
+                    "description": "Host cpu cores spec, init while importing",
                     "type": "integer"
                 },
                 "createTime": {
@@ -2832,6 +2833,14 @@ var doc = `{
                         "$ref": "#/definitions/hostapi.DiskInfo"
                     }
                 },
+                "freeCpuCores": {
+                    "description": "Unused CpuCore, used for allocation",
+                    "type": "integer"
+                },
+                "freeMemory": {
+                    "description": "Unused memory size, Unit:GB, used for allocation",
+                    "type": "integer"
+                },
                 "hostId": {
                     "type": "string"
                 },
@@ -2845,7 +2854,7 @@ var doc = `{
                     "type": "string"
                 },
                 "memory": {
-                    "description": "Host memory size, Unit:GB",
+                    "description": "Host memroy, init while importing",
                     "type": "integer"
                 },
                 "nic": {

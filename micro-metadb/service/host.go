@@ -19,7 +19,7 @@ type FailureDomain int32
 
 const (
 	ROOT FailureDomain = iota
-	DATACENTER
+	Region
 	ZONE
 	RACK
 	HOST
@@ -43,9 +43,11 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *resource.Host) {
 	dst.Arch = src.Arch
 	dst.OS = src.Os
 	dst.Kernel = src.Kernel
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
+	dst.Spec = src.Spec
 	dst.CpuCores = src.CpuCores
 	dst.Memory = src.Memory
-	dst.Spec = src.Spec
 	dst.Nic = src.Nic
 	dst.Region = src.Region
 	dst.AZ = genDomainCodeByName(dst.Region, src.Az)
@@ -176,9 +178,11 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.Arch = src.Arch
 	dst.Os = src.OS
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int32(src.CpuCores)
-	dst.Memory = int32(src.Memory)
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
 	dst.Spec = src.Spec
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Nic = src.Nic
 	dst.Region = src.Region
 	dst.Az = GetDomainNameFromCode(src.AZ)
@@ -336,14 +340,14 @@ func (handler *DBServiceHandler) AllocHosts(ctx context.Context, in *dbPb.DBAllo
 
 func getFailureDomainByType(fd FailureDomain) (domain string, err error) {
 	switch fd {
-	case DATACENTER:
-		domain = "dc"
+	case Region:
+		domain = "region"
 	case ZONE:
 		domain = "az"
 	case RACK:
 		domain = "rack"
 	default:
-		err = status.Errorf(codes.InvalidArgument, "%d is invalid domain type(1-DataCenter, 2-Zone, 3-Rack)", fd)
+		err = status.Errorf(codes.InvalidArgument, "%d is invalid domain type(1-Region, 2-Zone, 3-Rack)", fd)
 	}
 	return
 }

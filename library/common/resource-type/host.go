@@ -73,9 +73,11 @@ type Host struct {
 	Arch         string         `json:"arch" gorm:"index"`   // x86 or arm64
 	OS           string         `json:"os" gorm:"size:32"`
 	Kernel       string         `json:"kernel" gorm:"size:32"`
-	CpuCores     int32          `json:"cpuCores"`
-	Memory       int32          `json:"memory"`             // Host memory size, Unit:GB
 	Spec         string         `json:"spec"`               // Host Spec, init while importing
+	CpuCores     int32          `json:"cpuCores"`           // Host cpu cores spec, init while importing
+	Memory       int32          `json:"memory"`             // Host memroy, init while importing
+	FreeCpuCores int32          `json:"freeCpuCores"`       // Unused CpuCore, used for allocation
+	FreeMemory   int32          `json:"freeMemory"`         // Unused memory size, Unit:GB, used for allocation
 	Nic          string         `json:"nic" gorm:"size:32"` // Host network type: 1GE or 10GE
 	Region       string         `json:"region" gorm:"size:32"`
 	AZ           string         `json:"az" gorm:"index"`
@@ -100,7 +102,7 @@ func (h Host) IsExhaust() bool {
 			break
 		}
 	}
-	return diskExaust || h.CpuCores == 0 || h.Memory == 0
+	return diskExaust || h.FreeCpuCores == 0 || h.FreeMemory == 0
 }
 
 func (h *Host) SetDiskStatus(diskId string, s DiskStatus) {

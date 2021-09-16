@@ -26,9 +26,11 @@ func copyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.Arch = src.Arch
 	dst.Os = src.Os
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int32(src.CpuCores)
-	dst.Memory = int32(src.Memory)
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
 	dst.Spec = src.Spec
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Nic = src.Nic
 	dst.Region = src.Region
 	dst.Az = src.Az
@@ -55,9 +57,11 @@ func copyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.Arch = src.Arch
 	dst.Os = src.Os
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int32(src.CpuCores)
-	dst.Memory = int32(src.Memory)
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
 	dst.Spec = src.Spec
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Nic = src.Nic
 	dst.Region = src.Region
 	dst.Az = src.Az

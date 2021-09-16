@@ -45,14 +45,16 @@ message DBHostInfoDTO {
     string os = 11;                 // Host os
     string kernel = 12;
     string spec = 13;               // Host Spec ["4C8G/16C32g"]
-    int32 cpuCores = 14;            // Host cpu Remains
-    int32 memory = 15;              // Host memory Remains, Unit:GB
-    string nic = 16;                // Host network type: 1GE or 10GE
-    string purpose = 17;            // What Purpose is the host used for? [compute/storage or general]
-    string diskType = 18;
-    bool reserved = 19;
-    int64 createAt = 20;
-    repeated DBDiskDTO disks = 21;
+    int32 cpuCores = 14;            // Host cpu cores spec
+    int32 memory = 15;              // Host memory spec
+    int32 freeCpuCores = 16;        // Host cpu Remains
+    int32 freeMemory = 17;          // Host memory Remains, Unit:GB
+    string nic = 18;                // Host network type: 1GE or 10GE
+    string purpose = 19;            // What Purpose is the host used for? [compute/storage or general]
+    string diskType = 20;
+    bool reserved = 21;
+    int64 createAt = 22;
+    repeated DBDiskDTO disks = 23;
 }
 
 message DBAllocHostDTO {

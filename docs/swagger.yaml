@@ -500,6 +500,7 @@ definitions:
       az:
         type: string
       cpuCores:
+        description: Host cpu cores spec, init while importing
         type: integer
       createTime:
         type: integer
@@ -510,6 +511,12 @@ definitions:
         items:
           $ref: '#/definitions/hostapi.DiskInfo'
         type: array
+      freeCpuCores:
+        description: Unused CpuCore, used for allocation
+        type: integer
+      freeMemory:
+        description: Unused memory size, Unit:GB, used for allocation
+        type: integer
       hostId:
         type: string
       hostName:
@@ -519,7 +526,7 @@ definitions:
       kernel:
         type: string
       memory:
-        description: Host memory size, Unit:GB
+        description: Host memroy, init while importing
         type: integer
       nic:
         description: 'Host network type: 1GE or 10GE'

@@ -10,6 +10,17 @@ import (
 	"gorm.io/gorm"
 )
 
+type FailureDomain int32
+
+const (
+	ROOT FailureDomain = iota
+	REGION
+	ZONE
+	RACK
+	HOST
+	DISK
+)
+
 type ArchType string
 
 const (

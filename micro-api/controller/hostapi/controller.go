@@ -566,10 +566,10 @@ func GetFailureDomain(c *gin.Context) {
 	var domain int
 	domainStr := c.Query("failureDomainType")
 	if domainStr == "" {
-		domain = int(service.ZONE)
+		domain = int(resource.ZONE)
 	}
 	domain, err := strconv.Atoi(domainStr)
-	if err != nil || domain > int(service.RACK) || domain < int(service.DATACENTER) {
+	if err != nil || domain > int(resource.RACK) || domain < int(resource.REGION) {
 		errmsg := fmt.Sprintf("Input domainType [%s] Invalid: %v", c.Query("failureDomainType"), err)
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return

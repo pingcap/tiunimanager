@@ -15,17 +15,6 @@ import (
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
-type FailureDomain int32
-
-const (
-	ROOT FailureDomain = iota
-	Region
-	ZONE
-	RACK
-	HOST
-	DISK
-)
-
 func genDomainCodeByName(pre string, name string) string {
 	return fmt.Sprintf("%s,%s", pre, name)
 }
@@ -338,13 +327,13 @@ func (handler *DBServiceHandler) AllocHosts(ctx context.Context, in *dbPb.DBAllo
 	return nil
 }
 
-func getFailureDomainByType(fd FailureDomain) (domain string, err error) {
+func getFailureDomainByType(fd resource.FailureDomain) (domain string, err error) {
 	switch fd {
-	case Region:
+	case resource.REGION:
 		domain = "region"
-	case ZONE:
+	case resource.ZONE:
 		domain = "az"
-	case RACK:
+	case resource.RACK:
 		domain = "rack"
 	default:
 		err = status.Errorf(codes.InvalidArgument, "%d is invalid domain type(1-Region, 2-Zone, 3-Rack)", fd)
@@ -356,7 +345,7 @@ func (handler *DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb
 
 	log := framework.Log()
 	domainType := req.FailureDomainType
-	domain, err := getFailureDomainByType(FailureDomain(domainType))
+	domain, err := getFailureDomainByType(resource.FailureDomain(domainType))
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		st, ok := status.FromError(err)

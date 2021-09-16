@@ -151,7 +151,7 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 	return clusterAggregation, nil
 }
 
-func SaveBackupStrategy(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) error {
+func SaveBackupStrategyPreCheck(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) error {
 	period := strings.Split(strategy.GetPeriod(), "-")
 	if len(period) != 2 {
 		return fmt.Errorf("invalid param period, %s", strategy.GetPeriod())
@@ -159,16 +159,33 @@ func SaveBackupStrategy(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) 
 
 	starts := strings.Split(period[0], ":")
 	ends := strings.Split(period[1], ":")
-	startHour, err := strconv.Atoi(starts[0])
+	_, err := strconv.Atoi(starts[0])
 	if err != nil {
 		return fmt.Errorf("invalid param start hour, %s", err.Error())
 	}
-	endHour, err := strconv.Atoi(ends[0])
+	_, err = strconv.Atoi(ends[0])
 	if err != nil {
 		return fmt.Errorf("invalid param end hour, %s", err.Error())
 	}
 
-	_, err = client.DBClient.SaveBackupStrategy(context.TODO(), &db.DBSaveBackupStrategyRequest{
+	backupDates := strings.Split(strategy.GetBackupDate(), ",")
+	for _, day := range backupDates {
+		if !checkWeekDayValid(day) {
+			return fmt.Errorf("backupDate contains invalid weekday, %s", day)
+		}
+	}
+
+	return nil
+}
+
+func SaveBackupStrategy(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) error {
+	period := strings.Split(strategy.GetPeriod(), "-")
+	starts := strings.Split(period[0], ":")
+	ends := strings.Split(period[1], ":")
+	startHour, _ := strconv.Atoi(starts[0])
+	endHour, _ := strconv.Atoi(ends[0])
+
+	_, err := client.DBClient.SaveBackupStrategy(context.TODO(), &db.DBSaveBackupStrategyRequest{
 		Strategy: &db.DBBackupStrategyDTO{
 			TenantId:    ope.TenantId,
 			OperatorId:  ope.GetId(),

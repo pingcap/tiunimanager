@@ -423,6 +423,7 @@ func ConvertToBackupStrategyDTO(do *models.BackupStrategy) (dto *dbPb.DBBackupSt
 	}
 	dto = &dbPb.DBBackupStrategyDTO{
 		Id:          int64(do.ID),
+		OperatorId:  do.OperatorId,
 		TenantId:    do.TenantId,
 		ClusterId:   do.ClusterId,
 		CreateTime:  do.CreatedAt.Unix(),

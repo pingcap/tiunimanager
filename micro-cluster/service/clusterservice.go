@@ -5,16 +5,14 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
-	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
-	log "github.com/sirupsen/logrus"
-	"net/http"
-	"strconv"
-	"time"
-
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
+	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	log "github.com/sirupsen/logrus"
+	"net/http"
+	"strconv"
 )
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
@@ -228,7 +226,13 @@ func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *
 func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *clusterPb.SaveBackupStrategyRequest, response *clusterPb.SaveBackupStrategyResponse) (err error) {
 	getLogger().Info("save backup strategy")
 
-	err = domain.SaveBackupStrategy(request.Operator, request.GetStrategy())
+	err = domain.SaveBackupStrategyPreCheck(request.GetOperator(), request.GetStrategy())
+	if err != nil {
+		getLogger().Error(err)
+		return err
+	}
+
+	err = domain.SaveBackupStrategy(request.GetOperator(), request.GetStrategy())
 	if err != nil {
 		// todo
 		getLogger().Error(err)
@@ -247,8 +251,6 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 		getLogger().Error(err)
 		return err
 	} else {
-		startLocalTime, _ := time.ParseInLocation("00:00", fmt.Sprintf("%d:00", resp.GetStrategy().GetStartHour()), time.Local)
-		endLocalTime, _ := time.ParseInLocation("00:00", fmt.Sprintf("%d:00", resp.GetStrategy().GetEndHour()), time.Local)
 		response.Status = SuccessResponseStatus
 		response.Strategy = &clusterPb.BackupStrategy{
 			ClusterId:   resp.GetStrategy().GetClusterId(),
@@ -256,7 +258,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 			FilePath:    resp.GetStrategy().GetFilePath(),
 			BackupRange: resp.GetStrategy().GetBackupRange(),
 			BackupType:  resp.GetStrategy().GetBackupType(),
-			Period:      fmt.Sprintf("%s-%sZ", startLocalTime.UTC().Format("00:00Z"), endLocalTime.UTC().Format("00:00Z")),
+			Period:      fmt.Sprintf("%d:00-%d:00", resp.GetStrategy().GetStartHour(), resp.GetStrategy().GetEndHour()),
 		}
 		return nil
 	}

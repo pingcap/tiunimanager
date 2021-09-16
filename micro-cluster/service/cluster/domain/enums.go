@@ -153,3 +153,26 @@ func checkBackupTypeValid(backupType string) bool {
 	}
 	return true
 }
+
+type WeekDay string
+
+const (
+	Sunday WeekDay = "Sunday"
+	Monday WeekDay = "Monday"
+	Tuesday WeekDay = "Tuesday"
+	Wednesday WeekDay = "Wednesday"
+	Thursday WeekDay = "Thursday"
+	Friday WeekDay = "Friday"
+	Saturday WeekDay = "Saturday"
+)
+
+var WeekDays = []WeekDay{Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday}
+
+func checkWeekDayValid(day string) bool {
+	for _, v := range WeekDays {
+		if string(v) == day {
+			return true
+		}
+	}
+	return false
+}

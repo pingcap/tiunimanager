@@ -20,7 +20,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/embed"
+	"github.com/pingcap-inc/tiem/tiup/embed"
 )
 
 // TiEMClusterServerScript represent the data to generate TiEMClusterServer config
@@ -75,8 +75,8 @@ func (c *TiEMClusterServerScript) WithTracer(addr []string) *TiEMClusterServerSc
 
 // Script generate the config file data.
 func (c *TiEMClusterServerScript) Script() ([]byte, error) {
-	fp := path.Join("scripts", "run_tiem_cluster.sh.tpl")
-	tpl, err := embed.ReadScriptTemplate(fp)
+	fp := path.Join("templates", "scripts", "run_tiem_cluster.sh.tpl")
+	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
 		return nil, err
 	}

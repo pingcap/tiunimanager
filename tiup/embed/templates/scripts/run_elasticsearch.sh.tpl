@@ -9,6 +9,6 @@ DEPLOY_DIR={{.DeployDir}}
 cd "${DEPLOY_DIR}" || exit 1
 
 LANG=en_US.UTF-8 \
-exec env GODEBUG=madvdontneed=1 bin/elasticsearch \
+exec env GODEBUG=madvdontneed=1 bin/elasticsearch-7.14.0/elasticsearch \
     -d \
     -Epath.conf="${DEPLOY_DIR}/conf/"

@@ -19,7 +19,7 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/embed"
+	"github.com/pingcap-inc/tiem/tiup/embed"
 )
 
 // TiEMWebServerScript represent the data to generate TiEMWebServer config
@@ -38,8 +38,8 @@ func NewTiEMWebServerScript(ip, deployDir string) *TiEMWebServerScript {
 
 // Script generate the config file data.
 func (c *TiEMWebServerScript) Script() ([]byte, error) {
-	fp := path.Join("scripts", "run_tiem_web.sh.tpl")
-	tpl, err := embed.ReadScriptTemplate(fp)
+	fp := path.Join("templates", "scripts", "run_tiem_web.sh.tpl")
+	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
 		return nil, err
 	}

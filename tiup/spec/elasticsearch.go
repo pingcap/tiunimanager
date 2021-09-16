@@ -20,11 +20,16 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
+	system "github.com/pingcap-inc/tiem/tiup/templates/systemd"
+	"github.com/pingcap/errors"
+	"github.com/pingcap/tiup/pkg/checkpoint"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/logger/log"
 	"github.com/pingcap/tiup/pkg/meta"
+	"go.uber.org/zap"
 )
 
 // ElasticSearchSpec represents the Master topology specification in topology.yaml
@@ -37,6 +42,7 @@ type ElasticSearchSpec struct {
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
 	DataDir         string                 `yaml:"data_dir,omitempty"`
 	LogDir          string                 `yaml:"log_dir,omitempty"`
+	JavaHome        string                 `yaml:"java_home,omitempty" validate:"java_home:editable"`
 	Config          map[string]interface{} `yaml:"config,omitempty" validate:"config:ignore"`
 	Arch            string                 `yaml:"arch,omitempty"`
 	OS              string                 `yaml:"os,omitempty"`
@@ -112,7 +118,8 @@ func (c *ElasticSearchComponent) Instances() []Instance {
 					return spec.UptimeByHost(s.Host, s.Port, tlsCfg)
 				},
 			},
-			topo: c.Topology,
+			topo:     c.Topology,
+			JavaHome: s.JavaHome,
 		})
 	}
 	return ins
@@ -122,7 +129,8 @@ func (c *ElasticSearchComponent) Instances() []Instance {
 type ElasticSearchInstance struct {
 	Name string
 	BaseInstance
-	topo *Specification
+	topo     *Specification
+	JavaHome string
 }
 
 // InitConfig implement Instance interface
@@ -134,8 +142,34 @@ func (i *ElasticSearchInstance) InitConfig(
 	deployUser string,
 	paths meta.DirPaths,
 ) error {
-	if err := i.BaseInstance.InitConfig(ctx, e, i.topo.GlobalOptions, deployUser, paths); err != nil {
-		return err
+	comp := i.ComponentName()
+	host := i.GetHost()
+	port := i.GetPort()
+	sysCfg := filepath.Join(paths.Cache, fmt.Sprintf("%s-%s-%d.service", comp, host, port))
+
+	var err error
+	// insert checkpoint
+	point := checkpoint.Acquire(ctx, CopyConfigFile, map[string]interface{}{"config-file": sysCfg})
+	defer func() {
+		point.Release(err, zap.String("config-file", sysCfg))
+	}()
+
+	if point.Hit() != nil {
+		return nil
+	}
+
+	systemCfg := system.NewJavaAppConfig(comp, deployUser, paths.Deploy, i.JavaHome)
+
+	if err := systemCfg.ConfigToFile(sysCfg); err != nil {
+		return errors.Trace(err)
+	}
+	tgt := filepath.Join("/tmp", comp+"_"+uuid.New().String()+".service")
+	if err := e.Transfer(ctx, sysCfg, tgt, false, 0); err != nil {
+		return errors.Annotatef(err, "transfer from %s to %s failed", sysCfg, tgt)
+	}
+	cmd := fmt.Sprintf("mv %s /etc/systemd/system/%s-%d.service", tgt, comp, port)
+	if _, _, err := e.Execute(ctx, cmd, true); err != nil {
+		return errors.Annotatef(err, "execute: %s", cmd)
 	}
 
 	spec := i.InstanceSpec.(*ElasticSearchSpec)

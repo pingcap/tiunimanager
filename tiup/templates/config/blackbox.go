@@ -19,7 +19,7 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/embed"
+	"github.com/pingcap-inc/tiem/tiup/embed"
 )
 
 // BlackboxConfig represent the data to generate AlertManager config
@@ -38,8 +38,8 @@ func NewBlackboxConfig(deployDir string, tlsEnabled bool) *BlackboxConfig {
 
 // Config generate the config file data.
 func (c *BlackboxConfig) Config() ([]byte, error) {
-	fp := path.Join("configs", "blackbox.yml.tpl")
-	tpl, err := embed.ReadConfigTemplate(fp)
+	fp := path.Join("templates", "configs", "blackbox.yml.tpl")
+	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
 		return nil, err
 	}

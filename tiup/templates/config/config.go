@@ -16,11 +16,11 @@ package config
 import (
 	"path/filepath"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/embed"
+	"github.com/pingcap-inc/tiem/tiup/embed"
 )
 
 // GetConfig returns a raw config file from embed templates
 func GetConfig(filename string) ([]byte, error) {
-	fp := filepath.Join("configs", filename)
-	return embed.ReadConfigTemplate(fp)
+	fp := filepath.Join("templates", "configs", filename)
+	return embed.ReadTemplate(fp)
 }

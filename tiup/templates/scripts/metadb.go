@@ -20,7 +20,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/embed"
+	"github.com/pingcap-inc/tiem/tiup/embed"
 )
 
 // TiEMMetaDBScript represent the data to generate TiEMMetaDB config
@@ -91,8 +91,8 @@ func (c *TiEMMetaDBScript) WithTracer(addr []string) *TiEMMetaDBScript {
 
 // Script generate the config file data.
 func (c *TiEMMetaDBScript) Script() ([]byte, error) {
-	fp := path.Join("scripts", "run_tiem_metadb.sh.tpl")
-	tpl, err := embed.ReadScriptTemplate(fp)
+	fp := path.Join("templates", "scripts", "run_tiem_metadb.sh.tpl")
+	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
 		return nil, err
 	}

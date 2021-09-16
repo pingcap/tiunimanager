@@ -36,8 +36,8 @@ func getAllFilePaths(dir string) (paths []string, err error) {
 }
 
 // Test can read all file in /templates
-func (s *embedSuite) TestCanReadConfigs(c *check.C) {
-	paths, err := getAllFilePaths("configs")
+func (s *embedSuite) TestCanReadTemplates(c *check.C) {
+	paths, err := getAllFilePaths("templates/configs")
 	c.Assert(err, check.IsNil)
 	c.Assert(len(paths), check.Greater, 0)
 
@@ -47,26 +47,7 @@ func (s *embedSuite) TestCanReadConfigs(c *check.C) {
 		data, err := os.ReadFile(path)
 		c.Assert(err, check.IsNil)
 
-		embedData, err := ReadConfigTemplate(path)
-		c.Assert(err, check.IsNil)
-
-		c.Assert(embedData, check.BytesEquals, data)
-	}
-}
-
-// Test can read all file in /examples
-func (s *embedSuite) TestCanReadScripts(c *check.C) {
-	paths, err := getAllFilePaths("scripts")
-	c.Assert(err, check.IsNil)
-	c.Assert(len(paths), check.Greater, 0)
-
-	for _, path := range paths {
-		c.Log("check file: ", path)
-
-		data, err := os.ReadFile(path)
-		c.Assert(err, check.IsNil)
-
-		embedData, err := ReadScriptTemplate(path)
+		embedData, err := ReadTemplate(path)
 		c.Assert(err, check.IsNil)
 
 		c.Assert(embedData, check.BytesEquals, data)

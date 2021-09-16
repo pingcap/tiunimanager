@@ -17,7 +17,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/embed"
+	"github.com/pingcap-inc/tiem/tiup/embed"
 	"github.com/pingcap/errors"
 )
 
@@ -61,8 +61,8 @@ func (c *NginxConfig) WithRegistryEndpoints(endpoints []string) *NginxConfig {
 
 // Config generate the config file data.
 func (c *NginxConfig) Config() ([]byte, error) {
-	fp := path.Join("configs", "nginx.conf.tpl")
-	tpl, err := embed.ReadConfigTemplate(fp)
+	fp := path.Join("templates", "configs", "nginx.conf.tpl")
+	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +100,8 @@ func NewNginxServerList(apis []string) *NginxServerList {
 
 // Config generate the config file data.
 func (c *NginxServerList) Config() ([]byte, error) {
-	fp := path.Join("configs", "nginx_server_list.conf.tpl")
-	tpl, err := embed.ReadConfigTemplate(fp)
+	fp := path.Join("templates", "configs", "nginx_server_list.conf.tpl")
+	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
 		return nil, err
 	}

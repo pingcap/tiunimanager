@@ -19,7 +19,7 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/pingcap-inc/tiem/tiup/templates/embed"
+	"github.com/pingcap-inc/tiem/tiup/embed"
 )
 
 // ElasticSearchScript represent the data to generate ElasticSearch config
@@ -50,8 +50,8 @@ func (c *ElasticSearchScript) WithPort(port int) *ElasticSearchScript {
 
 // Script generate the config file data.
 func (c *ElasticSearchScript) Script() ([]byte, error) {
-	fp := path.Join("scripts", "run_elasticsearch.sh.tpl")
-	tpl, err := embed.ReadScriptTemplate(fp)
+	fp := path.Join("templates", "scripts", "run_elasticsearch.sh.tpl")
+	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
 		return nil, err
 	}

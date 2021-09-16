@@ -15,17 +15,6 @@ import (
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
-type FailureDomain int32
-
-const (
-	ROOT FailureDomain = iota
-	DATACENTER
-	ZONE
-	RACK
-	HOST
-	DISK
-)
-
 func genDomainCodeByName(pre string, name string) string {
 	return fmt.Sprintf("%s,%s", pre, name)
 }
@@ -40,18 +29,22 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *resource.Host) {
 	dst.IP = src.Ip
 	dst.UserName = src.UserName
 	dst.Passwd = src.Passwd
+	dst.Arch = src.Arch
 	dst.OS = src.Os
 	dst.Kernel = src.Kernel
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
+	dst.Spec = src.Spec
 	dst.CpuCores = src.CpuCores
 	dst.Memory = src.Memory
-	dst.Spec = src.Spec
 	dst.Nic = src.Nic
-	dst.DC = src.Dc
-	dst.AZ = genDomainCodeByName(dst.DC, src.Az)
+	dst.Region = src.Region
+	dst.AZ = genDomainCodeByName(dst.Region, src.Az)
 	dst.Rack = genDomainCodeByName(dst.AZ, src.Rack)
 	dst.Status = int32(src.Status)
 	dst.Purpose = src.Purpose
-	dst.Performance = src.Performance
+	dst.DiskType = src.DiskType
+	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, resource.Disk{
 			Name:     disk.Name,
@@ -171,19 +164,23 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.HostId = src.ID
 	dst.HostName = src.HostName
 	dst.Ip = src.IP
+	dst.Arch = src.Arch
 	dst.Os = src.OS
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int32(src.CpuCores)
-	dst.Memory = int32(src.Memory)
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
 	dst.Spec = src.Spec
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Nic = src.Nic
-	dst.Dc = src.DC
+	dst.Region = src.Region
 	dst.Az = GetDomainNameFromCode(src.AZ)
 	dst.Rack = GetDomainNameFromCode(src.Rack)
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
-	dst.Performance = src.Performance
-	dst.CreateAt = src.CreatedAt
+	dst.DiskType = src.DiskType
+	dst.Reserved = src.Reserved
+	dst.CreateAt = src.CreatedAt.Unix()
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
 			DiskId:   disk.ID,
@@ -192,7 +189,6 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbPb.DBHostInfoDTO) {
 			Capacity: disk.Capacity,
 			Status:   disk.Status,
 			Type:     disk.Type,
-			UsedBy:   disk.UsedBy,
 		})
 	}
 }
@@ -331,16 +327,16 @@ func (handler *DBServiceHandler) AllocHosts(ctx context.Context, in *dbPb.DBAllo
 	return nil
 }
 
-func getFailureDomainByType(fd FailureDomain) (domain string, err error) {
+func getFailureDomainByType(fd resource.FailureDomain) (domain string, err error) {
 	switch fd {
-	case DATACENTER:
-		domain = "dc"
-	case ZONE:
+	case resource.REGION:
+		domain = "region"
+	case resource.ZONE:
 		domain = "az"
-	case RACK:
+	case resource.RACK:
 		domain = "rack"
 	default:
-		err = status.Errorf(codes.InvalidArgument, "%d is invalid domain type(1-DataCenter, 2-Zone, 3-Rack)", fd)
+		err = status.Errorf(codes.InvalidArgument, "%d is invalid domain type(1-Region, 2-Zone, 3-Rack)", fd)
 	}
 	return
 }
@@ -349,7 +345,7 @@ func (handler *DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb
 
 	log := framework.Log()
 	domainType := req.FailureDomainType
-	domain, err := getFailureDomainByType(FailureDomain(domainType))
+	domain, err := getFailureDomainByType(resource.FailureDomain(domainType))
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		st, ok := status.FromError(err)

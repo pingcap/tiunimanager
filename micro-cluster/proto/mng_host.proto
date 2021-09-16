@@ -21,23 +21,27 @@ message Disk {
 message HostInfo {
     string hostId = 1;
     string hostName = 2;
-    string dc = 3;
+    string region = 3;
     string az = 4;
     string rack = 5;
     string ip = 6;
     string userName = 7;
     string passwd = 8;
     int32 status = 9;
-    string os = 10;             // Host os
-    string kernel = 11;
-    string spec = 12;           // Host Spec ["4C8G/16C32g"]
-    int32 cpuCores = 13;        // Host cpu remains
-    int32 memory = 14;          // Host memory remains, Unit:GB
-    string nic = 15;            // Host network type: 1GE or 10GE
-    string purpose = 16;        // What Purpose is the host used for? [compute/storage or general]
-    string performance = 17;
-    int64 createAt = 18;
-    repeated Disk disks = 19;
+    string arch = 10;
+    string os = 11;             // Host os
+    string kernel = 12;
+    string spec = 13;           // Host Spec ["4C8G/16C32g"]
+    int32 cpuCores = 14;        // Host cpu cores spec
+    int32 memory = 15;          // Host memory spec
+    int32 freeCpuCores = 16;    // Host cpu remains
+    int32 freeMemory = 17;      // Host memory remains, Unit:GB
+    string nic = 18;            // Host network type: 1GE or 10GE
+    string purpose = 19;        // What Purpose is the host used for? [compute/storage or general]
+    string diskType = 20;
+    bool reserved = 21;
+    int64 createAt = 22;
+    repeated Disk disks = 23;
 }
 
 // The request means "Get 3 '4C8G' Hosts in Zone3"

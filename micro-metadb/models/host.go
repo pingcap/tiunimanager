@@ -136,10 +136,10 @@ type AllocReqs map[string][]*HostAllocReq
 type AllocRsps map[string][]*DiskResource
 
 func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, cpuCores int32, mem int32) (resources []*DiskResource, err error) {
-	err = tx.Order("hosts.cpu_cores desc").Order("hosts.memory desc").Limit(numReps).Model(&rt.Disk{}).Select(
+	err = tx.Order("hosts.free_cpu_cores desc").Order("hosts.free_memory desc").Limit(numReps).Model(&rt.Disk{}).Select(
 		"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", cpuCores, mem).Joins(
 		"left join hosts on disks.host_id = hosts.id").Where(
-		"hosts.az = ? and (hosts.status = ? or hosts.status = ?) and hosts.cpu_cores >= ? and memory >= ? and disks.status = ?",
+		"hosts.az = ? and (hosts.status = ? or hosts.status = ?) and hosts.free_cpu_cores >= ? and free_memory >= ? and disks.status = ?",
 		failureDomain, rt.HOST_ONLINE, rt.HOST_INUSED, cpuCores, mem, rt.DISK_AVAILABLE).Group("hosts.id").Scan(&resources).Error
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "select resources failed, %v", err)
@@ -163,14 +163,14 @@ func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, c
 
 		var host rt.Host
 		tx.First(&host, "ID = ?", resource.HostId)
-		host.CpuCores -= cpuCores
-		host.Memory -= mem
+		host.FreeCpuCores -= cpuCores
+		host.FreeMemory -= mem
 		if host.IsExhaust() {
 			host.Status = int32(rt.HOST_EXHAUST)
 		} else {
 			host.Status = int32(rt.HOST_INUSED)
 		}
-		err = tx.Model(&host).Select("CpuCores", "Memory", "Status").Where("id = ?", resource.HostId).Updates(rt.Host{CpuCores: host.CpuCores, Memory: host.Memory, Status: host.Status}).Error
+		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Status").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Status: host.Status}).Error
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "update host(%s) status err, %v", resource.HostId, err)
 		}

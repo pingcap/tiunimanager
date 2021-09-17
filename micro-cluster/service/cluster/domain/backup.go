@@ -217,7 +217,7 @@ func QueryBackupStrategy(ope *proto.OperatorDTO, clusterId string) (*proto.Backu
 		getLogger().Error(err)
 		return nil, err
 	} else {
-		nextBackupTime, err := calculateNextBackupTime(resp.GetStrategy().GetBackupDate(), int(resp.GetStrategy().GetStartHour()))
+		nextBackupTime, err := calculateNextBackupTime(time.Now(), resp.GetStrategy().GetBackupDate(), int(resp.GetStrategy().GetStartHour()))
 		if err != nil {
 			getLogger().Errorf("calculateNextBackupTime failed, %s", err.Error())
 			return nil, err
@@ -235,7 +235,7 @@ func QueryBackupStrategy(ope *proto.OperatorDTO, clusterId string) (*proto.Backu
 	}
 }
 
-func calculateNextBackupTime(weekdayStr string, hour int) (time.Time, error) {
+func calculateNextBackupTime(now time.Time,weekdayStr string, hour int) (time.Time, error) {
 	days := strings.Split(weekdayStr, ",")
 	if len(days) == 0 {
 		return time.Time{}, fmt.Errorf("weekday invalid, %s", weekdayStr)
@@ -246,7 +246,6 @@ func calculateNextBackupTime(weekdayStr string, hour int) (time.Time, error) {
 		}
 	}
 
-	now := time.Now()
 	var subDays int = 7
 	for _, day := range days {
 		if WeekDayMap[day] < int(now.Weekday()) {

@@ -20,12 +20,17 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pingcap-inc/tiem/tiup/templates/config"
 	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
+	system "github.com/pingcap-inc/tiem/tiup/templates/systemd"
+	"github.com/pingcap/errors"
+	"github.com/pingcap/tiup/pkg/checkpoint"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/logger/log"
 	"github.com/pingcap/tiup/pkg/meta"
+	"go.uber.org/zap"
 )
 
 // WebServerSpec represents the Master topology specification in topology.yaml
@@ -48,7 +53,7 @@ func (s *WebServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 
 // Role returns the component role of the instance
 func (s *WebServerSpec) Role() string {
-	return ComponentTiEMClusterServer
+	return ComponentTiEMWebServer
 }
 
 // SSH returns the host and SSH port of the instance
@@ -132,25 +137,67 @@ func (i *WebServerInstance) InitConfig(
 	deployUser string,
 	paths meta.DirPaths,
 ) error {
-	if err := i.BaseInstance.InitConfig(ctx, e, i.topo.GlobalOptions, deployUser, paths); err != nil {
-		return err
+	// build systemd service file
+	comp := i.ComponentName()
+	host := i.GetHost()
+	port := i.GetPort()
+	sysCfg := filepath.Join(paths.Cache, fmt.Sprintf("%s-%s-%d.service", comp, host, port))
+
+	var err error
+	// insert checkpoint
+	point := checkpoint.Acquire(ctx, CopyConfigFile, map[string]interface{}{"config-file": sysCfg})
+	defer func() {
+		point.Release(err, zap.String("config-file", sysCfg))
+	}()
+
+	if point.Hit() != nil {
+		return nil
+	}
+
+	resource := MergeResourceControl(i.topo.GlobalOptions.ResourceControl, i.resourceControl())
+	systemCfg := system.NewConfig(comp, deployUser, paths.Deploy).
+		WithMemoryLimit(resource.MemoryLimit).
+		WithCPUQuota(resource.CPUQuota).
+		WithLimitCORE(resource.LimitCORE).
+		WithIOReadBandwidthMax(resource.IOReadBandwidthMax).
+		WithIOWriteBandwidthMax(resource.IOWriteBandwidthMax).
+		WithType("forking")
+
+	if err := systemCfg.ConfigToFile(sysCfg); err != nil {
+		return errors.Trace(err)
+	}
+	tgt := filepath.Join("/tmp", comp+"_"+uuid.New().String()+".service")
+	if err := e.Transfer(ctx, sysCfg, tgt, false, 0); err != nil {
+		return errors.Annotatef(err, "transfer from %s to %s failed", sysCfg, tgt)
+	}
+	cmd := fmt.Sprintf("mv %s /etc/systemd/system/%s-%d.service", tgt, comp, port)
+	if _, _, err := e.Execute(ctx, cmd, true); err != nil {
+		return errors.Annotatef(err, "execute: %s", cmd)
 	}
 
 	// render startup script
 	scpt := scripts.NewTiEMWebServerScript(
 		i.GetHost(),
 		paths.Deploy,
+		paths.Log,
 	)
 
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_web_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_nginx_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
-	dst := filepath.Join(paths.Deploy, "scripts", "run_tiem_web.sh")
+	dst := filepath.Join(paths.Deploy, "scripts", "run_nginx.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}
 	if _, _, err := e.Execute(ctx, "chmod +x "+dst, false); err != nil {
+		return err
+	}
+
+	// copy default configs
+	if _, _, err := e.Execute(ctx,
+		fmt.Sprintf("cp -r %s/bin/conf/* %s/conf/", paths.Deploy, paths.Deploy),
+		false); err != nil {
 		return err
 	}
 
@@ -177,7 +224,7 @@ func (i *WebServerInstance) InitConfig(
 	if err := srvList.ConfigToFile(fp); err != nil {
 		return err
 	}
-	dst = filepath.Join(paths.Deploy, "conf", "server_config.conf")
+	dst = filepath.Join(paths.Deploy, "conf", "server_list.conf")
 	return e.Transfer(ctx, fp, dst, false, 0)
 }
 
@@ -199,15 +246,16 @@ func (i *WebServerInstance) ScaleConfig(
 	scpt := scripts.NewTiEMWebServerScript(
 		i.GetHost(),
 		paths.Deploy,
+		paths.Log,
 	)
 
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_web_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_nginx_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
 
-	dst := filepath.Join(paths.Deploy, "scripts", "run_tiem_web.sh")
+	dst := filepath.Join(paths.Deploy, "scripts", "run_nginx.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}
@@ -238,6 +286,6 @@ func (i *WebServerInstance) ScaleConfig(
 	if err := srvList.ConfigToFile(fp); err != nil {
 		return err
 	}
-	dst = filepath.Join(paths.Deploy, "conf", "server_config.conf")
+	dst = filepath.Join(paths.Deploy, "conf", "server_list.conf")
 	return e.Transfer(ctx, fp, dst, false, 0)
 }

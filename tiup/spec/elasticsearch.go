@@ -187,7 +187,7 @@ func (i *ElasticSearchInstance) InitConfig(
 		return err
 	}
 	if _, _, err := e.Execute(ctx,
-		fmt.Sprintf("mv %s/bin/config/* %s/conf/", paths.Deploy, paths.Deploy),
+		fmt.Sprintf("cp -r %s/bin/config/* %s/conf/", paths.Deploy, paths.Deploy),
 		false); err != nil {
 		return err
 	}

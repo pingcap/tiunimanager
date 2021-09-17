@@ -154,15 +154,22 @@ func (i *MetaDBInstance) InitConfig(
 		WithRegistry(i.topo.RegistryEndpoints()).
 		WithTracer(i.topo.TracerEndpoints())
 
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_metadb_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_metadb-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
-	dst := filepath.Join(paths.Deploy, "scripts", "run_tiem_metadb.sh")
+	dst := filepath.Join(paths.Deploy, "scripts", "run_metadb-server.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}
 	if _, _, err := e.Execute(ctx, "chmod +x "+dst, false); err != nil {
+		return err
+	}
+
+	// TODO: support user specified certificates
+	if _, _, err := e.Execute(ctx,
+		fmt.Sprintf("cp -r %s/bin/cert %s/", paths.Deploy, paths.Deploy),
+		false); err != nil {
 		return err
 	}
 
@@ -197,13 +204,13 @@ func (i *MetaDBInstance) ScaleConfig(
 		WithClientPort(spec.ClientPort).
 		WithMetricsPort(spec.MetricsPort)
 
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_metadb_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_metadb-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
 
-	dst := filepath.Join(paths.Deploy, "scripts", "run_tiem_metadb.sh")
+	dst := filepath.Join(paths.Deploy, "scripts", "run_metadb-server.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}

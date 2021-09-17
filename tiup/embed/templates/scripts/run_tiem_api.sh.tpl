@@ -14,7 +14,6 @@ exec env GODEBUG=madvdontneed=1 bin/openapi-server \
     --metrics-port="{{.MetricsPort}}" \
     --registry-address="{{.RegistryEndpoints}}" \
     --tracer-address="{{.TracerAddress}}" \
-    --elasticsearch-address="{{.ElasticSearchAddress}}" \
     --deploy-dir="{{.DeployDir}}" \
     --data-dir="{{.DataDir}}" \
     --log-level="{{.LogLevel}}"

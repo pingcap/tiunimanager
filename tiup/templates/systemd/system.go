@@ -37,6 +37,7 @@ type Config struct {
 	// Takes one of no, on-success, on-failure, on-abnormal, on-watchdog, on-abort, or always.
 	// The Template set as always if this is not setted.
 	Restart string
+	Type    string // service type
 }
 
 // NewConfig returns a Config with given arguments
@@ -75,6 +76,12 @@ func (c *Config) WithIOWriteBandwidthMax(io string) *Config {
 // WithLimitCORE set the LimitCORE field of Config
 func (c *Config) WithLimitCORE(core string) *Config {
 	c.LimitCORE = core
+	return c
+}
+
+// WithType set the systemd service type
+func (c *Config) WithType(typ string) *Config {
+	c.Type = typ
 	return c
 }
 

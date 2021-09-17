@@ -14,6 +14,6 @@ exec env GODEBUG=madvdontneed=1 bin/cluster-server \
     --metrics-port="{{.MetricsPort}}" \
     --registry-address="{{.RegistryEndpoints}}" \
     --tracer-address="{{.TracerAddress}}" \
-    --deploy-dir="{{.DeployDir}}" \
+    --deploy-dir="{{.DeployDir}}/bin" \
     --data-dir="{{.DataDir}}" \
     --log-level="{{.LogLevel}}"

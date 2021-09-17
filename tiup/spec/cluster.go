@@ -149,11 +149,11 @@ func (i *ClusterServerInstance) InitConfig(
 		WithRegistry(i.topo.RegistryEndpoints()).
 		WithTracer(i.topo.TracerEndpoints())
 
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_cluster_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_cluster-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
-	dst := filepath.Join(paths.Deploy, "scripts", "run_tiem_cluster.sh")
+	dst := filepath.Join(paths.Deploy, "scripts", "run_cluster-server.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}
@@ -190,13 +190,13 @@ func (i *ClusterServerInstance) ScaleConfig(
 		WithPort(spec.Port).
 		WithMetricsPort(spec.MetricsPort)
 
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_cluster_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_cluster-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
 
-	dst := filepath.Join(paths.Deploy, "scripts", "run_tiem_cluster.sh")
+	dst := filepath.Join(paths.Deploy, "scripts", "run_cluster-server.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}

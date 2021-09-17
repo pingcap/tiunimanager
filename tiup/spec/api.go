@@ -50,7 +50,7 @@ func (s *APIServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 
 // Role returns the component role of the instance
 func (s *APIServerSpec) Role() string {
-	return ComponentTiEMClusterServer
+	return ComponentTiEMAPIServer
 }
 
 // SSH returns the host and SSH port of the instance
@@ -147,18 +147,24 @@ func (i *APIServerInstance) InitConfig(
 		WithPort(spec.Port).
 		WithMetricsPort(spec.MetricsPort).
 		WithRegistry(i.topo.RegistryEndpoints()).
-		WithTracer(i.topo.TracerEndpoints()).
-		WithElasticSearch(i.topo.ElasticSearchAddress())
+		WithTracer(i.topo.TracerEndpoints())
 
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_api_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_openapi-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
-	dst := filepath.Join(paths.Deploy, "scripts", "run_tiem_api.sh")
+	dst := filepath.Join(paths.Deploy, "scripts", "run_openapi-server.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}
 	if _, _, err := e.Execute(ctx, "chmod +x "+dst, false); err != nil {
+		return err
+	}
+
+	// TODO: support user specified certificates
+	if _, _, err := e.Execute(ctx,
+		fmt.Sprintf("cp -r %s/bin/cert %s/", paths.Deploy, paths.Deploy),
+		false); err != nil {
 		return err
 	}
 
@@ -189,15 +195,17 @@ func (i *APIServerInstance) ScaleConfig(
 		spec.LogLevel,
 	).
 		WithPort(spec.Port).
-		WithMetricsPort(spec.MetricsPort)
+		WithMetricsPort(spec.MetricsPort).
+		WithRegistry(i.topo.RegistryEndpoints()).
+		WithTracer(i.topo.TracerEndpoints())
 
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_tiem_api_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_openapi-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
 
-	dst := filepath.Join(paths.Deploy, "scripts", "run_tiem_api.sh")
+	dst := filepath.Join(paths.Deploy, "scripts", "run_openapi-server.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}

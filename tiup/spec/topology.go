@@ -472,7 +472,7 @@ func (s *Specification) CountDir(targetHost, dirPrefix string) int {
 func (s *Specification) RegistryEndpoints() []string {
 	result := make([]string, 0)
 	for _, inst := range s.MetaDBServers {
-		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.PeerPort))
+		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.ClientPort))
 	}
 	return result
 }

@@ -26,13 +26,15 @@ import (
 type TiEMWebServerScript struct {
 	Host      string
 	DeployDir string
+	LogDir    string
 }
 
 // NewTiEMWebServerScript returns a TiEMWebServerScript with given arguments
-func NewTiEMWebServerScript(ip, deployDir string) *TiEMWebServerScript {
+func NewTiEMWebServerScript(ip, deployDir, logDir string) *TiEMWebServerScript {
 	return &TiEMWebServerScript{
 		Host:      ip,
 		DeployDir: deployDir,
+		LogDir:    logDir,
 	}
 }
 

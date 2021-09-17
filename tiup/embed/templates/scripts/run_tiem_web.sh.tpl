@@ -8,5 +8,8 @@ DEPLOY_DIR={{.DeployDir}}
 cd "${DEPLOY_DIR}" || exit 1
 
 LANG=en_US.UTF-8 \
-exec env GODEBUG=madvdontneed=1 bin/nginx \
-    -c "{{.DeployDir}}/conf/nginx.conf"
+exec bin/sbin/nginx \
+    -p "{{.DeployDir}}/bin" \
+    -c "{{.DeployDir}}/conf/nginx.conf" \
+    -e "{{.LogDir}}/error.log" \
+    -g 'pid {{.DeployDir}}/nginx.pid;'

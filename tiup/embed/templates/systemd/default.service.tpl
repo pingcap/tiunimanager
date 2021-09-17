@@ -25,6 +25,10 @@ LimitSTACK=10485760
 AmbientCapabilities=CAP_NET_RAW
 {{- end}}
 
+{{- if ne .Type ""}}
+Type={{.Type}}
+{{- end}}
+
 User={{.User}}
 ExecStart={{.DeployDir}}/scripts/run_{{.ServiceName}}.sh
 {{- if eq .ServiceName "prometheus"}}

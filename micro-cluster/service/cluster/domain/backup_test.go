@@ -53,7 +53,7 @@ func Test_calculateNextBackupTime_case5(t *testing.T) {
 
 func Test_SaveBackupStrategyPreCheck_case1(t *testing.T) {
 	err := SaveBackupStrategyPreCheck(&proto.OperatorDTO{}, &proto.BackupStrategy{
-		Period: "14:00-16:00",
+		Period:     "14:00-16:00",
 		BackupDate: "Monday,Tuesday,Thursday,Sunday",
 	})
 	assert.NoError(t, err)
@@ -61,7 +61,7 @@ func Test_SaveBackupStrategyPreCheck_case1(t *testing.T) {
 
 func Test_SaveBackupStrategyPreCheck_case3(t *testing.T) {
 	err := SaveBackupStrategyPreCheck(&proto.OperatorDTO{}, &proto.BackupStrategy{
-		Period: "14:0016:00",
+		Period:     "14:0016:00",
 		BackupDate: "Monday,Tuesday,Thursday,Sunday",
 	})
 	assert.NotNil(t, err)
@@ -69,7 +69,7 @@ func Test_SaveBackupStrategyPreCheck_case3(t *testing.T) {
 
 func Test_SaveBackupStrategyPreCheck_case4(t *testing.T) {
 	err := SaveBackupStrategyPreCheck(&proto.OperatorDTO{}, &proto.BackupStrategy{
-		Period: "18-16",
+		Period:     "18-16",
 		BackupDate: "Monday,Tuesday,Thursday,Sunday",
 	})
 	assert.NotNil(t, err)
@@ -77,7 +77,7 @@ func Test_SaveBackupStrategyPreCheck_case4(t *testing.T) {
 
 func Test_SaveBackupStrategyPreCheck_case5(t *testing.T) {
 	err := SaveBackupStrategyPreCheck(&proto.OperatorDTO{}, &proto.BackupStrategy{
-		Period: "14:00-16:00",
+		Period:     "14:00-16:00",
 		BackupDate: "Monday,weekday,Thursday,Sunday",
 	})
 	assert.NotNil(t, err)

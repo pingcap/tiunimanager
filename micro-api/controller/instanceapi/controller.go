@@ -158,16 +158,16 @@ func Backup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(BackupRecord{
-			ID:          	resp.GetBackupRecord().GetId(),
-			ClusterId:   	resp.GetBackupRecord().GetClusterId(),
-			StartTime:   	time.Unix(resp.GetBackupRecord().GetStartTime(), 0),
-			EndTime:     	time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
-			BackupType:  	resp.GetBackupRecord().GetRange(),
-			BackupMethod:  	resp.GetBackupRecord().GetBackupType(),
-			BackupMode:  	resp.GetBackupRecord().GetMode(),
-			FilePath:    	resp.GetBackupRecord().GetFilePath(),
-			Size:        	resp.GetBackupRecord().GetSize(),
-			Status:      	*clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
+			ID:           resp.GetBackupRecord().GetId(),
+			ClusterId:    resp.GetBackupRecord().GetClusterId(),
+			StartTime:    time.Unix(resp.GetBackupRecord().GetStartTime(), 0),
+			EndTime:      time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
+			BackupType:   resp.GetBackupRecord().GetRange(),
+			BackupMethod: resp.GetBackupRecord().GetBackupType(),
+			BackupMode:   resp.GetBackupRecord().GetMode(),
+			FilePath:     resp.GetBackupRecord().GetFilePath(),
+			Size:         resp.GetBackupRecord().GetSize(),
+			Status:       *clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
 		}))
 	}
 }
@@ -197,12 +197,12 @@ func QueryBackupStrategy(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(BackupStrategy{
-			ClusterId:   resp.GetStrategy().GetClusterId(),
-			FilePath:    resp.GetStrategy().GetFilePath(),
-			BackupType:  resp.GetStrategy().GetBackupType(),
-			BackupRange: resp.GetStrategy().GetBackupRange(),
-			BackupDate:  resp.GetStrategy().GetBackupDate(),
-			Period:      resp.GetStrategy().GetPeriod(),
+			ClusterId:      resp.GetStrategy().GetClusterId(),
+			FilePath:       resp.GetStrategy().GetFilePath(),
+			BackupType:     resp.GetStrategy().GetBackupType(),
+			BackupRange:    resp.GetStrategy().GetBackupRange(),
+			BackupDate:     resp.GetStrategy().GetBackupDate(),
+			Period:         resp.GetStrategy().GetPeriod(),
 			NextBackupTime: time.Unix(resp.GetStrategy().GetNextBackupTime(), 0),
 		}))
 	}
@@ -269,11 +269,11 @@ func QueryBackup(c *gin.Context) {
 	}
 	operator := controller.GetOperator(c)
 	reqDTO := &cluster.QueryBackupRequest{
-		Operator:  	operator.ConvertToDTO(),
-		ClusterId: 	queryReq.ClusterId,
-		Page:      	queryReq.PageRequest.ConvertToDTO(),
-		StartTime: 	queryReq.StartTime,
-		EndTime: 	queryReq.EndTime,
+		Operator:  operator.ConvertToDTO(),
+		ClusterId: queryReq.ClusterId,
+		Page:      queryReq.PageRequest.ConvertToDTO(),
+		StartTime: queryReq.StartTime,
+		EndTime:   queryReq.EndTime,
 	}
 
 	resp, err := client.ClusterClient.QueryBackupRecord(context.TODO(), reqDTO, controller.DefaultTimeout)
@@ -285,13 +285,13 @@ func QueryBackup(c *gin.Context) {
 
 		for i, v := range resp.BackupRecords {
 			records[i] = BackupRecord{
-				ID:          	v.Id,
-				ClusterId:   	v.ClusterId,
-				StartTime:   	time.Unix(v.StartTime, 0),
-				EndTime:     	time.Unix(v.EndTime, 0),
-				BackupType:  	v.Range,
-				BackupMethod:  	v.BackupType,
-				BackupMode:  	v.Mode,
+				ID:           v.Id,
+				ClusterId:    v.ClusterId,
+				StartTime:    time.Unix(v.StartTime, 0),
+				EndTime:      time.Unix(v.EndTime, 0),
+				BackupType:   v.Range,
+				BackupMethod: v.BackupType,
+				BackupMode:   v.Mode,
 				Operator: controller.Operator{
 					ManualOperator: true,
 					OperatorId:     v.Operator.Id,

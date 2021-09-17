@@ -22,7 +22,7 @@ func InitAutoBackupCronJob() {
 	go mgr.Start()
 }
 
-func NewAutoBackupManager() *AutoBackupManager{
+func NewAutoBackupManager() *AutoBackupManager {
 	mgr := &AutoBackupManager{
 		JobCron: cron.New(),
 		JobSpec: "0 0 * * * *", // every integer hour
@@ -52,7 +52,7 @@ func (auto *autoBackupHandler) Run() {
 	defer getLogger().Infof("end AutoBackupHandler Run")
 
 	resp, err := client.DBClient.QueryBackupStrategyByTime(ctx.TODO(), &db.DBQueryBackupStrategyByTimeRequest{
-		Weekday: curWeekDay,
+		Weekday:   curWeekDay,
 		StartHour: uint32(curHour),
 	})
 	if err != nil {
@@ -71,7 +71,7 @@ func (auto *autoBackupHandler) doBackup(straegy *db.DBBackupStrategyDTO) {
 	defer getLogger().Infof("end do auto backup for cluster %s", straegy.GetClusterId())
 
 	ope := &proto.OperatorDTO{
-		Id: straegy.GetOperatorId(),
+		Id:       straegy.GetOperatorId(),
 		TenantId: straegy.GetTenantId(),
 	}
 	_, err := Backup(ope, straegy.GetClusterId(), straegy.GetBackupRange(), straegy.GetBackupType(), BackupModeAuto, "")

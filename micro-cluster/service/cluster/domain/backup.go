@@ -159,13 +159,16 @@ func SaveBackupStrategyPreCheck(ope *proto.OperatorDTO, strategy *proto.BackupSt
 
 	starts := strings.Split(period[0], ":")
 	ends := strings.Split(period[1], ":")
-	_, err := strconv.Atoi(starts[0])
+	startHour, err := strconv.Atoi(starts[0])
 	if err != nil {
 		return fmt.Errorf("invalid param start hour, %s", err.Error())
 	}
-	_, err = strconv.Atoi(ends[0])
+	endHour, err := strconv.Atoi(ends[0])
 	if err != nil {
 		return fmt.Errorf("invalid param end hour, %s", err.Error())
+	}
+	if startHour > 23 || startHour < 0 || endHour > 23 || endHour < 0 || startHour >= endHour {
+		return fmt.Errorf("invalid param period, %s", strategy.GetPeriod())
 	}
 
 	backupDates := strings.Split(strategy.GetBackupDate(), ",")

@@ -44,7 +44,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 	operator := parseOperatorFromDTO(ope)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil || clusterAggregation == nil {
-		return nil, errors.New("load cluster aggregation")
+		return nil, fmt.Errorf("load cluster %s aggregation failed", clusterId)
 	}
 
 	clusterAggregation.CurrentOperator = operator

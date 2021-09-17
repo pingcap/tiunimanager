@@ -107,6 +107,37 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *proto.DBF
 	return err
 }
 
+func (handler *DBServiceHandler) FindAccountById(cxt context.Context, req *proto.DBFindAccountByIdRequest, resp *proto.DBFindAccountByIdResponse) error {
+	if nil == req || nil == resp {
+		return errors.Errorf("FindAccount has invalid parameter")
+	}
+	log := framework.Log()
+	accountManager := handler.Dao().AccountManager()
+	account, err := accountManager.Find(req.GetId())
+	if err == nil {
+		resp.Status = SuccessResponseStatus
+		resp.Account = &proto.DBAccountDTO{
+			Id:        account.ID,
+			TenantId:  account.TenantId,
+			Name:      account.Name,
+			Salt:      account.Salt,
+			FinalHash: account.FinalHash,
+		}
+		log.Infof("Find account by id %s successful, error: %v", req.GetId(), err)
+	} else {
+		resp.Status = &proto.DbAuthResponseStatus{
+			Code:    common.TIEM_ACCOUNT_NOT_FOUND,
+			Message: err.Error(),
+		}
+
+		resp.Status.Message = err.Error()
+		err = errors.Errorf("FindAccount,query database failed, id: %s, error: %v", req.GetId(), err)
+		log.Errorf("Find account by id %s successful, error: %v", req.GetId(), err)
+	}
+
+	return err
+}
+
 func (handler *DBServiceHandler) SaveToken(cxt context.Context, req *proto.DBSaveTokenRequest, resp *proto.DBSaveTokenResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveToken has invalid parameter, req: %v, resp: %v", req, resp)

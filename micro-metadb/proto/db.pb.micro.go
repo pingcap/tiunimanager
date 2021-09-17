@@ -39,6 +39,7 @@ type TiEMDBService interface {
 	// Auth Module
 	FindTenant(ctx context.Context, in *DBFindTenantRequest, opts ...client.CallOption) (*DBFindTenantResponse, error)
 	FindAccount(ctx context.Context, in *DBFindAccountRequest, opts ...client.CallOption) (*DBFindAccountResponse, error)
+	FindAccountById(ctx context.Context, in *DBFindAccountByIdRequest, opts ...client.CallOption) (*DBFindAccountByIdResponse, error)
 	SaveToken(ctx context.Context, in *DBSaveTokenRequest, opts ...client.CallOption) (*DBSaveTokenResponse, error)
 	FindToken(ctx context.Context, in *DBFindTokenRequest, opts ...client.CallOption) (*DBFindTokenResponse, error)
 	FindRolesByPermission(ctx context.Context, in *DBFindRolesByPermissionRequest, opts ...client.CallOption) (*DBFindRolesByPermissionResponse, error)
@@ -115,6 +116,16 @@ func (c *tiEMDBService) FindTenant(ctx context.Context, in *DBFindTenantRequest,
 func (c *tiEMDBService) FindAccount(ctx context.Context, in *DBFindAccountRequest, opts ...client.CallOption) (*DBFindAccountResponse, error) {
 	req := c.c.NewRequest(c.name, "TiEMDBService.FindAccount", in)
 	out := new(DBFindAccountResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiEMDBService) FindAccountById(ctx context.Context, in *DBFindAccountByIdRequest, opts ...client.CallOption) (*DBFindAccountByIdResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.FindAccountById", in)
+	out := new(DBFindAccountByIdResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -558,6 +569,7 @@ type TiEMDBServiceHandler interface {
 	// Auth Module
 	FindTenant(context.Context, *DBFindTenantRequest, *DBFindTenantResponse) error
 	FindAccount(context.Context, *DBFindAccountRequest, *DBFindAccountResponse) error
+	FindAccountById(context.Context, *DBFindAccountByIdRequest, *DBFindAccountByIdResponse) error
 	SaveToken(context.Context, *DBSaveTokenRequest, *DBSaveTokenResponse) error
 	FindToken(context.Context, *DBFindTokenRequest, *DBFindTokenResponse) error
 	FindRolesByPermission(context.Context, *DBFindRolesByPermissionRequest, *DBFindRolesByPermissionResponse) error
@@ -613,6 +625,7 @@ func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, op
 	type tiEMDBService interface {
 		FindTenant(ctx context.Context, in *DBFindTenantRequest, out *DBFindTenantResponse) error
 		FindAccount(ctx context.Context, in *DBFindAccountRequest, out *DBFindAccountResponse) error
+		FindAccountById(ctx context.Context, in *DBFindAccountByIdRequest, out *DBFindAccountByIdResponse) error
 		SaveToken(ctx context.Context, in *DBSaveTokenRequest, out *DBSaveTokenResponse) error
 		FindToken(ctx context.Context, in *DBFindTokenRequest, out *DBFindTokenResponse) error
 		FindRolesByPermission(ctx context.Context, in *DBFindRolesByPermissionRequest, out *DBFindRolesByPermissionResponse) error
@@ -674,6 +687,10 @@ func (h *tiEMDBServiceHandler) FindTenant(ctx context.Context, in *DBFindTenantR
 
 func (h *tiEMDBServiceHandler) FindAccount(ctx context.Context, in *DBFindAccountRequest, out *DBFindAccountResponse) error {
 	return h.TiEMDBServiceHandler.FindAccount(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) FindAccountById(ctx context.Context, in *DBFindAccountByIdRequest, out *DBFindAccountByIdResponse) error {
+	return h.TiEMDBServiceHandler.FindAccountById(ctx, in, out)
 }
 
 func (h *tiEMDBServiceHandler) SaveToken(ctx context.Context, in *DBSaveTokenRequest, out *DBSaveTokenResponse) error {

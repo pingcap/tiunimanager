@@ -70,11 +70,18 @@ func (auto *autoBackupHandler) doBackup(straegy *db.DBBackupStrategyDTO) {
 	getLogger().Infof("begin do auto backup for cluster %s", straegy.GetClusterId())
 	defer getLogger().Infof("end do auto backup for cluster %s", straegy.GetClusterId())
 
-	ope := &proto.OperatorDTO{
-		Id:       straegy.GetOperatorId(),
-		TenantId: straegy.GetTenantId(),
+	resp, err := client.DBClient.FindAccountById(ctx.TODO(), &db.DBFindAccountByIdRequest{Id: straegy.GetOperatorId()})
+	if err != nil {
+		getLogger().Errorf("find account by id %s failed, %s", straegy.GetOperatorId(), err.Error())
+		return
 	}
-	_, err := Backup(ope, straegy.GetClusterId(), straegy.GetBackupRange(), straegy.GetBackupType(), BackupModeAuto, "")
+
+	ope := &proto.OperatorDTO{
+		Id:       resp.GetAccount().GetId(),
+		TenantId: resp.GetAccount().GetTenantId(),
+		Name: resp.GetAccount().GetName(),
+	}
+	_, err = Backup(ope, straegy.GetClusterId(), straegy.GetBackupRange(), straegy.GetBackupType(), BackupModeAuto, "")
 	if err != nil {
 		getLogger().Errorf("do backup for cluster %s failed, %s", straegy.GetClusterId(), err.Error())
 		return

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
@@ -13,7 +12,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
@@ -245,30 +243,13 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 }
 
 func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *clusterPb.GetBackupStrategyRequest, response *clusterPb.GetBackupStrategyResponse) (err error) {
-	resp, err := client.DBClient.QueryBackupStrategy(context.TODO(), &dbPb.DBQueryBackupStrategyRequest{
-		ClusterId: request.ClusterId,
-	})
+	strategy, err := domain.QueryBackupStrategy(request.GetOperator(), request.GetClusterId())
 	if err != nil {
 		getLogger().Error(err)
 		return err
 	} else {
-		now := time.Now()
-		var nextAutoBackupTime time.Time
-		if now.Hour() < int(resp.GetStrategy().GetStartHour()) {
-			nextAutoBackupTime = time.Date(now.Year(), now.Month(), now.Day(), int(resp.GetStrategy().GetStartHour()), 0, 0, 0, time.Local)
-		} else {
-			nextAutoBackupTime = time.Date(now.Year(), now.Month(), now.Day(), int(resp.GetStrategy().GetStartHour()), 0, 0, 0, time.Local).AddDate(0, 0, 1)
-		}
 		response.Status = SuccessResponseStatus
-		response.Strategy = &clusterPb.BackupStrategy{
-			ClusterId:   resp.GetStrategy().GetClusterId(),
-			BackupDate:  resp.GetStrategy().GetBackupDate(),
-			FilePath:    resp.GetStrategy().GetFilePath(),
-			BackupRange: resp.GetStrategy().GetBackupRange(),
-			BackupType:  resp.GetStrategy().GetBackupType(),
-			Period:      fmt.Sprintf("%d:00-%d:00", resp.GetStrategy().GetStartHour(), resp.GetStrategy().GetEndHour()),
-		}
-		response.NextBackupTime = nextAutoBackupTime.Unix()
+		response.Strategy = strategy
 		return nil
 	}
 }

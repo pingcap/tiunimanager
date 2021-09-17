@@ -206,6 +206,65 @@ func SaveBackupStrategy(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) 
 	return nil
 }
 
+func QueryBackupStrategy(ope *proto.OperatorDTO, clusterId string) (*proto.BackupStrategy, error) {
+	resp, err := client.DBClient.QueryBackupStrategy(context.TODO(), &db.DBQueryBackupStrategyRequest{
+		ClusterId: clusterId,
+	})
+	if err != nil {
+		getLogger().Error(err)
+		return nil, err
+	} else {
+		nextBackupTime, err := calculateNextBackupTime(resp.GetStrategy().GetBackupDate(), int(resp.GetStrategy().GetStartHour()))
+		if err != nil {
+			getLogger().Errorf("calculateNextBackupTime failed, %s", err.Error())
+			return nil, err
+		}
+		strategy := &proto.BackupStrategy{
+			ClusterId:   resp.GetStrategy().GetClusterId(),
+			BackupDate:  resp.GetStrategy().GetBackupDate(),
+			FilePath:    resp.GetStrategy().GetFilePath(),
+			BackupRange: resp.GetStrategy().GetBackupRange(),
+			BackupType:  resp.GetStrategy().GetBackupType(),
+			Period:      fmt.Sprintf("%d:00-%d:00", resp.GetStrategy().GetStartHour(), resp.GetStrategy().GetEndHour()),
+			NextBackupTime: nextBackupTime.Unix(),
+		}
+		return strategy, nil
+	}
+}
+
+func calculateNextBackupTime(weekdayStr string, hour int) (time.Time, error) {
+	days := strings.Split(weekdayStr, ",")
+	if len(days) == 0 {
+		return time.Time{}, fmt.Errorf("weekday invalid, %s", weekdayStr)
+	}
+	for _, day := range days {
+		if !checkWeekDayValid(day) {
+			return time.Time{}, fmt.Errorf("weekday invalid, %s", day)
+		}
+	}
+
+	now := time.Now()
+	var subDays int = 7
+	for _, day := range days {
+		if WeekDayMap[day] < int(now.Weekday()) {
+			if WeekDayMap[day] + 7 - int(now.Weekday()) < subDays {
+				subDays = WeekDayMap[day] + 7 - int(now.Weekday())
+			}
+		} else if WeekDayMap[day] > int(now.Weekday()) {
+			if int(now.Weekday()) - WeekDayMap[day] < subDays {
+				subDays = int(now.Weekday()) - WeekDayMap[day]
+			}
+		} else {
+			if now.Hour() < hour {
+				subDays = 0
+			}
+		}
+	}
+	nextAutoBackupTime := time.Date(now.Year(), now.Month(), now.Day(), hour, 0, 0, 0, time.Local).AddDate(0, 0, subDays)
+
+	return nextAutoBackupTime, nil
+}
+
 func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupRange string) string {
 	if filePrefix != "" {
 		//use user spec filepath

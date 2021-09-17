@@ -16,37 +16,49 @@ package common
 
 // tiem all errno
 const (
-	TIEM_SUCCESS 	= 0
+	TIEM_SUCCESS           = 0
 	TIEM_PARAMETER_INVALID = 1
 
 	TIEM_ACCOUNT_NOT_FOUND = 100
-	TIME_ACCOUNT_EXIST = 101
+	TIME_ACCOUNT_EXIST     = 101
 
 	TIEM_TENANT_NOT_FOUND = 200
-	TIEM_TENANT_EXIST =201
+	TIEM_TENANT_EXIST     = 201
 
 	TIEM_QUERY_PERMISSION_FAILED = 300
 
 	TIEM_ADD_TOKEN_FAILED = 400
-	TIEM_TOKEN_NOT_FOUND = 401
+	TIEM_TOKEN_NOT_FOUND  = 401
+
+	TIEM_RESOURCE_SQL_ERROR                        = 500
+	TIEM_RESOURCE_HOST_NOT_FOUND                   = 501
+	TIEM_RESOURCE_NO_ENOUGH_HOST                   = 502
+	TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_EXCLUDED    = 503
+	TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER = 504
+	TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_HOST_FILTER = 505
+	TIEM_RESOURCE_NO_ENOUGH_PORT                   = 506
 )
 
-var TiEMErrMsg = map[uint32] string {
-	TIEM_PARAMETER_INVALID : "parameter is invalid",
-	TIEM_ACCOUNT_NOT_FOUND : "account is not found",
-	TIME_ACCOUNT_EXIST : "account is exist",
+var TiEMErrMsg = map[uint32]string{
+	TIEM_SUCCESS:           "successful",
+	TIEM_PARAMETER_INVALID: "parameter is invalid",
+	TIEM_ACCOUNT_NOT_FOUND: "account is not found",
+	TIME_ACCOUNT_EXIST:     "account is exist",
 
-	TIEM_TENANT_NOT_FOUND : "tenant is not found",
-	TIEM_TENANT_EXIST : "tenant is exist",
+	TIEM_TENANT_NOT_FOUND: "tenant is not found",
+	TIEM_TENANT_EXIST:     "tenant is exist",
 
-	TIEM_QUERY_PERMISSION_FAILED :"query permission failed",
+	TIEM_QUERY_PERMISSION_FAILED: "query permission failed",
 
-	TIEM_ADD_TOKEN_FAILED :"add token failed",
+	TIEM_ADD_TOKEN_FAILED: "add token failed",
 
-	TIEM_TOKEN_NOT_FOUND : "token not found",
+	TIEM_TOKEN_NOT_FOUND: "token not found",
 
-}
-
-var TiEMErrName = map[uint32]string{
-	TIEM_SUCCESS: "successufl",
+	TIEM_RESOURCE_SQL_ERROR:                        "resource sql error",
+	TIEM_RESOURCE_HOST_NOT_FOUND:                   "host is not found",
+	TIEM_RESOURCE_NO_ENOUGH_HOST:                   "no enough host resource",
+	TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_EXCLUDED:    "no enough disk resource after excluded",
+	TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER: "no enough disk after disk filter",
+	TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_HOST_FILTER: "no enouth disk after host filter",
+	TIEM_RESOURCE_NO_ENOUGH_PORT:                   "no enough port resource",
 }

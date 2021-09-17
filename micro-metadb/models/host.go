@@ -2,11 +2,12 @@ package models
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/pingcap-inc/tiem/library/common"
 	rt "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 
+	"github.com/pingcap-inc/tiem/library/util/bitmap"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -213,21 +214,222 @@ func (m *DAOResourceManager) GetFailureDomain(domain string) (res []FailureDomai
 	return
 }
 
-func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, require *dbPb.AllocRequirement) (results []rt.HostResource, err error) {
-	excludedStr := strings.Join(require.HostExcluded.Hosts, ",")
+type Resource struct {
+	HostId   string
+	HostName string
+	Ip       string
+	UserName string
+	Passwd   string
+	CpuCores int
+	Memory   int
+	DiskId   string
+	DiskName string
+	Path     string
+	Capacity int
+	portRes  []*rt.PortResource
+}
 
+func getPortsInRange(usedPorts []int32, start int32, end int32, count int) (*rt.PortResource, error) {
+	bitlen := int(end - start)
+	bm := bitmap.NewConcurrentBitmap(bitlen)
+	for _, used := range usedPorts {
+		if used < start {
+			continue
+		} else if used > end {
+			break
+		} else {
+			bm.Set(int(used - start))
+		}
+	}
+	result := &rt.PortResource{
+		Start: start,
+		End:   end,
+	}
+	for i := 0; i < count; i++ {
+		found := false
+		for j := 0; j < bitlen; j++ {
+			if !bm.UnsafeIsSet(j) {
+				bm.Set(j)
+				result.Ports = append(result.Ports, start+int32(j))
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_PORT, common.TiEMErrMsg[common.TIEM_RESOURCE_NO_ENOUGH_PORT])
+		}
+	}
+	return result, nil
+}
+
+func markResourcesForUsed(tx *gorm.DB, applicant *dbPb.Applicant, resources []*Resource) (err error) {
+	for _, resource := range resources {
+		if resource.DiskId != "" {
+			var disk rt.Disk
+			tx.First(&disk, "ID = ?", resource.DiskId).First(&disk)
+			if rt.DiskStatus(disk.Status).IsAvailable() {
+				err = tx.Model(&disk).Update("Status", int32(rt.DISK_EXHAUST)).Error
+				if err != nil {
+					return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update disk(%s) status err, %v", resource.DiskId, err)
+				}
+			} else {
+				return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "disk %s status not expected(%d)", resource.DiskId, disk.Status)
+			}
+			usedDisk := rt.UsedDisk{
+				DiskId:   resource.DiskId,
+				HostId:   resource.HostId,
+				Capacity: int32(resource.Capacity),
+			}
+			usedDisk.HolderId = applicant.HolderId
+			usedDisk.RequestId = applicant.RequestId
+			err = tx.Create(&usedDisk).Error
+			if err != nil {
+				return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "insert disk(%s) to used_disks table failed: %v", resource.DiskId, err)
+			}
+		}
+
+		var host rt.Host
+		tx.First(&host, "ID = ?", resource.HostId)
+		host.FreeCpuCores -= int32(resource.CpuCores)
+		host.FreeMemory -= int32(resource.Memory)
+		if host.IsExhaust() {
+			host.Status = int32(rt.HOST_EXHAUST)
+		} else {
+			host.Status = int32(rt.HOST_INUSED)
+		}
+		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Status").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Status: host.Status}).Error
+		if err != nil {
+			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update host(%s) status err, %v", resource.HostId, err)
+		}
+		usedCompute := rt.UsedCompute{
+			HostId:   resource.HostId,
+			CpuCores: int32(resource.CpuCores),
+			Memory:   int32(resource.Memory),
+		}
+		usedCompute.Holder.HolderId = applicant.HolderId
+		usedCompute.RequestId = applicant.RequestId
+		err = tx.Create(&usedCompute).Error
+		if err != nil {
+			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "insert host(%s) to used_disks table failed: %v", resource.HostId, err)
+		}
+
+		for _, ports := range resource.portRes {
+			for _, port := range ports.Ports {
+				usedPort := rt.UsedPort{
+					HostId: resource.HostId,
+					Port:   port,
+				}
+				usedPort.HolderId = applicant.HolderId
+				usedPort.RequestId = applicant.RequestId
+				err = tx.Create(&usedPort).Error
+				if err != nil {
+					return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "insert host(%s) for port(%d) table failed: %v", resource.HostId, port, err)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, require *dbPb.AllocRequirement, choosedHosts []string) (results []rt.HostResource, err error) {
+	region := require.Location.Region
+	zone := require.Location.Zone
+	excludedHosts := require.HostExcluded.Hosts
+	// excluded choosed hosts in one request
+	excludedHosts = append(excludedHosts, choosedHosts...)
+	hostPurpose := require.HostFilter.Purpose
+	hostDiskType := require.HostFilter.DiskType
+	reqCores := require.Require.ComputeReq.CpuCores
+	reqMem := require.Require.ComputeReq.Memory
+	diskType := rt.DiskType(require.Require.DiskReq.DiskType)
+	capacity := require.Require.DiskReq.Capacity
+	needDisk := require.Require.DiskReq.NeedDisk
+	// 1. Choose Host/Disk List
+	var resources []*Resource
+	if needDisk {
+		var count int64
+		db := tx.Order("hosts.free_cpu_cores desc").Order("hosts.free_memory desc").Limit(int(require.Count)).Model(&rt.Disk{}).Select(
+			"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
+			"left join hosts on disks.host_id = hosts.id").Where("hosts.reserved = 0").Not(map[string]interface{}{"hosts.ip": excludedHosts}).Count(&count)
+		if count < int64(require.Count) {
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_EXCLUDED, common.TiEMErrMsg[common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_EXCLUDED])
+		}
+
+		db = db.Where("disks.type = ? and disks.status = ? and disks.capacity >= ?", diskType, rt.DISK_AVAILABLE, capacity).Count(&count)
+		if count < int64(require.Count) {
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, common.TiEMErrMsg[common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER])
+		}
+
+		err = db.Where("hosts.region = ? and hosts.az = ? and hosts.purpose = ? and hosts.disk_type = ? and (hosts.status = ? or hosts.status = ?) and hosts.free_cpu_cores >= ? and free_memory >= ?",
+			region, zone, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_INUSED, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
+	} else {
+		err = nil
+	}
+	if err != nil {
+		return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
+	}
+
+	if len(resources) < int(require.Count) {
+		return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "hosts in %s,%s is not enough for allocation(%d|%d)", region, zone, len(resources), require.Count)
+	}
+
+	// 2. Choose Ports in Hosts
+	for _, resource := range resources {
+		var usedPorts []int32
+		tx.Order("port").Model(&rt.UsedPort{}).Select("port").Where("host_id = ?", resource.HostId).Scan(&usedPorts)
+		for _, portReq := range require.Require.PortReq {
+			res, err := getPortsInRange(usedPorts, portReq.Start, portReq.End, int(portReq.PortCnt))
+			if err != nil {
+				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_PORT, "host %s(%s) has no enough ports on range [%d, %d]", resource.HostId, resource.Ip, portReq.Start, portReq.End)
+			}
+			resource.portRes = append(resource.portRes, res)
+		}
+	}
+
+	// 3. Mark Resources in used
+	err = markResourcesForUsed(tx, applicant, resources)
+	if err != nil {
+		return nil, err
+	}
+
+	// 4. make Results and Complete one Requirement
+	for _, resource := range resources {
+		result := rt.HostResource{
+			Reqseq:   int32(seq),
+			HostId:   resource.HostId,
+			HostName: resource.HostName,
+			HostIp:   resource.Ip,
+			UserName: resource.UserName,
+			Passwd:   resource.Passwd,
+		}
+		result.ComputeRes.CpuCores = int32(resource.CpuCores)
+		result.ComputeRes.Memory = int32(resource.Memory)
+		result.DiskRes.DiskId = resource.DiskId
+		result.DiskRes.DiskName = resource.DiskName
+		result.DiskRes.Path = resource.Path
+		result.DiskRes.Capacity = int32(resource.Capacity)
+		for _, portRes := range resource.portRes {
+			result.PortRes = append(result.PortRes, *portRes)
+		}
+
+		results = append(results, result)
+	}
 	return
 }
 
 func (m *DAOResourceManager) AllocResources(req *dbPb.AllocReq) (results []rt.HostResource, err error) {
 	tx := m.getDb().Begin()
+	var choosedHosts []string
 	for i, require := range req.Requires {
 		switch rt.AllocStrategy(require.Strategy) {
 		case rt.RandomRack:
-			res, err := allocResourceWithRR(tx, req.Applicant, i, require)
+			res, err := allocResourceWithRR(tx, req.Applicant, i, require, choosedHosts)
 			if err != nil {
 				tx.Rollback()
 				return nil, status.Errorf(codes.Internal, "alloc with RandomRack %dth require failed, %v", i, err)
+			}
+			for _, result := range res {
+				choosedHosts = append(choosedHosts, result.HostIp)
 			}
 			results = append(results, res...)
 		case rt.DiffRackBestEffort:

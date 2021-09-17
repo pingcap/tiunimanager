@@ -153,3 +153,30 @@ func Test_checkBackupTypeValid(t *testing.T) {
 		})
 	}
 }
+
+func Test_checkWeekDayValid(t *testing.T) {
+	type args struct {
+		weekday string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{"Sunday", args{"Sunday"}, true},
+		{"Monday", args{"Monday"}, true},
+		{"Tuesday", args{"Tuesday"}, true},
+		{"Wednesday", args{"Wednesday"}, true},
+		{"Thursday", args{"Thursday"}, true},
+		{"Friday", args{"Friday"}, true},
+		{"Saturday", args{"Saturday"}, true},
+		{"whatever", args{"whatever"}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := checkWeekDayValid(tt.args.weekday); got != tt.want {
+				t.Errorf("checkWeekDayValid() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -25,7 +25,7 @@ func InitAutoBackupCronJob() {
 func NewAutoBackupManager() *AutoBackupManager{
 	mgr := &AutoBackupManager{
 		JobCron: cron.New(),
-		JobSpec: "0 0 0-23 * * *", // every integer hour
+		JobSpec: "0 0 * * * *", // every integer hour
 	}
 	err := mgr.JobCron.AddJob(mgr.JobSpec, &autoBackupHandler{})
 	if err != nil {

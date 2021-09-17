@@ -42,6 +42,15 @@ message DBFindAccountResponse {
 	DBAccountDTO account = 2;
 }
 
+message DBFindAccountByIdRequest {
+	string id = 1;
+}
+
+message DBFindAccountByIdResponse {
+	DbAuthResponseStatus status = 1;
+	DBAccountDTO account = 2;
+}
+
 message DBTokenDTO {
 	string tokenString = 1;
 	string accountName = 2;

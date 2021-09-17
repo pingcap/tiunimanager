@@ -25,6 +25,7 @@ type DBFakeService struct {
 	mockCheckDetails       func(ctx context.Context, in *db.DBCheckDetailsRequest, opts ...client.CallOption) (*db.DBCheckDetailsResponse, error)
 	mockAllocHosts         func(ctx context.Context, in *db.DBAllocHostsRequest, opts ...client.CallOption) (*db.DBAllocHostsResponse, error)
 	mockGetFailureDomain   func(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error)
+	mockAllocResources     func(ctx context.Context, in *db.AllocReq, opts ...client.CallOption) (*db.AllocRsp, error)
 	// Cluster
 	mockCreateCluster           func(ctx context.Context, in *db.DBCreateClusterRequest, opts ...client.CallOption) (*db.DBCreateClusterResponse, error)
 	mockDeleteCluster           func(ctx context.Context, in *db.DBDeleteClusterRequest, opts ...client.CallOption) (*db.DBDeleteClusterResponse, error)
@@ -98,6 +99,9 @@ func (s *DBFakeService) AllocHosts(ctx context.Context, in *db.DBAllocHostsReque
 }
 func (s *DBFakeService) GetFailureDomain(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error) {
 	return s.mockGetFailureDomain(ctx, in, opts...)
+}
+func (s *DBFakeService) AllocResources(ctx context.Context, in *db.AllocReq, opts ...client.CallOption) (*db.AllocRsp, error) {
+	return s.mockAllocResources(ctx, in, opts...)
 }
 
 // Mock Cluster
@@ -344,4 +348,8 @@ func (s *DBFakeService) MockAllocHosts(mock func(ctx context.Context, in *db.DBA
 
 func (s *DBFakeService) MockGetFailureDomain(mock func(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error)) {
 	s.mockGetFailureDomain = mock
+}
+
+func (s *DBFakeService) MockAllocResources(mock func(ctx context.Context, in *db.AllocReq, opts ...client.CallOption) (*db.AllocRsp, error)) {
+	s.mockAllocResources = mock
 }

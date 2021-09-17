@@ -17,8 +17,8 @@ type Excluded struct {
 }
 
 type Filter struct {
-	Purpose     string
-	Performance string
+	Purpose  string
+	DiskType string
 }
 
 type ComputeRequirement struct {

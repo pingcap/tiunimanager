@@ -113,7 +113,7 @@ func (handler *DBServiceHandler) FindAccountById(cxt context.Context, req *proto
 	}
 	log := framework.Log()
 	accountManager := handler.Dao().AccountManager()
-	account, err := accountManager.Find(req.GetId())
+	account, err := accountManager.FindById(req.GetId())
 	if err == nil {
 		resp.Status = SuccessResponseStatus
 		resp.Account = &proto.DBAccountDTO{

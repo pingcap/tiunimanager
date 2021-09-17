@@ -25,7 +25,7 @@ message Excluded {
 
 message Filter {
 	string purpose  = 1;
-	string performance = 2;
+	string diskType = 2;
 }
 
 message ComputeRequirement {

@@ -112,6 +112,7 @@ func init() {
 	_ = rootCmd.PersistentFlags().MarkHidden("native-ssh")
 
 	rootCmd.AddCommand(
+		newListCmd(),
 		newDisplayCmd(),
 		newDeployCmd(),
 		newScaleInCmd(),

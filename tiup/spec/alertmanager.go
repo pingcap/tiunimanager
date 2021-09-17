@@ -20,9 +20,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/pingcap-inc/tiem/tiup/templates/config"
+	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
-	"github.com/pingcap/tiup/pkg/cluster/template/config"
-	"github.com/pingcap/tiup/pkg/cluster/template/scripts"
 	"github.com/pingcap/tiup/pkg/meta"
 )
 
@@ -145,8 +145,8 @@ func (i *AlertManagerInstance) InitConfig(
 	enableTLS := false // not implemented for tiem
 	// Transfer start script
 	spec := i.InstanceSpec.(*AlertmanagerSpec)
-	cfg := scripts.NewAlertManagerScript(spec.Host, paths.Deploy, paths.Data[0], paths.Log, enableTLS).
-		WithWebPort(spec.WebPort).WithClusterPort(spec.ClusterPort).WithNumaNode(spec.NumaNode).
+	cfg := scripts.NewAlertManagerScript(spec.Host, paths.Deploy, paths.Data[0], paths.Log).
+		WithWebPort(spec.WebPort).WithClusterPort(spec.ClusterPort).
 		AppendEndpoints(AlertManagerEndpoints(alertmanagers, deployUser, enableTLS))
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_alertmanager_%s_%d.sh", i.GetHost(), i.GetPort()))

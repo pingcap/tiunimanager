@@ -10,7 +10,7 @@ cd "${DEPLOY_DIR}" || exit 1
 exec > >(tee -i -a "{{.LogDir}}/prometheus.log")
 exec 2>&1
 
-exec bin/prometheus/prometheus \
+exec bin/prometheus \
     --config.file="{{.DeployDir}}/conf/prometheus.yml" \
     --web.listen-address=":{{.Port}}" \
     --web.external-url="http://{{.IP}}:{{.Port}}/" \

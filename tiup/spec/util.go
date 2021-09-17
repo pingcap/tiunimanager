@@ -24,9 +24,9 @@ import (
 	"time"
 
 	"github.com/creasty/defaults"
-	"github.com/pingcap/tiup/pkg/cluster/template/scripts"
+	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
+	"github.com/pingcap-inc/tiem/tiup/version"
 	"github.com/pingcap/tiup/pkg/utils"
-	"github.com/pingcap/tiup/pkg/version"
 	"github.com/prometheus/common/expfmt"
 	"go.etcd.io/etcd/client/pkg/v3/transport"
 )
@@ -39,7 +39,7 @@ func AuditDir() string {
 // SaveMetadata saves the cluster meta information to profile directory
 func SaveMetadata(clusterName string, cmeta *TiEMMeta) error {
 	// set the cmd version
-	cmeta.OpsVer = version.NewTiUPVersion().String()
+	cmeta.OpsVer = version.NewComponentVersion().String()
 	return GetSpecManager().SaveMeta(clusterName, cmeta)
 }
 
@@ -176,7 +176,6 @@ func AlertManagerEndpoints(alertmanager []*AlertmanagerSpec, user string, enable
 			deployDir,
 			dataDir,
 			logDir,
-			enableTLS,
 		).
 			WithWebPort(spec.WebPort).
 			WithClusterPort(spec.ClusterPort)

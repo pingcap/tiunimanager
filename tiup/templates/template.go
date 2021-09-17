@@ -11,16 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package scripts
+package template
 
-import (
-	"path/filepath"
-
-	"github.com/pingcap/tiup/embed"
-)
-
-// GetScript returns a raw config file from embed templates
-func GetScript(filename string) ([]byte, error) {
-	fp := filepath.Join("templates", "scripts", filename)
-	return embed.ReadTemplate(fp)
+// ConfigGenerator is used to generate configuration for component
+type ConfigGenerator interface {
+	Config() ([]byte, error)
+	ConfigWithTemplate(tpl string) ([]byte, error)
+	ConfigToFile(file string) error
 }

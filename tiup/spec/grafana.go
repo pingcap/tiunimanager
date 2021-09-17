@@ -19,13 +19,12 @@ import (
 	"fmt"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"time"
 
+	"github.com/pingcap-inc/tiem/tiup/templates/config"
+	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
-	"github.com/pingcap/tiup/pkg/cluster/template/config"
-	"github.com/pingcap/tiup/pkg/cluster/template/scripts"
 	"github.com/pingcap/tiup/pkg/meta"
 )
 
@@ -217,39 +216,33 @@ func (i *GrafanaInstance) InitConfig(
 }
 
 func (i *GrafanaInstance) initDashboards(ctx context.Context, e ctxt.Executor, spec *GrafanaSpec, paths meta.DirPaths, clusterName string) error {
-	dashboardsDir := filepath.Join(paths.Deploy, "dashboards")
-	if spec.DashboardDir != "" {
-		return i.TransferLocalConfigDir(ctx, e, spec.DashboardDir, dashboardsDir, func(name string) bool {
-			return strings.HasSuffix(name, ".json")
-		})
-	}
-
-	cmds := []string{
-		"mkdir -p %[1]s",
-		`find %[1]s -maxdepth 1 -type f -name "*.json" -delete`,
-		`find %[2]s/bin -maxdepth 1 -type f -name "*.json" -exec cp {} %[1]s \;`,
-	}
-	_, stderr, err := e.Execute(ctx, fmt.Sprintf(strings.Join(cmds, " && "), dashboardsDir, paths.Deploy), false)
-	if err != nil {
-		return errors.Annotatef(err, "stderr: %s", string(stderr))
-	}
-
-	// Deal with the cluster name
-	for _, cmd := range []string{
-		`find %s -type f -exec sed -i "s/\${DS_.*-CLUSTER}/%s/g" {} \;`,
-		`find %s -type f -exec sed -i "s/DS_.*-CLUSTER/%s/g" {} \;`,
-		`find %s -type f -exec sed -i "s/\${DS_LIGHTNING}/%s/g" {} \;`,
-		`find %s -type f -exec sed -i "s/DS_LIGHTNING/%s/g" {} \;`,
-		`find %s -type f -exec sed -i "s/test-cluster/%s/g" {} \;`,
-		`find %s -type f -exec sed -i "s/Test-Cluster/%s/g" {} \;`,
-	} {
-		cmd := fmt.Sprintf(cmd, dashboardsDir, clusterName)
-		_, stderr, err := e.Execute(ctx, cmd, false)
+	/*
+		cmds := []string{
+			"mkdir -p %[1]s",
+			`find %[1]s -maxdepth 1 -type f -name "*.json" -delete`,
+			`find %[2]s/bin -maxdepth 1 -type f -name "*.json" -exec cp {} %[1]s \;`,
+		}
+		_, stderr, err := e.Execute(ctx, fmt.Sprintf(strings.Join(cmds, " && "), dashboardsDir, paths.Deploy), false)
 		if err != nil {
 			return errors.Annotatef(err, "stderr: %s", string(stderr))
 		}
-	}
 
+		// Deal with the cluster name
+		for _, cmd := range []string{
+			`find %s -type f -exec sed -i "s/\${DS_.*-CLUSTER}/%s/g" {} \;`,
+			`find %s -type f -exec sed -i "s/DS_.*-CLUSTER/%s/g" {} \;`,
+			`find %s -type f -exec sed -i "s/\${DS_LIGHTNING}/%s/g" {} \;`,
+			`find %s -type f -exec sed -i "s/DS_LIGHTNING/%s/g" {} \;`,
+			`find %s -type f -exec sed -i "s/test-cluster/%s/g" {} \;`,
+			`find %s -type f -exec sed -i "s/Test-Cluster/%s/g" {} \;`,
+		} {
+			cmd := fmt.Sprintf(cmd, dashboardsDir, clusterName)
+			_, stderr, err := e.Execute(ctx, cmd, false)
+			if err != nil {
+				return errors.Annotatef(err, "stderr: %s", string(stderr))
+			}
+		}
+	*/
 	return nil
 }
 
@@ -262,39 +255,39 @@ func (i *GrafanaInstance) installDashboards(ctx context.Context, e ctxt.Executor
 	if i.topo.Type() != TopoTypeTiEM {
 		return nil
 	}
+	/*
+		tmp := filepath.Join(deployDir, "_tiup_tmp")
+		_, stderr, err := e.Execute(ctx, fmt.Sprintf("mkdir -p %s", tmp), false)
+		if err != nil {
+			return errors.Annotatef(err, "stderr: %s", string(stderr))
+		}
 
-	tmp := filepath.Join(deployDir, "_tiup_tmp")
-	_, stderr, err := e.Execute(ctx, fmt.Sprintf("mkdir -p %s", tmp), false)
-	if err != nil {
-		return errors.Annotatef(err, "stderr: %s", string(stderr))
-	}
+		srcPath := PackagePath(ComponentTiEMMetaDBServer, clusterVersion, i.OS(), i.Arch())
+		dstPath := filepath.Join(tmp, filepath.Base(srcPath))
+		err = e.Transfer(ctx, srcPath, dstPath, false, 0)
+		if err != nil {
+			return err
+		}
 
-	srcPath := PackagePath(ComponentTiEMWebServer, clusterVersion, i.OS(), i.Arch())
-	dstPath := filepath.Join(tmp, filepath.Base(srcPath))
-	err = e.Transfer(ctx, srcPath, dstPath, false, 0)
-	if err != nil {
-		return err
-	}
+		cmd := fmt.Sprintf(`tar --no-same-owner -zxf %s -C %s && rm %s`, dstPath, tmp, dstPath)
+		_, stderr, err = e.Execute(ctx, cmd, false)
+		if err != nil {
+			return errors.Annotatef(err, "stderr: %s", string(stderr))
+		}
 
-	cmd := fmt.Sprintf(`tar --no-same-owner -zxf %s -C %s && rm %s`, dstPath, tmp, dstPath)
-	_, stderr, err = e.Execute(ctx, cmd, false)
-	if err != nil {
-		return errors.Annotatef(err, "stderr: %s", string(stderr))
-	}
-
-	// copy dm-master/scripts/*.json
-	targetDir := filepath.Join(deployDir, "bin")
-	cmds := []string{
-		"mkdir -p %[1]s",
-		`find %[1]s -maxdepth 1 -type f -name "*.json" -delete`,
-		`find %[2]s/dm-master/scripts -type f -name "*.json" -exec cp {} %[1]s \;`,
-		"rm -rf %[2]s",
-	}
-	_, stderr, err = e.Execute(ctx, fmt.Sprintf(strings.Join(cmds, " && "), targetDir, tmp), false)
-	if err != nil {
-		return errors.Annotatef(err, "stderr: %s", string(stderr))
-	}
-
+		// copy dm-master/scripts/*.json
+		targetDir := filepath.Join(deployDir, "bin")
+		cmds := []string{
+			"mkdir -p %[1]s",
+			`find %[1]s -maxdepth 1 -type f -name "*.json" -delete`,
+			`find %[2]s/dm-master/scripts -type f -name "*.json" -exec cp {} %[1]s \;`,
+			"rm -rf %[2]s",
+		}
+		_, stderr, err = e.Execute(ctx, fmt.Sprintf(strings.Join(cmds, " && "), targetDir, tmp), false)
+		if err != nil {
+			return errors.Annotatef(err, "stderr: %s", string(stderr))
+		}
+	*/
 	return nil
 }
 

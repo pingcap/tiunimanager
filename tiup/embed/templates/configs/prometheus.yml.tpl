@@ -1,29 +1,75 @@
 global:
   scrape_interval:     15s
   evaluation_interval: 15s
+  external_labels:
+    cluster: '{{.ClusterName}}'
+    monitor: "prometheus"
+
+{{- if .AlertmanagerAddrs}}
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+{{- range .AlertmanagerAddrs}}
+      - '{{.}}'
+{{- end}}
+{{- end}}
 
 scrape_configs:
   - job_name: node_exporter
+    honor_labels: true # don't overwrite job & instance labels
     scrape_interval: 10s
-    static_configs
+    static_configs:
       - targets:
-          - {{.host}}:{{.node_exporter_port}} ### 1. 遍历每台部署了node_exporter的实例[host+node_exporter_port]组成一个target，遍历显示
-          -
-          -
+{{- range .NodeExporterAddrs}}
+        - '{{.}}'
+{{- end}}
+
+{{- range $addr := .BlackboxExporterAddrs}}
+  - job_name: "blackbox_exporter_{{$addr}}_icmp"
+    scrape_interval: 6s
+    metrics_path: /probe
+    params:
+      module: [icmp]
+    static_configs:
+    - targets:
+    {{- range $.MonitoredServers}}
+      - '{{.}}'
+    {{- end}}
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: (.*)(:80)?
+        target_label: __param_target
+        replacement: ${1}
+      - source_labels: [__param_target]
+        regex: (.*)
+        target_label: ping
+        replacement: ${1}
+      - source_labels: []
+        regex: .*
+        target_label: __address__
+        replacement: {{$addr}}
+{{- end}}
 
   - job_name: tiem
-    static_configs
+    static_configs:
       - targets: 
-          - {{.host}}:{{.metrics_port}} ### 2. 将tiem的三个组件metadb/cluster/api的每一个实例的[host+metrics_port]组成一个target，遍历显示
-          -
-          -
+{{- range .TiEMAPIServers}}
+        - '{{.}}'
+{{- end}}
+{{- range .TiEMMetaDBServers}}
+        - '{{.}}'
+{{- end}}
+{{- range .TiEMClusterServers}}
+        - '{{.}}'
+{{- end}}
 
-  - job_name: 'tidb_cluster'
-    scrape_interval: 15s
-    params:
-     'match[]':
-       - '{job=~".*"}'
-    http_sd_configs:
-        ### 3. 可否直接通过tiup获取tiem_api_servers的地址？比如：{{.tiem_api_servers.host}}:{{.tiem_api_servers.port}}
-      - url: "http://{{.tiem_api_servers.host}}:{{.tiem_api_servers.port}}/api/sd/metrics?address={{.monitoring_servers.host}}:{{.monitoring_servers.port}}"
-        refresh_interval: 15s
+#  - job_name: 'tidb_cluster'
+#    scrape_interval: 15s
+#    params:
+#     'match[]':
+#       - '{job=~".*"}'
+#    http_sd_configs:
+#        ### 3. 可否直接通过tiup获取tiem_api_servers的地址？比如：".tiem_api_servers.host":"".tiem_api_servers.port"
+#      - url: "http://".tiem_api_servers.host:".tiem_api_servers.port"/api/sd/metrics?address=".monitoring_servers.host":".monitoring_servers.port""
+#        refresh_interval: 15s

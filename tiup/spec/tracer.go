@@ -47,7 +47,7 @@ func (s *TracerServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 
 // Role returns the component role of the instance
 func (s *TracerServerSpec) Role() string {
-	return ComponentTiEMClusterServer
+	return ComponentTiEMTracerServer
 }
 
 // SSH returns the host and SSH port of the instance

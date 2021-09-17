@@ -11,16 +11,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package scripts
+package main
 
 import (
-	"path/filepath"
-
-	"github.com/pingcap/tiup/embed"
+	"github.com/spf13/cobra"
 )
 
-// GetScript returns a raw config file from embed templates
-func GetScript(filename string) ([]byte, error) {
-	fp := filepath.Join("templates", "scripts", filename)
-	return embed.ReadTemplate(fp)
+func newListCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List all clusters",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cm.ListCluster()
+		},
+	}
+	return cmd
 }

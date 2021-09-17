@@ -61,12 +61,12 @@ func (topo *Specification) ComponentsByStopOrder() (comps []Component) {
 
 // ComponentsByStartOrder return component in the order need to start.
 func (topo *Specification) ComponentsByStartOrder() (comps []Component) {
-	// "elasticsearch", "monitor", "metadb", "api-server", "cluster-server", "web"
+	// "elasticsearch", "monitor", "tracer", "metadb", "api-server", "cluster-server", "web"
 	comps = append(comps, &ElasticSearchComponent{topo})
 	comps = append(comps, &MonitorComponent{Topology: topo})
 	comps = append(comps, &GrafanaComponent{Topology: topo})
 	comps = append(comps, &AlertManagerComponent{Topology: topo})
-	// TODO: add tracer
+	comps = append(comps, &JaegerComponent{topo})
 	comps = append(comps, &MetaDBComponent{topo})
 	comps = append(comps, &APIServerComponent{topo})
 	comps = append(comps, &ClusterServerComponent{topo})
@@ -76,12 +76,12 @@ func (topo *Specification) ComponentsByStartOrder() (comps []Component) {
 
 // ComponentsByUpdateOrder return component in the order need to be updated.
 func (topo *Specification) ComponentsByUpdateOrder() (comps []Component) {
-	// "metadb", "api-server", "web", "cluster-server", "monitor", "elasticsearch"
+	// "metadb", "api-server", "web", "cluster-server", "tracer", "monitor", "elasticsearch"
 	comps = append(comps, &MetaDBComponent{topo})
 	comps = append(comps, &APIServerComponent{topo})
 	comps = append(comps, &WebServerComponent{topo})
 	comps = append(comps, &ClusterServerComponent{topo})
-	// TODO: add tracer
+	comps = append(comps, &JaegerComponent{topo})
 	comps = append(comps, &MonitorComponent{Topology: topo})
 	comps = append(comps, &GrafanaComponent{Topology: topo})
 	comps = append(comps, &AlertManagerComponent{Topology: topo})

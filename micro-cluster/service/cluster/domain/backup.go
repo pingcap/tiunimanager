@@ -253,8 +253,8 @@ func calculateNextBackupTime(now time.Time, weekdayStr string, hour int) (time.T
 				subDays = WeekDayMap[day] + 7 - int(now.Weekday())
 			}
 		} else if WeekDayMap[day] > int(now.Weekday()) {
-			if int(now.Weekday())-WeekDayMap[day] < subDays {
-				subDays = int(now.Weekday()) - WeekDayMap[day]
+			if WeekDayMap[day] - int(now.Weekday()) < subDays {
+				subDays = WeekDayMap[day] - int(now.Weekday())
 			}
 		} else {
 			if now.Hour() < hour {

@@ -45,6 +45,16 @@ func Test_calculateNextBackupTime_case4(t *testing.T) {
 
 func Test_calculateNextBackupTime_case5(t *testing.T) {
 	now := time.Date(2021, 9, 17, 11, 0, 0, 0, time.Local)
+	weekdayStr := "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday"
+	startHour := 12
+	nextBackupTime, err := calculateNextBackupTime(now, weekdayStr, startHour)
+	assert.NoError(t, err)
+	t.Log(nextBackupTime)
+	assert.Equal(t, time.Date(2021, 9, 17, 12, 0, 0, 0, time.Local), nextBackupTime)
+}
+
+func Test_calculateNextBackupTime_case6(t *testing.T) {
+	now := time.Date(2021, 9, 17, 11, 0, 0, 0, time.Local)
 	weekdayStr := "Tuesday,Weekday"
 	startHour := 12
 	_, err := calculateNextBackupTime(now, weekdayStr, startHour)
@@ -82,3 +92,4 @@ func Test_SaveBackupStrategyPreCheck_case5(t *testing.T) {
 	})
 	assert.NotNil(t, err)
 }
+

@@ -3008,6 +3008,9 @@ var doc = `{
                 "filePath": {
                     "type": "string"
                 },
+                "nextBackupTime": {
+                    "type": "string"
+                },
                 "period": {
                     "type": "string"
                 }

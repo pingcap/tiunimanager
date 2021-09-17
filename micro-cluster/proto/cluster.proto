@@ -288,6 +288,7 @@ message BackupStrategy {
     string backupRange = 4;
     string backupType = 5;
     string period = 6;
+    int64 NextBackupTime = 7;
 }
 
 message SaveBackupStrategyRequest {
@@ -302,12 +303,11 @@ message SaveBackupStrategyResponse {
 message GetBackupStrategyRequest {
     string clusterId = 1;
     OperatorDTO operator = 2;
-
 }
 
 message GetBackupStrategyResponse {
     ResponseStatusDTO status = 1;
-     BackupStrategy strategy = 2;
+    BackupStrategy strategy = 2;
 }
 
 message QueryClusterParametersRequest {

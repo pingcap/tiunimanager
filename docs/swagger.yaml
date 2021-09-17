@@ -629,6 +629,8 @@ definitions:
         type: string
       filePath:
         type: string
+      nextBackupTime:
+        type: string
       period:
         type: string
     type: object

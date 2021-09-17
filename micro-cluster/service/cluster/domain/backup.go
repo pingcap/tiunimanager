@@ -10,6 +10,7 @@ import (
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -34,15 +35,10 @@ type RecoverRecord struct {
 	BackupRecord BackupRecord
 }
 
-type BackupStrategy struct {
-	ValidityPeriod int64
-	CronString     string
-}
-
 //var defaultPathPrefix string = "/tmp/tiem/backup"
 var defaultPathPrefix string = "nfs/tiem/backup"
 
-func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, filePath string) (*ClusterAggregation, error) {
+func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, backupMode BackupMode, filePath string) (*ClusterAggregation, error) {
 	getLogger().Infof("Begin do Backup, clusterId: %s, backupRange: %s, backupType: %s, filePath: %s", clusterId, backupRange, backupType, filePath)
 	defer getLogger().Infof("End do Backup")
 	operator := parseOperatorFromDTO(ope)
@@ -61,7 +57,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 		ClusterId:  clusterId,
 		Range:      BackupRangeFull,
 		BackupType: BackupTypePhysics,
-		BackupMode: BackupModeManual,
+		BackupMode: backupMode,
 		OperatorId: operator.Id,
 		FilePath:   getBackupPath(filePath, clusterId, time.Now().Unix(), string(BackupRangeFull)),
 		StartTime:  time.Now().Unix(),
@@ -153,6 +149,122 @@ func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*C
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
+}
+
+func SaveBackupStrategyPreCheck(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) error {
+	period := strings.Split(strategy.GetPeriod(), "-")
+	if len(period) != 2 {
+		return fmt.Errorf("invalid param period, %s", strategy.GetPeriod())
+	}
+
+	starts := strings.Split(period[0], ":")
+	ends := strings.Split(period[1], ":")
+	startHour, err := strconv.Atoi(starts[0])
+	if err != nil {
+		return fmt.Errorf("invalid param start hour, %s", err.Error())
+	}
+	endHour, err := strconv.Atoi(ends[0])
+	if err != nil {
+		return fmt.Errorf("invalid param end hour, %s", err.Error())
+	}
+	if startHour > 23 || startHour < 0 || endHour > 23 || endHour < 0 || startHour >= endHour {
+		return fmt.Errorf("invalid param period, %s", strategy.GetPeriod())
+	}
+
+	backupDates := strings.Split(strategy.GetBackupDate(), ",")
+	for _, day := range backupDates {
+		if !checkWeekDayValid(day) {
+			return fmt.Errorf("backupDate contains invalid weekday, %s", day)
+		}
+	}
+
+	return nil
+}
+
+func SaveBackupStrategy(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) error {
+	period := strings.Split(strategy.GetPeriod(), "-")
+	starts := strings.Split(period[0], ":")
+	ends := strings.Split(period[1], ":")
+	startHour, _ := strconv.Atoi(starts[0])
+	endHour, _ := strconv.Atoi(ends[0])
+
+	_, err := client.DBClient.SaveBackupStrategy(context.TODO(), &db.DBSaveBackupStrategyRequest{
+		Strategy: &db.DBBackupStrategyDTO{
+			TenantId:    ope.TenantId,
+			OperatorId:  ope.GetId(),
+			ClusterId:   strategy.ClusterId,
+			BackupDate:  strategy.BackupDate,
+			FilePath:    strategy.FilePath,
+			BackupRange: strategy.BackupRange,
+			BackupType:  strategy.BackupType,
+			StartHour:   uint32(startHour),
+			EndHour:     uint32(endHour),
+		},
+	})
+	if err != nil {
+		getLogger().Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func QueryBackupStrategy(ope *proto.OperatorDTO, clusterId string) (*proto.BackupStrategy, error) {
+	resp, err := client.DBClient.QueryBackupStrategy(context.TODO(), &db.DBQueryBackupStrategyRequest{
+		ClusterId: clusterId,
+	})
+	if err != nil {
+		getLogger().Error(err)
+		return nil, err
+	} else {
+		nextBackupTime, err := calculateNextBackupTime(time.Now(), resp.GetStrategy().GetBackupDate(), int(resp.GetStrategy().GetStartHour()))
+		if err != nil {
+			getLogger().Errorf("calculateNextBackupTime failed, %s", err.Error())
+			return nil, err
+		}
+		strategy := &proto.BackupStrategy{
+			ClusterId:      resp.GetStrategy().GetClusterId(),
+			BackupDate:     resp.GetStrategy().GetBackupDate(),
+			FilePath:       resp.GetStrategy().GetFilePath(),
+			BackupRange:    resp.GetStrategy().GetBackupRange(),
+			BackupType:     resp.GetStrategy().GetBackupType(),
+			Period:         fmt.Sprintf("%d:00-%d:00", resp.GetStrategy().GetStartHour(), resp.GetStrategy().GetEndHour()),
+			NextBackupTime: nextBackupTime.Unix(),
+		}
+		return strategy, nil
+	}
+}
+
+func calculateNextBackupTime(now time.Time, weekdayStr string, hour int) (time.Time, error) {
+	days := strings.Split(weekdayStr, ",")
+	if len(days) == 0 {
+		return time.Time{}, fmt.Errorf("weekday invalid, %s", weekdayStr)
+	}
+	for _, day := range days {
+		if !checkWeekDayValid(day) {
+			return time.Time{}, fmt.Errorf("weekday invalid, %s", day)
+		}
+	}
+
+	var subDays int = 7
+	for _, day := range days {
+		if WeekDayMap[day] < int(now.Weekday()) {
+			if WeekDayMap[day]+7-int(now.Weekday()) < subDays {
+				subDays = WeekDayMap[day] + 7 - int(now.Weekday())
+			}
+		} else if WeekDayMap[day] > int(now.Weekday()) {
+			if int(now.Weekday())-WeekDayMap[day] < subDays {
+				subDays = int(now.Weekday()) - WeekDayMap[day]
+			}
+		} else {
+			if now.Hour() < hour {
+				subDays = 0
+			}
+		}
+	}
+	nextAutoBackupTime := time.Date(now.Year(), now.Month(), now.Day(), hour, 0, 0, 0, time.Local).AddDate(0, 0, subDays)
+
+	return nextAutoBackupTime, nil
 }
 
 func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupRange string) string {

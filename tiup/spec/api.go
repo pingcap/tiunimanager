@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/logger/log"
 	"github.com/pingcap/tiup/pkg/meta"
+	"github.com/pingcap/tiup/pkg/utils"
 )
 
 // APIServerSpec represents the Master topology specification in topology.yaml
@@ -45,7 +46,17 @@ type APIServerSpec struct {
 
 // Status queries current status of the instance
 func (s *APIServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
-	return "N/A"
+	client := utils.NewHTTPClient(statusQueryTimeout, tlsCfg)
+
+	path := "/system/check"
+	url := fmt.Sprintf("http://%s:%d%s", s.Host, s.Port, path)
+
+	// body doesn't have any status section needed
+	body, err := client.Get(context.TODO(), url)
+	if err != nil || body == nil {
+		return "Down"
+	}
+	return "Up"
 }
 
 // Role returns the component role of the instance

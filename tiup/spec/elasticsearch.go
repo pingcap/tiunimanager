@@ -52,7 +52,7 @@ type ElasticSearchSpec struct {
 
 // Status queries current status of the instance
 func (s *ElasticSearchSpec) Status(tlsCfg *tls.Config, _ ...string) string {
-	return "N/A"
+	return statusByHost(s.Host, s.Port, "/", nil)
 }
 
 // Role returns the component role of the instance

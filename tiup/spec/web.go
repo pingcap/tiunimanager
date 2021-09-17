@@ -30,6 +30,7 @@ import (
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/logger/log"
 	"github.com/pingcap/tiup/pkg/meta"
+	"github.com/pingcap/tiup/pkg/utils"
 	"go.uber.org/zap"
 )
 
@@ -48,7 +49,17 @@ type WebServerSpec struct {
 
 // Status queries current status of the instance
 func (s *WebServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
-	return "N/A"
+	client := utils.NewHTTPClient(statusQueryTimeout, tlsCfg)
+
+	path := "/"
+	url := fmt.Sprintf("http://%s:%d%s", s.Host, s.Port, path)
+
+	// body doesn't have any status section needed
+	_, err := client.Get(context.TODO(), url)
+	if err != nil {
+		return "Down"
+	}
+	return "Up"
 }
 
 // Role returns the component role of the instance

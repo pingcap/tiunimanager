@@ -302,12 +302,12 @@ message SaveBackupStrategyResponse {
 message GetBackupStrategyRequest {
     string clusterId = 1;
     OperatorDTO operator = 2;
-
 }
 
 message GetBackupStrategyResponse {
     ResponseStatusDTO status = 1;
-     BackupStrategy strategy = 2;
+    BackupStrategy strategy = 2;
+    int64 NextBackupTime = 3;
 }
 
 message QueryClusterParametersRequest {

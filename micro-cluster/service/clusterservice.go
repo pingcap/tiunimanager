@@ -13,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
@@ -251,6 +252,13 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 		getLogger().Error(err)
 		return err
 	} else {
+		now := time.Now()
+		var nextAutoBackupTime time.Time
+		if now.Hour() < int(resp.GetStrategy().GetStartHour()) {
+			nextAutoBackupTime = time.Date(now.Year(), now.Month(), now.Day(), int(resp.GetStrategy().GetStartHour()), 0, 0, 0, time.Local)
+		} else {
+			nextAutoBackupTime = time.Date(now.Year(), now.Month(), now.Day(), int(resp.GetStrategy().GetStartHour()), 0, 0, 0, time.Local).AddDate(0, 0, 1)
+		}
 		response.Status = SuccessResponseStatus
 		response.Strategy = &clusterPb.BackupStrategy{
 			ClusterId:   resp.GetStrategy().GetClusterId(),
@@ -260,6 +268,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 			BackupType:  resp.GetStrategy().GetBackupType(),
 			Period:      fmt.Sprintf("%d:00-%d:00", resp.GetStrategy().GetStartHour(), resp.GetStrategy().GetEndHour()),
 		}
+		response.NextBackupTime = nextAutoBackupTime.Unix()
 		return nil
 	}
 }

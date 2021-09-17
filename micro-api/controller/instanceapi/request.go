@@ -2,6 +2,7 @@ package instanceapi
 
 import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"time"
 )
 
 type ParamQueryReq struct {
@@ -24,12 +25,13 @@ type BackupDeleteReq struct {
 }
 
 type BackupStrategy struct {
-	ClusterId 	string 		`json:"clusterId"`
-	BackupDate	string		`json:"backupDate"`
-	FilePath	string 		`json:"filePath"`
-	BackupRange string		`json:"backupRange"`
-	BackupType 	string		`json:"backupType"`
-	Period		string 		`json:"period"`
+	ClusterId 		string 		`json:"clusterId"`
+	BackupDate		string		`json:"backupDate"`
+	FilePath		string 		`json:"filePath"`
+	BackupRange 	string		`json:"backupRange"`
+	BackupType 		string		`json:"backupType"`
+	Period			string 		`json:"period"`
+	NextBackupTime 	time.Time 	`json:"nextBackupTime"`
 }
 
 type BackupStrategyUpdateReq struct {

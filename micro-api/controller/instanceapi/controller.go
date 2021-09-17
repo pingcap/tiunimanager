@@ -203,6 +203,7 @@ func QueryBackupStrategy(c *gin.Context) {
 			BackupRange: resp.GetStrategy().GetBackupRange(),
 			BackupDate:  resp.GetStrategy().GetBackupDate(),
 			Period:      resp.GetStrategy().GetPeriod(),
+			NextBackupTime: time.Unix(resp.GetNextBackupTime(), 0),
 		}))
 	}
 }

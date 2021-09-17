@@ -14,8 +14,10 @@
 package config
 
 import (
+	"bytes"
 	"os"
 	"path"
+	"text/template"
 
 	"github.com/pingcap-inc/tiem/tiup/embed"
 	"github.com/pingcap/errors"
@@ -71,7 +73,17 @@ func (c *NginxConfig) Config() ([]byte, error) {
 
 // ConfigWithTemplate generate the Nginx config content by tpl
 func (c *NginxConfig) ConfigWithTemplate(tpl string) ([]byte, error) {
-	return []byte(tpl), nil
+	tmpl, err := template.New("Nginx").Parse(tpl)
+	if err != nil {
+		return nil, err
+	}
+
+	content := bytes.NewBufferString("")
+	if err := tmpl.Execute(content, c); err != nil {
+		return nil, err
+	}
+
+	return content.Bytes(), nil
 }
 
 // ConfigToFile write config content to specific path
@@ -110,7 +122,17 @@ func (c *NginxServerList) Config() ([]byte, error) {
 
 // ConfigWithTemplate generate the Nginx config content by tpl
 func (c *NginxServerList) ConfigWithTemplate(tpl string) ([]byte, error) {
-	return []byte(tpl), nil
+	tmpl, err := template.New("NginxServerList").Parse(tpl)
+	if err != nil {
+		return nil, err
+	}
+
+	content := bytes.NewBufferString("")
+	if err := tmpl.Execute(content, c); err != nil {
+		return nil, err
+	}
+
+	return content.Bytes(), nil
 }
 
 // ConfigToFile write config content to specific path

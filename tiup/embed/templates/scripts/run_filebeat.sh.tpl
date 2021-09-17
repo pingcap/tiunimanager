@@ -1,4 +1,3 @@
-# review: https://github.com/pingcap/tiup/blob/master/embed/templates/scripts/run_tidb.sh.tpl
 #!/bin/bash
 set -e
 

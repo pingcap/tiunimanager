@@ -1,4 +1,3 @@
-# review: https://github.com/pingcap/tiup/blob/master/embed/templates/scripts/run_tidb.sh.tpl
 #!/bin/bash
 set -e
 
@@ -9,6 +8,5 @@ DEPLOY_DIR={{.DeployDir}}
 cd "${DEPLOY_DIR}" || exit 1
 
 LANG=en_US.UTF-8 \
-exec env GODEBUG=madvdontneed=1 bin/elasticsearch-7.14.0/elasticsearch \
-    -d \
-    -Epath.conf="${DEPLOY_DIR}/conf/"
+exec env ES_PATH_CONF="${DEPLOY_DIR}/conf/" bin/bin/elasticsearch \
+    -d

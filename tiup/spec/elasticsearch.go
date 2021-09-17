@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pingcap-inc/tiem/tiup/templates/config"
 	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
 	system "github.com/pingcap-inc/tiem/tiup/templates/systemd"
 	"github.com/pingcap/errors"
@@ -37,7 +38,7 @@ type ElasticSearchSpec struct {
 	Host    string `yaml:"host"`
 	SSHPort int    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
 	// Use Name to get the name with a default value if it's empty.
-	Name            string                 `yaml:"name,omitempty"`
+	Name            string                 `yaml:"name,omitempty", default:"tiem-cluster"`
 	Port            int                    `yaml:"port,omitempty" default:"4122"`
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
 	DataDir         string                 `yaml:"data_dir,omitempty"`
@@ -173,6 +174,28 @@ func (i *ElasticSearchInstance) InitConfig(
 	}
 
 	spec := i.InstanceSpec.(*ElasticSearchSpec)
+	cfg := config.NewElasticSearchConfig(
+		i.GetHost(),
+		paths.Deploy,
+		paths.Data[0],
+		paths.Log,
+	).
+		WithPort(spec.Port).
+		WithName(spec.Name)
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("elasticsearch_%s_%d.yml", i.GetHost(), i.GetPort()))
+	if err := cfg.ConfigToFile(fp); err != nil {
+		return err
+	}
+	if _, _, err := e.Execute(ctx,
+		fmt.Sprintf("mv %s/bin/config/* %s/conf/", paths.Deploy, paths.Deploy),
+		false); err != nil {
+		return err
+	}
+	dst := filepath.Join(paths.Deploy, "conf", "elasticsearch.yml")
+	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
+		return err
+	}
+
 	scpt := scripts.NewElasticSearchScript(
 		i.GetHost(),
 		paths.Deploy,
@@ -181,11 +204,11 @@ func (i *ElasticSearchInstance) InitConfig(
 	).
 		WithPort(spec.Port)
 
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_elasticsearch_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp = filepath.Join(paths.Cache, fmt.Sprintf("run_elasticsearch_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
-	dst := filepath.Join(paths.Deploy, "scripts", "run_elasticsearch.sh")
+	dst = filepath.Join(paths.Deploy, "scripts", "run_elasticsearch.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}

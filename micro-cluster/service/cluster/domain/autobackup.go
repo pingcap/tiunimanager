@@ -37,6 +37,7 @@ func NewAutoBackupManager() *AutoBackupManager{
 }
 
 func (mgr *AutoBackupManager) Start() {
+	time.Sleep(5 * time.Second) //wait db client ready
 	mgr.JobCron.Start()
 	defer mgr.JobCron.Stop()
 

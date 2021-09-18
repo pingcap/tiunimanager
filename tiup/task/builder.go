@@ -19,6 +19,7 @@ import (
 
 	operator "github.com/pingcap-inc/tiem/tiup/operation"
 	"github.com/pingcap-inc/tiem/tiup/spec"
+	"github.com/pingcap-inc/tiem/tiup/templates/config"
 	"github.com/pingcap/tiup/pkg/cluster/executor"
 	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/crypto"
@@ -230,7 +231,15 @@ func (b *Builder) ScaleConfig(clusterName, clusterVersion string, specManager *s
 }
 
 // MonitoredConfig appends a CopyComponent task to the current task collection
-func (b *Builder) MonitoredConfig(name, comp, host string, globResCtl meta.ResourceControl, options *cspec.MonitoredOptions, deployUser string, tlsEnabled bool, paths meta.DirPaths) *Builder {
+func (b *Builder) MonitoredConfig(
+	name, comp, host string,
+	globResCtl meta.ResourceControl,
+	options *cspec.MonitoredOptions,
+	deployUser string,
+	paths meta.DirPaths,
+	es string,
+	tiemHosts map[string]*config.LogPathInfo,
+) *Builder {
 	b.tasks = append(b.tasks, &MonitoredConfig{
 		name:       name,
 		component:  comp,
@@ -238,8 +247,9 @@ func (b *Builder) MonitoredConfig(name, comp, host string, globResCtl meta.Resou
 		globResCtl: globResCtl,
 		options:    options,
 		deployUser: deployUser,
-		tlsEnabled: tlsEnabled,
 		paths:      paths,
+		esHost:     es,
+		tiemHosts:  tiemHosts,
 	})
 	return b
 }

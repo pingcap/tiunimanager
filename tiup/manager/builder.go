@@ -23,6 +23,7 @@ import (
 	operator "github.com/pingcap-inc/tiem/tiup/operation"
 	"github.com/pingcap-inc/tiem/tiup/spec"
 	"github.com/pingcap-inc/tiem/tiup/task"
+	"github.com/pingcap-inc/tiem/tiup/templates/config"
 	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/meta"
 	"github.com/pingcap/tiup/pkg/set"
@@ -265,6 +266,8 @@ func buildScaleOutTask(
 		topo.BaseTopo().MonitoredOptions,
 		base.Version,
 		gOpt,
+		topo.(*spec.Specification).ElasticSearchAddress(),
+		topo.(*spec.Specification).TiEMLogPaths(),
 		p,
 	)
 	if err != nil {
@@ -329,15 +332,26 @@ func buildMonitoredDeployTask(
 	monitoredOptions *cspec.MonitoredOptions,
 	version string,
 	gOpt operator.Options,
+	esHosts []string,
+	tiemHosts map[string]*config.LogPathInfo,
 	p *tui.SSHConnectionProps,
 ) (downloadCompTasks []*task.StepDisplay, deployCompTasks []*task.StepDisplay, err error) {
 	if monitoredOptions == nil {
 		return
 	}
 
+	if len(esHosts) < 1 {
+		err = fmt.Errorf("no elasticsearch node available in the topology")
+		return
+	}
+
 	uniqueCompOSArch := set.NewStringSet()
 	// monitoring agents
-	for _, comp := range []string{spec.ComponentNodeExporter, spec.ComponentBlackboxExporter} {
+	for _, comp := range []string{
+		spec.ComponentNodeExporter,
+		spec.ComponentBlackboxExporter,
+		spec.ComponentFilebeat,
+	} {
 		version := m.bindVersion(comp, version)
 
 		for host, info := range uniqueHosts {
@@ -409,13 +423,14 @@ func buildMonitoredDeployTask(
 					globalOptions.ResourceControl,
 					monitoredOptions,
 					globalOptions.User,
-					false,
 					meta.DirPaths{
 						Deploy: deployDir,
 						Data:   []string{dataDir},
 						Log:    logDir,
 						Cache:  m.specManager.Path(name, spec.TempConfigPath),
 					},
+					esHosts[0],
+					tiemHosts,
 				)
 
 			deployCompTasks = append(deployCompTasks, tb.BuildAsStep(fmt.Sprintf("  - Copy %s -> %s", comp, host)))
@@ -433,6 +448,8 @@ func buildRefreshMonitoredConfigTasks(
 	monitoredOptions *cspec.MonitoredOptions,
 	sshTimeout, exeTimeout uint64,
 	gOpt operator.Options,
+	esHosts []string,
+	tiemHosts map[string]*config.LogPathInfo,
 	p *tui.SSHConnectionProps,
 ) []*task.StepDisplay {
 	if monitoredOptions == nil {
@@ -441,7 +458,11 @@ func buildRefreshMonitoredConfigTasks(
 
 	tasks := []*task.StepDisplay{}
 	// monitoring agents
-	for _, comp := range []string{spec.ComponentNodeExporter, spec.ComponentBlackboxExporter} {
+	for _, comp := range []string{
+		spec.ComponentNodeExporter,
+		spec.ComponentBlackboxExporter,
+		spec.ComponentFilebeat,
+	} {
 		for host, info := range uniqueHosts {
 			if noAgentHosts.Exist(host) {
 				continue
@@ -481,13 +502,14 @@ func buildRefreshMonitoredConfigTasks(
 					globalOptions.ResourceControl,
 					monitoredOptions,
 					globalOptions.User,
-					false,
 					meta.DirPaths{
 						Deploy: deployDir,
 						Data:   []string{dataDir},
 						Log:    logDir,
 						Cache:  specManager.Path(name, spec.TempConfigPath),
 					},
+					esHosts[0],
+					tiemHosts,
 				).
 				BuildAsStep(fmt.Sprintf("  - Refresh config %s -> %s", comp, host))
 			tasks = append(tasks, t)

@@ -9,6 +9,7 @@ func TiEMComponentVersion(comp, version string) string {
 		ComponentPrometheus,
 		ComponentBlackboxExporter,
 		ComponentNodeExporter,
+		ComponentFilebeat,
 		ComponentTiEMTracerServer:
 		return ""
 	case ComponentElasticSearchServer,

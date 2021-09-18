@@ -247,7 +247,11 @@ func EnableMonitored(ctx context.Context, hosts []string, noAgentHosts set.Strin
 
 func systemctlMonitor(ctx context.Context, hosts []string, noAgentHosts set.StringSet, options *cspec.MonitoredOptions, action string, timeout uint64) error {
 	ports := monitorPortMap(options)
-	for _, comp := range []string{spec.ComponentNodeExporter, spec.ComponentBlackboxExporter} {
+	for _, comp := range []string{
+		spec.ComponentNodeExporter,
+		spec.ComponentBlackboxExporter,
+		spec.ComponentFilebeat,
+	} {
 		log.Infof("%s component %s", actionPrevMsgs[action], comp)
 
 		errg, _ := errgroup.WithContext(ctx)
@@ -415,7 +419,8 @@ func EnableComponent(ctx context.Context, instances []spec.Instance, noAgentHost
 		// skip certain instances
 		switch name {
 		case spec.ComponentNodeExporter,
-			spec.ComponentBlackboxExporter:
+			spec.ComponentBlackboxExporter,
+			spec.ComponentFilebeat:
 			if noAgentHosts.Exist(ins.GetHost()) {
 				log.Debugf("Ignored enabling/disabling %s for %s:%d", name, ins.GetHost(), ins.GetPort())
 				continue
@@ -453,7 +458,8 @@ func StartComponent(ctx context.Context, instances []spec.Instance, noAgentHosts
 		ins := ins
 		switch name {
 		case spec.ComponentNodeExporter,
-			spec.ComponentBlackboxExporter:
+			spec.ComponentBlackboxExporter,
+			spec.ComponentFilebeat:
 			if noAgentHosts.Exist(ins.GetHost()) {
 				log.Debugf("Ignored starting %s for %s:%d", name, ins.GetHost(), ins.GetPort())
 				continue
@@ -515,7 +521,8 @@ func StopComponent(ctx context.Context, instances []spec.Instance, noAgentHosts 
 		ins := ins
 		switch name {
 		case spec.ComponentNodeExporter,
-			spec.ComponentBlackboxExporter:
+			spec.ComponentBlackboxExporter,
+			spec.ComponentFilebeat:
 			if noAgentHosts.Exist(ins.GetHost()) {
 				log.Debugf("Ignored stopping %s for %s:%d", name, ins.GetHost(), ins.GetPort())
 				continue
@@ -586,5 +593,6 @@ func monitorPortMap(options *cspec.MonitoredOptions) map[string]int {
 	return map[string]int{
 		spec.ComponentNodeExporter:     options.NodeExporterPort,
 		spec.ComponentBlackboxExporter: options.BlackboxExporterPort,
+		spec.ComponentFilebeat:         0, // no public port needed
 	}
 }

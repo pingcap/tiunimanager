@@ -84,6 +84,9 @@ type Instance interface {
 
 // PortStarted wait until a port is being listened
 func PortStarted(ctx context.Context, e ctxt.Executor, port int, timeout uint64) error {
+	if port == 0 {
+		return nil
+	}
 	c := module.WaitForConfig{
 		Port:    port,
 		State:   "started",
@@ -95,6 +98,9 @@ func PortStarted(ctx context.Context, e ctxt.Executor, port int, timeout uint64)
 
 // PortStopped wait until a port is being released
 func PortStopped(ctx context.Context, e ctxt.Executor, port int, timeout uint64) error {
+	if port == 0 {
+		return nil
+	}
 	c := module.WaitForConfig{
 		Port:    port,
 		State:   "stopped",
@@ -122,7 +128,7 @@ type BaseInstance struct {
 
 // Ready implements Instance interface
 func (i *BaseInstance) Ready(ctx context.Context, e ctxt.Executor, timeout uint64) error {
-	return PortStarted(ctx, e, i.Port, timeout)
+	return PortStarted(ctx, e, i.GetMainPort(), timeout)
 }
 
 // InitConfig init the service configuration.
@@ -248,7 +254,7 @@ func (i *BaseInstance) mergeTiFlashLearnerServerConfig(ctx context.Context, e ct
 
 // ID returns the identifier of this instance, the ID is constructed by host:port
 func (i *BaseInstance) ID() string {
-	return fmt.Sprintf("%s:%d", i.Host, i.Port)
+	return fmt.Sprintf("%s:%d", i.Host, i.GetMainPort())
 }
 
 // ComponentName implements Instance interface
@@ -258,8 +264,8 @@ func (i *BaseInstance) ComponentName() string {
 
 // InstanceName implements Instance interface
 func (i *BaseInstance) InstanceName() string {
-	if i.Port > 0 {
-		return fmt.Sprintf("%s%d", i.Name, i.Port)
+	if i.GetMainPort() > 0 {
+		return fmt.Sprintf("%s%d", i.Name, i.GetMainPort())
 	}
 	return i.ComponentName()
 }
@@ -271,8 +277,8 @@ func (i *BaseInstance) ServiceName() string {
 	default:
 		name = i.Name
 	}
-	if i.Port > 0 {
-		return fmt.Sprintf("%s-%d.service", name, i.Port)
+	if i.GetMainPort() > 0 {
+		return fmt.Sprintf("%s-%d.service", name, i.GetMainPort())
 	}
 	return fmt.Sprintf("%s.service", name)
 }
@@ -403,7 +409,7 @@ func (i *BaseInstance) resourceControl() meta.ResourceControl {
 
 // GetPort implements Instance interface
 func (i *BaseInstance) GetPort() int {
-	return i.Port
+	return i.GetMainPort()
 }
 
 // UsedPorts implements Instance interface

@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/creasty/defaults"
+	"github.com/pingcap-inc/tiem/tiup/templates/config"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/tiup/pkg/cluster/executor"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -69,6 +70,7 @@ type GlobalOptions struct {
 	DeployDir       string               `yaml:"deploy_dir,omitempty" default:"deploy"`
 	DataDir         string               `yaml:"data_dir,omitempty" default:"data"`
 	LogDir          string               `yaml:"log_dir,omitempty"`
+	LogLevel        string               `yaml:"log_level,omitempty"`
 	ResourceControl meta.ResourceControl `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
 	OS              string               `yaml:"os,omitempty" default:"linux"`
 	Arch            string               `yaml:"arch,omitempty"`
@@ -504,6 +506,46 @@ func (s *Specification) ElasticSearchAddress() []string {
 	return result
 }
 
+// TiEMLogPaths return a list of paths to logs of TiEM components
+func (s *Specification) TiEMLogPaths() map[string]*config.LogPathInfo {
+	result := make(map[string]*config.LogPathInfo)
+
+	for _, host := range s.APIServers {
+		if _, ok := result[host.Host]; !ok {
+			result[host.Host] = &config.LogPathInfo{
+				GeneralLogs: set.NewStringSet(),
+				AuditLogs:   set.NewStringSet(),
+			}
+		}
+		result[host.Host].GeneralLogs.Insert(fmt.Sprintf("%s/logs/*.log", host.DeployDir))
+		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/audits/*.log", host.DeployDir))
+	}
+
+	for _, host := range s.MetaDBServers {
+		if _, ok := result[host.Host]; !ok {
+			result[host.Host] = &config.LogPathInfo{
+				GeneralLogs: set.NewStringSet(),
+				AuditLogs:   set.NewStringSet(),
+			}
+		}
+		result[host.Host].GeneralLogs.Insert(fmt.Sprintf("%s/logs/*.log", host.DeployDir))
+		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/audits/*.log", host.DeployDir))
+	}
+
+	for _, host := range s.ClusterServers {
+		if _, ok := result[host.Host]; !ok {
+			result[host.Host] = &config.LogPathInfo{
+				GeneralLogs: set.NewStringSet(),
+				AuditLogs:   set.NewStringSet(),
+			}
+		}
+		result[host.Host].GeneralLogs.Insert(fmt.Sprintf("%s/logs/*.log", host.DeployDir))
+		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/audits/*.log", host.DeployDir))
+	}
+
+	return result
+}
+
 // Validate validates the topology specification and produce error if the
 // specification invalid (e.g: port conflicts or directory conflicts)
 func (s *Specification) Validate() error {
@@ -636,7 +678,7 @@ func setTiEMCustomDefaults(globalOptions *GlobalOptions, field reflect.Value) er
 			}
 			host := field.FieldByName("Host").String()
 			port := field.FieldByName("Port").Int()
-			field.Field(j).Set(reflect.ValueOf(fmt.Sprintf("dm-%s-%d", host, port)))
+			field.Field(j).Set(reflect.ValueOf(fmt.Sprintf("tiem-%s-%d", host, port)))
 		case "DataDir":
 			dataDir := field.Field(j).String()
 			if dataDir != "" { // already have a value, skip filling default values
@@ -705,7 +747,12 @@ func setTiEMCustomDefaults(globalOptions *GlobalOptions, field reflect.Value) er
 func getPort(v reflect.Value) string {
 	for i := 0; i < v.NumField(); i++ {
 		switch v.Type().Field(i).Name {
-		case "Port", "ClientPort", "WebPort", "TCPPort", "NodeExporterPort":
+		case "Port",
+			"ClientPort",
+			"WebPort",
+			"TCPPort",
+			"NodeExporterPort",
+			"ZipkinHostPort":
 			return fmt.Sprintf("%d", v.Field(i).Int())
 		}
 	}

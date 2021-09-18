@@ -6,14 +6,23 @@ setup:
     name: "${indexPrefix:tiem-cluster}"
     pattern: "${indexPrefix:tiem-cluster}-*"
     overwrite: true
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: {{.LogDir}}
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+
 filebeat:
   inputs:
     - type: log
       enabled: true
       paths:
-        - {{.data_dir}}/logs/*.log    ### 1. 遍历将tiem的三个组件metadb/cluster/api的每一个实例的data_dir目录进行显示
-        - 
-        -
+{{- range .GeneralLogs}}
+        - '{{.}}'
+{{- end}}
       fields:
         type: logs
       json:
@@ -26,9 +35,9 @@ filebeat:
     - type: log
       enabled: true
       paths:
-        - {{.data_dir}}/audits/*.log    ### 2. 遍历将tiem的三个组件metadb/cluster/api的每一个实例的data_dir目录进行显示
-        - 
-        -
+{{- range .AuditLogs}}
+        - '{{.}}'
+{{- end}}
       fields:
         type: audits
       json:
@@ -47,7 +56,7 @@ filebeat.config.inputs:
   
 output.elasticsearch:
   ### 3. 读取拓扑文件配置的es的主机列表，如果是多个es实例，需要用逗号进行拼装，例如：192.168.1.101:9200,192.168.1.102:9200,192.168.1.103:9200
-  hosts: "${esAddress:{{.elasticsearch_hosts}}}"
+  hosts: "${esAddress:{{.ElasticSearchHost}}}"
   indices:
     - index: "${indexPrefix:tiem}-logs-%{+yyyy.MM.dd}"
       when.equals:

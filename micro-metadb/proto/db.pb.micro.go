@@ -62,7 +62,7 @@ type TiEMDBService interface {
 	CreateCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, opts ...client.CallOption) (*DBDeleteClusterResponse, error)
 	UpdateClusterStatus(ctx context.Context, in *DBUpdateClusterStatusRequest, opts ...client.CallOption) (*DBUpdateClusterStatusResponse, error)
-	UpdateClusterTiupConfig(ctx context.Context, in *DBUpdateTiupConfigRequest, opts ...client.CallOption) (*DBUpdateTiupConfigResponse, error)
+	UpdateClusterTopologyConfig(ctx context.Context, in *DBUpdateTopologyConfigRequest, opts ...client.CallOption) (*DBUpdateTopologyConfigResponse, error)
 	CreateInstance(ctx context.Context, in *DBCreateInstanceRequest, opts ...client.CallOption) (*DBCreateInstanceResponse, error)
 	LoadCluster(ctx context.Context, in *DBLoadClusterRequest, opts ...client.CallOption) (*DBLoadClusterResponse, error)
 	ListCluster(ctx context.Context, in *DBListClusterRequest, opts ...client.CallOption) (*DBListClusterResponse, error)
@@ -280,9 +280,9 @@ func (c *tiEMDBService) UpdateClusterStatus(ctx context.Context, in *DBUpdateClu
 	return out, nil
 }
 
-func (c *tiEMDBService) UpdateClusterTiupConfig(ctx context.Context, in *DBUpdateTiupConfigRequest, opts ...client.CallOption) (*DBUpdateTiupConfigResponse, error) {
-	req := c.c.NewRequest(c.name, "TiEMDBService.UpdateClusterTiupConfig", in)
-	out := new(DBUpdateTiupConfigResponse)
+func (c *tiEMDBService) UpdateClusterTopologyConfig(ctx context.Context, in *DBUpdateTopologyConfigRequest, opts ...client.CallOption) (*DBUpdateTopologyConfigResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.UpdateClusterTopologyConfig", in)
+	out := new(DBUpdateTopologyConfigResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -603,7 +603,7 @@ type TiEMDBServiceHandler interface {
 	CreateCluster(context.Context, *DBCreateClusterRequest, *DBCreateClusterResponse) error
 	DeleteCluster(context.Context, *DBDeleteClusterRequest, *DBDeleteClusterResponse) error
 	UpdateClusterStatus(context.Context, *DBUpdateClusterStatusRequest, *DBUpdateClusterStatusResponse) error
-	UpdateClusterTiupConfig(context.Context, *DBUpdateTiupConfigRequest, *DBUpdateTiupConfigResponse) error
+	UpdateClusterTiupConfig(context.Context, *DBUpdateTopologyConfigRequest, *DBUpdateTopologyConfigResponse) error
 	CreateInstance(context.Context, *DBCreateInstanceRequest, *DBCreateInstanceResponse) error
 	LoadCluster(context.Context, *DBLoadClusterRequest, *DBLoadClusterResponse) error
 	ListCluster(context.Context, *DBListClusterRequest, *DBListClusterResponse) error
@@ -658,7 +658,7 @@ func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, op
 		CreateCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, out *DBDeleteClusterResponse) error
 		UpdateClusterStatus(ctx context.Context, in *DBUpdateClusterStatusRequest, out *DBUpdateClusterStatusResponse) error
-		UpdateClusterTiupConfig(ctx context.Context, in *DBUpdateTiupConfigRequest, out *DBUpdateTiupConfigResponse) error
+		UpdateClusterTiupConfig(ctx context.Context, in *DBUpdateTopologyConfigRequest, out *DBUpdateTopologyConfigResponse) error
 		CreateInstance(ctx context.Context, in *DBCreateInstanceRequest, out *DBCreateInstanceResponse) error
 		LoadCluster(ctx context.Context, in *DBLoadClusterRequest, out *DBLoadClusterResponse) error
 		ListCluster(ctx context.Context, in *DBListClusterRequest, out *DBListClusterResponse) error
@@ -768,7 +768,7 @@ func (h *tiEMDBServiceHandler) UpdateClusterStatus(ctx context.Context, in *DBUp
 	return h.TiEMDBServiceHandler.UpdateClusterStatus(ctx, in, out)
 }
 
-func (h *tiEMDBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, in *DBUpdateTiupConfigRequest, out *DBUpdateTiupConfigResponse) error {
+func (h *tiEMDBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, in *DBUpdateTopologyConfigRequest, out *DBUpdateTopologyConfigResponse) error {
 	return h.TiEMDBServiceHandler.UpdateClusterTiupConfig(ctx, in, out)
 }
 

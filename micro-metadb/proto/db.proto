@@ -33,7 +33,7 @@ service TiEMDBService {
 	rpc CreateCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);
 	rpc DeleteCluster(DBDeleteClusterRequest) returns (DBDeleteClusterResponse);
 	rpc UpdateClusterStatus(DBUpdateClusterStatusRequest) returns (DBUpdateClusterStatusResponse);
-	rpc UpdateClusterTiupConfig(DBUpdateTiupConfigRequest) returns (DBUpdateTiupConfigResponse);
+	rpc UpdateClusterTiupConfig(DBUpdateTopologyConfigRequest) returns (DBUpdateTopologyConfigResponse);
 	rpc CreateInstance(DBCreateInstanceRequest) returns (DBCreateInstanceResponse);
 
 	rpc LoadCluster(DBLoadClusterRequest) returns (DBLoadClusterResponse);

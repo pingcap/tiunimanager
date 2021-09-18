@@ -541,7 +541,7 @@ func TestListClusterDetails(t *testing.T) {
 			t.Errorf("ListClusters() DemandRecord = %v, want = %v", results[0].DemandRecord.Content, "demand1")
 		}
 		if results[0].TiUPConfig.Content != "tiup1" {
-			t.Errorf("ListClusters() TiUPConfig = %v, want = %v", results[0].TiUPConfig.Content, "tiup1")
+			t.Errorf("ListClusters() TopologyConfig = %v, want = %v", results[0].TiUPConfig.Content, "tiup1")
 		}
 		if results[0].Flow.Name != "flow1" {
 			t.Errorf("ListClusters() Flow = %v, want = %v", results[0].Flow.Name, "flow1")
@@ -804,17 +804,17 @@ func TestFetchCluster(t *testing.T) {
 			return
 		}
 		if gotResult.TiUPConfig.ID != cluster.CurrentTiupConfigId {
-			t.Errorf("FetchCluster() want TiUPConfig id = %v, got = %v", cluster.CurrentTiupConfigId, gotResult.TiUPConfig.ID)
+			t.Errorf("FetchCluster() want TopologyConfig id = %v, got = %v", cluster.CurrentTiupConfigId, gotResult.TiUPConfig.ID)
 			return
 		}
 		if gotResult.TiUPConfig.Content != "config content" {
-			t.Errorf("FetchCluster() want TiUPConfig content = %v, got = %v", "config content", gotResult.TiUPConfig.Content)
+			t.Errorf("FetchCluster() want TopologyConfig content = %v, got = %v", "config content", gotResult.TiUPConfig.Content)
 			return
 		}
 	})
 	t.Run("with config err", func(t *testing.T) {
 		cluster, _ := clusterTbl.UpdateTiUPConfig(cluster.ID, "config content", defaultTenantId)
-		MetaDB.Model(&TiUPConfig{}).Where("id = ?", cluster.CurrentTiupConfigId).Delete(&TiUPConfig{})
+		MetaDB.Model(&TopologyConfig{}).Where("id = ?", cluster.CurrentTiupConfigId).Delete(&TopologyConfig{})
 		_, err := clusterTbl.FetchCluster(cluster.ID)
 		if err == nil {
 			t.Errorf("FetchCluster() want error")

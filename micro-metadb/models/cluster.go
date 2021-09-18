@@ -29,7 +29,7 @@ type DemandRecord struct {
 	Content   string `gorm:"type:text"`
 }
 
-type TiUPConfig struct {
+type TopologyConfig struct {
 	Record
 	ClusterId string `gorm:"not null;type:varchar(2);default:null"`
 	Content   string `gorm:"type:text"`
@@ -39,7 +39,7 @@ type ClusterFetchResult struct {
 	Cluster      *Cluster
 	Flow         *FlowDO
 	DemandRecord *DemandRecord
-	TiUPConfig   *TiUPConfig
+	TiUPConfig   *TopologyConfig
 	ComponentInstances []*ComponentInstance
 }
 
@@ -158,7 +158,7 @@ func (m *DAOClusterManager) UpdateTiUPConfig(clusterId string, content string, t
 		return nil, errors.New(fmt.Sprintf("UpdateTiUPConfig has invalid parameter, clusterId: %s, content: %s", clusterId, content))
 	}
 	cluster = &Cluster{}
-	record := &TiUPConfig{
+	record := &TopologyConfig{
 		ClusterId: clusterId,
 		Content:   content,
 		Record: Record{
@@ -205,7 +205,7 @@ func (m *DAOClusterManager) FetchCluster(clusterId string) (result *ClusterFetch
 		}
 
 		if cluster.CurrentTiupConfigId > 0 {
-			result.TiUPConfig = &TiUPConfig{}
+			result.TiUPConfig = &TopologyConfig{}
 			err = m.Db().First(result.TiUPConfig, "id = ?", cluster.CurrentTiupConfigId).Error
 			if nil != err {
 				return nil, errors.New(fmt.Sprintf("FetchCluster, query demand record failed, clusterId: %s, TiUPID:%d, error: %v", clusterId, cluster.CurrentTiupConfigId, err))
@@ -274,7 +274,7 @@ func (m *DAOClusterManager) ListClusterDetails(clusterId, clusterName, clusterTy
 		clusterMap[v.ClusterId].DemandRecord = v
 	}
 
-	tiupConfigs := make([]*TiUPConfig, len(clusters), len(clusters))
+	tiupConfigs := make([]*TopologyConfig, len(clusters), len(clusters))
 	err = m.Db().Find(&tiupConfigs, tiupConfigIds).Error
 	if nil != err {
 		return nil, 0, errors.New(fmt.Sprintf("ListClusterDetails, query TiUP config lists failed, error: %v", err))

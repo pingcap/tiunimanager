@@ -75,7 +75,7 @@ func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbPb.D
 
 	clusterManager := handler.Dao().ClusterManager()
 
-	cluster, err := clusterManager.UpdateTiUPConfig(req.ClusterId, req.TiupContent, req.TenantId)
+	cluster, err := clusterManager.UpdateTiUPConfig(req.ClusterId, req.TopologyContent, req.TenantId)
 	if err == nil {
 		componentInstances, err := clusterManager.AddClusterComponentInstance(req.ClusterId, convertToComponentInstance(req.ComponentInstances))
 		if err == nil {
@@ -96,7 +96,7 @@ func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbPb.D
 	return err
 }
 
-func (handler *DBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, req *dbPb.DBUpdateTiupConfigRequest, resp *dbPb.DBUpdateTiupConfigResponse) (err error) {
+func (handler *DBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, req *dbPb.DBUpdateTopologyConfigRequest, resp *dbPb.DBUpdateTopologyConfigResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("UpdateClusterTiUPConfig has invalid parameter")
 	}
@@ -160,7 +160,7 @@ func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLo
 		resp.Status = ClusterSuccessResponseStatus
 		resp.ClusterDetail = &dbPb.DBClusterDetailDTO{
 			Cluster:          convertToClusterDTO(result.Cluster, result.DemandRecord),
-			TiupConfigRecord: convertToConfigDTO(result.TiUPConfig),
+			TopologyConfigRecord: convertToConfigDTO(result.TiUPConfig),
 			Flow:             convertFlowToDTO(result.Flow),
 			ComponentInstances: convertToComponentInstanceDTO(result.ComponentInstances),
 		}
@@ -191,7 +191,7 @@ func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbPb.DBLi
 		for i, v := range clusters {
 			clusterDetails[i] = &dbPb.DBClusterDetailDTO{
 				Cluster:          convertToClusterDTO(v.Cluster, v.DemandRecord),
-				TiupConfigRecord: convertToConfigDTO(v.TiUPConfig),
+				TopologyConfigRecord: convertToConfigDTO(v.TiUPConfig),
 				Flow:             convertFlowToDTO(v.Flow),
 			}
 		}
@@ -576,11 +576,11 @@ func convertToClusterDTO(do *models.Cluster, demand *models.DemandRecord) (dto *
 	return
 }
 
-func convertToConfigDTO(do *models.TiUPConfig) (dto *dbPb.DBTiUPConfigDTO) {
+func convertToConfigDTO(do *models.TopologyConfig) (dto *dbPb.DBTopologyConfigDTO) {
 	if do == nil {
 		return nil
 	}
-	return &dbPb.DBTiUPConfigDTO{
+	return &dbPb.DBTopologyConfigDTO{
 		Id:         int32(do.ID),
 		TenantId:   do.TenantId,
 		ClusterId:  do.ClusterId,

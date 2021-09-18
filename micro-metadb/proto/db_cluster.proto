@@ -28,7 +28,7 @@ message DBClusterDTO {
     int64 deleteTime = 16;
 }
 
-message DBTiUPConfigDTO {
+message DBTopologyConfigDTO {
     int32 id = 1;
     string tenantId = 2;
     string clusterId = 3;
@@ -61,7 +61,7 @@ message DBClusterDisplayDTO {
 
 message DBClusterDetailDTO {
     DBClusterDTO cluster = 1;
-    DBTiUPConfigDTO tiupConfigRecord = 2;
+    DBTopologyConfigDTO topologyConfigRecord = 2;
     DBFlowDTO flow = 3;
     repeated DBComponentInstanceDTO componentInstances = 4;
 }
@@ -107,27 +107,27 @@ message DBUpdateClusterStatusResponse {
 message DBCreateInstanceRequest {
     string clusterId = 1;
     string tenantId = 2;
-    string tiupContent = 3;
+    string topologyContent = 3;
     repeated DBComponentInstanceDTO componentInstances = 4;
 }
 
 message DBCreateInstanceResponse {
     DBClusterResponseStatus status = 1;
     DBClusterDTO cluster = 2;
-    DBTiUPConfigDTO tiupConfigRecord = 3;
+    DBTopologyConfigDTO topologyConfigRecord = 3;
     repeated DBComponentInstanceDTO componentInstances = 4;
 }
 
-message DBUpdateTiupConfigRequest {
+message DBUpdateTopologyConfigRequest {
     string clusterId = 1;
     string content = 2;
     string tenantId = 3;
 }
 
-message DBUpdateTiupConfigResponse {
+message DBUpdateTopologyConfigResponse {
     DBClusterResponseStatus status = 1;
     DBClusterDTO cluster = 2;
-    DBTiUPConfigDTO tiupConfigRecord = 3;
+    DBTopologyConfigDTO topologyConfigRecord = 3;
 }
 
 message DBPageDTO {

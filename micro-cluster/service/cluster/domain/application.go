@@ -20,7 +20,7 @@ import (
 type ClusterAggregation struct {
 	Cluster *Cluster
 
-	CurrentTiUPConfigRecord *TiUPConfigRecord
+	CurrentTiUPConfigRecord *TopologyConfigRecord
 	CurrentWorkFlow         *FlowWorkEntity
 
 	CurrentOperator *Operator
@@ -201,7 +201,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 
-	config := &TiUPConfigRecord{
+	config := &TopologyConfigRecord{
 		TenantId:    clusterAggregation.Cluster.TenantId,
 		ClusterId:   clusterAggregation.Cluster.Id,
 		ConfigModel: convertConfig(clusterAggregation.AvailableResources, clusterAggregation.Cluster),

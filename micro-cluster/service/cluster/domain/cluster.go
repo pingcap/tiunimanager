@@ -59,7 +59,7 @@ type ClusterNodeDistributionItem struct {
 	Count  			int
 }
 
-type TiUPConfigRecord struct {
+type TopologyConfigRecord struct {
 	Id 					uint
 	TenantId 			string
 	ClusterId 			string
@@ -72,7 +72,7 @@ type RecoverInfo struct {
 	BackupRecordId 		int64
 }
 
-func (r TiUPConfigRecord) Content() string {
+func (r TopologyConfigRecord) Content() string {
 	bytes, _ := json.Marshal(r.ConfigModel)
 	return string(bytes)
 }

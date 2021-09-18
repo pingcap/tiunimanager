@@ -49,7 +49,7 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 	for i, v := range resp.Clusters {
 		cluster := &domain.ClusterAggregation{}
 		cluster.Cluster = ParseFromClusterDTO(v.Cluster)
-		cluster.CurrentTiUPConfigRecord = parseConfigRecordDTO(v.TiupConfigRecord)
+		cluster.CurrentTiUPConfigRecord = parseConfigRecordDTO(v.TopologyConfigRecord)
 		cluster.CurrentWorkFlow = parseFlowFromDTO(v.Flow)
 		cluster.MaintainCronTask = domain.GetDefaultMaintainTask() // next_version get from db
 
@@ -104,7 +104,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 	}
 
 	if aggregation.ConfigModified {
-		resp, err := client.DBClient.UpdateClusterTiupConfig(context.TODO(), &db.DBUpdateTiupConfigRequest{
+		resp, err := client.DBClient.UpdateClusterTopologyConfig(context.TODO(), &db.DBUpdateTopologyConfigRequest{
 			ClusterId: aggregation.Cluster.Id,
 			Content:   aggregation.CurrentTiUPConfigRecord.Content(),
 			TenantId:  aggregation.Cluster.TenantId,
@@ -114,7 +114,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 			// todo
 			return err
 		}
-		aggregation.CurrentTiUPConfigRecord = parseConfigRecordDTO(resp.TiupConfigRecord)
+		aggregation.CurrentTiUPConfigRecord = parseConfigRecordDTO(resp.TopologyConfigRecord)
 	}
 	/*
 		if aggregation.LastBackupRecord != nil && aggregation.LastBackupRecord.Id == 0 {
@@ -193,7 +193,7 @@ func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation,
 	} else {
 		cluster = &domain.ClusterAggregation{}
 		cluster.Cluster = ParseFromClusterDTO(resp.ClusterDetail.Cluster)
-		cluster.CurrentTiUPConfigRecord = parseConfigRecordDTO(resp.ClusterDetail.TiupConfigRecord)
+		cluster.CurrentTiUPConfigRecord = parseConfigRecordDTO(resp.ClusterDetail.TopologyConfigRecord)
 		cluster.CurrentWorkFlow = parseFlowFromDTO(resp.ClusterDetail.Flow)
 		cluster.MaintainCronTask = domain.GetDefaultMaintainTask() // next_version get from db
 		return
@@ -419,11 +419,11 @@ func ParseFromClusterDTO(dto *db.DBClusterDTO) (cluster *domain.Cluster) {
 	return
 }
 
-func parseConfigRecordDTO(dto *db.DBTiUPConfigDTO) (record *domain.TiUPConfigRecord) {
+func parseConfigRecordDTO(dto *db.DBTopologyConfigDTO) (record *domain.TopologyConfigRecord) {
 	if dto == nil {
 		return nil
 	}
-	record = &domain.TiUPConfigRecord{
+	record = &domain.TopologyConfigRecord{
 		Id:         uint(dto.Id),
 		TenantId:   dto.TenantId,
 		ClusterId:  dto.ClusterId,

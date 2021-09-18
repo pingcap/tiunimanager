@@ -103,6 +103,20 @@ message DBUpdateClusterStatusResponse {
     DBClusterDTO cluster = 2;
 }
 
+message DBCreateInstanceRequest {
+    string clusterId = 1;
+    string tenantId = 2;
+    string tiupContent = 3;
+    repeated DBComponentInstanceDTO componentInstances = 4;
+}
+
+message DBCreateInstanceResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+    DBTiUPConfigDTO tiupConfigRecord = 3;
+    repeated DBComponentInstanceDTO componentInstances = 4;
+}
+
 message DBUpdateTiupConfigRequest {
     string clusterId = 1;
     string content = 2;
@@ -278,4 +292,26 @@ message DBQueryBackupStrategyByTimeRequest {
 message DBQueryBackupStrategyByTimeResponse {
     DBClusterResponseStatus status = 1;
     repeated DBBackupStrategyDTO strategys = 2;
+}
+
+message DBComponentInstanceDTO {
+    string id = 1;
+    string code = 2;
+    string tenantId = 3;
+    int32 status = 4;
+
+    string clusterId = 5;
+    string componentType = 6;
+    string role = 7;
+    string spec = 8;
+    string version = 9;
+
+    string hostId = 10;
+    string diskId = 11;
+    string portInfo = 12;
+    string allocRequestId = 13;
+
+    int64 createTime = 14;
+    int64 updateTime = 15;
+    int64 deleteTime = 16;
 }

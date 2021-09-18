@@ -17,7 +17,7 @@ type Cluster struct {
 	Version             string
 	Tls                 bool
 	Tags                string
-	OwnerId             string `gorm:"not null;type:varchar(36);default:null"`
+	OwnerId             string `gorm:"not null;type:varchar(22);default:null"`
 	CurrentTiupConfigId uint
 	CurrentDemandId     uint
 	CurrentFlowId       uint
@@ -25,13 +25,13 @@ type Cluster struct {
 
 type DemandRecord struct {
 	Record
-	ClusterId string `gorm:"not null;type:varchar(36);default:null"`
+	ClusterId string `gorm:"not null;type:varchar(2);default:null"`
 	Content   string `gorm:"type:text"`
 }
 
 type TiUPConfig struct {
 	Record
-	ClusterId string `gorm:"not null;type:varchar(36);default:null"`
+	ClusterId string `gorm:"not null;type:varchar(2);default:null"`
 	Content   string `gorm:"type:text"`
 }
 
@@ -44,11 +44,11 @@ type ClusterFetchResult struct {
 
 type BackupRecord struct {
 	Record
-	ClusterId   string `gorm:"not null;type:varchar(36);default:null"`
+	ClusterId   string `gorm:"not null;type:varchar(2);default:null"`
 	BackupRange string
 	BackupType  string
 	BackupMode  string
-	OperatorId  string `gorm:"not null;type:varchar(36);default:null"`
+	OperatorId  string `gorm:"not null;type:varchar(2);default:null"`
 
 	FilePath string
 	FlowId   int64
@@ -60,23 +60,23 @@ type BackupRecord struct {
 
 type RecoverRecord struct {
 	Record
-	ClusterId      string `gorm:"not null;type:varchar(36);default:null"`
-	OperatorId     string `gorm:"not null;type:varchar(36);default:null"`
+	ClusterId      string `gorm:"not null;type:varchar(22);default:null"`
+	OperatorId     string `gorm:"not null;type:varchar(22);default:null"`
 	BackupRecordId uint
 	FlowId         uint
 }
 
 type ParametersRecord struct {
 	Record
-	ClusterId  string `gorm:"not null;type:varchar(36);default:null"`
-	OperatorId string `gorm:"not null;type:varchar(36);default:null"`
+	ClusterId  string `gorm:"not null;type:varchar(22);default:null"`
+	OperatorId string `gorm:"not null;type:varchar(22);default:null"`
 	Content    string `gorm:"type:text"`
 	FlowId     uint
 }
 type BackupStrategy struct {
 	Record
-	ClusterId  string `gorm:"not null;type:varchar(36);default:null"`
-	OperatorId string `gorm:"not null;type:varchar(36);default:null"`
+	ClusterId  string `gorm:"not null;type:varchar(22);default:null"`
+	OperatorId string `gorm:"not null;type:varchar(22);default:null"`
 
 	BackupDate  string
 	StartHour   uint32

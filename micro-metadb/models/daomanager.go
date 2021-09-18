@@ -112,6 +112,7 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_BACKUP_STRATEGY, new(BackupStrategy))
 	dao.AddTable(TABLE_NAME_TRANSPORT_RECORD, new(TransportRecord))
 	dao.AddTable(TABLE_NAME_RECOVER_RECORD, new(RecoverRecord))
+	dao.AddTable(TABLE_NAME_COMPONENT_INSTANCE, new(ComponentInstance))
 
 	log.Info("create TiEM all tables successful.")
 	return nil

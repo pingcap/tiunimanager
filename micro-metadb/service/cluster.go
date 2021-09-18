@@ -162,6 +162,7 @@ func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLo
 			Cluster:          convertToClusterDTO(result.Cluster, result.DemandRecord),
 			TiupConfigRecord: convertToConfigDTO(result.TiUPConfig),
 			Flow:             convertFlowToDTO(result.Flow),
+			ComponentInstances: convertToComponentInstanceDTO(result.ComponentInstances),
 		}
 		log.Infof("LoadCluster successful, clusterId: %s, error: %v", req.GetClusterId(), err)
 	} else {
@@ -214,7 +215,7 @@ func (handler *DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb
 	result, err := clusterManager.SaveBackupRecord(dto)
 	if err == nil {
 		resp.Status = ClusterSuccessResponseStatus
-		resp.BackupRecord = ConvertToBackupRecordDTO(result)
+		resp.BackupRecord = convertToBackupRecordDTO(result)
 		log.Infof("SaveBackupRecord successful, tenantId: %s, clusterId: %s, operatorId: %s, filepath: %s, error: %s",
 			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.FilePath, err)
 	} else {
@@ -245,7 +246,7 @@ func (handler *DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *db
 	result, err := clusterManager.DeleteBackupRecord(uint(req.Id))
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
-		resp.BackupRecord = ConvertToBackupRecordDTO(result)
+		resp.BackupRecord = convertToBackupRecordDTO(result)
 		log.Infof("DeleteBackupRecord successful, Id: %d, error: %v", req.GetId(), err)
 	} else {
 		log.Infof("DeleteBackupRecord failed, Id: %d, error: %v", req.GetId(), err)
@@ -402,7 +403,7 @@ func (handler *DBServiceHandler) GetCurrentParametersRecord(ctx context.Context,
 	}
 }
 
-func ConvertToBackupRecordDTO(do *models.BackupRecord) (dto *dbPb.DBBackupRecordDTO) {
+func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbPb.DBBackupRecordDTO) {
 	if do == nil {
 		return nil
 	}
@@ -422,12 +423,64 @@ func ConvertToBackupRecordDTO(do *models.BackupRecord) (dto *dbPb.DBBackupRecord
 }
 
 func convertToComponentInstance(dtos []*dbPb.DBComponentInstanceDTO) []*models.ComponentInstance {
-	// todo
-	return nil
+	if dtos == nil || len(dtos) == 0 {
+		return []*models.ComponentInstance{}
+	}
+
+	result := make([]*models.ComponentInstance, len(dtos), len(dtos))
+
+	for i, v := range dtos {
+		result[i] = &models.ComponentInstance {
+			Entity: models.Entity{
+				ID:       v.Id,
+				Code:     v.Code,
+				TenantId: v.TenantId,
+				Status: int8(v.Status),
+			},
+			ClusterId: v.ClusterId,
+			ComponentType: v.ComponentType,
+			Role: v.Role,
+			Spec: v.Spec,
+			Version: v.Version,
+			HostId: v.HostId,
+			DiskId: v.DiskId,
+			PortInfo: v.PortInfo,
+			AllocRequestId: v.AllocRequestId,
+		}
+	}
+
+	return result
 }
+
 func convertToComponentInstanceDTO(models []*models.ComponentInstance) []*dbPb.DBComponentInstanceDTO {
-	// todo
-	return nil
+	if models == nil || len(models) == 0 {
+		return []*dbPb.DBComponentInstanceDTO{}
+	}
+	result := make([]*dbPb.DBComponentInstanceDTO, len(models), len(models))
+
+	for i, v := range models {
+		result[i] = &dbPb.DBComponentInstanceDTO {
+			Id:       v.ID,
+			Code:     v.Code,
+			TenantId: v.TenantId,
+			Status: int32(v.Status),
+
+			ClusterId: v.ClusterId,
+			ComponentType: v.ComponentType,
+			Role: v.Role,
+			Spec: v.Spec,
+			Version: v.Version,
+			HostId: v.HostId,
+			DiskId: v.DiskId,
+			PortInfo: v.PortInfo,
+			AllocRequestId: v.AllocRequestId,
+			CreateTime: v.CreatedAt.Unix(),
+			UpdateTime: v.UpdatedAt.Unix(),
+			DeleteTime: deletedAtUnix(v.DeletedAt),
+		}
+	}
+
+	return result
 }
 
 func convertToBackupRecordDisplayDTO(do *models.BackupRecord, flow *models.FlowDO) (dto *dbPb.DBDBBackupRecordDisplayDTO) {
@@ -436,7 +489,7 @@ func convertToBackupRecordDisplayDTO(do *models.BackupRecord, flow *models.FlowD
 	}
 
 	dto = &dbPb.DBDBBackupRecordDisplayDTO{
-		BackupRecord: ConvertToBackupRecordDTO(do),
+		BackupRecord: convertToBackupRecordDTO(do),
 		Flow:         convertFlowToDTO(flow),
 	}
 	return

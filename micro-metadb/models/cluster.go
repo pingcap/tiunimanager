@@ -40,6 +40,7 @@ type ClusterFetchResult struct {
 	Flow         *FlowDO
 	DemandRecord *DemandRecord
 	TiUPConfig   *TiUPConfig
+	ComponentInstances []*ComponentInstance
 }
 
 type BackupRecord struct {
@@ -217,6 +218,11 @@ func (m *DAOClusterManager) FetchCluster(clusterId string) (result *ClusterFetch
 			if nil != err {
 				return nil, errors.New(fmt.Sprintf("FetchCluster, query workflow failed, clusterId: %s, workflowId:%d, error: %v", clusterId, cluster.CurrentFlowId, err))
 			}
+		}
+
+		result.ComponentInstances, err = m.ListComponentInstances(cluster.ID)
+		if nil != err {
+			return nil, errors.New(fmt.Sprintf("FetchCluster, ListComponentInstances failed, clusterId: %s, error: %v", clusterId, err))
 		}
 	} else {
 		return nil, errors.New(fmt.Sprintf("FetchCluster, query cluster failed, clusterId: %s, error: %v", clusterId, err))

@@ -63,6 +63,7 @@ message DBClusterDetailDTO {
     DBClusterDTO cluster = 1;
     DBTiUPConfigDTO tiupConfigRecord = 2;
     DBFlowDTO flow = 3;
+    repeated DBComponentInstanceDTO componentInstances = 4;
 }
 
 message DBListClusterRequest {

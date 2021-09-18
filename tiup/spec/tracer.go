@@ -29,20 +29,28 @@ import (
 
 // TracerServerSpec represents the Master topology specification in topology.yaml
 type TracerServerSpec struct {
-	Host            string                 `yaml:"host"`
-	SSHPort         int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
-	Port            int                    `yaml:"port,omitempty" default:"4123"`
-	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
-	LogDir          string                 `yaml:"log_dir,omitempty"`
-	Config          map[string]interface{} `yaml:"config,omitempty" validate:"config:ignore"`
-	Arch            string                 `yaml:"arch,omitempty"`
-	OS              string                 `yaml:"os,omitempty"`
-	ResourceControl meta.ResourceControl   `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
+	Host              string                 `yaml:"host"`
+	SSHPort           int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
+	ZipkinThriftPort  int                    `yaml:"zipkin_thrift_port,omitempty" default:"5775"`
+	CompactThriftPort int                    `yaml:"compact_thrift_port,omitempty" default:"6831"`
+	BinaryThriftPort  int                    `yaml:"binary_thrift_port,omitempty" default:"6832"`
+	AgentServePort    int                    `yaml:"agent_serve_port,omitempty" default:"5778"`
+	QueryServePort    int                    `yaml:"query_serve_port,omitempty" default:"16686"`
+	JaegerThriftPort  int                    `yaml:"jaeger_thrift_port,omitempty" default:"14268"`
+	JaegerHostPort    int                    `yaml:"jaeger_host_port,omitempty" default:"14269"`
+	CollectorPort     int                    `yaml:"collecter_port,omitempty" default:"14250"`
+	ZipkinHostPort    int                    `yaml:"port,omitempty" default:"4123"`
+	DeployDir         string                 `yaml:"deploy_dir,omitempty"`
+	LogDir            string                 `yaml:"log_dir,omitempty"`
+	Config            map[string]interface{} `yaml:"config,omitempty" validate:"config:ignore"`
+	Arch              string                 `yaml:"arch,omitempty"`
+	OS                string                 `yaml:"os,omitempty"`
+	ResourceControl   meta.ResourceControl   `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
 }
 
 // Status queries current status of the instance
 func (s *TracerServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
-	return "N/A"
+	return statusByHost(s.Host, s.JaegerHostPort, "/metrics", nil)
 }
 
 // Role returns the component role of the instance
@@ -57,7 +65,7 @@ func (s *TracerServerSpec) SSH() (string, int) {
 
 // GetMainPort returns the main port of the instance
 func (s *TracerServerSpec) GetMainPort() int {
-	return s.Port
+	return s.ZipkinHostPort
 }
 
 // IsImported implements the instance interface, not needed for tiem
@@ -93,18 +101,26 @@ func (c *JaegerComponent) Instances() []Instance {
 				InstanceSpec: s,
 				Name:         c.Name(),
 				Host:         s.Host,
-				Port:         s.Port,
+				Port:         s.ZipkinHostPort,
 				SSHP:         s.SSHPort,
 
 				Ports: []int{
-					s.Port,
+					s.ZipkinHostPort,
+					s.ZipkinThriftPort,
+					s.AgentServePort,
+					s.CompactThriftPort,
+					s.BinaryThriftPort,
+					s.CollectorPort,
+					s.JaegerThriftPort,
+					s.JaegerHostPort,
+					s.QueryServePort,
 				},
 				Dirs: []string{
 					s.DeployDir,
 				},
 				StatusFn: s.Status,
 				UptimeFn: func(tlsCfg *tls.Config) time.Duration {
-					return spec.UptimeByHost(s.Host, s.Port, tlsCfg)
+					return spec.UptimeByHost(s.Host, s.ZipkinHostPort, tlsCfg)
 				},
 			},
 			topo: c.Topology,
@@ -138,7 +154,7 @@ func (i *JaegerInstance) InitConfig(
 		paths.Deploy,
 		paths.Log,
 	).
-		WithPort(spec.Port)
+		WithPort(spec.ZipkinHostPort)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_jaeger_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
@@ -176,7 +192,7 @@ func (i *JaegerInstance) ScaleConfig(
 		paths.Deploy,
 		paths.Log,
 	).
-		WithPort(spec.Port)
+		WithPort(spec.ZipkinHostPort)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_jaeger_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)

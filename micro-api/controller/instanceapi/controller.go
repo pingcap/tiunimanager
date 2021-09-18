@@ -180,7 +180,7 @@ func Backup(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "clusterId"
-// @Success 200 {object} controller.CommonResult{data=[]BackupStrategy}
+// @Success 200 {object} controller.CommonResult{data=BackupStrategy}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult

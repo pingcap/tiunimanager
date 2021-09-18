@@ -1418,9 +1418,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/instanceapi.BackupStrategy'
-                  type: array
+                  $ref: '#/definitions/instanceapi.BackupStrategy'
               type: object
         "401":
           description: Unauthorized

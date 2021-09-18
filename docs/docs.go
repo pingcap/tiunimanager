@@ -1109,10 +1109,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/instanceapi.BackupStrategy"
-                                            }
+                                            "$ref": "#/definitions/instanceapi.BackupStrategy"
                                         }
                                     }
                                 }

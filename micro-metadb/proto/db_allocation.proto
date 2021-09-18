@@ -59,7 +59,7 @@ message AllocRequirement {
 	int32 count  = 6;     
 }
 
-message AllocReq {
+message AllocRequest {
 	Applicant applicant = 1;
 	repeated AllocRequirement requires = 2;
 }
@@ -91,7 +91,17 @@ message HostResource {
 	repeated PortResource portRes = 10;
 }
 
-message AllocRsp {
+message AllocResponse {
     DBAllocResponseStatus rs = 1;
     repeated HostResource results = 2;
+}
+
+message BatchAllocRequest {
+	repeated AllocRequest batchRequests = 1;
+}
+
+
+message BatchAllocResponse {
+	DBAllocResponseStatus rs = 1;
+	repeated AllocResponse batchResults = 2;
 }

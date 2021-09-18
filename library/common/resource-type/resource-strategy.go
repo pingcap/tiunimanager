@@ -96,3 +96,11 @@ type HostResource struct {
 type AllocRsp struct {
 	Results []HostResource
 }
+
+type BatchAllocRequest struct {
+	BatchRequests []AllocReq
+}
+
+type BatchAllocResponse struct {
+	BatchResults []AllocRsp
+}

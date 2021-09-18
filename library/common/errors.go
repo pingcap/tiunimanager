@@ -37,6 +37,8 @@ const (
 	TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER = 504
 	TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_HOST_FILTER = 505
 	TIEM_RESOURCE_NO_ENOUGH_PORT                   = 506
+	TIEM_RESOURCE_NOT_ALL_SUCCEED                  = 507
+	TIEM_RESOURCE_INVALID_STRATEGY                 = 508
 )
 
 var TiEMErrMsg = map[uint32]string{
@@ -61,4 +63,6 @@ var TiEMErrMsg = map[uint32]string{
 	TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER: "no enough disk after disk filter",
 	TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_HOST_FILTER: "no enouth disk after host filter",
 	TIEM_RESOURCE_NO_ENOUGH_PORT:                   "no enough port resource",
+	TIEM_RESOURCE_NOT_ALL_SUCCEED:                  "not all request succeed",
+	TIEM_RESOURCE_INVALID_STRATEGY:                 "invalid alloc strategy",
 }

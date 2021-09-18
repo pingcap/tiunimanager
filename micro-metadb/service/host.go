@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
@@ -419,7 +420,7 @@ func copyResultToRsp(src *resource.HostResource, dst *dbPb.HostResource) {
 	}
 }
 
-func (handler *DBServiceHandler) AllocResources(ctx context.Context, in *dbPb.AllocReq, out *dbPb.AllocRsp) error {
+func (handler *DBServiceHandler) AllocResources(ctx context.Context, in *dbPb.AllocRequest, out *dbPb.AllocResponse) error {
 	log := framework.Log()
 	log.Infof("Receive %d allocation requirement from %s in requestID %s\n", len(in.Requires), in.Applicant.HolderId, in.Applicant.RequestId)
 	resourceManager := handler.Dao().ResourceManager()
@@ -439,10 +440,47 @@ func (handler *DBServiceHandler) AllocResources(ctx context.Context, in *dbPb.Al
 		// return nil to use rsp
 		return nil
 	}
-	for _, r := range resources {
-		var resource dbPb.HostResource
-		copyResultToRsp(&r, &resource)
-		out.Results = append(out.Results, &resource)
+	for _, r := range resources.Results {
+		var hostResource dbPb.HostResource
+		copyResultToRsp(&r, &hostResource)
+		out.Results = append(out.Results, &hostResource)
 	}
+	out.Rs.Code = common.TIEM_SUCCESS
+	return nil
+}
+
+func (handler *DBServiceHandler) AllocResourcesInBatch(ctx context.Context, in *dbPb.BatchAllocRequest, out *dbPb.BatchAllocResponse) error {
+	log := framework.Log()
+	log.Infof("Receive batch allocation with %d requests", len(in.BatchRequests))
+	out.Rs = new(dbPb.DBAllocResponseStatus)
+
+	resourceManager := handler.Dao().ResourceManager()
+	resources, err := resourceManager.AllocResourcesInBatch(in)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			out.Rs.Code = int32(st.Code())
+			out.Rs.Message = st.Message()
+		} else {
+			out.Rs.Code = int32(codes.Internal)
+			out.Rs.Message = fmt.Sprintf("alloc resources in batch failed, err: %v", err)
+		}
+		log.Warnln(out.Rs.Message)
+
+		// return nil to use rsp
+		return nil
+	}
+	for _, result := range resources.BatchResults {
+		var rsp dbPb.AllocResponse
+		rsp.Rs = new(dbPb.DBAllocResponseStatus)
+		rsp.Rs.Code = common.TIEM_SUCCESS
+		for _, r := range result.Results {
+			var hostResource dbPb.HostResource
+			copyResultToRsp(&r, &hostResource)
+			rsp.Results = append(rsp.Results, &hostResource)
+		}
+		out.BatchResults = append(out.BatchResults, &rsp)
+	}
+	out.Rs.Code = common.TIEM_SUCCESS
 	return nil
 }

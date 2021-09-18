@@ -417,28 +417,50 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, requir
 	return
 }
 
-func (m *DAOResourceManager) AllocResources(req *dbPb.AllocReq) (results []rt.HostResource, err error) {
-	tx := m.getDb().Begin()
+func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbPb.AllocRequest) (results rt.AllocRsp, err error) {
 	var choosedHosts []string
 	for i, require := range req.Requires {
 		switch rt.AllocStrategy(require.Strategy) {
 		case rt.RandomRack:
 			res, err := allocResourceWithRR(tx, req.Applicant, i, require, choosedHosts)
 			if err != nil {
-				tx.Rollback()
-				return nil, status.Errorf(codes.Internal, "alloc with RandomRack %dth require failed, %v", i, err)
+				return rt.AllocRsp{}, status.Errorf(codes.Internal, "alloc with RandomRack %dth require failed, %v", i, err)
 			}
 			for _, result := range res {
 				choosedHosts = append(choosedHosts, result.HostIp)
 			}
-			results = append(results, res...)
+			results.Results = append(results.Results, res...)
 		case rt.DiffRackBestEffort:
 		case rt.UserSpecifyRack:
 		case rt.UserSpecifyHost:
 		default:
-			tx.Rollback()
-			return nil, status.Errorf(codes.InvalidArgument, "bad alloc strategy %d", require.Strategy)
+			return rt.AllocRsp{}, status.Errorf(common.TIEM_RESOURCE_INVALID_STRATEGY, "invalid alloc strategy %d", require.Strategy)
 		}
+	}
+	return
+}
+
+func (m *DAOResourceManager) AllocResources(req *dbPb.AllocRequest) (result rt.AllocRsp, err error) {
+	tx := m.getDb().Begin()
+	result, err = m.doAlloc(tx, req)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
+	return
+}
+
+func (m *DAOResourceManager) AllocResourcesInBatch(batchReq *dbPb.BatchAllocRequest) (results rt.BatchAllocResponse, err error) {
+	tx := m.getDb().Begin()
+	for i, req := range batchReq.BatchRequests {
+		var result rt.AllocRsp
+		result, err = m.doAlloc(tx, req)
+		if err != nil {
+			tx.Rollback()
+			return rt.BatchAllocResponse{}, status.Errorf(common.TIEM_RESOURCE_NOT_ALL_SUCCEED, "alloc resources in batch failed on request %d, %v", i, err)
+		}
+		results.BatchResults = append(results.BatchResults, result)
 	}
 	tx.Commit()
 	return

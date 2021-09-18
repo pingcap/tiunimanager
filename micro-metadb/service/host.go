@@ -389,9 +389,60 @@ func (handler *DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb
 	return nil
 }
 
+func copyResultToRsp(src *resource.HostResource, dst *dbPb.HostResource) {
+	dst.Reqseq = src.Reqseq
+	dst.Location = new(dbPb.Location)
+	dst.Location.Region = src.Location.Region
+	dst.Location.Zone = src.Location.Zone
+	dst.Location.Rack = src.Location.Rack
+	dst.Location.Host = src.Location.Host
+	dst.HostId = src.HostId
+	dst.HostName = src.HostName
+	dst.HostIp = src.HostIp
+	dst.UserName = src.UserName
+	dst.Passwd = src.Passwd
+	dst.ComputeRes = new(dbPb.ComputeRequirement)
+	dst.ComputeRes.CpuCores = src.ComputeRes.CpuCores
+	dst.ComputeRes.Memory = src.ComputeRes.Memory
+	dst.DiskRes = new(dbPb.DiskResource)
+	dst.DiskRes.DiskId = src.DiskRes.DiskId
+	dst.DiskRes.DiskName = src.DiskRes.DiskName
+	dst.DiskRes.Path = src.DiskRes.Path
+	dst.DiskRes.Capacity = src.DiskRes.Capacity
+	dst.DiskRes.Type = src.DiskRes.Type
+	for _, portRes := range src.PortRes {
+		dst.PortRes = append(dst.PortRes, &dbPb.PortResource{
+			Start: portRes.Start,
+			End:   portRes.End,
+			Ports: portRes.Ports,
+		})
+	}
+}
+
 func (handler *DBServiceHandler) AllocResources(ctx context.Context, in *dbPb.AllocReq, out *dbPb.AllocRsp) error {
 	log := framework.Log()
 	log.Infof("Receive %d allocation requirement from %s in requestID %s\n", len(in.Requires), in.Applicant.HolderId, in.Applicant.RequestId)
+	resourceManager := handler.Dao().ResourceManager()
+	resources, err := resourceManager.AllocResources(in)
+	out.Rs = new(dbPb.DBAllocResponseStatus)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			out.Rs.Code = int32(st.Code())
+			out.Rs.Message = st.Message()
+		} else {
+			out.Rs.Code = int32(codes.Internal)
+			out.Rs.Message = fmt.Sprintf("alloc resources failed, err: %v", err)
+		}
+		log.Warnln(out.Rs.Message)
 
+		// return nil to use rsp
+		return nil
+	}
+	for _, r := range resources {
+		var resource dbPb.HostResource
+		copyResultToRsp(&r, &resource)
+		out.Results = append(out.Results, &resource)
+	}
 	return nil
 }

@@ -160,7 +160,7 @@ func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLo
 		resp.Status = ClusterSuccessResponseStatus
 		resp.ClusterDetail = &dbPb.DBClusterDetailDTO{
 			Cluster:          convertToClusterDTO(result.Cluster, result.DemandRecord),
-			TopologyConfigRecord: convertToConfigDTO(result.TiUPConfig),
+			TopologyConfigRecord: convertToConfigDTO(result.TopologyConfig),
 			Flow:             convertFlowToDTO(result.Flow),
 			ComponentInstances: convertToComponentInstanceDTO(result.ComponentInstances),
 		}
@@ -191,7 +191,7 @@ func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbPb.DBLi
 		for i, v := range clusters {
 			clusterDetails[i] = &dbPb.DBClusterDetailDTO{
 				Cluster:          convertToClusterDTO(v.Cluster, v.DemandRecord),
-				TopologyConfigRecord: convertToConfigDTO(v.TiUPConfig),
+				TopologyConfigRecord: convertToConfigDTO(v.TopologyConfig),
 				Flow:             convertFlowToDTO(v.Flow),
 			}
 		}

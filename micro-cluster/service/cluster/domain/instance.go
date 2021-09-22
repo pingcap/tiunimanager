@@ -17,7 +17,7 @@ func (aggregation *ClusterAggregation) ExtractInstancesDTO() *proto.ClusterInsta
 		BackupFileUsage:          MockUsage(),
 	}
 
-	if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
+	if record := aggregation.CurrentTopologyConfigRecord; aggregation.CurrentTopologyConfigRecord != nil && record.ConfigModel != nil {
 		dto.IntranetConnectAddresses, dto.ExtranetConnectAddresses, dto.PortList = ConnectAddresses(record.ConfigModel)
 	} else {
 		dto.PortList = []int64{4000}
@@ -42,7 +42,7 @@ func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int64) {
 }
 
 func (aggregation *ClusterAggregation) ExtractComponentDTOs() []*proto.ComponentInstanceDTO {
-	if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
+	if record := aggregation.CurrentTopologyConfigRecord; aggregation.CurrentTopologyConfigRecord != nil && record.ConfigModel != nil {
 		config := record.ConfigModel
 		knowledge := knowledge.ClusterTypeSpecFromCode(aggregation.Cluster.ClusterType.Code)
 		for _, v := range knowledge.VersionSpecs {

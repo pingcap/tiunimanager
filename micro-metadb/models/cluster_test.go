@@ -221,15 +221,15 @@ func TestUpdateTiUPConfig(t *testing.T) {
 		}
 		MetaDB.Create(cluster)
 
-		currentConfigId := cluster.CurrentTiupConfigId
+		currentConfigId := cluster.CurrentTopologyConfigId
 
 		cluster, err := clusterTbl.UpdateTopologyConfig(cluster.ID, "aaa", cluster.TenantId)
 		if err != nil {
 			t.Errorf("UpdateTopologyConfig() error = %v", err)
 		}
 
-		if cluster.CurrentTiupConfigId == 0 || cluster.CurrentTiupConfigId <= currentConfigId {
-			t.Errorf("UpdateTopologyConfig() new config id = %v, current config id = %v", cluster.CurrentTiupConfigId, currentConfigId)
+		if cluster.CurrentTopologyConfigId == 0 || cluster.CurrentTopologyConfigId <= currentConfigId {
+			t.Errorf("UpdateTopologyConfig() new config id = %v, current config id = %v", cluster.CurrentTopologyConfigId, currentConfigId)
 		}
 
 		if cluster.ID == "" {
@@ -540,8 +540,8 @@ func TestListClusterDetails(t *testing.T) {
 		if results[0].DemandRecord.Content != "demand1" {
 			t.Errorf("ListClusters() DemandRecord = %v, want = %v", results[0].DemandRecord.Content, "demand1")
 		}
-		if results[0].TiUPConfig.Content != "tiup1" {
-			t.Errorf("ListClusters() TopologyConfig = %v, want = %v", results[0].TiUPConfig.Content, "tiup1")
+		if results[0].TopologyConfig.Content != "tiup1" {
+			t.Errorf("ListClusters() TopologyConfig = %v, want = %v", results[0].TopologyConfig.Content, "tiup1")
 		}
 		if results[0].Flow.Name != "flow1" {
 			t.Errorf("ListClusters() Flow = %v, want = %v", results[0].Flow.Name, "flow1")
@@ -799,22 +799,22 @@ func TestFetchCluster(t *testing.T) {
 			t.Errorf("FetchCluster() want id = %v, got = %v", cluster.ID, gotResult.Cluster.ID)
 			return
 		}
-		if gotResult.Cluster.CurrentTiupConfigId != cluster.CurrentTiupConfigId {
-			t.Errorf("FetchCluster() want CurrentTiupConfigId = %v, got = %v", cluster.CurrentTiupConfigId, gotResult.Cluster.CurrentTiupConfigId)
+		if gotResult.Cluster.CurrentTopologyConfigId != cluster.CurrentTopologyConfigId {
+			t.Errorf("FetchCluster() want CurrentTiupConfigId = %v, got = %v", cluster.CurrentTopologyConfigId, gotResult.Cluster.CurrentTopologyConfigId)
 			return
 		}
-		if gotResult.TiUPConfig.ID != cluster.CurrentTiupConfigId {
-			t.Errorf("FetchCluster() want TopologyConfig id = %v, got = %v", cluster.CurrentTiupConfigId, gotResult.TiUPConfig.ID)
+		if gotResult.TopologyConfig.ID != cluster.CurrentTopologyConfigId {
+			t.Errorf("FetchCluster() want TopologyConfig id = %v, got = %v", cluster.CurrentTopologyConfigId, gotResult.TopologyConfig.ID)
 			return
 		}
-		if gotResult.TiUPConfig.Content != "config content" {
-			t.Errorf("FetchCluster() want TopologyConfig content = %v, got = %v", "config content", gotResult.TiUPConfig.Content)
+		if gotResult.TopologyConfig.Content != "config content" {
+			t.Errorf("FetchCluster() want TopologyConfig content = %v, got = %v", "config content", gotResult.TopologyConfig.Content)
 			return
 		}
 	})
 	t.Run("with config err", func(t *testing.T) {
 		cluster, _ := clusterTbl.UpdateTopologyConfig(cluster.ID, "config content", defaultTenantId)
-		MetaDB.Model(&TopologyConfig{}).Where("id = ?", cluster.CurrentTiupConfigId).Delete(&TopologyConfig{})
+		MetaDB.Model(&TopologyConfig{}).Where("id = ?", cluster.CurrentTopologyConfigId).Delete(&TopologyConfig{})
 		_, err := clusterTbl.FetchCluster(cluster.ID)
 		if err == nil {
 			t.Errorf("FetchCluster() want error")

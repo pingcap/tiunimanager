@@ -11,16 +11,16 @@ import (
 
 type Cluster struct {
 	Entity
-	Name                string
-	DbPassword          string
-	Type                string
-	Version             string
-	Tls                 bool
-	Tags                string
-	OwnerId             string `gorm:"not null;type:varchar(22);default:null"`
-	CurrentTiupConfigId uint
-	CurrentDemandId     uint
-	CurrentFlowId       uint
+	Name                    string
+	DbPassword              string
+	Type                    string
+	Version                 string
+	Tls                     bool
+	Tags                    string
+	OwnerId                 string `gorm:"not null;type:varchar(22);default:null"`
+	CurrentTopologyConfigId uint
+	CurrentDemandId         uint
+	CurrentFlowId           uint
 }
 
 type DemandRecord struct {
@@ -36,10 +36,10 @@ type TopologyConfig struct {
 }
 
 type ClusterFetchResult struct {
-	Cluster      *Cluster
-	Flow         *FlowDO
-	DemandRecord *DemandRecord
-	TiUPConfig   *TopologyConfig
+	Cluster            *Cluster
+	Flow               *FlowDO
+	DemandRecord       *DemandRecord
+	TopologyConfig     *TopologyConfig
 	ComponentInstances []*ComponentInstance
 }
 
@@ -74,6 +74,7 @@ type ParametersRecord struct {
 	Content    string `gorm:"type:text"`
 	FlowId     uint
 }
+
 type BackupStrategy struct {
 	Record
 	ClusterId  string `gorm:"not null;type:varchar(22);default:null"`
@@ -204,11 +205,11 @@ func (m *DAOClusterManager) FetchCluster(clusterId string) (result *ClusterFetch
 			}
 		}
 
-		if cluster.CurrentTiupConfigId > 0 {
-			result.TiUPConfig = &TopologyConfig{}
-			err = m.Db().First(result.TiUPConfig, "id = ?", cluster.CurrentTiupConfigId).Error
+		if cluster.CurrentTopologyConfigId > 0 {
+			result.TopologyConfig = &TopologyConfig{}
+			err = m.Db().First(result.TopologyConfig, "id = ?", cluster.CurrentTopologyConfigId).Error
 			if nil != err {
-				return nil, errors.New(fmt.Sprintf("FetchCluster, query demand record failed, clusterId: %s, TiUPID:%d, error: %v", clusterId, cluster.CurrentTiupConfigId, err))
+				return nil, errors.New(fmt.Sprintf("FetchCluster, query demand record failed, clusterId: %s, TiUPID:%d, error: %v", clusterId, cluster.CurrentTopologyConfigId, err))
 			}
 		}
 
@@ -249,7 +250,7 @@ func (m *DAOClusterManager) ListClusterDetails(clusterId, clusterName, clusterTy
 	for i, c := range clusters {
 		flowIds[i] = c.CurrentFlowId
 		demandIds[i] = c.CurrentDemandId
-		tiupConfigIds[i] = c.CurrentTiupConfigId
+		tiupConfigIds[i] = c.CurrentTopologyConfigId
 		result[i] = &ClusterFetchResult{
 			Cluster: c,
 		}
@@ -280,7 +281,7 @@ func (m *DAOClusterManager) ListClusterDetails(clusterId, clusterName, clusterTy
 		return nil, 0, errors.New(fmt.Sprintf("ListClusterDetails, query TiUP config lists failed, error: %v", err))
 	}
 	for _, v := range tiupConfigs {
-		clusterMap[v.ClusterId].TiUPConfig = v
+		clusterMap[v.ClusterId].TopologyConfig = v
 	}
 	return result, total, nil
 }

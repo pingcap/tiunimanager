@@ -8,7 +8,7 @@ import (
 
 func TestGetDashboardUrlFromCluser(t *testing.T) {
 	clusterAggregation := &ClusterAggregation{
-		CurrentTiUPConfigRecord: &TopologyConfigRecord{
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
 			ConfigModel: &spec.Specification{
 				PDServers: []*spec.PDSpec{
 					{

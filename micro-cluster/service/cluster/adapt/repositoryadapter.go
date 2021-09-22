@@ -49,7 +49,7 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 	for i, v := range resp.Clusters {
 		cluster := &domain.ClusterAggregation{}
 		cluster.Cluster = ParseFromClusterDTO(v.Cluster)
-		cluster.CurrentTiUPConfigRecord = parseConfigRecordDTO(v.TopologyConfigRecord)
+		cluster.CurrentTopologyConfigRecord = parseConfigRecordDTO(v.TopologyConfigRecord)
 		cluster.CurrentWorkFlow = parseFlowFromDTO(v.Flow)
 		cluster.MaintainCronTask = domain.GetDefaultMaintainTask() // next_version get from db
 
@@ -106,7 +106,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 	if aggregation.ConfigModified {
 		resp, err := client.DBClient.UpdateClusterTopologyConfig(context.TODO(), &db.DBUpdateTopologyConfigRequest{
 			ClusterId: aggregation.Cluster.Id,
-			Content:   aggregation.CurrentTiUPConfigRecord.Content(),
+			Content:   aggregation.CurrentTopologyConfigRecord.Content(),
 			TenantId:  aggregation.Cluster.TenantId,
 		})
 
@@ -114,7 +114,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 			// todo
 			return err
 		}
-		aggregation.CurrentTiUPConfigRecord = parseConfigRecordDTO(resp.TopologyConfigRecord)
+		aggregation.CurrentTopologyConfigRecord = parseConfigRecordDTO(resp.TopologyConfigRecord)
 	}
 	/*
 		if aggregation.LastBackupRecord != nil && aggregation.LastBackupRecord.Id == 0 {
@@ -193,7 +193,7 @@ func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation,
 	} else {
 		cluster = &domain.ClusterAggregation{}
 		cluster.Cluster = ParseFromClusterDTO(resp.ClusterDetail.Cluster)
-		cluster.CurrentTiUPConfigRecord = parseConfigRecordDTO(resp.ClusterDetail.TopologyConfigRecord)
+		cluster.CurrentTopologyConfigRecord = parseConfigRecordDTO(resp.ClusterDetail.TopologyConfigRecord)
 		cluster.CurrentWorkFlow = parseFlowFromDTO(resp.ClusterDetail.Flow)
 		cluster.MaintainCronTask = domain.GetDefaultMaintainTask() // next_version get from db
 		return

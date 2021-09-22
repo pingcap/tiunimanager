@@ -298,10 +298,10 @@ func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId str
 func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo) *DataImportConfig {
 	getLogger().Info("begin convertTomlConfig")
 	defer getLogger().Info("end convertTomlConfig")
-	if clusterAggregation == nil || clusterAggregation.CurrentTiUPConfigRecord == nil {
+	if clusterAggregation == nil || clusterAggregation.CurrentTopologyConfigRecord == nil {
 		return nil
 	}
-	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	if configModel == nil || configModel.TiDBServers == nil || configModel.PDServers == nil {
 		return nil
 	}
@@ -474,7 +474,7 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ExportInfo)
-	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
 	tidbServerPort := tidbServer.Port
 	if tidbServerPort == 0 {

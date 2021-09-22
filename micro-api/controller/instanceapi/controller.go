@@ -150,7 +150,7 @@ func Backup(c *gin.Context) {
 	resp, err := client.ClusterClient.CreateBackup(context.TODO(), &cluster.CreateBackupRequest{
 		ClusterId:   req.ClusterId,
 		BackupType:  req.BackupType,
-		BackupRange: req.BackupRange,
+		BackupMethod: req.BackupMethod,
 		FilePath:    req.FilePath,
 		Operator:    operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
@@ -162,9 +162,9 @@ func Backup(c *gin.Context) {
 			ClusterId:    resp.GetBackupRecord().GetClusterId(),
 			StartTime:    time.Unix(resp.GetBackupRecord().GetStartTime(), 0),
 			EndTime:      time.Unix(resp.GetBackupRecord().GetEndTime(), 0),
-			BackupType:   resp.GetBackupRecord().GetRange(),
-			BackupMethod: resp.GetBackupRecord().GetBackupType(),
-			BackupMode:   resp.GetBackupRecord().GetMode(),
+			BackupType:   resp.GetBackupRecord().GetBackupType(),
+			BackupMethod: resp.GetBackupRecord().GetBackupMethod(),
+			BackupMode:   resp.GetBackupRecord().GetBackupMode(),
 			FilePath:     resp.GetBackupRecord().GetFilePath(),
 			Size:         resp.GetBackupRecord().GetSize(),
 			Status:       *clusterapi.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
@@ -198,9 +198,6 @@ func QueryBackupStrategy(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, controller.Success(BackupStrategy{
 			ClusterId:      resp.GetStrategy().GetClusterId(),
-			FilePath:       resp.GetStrategy().GetFilePath(),
-			BackupType:     resp.GetStrategy().GetBackupType(),
-			BackupRange:    resp.GetStrategy().GetBackupRange(),
 			BackupDate:     resp.GetStrategy().GetBackupDate(),
 			Period:         resp.GetStrategy().GetPeriod(),
 			NextBackupTime: time.Unix(resp.GetStrategy().GetNextBackupTime(), 0),
@@ -236,11 +233,8 @@ func SaveBackupStrategy(c *gin.Context) {
 		Operator: operator.ConvertToDTO(),
 		Strategy: &cluster.BackupStrategy{
 			ClusterId:   clusterId,
-			BackupType:  req.Strategy.BackupType,
-			BackupRange: req.Strategy.BackupRange,
 			BackupDate:  req.Strategy.BackupDate,
 			Period:      req.Strategy.Period,
-			FilePath:    req.Strategy.FilePath,
 		},
 	}, controller.DefaultTimeout)
 	if err != nil {
@@ -291,9 +285,9 @@ func QueryBackup(c *gin.Context) {
 				ClusterId:    v.ClusterId,
 				StartTime:    time.Unix(v.StartTime, 0),
 				EndTime:      time.Unix(v.EndTime, 0),
-				BackupType:   v.Range,
-				BackupMethod: v.BackupType,
-				BackupMode:   v.Mode,
+				BackupType:   v.BackupType,
+				BackupMethod: v.BackupMethod,
+				BackupMode:   v.BackupMode,
 				Operator: controller.Operator{
 					ManualOperator: true,
 					OperatorId:     v.Operator.Id,

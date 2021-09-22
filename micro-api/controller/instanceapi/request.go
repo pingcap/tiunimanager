@@ -27,9 +27,6 @@ type BackupDeleteReq struct {
 type BackupStrategy struct {
 	ClusterId      string    `json:"clusterId"`
 	BackupDate     string    `json:"backupDate"`
-	FilePath       string    `json:"filePath"`
-	BackupRange    string    `json:"backupRange"`
-	BackupType     string    `json:"backupType"`
 	Period         string    `json:"period"`
 	NextBackupTime time.Time `json:"nextBackupTime"`
 }
@@ -39,10 +36,10 @@ type BackupStrategyUpdateReq struct {
 }
 
 type BackupReq struct {
-	ClusterId   string `json:"clusterId"`
-	BackupType  string `json:"backupType"`
-	BackupRange string `json:"backupRange"`
-	FilePath    string `json:"filePath"`
+	ClusterId   	string `json:"clusterId"`
+	BackupType  	string `json:"backupType"`
+	BackupMethod 	string `json:"backupMethod"`
+	FilePath    	string `json:"filePath"`
 }
 type BackupRecoverReq struct {
 	ClusterId string `json:"clusterId"`

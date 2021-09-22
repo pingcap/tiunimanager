@@ -153,9 +153,9 @@ func (m *DAOClusterManager) UpdateClusterFlowId(clusterId string, flowId uint) (
 	return cluster, m.Db().Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_flow_id", flowId).Error
 }
 
-func (m *DAOClusterManager) UpdateTiUPConfig(clusterId string, content string, tenantId string) (cluster *Cluster, err error) {
+func (m *DAOClusterManager) UpdateTopologyConfig(clusterId string, content string, tenantId string) (cluster *Cluster, err error) {
 	if "" == clusterId || "" == tenantId || "" == content {
-		return nil, errors.New(fmt.Sprintf("UpdateTiUPConfig has invalid parameter, clusterId: %s, content: %s", clusterId, content))
+		return nil, errors.New(fmt.Sprintf("UpdateTopologyConfig has invalid parameter, clusterId: %s, content: %s", clusterId, content))
 	}
 	cluster = &Cluster{}
 	record := &TopologyConfig{

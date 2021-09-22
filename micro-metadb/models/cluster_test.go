@@ -223,17 +223,17 @@ func TestUpdateTiUPConfig(t *testing.T) {
 
 		currentConfigId := cluster.CurrentTiupConfigId
 
-		cluster, err := clusterTbl.UpdateTiUPConfig(cluster.ID, "aaa", cluster.TenantId)
+		cluster, err := clusterTbl.UpdateTopologyConfig(cluster.ID, "aaa", cluster.TenantId)
 		if err != nil {
-			t.Errorf("UpdateTiUPConfig() error = %v", err)
+			t.Errorf("UpdateTopologyConfig() error = %v", err)
 		}
 
 		if cluster.CurrentTiupConfigId == 0 || cluster.CurrentTiupConfigId <= currentConfigId {
-			t.Errorf("UpdateTiUPConfig() new config id = %v, current config id = %v", cluster.CurrentTiupConfigId, currentConfigId)
+			t.Errorf("UpdateTopologyConfig() new config id = %v, current config id = %v", cluster.CurrentTiupConfigId, currentConfigId)
 		}
 
 		if cluster.ID == "" {
-			t.Errorf("UpdateTiUPConfig() cluster.ID empty")
+			t.Errorf("UpdateTopologyConfig() cluster.ID empty")
 		}
 	})
 
@@ -498,7 +498,7 @@ func TestListClusterDetails(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
 	cluster1, _, _ = clusterTbl.UpdateClusterDemand(cluster1.ID, "demand1", "111")
 	cluster1, _ = clusterTbl.UpdateClusterFlowId(cluster1.ID, f.ID)
-	cluster1, _ = clusterTbl.UpdateTiUPConfig(cluster1.ID, "tiup1", "111")
+	cluster1, _ = clusterTbl.UpdateTopologyConfig(cluster1.ID, "tiup1", "111")
 
 	for i := 0; i < 10; i++ {
 		MetaDB.Create(&Cluster{
@@ -789,7 +789,7 @@ func TestFetchCluster(t *testing.T) {
 		clusterTbl.UpdateClusterDemand(cluster.ID, "demand content", defaultTenantId)
 	})
 	t.Run("with config", func(t *testing.T) {
-		cluster, _ := clusterTbl.UpdateTiUPConfig(cluster.ID, "config content", defaultTenantId)
+		cluster, _ := clusterTbl.UpdateTopologyConfig(cluster.ID, "config content", defaultTenantId)
 		gotResult, err := clusterTbl.FetchCluster(cluster.ID)
 		if err != nil {
 			t.Errorf("FetchCluster() error = %v", err)
@@ -813,14 +813,14 @@ func TestFetchCluster(t *testing.T) {
 		}
 	})
 	t.Run("with config err", func(t *testing.T) {
-		cluster, _ := clusterTbl.UpdateTiUPConfig(cluster.ID, "config content", defaultTenantId)
+		cluster, _ := clusterTbl.UpdateTopologyConfig(cluster.ID, "config content", defaultTenantId)
 		MetaDB.Model(&TopologyConfig{}).Where("id = ?", cluster.CurrentTiupConfigId).Delete(&TopologyConfig{})
 		_, err := clusterTbl.FetchCluster(cluster.ID)
 		if err == nil {
 			t.Errorf("FetchCluster() want error")
 			return
 		}
-		clusterTbl.UpdateTiUPConfig(cluster.ID, "config content", defaultTenantId)
+		clusterTbl.UpdateTopologyConfig(cluster.ID, "config content", defaultTenantId)
 	})
 	t.Run("with flow", func(t *testing.T) {
 		flow, _ := CreateFlow(MetaDB, "whatever", "whatever", "whatever", "111")

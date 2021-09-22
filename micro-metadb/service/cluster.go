@@ -75,7 +75,7 @@ func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbPb.D
 
 	clusterManager := handler.Dao().ClusterManager()
 
-	cluster, err := clusterManager.UpdateTiUPConfig(req.ClusterId, req.TopologyContent, req.TenantId)
+	cluster, err := clusterManager.UpdateTopologyConfig(req.ClusterId, req.TopologyContent, req.TenantId)
 	if err == nil {
 		componentInstances, err := clusterManager.AddClusterComponentInstance(req.ClusterId, convertToComponentInstance(req.ComponentInstances))
 		if err == nil {
@@ -96,13 +96,13 @@ func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbPb.D
 	return err
 }
 
-func (handler *DBServiceHandler) UpdateClusterTiupConfig(ctx context.Context, req *dbPb.DBUpdateTopologyConfigRequest, resp *dbPb.DBUpdateTopologyConfigResponse) (err error) {
+func (handler *DBServiceHandler) UpdateClusterTopologyConfig(ctx context.Context, req *dbPb.DBUpdateTopologyConfigRequest, resp *dbPb.DBUpdateTopologyConfigResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("UpdateClusterTiUPConfig has invalid parameter")
 	}
 	log := framework.Log()
 	clusterManager := handler.Dao().ClusterManager()
-	do, err := clusterManager.UpdateTiUPConfig(req.ClusterId, req.Content, req.TenantId)
+	do, err := clusterManager.UpdateTopologyConfig(req.ClusterId, req.Content, req.TenantId)
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.Cluster = convertToClusterDTO(do, nil)

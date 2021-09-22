@@ -26,6 +26,7 @@ const (
 	TABLE_NAME_DISK               = "disks"
 	TABLE_NAME_USED_COMPUTE       = "used_computes"
 	TABLE_NAME_USED_PORT          = "used_ports"
+	TABLE_NAME_USED_DISK          = "used_disks"
 	TABLE_NAME_TIUP_CONFIG        = "tiup_configs"
 	TABLE_NAME_TIUP_TASK          = "tiup_tasks"
 	TABLE_NAME_FLOW               = "flows"

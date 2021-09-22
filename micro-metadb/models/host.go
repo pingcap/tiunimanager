@@ -334,7 +334,10 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbPb.Applicant, resources []*R
 func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, require *dbPb.AllocRequirement, choosedHosts []string) (results []rt.HostResource, err error) {
 	region := require.Location.Region
 	zone := require.Location.Zone
-	excludedHosts := require.HostExcluded.Hosts
+	var excludedHosts []string
+	if require.HostExcluded != nil {
+		excludedHosts = require.HostExcluded.Hosts
+	}
 	// excluded choosed hosts in one request
 	excludedHosts = append(excludedHosts, choosedHosts...)
 	hostPurpose := require.HostFilter.Purpose
@@ -350,14 +353,19 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, requir
 		var count int64
 		db := tx.Order("hosts.free_cpu_cores desc").Order("hosts.free_memory desc").Limit(int(require.Count)).Model(&rt.Disk{}).Select(
 			"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
-			"left join hosts on disks.host_id = hosts.id").Where("hosts.reserved = 0").Not(map[string]interface{}{"hosts.ip": excludedHosts}).Count(&count)
+			"left join hosts on disks.host_id = hosts.id").Where("hosts.reserved = 0")
+		if excludedHosts == nil {
+			db.Count(&count)
+		} else {
+			db.Not(map[string]interface{}{"hosts.ip": excludedHosts}).Count(&count)
+		}
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_EXCLUDED, common.TiEMErrMsg[common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_EXCLUDED])
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_EXCLUDED, "expect disk count %d but only %d after excluded host list", require.Count, count)
 		}
 
 		db = db.Where("disks.type = ? and disks.status = ? and disks.capacity >= ?", diskType, rt.DISK_AVAILABLE, capacity).Count(&count)
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, common.TiEMErrMsg[common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER])
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "expect disk count %d but only %d after disk filter", require.Count, count)
 		}
 
 		err = db.Where("hosts.region = ? and hosts.az = ? and hosts.purpose = ? and hosts.disk_type = ? and hosts.status = ? and (hosts.stat = ? or hosts.stat = ?) and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
@@ -417,14 +425,15 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, requir
 	return
 }
 
-func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbPb.AllocRequest) (results rt.AllocRsp, err error) {
+func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbPb.AllocRequest) (results *rt.AllocRsp, err error) {
 	var choosedHosts []string
+	results = new(rt.AllocRsp)
 	for i, require := range req.Requires {
 		switch rt.AllocStrategy(require.Strategy) {
 		case rt.RandomRack:
 			res, err := allocResourceWithRR(tx, req.Applicant, i, require, choosedHosts)
 			if err != nil {
-				return rt.AllocRsp{}, status.Errorf(codes.Internal, "alloc with RandomRack %dth require failed, %v", i, err)
+				return nil, status.Errorf(codes.Internal, "alloc with RandomRack %dth require failed, %v", i, err)
 			}
 			for _, result := range res {
 				choosedHosts = append(choosedHosts, result.HostIp)
@@ -434,13 +443,13 @@ func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbPb.AllocRequest) (resul
 		case rt.UserSpecifyRack:
 		case rt.UserSpecifyHost:
 		default:
-			return rt.AllocRsp{}, status.Errorf(common.TIEM_RESOURCE_INVALID_STRATEGY, "invalid alloc strategy %d", require.Strategy)
+			return nil, status.Errorf(common.TIEM_RESOURCE_INVALID_STRATEGY, "invalid alloc strategy %d", require.Strategy)
 		}
 	}
 	return
 }
 
-func (m *DAOResourceManager) AllocResources(req *dbPb.AllocRequest) (result rt.AllocRsp, err error) {
+func (m *DAOResourceManager) AllocResources(req *dbPb.AllocRequest) (result *rt.AllocRsp, err error) {
 	tx := m.getDb().Begin()
 	result, err = m.doAlloc(tx, req)
 	if err != nil {
@@ -451,14 +460,14 @@ func (m *DAOResourceManager) AllocResources(req *dbPb.AllocRequest) (result rt.A
 	return
 }
 
-func (m *DAOResourceManager) AllocResourcesInBatch(batchReq *dbPb.BatchAllocRequest) (results rt.BatchAllocResponse, err error) {
+func (m *DAOResourceManager) AllocResourcesInBatch(batchReq *dbPb.BatchAllocRequest) (results *rt.BatchAllocResponse, err error) {
 	tx := m.getDb().Begin()
 	for i, req := range batchReq.BatchRequests {
-		var result rt.AllocRsp
+		var result *rt.AllocRsp
 		result, err = m.doAlloc(tx, req)
 		if err != nil {
 			tx.Rollback()
-			return rt.BatchAllocResponse{}, status.Errorf(common.TIEM_RESOURCE_NOT_ALL_SUCCEED, "alloc resources in batch failed on request %d, %v", i, err)
+			return nil, status.Errorf(common.TIEM_RESOURCE_NOT_ALL_SUCCEED, "alloc resources in batch failed on request %d, %v", i, err)
 		}
 		results.BatchResults = append(results.BatchResults, result)
 	}

@@ -102,5 +102,5 @@ type BatchAllocRequest struct {
 }
 
 type BatchAllocResponse struct {
-	BatchResults []AllocRsp
+	BatchResults []*AllocRsp
 }

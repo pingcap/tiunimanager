@@ -42,7 +42,8 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *resource.Host) {
 	dst.Region = src.Region
 	dst.AZ = genDomainCodeByName(dst.Region, src.Az)
 	dst.Rack = genDomainCodeByName(dst.AZ, src.Rack)
-	dst.Status = int32(src.Status)
+	dst.Status = src.Status
+	dst.Stat = src.Stat
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved
@@ -178,6 +179,7 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.Az = GetDomainNameFromCode(src.AZ)
 	dst.Rack = GetDomainNameFromCode(src.Rack)
 	dst.Status = src.Status
+	dst.Stat = src.Stat
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved

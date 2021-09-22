@@ -437,16 +437,16 @@ func TestGetFailureDomain(t *testing.T) {
 func TestHostStatus_IsAvailable(t *testing.T) {
 	tests := []struct {
 		name string
-		s    resource.HostStatus
+		h    resource.Host
 		want bool
 	}{
-		{"normal_online", resource.HOST_ONLINE, true},
-		{"normal_inused", resource.HOST_INUSED, true},
-		{"want false", 999, false},
+		{"normal_online", resource.Host{Status: int32(resource.HOST_ONLINE), Stat: resource.HOST_LOADLESS}, true},
+		{"normal_inused", resource.Host{Status: int32(resource.HOST_ONLINE), Stat: resource.HOST_INUSED}, true},
+		{"want false", resource.Host{Status: int32(resource.HOST_OFFLINE), Stat: resource.HOST_INUSED}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.s.IsAvailable(); got != tt.want {
+			if got := tt.h.IsAvailable(); got != tt.want {
 				t.Errorf("IsAvailable() = %v, want %v", got, tt.want)
 			}
 		})
@@ -456,15 +456,15 @@ func TestHostStatus_IsAvailable(t *testing.T) {
 func TestHostStatus_IsInused(t *testing.T) {
 	tests := []struct {
 		name string
-		s    resource.HostStatus
+		h    resource.Host
 		want bool
 	}{
-		{"normal_inused", resource.HOST_INUSED, true},
-		{"want false", 999, false},
+		{"normal_inused", resource.Host{Status: int32(resource.HOST_ONLINE), Stat: resource.HOST_INUSED}, true},
+		{"want false", resource.Host{Status: int32(resource.HOST_ONLINE), Stat: resource.HOST_LOADLESS}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.s.IsInused(); got != tt.want {
+			if got := tt.h.IsInused(); got != tt.want {
 				t.Errorf("IsInused() = %v, want %v", got, tt.want)
 			}
 		})
@@ -1049,17 +1049,17 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 			MetaDB.First(&host, "IP = ?", "474.111.111.111")
 			assert.Equal(t, int32(17-4), host.FreeCpuCores)
 			assert.Equal(t, int32(64-8), host.FreeMemory)
-			assert.True(t, host.Status == int32(resource.HOST_EXHAUST))
+			assert.True(t, host.Stat == int32(resource.HOST_EXHAUST))
 			var host2 resource.Host
 			MetaDB.First(&host2, "IP = ?", "474.111.111.112")
 			assert.Equal(t, int32(16-4), host2.FreeCpuCores)
 			assert.Equal(t, int32(64-8), host2.FreeMemory)
-			assert.True(t, host2.Status == int32(resource.HOST_INUSED))
+			assert.True(t, host2.Stat == int32(resource.HOST_INUSED))
 			var host3 resource.Host
 			MetaDB.First(&host3, "IP = ?", "474.111.111.113")
 			assert.Equal(t, int32(15-4), host3.FreeCpuCores)
 			assert.Equal(t, int32(64-8), host3.FreeMemory)
-			assert.True(t, host3.Status == int32(resource.HOST_EXHAUST))
+			assert.True(t, host3.Stat == int32(resource.HOST_EXHAUST))
 		})
 	}
 }
@@ -1142,7 +1142,7 @@ func TestAllocHosts_1Host(t *testing.T) {
 			MetaDB.First(&host, "IP = ?", "192.168.56.99")
 			assert.Equal(t, int32(17-4-4-4), host.FreeCpuCores)
 			assert.Equal(t, int32(64-8-8-8), host.FreeMemory)
-			assert.True(t, host.Status == int32(resource.HOST_EXHAUST))
+			assert.True(t, host.Stat == int32(resource.HOST_EXHAUST))
 
 		})
 	}

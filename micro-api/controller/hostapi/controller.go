@@ -41,7 +41,8 @@ func copyHostFromRsp(src *cluster.HostInfo, dst *HostInfo) {
 	dst.Region = src.Region
 	dst.AZ = src.Az
 	dst.Rack = src.Rack
-	dst.Status = int32(src.Status)
+	dst.Status = src.Status
+	dst.Stat = src.Stat
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.CreatedAt = src.CreateAt
@@ -84,6 +85,7 @@ func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
 	dst.Az = src.AZ
 	dst.Rack = src.Rack
 	dst.Status = src.Status
+	dst.Stat = src.Stat
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved

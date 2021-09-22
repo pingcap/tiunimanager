@@ -140,8 +140,8 @@ func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, c
 	err = tx.Order("hosts.free_cpu_cores desc").Order("hosts.free_memory desc").Limit(numReps).Model(&rt.Disk{}).Select(
 		"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", cpuCores, mem).Joins(
 		"left join hosts on disks.host_id = hosts.id").Where(
-		"hosts.az = ? and (hosts.status = ? or hosts.status = ?) and hosts.free_cpu_cores >= ? and free_memory >= ? and disks.status = ?",
-		failureDomain, rt.HOST_ONLINE, rt.HOST_INUSED, cpuCores, mem, rt.DISK_AVAILABLE).Group("hosts.id").Scan(&resources).Error
+		"hosts.az = ? and hosts.status = ? and (hosts.stat = ? or hosts.stat = ?) and hosts.free_cpu_cores >= ? and hosts.free_memory >= ? and disks.status = ?",
+		failureDomain, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, cpuCores, mem, rt.DISK_AVAILABLE).Group("hosts.id").Scan(&resources).Error
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "select resources failed, %v", err)
 	}
@@ -167,13 +167,13 @@ func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, c
 		host.FreeCpuCores -= cpuCores
 		host.FreeMemory -= mem
 		if host.IsExhaust() {
-			host.Status = int32(rt.HOST_EXHAUST)
+			host.Stat = int32(rt.HOST_EXHAUST)
 		} else {
-			host.Status = int32(rt.HOST_INUSED)
+			host.Stat = int32(rt.HOST_INUSED)
 		}
-		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Status").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Status: host.Status}).Error
+		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "update host(%s) status err, %v", resource.HostId, err)
+			return nil, status.Errorf(codes.Internal, "update host(%s) stat err, %v", resource.HostId, err)
 		}
 	}
 	return
@@ -209,7 +209,7 @@ type FailureDomainResource struct {
 
 func (m *DAOResourceManager) GetFailureDomain(domain string) (res []FailureDomainResource, err error) {
 	selectStr := fmt.Sprintf("%s as FailureDomain, purpose, cpu_cores, memory, count(id) as Count", domain)
-	err = m.getDb().Table("hosts").Where("Status = ? or Status = ?", rt.HOST_ONLINE, rt.HOST_INUSED).Select(selectStr).
+	err = m.getDb().Table("hosts").Where("Status = ? and (Stat = ? or Stat = ?)", rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED).Select(selectStr).
 		Group(domain).Group("purpose").Group("cpu_cores").Group("memory").Scan(&res).Error
 	return
 }
@@ -293,13 +293,13 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbPb.Applicant, resources []*R
 		host.FreeCpuCores -= int32(resource.CpuCores)
 		host.FreeMemory -= int32(resource.Memory)
 		if host.IsExhaust() {
-			host.Status = int32(rt.HOST_EXHAUST)
+			host.Stat = int32(rt.HOST_EXHAUST)
 		} else {
-			host.Status = int32(rt.HOST_INUSED)
+			host.Stat = int32(rt.HOST_INUSED)
 		}
-		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Status").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Status: host.Status}).Error
+		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
 		if err != nil {
-			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update host(%s) status err, %v", resource.HostId, err)
+			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update host(%s) stat err, %v", resource.HostId, err)
 		}
 		usedCompute := rt.UsedCompute{
 			HostId:   resource.HostId,
@@ -360,8 +360,8 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, requir
 			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, common.TiEMErrMsg[common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER])
 		}
 
-		err = db.Where("hosts.region = ? and hosts.az = ? and hosts.purpose = ? and hosts.disk_type = ? and (hosts.status = ? or hosts.status = ?) and hosts.free_cpu_cores >= ? and free_memory >= ?",
-			region, zone, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_INUSED, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
+		err = db.Where("hosts.region = ? and hosts.az = ? and hosts.purpose = ? and hosts.disk_type = ? and hosts.status = ? and (hosts.stat = ? or hosts.stat = ?) and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
+			region, zone, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
 	} else {
 		err = nil
 	}

@@ -25,13 +25,13 @@ type Cluster struct {
 
 type DemandRecord struct {
 	Record
-	ClusterId string `gorm:"not null;type:varchar(2);default:null"`
+	ClusterId string `gorm:"not null;type:varchar(22);default:null"`
 	Content   string `gorm:"type:text"`
 }
 
 type TopologyConfig struct {
 	Record
-	ClusterId string `gorm:"not null;type:varchar(2);default:null"`
+	ClusterId string `gorm:"not null;type:varchar(22);default:null"`
 	Content   string `gorm:"type:text"`
 }
 

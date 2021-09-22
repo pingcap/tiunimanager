@@ -39,6 +39,7 @@ type TiEMDBService interface {
 	// Auth Module
 	FindTenant(ctx context.Context, in *DBFindTenantRequest, opts ...client.CallOption) (*DBFindTenantResponse, error)
 	FindAccount(ctx context.Context, in *DBFindAccountRequest, opts ...client.CallOption) (*DBFindAccountResponse, error)
+	FindAccountById(ctx context.Context, in *DBFindAccountByIdRequest, opts ...client.CallOption) (*DBFindAccountByIdResponse, error)
 	SaveToken(ctx context.Context, in *DBSaveTokenRequest, opts ...client.CallOption) (*DBSaveTokenResponse, error)
 	FindToken(ctx context.Context, in *DBFindTokenRequest, opts ...client.CallOption) (*DBFindTokenResponse, error)
 	FindRolesByPermission(ctx context.Context, in *DBFindRolesByPermissionRequest, opts ...client.CallOption) (*DBFindRolesByPermissionResponse, error)
@@ -64,6 +65,7 @@ type TiEMDBService interface {
 	DeleteBackupRecord(ctx context.Context, in *DBDeleteBackupRecordRequest, opts ...client.CallOption) (*DBDeleteBackupRecordResponse, error)
 	SaveBackupStrategy(ctx context.Context, in *DBSaveBackupStrategyRequest, opts ...client.CallOption) (*DBSaveBackupStrategyResponse, error)
 	QueryBackupStrategy(ctx context.Context, in *DBQueryBackupStrategyRequest, opts ...client.CallOption) (*DBQueryBackupStrategyResponse, error)
+	QueryBackupStrategyByTime(ctx context.Context, in *DBQueryBackupStrategyByTimeRequest, opts ...client.CallOption) (*DBQueryBackupStrategyByTimeResponse, error)
 	QueryBackupRecords(ctx context.Context, in *DBQueryBackupRecordRequest, opts ...client.CallOption) (*DBQueryBackupRecordResponse, error)
 	ListBackupRecords(ctx context.Context, in *DBListBackupRecordsRequest, opts ...client.CallOption) (*DBListBackupRecordsResponse, error)
 	SaveRecoverRecord(ctx context.Context, in *DBSaveRecoverRecordRequest, opts ...client.CallOption) (*DBSaveRecoverRecordResponse, error)
@@ -114,6 +116,16 @@ func (c *tiEMDBService) FindTenant(ctx context.Context, in *DBFindTenantRequest,
 func (c *tiEMDBService) FindAccount(ctx context.Context, in *DBFindAccountRequest, opts ...client.CallOption) (*DBFindAccountResponse, error) {
 	req := c.c.NewRequest(c.name, "TiEMDBService.FindAccount", in)
 	out := new(DBFindAccountResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiEMDBService) FindAccountById(ctx context.Context, in *DBFindAccountByIdRequest, opts ...client.CallOption) (*DBFindAccountByIdResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.FindAccountById", in)
+	out := new(DBFindAccountByIdResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -341,6 +353,16 @@ func (c *tiEMDBService) QueryBackupStrategy(ctx context.Context, in *DBQueryBack
 	return out, nil
 }
 
+func (c *tiEMDBService) QueryBackupStrategyByTime(ctx context.Context, in *DBQueryBackupStrategyByTimeRequest, opts ...client.CallOption) (*DBQueryBackupStrategyByTimeResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.QueryBackupStrategyByTime", in)
+	out := new(DBQueryBackupStrategyByTimeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *tiEMDBService) QueryBackupRecords(ctx context.Context, in *DBQueryBackupRecordRequest, opts ...client.CallOption) (*DBQueryBackupRecordResponse, error) {
 	req := c.c.NewRequest(c.name, "TiEMDBService.QueryBackupRecords", in)
 	out := new(DBQueryBackupRecordResponse)
@@ -547,6 +569,7 @@ type TiEMDBServiceHandler interface {
 	// Auth Module
 	FindTenant(context.Context, *DBFindTenantRequest, *DBFindTenantResponse) error
 	FindAccount(context.Context, *DBFindAccountRequest, *DBFindAccountResponse) error
+	FindAccountById(context.Context, *DBFindAccountByIdRequest, *DBFindAccountByIdResponse) error
 	SaveToken(context.Context, *DBSaveTokenRequest, *DBSaveTokenResponse) error
 	FindToken(context.Context, *DBFindTokenRequest, *DBFindTokenResponse) error
 	FindRolesByPermission(context.Context, *DBFindRolesByPermissionRequest, *DBFindRolesByPermissionResponse) error
@@ -572,6 +595,7 @@ type TiEMDBServiceHandler interface {
 	DeleteBackupRecord(context.Context, *DBDeleteBackupRecordRequest, *DBDeleteBackupRecordResponse) error
 	SaveBackupStrategy(context.Context, *DBSaveBackupStrategyRequest, *DBSaveBackupStrategyResponse) error
 	QueryBackupStrategy(context.Context, *DBQueryBackupStrategyRequest, *DBQueryBackupStrategyResponse) error
+	QueryBackupStrategyByTime(context.Context, *DBQueryBackupStrategyByTimeRequest, *DBQueryBackupStrategyByTimeResponse) error
 	QueryBackupRecords(context.Context, *DBQueryBackupRecordRequest, *DBQueryBackupRecordResponse) error
 	ListBackupRecords(context.Context, *DBListBackupRecordsRequest, *DBListBackupRecordsResponse) error
 	SaveRecoverRecord(context.Context, *DBSaveRecoverRecordRequest, *DBSaveRecoverRecordResponse) error
@@ -601,6 +625,7 @@ func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, op
 	type tiEMDBService interface {
 		FindTenant(ctx context.Context, in *DBFindTenantRequest, out *DBFindTenantResponse) error
 		FindAccount(ctx context.Context, in *DBFindAccountRequest, out *DBFindAccountResponse) error
+		FindAccountById(ctx context.Context, in *DBFindAccountByIdRequest, out *DBFindAccountByIdResponse) error
 		SaveToken(ctx context.Context, in *DBSaveTokenRequest, out *DBSaveTokenResponse) error
 		FindToken(ctx context.Context, in *DBFindTokenRequest, out *DBFindTokenResponse) error
 		FindRolesByPermission(ctx context.Context, in *DBFindRolesByPermissionRequest, out *DBFindRolesByPermissionResponse) error
@@ -623,6 +648,7 @@ func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, op
 		DeleteBackupRecord(ctx context.Context, in *DBDeleteBackupRecordRequest, out *DBDeleteBackupRecordResponse) error
 		SaveBackupStrategy(ctx context.Context, in *DBSaveBackupStrategyRequest, out *DBSaveBackupStrategyResponse) error
 		QueryBackupStrategy(ctx context.Context, in *DBQueryBackupStrategyRequest, out *DBQueryBackupStrategyResponse) error
+		QueryBackupStrategyByTime(ctx context.Context, in *DBQueryBackupStrategyByTimeRequest, out *DBQueryBackupStrategyByTimeResponse) error
 		QueryBackupRecords(ctx context.Context, in *DBQueryBackupRecordRequest, out *DBQueryBackupRecordResponse) error
 		ListBackupRecords(ctx context.Context, in *DBListBackupRecordsRequest, out *DBListBackupRecordsResponse) error
 		SaveRecoverRecord(ctx context.Context, in *DBSaveRecoverRecordRequest, out *DBSaveRecoverRecordResponse) error
@@ -661,6 +687,10 @@ func (h *tiEMDBServiceHandler) FindTenant(ctx context.Context, in *DBFindTenantR
 
 func (h *tiEMDBServiceHandler) FindAccount(ctx context.Context, in *DBFindAccountRequest, out *DBFindAccountResponse) error {
 	return h.TiEMDBServiceHandler.FindAccount(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) FindAccountById(ctx context.Context, in *DBFindAccountByIdRequest, out *DBFindAccountByIdResponse) error {
+	return h.TiEMDBServiceHandler.FindAccountById(ctx, in, out)
 }
 
 func (h *tiEMDBServiceHandler) SaveToken(ctx context.Context, in *DBSaveTokenRequest, out *DBSaveTokenResponse) error {
@@ -749,6 +779,10 @@ func (h *tiEMDBServiceHandler) SaveBackupStrategy(ctx context.Context, in *DBSav
 
 func (h *tiEMDBServiceHandler) QueryBackupStrategy(ctx context.Context, in *DBQueryBackupStrategyRequest, out *DBQueryBackupStrategyResponse) error {
 	return h.TiEMDBServiceHandler.QueryBackupStrategy(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) QueryBackupStrategyByTime(ctx context.Context, in *DBQueryBackupStrategyByTimeRequest, out *DBQueryBackupStrategyByTimeResponse) error {
+	return h.TiEMDBServiceHandler.QueryBackupStrategyByTime(ctx, in, out)
 }
 
 func (h *tiEMDBServiceHandler) QueryBackupRecords(ctx context.Context, in *DBQueryBackupRecordRequest, out *DBQueryBackupRecordResponse) error {

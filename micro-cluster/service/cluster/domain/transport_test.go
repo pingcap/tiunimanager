@@ -9,11 +9,11 @@ import (
 )
 
 func TestExportDataPreCheck(t *testing.T) {
-	req := &proto.DataExportRequest {
-		ClusterId: "test-abc",
-		UserName: "root",
-		Password: "",
-		FilePath: "filePath",
+	req := &proto.DataExportRequest{
+		ClusterId:   "test-abc",
+		UserName:    "root",
+		Password:    "",
+		FilePath:    "filePath",
 		StorageType: S3StorageType,
 	}
 	if err := ExportDataPreCheck(req); err != nil {
@@ -24,11 +24,11 @@ func TestExportDataPreCheck(t *testing.T) {
 }
 
 func TestImportDataPreCheck(t *testing.T) {
-	req := &proto.DataImportRequest {
-		ClusterId: "test-abc",
-		UserName: "root",
-		Password: "",
-		FilePath: "filePath",
+	req := &proto.DataImportRequest{
+		ClusterId:   "test-abc",
+		UserName:    "root",
+		Password:    "",
+		FilePath:    "filePath",
 		StorageType: S3StorageType,
 	}
 	err := ImportDataPreCheck(req)
@@ -39,13 +39,13 @@ func TestBuildDataImportConfig(t *testing.T) {
 	task := &TaskEntity{}
 	context := &FlowContext{}
 	context.put(contextDataTransportKey, &ImportInfo{
-		ClusterId: "test-abc",
-		UserName:  "root",
-		Password:  "",
-		FilePath:  "filePath",
-		RecordId:  "123",
+		ClusterId:   "test-abc",
+		UserName:    "root",
+		Password:    "",
+		FilePath:    "filePath",
+		RecordId:    "123",
 		StorageType: S3StorageType,
-		ConfigPath: "configPath",
+		ConfigPath:  "configPath",
 	})
 	context.put(contextClusterKey, &ClusterAggregation{
 		CurrentTiUPConfigRecord: &TiUPConfigRecord{

@@ -311,6 +311,24 @@ func (handler *DBServiceHandler) QueryBackupStrategy(ctx context.Context, req *d
 	return nil
 }
 
+func (handler *DBServiceHandler) QueryBackupStrategyByTime(ctx context.Context, req *dbPb.DBQueryBackupStrategyByTimeRequest, resp *dbPb.DBQueryBackupStrategyByTimeResponse) (err error) {
+
+	result, err := handler.Dao().ClusterManager().QueryBackupStartegyByTime(req.GetWeekday(), req.GetStartHour())
+
+	if err != nil {
+		// todo
+		return nil
+	}
+
+	resp.Status = ClusterSuccessResponseStatus
+	strategyList := make([]*dbPb.DBBackupStrategyDTO, len(result))
+	for i, v := range result {
+		strategyList[i] = ConvertToBackupStrategyDTO(v)
+	}
+	resp.Strategys = strategyList
+	return nil
+}
+
 func (handler *DBServiceHandler) SaveParametersRecord(ctx context.Context, req *dbPb.DBSaveParametersRequest, resp *dbPb.DBSaveParametersResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveParametersRecord has invalid parameter")
@@ -405,6 +423,7 @@ func ConvertToBackupStrategyDTO(do *models.BackupStrategy) (dto *dbPb.DBBackupSt
 	}
 	dto = &dbPb.DBBackupStrategyDTO{
 		Id:          int64(do.ID),
+		OperatorId:  do.OperatorId,
 		TenantId:    do.TenantId,
 		ClusterId:   do.ClusterId,
 		CreateTime:  do.CreatedAt.Unix(),
@@ -412,7 +431,8 @@ func ConvertToBackupStrategyDTO(do *models.BackupStrategy) (dto *dbPb.DBBackupSt
 		BackupRange: do.BackupRange,
 		BackupType:  do.BackupType,
 		BackupDate:  do.BackupDate,
-		Period:      do.Period,
+		StartHour:   do.StartHour,
+		EndHour:     do.EndHour,
 		FilePath:    do.FilePath,
 	}
 	return

@@ -125,7 +125,7 @@ func Test_checkBackupRangeValid(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := checkBackupRangeValid(tt.args.backupRange); got != tt.want {
+			if got := checkBackupTypeValid(tt.args.backupRange); got != tt.want {
 				t.Errorf("checkBackupRangeValid() = %v, want %v", got, tt.want)
 			}
 		})
@@ -147,7 +147,7 @@ func Test_checkBackupTypeValid(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := checkBackupTypeValid(tt.args.backupType); got != tt.want {
+			if got := checkBackupMethodValid(tt.args.backupType); got != tt.want {
 				t.Errorf("checkBackupTypeValid() = %v, want %v", got, tt.want)
 			}
 		})

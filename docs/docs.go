@@ -2973,7 +2973,7 @@ var doc = `{
         "instanceapi.BackupReq": {
             "type": "object",
             "properties": {
-                "backupRange": {
+                "backupMethod": {
                     "type": "string"
                 },
                 "backupType": {
@@ -2993,16 +2993,7 @@ var doc = `{
                 "backupDate": {
                     "type": "string"
                 },
-                "backupRange": {
-                    "type": "string"
-                },
-                "backupType": {
-                    "type": "string"
-                },
                 "clusterId": {
-                    "type": "string"
-                },
-                "filePath": {
                     "type": "string"
                 },
                 "nextBackupTime": {

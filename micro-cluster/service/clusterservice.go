@@ -180,7 +180,7 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterPb.CreateBackupRequest, response *clusterPb.CreateBackupResponse) (err error) {
 	getLogger().Info("backup cluster")
 
-	clusterAggregation, err := domain.Backup(request.Operator, request.ClusterId, request.BackupRange, request.BackupType, domain.BackupModeManual, request.FilePath)
+	clusterAggregation, err := domain.Backup(request.Operator, request.ClusterId, request.BackupMethod, request.BackupType, domain.BackupModeManual, request.FilePath)
 	if err != nil {
 		getLogger().Info(err)
 		// todo
@@ -280,9 +280,9 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 			response.BackupRecords[i] = &clusterPb.BackupRecordDTO{
 				Id:         v.BackupRecord.Id,
 				ClusterId:  v.BackupRecord.ClusterId,
-				Range:      v.BackupRecord.BackupRange,
+				BackupMethod: v.BackupRecord.BackupMethod,
 				BackupType: v.BackupRecord.BackupType,
-				Mode:  		v.BackupRecord.BackupMode,
+				BackupMode: v.BackupRecord.BackupMode,
 				FilePath:   v.BackupRecord.FilePath,
 				StartTime:  v.Flow.CreateTime,
 				EndTime:    v.Flow.UpdateTime,

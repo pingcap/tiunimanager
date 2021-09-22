@@ -412,7 +412,7 @@ func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbPb.DBBackupRecord
 		TenantId:    do.TenantId,
 		ClusterId:   do.ClusterId,
 		StartTime:   do.StartTime.Unix(),
-		BackupRange: do.BackupRange,
+		BackupMethod: do.BackupMethod,
 		BackupMode:  do.BackupMode,
 		BackupType:  do.BackupType,
 		OperatorId:  do.OperatorId,
@@ -522,12 +522,9 @@ func convertToBackupStrategyDTO(do *models.BackupStrategy) (dto *dbPb.DBBackupSt
 		ClusterId:   do.ClusterId,
 		CreateTime:  do.CreatedAt.Unix(),
 		UpdateTime:  do.UpdatedAt.Unix(),
-		BackupRange: do.BackupRange,
-		BackupType:  do.BackupType,
 		BackupDate:  do.BackupDate,
 		StartHour:   do.StartHour,
 		EndHour:     do.EndHour,
-		FilePath:    do.FilePath,
 	}
 	return
 }

@@ -45,11 +45,11 @@ type ClusterFetchResult struct {
 
 type BackupRecord struct {
 	Record
-	ClusterId   string `gorm:"not null;type:varchar(2);default:null"`
-	BackupRange string
-	BackupType  string
-	BackupMode  string
-	OperatorId  string `gorm:"not null;type:varchar(2);default:null"`
+	ClusterId    string `gorm:"not null;type:varchar(22);default:null"`
+	BackupType   string
+	BackupMethod string
+	BackupMode   string
+	OperatorId   string `gorm:"not null;type:varchar(22);default:null"`
 
 	FilePath string
 	FlowId   int64
@@ -83,9 +83,6 @@ type BackupStrategy struct {
 	BackupDate  string
 	StartHour   uint32
 	EndHour 	uint32
-	FilePath    string
-	BackupRange string
-	BackupType  string
 }
 
 type BackupRecordFetchResult struct {
@@ -369,15 +366,15 @@ func (m *DAOClusterManager) SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		},
-		ClusterId:   record.GetClusterId(),
-		OperatorId:  record.GetOperatorId(),
-		BackupRange: record.GetBackupRange(),
-		BackupType:  record.GetBackupType(),
-		BackupMode:  record.GetBackupMode(),
-		FlowId:      record.GetFlowId(),
-		FilePath:    record.GetFilePath(),
-		StartTime:   time.Unix(record.GetStartTime(), 0),
-		EndTime:     time.Unix(record.GetEndTime(), 0),
+		ClusterId:    record.GetClusterId(),
+		OperatorId:   record.GetOperatorId(),
+		BackupMethod: record.GetBackupMethod(),
+		BackupType:   record.GetBackupType(),
+		BackupMode:   record.GetBackupMode(),
+		FlowId:       record.GetFlowId(),
+		FilePath:     record.GetFilePath(),
+		StartTime:    time.Unix(record.GetStartTime(), 0),
+		EndTime:      time.Unix(record.GetEndTime(), 0),
 	}
 
 	return do, m.Db().Create(do).Error
@@ -483,11 +480,8 @@ func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDT
 			TenantId: strategy.GetTenantId(),
 		},
 		BackupDate:  strategy.GetBackupDate(),
-		BackupRange: strategy.GetBackupRange(),
-		BackupType:  strategy.GetBackupType(),
 		StartHour:   strategy.GetStartHour(),
 		EndHour:     strategy.GetEndHour(),
-		FilePath:    strategy.GetFilePath(),
 	}
 	result := m.Db().Table(TABLE_NAME_BACKUP_STRATEGY).Where("cluster_id = ?", strategy.ClusterId).First(&strategyDO)
 	if result.Error != nil {
@@ -505,11 +499,8 @@ func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDT
 		strategyDO.UpdatedAt = time.Now()
 		err := m.Db().Model(&strategyDO).Updates(&BackupStrategy{
 			BackupDate:  strategy.GetBackupDate(),
-			BackupRange: strategy.GetBackupRange(),
-			BackupType:  strategy.GetBackupType(),
 			StartHour:   strategy.GetStartHour(),
 			EndHour:     strategy.GetEndHour(),
-			FilePath:    strategy.GetFilePath(),
 		}).Error
 		if err != nil {
 			return nil, err

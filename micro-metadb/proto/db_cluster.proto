@@ -170,7 +170,7 @@ message DBBackupRecordDTO {
     string clusterId = 3;
     int64 startTime = 4;
     int64 endTime = 5;
-    string backupRange = 6;
+    string backupMethod = 6;
     string backupType = 7;
     string backupMode = 8;
     string operatorId = 9;
@@ -258,13 +258,10 @@ message DBBackupStrategyDTO {
     string operatorId = 3;
     string clusterId = 4;
     string backupDate = 5;
-    string filePath = 6;
-    string backupRange = 7;
-    string backupType = 8;
-    uint32 startHour = 9;
-    uint32 endHour = 10;
-    int64 createTime = 11;
-    int64 updateTime = 12;
+    uint32 startHour = 6;
+    uint32 endHour = 7;
+    int64 createTime = 8;
+    int64 updateTime = 9;
 }
 
 message DBSaveBackupStrategyRequest {

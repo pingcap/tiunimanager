@@ -81,7 +81,7 @@ func (auto *autoBackupHandler) doBackup(straegy *db.DBBackupStrategyDTO) {
 		TenantId: resp.GetAccount().GetTenantId(),
 		Name: resp.GetAccount().GetName(),
 	}
-	_, err = Backup(ope, straegy.GetClusterId(), straegy.GetBackupRange(), straegy.GetBackupType(), BackupModeAuto, "")
+	_, err = Backup(ope, straegy.GetClusterId(), "", "", BackupModeAuto, "")
 	if err != nil {
 		getLogger().Errorf("do backup for cluster %s failed, %s", straegy.GetClusterId(), err.Error())
 		return

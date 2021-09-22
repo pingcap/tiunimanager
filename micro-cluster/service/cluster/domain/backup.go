@@ -17,7 +17,7 @@ import (
 type BackupRecord struct {
 	Id         int64
 	ClusterId  string
-	Range      BackupRange
+	BackupMethod BackupMethod
 	BackupType BackupType
 	BackupMode BackupMode
 	OperatorId string
@@ -38,8 +38,8 @@ type RecoverRecord struct {
 //var defaultPathPrefix string = "/tmp/tiem/backup"
 var defaultPathPrefix string = "nfs/tiem/backup"
 
-func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backupType string, backupMode BackupMode, filePath string) (*ClusterAggregation, error) {
-	getLogger().Infof("Begin do Backup, clusterId: %s, backupRange: %s, backupType: %s, filePath: %s", clusterId, backupRange, backupType, filePath)
+func Backup(ope *proto.OperatorDTO, clusterId string, backupMethod string, backupType string, backupMode BackupMode, filePath string) (*ClusterAggregation, error) {
+	getLogger().Infof("Begin do Backup, clusterId: %s, backupMethod: %s, backupType: %s, backupMode: %s, filePath: %s", clusterId, backupMethod, backupType, backupMode, filePath)
 	defer getLogger().Infof("End do Backup")
 	operator := parseOperatorFromDTO(ope)
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
@@ -55,11 +55,11 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 	//todo: only support FULL Physics backup now
 	record := &BackupRecord{
 		ClusterId:  clusterId,
-		Range:      BackupRangeFull,
-		BackupType: BackupTypePhysics,
+		BackupMethod: BackupMethodPhysics,
+		BackupType: BackupTypeFull,
 		BackupMode: backupMode,
 		OperatorId: operator.Id,
-		FilePath:   getBackupPath(filePath, clusterId, time.Now().Unix(), string(BackupRangeFull)),
+		FilePath:   getBackupPath(filePath, clusterId, time.Now().Unix(), string(BackupTypeFull)),
 		StartTime:  time.Now().Unix(),
 	}
 	resp, err := client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
@@ -67,7 +67,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupRange string, backup
 			TenantId:    cluster.TenantId,
 			ClusterId:   record.ClusterId,
 			BackupType:  string(record.BackupType),
-			BackupRange: string(record.Range),
+			BackupMethod: string(record.BackupMethod),
 			BackupMode:  string(record.BackupMode),
 			OperatorId:  record.OperatorId,
 			FilePath:    record.FilePath,
@@ -194,9 +194,6 @@ func SaveBackupStrategy(ope *proto.OperatorDTO, strategy *proto.BackupStrategy) 
 			OperatorId:  ope.GetId(),
 			ClusterId:   strategy.ClusterId,
 			BackupDate:  strategy.BackupDate,
-			FilePath:    strategy.FilePath,
-			BackupRange: strategy.BackupRange,
-			BackupType:  strategy.BackupType,
 			StartHour:   uint32(startHour),
 			EndHour:     uint32(endHour),
 		},
@@ -225,9 +222,6 @@ func QueryBackupStrategy(ope *proto.OperatorDTO, clusterId string) (*proto.Backu
 		strategy := &proto.BackupStrategy{
 			ClusterId:      resp.GetStrategy().GetClusterId(),
 			BackupDate:     resp.GetStrategy().GetBackupDate(),
-			FilePath:       resp.GetStrategy().GetFilePath(),
-			BackupRange:    resp.GetStrategy().GetBackupRange(),
-			BackupType:     resp.GetStrategy().GetBackupType(),
 			Period:         fmt.Sprintf("%d:00-%d:00", resp.GetStrategy().GetStartHour(), resp.GetStrategy().GetEndHour()),
 			NextBackupTime: nextBackupTime.Unix(),
 		}

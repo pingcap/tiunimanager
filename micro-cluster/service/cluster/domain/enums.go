@@ -119,13 +119,13 @@ const (
 )
 
 
-type BackupRange string
+type BackupMethod string
 type BackupType string
 type BackupMode string
 
 const (
-	BackupRangeFull BackupRange = "full"
-	BackupRangeIncrement BackupRange = "incr"
+	BackupTypeFull BackupType = "full"
+	BackupTypeIncrement BackupType = "incr"
 )
 
 const (
@@ -134,21 +134,21 @@ const (
 )
 
 const (
-	BackupTypeLogic BackupType = "logical"
-	BackupTypePhysics BackupType = "physical"
+	BackupMethodLogic BackupMethod = "logical"
+	BackupMethodPhysics BackupMethod = "physical"
 )
 
-func checkBackupRangeValid(backupRange string) bool {
-	if string(BackupRangeFull) != backupRange &&
-		string(BackupRangeIncrement) != backupRange {
+func checkBackupTypeValid(backupType string) bool {
+	if string(BackupTypeFull) != backupType &&
+		string(BackupTypeIncrement) != backupType {
 		return false
 	}
 	return true
 }
 
-func checkBackupTypeValid(backupType string) bool {
-	if string(BackupTypeLogic) != backupType &&
-		string(BackupTypePhysics) != backupType {
+func checkBackupMethodValid(backupMethod string) bool {
+	if string(BackupMethodLogic) != backupMethod &&
+		string(BackupMethodPhysics) != backupMethod {
 		return false
 	}
 	return true

@@ -608,7 +608,7 @@ definitions:
     type: object
   instanceapi.BackupReq:
     properties:
-      backupRange:
+      backupMethod:
         type: string
       backupType:
         type: string
@@ -621,13 +621,7 @@ definitions:
     properties:
       backupDate:
         type: string
-      backupRange:
-        type: string
-      backupType:
-        type: string
       clusterId:
-        type: string
-      filePath:
         type: string
       nextBackupTime:
         type: string

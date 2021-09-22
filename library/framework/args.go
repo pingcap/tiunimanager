@@ -17,16 +17,17 @@ import (
 //  DataDir Persistent data storage directory
 //  LogLevel Minimum log level, default by info.
 type ClientArgs struct {
-	Host               string
-	Port               int
-	MetricsPort        int
-	RegistryClientPort int
-	RegistryPeerPort   int
-	RegistryAddress    string
-	TracerAddress      string
-	DeployDir          string
-	DataDir            string
-	LogLevel           string
+	Host                 string
+	Port                 int
+	MetricsPort          int
+	RegistryClientPort   int
+	RegistryPeerPort     int
+	RegistryAddress      string
+	TracerAddress        string
+	DeployDir            string
+	DataDir              string
+	LogLevel             string
+	ElasticsearchAddress string
 }
 
 func AllFlags(receiver *ClientArgs) []cli.Flag {
@@ -90,6 +91,12 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 			Value:       "info",
 			Usage:       "Specify the minimum log level.",
 			Destination: &receiver.LogLevel,
+		},
+		&cli.StringFlag{
+			Name:        "elasticsearch-address",
+			Value:       "127.0.0.1:4125",
+			Usage:       "Specify the default elasticsearch address.",
+			Destination: &receiver.ElasticsearchAddress,
 		},
 	}
 }

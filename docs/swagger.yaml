@@ -750,6 +750,39 @@ definitions:
       unit:
         type: string
     type: object
+  logapi.SearchTiDBLogDetail:
+    properties:
+      clusterId:
+        type: string
+      ext:
+        additionalProperties: true
+        type: object
+      id:
+        type: string
+      index:
+        type: string
+      ip:
+        type: string
+      level:
+        type: string
+      message:
+        type: string
+      module:
+        type: string
+      sourceLine:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  logapi.SearchTiDBLogRsp:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/logapi.SearchTiDBLogDetail'
+        type: array
+      took:
+        type: integer
+    type: object
   taskapi.FlowWorkDetailInfo:
     properties:
       clusterId:
@@ -1692,6 +1725,66 @@ paths:
       summary: show cluster knowledge
       tags:
       - knowledge
+  /logs/tidb/{clusterId}:
+    get:
+      consumes:
+      - application/json
+      description: search tidb log
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - in: query
+        name: endTime
+        type: string
+      - in: query
+        name: from
+        type: integer
+      - in: query
+        name: ip
+        type: string
+      - in: query
+        name: level
+        type: string
+      - in: query
+        name: message
+        type: string
+      - in: query
+        name: module
+        type: string
+      - in: query
+        name: size
+        type: integer
+      - in: query
+        name: startTime
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/logapi.SearchTiDBLogRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: search tidb log
+      tags:
+      - logs
   /resources/allochosts:
     post:
       consumes:

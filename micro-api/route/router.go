@@ -7,6 +7,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller/databaseapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/instanceapi"
+	"github.com/pingcap-inc/tiem/micro-api/controller/logapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/taskapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/userapi"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
@@ -119,6 +120,11 @@ func Route(g *gin.Engine) {
 
 			// Add allochosts API for debugging, not release.
 			host.POST("allochosts", hostapi.AllocHosts)
+		}
+
+		log := apiV1.Group("/logs")
+		{
+			log.GET("/tidb/:clusterId", logapi.SearchTiDBLog)
 		}
 	}
 

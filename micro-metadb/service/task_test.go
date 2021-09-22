@@ -21,7 +21,7 @@ func TestDBServiceHandler_CreateFlow(t *testing.T) {
 		asserts []func(args *args) bool
 	}{
 		{"normal", args{nil, &dbPb.DBCreateFlowRequest{
-			Flow: &dbPb.DBFlowDTO{FlowName: "aaa"},
+			Flow: &dbPb.DBFlowDTO{FlowName: "aaa", Operator: "111111"},
 		}, &dbPb.DBCreateFlowResponse{}}, false, []func(args *args) bool{
 			func(args *args) bool {
 				return args.req.Flow.FlowName == args.rsp.Flow.FlowName && args.rsp.Flow.Id > 0

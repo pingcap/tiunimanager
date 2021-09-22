@@ -2885,6 +2885,10 @@ var doc = `{
                     "description": "Host Spec, init while importing",
                     "type": "string"
                 },
+                "stat": {
+                    "description": "Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust",
+                    "type": "integer"
+                },
                 "status": {
                     "description": "Host Status, 0 for Online, 1 for offline",
                     "type": "integer"

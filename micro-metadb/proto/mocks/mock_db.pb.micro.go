@@ -156,6 +156,26 @@ func (mr *MockTiEMDBServiceMockRecorder) CreateFlow(ctx, in interface{}, opts ..
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFlow", reflect.TypeOf((*MockTiEMDBService)(nil).CreateFlow), varargs...)
 }
 
+// CreateInstance mocks base method.
+func (m *MockTiEMDBService) CreateInstance(ctx context.Context, in *db.DBCreateInstanceRequest, opts ...client.CallOption) (*db.DBCreateInstanceResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateInstance", varargs...)
+	ret0, _ := ret[0].(*db.DBCreateInstanceResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateInstance indicates an expected call of CreateInstance.
+func (mr *MockTiEMDBServiceMockRecorder) CreateInstance(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstance", reflect.TypeOf((*MockTiEMDBService)(nil).CreateInstance), varargs...)
+}
+
 // CreateTask mocks base method.
 func (m *MockTiEMDBService) CreateTask(ctx context.Context, in *db.DBCreateTaskRequest, opts ...client.CallOption) (*db.DBCreateTaskResponse, error) {
 	m.ctrl.T.Helper()
@@ -274,6 +294,26 @@ func (mr *MockTiEMDBServiceMockRecorder) FindAccount(ctx, in interface{}, opts .
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, in}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAccount", reflect.TypeOf((*MockTiEMDBService)(nil).FindAccount), varargs...)
+}
+
+// FindAccountById mocks base method.
+func (m *MockTiEMDBService) FindAccountById(ctx context.Context, in *db.DBFindAccountByIdRequest, opts ...client.CallOption) (*db.DBFindAccountByIdResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "FindAccountById", varargs...)
+	ret0, _ := ret[0].(*db.DBFindAccountByIdResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindAccountById indicates an expected call of FindAccountById.
+func (mr *MockTiEMDBServiceMockRecorder) FindAccountById(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAccountById", reflect.TypeOf((*MockTiEMDBService)(nil).FindAccountById), varargs...)
 }
 
 // FindRolesByPermission mocks base method.
@@ -636,6 +676,26 @@ func (mr *MockTiEMDBServiceMockRecorder) QueryBackupStrategy(ctx, in interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBackupStrategy", reflect.TypeOf((*MockTiEMDBService)(nil).QueryBackupStrategy), varargs...)
 }
 
+// QueryBackupStrategyByTime mocks base method.
+func (m *MockTiEMDBService) QueryBackupStrategyByTime(ctx context.Context, in *db.DBQueryBackupStrategyByTimeRequest, opts ...client.CallOption) (*db.DBQueryBackupStrategyByTimeResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "QueryBackupStrategyByTime", varargs...)
+	ret0, _ := ret[0].(*db.DBQueryBackupStrategyByTimeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QueryBackupStrategyByTime indicates an expected call of QueryBackupStrategyByTime.
+func (mr *MockTiEMDBServiceMockRecorder) QueryBackupStrategyByTime(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBackupStrategyByTime", reflect.TypeOf((*MockTiEMDBService)(nil).QueryBackupStrategyByTime), varargs...)
+}
+
 // RemoveHost mocks base method.
 func (m *MockTiEMDBService) RemoveHost(ctx context.Context, in *db.DBRemoveHostRequest, opts ...client.CallOption) (*db.DBRemoveHostResponse, error) {
 	m.ctrl.T.Helper()
@@ -816,24 +876,24 @@ func (mr *MockTiEMDBServiceMockRecorder) UpdateClusterStatus(ctx, in interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateClusterStatus", reflect.TypeOf((*MockTiEMDBService)(nil).UpdateClusterStatus), varargs...)
 }
 
-// UpdateClusterTiupConfig mocks base method.
-func (m *MockTiEMDBService) UpdateClusterTiupConfig(ctx context.Context, in *db.DBUpdateTiupConfigRequest, opts ...client.CallOption) (*db.DBUpdateTiupConfigResponse, error) {
+// UpdateClusterTopologyConfig mocks base method.
+func (m *MockTiEMDBService) UpdateClusterTopologyConfig(ctx context.Context, in *db.DBUpdateTopologyConfigRequest, opts ...client.CallOption) (*db.DBUpdateTopologyConfigResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
-	ret := m.ctrl.Call(m, "UpdateClusterTiupConfig", varargs...)
-	ret0, _ := ret[0].(*db.DBUpdateTiupConfigResponse)
+	ret := m.ctrl.Call(m, "UpdateClusterTopologyConfig", varargs...)
+	ret0, _ := ret[0].(*db.DBUpdateTopologyConfigResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// UpdateClusterTiupConfig indicates an expected call of UpdateClusterTiupConfig.
-func (mr *MockTiEMDBServiceMockRecorder) UpdateClusterTiupConfig(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+// UpdateClusterTopologyConfig indicates an expected call of UpdateClusterTopologyConfig.
+func (mr *MockTiEMDBServiceMockRecorder) UpdateClusterTopologyConfig(ctx, in interface{}, opts ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, in}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateClusterTiupConfig", reflect.TypeOf((*MockTiEMDBService)(nil).UpdateClusterTiupConfig), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateClusterTopologyConfig", reflect.TypeOf((*MockTiEMDBService)(nil).UpdateClusterTopologyConfig), varargs...)
 }
 
 // UpdateFlow mocks base method.
@@ -1023,6 +1083,20 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) CreateFlow(arg0, arg1, arg2 inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFlow", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).CreateFlow), arg0, arg1, arg2)
 }
 
+// CreateInstance mocks base method.
+func (m *MockTiEMDBServiceHandler) CreateInstance(arg0 context.Context, arg1 *db.DBCreateInstanceRequest, arg2 *db.DBCreateInstanceResponse) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateInstance", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateInstance indicates an expected call of CreateInstance.
+func (mr *MockTiEMDBServiceHandlerMockRecorder) CreateInstance(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstance", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).CreateInstance), arg0, arg1, arg2)
+}
+
 // CreateTask mocks base method.
 func (m *MockTiEMDBServiceHandler) CreateTask(arg0 context.Context, arg1 *db.DBCreateTaskRequest, arg2 *db.DBCreateTaskResponse) error {
 	m.ctrl.T.Helper()
@@ -1105,6 +1179,20 @@ func (m *MockTiEMDBServiceHandler) FindAccount(arg0 context.Context, arg1 *db.DB
 func (mr *MockTiEMDBServiceHandlerMockRecorder) FindAccount(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAccount", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).FindAccount), arg0, arg1, arg2)
+}
+
+// FindAccountById mocks base method.
+func (m *MockTiEMDBServiceHandler) FindAccountById(arg0 context.Context, arg1 *db.DBFindAccountByIdRequest, arg2 *db.DBFindAccountByIdResponse) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindAccountById", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// FindAccountById indicates an expected call of FindAccountById.
+func (mr *MockTiEMDBServiceHandlerMockRecorder) FindAccountById(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAccountById", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).FindAccountById), arg0, arg1, arg2)
 }
 
 // FindRolesByPermission mocks base method.
@@ -1359,6 +1447,20 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) QueryBackupStrategy(arg0, arg1, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBackupStrategy", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).QueryBackupStrategy), arg0, arg1, arg2)
 }
 
+// QueryBackupStrategyByTime mocks base method.
+func (m *MockTiEMDBServiceHandler) QueryBackupStrategyByTime(arg0 context.Context, arg1 *db.DBQueryBackupStrategyByTimeRequest, arg2 *db.DBQueryBackupStrategyByTimeResponse) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QueryBackupStrategyByTime", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// QueryBackupStrategyByTime indicates an expected call of QueryBackupStrategyByTime.
+func (mr *MockTiEMDBServiceHandlerMockRecorder) QueryBackupStrategyByTime(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QueryBackupStrategyByTime", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).QueryBackupStrategyByTime), arg0, arg1, arg2)
+}
+
 // RemoveHost mocks base method.
 func (m *MockTiEMDBServiceHandler) RemoveHost(arg0 context.Context, arg1 *db.DBRemoveHostRequest, arg2 *db.DBRemoveHostResponse) error {
 	m.ctrl.T.Helper()
@@ -1485,18 +1587,18 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) UpdateClusterStatus(arg0, arg1, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateClusterStatus", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).UpdateClusterStatus), arg0, arg1, arg2)
 }
 
-// UpdateClusterTiupConfig mocks base method.
-func (m *MockTiEMDBServiceHandler) UpdateClusterTiupConfig(arg0 context.Context, arg1 *db.DBUpdateTiupConfigRequest, arg2 *db.DBUpdateTiupConfigResponse) error {
+// UpdateClusterTopologyConfig mocks base method.
+func (m *MockTiEMDBServiceHandler) UpdateClusterTopologyConfig(arg0 context.Context, arg1 *db.DBUpdateTopologyConfigRequest, arg2 *db.DBUpdateTopologyConfigResponse) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateClusterTiupConfig", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "UpdateClusterTopologyConfig", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateClusterTiupConfig indicates an expected call of UpdateClusterTiupConfig.
-func (mr *MockTiEMDBServiceHandlerMockRecorder) UpdateClusterTiupConfig(arg0, arg1, arg2 interface{}) *gomock.Call {
+// UpdateClusterTopologyConfig indicates an expected call of UpdateClusterTopologyConfig.
+func (mr *MockTiEMDBServiceHandlerMockRecorder) UpdateClusterTopologyConfig(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateClusterTiupConfig", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).UpdateClusterTiupConfig), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateClusterTopologyConfig", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).UpdateClusterTopologyConfig), arg0, arg1, arg2)
 }
 
 // UpdateFlow mocks base method.

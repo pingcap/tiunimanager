@@ -10,6 +10,7 @@ message DataImportRequest {
     string  userName = 3;
     string  password = 4;
     string  filePath = 5;
+    string  storageType = 6;
 }
 
 message DataImportResponse {
@@ -24,6 +25,8 @@ message DataExportRequest {
     string  password = 4;
     string  fileType = 5;
     string  filter = 6;
+    string  filePath = 7;
+    string  storageType = 8;
 }
 
 message DataExportResponse {

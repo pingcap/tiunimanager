@@ -5,25 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
-
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
-)
-
-type FailureDomain int32
-
-const (
-	ROOT FailureDomain = iota
-	DATACENTER
-	ZONE
-	RACK
-	HOST
-	DISK
 )
 
 func genDomainCodeByName(pre string, name string) string {
@@ -35,28 +24,34 @@ func GetDomainNameFromCode(failureDomain string) string {
 	return failureDomain[pos+1:]
 }
 
-func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
+func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *resource.Host) {
 	dst.HostName = src.HostName
 	dst.IP = src.Ip
 	dst.UserName = src.UserName
 	dst.Passwd = src.Passwd
+	dst.Arch = src.Arch
 	dst.OS = src.Os
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int(src.CpuCores)
-	dst.Memory = int(src.Memory)
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
 	dst.Spec = src.Spec
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Nic = src.Nic
-	dst.DC = src.Dc
-	dst.AZ = genDomainCodeByName(dst.DC, src.Az)
+	dst.Region = src.Region
+	dst.AZ = genDomainCodeByName(dst.Region, src.Az)
 	dst.Rack = genDomainCodeByName(dst.AZ, src.Rack)
 	dst.Status = int32(src.Status)
 	dst.Purpose = src.Purpose
+	dst.DiskType = src.DiskType
+	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
-		dst.Disks = append(dst.Disks, models.Disk{
+		dst.Disks = append(dst.Disks, resource.Disk{
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Status:   int32(disk.Status),
 			Capacity: disk.Capacity,
+			Type:     disk.Type,
 		})
 	}
 }
@@ -64,7 +59,7 @@ func copyHostInfoFromReq(src *dbPb.DBHostInfoDTO, dst *models.Host) {
 func (handler *DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHostRequest, rsp *dbPb.DBAddHostResponse) error {
 	resourceManager := handler.Dao().ResourceManager()
 	log := framework.Log()
-	var host models.Host
+	var host resource.Host
 	copyHostInfoFromReq(req.Host, &host)
 
 	hostId, err := resourceManager.CreateHost(&host)
@@ -91,9 +86,9 @@ func (handler *DBServiceHandler) AddHost(ctx context.Context, req *dbPb.DBAddHos
 func (handler *DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbPb.DBAddHostsInBatchRequest, rsp *dbPb.DBAddHostsInBatchResponse) error {
 	resourceManager := handler.Dao().ResourceManager()
 	log := framework.Log()
-	var hosts []*models.Host
+	var hosts []*resource.Host
 	for _, v := range req.Hosts {
-		var host models.Host
+		var host resource.Host
 		copyHostInfoFromReq(v, &host)
 		hosts = append(hosts, &host)
 	}
@@ -165,21 +160,26 @@ func (handler *DBServiceHandler) RemoveHostsInBatch(ctx context.Context, req *db
 	return nil
 }
 
-func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
+func copyHostInfoToRsp(src *resource.Host, dst *dbPb.DBHostInfoDTO) {
 	dst.HostId = src.ID
 	dst.HostName = src.HostName
 	dst.Ip = src.IP
+	dst.Arch = src.Arch
 	dst.Os = src.OS
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int32(src.CpuCores)
-	dst.Memory = int32(src.Memory)
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
 	dst.Spec = src.Spec
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Nic = src.Nic
-	dst.Dc = src.DC
+	dst.Region = src.Region
 	dst.Az = GetDomainNameFromCode(src.AZ)
 	dst.Rack = GetDomainNameFromCode(src.Rack)
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
+	dst.DiskType = src.DiskType
+	dst.Reserved = src.Reserved
 	dst.CreateAt = src.CreatedAt.Unix()
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
@@ -188,6 +188,7 @@ func copyHostInfoToRsp(src *models.Host, dst *dbPb.DBHostInfoDTO) {
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
 			Status:   disk.Status,
+			Type:     disk.Type,
 		})
 	}
 }
@@ -197,7 +198,7 @@ func (handler *DBServiceHandler) ListHost(ctx context.Context, req *dbPb.DBListH
 	log := framework.Log()
 	var hostReq models.ListHostReq
 	hostReq.Purpose = req.Purpose
-	hostReq.Status = models.HostStatus(req.Status)
+	hostReq.Status = resource.HostStatus(req.Status)
 	hostReq.Limit = int(req.Page.PageSize)
 	if req.Page.Page >= 1 {
 		hostReq.Offset = (int(req.Page.Page) - 1) * int(req.Page.PageSize)
@@ -265,8 +266,8 @@ func copyAllocReq(component string, req models.AllocReqs, in []*dbPb.DBAllocatio
 		}
 		req[component] = append(req[component], &models.HostAllocReq{
 			FailureDomain: eachReq.FailureDomain,
-			CpuCores:      int(eachReq.CpuCores),
-			Memory:        int(eachReq.Memory),
+			CpuCores:      eachReq.CpuCores,
+			Memory:        eachReq.Memory,
 			Count:         int(eachReq.Count),
 		})
 	}
@@ -286,7 +287,7 @@ func buildAllocRsp(componet string, req models.AllocRsps, out *[]*dbPb.DBAllocHo
 				Name:     result.DiskName,
 				Path:     result.Path,
 				Capacity: int32(result.Capacity),
-				Status:   int32(models.DISK_AVAILABLE),
+				Status:   int32(resource.DISK_AVAILABLE),
 			},
 		})
 	}
@@ -326,16 +327,16 @@ func (handler *DBServiceHandler) AllocHosts(ctx context.Context, in *dbPb.DBAllo
 	return nil
 }
 
-func getFailureDomainByType(fd FailureDomain) (domain string, err error) {
+func getFailureDomainByType(fd resource.FailureDomain) (domain string, err error) {
 	switch fd {
-	case DATACENTER:
-		domain = "dc"
-	case ZONE:
+	case resource.REGION:
+		domain = "region"
+	case resource.ZONE:
 		domain = "az"
-	case RACK:
+	case resource.RACK:
 		domain = "rack"
 	default:
-		err = status.Errorf(codes.InvalidArgument, "%d is invalid domain type(1-DataCenter, 2-Zone, 3-Rack)", fd)
+		err = status.Errorf(codes.InvalidArgument, "%d is invalid domain type(1-Region, 2-Zone, 3-Rack)", fd)
 	}
 	return
 }
@@ -344,7 +345,7 @@ func (handler *DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb
 
 	log := framework.Log()
 	domainType := req.FailureDomainType
-	domain, err := getFailureDomainByType(FailureDomain(domainType))
+	domain, err := getFailureDomainByType(resource.FailureDomain(domainType))
 	rsp.Rs = new(dbPb.DBHostResponseStatus)
 	if err != nil {
 		st, ok := status.FromError(err)

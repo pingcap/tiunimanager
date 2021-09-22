@@ -78,6 +78,14 @@ func (m *DAOAccountManager) Find(name string) (result *Account, err error) {
 	return result, m.Db().Where(&Account{Name: name}).First(result).Error
 }
 
+func (m *DAOAccountManager) FindById(id string) (result *Account, err error) {
+	if "" == id {
+		return nil, errors.New(fmt.Sprintf("find account failed, has invalid parameter, id: %s", id))
+	}
+	result = &Account{Entity: Entity{ID: id}}
+	return result, m.Db().Where(&Account{Entity: Entity{ID: id}}).First(result).Error
+}
+
 func (m *DAOAccountManager) AddRole(tenantId string, name string, desc string, status int8) (result *Role, err error) {
 	//TODO please add desc and status check
 	if "" == tenantId || "" == name {

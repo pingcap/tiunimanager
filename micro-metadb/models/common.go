@@ -2,12 +2,13 @@ package models
 
 import (
 	"errors"
+	"time"
+
 	"github.com/mozillazg/go-pinyin"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"time"
 )
 
 const (
@@ -23,14 +24,17 @@ const (
 	TABLE_NAME_TASK               = "tasks"
 	TABLE_NAME_HOST               = "hosts"
 	TABLE_NAME_DISK               = "disks"
+	TABLE_NAME_USED_COMPUTE       = "used_computes"
+	TABLE_NAME_USED_PORT          = "used_ports"
 	TABLE_NAME_TIUP_CONFIG        = "tiup_configs"
 	TABLE_NAME_TIUP_TASK          = "tiup_tasks"
 	TABLE_NAME_FLOW               = "flows"
 	TABLE_NAME_PARAMETERS_RECORD  = "parameters_records"
 	TABLE_NAME_BACKUP_RECORD      = "backup_records"
-	TABLE_NAME_BACKUP_STRATEGY    = "backup_strategys"
+	TABLE_NAME_BACKUP_STRATEGY    = "backup_strategies"
 	TABLE_NAME_TRANSPORT_RECORD   = "transport_records"
 	TABLE_NAME_RECOVER_RECORD     = "recover_records"
+	TABLE_NAME_COMPONENT_INSTANCE = "component_instances"
 )
 
 func getLogger() *log.Entry {

@@ -17,7 +17,7 @@ func (aggregation *ClusterAggregation) ExtractInstancesDTO() *proto.ClusterInsta
 		BackupFileUsage:          MockUsage(),
 	}
 
-	if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
+	if record := aggregation.CurrentTopologyConfigRecord; aggregation.CurrentTopologyConfigRecord != nil && record.ConfigModel != nil {
 		dto.IntranetConnectAddresses, dto.ExtranetConnectAddresses, dto.PortList = ConnectAddresses(record.ConfigModel)
 	} else {
 		dto.PortList = []int64{4000}
@@ -42,20 +42,20 @@ func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int64) {
 }
 
 func (aggregation *ClusterAggregation) ExtractComponentDTOs() []*proto.ComponentInstanceDTO {
-	//if record := aggregation.CurrentTiUPConfigRecord; aggregation.CurrentTiUPConfigRecord != nil && record.ConfigModel != nil {
-	//	config := record.ConfigModel
-	//	knowledge := knowledge.ClusterTypeSpecFromCode(aggregation.Cluster.ClusterType.Code)
-	//	for _, v := range knowledge.VersionSpecs {
-	//		if v.ClusterVersion.Code == aggregation.Cluster.ClusterVersion.Code {
-	//			return appendAllComponentInstances(config, &v)
-	//		}
-	//	}
-	//}
+	if record := aggregation.CurrentTopologyConfigRecord; aggregation.CurrentTopologyConfigRecord != nil && record.ConfigModel != nil {
+		config := record.ConfigModel
+		knowledge := knowledge.ClusterTypeSpecFromCode(aggregation.Cluster.ClusterType.Code)
+		for _, v := range knowledge.VersionSpecs {
+			if v.ClusterVersion.Code == aggregation.Cluster.ClusterVersion.Code {
+				return appendAllComponentInstances(config, &v)
+			}
+		}
+	}
 	return make([]*proto.ComponentInstanceDTO, 0)
 }
 
 func appendAllComponentInstances(config *spec.Specification, knowledge *knowledge.ClusterVersionSpec) []*proto.ComponentInstanceDTO{
-	components := make([]*proto.ComponentInstanceDTO, len(knowledge.ComponentSpecs), len(knowledge.ComponentSpecs))
+	components := make([]*proto.ComponentInstanceDTO, 0, len(knowledge.ComponentSpecs))
 
 	for _, v := range knowledge.ComponentSpecs {
 		code := v.ClusterComponent.ComponentType
@@ -64,7 +64,7 @@ func appendAllComponentInstances(config *spec.Specification, knowledge *knowledg
 				ComponentType: code,
 				ComponentName: v.ClusterComponent.ComponentName,
 			},
-			Nodes: ComponentAppender[code](config),
+			Nodes: ComponentAppender[code](config, knowledge.ClusterVersion.Code),
 		}
 
 		components = append(components, componentDTO)
@@ -72,19 +72,21 @@ func appendAllComponentInstances(config *spec.Specification, knowledge *knowledg
 	return components
 }
 
-var ComponentAppender = map[string]func (*spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
-	"tidb": tiDBComponent,
-	"tikv": tiKVComponent,
-	"pd": pDComponent,
+var ComponentAppender = map[string]func (*spec.Specification, string) []*proto.ComponentNodeDisplayInfoDTO {
+	"TiDB": tiDBComponent,
+	"TiKV": tiKVComponent,
+	"PD": pDComponent,
+	//"TiFlash": tiFlashComponent,
+	//"TiCDC": tiCDCComponent,
 }
 
-func tiDBComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
+func tiDBComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
 	servers := config.TiDBServers
 	dto := make([]*proto.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
 	for i, v := range servers {
 		dto[i] = &proto.ComponentNodeDisplayInfoDTO{
 			NodeId: v.Host,
-			Version: "version", // todo
+			Version: version, // todo
 			Status: "运行中", // todo
 			Instance: &proto.ComponentNodeInstanceDTO{
 				HostId: v.Host,
@@ -106,15 +108,69 @@ func tiDBComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfo
 	return dto
 }
 
-func tiKVComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
+func tiKVComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
 	servers := config.TiKVServers
 	dto := make([]*proto.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	for i, v := range servers {
+		dto[i] = &proto.ComponentNodeDisplayInfoDTO{
+			NodeId: v.Host,
+			Version: version, // todo
+			Status: "运行中", // todo
+			Instance: &proto.ComponentNodeInstanceDTO{
+				HostId: v.Host,
+				Port: 20160,
+				Role: mockRole(),
+				Spec: mockSpec(),
+				Zone: mockZone(),
+			},
+
+			Usages: &proto.ComponentNodeUsageDTO{
+				IoUtil:       mockIoUtil(),
+				Iops:         mockIops(),
+				CpuUsage:     MockUsage(),
+				MemoryUsage:  MockUsage(),
+				StoregeUsage: MockUsage(),
+			},
+		}
+	}
 	return dto
 }
 
-func pDComponent(config *spec.Specification) []*proto.ComponentNodeDisplayInfoDTO {
+func pDComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
 	servers := config.PDServers
 	dto := make([]*proto.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	for i, v := range servers {
+		dto[i] = &proto.ComponentNodeDisplayInfoDTO{
+			NodeId: v.Host,
+			Version: version, // todo
+			Status: "运行中", // todo
+			Instance: &proto.ComponentNodeInstanceDTO{
+				HostId: v.Host,
+				Port: 2379,
+				Role: mockRole(),
+				Spec: mockSpec(),
+				Zone: mockZone(),
+			},
+
+			Usages: &proto.ComponentNodeUsageDTO{
+				IoUtil:       mockIoUtil(),
+				Iops:         mockIops(),
+				CpuUsage:     MockUsage(),
+				MemoryUsage:  MockUsage(),
+				StoregeUsage: MockUsage(),
+			},
+		}
+	}
+	return dto
+}
+
+func tiCDCComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
+	dto := make([]*proto.ComponentNodeDisplayInfoDTO, 0, 0)
+
+	return dto
+}
+func tiFlashComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
+	dto := make([]*proto.ComponentNodeDisplayInfoDTO, 0, 0)
 	return dto
 }
 
@@ -144,8 +200,8 @@ func mockSpec() *proto.SpecBaseInfoDTO {
 
 func mockZone() *proto.ZoneBaseInfoDTO {
 	return &proto.ZoneBaseInfoDTO{
-		ZoneCode: "AZ1",
-		ZoneName: "AZ1",
+		ZoneCode: "TEST_Zone1",
+		ZoneName: "TEST_Zone1",
 	}
 }
 

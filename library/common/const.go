@@ -32,3 +32,13 @@ const (
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"
 )
+
+const (
+	RegistryMicroServicePrefix = "/micro/registry/"
+	HttpProtocol               = "http://"
+)
+
+var (
+	TemplateFileName = "hostInfo_template.xlsx"
+	TemplateFilePath = "./etc"
+)

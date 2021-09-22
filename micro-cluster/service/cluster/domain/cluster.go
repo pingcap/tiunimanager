@@ -32,6 +32,9 @@ type Cluster struct {
 	DeleteTime 			time.Time
 }
 
+func (c *Cluster) Online()  {
+	c.Status = ClusterStatusOnline
+}
 func (c *Cluster) Delete()  {
 	c.Status = ClusterStatusDeleted
 }
@@ -56,7 +59,7 @@ type ClusterNodeDistributionItem struct {
 	Count  			int
 }
 
-type TiUPConfigRecord struct {
+type TopologyConfigRecord struct {
 	Id 					uint
 	TenantId 			string
 	ClusterId 			string
@@ -69,7 +72,7 @@ type RecoverInfo struct {
 	BackupRecordId 		int64
 }
 
-func (r TiUPConfigRecord) Content() string {
+func (r TopologyConfigRecord) Content() string {
 	bytes, _ := json.Marshal(r.ConfigModel)
 	return string(bytes)
 }

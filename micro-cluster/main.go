@@ -11,6 +11,7 @@ import (
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
+	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	tenantAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/adapt"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
@@ -20,6 +21,7 @@ func main() {
 		loadKnowledge,
 		initLibForDev,
 		initAdapter,
+		initCronJob,
 		defaultPortForLocal,
 	)
 
@@ -56,6 +58,11 @@ func loadKnowledge(f *framework.BaseFramework) error {
 func initAdapter(f *framework.BaseFramework) error {
 	tenantAdapt.InjectionMetaDbRepo()
 	clusterAdapt.InjectionMetaDbRepo()
+	return nil
+}
+
+func initCronJob(f *framework.BaseFramework) error {
+	domain.InitAutoBackupCronJob()
 	return nil
 }
 

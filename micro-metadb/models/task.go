@@ -8,7 +8,7 @@ type FlowDO struct {
 	Data
 	Name        string
 	StatusAlias string
-	Operator  string `gorm:"not null;type:varchar(36);default:null"`
+	Operator  string `gorm:"not null;type:varchar(22);default:null"`
 }
 
 func (do FlowDO) TableName() string {

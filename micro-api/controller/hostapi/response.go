@@ -25,13 +25,13 @@ type ZoneHostStockRsp struct {
 	AvailableStocks map[string][]ZoneHostStock
 }
 type AllocateRsp struct {
-	HostName string `json:"hostName"`
-	Ip       string `json:"ip"`
-	UserName string `json:"userName"`
-	Passwd   string `json:"passwd"`
-	CpuCores int32  `json:"cpuCore"`
-	Memory   int32  `json:"memory"`
-	Disk     Disk   `json:"disk"`
+	HostName string   `json:"hostName"`
+	Ip       string   `json:"ip"`
+	UserName string   `json:"userName"`
+	Passwd   string   `json:"passwd"`
+	CpuCores int32    `json:"cpuCore"`
+	Memory   int32    `json:"memory"`
+	Disk     DiskInfo `json:"disk"`
 }
 
 type AllocHostsRsp struct {

@@ -40,6 +40,8 @@ func ExportData(c *gin.Context) {
 		Password:  req.Password,
 		FileType:  req.FileType,
 		Filter:    req.Filter,
+		FilePath:  req.FilePath,
+		StorageType: req.StorageType,
 	}, controller.DefaultTimeout)
 
 	if err != nil {
@@ -84,6 +86,7 @@ func ImportData(c *gin.Context) {
 		UserName:  req.UserName,
 		Password:  req.Password,
 		FilePath:  req.FilePath,
+		StorageType: req.StorageType,
 	}, controller.DefaultTimeout)
 
 	if err != nil {

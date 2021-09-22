@@ -11,44 +11,45 @@ import (
 
 type Cluster struct {
 	Entity
-	Name                string
-	DbPassword          string
-	Type                string
-	Version             string
-	Tls                 bool
-	Tags                string
-	OwnerId             string `gorm:"not null;type:varchar(36);default:null"`
-	CurrentTiupConfigId uint
-	CurrentDemandId     uint
-	CurrentFlowId       uint
+	Name                    string
+	DbPassword              string
+	Type                    string
+	Version                 string
+	Tls                     bool
+	Tags                    string
+	OwnerId                 string `gorm:"not null;type:varchar(22);default:null"`
+	CurrentTopologyConfigId uint
+	CurrentDemandId         uint
+	CurrentFlowId           uint
 }
 
 type DemandRecord struct {
 	Record
-	ClusterId string `gorm:"not null;type:varchar(36);default:null"`
+	ClusterId string `gorm:"not null;type:varchar(22);default:null"`
 	Content   string `gorm:"type:text"`
 }
 
-type TiUPConfig struct {
+type TopologyConfig struct {
 	Record
-	ClusterId string `gorm:"not null;type:varchar(36);default:null"`
+	ClusterId string `gorm:"not null;type:varchar(22);default:null"`
 	Content   string `gorm:"type:text"`
 }
 
 type ClusterFetchResult struct {
-	Cluster      *Cluster
-	Flow         *FlowDO
-	DemandRecord *DemandRecord
-	TiUPConfig   *TiUPConfig
+	Cluster            *Cluster
+	Flow               *FlowDO
+	DemandRecord       *DemandRecord
+	TopologyConfig     *TopologyConfig
+	ComponentInstances []*ComponentInstance
 }
 
 type BackupRecord struct {
 	Record
-	ClusterId   string `gorm:"not null;type:varchar(36);default:null"`
-	BackupRange string
-	BackupType  string
-	BackupMode  string
-	OperatorId  string `gorm:"not null;type:varchar(36);default:null"`
+	ClusterId    string `gorm:"not null;type:varchar(22);default:null"`
+	BackupType   string
+	BackupMethod string
+	BackupMode   string
+	OperatorId   string `gorm:"not null;type:varchar(22);default:null"`
 
 	FilePath string
 	FlowId   int64
@@ -60,29 +61,28 @@ type BackupRecord struct {
 
 type RecoverRecord struct {
 	Record
-	ClusterId      string `gorm:"not null;type:varchar(36);default:null"`
-	OperatorId     string `gorm:"not null;type:varchar(36);default:null"`
+	ClusterId      string `gorm:"not null;type:varchar(22);default:null"`
+	OperatorId     string `gorm:"not null;type:varchar(22);default:null"`
 	BackupRecordId uint
 	FlowId         uint
 }
 
 type ParametersRecord struct {
 	Record
-	ClusterId  string `gorm:"not null;type:varchar(36);default:null"`
-	OperatorId string `gorm:"not null;type:varchar(36);default:null"`
+	ClusterId  string `gorm:"not null;type:varchar(22);default:null"`
+	OperatorId string `gorm:"not null;type:varchar(22);default:null"`
 	Content    string `gorm:"type:text"`
 	FlowId     uint
 }
+
 type BackupStrategy struct {
 	Record
-	ClusterId  string `gorm:"not null;type:varchar(36);default:null"`
-	OperatorId string `gorm:"not null;type:varchar(36);default:null"`
+	ClusterId  string `gorm:"not null;type:varchar(22);default:null"`
+	OperatorId string `gorm:"not null;type:varchar(22);default:null"`
 
 	BackupDate  string
-	FilePath    string
-	BackupRange string
-	BackupType  string
-	Period      string
+	StartHour   uint32
+	EndHour 	uint32
 }
 
 type BackupRecordFetchResult struct {
@@ -151,12 +151,12 @@ func (m *DAOClusterManager) UpdateClusterFlowId(clusterId string, flowId uint) (
 	return cluster, m.Db().Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_flow_id", flowId).Error
 }
 
-func (m *DAOClusterManager) UpdateTiUPConfig(clusterId string, content string, tenantId string) (cluster *Cluster, err error) {
+func (m *DAOClusterManager) UpdateTopologyConfig(clusterId string, content string, tenantId string) (cluster *Cluster, err error) {
 	if "" == clusterId || "" == tenantId || "" == content {
-		return nil, errors.New(fmt.Sprintf("UpdateTiUPConfig has invalid parameter, clusterId: %s, content: %s", clusterId, content))
+		return nil, errors.New(fmt.Sprintf("UpdateTopologyConfig has invalid parameter, clusterId: %s, content: %s", clusterId, content))
 	}
 	cluster = &Cluster{}
-	record := &TiUPConfig{
+	record := &TopologyConfig{
 		ClusterId: clusterId,
 		Content:   content,
 		Record: Record{
@@ -165,12 +165,12 @@ func (m *DAOClusterManager) UpdateTiUPConfig(clusterId string, content string, t
 	}
 	err = m.Db().Create(record).Error
 	if nil == err {
-		err = m.Db().Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_tiup_config_id", record.ID).Error
+		err = m.Db().Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_topology_config_id", record.ID).Error
 		if nil != err {
-			err = errors.New(fmt.Sprintf("update tiup config faild, clusterId: %s, tenantId: %s, TiUPId: %d, error: %v", clusterId, tenantId, record.ID, err))
+			err = errors.New(fmt.Sprintf("update topology config faild, clusterId: %s, tenantId: %s, topologyId: %d, error: %v", clusterId, tenantId, record.ID, err))
 		}
 	} else {
-		err = errors.New(fmt.Sprintf("craete tiup config faild, clusterId: %s, tenantId: %s, TiUPId: %d, error: %v", clusterId, tenantId, record.ID, err))
+		err = errors.New(fmt.Sprintf("craete topology config faild, clusterId: %s, tenantId: %s, topologyId: %d, error: %v", clusterId, tenantId, record.ID, err))
 	}
 	return cluster, err
 }
@@ -202,11 +202,11 @@ func (m *DAOClusterManager) FetchCluster(clusterId string) (result *ClusterFetch
 			}
 		}
 
-		if cluster.CurrentTiupConfigId > 0 {
-			result.TiUPConfig = &TiUPConfig{}
-			err = m.Db().First(result.TiUPConfig, "id = ?", cluster.CurrentTiupConfigId).Error
+		if cluster.CurrentTopologyConfigId > 0 {
+			result.TopologyConfig = &TopologyConfig{}
+			err = m.Db().First(result.TopologyConfig, "id = ?", cluster.CurrentTopologyConfigId).Error
 			if nil != err {
-				return nil, errors.New(fmt.Sprintf("FetchCluster, query demand record failed, clusterId: %s, TiUPID:%d, error: %v", clusterId, cluster.CurrentTiupConfigId, err))
+				return nil, errors.New(fmt.Sprintf("FetchCluster, query demand record failed, clusterId: %s, topologyId:%d, error: %v", clusterId, cluster.CurrentTopologyConfigId, err))
 			}
 		}
 
@@ -216,6 +216,11 @@ func (m *DAOClusterManager) FetchCluster(clusterId string) (result *ClusterFetch
 			if nil != err {
 				return nil, errors.New(fmt.Sprintf("FetchCluster, query workflow failed, clusterId: %s, workflowId:%d, error: %v", clusterId, cluster.CurrentFlowId, err))
 			}
+		}
+
+		result.ComponentInstances, err = m.ListComponentInstances(cluster.ID)
+		if nil != err {
+			return nil, errors.New(fmt.Sprintf("FetchCluster, ListComponentInstances failed, clusterId: %s, error: %v", clusterId, err))
 		}
 	} else {
 		return nil, errors.New(fmt.Sprintf("FetchCluster, query cluster failed, clusterId: %s, error: %v", clusterId, err))
@@ -234,7 +239,7 @@ func (m *DAOClusterManager) ListClusterDetails(clusterId, clusterName, clusterTy
 
 	flowIds := make([]uint, len(clusters), len(clusters))
 	demandIds := make([]uint, len(clusters), len(clusters))
-	tiupConfigIds := make([]uint, len(clusters), len(clusters))
+	topologyConfigIds := make([]uint, len(clusters), len(clusters))
 
 	result = make([]*ClusterFetchResult, len(clusters), len(clusters))
 	clusterMap := make(map[string]*ClusterFetchResult)
@@ -242,7 +247,7 @@ func (m *DAOClusterManager) ListClusterDetails(clusterId, clusterName, clusterTy
 	for i, c := range clusters {
 		flowIds[i] = c.CurrentFlowId
 		demandIds[i] = c.CurrentDemandId
-		tiupConfigIds[i] = c.CurrentTiupConfigId
+		topologyConfigIds[i] = c.CurrentTopologyConfigId
 		result[i] = &ClusterFetchResult{
 			Cluster: c,
 		}
@@ -267,13 +272,13 @@ func (m *DAOClusterManager) ListClusterDetails(clusterId, clusterName, clusterTy
 		clusterMap[v.ClusterId].DemandRecord = v
 	}
 
-	tiupConfigs := make([]*TiUPConfig, len(clusters), len(clusters))
-	err = m.Db().Find(&tiupConfigs, tiupConfigIds).Error
+	topologyConfigs := make([]*TopologyConfig, len(clusters), len(clusters))
+	err = m.Db().Find(&topologyConfigs, topologyConfigIds).Error
 	if nil != err {
-		return nil, 0, errors.New(fmt.Sprintf("ListClusterDetails, query TiUP config lists failed, error: %v", err))
+		return nil, 0, errors.New(fmt.Sprintf("ListClusterDetails, query topology config lists failed, error: %v", err))
 	}
-	for _, v := range tiupConfigs {
-		clusterMap[v.ClusterId].TiUPConfig = v
+	for _, v := range topologyConfigs {
+		clusterMap[v.ClusterId].TopologyConfig = v
 	}
 	return result, total, nil
 }
@@ -361,15 +366,15 @@ func (m *DAOClusterManager) SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		},
-		ClusterId:   record.GetClusterId(),
-		OperatorId:  record.GetOperatorId(),
-		BackupRange: record.GetBackupRange(),
-		BackupType:  record.GetBackupType(),
-		BackupMode:  record.GetBackupMode(),
-		FlowId:      record.GetFlowId(),
-		FilePath:    record.GetFilePath(),
-		StartTime:   time.Unix(record.GetStartTime(), 0),
-		EndTime:     time.Unix(record.GetEndTime(), 0),
+		ClusterId:    record.GetClusterId(),
+		OperatorId:   record.GetOperatorId(),
+		BackupMethod: record.GetBackupMethod(),
+		BackupType:   record.GetBackupType(),
+		BackupMode:   record.GetBackupMode(),
+		FlowId:       record.GetFlowId(),
+		FilePath:     record.GetFilePath(),
+		StartTime:    time.Unix(record.GetStartTime(), 0),
+		EndTime:      time.Unix(record.GetEndTime(), 0),
 	}
 
 	return do, m.Db().Create(do).Error
@@ -469,17 +474,16 @@ func (m *DAOClusterManager) SaveRecoverRecord(tenantId, clusterId, operatorId st
 
 func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDTO) (*BackupStrategy, error) {
 	strategyDO := BackupStrategy{
-		ClusterId: strategy.ClusterId,
+		ClusterId: strategy.GetClusterId(),
+		OperatorId: strategy.GetOperatorId(),
 		Record: Record{
-			TenantId: strategy.TenantId,
+			TenantId: strategy.GetTenantId(),
 		},
-		BackupDate:  strategy.BackupDate,
-		BackupRange: strategy.BackupRange,
-		BackupType:  strategy.BackupType,
-		Period:      strategy.Period,
-		FilePath:    strategy.FilePath,
+		BackupDate:  strategy.GetBackupDate(),
+		StartHour:   strategy.GetStartHour(),
+		EndHour:     strategy.GetEndHour(),
 	}
-	result := m.Db().Table("backup_strategy").Where("cluster_id = ?", strategy.ClusterId).First(&strategyDO)
+	result := m.Db().Table(TABLE_NAME_BACKUP_STRATEGY).Where("cluster_id = ?", strategy.ClusterId).First(&strategyDO)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			strategyDO.CreatedAt = time.Now()
@@ -493,12 +497,10 @@ func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDT
 		}
 	} else {
 		strategyDO.UpdatedAt = time.Now()
-		err := m.Db().Model(&BackupStrategy{}).Updates(&BackupStrategy{
-			BackupDate:  strategy.BackupDate,
-			BackupRange: strategy.BackupRange,
-			BackupType:  strategy.BackupType,
-			Period:      strategy.Period,
-			FilePath:    strategy.FilePath,
+		err := m.Db().Model(&strategyDO).Updates(&BackupStrategy{
+			BackupDate:  strategy.GetBackupDate(),
+			StartHour:   strategy.GetStartHour(),
+			EndHour:     strategy.GetEndHour(),
 		}).Error
 		if err != nil {
 			return nil, err
@@ -509,10 +511,21 @@ func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDT
 
 func (m *DAOClusterManager) QueryBackupStartegy(clusterId string) (*BackupStrategy, error) {
 	strategyDO := BackupStrategy{}
-	err := m.Db().Table("backup_strategy").Where("cluster_id = ?", clusterId).First(&strategyDO).Error
+	err := m.Db().Table(TABLE_NAME_BACKUP_STRATEGY).Where("cluster_id = ?", clusterId).First(&strategyDO).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
 
 	return &strategyDO, nil
+}
+
+
+func (m *DAOClusterManager) QueryBackupStartegyByTime(weekday string, startHour uint32) ([]*BackupStrategy, error) {
+	var strategyListDO []*BackupStrategy
+	err := m.Db().Table(TABLE_NAME_BACKUP_STRATEGY).Where("start_hour = ?", startHour).Where("backup_date like '%" + weekday + "%'").Find(&strategyListDO).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	return strategyListDO, nil
 }

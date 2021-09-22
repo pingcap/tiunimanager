@@ -2,6 +2,7 @@ package host
 
 import (
 	"context"
+
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 
@@ -10,7 +11,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-type ResourceManager struct {}
+type ResourceManager struct{}
 
 func NewResourceManager() *ResourceManager {
 	m := new(ResourceManager)
@@ -22,23 +23,29 @@ func copyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.Ip = src.Ip
 	dst.UserName = src.UserName
 	dst.Passwd = src.Passwd
+	dst.Arch = src.Arch
 	dst.Os = src.Os
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int32(src.CpuCores)
-	dst.Memory = int32(src.Memory)
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
 	dst.Spec = src.Spec
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Nic = src.Nic
-	dst.Dc = src.Dc
+	dst.Region = src.Region
 	dst.Az = src.Az
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
+	dst.DiskType = src.DiskType
+	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
 			Status:   disk.Status,
+			Type:     disk.Type,
 		})
 	}
 }
@@ -47,18 +54,23 @@ func copyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.HostId = src.HostId
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
+	dst.Arch = src.Arch
 	dst.Os = src.Os
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int32(src.CpuCores)
-	dst.Memory = int32(src.Memory)
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
 	dst.Spec = src.Spec
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Nic = src.Nic
-	dst.Dc = src.Dc
+	dst.Region = src.Region
 	dst.Az = src.Az
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
+	dst.DiskType = src.DiskType
 	dst.CreateAt = src.CreateAt
+	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &hostPb.Disk{
 			DiskId:   disk.DiskId,
@@ -66,6 +78,8 @@ func copyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
 			Status:   disk.Status,
+			Type:     disk.Type,
+			UsedBy:   disk.UsedBy,
 		})
 	}
 }

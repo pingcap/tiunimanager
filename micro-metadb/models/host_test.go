@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -12,26 +13,26 @@ import (
 )
 
 func TestCreateHost(t *testing.T) {
-	h := &Host{
-		HostName: "TestCreateHostRepeated",
-		IP:       "111.111.111.111",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "TestCompute",
-		Disks: []Disk{
+	h := &resource.Host{
+		HostName:     "TestCreateHostRepeated",
+		IP:           "111.111.111.111",
+		Status:       0,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 5,
+		FreeMemory:   8,
+		Nic:          "1GE",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "TestCompute",
+		Disks: []resource.Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
 	id, _ := Dao.ResourceManager().CreateHost(h)
 	defer Dao.ResourceManager().DeleteHost(id)
 	type args struct {
-		host *Host
+		host *resource.Host
 	}
 	tests := []struct {
 		name    string
@@ -39,37 +40,37 @@ func TestCreateHost(t *testing.T) {
 		wantErr bool
 		assert  func(result string) bool
 	}{
-		{"normal", args{host: &Host{
-			HostName: "TestCreateHost1",
-			IP:       "192.168.125.132",
-			Status:   0,
-			OS:       "CentOS",
-			Kernel:   "5.0.0",
-			CpuCores: 5,
-			Memory:   8,
-			Nic:      "1GE",
-			AZ:       "Zone1",
-			Rack:     "3-1",
-			Purpose:  "TestCompute",
-			Disks: []Disk{
+		{"normal", args{host: &resource.Host{
+			HostName:     "TestCreateHost1",
+			IP:           "192.168.125.132",
+			Status:       0,
+			OS:           "CentOS",
+			Kernel:       "5.0.0",
+			FreeCpuCores: 5,
+			FreeMemory:   8,
+			Nic:          "1GE",
+			AZ:           "Zone1",
+			Rack:         "3-1",
+			Purpose:      "TestCompute",
+			Disks: []resource.Disk{
 				{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 			},
 		}}, false, func(result string) bool {
 			return len(result) > 0
 		}},
-		{"same name", args{host: &Host{
-			HostName: "TestCreateHostRepeated",
-			IP:       "111.111.111.111",
-			Status:   0,
-			OS:       "CentOS",
-			Kernel:   "5.0.0",
-			CpuCores: 5,
-			Memory:   8,
-			Nic:      "1GE",
-			AZ:       "Zone1",
-			Rack:     "3-1",
-			Purpose:  "TestCompute",
-			Disks: []Disk{
+		{"same name", args{host: &resource.Host{
+			HostName:     "TestCreateHostRepeated",
+			IP:           "111.111.111.111",
+			Status:       0,
+			OS:           "CentOS",
+			Kernel:       "5.0.0",
+			FreeCpuCores: 5,
+			FreeMemory:   8,
+			Nic:          "1GE",
+			AZ:           "Zone1",
+			Rack:         "3-1",
+			Purpose:      "TestCompute",
+			Disks: []resource.Disk{
 				{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 			},
 		}}, true, func(result string) bool {
@@ -93,7 +94,7 @@ func TestCreateHost(t *testing.T) {
 
 func TestCreateHostsInBatch(t *testing.T) {
 	type args struct {
-		hosts []*Host
+		hosts []*resource.Host
 	}
 	tests := []struct {
 		name    string
@@ -101,67 +102,67 @@ func TestCreateHostsInBatch(t *testing.T) {
 		wantErr bool
 		asserts []func(result []string) bool
 	}{
-		{"normal", args{hosts: []*Host{
+		{"normal", args{hosts: []*resource.Host{
 			{
-				HostName: "TestCreateHostsInBatch1",
-				IP:       "192.168.11.111",
-				Status:   0,
-				OS:       "CentOS",
-				Kernel:   "5.0.0",
-				CpuCores: 5,
-				Memory:   8,
-				Nic:      "1GE",
-				AZ:       "Zone1",
-				Rack:     "3-1",
-				Purpose:  "TestCompute",
-				Disks:    []Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
+				HostName:     "TestCreateHostsInBatch1",
+				IP:           "192.168.11.111",
+				Status:       0,
+				OS:           "CentOS",
+				Kernel:       "5.0.0",
+				FreeCpuCores: 5,
+				FreeMemory:   8,
+				Nic:          "1GE",
+				AZ:           "Zone1",
+				Rack:         "3-1",
+				Purpose:      "TestCompute",
+				Disks:        []resource.Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
 			},
 			{
-				HostName: "TestCreateHostsInBatch2",
-				IP:       "192.111.125.111",
-				Status:   0,
-				OS:       "CentOS",
-				Kernel:   "5.0.0",
-				CpuCores: 5,
-				Memory:   8,
-				Nic:      "1GE",
-				AZ:       "Zone1",
-				Rack:     "3-1",
-				Purpose:  "TestCompute",
-				Disks:    []Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
+				HostName:     "TestCreateHostsInBatch2",
+				IP:           "192.111.125.111",
+				Status:       0,
+				OS:           "CentOS",
+				Kernel:       "5.0.0",
+				FreeCpuCores: 5,
+				FreeMemory:   8,
+				Nic:          "1GE",
+				AZ:           "Zone1",
+				Rack:         "3-1",
+				Purpose:      "TestCompute",
+				Disks:        []resource.Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
 			},
 		}}, false, []func(result []string) bool{
 			func(result []string) bool { return len(result) == 2 },
 			func(result []string) bool { return len(result[0]) > 0 },
 		}},
-		{"same name", args{hosts: []*Host{
+		{"same name", args{hosts: []*resource.Host{
 			{
-				HostName: "TestCreateHostsInBatchRepeated",
-				IP:       "444.555.666.777",
-				Status:   0,
-				OS:       "CentOS",
-				Kernel:   "5.0.0",
-				CpuCores: 5,
-				Memory:   8,
-				Nic:      "1GE",
-				AZ:       "Zone1",
-				Rack:     "3-1",
-				Purpose:  "TestCompute",
-				Disks:    []Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
+				HostName:     "TestCreateHostsInBatchRepeated",
+				IP:           "444.555.666.777",
+				Status:       0,
+				OS:           "CentOS",
+				Kernel:       "5.0.0",
+				FreeCpuCores: 5,
+				FreeMemory:   8,
+				Nic:          "1GE",
+				AZ:           "Zone1",
+				Rack:         "3-1",
+				Purpose:      "TestCompute",
+				Disks:        []resource.Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
 			},
 			{
-				HostName: "TestCreateHostsInBatchRepeated",
-				IP:       "444.555.666.777",
-				Status:   0,
-				OS:       "CentOS",
-				Kernel:   "5.0.0",
-				CpuCores: 5,
-				Memory:   8,
-				Nic:      "1GE",
-				AZ:       "Zone1",
-				Rack:     "3-1",
-				Purpose:  "TestCompute",
-				Disks:    []Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
+				HostName:     "TestCreateHostsInBatchRepeated",
+				IP:           "444.555.666.777",
+				Status:       0,
+				OS:           "CentOS",
+				Kernel:       "5.0.0",
+				FreeCpuCores: 5,
+				FreeMemory:   8,
+				Nic:          "1GE",
+				AZ:           "Zone1",
+				Rack:         "3-1",
+				Purpose:      "TestCompute",
+				Disks:        []resource.Disk{{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1}},
 			},
 		}}, true, []func(result []string) bool{}},
 	}
@@ -183,19 +184,19 @@ func TestCreateHostsInBatch(t *testing.T) {
 }
 
 func TestDeleteHost(t *testing.T) {
-	h := &Host{
-		HostName: "TestDeleteHost1",
-		IP:       "192.99.999.132",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "TestCompute",
-		Disks: []Disk{
+	h := &resource.Host{
+		HostName:     "TestDeleteHost1",
+		IP:           "192.99.999.132",
+		Status:       0,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 5,
+		FreeMemory:   8,
+		Nic:          "1GE",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "TestCompute",
+		Disks: []resource.Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
@@ -222,37 +223,37 @@ func TestDeleteHost(t *testing.T) {
 }
 
 func TestDeleteHostsInBatch(t *testing.T) {
-	h := &Host{
-		HostName: "主机1",
-		IP:       "111.99.999.132",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "TestCompute",
-		Disks: []Disk{
+	h := &resource.Host{
+		HostName:     "主机1",
+		IP:           "111.99.999.132",
+		Status:       0,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 5,
+		FreeMemory:   8,
+		Nic:          "1GE",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "TestCompute",
+		Disks: []resource.Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
 	id1, _ := Dao.ResourceManager().CreateHost(h)
 	defer Dao.ResourceManager().DeleteHost(id1)
-	h2 := &Host{
-		HostName: "主机1",
-		IP:       "222.99.999.132",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "TestCompute",
-		Disks: []Disk{
+	h2 := &resource.Host{
+		HostName:     "主机1",
+		IP:           "222.99.999.132",
+		Status:       0,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 5,
+		FreeMemory:   8,
+		Nic:          "1GE",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "TestCompute",
+		Disks: []resource.Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
@@ -282,10 +283,10 @@ func TestDeleteHostsInBatch(t *testing.T) {
 func TestDiskStatus_IsAvailable(t *testing.T) {
 	tests := []struct {
 		name string
-		s    DiskStatus
+		s    resource.DiskStatus
 		want bool
 	}{
-		{"normal", DISK_AVAILABLE, true},
+		{"normal", resource.DISK_AVAILABLE, true},
 		{"want false", 999, false},
 	}
 	for _, tt := range tests {
@@ -300,10 +301,10 @@ func TestDiskStatus_IsAvailable(t *testing.T) {
 func TestDiskStatus_IsInused(t *testing.T) {
 	tests := []struct {
 		name string
-		s    DiskStatus
+		s    resource.DiskStatus
 		want bool
 	}{
-		{"normal", DISK_INUSED, true},
+		{"normal", resource.DISK_INUSED, true},
 		{"want false", 999, false},
 	}
 	for _, tt := range tests {
@@ -340,7 +341,7 @@ func TestDisk_BeforeCreate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := &Disk{
+			d := &resource.Disk{
 				ID:        tt.fields.ID,
 				HostId:    tt.fields.HostId,
 				Name:      tt.fields.Name,
@@ -358,59 +359,20 @@ func TestDisk_BeforeCreate(t *testing.T) {
 	}
 }
 
-func TestDisk_TableName(t *testing.T) {
-	type fields struct {
-		ID        string
-		HostId    string
-		Name      string
-		Capacity  int32
-		Path      string
-		Status    int32
-		CreatedAt time.Time
-		UpdatedAt time.Time
-		DeletedAt gorm.DeletedAt
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := Disk{
-				ID:        tt.fields.ID,
-				HostId:    tt.fields.HostId,
-				Name:      tt.fields.Name,
-				Capacity:  tt.fields.Capacity,
-				Path:      tt.fields.Path,
-				Status:    tt.fields.Status,
-				CreatedAt: tt.fields.CreatedAt,
-				UpdatedAt: tt.fields.UpdatedAt,
-				DeletedAt: tt.fields.DeletedAt,
-			}
-			if got := d.TableName(); got != tt.want {
-				t.Errorf("TableName() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestFindHostById(t *testing.T) {
-	h := &Host{
-		HostName: "主机1",
-		IP:       "876.111.111.111",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "TestCompute",
-		Disks: []Disk{
+	h := &resource.Host{
+		HostName:     "主机1",
+		IP:           "876.111.111.111",
+		Status:       0,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 5,
+		FreeMemory:   8,
+		Nic:          "1GE",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "TestCompute",
+		Disks: []resource.Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
@@ -423,11 +385,11 @@ func TestFindHostById(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-		asserts []func(result *Host) bool
+		asserts []func(result *resource.Host) bool
 	}{
-		{"normal", args{hostId: id1}, false, []func(result *Host) bool{
-			func(result *Host) bool { return id1 == result.ID },
-			func(result *Host) bool { return h.IP == result.IP },
+		{"normal", args{hostId: id1}, false, []func(result *resource.Host) bool{
+			func(result *resource.Host) bool { return id1 == result.ID },
+			func(result *resource.Host) bool { return h.IP == result.IP },
 		}},
 	}
 	for _, tt := range tests {
@@ -475,11 +437,11 @@ func TestGetFailureDomain(t *testing.T) {
 func TestHostStatus_IsAvailable(t *testing.T) {
 	tests := []struct {
 		name string
-		s    HostStatus
+		s    resource.HostStatus
 		want bool
 	}{
-		{"normal_online", HOST_ONLINE, true},
-		{"normal_inused", HOST_INUSED, true},
+		{"normal_online", resource.HOST_ONLINE, true},
+		{"normal_inused", resource.HOST_INUSED, true},
 		{"want false", 999, false},
 	}
 	for _, tt := range tests {
@@ -494,10 +456,10 @@ func TestHostStatus_IsAvailable(t *testing.T) {
 func TestHostStatus_IsInused(t *testing.T) {
 	tests := []struct {
 		name string
-		s    HostStatus
+		s    resource.HostStatus
 		want bool
 	}{
-		{"normal_inused", HOST_INUSED, true},
+		{"normal_inused", resource.HOST_INUSED, true},
 		{"want false", 999, false},
 	}
 	for _, tt := range tests {
@@ -518,7 +480,7 @@ func TestHostTableName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := HostTableName(); got != tt.want {
+			if got := TABLE_NAME_HOST; got != tt.want {
 				t.Errorf("HostTableName() = %v, want %v", got, tt.want)
 			}
 		})
@@ -533,15 +495,15 @@ func TestHost_AfterDelete(t *testing.T) {
 		Status    int32
 		OS        string
 		Kernel    string
-		CpuCores  int
-		Memory    int
+		CpuCores  int32
+		Memory    int32
 		Spec      string
 		Nic       string
-		DC        string
+		Region    string
 		AZ        string
 		Rack      string
 		Purpose   string
-		Disks     []Disk
+		Disks     []resource.Disk
 		CreatedAt time.Time
 		UpdatedAt time.Time
 		DeletedAt gorm.DeletedAt
@@ -559,25 +521,25 @@ func TestHost_AfterDelete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := &Host{
-				ID:        tt.fields.ID,
-				IP:        tt.fields.IP,
-				HostName:  tt.fields.HostName,
-				Status:    tt.fields.Status,
-				OS:        tt.fields.OS,
-				Kernel:    tt.fields.Kernel,
-				CpuCores:  tt.fields.CpuCores,
-				Memory:    tt.fields.Memory,
-				Spec:      tt.fields.Spec,
-				Nic:       tt.fields.Nic,
-				DC:        tt.fields.DC,
-				AZ:        tt.fields.AZ,
-				Rack:      tt.fields.Rack,
-				Purpose:   tt.fields.Purpose,
-				Disks:     tt.fields.Disks,
-				CreatedAt: tt.fields.CreatedAt,
-				UpdatedAt: tt.fields.UpdatedAt,
-				DeletedAt: tt.fields.DeletedAt,
+			h := &resource.Host{
+				ID:           tt.fields.ID,
+				IP:           tt.fields.IP,
+				HostName:     tt.fields.HostName,
+				Status:       tt.fields.Status,
+				OS:           tt.fields.OS,
+				Kernel:       tt.fields.Kernel,
+				FreeCpuCores: tt.fields.CpuCores,
+				FreeMemory:   tt.fields.Memory,
+				Spec:         tt.fields.Spec,
+				Nic:          tt.fields.Nic,
+				Region:       tt.fields.Region,
+				AZ:           tt.fields.AZ,
+				Rack:         tt.fields.Rack,
+				Purpose:      tt.fields.Purpose,
+				Disks:        tt.fields.Disks,
+				CreatedAt:    tt.fields.CreatedAt,
+				UpdatedAt:    tt.fields.UpdatedAt,
+				DeletedAt:    tt.fields.DeletedAt,
 			}
 			if err := h.AfterDelete(tt.args.tx); (err != nil) != tt.wantErr {
 				t.Errorf("AfterDelete() error = %v, wantErr %v", err, tt.wantErr)
@@ -594,15 +556,15 @@ func TestHost_AfterFind(t *testing.T) {
 		Status    int32
 		OS        string
 		Kernel    string
-		CpuCores  int
-		Memory    int
+		CpuCores  int32
+		Memory    int32
 		Spec      string
 		Nic       string
-		DC        string
+		Region    string
 		AZ        string
 		Rack      string
 		Purpose   string
-		Disks     []Disk
+		Disks     []resource.Disk
 		CreatedAt time.Time
 		UpdatedAt time.Time
 		DeletedAt gorm.DeletedAt
@@ -620,25 +582,25 @@ func TestHost_AfterFind(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := &Host{
-				ID:        tt.fields.ID,
-				IP:        tt.fields.IP,
-				HostName:  tt.fields.HostName,
-				Status:    tt.fields.Status,
-				OS:        tt.fields.OS,
-				Kernel:    tt.fields.Kernel,
-				CpuCores:  tt.fields.CpuCores,
-				Memory:    tt.fields.Memory,
-				Spec:      tt.fields.Spec,
-				Nic:       tt.fields.Nic,
-				DC:        tt.fields.DC,
-				AZ:        tt.fields.AZ,
-				Rack:      tt.fields.Rack,
-				Purpose:   tt.fields.Purpose,
-				Disks:     tt.fields.Disks,
-				CreatedAt: tt.fields.CreatedAt,
-				UpdatedAt: tt.fields.UpdatedAt,
-				DeletedAt: tt.fields.DeletedAt,
+			h := &resource.Host{
+				ID:           tt.fields.ID,
+				IP:           tt.fields.IP,
+				HostName:     tt.fields.HostName,
+				Status:       tt.fields.Status,
+				OS:           tt.fields.OS,
+				Kernel:       tt.fields.Kernel,
+				FreeCpuCores: tt.fields.CpuCores,
+				FreeMemory:   tt.fields.Memory,
+				Spec:         tt.fields.Spec,
+				Nic:          tt.fields.Nic,
+				Region:       tt.fields.Region,
+				AZ:           tt.fields.AZ,
+				Rack:         tt.fields.Rack,
+				Purpose:      tt.fields.Purpose,
+				Disks:        tt.fields.Disks,
+				CreatedAt:    tt.fields.CreatedAt,
+				UpdatedAt:    tt.fields.UpdatedAt,
+				DeletedAt:    tt.fields.DeletedAt,
 			}
 			if err := h.AfterFind(tt.args.tx); (err != nil) != tt.wantErr {
 				t.Errorf("AfterFind() error = %v, wantErr %v", err, tt.wantErr)
@@ -655,15 +617,15 @@ func TestHost_BeforeCreate(t *testing.T) {
 		Status    int32
 		OS        string
 		Kernel    string
-		CpuCores  int
-		Memory    int
+		CpuCores  int32
+		Memory    int32
 		Spec      string
 		Nic       string
-		DC        string
+		Region    string
 		AZ        string
 		Rack      string
 		Purpose   string
-		Disks     []Disk
+		Disks     []resource.Disk
 		CreatedAt time.Time
 		UpdatedAt time.Time
 		DeletedAt gorm.DeletedAt
@@ -681,25 +643,25 @@ func TestHost_BeforeCreate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := &Host{
-				ID:        tt.fields.ID,
-				IP:        tt.fields.IP,
-				HostName:  tt.fields.HostName,
-				Status:    tt.fields.Status,
-				OS:        tt.fields.OS,
-				Kernel:    tt.fields.Kernel,
-				CpuCores:  tt.fields.CpuCores,
-				Memory:    tt.fields.Memory,
-				Spec:      tt.fields.Spec,
-				Nic:       tt.fields.Nic,
-				DC:        tt.fields.DC,
-				AZ:        tt.fields.AZ,
-				Rack:      tt.fields.Rack,
-				Purpose:   tt.fields.Purpose,
-				Disks:     tt.fields.Disks,
-				CreatedAt: tt.fields.CreatedAt,
-				UpdatedAt: tt.fields.UpdatedAt,
-				DeletedAt: tt.fields.DeletedAt,
+			h := &resource.Host{
+				ID:           tt.fields.ID,
+				IP:           tt.fields.IP,
+				HostName:     tt.fields.HostName,
+				Status:       tt.fields.Status,
+				OS:           tt.fields.OS,
+				Kernel:       tt.fields.Kernel,
+				FreeCpuCores: tt.fields.CpuCores,
+				FreeMemory:   tt.fields.Memory,
+				Spec:         tt.fields.Spec,
+				Nic:          tt.fields.Nic,
+				Region:       tt.fields.Region,
+				AZ:           tt.fields.AZ,
+				Rack:         tt.fields.Rack,
+				Purpose:      tt.fields.Purpose,
+				Disks:        tt.fields.Disks,
+				CreatedAt:    tt.fields.CreatedAt,
+				UpdatedAt:    tt.fields.UpdatedAt,
+				DeletedAt:    tt.fields.DeletedAt,
 			}
 			if err := h.BeforeCreate(tt.args.tx); (err != nil) != tt.wantErr {
 				t.Errorf("BeforeCreate() error = %v, wantErr %v", err, tt.wantErr)
@@ -716,15 +678,15 @@ func TestHost_BeforeDelete(t *testing.T) {
 		Status    int32
 		OS        string
 		Kernel    string
-		CpuCores  int
-		Memory    int
+		CpuCores  int32
+		Memory    int32
 		Spec      string
 		Nic       string
-		DC        string
+		Region    string
 		AZ        string
 		Rack      string
 		Purpose   string
-		Disks     []Disk
+		Disks     []resource.Disk
 		CreatedAt time.Time
 		UpdatedAt time.Time
 		DeletedAt gorm.DeletedAt
@@ -742,25 +704,25 @@ func TestHost_BeforeDelete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := &Host{
-				ID:        tt.fields.ID,
-				IP:        tt.fields.IP,
-				HostName:  tt.fields.HostName,
-				Status:    tt.fields.Status,
-				OS:        tt.fields.OS,
-				Kernel:    tt.fields.Kernel,
-				CpuCores:  tt.fields.CpuCores,
-				Memory:    tt.fields.Memory,
-				Spec:      tt.fields.Spec,
-				Nic:       tt.fields.Nic,
-				DC:        tt.fields.DC,
-				AZ:        tt.fields.AZ,
-				Rack:      tt.fields.Rack,
-				Purpose:   tt.fields.Purpose,
-				Disks:     tt.fields.Disks,
-				CreatedAt: tt.fields.CreatedAt,
-				UpdatedAt: tt.fields.UpdatedAt,
-				DeletedAt: tt.fields.DeletedAt,
+			h := &resource.Host{
+				ID:           tt.fields.ID,
+				IP:           tt.fields.IP,
+				HostName:     tt.fields.HostName,
+				Status:       tt.fields.Status,
+				OS:           tt.fields.OS,
+				Kernel:       tt.fields.Kernel,
+				FreeCpuCores: tt.fields.CpuCores,
+				FreeMemory:   tt.fields.Memory,
+				Spec:         tt.fields.Spec,
+				Nic:          tt.fields.Nic,
+				Region:       tt.fields.Region,
+				AZ:           tt.fields.AZ,
+				Rack:         tt.fields.Rack,
+				Purpose:      tt.fields.Purpose,
+				Disks:        tt.fields.Disks,
+				CreatedAt:    tt.fields.CreatedAt,
+				UpdatedAt:    tt.fields.UpdatedAt,
+				DeletedAt:    tt.fields.DeletedAt,
 			}
 			if err := h.BeforeDelete(tt.args.tx); (err != nil) != tt.wantErr {
 				t.Errorf("BeforeDelete() error = %v, wantErr %v", err, tt.wantErr)
@@ -777,15 +739,15 @@ func TestHost_IsExhaust(t *testing.T) {
 		Status    int32
 		OS        string
 		Kernel    string
-		CpuCores  int
-		Memory    int
+		CpuCores  int32
+		Memory    int32
 		Spec      string
 		Nic       string
-		DC        string
+		Region    string
 		AZ        string
 		Rack      string
 		Purpose   string
-		Disks     []Disk
+		Disks     []resource.Disk
 		CreatedAt time.Time
 		UpdatedAt time.Time
 		DeletedAt gorm.DeletedAt
@@ -795,32 +757,32 @@ func TestHost_IsExhaust(t *testing.T) {
 		fields fields
 		want   bool
 	}{
-		{"normal", fields{CpuCores: 4, Memory: 8, Disks: []Disk{{Status: int32(DISK_AVAILABLE)}}}, false},
+		{"normal", fields{CpuCores: 4, Memory: 8, Disks: []resource.Disk{{Status: int32(resource.DISK_AVAILABLE)}}}, false},
 		{"without_disk", fields{CpuCores: 4, Memory: 8}, true},
-		{"without_cpu", fields{CpuCores: 0, Memory: 8, Disks: []Disk{{Status: int32(DISK_AVAILABLE)}}}, true},
-		{"without_momery", fields{CpuCores: 4, Memory: 0, Disks: []Disk{{Status: int32(DISK_AVAILABLE)}}}, true},
+		{"without_cpu", fields{CpuCores: 0, Memory: 8, Disks: []resource.Disk{{Status: int32(resource.DISK_AVAILABLE)}}}, true},
+		{"without_momery", fields{CpuCores: 4, Memory: 0, Disks: []resource.Disk{{Status: int32(resource.DISK_AVAILABLE)}}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := Host{
-				ID:        tt.fields.ID,
-				IP:        tt.fields.IP,
-				HostName:  tt.fields.HostName,
-				Status:    tt.fields.Status,
-				OS:        tt.fields.OS,
-				Kernel:    tt.fields.Kernel,
-				CpuCores:  tt.fields.CpuCores,
-				Memory:    tt.fields.Memory,
-				Spec:      tt.fields.Spec,
-				Nic:       tt.fields.Nic,
-				DC:        tt.fields.DC,
-				AZ:        tt.fields.AZ,
-				Rack:      tt.fields.Rack,
-				Purpose:   tt.fields.Purpose,
-				Disks:     tt.fields.Disks,
-				CreatedAt: tt.fields.CreatedAt,
-				UpdatedAt: tt.fields.UpdatedAt,
-				DeletedAt: tt.fields.DeletedAt,
+			h := resource.Host{
+				ID:           tt.fields.ID,
+				IP:           tt.fields.IP,
+				HostName:     tt.fields.HostName,
+				Status:       tt.fields.Status,
+				OS:           tt.fields.OS,
+				Kernel:       tt.fields.Kernel,
+				FreeCpuCores: tt.fields.CpuCores,
+				FreeMemory:   tt.fields.Memory,
+				Spec:         tt.fields.Spec,
+				Nic:          tt.fields.Nic,
+				Region:       tt.fields.Region,
+				AZ:           tt.fields.AZ,
+				Rack:         tt.fields.Rack,
+				Purpose:      tt.fields.Purpose,
+				Disks:        tt.fields.Disks,
+				CreatedAt:    tt.fields.CreatedAt,
+				UpdatedAt:    tt.fields.UpdatedAt,
+				DeletedAt:    tt.fields.DeletedAt,
 			}
 			if got := h.IsExhaust(); got != tt.want {
 				t.Errorf("IsExhaust() = %v, want %v", got, tt.want)
@@ -831,23 +793,23 @@ func TestHost_IsExhaust(t *testing.T) {
 
 func TestHost_SetDiskStatus(t *testing.T) {
 	type fields struct {
-		Disks []Disk
+		Disks []resource.Disk
 	}
 	type args struct {
 		diskId string
-		s      DiskStatus
+		s      resource.DiskStatus
 	}
 	tests := []struct {
 		name   string
 		fields fields
 		args   args
-		wanted DiskStatus
+		wanted resource.DiskStatus
 	}{
-		{"normal", fields{[]Disk{{ID: "fake1", Status: int32(DISK_AVAILABLE)}, {ID: "fake2", Status: int32(DISK_AVAILABLE)}}}, args{"fake2", DISK_INUSED}, DISK_INUSED},
+		{"normal", fields{[]resource.Disk{{ID: "fake1", Status: int32(resource.DISK_AVAILABLE)}, {ID: "fake2", Status: int32(resource.DISK_AVAILABLE)}}}, args{"fake2", resource.DISK_INUSED}, resource.DISK_INUSED},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := &Host{
+			h := &resource.Host{
 				Disks: tt.fields.Disks,
 			}
 			h.SetDiskStatus(tt.args.diskId, tt.args.s)
@@ -857,19 +819,19 @@ func TestHost_SetDiskStatus(t *testing.T) {
 }
 
 func TestListHosts(t *testing.T) {
-	h := &Host{
-		HostName: "TestListHosts1",
-		IP:       "111.121.999.132",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "TestCompute",
-		Disks: []Disk{
+	h := &resource.Host{
+		HostName:     "TestListHosts1",
+		IP:           "111.121.999.132",
+		Status:       0,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 5,
+		FreeMemory:   8,
+		Nic:          "1GE",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "TestCompute",
+		Disks: []resource.Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
@@ -877,38 +839,38 @@ func TestListHosts(t *testing.T) {
 	id1, _ := Dao.ResourceManager().CreateHost(h)
 	defer Dao.ResourceManager().DeleteHost(id1)
 
-	h2 := &Host{
-		HostName: "TestListHosts2",
-		IP:       "222.121.999.132",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "TestCompute",
-		Disks: []Disk{
+	h2 := &resource.Host{
+		HostName:     "TestListHosts2",
+		IP:           "222.121.999.132",
+		Status:       0,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 5,
+		FreeMemory:   8,
+		Nic:          "1GE",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "TestCompute",
+		Disks: []resource.Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
 	id2, _ := Dao.ResourceManager().CreateHost(h2)
 	defer Dao.ResourceManager().DeleteHost(id2)
 
-	h3 := &Host{
-		HostName: "TestListHosts3",
-		IP:       "333.121.999.132",
-		Status:   3,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "whatever",
-		Disks: []Disk{
+	h3 := &resource.Host{
+		HostName:     "TestListHosts3",
+		IP:           "333.121.999.132",
+		Status:       3,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 5,
+		FreeMemory:   8,
+		Nic:          "1GE",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "whatever",
+		Disks: []resource.Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
@@ -922,39 +884,39 @@ func TestListHosts(t *testing.T) {
 		name    string
 		args    args
 		wantErr bool
-		asserts []func(a args, result []Host) bool
+		asserts []func(a args, result []resource.Host) bool
 	}{
 		{"normal", args{req: ListHostReq{
 			Status:  0,
 			Purpose: "TestCompute",
 			Offset:  0,
 			Limit:   2,
-		}}, false, []func(a args, result []Host) bool{
-			func(a args, result []Host) bool { return len(result) == 2 },
-			func(a args, result []Host) bool { return result[1].Purpose == "TestCompute" },
+		}}, false, []func(a args, result []resource.Host) bool{
+			func(a args, result []resource.Host) bool { return len(result) == 2 },
+			func(a args, result []resource.Host) bool { return result[1].Purpose == "TestCompute" },
 		}},
 		{"offset", args{req: ListHostReq{
 			Status:  0,
 			Purpose: "TestCompute",
 			Offset:  1,
 			Limit:   2,
-		}}, false, []func(a args, result []Host) bool{
-			func(a args, result []Host) bool { return len(result) == 1 },
+		}}, false, []func(a args, result []resource.Host) bool{
+			func(a args, result []resource.Host) bool { return len(result) == 1 },
 		}},
 		{"without Purpose", args{req: ListHostReq{
-			Status: HOST_ONLINE,
+			Status: resource.HOST_ONLINE,
 			Offset: 0,
 			Limit:  5,
-		}}, false, []func(a args, result []Host) bool{
-			func(a args, result []Host) bool { return len(result) >= 2 },
+		}}, false, []func(a args, result []resource.Host) bool{
+			func(a args, result []resource.Host) bool { return len(result) >= 2 },
 		}},
 		{"without status", args{req: ListHostReq{
-			Status:  HOST_WHATEVER,
+			Status:  resource.HOST_WHATEVER,
 			Purpose: "TestCompute",
 			Offset:  0,
 			Limit:   5,
-		}}, false, []func(a args, result []Host) bool{
-			func(a args, result []Host) bool { return len(result) == 2 },
+		}}, false, []func(a args, result []resource.Host) bool{
+			func(a args, result []resource.Host) bool { return len(result) == 2 },
 		}},
 	}
 	for _, tt := range tests {
@@ -974,59 +936,59 @@ func TestListHosts(t *testing.T) {
 }
 
 func TestAllocHosts_3Hosts(t *testing.T) {
-	h := &Host{
-		HostName: "主机1",
-		IP:       "474.111.111.111",
-		UserName: "root",
-		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 17,
-		Memory:   64,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "TestCompute",
-		Disks: []Disk{
+	h := &resource.Host{
+		HostName:     "主机1",
+		IP:           "474.111.111.111",
+		UserName:     "root",
+		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:       0,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 17,
+		FreeMemory:   64,
+		Nic:          "1GE",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "TestCompute",
+		Disks: []resource.Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
 			{Name: "sdb", Path: "/pd", Capacity: 256, Status: 0},
 		},
 	}
-	h2 := &Host{
-		HostName: "主机2",
-		IP:       "474.111.111.112",
-		UserName: "root",
-		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 16,
-		Memory:   64,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "TestCompute",
-		Disks: []Disk{
+	h2 := &resource.Host{
+		HostName:     "主机2",
+		IP:           "474.111.111.112",
+		UserName:     "root",
+		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:       0,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 16,
+		FreeMemory:   64,
+		Nic:          "1GE",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "TestCompute",
+		Disks: []resource.Disk{
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 0},
 			{Name: "sdc", Path: "/tidb2", Capacity: 256, Status: 0},
 		},
 	}
-	h3 := &Host{
-		HostName: "主机3",
-		IP:       "474.111.111.113",
-		UserName: "root",
-		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 15,
-		Memory:   64,
-		Nic:      "1GE",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "TestCompute",
-		Disks: []Disk{
+	h3 := &resource.Host{
+		HostName:     "主机3",
+		IP:           "474.111.111.113",
+		UserName:     "root",
+		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:       0,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 15,
+		FreeMemory:   64,
+		Nic:          "1GE",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "TestCompute",
+		Disks: []resource.Disk{
 			{Name: "sdb", Path: "/tikv", Capacity: 256, Status: 0},
 		},
 	}
@@ -1039,19 +1001,19 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 	defer Dao.ResourceManager().DeleteHost(id3)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
-	m["pd"] = append(m["pd"], &HostAllocReq{
+	m["PD"] = append(m["PD"], &HostAllocReq{
 		FailureDomain: "Zone1",
 		CpuCores:      4,
 		Memory:        8,
 		Count:         1,
 	})
-	m["tidb"] = append(m["tidb"], &HostAllocReq{
+	m["TiDB"] = append(m["TiDB"], &HostAllocReq{
 		FailureDomain: "Zone1",
 		CpuCores:      4,
 		Memory:        8,
 		Count:         1,
 	})
-	m["tikv"] = append(m["tikv"], &HostAllocReq{
+	m["TiKV"] = append(m["TiKV"], &HostAllocReq{
 		FailureDomain: "Zone1",
 		CpuCores:      4,
 		Memory:        8,
@@ -1075,50 +1037,49 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			pdIp := rsp["pd"][0].Ip
-			tidbIp := rsp["tidb"][0].Ip
-			tikvIp := rsp["tikv"][0].Ip
-			assert.True(t, pdIp != tidbIp && tidbIp != tikvIp && tikvIp != pdIp)
+			pdIp := rsp["PD"][0].Ip
+			tidbIp := rsp["TiDB"][0].Ip
+			tikvIp := rsp["TiDB"][0].Ip
 			assert.True(t, pdIp == "474.111.111.111" || pdIp == "474.111.111.112" || pdIp == "474.111.111.113")
 			assert.True(t, tidbIp == "474.111.111.111" || tidbIp == "474.111.111.112" || tidbIp == "474.111.111.113")
 			assert.True(t, tikvIp == "474.111.111.111" || tikvIp == "474.111.111.112" || tikvIp == "474.111.111.113")
-			assert.Equal(t, 4, rsp["pd"][0].CpuCores)
-			assert.Equal(t, 8, rsp["pd"][0].Memory)
-			var host Host
+			assert.Equal(t, 4, rsp["PD"][0].CpuCores)
+			assert.Equal(t, 8, rsp["PD"][0].Memory)
+			var host resource.Host
 			MetaDB.First(&host, "IP = ?", "474.111.111.111")
-			assert.Equal(t, 17-4, host.CpuCores)
-			assert.Equal(t, 64-8, host.Memory)
-			assert.True(t, host.Status == int32(HOST_EXHAUST))
-			var host2 Host
+			assert.Equal(t, int32(17-4), host.FreeCpuCores)
+			assert.Equal(t, int32(64-8), host.FreeMemory)
+			assert.True(t, host.Status == int32(resource.HOST_EXHAUST))
+			var host2 resource.Host
 			MetaDB.First(&host2, "IP = ?", "474.111.111.112")
-			assert.Equal(t, 16-4, host2.CpuCores)
-			assert.Equal(t, 64-8, host2.Memory)
-			assert.True(t, host2.Status == int32(HOST_INUSED))
-			var host3 Host
+			assert.Equal(t, int32(16-4), host2.FreeCpuCores)
+			assert.Equal(t, int32(64-8), host2.FreeMemory)
+			assert.True(t, host2.Status == int32(resource.HOST_INUSED))
+			var host3 resource.Host
 			MetaDB.First(&host3, "IP = ?", "474.111.111.113")
-			assert.Equal(t, 15-4, host3.CpuCores)
-			assert.Equal(t, 64-8, host3.Memory)
-			assert.True(t, host3.Status == int32(HOST_EXHAUST))
+			assert.Equal(t, int32(15-4), host3.FreeCpuCores)
+			assert.Equal(t, int32(64-8), host3.FreeMemory)
+			assert.True(t, host3.Status == int32(resource.HOST_EXHAUST))
 		})
 	}
 }
 
 func TestAllocHosts_1Host(t *testing.T) {
-	h := &Host{
-		HostName: "主机1",
-		IP:       "192.168.56.99",
-		UserName: "root",
-		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 17,
-		Memory:   64,
-		Nic:      "1GE",
-		AZ:       "Zone99",
-		Rack:     "3-1",
-		Purpose:  "TestCompute",
-		Disks: []Disk{
+	h := &resource.Host{
+		HostName:     "主机1",
+		IP:           "192.168.56.99",
+		UserName:     "root",
+		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:       0,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 17,
+		FreeMemory:   64,
+		Nic:          "1GE",
+		AZ:           "Zone99",
+		Rack:         "3-1",
+		Purpose:      "TestCompute",
+		Disks: []resource.Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
 			{Name: "sdb", Path: "/mnt1", Capacity: 256, Status: 0},
 			{Name: "sdc", Path: "/mnt2", Capacity: 256, Status: 0},
@@ -1130,19 +1091,19 @@ func TestAllocHosts_1Host(t *testing.T) {
 	defer Dao.ResourceManager().DeleteHost(id1)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
-	m["pd"] = append(m["pd"], &HostAllocReq{
+	m["PD"] = append(m["PD"], &HostAllocReq{
 		FailureDomain: "Zone99",
 		CpuCores:      4,
 		Memory:        8,
 		Count:         1,
 	})
-	m["tidb"] = append(m["tidb"], &HostAllocReq{
+	m["TiDB"] = append(m["TiDB"], &HostAllocReq{
 		FailureDomain: "Zone99",
 		CpuCores:      4,
 		Memory:        8,
 		Count:         1,
 	})
-	m["tikv"] = append(m["tikv"], &HostAllocReq{
+	m["TiKV"] = append(m["TiKV"], &HostAllocReq{
 		FailureDomain: "Zone99",
 		CpuCores:      4,
 		Memory:        8,
@@ -1166,43 +1127,43 @@ func TestAllocHosts_1Host(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			pdIp := rsp["pd"][0].Ip
-			tidbIp := rsp["tidb"][0].Ip
-			tikvIp := rsp["tikv"][0].Ip
-			pdDisk := rsp["pd"][0].DiskName
-			tidbDisk := rsp["tidb"][0].DiskName
-			tikvDisk := rsp["tikv"][0].DiskName
+			pdIp := rsp["PD"][0].Ip
+			tidbIp := rsp["TiDB"][0].Ip
+			tikvIp := rsp["TiKV"][0].Ip
+			pdDisk := rsp["PD"][0].DiskName
+			tidbDisk := rsp["TiDB"][0].DiskName
+			tikvDisk := rsp["TiKV"][0].DiskName
 			assert.True(t, pdIp == "192.168.56.99" && tidbIp == "192.168.56.99" && tikvIp == "192.168.56.99")
 			assert.True(t, pdDisk != tidbDisk && tidbDisk != tikvDisk && tikvDisk != pdDisk)
 			assert.True(t, pdDisk == "sdb" || pdDisk == "sdc" || pdDisk == "sdd")
 			assert.True(t, tidbDisk == "sdb" || tidbDisk == "sdc" || tidbDisk == "sdd")
 			assert.True(t, tikvDisk == "sdb" || tikvDisk == "sdc" || tikvDisk == "sdd")
-			var host Host
+			var host resource.Host
 			MetaDB.First(&host, "IP = ?", "192.168.56.99")
-			assert.Equal(t, 17-4-4-4, host.CpuCores)
-			assert.Equal(t, 64-8-8-8, host.Memory)
-			assert.True(t, host.Status == int32(HOST_EXHAUST))
+			assert.Equal(t, int32(17-4-4-4), host.FreeCpuCores)
+			assert.Equal(t, int32(64-8-8-8), host.FreeMemory)
+			assert.True(t, host.Status == int32(resource.HOST_EXHAUST))
 
 		})
 	}
 }
 
 func TestAllocHosts_1Host_NotEnough(t *testing.T) {
-	h := &Host{
-		HostName: "主机2",
-		IP:       "192.168.56.100",
-		UserName: "root",
-		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 17,
-		Memory:   64,
-		Nic:      "1GE",
-		AZ:       "Zone100",
-		Rack:     "3-1",
-		Purpose:  "TestCompute",
-		Disks: []Disk{
+	h := &resource.Host{
+		HostName:     "主机2",
+		IP:           "192.168.56.100",
+		UserName:     "root",
+		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:       0,
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 17,
+		FreeMemory:   64,
+		Nic:          "1GE",
+		AZ:           "Zone100",
+		Rack:         "3-1",
+		Purpose:      "TestCompute",
+		Disks: []resource.Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
 			{Name: "sdb", Path: "/mnt1", Capacity: 256, Status: 0},
 			{Name: "sdc", Path: "/mnt2", Capacity: 256, Status: 0},
@@ -1214,19 +1175,19 @@ func TestAllocHosts_1Host_NotEnough(t *testing.T) {
 	defer Dao.ResourceManager().DeleteHost(id1)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
-	m["pd"] = append(m["pd"], &HostAllocReq{
+	m["PD"] = append(m["PD"], &HostAllocReq{
 		FailureDomain: "Zone100",
 		CpuCores:      4,
 		Memory:        8,
 		Count:         2,
 	})
-	m["tidb"] = append(m["tidb"], &HostAllocReq{
+	m["TiDB"] = append(m["TiDB"], &HostAllocReq{
 		FailureDomain: "Zone100",
 		CpuCores:      4,
 		Memory:        8,
 		Count:         1,
 	})
-	m["tikv"] = append(m["tikv"], &HostAllocReq{
+	m["TiKV"] = append(m["TiKV"], &HostAllocReq{
 		FailureDomain: "Zone100",
 		CpuCores:      4,
 		Memory:        8,

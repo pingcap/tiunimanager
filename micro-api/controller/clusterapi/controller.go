@@ -3,7 +3,9 @@ package clusterapi
 import (
 	"context"
 	"net/http"
+	"time"
 
+	cli "github.com/asim/go-micro/v3/client"
 	"github.com/pingcap-inc/tiem/library/client"
 
 	"github.com/gin-gonic/gin"
@@ -44,7 +46,11 @@ func Create(c *gin.Context) {
 		Demands:  demand,
 	}
 
-	respDTO, err := client.ClusterClient.CreateCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.CreateCluster(context.TODO(), reqDTO, func(o *cli.CallOptions) {
+		o.RequestTimeout = time.Minute * 5
+		o.DialTimeout = time.Minute * 5
+	})
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
@@ -187,9 +193,11 @@ func Detail(c *gin.Context) {
 		maintenance := respDTO.GetMaintenanceInfo()
 		components := respDTO.GetComponents()
 
-		componentInstances := make([]ComponentInstance, len(components), len(components))
-		for i, v := range components {
-			componentInstances[i] = *ParseComponentInfoFromDTO(v)
+		componentInstances := make([]ComponentInstance, 0, 0)
+		for _, v := range components {
+			if len(v.Nodes) > 0 {
+				componentInstances = append(componentInstances, *ParseComponentInfoFromDTO(v))
+			}
 		}
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, DetailClusterRsp{

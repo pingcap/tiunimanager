@@ -343,6 +343,8 @@ definitions:
         type: string
       password:
         type: string
+      storageType:
+        type: string
       userName:
         type: string
     type: object
@@ -358,6 +360,8 @@ definitions:
       filePath:
         type: string
       password:
+        type: string
+      storageType:
         type: string
       userName:
         type: string
@@ -426,7 +430,7 @@ definitions:
       cpuCore:
         type: integer
       disk:
-        $ref: '#/definitions/hostapi.Disk'
+        $ref: '#/definitions/hostapi.DiskInfo'
       hostName:
         type: string
       ip:
@@ -449,12 +453,14 @@ definitions:
       memory:
         type: integer
     type: object
-  hostapi.Disk:
+  hostapi.DiskInfo:
     properties:
       capacity:
         description: 'Disk size, Unit: GB'
         type: integer
       diskId:
+        type: string
+      hostId:
         type: string
       name:
         description: '[sda/sdb/nvmep0...]'
@@ -465,6 +471,11 @@ definitions:
       status:
         description: Disk Status, 0 for available, 1 for inused
         type: integer
+      type:
+        description: 'Disk type: [nvme-ssd/ssd/sata]'
+        type: string
+      usedBy:
+        type: string
     type: object
   hostapi.DomainResource:
     properties:
@@ -483,18 +494,29 @@ definitions:
     type: object
   hostapi.HostInfo:
     properties:
+      arch:
+        description: x86 or arm64
+        type: string
       az:
         type: string
       cpuCores:
+        description: Host cpu cores spec, init while importing
         type: integer
       createTime:
         type: integer
-      dc:
+      diskType:
+        description: Disk type of this host [sata/ssd/nvme_ssd]
         type: string
       disks:
         items:
-          $ref: '#/definitions/hostapi.Disk'
+          $ref: '#/definitions/hostapi.DiskInfo'
         type: array
+      freeCpuCores:
+        description: Unused CpuCore, used for allocation
+        type: integer
+      freeMemory:
+        description: Unused memory size, Unit:GB, used for allocation
+        type: integer
       hostId:
         type: string
       hostName:
@@ -504,7 +526,7 @@ definitions:
       kernel:
         type: string
       memory:
-        description: Host memory size, Unit:GB
+        description: Host memroy, init while importing
         type: integer
       nic:
         description: 'Host network type: 1GE or 10GE'
@@ -514,10 +536,15 @@ definitions:
       passwd:
         type: string
       purpose:
-        description: What Purpose is the host used for? [compute/storage or both]
+        description: What Purpose is the host used for? [compute/storage/general]
         type: string
       rack:
         type: string
+      region:
+        type: string
+      reserved:
+        description: Whether this host is reserved - will not be allocated
+        type: boolean
       spec:
         description: Host Spec, init while importing
         type: string
@@ -581,7 +608,7 @@ definitions:
     type: object
   instanceapi.BackupReq:
     properties:
-      backupRange:
+      backupMethod:
         type: string
       backupType:
         type: string
@@ -594,13 +621,9 @@ definitions:
     properties:
       backupDate:
         type: string
-      backupRange:
-        type: string
-      backupType:
-        type: string
       clusterId:
         type: string
-      filePath:
+      nextBackupTime:
         type: string
       period:
         type: string
@@ -726,6 +749,39 @@ definitions:
         type: integer
       unit:
         type: string
+    type: object
+  logapi.SearchTiDBLogDetail:
+    properties:
+      clusterId:
+        type: string
+      ext:
+        additionalProperties: true
+        type: object
+      id:
+        type: string
+      index:
+        type: string
+      ip:
+        type: string
+      level:
+        type: string
+      message:
+        type: string
+      module:
+        type: string
+      sourceLine:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  logapi.SearchTiDBLogRsp:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/logapi.SearchTiDBLogDetail'
+        type: array
+      took:
+        type: integer
     type: object
   taskapi.FlowWorkDetailInfo:
     properties:
@@ -1389,9 +1445,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/instanceapi.BackupStrategy'
-                  type: array
+                  $ref: '#/definitions/instanceapi.BackupStrategy'
               type: object
         "401":
           description: Unauthorized
@@ -1671,6 +1725,66 @@ paths:
       summary: show cluster knowledge
       tags:
       - knowledge
+  /logs/tidb/{clusterId}:
+    get:
+      consumes:
+      - application/json
+      description: search tidb log
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - in: query
+        name: endTime
+        type: string
+      - in: query
+        name: from
+        type: integer
+      - in: query
+        name: ip
+        type: string
+      - in: query
+        name: level
+        type: string
+      - in: query
+        name: message
+        type: string
+      - in: query
+        name: module
+        type: string
+      - in: query
+        name: size
+        type: integer
+      - in: query
+        name: startTime
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/logapi.SearchTiDBLogRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: search tidb log
+      tags:
+      - logs
   /resources/allochosts:
     post:
       consumes:

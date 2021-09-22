@@ -12,6 +12,8 @@ import (
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	crypto "github.com/pingcap-inc/tiem/library/thirdparty/encrypt"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
@@ -24,28 +26,34 @@ import (
 )
 
 func copyHostFromRsp(src *cluster.HostInfo, dst *HostInfo) {
-	dst.HostId = src.HostId
+	dst.ID = src.HostId
 	dst.HostName = src.HostName
-	dst.Ip = src.Ip
-	dst.Os = src.Os
+	dst.IP = src.Ip
+	dst.Arch = src.Arch
+	dst.OS = src.Os
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int32(src.CpuCores)
-	dst.Memory = int32(src.Memory)
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
 	dst.Spec = src.Spec
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Nic = src.Nic
-	dst.Dc = src.Dc
-	dst.Az = src.Az
+	dst.Region = src.Region
+	dst.AZ = src.Az
 	dst.Rack = src.Rack
 	dst.Status = int32(src.Status)
 	dst.Purpose = src.Purpose
+	dst.DiskType = src.DiskType
 	dst.CreatedAt = src.CreateAt
+	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
-		dst.Disks = append(dst.Disks, Disk{
-			DiskId:   disk.DiskId,
+		dst.Disks = append(dst.Disks, DiskInfo{
+			ID:       disk.DiskId,
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
 			Status:   int32(disk.Status),
+			Type:     disk.Type,
 		})
 	}
 }
@@ -56,24 +64,29 @@ func genHostSpec(cpuCores int32, mem int32) string {
 
 func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
 	dst.HostName = src.HostName
-	dst.Ip = src.Ip
+	dst.Ip = src.IP
 	dst.UserName = src.UserName
 	passwd, err := crypto.AesEncryptCFB(src.Passwd)
 	if err != nil {
 		return err
 	}
 	dst.Passwd = passwd
-	dst.Os = src.Os
+	dst.Arch = src.Arch
+	dst.Os = src.OS
 	dst.Kernel = src.Kernel
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
+	dst.Spec = genHostSpec(src.CpuCores, src.Memory)
 	dst.CpuCores = src.CpuCores
 	dst.Memory = src.Memory
-	dst.Spec = genHostSpec(src.CpuCores, src.Memory)
 	dst.Nic = src.Nic
-	dst.Dc = src.Dc
-	dst.Az = src.Az
+	dst.Region = src.Region
+	dst.Az = src.AZ
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Purpose = src.Purpose
+	dst.DiskType = src.DiskType
+	dst.Reserved = src.Reserved
 
 	for _, v := range src.Disks {
 		dst.Disks = append(dst.Disks, &cluster.Disk{
@@ -81,6 +94,7 @@ func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
 			Capacity: v.Capacity,
 			Status:   v.Status,
 			Path:     v.Path,
+			Type:     v.Type,
 		})
 	}
 	return nil
@@ -135,6 +149,11 @@ func ImportHost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
+	for i := range host.Disks {
+		if host.Disks[i].Type == "" {
+			host.Disks[i].Type = string(resource.Sata)
+		}
+	}
 
 	rsp, err := doImport(c, &host)
 	if err != nil {
@@ -155,7 +174,7 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	rows := xlsx.GetRows("主机信息")
+	rows := xlsx.GetRows("Host Information")
 	var hosts []*HostInfo
 	for irow, row := range rows {
 		if irow > 0 {
@@ -166,24 +185,58 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 				errMsg := fmt.Sprintf("Row %d has a Invalid IP Address %s", irow, row[IP_FILED])
 				return nil, errors.New(errMsg)
 			}
-			host.Ip = addr.String()
+			host.IP = addr.String()
 			host.UserName = row[USERNAME_FIELD]
 			host.Passwd = row[PASSWD_FIELD]
-			host.Dc = row[DC_FIELD]
-			host.Az = row[ZONE_FIELD]
+			host.Region = row[REGION_FIELD]
+			host.AZ = row[ZONE_FIELD]
 			host.Rack = row[RACK_FIELD]
-			host.Os = row[OS_FIELD]
+			if err = resource.ValidArch(row[ARCH_FIELD]); err != nil {
+				errMsg := fmt.Sprintf("Row %d get arch(%s) failed, %v", irow, row[ARCH_FIELD], err)
+				return nil, errors.New(errMsg)
+			}
+			host.Arch = row[ARCH_FIELD]
+			host.OS = row[OS_FIELD]
 			host.Kernel = row[KERNEL_FIELD]
-			coreNum, _ := (strconv.Atoi(row[CPU_FIELD]))
+			coreNum, err := (strconv.Atoi(row[CPU_FIELD]))
+			if err != nil {
+				errMsg := fmt.Sprintf("Row %d get coreNum(%s) failed, %v", irow, row[CPU_FIELD], err)
+				return nil, errors.New(errMsg)
+			}
 			host.CpuCores = int32(coreNum)
-			mem, _ := (strconv.Atoi(row[MEM_FIELD]))
+			host.FreeCpuCores = host.CpuCores
+			mem, err := (strconv.Atoi(row[MEM_FIELD]))
+			if err != nil {
+				errMsg := fmt.Sprintf("Row %d get memory(%s) failed, %v", irow, row[MEM_FIELD], err)
+				return nil, errors.New(errMsg)
+			}
 			host.Memory = int32(mem)
+			host.FreeMemory = host.Memory
 			host.Nic = row[NIC_FIELD]
+			host.Reserved, err = strconv.ParseBool(row[RESERVED_FIELD])
+			if err != nil {
+				errMsg := fmt.Sprintf("Row %d get boolean reserved failed, %v", irow, err)
+				return nil, errors.New(errMsg)
+			}
+			if err = resource.ValidPurposeType(row[PURPOSE_FIELD]); err != nil {
+				errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, row[PURPOSE_FIELD], err)
+				return nil, errors.New(errMsg)
+			}
 			host.Purpose = row[PURPOSE_FIELD]
+			if err = resource.ValidDiskType(row[DISKTYPE_FIELD]); err != nil {
+				errMsg := fmt.Sprintf("Row %d get disk type(%s) failed, %v", irow, row[DISKTYPE_FIELD], err)
+				return nil, errors.New(errMsg)
+			}
+			host.DiskType = row[DISKTYPE_FIELD]
 			disksStr := row[DISKS_FIELD]
 			if err = json.Unmarshal([]byte(disksStr), &host.Disks); err != nil {
 				errMsg := fmt.Sprintf("Row %d has a Invalid Disk Json Format, %v", irow, err)
 				return nil, errors.New(errMsg)
+			}
+			for i := range host.Disks {
+				if host.Disks[i].Type == "" {
+					host.Disks[i].Type = string(resource.DiskType(host.DiskType))
+				}
 			}
 			hosts = append(hosts, &host)
 		}
@@ -246,7 +299,7 @@ func ListHost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
-	if !HostStatus(hostQuery.Status).IsValid() {
+	if !resource.HostStatus(hostQuery.Status).IsValid() {
 		errmsg := fmt.Sprintf("Input Status %d is Invalid", hostQuery.Status)
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
@@ -406,9 +459,9 @@ func RemoveHosts(c *gin.Context) {
 // @Router /resources/hosts-template/ [get]
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
-	templateName := "hostInfo_template.xlsx"
+	templateName := common.TemplateFileName
 	// The template file should be on tiem/etc/hostInfo_template.xlsx
-	filePath := filepath.Join(curDir, "./etc/", templateName)
+	filePath := filepath.Join(curDir, common.TemplateFilePath, templateName)
 
 	_, err := os.Stat(filePath)
 	if err != nil && !os.IsExist(err) {
@@ -450,7 +503,7 @@ func copyAllocFromRsp(src []*cluster.AllocHost, dst *[]AllocateRsp) {
 			CpuCores: host.CpuCores,
 			Memory:   host.Memory,
 		})
-		(*dst)[i].Disk.DiskId = host.Disk.DiskId
+		(*dst)[i].Disk.ID = host.Disk.DiskId
 		(*dst)[i].Disk.Name = host.Disk.Name
 		(*dst)[i].Disk.Path = host.Disk.Path
 		(*dst)[i].Disk.Capacity = host.Disk.Capacity
@@ -513,10 +566,10 @@ func GetFailureDomain(c *gin.Context) {
 	var domain int
 	domainStr := c.Query("failureDomainType")
 	if domainStr == "" {
-		domain = int(service.ZONE)
+		domain = int(resource.ZONE)
 	}
 	domain, err := strconv.Atoi(domainStr)
-	if err != nil || domain > int(service.RACK) || domain < int(service.DATACENTER) {
+	if err != nil || domain > int(resource.RACK) || domain < int(resource.REGION) {
 		errmsg := fmt.Sprintf("Input domainType [%s] Invalid: %v", c.Query("failureDomainType"), err)
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
@@ -535,7 +588,9 @@ func GetFailureDomain(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}
-	var res DomainResourceRsp
+	res := DomainResourceRsp{
+		Resources: make([]DomainResource, 0, len(rsp.FdList)),
+	}
 	for _, v := range rsp.FdList {
 		res.Resources = append(res.Resources, DomainResource{
 			ZoneName: service.GetDomainNameFromCode(v.FailureDomain),

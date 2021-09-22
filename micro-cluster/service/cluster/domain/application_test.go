@@ -33,7 +33,7 @@ func defaultCluster() *ClusterAggregation {
 		ClusterId: "111",
 		BackupType: BackupTypeFull,
 		BackupMode: BackupModeAuto,
-		BackupMethod: BackupMethodLogic,
+		BackupMethod: BackupMethodPhysics,
 		StartTime: time.Now().Unix(),
 		EndTime: time.Now().Unix(),
 	}

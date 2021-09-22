@@ -109,29 +109,6 @@ func TestTaskStatus_Finished(t *testing.T) {
 	}
 }
 
-func Test_checkBackupRangeValid(t *testing.T) {
-	type args struct {
-		backupRange string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		{"BackupRangeIncrement", args{"incr"}, true},
-		{"BackupRangeFull", args{"full"}, true},
-		{"whatever", args{"whatever"}, false},
-
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := checkBackupTypeValid(tt.args.backupRange); got != tt.want {
-				t.Errorf("checkBackupRangeValid() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_checkBackupTypeValid(t *testing.T) {
 	type args struct {
 		backupType string
@@ -141,13 +118,36 @@ func Test_checkBackupTypeValid(t *testing.T) {
 		args args
 		want bool
 	}{
-		{"BackupTypeLogic", args{"logical"}, true},
-		{"BackupTypePhysics", args{"physical"}, true},
+		{"BackupTypeIncrement", args{"incr"}, true},
+		{"BackupTypeFull", args{"full"}, true},
+		{"whatever", args{"whatever"}, false},
+
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := checkBackupTypeValid(tt.args.backupType); got != tt.want {
+				t.Errorf("checkBackupRangeValid() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_checkBackupMethodValid(t *testing.T) {
+	type args struct {
+		backupMethod string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{"BackupMethodLogic", args{"logical"}, true},
+		{"BackupMethodPhysics", args{"physical"}, true},
 		{"whatever", args{"whatever"}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := checkBackupMethodValid(tt.args.backupType); got != tt.want {
+			if got := checkBackupMethodValid(tt.args.backupMethod); got != tt.want {
 				t.Errorf("checkBackupTypeValid() = %v, want %v", got, tt.want)
 			}
 		})

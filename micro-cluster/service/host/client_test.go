@@ -26,12 +26,12 @@ type DBFakeService struct {
 	mockAllocHosts         func(ctx context.Context, in *db.DBAllocHostsRequest, opts ...client.CallOption) (*db.DBAllocHostsResponse, error)
 	mockGetFailureDomain   func(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error)
 	// Cluster
-	mockCreateCluster           func(ctx context.Context, in *db.DBCreateClusterRequest, opts ...client.CallOption) (*db.DBCreateClusterResponse, error)
-	mockDeleteCluster           func(ctx context.Context, in *db.DBDeleteClusterRequest, opts ...client.CallOption) (*db.DBDeleteClusterResponse, error)
-	mockUpdateClusterStatus     func(ctx context.Context, in *db.DBUpdateClusterStatusRequest, opts ...client.CallOption) (*db.DBUpdateClusterStatusResponse, error)
-	mockUpdateClusterTiupConfig func(ctx context.Context, in *db.DBUpdateTiupConfigRequest, opts ...client.CallOption) (*db.DBUpdateTiupConfigResponse, error)
-	mockLoadCluster             func(ctx context.Context, in *db.DBLoadClusterRequest, opts ...client.CallOption) (*db.DBLoadClusterResponse, error)
-	mockListCluster             func(ctx context.Context, in *db.DBListClusterRequest, opts ...client.CallOption) (*db.DBListClusterResponse, error)
+	mockCreateCluster               func(ctx context.Context, in *db.DBCreateClusterRequest, opts ...client.CallOption) (*db.DBCreateClusterResponse, error)
+	mockDeleteCluster               func(ctx context.Context, in *db.DBDeleteClusterRequest, opts ...client.CallOption) (*db.DBDeleteClusterResponse, error)
+	mockUpdateClusterStatus         func(ctx context.Context, in *db.DBUpdateClusterStatusRequest, opts ...client.CallOption) (*db.DBUpdateClusterStatusResponse, error)
+	mockUpdateClusterTopologyConfig func(ctx context.Context, in *db.DBUpdateTopologyConfigRequest, opts ...client.CallOption) (*db.DBUpdateTopologyConfigResponse, error)
+	mockLoadCluster                 func(ctx context.Context, in *db.DBLoadClusterRequest, opts ...client.CallOption) (*db.DBLoadClusterResponse, error)
+	mockListCluster                 func(ctx context.Context, in *db.DBListClusterRequest, opts ...client.CallOption) (*db.DBListClusterResponse, error)
 	// backup & recover & parameters
 	mockSaveBackupRecord           func(ctx context.Context, in *db.DBSaveBackupRecordRequest, opts ...client.CallOption) (*db.DBSaveBackupRecordResponse, error)
 	mockDeleteBackupRecord         func(ctx context.Context, in *db.DBDeleteBackupRecordRequest, opts ...client.CallOption) (*db.DBDeleteBackupRecordResponse, error)
@@ -51,6 +51,18 @@ type DBFakeService struct {
 	mockUpdateTask func(ctx context.Context, in *db.DBUpdateTaskRequest, opts ...client.CallOption) (*db.DBUpdateTaskResponse, error)
 	mockLoadFlow   func(ctx context.Context, in *db.DBLoadFlowRequest, opts ...client.CallOption) (*db.DBLoadFlowResponse, error)
 	mockLoadTask   func(ctx context.Context, in *db.DBLoadTaskRequest, opts ...client.CallOption) (*db.DBLoadTaskResponse, error)
+}
+
+func (s *DBFakeService) FindAccountById(ctx context.Context, in *db.DBFindAccountByIdRequest, opts ...client.CallOption) (*db.DBFindAccountByIdResponse, error) {
+	panic("implement me")
+}
+
+func (s *DBFakeService) CreateInstance(ctx context.Context, in *db.DBCreateInstanceRequest, opts ...client.CallOption) (*db.DBCreateInstanceResponse, error) {
+	panic("implement me")
+}
+
+func (s *DBFakeService) QueryBackupStrategyByTime(ctx context.Context, in *db.DBQueryBackupStrategyByTimeRequest, opts ...client.CallOption) (*db.DBQueryBackupStrategyByTimeResponse, error) {
+	panic("implement me")
 }
 
 func (s *DBFakeService) ListFlows(ctx context.Context, in *db.DBListFlowsRequest, opts ...client.CallOption) (*db.DBListFlowsResponse, error) {
@@ -110,8 +122,8 @@ func (s *DBFakeService) DeleteCluster(ctx context.Context, in *db.DBDeleteCluste
 func (s *DBFakeService) UpdateClusterStatus(ctx context.Context, in *db.DBUpdateClusterStatusRequest, opts ...client.CallOption) (*db.DBUpdateClusterStatusResponse, error) {
 	return s.mockUpdateClusterStatus(ctx, in, opts...)
 }
-func (s *DBFakeService) UpdateClusterTiupConfig(ctx context.Context, in *db.DBUpdateTiupConfigRequest, opts ...client.CallOption) (*db.DBUpdateTiupConfigResponse, error) {
-	return s.mockUpdateClusterTiupConfig(ctx, in, opts...)
+func (s *DBFakeService) UpdateClusterTopologyConfig(ctx context.Context, in *db.DBUpdateTopologyConfigRequest, opts ...client.CallOption) (*db.DBUpdateTopologyConfigResponse, error) {
+	return s.mockUpdateClusterTopologyConfig(ctx, in, opts...)
 }
 func (s *DBFakeService) LoadCluster(ctx context.Context, in *db.DBLoadClusterRequest, opts ...client.CallOption) (*db.DBLoadClusterResponse, error) {
 	return s.mockLoadCluster(ctx, in, opts...)
@@ -250,7 +262,7 @@ func InitMockDBClient() *DBFakeService {
 		mockUpdateClusterStatus: func(ctx context.Context, in *db.DBUpdateClusterStatusRequest, opts ...client.CallOption) (*db.DBUpdateClusterStatusResponse, error) {
 			return nil, nil
 		},
-		mockUpdateClusterTiupConfig: func(ctx context.Context, in *db.DBUpdateTiupConfigRequest, opts ...client.CallOption) (*db.DBUpdateTiupConfigResponse, error) {
+		mockUpdateClusterTopologyConfig: func(ctx context.Context, in *db.DBUpdateTopologyConfigRequest, opts ...client.CallOption) (*db.DBUpdateTopologyConfigResponse, error) {
 			return nil, nil
 		},
 		mockLoadCluster: func(ctx context.Context, in *db.DBLoadClusterRequest, opts ...client.CallOption) (*db.DBLoadClusterResponse, error) {

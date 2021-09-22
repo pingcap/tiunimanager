@@ -168,12 +168,12 @@ func (m *DAOClusterManager) UpdateTopologyConfig(clusterId string, content strin
 	}
 	err = m.Db().Create(record).Error
 	if nil == err {
-		err = m.Db().Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_tiup_config_id", record.ID).Error
+		err = m.Db().Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_topology_config_id", record.ID).Error
 		if nil != err {
-			err = errors.New(fmt.Sprintf("update tiup config faild, clusterId: %s, tenantId: %s, TiUPId: %d, error: %v", clusterId, tenantId, record.ID, err))
+			err = errors.New(fmt.Sprintf("update topology config faild, clusterId: %s, tenantId: %s, topologyId: %d, error: %v", clusterId, tenantId, record.ID, err))
 		}
 	} else {
-		err = errors.New(fmt.Sprintf("craete tiup config faild, clusterId: %s, tenantId: %s, TiUPId: %d, error: %v", clusterId, tenantId, record.ID, err))
+		err = errors.New(fmt.Sprintf("craete topology config faild, clusterId: %s, tenantId: %s, topologyId: %d, error: %v", clusterId, tenantId, record.ID, err))
 	}
 	return cluster, err
 }
@@ -209,7 +209,7 @@ func (m *DAOClusterManager) FetchCluster(clusterId string) (result *ClusterFetch
 			result.TopologyConfig = &TopologyConfig{}
 			err = m.Db().First(result.TopologyConfig, "id = ?", cluster.CurrentTopologyConfigId).Error
 			if nil != err {
-				return nil, errors.New(fmt.Sprintf("FetchCluster, query demand record failed, clusterId: %s, TiUPID:%d, error: %v", clusterId, cluster.CurrentTopologyConfigId, err))
+				return nil, errors.New(fmt.Sprintf("FetchCluster, query demand record failed, clusterId: %s, topologyId:%d, error: %v", clusterId, cluster.CurrentTopologyConfigId, err))
 			}
 		}
 
@@ -242,7 +242,7 @@ func (m *DAOClusterManager) ListClusterDetails(clusterId, clusterName, clusterTy
 
 	flowIds := make([]uint, len(clusters), len(clusters))
 	demandIds := make([]uint, len(clusters), len(clusters))
-	tiupConfigIds := make([]uint, len(clusters), len(clusters))
+	topologyConfigIds := make([]uint, len(clusters), len(clusters))
 
 	result = make([]*ClusterFetchResult, len(clusters), len(clusters))
 	clusterMap := make(map[string]*ClusterFetchResult)
@@ -250,7 +250,7 @@ func (m *DAOClusterManager) ListClusterDetails(clusterId, clusterName, clusterTy
 	for i, c := range clusters {
 		flowIds[i] = c.CurrentFlowId
 		demandIds[i] = c.CurrentDemandId
-		tiupConfigIds[i] = c.CurrentTopologyConfigId
+		topologyConfigIds[i] = c.CurrentTopologyConfigId
 		result[i] = &ClusterFetchResult{
 			Cluster: c,
 		}
@@ -275,12 +275,12 @@ func (m *DAOClusterManager) ListClusterDetails(clusterId, clusterName, clusterTy
 		clusterMap[v.ClusterId].DemandRecord = v
 	}
 
-	tiupConfigs := make([]*TopologyConfig, len(clusters), len(clusters))
-	err = m.Db().Find(&tiupConfigs, tiupConfigIds).Error
+	topologyConfigs := make([]*TopologyConfig, len(clusters), len(clusters))
+	err = m.Db().Find(&topologyConfigs, topologyConfigIds).Error
 	if nil != err {
-		return nil, 0, errors.New(fmt.Sprintf("ListClusterDetails, query TiUP config lists failed, error: %v", err))
+		return nil, 0, errors.New(fmt.Sprintf("ListClusterDetails, query topology config lists failed, error: %v", err))
 	}
-	for _, v := range tiupConfigs {
+	for _, v := range topologyConfigs {
 		clusterMap[v.ClusterId].TopologyConfig = v
 	}
 	return result, total, nil

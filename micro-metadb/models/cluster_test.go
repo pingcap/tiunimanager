@@ -212,7 +212,7 @@ func TestUpdateClusterStatus(t *testing.T) {
 	})
 }
 
-func TestUpdateTiUPConfig(t *testing.T) {
+func TestUpdateTopologyConfig(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
 	t.Run("normal update config", func(t *testing.T) {
 		cluster := &Cluster{
@@ -800,7 +800,8 @@ func TestFetchCluster(t *testing.T) {
 			return
 		}
 		if gotResult.Cluster.CurrentTopologyConfigId != cluster.CurrentTopologyConfigId {
-			t.Errorf("FetchCluster() want CurrentTiupConfigId = %v, got = %v", cluster.CurrentTopologyConfigId, gotResult.Cluster.CurrentTopologyConfigId)
+			t.Errorf("FetchCluster() want Current" +
+				"TopologyConfigId = %v, got = %v", cluster.CurrentTopologyConfigId, gotResult.Cluster.CurrentTopologyConfigId)
 			return
 		}
 		if gotResult.TopologyConfig.ID != cluster.CurrentTopologyConfigId {

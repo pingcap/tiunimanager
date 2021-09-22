@@ -104,7 +104,7 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_DISK, new(resource.Disk))
 	dao.AddTable(TABLE_NAME_USED_COMPUTE, new(resource.UsedCompute))
 	dao.AddTable(TABLE_NAME_USED_PORT, new(resource.UsedPort))
-	dao.AddTable(TABLE_NAME_TIUP_CONFIG, new(TiUPConfig))
+	dao.AddTable(TABLE_NAME_TIUP_CONFIG, new(TopologyConfig))
 	dao.AddTable(TABLE_NAME_TIUP_TASK, new(TiupTask))
 	dao.AddTable(TABLE_NAME_FLOW, new(FlowDO))
 	dao.AddTable(TABLE_NAME_PARAMETERS_RECORD, new(ParametersRecord))
@@ -112,6 +112,7 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_BACKUP_STRATEGY, new(BackupStrategy))
 	dao.AddTable(TABLE_NAME_TRANSPORT_RECORD, new(TransportRecord))
 	dao.AddTable(TABLE_NAME_RECOVER_RECORD, new(RecoverRecord))
+	dao.AddTable(TABLE_NAME_COMPONENT_INSTANCE, new(ComponentInstance))
 
 	log.Info("create TiEM all tables successful.")
 	return nil

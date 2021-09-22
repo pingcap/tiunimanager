@@ -48,7 +48,7 @@ func TestBuildDataImportConfig(t *testing.T) {
 		ConfigPath:  "configPath",
 	})
 	context.put(contextClusterKey, &ClusterAggregation{
-		CurrentTiUPConfigRecord: &TiUPConfigRecord{
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
 			ConfigModel: &spec.Specification{
 				TiDBServers: []*spec.TiDBSpec{
 					{

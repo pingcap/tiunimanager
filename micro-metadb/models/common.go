@@ -34,6 +34,7 @@ const (
 	TABLE_NAME_BACKUP_STRATEGY    = "backup_strategies"
 	TABLE_NAME_TRANSPORT_RECORD   = "transport_records"
 	TABLE_NAME_RECOVER_RECORD     = "recover_records"
+	TABLE_NAME_COMPONENT_INSTANCE = "component_instances"
 )
 
 func getLogger() *log.Entry {

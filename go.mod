@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
+	github.com/Azure/go-autorest/autorest/date v0.1.0
 	github.com/BurntSushi/toml v0.4.1
 	github.com/HdrHistogram/hdrhistogram-go v1.1.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
@@ -12,13 +13,14 @@ require (
 	github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/v3 v3.5.2
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
+	github.com/elastic/go-elasticsearch/v7 v7.14.0
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
 	github.com/lithammer/shortuuid v3.0.0+incompatible
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/micro/cli/v2 v2.1.2
 	github.com/mozillazg/go-pinyin v0.18.0
 	github.com/opentracing/basictracer-go v1.0.0
@@ -42,9 +44,11 @@ require (
 	go.uber.org/goleak v1.1.10
 	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+	golang.org/x/net v0.0.0-20210917221730-978cfadd31cf // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
-	golang.org/x/tools v0.1.5 // indirect
+	golang.org/x/sys v0.0.0-20210917161153-d61c044b1678
+	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/tools v0.1.6 // indirect
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0

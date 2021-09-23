@@ -2647,7 +2647,19 @@
         "databaseapi.DataExportReq": {
             "type": "object",
             "properties": {
+                "accessKey": {
+                    "type": "string"
+                },
+                "bucketRegion": {
+                    "type": "string"
+                },
+                "bucketUrl": {
+                    "type": "string"
+                },
                 "clusterId": {
+                    "type": "string"
+                },
+                "endpointUrl": {
                     "type": "string"
                 },
                 "filePath": {
@@ -2660,6 +2672,12 @@
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "secretAccessKey": {
+                    "type": "string"
+                },
+                "sql": {
                     "type": "string"
                 },
                 "storageType": {

@@ -104,7 +104,7 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_DISK, new(resource.Disk))
 	dao.AddTable(TABLE_NAME_USED_COMPUTE, new(resource.UsedCompute))
 	dao.AddTable(TABLE_NAME_USED_PORT, new(resource.UsedPort))
-	dao.AddTable(TABLE_NAME_TIUP_CONFIG, new(TiUPConfig))
+	dao.AddTable(TABLE_NAME_TIUP_CONFIG, new(TopologyConfig))
 	dao.AddTable(TABLE_NAME_TIUP_TASK, new(TiupTask))
 	dao.AddTable(TABLE_NAME_FLOW, new(FlowDO))
 	dao.AddTable(TABLE_NAME_PARAMETERS_RECORD, new(ParametersRecord))
@@ -112,6 +112,7 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_BACKUP_STRATEGY, new(BackupStrategy))
 	dao.AddTable(TABLE_NAME_TRANSPORT_RECORD, new(TransportRecord))
 	dao.AddTable(TABLE_NAME_RECOVER_RECORD, new(RecoverRecord))
+	dao.AddTable(TABLE_NAME_COMPONENT_INSTANCE, new(ComponentInstance))
 
 	log.Info("create TiEM all tables successful.")
 	return nil
@@ -195,20 +196,23 @@ func (dao *DAOManager) initSystemDefaultData() error {
 func (dao *DAOManager) initResourceDataForDev() error {
 	log := framework.Log()
 	id1, err := dao.ResourceManager().CreateHost(&resource.Host{
-		HostName: "TEST_HOST1",
-		IP:       "168.168.168.1",
-		UserName: "root",
-		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		DC:       "DataCenter1",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "Compute",
+		HostName:     "TEST_HOST1",
+		IP:           "168.168.168.1",
+		UserName:     "root",
+		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:       0,
+		Arch:         string(resource.X86),
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 5,
+		FreeMemory:   8,
+		Nic:          "1GE",
+		Region:       "Region1",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "Compute",
+		DiskType:     string(resource.Sata),
+		Reserved:     false,
 		Disks: []resource.Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
 			{Name: "sdb", Path: "/mnt/pd", Capacity: 256, Status: 0},
@@ -221,20 +225,23 @@ func (dao *DAOManager) initResourceDataForDev() error {
 		return err
 	}
 	id2, err := dao.ResourceManager().CreateHost(&resource.Host{
-		HostName: "TEST_HOST2",
-		IP:       "168.168.168.2",
-		UserName: "root",
-		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		DC:       "DataCenter1",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "Compute",
+		HostName:     "TEST_HOST2",
+		IP:           "168.168.168.2",
+		UserName:     "root",
+		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:       0,
+		Arch:         string(resource.X86),
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 5,
+		FreeMemory:   8,
+		Nic:          "1GE",
+		Region:       "Region1",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "Compute",
+		DiskType:     string(resource.Sata),
+		Reserved:     false,
 		Disks: []resource.Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
 			{Name: "sdb", Path: "/mnt/pd", Capacity: 256, Status: 0},
@@ -247,20 +254,23 @@ func (dao *DAOManager) initResourceDataForDev() error {
 		return err
 	}
 	id3, err := dao.ResourceManager().CreateHost(&resource.Host{
-		HostName: "TEST_HOST3",
-		IP:       "168.168.168.3",
-		UserName: "root",
-		Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
-		Status:   0,
-		OS:       "CentOS",
-		Kernel:   "5.0.0",
-		CpuCores: 5,
-		Memory:   8,
-		Nic:      "1GE",
-		DC:       "DataCenter1",
-		AZ:       "Zone1",
-		Rack:     "3-1",
-		Purpose:  "Compute",
+		HostName:     "TEST_HOST3",
+		IP:           "168.168.168.3",
+		UserName:     "root",
+		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
+		Status:       0,
+		Arch:         string(resource.X86),
+		OS:           "CentOS",
+		Kernel:       "5.0.0",
+		FreeCpuCores: 5,
+		FreeMemory:   8,
+		Nic:          "1GE",
+		Region:       "Region1",
+		AZ:           "Zone1",
+		Rack:         "3-1",
+		Purpose:      "Compute",
+		DiskType:     string(resource.Sata),
+		Reserved:     false,
 		Disks: []resource.Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
 			{Name: "sdb", Path: "/mnt/pd", Capacity: 256, Status: 0},

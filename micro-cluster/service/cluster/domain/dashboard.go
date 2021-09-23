@@ -72,7 +72,7 @@ func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, er
 }
 
 func getDashboardUrlFromCluser(clusterAggregation *ClusterAggregation) string {
-	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	pdNum := len(configModel.PDServers)
 	pdServer := configModel.PDServers[rand.Intn(pdNum)]
 	pdClientPort := pdServer.ClientPort

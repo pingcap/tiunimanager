@@ -262,82 +262,6 @@ var doc = `{
                 }
             }
         },
-        "/backups/{backupId}/restore": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "recover backup record of a cluster",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster backup"
-                ],
-                "summary": "recover backup record of a cluster",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "backupId",
-                        "name": "backupId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "backup recover request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.BackupRecoverReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/controller.StatusInfo"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
         "/clusters": {
             "get": {
                 "security": [
@@ -614,6 +538,75 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/databaseapi.DataImportResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/recover": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "recover a new cluster by backup record",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "recover a new cluster by backup record",
+                "parameters": [
+                    {
+                        "description": "recover request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clusterapi.RecoverReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controller.StatusInfo"
                                         }
                                     }
                                 }
@@ -1109,10 +1102,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/instanceapi.BackupStrategy"
-                                            }
+                                            "$ref": "#/definitions/instanceapi.BackupStrategy"
                                         }
                                     }
                                 }
@@ -1441,6 +1431,107 @@ var doc = `{
                 }
             }
         },
+        "/logs/tidb/{clusterId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "search tidb log",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "logs"
+                ],
+                "summary": "search tidb log",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "endTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "ip",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "level",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "message",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "module",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "startTime",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/logapi.SearchTiDBLogRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/resources/allochosts": {
             "post": {
                 "security": [
@@ -1573,7 +1664,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/resource.Host"
+                            "$ref": "#/definitions/hostapi.HostInfo"
                         }
                     }
                 ],
@@ -1653,7 +1744,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/resource.Host"
+                                                "$ref": "#/definitions/hostapi.HostInfo"
                                             }
                                         }
                                     }
@@ -1835,7 +1926,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/resource.Host"
+                                            "$ref": "#/definitions/hostapi.HostInfo"
                                         }
                                     }
                                 }
@@ -2462,6 +2553,38 @@ var doc = `{
                 }
             }
         },
+        "clusterapi.RecoverReq": {
+            "type": "object",
+            "properties": {
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
+                "dbPassword": {
+                    "type": "string"
+                },
+                "nodeDemandList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clusterapi.ClusterNodeDemand"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "type": "boolean"
+                }
+            }
+        },
         "controller.CommonResult": {
             "type": "object",
             "properties": {
@@ -2713,7 +2836,7 @@ var doc = `{
                     "type": "integer"
                 },
                 "disk": {
-                    "$ref": "#/definitions/resource.Disk"
+                    "$ref": "#/definitions/hostapi.DiskInfo"
                 },
                 "hostName": {
                     "type": "string"
@@ -2749,6 +2872,40 @@ var doc = `{
                 }
             }
         },
+        "hostapi.DiskInfo": {
+            "type": "object",
+            "properties": {
+                "capacity": {
+                    "description": "Disk size, Unit: GB",
+                    "type": "integer"
+                },
+                "diskId": {
+                    "type": "string"
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "[sda/sdb/nvmep0...]",
+                    "type": "string"
+                },
+                "path": {
+                    "description": "Disk mount path: [/data1]",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Disk Status, 0 for available, 1 for inused",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Disk type: [nvme-ssd/ssd/sata]",
+                    "type": "string"
+                },
+                "usedBy": {
+                    "type": "string"
+                }
+            }
+        },
         "hostapi.DomainResource": {
             "type": "object",
             "properties": {
@@ -2768,6 +2925,94 @@ var doc = `{
                     "type": "string"
                 },
                 "zoneName": {
+                    "type": "string"
+                }
+            }
+        },
+        "hostapi.HostInfo": {
+            "type": "object",
+            "properties": {
+                "arch": {
+                    "description": "x86 or arm64",
+                    "type": "string"
+                },
+                "az": {
+                    "type": "string"
+                },
+                "cpuCores": {
+                    "description": "Host cpu cores spec, init while importing",
+                    "type": "integer"
+                },
+                "createTime": {
+                    "type": "integer"
+                },
+                "diskType": {
+                    "description": "Disk type of this host [sata/ssd/nvme_ssd]",
+                    "type": "string"
+                },
+                "disks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostapi.DiskInfo"
+                    }
+                },
+                "freeCpuCores": {
+                    "description": "Unused CpuCore, used for allocation",
+                    "type": "integer"
+                },
+                "freeMemory": {
+                    "description": "Unused memory size, Unit:GB, used for allocation",
+                    "type": "integer"
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "hostName": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "kernel": {
+                    "type": "string"
+                },
+                "memory": {
+                    "description": "Host memroy, init while importing",
+                    "type": "integer"
+                },
+                "nic": {
+                    "description": "Host network type: 1GE or 10GE",
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "passwd": {
+                    "type": "string"
+                },
+                "purpose": {
+                    "description": "What Purpose is the host used for? [compute/storage/general]",
+                    "type": "string"
+                },
+                "rack": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "reserved": {
+                    "description": "Whether this host is reserved - will not be allocated",
+                    "type": "boolean"
+                },
+                "spec": {
+                    "description": "Host Spec, init while importing",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Host Status, 0 for Online, 1 for offline",
+                    "type": "integer"
+                },
+                "userName": {
                     "type": "string"
                 }
             }
@@ -2843,18 +3088,10 @@ var doc = `{
                 }
             }
         },
-        "instanceapi.BackupRecoverReq": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                }
-            }
-        },
         "instanceapi.BackupReq": {
             "type": "object",
             "properties": {
-                "backupRange": {
+                "backupMethod": {
                     "type": "string"
                 },
                 "backupType": {
@@ -2874,16 +3111,10 @@ var doc = `{
                 "backupDate": {
                     "type": "string"
                 },
-                "backupRange": {
-                    "type": "string"
-                },
-                "backupType": {
-                    "type": "string"
-                },
                 "clusterId": {
                     "type": "string"
                 },
-                "filePath": {
+                "nextBackupTime": {
                     "type": "string"
                 },
                 "period": {
@@ -3081,109 +3312,53 @@ var doc = `{
                 }
             }
         },
-        "resource.Disk": {
+        "logapi.SearchTiDBLogDetail": {
             "type": "object",
             "properties": {
-                "capacity": {
-                    "description": "Disk size, Unit: GB",
-                    "type": "integer"
-                },
-                "diskId": {
+                "clusterId": {
                     "type": "string"
                 },
-                "name": {
-                    "description": "[sda/sdb/nvmep0...]",
+                "ext": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "id": {
                     "type": "string"
                 },
-                "omitempty": {
-                    "type": "string"
-                },
-                "path": {
-                    "description": "Disk mount path: [/data1]",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Disk Status, 0 for available, 1 for inused",
-                    "type": "integer"
-                },
-                "type": {
-                    "description": "Disk type: [nvme-ssd/ssd/sata]",
-                    "type": "string"
-                },
-                "usedby": {
-                    "description": "Disk is used by which cluster",
-                    "type": "string"
-                }
-            }
-        },
-        "resource.Host": {
-            "type": "object",
-            "properties": {
-                "az": {
-                    "type": "string"
-                },
-                "cpuCores": {
-                    "type": "integer"
-                },
-                "createTime": {
-                    "type": "integer"
-                },
-                "dc": {
-                    "type": "string"
-                },
-                "disks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/resource.Disk"
-                    }
-                },
-                "hostId": {
-                    "type": "string"
-                },
-                "hostName": {
+                "index": {
                     "type": "string"
                 },
                 "ip": {
                     "type": "string"
                 },
-                "kernel": {
+                "level": {
                     "type": "string"
                 },
-                "memory": {
-                    "description": "Host memory size, Unit:GB",
+                "message": {
+                    "type": "string"
+                },
+                "module": {
+                    "type": "string"
+                },
+                "sourceLine": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "logapi.SearchTiDBLogRsp": {
+            "type": "object",
+            "properties": {
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/logapi.SearchTiDBLogDetail"
+                    }
+                },
+                "took": {
                     "type": "integer"
-                },
-                "nic": {
-                    "description": "Host network type: 1GE or 10GE",
-                    "type": "string"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "passwd": {
-                    "type": "string"
-                },
-                "performance": {
-                    "description": "Performance type of this host [High/Medium/Low]",
-                    "type": "string"
-                },
-                "purpose": {
-                    "description": "What Purpose is the host used for? [compute/storage/general]",
-                    "type": "string"
-                },
-                "rack": {
-                    "type": "string"
-                },
-                "spec": {
-                    "description": "Host Spec, init while importing",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Host Status, 0 for Online, 1 for offline",
-                    "type": "integer"
-                },
-                "userName": {
-                    "type": "string"
                 }
             }
         },

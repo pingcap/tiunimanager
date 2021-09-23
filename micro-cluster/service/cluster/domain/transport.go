@@ -28,23 +28,23 @@ const (
 )
 
 type ImportInfo struct {
-	ClusterId 	string
-	UserName  	string
-	Password  	string
-	FilePath  	string
-	RecordId  	string
+	ClusterId   string
+	UserName    string
+	Password    string
+	FilePath    string
+	RecordId    string
 	StorageType string
-	ConfigPath 	string
+	ConfigPath  string
 }
 
 type ExportInfo struct {
-	ClusterId string
-	UserName  string
-	Password  string
-	FileType  string
-	RecordId  string
-	FilePath  string
-	Filter    string
+	ClusterId   string
+	UserName    string
+	Password    string
+	FileType    string
+	RecordId    string
+	FilePath    string
+	Filter      string
 	StorageType string
 }
 
@@ -78,7 +78,7 @@ type LightningCfg struct {
 /*
 	tidb-lightning backend
 	https://docs.pingcap.com/zh/tidb/stable/tidb-lightning-backends#tidb-lightning-backend
- */
+*/
 const (
 	BackendLocal  string = "local"
 	BackendImport string = "importer"
@@ -87,13 +87,13 @@ const (
 
 const (
 	NfsStorageType string = "nfs"
-	S3StorageType string = "s3"
+	S3StorageType  string = "s3"
 )
 
 const (
-	DefaultTidbPort int = 4000
+	DefaultTidbPort       int = 4000
 	DefaultTidbStatusPort int = 10080
-	DefaultPDClientPort int = 2379
+	DefaultPDClientPort   int = 2379
 )
 
 type TikvImporterCfg struct {
@@ -134,9 +134,9 @@ func ExportDataPreCheck(req *proto.DataExportRequest) error {
 		return errors.New("invalid param userName")
 	}
 	/*
-	if req.GetPassword() == "" {
-		return errors.New("invalid param password")
-	}
+		if req.GetPassword() == "" {
+			return errors.New("invalid param password")
+		}
 	*/
 	if S3StorageType != req.GetStorageType() && NfsStorageType != req.GetStorageType() {
 		return errors.New("invalid param storageType")
@@ -200,13 +200,13 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, filePath string, stora
 	}
 
 	info := &ExportInfo{
-		ClusterId: clusterId,
-		UserName:  userName,
-		Password:  password, //todo: need encrypt
-		FileType:  fileType,
-		RecordId:  resp.GetId(),
-		FilePath:  getDataTransportDir(clusterId, TransportTypeExport, filePath, storageType),
-		Filter:    filter,
+		ClusterId:   clusterId,
+		UserName:    userName,
+		Password:    password, //todo: need encrypt
+		FileType:    fileType,
+		RecordId:    resp.GetId(),
+		FilePath:    getDataTransportDir(clusterId, TransportTypeExport, filePath, storageType),
+		Filter:      filter,
 		StorageType: storageType,
 	}
 
@@ -253,13 +253,13 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 		return "", err
 	}
 	info := &ImportInfo{
-		ClusterId: clusterId,
-		UserName:  userName,
-		Password:  password, //todo: need encrypt
-		FilePath:  filepath,
-		RecordId:  resp.GetId(),
+		ClusterId:   clusterId,
+		UserName:    userName,
+		Password:    password, //todo: need encrypt
+		FilePath:    filepath,
+		RecordId:    resp.GetId(),
 		StorageType: storageType,
-		ConfigPath: getDataTransportDir(clusterId, TransportTypeImport, "", ""),
+		ConfigPath:  getDataTransportDir(clusterId, TransportTypeImport, "", ""),
 	}
 
 	// Start the workflow
@@ -298,10 +298,10 @@ func DescribeDataTransportRecord(ope *proto.OperatorDTO, recordId, clusterId str
 func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo) *DataImportConfig {
 	getLogger().Info("begin convertTomlConfig")
 	defer getLogger().Info("end convertTomlConfig")
-	if clusterAggregation == nil || clusterAggregation.CurrentTiUPConfigRecord == nil {
+	if clusterAggregation == nil || clusterAggregation.CurrentTopologyConfigRecord == nil {
 		return nil
 	}
-	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	if configModel == nil || configModel.TiDBServers == nil || configModel.PDServers == nil {
 		return nil
 	}
@@ -366,7 +366,7 @@ data import && export dir
 func getDataTransportDir(clusterId string, transportType TransportType, filePath string, storageType string) string {
 	if S3StorageType == storageType {
 		if filePath != "" {
-			return fmt.Sprintf("%s/%s/%s", filePath, clusterId, transportType)
+			return filePath
 		} else {
 			return fmt.Sprintf("%s/%s/%s/%s", defaultTransportS3DirPrefix, clusterId, transportType, defaultTransportS3AkSk)
 		}
@@ -474,16 +474,18 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ExportInfo)
-	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
 	tidbServerPort := tidbServer.Port
 	if tidbServerPort == 0 {
 		tidbServerPort = DefaultTidbPort
 	}
 
-	if err := cleanDataTransportDir(info.FilePath); err != nil {
-		getLogger().Errorf("clean export directory failed, %s", err.Error())
-		return false
+	if NfsStorageType == info.StorageType {
+		if err := cleanDataTransportDir(info.FilePath); err != nil {
+			getLogger().Errorf("clean export directory failed, %s", err.Error())
+			return false
+		}
 	}
 
 	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "user*"
@@ -616,6 +618,7 @@ func updateTransportRecordFailed(recordId, clusterId string) error {
 	getLogger().Infof("update data transport record success, %v", resp)
 	return nil
 }
+
 /*
 func zipDir(dir string, zipFile string) error {
 	getLogger().Infof("begin zipDir: dir[%s] to file[%s]", dir, zipFile)

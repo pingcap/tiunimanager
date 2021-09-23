@@ -38,7 +38,7 @@ func buildAggregation() *ClusterAggregation {
 			},
 		},
 	}
-	aggregation.CurrentTiUPConfigRecord = &TiUPConfigRecord{
+	aggregation.CurrentTopologyConfigRecord = &TopologyConfigRecord{
 		TenantId:    aggregation.Cluster.TenantId,
 		ClusterId:   aggregation.Cluster.Id,
 		ConfigModel: convertConfig(aggregation.AvailableResources, aggregation.Cluster),

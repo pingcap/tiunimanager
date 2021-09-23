@@ -119,14 +119,14 @@ const (
 )
 
 
-type BackupRange string
+type BackupMethod string
 type BackupType string
 type BackupMode string
 type StorageType string
 
 const (
-	BackupRangeFull BackupRange = "full"
-	BackupRangeIncrement BackupRange = "incr"
+	BackupTypeFull BackupType = "full"
+	BackupTypeIncrement BackupType = "incr"
 )
 
 const (
@@ -135,8 +135,8 @@ const (
 )
 
 const (
-	BackupTypeLogic BackupType = "logical"
-	BackupTypePhysics BackupType = "physical"
+	BackupMethodLogic BackupMethod = "logical"
+	BackupMethodPhysics BackupMethod = "physical"
 )
 
 const (
@@ -144,18 +144,42 @@ const (
 	StorageTypeS3 StorageType = "s3"
 )
 
-func checkBackupRangeValid(backupRange string) bool {
-	if string(BackupRangeFull) != backupRange &&
-		string(BackupRangeIncrement) != backupRange {
+func checkBackupTypeValid(backupType string) bool {
+	if string(BackupTypeFull) != backupType &&
+		string(BackupTypeIncrement) != backupType {
 		return false
 	}
 	return true
 }
 
-func checkBackupTypeValid(backupType string) bool {
-	if string(BackupTypeLogic) != backupType &&
-		string(BackupTypePhysics) != backupType {
+func checkBackupMethodValid(backupMethod string) bool {
+	if string(BackupMethodLogic) != backupMethod &&
+		string(BackupMethodPhysics) != backupMethod {
 		return false
 	}
 	return true
+}
+
+const (
+	Sunday string = "Sunday"
+	Monday string = "Monday"
+	Tuesday string = "Tuesday"
+	Wednesday string = "Wednesday"
+	Thursday string = "Thursday"
+	Friday string = "Friday"
+	Saturday string = "Saturday"
+)
+
+var WeekDayMap = map[string]int{
+	Sunday: 0,
+	Monday: 1,
+	Tuesday: 2,
+	Wednesday: 3,
+	Thursday: 4,
+	Friday: 5,
+	Saturday: 6}
+
+func checkWeekDayValid(day string) bool {
+	_, exist := WeekDayMap[day]
+	return exist
 }

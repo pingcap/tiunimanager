@@ -31,9 +31,9 @@ func defaultCluster() *ClusterAggregation {
 	br := &BackupRecord{
 		Id: 222,
 		ClusterId: "111",
-		BackupType: BackupTypeLogic,
+		BackupType: BackupTypeFull,
 		BackupMode: BackupModeAuto,
-		Range: BackupRangeFull,
+		BackupMethod: BackupMethodPhysics,
 		StartTime: time.Now().Unix(),
 		EndTime: time.Now().Unix(),
 	}

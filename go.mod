@@ -12,11 +12,12 @@ require (
 	github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/v3 v3.5.2
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
+	github.com/elastic/go-elasticsearch/v7 v7.14.0
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	github.com/micro/cli/v2 v2.1.2
@@ -27,6 +28,7 @@ require (
 	github.com/pingcap/errors v0.11.4
 	github.com/pingcap/tiup v1.5.5
 	github.com/prometheus/client_golang v1.11.0
+	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/files v0.0.0-20210815190702-a29dd2bc99b2

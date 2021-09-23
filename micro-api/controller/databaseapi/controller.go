@@ -40,8 +40,14 @@ func ExportData(c *gin.Context) {
 		Password:  req.Password,
 		FileType:  req.FileType,
 		Filter:    req.Filter,
+		Sql:       req.Sql,
 		FilePath:  req.FilePath,
 		StorageType: req.StorageType,
+		BucketUrl: req.BucketUrl,
+		BucketRegion: req.BucketRegion,
+		EndpointUrl: req.EndpointUrl,
+		AccessKey: req.AccessKey,
+		SecretAccessKey: req.SecretAccessKey,
 	}, controller.DefaultTimeout)
 
 	if err != nil {

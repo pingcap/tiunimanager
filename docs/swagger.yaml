@@ -333,7 +333,15 @@ definitions:
     type: object
   databaseapi.DataExportReq:
     properties:
+      accessKey:
+        type: string
+      bucketRegion:
+        type: string
+      bucketUrl:
+        type: string
       clusterId:
+        type: string
+      endpointUrl:
         type: string
       filePath:
         type: string
@@ -342,6 +350,10 @@ definitions:
       filter:
         type: string
       password:
+        type: string
+      secretAccessKey:
+        type: string
+      sql:
         type: string
       storageType:
         type: string

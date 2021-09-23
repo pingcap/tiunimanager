@@ -461,6 +461,7 @@ func (m *DAOResourceManager) AllocResources(req *dbPb.AllocRequest) (result *rt.
 }
 
 func (m *DAOResourceManager) AllocResourcesInBatch(batchReq *dbPb.BatchAllocRequest) (results *rt.BatchAllocResponse, err error) {
+	results = new(rt.BatchAllocResponse)
 	tx := m.getDb().Begin()
 	for i, req := range batchReq.BatchRequests {
 		var result *rt.AllocRsp

@@ -765,25 +765,34 @@ definitions:
   logapi.SearchTiDBLogDetail:
     properties:
       clusterId:
+        example: abc
         type: string
       ext:
         additionalProperties: true
         type: object
       id:
+        example: zvadfwf
         type: string
       index:
+        example: tiem-tidb-cluster-2021.09.23
         type: string
       ip:
+        example: 127.0.0.1
         type: string
       level:
+        example: warn
         type: string
       message:
+        example: tidb log
         type: string
       module:
+        example: tidb
         type: string
       sourceLine:
+        example: main.go:210
         type: string
       timestamp:
+        example: "2021-09-23 14:23:10"
         type: string
     type: object
   logapi.SearchTiDBLogRsp:
@@ -793,6 +802,7 @@ definitions:
           $ref: '#/definitions/logapi.SearchTiDBLogDetail'
         type: array
       took:
+        example: 10
         type: integer
     type: object
   taskapi.FlowWorkDetailInfo:
@@ -1748,28 +1758,36 @@ paths:
         name: clusterId
         required: true
         type: string
-      - in: query
+      - example: "2021-12-01 12:00:00"
+        in: query
         name: endTime
         type: string
-      - in: query
+      - example: 0
+        in: query
         name: from
         type: integer
-      - in: query
+      - example: 127.0.0.1
+        in: query
         name: ip
         type: string
-      - in: query
+      - example: warn
+        in: query
         name: level
         type: string
-      - in: query
+      - example: tidb log
+        in: query
         name: message
         type: string
-      - in: query
+      - example: tidb
+        in: query
         name: module
         type: string
-      - in: query
+      - example: 10
+        in: query
         name: size
         type: integer
-      - in: query
+      - example: "2021-09-01 12:00:00"
+        in: query
         name: startTime
         type: string
       produces:

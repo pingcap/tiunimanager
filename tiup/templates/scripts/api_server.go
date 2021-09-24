@@ -43,7 +43,7 @@ func NewTiEMAPIServerScript(ip, deployDir, dataDir, logDir, logLevel string) *Ti
 	return &TiEMAPIServerScript{
 		Host:        ip,
 		Port:        4116,
-		MetricsPort: 4121,
+		MetricsPort: 4123,
 		DeployDir:   deployDir,
 		DataDir:     dataDir,
 		LogDir:      logDir,

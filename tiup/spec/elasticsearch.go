@@ -38,8 +38,8 @@ type ElasticSearchSpec struct {
 	Host    string `yaml:"host"`
 	SSHPort int    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
 	// Use Name to get the name with a default value if it's empty.
-	Name            string                 `yaml:"name,omitempty", default:"tiem-cluster"`
-	Port            int                    `yaml:"port,omitempty" default:"4125"`
+	Name            string                 `yaml:"name,omitempty" default:"tiem-cluster"`
+	Port            int                    `yaml:"port,omitempty" default:"4127"`
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
 	DataDir         string                 `yaml:"data_dir,omitempty"`
 	LogDir          string                 `yaml:"log_dir,omitempty"`

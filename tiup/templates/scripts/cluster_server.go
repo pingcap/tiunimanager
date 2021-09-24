@@ -41,7 +41,7 @@ func NewTiEMClusterServerScript(ip, deployDir, dataDir, logDir, logLevel string)
 	return &TiEMClusterServerScript{
 		Host:        ip,
 		Port:        4110,
-		MetricsPort: 4121,
+		MetricsPort: 4122,
 		DeployDir:   deployDir,
 		DataDir:     dataDir,
 		LogDir:      logDir,

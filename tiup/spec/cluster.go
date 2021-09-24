@@ -119,6 +119,7 @@ func (c *ClusterServerComponent) Instances() []Instance {
 
 				Ports: []int{
 					s.Port,
+					s.MetricsPort,
 				},
 				Dirs: []string{
 					s.DeployDir,

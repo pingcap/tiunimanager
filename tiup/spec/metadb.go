@@ -121,7 +121,9 @@ func (c *MetaDBComponent) Instances() []Instance {
 
 				Ports: []int{
 					s.Port,
+					s.ClientPort,
 					s.PeerPort,
+					s.MetricsPort,
 				},
 				Dirs: []string{
 					s.DeployDir,

@@ -34,7 +34,7 @@ type JaegerScript struct {
 func NewJaegerScript(ip, deployDir, logDir string) *JaegerScript {
 	return &JaegerScript{
 		Host:      ip,
-		Port:      4122,
+		Port:      4133,
 		DeployDir: deployDir,
 		LogDir:    logDir,
 	}

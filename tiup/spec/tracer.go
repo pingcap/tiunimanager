@@ -39,7 +39,7 @@ type TracerServerSpec struct {
 	JaegerThriftPort  int                    `yaml:"jaeger_thrift_port,omitempty" default:"14268"`
 	JaegerHostPort    int                    `yaml:"jaeger_host_port,omitempty" default:"14269"`
 	CollectorPort     int                    `yaml:"collecter_port,omitempty" default:"14250"`
-	ZipkinHostPort    int                    `yaml:"port,omitempty" default:"4123"`
+	ZipkinHostPort    int                    `yaml:"port,omitempty" default:"4133"`
 	DeployDir         string                 `yaml:"deploy_dir,omitempty"`
 	LogDir            string                 `yaml:"log_dir,omitempty"`
 	Config            map[string]interface{} `yaml:"config,omitempty" validate:"config:ignore"`

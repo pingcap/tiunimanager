@@ -33,8 +33,8 @@ type AlertmanagerSpec struct {
 	Imported        bool                 `yaml:"imported,omitempty"`
 	Patched         bool                 `yaml:"patched,omitempty"`
 	IgnoreExporter  bool                 `yaml:"ignore_exporter,omitempty"`
-	WebPort         int                  `yaml:"web_port" default:"9093"`
-	ClusterPort     int                  `yaml:"cluster_port" default:"9094"`
+	WebPort         int                  `yaml:"web_port" default:"4131"`
+	ClusterPort     int                  `yaml:"cluster_port" default:"4132"`
 	DeployDir       string               `yaml:"deploy_dir,omitempty"`
 	DataDir         string               `yaml:"data_dir,omitempty"`
 	LogDir          string               `yaml:"log_dir,omitempty"`

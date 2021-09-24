@@ -70,7 +70,7 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 		},
 		&cli.StringFlag{
 			Name:        "tracer-address",
-			Value:       "",
+			Value:       "127.0.0.1:4133",
 			Usage:       "Specify the opentracing jaeger server address.",
 			Destination: &receiver.TracerAddress,
 		},
@@ -94,7 +94,7 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 		},
 		&cli.StringFlag{
 			Name:        "elasticsearch-address",
-			Value:       "127.0.0.1:4125",
+			Value:       "127.0.0.1:4127",
 			Usage:       "Specify the default elasticsearch address.",
 			Destination: &receiver.ElasticsearchAddress,
 		},

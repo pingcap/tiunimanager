@@ -170,6 +170,7 @@ admin_password = {{.Password}}
 
 # Default UI theme ("dark" or "light")
 ;default_theme = dark
+default_theme = light
 
 ############### Set Cookie Name for Multiple Instances #######################
 [auth]
@@ -177,9 +178,10 @@ login_cookie_name = grafana_session_{{ if .Domain }}{{.Domain}}_{{ end }}{{.Port
 
 #################################### Anonymous Auth ##########################
 [auth.anonymous]
-{{- if .AnonymousEnable}}
+#{{- if .AnonymousEnable}}
+#enabled = true
+#{{- end}}
 enabled = true
-{{- end}}
 
 # specify organization name that should be used for unauthenticated users
 ;org_name = Main Org.

@@ -39,7 +39,6 @@ cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/AstroProfundis/easyssh-proxy v1.3.10-0.20210615044136-d52fc631316d h1:jsOHh5HJR1sYE1wYxuYQa2nSc01V0/6ZNRIS2qNW1zg=
 github.com/AstroProfundis/easyssh-proxy v1.3.10-0.20210615044136-d52fc631316d/go.mod h1:SnOlkuIAoaj8FvRIGcWp2BbLOwvHZnNNOva+DBMbHWU=
-github.com/AstroProfundis/sysinfo v0.0.0-20210901042104-765f00aa1304 h1:xjoJdgLCgiPv8CNEnsHP+W6UJ/JiNbALll6csqw3hbg=
 github.com/AstroProfundis/sysinfo v0.0.0-20210901042104-765f00aa1304/go.mod h1:4m15VhW6ZffaqJNAK/HtN3Qvf97aCe1T39u3UXaA2lA=
 github.com/AstroProfundis/tabby v1.1.1-color h1:gi/Fs4W2KVcC1m29lqa39tDnsGfZG/PYvZmwOhAH5m0=
 github.com/AstroProfundis/tabby v1.1.1-color/go.mod h1:Wcm+uinH1saEOFGLK2LdY37lAOts8HLevz64Y3y3M3Q=
@@ -326,7 +325,6 @@ github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
 github.com/kr/text v0.2.0/go.mod h1:eLer722TekiGuMkidMxC/pM04lWEeraHUUmBw8l2grE=
-github.com/lorenzosaino/go-sysctl v0.1.1 h1:GtMW47kS6ym10GaSu17iONx2RmXCelnkunMSXg4LJOU=
 github.com/lorenzosaino/go-sysctl v0.1.1/go.mod h1:J8IUEpaHUUrL+FuDT+OsvlToHAV0A3u6iNRrJdCkoCU=
 github.com/lunixbochs/vtclean v1.0.0 h1:xu2sLAri4lGiovBDQKxl5mrXyESr3gUr5m5SM5+LVb8=
 github.com/lunixbochs/vtclean v1.0.0/go.mod h1:pHhQNgMf3btfWnGBVipUOjRYhoOsdGqdm/+2c2E2WMI=
@@ -392,7 +390,6 @@ github.com/pingcap/kvproto v0.0.0-20210830034942-555d7b3265ae h1:T6MfH69aJMRPUOS
 github.com/pingcap/kvproto v0.0.0-20210830034942-555d7b3265ae/go.mod h1:IOdRDPLyda8GX2hE/jO7gqaCV/PNFh8BZQCQZXfIOqI=
 github.com/pingcap/log v0.0.0-20191012051959-b742a5d432e9 h1:AJD9pZYm72vMgPcQDww9rkZ1DnWfl0pXV3BOWlkYIjA=
 github.com/pingcap/log v0.0.0-20191012051959-b742a5d432e9/go.mod h1:4rbK1p9ILyIfb6hU7OG2CiWSqMXnp3JMbiaVJ6mvoY8=
-github.com/pingcap/tidb-insight/collector v0.0.0-20210901075740-c60ea2cc41e4 h1:DYcr/+vxxjUi/4GP4IKtiKmhywZE4/27xEWecIgvblo=
 github.com/pingcap/tidb-insight/collector v0.0.0-20210901075740-c60ea2cc41e4/go.mod h1:dV38N1mISWxCX7KJpn0gXGJoPaMhlx6+VCdfkUMNotg=
 github.com/pingcap/tiup v1.6.0-dev.0.20210907031459-0284d6284320 h1:GLoZZgke/XeFwKCJgtrn5LYvN/X4hAVdgXGGhSJ9W54=
 github.com/pingcap/tiup v1.6.0-dev.0.20210907031459-0284d6284320/go.mod h1:wY81QLpA2XhGpUni3PUVjGmoBPu0YcsqueoEaOqdW9M=
@@ -494,9 +491,7 @@ github.com/tklauser/numcpus v0.3.0/go.mod h1:yFGUr7TUHQRAhyqBcEg0Ge34zDBAsIvJJcy
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.0.1/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPUpymEIMZ47gx8=
-github.com/vishvananda/netlink v0.0.0-20210530105856-14e832ae1e8f h1:uKAQrhXS4xtXu+lAQ6Rh8rER4nVuUy9km9ayWDCF2x4=
 github.com/vishvananda/netlink v0.0.0-20210530105856-14e832ae1e8f/go.mod h1:twkDnbuQxJYemMlGd4JFIcuhgX83tXhKS2B/PRMpOho=
-github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae h1:4hwBBUfQCFe3Cym0ZtKyq7L16eZUtYKs+BaHDN6mAns=
 github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae/go.mod h1:DD4vA1DwXk04H54A1oHXtwZmA0grkVMdPxx/VGLCah0=
 github.com/vmihailenco/msgpack v4.0.4+incompatible h1:dSLoQfGFAo3F6OoNhwUmLwVgaUXK79GlxNBwueZn0xI=
 github.com/vmihailenco/msgpack v4.0.4+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
@@ -949,7 +944,6 @@ honnef.co/go/tools v0.0.0-20190418001031-e561f6794a2a/go.mod h1:rf3lG4BRIbNafJWh
 honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.1-2019.2.3/go.mod h1:a3bituU0lyd329TUQxRnasdCoJDkEUEAqEt0JzvZhAg=
 honnef.co/go/tools v0.0.1-2020.1.3/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
-honnef.co/go/tools v0.0.1-2020.1.4 h1:UoveltGrhghAA7ePc+e+QYDHXrBps2PqFZiHkGR/xK8=
 honnef.co/go/tools v0.0.1-2020.1.4/go.mod h1:X/FiERA/W4tHapMX5mGpAtMSVEeEUOyHaw9vFzvIQ3k=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=

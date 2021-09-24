@@ -25,16 +25,17 @@ import (
 
 // TiEMAPIServerScript represent the data to generate TiEMAPIServer config
 type TiEMAPIServerScript struct {
-	Host              string
-	Port              int
-	ClientPort        int
-	MetricsPort       int
-	DeployDir         string
-	DataDir           string
-	LogDir            string
-	LogLevel          string
-	RegistryEndpoints string
-	TracerAddress     string
+	Host                 string
+	Port                 int
+	ClientPort           int
+	MetricsPort          int
+	DeployDir            string
+	DataDir              string
+	LogDir               string
+	LogLevel             string
+	RegistryEndpoints    string
+	TracerAddress        string
+	ElasticsearchAddress string
 }
 
 // NewTiEMAPIServerScript returns a TiEMAPIServerScript with given arguments
@@ -71,6 +72,12 @@ func (c *TiEMAPIServerScript) WithRegistry(addr []string) *TiEMAPIServerScript {
 // WithTracer set TracerAddress
 func (c *TiEMAPIServerScript) WithTracer(addr []string) *TiEMAPIServerScript {
 	c.TracerAddress = strings.Join(addr, ",")
+	return c
+}
+
+// WithElasticsearch set ElasticsearchAddress
+func (c *TiEMAPIServerScript) WithElasticsearch(addr []string) *TiEMAPIServerScript {
+	c.ElasticsearchAddress = strings.Join(addr, ",")
 	return c
 }
 

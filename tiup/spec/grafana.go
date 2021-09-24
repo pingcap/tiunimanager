@@ -211,6 +211,14 @@ func (i *GrafanaInstance) InitConfig(
 		ConfigToFile(fp); err != nil {
 		return err
 	}
+
+	// cp dashboards
+	if _, _, err := e.Execute(ctx,
+		fmt.Sprintf("cp -r %s/bin/dashboards %s/", paths.Deploy, paths.Deploy),
+		false); err != nil {
+		return err
+	}
+
 	dst = filepath.Join(paths.Deploy, "provisioning", "datasources", "datasource.yml")
 	return i.TransferLocalConfigFile(ctx, e, fp, dst)
 }

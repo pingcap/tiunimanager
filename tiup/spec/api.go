@@ -158,7 +158,8 @@ func (i *APIServerInstance) InitConfig(
 		WithPort(spec.Port).
 		WithMetricsPort(spec.MetricsPort).
 		WithRegistry(i.topo.RegistryEndpoints()).
-		WithTracer(i.topo.TracerEndpoints())
+		WithTracer(i.topo.TracerEndpoints()).
+		WithElasticsearch(i.topo.ElasticSearchAddress())
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_openapi-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
@@ -208,7 +209,8 @@ func (i *APIServerInstance) ScaleConfig(
 		WithPort(spec.Port).
 		WithMetricsPort(spec.MetricsPort).
 		WithRegistry(i.topo.RegistryEndpoints()).
-		WithTracer(i.topo.TracerEndpoints())
+		WithTracer(i.topo.TracerEndpoints()).
+		WithElasticsearch(i.topo.ElasticSearchAddress())
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_openapi-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)

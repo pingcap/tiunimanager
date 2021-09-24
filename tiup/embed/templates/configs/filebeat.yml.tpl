@@ -3,9 +3,16 @@ setup:
     enabled: false
   template:
     enabled: true
-    name: "${indexPrefix:tiem-cluster}"
-    pattern: "${indexPrefix:tiem-cluster}-*"
+    name: "${indexPrefix:tiem}"
+    pattern: "${indexPrefix:tiem}-*"
     overwrite: true
+setup.template.append_fields:
+  - name: msg
+    type: text
+
+processors:
+  - rate_limit:
+      limit: "200/s"
 
 logging.level: info
 logging.to_files: true
@@ -14,6 +21,12 @@ logging.files:
   name: filebeat
   keepfiles: 7
   permissions: 0644
+
+filebeat.config.modules:
+  enable: true
+  path: ${path.config}/conf/*.yml
+  reload.enabled: true
+  reload.period: 5s
 
 filebeat:
   inputs:
@@ -29,7 +42,7 @@ filebeat:
         keys_under_root: true  
         overwrite_keys: true
         message_key: msg
-      #include_lines:  [ 'log' ]
+      include_lines:  [  ]
       exclude_lines: [  ]
       fields_under_root: true
     - type: log
@@ -39,31 +52,27 @@ filebeat:
         - '{{.}}'
 {{- end}}
       fields:
-        type: audits
+        type: audit
       json:
         keys_under_root: true  
         overwrite_keys: true
         message_key: msg
-      #include_lines:  [ 'audits' ]
+      #include_lines:  [  ]
       exclude_lines: [  ]
       fields_under_root: true
-
-filebeat.config.inputs:
-  enabled: true
-  path: conf/*.yml
-  reload.enabled: true
-  reload.period: 5s
   
 output.elasticsearch:
-  ### 3. 读取拓扑文件配置的es的主机列表，如果是多个es实例，需要用逗号进行拼装，例如：192.168.1.101:9200,192.168.1.102:9200,192.168.1.103:9200
   hosts: "${esAddress:{{.ElasticSearchHost}}}"
   indices:
     - index: "${indexPrefix:tiem}-logs-%{+yyyy.MM.dd}"
       when.equals:
         type: "logs"
-    - index: "${indexPrefix:tiem}-audits-%{+yyyy.MM.dd}"
+    - index: "${indexPrefix:tiem}-audit-%{+yyyy.MM.dd}"
       when.equals:
-        type: "audits"
+        type: "audit"
     - index: "${indexPrefix:tiem}-tidb-cluster-%{+yyyy.MM.dd}"
       when.equals:
         type: "tidb"
+    - index: "${indexPrefix:tiem}-tidb-slowlog-%{+yyyy.MM.dd}"
+      when.equals:
+        type: "tidb_slowlog"

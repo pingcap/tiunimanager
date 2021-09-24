@@ -816,8 +816,6 @@ github.com/pingcap/kvproto v0.0.0-20210622031542-706fcaf286c8/go.mod h1:IOdRDPLy
 github.com/pingcap/log v0.0.0-20191012051959-b742a5d432e9 h1:AJD9pZYm72vMgPcQDww9rkZ1DnWfl0pXV3BOWlkYIjA=
 github.com/pingcap/log v0.0.0-20191012051959-b742a5d432e9/go.mod h1:4rbK1p9ILyIfb6hU7OG2CiWSqMXnp3JMbiaVJ6mvoY8=
 github.com/pingcap/tidb-insight v0.3.2/go.mod h1:jJMP56M/+MLCrn7/tL4wJmYyK2mjo37ijtyoesccyBE=
-github.com/pingcap/tiup v1.5.5 h1:vPfA4/EH5S7RKt4w6XixtjBmcFMq5bKwU2ZUbhcFSmE=
-github.com/pingcap/tiup v1.5.5/go.mod h1:3LbEOHIhkh3Ja4oX/TmvVzG7FqsX5yEq9b0wHGHFCxM=
 github.com/pingcap/tiup v1.5.6 h1:gJ9s1WcSKkJHjUdsLjBlvvbjsHLZSRjR6K2MK0ZXFYM=
 github.com/pingcap/tiup v1.5.6/go.mod h1:3LbEOHIhkh3Ja4oX/TmvVzG7FqsX5yEq9b0wHGHFCxM=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

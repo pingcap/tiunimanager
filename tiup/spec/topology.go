@@ -517,8 +517,8 @@ func (s *Specification) TiEMLogPaths() map[string]*config.LogPathInfo {
 				AuditLogs:   set.NewStringSet(),
 			}
 		}
-		result[host.Host].GeneralLogs.Insert(fmt.Sprintf("%s/logs/*.log", host.DeployDir))
-		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/audits/*.log", host.DeployDir))
+		result[host.Host].GeneralLogs.Insert(fmt.Sprintf("%s/logs/*-server.log", host.DataDir))
+		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/logs/audit.log", host.DataDir))
 	}
 
 	for _, host := range s.MetaDBServers {
@@ -528,8 +528,8 @@ func (s *Specification) TiEMLogPaths() map[string]*config.LogPathInfo {
 				AuditLogs:   set.NewStringSet(),
 			}
 		}
-		result[host.Host].GeneralLogs.Insert(fmt.Sprintf("%s/logs/*.log", host.DeployDir))
-		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/audits/*.log", host.DeployDir))
+		result[host.Host].GeneralLogs.Insert(fmt.Sprintf("%s/logs/*-server.log", host.DataDir))
+		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/logs/audit.log", host.DataDir))
 	}
 
 	for _, host := range s.ClusterServers {
@@ -539,8 +539,8 @@ func (s *Specification) TiEMLogPaths() map[string]*config.LogPathInfo {
 				AuditLogs:   set.NewStringSet(),
 			}
 		}
-		result[host.Host].GeneralLogs.Insert(fmt.Sprintf("%s/logs/*.log", host.DeployDir))
-		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/audits/*.log", host.DeployDir))
+		result[host.Host].GeneralLogs.Insert(fmt.Sprintf("%s/logs/*-server.log", host.DataDir))
+		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/logs/audit.log", host.DataDir))
 	}
 
 	return result

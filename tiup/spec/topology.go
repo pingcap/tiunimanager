@@ -711,6 +711,10 @@ func setTiEMCustomDefaults(globalOptions *GlobalOptions, field reflect.Value) er
 			if field.Field(j).String() == "" && defaults.CanUpdate(field.Field(j).Interface()) {
 				field.Field(j).Set(reflect.ValueOf(globalOptions.LogDir))
 			}
+		case "LogLevel":
+			if field.Field(j).String() == "" && defaults.CanUpdate(field.Field(j).Interface()) {
+				field.Field(j).Set(reflect.ValueOf(globalOptions.LogLevel))
+			}
 		case "Arch":
 			// default values of globalOptions are set before fillCustomDefaults in Unmarshal
 			// so the globalOptions.Arch already has its default value set, no need to check again

@@ -23,9 +23,11 @@ func TestDBServiceHandler_AllocResourcesInBatch(t *testing.T) {
 	loc.Region = "Region1"
 	loc.Zone = "Zone1"
 	filter1 := new(dbPb.Filter)
+	filter1.Arch = string(resource.X86)
 	filter1.DiskType = string(resource.Sata)
 	filter1.Purpose = string(resource.General)
 	require := new(dbPb.Requirement)
+	require.Exclusive = false
 	require.ComputeReq = new(dbPb.ComputeRequirement)
 	require.ComputeReq.CpuCores = 4
 	require.ComputeReq.Memory = 8

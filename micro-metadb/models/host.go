@@ -262,7 +262,7 @@ func getPortsInRange(usedPorts []int32, start int32, end int32, count int) (*rt.
 	return result, nil
 }
 
-func markResourcesForUsed(tx *gorm.DB, applicant *dbPb.Applicant, resources []*Resource) (err error) {
+func markResourcesForUsed(tx *gorm.DB, applicant *dbPb.Applicant, resources []*Resource, exclusive bool) (err error) {
 	for _, resource := range resources {
 		if resource.DiskId != "" {
 			var disk rt.Disk
@@ -292,10 +292,14 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbPb.Applicant, resources []*R
 		tx.First(&host, "ID = ?", resource.HostId)
 		host.FreeCpuCores -= int32(resource.CpuCores)
 		host.FreeMemory -= int32(resource.Memory)
-		if host.IsExhaust() {
-			host.Stat = int32(rt.HOST_EXHAUST)
+		if exclusive {
+			host.Stat = rt.HOST_EXCLUSIVE
 		} else {
-			host.Stat = int32(rt.HOST_INUSED)
+			if host.IsExhaust() {
+				host.Stat = rt.HOST_EXHAUST
+			} else {
+				host.Stat = rt.HOST_INUSED
+			}
 		}
 		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
 		if err != nil {
@@ -340,8 +344,10 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, requir
 	}
 	// excluded choosed hosts in one request
 	excludedHosts = append(excludedHosts, choosedHosts...)
+	hostArch := require.HostFilter.Arch
 	hostPurpose := require.HostFilter.Purpose
 	hostDiskType := require.HostFilter.DiskType
+	exclusive := require.Require.Exclusive
 	reqCores := require.Require.ComputeReq.CpuCores
 	reqMem := require.Require.ComputeReq.Memory
 	diskType := rt.DiskType(require.Require.DiskReq.DiskType)
@@ -368,8 +374,14 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, requir
 			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "expect disk count %d but only %d after disk filter", require.Count, count)
 		}
 
-		err = db.Where("hosts.region = ? and hosts.az = ? and hosts.purpose = ? and hosts.disk_type = ? and hosts.status = ? and (hosts.stat = ? or hosts.stat = ?) and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
-			region, zone, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
+		if !exclusive {
+			err = db.Where("hosts.region = ? and hosts.az = ? and hosts.arch = ? and hosts.purpose = ? and hosts.disk_type = ? and hosts.status = ? and (hosts.stat = ? or hosts.stat = ?) and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
+				region, zone, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
+		} else {
+			// If need exclusive resource, only choosing from loadless hosts
+			err = db.Where("hosts.region = ? and hosts.az = ? and hosts.arch = ? and hosts.purpose = ? and hosts.disk_type = ? and hosts.status = ? and hosts.stat = ? and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
+				region, zone, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
+		}
 	} else {
 		err = nil
 	}
@@ -395,7 +407,7 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, requir
 	}
 
 	// 3. Mark Resources in used
-	err = markResourcesForUsed(tx, applicant, resources)
+	err = markResourcesForUsed(tx, applicant, resources, exclusive)
 	if err != nil {
 		return nil, err
 	}

@@ -1227,6 +1227,7 @@ func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
 		Stat:         0,
+		Arch:         "X86",
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		FreeCpuCores: 17,
@@ -1249,6 +1250,7 @@ func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
 		Stat:         0,
+		Arch:         "X86",
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		FreeCpuCores: 16,
@@ -1272,6 +1274,7 @@ func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
 		Stat:         0,
+		Arch:         "X86",
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		FreeCpuCores: 15,
@@ -1300,6 +1303,7 @@ func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
 	loc.Region = "Region1"
 	loc.Zone = "Zone1"
 	filter := new(dbPb.Filter)
+	filter.Arch = string(resource.X86)
 	filter.DiskType = string(resource.SSD)
 	filter.Purpose = string(resource.General)
 	require := new(dbPb.Requirement)
@@ -1386,6 +1390,7 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
 		Stat:         0,
+		Arch:         "X86",
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		FreeCpuCores: 17,
@@ -1408,6 +1413,7 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
 		Stat:         0,
+		Arch:         "X86",
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		FreeCpuCores: 16,
@@ -1431,6 +1437,7 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
 		Stat:         0,
+		Arch:         "X86",
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		FreeCpuCores: 15,
@@ -1459,9 +1466,11 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 	loc.Region = "Region1"
 	loc.Zone = "Zone2"
 	filter1 := new(dbPb.Filter)
+	filter1.Arch = string(resource.X86)
 	filter1.DiskType = string(resource.SSD)
 	filter1.Purpose = string(resource.General)
 	filter2 := new(dbPb.Filter)
+	filter2.Arch = string(resource.X86)
 	filter2.DiskType = string(resource.SSD)
 	filter2.Purpose = string(resource.Storage)
 	require := new(dbPb.Requirement)
@@ -1562,6 +1571,7 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
 		Stat:         0,
+		Arch:         "X86",
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		FreeCpuCores: 17,
@@ -1586,6 +1596,7 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
 		Stat:         0,
+		Arch:         "X86",
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		FreeCpuCores: 16,
@@ -1610,6 +1621,7 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
 		Stat:         0,
+		Arch:         "X86",
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		FreeCpuCores: 15,
@@ -1643,6 +1655,7 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 	filter1 := new(dbPb.Filter)
 	filter1.DiskType = string(resource.SSD)
 	filter1.Purpose = string(resource.General)
+	filter1.Arch = string(resource.X86)
 	require := new(dbPb.Requirement)
 	require.ComputeReq = new(dbPb.ComputeRequirement)
 	require.ComputeReq.CpuCores = 4

@@ -78,6 +78,7 @@ const (
 	HOST_LOADLESS = iota
 	HOST_INUSED
 	HOST_EXHAUST
+	HOST_EXCLUSIVE
 )
 
 type Host struct {

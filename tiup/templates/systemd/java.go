@@ -30,6 +30,7 @@ type JavaAppConfig struct {
 	// Takes one of no, on-success, on-failure, on-abnormal, on-watchdog, on-abort, or always.
 	// The Template set as always if this is not setted.
 	Restart string
+	Type    string // service type
 }
 
 // NewJavaAppConfig returns a Config with given arguments
@@ -40,6 +41,12 @@ func NewJavaAppConfig(service, user, deployDir, javaHome string) *JavaAppConfig 
 		DeployDir:   deployDir,
 		JavaHome:    javaHome,
 	}
+}
+
+// WithType set the systemd service type
+func (c *JavaAppConfig) WithType(typ string) *JavaAppConfig {
+	c.Type = typ
+	return c
 }
 
 // ConfigToFile write config content to specific path

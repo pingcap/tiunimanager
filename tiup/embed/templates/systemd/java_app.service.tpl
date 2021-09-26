@@ -3,12 +3,12 @@ Description={{.ServiceName}} service
 After=syslog.target network.target remote-fs.target nss-lookup.target
 
 [Service]
-Type=forking
-
+{{- if ne .Type ""}}
+Type={{.Type}}
+{{- end}}
 {{- if ne .JavaHome ""}}
 Environment="JAVA_HOME={{.JavaHome}}"
 {{- end}}
-
 User={{.User}}
 ExecStart={{.DeployDir}}/scripts/run_{{.ServiceName}}.sh
 

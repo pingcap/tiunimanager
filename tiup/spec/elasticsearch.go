@@ -160,7 +160,8 @@ func (i *ElasticSearchInstance) InitConfig(
 		return nil
 	}
 
-	systemCfg := system.NewJavaAppConfig(comp, deployUser, paths.Deploy, i.JavaHome)
+	systemCfg := system.NewJavaAppConfig(comp, deployUser, paths.Deploy, i.JavaHome).
+		WithType("forking")
 
 	if err := systemCfg.ConfigToFile(sysCfg); err != nil {
 		return errors.Trace(err)

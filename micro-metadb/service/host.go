@@ -486,3 +486,28 @@ func (handler *DBServiceHandler) AllocResourcesInBatch(ctx context.Context, in *
 	out.Rs.Code = common.TIEM_SUCCESS
 	return nil
 }
+
+func (handler *DBServiceHandler) RecycleResources(ctx context.Context, in *dbPb.RecycleRequest, out *dbPb.RecycleResponse) error {
+	log := framework.Log()
+	log.Infof("Receive recycle with %d requires", len(in.RecycleReqs))
+	out.Rs = new(dbPb.DBAllocResponseStatus)
+
+	resourceManager := handler.Dao().ResourceManager()
+	err := resourceManager.RecycleAllocResources(in)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			out.Rs.Code = int32(st.Code())
+			out.Rs.Message = st.Message()
+		} else {
+			out.Rs.Code = int32(codes.Internal)
+			out.Rs.Message = fmt.Sprintf("recycle resources failed, err: %v", err)
+		}
+		log.Warnln(out.Rs.Message)
+
+		// return nil to use rsp
+		return nil
+	}
+	out.Rs.Code = common.TIEM_SUCCESS
+	return nil
+}

@@ -39,6 +39,7 @@ const (
 	TIEM_RESOURCE_NO_ENOUGH_PORT                   = 506
 	TIEM_RESOURCE_NOT_ALL_SUCCEED                  = 507
 	TIEM_RESOURCE_INVALID_STRATEGY                 = 508
+	TIEM_RESOURCE_INVAILD_RECYCLE_TYPE             = 509
 )
 
 var TiEMErrMsg = map[uint32]string{

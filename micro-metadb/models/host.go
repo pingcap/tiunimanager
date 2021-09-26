@@ -487,3 +487,105 @@ func (m *DAOResourceManager) AllocResourcesInBatch(batchReq *dbPb.BatchAllocRequ
 	tx.Commit()
 	return
 }
+
+func FreeResourcesInHost(tx *gorm.DB, usedCompute []UsedComputeStatistic, usedDisks []string) (err error) {
+	for _, diskId := range usedDisks {
+		var disk rt.Disk
+		tx.First(&disk, "ID = ?", diskId).First(&disk)
+		if rt.DiskStatus(disk.Status).IsExhaust() {
+			err = tx.Model(&disk).Update("Status", int32(rt.DISK_AVAILABLE)).Error
+			if err != nil {
+				return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update disk(%s) status err, %v", diskId, err)
+			}
+		} else {
+			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "disk %s status not expected(%d)", diskId, disk.Status)
+		}
+	}
+	for _, usedCompute := range usedCompute {
+		var host rt.Host
+		tx.First(&host, "ID = ?", usedCompute.HostId)
+		host.FreeCpuCores += int32(usedCompute.TotalCpuCores)
+		host.FreeMemory += int32(usedCompute.TotalMemory)
+
+		if host.IsLoadless() {
+			host.Stat = rt.HOST_LOADLESS
+		} else {
+			host.Stat = rt.HOST_INUSED
+		}
+
+		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", usedCompute.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
+		if err != nil {
+			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update host(%s) stat err, %v", usedCompute.HostId, err)
+		}
+	}
+	return nil
+}
+
+type UsedComputeStatistic struct {
+	HostId        string
+	TotalCpuCores int
+	TotalMemory   int
+}
+
+func recycleClusterResource(tx *gorm.DB, clusterId string) (err error) {
+	var usedCompute []UsedComputeStatistic
+	err = tx.Model(&rt.UsedCompute{}).Select("host_id, count(cpu_cores) as total_cpu_cores, count(memory) as total_memory").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedCompute).Error
+	if err != nil {
+		return err
+	}
+
+	var usedDisks []string
+	err = tx.Model(&rt.UsedDisk{}).Select("disk_id").Where("holder_id = ?").Scan(&usedDisks).Error
+	if err != nil {
+		return err
+	}
+
+	err = FreeResourcesInHost(tx, usedCompute, usedDisks)
+	if err != nil {
+		return err
+	}
+
+	// Drop used resources in used_computes/used_disks/used_ports
+	err = tx.Where("holder_id = ?", clusterId).Delete(&rt.UsedCompute{}).Error
+	if err != nil {
+		return err
+	}
+
+	err = tx.Where("holder_id = ?", clusterId).Delete(&rt.UsedDisk{}).Error
+	if err != nil {
+		return err
+	}
+
+	err = tx.Where("holder_id = ?", clusterId).Delete(&rt.UsedPort{}).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *DAOResourceManager) doRecycle(tx *gorm.DB, req *dbPb.RecycleRequire) (err error) {
+	switch rt.RecycleType(req.RecycleType) {
+	case rt.RecycleCluster:
+		return recycleClusterResource(tx, req.ClusterId)
+	case rt.RecycleOperate:
+	case rt.RecycleCompute:
+	case rt.RecycleDisk:
+	default:
+		return status.Errorf(common.TIEM_RESOURCE_INVAILD_RECYCLE_TYPE, "invalid recycle resource type %d", req.RecycleType)
+	}
+	return nil
+}
+
+func (m *DAOResourceManager) RecycleAllocResources(request *dbPb.RecycleRequest) (err error) {
+	tx := m.getDb().Begin()
+	for i, req := range request.RecycleReqs {
+		err = m.doRecycle(tx, req)
+		if err != nil {
+			tx.Rollback()
+			return status.Errorf(common.TIEM_RESOURCE_NOT_ALL_SUCCEED, "recycle resources failed on request %d, %v", i, err)
+		}
+	}
+	tx.Commit()
+	return
+}

@@ -36,6 +36,10 @@ func (s DiskStatus) IsInused() bool {
 	return s == DISK_INUSED
 }
 
+func (s DiskStatus) IsExhaust() bool {
+	return s == DISK_EXHAUST
+}
+
 func (s DiskStatus) IsAvailable() bool {
 	return s == DISK_AVAILABLE
 }

@@ -124,6 +124,17 @@ func (h Host) IsExhaust() bool {
 	return diskExaust || h.FreeCpuCores == 0 || h.FreeMemory == 0
 }
 
+func (h Host) IsLoadless() bool {
+	diskLoadless := true
+	for _, disk := range h.Disks {
+		if disk.Status != int32(DISK_AVAILABLE) {
+			diskLoadless = false
+			break
+		}
+	}
+	return diskLoadless && h.FreeCpuCores == h.CpuCores && h.FreeMemory == h.Memory
+}
+
 func (h *Host) SetDiskStatus(diskId string, s DiskStatus) {
 	for i := range h.Disks {
 		if h.Disks[i].ID == diskId {

@@ -17,6 +17,7 @@ type Excluded struct {
 }
 
 type Filter struct {
+	Arch     string
 	Purpose  string
 	DiskType string
 }
@@ -38,6 +39,7 @@ type PortRequirement struct {
 	PortCnt int32
 }
 type Requirement struct {
+	Exclusive  bool // The Resource meets the Requirement will be used by exclusive
 	DiskReq    DiskRequirement
 	ComputeReq ComputeRequirement
 	PortReq    []PortRequirement
@@ -103,4 +105,28 @@ type BatchAllocRequest struct {
 
 type BatchAllocResponse struct {
 	BatchResults []*AllocRsp
+}
+
+type RecycleType int32
+
+const (
+	RecycleCluster RecycleType = iota // Recycle the resources owned by ClusterID
+	RecycleOperate                    // Recycle the resources operated in RequestID
+	RecycleCompute                    // Recycle Compute resources specify by Recycle request
+	RecycleDisk                       // Recycle Disk resources specify by Recycle request
+)
+
+type RecycleRequire struct {
+	RecycleType RecycleType
+	ClusterID   string
+	RequestID   string
+	HostID      string
+	HostIP      string
+	ComputeReq  ComputeRequirement
+	PortReq     []PortResource
+	DiskReq     DiskResource
+}
+
+type RecycleRequest struct {
+	RecycleReqs []RecycleRequire
 }

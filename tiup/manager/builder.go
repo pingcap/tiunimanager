@@ -294,11 +294,11 @@ func buildScaleOutTask(
 			metadata.SetTopology(mergedTopo)
 			return m.specManager.SaveMeta(name, metadata)
 		}).
+		Parallel(false, refreshConfigTasks...).
+		Parallel(false, buildReloadPromTasks(metadata.GetTopology())...).
 		Func("StartCluster", func(ctx context.Context) error {
 			return operator.Start(ctx, newPart, operator.Options{OptTimeout: gOpt.OptTimeout, Operation: operator.ScaleOutOperation}, tlsCfg)
-		}).
-		Parallel(false, refreshConfigTasks...).
-		Parallel(false, buildReloadPromTasks(metadata.GetTopology())...)
+		})
 
 	if final != nil {
 		final(builder, name, metadata)

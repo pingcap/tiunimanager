@@ -219,7 +219,8 @@ func (i *WebServerInstance) InitConfig(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Log,
-	).WithPort(i.Port).
+	).
+		WithPort(i.Port).
 		WithServerName(i.ServerName).
 		WithRegistryEndpoints(i.topo.RegistryEndpoints())
 
@@ -281,7 +282,8 @@ func (i *WebServerInstance) ScaleConfig(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Log,
-	).WithPort(i.Port).
+	).
+		WithPort(i.Port).
 		WithServerName(i.ServerName).
 		WithRegistryEndpoints(i.topo.RegistryEndpoints())
 

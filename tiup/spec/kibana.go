@@ -52,7 +52,7 @@ type KibanaSpec struct {
 
 // Status queries current status of the instance
 func (s *KibanaSpec) Status(tlsCfg *tls.Config, _ ...string) string {
-	return statusByHost(s.Host, s.Port, "/", nil)
+	return statusByHost(s.Host, s.Port, "/status", nil)
 }
 
 // Role returns the component role of the instance

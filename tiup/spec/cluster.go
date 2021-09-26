@@ -208,7 +208,9 @@ func (i *ClusterServerInstance) ScaleConfig(
 		spec.LogLevel,
 	).
 		WithPort(spec.Port).
-		WithMetricsPort(spec.MetricsPort)
+		WithMetricsPort(spec.MetricsPort).
+		WithRegistry(i.topo.RegistryEndpoints()).
+		WithTracer(i.topo.TracerEndpoints())
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_cluster-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)

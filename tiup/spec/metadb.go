@@ -223,7 +223,9 @@ func (i *MetaDBInstance) ScaleConfig(
 		WithPort(spec.Port).
 		WithPeerPort(spec.PeerPort).
 		WithClientPort(spec.ClientPort).
-		WithMetricsPort(spec.MetricsPort)
+		WithMetricsPort(spec.MetricsPort).
+		WithRegistry(i.topo.RegistryEndpoints()).
+		WithTracer(i.topo.TracerEndpoints())
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_metadb-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)

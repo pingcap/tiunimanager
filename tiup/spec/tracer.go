@@ -41,6 +41,7 @@ type TracerServerSpec struct {
 	CollectorPort     int                    `yaml:"collecter_port,omitempty" default:"14250"`
 	ZipkinHostPort    int                    `yaml:"port,omitempty" default:"4133"`
 	DeployDir         string                 `yaml:"deploy_dir,omitempty"`
+	DataDir           string                 `yaml:"data_dir,omitempty"`
 	LogDir            string                 `yaml:"log_dir,omitempty"`
 	Config            map[string]interface{} `yaml:"config,omitempty" validate:"config:ignore"`
 	Arch              string                 `yaml:"arch,omitempty"`
@@ -117,6 +118,8 @@ func (c *JaegerComponent) Instances() []Instance {
 				},
 				Dirs: []string{
 					s.DeployDir,
+					s.DataDir,
+					s.LogDir,
 				},
 				StatusFn: s.Status,
 				UptimeFn: func(tlsCfg *tls.Config) time.Duration {

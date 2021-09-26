@@ -124,6 +124,7 @@ func (c *ClusterServerComponent) Instances() []Instance {
 				Dirs: []string{
 					s.DeployDir,
 					s.DataDir,
+					s.LogDir,
 				},
 				StatusFn: s.Status,
 				UptimeFn: func(tlsCfg *tls.Config) time.Duration {

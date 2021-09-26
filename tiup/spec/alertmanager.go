@@ -105,6 +105,7 @@ func (c *AlertManagerComponent) Instances() []Instance {
 				Dirs: []string{
 					s.DeployDir,
 					s.DataDir,
+					s.LogDir,
 				},
 				StatusFn: func(_ *tls.Config, _ ...string) string {
 					return statusByHost(s.Host, s.WebPort, "/-/ready", nil)

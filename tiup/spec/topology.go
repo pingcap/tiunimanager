@@ -747,11 +747,20 @@ func setTiEMCustomDefaults(globalOptions *GlobalOptions, field reflect.Value) er
 func getPort(v reflect.Value) string {
 	for i := 0; i < v.NumField(); i++ {
 		switch v.Type().Field(i).Name {
+		// all field names that could be a listening port of some process
 		case "Port",
 			"ClientPort",
 			"WebPort",
 			"TCPPort",
 			"NodeExporterPort",
+			"ZipkinThriftPort",
+			"CompactThriftPort",
+			"BinaryThriftPort",
+			"AgentServePort",
+			"QueryServePort",
+			"JaegerThriftPort",
+			"JaegerHostPort",
+			"CollectorPort",
 			"ZipkinHostPort":
 			return fmt.Sprintf("%d", v.Field(i).Int())
 		}

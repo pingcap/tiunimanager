@@ -41,6 +41,7 @@ type WebServerSpec struct {
 	ServerName      string               `yaml:"server_name,omitempty" default:"localhost" validate:"server_name:editable"`
 	Port            int                  `yaml:"port,omitempty" default:"4120"`
 	DeployDir       string               `yaml:"deploy_dir,omitempty"`
+	DataDir         string               `yaml:"data_dir,omitempty"`
 	LogDir          string               `yaml:"log_dir,omitempty"`
 	Arch            string               `yaml:"arch,omitempty"`
 	OS              string               `yaml:"os,omitempty"`
@@ -119,6 +120,7 @@ func (c *WebServerComponent) Instances() []Instance {
 				},
 				Dirs: []string{
 					s.DeployDir,
+					s.DataDir,
 					s.LogDir,
 				},
 				StatusFn: s.Status,

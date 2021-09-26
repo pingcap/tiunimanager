@@ -37,6 +37,7 @@ type GrafanaSpec struct {
 	IgnoreExporter  bool                 `yaml:"ignore_exporter,omitempty"`
 	Port            int                  `yaml:"port" default:"4130"`
 	DeployDir       string               `yaml:"deploy_dir,omitempty"`
+	DataDir         string               `yaml:"data_dir,omitempty"`
 	ResourceControl meta.ResourceControl `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
 	Arch            string               `yaml:"arch,omitempty"`
 	OS              string               `yaml:"os,omitempty"`
@@ -105,6 +106,7 @@ func (c *GrafanaComponent) Instances() []Instance {
 				},
 				Dirs: []string{
 					s.DeployDir,
+					s.DataDir,
 				},
 				StatusFn: func(_ *tls.Config, _ ...string) string {
 					return statusByHost(s.Host, s.Port, "", nil)

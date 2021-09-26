@@ -97,7 +97,8 @@ type Specification struct {
 	WebServers           []*WebServerSpec       `yaml:"tiem_web_servers"`
 	TracerServers        []*TracerServerSpec    `yaml:"tracer_servers"`
 	ElasticSearchServers []*ElasticSearchSpec   `yaml:"elasticsearch_servers"`
-	Monitors             []*PrometheusSpec      `yaml:"monitoring_servers"`
+	KibanaServers        []*KibanaSpec          `yaml:"kibana_servers,omitempty"`
+	Monitors             []*PrometheusSpec      `yaml:"monitoring_servers,omitempty"`
 	Grafanas             []*GrafanaSpec         `yaml:"grafana_servers,omitempty"`
 	Alertmanagers        []*AlertmanagerSpec    `yaml:"alertmanager_servers,omitempty"`
 }
@@ -615,6 +616,7 @@ func (s *Specification) Merge(that Topology) Topology {
 		WebServers:           append(s.WebServers, spec.WebServers...),
 		TracerServers:        append(s.TracerServers, spec.TracerServers...),
 		ElasticSearchServers: append(s.ElasticSearchServers, spec.ElasticSearchServers...),
+		KibanaServers:        append(s.KibanaServers, spec.KibanaServers...),
 		Monitors:             append(s.Monitors, spec.Monitors...),
 		Grafanas:             append(s.Grafanas, spec.Grafanas...),
 		Alertmanagers:        append(s.Alertmanagers, spec.Alertmanagers...),

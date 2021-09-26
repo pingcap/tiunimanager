@@ -45,6 +45,7 @@ type ClusterFetchResult struct {
 
 type BackupRecord struct {
 	Record
+	StorageType  string
 	ClusterId    string `gorm:"not null;type:varchar(22);default:null"`
 	BackupType   string
 	BackupMethod string
@@ -366,6 +367,7 @@ func (m *DAOClusterManager) SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		},
+		StorageType:  record.GetStorageType(),
 		ClusterId:    record.GetClusterId(),
 		OperatorId:   record.GetOperatorId(),
 		BackupMethod: record.GetBackupMethod(),

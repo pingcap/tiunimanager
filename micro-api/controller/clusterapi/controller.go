@@ -260,3 +260,58 @@ func DescribeDashboard(c *gin.Context) {
 		c.JSON(http.StatusOK, result)
 	}
 }
+
+// Recover
+// @Summary recover a new cluster by backup record
+// @Description recover a new cluster by backup record
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body RecoverReq true "recover request"
+// @Success 200 {object} controller.CommonResult{data=controller.StatusInfo}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/recover [post]
+func Recover(c *gin.Context) {
+	var req RecoverReq
+
+	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	operator := controller.GetOperator(c)
+
+	baseInfo, demand := req.ConvertToDTO()
+
+	reqDTO := &cluster.RecoverRequest{
+		Operator: operator.ConvertToDTO(),
+		Cluster:  baseInfo,
+		Demands:  demand,
+	}
+
+	respDTO, err := client.ClusterClient.RecoverCluster(context.TODO(), reqDTO, func(o *cli.CallOptions) {
+		o.RequestTimeout = time.Minute * 5
+		o.DialTimeout = time.Minute * 5
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetRespStatus()
+		if status.Code != 0 {
+			c.JSON(http.StatusInternalServerError, controller.Fail(500, status.Message))
+			return
+		}
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, RecoverClusterRsp{
+			ClusterId:       respDTO.GetClusterId(),
+			ClusterBaseInfo: *ParseClusterBaseInfoFromDTO(respDTO.GetBaseInfo()),
+			StatusInfo:      *ParseStatusFromDTO(respDTO.GetClusterStatus()),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
+}

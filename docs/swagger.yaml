@@ -267,6 +267,27 @@ definitions:
       zoneCode:
         type: string
     type: object
+  clusterapi.RecoverReq:
+    properties:
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      dbPassword:
+        type: string
+      nodeDemandList:
+        items:
+          $ref: '#/definitions/clusterapi.ClusterNodeDemand'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+    type: object
   controller.CommonResult:
     properties:
       code:
@@ -612,11 +633,6 @@ definitions:
         type: string
       status:
         $ref: '#/definitions/controller.StatusInfo'
-    type: object
-  instanceapi.BackupRecoverReq:
-    properties:
-      clusterId:
-        type: string
     type: object
   instanceapi.BackupReq:
     properties:
@@ -1042,52 +1058,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: delete backup record
-      tags:
-      - cluster backup
-  /backups/{backupId}/restore:
-    post:
-      consumes:
-      - application/json
-      description: recover backup record of a cluster
-      parameters:
-      - description: backupId
-        in: path
-        name: backupId
-        required: true
-        type: string
-      - description: backup recover request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/instanceapi.BackupRecoverReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/controller.StatusInfo'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: recover backup record of a cluster
       tags:
       - cluster backup
   /clusters:
@@ -1619,6 +1589,47 @@ paths:
       summary: import data to tidb cluster
       tags:
       - cluster import
+  /clusters/recover:
+    post:
+      consumes:
+      - application/json
+      description: recover a new cluster by backup record
+      parameters:
+      - description: recover request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/clusterapi.RecoverReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.StatusInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: recover a new cluster by backup record
+      tags:
+      - cluster
   /flowwork/{flowWorkId}:
     get:
       consumes:

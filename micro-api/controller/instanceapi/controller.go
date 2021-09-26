@@ -303,48 +303,6 @@ func QueryBackup(c *gin.Context) {
 	}
 }
 
-// RecoverBackup
-// @Summary recover backup record of a cluster
-// @Description recover backup record of a cluster
-// @Tags cluster backup
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param backupId path string true "backupId"
-// @Param request body BackupRecoverReq true "backup recover request"
-// @Success 200 {object} controller.CommonResult{data=controller.StatusInfo}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /backups/{backupId}/restore [post]
-func RecoverBackup(c *gin.Context) {
-	backupIdStr := c.Param("backupId")
-	backupId, err := strconv.Atoi(backupIdStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
-		return
-	}
-	var req BackupRecoverReq
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
-		return
-	}
-
-	operator := controller.GetOperator(c)
-
-	resp, err := client.ClusterClient.RecoverBackupRecord(context.TODO(), &cluster.RecoverBackupRequest{
-		ClusterId:      req.ClusterId,
-		Operator:       operator.ConvertToDTO(),
-		BackupRecordId: int64(backupId),
-	}, controller.DefaultTimeout)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
-	} else {
-		c.JSON(http.StatusOK, controller.Success(*clusterapi.ParseStatusFromDTO(resp.GetRecoverRecord().DisplayStatus)))
-	}
-}
-
 // DeleteBackup
 // @Summary delete backup record
 // @Description delete backup record

@@ -173,10 +173,11 @@ message DBBackupRecordDTO {
     string backupMethod = 6;
     string backupType = 7;
     string backupMode = 8;
-    string operatorId = 9;
-    string filePath = 10;
-    int64 flowId = 11;
-    uint64 size = 12;
+    string storageType = 9;
+    string operatorId = 10;
+    string filePath = 11;
+    int64 flowId = 12;
+    uint64 size = 13;
 }
 
 message DBSaveBackupRecordRequest {

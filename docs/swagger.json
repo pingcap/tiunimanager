@@ -247,82 +247,6 @@
                 }
             }
         },
-        "/backups/{backupId}/restore": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "recover backup record of a cluster",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster backup"
-                ],
-                "summary": "recover backup record of a cluster",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "backupId",
-                        "name": "backupId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "backup recover request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.BackupRecoverReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/controller.StatusInfo"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
         "/clusters": {
             "get": {
                 "security": [
@@ -599,6 +523,75 @@
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/databaseapi.DataImportResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/recover": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "recover a new cluster by backup record",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "recover a new cluster by backup record",
+                "parameters": [
+                    {
+                        "description": "recover request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clusterapi.RecoverReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controller.StatusInfo"
                                         }
                                     }
                                 }
@@ -2553,6 +2546,38 @@
                 }
             }
         },
+        "clusterapi.RecoverReq": {
+            "type": "object",
+            "properties": {
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
+                "dbPassword": {
+                    "type": "string"
+                },
+                "nodeDemandList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clusterapi.ClusterNodeDemand"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "type": "boolean"
+                }
+            }
+        },
         "controller.CommonResult": {
             "type": "object",
             "properties": {
@@ -3071,14 +3096,6 @@
                 },
                 "status": {
                     "$ref": "#/definitions/controller.StatusInfo"
-                }
-            }
-        },
-        "instanceapi.BackupRecoverReq": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
                 }
             }
         },

@@ -263,7 +263,21 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 		}
 	}
 	getLogger().Infof("start cluster %s", cluster.ClusterName)
-	libtiup.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
+	startTaskId, err := libtiup.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
+	if err != nil {
+		getLogger().Errorf("call tiup api start cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+	context.put("startTaskId", startTaskId)
+	getLogger().Infof("got startTaskId %s", strconv.Itoa(int(startTaskId)))
+
+	task.Success(nil)
+	return true
+}
+
+func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.StatusModified = true
 	clusterAggregation.Cluster.Online()
 

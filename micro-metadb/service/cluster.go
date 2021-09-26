@@ -415,6 +415,7 @@ func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbPb.DBBackupRecord
 		BackupMethod: do.BackupMethod,
 		BackupMode:  do.BackupMode,
 		BackupType:  do.BackupType,
+		StorageType: do.StorageType,
 		OperatorId:  do.OperatorId,
 		FilePath:    do.FilePath,
 		FlowId:      int64(do.FlowId),

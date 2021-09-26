@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
@@ -20,6 +21,7 @@ type BackupRecord struct {
 	BackupMethod BackupMethod
 	BackupType BackupType
 	BackupMode BackupMode
+	StorageType StorageType
 	OperatorId string
 	Size       uint64
 	FilePath   string
@@ -55,6 +57,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupMethod string, backu
 	//todo: only support FULL Physics backup now
 	record := &BackupRecord{
 		ClusterId:  clusterId,
+		StorageType: StorageTypeS3,
 		BackupMethod: BackupMethodPhysics,
 		BackupType: BackupTypeFull,
 		BackupMode: backupMode,
@@ -69,6 +72,7 @@ func Backup(ope *proto.OperatorDTO, clusterId string, backupMethod string, backu
 			BackupType:  string(record.BackupType),
 			BackupMethod: string(record.BackupMethod),
 			BackupMode:  string(record.BackupMode),
+			StorageType: string(record.StorageType),
 			OperatorId:  record.OperatorId,
 			FilePath:    record.FilePath,
 			FlowId:      int64(flow.FlowWork.Id),
@@ -118,28 +122,72 @@ func DeleteBackup(ope *proto.OperatorDTO, clusterId string, bakId int64) error {
 	return nil
 }
 
-func Recover(ope *proto.OperatorDTO, clusterId string, backupRecordId int64) (*ClusterAggregation, error) {
+func RecoverPreCheck(req *proto.RecoverRequest) error {
+	if req.GetCluster() == nil {
+		return fmt.Errorf("invalid input cluster info")
+	}
+	recoverInfo := req.GetCluster().GetRecoverInfo()
+	if recoverInfo.GetBackupRecordId() <= 0 || recoverInfo.GetSourceClusterId() == "" {
+		return fmt.Errorf("invalid recover info param")
+	}
+
+	srcClusterArg, err := ClusterRepo.Load(recoverInfo.SourceClusterId)
+	if err != nil || srcClusterArg == nil {
+		return fmt.Errorf("load recover src cluster %s aggregation", recoverInfo.SourceClusterId)
+	}
+	operator := parseOperatorFromDTO(req.GetOperator())
+	if srcClusterArg.Cluster.TenantId != operator.TenantId {
+		return fmt.Errorf("recover cluster tenant %s not match source cluster tenanat %s", operator.TenantId, srcClusterArg.Cluster.TenantId)
+	}
+
+	/*
+	 * todo: source cluster contains TiFlash and version < v4.0.0, new cluster for recover must contains TiFlash, otherwise it will cause recover fail
+	 * https://docs.pingcap.com/zh/tidb/stable/backup-and-restore-faq
+	*/
+
+	//todo: check new cluster storage must > source cluster used storage
+
+	return nil
+}
+
+func Recover(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO, demandDTOs []*proto.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
-	clusterAggregation, err := ClusterRepo.Load(clusterId)
-	if err != nil || clusterAggregation == nil {
-		return nil, errors.New("load cluster aggregation")
-	}
-	clusterAggregation.CurrentOperator = operator
-	clusterAggregation.LastRecoverRecord = &RecoverRecord{
-		ClusterId:    clusterId,
-		OperatorId:   operator.Id,
-		BackupRecord: BackupRecord{Id: backupRecordId},
+	cluster := &Cluster{
+		ClusterName:    clusterInfo.ClusterName,
+		DbPassword:     clusterInfo.DbPassword,
+		ClusterType:    *knowledge.ClusterTypeFromCode(clusterInfo.ClusterType.Code),
+		ClusterVersion: *knowledge.ClusterVersionFromCode(clusterInfo.ClusterVersion.Code),
+		Tls:            clusterInfo.Tls,
+		TenantId:       operator.TenantId,
+		OwnerId:        operator.Id,
 	}
 
-	//currentFlow := clusterAggregation.CurrentWorkFlow
-	//if currentFlow != nil && !currentFlow.Finished(){
-	//	return clusterAggregation, errors.New("incomplete processing flow")
-	//}
+	demands := make([]*ClusterComponentDemand, len(demandDTOs), len(demandDTOs))
 
-	flow, err := CreateFlowWork(clusterId, FlowRecoverCluster, operator)
+	for i, v := range demandDTOs {
+		demands[i] = parseNodeDemandFromDTO(v)
+	}
+
+	cluster.Demands = demands
+
+	// persist the cluster into database
+	err := ClusterRepo.AddCluster(cluster)
+
 	if err != nil {
-		// todo
+		return nil, err
+	}
+	clusterAggregation := &ClusterAggregation{
+		Cluster:          cluster,
+		MaintainCronTask: GetDefaultMaintainTask(),
+		CurrentOperator:  operator,
+	}
+
+	// Start the workflow to create a cluster instance
+
+	flow, err := CreateFlowWork(cluster.Id, FlowRecoverCluster, operator)
+	if err != nil {
+		return nil, err
 	}
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
@@ -286,6 +334,12 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 		tidbServerPort = DefaultTidbPort
 	}
 
+	storageType, err := convertBrStorageType(string(record.StorageType))
+	if err != nil {
+		getLogger().Errorf("convert storage type failed, %s", err.Error())
+		return false
+	}
+
 	clusterFacade := libbr.ClusterFacade{
 		DbConnParameter: libbr.DbConnParam{
 			Username: "root", //todo: replace admin account
@@ -300,12 +354,12 @@ func backupCluster(task *TaskEntity, context *FlowContext) bool {
 		TaskID:      uint64(task.Id),
 	}
 	storage := libbr.BrStorage{
-		StorageType: libbr.StorageTypeS3,
+		StorageType: storageType,
 		Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
 
 	getLogger().Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
-	_, err := libbr.BackUp(clusterFacade, storage, uint64(task.Id))
+	_, err = libbr.BackUp(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call backup api failed, %s", err.Error())
 		return false
@@ -357,7 +411,6 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	return true
 }
 
-/*
 func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	getLogger().Info("begin recoverFromSrcCluster")
 	defer getLogger().Info("end recoverFromSrcCluster")
@@ -365,17 +418,45 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	recoverInfo := cluster.RecoverInfo
-	if recoverInfo.SourceClusterId == "" || recoverInfo.BackupRecordId == 0 {
-		getLogger().Infof("cluster[%s] no need recover", cluster.Id)
+	if recoverInfo.SourceClusterId == "" || recoverInfo.BackupRecordId <= 0 {
+		getLogger().Infof("cluster %s no need recover", cluster.Id)
 		return true
 	}
 
-	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	//todo: wait start task finished, temporary solution
+	var req db.FindTiupTaskByIDRequest
+	req.Id = flowContext.value("startTaskId").(uint64)
+
+	for i := 0; i < 30; i++ {
+		time.Sleep(5 * time.Second)
+		rsp, err := client.DBClient.FindTiupTaskByID(context.TODO(), &req)
+		if err != nil {
+			getLogger().Errorf("get start task err = %s", err.Error())
+			task.Fail(err)
+			return false
+		}
+		if rsp.TiupTask.Status == db.TiupTaskStatus_Error{
+			getLogger().Errorf("start cluster error, %s", rsp.TiupTask.ErrorStr)
+			task.Fail(errors.New(rsp.TiupTask.ErrorStr))
+			return false
+		}
+		if rsp.TiupTask.Status == db.TiupTaskStatus_Finished {
+			break
+		}
+	}
+
+	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
 
 	record, err := client.DBClient.QueryBackupRecords(context.TODO(), &db.DBQueryBackupRecordRequest{ClusterId: recoverInfo.SourceClusterId, RecordId: recoverInfo.BackupRecordId})
 	if err != nil {
 		getLogger().Errorf("query backup record failed, %s", err.Error())
+		return false
+	}
+
+	storageType, err := convertBrStorageType(record.GetBackupRecords().GetBackupRecord().GetStorageType())
+	if err != nil {
+		getLogger().Errorf("convert br storage type failed, %s", err.Error())
 		return false
 	}
 
@@ -392,10 +473,10 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		ClusterName: cluster.ClusterName,
 	}
 	storage := libbr.BrStorage{
-		StorageType: libbr.StorageTypeLocal,
-		Root: record.GetBackupRecords().GetBackupRecord().GetFilePath(),
+		StorageType: storageType,
+		Root:        fmt.Sprintf("%s/%s", record.GetBackupRecords().GetBackupRecord().GetFilePath(), "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
-	getLogger().Infof("begin call brmgr restore api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
+	getLogger().Infof("begin call brmgr restore api, clusterFacade %v, storage %v", clusterFacade, storage)
 	_, err = libbr.Restore(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call restore api failed, %s", err.Error())
@@ -404,62 +485,15 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	return true
 }
 
-//for no nfs storage
-func mergeBackupFiles(task *TaskEntity, context *FlowContext) bool {
-	//copy file from tikv server to backup dir
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
-	record := clusterAggregation.LastBackupRecord
-	tikvDir := record.FilePath
-	backupDir := record.FilePath
-
-	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
-	tikvServers := configModel.TiKVServers
-
-	for index, tikv := range tikvServers {
-		err := scpTikvBackupFiles(tikv, tikvDir, backupDir, index)
-		if err != nil {
-			getLogger().Errorf("scp backup files from tikv server[%s] failed, %s", tikv.Host, err.Error())
-			return false
-		}
+func convertBrStorageType(storageType string) (libbr.StorageType, error) {
+	if string(StorageTypeS3) == storageType{
+		return libbr.StorageTypeS3, nil
+	} else if string(StorageTypeLocal) == storageType{
+		return libbr.StorageTypeLocal, nil
+	} else {
+		return "", fmt.Errorf("invalid storage type, %s", storageType)
 	}
-
-	return true
 }
-
-func scpTikvBackupFiles(tikv *spec.TiKVSpec, tikvDir, backupDir string, index int) error {
-	sshConfig, err := auth.PrivateKey("root", "/root/.ssh/id_rsa_tiup_test", ssh.InsecureIgnoreHostKey())
-	if err != nil {
-		getLogger().Errorf("ssh auth remote host failed, %s", err.Error())
-		return err
-	}
-
-	scpClient := scp.NewClient(fmt.Sprintf("%s:22", tikv.Host), &sshConfig)
-	err = scpClient.Connect()
-	if err != nil {
-		getLogger().Errorf("scp client connect tikv server[%s] failed, %s", tikv.Host, err.Error())
-		return err
-	}
-	defer scpClient.Session.Close()
-
-	backupFile, err := os.Open(fmt.Sprintf("%s/tikv-%d.zip", backupDir, index))
-	if err != nil {
-		getLogger().Errorf("open backup file failed, %s", err.Error())
-		return err
-	}
-	defer backupFile.Close()
-
-	err = scpClient.CopyFromRemote(backupFile, fmt.Sprintf("%s/tikv.zip", tikvDir))
-	if err != nil {
-		getLogger().Errorf("copy backup file from tikv server[%s] failed, %s", tikv.Host, err.Error())
-		return err
-	}
-	return nil
-}
-
-func cleanLocalTikvBackupDir() error {
-	return nil
-}
-*/
 
 func recoverCluster(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)

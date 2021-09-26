@@ -16,11 +16,8 @@ func TestExportDataPreCheck(t *testing.T) {
 		FilePath:    "filePath",
 		StorageType: S3StorageType,
 	}
-	if err := ExportDataPreCheck(req); err != nil {
-		t.Errorf("TestExportDataPreCheck failed, %s", err.Error())
-		return
-	}
-	t.Log("TestExportDataPreCheck success")
+	err := ExportDataPreCheck(req)
+	assert.NoError(t, err)
 }
 
 func TestImportDataPreCheck(t *testing.T) {

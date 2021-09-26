@@ -2,7 +2,6 @@ package domain
 
 import (
 	ctx "context"
-	"errors"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/library/client"
@@ -45,7 +44,9 @@ type ExportInfo struct {
 	RecordId    string
 	FilePath    string
 	Filter      string
+	Sql 		string
 	StorageType string
+	BucketRegion string
 }
 
 type TransportInfo struct {
@@ -91,6 +92,11 @@ const (
 )
 
 const (
+	FileTypeCSV string = "csv"
+	FileTypeSQL string = "sql"
+)
+
+const (
 	DefaultTidbPort       int = 4000
 	DefaultTidbStatusPort int = 10080
 	DefaultPDClientPort   int = 2379
@@ -115,80 +121,89 @@ type TidbCfg struct {
 }
 
 var contextDataTransportKey = "dataTransportInfo"
-var defaultTransportNfsDirPrefix = "/tmp/tiem/transport" //todo: move to config
-var defaultTransportS3DirPrefix = "s3://nfs/tiem/transport"
-var defaultTransportS3AkSk = "?access-key=minioadmin&secret-access-key=minioadmin&endpoint=http://minio.pingcap.net:9000&force-path-style=true" //todo: test env ak sk
+var defaultTransportDirPrefix = "/tmp/tiem/transport" //todo: move to config
 
 func ExportDataPreCheck(req *proto.DataExportRequest) error {
-	if req.GetFilePath() == "" {
-		req.FilePath = defaultTransportS3DirPrefix
-	}
-	if req.GetStorageType() == "" {
-		req.StorageType = S3StorageType
-	}
-
 	if req.GetClusterId() == "" {
-		return errors.New("invalid param clusterId")
+		return fmt.Errorf("invalid param clusterId %s", req.GetClusterId())
 	}
 	if req.GetUserName() == "" {
-		return errors.New("invalid param userName")
+		return fmt.Errorf("invalid param userName %s", req.GetUserName())
 	}
 	/*
 		if req.GetPassword() == "" {
-			return errors.New("invalid param password")
+			return fmt.Errorf("invalid param password %s", req.GetPassword())
 		}
 	*/
-	if S3StorageType != req.GetStorageType() && NfsStorageType != req.GetStorageType() {
-		return errors.New("invalid param storageType")
+
+	if FileTypeCSV != req.GetFileType() && FileTypeSQL != req.GetFileType() {
+		return fmt.Errorf("invalid param fileType %s", req.GetFileType())
+	}
+	switch req.GetStorageType() {
+	case S3StorageType:
+		if req.GetEndpointUrl() == "" {
+			return fmt.Errorf("invalid param endpointUrl %s", req.GetEndpointUrl())
+		}
+		if req.GetBucketUrl() == "" {
+			return fmt.Errorf("invalid param bucketUrl %s", req.GetBucketUrl())
+		}
+		if req.GetAccessKey() == "" {
+			return fmt.Errorf("invalid param accessKey %s", req.GetAccessKey())
+		}
+		if req.GetSecretAccessKey() == "" {
+			return fmt.Errorf("invalid param secretAccessKey %s", req.GetSecretAccessKey())
+		}
+	case NfsStorageType:
+		if req.GetFilePath() == "" {
+			return fmt.Errorf("invalid param filePath %s", req.GetFilePath())
+		}
+	default:
+		return fmt.Errorf("invalid param storageType %s", req.GetStorageType())
 	}
 
 	return nil
 }
 
 func ImportDataPreCheck(req *proto.DataImportRequest) error {
-	if req.GetFilePath() == "" {
-		req.FilePath = defaultTransportS3DirPrefix
-	}
-	if req.GetStorageType() == "" {
-		req.StorageType = S3StorageType
-	}
-
 	if req.GetClusterId() == "" {
-		return errors.New("invalid param clusterId")
+		return fmt.Errorf("invalid param clusterId %s", req.GetClusterId())
 	}
 	if req.GetUserName() == "" {
-		return errors.New("invalid param userName")
+		return fmt.Errorf("invalid param userName %s", req.GetUserName())
 	}
 	/*
 		if req.GetPassword() == "" {
-			return errors.New("invalid param password")
+			return fmt.Errorf("invalid param password %s", req.GetPassword())
 		}
 	*/
+	if req.GetFilePath() == "" {
+		return fmt.Errorf("invalid param filePath %s", req.GetFilePath())
+	}
 	if S3StorageType != req.GetStorageType() && NfsStorageType != req.GetStorageType() {
-		return errors.New("invalid param storageType")
+		return fmt.Errorf("invalid param storageType %s", req.GetStorageType())
 	}
 
 	return nil
 }
 
-func ExportData(ope *proto.OperatorDTO, clusterId string, filePath string, storageType string, userName string, password string, fileType string, filter string) (string, error) {
-	getLogger().Infof("begin exportdata clusterId: %s, storageType: %s, filePath: %s, userName: %s, password: %s, fileType: %s, filter: %s", clusterId, storageType, fileType, userName, password, fileType, filter)
+func ExportData(request *proto.DataExportRequest) (string, error) {
+	getLogger().Infof("begin exportdata request %+v", request)
 	defer getLogger().Infof("end exportdata")
 	//todo: check operator
-	operator := parseOperatorFromDTO(ope)
+	operator := parseOperatorFromDTO(request.GetOperator())
 	getLogger().Info(operator)
-	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	clusterAggregation, err := ClusterRepo.Load(request.GetClusterId())
 	if err != nil {
-		getLogger().Errorf("load cluster %s aggregation from metadb failed", clusterId)
+		getLogger().Errorf("load cluster %s aggregation from metadb failed", request.GetClusterId())
 		return "", err
 	}
 
 	req := &db.DBCreateTransportRecordRequest{
 		Record: &db.TransportRecordDTO{
-			ClusterId:     clusterId,
+			ClusterId:     request.GetClusterId(),
 			TenantId:      operator.TenantId,
 			TransportType: string(TransportTypeExport),
-			FilePath:      getDataTransportDir(clusterId, TransportTypeExport, filePath, storageType),
+			FilePath:      getDataExportFilePath(request),
 			Status:        TransportStatusRunning,
 			StartTime:     time.Now().Unix(),
 			EndTime:       time.Now().Unix(),
@@ -200,18 +215,20 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, filePath string, stora
 	}
 
 	info := &ExportInfo{
-		ClusterId:   clusterId,
-		UserName:    userName,
-		Password:    password, //todo: need encrypt
-		FileType:    fileType,
+		ClusterId:   request.GetClusterId(),
+		UserName:    request.GetUserName(),
+		Password:    request.GetPassword(), //todo: need encrypt
+		FileType:    request.GetFileType(),
 		RecordId:    resp.GetId(),
-		FilePath:    getDataTransportDir(clusterId, TransportTypeExport, filePath, storageType),
-		Filter:      filter,
-		StorageType: storageType,
+		FilePath:    getDataExportFilePath(request),
+		Filter:      request.GetFilter(),
+		Sql:  		 request.GetSql(),
+		StorageType: request.GetStorageType(),
+		BucketRegion: request.GetBucketRegion(),
 	}
 
 	// Start the workflow
-	flow, err := CreateFlowWork(clusterId, FlowExportData, operator)
+	flow, err := CreateFlowWork(request.GetClusterId(), FlowExportData, operator)
 	if err != nil {
 		return "", err
 	}
@@ -224,25 +241,25 @@ func ExportData(ope *proto.OperatorDTO, clusterId string, filePath string, stora
 	return info.RecordId, nil
 }
 
-func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, password string, filepath string, storageType string) (string, error) {
-	getLogger().Infof("begin importdata clusterId: %s, storageType: %s, userName: %s, password: %s, filePath: %s", clusterId, storageType, userName, password, filepath)
+func ImportData(request *proto.DataImportRequest) (string, error) {
+	getLogger().Infof("begin importdata request %+v", request)
 	defer getLogger().Infof("end importdata")
 	//todo: check operator
-	operator := parseOperatorFromDTO(ope)
+	operator := parseOperatorFromDTO(request.GetOperator())
 	getLogger().Info(operator)
 
-	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	clusterAggregation, err := ClusterRepo.Load(request.GetClusterId())
 	if err != nil {
-		getLogger().Errorf("load cluster %s aggregation from metadb failed", clusterId)
+		getLogger().Errorf("load cluster %s aggregation from metadb failed", request.GetClusterId())
 		return "", err
 	}
 
 	req := &db.DBCreateTransportRecordRequest{
 		Record: &db.TransportRecordDTO{
-			ClusterId:     clusterId,
+			ClusterId:     request.GetClusterId(),
 			TenantId:      operator.TenantId,
 			TransportType: string(TransportTypeImport),
-			FilePath:      filepath,
+			FilePath:      request.GetFilePath(),
 			Status:        TransportStatusRunning,
 			StartTime:     time.Now().Unix(),
 			EndTime:       time.Now().Unix(),
@@ -253,17 +270,17 @@ func ImportData(ope *proto.OperatorDTO, clusterId string, userName string, passw
 		return "", err
 	}
 	info := &ImportInfo{
-		ClusterId:   clusterId,
-		UserName:    userName,
-		Password:    password, //todo: need encrypt
-		FilePath:    filepath,
+		ClusterId:   request.GetClusterId(),
+		UserName:    request.GetUserName(),
+		Password:    request.GetPassword(), //todo: need encrypt
+		FilePath:    request.GetFilePath(),
 		RecordId:    resp.GetId(),
-		StorageType: storageType,
-		ConfigPath:  getDataTransportDir(clusterId, TransportTypeImport, "", ""),
+		StorageType: request.GetStorageType(),
+		ConfigPath:  getDataImportConfigDir(request.GetClusterId(), TransportTypeImport),
 	}
 
 	// Start the workflow
-	flow, err := CreateFlowWork(clusterId, FlowImportData, operator)
+	flow, err := CreateFlowWork(request.GetClusterId(), FlowImportData, operator)
 	if err != nil {
 		return "", err
 	}
@@ -353,30 +370,19 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	return config
 }
 
-/**
-data import && export dir
-└── filePath/[cluster-id]
-	├── import
-	|	├── data
-	|	├── tidb-lightning.toml
-	|	└── tidb-lightning.log
-	└── export
-		└── data
-*/
-func getDataTransportDir(clusterId string, transportType TransportType, filePath string, storageType string) string {
-	if S3StorageType == storageType {
-		if filePath != "" {
-			return filePath
-		} else {
-			return fmt.Sprintf("%s/%s/%s/%s", defaultTransportS3DirPrefix, clusterId, transportType, defaultTransportS3AkSk)
-		}
+
+func getDataImportConfigDir(clusterId string, transportType TransportType) string {
+	return fmt.Sprintf("%s/%s/%s", defaultTransportDirPrefix, clusterId, transportType)
+}
+
+func getDataExportFilePath(request *proto.DataExportRequest) string {
+	var filePath string
+	if S3StorageType == request.GetStorageType() {
+		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
 	} else {
-		if filePath != "" {
-			return fmt.Sprintf("%s/%s/%s", filePath, clusterId, transportType)
-		} else {
-			return fmt.Sprintf("%s/%s/%s", defaultTransportNfsDirPrefix, clusterId, transportType)
-		}
+		filePath = request.GetFilePath()
 	}
+	return filePath
 }
 
 func cleanDataTransportDir(filepath string) error {
@@ -502,6 +508,12 @@ func exportDataFromCluster(task *TaskEntity, context *FlowContext) bool {
 		"-F", "256MiB"}
 	if info.Filter != "" {
 		cmd = append(cmd, "--filter", fmt.Sprintf("\"%s\"", info.Filter))
+	}
+	if FileTypeCSV == info.FileType && info.Sql != "" {
+		cmd = append(cmd, "--sql", fmt.Sprintf("\"%s\"", info.Sql))
+	}
+	if S3StorageType == info.StorageType && info.BucketRegion != "" {
+		cmd = append(cmd, "--s3.region", fmt.Sprintf("\"%s\"", info.BucketRegion))
 	}
 	getLogger().Infof("call tiupmgr dumpling api, cmd: %v", cmd)
 	resp, err := libtiup.MicroSrvTiupDumpling(0, cmd, uint64(task.Id))

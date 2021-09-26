@@ -1459,41 +1459,49 @@ var doc = `{
                     },
                     {
                         "type": "string",
+                        "example": "2021-12-01 12:00:00",
                         "name": "endTime",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "example": 0,
                         "name": "from",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "example": "127.0.0.1",
                         "name": "ip",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "example": "warn",
                         "name": "level",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "example": "tidb log",
                         "name": "message",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "example": "tidb",
                         "name": "module",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "example": 10,
                         "name": "size",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "example": "2021-09-01 12:00:00",
                         "name": "startTime",
                         "in": "query"
                     }
@@ -2687,7 +2695,19 @@ var doc = `{
         "databaseapi.DataExportReq": {
             "type": "object",
             "properties": {
+                "accessKey": {
+                    "type": "string"
+                },
+                "bucketRegion": {
+                    "type": "string"
+                },
+                "bucketUrl": {
+                    "type": "string"
+                },
                 "clusterId": {
+                    "type": "string"
+                },
+                "endpointUrl": {
                     "type": "string"
                 },
                 "filePath": {
@@ -2700,6 +2720,12 @@ var doc = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "secretAccessKey": {
+                    "type": "string"
+                },
+                "sql": {
                     "type": "string"
                 },
                 "storageType": {
@@ -3316,35 +3342,44 @@ var doc = `{
             "type": "object",
             "properties": {
                 "clusterId": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "abc"
                 },
                 "ext": {
                     "type": "object",
                     "additionalProperties": true
                 },
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "zvadfwf"
                 },
                 "index": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "tiem-tidb-cluster-2021.09.23"
                 },
                 "ip": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "127.0.0.1"
                 },
                 "level": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "warn"
                 },
                 "message": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "tidb log"
                 },
                 "module": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "tidb"
                 },
                 "sourceLine": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "main.go:210"
                 },
                 "timestamp": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2021-09-23 14:23:10"
                 }
             }
         },
@@ -3358,7 +3393,8 @@ var doc = `{
                     }
                 },
                 "took": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 10
                 }
             }
         },

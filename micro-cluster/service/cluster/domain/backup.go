@@ -423,6 +423,28 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		return true
 	}
 
+	//todo: wait start task finished, temporary solution
+	var req db.FindTiupTaskByIDRequest
+	req.Id = flowContext.value("startTaskId").(uint64)
+
+	for i := 0; i < 30; i++ {
+		time.Sleep(5 * time.Second)
+		rsp, err := client.DBClient.FindTiupTaskByID(context.TODO(), &req)
+		if err != nil {
+			getLogger().Errorf("get start task err = %s", err.Error())
+			task.Fail(err)
+			return false
+		}
+		if rsp.TiupTask.Status == db.TiupTaskStatus_Error{
+			getLogger().Errorf("start cluster error, %s", rsp.TiupTask.ErrorStr)
+			task.Fail(errors.New(rsp.TiupTask.ErrorStr))
+			return false
+		}
+		if rsp.TiupTask.Status == db.TiupTaskStatus_Finished {
+			break
+		}
+	}
+
 	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
 
@@ -472,64 +494,6 @@ func convertBrStorageType(storageType string) (libbr.StorageType, error) {
 		return "", fmt.Errorf("invalid storage type, %s", storageType)
 	}
 }
-
-/*ss
-//for no nfs storage
-func mergeBackupFiles(task *TaskEntity, context *FlowContext) bool {
-	//copy file from tikv server to backup dir
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
-	record := clusterAggregation.LastBackupRecord
-	tikvDir := record.FilePath
-	backupDir := record.FilePath
-
-	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
-	tikvServers := configModel.TiKVServers
-
-	for index, tikv := range tikvServers {
-		err := scpTikvBackupFiles(tikv, tikvDir, backupDir, index)
-		if err != nil {
-			getLogger().Errorf("scp backup files from tikv server[%s] failed, %s", tikv.Host, err.Error())
-			return false
-		}
-	}
-
-	return true
-}
-
-func scpTikvBackupFiles(tikv *spec.TiKVSpec, tikvDir, backupDir string, index int) error {
-	sshConfig, err := auth.PrivateKey("root", "/root/.ssh/id_rsa_tiup_test", ssh.InsecureIgnoreHostKey())
-	if err != nil {
-		getLogger().Errorf("ssh auth remote host failed, %s", err.Error())
-		return err
-	}
-
-	scpClient := scp.NewClient(fmt.Sprintf("%s:22", tikv.Host), &sshConfig)
-	err = scpClient.Connect()
-	if err != nil {
-		getLogger().Errorf("scp client connect tikv server[%s] failed, %s", tikv.Host, err.Error())
-		return err
-	}
-	defer scpClient.Session.Close()
-
-	backupFile, err := os.Open(fmt.Sprintf("%s/tikv-%d.zip", backupDir, index))
-	if err != nil {
-		getLogger().Errorf("open backup file failed, %s", err.Error())
-		return err
-	}
-	defer backupFile.Close()
-
-	err = scpClient.CopyFromRemote(backupFile, fmt.Sprintf("%s/tikv.zip", tikvDir))
-	if err != nil {
-		getLogger().Errorf("copy backup file from tikv server[%s] failed, %s", tikv.Host, err.Error())
-		return err
-	}
-	return nil
-}
-
-func cleanLocalTikvBackupDir() error {
-	return nil
-}
-*/
 
 func recoverCluster(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)

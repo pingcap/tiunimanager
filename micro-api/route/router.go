@@ -7,6 +7,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller/databaseapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/instanceapi"
+	"github.com/pingcap-inc/tiem/micro-api/controller/logapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/taskapi"
 	"github.com/pingcap-inc/tiem/micro-api/controller/userapi"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
@@ -63,6 +64,7 @@ func Route(g *gin.Engine) {
 			cluster.POST("/", clusterapi.Create)
 			cluster.GET("/", clusterapi.Query)
 			cluster.DELETE("/:clusterId", clusterapi.Delete)
+			cluster.POST("/restore", clusterapi.Restore)
 			cluster.GET("/:clusterId/dashboard", clusterapi.DescribeDashboard)
 			// Params
 			cluster.GET("/:clusterId/params", instanceapi.QueryParams)
@@ -90,7 +92,6 @@ func Route(g *gin.Engine) {
 			backup.Use(interceptor.AuditLog())
 			backup.POST("/", instanceapi.Backup)
 			backup.GET("/", instanceapi.QueryBackup)
-			backup.POST("/:backupId/restore", instanceapi.RecoverBackup)
 			backup.DELETE("/:backupId", instanceapi.DeleteBackup)
 			//backup.GET("/:backupId", instanceapi.DetailsBackup)
 		}
@@ -119,6 +120,11 @@ func Route(g *gin.Engine) {
 
 			// Add allochosts API for debugging, not release.
 			host.POST("allochosts", hostapi.AllocHosts)
+		}
+
+		log := apiV1.Group("/logs")
+		{
+			log.GET("/tidb/:clusterId", logapi.SearchTiDBLog)
 		}
 	}
 

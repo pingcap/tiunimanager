@@ -35,6 +35,35 @@ func (req *CreateReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, d
 	return
 }
 
+func (req *RestoreReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, demandsDTO []*cluster.ClusterNodeDemandDTO) {
+	baseInfoDTO = req.ClusterBaseInfo.ConvertToDTO()
+
+	demandsDTO = make([]*cluster.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))
+
+	for _,demand := range req.NodeDemandList {
+		if demand.TotalNodeCount <= 0 {
+			framework.Log().Infof("Skip empty demand for component %s", demand.ComponentType)
+			continue
+		}
+		items := make([]*cluster.DistributionItemDTO, len(demand.DistributionItems), len(demand.DistributionItems))
+
+		for j, item := range demand.DistributionItems {
+			items[j] = &cluster.DistributionItemDTO{
+				ZoneCode: item.ZoneCode,
+				SpecCode: item.SpecCode,
+				Count: int32(item.Count),
+			}
+		}
+
+		demandsDTO = append(demandsDTO, &cluster.ClusterNodeDemandDTO{
+			ComponentType:  demand.ComponentType,
+			TotalNodeCount: int32(demand.TotalNodeCount),
+			Items:          items,
+		})
+	}
+	return
+}
+
 func (baseInfo *ClusterBaseInfo) ConvertToDTO() (dto *cluster.ClusterBaseInfoDTO) {
 	dto = &cluster.ClusterBaseInfoDTO{
 		ClusterName: baseInfo.ClusterName,
@@ -44,6 +73,7 @@ func (baseInfo *ClusterBaseInfo) ConvertToDTO() (dto *cluster.ClusterBaseInfoDTO
 		ClusterVersion: controller.ConvertVersionDTO(baseInfo.ClusterVersion),
 		Tags: baseInfo.Tags,
 		Tls: baseInfo.Tls,
+		RecoverInfo: controller.ConvertRecoverInfoDTO(baseInfo.RecoverInfo.SourceClusterId, baseInfo.RecoverInfo.BackupRecordId),
 	}
 
 	return

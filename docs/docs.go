@@ -262,82 +262,6 @@ var doc = `{
                 }
             }
         },
-        "/backups/{backupId}/restore": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "recover backup record of a cluster",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster backup"
-                ],
-                "summary": "recover backup record of a cluster",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "backupId",
-                        "name": "backupId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "backup recover request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.BackupRecoverReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/controller.StatusInfo"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
         "/clusters": {
             "get": {
                 "security": [
@@ -614,6 +538,75 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/databaseapi.DataImportResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/restore": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "restore a new cluster by backup record",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "restore a new cluster by backup record",
+                "parameters": [
+                    {
+                        "description": "restore request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clusterapi.RestoreReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/controller.StatusInfo"
                                         }
                                     }
                                 }
@@ -1109,10 +1102,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/instanceapi.BackupStrategy"
-                                            }
+                                            "$ref": "#/definitions/instanceapi.BackupStrategy"
                                         }
                                     }
                                 }
@@ -1428,6 +1418,115 @@ var doc = `{
                     },
                     "403": {
                         "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/logs/tidb/{clusterId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "search tidb log",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "logs"
+                ],
+                "summary": "search tidb log",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "2021-12-01 12:00:00",
+                        "name": "endTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 0,
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "127.0.0.1",
+                        "name": "ip",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "warn",
+                        "name": "level",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "tidb log",
+                        "name": "message",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "tidb",
+                        "name": "module",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 10,
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "2021-09-01 12:00:00",
+                        "name": "startTime",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/logapi.SearchTiDBLogRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/controller.CommonResult"
                         }
@@ -2113,6 +2212,9 @@ var doc = `{
                         "type": "integer"
                     }
                 },
+                "recoverInfo": {
+                    "$ref": "#/definitions/clusterapi.RecoverInfo"
+                },
                 "statusCode": {
                     "type": "string"
                 },
@@ -2261,6 +2363,9 @@ var doc = `{
                 "inProcessFlowId": {
                     "type": "integer"
                 },
+                "recoverInfo": {
+                    "$ref": "#/definitions/clusterapi.RecoverInfo"
+                },
                 "statusCode": {
                     "type": "string"
                 },
@@ -2301,6 +2406,9 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/clusterapi.ClusterNodeDemand"
                     }
+                },
+                "recoverInfo": {
+                    "$ref": "#/definitions/clusterapi.RecoverInfo"
                 },
                 "tags": {
                     "type": "array",
@@ -2419,6 +2527,9 @@ var doc = `{
                         "type": "integer"
                     }
                 },
+                "recoverInfo": {
+                    "$ref": "#/definitions/clusterapi.RecoverInfo"
+                },
                 "statusCode": {
                     "type": "string"
                 },
@@ -2459,6 +2570,52 @@ var doc = `{
                 },
                 "zoneCode": {
                     "type": "string"
+                }
+            }
+        },
+        "clusterapi.RecoverInfo": {
+            "type": "object",
+            "properties": {
+                "backupRecordId": {
+                    "type": "integer"
+                },
+                "sourceClusterId": {
+                    "type": "string"
+                }
+            }
+        },
+        "clusterapi.RestoreReq": {
+            "type": "object",
+            "properties": {
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
+                "dbPassword": {
+                    "type": "string"
+                },
+                "nodeDemandList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clusterapi.ClusterNodeDemand"
+                    }
+                },
+                "recoverInfo": {
+                    "$ref": "#/definitions/clusterapi.RecoverInfo"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "type": "boolean"
                 }
             }
         },
@@ -2564,7 +2721,19 @@ var doc = `{
         "databaseapi.DataExportReq": {
             "type": "object",
             "properties": {
+                "accessKey": {
+                    "type": "string"
+                },
+                "bucketRegion": {
+                    "type": "string"
+                },
+                "bucketUrl": {
+                    "type": "string"
+                },
                 "clusterId": {
+                    "type": "string"
+                },
+                "endpointUrl": {
                     "type": "string"
                 },
                 "filePath": {
@@ -2577,6 +2746,12 @@ var doc = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "secretAccessKey": {
+                    "type": "string"
+                },
+                "sql": {
                     "type": "string"
                 },
                 "storageType": {
@@ -2969,18 +3144,10 @@ var doc = `{
                 }
             }
         },
-        "instanceapi.BackupRecoverReq": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                }
-            }
-        },
         "instanceapi.BackupReq": {
             "type": "object",
             "properties": {
-                "backupRange": {
+                "backupMethod": {
                     "type": "string"
                 },
                 "backupType": {
@@ -3000,16 +3167,10 @@ var doc = `{
                 "backupDate": {
                     "type": "string"
                 },
-                "backupRange": {
-                    "type": "string"
-                },
-                "backupType": {
-                    "type": "string"
-                },
                 "clusterId": {
                     "type": "string"
                 },
-                "filePath": {
+                "nextBackupTime": {
                     "type": "string"
                 },
                 "period": {
@@ -3204,6 +3365,66 @@ var doc = `{
                 },
                 "unit": {
                     "type": "string"
+                }
+            }
+        },
+        "logapi.SearchTiDBLogDetail": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string",
+                    "example": "abc"
+                },
+                "ext": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "id": {
+                    "type": "string",
+                    "example": "zvadfwf"
+                },
+                "index": {
+                    "type": "string",
+                    "example": "tiem-tidb-cluster-2021.09.23"
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "127.0.0.1"
+                },
+                "level": {
+                    "type": "string",
+                    "example": "warn"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "tidb log"
+                },
+                "module": {
+                    "type": "string",
+                    "example": "tidb"
+                },
+                "sourceLine": {
+                    "type": "string",
+                    "example": "main.go:210"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2021-09-23 14:23:10"
+                }
+            }
+        },
+        "logapi.SearchTiDBLogRsp": {
+            "type": "object",
+            "properties": {
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/logapi.SearchTiDBLogDetail"
+                    }
+                },
+                "took": {
+                    "type": "integer",
+                    "example": 10
                 }
             }
         },

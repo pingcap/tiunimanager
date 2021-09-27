@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/pingcap-inc/tiem/tiup/spec"
+	"github.com/pingcap-inc/tiem/tiup/utils"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/tiup/pkg/checkpoint"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
@@ -131,6 +132,22 @@ func Start(
 		for _, inst := range insts {
 			if !inst.IgnoreMonitorAgent() {
 				uniqueHosts.Insert(inst.GetHost())
+			}
+			// init kibana index patterns
+			if comp.Name() == spec.ComponentKibana {
+				time.Sleep(time.Second * 20)
+				path := "/api/saved_objects/_import?overwrite=true"
+				url := fmt.Sprintf("http://%s:%d%s", inst.GetHost(), inst.GetPort(), path)
+				log.Debugf("init kibana index patterns url: ", url)
+
+				uploads := make([]utils.UploadFile, 0)
+				uploads = append(uploads, utils.UploadFile{
+					Name:     "file",
+					Filepath: inst.DeployDir() + "/bin/index_patterns.ndjson",
+				})
+				headers := map[string]string{"kbn-xsrf": "reporting"}
+				resp := utils.PostFile(url, map[string]string{}, uploads, headers)
+				log.Debugf("init kibana index patterns response: ", resp)
 			}
 		}
 	}

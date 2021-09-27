@@ -64,10 +64,10 @@ filebeat:
 output.elasticsearch:
   hosts: "${esAddress:{{.ElasticSearchHost}}}"
   indices:
-    - index: "${indexPrefix:tiem}-logs-%{+yyyy.MM.dd}"
+    - index: "${indexPrefix:tiem}-system-logs-%{+yyyy.MM.dd}"
       when.equals:
         type: "logs"
-    - index: "${indexPrefix:tiem}-audit-%{+yyyy.MM.dd}"
+    - index: "${indexPrefix:tiem}-system-audit-%{+yyyy.MM.dd}"
       when.equals:
         type: "audit"
     - index: "${indexPrefix:tiem}-tidb-cluster-%{+yyyy.MM.dd}"

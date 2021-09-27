@@ -488,17 +488,59 @@ func (m *DAOResourceManager) AllocResourcesInBatch(batchReq *dbPb.BatchAllocRequ
 	return
 }
 
-func FreeResourcesInHost(tx *gorm.DB, usedCompute []UsedComputeStatistic, usedDisks []string) (err error) {
+func recycleUsedTablesByClusterId(tx *gorm.DB, clusterId string) (err error) {
+	err = tx.Where("holder_id = ?", clusterId).Delete(&rt.UsedCompute{}).Error
+	if err != nil {
+		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedCompute for cluster %s failed, %v", clusterId, err)
+	}
+
+	err = tx.Where("holder_id = ?", clusterId).Delete(&rt.UsedDisk{}).Error
+	if err != nil {
+		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedDisk for cluster %s failed, %v", clusterId, err)
+	}
+
+	err = tx.Where("holder_id = ?", clusterId).Delete(&rt.UsedPort{}).Error
+	if err != nil {
+		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedPort for cluster %s failed, %v", clusterId, err)
+	}
+	return nil
+}
+
+func recycleUsedTablesByRequestId(tx *gorm.DB, requestId string) (err error) {
+	err = tx.Where("request_id = ?", requestId).Delete(&rt.UsedCompute{}).Error
+	if err != nil {
+		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedCompute for request %s failed, %v", requestId, err)
+	}
+
+	err = tx.Where("request_id = ?", requestId).Delete(&rt.UsedDisk{}).Error
+	if err != nil {
+		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedDisk for request %s failed, %v", requestId, err)
+	}
+
+	err = tx.Where("request_id = ?", requestId).Delete(&rt.UsedPort{}).Error
+	if err != nil {
+		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedPort for request %s failed, %v", requestId, err)
+	}
+	return nil
+}
+
+type UsedComputeStatistic struct {
+	HostId        string
+	TotalCpuCores int
+	TotalMemory   int
+}
+
+func recycleResourcesInHosts(tx *gorm.DB, usedCompute []UsedComputeStatistic, usedDisks []string) (err error) {
 	for _, diskId := range usedDisks {
 		var disk rt.Disk
 		tx.First(&disk, "ID = ?", diskId).First(&disk)
 		if rt.DiskStatus(disk.Status).IsExhaust() {
 			err = tx.Model(&disk).Update("Status", int32(rt.DISK_AVAILABLE)).Error
 			if err != nil {
-				return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update disk(%s) status err, %v", diskId, err)
+				return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update disk(%s) status while recycle failed, %v", diskId, err)
 			}
 		} else {
-			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "disk %s status not expected(%d)", diskId, disk.Status)
+			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "disk %s status not expected(%d) while recycle", diskId, disk.Status)
 		}
 	}
 	for _, usedCompute := range usedCompute {
@@ -515,48 +557,61 @@ func FreeResourcesInHost(tx *gorm.DB, usedCompute []UsedComputeStatistic, usedDi
 
 		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", usedCompute.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
 		if err != nil {
-			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update host(%s) stat err, %v", usedCompute.HostId, err)
+			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update host(%s) stat while recycle failed, %v", usedCompute.HostId, err)
 		}
 	}
 	return nil
-}
-
-type UsedComputeStatistic struct {
-	HostId        string
-	TotalCpuCores int
-	TotalMemory   int
 }
 
 func recycleClusterResource(tx *gorm.DB, clusterId string) (err error) {
 	var usedCompute []UsedComputeStatistic
 	err = tx.Model(&rt.UsedCompute{}).Select("host_id, count(cpu_cores) as total_cpu_cores, count(memory) as total_memory").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedCompute).Error
 	if err != nil {
-		return err
+		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get cluster %s total used compute failed, %v", clusterId, err)
 	}
 
 	var usedDisks []string
-	err = tx.Model(&rt.UsedDisk{}).Select("disk_id").Where("holder_id = ?").Scan(&usedDisks).Error
+	err = tx.Model(&rt.UsedDisk{}).Select("disk_id").Where("holder_id = ?", clusterId).Scan(&usedDisks).Error
 	if err != nil {
-		return err
+		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get cluster %s total used disks failed, %v", clusterId, err)
 	}
 
-	err = FreeResourcesInHost(tx, usedCompute, usedDisks)
+	// update stat for hosts and disks
+	err = recycleResourcesInHosts(tx, usedCompute, usedDisks)
 	if err != nil {
 		return err
 	}
 
 	// Drop used resources in used_computes/used_disks/used_ports
-	err = tx.Where("holder_id = ?", clusterId).Delete(&rt.UsedCompute{}).Error
+	err = recycleUsedTablesByClusterId(tx, clusterId)
 	if err != nil {
 		return err
 	}
 
-	err = tx.Where("holder_id = ?", clusterId).Delete(&rt.UsedDisk{}).Error
+	return nil
+}
+
+func recycleResourceForRequest(tx *gorm.DB, requestId string) (err error) {
+	var usedCompute []UsedComputeStatistic
+	err = tx.Model(&rt.UsedCompute{}).Select("host_id, count(cpu_cores) as total_cpu_cores, count(memory) as total_memory").Where("request_id = ?", requestId).Group("host_id").Scan(&usedCompute).Error
+	if err != nil {
+		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get request %s total used compute failed, %v", requestId, err)
+	}
+
+	var usedDisks []string
+	err = tx.Model(&rt.UsedDisk{}).Select("disk_id").Where("request_id = ?", requestId).Scan(&usedDisks).Error
+	if err != nil {
+		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get request %s total used disks failed, %v", requestId, err)
+	}
+
+	// update stat for hosts and disks
+	err = recycleResourcesInHosts(tx, usedCompute, usedDisks)
 	if err != nil {
 		return err
 	}
 
-	err = tx.Where("holder_id = ?", clusterId).Delete(&rt.UsedPort{}).Error
+	// Drop used resources in used_computes/used_disks/used_ports
+	err = recycleUsedTablesByRequestId(tx, requestId)
 	if err != nil {
 		return err
 	}
@@ -569,6 +624,7 @@ func (m *DAOResourceManager) doRecycle(tx *gorm.DB, req *dbPb.RecycleRequire) (e
 	case rt.RecycleCluster:
 		return recycleClusterResource(tx, req.ClusterId)
 	case rt.RecycleOperate:
+		return recycleResourceForRequest(tx, req.RequestId)
 	case rt.RecycleCompute:
 	case rt.RecycleDisk:
 	default:

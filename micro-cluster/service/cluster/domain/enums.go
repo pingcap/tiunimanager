@@ -122,6 +122,7 @@ const (
 type BackupMethod string
 type BackupType string
 type BackupMode string
+type StorageType string
 
 const (
 	BackupTypeFull BackupType = "full"
@@ -136,6 +137,11 @@ const (
 const (
 	BackupMethodLogic BackupMethod = "logical"
 	BackupMethodPhysics BackupMethod = "physical"
+)
+
+const (
+	StorageTypeLocal StorageType = "local"
+	StorageTypeS3 StorageType = "s3"
 )
 
 func checkBackupTypeValid(backupType string) bool {

@@ -20,7 +20,7 @@ service ClusterService {
 
     rpc QueryBackupRecord(QueryBackupRequest) returns (QueryBackupResponse);
     rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
-    rpc RecoverBackupRecord(RecoverBackupRequest) returns (RecoverBackupResponse);
+    rpc RecoverCluster(RecoverRequest) returns (RecoverResponse);
     rpc DeleteBackupRecord(DeleteBackupRequest) returns (DeleteBackupResponse);
     rpc SaveBackupStrategy(SaveBackupStrategyRequest) returns (SaveBackupStrategyResponse);
     rpc GetBackupStrategy(GetBackupStrategyRequest) returns (GetBackupStrategyResponse);
@@ -251,15 +251,17 @@ message CreateBackupResponse {
     BackupRecordDTO backupRecord = 2;
 }
 
-message RecoverBackupRequest {
-    string clusterId = 1;
-    OperatorDTO operator = 2;
-    int64 backupRecordId = 3;
+message RecoverRequest {
+    OperatorDTO operator = 1;
+    ClusterBaseInfoDTO cluster = 2;
+    repeated ClusterNodeDemandDTO demands = 3;
 }
 
-message RecoverBackupResponse {
-    ResponseStatusDTO status = 1;
-    BackupRecoverRecordDTO recoverRecord = 2;
+message RecoverResponse {
+   ResponseStatusDTO respStatus = 1;
+   string clusterId = 2;
+   ClusterBaseInfoDTO baseInfo = 3;
+   DisplayStatusDTO clusterStatus = 4;
 }
 
 message BackupRecoverRecordDTO {

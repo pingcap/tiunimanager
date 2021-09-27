@@ -118,13 +118,14 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterPb
 
 func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterPb.DataExportRequest, resp *clusterPb.DataExportResponse) error {
 	if err := domain.ExportDataPreCheck(req); err != nil {
+		getLogger().Error(err)
 		return err
 	}
 
-	recordId, err := domain.ExportData(req.GetOperator(), req.GetClusterId(), req.GetFilePath(), req.GetStorageType(), req.GetUserName(), req.GetPassword(), req.GetFileType(), req.GetFilter())
+	recordId, err := domain.ExportData(req)
 
 	if err != nil {
-		//todo
+		getLogger().Error(err)
 		return err
 	}
 	resp.RespStatus = SuccessResponseStatus
@@ -135,13 +136,14 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterPb.Da
 
 func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterPb.DataImportRequest, resp *clusterPb.DataImportResponse) error {
 	if err := domain.ImportDataPreCheck(req); err != nil {
+		getLogger().Error(err)
 		return err
 	}
 
-	recordId, err := domain.ImportData(req.GetOperator(), req.GetClusterId(), req.GetUserName(), req.GetPassword(), req.GetFilePath(), req.GetStorageType())
+	recordId, err := domain.ImportData(req)
 
 	if err != nil {
-		//todo
+		getLogger().Error(err)
 		return err
 	}
 	resp.RespStatus = SuccessResponseStatus
@@ -192,18 +194,25 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	}
 }
 
-func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request *clusterPb.RecoverBackupRequest, response *clusterPb.RecoverBackupResponse) (err error) {
+func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterPb.RecoverRequest, resp *clusterPb.RecoverResponse) (err error) {
 	getLogger().Info("recover cluster")
 
-	//todo: param precheck
-	cluster, err := domain.Recover(request.Operator, request.ClusterId, request.BackupRecordId)
+	if err = domain.RecoverPreCheck(req); err != nil {
+		getLogger().Errorf("recover cluster pre check failed, %s", err.Error())
+		return err
+	}
 
+	clusterAggregation, err := domain.Recover(req.GetOperator(), req.GetCluster(), req.GetDemands())
 	if err != nil {
 		getLogger().Info(err)
-		return nil
+		resp.RespStatus = BizErrorResponseStatus
+		resp.RespStatus.Message = err.Error()
+		return err
 	} else {
-		response.Status = SuccessResponseStatus
-		response.RecoverRecord = cluster.ExtractRecoverRecordDTO()
+		resp.RespStatus = SuccessResponseStatus
+		resp.ClusterId = clusterAggregation.Cluster.Id
+		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
+		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 		return nil
 	}
 }

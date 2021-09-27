@@ -46,7 +46,7 @@ type ClusterService interface {
 	DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, opts ...client.CallOption) (*DataTransportQueryResponse, error)
 	QueryBackupRecord(ctx context.Context, in *QueryBackupRequest, opts ...client.CallOption) (*QueryBackupResponse, error)
 	CreateBackup(ctx context.Context, in *CreateBackupRequest, opts ...client.CallOption) (*CreateBackupResponse, error)
-	RecoverBackupRecord(ctx context.Context, in *RecoverBackupRequest, opts ...client.CallOption) (*RecoverBackupResponse, error)
+	RecoverCluster(ctx context.Context, in *RecoverRequest, opts ...client.CallOption) (*RecoverResponse, error)
 	DeleteBackupRecord(ctx context.Context, in *DeleteBackupRequest, opts ...client.CallOption) (*DeleteBackupResponse, error)
 	SaveBackupStrategy(ctx context.Context, in *SaveBackupStrategyRequest, opts ...client.CallOption) (*SaveBackupStrategyResponse, error)
 	GetBackupStrategy(ctx context.Context, in *GetBackupStrategyRequest, opts ...client.CallOption) (*GetBackupStrategyResponse, error)
@@ -172,9 +172,9 @@ func (c *clusterService) CreateBackup(ctx context.Context, in *CreateBackupReque
 	return out, nil
 }
 
-func (c *clusterService) RecoverBackupRecord(ctx context.Context, in *RecoverBackupRequest, opts ...client.CallOption) (*RecoverBackupResponse, error) {
-	req := c.c.NewRequest(c.name, "ClusterService.RecoverBackupRecord", in)
-	out := new(RecoverBackupResponse)
+func (c *clusterService) RecoverCluster(ctx context.Context, in *RecoverRequest, opts ...client.CallOption) (*RecoverResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.RecoverCluster", in)
+	out := new(RecoverResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -375,7 +375,7 @@ type ClusterServiceHandler interface {
 	DescribeDataTransport(context.Context, *DataTransportQueryRequest, *DataTransportQueryResponse) error
 	QueryBackupRecord(context.Context, *QueryBackupRequest, *QueryBackupResponse) error
 	CreateBackup(context.Context, *CreateBackupRequest, *CreateBackupResponse) error
-	RecoverBackupRecord(context.Context, *RecoverBackupRequest, *RecoverBackupResponse) error
+	RecoverCluster(context.Context, *RecoverRequest, *RecoverResponse) error
 	DeleteBackupRecord(context.Context, *DeleteBackupRequest, *DeleteBackupResponse) error
 	SaveBackupStrategy(context.Context, *SaveBackupStrategyRequest, *SaveBackupStrategyResponse) error
 	GetBackupStrategy(context.Context, *GetBackupStrategyRequest, *GetBackupStrategyResponse) error
@@ -410,7 +410,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, out *DataTransportQueryResponse) error
 		QueryBackupRecord(ctx context.Context, in *QueryBackupRequest, out *QueryBackupResponse) error
 		CreateBackup(ctx context.Context, in *CreateBackupRequest, out *CreateBackupResponse) error
-		RecoverBackupRecord(ctx context.Context, in *RecoverBackupRequest, out *RecoverBackupResponse) error
+		RecoverCluster(ctx context.Context, in *RecoverRequest, out *RecoverResponse) error
 		DeleteBackupRecord(ctx context.Context, in *DeleteBackupRequest, out *DeleteBackupResponse) error
 		SaveBackupStrategy(ctx context.Context, in *SaveBackupStrategyRequest, out *SaveBackupStrategyResponse) error
 		GetBackupStrategy(ctx context.Context, in *GetBackupStrategyRequest, out *GetBackupStrategyResponse) error
@@ -477,8 +477,8 @@ func (h *clusterServiceHandler) CreateBackup(ctx context.Context, in *CreateBack
 	return h.ClusterServiceHandler.CreateBackup(ctx, in, out)
 }
 
-func (h *clusterServiceHandler) RecoverBackupRecord(ctx context.Context, in *RecoverBackupRequest, out *RecoverBackupResponse) error {
-	return h.ClusterServiceHandler.RecoverBackupRecord(ctx, in, out)
+func (h *clusterServiceHandler) RecoverCluster(ctx context.Context, in *RecoverRequest, out *RecoverResponse) error {
+	return h.ClusterServiceHandler.RecoverCluster(ctx, in, out)
 }
 
 func (h *clusterServiceHandler) DeleteBackupRecord(ctx context.Context, in *DeleteBackupRequest, out *DeleteBackupResponse) error {

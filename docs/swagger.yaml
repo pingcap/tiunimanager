@@ -38,6 +38,8 @@ definitions:
         items:
           type: integer
         type: array
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       statusCode:
         type: string
       statusName:
@@ -135,6 +137,8 @@ definitions:
         type: string
       inProcessFlowId:
         type: integer
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       statusCode:
         type: string
       statusName:
@@ -162,6 +166,8 @@ definitions:
         items:
           $ref: '#/definitions/clusterapi.ClusterNodeDemand'
         type: array
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       tags:
         items:
           type: string
@@ -239,6 +245,8 @@ definitions:
         items:
           type: integer
         type: array
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       statusCode:
         type: string
       statusName:
@@ -266,6 +274,36 @@ definitions:
         type: string
       zoneCode:
         type: string
+    type: object
+  clusterapi.RecoverInfo:
+    properties:
+      backupRecordId:
+        type: integer
+      sourceClusterId:
+        type: string
+    type: object
+  clusterapi.RestoreReq:
+    properties:
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      dbPassword:
+        type: string
+      nodeDemandList:
+        items:
+          $ref: '#/definitions/clusterapi.ClusterNodeDemand'
+        type: array
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
     type: object
   controller.CommonResult:
     properties:
@@ -333,7 +371,15 @@ definitions:
     type: object
   databaseapi.DataExportReq:
     properties:
+      accessKey:
+        type: string
+      bucketRegion:
+        type: string
+      bucketUrl:
+        type: string
       clusterId:
+        type: string
+      endpointUrl:
         type: string
       filePath:
         type: string
@@ -342,6 +388,10 @@ definitions:
       filter:
         type: string
       password:
+        type: string
+      secretAccessKey:
+        type: string
+      sql:
         type: string
       storageType:
         type: string
@@ -601,11 +651,6 @@ definitions:
       status:
         $ref: '#/definitions/controller.StatusInfo'
     type: object
-  instanceapi.BackupRecoverReq:
-    properties:
-      clusterId:
-        type: string
-    type: object
   instanceapi.BackupReq:
     properties:
       backupMethod:
@@ -753,25 +798,34 @@ definitions:
   logapi.SearchTiDBLogDetail:
     properties:
       clusterId:
+        example: abc
         type: string
       ext:
         additionalProperties: true
         type: object
       id:
+        example: zvadfwf
         type: string
       index:
+        example: tiem-tidb-cluster-2021.09.23
         type: string
       ip:
+        example: 127.0.0.1
         type: string
       level:
+        example: warn
         type: string
       message:
+        example: tidb log
         type: string
       module:
+        example: tidb
         type: string
       sourceLine:
+        example: main.go:210
         type: string
       timestamp:
+        example: "2021-09-23 14:23:10"
         type: string
     type: object
   logapi.SearchTiDBLogRsp:
@@ -781,6 +835,7 @@ definitions:
           $ref: '#/definitions/logapi.SearchTiDBLogDetail'
         type: array
       took:
+        example: 10
         type: integer
     type: object
   taskapi.FlowWorkDetailInfo:
@@ -1020,52 +1075,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: delete backup record
-      tags:
-      - cluster backup
-  /backups/{backupId}/restore:
-    post:
-      consumes:
-      - application/json
-      description: recover backup record of a cluster
-      parameters:
-      - description: backupId
-        in: path
-        name: backupId
-        required: true
-        type: string
-      - description: backup recover request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/instanceapi.BackupRecoverReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/controller.StatusInfo'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: recover backup record of a cluster
       tags:
       - cluster backup
   /clusters:
@@ -1597,6 +1606,47 @@ paths:
       summary: import data to tidb cluster
       tags:
       - cluster import
+  /clusters/restore:
+    post:
+      consumes:
+      - application/json
+      description: restore a new cluster by backup record
+      parameters:
+      - description: restore request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/clusterapi.RestoreReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.StatusInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: restore a new cluster by backup record
+      tags:
+      - cluster
   /flowwork/{flowWorkId}:
     get:
       consumes:
@@ -1736,28 +1786,36 @@ paths:
         name: clusterId
         required: true
         type: string
-      - in: query
+      - example: "2021-12-01 12:00:00"
+        in: query
         name: endTime
         type: string
-      - in: query
+      - example: 0
+        in: query
         name: from
         type: integer
-      - in: query
+      - example: 127.0.0.1
+        in: query
         name: ip
         type: string
-      - in: query
+      - example: warn
+        in: query
         name: level
         type: string
-      - in: query
+      - example: tidb log
+        in: query
         name: message
         type: string
-      - in: query
+      - example: tidb
+        in: query
         name: module
         type: string
-      - in: query
+      - example: 10
+        in: query
         name: size
         type: integer
-      - in: query
+      - example: "2021-09-01 12:00:00"
+        in: query
         name: startTime
         type: string
       produces:

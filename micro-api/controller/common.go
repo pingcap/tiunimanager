@@ -188,3 +188,10 @@ func ConvertTypeDTO(code string) (dto *cluster.ClusterTypeDTO) {
 	}
 	return
 }
+
+func ConvertRecoverInfoDTO(sourceClusterId string, backupRecordId int64) (dto *cluster.RecoverInfoDTO) {
+	return &cluster.RecoverInfoDTO{
+		SourceClusterId: sourceClusterId,
+		BackupRecordId: backupRecordId,
+	}
+}

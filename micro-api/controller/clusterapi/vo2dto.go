@@ -35,7 +35,7 @@ func (req *CreateReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, d
 	return
 }
 
-func (req *RecoverReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, demandsDTO []*cluster.ClusterNodeDemandDTO) {
+func (req *RestoreReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, demandsDTO []*cluster.ClusterNodeDemandDTO) {
 	baseInfoDTO = req.ClusterBaseInfo.ConvertToDTO()
 
 	demandsDTO = make([]*cluster.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))

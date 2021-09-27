@@ -261,21 +261,21 @@ func DescribeDashboard(c *gin.Context) {
 	}
 }
 
-// Recover
-// @Summary recover a new cluster by backup record
-// @Description recover a new cluster by backup record
+// Restore
+// @Summary restore a new cluster by backup record
+// @Description restore a new cluster by backup record
 // @Tags cluster
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param request body RecoverReq true "recover request"
+// @Param request body RestoreReq true "restore request"
 // @Success 200 {object} controller.CommonResult{data=controller.StatusInfo}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/recover [post]
-func Recover(c *gin.Context) {
-	var req RecoverReq
+// @Router /clusters/restore [post]
+func Restore(c *gin.Context) {
+	var req RestoreReq
 
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
 		_ = c.Error(err)

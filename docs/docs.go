@@ -565,14 +565,14 @@ var doc = `{
                 }
             }
         },
-        "/clusters/recover": {
+        "/clusters/restore": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "recover a new cluster by backup record",
+                "description": "restore a new cluster by backup record",
                 "consumes": [
                     "application/json"
                 ],
@@ -582,15 +582,15 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "recover a new cluster by backup record",
+                "summary": "restore a new cluster by backup record",
                 "parameters": [
                     {
-                        "description": "recover request",
+                        "description": "restore request",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/clusterapi.RecoverReq"
+                            "$ref": "#/definitions/clusterapi.RestoreReq"
                         }
                     }
                 ],
@@ -2584,7 +2584,7 @@ var doc = `{
                 }
             }
         },
-        "clusterapi.RecoverReq": {
+        "clusterapi.RestoreReq": {
             "type": "object",
             "properties": {
                 "clusterName": {

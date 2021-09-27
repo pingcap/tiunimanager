@@ -9,7 +9,7 @@ type CreateReq struct {
 	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
 }
 
-type RecoverReq struct {
+type RestoreReq struct {
 	ClusterBaseInfo
 	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
 }

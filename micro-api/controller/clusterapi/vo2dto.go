@@ -73,6 +73,7 @@ func (baseInfo *ClusterBaseInfo) ConvertToDTO() (dto *cluster.ClusterBaseInfoDTO
 		ClusterVersion: controller.ConvertVersionDTO(baseInfo.ClusterVersion),
 		Tags: baseInfo.Tags,
 		Tls: baseInfo.Tls,
+		RecoverInfo: controller.ConvertRecoverInfoDTO(baseInfo.RecoverInfo),
 	}
 
 	return

@@ -15,6 +15,7 @@
 package controller
 
 import (
+	"github.com/pingcap-inc/tiem/micro-api/controller/clusterapi"
 	"net/http"
 	"time"
 
@@ -187,4 +188,11 @@ func ConvertTypeDTO(code string) (dto *cluster.ClusterTypeDTO) {
 		Name: t.Name,
 	}
 	return
+}
+
+func ConvertRecoverInfoDTO(info clusterapi.RecoverInfo) (dto *cluster.RecoverInfoDTO) {
+	return &cluster.RecoverInfoDTO{
+		SourceClusterId: info.SourceClusterId,
+		BackupRecordId: info.BackupRecordId,
+	}
 }

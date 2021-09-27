@@ -38,6 +38,8 @@ definitions:
         items:
           type: integer
         type: array
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       statusCode:
         type: string
       statusName:
@@ -135,6 +137,8 @@ definitions:
         type: string
       inProcessFlowId:
         type: integer
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       statusCode:
         type: string
       statusName:
@@ -162,6 +166,8 @@ definitions:
         items:
           $ref: '#/definitions/clusterapi.ClusterNodeDemand'
         type: array
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       tags:
         items:
           type: string
@@ -239,6 +245,8 @@ definitions:
         items:
           type: integer
         type: array
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       statusCode:
         type: string
       statusName:
@@ -267,6 +275,13 @@ definitions:
       zoneCode:
         type: string
     type: object
+  clusterapi.RecoverInfo:
+    properties:
+      backupRecordId:
+        type: integer
+      sourceClusterId:
+        type: string
+    type: object
   clusterapi.RecoverReq:
     properties:
       clusterName:
@@ -281,6 +296,8 @@ definitions:
         items:
           $ref: '#/definitions/clusterapi.ClusterNodeDemand'
         type: array
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       tags:
         items:
           type: string

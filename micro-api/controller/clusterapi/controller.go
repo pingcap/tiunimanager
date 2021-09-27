@@ -292,10 +292,7 @@ func Recover(c *gin.Context) {
 		Demands:  demand,
 	}
 
-	respDTO, err := client.ClusterClient.RecoverCluster(context.TODO(), reqDTO, func(o *cli.CallOptions) {
-		o.RequestTimeout = time.Minute * 5
-		o.DialTimeout = time.Minute * 5
-	})
+	respDTO, err := client.ClusterClient.RecoverCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))

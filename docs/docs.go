@@ -2212,6 +2212,9 @@ var doc = `{
                         "type": "integer"
                     }
                 },
+                "recoverInfo": {
+                    "$ref": "#/definitions/clusterapi.RecoverInfo"
+                },
                 "statusCode": {
                     "type": "string"
                 },
@@ -2360,6 +2363,9 @@ var doc = `{
                 "inProcessFlowId": {
                     "type": "integer"
                 },
+                "recoverInfo": {
+                    "$ref": "#/definitions/clusterapi.RecoverInfo"
+                },
                 "statusCode": {
                     "type": "string"
                 },
@@ -2400,6 +2406,9 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/clusterapi.ClusterNodeDemand"
                     }
+                },
+                "recoverInfo": {
+                    "$ref": "#/definitions/clusterapi.RecoverInfo"
                 },
                 "tags": {
                     "type": "array",
@@ -2518,6 +2527,9 @@ var doc = `{
                         "type": "integer"
                     }
                 },
+                "recoverInfo": {
+                    "$ref": "#/definitions/clusterapi.RecoverInfo"
+                },
                 "statusCode": {
                     "type": "string"
                 },
@@ -2561,6 +2573,17 @@ var doc = `{
                 }
             }
         },
+        "clusterapi.RecoverInfo": {
+            "type": "object",
+            "properties": {
+                "backupRecordId": {
+                    "type": "integer"
+                },
+                "sourceClusterId": {
+                    "type": "string"
+                }
+            }
+        },
         "clusterapi.RecoverReq": {
             "type": "object",
             "properties": {
@@ -2581,6 +2604,9 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/clusterapi.ClusterNodeDemand"
                     }
+                },
+                "recoverInfo": {
+                    "$ref": "#/definitions/clusterapi.RecoverInfo"
                 },
                 "tags": {
                     "type": "array",

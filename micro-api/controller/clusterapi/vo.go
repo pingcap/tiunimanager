@@ -10,8 +10,9 @@ type ClusterBaseInfo struct {
 	DbPassword 			string   	`json:"dbPassword"`
 	ClusterType 		string   	`json:"clusterType"`
 	ClusterVersion 		string		`json:"clusterVersion"`
-	Tags 				[]string		`json:"tags"`
+	Tags 				[]string	`json:"tags"`
 	Tls 				bool		`json:"tls"`
+	RecoverInfo         RecoverInfo `json:"recoverInfo"`
 }
 
 type ClusterInstanceInfo struct {
@@ -24,6 +25,11 @@ type ClusterInstanceInfo struct {
 	MemoryUsage 				controller.Usage	`json:"memoryUsage"`
 	StorageUsage				controller.Usage	`json:"storageUsage"`
 	BackupFileUsage				controller.Usage	`json:"backupFileUsage"`
+}
+
+type RecoverInfo struct {
+	SourceClusterId string `json:"sourceClusterId"`
+	BackupRecordId  int64  `json:"backupRecordId"`
 }
 
 type ClusterMaintenanceInfo struct {

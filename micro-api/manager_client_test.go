@@ -155,6 +155,10 @@ func (s *ClusterFakeService) DetailCluster(ctx context.Context, in *cluster.Clus
 	panic("implement me")
 }
 
+func (s *ClusterFakeService) RecoverCluster(ctx context.Context, in *cluster.RecoverRequest, opts ...micro.CallOption) (*cluster.RecoverResponse, error) {
+	panic("implement me")
+}
+
 func (s *ClusterFakeService) QueryBackupRecord(ctx context.Context, in *cluster.QueryBackupRequest, opts ...micro.CallOption) (*cluster.QueryBackupResponse, error) {
 	panic("implement me")
 }
@@ -163,7 +167,7 @@ func (s *ClusterFakeService) CreateBackup(ctx context.Context, in *cluster.Creat
 	panic("implement me")
 }
 
-func (s *ClusterFakeService) RecoverBackupRecord(ctx context.Context, in *cluster.RecoverBackupRequest, opts ...micro.CallOption) (*cluster.RecoverBackupResponse, error) {
+func (s *ClusterFakeService) RecoverBackupRecord(ctx context.Context, in *cluster.RecoverRequest, opts ...micro.CallOption) (*cluster.RecoverResponse, error) {
 	panic("implement me")
 }
 

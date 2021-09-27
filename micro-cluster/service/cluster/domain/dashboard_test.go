@@ -22,3 +22,8 @@ func TestGetDashboardUrlFromCluser(t *testing.T) {
 	url := getDashboardUrlFromCluser(clusterAggregation)
 	assert.Equal(t, "http://127.0.0.1:2379/dashboard/", url)
 }
+
+
+func TestDescribeDashboard(t *testing.T) {
+
+}

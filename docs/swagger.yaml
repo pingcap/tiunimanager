@@ -282,7 +282,7 @@ definitions:
       sourceClusterId:
         type: string
     type: object
-  clusterapi.RecoverReq:
+  clusterapi.RestoreReq:
     properties:
       clusterName:
         type: string
@@ -1606,18 +1606,18 @@ paths:
       summary: import data to tidb cluster
       tags:
       - cluster import
-  /clusters/recover:
+  /clusters/restore:
     post:
       consumes:
       - application/json
-      description: recover a new cluster by backup record
+      description: restore a new cluster by backup record
       parameters:
-      - description: recover request
+      - description: restore request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/clusterapi.RecoverReq'
+          $ref: '#/definitions/clusterapi.RestoreReq'
       produces:
       - application/json
       responses:
@@ -1644,7 +1644,7 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: recover a new cluster by backup record
+      summary: restore a new cluster by backup record
       tags:
       - cluster
   /flowwork/{flowWorkId}:

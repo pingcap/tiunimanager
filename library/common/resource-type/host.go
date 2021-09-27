@@ -127,7 +127,7 @@ func (h Host) IsExhaust() bool {
 func (h Host) IsLoadless() bool {
 	diskLoadless := true
 	for _, disk := range h.Disks {
-		if disk.Status != int32(DISK_AVAILABLE) {
+		if disk.Status == int32(DISK_EXHAUST) || disk.Status == int32(DISK_INUSED) {
 			diskLoadless = false
 			break
 		}

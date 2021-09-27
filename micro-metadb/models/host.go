@@ -565,7 +565,7 @@ func recycleResourcesInHosts(tx *gorm.DB, usedCompute []UsedComputeStatistic, us
 
 func recycleClusterResource(tx *gorm.DB, clusterId string) (err error) {
 	var usedCompute []UsedComputeStatistic
-	err = tx.Model(&rt.UsedCompute{}).Select("host_id, count(cpu_cores) as total_cpu_cores, count(memory) as total_memory").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedCompute).Error
+	err = tx.Model(&rt.UsedCompute{}).Select("host_id, sum(cpu_cores) as total_cpu_cores, sum(memory) as total_memory").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedCompute).Error
 	if err != nil {
 		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get cluster %s total used compute failed, %v", clusterId, err)
 	}
@@ -593,7 +593,7 @@ func recycleClusterResource(tx *gorm.DB, clusterId string) (err error) {
 
 func recycleResourceForRequest(tx *gorm.DB, requestId string) (err error) {
 	var usedCompute []UsedComputeStatistic
-	err = tx.Model(&rt.UsedCompute{}).Select("host_id, count(cpu_cores) as total_cpu_cores, count(memory) as total_memory").Where("request_id = ?", requestId).Group("host_id").Scan(&usedCompute).Error
+	err = tx.Model(&rt.UsedCompute{}).Select("host_id, sum(cpu_cores) as total_cpu_cores, sum(memory) as total_memory").Where("request_id = ?", requestId).Group("host_id").Scan(&usedCompute).Error
 	if err != nil {
 		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get request %s total used compute failed, %v", requestId, err)
 	}

@@ -27,6 +27,7 @@ type DiskStatus int32
 
 const (
 	DISK_AVAILABLE DiskStatus = iota
+	DISK_RESERVED
 	DISK_INUSED
 	DISK_EXHAUST
 	DISK_ERROR

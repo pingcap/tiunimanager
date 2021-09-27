@@ -9,7 +9,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDBServiceHandler_AllocResourcesInBatch(t *testing.T) {
+type UsedComputeStatistic struct {
+	HostId        string
+	TotalCpuCores int
+	TotalMemory   int
+}
+
+type UsedDiskStatistic struct {
+	HostId    string
+	DiskCount int
+}
+
+type usedPortStatistic struct {
+	HostId    string
+	PortCount int
+}
+
+func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 
 	Dao.InitResourceDataForDev()
 
@@ -42,9 +58,11 @@ func TestDBServiceHandler_AllocResourcesInBatch(t *testing.T) {
 	})
 
 	var test_req dbPb.AllocRequest
+	clusterId := "TestClusterId1"
+	requestId := "TestRequestId1"
 	test_req.Applicant = new(dbPb.Applicant)
-	test_req.Applicant.HolderId = "TestCluster1"
-	test_req.Applicant.RequestId = "TestRequestID1"
+	test_req.Applicant.HolderId = clusterId
+	test_req.Applicant.RequestId = requestId
 	test_req.Requires = append(test_req.Requires, &dbPb.AllocRequirement{
 		Location:   loc,
 		HostFilter: filter1,
@@ -107,6 +125,36 @@ func TestDBServiceHandler_AllocResourcesInBatch(t *testing.T) {
 			assert.Equal(t, int32(16-4-4-4), host3.FreeCpuCores)
 			assert.Equal(t, int32(64-8-8-8), host3.FreeMemory)
 			assert.True(t, host3.Stat == int32(resource.HOST_EXHAUST))
+
+			var usedComputes []UsedComputeStatistic
+			MetaDB.Model(&resource.UsedCompute{}).Select("host_id, sum(cpu_cores) as total_cpu_cores, sum(memory) as total_memory").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedComputes)
+			assert.Equal(t, 3, len(usedComputes))
+			assert.True(t, usedComputes[0].TotalCpuCores == 12 && usedComputes[1].TotalCpuCores == 12 && usedComputes[2].TotalCpuCores == 12)
+			assert.True(t, usedComputes[0].TotalMemory == 24 && usedComputes[1].TotalMemory == 24 && usedComputes[2].TotalMemory == 24)
+			var usedDisks []UsedDiskStatistic
+			MetaDB.Model(&resource.UsedDisk{}).Select("host_id, count(disk_id) as disk_count").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedDisks)
+			assert.True(t, usedDisks[0].DiskCount == 3 && usedDisks[1].DiskCount == 3 && usedDisks[2].DiskCount == 3)
+			var usedPorts []usedPortStatistic
+			MetaDB.Model(&resource.UsedPort{}).Select("host_id, count(port) as port_count").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedPorts)
+			assert.True(t, usedPorts[0].PortCount == 15 && usedPorts[1].PortCount == 15 && usedPorts[2].PortCount == 15)
+
+			recycleRequest := new(dbPb.RecycleRequest)
+			recycleRequest.RecycleReqs = append(recycleRequest.RecycleReqs, &dbPb.RecycleRequire{
+				RecycleType: int32(resource.RecycleCluster),
+				ClusterId:   clusterId,
+			})
+			recycleResponse := new(dbPb.RecycleResponse)
+			if err := handler.RecycleResources(tt.args.ctx, recycleRequest, recycleResponse); (err != nil) != tt.wantErr {
+				t.Errorf("RecycleResources() error = %v, wantErr %v", err, tt.wantErr)
+			} else {
+				assert.Equal(t, int32(0), tt.args.rsp.Rs.Code)
+				t.Log(tt.args.rsp.Rs.Message)
+			}
+
+			MetaDB.First(&host, "IP = ?", "168.168.168.1")
+			assert.Equal(t, int32(16), host.FreeCpuCores)
+			assert.Equal(t, int32(64), host.FreeMemory)
+			assert.True(t, host.Stat == int32(resource.HOST_LOADLESS))
 		})
 	}
 }

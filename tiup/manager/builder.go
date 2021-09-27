@@ -81,15 +81,19 @@ func buildScaleOutTask(
 	tlsCfg := &tls.Config{} // not implemented for tiem
 
 	// Initialize the environments
-	initializedHosts := set.NewStringSet()
+	initializedHosts := make(map[string]hostInfo) // host -> ssh-port, os, arch
 	metadata.GetTopology().IterInstance(func(instance spec.Instance) {
-		initializedHosts.Insert(instance.GetHost())
+		initializedHosts[instance.GetHost()] = hostInfo{
+			ssh:  instance.GetSSHPort(),
+			os:   instance.OS(),
+			arch: instance.Arch(),
+		}
 	})
 	// uninitializedHosts are hosts which haven't been initialized yet
 	uninitializedHosts := make(map[string]hostInfo) // host -> ssh-port, os, arch
 	newPart.IterInstance(func(instance spec.Instance) {
 		host := instance.GetHost()
-		if initializedHosts.Exist(host) {
+		if _, found := initializedHosts[host]; found {
 			return
 		}
 		if _, found := uninitializedHosts[host]; found {
@@ -276,6 +280,20 @@ func buildScaleOutTask(
 	downloadCompTasks = append(downloadCompTasks, convertStepDisplaysToTasks(dlTasks)...)
 	deployCompTasks = append(deployCompTasks, convertStepDisplaysToTasks(dpTasks)...)
 
+	// regenerate configs of monitor agents
+	regenMonitorTasks := buildRefreshMonitoredConfigTasks(
+		m,
+		name,
+		initializedHosts,
+		noAgentHosts,
+		*topo.BaseTopo().GlobalOptions,
+		topo.BaseTopo().MonitoredOptions,
+		gOpt,
+		topo.(*spec.Specification).ElasticSearchAddress(),
+		topo.(*spec.Specification).TiEMLogPaths(),
+		p,
+	)
+
 	builder, err := m.sshTaskBuilder(name, topo, base.User, gOpt)
 	if err != nil {
 		return nil, err
@@ -295,6 +313,7 @@ func buildScaleOutTask(
 			return m.specManager.SaveMeta(name, metadata)
 		}).
 		Parallel(false, refreshConfigTasks...).
+		Parallel(false, convertStepDisplaysToTasks(regenMonitorTasks)...).
 		Parallel(false, buildReloadPromTasks(metadata.GetTopology())...).
 		Func("StartCluster", func(ctx context.Context) error {
 			return operator.Start(ctx, newPart, operator.Options{OptTimeout: gOpt.OptTimeout, Operation: operator.ScaleOutOperation}, tlsCfg)
@@ -440,13 +459,12 @@ func buildMonitoredDeployTask(
 }
 
 func buildRefreshMonitoredConfigTasks(
-	specManager *spec.SpecManager,
+	m *Manager,
 	name string,
 	uniqueHosts map[string]hostInfo, // host -> ssh-port, os, arch
 	noAgentHosts set.StringSet,
 	globalOptions spec.GlobalOptions,
 	monitoredOptions *cspec.MonitoredOptions,
-	sshTimeout, exeTimeout uint64,
 	gOpt operator.Options,
 	esHosts []string,
 	tiemHosts map[string]*config.LogPathInfo,
@@ -454,6 +472,12 @@ func buildRefreshMonitoredConfigTasks(
 ) []*task.StepDisplay {
 	if monitoredOptions == nil {
 		return nil
+	}
+
+	ports := map[string]int{
+		spec.ComponentNodeExporter:     monitoredOptions.NodeExporterPort,
+		spec.ComponentBlackboxExporter: monitoredOptions.BlackboxExporterPort,
+		spec.ComponentFilebeat:         0, // no need to listen any port
 	}
 
 	tasks := []*task.StepDisplay{}
@@ -483,8 +507,8 @@ func buildRefreshMonitoredConfigTasks(
 					host,
 					info.ssh,
 					globalOptions.User,
-					sshTimeout,
-					exeTimeout,
+					gOpt.SSHTimeout,
+					gOpt.OptTimeout,
 					gOpt.SSHProxyHost,
 					gOpt.SSHProxyPort,
 					gOpt.SSHProxyUser,
@@ -506,10 +530,16 @@ func buildRefreshMonitoredConfigTasks(
 						Deploy: deployDir,
 						Data:   []string{dataDir},
 						Log:    logDir,
-						Cache:  specManager.Path(name, spec.TempConfigPath),
+						Cache:  m.specManager.Path(name, spec.TempConfigPath),
 					},
 					esHosts[0],
 					tiemHosts,
+				).
+				SystemCtl(
+					host,
+					fmt.Sprintf("%s-%d.service", comp, ports[comp]),
+					"restart",
+					false,
 				).
 				BuildAsStep(fmt.Sprintf("  - Refresh config %s -> %s", comp, host))
 			tasks = append(tasks, t)

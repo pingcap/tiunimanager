@@ -31,39 +31,39 @@ func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 
 	type args struct {
 		ctx context.Context
-		req *dbPb.BatchAllocRequest
-		rsp *dbPb.BatchAllocResponse
+		req *dbPb.DBBatchAllocRequest
+		rsp *dbPb.DBBatchAllocResponse
 	}
 
-	loc := new(dbPb.Location)
+	loc := new(dbPb.DBLocation)
 	loc.Region = "Region1"
 	loc.Zone = "Zone1"
-	filter1 := new(dbPb.Filter)
+	filter1 := new(dbPb.DBFilter)
 	filter1.Arch = string(resource.X86)
 	filter1.DiskType = string(resource.Sata)
 	filter1.Purpose = string(resource.General)
-	require := new(dbPb.Requirement)
+	require := new(dbPb.DBRequirement)
 	require.Exclusive = false
-	require.ComputeReq = new(dbPb.ComputeRequirement)
+	require.ComputeReq = new(dbPb.DBComputeRequirement)
 	require.ComputeReq.CpuCores = 4
 	require.ComputeReq.Memory = 8
-	require.DiskReq = new(dbPb.DiskRequirement)
+	require.DiskReq = new(dbPb.DBDiskRequirement)
 	require.DiskReq.Capacity = 256
 	require.DiskReq.DiskType = string(resource.Sata)
 	require.DiskReq.NeedDisk = true
-	require.PortReq = append(require.PortReq, &dbPb.PortRequirement{
+	require.PortReq = append(require.PortReq, &dbPb.DBPortRequirement{
 		Start:   10000,
 		End:     10015,
 		PortCnt: 5,
 	})
 
-	var test_req dbPb.AllocRequest
+	var test_req dbPb.DBAllocRequest
 	clusterId := "TestClusterId1"
 	requestId := "TestRequestId1"
-	test_req.Applicant = new(dbPb.Applicant)
+	test_req.Applicant = new(dbPb.DBApplicant)
 	test_req.Applicant.HolderId = clusterId
 	test_req.Applicant.RequestId = requestId
-	test_req.Requires = append(test_req.Requires, &dbPb.AllocRequirement{
+	test_req.Requires = append(test_req.Requires, &dbPb.DBAllocRequirement{
 		Location:   loc,
 		HostFilter: filter1,
 		Strategy:   int32(resource.RandomRack),
@@ -71,13 +71,13 @@ func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 		Count:      3,
 	})
 
-	var batchReq dbPb.BatchAllocRequest
+	var batchReq dbPb.DBBatchAllocRequest
 	batchReq.BatchRequests = append(batchReq.BatchRequests, &test_req)
 	batchReq.BatchRequests = append(batchReq.BatchRequests, &test_req)
 	batchReq.BatchRequests = append(batchReq.BatchRequests, &test_req)
 	assert.Equal(t, 3, len(batchReq.BatchRequests))
 
-	var batchRsp dbPb.BatchAllocResponse
+	var batchRsp dbPb.DBBatchAllocResponse
 
 	tests := []struct {
 		name    string
@@ -138,12 +138,12 @@ func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 			MetaDB.Model(&resource.UsedPort{}).Select("host_id, count(port) as port_count").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedPorts)
 			assert.True(t, usedPorts[0].PortCount == 15 && usedPorts[1].PortCount == 15 && usedPorts[2].PortCount == 15)
 
-			recycleRequest := new(dbPb.RecycleRequest)
-			recycleRequest.RecycleReqs = append(recycleRequest.RecycleReqs, &dbPb.RecycleRequire{
+			recycleRequest := new(dbPb.DBRecycleRequest)
+			recycleRequest.RecycleReqs = append(recycleRequest.RecycleReqs, &dbPb.DBRecycleRequire{
 				RecycleType: int32(resource.RecycleCluster),
 				ClusterId:   clusterId,
 			})
-			recycleResponse := new(dbPb.RecycleResponse)
+			recycleResponse := new(dbPb.DBRecycleResponse)
 			if err := handler.RecycleResources(tt.args.ctx, recycleRequest, recycleResponse); (err != nil) != tt.wantErr {
 				t.Errorf("RecycleResources() error = %v, wantErr %v", err, tt.wantErr)
 			} else {

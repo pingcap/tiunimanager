@@ -262,7 +262,7 @@ func getPortsInRange(usedPorts []int32, start int32, end int32, count int) (*rt.
 	return result, nil
 }
 
-func markResourcesForUsed(tx *gorm.DB, applicant *dbPb.Applicant, resources []*Resource, exclusive bool) (err error) {
+func markResourcesForUsed(tx *gorm.DB, applicant *dbPb.DBApplicant, resources []*Resource, exclusive bool) (err error) {
 	for _, resource := range resources {
 		if resource.DiskId != "" {
 			var disk rt.Disk
@@ -335,7 +335,7 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbPb.Applicant, resources []*R
 	return nil
 }
 
-func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, require *dbPb.AllocRequirement, choosedHosts []string) (results []rt.HostResource, err error) {
+func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.DBApplicant, seq int, require *dbPb.DBAllocRequirement, choosedHosts []string) (results []rt.HostResource, err error) {
 	region := require.Location.Region
 	zone := require.Location.Zone
 	var excludedHosts []string
@@ -437,7 +437,7 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.Applicant, seq int, requir
 	return
 }
 
-func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbPb.AllocRequest) (results *rt.AllocRsp, err error) {
+func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbPb.DBAllocRequest) (results *rt.AllocRsp, err error) {
 	var choosedHosts []string
 	results = new(rt.AllocRsp)
 	for i, require := range req.Requires {
@@ -461,7 +461,7 @@ func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbPb.AllocRequest) (resul
 	return
 }
 
-func (m *DAOResourceManager) AllocResources(req *dbPb.AllocRequest) (result *rt.AllocRsp, err error) {
+func (m *DAOResourceManager) AllocResources(req *dbPb.DBAllocRequest) (result *rt.AllocRsp, err error) {
 	tx := m.getDb().Begin()
 	result, err = m.doAlloc(tx, req)
 	if err != nil {
@@ -472,7 +472,7 @@ func (m *DAOResourceManager) AllocResources(req *dbPb.AllocRequest) (result *rt.
 	return
 }
 
-func (m *DAOResourceManager) AllocResourcesInBatch(batchReq *dbPb.BatchAllocRequest) (results *rt.BatchAllocResponse, err error) {
+func (m *DAOResourceManager) AllocResourcesInBatch(batchReq *dbPb.DBBatchAllocRequest) (results *rt.BatchAllocResponse, err error) {
 	results = new(rt.BatchAllocResponse)
 	tx := m.getDb().Begin()
 	for i, req := range batchReq.BatchRequests {
@@ -619,7 +619,7 @@ func recycleResourceForRequest(tx *gorm.DB, requestId string) (err error) {
 	return nil
 }
 
-func (m *DAOResourceManager) doRecycle(tx *gorm.DB, req *dbPb.RecycleRequire) (err error) {
+func (m *DAOResourceManager) doRecycle(tx *gorm.DB, req *dbPb.DBRecycleRequire) (err error) {
 	switch rt.RecycleType(req.RecycleType) {
 	case rt.RecycleCluster:
 		return recycleClusterResource(tx, req.ClusterId)
@@ -633,7 +633,7 @@ func (m *DAOResourceManager) doRecycle(tx *gorm.DB, req *dbPb.RecycleRequire) (e
 	return nil
 }
 
-func (m *DAOResourceManager) RecycleAllocResources(request *dbPb.RecycleRequest) (err error) {
+func (m *DAOResourceManager) RecycleAllocResources(request *dbPb.DBRecycleRequest) (err error) {
 	tx := m.getDb().Begin()
 	for i, req := range request.RecycleReqs {
 		err = m.doRecycle(tx, req)

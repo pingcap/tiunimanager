@@ -29,8 +29,9 @@ service TiEMDBService {
 	rpc CheckDetails(DBCheckDetailsRequest) returns (DBCheckDetailsResponse);
 	rpc AllocHosts(DBAllocHostsRequest) returns (DBAllocHostsResponse);
 	rpc GetFailureDomain(DBGetFailureDomainRequest) returns (DBGetFailureDomainResponse);
-	rpc AllocResources(AllocRequest) returns (AllocResponse);
-	rpc AllocResourcesInBatch(BatchAllocRequest) returns (BatchAllocResponse);
+	rpc AllocResources(DBAllocRequest) returns (DBAllocResponse);
+	rpc AllocResourcesInBatch(DBBatchAllocRequest) returns (DBBatchAllocResponse);
+	rpc RecycleResources(DBRecycleRequest) returns (DBRecycleResponse);
 
 	// Cluster
 	rpc CreateCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);

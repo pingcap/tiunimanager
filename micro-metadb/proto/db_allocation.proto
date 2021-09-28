@@ -7,66 +7,66 @@ message DBAllocResponseStatus {
     string message = 2;
 }
 
-message Applicant {
+message DBApplicant {
 	string holderId = 1;
 	string requestId = 2;
 }
 
-message Location {
+message DBLocation {
 	string region = 1;
 	string zone = 2;
 	string rack = 3;
 	string host = 4;
 }
 
-message Excluded {
+message DBExcluded {
 	repeated string hosts = 1;
 }
 
-message Filter {
+message DBFilter {
 	string arch = 1;
 	string purpose  = 2;
 	string diskType = 3;
 }
 
-message ComputeRequirement {
+message DBComputeRequirement {
 	int32 cpuCores = 1;
 	int32 memory = 2;
 }
 
-message DiskRequirement {
+message DBDiskRequirement {
 	bool needDisk = 1;
 	int32 capacity = 2;  // Reserved, not used by now
 	string diskType = 3; // Reserved, not used by now
 }
 
-message PortRequirement {
+message DBPortRequirement {
 	int32 start = 1;
 	int32 end = 2;
 	int32 portCnt = 3;
 }
-message Requirement {
+message DBRequirement {
 	bool exclusive = 1;
-	DiskRequirement diskReq = 2;
-	ComputeRequirement computeReq = 3;
-	repeated PortRequirement portReq = 4;
+	DBDiskRequirement diskReq = 2;
+	DBComputeRequirement computeReq = 3;
+	repeated DBPortRequirement portReq = 4;
 }
 
-message AllocRequirement {
-	Location location = 1; 
-	Excluded hostExcluded = 2;
-	Filter hostFilter = 3;
-	Requirement require = 4; 
+message DBAllocRequirement {
+	DBLocation location = 1;
+	DBExcluded hostExcluded = 2;
+	DBFilter hostFilter = 3;
+	DBRequirement require = 4;
 	int32 strategy = 5;
 	int32 count  = 6;     
 }
 
-message AllocRequest {
-	Applicant applicant = 1;
-	repeated AllocRequirement requires = 2;
+message DBAllocRequest {
+	DBApplicant applicant = 1;
+	repeated DBAllocRequirement requires = 2;
 }
 
-message DiskResource {
+message DBDiskResource {
 	string diskId = 1;
 	string diskName = 2;
 	string path = 3;
@@ -74,55 +74,55 @@ message DiskResource {
 	int32 capacity = 5;
 }
 
-message PortResource {
+message DBPortResource {
 	int32 start = 1;
 	int32 end = 2;
 	repeated int32 ports = 3;
 }
 
-message HostResource {
+message DBHostResource {
 	int32 reqseq = 1;
-	Location location = 2;
+	DBLocation location = 2;
 	string hostId = 3;
 	string hostName = 4;
 	string hostIp = 5;
 	string userName = 6;
 	string passwd = 7;
-	ComputeRequirement computeRes = 8;
-	DiskResource diskRes = 9;
-	repeated PortResource portRes = 10;
+	DBComputeRequirement computeRes = 8;
+	DBDiskResource diskRes = 9;
+	repeated DBPortResource portRes = 10;
 }
 
-message AllocResponse {
+message DBAllocResponse {
     DBAllocResponseStatus rs = 1;
-    repeated HostResource results = 2;
+    repeated DBHostResource results = 2;
 }
 
-message BatchAllocRequest {
-	repeated AllocRequest batchRequests = 1;
+message DBBatchAllocRequest {
+	repeated DBAllocRequest batchRequests = 1;
 }
 
 
-message BatchAllocResponse {
+message DBBatchAllocResponse {
 	DBAllocResponseStatus rs = 1;
-	repeated AllocResponse batchResults = 2;
+	repeated DBAllocResponse batchResults = 2;
 }
 
-message RecycleRequire {
+message DBRecycleRequire {
 	int32 recycleType = 1;
 	string clusterId = 2;
 	string requestId = 3;
 	string hostId = 4;
 	string hostIp = 5;
-	ComputeRequirement computeReq = 6;
-	DiskResource diskReq = 7;
-	repeated PortResource portReq = 8;
+	DBComputeRequirement computeReq = 6;
+	DBDiskResource diskReq = 7;
+	repeated DBPortResource portReq = 8;
 }
 
-message RecycleRequest {
-	repeated RecycleRequire RecycleReqs = 1;
+message DBRecycleRequest {
+	repeated DBRecycleRequire RecycleReqs = 1;
 }
 
-message RecycleResponse {
+message DBRecycleResponse {
 	DBAllocResponseStatus rs = 1;
 }

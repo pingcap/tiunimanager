@@ -392,9 +392,9 @@ func (handler *DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbPb
 	return nil
 }
 
-func copyResultToRsp(src *resource.HostResource, dst *dbPb.HostResource) {
+func copyResultToRsp(src *resource.HostResource, dst *dbPb.DBHostResource) {
 	dst.Reqseq = src.Reqseq
-	dst.Location = new(dbPb.Location)
+	dst.Location = new(dbPb.DBLocation)
 	dst.Location.Region = src.Location.Region
 	dst.Location.Zone = src.Location.Zone
 	dst.Location.Rack = src.Location.Rack
@@ -404,17 +404,17 @@ func copyResultToRsp(src *resource.HostResource, dst *dbPb.HostResource) {
 	dst.HostIp = src.HostIp
 	dst.UserName = src.UserName
 	dst.Passwd = src.Passwd
-	dst.ComputeRes = new(dbPb.ComputeRequirement)
+	dst.ComputeRes = new(dbPb.DBComputeRequirement)
 	dst.ComputeRes.CpuCores = src.ComputeRes.CpuCores
 	dst.ComputeRes.Memory = src.ComputeRes.Memory
-	dst.DiskRes = new(dbPb.DiskResource)
+	dst.DiskRes = new(dbPb.DBDiskResource)
 	dst.DiskRes.DiskId = src.DiskRes.DiskId
 	dst.DiskRes.DiskName = src.DiskRes.DiskName
 	dst.DiskRes.Path = src.DiskRes.Path
 	dst.DiskRes.Capacity = src.DiskRes.Capacity
 	dst.DiskRes.Type = src.DiskRes.Type
 	for _, portRes := range src.PortRes {
-		dst.PortRes = append(dst.PortRes, &dbPb.PortResource{
+		dst.PortRes = append(dst.PortRes, &dbPb.DBPortResource{
 			Start: portRes.Start,
 			End:   portRes.End,
 			Ports: portRes.Ports,
@@ -422,7 +422,7 @@ func copyResultToRsp(src *resource.HostResource, dst *dbPb.HostResource) {
 	}
 }
 
-func (handler *DBServiceHandler) AllocResources(ctx context.Context, in *dbPb.AllocRequest, out *dbPb.AllocResponse) error {
+func (handler *DBServiceHandler) AllocResources(ctx context.Context, in *dbPb.DBAllocRequest, out *dbPb.DBAllocResponse) error {
 	log := framework.Log()
 	log.Infof("Receive %d allocation requirement from %s in requestID %s\n", len(in.Requires), in.Applicant.HolderId, in.Applicant.RequestId)
 	resourceManager := handler.Dao().ResourceManager()
@@ -443,7 +443,7 @@ func (handler *DBServiceHandler) AllocResources(ctx context.Context, in *dbPb.Al
 		return nil
 	}
 	for _, r := range resources.Results {
-		var hostResource dbPb.HostResource
+		var hostResource dbPb.DBHostResource
 		copyResultToRsp(&r, &hostResource)
 		out.Results = append(out.Results, &hostResource)
 	}
@@ -451,7 +451,7 @@ func (handler *DBServiceHandler) AllocResources(ctx context.Context, in *dbPb.Al
 	return nil
 }
 
-func (handler *DBServiceHandler) AllocResourcesInBatch(ctx context.Context, in *dbPb.BatchAllocRequest, out *dbPb.BatchAllocResponse) error {
+func (handler *DBServiceHandler) AllocResourcesInBatch(ctx context.Context, in *dbPb.DBBatchAllocRequest, out *dbPb.DBBatchAllocResponse) error {
 	log := framework.Log()
 	log.Infof("Receive batch allocation with %d requests", len(in.BatchRequests))
 	out.Rs = new(dbPb.DBAllocResponseStatus)
@@ -473,11 +473,11 @@ func (handler *DBServiceHandler) AllocResourcesInBatch(ctx context.Context, in *
 		return nil
 	}
 	for _, result := range resources.BatchResults {
-		var rsp dbPb.AllocResponse
+		var rsp dbPb.DBAllocResponse
 		rsp.Rs = new(dbPb.DBAllocResponseStatus)
 		rsp.Rs.Code = common.TIEM_SUCCESS
 		for _, r := range result.Results {
-			var hostResource dbPb.HostResource
+			var hostResource dbPb.DBHostResource
 			copyResultToRsp(&r, &hostResource)
 			rsp.Results = append(rsp.Results, &hostResource)
 		}
@@ -487,7 +487,7 @@ func (handler *DBServiceHandler) AllocResourcesInBatch(ctx context.Context, in *
 	return nil
 }
 
-func (handler *DBServiceHandler) RecycleResources(ctx context.Context, in *dbPb.RecycleRequest, out *dbPb.RecycleResponse) error {
+func (handler *DBServiceHandler) RecycleResources(ctx context.Context, in *dbPb.DBRecycleRequest, out *dbPb.DBRecycleResponse) error {
 	log := framework.Log()
 	log.Infof("Receive recycle with %d requires", len(in.RecycleReqs))
 	out.Rs = new(dbPb.DBAllocResponseStatus)

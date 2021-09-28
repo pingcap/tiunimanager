@@ -37,6 +37,7 @@ http {
         location / {
             root   html;
             index  index.html index.htm;
+            try_files $uri $uri/ /index.html;
         }
 
         location ^~ /api {

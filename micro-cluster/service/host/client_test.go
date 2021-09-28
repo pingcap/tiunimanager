@@ -377,3 +377,7 @@ func (s *DBFakeService) MockAllocResources(mock func(ctx context.Context, in *db
 func (s *DBFakeService) MockAllocResourcesInBatch(mock func(ctx context.Context, in *db.DBBatchAllocRequest, opts ...client.CallOption) (*db.DBBatchAllocResponse, error)) {
 	s.mockAllocResourcesInBatch = mock
 }
+
+func (s *DBFakeService) MockRecycleResources(mock func(ctx context.Context, in *db.DBRecycleRequest, opts ...client.CallOption) (*db.DBRecycleResponse, error)) {
+	s.mockRecycleResources = mock
+}

@@ -5,6 +5,7 @@ import "softwarespec.proto";
 import "database.proto";
 import "mng_auth.proto";
 import "mng_host.proto";
+import "mng_allocation.proto";
 option go_package = "./;cluster";
 
 service ClusterService {
@@ -44,6 +45,8 @@ service ClusterService {
     rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
     rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);
     rpc GetFailureDomain(GetFailureDomainRequest) returns (GetFailureDomainResponse);
+    rpc AllocResourcesInBatch(BatchAllocRequest) returns (BatchAllocResponse);
+    rpc RecycleResources(RecycleRequest) returns (RecycleResponse);
 
     // task manager
     rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);

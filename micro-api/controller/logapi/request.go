@@ -7,6 +7,6 @@ type SearchTiDBLogReq struct {
 	Message   string `form:"message" example:"tidb log"`
 	StartTime string `form:"startTime" example:"2021-09-01 12:00:00"`
 	EndTime   string `form:"endTime" example:"2021-12-01 12:00:00"`
-	From      int    `form:"from" example:"0"`
-	Size      int    `form:"size" example:"10"`
+	Page      int    `form:"page" example:"1"`
+	PageSize  int    `form:"pageSize" example:"10"`
 }

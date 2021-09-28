@@ -155,6 +155,17 @@ func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 			assert.Equal(t, int32(16), host.FreeCpuCores)
 			assert.Equal(t, int32(64), host.FreeMemory)
 			assert.True(t, host.Stat == int32(resource.HOST_LOADLESS))
+
+			var usedComputes2 []UsedComputeStatistic
+			MetaDB.Model(&resource.UsedCompute{}).Select("host_id, sum(cpu_cores) as total_cpu_cores, sum(memory) as total_memory").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedComputes2)
+			assert.Equal(t, 0, len(usedComputes2))
+			var usedDisks2 []UsedDiskStatistic
+			MetaDB.Model(&resource.UsedDisk{}).Select("host_id, count(disk_id) as disk_count").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedDisks2)
+			assert.Equal(t, 0, len(usedDisks2))
+			var usedPorts2 []usedPortStatistic
+			MetaDB.Model(&resource.UsedPort{}).Select("host_id, count(port) as port_count").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedPorts2)
+			assert.Equal(t, 0, len(usedPorts2))
+
 		})
 	}
 }

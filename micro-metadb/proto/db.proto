@@ -6,6 +6,7 @@ import "db_cluster.proto";
 import "db_tiup.proto";
 import "db_task.proto";
 import "db_transport.proto";
+import "db_allocation.proto";
 
 option go_package = "./;db";
 
@@ -28,6 +29,9 @@ service TiEMDBService {
 	rpc CheckDetails(DBCheckDetailsRequest) returns (DBCheckDetailsResponse);
 	rpc AllocHosts(DBAllocHostsRequest) returns (DBAllocHostsResponse);
 	rpc GetFailureDomain(DBGetFailureDomainRequest) returns (DBGetFailureDomainResponse);
+	rpc AllocResources(DBAllocRequest) returns (DBAllocResponse);
+	rpc AllocResourcesInBatch(DBBatchAllocRequest) returns (DBBatchAllocResponse);
+	rpc RecycleResources(DBRecycleRequest) returns (DBRecycleResponse);
 
 	// Cluster
 	rpc CreateCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);

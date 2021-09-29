@@ -56,8 +56,6 @@ const (
 	HOST_WHATEVER HostStatus = iota - 1
 	HOST_ONLINE
 	HOST_OFFLINE
-	HOST_INUSED
-	HOST_EXHAUST
 	HOST_DELETED
 )
 
@@ -66,13 +64,22 @@ func (s HostStatus) IsValid() bool {
 	return (s >= HOST_WHATEVER && s <= HOST_DELETED)
 }
 
-func (s HostStatus) IsInused() bool {
-	return s == HOST_INUSED || s == HOST_EXHAUST
+func (h Host) IsInused() bool {
+	return h.Stat == HOST_INUSED || h.Stat == HOST_EXHAUST
 }
 
-func (s HostStatus) IsAvailable() bool {
-	return (s == HOST_ONLINE || s == HOST_INUSED)
+func (h Host) IsAvailable() bool {
+	return (HostStatus(h.Status) == HOST_ONLINE && (h.Stat == HOST_LOADLESS || h.Stat == HOST_INUSED))
 }
+
+type HostStat int32
+
+const (
+	HOST_LOADLESS = iota
+	HOST_INUSED
+	HOST_EXHAUST
+	HOST_EXCLUSIVE
+)
 
 type Host struct {
 	ID           string         `json:"hostId" gorm:"PrimaryKey"`
@@ -80,8 +87,9 @@ type Host struct {
 	UserName     string         `json:"userName,omitempty" gorm:"size:32"`
 	Passwd       string         `json:"passwd,omitempty" gorm:"size:32"`
 	HostName     string         `json:"hostName" gorm:"size:255"`
-	Status       int32          `json:"status" gorm:"index"` // Host Status, 0 for Online, 1 for offline
-	Arch         string         `json:"arch" gorm:"index"`   // x86 or arm64
+	Status       int32          `json:"status" gorm:"index"`         // Host Status, 0 for Online, 1 for offline
+	Stat         int32          `json:"stat" gorm:"index;default:0"` // Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+	Arch         string         `json:"arch" gorm:"index"`           // x86 or arm64
 	OS           string         `json:"os" gorm:"size:32"`
 	Kernel       string         `json:"kernel" gorm:"size:32"`
 	Spec         string         `json:"spec"`               // Host Spec, init while importing
@@ -116,6 +124,17 @@ func (h Host) IsExhaust() bool {
 	return diskExaust || h.FreeCpuCores == 0 || h.FreeMemory == 0
 }
 
+func (h Host) IsLoadless() bool {
+	diskLoadless := true
+	for _, disk := range h.Disks {
+		if disk.Status == int32(DISK_EXHAUST) || disk.Status == int32(DISK_INUSED) {
+			diskLoadless = false
+			break
+		}
+	}
+	return diskLoadless && h.FreeCpuCores == h.CpuCores && h.FreeMemory == h.Memory
+}
+
 func (h *Host) SetDiskStatus(diskId string, s DiskStatus) {
 	for i := range h.Disks {
 		if h.Disks[i].ID == diskId {
@@ -145,7 +164,7 @@ func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
 			return status.Errorf(codes.NotFound, "host %s is not found", h.ID)
 		}
 	} else {
-		if HostStatus(h.Status).IsInused() {
+		if h.IsInused() {
 			return status.Errorf(codes.PermissionDenied, "host %s is still in used", h.ID)
 		}
 	}

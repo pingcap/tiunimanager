@@ -27,6 +27,7 @@ type DiskStatus int32
 
 const (
 	DISK_AVAILABLE DiskStatus = iota
+	DISK_RESERVED
 	DISK_INUSED
 	DISK_EXHAUST
 	DISK_ERROR
@@ -34,6 +35,10 @@ const (
 
 func (s DiskStatus) IsInused() bool {
 	return s == DISK_INUSED
+}
+
+func (s DiskStatus) IsExhaust() bool {
+	return s == DISK_EXHAUST
 }
 
 func (s DiskStatus) IsAvailable() bool {

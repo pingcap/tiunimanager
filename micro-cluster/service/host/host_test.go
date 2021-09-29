@@ -697,7 +697,7 @@ func Test_RecycleResources_Succeed(t *testing.T) {
 	fakeDBClient.MockRecycleResources(func(ctx context.Context, in *db.DBRecycleRequest, opts ...client.CallOption) (*db.DBRecycleResponse, error) {
 		rsp := new(db.DBRecycleResponse)
 		rsp.Rs = new(db.DBAllocResponseStatus)
-		if in.RecycleReqs[0].RecycleType == 2 && in.RecycleReqs[0].ClusterId == fake_cluster_id {
+		if in.RecycleReqs[0].RecycleType == 2 && in.RecycleReqs[0].HolderId == fake_cluster_id {
 			rsp.Rs.Code = int32(codes.OK)
 		} else {
 			return nil, status.Error(codes.Internal, "BAD recycle resource request")
@@ -707,7 +707,7 @@ func Test_RecycleResources_Succeed(t *testing.T) {
 
 	var req hostPb.RecycleRequest
 	var require hostPb.RecycleRequire
-	require.ClusterId = fake_cluster_id
+	require.HolderId = fake_cluster_id
 	require.RecycleType = 2
 
 	req.RecycleReqs = append(req.RecycleReqs, &require)

@@ -448,7 +448,7 @@ func (m *ResourceManager) AllocResourcesInBatch(ctx context.Context, in *hostPb.
 
 func buildDBRecycleRequire(src *hostPb.RecycleRequire, dst *dbPb.DBRecycleRequire) {
 	dst.RecycleType = src.RecycleType
-	dst.ClusterId = src.ClusterId
+	dst.HolderId = src.HolderId
 	dst.RequestId = src.RequestId
 	dst.HostId = src.HostId
 	dst.HostIp = src.HostIp
@@ -498,7 +498,7 @@ func (m *ResourceManager) RecycleResources(ctx context.Context, in *hostPb.Recyc
 		return nil
 	}
 
-	framework.Log().Infof("recycle resources from db service succeed, recycle type %d, clusterId %s, requestId %s", in.RecycleReqs[0].RecycleType, in.RecycleReqs[0].ClusterId, in.RecycleReqs[0].RequestId)
+	framework.Log().Infof("recycle resources from db service succeed, recycle type %d, holderId %s, requestId %s", in.RecycleReqs[0].RecycleType, in.RecycleReqs[0].HolderId, in.RecycleReqs[0].RequestId)
 
 	return nil
 }

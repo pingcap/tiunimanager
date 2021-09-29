@@ -110,7 +110,7 @@ message BatchAllocResponse {
 
 message RecycleRequire {
 	int32 recycleType = 1;
-	string clusterId = 2;
+	string holderId = 2;
 	string requestId = 3;
 	string hostId = 4;
 	string hostIp = 5;

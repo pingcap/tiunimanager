@@ -563,7 +563,7 @@ func recycleResourcesInHosts(tx *gorm.DB, usedCompute []UsedComputeStatistic, us
 	return nil
 }
 
-func recycleClusterResource(tx *gorm.DB, clusterId string) (err error) {
+func recycleHolderResource(tx *gorm.DB, clusterId string) (err error) {
 	var usedCompute []UsedComputeStatistic
 	err = tx.Model(&rt.UsedCompute{}).Select("host_id, sum(cpu_cores) as total_cpu_cores, sum(memory) as total_memory").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedCompute).Error
 	if err != nil {
@@ -621,8 +621,8 @@ func recycleResourceForRequest(tx *gorm.DB, requestId string) (err error) {
 
 func (m *DAOResourceManager) doRecycle(tx *gorm.DB, req *dbPb.DBRecycleRequire) (err error) {
 	switch rt.RecycleType(req.RecycleType) {
-	case rt.RecycleCluster:
-		return recycleClusterResource(tx, req.ClusterId)
+	case rt.RecycleHolder:
+		return recycleHolderResource(tx, req.HolderId)
 	case rt.RecycleOperate:
 		return recycleResourceForRequest(tx, req.RequestId)
 	case rt.RecycleCompute:

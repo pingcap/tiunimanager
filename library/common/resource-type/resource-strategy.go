@@ -110,7 +110,7 @@ type BatchAllocResponse struct {
 type RecycleType int32
 
 const (
-	RecycleCluster RecycleType = iota // Recycle the resources owned by ClusterID
+	RecycleHolder  RecycleType = iota // Recycle the resources owned by HolderID
 	RecycleOperate                    // Recycle the resources operated in RequestID
 	RecycleCompute                    // Recycle Compute resources specify by Recycle request
 	RecycleDisk                       // Recycle Disk resources specify by Recycle request
@@ -118,7 +118,7 @@ const (
 
 type RecycleRequire struct {
 	RecycleType RecycleType
-	ClusterID   string
+	HolderID    string
 	RequestID   string
 	HostID      string
 	HostIP      string

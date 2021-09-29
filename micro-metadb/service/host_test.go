@@ -140,8 +140,8 @@ func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 
 			recycleRequest := new(dbPb.DBRecycleRequest)
 			recycleRequest.RecycleReqs = append(recycleRequest.RecycleReqs, &dbPb.DBRecycleRequire{
-				RecycleType: int32(resource.RecycleCluster),
-				ClusterId:   clusterId,
+				RecycleType: int32(resource.RecycleHolder),
+				HolderId:    clusterId,
 			})
 			recycleResponse := new(dbPb.DBRecycleResponse)
 			if err := handler.RecycleResources(tt.args.ctx, recycleRequest, recycleResponse); (err != nil) != tt.wantErr {

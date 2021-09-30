@@ -320,8 +320,8 @@ func (s *topoSuite) TestFixRelativePath(c *check.C) {
 			},
 		},
 	}
-	expandRelativePath("tidb", &topo)
-	c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tidb/my-deploy")
+	expandRelativePath("tiem", &topo)
+	c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiem/my-deploy")
 
 	// test data dir & log dir
 	topo = Specification{
@@ -333,10 +333,10 @@ func (s *topoSuite) TestFixRelativePath(c *check.C) {
 			},
 		},
 	}
-	expandRelativePath("tidb", &topo)
-	c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tidb/my-deploy")
-	c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tidb/my-deploy/my-data")
-	c.Assert(topo.ClusterServers[0].LogDir, check.Equals, "/home/tidb/my-deploy/my-log")
+	expandRelativePath("tiem", &topo)
+	c.Assert(topo.ClusterServers[0].DeployDir, check.Equals, "/home/tiem/my-deploy")
+	c.Assert(topo.ClusterServers[0].DataDir, check.Equals, "/home/tiem/my-deploy/my-data")
+	c.Assert(topo.ClusterServers[0].LogDir, check.Equals, "/home/tiem/my-deploy/my-log")
 
 	// test global options
 	topo = Specification{
@@ -349,7 +349,7 @@ func (s *topoSuite) TestFixRelativePath(c *check.C) {
 			{},
 		},
 	}
-	expandRelativePath("tidb", &topo)
+	expandRelativePath("tiem", &topo)
 	c.Assert(topo.GlobalOptions.DeployDir, check.Equals, "my-deploy")
 	c.Assert(topo.GlobalOptions.DataDir, check.Equals, "my-data")
 	c.Assert(topo.GlobalOptions.LogDir, check.Equals, "my-log")

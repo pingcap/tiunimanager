@@ -16,10 +16,7 @@ package manager
 import (
 	"testing"
 
-	"github.com/pingcap-inc/tiem/tiup/spec"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
 )
 
 func TestVersionCompare(t *testing.T) {
@@ -36,25 +33,4 @@ func TestVersionCompare(t *testing.T) {
 
 	err = versionCompare("nightly", "nightly")
 	assert.Nil(t, err)
-}
-
-func TestValidateNewTopo(t *testing.T) {
-	topo := spec.Specification{}
-	err := yaml.Unmarshal([]byte(`
-global:
-  user: "test1"
-  ssh_port: 220
-  deploy_dir: "test-deploy"
-  data_dir: "test-data"
-tiem_metadb_servers:
-  - host: 172.16.5.138
-    deploy_dir: "tiem-deploy"
-tiem_api_servers:
-  - host: 172.16.5.53
-    data_dir: "pd-data"
-`), &topo)
-	assert := require.New(t)
-	assert.Nil(err)
-	err = validateNewTopo(&topo)
-	assert.Nil(err)
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain/mock"
+	mock "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain/mock"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/stretchr/testify/assert"
 	"testing"

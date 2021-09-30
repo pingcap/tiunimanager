@@ -30,9 +30,9 @@ type JaegerScript struct {
 	ZipkinCompactPort int
 	JaegerCompactPort int
 	JaegerBinaryPort  int
-	JaegerHttpPort    int
-	CollectorHttpPort int
-	AdminHttpPort     int
+	JaegerHTTPPort    int
+	CollectorHTTPPort int
+	AdminHTTPPort     int
 	CollectorGrpcPort int
 	QueryGrpcPort     int
 	DeployDir         string
@@ -48,9 +48,9 @@ func NewJaegerScript(ip, deployDir, logDir string) *JaegerScript {
 		ZipkinCompactPort: 4135,
 		JaegerCompactPort: 4136,
 		JaegerBinaryPort:  4137,
-		JaegerHttpPort:    4138,
-		CollectorHttpPort: 4139,
-		AdminHttpPort:     4140,
+		JaegerHTTPPort:    4138,
+		CollectorHTTPPort: 4139,
+		AdminHTTPPort:     4140,
 		CollectorGrpcPort: 4141,
 		QueryGrpcPort:     4142,
 		DeployDir:         deployDir,
@@ -88,21 +88,21 @@ func (c *JaegerScript) WithJaegerBinaryPort(port int) *JaegerScript {
 	return c
 }
 
-// WithJaegerHttpPort set JaegerHttpPort field of JaegerScript
-func (c *JaegerScript) WithJaegerHttpPort(port int) *JaegerScript {
-	c.JaegerHttpPort = port
+// WithJaegerHTTPPort set JaegerHTTPPort field of JaegerScript
+func (c *JaegerScript) WithJaegerHTTPPort(port int) *JaegerScript {
+	c.JaegerHTTPPort = port
 	return c
 }
 
-// WithCollectorHttpPort set CollectorHttpPort field of JaegerScript
-func (c *JaegerScript) WithCollectorHttpPort(port int) *JaegerScript {
-	c.CollectorHttpPort = port
+// WithCollectorHTTPPort set CollectorHTTPPort field of JaegerScript
+func (c *JaegerScript) WithCollectorHTTPPort(port int) *JaegerScript {
+	c.CollectorHTTPPort = port
 	return c
 }
 
-// WithAdminHttpPort set AdminHttpPort field of JaegerScript
-func (c *JaegerScript) WithAdminHttpPort(port int) *JaegerScript {
-	c.AdminHttpPort = port
+// WithAdminHTTPPort set AdminHTTPPort field of JaegerScript
+func (c *JaegerScript) WithAdminHTTPPort(port int) *JaegerScript {
+	c.AdminHTTPPort = port
 	return c
 }
 

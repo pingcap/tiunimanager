@@ -22,6 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/tiup/embed"
 )
 
+// JavaAppConfig is template for Java apps
 type JavaAppConfig struct {
 	ServiceName string
 	User        string

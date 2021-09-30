@@ -48,7 +48,7 @@ global:
   data_dir: "test-data"
 tiem_metadb_servers:
   - host: 172.16.5.138
-    deploy_dir: "tidb-deploy"
+    deploy_dir: "tiem-deploy"
 tiem_api_servers:
   - host: 172.16.5.53
     data_dir: "pd-data"

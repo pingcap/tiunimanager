@@ -54,6 +54,7 @@ func (c *FilebeatConfig) WithElasticSearch(es string) *FilebeatConfig {
 	return c
 }
 
+// WithTiEMLogs set log paths
 func (c *FilebeatConfig) WithTiEMLogs(paths map[string]*LogPathInfo) *FilebeatConfig {
 	if p, ok := paths[c.Host]; ok {
 		c.GeneralLogs = append(c.GeneralLogs, p.GeneralLogs.Slice()...)

@@ -57,6 +57,8 @@ fmt:
 tiup:
 	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/tiup-tiem cmd/*.go
 
+check: lint
+
 test: failpoint-enable run-tests failpoint-disable
 	@# Target: run tests with failpoint enabled
 
@@ -70,6 +72,12 @@ unit-test:
 	mkdir -p cover
 	TIUP_HOME=$(shell pwd)/tests/tiup $(GOTEST) ./... -covermode=count -coverprofile cover/cov.unit-test.out
 
+lint: tools/bin/revive
+	@# Target: run the lint checker revive
+	@echo "linting"
+	./tools/check/check-lint.sh
+	@tools/bin/revive -formatter friendly -config tools/check/revive.toml $(FILES)
+
 failpoint-enable: tools/bin/failpoint-ctl
 	@# Target: enable failpoint
 	@$(FAILPOINT_ENABLE)
@@ -82,3 +90,7 @@ tools/bin/failpoint-ctl: go.mod
 	@# Target: build the failpoint-ctl utility
 	$(GO) build -o $@ github.com/pingcap/failpoint/failpoint-ctl
 
+tools/bin/revive:
+	@# Target: build revive utility
+	cd tools/check; \
+	$(GO) build -o ../bin/revive github.com/mgechev/revive

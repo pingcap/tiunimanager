@@ -103,6 +103,9 @@ func Test_GetComponentPortRange(t *testing.T) {
 		{"Get5_0_0_TiDB_PortRange", args{"TiDB", "v5.0.0", "TiDB"}, &ComponentPortConstraint{10000, 10020, 2}},
 		{"Get5_0_0_TiKV_PortRange", args{"TiDB", "v5.0.0", "TiKV"}, &ComponentPortConstraint{10020, 10040, 2}},
 		{"Get5_0_0_PD_PortRange", args{"TiDB", "v5.0.0", "PD"}, &ComponentPortConstraint{10040, 10060, 2}},
+		{"Get5_0_0_PD_PortRange_WrongClusterCode", args{"XXXTiDB", "v5.0.0", "PD"}, nil},
+		{"Get5_0_0_PD_PortRange_WrongVersionCode", args{"TiDB", "v2.9.99", "PD"}, nil},
+		{"Get5_0_0_PD_PortRange_WrongComponentType", args{"TiDB", "v5.0.0", "PDD"}, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

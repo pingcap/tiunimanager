@@ -124,6 +124,7 @@ func Route(g *gin.Engine) {
 
 		log := apiV1.Group("/logs")
 		{
+			log.Use(interceptor.VerifyIdentity)
 			log.GET("/tidb/:clusterId", logapi.SearchTiDBLog)
 		}
 	}

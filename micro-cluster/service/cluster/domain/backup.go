@@ -496,8 +496,3 @@ func convertBrStorageType(storageType string) (libbr.StorageType, error) {
 		return "", fmt.Errorf("invalid storage type, %s", storageType)
 	}
 }
-
-func recoverCluster(task *TaskEntity, context *FlowContext) bool {
-	task.Success(nil)
-	return true
-}

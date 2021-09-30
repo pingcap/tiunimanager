@@ -461,7 +461,7 @@ func TestMgrHandleCmdDestroyReq(t *testing.T) {
 */
 
 // todo: make it standalone(depends on tiup binary), comment out for now
-/**
+/**dashboard.go
 func TestMgrHandleClusterDisplayReq(t *testing.T) {
 	cmdClusterDisplayReq := CmdClusterDisplayReq{
 		InstanceName: "test-cluster",

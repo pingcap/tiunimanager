@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"net/http"
+	"strconv"
+
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
@@ -10,8 +13,6 @@ import (
 	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	log "github.com/sirupsen/logrus"
-	"net/http"
-	"strconv"
 )
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
@@ -160,9 +161,9 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 	}
 	resp.RespStatus = SuccessResponseStatus
 	resp.PageReq = &clusterPb.PageDTO{
-		Page: page.GetPage(),
+		Page:     page.GetPage(),
 		PageSize: page.GetPageSize(),
-		Total: page.GetTotal(),
+		Total:    page.GetTotal(),
 	}
 	resp.TransportInfos = make([]*clusterPb.DataTransportInfo, len(infos))
 	for index := 0; index < len(infos); index++ {
@@ -267,7 +268,7 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 	result, err := client.DBClient.ListBackupRecords(context.TODO(), &dbPb.DBListBackupRecordsRequest{
 		ClusterId: request.ClusterId,
 		StartTime: request.StartTime,
-		EndTime: request.EndTime,
+		EndTime:   request.EndTime,
 		Page: &dbPb.DBPageDTO{
 			Page:     request.Page.Page,
 			PageSize: request.Page.PageSize,
@@ -287,15 +288,15 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 		response.BackupRecords = make([]*clusterPb.BackupRecordDTO, len(result.BackupRecords))
 		for i, v := range result.BackupRecords {
 			response.BackupRecords[i] = &clusterPb.BackupRecordDTO{
-				Id:         v.BackupRecord.Id,
-				ClusterId:  v.BackupRecord.ClusterId,
+				Id:           v.BackupRecord.Id,
+				ClusterId:    v.BackupRecord.ClusterId,
 				BackupMethod: v.BackupRecord.BackupMethod,
-				BackupType: v.BackupRecord.BackupType,
-				BackupMode: v.BackupRecord.BackupMode,
-				FilePath:   v.BackupRecord.FilePath,
-				StartTime:  v.Flow.CreateTime,
-				EndTime:    v.Flow.UpdateTime,
-				Size:       v.BackupRecord.Size,
+				BackupType:   v.BackupRecord.BackupType,
+				BackupMode:   v.BackupRecord.BackupMode,
+				FilePath:     v.BackupRecord.FilePath,
+				StartTime:    v.Flow.CreateTime,
+				EndTime:      v.Flow.UpdateTime,
+				Size:         v.BackupRecord.Size,
 				Operator: &clusterPb.OperatorDTO{
 					Id: v.BackupRecord.OperatorId,
 				},
@@ -369,7 +370,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterPb.Lis
 	response.Page = &clusterPb.PageDTO{
 		Page:     req.Page.Page,
 		PageSize: req.Page.PageSize,
-		Total: int32(total),
+		Total:    int32(total),
 	}
 
 	response.Flows = make([]*clusterPb.FlowDTO, len(flows), len(flows))
@@ -379,13 +380,13 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterPb.Lis
 			FlowName:    v.FlowName,
 			StatusAlias: v.StatusAlias,
 			BizId:       v.BizId,
-			Status: int32(v.Status),
-			StatusName: v.Status.Display(),
-			CreateTime: v.CreateTime.Unix(),
-			UpdateTime: v.UpdateTime.Unix(),
+			Status:      int32(v.Status),
+			StatusName:  v.Status.Display(),
+			CreateTime:  v.CreateTime.Unix(),
+			UpdateTime:  v.UpdateTime.Unix(),
 			Operator: &clusterPb.OperatorDTO{
-				Name: v.Operator.Name,
-				Id: v.Operator.Id,
+				Name:     v.Operator.Name,
+				Id:       v.Operator.Id,
 				TenantId: v.Operator.TenantId,
 			},
 		}
@@ -494,4 +495,12 @@ func (clusterManager *ClusterServiceHandler) AllocHosts(ctx context.Context, in 
 
 func (clusterManager *ClusterServiceHandler) GetFailureDomain(ctx context.Context, in *clusterPb.GetFailureDomainRequest, out *clusterPb.GetFailureDomainResponse) error {
 	return clusterManager.resourceManager.GetFailureDomain(ctx, in, out)
+}
+
+func (clusterManager *ClusterServiceHandler) AllocResourcesInBatch(ctx context.Context, in *clusterPb.BatchAllocRequest, out *clusterPb.BatchAllocResponse) error {
+	return clusterManager.resourceManager.AllocResourcesInBatch(ctx, in, out)
+}
+
+func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Context, in *clusterPb.RecycleRequest, out *clusterPb.RecycleResponse) error {
+	return clusterManager.resourceManager.RecycleResources(ctx, in, out)
 }

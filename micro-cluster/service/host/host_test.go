@@ -7,6 +7,7 @@ import (
 	"github.com/asim/go-micro/v3/client"
 	hostPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -572,4 +573,148 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 		t.Errorf("Rsp not Expected, code: %d, msg: %s, out.PdHosts[0].HostName = %s, out.TidbHosts[0].HostName = %s, out.TikvHosts[0].HostName = %s\n",
 			out.Rs.Code, out.Rs.Message, out.PdHosts[0].HostName, out.TidbHosts[0].HostName, out.TikvHosts[0].HostName)
 	}
+}
+
+func Test_AllocResourcesInBatch_Succeed(t *testing.T) {
+
+	fake_host_id1 := "TEST_host_id1"
+	fake_host_ip1 := "199.199.199.1"
+	fake_holder_id := "TEST_holder1"
+	fake_request_id := "TEST_reqeust1"
+	fake_disk_id1 := "TEST_disk_id1"
+	fakeDBClient := InitMockDBClient()
+	fakeDBClient.MockAllocResourcesInBatch(func(ctx context.Context, in *db.DBBatchAllocRequest, opts ...client.CallOption) (*db.DBBatchAllocResponse, error) {
+		rsp := new(db.DBBatchAllocResponse)
+		rsp.Rs = new(db.DBAllocResponseStatus)
+		if in.BatchRequests[0].Applicant.HolderId == fake_holder_id && in.BatchRequests[1].Applicant.RequestId == fake_request_id &&
+			in.BatchRequests[0].Requires[0].Count == 1 && in.BatchRequests[1].Requires[1].Require.PortReq[1].PortCnt == 2 {
+			rsp.Rs.Code = int32(codes.OK)
+		} else {
+			return nil, status.Error(codes.Internal, "BAD alloc resource request")
+		}
+		var r db.DBHostResource
+		r.Reqseq = 0
+		r.HostId = fake_host_id1
+		r.HostIp = fake_host_ip1
+		r.ComputeRes = new(db.DBComputeRequirement)
+		r.ComputeRes.CpuCores = in.BatchRequests[0].Requires[0].Require.ComputeReq.CpuCores
+		r.ComputeRes.Memory = in.BatchRequests[0].Requires[0].Require.ComputeReq.CpuCores
+		r.Location = new(db.DBLocation)
+		r.Location.Region = in.BatchRequests[0].Requires[0].Location.Region
+		r.Location.Zone = in.BatchRequests[0].Requires[0].Location.Zone
+		r.DiskRes = new(db.DBDiskResource)
+		r.DiskRes.DiskId = fake_disk_id1
+		r.DiskRes.Type = in.BatchRequests[0].Requires[0].Require.DiskReq.DiskType
+		r.DiskRes.Capacity = in.BatchRequests[0].Requires[0].Require.DiskReq.Capacity
+		for _, portRes := range in.BatchRequests[0].Requires[0].Require.PortReq {
+			var portResource db.DBPortResource
+			portResource.Start = portRes.Start
+			portResource.End = portRes.End
+			portResource.Ports = append(portResource.Ports, portRes.Start+1)
+			portResource.Ports = append(portResource.Ports, portRes.Start+2)
+			r.PortRes = append(r.PortRes, &portResource)
+		}
+
+		var one_rsp db.DBAllocResponse
+		one_rsp.Rs = new(db.DBAllocResponseStatus)
+		one_rsp.Rs.Code = int32(codes.OK)
+		one_rsp.Results = append(one_rsp.Results, &r)
+
+		rsp.BatchResults = append(rsp.BatchResults, &one_rsp)
+
+		var two_rsp db.DBAllocResponse
+		two_rsp.Rs = new(db.DBAllocResponseStatus)
+		two_rsp.Rs.Code = int32(codes.OK)
+		two_rsp.Results = append(two_rsp.Results, &r)
+		two_rsp.Results = append(two_rsp.Results, &r)
+		rsp.BatchResults = append(rsp.BatchResults, &two_rsp)
+		return rsp, nil
+	})
+
+	in := new(hostPb.BatchAllocRequest)
+
+	var require hostPb.AllocRequirement
+	require.Location = new(hostPb.Location)
+	require.Location.Region = "TesT_Region1"
+	require.Location.Zone = "TEST_Zone1"
+	require.HostFilter = new(hostPb.Filter)
+	require.HostFilter.Arch = "X86"
+	require.HostFilter.DiskType = "sata"
+	require.HostFilter.Purpose = "General"
+	require.Require = new(hostPb.Requirement)
+	require.Require.ComputeReq = new(hostPb.ComputeRequirement)
+	require.Require.ComputeReq.CpuCores = 4
+	require.Require.ComputeReq.Memory = 8
+	require.Require.DiskReq = new(hostPb.DiskRequirement)
+	require.Require.DiskReq.NeedDisk = true
+	require.Require.DiskReq.DiskType = "sata"
+	require.Require.DiskReq.Capacity = 256
+	require.Require.PortReq = append(require.Require.PortReq, &hostPb.PortRequirement{
+		Start:   10000,
+		End:     10010,
+		PortCnt: 2,
+	})
+	require.Require.PortReq = append(require.Require.PortReq, &hostPb.PortRequirement{
+		Start:   10010,
+		End:     10020,
+		PortCnt: 2,
+	})
+	require.Count = 1
+
+	var req1 hostPb.AllocRequest
+	req1.Applicant = new(hostPb.Applicant)
+	req1.Applicant.HolderId = fake_holder_id
+	req1.Applicant.RequestId = fake_request_id
+	req1.Requires = append(req1.Requires, &require)
+
+	var req2 hostPb.AllocRequest
+	req2.Applicant = new(hostPb.Applicant)
+	req2.Applicant.HolderId = fake_holder_id
+	req2.Applicant.RequestId = fake_request_id
+	req2.Requires = append(req2.Requires, &require)
+	req2.Requires = append(req2.Requires, &require)
+
+	in.BatchRequests = append(in.BatchRequests, &req1)
+	in.BatchRequests = append(in.BatchRequests, &req2)
+
+	out := new(hostPb.BatchAllocResponse)
+	if err := resourceManager.AllocResourcesInBatch(context.TODO(), in, out); err != nil {
+		t.Errorf("alloc resource failed, err: %v\n", err)
+	}
+
+	assert.True(t, out.Rs.Code == int32(codes.OK))
+	assert.Equal(t, 2, len(out.BatchResults))
+	assert.Equal(t, 1, len(out.BatchResults[0].Results))
+	assert.Equal(t, 2, len(out.BatchResults[1].Results))
+	assert.True(t, out.BatchResults[0].Results[0].DiskRes.DiskId == fake_disk_id1 && out.BatchResults[0].Results[0].DiskRes.Capacity == 256 && out.BatchResults[1].Results[0].DiskRes.Type == "sata")
+	assert.True(t, out.BatchResults[1].Results[1].PortRes[0].Ports[0] == 10001 && out.BatchResults[1].Results[1].PortRes[0].Ports[1] == 10002)
+	assert.True(t, out.BatchResults[1].Results[1].PortRes[1].Ports[0] == 10011 && out.BatchResults[1].Results[1].PortRes[1].Ports[1] == 10012)
+}
+
+func Test_RecycleResources_Succeed(t *testing.T) {
+	fake_cluster_id := "TEST_Fake_CLUSTER_ID"
+	fakeDBClient := InitMockDBClient()
+	fakeDBClient.MockRecycleResources(func(ctx context.Context, in *db.DBRecycleRequest, opts ...client.CallOption) (*db.DBRecycleResponse, error) {
+		rsp := new(db.DBRecycleResponse)
+		rsp.Rs = new(db.DBAllocResponseStatus)
+		if in.RecycleReqs[0].RecycleType == 2 && in.RecycleReqs[0].HolderId == fake_cluster_id {
+			rsp.Rs.Code = int32(codes.OK)
+		} else {
+			return nil, status.Error(codes.Internal, "BAD recycle resource request")
+		}
+		return rsp, nil
+	})
+
+	var req hostPb.RecycleRequest
+	var require hostPb.RecycleRequire
+	require.HolderId = fake_cluster_id
+	require.RecycleType = 2
+
+	req.RecycleReqs = append(req.RecycleReqs, &require)
+	out := new(hostPb.RecycleResponse)
+	if err := resourceManager.RecycleResources(context.TODO(), &req, out); err != nil {
+		t.Errorf("recycle resource failed, err: %v\n", err)
+	}
+
+	assert.True(t, out.Rs.Code == int32(codes.OK))
 }

@@ -104,6 +104,7 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_DISK, new(resource.Disk))
 	dao.AddTable(TABLE_NAME_USED_COMPUTE, new(resource.UsedCompute))
 	dao.AddTable(TABLE_NAME_USED_PORT, new(resource.UsedPort))
+	dao.AddTable(TABLE_NAME_USED_DISK, new(resource.UsedDisk))
 	dao.AddTable(TABLE_NAME_TIUP_CONFIG, new(TopologyConfig))
 	dao.AddTable(TABLE_NAME_TIUP_TASK, new(TiupTask))
 	dao.AddTable(TABLE_NAME_FLOW, new(FlowDO))
@@ -193,7 +194,7 @@ func (dao *DAOManager) initSystemDefaultData() error {
 	return err
 }
 
-func (dao *DAOManager) initResourceDataForDev() error {
+func (dao *DAOManager) InitResourceDataForDev() error {
 	log := framework.Log()
 	id1, err := dao.ResourceManager().CreateHost(&resource.Host{
 		HostName:     "TEST_HOST1",
@@ -204,20 +205,22 @@ func (dao *DAOManager) initResourceDataForDev() error {
 		Arch:         string(resource.X86),
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
-		FreeCpuCores: 5,
-		FreeMemory:   8,
+		CpuCores:     16,
+		Memory:       64,
+		FreeCpuCores: 16,
+		FreeMemory:   64,
 		Nic:          "1GE",
 		Region:       "Region1",
 		AZ:           "Zone1",
 		Rack:         "3-1",
-		Purpose:      "Compute",
+		Purpose:      string(resource.General),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
 		Disks: []resource.Disk{
-			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
-			{Name: "sdb", Path: "/mnt/pd", Capacity: 256, Status: 0},
-			{Name: "sdc", Path: "/mnt/tidb", Capacity: 256, Status: 0},
-			{Name: "sdd", Path: "/mnt/tikv", Capacity: 1024, Status: 0},
+			{Name: "sda", Path: "/", Capacity: 256, Status: 1, Type: string(resource.Sata)},
+			{Name: "sdb", Path: "/mnt1", Capacity: 256, Status: 0, Type: string(resource.Sata)},
+			{Name: "sdc", Path: "/mnt2", Capacity: 256, Status: 0, Type: string(resource.Sata)},
+			{Name: "sdd", Path: "/mnt3", Capacity: 1024, Status: 0, Type: string(resource.Sata)},
 		},
 	})
 	if err != nil {
@@ -233,20 +236,22 @@ func (dao *DAOManager) initResourceDataForDev() error {
 		Arch:         string(resource.X86),
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
-		FreeCpuCores: 5,
-		FreeMemory:   8,
+		CpuCores:     16,
+		Memory:       64,
+		FreeCpuCores: 16,
+		FreeMemory:   64,
 		Nic:          "1GE",
 		Region:       "Region1",
 		AZ:           "Zone1",
 		Rack:         "3-1",
-		Purpose:      "Compute",
+		Purpose:      string(resource.General),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
 		Disks: []resource.Disk{
-			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
-			{Name: "sdb", Path: "/mnt/pd", Capacity: 256, Status: 0},
-			{Name: "sdc", Path: "/mnt/tidb", Capacity: 256, Status: 0},
-			{Name: "sdd", Path: "/mnt/tikv", Capacity: 1024, Status: 0},
+			{Name: "sda", Path: "/", Capacity: 256, Status: 1, Type: string(resource.Sata)},
+			{Name: "sdb", Path: "/mnt1", Capacity: 256, Status: 0, Type: string(resource.Sata)},
+			{Name: "sdc", Path: "/mnt2", Capacity: 256, Status: 0, Type: string(resource.Sata)},
+			{Name: "sdd", Path: "/mnt3", Capacity: 1024, Status: 0, Type: string(resource.Sata)},
 		},
 	})
 	if err != nil {
@@ -262,20 +267,22 @@ func (dao *DAOManager) initResourceDataForDev() error {
 		Arch:         string(resource.X86),
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
-		FreeCpuCores: 5,
-		FreeMemory:   8,
+		CpuCores:     16,
+		Memory:       64,
+		FreeCpuCores: 16,
+		FreeMemory:   64,
 		Nic:          "1GE",
 		Region:       "Region1",
 		AZ:           "Zone1",
 		Rack:         "3-1",
-		Purpose:      "Compute",
+		Purpose:      string(resource.General),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
 		Disks: []resource.Disk{
-			{Name: "sda", Path: "/", Capacity: 256, Status: 1},
-			{Name: "sdb", Path: "/mnt/pd", Capacity: 256, Status: 0},
-			{Name: "sdc", Path: "/mnt/tidb", Capacity: 256, Status: 0},
-			{Name: "sdd", Path: "/mnt/tikv", Capacity: 1024, Status: 0},
+			{Name: "sda", Path: "/", Capacity: 256, Status: 1, Type: string(resource.Sata)},
+			{Name: "sdb", Path: "/mnt1", Capacity: 256, Status: 0, Type: string(resource.Sata)},
+			{Name: "sdc", Path: "/mnt2", Capacity: 256, Status: 0, Type: string(resource.Sata)},
+			{Name: "sdd", Path: "/mnt3", Capacity: 1024, Status: 0, Type: string(resource.Sata)},
 		},
 	})
 	if err != nil {

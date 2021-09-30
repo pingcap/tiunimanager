@@ -1449,12 +1449,6 @@
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "example": 0,
-                        "name": "from",
-                        "in": "query"
-                    },
-                    {
                         "type": "string",
                         "example": "127.0.0.1",
                         "name": "ip",
@@ -1480,8 +1474,14 @@
                     },
                     {
                         "type": "integer",
+                        "example": 1,
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "example": 10,
-                        "name": "size",
+                        "name": "pageSize",
                         "in": "query"
                     },
                     {
@@ -3044,6 +3044,10 @@
                 "spec": {
                     "description": "Host Spec, init while importing",
                     "type": "string"
+                },
+                "stat": {
+                    "description": "Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust",
+                    "type": "integer"
                 },
                 "status": {
                     "description": "Host Status, 0 for Online, 1 for offline",

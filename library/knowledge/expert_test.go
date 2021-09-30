@@ -85,3 +85,33 @@ func TestParameterFromName(t *testing.T) {
 		t.Errorf("ParameterFromName() = %v, want %v", got, "binlog_cache_size")
 	}
 }
+
+func Test_GetComponentPortRange(t *testing.T) {
+	type args struct {
+		typeCode      string
+		versionCode   string
+		componentType string
+	}
+	tests := []struct {
+		name string
+		args args
+		want *ComponentPortConstraint
+	}{
+		{"Get4_0_12_TiDB_PortRange", args{"TiDB", "v4.0.12", "TiDB"}, &ComponentPortConstraint{10000, 10020, 2}},
+		{"Get4_0_12_TiKV_PortRange", args{"TiDB", "v4.0.12", "TiKV"}, &ComponentPortConstraint{10020, 10040, 2}},
+		{"Get4_0_12_PD_PortRange", args{"TiDB", "v4.0.12", "PD"}, &ComponentPortConstraint{10040, 10060, 2}},
+		{"Get5_0_0_TiDB_PortRange", args{"TiDB", "v5.0.0", "TiDB"}, &ComponentPortConstraint{10000, 10020, 2}},
+		{"Get5_0_0_TiKV_PortRange", args{"TiDB", "v5.0.0", "TiKV"}, &ComponentPortConstraint{10020, 10040, 2}},
+		{"Get5_0_0_PD_PortRange", args{"TiDB", "v5.0.0", "PD"}, &ComponentPortConstraint{10040, 10060, 2}},
+		{"Get5_0_0_PD_PortRange_WrongClusterCode", args{"XXXTiDB", "v5.0.0", "PD"}, nil},
+		{"Get5_0_0_PD_PortRange_WrongVersionCode", args{"TiDB", "v2.9.99", "PD"}, nil},
+		{"Get5_0_0_PD_PortRange_WrongComponentType", args{"TiDB", "v5.0.0", "PDD"}, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetComponentPortRange(tt.args.typeCode, tt.args.versionCode, tt.args.componentType); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetComponentPortRange() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

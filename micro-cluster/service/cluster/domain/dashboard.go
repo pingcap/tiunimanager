@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/tiup/pkg/utils/rand"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -80,23 +78,6 @@ func getDashboardUrlFromCluser(clusterAggregation *ClusterAggregation) string {
 		pdClientPort = DefaultPDClientPort
 	}
 	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.Host, pdClientPort)
-}
-
-func getDashboardUrl(clusterAggregation *ClusterAggregation) (string, error) {
-	clusterName := clusterAggregation.Cluster.ClusterName
-	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterName)
-
-	//tiup cluster display CLUSTER_NAME --dashboard
-	tiUPMicro := libtiup.TiUPMicro{}
-	resp := tiUPMicro.MicroSrvTiupClusterDisplay(clusterName, 0, []string{"--dashboard"})
-	if resp.ErrorStr != "" {
-		getLogger().Errorf("call tiupmgr cluster display failed, %s", resp.ErrorStr)
-		return "", errors.New(resp.ErrorStr)
-	}
-	getLogger().Infof("call tiupmgr success, resp: %v", resp)
-	//DisplayRespString: "Dashboard URL: http://127.0.0.1:2379/dashboard/\n"
-	result := strings.Split(strings.Replace(resp.DisplayRespString, "\n", "", -1), " ")
-	return result[2], nil
 }
 
 func getLoginToken(dashboardUrl, userName, password string) (string, error) {

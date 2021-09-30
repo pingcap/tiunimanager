@@ -590,7 +590,7 @@ func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
 func importDataFailed(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin importDataFailed")
 	defer getLogger().Info("end importDataFailed")
-	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
 
@@ -604,7 +604,7 @@ func importDataFailed(task *TaskEntity, context *FlowContext) bool {
 func exportDataFailed(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Info("begin exportDataFailed")
 	defer getLogger().Info("end exportDataFailed")
-	clusterAggregation := context.value(contextClusterKey).(ClusterAggregation)
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	info := context.value(contextDataTransportKey).(*ExportInfo)
 	cluster := clusterAggregation.Cluster
 

@@ -23,6 +23,7 @@ type HostInfo struct {
 	Passwd       string     `json:"passwd,omitempty"`
 	HostName     string     `json:"hostName"`
 	Status       int32      `json:"status"` // Host Status, 0 for Online, 1 for offline
+	Stat         int32      `json:"stat"`   // Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
 	Arch         string     `json:"arch"`   // x86 or arm64
 	OS           string     `json:"os"`
 	Kernel       string     `json:"kernel"`

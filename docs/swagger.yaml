@@ -598,6 +598,9 @@ definitions:
       spec:
         description: Host Spec, init while importing
         type: string
+      stat:
+        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+        type: integer
       status:
         description: Host Status, 0 for Online, 1 for offline
         type: integer
@@ -1790,10 +1793,6 @@ paths:
         in: query
         name: endTime
         type: string
-      - example: 0
-        in: query
-        name: from
-        type: integer
       - example: 127.0.0.1
         in: query
         name: ip
@@ -1810,9 +1809,13 @@ paths:
         in: query
         name: module
         type: string
+      - example: 1
+        in: query
+        name: page
+        type: integer
       - example: 10
         in: query
-        name: size
+        name: pageSize
         type: integer
       - example: "2021-09-01 12:00:00"
         in: query

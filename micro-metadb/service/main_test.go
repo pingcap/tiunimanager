@@ -1,12 +1,13 @@
 package service
 
 import (
+	"os"
+	"testing"
+
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
 	"gorm.io/gorm"
-	"os"
-	"testing"
 )
 
 var MetaDB *gorm.DB
@@ -33,6 +34,7 @@ func TestMain(m *testing.M) {
 			MetaDB = Dao.Db()
 			Dao.SetAccountManager(models.NewDAOAccountManager(Dao.Db()))
 			Dao.SetClusterManager(models.NewDAOClusterManager(Dao.Db()))
+			Dao.SetResourceManager(models.NewDAOResourceManager(Dao.Db()))
 			return nil
 		},
 	)

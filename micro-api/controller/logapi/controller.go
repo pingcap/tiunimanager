@@ -59,14 +59,15 @@ func SearchTiDBLog(c *gin.Context) {
 	}
 
 	// default value valid
-	if reqParams.From <= 0 {
-		reqParams.From = 0
+	if reqParams.Page <= 1 {
+		reqParams.Page = 1
 	}
-	if reqParams.Size <= 0 {
-		reqParams.Size = 10
+	if reqParams.PageSize <= 0 {
+		reqParams.PageSize = 10
 	}
+	from := (reqParams.Page - 1) * reqParams.PageSize
 	esClient := framework.Current.GetElasticsearchClient()
-	resp, err := esClient.Search(tidbLogIndexPrefix, &buf, reqParams.From, reqParams.Size)
+	resp, err := esClient.Search(tidbLogIndexPrefix, &buf, from, reqParams.PageSize)
 	if err != nil {
 		framework.Log().Errorf("search tidb log error: %v", err)
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
@@ -119,11 +120,11 @@ func SearchTiDBLog(c *gin.Context) {
 	}
 
 	page := &controller.Page{
-		Page:     reqParams.From/reqParams.Size + 1,
+		Page:     reqParams.Page,
 		PageSize: len(results.Results),
 		Total:    esResult.Hits.Total.Value,
 	}
-	c.JSON(http.StatusOK, controller.BuildResultWithPage(resp.StatusCode, "OK", page, results))
+	c.JSON(http.StatusOK, controller.BuildResultWithPage(0, "OK", page, results))
 }
 
 // buildSearchTiDBReqParams build request elasticsearch parameters

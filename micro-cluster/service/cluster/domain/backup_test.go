@@ -1,6 +1,7 @@
 package domain
 
 import (
+	ctx "context"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
@@ -52,7 +53,7 @@ func TestBackup(t *testing.T) {
 	mockClient.EXPECT().SaveBackupRecord(gomock.Any(), gomock.Any()).Return(&db.DBSaveBackupRecordResponse{}, nil)
 	client.DBClient = mockClient
 
-	_, err := Backup(&proto.OperatorDTO{
+	_, err := Backup(ctx.Background(), &proto.OperatorDTO{
 		Id: "123",
 		Name: "123",
 		TenantId: "123",
@@ -81,7 +82,7 @@ func TestRecoverPreCheck(t *testing.T) {
 }
 
 func TestRecover(t *testing.T) {
-	_, err := Recover(&proto.OperatorDTO{
+	_, err := Recover(ctx.Background(), &proto.OperatorDTO{
 		Id: "123",
 		Name: "123",
 		TenantId: "123",
@@ -103,7 +104,7 @@ func TestDeleteBackup(t *testing.T) {
 	mockClient.EXPECT().DeleteBackupRecord(gomock.Any(), gomock.Any()).Return(&db.DBDeleteBackupRecordResponse{}, nil)
 	client.DBClient = mockClient
 
-	err := DeleteBackup(&proto.OperatorDTO{
+	err := DeleteBackup(ctx.Background(), &proto.OperatorDTO{
 		Id: "123",
 		Name: "123",
 		TenantId: "123",
@@ -120,7 +121,7 @@ func TestSaveBackupStrategy(t *testing.T) {
 	mockClient.EXPECT().SaveBackupStrategy(gomock.Any(), gomock.Any()).Return(&db.DBSaveBackupStrategyResponse{}, nil)
 	client.DBClient = mockClient
 
-	err := SaveBackupStrategy(&proto.OperatorDTO{
+	err := SaveBackupStrategy(ctx.Background(), &proto.OperatorDTO{
 		Id: "123",
 		Name: "123",
 		TenantId: "123",
@@ -149,7 +150,7 @@ func TestQueryBackupStrategy(t *testing.T) {
 	}, nil)
 	client.DBClient = mockClient
 
-	_, err := QueryBackupStrategy(&proto.OperatorDTO{
+	_, err := QueryBackupStrategy(ctx.Background(), &proto.OperatorDTO{
 		Id: "123",
 		Name: "123",
 		TenantId: "123",

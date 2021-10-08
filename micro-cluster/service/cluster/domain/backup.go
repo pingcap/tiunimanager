@@ -320,11 +320,11 @@ func getBackupPath(filePrefix string, clusterId string, time time.Time, backupRa
 	if filePrefix != "" {
 		//use user spec filepath
 		//local://br_data/[clusterId]/16242354365-FULL/(lock/SST/metadata)
-		return fmt.Sprintf("%s/%s/%s_%s", filePrefix, clusterId, time.Format("2021-01-01_01:01:01"), backupRange)
+		return fmt.Sprintf("%s/%s/%s_%s", filePrefix, clusterId, time.Format("2006-01-02_15:04:05"), backupRange)
 	}
 	//return fmt.Sprintf("%s/%s/%d-%s", defaultPathPrefix, clusterId, timeStamp, backupRange)
 	//todo: test env s3 config
-	return fmt.Sprintf("%s/%s/%s_%s", defaultPathPrefix, clusterId, time.Format("2021-01-01_01:01:01"), backupRange)
+	return fmt.Sprintf("%s/%s/%s_%s", defaultPathPrefix, clusterId, time.Format("2006-01-02_15:04:05"), backupRange)
 }
 
 func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {

@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -103,6 +104,7 @@ func (m *Manager) Display(name string, opt operator.Options) error {
 		fmt.Printf("Cluster version:    %s\n", cyan.Sprint(base.Version))
 		fmt.Printf("Deploy user:        %s\n", cyan.Sprint(topo.BaseTopo().GlobalOptions.User))
 		fmt.Printf("SSH type:           %s\n", cyan.Sprint(topo.BaseTopo().GlobalOptions.SSHType))
+		fmt.Printf("WebServer URL:      %s\n", cyan.Sprint(formatWebServerUrl(topo.BaseTopo().WebServers)))
 	}
 
 	// display topology
@@ -297,6 +299,14 @@ func formatInstanceStatus(status string) string {
 	default:
 		return status
 	}
+}
+
+func formatWebServerUrl(webServerSpec []*spec.WebServerSpec) string {
+	urls := make([]string, 0)
+	for _, spec := range webServerSpec {
+		urls = append(urls, "http://"+spec.Host+":"+strconv.Itoa(spec.Port))
+	}
+	return strings.Join(urls, ",")
 }
 
 func formatInstanceSince(uptime time.Duration) string {

@@ -85,6 +85,8 @@ type BaseTopo struct {
 	Monitors      []*PrometheusSpec
 	Grafanas      []*GrafanaSpec
 	Alertmanagers []*AlertmanagerSpec
+
+	WebServers []*WebServerSpec
 }
 
 // Specification represents the specification of topology.yaml
@@ -578,6 +580,7 @@ func (s *Specification) BaseTopo() *BaseTopo {
 		Monitors:         s.Monitors,
 		Grafanas:         s.Grafanas,
 		Alertmanagers:    s.Alertmanagers,
+		WebServers:       s.WebServers,
 	}
 }
 

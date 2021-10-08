@@ -62,7 +62,7 @@ func Backup(ctx context.Context, ope *proto.OperatorDTO, clusterId string, backu
 		BackupType: BackupTypeFull,
 		BackupMode: backupMode,
 		OperatorId: operator.Id,
-		FilePath:   getBackupPath(filePath, clusterId, time.Now().Unix(), string(BackupTypeFull)),
+		FilePath:   getBackupPath(filePath, clusterId, time.Now(), string(BackupTypeFull)),
 		StartTime:  time.Now().Unix(),
 	}
 	resp, err := client.DBClient.SaveBackupRecord(ctx, &db.DBSaveBackupRecordRequest{
@@ -235,6 +235,8 @@ func SaveBackupStrategyPreCheck(ope *proto.OperatorDTO, strategy *proto.BackupSt
 }
 
 func SaveBackupStrategy(ctx context.Context, ope *proto.OperatorDTO, strategy *proto.BackupStrategy) error {
+	getLoggerWithContext(ctx).Infof("begin save backup strategy: %+v", strategy)
+	defer getLoggerWithContext(ctx).Info("end save backup strategy")
 	period := strings.Split(strategy.GetPeriod(), "-")
 	starts := strings.Split(period[0], ":")
 	ends := strings.Split(period[1], ":")
@@ -314,15 +316,15 @@ func calculateNextBackupTime(now time.Time, weekdayStr string, hour int) (time.T
 	return nextAutoBackupTime, nil
 }
 
-func getBackupPath(filePrefix string, clusterId string, timeStamp int64, backupRange string) string {
+func getBackupPath(filePrefix string, clusterId string, time time.Time, backupRange string) string {
 	if filePrefix != "" {
 		//use user spec filepath
 		//local://br_data/[clusterId]/16242354365-FULL/(lock/SST/metadata)
-		return fmt.Sprintf("%s/%s/%d-%s", filePrefix, clusterId, timeStamp, backupRange)
+		return fmt.Sprintf("%s/%s/%d-%d-%d_%d:%d:%d_%s", filePrefix, clusterId, time.Year(), time.Month(), time.Day(), time.Hour(), time.Minute(), time.Second(), backupRange)
 	}
 	//return fmt.Sprintf("%s/%s/%d-%s", defaultPathPrefix, clusterId, timeStamp, backupRange)
 	//todo: test env s3 config
-	return fmt.Sprintf("%s/%s/%d-%s", defaultPathPrefix, clusterId, timeStamp, backupRange)
+	return fmt.Sprintf("%s/%s/%d-%d-%d_%d:%d:%d_%s", defaultPathPrefix, clusterId, time.Year(), time.Month(), time.Day(), time.Hour(), time.Minute(), time.Second(), backupRange)
 }
 
 func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {

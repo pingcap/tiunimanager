@@ -1,6 +1,7 @@
 package domain
 
 import (
+	ctx "context"
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
@@ -136,7 +137,7 @@ func TestExportData(t *testing.T) {
 			TenantId: "123",
 		},
 	}
-	_, err := ExportData(request)
+	_, err := ExportData(ctx.Background(), request)
 
 	assert.NoError(t, err)
 }
@@ -156,7 +157,7 @@ func TestImportData(t *testing.T) {
 			TenantId: "123",
 		},
 	}
-	_, err := ImportData(request)
+	_, err := ImportData(ctx.Background(), request)
 
 	assert.NoError(t, err)
 }
@@ -176,7 +177,7 @@ func TestDescribeDataTransportRecord(t *testing.T) {
 			TenantId: "123",
 		},
 	}
-	_, _, err := DescribeDataTransportRecord(request.GetOperator(), "123", "123", 1, 10)
+	_, _, err := DescribeDataTransportRecord(ctx.Background(), request.GetOperator(), "123", "123", 1, 10)
 	assert.NoError(t, err)
 }
 
@@ -211,8 +212,7 @@ func Test_buildDataImportConfig(t *testing.T) {
 	ret := buildDataImportConfig(task, context)
 	assert.Equal(t, true, ret)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
-	err := os.RemoveAll(info.ConfigPath)
-	t.Log(err)
+	os.RemoveAll(info.ConfigPath)
 }
 
 func Test_updateDataImportRecord(t *testing.T) {

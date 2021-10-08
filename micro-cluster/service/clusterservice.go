@@ -123,7 +123,7 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterPb.Da
 		return err
 	}
 
-	recordId, err := domain.ExportData(req)
+	recordId, err := domain.ExportData(ctx, req)
 
 	if err != nil {
 		getLogger().Error(err)
@@ -141,7 +141,7 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterPb.Da
 		return err
 	}
 
-	recordId, err := domain.ImportData(req)
+	recordId, err := domain.ImportData(ctx, req)
 
 	if err != nil {
 		getLogger().Error(err)
@@ -154,7 +154,7 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterPb.Da
 }
 
 func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *clusterPb.DataTransportQueryRequest, resp *clusterPb.DataTransportQueryResponse) error {
-	infos, page, err := domain.DescribeDataTransportRecord(req.GetOperator(), req.GetRecordId(), req.GetClusterId(), req.GetPageReq().GetPage(), req.GetPageReq().GetPageSize())
+	infos, page, err := domain.DescribeDataTransportRecord(ctx, req.GetOperator(), req.GetRecordId(), req.GetClusterId(), req.GetPageReq().GetPage(), req.GetPageReq().GetPageSize())
 	if err != nil {
 		//todo
 		return err
@@ -183,7 +183,7 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterPb.CreateBackupRequest, response *clusterPb.CreateBackupResponse) (err error) {
 	getLogger().Info("backup cluster")
 
-	clusterAggregation, err := domain.Backup(request.Operator, request.ClusterId, request.BackupMethod, request.BackupType, domain.BackupModeManual, request.FilePath)
+	clusterAggregation, err := domain.Backup(ctx, request.Operator, request.ClusterId, request.BackupMethod, request.BackupType, domain.BackupModeManual, request.FilePath)
 	if err != nil {
 		getLogger().Info(err)
 		// todo
@@ -203,7 +203,7 @@ func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterP
 		return err
 	}
 
-	clusterAggregation, err := domain.Recover(req.GetOperator(), req.GetCluster(), req.GetDemands())
+	clusterAggregation, err := domain.Recover(ctx, req.GetOperator(), req.GetCluster(), req.GetDemands())
 	if err != nil {
 		getLogger().Info(err)
 		resp.RespStatus = BizErrorResponseStatus
@@ -221,7 +221,7 @@ func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterP
 func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *clusterPb.DeleteBackupRequest, response *clusterPb.DeleteBackupResponse) (err error) {
 	getLogger().Info("delete backup")
 
-	err = domain.DeleteBackup(request.Operator, request.GetClusterId(), request.GetBackupRecordId())
+	err = domain.DeleteBackup(ctx, request.Operator, request.GetClusterId(), request.GetBackupRecordId())
 	if err != nil {
 		// todo
 		getLogger().Info(err)
@@ -241,7 +241,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 		return err
 	}
 
-	err = domain.SaveBackupStrategy(request.GetOperator(), request.GetStrategy())
+	err = domain.SaveBackupStrategy(ctx, request.GetOperator(), request.GetStrategy())
 	if err != nil {
 		// todo
 		getLogger().Error(err)
@@ -253,7 +253,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 }
 
 func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *clusterPb.GetBackupStrategyRequest, response *clusterPb.GetBackupStrategyResponse) (err error) {
-	strategy, err := domain.QueryBackupStrategy(request.GetOperator(), request.GetClusterId())
+	strategy, err := domain.QueryBackupStrategy(ctx, request.GetOperator(), request.GetClusterId())
 	if err != nil {
 		getLogger().Error(err)
 		return err
@@ -345,7 +345,7 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 }
 
 func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *clusterPb.DescribeDashboardRequest, response *clusterPb.DescribeDashboardResponse) (err error) {
-	info, err := domain.DescribeDashboard(request.Operator, request.ClusterId)
+	info, err := domain.DescribeDashboard(ctx, request.Operator, request.ClusterId)
 	if err != nil {
 		getLogger().Error(err)
 		return err

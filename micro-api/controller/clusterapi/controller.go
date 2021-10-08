@@ -2,6 +2,7 @@ package clusterapi
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 	"time"
 
@@ -245,7 +246,7 @@ func DescribeDashboard(c *gin.Context) {
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
 	}
-	respDTO, err := client.ClusterClient.DescribeDashboard(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.DescribeDashboard(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))

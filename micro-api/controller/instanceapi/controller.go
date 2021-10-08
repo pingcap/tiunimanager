@@ -194,7 +194,7 @@ func QueryBackupStrategy(c *gin.Context) {
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
-	if err != nil {
+	if err != nil || resp == nil || resp.GetStrategy() == nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(BackupStrategy{

@@ -222,10 +222,12 @@ func SaveBackupStrategyPreCheck(ope *proto.OperatorDTO, strategy *proto.BackupSt
 		return fmt.Errorf("invalid param period, %s", strategy.GetPeriod())
 	}
 
-	backupDates := strings.Split(strategy.GetBackupDate(), ",")
-	for _, day := range backupDates {
-		if !checkWeekDayValid(day) {
-			return fmt.Errorf("backupDate contains invalid weekday, %s", day)
+	if strategy.GetBackupDate() != "" {
+		backupDates := strings.Split(strategy.GetBackupDate(), ",")
+		for _, day := range backupDates {
+			if !checkWeekDayValid(day) {
+				return fmt.Errorf("backupDate contains invalid weekday, %s", day)
+			}
 		}
 	}
 
@@ -264,6 +266,14 @@ func QueryBackupStrategy(ctx context.Context, ope *proto.OperatorDTO, clusterId 
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
 		return nil, err
+	} else if resp == nil {
+		// default backup strategy
+		strategy := &proto.BackupStrategy{
+			ClusterId:      clusterId,
+			BackupDate:     "",
+			Period:         fmt.Sprintf("%d:00-%d:00", 0, 1),
+		}
+		return strategy, nil
 	} else {
 		nextBackupTime, err := calculateNextBackupTime(time.Now(), resp.GetStrategy().GetBackupDate(), int(resp.GetStrategy().GetStartHour()))
 		if err != nil {

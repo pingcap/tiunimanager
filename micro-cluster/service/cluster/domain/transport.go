@@ -513,10 +513,10 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		"-r", "200000",
 		"-F", "256MiB"}
 	if info.Filter != "" {
-		cmd = append(cmd, "--filter", fmt.Sprintf("\"%s\"", info.Filter))
+		cmd = append(cmd, "--filter", info.Filter)
 	}
 	if FileTypeCSV == info.FileType && info.Sql != "" {
-		cmd = append(cmd, "--sql", fmt.Sprintf("\"%s\"", info.Sql))
+		cmd = append(cmd, "--sql", info.Sql)
 	}
 	if S3StorageType == info.StorageType && info.BucketRegion != "" {
 		cmd = append(cmd, "--s3.region", fmt.Sprintf("\"%s\"", info.BucketRegion))

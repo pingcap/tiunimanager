@@ -16,8 +16,8 @@ exec bin/jaeger-all-in-one \
     --processor.zipkin-compact.server-host-port=":{{.ZipkinCompactPort}}" \
     --processor.jaeger-compact.server-host-port=":{{.JaegerCompactPort}}" \
     --processor.jaeger-binary.server-host-port=":{{.JaegerBinaryPort}}" \
-    --http-server.host-port=":{{.JaegerHttpPort}}" \
-    --collector.http-server.host-port=":{{.CollectorHttpPort}}" \
-    --admin.http.host-port=":{{.AdminHttpPort}}" \
+    --http-server.host-port=":{{.JaegerHTTPPort}}" \
+    --collector.http-server.host-port=":{{.CollectorHTTPPort}}" \
+    --admin.http.host-port=":{{.AdminHTTPPort}}" \
     --collector.grpc-server.host-port=":{{.CollectorGrpcPort}}" \
     --query.grpc-server.host-port=":{{.QueryGrpcPort}}"

@@ -138,7 +138,7 @@ func Start(
 				time.Sleep(time.Second * 20)
 				path := "/api/saved_objects/_import?overwrite=true"
 				url := fmt.Sprintf("http://%s:%d%s", inst.GetHost(), inst.GetPort(), path)
-				log.Debugf("init kibana index patterns url: ", url)
+				log.Debugf("init kibana index patterns url: %s", url)
 
 				uploads := make([]utils.UploadFile, 0)
 				uploads = append(uploads, utils.UploadFile{
@@ -147,7 +147,7 @@ func Start(
 				})
 				headers := map[string]string{"kbn-xsrf": "reporting"}
 				resp := utils.PostFile(url, map[string]string{}, uploads, headers)
-				log.Debugf("init kibana index patterns response: ", resp)
+				log.Debugf("init kibana index patterns response: %s", resp)
 			}
 		}
 	}

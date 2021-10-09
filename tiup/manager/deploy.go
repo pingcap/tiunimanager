@@ -15,7 +15,6 @@ package manager
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -150,20 +149,8 @@ func (m *Manager) Deploy(
 	noAgentHosts := set.NewStringSet()
 	globalOptions := base.GlobalOptions
 
-	var iterErr error // error when itering over instances
-	iterErr = nil
 	topo.IterInstance(func(inst spec.Instance) {
 		if _, found := uniqueHosts[inst.GetHost()]; !found {
-			// check for "imported" parameter, it can not be true when deploying and scaling out
-			// only for tidb now, need to support dm
-			if inst.IsImported() && m.sysName == "tidb" {
-				iterErr = errors.New(
-					"'imported' is set to 'true' for new instance, this is only used " +
-						"for instances imported from tidb-ansible and make no sense when " +
-						"deploying new instances, please delete the line or set it to 'false' for new instances")
-				return // skip the host to avoid issues
-			}
-
 			// add the instance to ignore list if it marks itself as ignore_exporter
 			if inst.IgnoreMonitorAgent() {
 				noAgentHosts.Insert(inst.GetHost())
@@ -211,10 +198,6 @@ func (m *Manager) Deploy(
 			envInitTasks = append(envInitTasks, t)
 		}
 	})
-
-	if iterErr != nil {
-		return iterErr
-	}
 
 	// Download missing component
 	downloadCompTasks = buildDownloadCompTasks(clusterVersion, topo, m.bindVersion)
@@ -293,10 +276,6 @@ func (m *Manager) Deploy(
 			t.BuildAsStep(fmt.Sprintf("  - Copy %s -> %s", inst.ComponentName(), inst.GetHost())),
 		)
 	})
-
-	if iterErr != nil {
-		return iterErr
-	}
 
 	// Deploy monitor relevant components to remote
 	dlTasks, dpTasks, err := buildMonitoredDeployTask(

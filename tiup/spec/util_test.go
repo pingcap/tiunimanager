@@ -46,18 +46,18 @@ func (s utilSuite) TestAbs(c *check.C) {
 }
 
 func (s *utilSuite) TestMultiDirAbs(c *check.C) {
-	paths := MultiDirAbs("tidb", "")
+	paths := MultiDirAbs("tiem", "")
 	c.Assert(len(paths), check.Equals, 0)
 
-	paths = MultiDirAbs("tidb", " ")
+	paths = MultiDirAbs("tiem", " ")
 	c.Assert(len(paths), check.Equals, 0)
 
-	paths = MultiDirAbs("tidb", "a ")
+	paths = MultiDirAbs("tiem", "a ")
 	c.Assert(len(paths), check.Equals, 1)
-	c.Assert(paths[0], check.Equals, "/home/tidb/a")
+	c.Assert(paths[0], check.Equals, "/home/tiem/a")
 
-	paths = MultiDirAbs("tidb", "a , /tmp/b")
+	paths = MultiDirAbs("tiem", "a , /tmp/b")
 	c.Assert(len(paths), check.Equals, 2)
-	c.Assert(paths[0], check.Equals, "/home/tidb/a")
+	c.Assert(paths[0], check.Equals, "/home/tiem/a")
 	c.Assert(paths[1], check.Equals, "/tmp/b")
 }

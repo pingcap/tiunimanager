@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -13,6 +12,7 @@ import (
 	"strings"
 )
 
+// UploadFile defines a file to be uploaded
 type UploadFile struct {
 	Name     string
 	Filepath string
@@ -20,15 +20,16 @@ type UploadFile struct {
 
 var httpClient = &http.Client{}
 
-func Get(reqUrl string, reqParams map[string]string, headers map[string]string) string {
+// Get implement HTTP GET
+func Get(reqURL string, reqParams map[string]string, headers map[string]string) string {
 	urlParams := url.Values{}
-	Url, _ := url.Parse(reqUrl)
+	parsedURL, _ := url.Parse(reqURL)
 	for key, val := range reqParams {
 		urlParams.Set(key, val)
 	}
 
-	Url.RawQuery = urlParams.Encode()
-	urlPath := Url.String()
+	parsedURL.RawQuery = urlParams.Encode()
+	urlPath := parsedURL.String()
 
 	httpRequest, _ := http.NewRequest("GET", urlPath, nil)
 	if headers != nil {
@@ -41,25 +42,28 @@ func Get(reqUrl string, reqParams map[string]string, headers map[string]string) 
 		panic(err)
 	}
 	defer resp.Body.Close()
-	response, _ := ioutil.ReadAll(resp.Body)
+	response, _ := io.ReadAll(resp.Body)
 	return string(response)
 }
 
-func PostForm(reqUrl string, reqParams map[string]string, headers map[string]string) string {
-	return post(reqUrl, reqParams, "application/x-www-form-urlencoded", nil, headers)
+// PostForm implements HTTP POST with form
+func PostForm(reqURL string, reqParams map[string]string, headers map[string]string) string {
+	return post(reqURL, reqParams, "application/x-www-form-urlencoded", nil, headers)
 }
 
-func PostJson(reqUrl string, reqParams map[string]string, headers map[string]string) string {
-	return post(reqUrl, reqParams, "application/json", nil, headers)
+// PostJSON implements HTTP POST with JSON format
+func PostJSON(reqURL string, reqParams map[string]string, headers map[string]string) string {
+	return post(reqURL, reqParams, "application/json", nil, headers)
 }
 
-func PostFile(reqUrl string, reqParams map[string]string, files []UploadFile, headers map[string]string) string {
-	return post(reqUrl, reqParams, "multipart/form-data", files, headers)
+// PostFile implements HTTP POST with file
+func PostFile(reqURL string, reqParams map[string]string, files []UploadFile, headers map[string]string) string {
+	return post(reqURL, reqParams, "multipart/form-data", files, headers)
 }
 
-func post(reqUrl string, reqParams map[string]string, contentType string, files []UploadFile, headers map[string]string) string {
+func post(reqURL string, reqParams map[string]string, contentType string, files []UploadFile, headers map[string]string) string {
 	requestBody, realContentType := getReader(reqParams, contentType, files)
-	httpRequest, _ := http.NewRequest("POST", reqUrl, requestBody)
+	httpRequest, _ := http.NewRequest("POST", reqURL, requestBody)
 	httpRequest.Header.Add("Content-Type", realContentType)
 	if headers != nil {
 		for k, v := range headers {
@@ -71,7 +75,7 @@ func post(reqUrl string, reqParams map[string]string, contentType string, files 
 		panic(err)
 	}
 	defer resp.Body.Close()
-	response, _ := ioutil.ReadAll(resp.Body)
+	response, _ := io.ReadAll(resp.Body)
 	return string(response)
 }
 

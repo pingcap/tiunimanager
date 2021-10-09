@@ -57,7 +57,7 @@ func (c *KibanaConfig) WithName(name string) *KibanaConfig {
 	return c
 }
 
-// WithElasticSearch sets es endpoints
+// WithElasticsearch sets es endpoints
 func (c *KibanaConfig) WithElasticsearch(addrs []string) *KibanaConfig {
 	c.ElasticSearchAddresses = addrs
 	return c

@@ -32,7 +32,7 @@ type TracerServerSpec struct {
 	Host               string                 `yaml:"host"`
 	SSHPort            int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
 	ZipkinHostPort     int                    `yaml:"port,omitempty" default:"4133"`
-	QueryHttpServePort int                    `yaml:"web_port,omitempty" default:"4134"`
+	QueryHTTPServePort int                    `yaml:"web_port,omitempty" default:"4134"`
 	ZipkinThriftPort   int                    `yaml:"zipkin_thrift_port,omitempty" default:"4135"`
 	CompactThriftPort  int                    `yaml:"compact_thrift_port,omitempty" default:"4136"`
 	BinaryThriftPort   int                    `yaml:"binary_thrift_port,omitempty" default:"4137"`
@@ -108,7 +108,7 @@ func (c *JaegerComponent) Instances() []Instance {
 
 				Ports: []int{
 					s.ZipkinHostPort,
-					s.QueryHttpServePort,
+					s.QueryHTTPServePort,
 					s.ZipkinThriftPort,
 					s.CompactThriftPort,
 					s.BinaryThriftPort,
@@ -160,13 +160,13 @@ func (i *JaegerInstance) InitConfig(
 		paths.Log,
 	).
 		WithPort(spec.ZipkinHostPort).
-		WithWebPort(spec.QueryHttpServePort).
+		WithWebPort(spec.QueryHTTPServePort).
 		WithZipkinCompactPort(spec.ZipkinThriftPort).
 		WithJaegerCompactPort(spec.CompactThriftPort).
 		WithJaegerBinaryPort(spec.BinaryThriftPort).
-		WithJaegerHttpPort(spec.AgentServePort).
-		WithCollectorHttpPort(spec.JaegerThriftPort).
-		WithAdminHttpPort(spec.JaegerHostPort).
+		WithJaegerHTTPPort(spec.AgentServePort).
+		WithCollectorHTTPPort(spec.JaegerThriftPort).
+		WithAdminHTTPPort(spec.JaegerHostPort).
 		WithCollectorGrpcPort(spec.CollectorPort).
 		WithQueryGrpcPort(spec.QueryGrpcServePort)
 
@@ -207,13 +207,13 @@ func (i *JaegerInstance) ScaleConfig(
 		paths.Log,
 	).
 		WithPort(spec.ZipkinHostPort).
-		WithWebPort(spec.QueryHttpServePort).
+		WithWebPort(spec.QueryHTTPServePort).
 		WithZipkinCompactPort(spec.ZipkinThriftPort).
 		WithJaegerCompactPort(spec.CompactThriftPort).
 		WithJaegerBinaryPort(spec.BinaryThriftPort).
-		WithJaegerHttpPort(spec.AgentServePort).
-		WithCollectorHttpPort(spec.JaegerThriftPort).
-		WithAdminHttpPort(spec.JaegerHostPort).
+		WithJaegerHTTPPort(spec.AgentServePort).
+		WithCollectorHTTPPort(spec.JaegerThriftPort).
+		WithAdminHTTPPort(spec.JaegerHostPort).
 		WithCollectorGrpcPort(spec.CollectorPort).
 		WithQueryGrpcPort(spec.QueryGrpcServePort)
 

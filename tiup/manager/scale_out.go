@@ -15,7 +15,6 @@ package manager
 
 import (
 	"context"
-	"errors"
 
 	"github.com/fatih/color"
 	"github.com/joomcode/errorx"
@@ -70,10 +69,6 @@ func (m *Manager) ScaleOut(
 	// file for some reason (manual edit, for example), it is still possible to scale-out it to make
 	// the whole topology back to normal state.
 	if err := spec.ParseTopologyYaml(topoFile, newPart); err != nil {
-		return err
-	}
-
-	if err := validateNewTopo(newPart); err != nil {
 		return err
 	}
 
@@ -140,21 +135,6 @@ func (m *Manager) ScaleOut(
 	log.Infof("Scaled cluster `%s` out successfully", name)
 
 	return nil
-}
-
-// validateNewTopo checks the new part of scale-out topology to make sure it's supported
-func validateNewTopo(topo spec.Topology) (err error) {
-	topo.IterInstance(func(instance spec.Instance) {
-		// check for "imported" parameter, it can not be true when scaling out
-		if instance.IsImported() {
-			err = errors.New(
-				"'imported' is set to 'true' for new instance, this is only used " +
-					"for instances imported from tidb-ansible and make no sense when " +
-					"scaling out, please delete the line or set it to 'false' for new instances")
-			return
-		}
-	})
-	return err
 }
 
 // checkForGlobalConfigs checks the input scale out topology to make sure users are aware

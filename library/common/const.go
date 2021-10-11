@@ -27,7 +27,6 @@ const (
 	LogFileTiupMgr = "tiupmgr"
 	LogFileBrMgr   = "brmgr"
 	LogFileLibTiup = "libtiup"
-	LogFileLibBr   = "libbr"
 
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"

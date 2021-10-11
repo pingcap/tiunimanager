@@ -3,7 +3,7 @@ package domain
 import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	mock "github.com/pingcap-inc/tiem/micro-metadb/proto/mocks"
@@ -214,9 +214,9 @@ func Test_calculateNextBackupTime_case6(t *testing.T) {
 
 func Test_convertBrStorageType(t *testing.T) {
 	result, _ := convertBrStorageType(string(StorageTypeS3))
-	assert.Equal(t, libbr.StorageTypeS3, result)
+	assert.Equal(t, secondparty.StorageTypeS3, result)
 	result, _ = convertBrStorageType(string(StorageTypeLocal))
-	assert.Equal(t, libbr.StorageTypeLocal, result)
+	assert.Equal(t, secondparty.StorageTypeLocal, result)
 	_, err := convertBrStorageType("data")
 	assert.NotNil(t, err)
 }

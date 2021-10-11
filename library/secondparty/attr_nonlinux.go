@@ -1,6 +1,6 @@
 // +build !linux
 
-package libtiup
+package secondparty
 
 import "syscall"
 

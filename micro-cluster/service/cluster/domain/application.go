@@ -4,13 +4,13 @@ import (
 	ctx "context"
 	"errors"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -227,8 +227,11 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 
 		cfgYamlStr := string(bs)
 		getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
-		tiUPMicro := libtiup.TiUPMicro{}
-		deployTaskId, err := tiUPMicro.MicroSrvTiupDeploy(
+		var secondMicro secondparty.MicroSrv
+		secondMicro = &secondparty.SecondMicro{
+			TiupBinPath: "tiup",
+		}
+		deployTaskId, err := secondMicro.MicroSrvTiupDeploy(
 			cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
 		)
 		context.put("deployTaskId", deployTaskId)
@@ -264,8 +267,11 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 		}
 	}
 	getLogger().Infof("start cluster %s", cluster.ClusterName)
-	tiUPMicro := libtiup.TiUPMicro{}
-	startTaskId, err := tiUPMicro.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
+	var secondMicro secondparty.MicroSrv
+	secondMicro = &secondparty.SecondMicro{
+		TiupBinPath: "tiup",
+	}
+	startTaskId, err := secondMicro.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call tiup api start cluster err = %s", err.Error())
 		task.Fail(err)

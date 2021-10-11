@@ -29,24 +29,12 @@ all:
 # 1. build binary
 build:
 	@echo "build TiEM server start."
-	make build_tiupcmd
-	make build_brcmd
 	make build_openapi_server
 	make build_cluster_server
 	make build_metadb_server
 	@echo "build TiEM all server successful."
 
 #Compile all TiEM microservices
-build_tiupcmd:
-	@echo "build tiupcmd start."
-	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${TIUPCMD_BINARY} library/secondparty/tiupcmd/main.go
-	@echo "build tiupcmd sucessufully."
-
-build_brcmd:
-	@echo "build brcmd start."
-	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${BRCMD_BINARY} library/secondparty/brcmd/main.go
-	@echo "build brcmd sucessufully."
-
 build_openapi_server:
 	@echo "build openapi-server start."
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${OPENAPI_SERVER_BINARY} micro-api/*.go

@@ -1,6 +1,6 @@
 // +build linux
 
-package libbr
+package secondparty
 
 import "syscall"
 

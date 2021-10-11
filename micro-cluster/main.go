@@ -6,8 +6,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
-	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
@@ -40,13 +39,11 @@ func main() {
 }
 
 func initLibForDev(f *framework.BaseFramework) error {
-	tiUPMicro := libtiup.TiUPMicro{}
-	tiUPMicro.MicroInit(f.GetDeployDir()+"/tiupcmd",
-		"tiup",
-		f.GetDataDir()+common.LogDirPrefix)
-	brMicro := libbr.BrMicro{}
-	brMicro.MicroInit(f.GetDeployDir()+"/brcmd",
-		f.GetDataDir()+common.LogDirPrefix)
+	var secondMicro secondparty.MicroSrv
+	secondMicro = &secondparty.SecondMicro{
+		TiupBinPath: "tiup",
+	}
+	secondMicro.MicroInit(f.GetDataDir()+common.LogDirPrefix)
 	return nil
 }
 

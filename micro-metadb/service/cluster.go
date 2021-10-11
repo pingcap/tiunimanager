@@ -209,7 +209,7 @@ func (handler *DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb
 	if nil == req || nil == resp {
 		return errors.Errorf("ListCluster has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	dto := req.BackupRecord
 	result, err := clusterManager.SaveBackupRecord(dto)
@@ -241,7 +241,7 @@ func (handler *DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *db
 	if nil == req || nil == resp {
 		return errors.Errorf("DeleteBackupRecord has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	result, err := clusterManager.DeleteBackupRecord(uint(req.Id))
 	if nil == err {
@@ -269,7 +269,7 @@ func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbP
 	if nil == req || nil == resp {
 		return errors.Errorf("ListBackupRecords has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	backupRecords, total, err := clusterManager.ListBackupRecords(req.ClusterId, req.StartTime, req.EndTime,
 		int((req.Page.Page-1)*req.Page.PageSize), int(req.Page.PageSize))
@@ -299,7 +299,7 @@ func (handler *DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbP
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveRecoverRecord has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	dto := req.RecoverRecord
 	result, err := clusterManager.SaveRecoverRecord(dto.TenantId, dto.ClusterId, dto.OperatorId, uint(dto.BackupRecordId), uint(dto.FlowId))

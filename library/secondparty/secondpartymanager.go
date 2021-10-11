@@ -27,22 +27,6 @@ type MicroSrv interface {
 	ShowBackUpInfo(cluster ClusterFacade) CmdShowBackUpInfoResp
 	Restore(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error)
 	ShowRestoreInfo(cluster ClusterFacade) CmdShowRestoreInfoResp
-	taskStatusMapSyncer()
-	startGetAllValidTaskStatusTask() CmdGetAllTaskStatusResp
-	getAllValidTaskStatus() (ret []TaskStatusMember)
-	startNewTiupDeployTask(taskID uint64, req *CmdDeployReq)
-	startNewTiupStartTask(taskID uint64, req *CmdStartReq)
-	startNewTiupListTask(req *CmdListReq) (resp CmdListResp, err error)
-	startNewTiupDestroyTask(taskID uint64, req *CmdDestroyReq)
-	startNewTiupDumplingTask(taskID uint64, req *CmdDumplingReq)
-	startNewTiupLightningTask(taskID uint64, req *CmdLightningReq)
-	startNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) (resp CmdClusterDisplayResp, err error)
-	startNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, TimeoutS int) (exitCh chan struct{})
-	startNewBrBackUpTaskThruSQL(taskID uint64, req *CmdBackUpReq)
-	startNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUpInfoResp
-	startNewBrRestoreTaskThruSQL(taskID uint64, req *CmdRestoreReq)
-	startNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRestoreInfoResp
-	startNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd string) (exitCh chan struct{})
 }
 
 type SecondMicro struct {

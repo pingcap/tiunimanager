@@ -52,7 +52,7 @@ type Disk struct {
 	Capacity  int32          `json:"capacity"`                      // Disk size, Unit: GB
 	Path      string         `json:"path" gorm:"size:255;not null"` // Disk mount path: [/data1]
 	Type      string         `json:"type"`                          // Disk type: [nvme-ssd/ssd/sata]
-	Status    int32          `json:"status" gorm:"index"`           // Disk Status, 0 for available, 1 for inused
+	Status    int32          `json:"status" gorm:"index"`           // Disk Status, 0 for available, 1 for reserved
 	CreatedAt time.Time      `json:"-"`
 	UpdatedAt time.Time      `json:"-"`
 	DeletedAt gorm.DeletedAt `json:"-"`

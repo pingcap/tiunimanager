@@ -3,6 +3,7 @@ package instanceapi
 import (
 	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 	"strconv"
 	"time"
@@ -147,7 +148,7 @@ func Backup(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	resp, err := client.ClusterClient.CreateBackup(context.TODO(), &cluster.CreateBackupRequest{
+	resp, err := client.ClusterClient.CreateBackup(framework.NewMicroCtxFromGinCtx(c), &cluster.CreateBackupRequest{
 		ClusterId:   req.ClusterId,
 		BackupType:  req.BackupType,
 		BackupMethod: req.BackupMethod,
@@ -189,11 +190,11 @@ func QueryBackupStrategy(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
 
-	resp, err := client.ClusterClient.GetBackupStrategy(context.TODO(), &cluster.GetBackupStrategyRequest{
+	resp, err := client.ClusterClient.GetBackupStrategy(framework.NewMicroCtxFromGinCtx(c), &cluster.GetBackupStrategyRequest{
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
-	if err != nil {
+	if err != nil || resp == nil || resp.GetStrategy() == nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		c.JSON(http.StatusOK, controller.Success(BackupStrategy{
@@ -229,7 +230,7 @@ func SaveBackupStrategy(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
-	_, err := client.ClusterClient.SaveBackupStrategy(context.TODO(), &cluster.SaveBackupStrategyRequest{
+	_, err := client.ClusterClient.SaveBackupStrategy(framework.NewMicroCtxFromGinCtx(c), &cluster.SaveBackupStrategyRequest{
 		Operator: operator.ConvertToDTO(),
 		Strategy: &cluster.BackupStrategy{
 			ClusterId:   clusterId,
@@ -272,7 +273,7 @@ func QueryBackup(c *gin.Context) {
 		EndTime:   queryReq.EndTime,
 	}
 
-	resp, err := client.ClusterClient.QueryBackupRecord(context.TODO(), reqDTO, controller.DefaultTimeout)
+	resp, err := client.ClusterClient.QueryBackupRecord(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -331,7 +332,7 @@ func DeleteBackup(c *gin.Context) {
 	}
 	operator := controller.GetOperator(c)
 
-	_, err = client.ClusterClient.DeleteBackupRecord(context.TODO(), &cluster.DeleteBackupRequest{
+	_, err = client.ClusterClient.DeleteBackupRecord(framework.NewMicroCtxFromGinCtx(c), &cluster.DeleteBackupRequest{
 		BackupRecordId: int64(backupId),
 		Operator:       operator.ConvertToDTO(),
 		ClusterId:      req.ClusterId,

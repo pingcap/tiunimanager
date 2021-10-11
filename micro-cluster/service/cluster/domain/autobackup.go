@@ -2,7 +2,9 @@ package domain
 
 import (
 	ctx "context"
+	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/framework"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/robfig/cron"
@@ -81,7 +83,7 @@ func (auto *autoBackupHandler) doBackup(straegy *db.DBBackupStrategyDTO) {
 		TenantId: resp.GetAccount().GetTenantId(),
 		Name: resp.GetAccount().GetName(),
 	}
-	_, err = Backup(ope, straegy.GetClusterId(), "", "", BackupModeAuto, "")
+	_, err = Backup(framework.NewMicroCtxFromGinCtx(&gin.Context{}), ope, straegy.GetClusterId(), "", "", BackupModeAuto, "")
 	if err != nil {
 		getLogger().Errorf("do backup for cluster %s failed, %s", straegy.GetClusterId(), err.Error())
 		return

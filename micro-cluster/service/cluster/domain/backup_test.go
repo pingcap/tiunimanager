@@ -2,8 +2,10 @@ package domain
 
 import (
 	ctx "context"
+	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain/mock"
@@ -238,6 +240,7 @@ func Test_updateBackupRecord(t *testing.T) {
 			Size: 1000,
 		},
 	})
+	context.put(contextCtxKey, framework.NewMicroCtxFromGinCtx(&gin.Context{}))
 	ret := updateBackupRecord(task, context)
 
 	assert.Equal(t, true, ret)

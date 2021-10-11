@@ -3,8 +3,10 @@ package domain
 import (
 	ctx "context"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/framework"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain/mock"
 	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
@@ -209,6 +211,7 @@ func Test_buildDataImportConfig(t *testing.T) {
 			},
 		},
 	})
+	context.put(contextCtxKey, framework.NewMicroCtxFromGinCtx(&gin.Context{}))
 	ret := buildDataImportConfig(task, context)
 	assert.Equal(t, true, ret)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
@@ -239,6 +242,7 @@ func Test_updateDataImportRecord(t *testing.T) {
 			Id: "test-abc",
 		},
 	})
+	context.put(contextCtxKey, framework.NewMicroCtxFromGinCtx(&gin.Context{}))
 
 	ret := updateDataImportRecord(task, context)
 
@@ -268,6 +272,7 @@ func Test_updateDataExportRecord(t *testing.T) {
 			Id: "test-abc",
 		},
 	})
+	context.put(contextCtxKey, framework.NewMicroCtxFromGinCtx(&gin.Context{}))
 
 	ret := updateDataExportRecord(task, context)
 
@@ -297,6 +302,7 @@ func Test_exportDataFailed(t *testing.T) {
 			Id: "test-abc",
 		},
 	})
+	context.put(contextCtxKey, framework.NewMicroCtxFromGinCtx(&gin.Context{}))
 
 	ret := exportDataFailed(task, context)
 
@@ -326,6 +332,7 @@ func Test_importDataFailed(t *testing.T) {
 			Id: "test-abc",
 		},
 	})
+	context.put(contextCtxKey, framework.NewMicroCtxFromGinCtx(&gin.Context{}))
 
 	ret := importDataFailed(task, context)
 

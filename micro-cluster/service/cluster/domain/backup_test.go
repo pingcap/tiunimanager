@@ -238,6 +238,7 @@ func Test_updateBackupRecord(t *testing.T) {
 			Size: 1000,
 		},
 	})
+	context.put(contextCtxKey, ctx.Background())
 	ret := updateBackupRecord(task, context)
 
 	assert.Equal(t, true, ret)

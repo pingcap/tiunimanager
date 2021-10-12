@@ -28,7 +28,7 @@ message DBClusterDTO {
     int64 deleteTime = 16;
 }
 
-message DBTiUPConfigDTO {
+message DBTopologyConfigDTO {
     int32 id = 1;
     string tenantId = 2;
     string clusterId = 3;
@@ -61,8 +61,9 @@ message DBClusterDisplayDTO {
 
 message DBClusterDetailDTO {
     DBClusterDTO cluster = 1;
-    DBTiUPConfigDTO tiupConfigRecord = 2;
+    DBTopologyConfigDTO topologyConfigRecord = 2;
     DBFlowDTO flow = 3;
+    repeated DBComponentInstanceDTO componentInstances = 4;
 }
 
 message DBListClusterRequest {
@@ -103,16 +104,30 @@ message DBUpdateClusterStatusResponse {
     DBClusterDTO cluster = 2;
 }
 
-message DBUpdateTiupConfigRequest {
+message DBCreateInstanceRequest {
+    string clusterId = 1;
+    string tenantId = 2;
+    string topologyContent = 3;
+    repeated DBComponentInstanceDTO componentInstances = 4;
+}
+
+message DBCreateInstanceResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+    DBTopologyConfigDTO topologyConfigRecord = 3;
+    repeated DBComponentInstanceDTO componentInstances = 4;
+}
+
+message DBUpdateTopologyConfigRequest {
     string clusterId = 1;
     string content = 2;
     string tenantId = 3;
 }
 
-message DBUpdateTiupConfigResponse {
+message DBUpdateTopologyConfigResponse {
     DBClusterResponseStatus status = 1;
     DBClusterDTO cluster = 2;
-    DBTiUPConfigDTO tiupConfigRecord = 3;
+    DBTopologyConfigDTO topologyConfigRecord = 3;
 }
 
 message DBPageDTO {
@@ -155,13 +170,14 @@ message DBBackupRecordDTO {
     string clusterId = 3;
     int64 startTime = 4;
     int64 endTime = 5;
-    string backupRange = 6;
+    string backupMethod = 6;
     string backupType = 7;
     string backupMode = 8;
-    string operatorId = 9;
-    string filePath = 10;
-    int64 flowId = 11;
-    uint64 size = 12;
+    string storageType = 9;
+    string operatorId = 10;
+    string filePath = 11;
+    int64 flowId = 12;
+    uint64 size = 13;
 }
 
 message DBSaveBackupRecordRequest {
@@ -240,14 +256,13 @@ message DBSaveRecoverRecordResponse {
 message DBBackupStrategyDTO {
     int64 id = 1;
     string tenantId = 2;
-    string clusterId = 3;
-    string backupDate = 4;
-    string filePath = 5;
-    string backupRange = 6;
-    string backupType = 7;
-    string period = 8;
-    int64 createTime = 9;
-    int64 updateTime = 10;
+    string operatorId = 3;
+    string clusterId = 4;
+    string backupDate = 5;
+    uint32 startHour = 6;
+    uint32 endHour = 7;
+    int64 createTime = 8;
+    int64 updateTime = 9;
 }
 
 message DBSaveBackupStrategyRequest {
@@ -266,4 +281,36 @@ message DBQueryBackupStrategyRequest {
 message DBQueryBackupStrategyResponse {
     DBClusterResponseStatus status = 1;
     DBBackupStrategyDTO strategy = 2;
+}
+
+message DBQueryBackupStrategyByTimeRequest {
+    string weekday = 1;
+    uint32 startHour = 2;
+}
+
+message DBQueryBackupStrategyByTimeResponse {
+    DBClusterResponseStatus status = 1;
+    repeated DBBackupStrategyDTO strategys = 2;
+}
+
+message DBComponentInstanceDTO {
+    string id = 1;
+    string code = 2;
+    string tenantId = 3;
+    int32 status = 4;
+
+    string clusterId = 5;
+    string componentType = 6;
+    string role = 7;
+    string spec = 8;
+    string version = 9;
+
+    string hostId = 10;
+    string diskId = 11;
+    string portInfo = 12;
+    string allocRequestId = 13;
+
+    int64 createTime = 14;
+    int64 updateTime = 15;
+    int64 deleteTime = 16;
 }

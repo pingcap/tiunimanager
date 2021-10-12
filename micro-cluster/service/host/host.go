@@ -23,18 +23,23 @@ func copyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.Ip = src.Ip
 	dst.UserName = src.UserName
 	dst.Passwd = src.Passwd
+	dst.Arch = src.Arch
 	dst.Os = src.Os
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int32(src.CpuCores)
-	dst.Memory = int32(src.Memory)
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
 	dst.Spec = src.Spec
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Nic = src.Nic
-	dst.Dc = src.Dc
+	dst.Region = src.Region
 	dst.Az = src.Az
 	dst.Rack = src.Rack
 	dst.Status = src.Status
+	dst.Stat = src.Stat
 	dst.Purpose = src.Purpose
-	dst.Performance = src.Performance
+	dst.DiskType = src.DiskType
+	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
 			Name:     disk.Name,
@@ -50,19 +55,24 @@ func copyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.HostId = src.HostId
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
+	dst.Arch = src.Arch
 	dst.Os = src.Os
 	dst.Kernel = src.Kernel
-	dst.CpuCores = int32(src.CpuCores)
-	dst.Memory = int32(src.Memory)
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
 	dst.Spec = src.Spec
+	dst.CpuCores = src.CpuCores
+	dst.Memory = src.Memory
 	dst.Nic = src.Nic
-	dst.Dc = src.Dc
+	dst.Region = src.Region
 	dst.Az = src.Az
 	dst.Rack = src.Rack
 	dst.Status = src.Status
+	dst.Stat = src.Stat
 	dst.Purpose = src.Purpose
-	dst.Performance = src.Performance
+	dst.DiskType = src.DiskType
 	dst.CreateAt = src.CreateAt
+	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &hostPb.Disk{
 			DiskId:   disk.DiskId,
@@ -314,5 +324,181 @@ func (m *ResourceManager) GetFailureDomain(ctx context.Context, in *hostPb.GetFa
 			Count:         v.Count,
 		})
 	}
+	return nil
+}
+
+func copyAllocRequirement(src *hostPb.AllocRequirement, dst *dbPb.DBAllocRequirement) {
+	dst.Location = new(dbPb.DBLocation)
+	dst.Location.Region = src.Location.Region
+	dst.Location.Zone = src.Location.Zone
+	dst.Location.Rack = src.Location.Rack
+	dst.Location.Host = src.Location.Host
+
+	dst.HostExcluded = new(dbPb.DBExcluded)
+	if src.HostExcluded != nil {
+		dst.HostExcluded.Hosts = append(dst.HostExcluded.Hosts, src.HostExcluded.Hosts...)
+	}
+
+	dst.HostFilter = new(dbPb.DBFilter)
+	dst.HostFilter.Arch = src.HostFilter.Arch
+	dst.HostFilter.Purpose = src.HostFilter.Purpose
+	dst.HostFilter.DiskType = src.HostFilter.DiskType
+
+	// copy requirement
+	dst.Require = new(dbPb.DBRequirement)
+	dst.Require.Exclusive = src.Require.Exclusive
+	dst.Require.ComputeReq = new(dbPb.DBComputeRequirement)
+	dst.Require.ComputeReq.CpuCores = src.Require.ComputeReq.CpuCores
+	dst.Require.ComputeReq.Memory = src.Require.ComputeReq.Memory
+
+	dst.Require.DiskReq = new(dbPb.DBDiskRequirement)
+	dst.Require.DiskReq.NeedDisk = src.Require.DiskReq.NeedDisk
+	dst.Require.DiskReq.DiskType = src.Require.DiskReq.DiskType
+	dst.Require.DiskReq.Capacity = src.Require.DiskReq.Capacity
+
+	for _, portReq := range src.Require.PortReq {
+		dst.Require.PortReq = append(dst.Require.PortReq, &dbPb.DBPortRequirement{
+			Start:   portReq.Start,
+			End:     portReq.End,
+			PortCnt: portReq.PortCnt,
+		})
+	}
+
+	dst.Strategy = src.Strategy
+	dst.Count = src.Count
+}
+
+func buildDBAllocRequest(src *hostPb.BatchAllocRequest, dst *dbPb.DBBatchAllocRequest) {
+	for _, request := range src.BatchRequests {
+		var dbReq dbPb.DBAllocRequest
+		dbReq.Applicant = new(dbPb.DBApplicant)
+		dbReq.Applicant.HolderId = request.Applicant.HolderId
+		dbReq.Applicant.RequestId = request.Applicant.RequestId
+		for _, require := range request.Requires {
+			var dbRequire dbPb.DBAllocRequirement
+			copyAllocRequirement(require, &dbRequire)
+			dbReq.Requires = append(dbReq.Requires, &dbRequire)
+		}
+		dst.BatchRequests = append(dst.BatchRequests, &dbReq)
+	}
+}
+
+func copyResourcesInfoFromRsp(src *dbPb.DBHostResource, dst *hostPb.HostResource) {
+	dst.Reqseq = src.Reqseq
+	dst.HostId = src.HostId
+	dst.HostIp = src.HostIp
+	dst.HostName = src.HostName
+	dst.Passwd = src.Passwd
+	dst.UserName = src.UserName
+	dst.ComputeRes = new(hostPb.ComputeRequirement)
+	dst.ComputeRes.CpuCores = src.ComputeRes.CpuCores
+	dst.ComputeRes.Memory = src.ComputeRes.Memory
+	dst.Location = new(hostPb.Location)
+	dst.Location.Region = src.Location.Region
+	dst.Location.Zone = src.Location.Zone
+	dst.Location.Rack = src.Location.Rack
+	dst.Location.Host = src.Location.Host
+	dst.DiskRes = new(hostPb.DiskResource)
+	dst.DiskRes.DiskId = src.DiskRes.DiskId
+	dst.DiskRes.DiskName = src.DiskRes.DiskName
+	dst.DiskRes.Path = src.DiskRes.Path
+	dst.DiskRes.Type = src.DiskRes.Type
+	dst.DiskRes.Capacity = src.DiskRes.Capacity
+	for _, portRes := range src.PortRes {
+		var portResource hostPb.PortResource
+		portResource.Start = portRes.Start
+		portResource.End = portRes.End
+		portResource.Ports = append(portResource.Ports, portRes.Ports...)
+		dst.PortRes = append(dst.PortRes, &portResource)
+	}
+}
+
+func (m *ResourceManager) AllocResourcesInBatch(ctx context.Context, in *hostPb.BatchAllocRequest, out *hostPb.BatchAllocResponse) error {
+	var req dbPb.DBBatchAllocRequest
+	buildDBAllocRequest(in, &req)
+	rsp, err := client.DBClient.AllocResourcesInBatch(ctx, &req)
+	if err != nil {
+		framework.Log().Errorf("alloc resources error, %v", err)
+		return err
+	}
+	out.Rs = new(hostPb.AllocResponseStatus)
+	out.Rs.Code = rsp.Rs.Code
+	out.Rs.Message = rsp.Rs.Message
+
+	if rsp.Rs.Code != int32(codes.OK) {
+		framework.Log().Warnf("alloc resources from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		return nil
+	}
+
+	framework.Log().Infof("alloc resources from db service succeed, holde id: %s, repest id: %s", in.BatchRequests[0].Applicant.HolderId, in.BatchRequests[0].Applicant.RequestId)
+	for _, result := range rsp.BatchResults {
+		var res hostPb.AllocResponse
+		res.Rs = new(hostPb.AllocResponseStatus)
+		res.Rs.Code = result.Rs.Code
+		res.Rs.Message = result.Rs.Message
+		for _, r := range result.Results {
+			var hostResource hostPb.HostResource
+			copyResourcesInfoFromRsp(r, &hostResource)
+			res.Results = append(res.Results, &hostResource)
+		}
+		out.BatchResults = append(out.BatchResults, &res)
+	}
+	return nil
+}
+
+func buildDBRecycleRequire(src *hostPb.RecycleRequire, dst *dbPb.DBRecycleRequire) {
+	dst.RecycleType = src.RecycleType
+	dst.HolderId = src.HolderId
+	dst.RequestId = src.RequestId
+	dst.HostId = src.HostId
+	dst.HostIp = src.HostIp
+	dst.ComputeReq = new(dbPb.DBComputeRequirement)
+	if src.ComputeReq != nil {
+		dst.ComputeReq.CpuCores = src.ComputeReq.CpuCores
+		dst.ComputeReq.Memory = src.ComputeReq.Memory
+	}
+
+	dst.DiskReq = new(dbPb.DBDiskResource)
+	if src.DiskReq != nil {
+		dst.DiskReq.DiskId = src.DiskReq.DiskId
+		dst.DiskReq.DiskName = src.DiskReq.DiskName
+		dst.DiskReq.Path = src.DiskReq.Path
+		dst.DiskReq.Type = src.DiskReq.Type
+		dst.DiskReq.Capacity = src.DiskReq.Capacity
+	}
+
+	for _, portReq := range src.PortReq {
+		var portResource dbPb.DBPortResource
+		portResource.Start = portReq.Start
+		portResource.End = portReq.End
+		portResource.Ports = append(portResource.Ports, portReq.Ports...)
+		dst.PortReq = append(dst.PortReq, &portResource)
+	}
+
+}
+
+func (m *ResourceManager) RecycleResources(ctx context.Context, in *hostPb.RecycleRequest, out *hostPb.RecycleResponse) error {
+	var req dbPb.DBRecycleRequest
+	for _, request := range in.RecycleReqs {
+		var r dbPb.DBRecycleRequire
+		buildDBRecycleRequire(request, &r)
+		req.RecycleReqs = append(req.RecycleReqs, &r)
+	}
+	rsp, err := client.DBClient.RecycleResources(ctx, &req)
+	if err != nil {
+		framework.Log().Errorf("recycle resources for type %d error, %v", err, in.RecycleReqs[0].RecycleType)
+		return err
+	}
+	out.Rs = new(hostPb.AllocResponseStatus)
+	out.Rs.Code = rsp.Rs.Code
+	out.Rs.Message = rsp.Rs.Message
+
+	if rsp.Rs.Code != int32(codes.OK) {
+		framework.Log().Warnf("recycle resources from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		return nil
+	}
+
+	framework.Log().Infof("recycle resources from db service succeed, recycle type %d, holderId %s, requestId %s", in.RecycleReqs[0].RecycleType, in.RecycleReqs[0].HolderId, in.RecycleReqs[0].RequestId)
+
 	return nil
 }

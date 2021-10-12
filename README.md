@@ -77,7 +77,7 @@ $ go run init.go main.go \
     --registry-peer-port=4102 \
     --metrics-port=4121 \
     --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
-    --tracer-address=192.168.1.100:4123 \
+    --tracer-address=192.168.1.100:4133 \
     --deploy-dir=/tiem-deploy/tiem-metadb-4100 \
     --data-dir=/tiem-data/tiem-metadb-4100 \
     --log-level=info
@@ -96,7 +96,7 @@ $ go run init.go main.go \
     --port=4110 \
     --metrics-port=4121 \
     --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
-    --tracer-address=192.168.1.100:4123 \
+    --tracer-address=192.168.1.100:4133 \
     --deploy-dir=/tiem-deploy/tiem-cluster-4110 \
     --data-dir=/tiem-data/tiem-cluster-4110 \
     --log-level=info
@@ -115,7 +115,8 @@ $ go run init.go main.go \
     --port=4116 \
     --metrics-port=4121 \
     --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
-    --tracer-address=192.168.1.100:4123 \
+    --tracer-address=192.168.1.100:4133 \
+    --elasticsearch-address=192.168.1.100:4127 \
     --deploy-dir=/tiem-deploy/tiem-api-4115 \
     --data-dir=/tiem-data/tiem-api-4115 \
     --log-level=info

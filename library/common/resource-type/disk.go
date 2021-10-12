@@ -1,9 +1,10 @@
 package resource
 
 import (
+	"errors"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 )
 
@@ -15,15 +16,29 @@ const (
 	Sata    DiskType = "sata"
 )
 
+func ValidDiskType(diskType string) error {
+	if diskType == string(NvmeSSD) || diskType == string(SSD) || diskType == string(Sata) {
+		return nil
+	}
+	return errors.New("valid disk type: [nvme_ssd | ssd | sata]")
+}
+
 type DiskStatus int32
 
 const (
 	DISK_AVAILABLE DiskStatus = iota
+	DISK_RESERVED
 	DISK_INUSED
+	DISK_EXHAUST
+	DISK_ERROR
 )
 
 func (s DiskStatus) IsInused() bool {
 	return s == DISK_INUSED
+}
+
+func (s DiskStatus) IsExhaust() bool {
+	return s == DISK_EXHAUST
 }
 
 func (s DiskStatus) IsAvailable() bool {
@@ -37,15 +52,13 @@ type Disk struct {
 	Capacity  int32          `json:"capacity"`                      // Disk size, Unit: GB
 	Path      string         `json:"path" gorm:"size:255;not null"` // Disk mount path: [/data1]
 	Type      string         `json:"type"`                          // Disk type: [nvme-ssd/ssd/sata]
-	Status    int32          `json:"status" gorm:"index"`           // Disk Status, 0 for available, 1 for inused
-	UsedBy    string         `json:"usedby" gorm:"index"`           // Disk is used by which cluster
-	RequestId string         `json:"-" gorm:"index"`
+	Status    int32          `json:"status" gorm:"index"`           // Disk Status, 0 for available, 1 for reserved
 	CreatedAt time.Time      `json:"-"`
 	UpdatedAt time.Time      `json:"-"`
 	DeletedAt gorm.DeletedAt `json:"-"`
 }
 
 func (d *Disk) BeforeCreate(tx *gorm.DB) (err error) {
-	d.ID = uuid.New().String()
+	d.ID = uuidutil.GenerateID()
 	return nil
 }

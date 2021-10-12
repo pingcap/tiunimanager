@@ -6,6 +6,7 @@ import "db_cluster.proto";
 import "db_tiup.proto";
 import "db_task.proto";
 import "db_transport.proto";
+import "db_allocation.proto";
 
 option go_package = "./;db";
 
@@ -14,6 +15,7 @@ service TiEMDBService {
     // Auth Module
 	rpc FindTenant(DBFindTenantRequest) returns (DBFindTenantResponse);
 	rpc FindAccount(DBFindAccountRequest) returns (DBFindAccountResponse);
+	rpc FindAccountById(DBFindAccountByIdRequest) returns (DBFindAccountByIdResponse);
 	rpc SaveToken(DBSaveTokenRequest) returns (DBSaveTokenResponse);
 	rpc FindToken(DBFindTokenRequest) returns (DBFindTokenResponse);
 	rpc FindRolesByPermission(DBFindRolesByPermissionRequest) returns (DBFindRolesByPermissionResponse);
@@ -27,12 +29,17 @@ service TiEMDBService {
 	rpc CheckDetails(DBCheckDetailsRequest) returns (DBCheckDetailsResponse);
 	rpc AllocHosts(DBAllocHostsRequest) returns (DBAllocHostsResponse);
 	rpc GetFailureDomain(DBGetFailureDomainRequest) returns (DBGetFailureDomainResponse);
+	rpc AllocResources(DBAllocRequest) returns (DBAllocResponse);
+	rpc AllocResourcesInBatch(DBBatchAllocRequest) returns (DBBatchAllocResponse);
+	rpc RecycleResources(DBRecycleRequest) returns (DBRecycleResponse);
 
 	// Cluster
 	rpc CreateCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);
 	rpc DeleteCluster(DBDeleteClusterRequest) returns (DBDeleteClusterResponse);
 	rpc UpdateClusterStatus(DBUpdateClusterStatusRequest) returns (DBUpdateClusterStatusResponse);
-	rpc UpdateClusterTiupConfig(DBUpdateTiupConfigRequest) returns (DBUpdateTiupConfigResponse);
+	rpc UpdateClusterTopologyConfig(DBUpdateTopologyConfigRequest) returns (DBUpdateTopologyConfigResponse);
+	rpc CreateInstance(DBCreateInstanceRequest) returns (DBCreateInstanceResponse);
+
 	rpc LoadCluster(DBLoadClusterRequest) returns (DBLoadClusterResponse);
 	rpc ListCluster(DBListClusterRequest) returns (DBListClusterResponse);
 
@@ -42,6 +49,7 @@ service TiEMDBService {
 	rpc DeleteBackupRecord(DBDeleteBackupRecordRequest) returns (DBDeleteBackupRecordResponse);
     rpc SaveBackupStrategy(DBSaveBackupStrategyRequest) returns (DBSaveBackupStrategyResponse);
     rpc QueryBackupStrategy(DBQueryBackupStrategyRequest) returns (DBQueryBackupStrategyResponse);
+    rpc QueryBackupStrategyByTime(DBQueryBackupStrategyByTimeRequest) returns (DBQueryBackupStrategyByTimeResponse);
     rpc QueryBackupRecords(DBQueryBackupRecordRequest) returns (DBQueryBackupRecordResponse);
 	rpc ListBackupRecords(DBListBackupRecordsRequest) returns (DBListBackupRecordsResponse);
 	rpc SaveRecoverRecord(DBSaveRecoverRecordRequest) returns (DBSaveRecoverRecordResponse);

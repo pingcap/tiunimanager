@@ -35,6 +35,7 @@ type Framework interface {
 	LogWithContext(context.Context) *log.Entry
 	GetTracer() *Tracer
 	GetEtcdClient() *EtcdClient
+	GetElasticsearchClient() *ElasticSearchClient
 
 	GetServiceMeta() *ServiceMeta
 	StartService() error
@@ -73,6 +74,8 @@ type BaseFramework struct {
 	trace         *Tracer
 	etcdClient    *EtcdClient
 	certificate   *CertificateInfo
+
+	elasticsearchClient *ElasticSearchClient
 
 	serviceMeta  *ServiceMeta
 	microService micro.Service
@@ -125,6 +128,7 @@ func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFr
 	Current = f
 
 	f.initEtcdClient()
+	f.initElasticsearchClient()
 	return f
 }
 
@@ -203,6 +207,10 @@ func (b *BaseFramework) initEtcdClient() {
 	b.etcdClient = InitEtcdClient(b.GetServiceMeta().RegistryAddress)
 }
 
+func (b *BaseFramework) initElasticsearchClient() {
+	b.elasticsearchClient = InitElasticsearch(b.GetClientArgs().ElasticsearchAddress)
+}
+
 func (b *BaseFramework) GetDeployDir() string {
 	return b.args.DeployDir
 }
@@ -258,6 +266,10 @@ func (b *BaseFramework) GetTracer() *Tracer {
 
 func (b *BaseFramework) GetEtcdClient() *EtcdClient {
 	return b.etcdClient
+}
+
+func (b *BaseFramework) GetElasticsearchClient() *ElasticSearchClient {
+	return b.elasticsearchClient
 }
 
 func (b *BaseFramework) GetServiceMeta() *ServiceMeta {

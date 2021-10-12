@@ -2,6 +2,7 @@ package clusterapi
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 	"time"
 
@@ -245,7 +246,7 @@ func DescribeDashboard(c *gin.Context) {
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
 	}
-	respDTO, err := client.ClusterClient.DescribeDashboard(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.DescribeDashboard(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -255,6 +256,58 @@ func DescribeDashboard(c *gin.Context) {
 			ClusterId: respDTO.GetClusterId(),
 			Url:       respDTO.GetUrl(),
 			Token:     respDTO.GetToken(),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
+}
+
+// Restore
+// @Summary restore a new cluster by backup record
+// @Description restore a new cluster by backup record
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body RestoreReq true "restore request"
+// @Success 200 {object} controller.CommonResult{data=controller.StatusInfo}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/restore [post]
+func Restore(c *gin.Context) {
+	var req RestoreReq
+
+	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	operator := controller.GetOperator(c)
+
+	baseInfo, demand := req.ConvertToDTO()
+
+	reqDTO := &cluster.RecoverRequest{
+		Operator: operator.ConvertToDTO(),
+		Cluster:  baseInfo,
+		Demands:  demand,
+	}
+
+	respDTO, err := client.ClusterClient.RecoverCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetRespStatus()
+		if status.Code != 0 {
+			c.JSON(http.StatusInternalServerError, controller.Fail(500, status.Message))
+			return
+		}
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, RecoverClusterRsp{
+			ClusterId:       respDTO.GetClusterId(),
+			ClusterBaseInfo: *ParseClusterBaseInfoFromDTO(respDTO.GetBaseInfo()),
+			StatusInfo:      *ParseStatusFromDTO(respDTO.GetClusterStatus()),
 		})
 
 		c.JSON(http.StatusOK, result)

@@ -20,8 +20,8 @@ import (
 type ClusterAggregation struct {
 	Cluster *Cluster
 
-	CurrentTiUPConfigRecord *TiUPConfigRecord
-	CurrentWorkFlow         *FlowWorkEntity
+	CurrentTopologyConfigRecord *TopologyConfigRecord
+	CurrentWorkFlow             *FlowWorkEntity
 
 	CurrentOperator *Operator
 
@@ -201,13 +201,13 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 
-	config := &TiUPConfigRecord{
+	config := &TopologyConfigRecord{
 		TenantId:    clusterAggregation.Cluster.TenantId,
 		ClusterId:   clusterAggregation.Cluster.Id,
 		ConfigModel: convertConfig(clusterAggregation.AvailableResources, clusterAggregation.Cluster),
 	}
 
-	clusterAggregation.CurrentTiUPConfigRecord = config
+	clusterAggregation.CurrentTopologyConfigRecord = config
 	clusterAggregation.ConfigModified = true
 	task.Success(config.Id)
 	return true
@@ -216,7 +216,7 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 func deployCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
-	spec := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	spec := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 
 	if true {
 		bs, err := yaml.Marshal(spec)
@@ -263,7 +263,21 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 		}
 	}
 	getLogger().Infof("start cluster %s", cluster.ClusterName)
-	libtiup.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
+	startTaskId, err := libtiup.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
+	if err != nil {
+		getLogger().Errorf("call tiup api start cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+	context.put("startTaskId", startTaskId)
+	getLogger().Infof("got startTaskId %s", strconv.Itoa(int(startTaskId)))
+
+	task.Success(nil)
+	return true
+}
+
+func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.StatusModified = true
 	clusterAggregation.Cluster.Online()
 
@@ -367,9 +381,9 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRec
 	return &proto.BackupRecordDTO{
 		Id:         record.Id,
 		ClusterId:  record.ClusterId,
-		Range:      string(record.Range),
+		BackupMethod: string(record.BackupMethod),
 		BackupType: string(record.BackupType),
-		Mode:		string(record.BackupMode),
+		BackupMode:	string(record.BackupMode),
 		Size:      record.Size,
 		StartTime: record.StartTime,
 		EndTime:   record.EndTime,

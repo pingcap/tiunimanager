@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+option go_package = "./;cluster";
+
+message AllocResponseStatus {
+    int32 code = 1;
+    string message = 2;
+}
+
+message Applicant {
+	string holderId = 1;
+	string requestId = 2;
+}
+
+message Location {
+	string region = 1;
+	string zone = 2;
+	string rack = 3;
+	string host = 4;
+}
+
+message Excluded {
+	repeated string hosts = 1;
+}
+
+message Filter {
+	string arch = 1;
+	string purpose  = 2;
+	string diskType = 3;
+}
+
+message ComputeRequirement {
+	int32 cpuCores = 1;
+	int32 memory = 2;
+}
+
+message DiskRequirement {
+	bool needDisk = 1;
+	int32 capacity = 2;  // Reserved, not used by now
+	string diskType = 3; // Reserved, not used by now
+}
+
+message PortRequirement {
+	int32 start = 1;
+	int32 end = 2;
+	int32 portCnt = 3;
+}
+message Requirement {
+	bool exclusive = 1;
+	DiskRequirement diskReq = 2;
+	ComputeRequirement computeReq = 3;
+	repeated PortRequirement portReq = 4;
+}
+
+message AllocRequirement {
+	Location location = 1; 
+	Excluded hostExcluded = 2;
+	Filter hostFilter = 3;
+	Requirement require = 4; 
+	int32 strategy = 5;
+	int32 count  = 6;     
+}
+
+message AllocRequest {
+	Applicant applicant = 1;
+	repeated AllocRequirement requires = 2;
+}
+
+message DiskResource {
+	string diskId = 1;
+	string diskName = 2;
+	string path = 3;
+	string type = 4;
+	int32 capacity = 5;
+}
+
+message PortResource {
+	int32 start = 1;
+	int32 end = 2;
+	repeated int32 ports = 3;
+}
+
+message HostResource {
+	int32 reqseq = 1;
+	Location location = 2;
+	string hostId = 3;
+	string hostName = 4;
+	string hostIp = 5;
+	string userName = 6;
+	string passwd = 7;
+	ComputeRequirement computeRes = 8;
+	DiskResource diskRes = 9;
+	repeated PortResource portRes = 10;
+}
+
+message AllocResponse {
+    AllocResponseStatus rs = 1;
+    repeated HostResource results = 2;
+}
+
+message BatchAllocRequest {
+	repeated AllocRequest batchRequests = 1;
+}
+
+
+message BatchAllocResponse {
+	AllocResponseStatus rs = 1;
+	repeated AllocResponse batchResults = 2;
+}
+
+message RecycleRequire {
+	int32 recycleType = 1;
+	string holderId = 2;
+	string requestId = 3;
+	string hostId = 4;
+	string hostIp = 5;
+	ComputeRequirement computeReq = 6;
+	DiskResource diskReq = 7;
+	repeated PortResource portReq = 8;
+}
+
+message RecycleRequest {
+	repeated RecycleRequire RecycleReqs = 1;
+}
+
+message RecycleResponse {
+	AllocResponseStatus rs = 1;
+}

@@ -38,6 +38,8 @@ definitions:
         items:
           type: integer
         type: array
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       statusCode:
         type: string
       statusName:
@@ -135,6 +137,8 @@ definitions:
         type: string
       inProcessFlowId:
         type: integer
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       statusCode:
         type: string
       statusName:
@@ -162,6 +166,8 @@ definitions:
         items:
           $ref: '#/definitions/clusterapi.ClusterNodeDemand'
         type: array
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       tags:
         items:
           type: string
@@ -239,6 +245,8 @@ definitions:
         items:
           type: integer
         type: array
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
       statusCode:
         type: string
       statusName:
@@ -266,6 +274,36 @@ definitions:
         type: string
       zoneCode:
         type: string
+    type: object
+  clusterapi.RecoverInfo:
+    properties:
+      backupRecordId:
+        type: integer
+      sourceClusterId:
+        type: string
+    type: object
+  clusterapi.RestoreReq:
+    properties:
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      dbPassword:
+        type: string
+      nodeDemandList:
+        items:
+          $ref: '#/definitions/clusterapi.ClusterNodeDemand'
+        type: array
+      recoverInfo:
+        $ref: '#/definitions/clusterapi.RecoverInfo'
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
     type: object
   controller.CommonResult:
     properties:
@@ -333,7 +371,15 @@ definitions:
     type: object
   databaseapi.DataExportReq:
     properties:
+      accessKey:
+        type: string
+      bucketRegion:
+        type: string
+      bucketUrl:
+        type: string
       clusterId:
+        type: string
+      endpointUrl:
         type: string
       filePath:
         type: string
@@ -342,6 +388,10 @@ definitions:
       filter:
         type: string
       password:
+        type: string
+      secretAccessKey:
+        type: string
+      sql:
         type: string
       storageType:
         type: string
@@ -430,7 +480,7 @@ definitions:
       cpuCore:
         type: integer
       disk:
-        $ref: '#/definitions/resource.Disk'
+        $ref: '#/definitions/hostapi.DiskInfo'
       hostName:
         type: string
       ip:
@@ -453,6 +503,30 @@ definitions:
       memory:
         type: integer
     type: object
+  hostapi.DiskInfo:
+    properties:
+      capacity:
+        description: 'Disk size, Unit: GB'
+        type: integer
+      diskId:
+        type: string
+      hostId:
+        type: string
+      name:
+        description: '[sda/sdb/nvmep0...]'
+        type: string
+      path:
+        description: 'Disk mount path: [/data1]'
+        type: string
+      status:
+        description: Disk Status, 0 for available, 1 for inused
+        type: integer
+      type:
+        description: 'Disk type: [nvme-ssd/ssd/sata]'
+        type: string
+      usedBy:
+        type: string
+    type: object
   hostapi.DomainResource:
     properties:
       count:
@@ -466,6 +540,71 @@ definitions:
       zoneCode:
         type: string
       zoneName:
+        type: string
+    type: object
+  hostapi.HostInfo:
+    properties:
+      arch:
+        description: x86 or arm64
+        type: string
+      az:
+        type: string
+      cpuCores:
+        description: Host cpu cores spec, init while importing
+        type: integer
+      createTime:
+        type: integer
+      diskType:
+        description: Disk type of this host [sata/ssd/nvme_ssd]
+        type: string
+      disks:
+        items:
+          $ref: '#/definitions/hostapi.DiskInfo'
+        type: array
+      freeCpuCores:
+        description: Unused CpuCore, used for allocation
+        type: integer
+      freeMemory:
+        description: Unused memory size, Unit:GB, used for allocation
+        type: integer
+      hostId:
+        type: string
+      hostName:
+        type: string
+      ip:
+        type: string
+      kernel:
+        type: string
+      memory:
+        description: Host memroy, init while importing
+        type: integer
+      nic:
+        description: 'Host network type: 1GE or 10GE'
+        type: string
+      os:
+        type: string
+      passwd:
+        type: string
+      purpose:
+        description: What Purpose is the host used for? [compute/storage/general]
+        type: string
+      rack:
+        type: string
+      region:
+        type: string
+      reserved:
+        description: Whether this host is reserved - will not be allocated
+        type: boolean
+      spec:
+        description: Host Spec, init while importing
+        type: string
+      stat:
+        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+        type: integer
+      status:
+        description: Host Status, 0 for Online, 1 for offline
+        type: integer
+      userName:
         type: string
     type: object
   hostapi.SpecBaseInfo:
@@ -515,14 +654,9 @@ definitions:
       status:
         $ref: '#/definitions/controller.StatusInfo'
     type: object
-  instanceapi.BackupRecoverReq:
-    properties:
-      clusterId:
-        type: string
-    type: object
   instanceapi.BackupReq:
     properties:
-      backupRange:
+      backupMethod:
         type: string
       backupType:
         type: string
@@ -535,13 +669,9 @@ definitions:
     properties:
       backupDate:
         type: string
-      backupRange:
-        type: string
-      backupType:
-        type: string
       clusterId:
         type: string
-      filePath:
+      nextBackupTime:
         type: string
       period:
         type: string
@@ -668,79 +798,48 @@ definitions:
       unit:
         type: string
     type: object
-  resource.Disk:
+  logapi.SearchTiDBLogDetail:
     properties:
-      capacity:
-        description: 'Disk size, Unit: GB'
-        type: integer
-      diskId:
+      clusterId:
+        example: abc
         type: string
-      name:
-        description: '[sda/sdb/nvmep0...]'
+      ext:
+        additionalProperties: true
+        type: object
+      id:
+        example: zvadfwf
         type: string
-      omitempty:
-        type: string
-      path:
-        description: 'Disk mount path: [/data1]'
-        type: string
-      status:
-        description: Disk Status, 0 for available, 1 for inused
-        type: integer
-      type:
-        description: 'Disk type: [nvme-ssd/ssd/sata]'
-        type: string
-      usedby:
-        description: Disk is used by which cluster
-        type: string
-    type: object
-  resource.Host:
-    properties:
-      az:
-        type: string
-      cpuCores:
-        type: integer
-      createTime:
-        type: integer
-      dc:
-        type: string
-      disks:
-        items:
-          $ref: '#/definitions/resource.Disk'
-        type: array
-      hostId:
-        type: string
-      hostName:
+      index:
+        example: tiem-tidb-cluster-2021.09.23
         type: string
       ip:
+        example: 127.0.0.1
         type: string
-      kernel:
+      level:
+        example: warn
         type: string
-      memory:
-        description: Host memory size, Unit:GB
+      message:
+        example: tidb log
+        type: string
+      module:
+        example: tidb
+        type: string
+      sourceLine:
+        example: main.go:210
+        type: string
+      timestamp:
+        example: "2021-09-23 14:23:10"
+        type: string
+    type: object
+  logapi.SearchTiDBLogRsp:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/logapi.SearchTiDBLogDetail'
+        type: array
+      took:
+        example: 10
         type: integer
-      nic:
-        description: 'Host network type: 1GE or 10GE'
-        type: string
-      os:
-        type: string
-      passwd:
-        type: string
-      performance:
-        description: Performance type of this host [High/Medium/Low]
-        type: string
-      purpose:
-        description: What Purpose is the host used for? [compute/storage/general]
-        type: string
-      rack:
-        type: string
-      spec:
-        description: Host Spec, init while importing
-        type: string
-      status:
-        description: Host Status, 0 for Online, 1 for offline
-        type: integer
-      userName:
-        type: string
     type: object
   taskapi.FlowWorkDetailInfo:
     properties:
@@ -979,52 +1078,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: delete backup record
-      tags:
-      - cluster backup
-  /backups/{backupId}/restore:
-    post:
-      consumes:
-      - application/json
-      description: recover backup record of a cluster
-      parameters:
-      - description: backupId
-        in: path
-        name: backupId
-        required: true
-        type: string
-      - description: backup recover request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/instanceapi.BackupRecoverReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/controller.StatusInfo'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: recover backup record of a cluster
       tags:
       - cluster backup
   /clusters:
@@ -1404,9 +1457,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/instanceapi.BackupStrategy'
-                  type: array
+                  $ref: '#/definitions/instanceapi.BackupStrategy'
               type: object
         "401":
           description: Unauthorized
@@ -1558,6 +1609,47 @@ paths:
       summary: import data to tidb cluster
       tags:
       - cluster import
+  /clusters/restore:
+    post:
+      consumes:
+      - application/json
+      description: restore a new cluster by backup record
+      parameters:
+      - description: restore request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/clusterapi.RestoreReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/controller.StatusInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: restore a new cluster by backup record
+      tags:
+      - cluster
   /flowwork/{flowWorkId}:
     get:
       consumes:
@@ -1686,6 +1778,74 @@ paths:
       summary: show cluster knowledge
       tags:
       - knowledge
+  /logs/tidb/{clusterId}:
+    get:
+      consumes:
+      - application/json
+      description: search tidb log
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      - example: "2021-12-01 12:00:00"
+        in: query
+        name: endTime
+        type: string
+      - example: 127.0.0.1
+        in: query
+        name: ip
+        type: string
+      - example: warn
+        in: query
+        name: level
+        type: string
+      - example: tidb log
+        in: query
+        name: message
+        type: string
+      - example: tidb
+        in: query
+        name: module
+        type: string
+      - example: 1
+        in: query
+        name: page
+        type: integer
+      - example: 10
+        in: query
+        name: pageSize
+        type: integer
+      - example: "2021-09-01 12:00:00"
+        in: query
+        name: startTime
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/logapi.SearchTiDBLogRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: search tidb log
+      tags:
+      - logs
   /resources/allochosts:
     post:
       consumes:
@@ -1759,7 +1919,7 @@ paths:
         name: host
         required: true
         schema:
-          $ref: '#/definitions/resource.Host'
+          $ref: '#/definitions/hostapi.HostInfo'
       produces:
       - application/json
       responses:
@@ -1806,7 +1966,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/resource.Host'
+                    $ref: '#/definitions/hostapi.HostInfo'
                   type: array
               type: object
       security:
@@ -1939,7 +2099,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/resource.Host'
+                  $ref: '#/definitions/hostapi.HostInfo'
               type: object
       security:
       - ApiKeyAuth: []

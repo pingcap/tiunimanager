@@ -7,13 +7,12 @@ import (
 
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
-	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
-	log "github.com/sirupsen/logrus"
-
 	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
+	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
 	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	log "github.com/sirupsen/logrus"
 )
 
 var TiEMClusterServiceName = "go.micro.tiem.cluster"
@@ -120,13 +119,14 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterPb
 
 func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterPb.DataExportRequest, resp *clusterPb.DataExportResponse) error {
 	if err := domain.ExportDataPreCheck(req); err != nil {
+		getLogger().Error(err)
 		return err
 	}
 
-	recordId, err := domain.ExportData(req.GetOperator(), req.GetClusterId(), req.GetFilePath(), req.GetStorageType(), req.GetUserName(), req.GetPassword(), req.GetFileType(), req.GetFilter())
+	recordId, err := domain.ExportData(ctx, req)
 
 	if err != nil {
-		//todo
+		getLogger().Error(err)
 		return err
 	}
 	resp.RespStatus = SuccessResponseStatus
@@ -137,13 +137,14 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterPb.Da
 
 func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterPb.DataImportRequest, resp *clusterPb.DataImportResponse) error {
 	if err := domain.ImportDataPreCheck(req); err != nil {
+		getLogger().Error(err)
 		return err
 	}
 
-	recordId, err := domain.ImportData(req.GetOperator(), req.GetClusterId(), req.GetUserName(), req.GetPassword(), req.GetFilePath(), req.GetStorageType())
+	recordId, err := domain.ImportData(ctx, req)
 
 	if err != nil {
-		//todo
+		getLogger().Error(err)
 		return err
 	}
 	resp.RespStatus = SuccessResponseStatus
@@ -153,16 +154,16 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterPb.Da
 }
 
 func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *clusterPb.DataTransportQueryRequest, resp *clusterPb.DataTransportQueryResponse) error {
-	infos, page, err := domain.DescribeDataTransportRecord(req.GetOperator(), req.GetRecordId(), req.GetClusterId(), req.GetPageReq().GetPage(), req.GetPageReq().GetPageSize())
+	infos, page, err := domain.DescribeDataTransportRecord(ctx, req.GetOperator(), req.GetRecordId(), req.GetClusterId(), req.GetPageReq().GetPage(), req.GetPageReq().GetPageSize())
 	if err != nil {
 		//todo
 		return err
 	}
 	resp.RespStatus = SuccessResponseStatus
 	resp.PageReq = &clusterPb.PageDTO{
-		Page: page.GetPage(),
+		Page:     page.GetPage(),
 		PageSize: page.GetPageSize(),
-		Total: page.GetTotal(),
+		Total:    page.GetTotal(),
 	}
 	resp.TransportInfos = make([]*clusterPb.DataTransportInfo, len(infos))
 	for index := 0; index < len(infos); index++ {
@@ -182,7 +183,7 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterPb.CreateBackupRequest, response *clusterPb.CreateBackupResponse) (err error) {
 	getLogger().Info("backup cluster")
 
-	clusterAggregation, err := domain.Backup(request.Operator, request.ClusterId, request.BackupRange, request.BackupType, request.FilePath)
+	clusterAggregation, err := domain.Backup(ctx, request.Operator, request.ClusterId, request.BackupMethod, request.BackupType, domain.BackupModeManual, request.FilePath)
 	if err != nil {
 		getLogger().Info(err)
 		// todo
@@ -194,18 +195,25 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	}
 }
 
-func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request *clusterPb.RecoverBackupRequest, response *clusterPb.RecoverBackupResponse) (err error) {
+func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterPb.RecoverRequest, resp *clusterPb.RecoverResponse) (err error) {
 	getLogger().Info("recover cluster")
 
-	//todo: param precheck
-	cluster, err := domain.Recover(request.Operator, request.ClusterId, request.BackupRecordId)
+	if err = domain.RecoverPreCheck(req); err != nil {
+		getLogger().Errorf("recover cluster pre check failed, %s", err.Error())
+		return err
+	}
 
+	clusterAggregation, err := domain.Recover(ctx, req.GetOperator(), req.GetCluster(), req.GetDemands())
 	if err != nil {
 		getLogger().Info(err)
-		return nil
+		resp.RespStatus = BizErrorResponseStatus
+		resp.RespStatus.Message = err.Error()
+		return err
 	} else {
-		response.Status = SuccessResponseStatus
-		response.RecoverRecord = cluster.ExtractRecoverRecordDTO()
+		resp.RespStatus = SuccessResponseStatus
+		resp.ClusterId = clusterAggregation.Cluster.Id
+		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
+		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 		return nil
 	}
 }
@@ -213,7 +221,7 @@ func (c ClusterServiceHandler) RecoverBackupRecord(ctx context.Context, request 
 func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *clusterPb.DeleteBackupRequest, response *clusterPb.DeleteBackupResponse) (err error) {
 	getLogger().Info("delete backup")
 
-	err = domain.DeleteBackup(request.Operator, request.GetClusterId(), request.GetBackupRecordId())
+	err = domain.DeleteBackup(ctx, request.Operator, request.GetClusterId(), request.GetBackupRecordId())
 	if err != nil {
 		// todo
 		getLogger().Info(err)
@@ -225,92 +233,42 @@ func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *
 }
 
 func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *clusterPb.SaveBackupStrategyRequest, response *clusterPb.SaveBackupStrategyResponse) (err error) {
-	_, err = client.DBClient.SaveBackupStrategy(context.TODO(), &dbPb.DBSaveBackupStrategyRequest{
-		Strategy: &dbPb.DBBackupStrategyDTO{
-			TenantId:    request.Operator.TenantId,
-			ClusterId:   request.Strategy.ClusterId,
-			BackupDate:  request.Strategy.BackupDate,
-			FilePath:    request.Strategy.FilePath,
-			BackupRange: request.Strategy.BackupRange,
-			BackupType:  request.Strategy.BackupType,
-			Period:      request.Strategy.Period,
-		},
-	})
+	getLogger().Info("save backup strategy")
+
+	err = domain.SaveBackupStrategyPreCheck(request.GetOperator(), request.GetStrategy())
 	if err != nil {
+		getLogger().Error(err)
+		return err
+	}
+
+	err = domain.SaveBackupStrategy(ctx, request.GetOperator(), request.GetStrategy())
+	if err != nil {
+		// todo
 		getLogger().Error(err)
 		return err
 	} else {
 		response.Status = SuccessResponseStatus
 		return nil
 	}
-	/*
-		cronEntity, err := domain.TaskRepo.QueryCronTask(request.ClusterId, int(domain.CronBackup))
-
-		if err != nil {
-			// todo
-			getLogger().Info(err)
-			return err
-		}
-
-		if cronEntity == nil {
-			cronEntity = &domain.CronTaskEntity{
-				Cron:         request.Cron,
-				BizId:        request.ClusterId,
-				CronTaskType: domain.CronBackup,
-				Status:       domain.CronStatusValid,
-			}
-
-			domain.TaskRepo.AddCronTask(cronEntity)
-		} else {
-			cronEntity.Cron = request.Cron
-		}
-
-		return nil
-	*/
 }
 
 func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *clusterPb.GetBackupStrategyRequest, response *clusterPb.GetBackupStrategyResponse) (err error) {
-	resp, err := client.DBClient.QueryBackupStrategy(context.TODO(), &dbPb.DBQueryBackupStrategyRequest{
-		ClusterId: request.ClusterId,
-	})
+	strategy, err := domain.QueryBackupStrategy(ctx, request.GetOperator(), request.GetClusterId())
 	if err != nil {
 		getLogger().Error(err)
 		return err
 	} else {
 		response.Status = SuccessResponseStatus
-		response.Strategy = &clusterPb.BackupStrategy{
-			ClusterId:   resp.GetStrategy().GetClusterId(),
-			BackupDate:  resp.GetStrategy().GetBackupDate(),
-			FilePath:    resp.GetStrategy().GetFilePath(),
-			BackupRange: resp.GetStrategy().GetBackupRange(),
-			BackupType:  resp.GetStrategy().GetBackupType(),
-			Period:      resp.GetStrategy().GetPeriod(),
-		}
+		response.Strategy = strategy
 		return nil
 	}
-
-	/*
-		cronEntity, err := domain.TaskRepo.QueryCronTask(request.ClusterId, int(domain.CronBackup))
-
-		if err != nil {
-			// todo
-			getLogger().Info(err)
-			return err
-		}
-
-		response.Status = SuccessResponseStatus
-		response.Cron = cronEntity.Cron
-
-		return nil
-
-	*/
 }
 
 func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *clusterPb.QueryBackupRequest, response *clusterPb.QueryBackupResponse) (err error) {
 	result, err := client.DBClient.ListBackupRecords(context.TODO(), &dbPb.DBListBackupRecordsRequest{
 		ClusterId: request.ClusterId,
 		StartTime: request.StartTime,
-		EndTime: request.EndTime,
+		EndTime:   request.EndTime,
 		Page: &dbPb.DBPageDTO{
 			Page:     request.Page.Page,
 			PageSize: request.Page.PageSize,
@@ -330,15 +288,15 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 		response.BackupRecords = make([]*clusterPb.BackupRecordDTO, len(result.BackupRecords))
 		for i, v := range result.BackupRecords {
 			response.BackupRecords[i] = &clusterPb.BackupRecordDTO{
-				Id:         v.BackupRecord.Id,
-				ClusterId:  v.BackupRecord.ClusterId,
-				Range:      v.BackupRecord.BackupRange,
-				BackupType: v.BackupRecord.BackupType,
-				Mode:  		v.BackupRecord.BackupMode,
-				FilePath:   v.BackupRecord.FilePath,
-				StartTime:  v.Flow.CreateTime,
-				EndTime:    v.Flow.UpdateTime,
-				Size:       v.BackupRecord.Size,
+				Id:           v.BackupRecord.Id,
+				ClusterId:    v.BackupRecord.ClusterId,
+				BackupMethod: v.BackupRecord.BackupMethod,
+				BackupType:   v.BackupRecord.BackupType,
+				BackupMode:   v.BackupRecord.BackupMode,
+				FilePath:     v.BackupRecord.FilePath,
+				StartTime:    v.Flow.CreateTime,
+				EndTime:      v.Flow.UpdateTime,
+				Size:         v.BackupRecord.Size,
 				Operator: &clusterPb.OperatorDTO{
 					Id: v.BackupRecord.OperatorId,
 				},
@@ -387,7 +345,7 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 }
 
 func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *clusterPb.DescribeDashboardRequest, response *clusterPb.DescribeDashboardResponse) (err error) {
-	info, err := domain.DescribeDashboard(request.Operator, request.ClusterId)
+	info, err := domain.DescribeDashboard(ctx, request.Operator, request.ClusterId)
 	if err != nil {
 		getLogger().Error(err)
 		return err
@@ -412,7 +370,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterPb.Lis
 	response.Page = &clusterPb.PageDTO{
 		Page:     req.Page.Page,
 		PageSize: req.Page.PageSize,
-		Total: int32(total),
+		Total:    int32(total),
 	}
 
 	response.Flows = make([]*clusterPb.FlowDTO, len(flows), len(flows))
@@ -422,13 +380,13 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterPb.Lis
 			FlowName:    v.FlowName,
 			StatusAlias: v.StatusAlias,
 			BizId:       v.BizId,
-			Status: int32(v.Status),
-			StatusName: v.Status.Display(),
-			CreateTime: v.CreateTime.Unix(),
-			UpdateTime: v.UpdateTime.Unix(),
+			Status:      int32(v.Status),
+			StatusName:  v.Status.Display(),
+			CreateTime:  v.CreateTime.Unix(),
+			UpdateTime:  v.UpdateTime.Unix(),
 			Operator: &clusterPb.OperatorDTO{
-				Name: v.Operator.Name,
-				Id: v.Operator.Id,
+				Name:     v.Operator.Name,
+				Id:       v.Operator.Id,
 				TenantId: v.Operator.TenantId,
 			},
 		}
@@ -537,4 +495,12 @@ func (clusterManager *ClusterServiceHandler) AllocHosts(ctx context.Context, in 
 
 func (clusterManager *ClusterServiceHandler) GetFailureDomain(ctx context.Context, in *clusterPb.GetFailureDomainRequest, out *clusterPb.GetFailureDomainResponse) error {
 	return clusterManager.resourceManager.GetFailureDomain(ctx, in, out)
+}
+
+func (clusterManager *ClusterServiceHandler) AllocResourcesInBatch(ctx context.Context, in *clusterPb.BatchAllocRequest, out *clusterPb.BatchAllocResponse) error {
+	return clusterManager.resourceManager.AllocResourcesInBatch(ctx, in, out)
+}
+
+func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Context, in *clusterPb.RecycleRequest, out *clusterPb.RecycleResponse) error {
+	return clusterManager.resourceManager.RecycleResources(ctx, in, out)
 }

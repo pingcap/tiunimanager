@@ -15,14 +15,16 @@ type ClusterFakeService struct {
 	mockLogout         func(ctx context.Context, in *cluster.LogoutRequest, opts ...micro.CallOption) (*cluster.LogoutResponse, error)
 	mockVerifyIdentity func(ctx context.Context, in *cluster.VerifyIdentityRequest, opts ...micro.CallOption) (*cluster.VerifyIdentityResponse, error)
 	// host manager module
-	mockImportHost         func(ctx context.Context, in *cluster.ImportHostRequest, opts ...micro.CallOption) (*cluster.ImportHostResponse, error)
-	mockImportHostsInBatch func(ctx context.Context, in *cluster.ImportHostsInBatchRequest, opts ...micro.CallOption) (*cluster.ImportHostsInBatchResponse, error)
-	mockRemoveHost         func(ctx context.Context, in *cluster.RemoveHostRequest, opts ...micro.CallOption) (*cluster.RemoveHostResponse, error)
-	mockRemoveHostsInBatch func(ctx context.Context, in *cluster.RemoveHostsInBatchRequest, opts ...micro.CallOption) (*cluster.RemoveHostsInBatchResponse, error)
-	mockListHost           func(ctx context.Context, in *cluster.ListHostsRequest, opts ...micro.CallOption) (*cluster.ListHostsResponse, error)
-	mockCheckDetails       func(ctx context.Context, in *cluster.CheckDetailsRequest, opts ...micro.CallOption) (*cluster.CheckDetailsResponse, error)
-	mockAllocHosts         func(ctx context.Context, in *cluster.AllocHostsRequest, opts ...micro.CallOption) (*cluster.AllocHostResponse, error)
-	mockGetFailureDomain   func(ctx context.Context, in *cluster.GetFailureDomainRequest, opts ...micro.CallOption) (*cluster.GetFailureDomainResponse, error)
+	mockImportHost            func(ctx context.Context, in *cluster.ImportHostRequest, opts ...micro.CallOption) (*cluster.ImportHostResponse, error)
+	mockImportHostsInBatch    func(ctx context.Context, in *cluster.ImportHostsInBatchRequest, opts ...micro.CallOption) (*cluster.ImportHostsInBatchResponse, error)
+	mockRemoveHost            func(ctx context.Context, in *cluster.RemoveHostRequest, opts ...micro.CallOption) (*cluster.RemoveHostResponse, error)
+	mockRemoveHostsInBatch    func(ctx context.Context, in *cluster.RemoveHostsInBatchRequest, opts ...micro.CallOption) (*cluster.RemoveHostsInBatchResponse, error)
+	mockListHost              func(ctx context.Context, in *cluster.ListHostsRequest, opts ...micro.CallOption) (*cluster.ListHostsResponse, error)
+	mockCheckDetails          func(ctx context.Context, in *cluster.CheckDetailsRequest, opts ...micro.CallOption) (*cluster.CheckDetailsResponse, error)
+	mockAllocHosts            func(ctx context.Context, in *cluster.AllocHostsRequest, opts ...micro.CallOption) (*cluster.AllocHostResponse, error)
+	mockGetFailureDomain      func(ctx context.Context, in *cluster.GetFailureDomainRequest, opts ...micro.CallOption) (*cluster.GetFailureDomainResponse, error)
+	mockAllocResourcesInBatch func(ctx context.Context, in *cluster.BatchAllocRequest, opts ...micro.CallOption) (*cluster.BatchAllocResponse, error)
+	mockRecycleResources      func(ctx context.Context, in *cluster.RecycleRequest, opts ...micro.CallOption) (*cluster.RecycleResponse, error)
 }
 
 func (s *ClusterFakeService) ListFlows(ctx context.Context, in *cluster.ListFlowsRequest, opts ...micro.CallOption) (*cluster.ListFlowsResponse, error) {
@@ -64,6 +66,12 @@ func (s *ClusterFakeService) AllocHosts(ctx context.Context, in *cluster.AllocHo
 }
 func (s *ClusterFakeService) GetFailureDomain(ctx context.Context, in *cluster.GetFailureDomainRequest, opts ...micro.CallOption) (*cluster.GetFailureDomainResponse, error) {
 	return s.mockGetFailureDomain(ctx, in, opts...)
+}
+func (s *ClusterFakeService) AllocResourcesInBatch(ctx context.Context, in *cluster.BatchAllocRequest, opts ...micro.CallOption) (*cluster.BatchAllocResponse, error) {
+	return s.mockAllocResourcesInBatch(ctx, in, opts...)
+}
+func (s *ClusterFakeService) RecycleResources(ctx context.Context, in *cluster.RecycleRequest, opts ...micro.CallOption) (*cluster.RecycleResponse, error) {
+	return s.mockRecycleResources(ctx, in, opts...)
 }
 
 func InitFakeClusterClient() *ClusterFakeService {
@@ -155,6 +163,10 @@ func (s *ClusterFakeService) DetailCluster(ctx context.Context, in *cluster.Clus
 	panic("implement me")
 }
 
+func (s *ClusterFakeService) RecoverCluster(ctx context.Context, in *cluster.RecoverRequest, opts ...micro.CallOption) (*cluster.RecoverResponse, error) {
+	panic("implement me")
+}
+
 func (s *ClusterFakeService) QueryBackupRecord(ctx context.Context, in *cluster.QueryBackupRequest, opts ...micro.CallOption) (*cluster.QueryBackupResponse, error) {
 	panic("implement me")
 }
@@ -163,7 +175,7 @@ func (s *ClusterFakeService) CreateBackup(ctx context.Context, in *cluster.Creat
 	panic("implement me")
 }
 
-func (s *ClusterFakeService) RecoverBackupRecord(ctx context.Context, in *cluster.RecoverBackupRequest, opts ...micro.CallOption) (*cluster.RecoverBackupResponse, error) {
+func (s *ClusterFakeService) RecoverBackupRecord(ctx context.Context, in *cluster.RecoverRequest, opts ...micro.CallOption) (*cluster.RecoverResponse, error) {
 	panic("implement me")
 }
 

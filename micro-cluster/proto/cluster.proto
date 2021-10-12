@@ -5,6 +5,7 @@ import "softwarespec.proto";
 import "database.proto";
 import "mng_auth.proto";
 import "mng_host.proto";
+import "mng_allocation.proto";
 option go_package = "./;cluster";
 
 service ClusterService {
@@ -20,7 +21,7 @@ service ClusterService {
 
     rpc QueryBackupRecord(QueryBackupRequest) returns (QueryBackupResponse);
     rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
-    rpc RecoverBackupRecord(RecoverBackupRequest) returns (RecoverBackupResponse);
+    rpc RecoverCluster(RecoverRequest) returns (RecoverResponse);
     rpc DeleteBackupRecord(DeleteBackupRequest) returns (DeleteBackupResponse);
     rpc SaveBackupStrategy(SaveBackupStrategyRequest) returns (SaveBackupStrategyResponse);
     rpc GetBackupStrategy(GetBackupStrategyRequest) returns (GetBackupStrategyResponse);
@@ -44,6 +45,8 @@ service ClusterService {
     rpc CheckDetails(CheckDetailsRequest) returns (CheckDetailsResponse);
     rpc AllocHosts(AllocHostsRequest) returns (AllocHostResponse);
     rpc GetFailureDomain(GetFailureDomainRequest) returns (GetFailureDomainResponse);
+    rpc AllocResourcesInBatch(BatchAllocRequest) returns (BatchAllocResponse);
+    rpc RecycleResources(RecycleRequest) returns (RecycleResponse);
 
     // task manager
     rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);
@@ -215,9 +218,9 @@ message BackupRecordDTO {
     string clusterId = 2;
     int64 startTime = 3;
     int64 endTime = 4;
-    string range = 5;
+    string backupMethod = 5;
     string backupType = 6;
-    string mode = 7;
+    string backupMode = 7;
     OperatorDTO operator = 8;
     uint64 size = 9;
     DisplayStatusDTO displayStatus = 10;
@@ -241,7 +244,7 @@ message QueryBackupResponse {
 message CreateBackupRequest {
     string clusterId = 1;
     string backupType = 2;
-    string backupRange = 3;
+    string backupMethod = 3;
     string filePath = 4;
     OperatorDTO operator = 5;
 }
@@ -251,15 +254,17 @@ message CreateBackupResponse {
     BackupRecordDTO backupRecord = 2;
 }
 
-message RecoverBackupRequest {
-    string clusterId = 1;
-    OperatorDTO operator = 2;
-    int64 backupRecordId = 3;
+message RecoverRequest {
+    OperatorDTO operator = 1;
+    ClusterBaseInfoDTO cluster = 2;
+    repeated ClusterNodeDemandDTO demands = 3;
 }
 
-message RecoverBackupResponse {
-    ResponseStatusDTO status = 1;
-    BackupRecoverRecordDTO recoverRecord = 2;
+message RecoverResponse {
+   ResponseStatusDTO respStatus = 1;
+   string clusterId = 2;
+   ClusterBaseInfoDTO baseInfo = 3;
+   DisplayStatusDTO clusterStatus = 4;
 }
 
 message BackupRecoverRecordDTO {
@@ -284,10 +289,8 @@ message DeleteBackupResponse {
 message BackupStrategy {
     string clusterId = 1;
     string backupDate = 2;
-    string filePath = 3;
-    string backupRange = 4;
-    string backupType = 5;
-    string period = 6;
+    string period = 3;
+    int64 NextBackupTime = 4;
 }
 
 message SaveBackupStrategyRequest {
@@ -302,12 +305,11 @@ message SaveBackupStrategyResponse {
 message GetBackupStrategyRequest {
     string clusterId = 1;
     OperatorDTO operator = 2;
-
 }
 
 message GetBackupStrategyResponse {
     ResponseStatusDTO status = 1;
-     BackupStrategy strategy = 2;
+    BackupStrategy strategy = 2;
 }
 
 message QueryClusterParametersRequest {

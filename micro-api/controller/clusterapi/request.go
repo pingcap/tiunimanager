@@ -9,6 +9,11 @@ type CreateReq struct {
 	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
 }
 
+type RestoreReq struct {
+	ClusterBaseInfo
+	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
+}
+
 type QueryReq struct {
 	controller.PageRequest
 	ClusterId     string `json:"clusterId" form:"clusterId"`

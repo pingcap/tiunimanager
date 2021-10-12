@@ -1,6 +1,7 @@
 package databaseapi
 
 import (
+	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 	"time"
 
@@ -33,15 +34,21 @@ func ExportData(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	respDTO, err := client.ClusterClient.ExportData(c, &cluster.DataExportRequest{
+	respDTO, err := client.ClusterClient.ExportData(framework.NewMicroCtxFromGinCtx(c), &cluster.DataExportRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: req.ClusterId,
 		UserName:  req.UserName,
 		Password:  req.Password,
 		FileType:  req.FileType,
 		Filter:    req.Filter,
+		Sql:       req.Sql,
 		FilePath:  req.FilePath,
 		StorageType: req.StorageType,
+		BucketUrl: req.BucketUrl,
+		BucketRegion: req.BucketRegion,
+		EndpointUrl: req.EndpointUrl,
+		AccessKey: req.AccessKey,
+		SecretAccessKey: req.SecretAccessKey,
 	}, controller.DefaultTimeout)
 
 	if err != nil {
@@ -80,7 +87,7 @@ func ImportData(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	respDTO, err := client.ClusterClient.ImportData(c, &cluster.DataImportRequest{
+	respDTO, err := client.ClusterClient.ImportData(framework.NewMicroCtxFromGinCtx(c), &cluster.DataImportRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: req.ClusterId,
 		UserName:  req.UserName,
@@ -126,7 +133,7 @@ func DescribeDataTransport(c *gin.Context) {
 	}
 
 	operator := controller.GetOperator(c)
-	respDTO, err := client.ClusterClient.DescribeDataTransport(c, &cluster.DataTransportQueryRequest{
+	respDTO, err := client.ClusterClient.DescribeDataTransport(framework.NewMicroCtxFromGinCtx(c), &cluster.DataTransportQueryRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: clusterId,
 		RecordId:  req.RecordId,

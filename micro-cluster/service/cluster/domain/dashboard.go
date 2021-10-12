@@ -2,15 +2,14 @@ package domain
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/tiup/pkg/utils/rand"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -43,7 +42,7 @@ type Dashboard struct {
 var loginUrlSuffix string = "api/user/login"
 var defaultExpire int64 = 60 * 60 * 3 //3 hour expire
 
-func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
+func DescribeDashboard(ctx context.Context, ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
 	//todo: check operator and clusterId
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil || clusterAggregation == nil || clusterAggregation.Cluster == nil {
@@ -57,7 +56,7 @@ func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, er
 	}*/
 	url := getDashboardUrlFromCluser(clusterAggregation)
 
-	token, err := getLoginToken(url, "root", "") //todo: replace by real data
+	token, err := getLoginToken(ctx, url, "root", "") //todo: replace by real data
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +71,7 @@ func DescribeDashboard(ope *proto.OperatorDTO, clusterId string) (*Dashboard, er
 }
 
 func getDashboardUrlFromCluser(clusterAggregation *ClusterAggregation) string {
-	configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
+	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	pdNum := len(configModel.PDServers)
 	pdServer := configModel.PDServers[rand.Intn(pdNum)]
 	pdClientPort := pdServer.ClientPort
@@ -82,29 +81,13 @@ func getDashboardUrlFromCluser(clusterAggregation *ClusterAggregation) string {
 	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.Host, pdClientPort)
 }
 
-func getDashboardUrl(clusterAggregation *ClusterAggregation) (string, error) {
-	clusterName := clusterAggregation.Cluster.ClusterName
-	getLogger().Infof("begin call tiupmgr: tiup cluster display %s --dashboard", clusterName)
-
-	//tiup cluster display CLUSTER_NAME --dashboard
-	resp := libtiup.MicroSrvTiupClusterDisplay(clusterName, 0, []string{"--dashboard"})
-	if resp.ErrorStr != "" {
-		getLogger().Errorf("call tiupmgr cluster display failed, %s", resp.ErrorStr)
-		return "", errors.New(resp.ErrorStr)
-	}
-	getLogger().Infof("call tiupmgr success, resp: %v", resp)
-	//DisplayRespString: "Dashboard URL: http://127.0.0.1:2379/dashboard/\n"
-	result := strings.Split(strings.Replace(resp.DisplayRespString, "\n", "", -1), " ")
-	return result[2], nil
-}
-
-func getLoginToken(dashboardUrl, userName, password string) (string, error) {
+func getLoginToken(ctx context.Context, dashboardUrl, userName, password string) (string, error) {
 	url := fmt.Sprintf("%s%s", dashboardUrl, loginUrlSuffix)
 	body := &LoginRequest{
 		Username: userName,
 		Password: password,
 	}
-	resp, err := post(url, body, nil)
+	resp, err := post(ctx, url, body, nil)
 	if err != nil {
 		return "", err
 	}
@@ -118,12 +101,12 @@ func getLoginToken(dashboardUrl, userName, password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	getLogger().Infof("getLoginToken resp: %v", loginResp)
+	getLoggerWithContext(ctx).Infof("getLoginToken resp: %v", loginResp)
 
 	return loginResp.Token, nil
 }
 
-func post(url string, body interface{}, headers map[string]string) (*http.Response, error) {
+func post(ctx context.Context, url string, body interface{}, headers map[string]string) (*http.Response, error) {
 	//add post body
 	var bodyJson []byte
 	var req *http.Request
@@ -147,6 +130,6 @@ func post(url string, body interface{}, headers map[string]string) (*http.Respon
 
 	//http client
 	client := &http.Client{}
-	getLogger().Infof("%s URL : %s \n", http.MethodPost, req.URL.String())
+	getLoggerWithContext(ctx).Infof("%s URL : %s \n", http.MethodPost, req.URL.String())
 	return client.Do(req)
 }

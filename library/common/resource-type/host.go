@@ -4,11 +4,51 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
+
+type FailureDomain int32
+
+const (
+	ROOT FailureDomain = iota
+	REGION
+	ZONE
+	RACK
+	HOST
+	DISK
+)
+
+type ArchType string
+
+const (
+	Arm64 ArchType = "ARM64"
+	X86   ArchType = "X86"
+)
+
+func ValidArch(arch string) error {
+	if arch == string(X86) || arch == string(Arm64) {
+		return nil
+	}
+	return errors.New("valid arch type: [ARM64 | X86]")
+}
+
+type Purpose string
+
+const (
+	Compute Purpose = "Compute"
+	Storage Purpose = "Storage"
+	General Purpose = "General"
+)
+
+func ValidPurposeType(p string) error {
+	if p == string(Compute) || p == string(Storage) || p == string(General) {
+		return nil
+	}
+	return errors.New("valid purpose: [Compute | Storage | General]")
+}
 
 type HostStatus int32
 
@@ -16,8 +56,6 @@ const (
 	HOST_WHATEVER HostStatus = iota - 1
 	HOST_ONLINE
 	HOST_OFFLINE
-	HOST_INUSED
-	HOST_EXHAUST
 	HOST_DELETED
 )
 
@@ -26,13 +64,22 @@ func (s HostStatus) IsValid() bool {
 	return (s >= HOST_WHATEVER && s <= HOST_DELETED)
 }
 
-func (s HostStatus) IsInused() bool {
-	return s == HOST_INUSED || s == HOST_EXHAUST
+func (h Host) IsInused() bool {
+	return h.Stat == HOST_INUSED || h.Stat == HOST_EXHAUST
 }
 
-func (s HostStatus) IsAvailable() bool {
-	return (s == HOST_ONLINE || s == HOST_INUSED)
+func (h Host) IsAvailable() bool {
+	return (HostStatus(h.Status) == HOST_ONLINE && (h.Stat == HOST_LOADLESS || h.Stat == HOST_INUSED))
 }
+
+type HostStat int32
+
+const (
+	HOST_LOADLESS = iota
+	HOST_INUSED
+	HOST_EXHAUST
+	HOST_EXCLUSIVE
+)
 
 type Host struct {
 	ID           string         `json:"hostId" gorm:"PrimaryKey"`
@@ -40,22 +87,28 @@ type Host struct {
 	UserName     string         `json:"userName,omitempty" gorm:"size:32"`
 	Passwd       string         `json:"passwd,omitempty" gorm:"size:32"`
 	HostName     string         `json:"hostName" gorm:"size:255"`
-	Status       int32          `json:"status" gorm:"index"` // Host Status, 0 for Online, 1 for offline
+	Status       int32          `json:"status" gorm:"index"`         // Host Status, 0 for Online, 1 for offline
+	Stat         int32          `json:"stat" gorm:"index;default:0"` // Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+	Arch         string         `json:"arch" gorm:"index"`           // x86 or arm64
 	OS           string         `json:"os" gorm:"size:32"`
 	Kernel       string         `json:"kernel" gorm:"size:32"`
-	CpuCores     int32          `json:"cpuCores"`
-	Memory       int32          `json:"memory"`             // Host memory size, Unit:GB
 	Spec         string         `json:"spec"`               // Host Spec, init while importing
+	CpuCores     int32          `json:"cpuCores"`           // Host cpu cores spec, init while importing
+	Memory       int32          `json:"memory"`             // Host memroy, init while importing
+	FreeCpuCores int32          `json:"freeCpuCores"`       // Unused CpuCore, used for allocation
+	FreeMemory   int32          `json:"freeMemory"`         // Unused memory size, Unit:GB, used for allocation
 	Nic          string         `json:"nic" gorm:"size:32"` // Host network type: 1GE or 10GE
-	DC           string         `json:"dc" gorm:"size:32"`
+	Region       string         `json:"region" gorm:"size:32"`
 	AZ           string         `json:"az" gorm:"index"`
-	Rack         string         `json:"rack" gorm:"size:32"`
-	Purpose      string         `json:"purpose" gorm:"index"`     // What Purpose is the host used for? [compute/storage/general]
-	Performance  string         `json:"performance" gorm:"index"` // Performance type of this host [High/Medium/Low]
+	Rack         string         `json:"rack" gorm:"index"`
+	Purpose      string         `json:"purpose" gorm:"index"`  // What Purpose is the host used for? [compute/storage/general]
+	DiskType     string         `json:"diskType" gorm:"index"` // Disk type of this host [sata/ssd/nvme_ssd]
+	Reserved     bool           `json:"reserved" gorm:"index"` // Whether this host is reserved - will not be allocated
 	Disks        []Disk         `json:"disks"`
+	UsedDisks    []UsedDisk     `json:"-"`
 	UsedComputes []UsedCompute  `json:"-"`
 	UsedPorts    []UsedPort     `json:"-"`
-	CreatedAt    int64          `json:"createTime" gorm:"autoCreateTime"`
+	CreatedAt    time.Time      `json:"createTime"`
 	UpdatedAt    time.Time      `json:"-"`
 	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
 }
@@ -68,7 +121,18 @@ func (h Host) IsExhaust() bool {
 			break
 		}
 	}
-	return diskExaust || h.CpuCores == 0 || h.Memory == 0
+	return diskExaust || h.FreeCpuCores == 0 || h.FreeMemory == 0
+}
+
+func (h Host) IsLoadless() bool {
+	diskLoadless := true
+	for _, disk := range h.Disks {
+		if disk.Status == int32(DISK_EXHAUST) || disk.Status == int32(DISK_INUSED) {
+			diskLoadless = false
+			break
+		}
+	}
+	return diskLoadless && h.FreeCpuCores == h.CpuCores && h.FreeMemory == h.Memory
 }
 
 func (h *Host) SetDiskStatus(diskId string, s DiskStatus) {
@@ -86,7 +150,7 @@ func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 		return status.Errorf(codes.AlreadyExists, "host %s(%s) is existed", h.HostName, h.IP)
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		h.ID = uuid.New().String()
+		h.ID = uuidutil.GenerateID()
 		return nil
 	} else {
 		return err
@@ -100,7 +164,7 @@ func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
 			return status.Errorf(codes.NotFound, "host %s is not found", h.ID)
 		}
 	} else {
-		if HostStatus(h.Status).IsInused() {
+		if h.IsInused() {
 			return status.Errorf(codes.PermissionDenied, "host %s is still in used", h.ID)
 		}
 	}

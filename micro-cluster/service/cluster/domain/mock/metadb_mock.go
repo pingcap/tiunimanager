@@ -6,11 +6,11 @@ package mock
 
 import (
 	context "context"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	reflect "reflect"
 
 	client "github.com/asim/go-micro/v3/client"
 	gomock "github.com/golang/mock/gomock"
-	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 // MockTiEMDBService is a mock of TiEMDBService interface.
@@ -37,14 +37,14 @@ func (m *MockTiEMDBService) EXPECT() *MockTiEMDBServiceMockRecorder {
 }
 
 // AddHost mocks base method.
-func (m *MockTiEMDBService) AddHost(ctx context.Context, in *db.DBAddHostRequest, opts ...client.CallOption) (*db.DBAddHostResponse, error) {
+func (m *MockTiEMDBService) AddHost(ctx context.Context, in *dbpb.DBAddHostRequest, opts ...client.CallOption) (*dbpb.DBAddHostResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "AddHost", varargs...)
-	ret0, _ := ret[0].(*db.DBAddHostResponse)
+	ret0, _ := ret[0].(*dbpb.DBAddHostResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -57,14 +57,14 @@ func (mr *MockTiEMDBServiceMockRecorder) AddHost(ctx, in interface{}, opts ...in
 }
 
 // AddHostsInBatch mocks base method.
-func (m *MockTiEMDBService) AddHostsInBatch(ctx context.Context, in *db.DBAddHostsInBatchRequest, opts ...client.CallOption) (*db.DBAddHostsInBatchResponse, error) {
+func (m *MockTiEMDBService) AddHostsInBatch(ctx context.Context, in *dbpb.DBAddHostsInBatchRequest, opts ...client.CallOption) (*dbpb.DBAddHostsInBatchResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "AddHostsInBatch", varargs...)
-	ret0, _ := ret[0].(*db.DBAddHostsInBatchResponse)
+	ret0, _ := ret[0].(*dbpb.DBAddHostsInBatchResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -77,14 +77,14 @@ func (mr *MockTiEMDBServiceMockRecorder) AddHostsInBatch(ctx, in interface{}, op
 }
 
 // AllocHosts mocks base method.
-func (m *MockTiEMDBService) AllocHosts(ctx context.Context, in *db.DBAllocHostsRequest, opts ...client.CallOption) (*db.DBAllocHostsResponse, error) {
+func (m *MockTiEMDBService) AllocHosts(ctx context.Context, in *dbpb.DBAllocHostsRequest, opts ...client.CallOption) (*dbpb.DBAllocHostsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "AllocHosts", varargs...)
-	ret0, _ := ret[0].(*db.DBAllocHostsResponse)
+	ret0, _ := ret[0].(*dbpb.DBAllocHostsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -97,14 +97,14 @@ func (mr *MockTiEMDBServiceMockRecorder) AllocHosts(ctx, in interface{}, opts ..
 }
 
 // AllocResources mocks base method.
-func (m *MockTiEMDBService) AllocResources(ctx context.Context, in *db.DBAllocRequest, opts ...client.CallOption) (*db.DBAllocResponse, error) {
+func (m *MockTiEMDBService) AllocResources(ctx context.Context, in *dbpb.DBAllocRequest, opts ...client.CallOption) (*dbpb.DBAllocResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "AllocResources", varargs...)
-	ret0, _ := ret[0].(*db.DBAllocResponse)
+	ret0, _ := ret[0].(*dbpb.DBAllocResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -117,14 +117,14 @@ func (mr *MockTiEMDBServiceMockRecorder) AllocResources(ctx, in interface{}, opt
 }
 
 // AllocResourcesInBatch mocks base method.
-func (m *MockTiEMDBService) AllocResourcesInBatch(ctx context.Context, in *db.DBBatchAllocRequest, opts ...client.CallOption) (*db.DBBatchAllocResponse, error) {
+func (m *MockTiEMDBService) AllocResourcesInBatch(ctx context.Context, in *dbpb.DBBatchAllocRequest, opts ...client.CallOption) (*dbpb.DBBatchAllocResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "AllocResourcesInBatch", varargs...)
-	ret0, _ := ret[0].(*db.DBBatchAllocResponse)
+	ret0, _ := ret[0].(*dbpb.DBBatchAllocResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -137,14 +137,14 @@ func (mr *MockTiEMDBServiceMockRecorder) AllocResourcesInBatch(ctx, in interface
 }
 
 // CheckDetails mocks base method.
-func (m *MockTiEMDBService) CheckDetails(ctx context.Context, in *db.DBCheckDetailsRequest, opts ...client.CallOption) (*db.DBCheckDetailsResponse, error) {
+func (m *MockTiEMDBService) CheckDetails(ctx context.Context, in *dbpb.DBCheckDetailsRequest, opts ...client.CallOption) (*dbpb.DBCheckDetailsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CheckDetails", varargs...)
-	ret0, _ := ret[0].(*db.DBCheckDetailsResponse)
+	ret0, _ := ret[0].(*dbpb.DBCheckDetailsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -157,14 +157,14 @@ func (mr *MockTiEMDBServiceMockRecorder) CheckDetails(ctx, in interface{}, opts 
 }
 
 // CreateCluster mocks base method.
-func (m *MockTiEMDBService) CreateCluster(ctx context.Context, in *db.DBCreateClusterRequest, opts ...client.CallOption) (*db.DBCreateClusterResponse, error) {
+func (m *MockTiEMDBService) CreateCluster(ctx context.Context, in *dbpb.DBCreateClusterRequest, opts ...client.CallOption) (*dbpb.DBCreateClusterResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateCluster", varargs...)
-	ret0, _ := ret[0].(*db.DBCreateClusterResponse)
+	ret0, _ := ret[0].(*dbpb.DBCreateClusterResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -177,14 +177,14 @@ func (mr *MockTiEMDBServiceMockRecorder) CreateCluster(ctx, in interface{}, opts
 }
 
 // CreateFlow mocks base method.
-func (m *MockTiEMDBService) CreateFlow(ctx context.Context, in *db.DBCreateFlowRequest, opts ...client.CallOption) (*db.DBCreateFlowResponse, error) {
+func (m *MockTiEMDBService) CreateFlow(ctx context.Context, in *dbpb.DBCreateFlowRequest, opts ...client.CallOption) (*dbpb.DBCreateFlowResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateFlow", varargs...)
-	ret0, _ := ret[0].(*db.DBCreateFlowResponse)
+	ret0, _ := ret[0].(*dbpb.DBCreateFlowResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -197,14 +197,14 @@ func (mr *MockTiEMDBServiceMockRecorder) CreateFlow(ctx, in interface{}, opts ..
 }
 
 // CreateInstance mocks base method.
-func (m *MockTiEMDBService) CreateInstance(ctx context.Context, in *db.DBCreateInstanceRequest, opts ...client.CallOption) (*db.DBCreateInstanceResponse, error) {
+func (m *MockTiEMDBService) CreateInstance(ctx context.Context, in *dbpb.DBCreateInstanceRequest, opts ...client.CallOption) (*dbpb.DBCreateInstanceResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateInstance", varargs...)
-	ret0, _ := ret[0].(*db.DBCreateInstanceResponse)
+	ret0, _ := ret[0].(*dbpb.DBCreateInstanceResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -217,14 +217,14 @@ func (mr *MockTiEMDBServiceMockRecorder) CreateInstance(ctx, in interface{}, opt
 }
 
 // CreateTask mocks base method.
-func (m *MockTiEMDBService) CreateTask(ctx context.Context, in *db.DBCreateTaskRequest, opts ...client.CallOption) (*db.DBCreateTaskResponse, error) {
+func (m *MockTiEMDBService) CreateTask(ctx context.Context, in *dbpb.DBCreateTaskRequest, opts ...client.CallOption) (*dbpb.DBCreateTaskResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateTask", varargs...)
-	ret0, _ := ret[0].(*db.DBCreateTaskResponse)
+	ret0, _ := ret[0].(*dbpb.DBCreateTaskResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -237,14 +237,14 @@ func (mr *MockTiEMDBServiceMockRecorder) CreateTask(ctx, in interface{}, opts ..
 }
 
 // CreateTiupTask mocks base method.
-func (m *MockTiEMDBService) CreateTiupTask(ctx context.Context, in *db.CreateTiupTaskRequest, opts ...client.CallOption) (*db.CreateTiupTaskResponse, error) {
+func (m *MockTiEMDBService) CreateTiupTask(ctx context.Context, in *dbpb.CreateTiupTaskRequest, opts ...client.CallOption) (*dbpb.CreateTiupTaskResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateTiupTask", varargs...)
-	ret0, _ := ret[0].(*db.CreateTiupTaskResponse)
+	ret0, _ := ret[0].(*dbpb.CreateTiupTaskResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -257,14 +257,14 @@ func (mr *MockTiEMDBServiceMockRecorder) CreateTiupTask(ctx, in interface{}, opt
 }
 
 // CreateTransportRecord mocks base method.
-func (m *MockTiEMDBService) CreateTransportRecord(ctx context.Context, in *db.DBCreateTransportRecordRequest, opts ...client.CallOption) (*db.DBCreateTransportRecordResponse, error) {
+func (m *MockTiEMDBService) CreateTransportRecord(ctx context.Context, in *dbpb.DBCreateTransportRecordRequest, opts ...client.CallOption) (*dbpb.DBCreateTransportRecordResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateTransportRecord", varargs...)
-	ret0, _ := ret[0].(*db.DBCreateTransportRecordResponse)
+	ret0, _ := ret[0].(*dbpb.DBCreateTransportRecordResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -277,14 +277,14 @@ func (mr *MockTiEMDBServiceMockRecorder) CreateTransportRecord(ctx, in interface
 }
 
 // DeleteBackupRecord mocks base method.
-func (m *MockTiEMDBService) DeleteBackupRecord(ctx context.Context, in *db.DBDeleteBackupRecordRequest, opts ...client.CallOption) (*db.DBDeleteBackupRecordResponse, error) {
+func (m *MockTiEMDBService) DeleteBackupRecord(ctx context.Context, in *dbpb.DBDeleteBackupRecordRequest, opts ...client.CallOption) (*dbpb.DBDeleteBackupRecordResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "DeleteBackupRecord", varargs...)
-	ret0, _ := ret[0].(*db.DBDeleteBackupRecordResponse)
+	ret0, _ := ret[0].(*dbpb.DBDeleteBackupRecordResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -297,14 +297,14 @@ func (mr *MockTiEMDBServiceMockRecorder) DeleteBackupRecord(ctx, in interface{},
 }
 
 // DeleteCluster mocks base method.
-func (m *MockTiEMDBService) DeleteCluster(ctx context.Context, in *db.DBDeleteClusterRequest, opts ...client.CallOption) (*db.DBDeleteClusterResponse, error) {
+func (m *MockTiEMDBService) DeleteCluster(ctx context.Context, in *dbpb.DBDeleteClusterRequest, opts ...client.CallOption) (*dbpb.DBDeleteClusterResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "DeleteCluster", varargs...)
-	ret0, _ := ret[0].(*db.DBDeleteClusterResponse)
+	ret0, _ := ret[0].(*dbpb.DBDeleteClusterResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -317,14 +317,14 @@ func (mr *MockTiEMDBServiceMockRecorder) DeleteCluster(ctx, in interface{}, opts
 }
 
 // FindAccount mocks base method.
-func (m *MockTiEMDBService) FindAccount(ctx context.Context, in *db.DBFindAccountRequest, opts ...client.CallOption) (*db.DBFindAccountResponse, error) {
+func (m *MockTiEMDBService) FindAccount(ctx context.Context, in *dbpb.DBFindAccountRequest, opts ...client.CallOption) (*dbpb.DBFindAccountResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "FindAccount", varargs...)
-	ret0, _ := ret[0].(*db.DBFindAccountResponse)
+	ret0, _ := ret[0].(*dbpb.DBFindAccountResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -337,14 +337,14 @@ func (mr *MockTiEMDBServiceMockRecorder) FindAccount(ctx, in interface{}, opts .
 }
 
 // FindAccountById mocks base method.
-func (m *MockTiEMDBService) FindAccountById(ctx context.Context, in *db.DBFindAccountByIdRequest, opts ...client.CallOption) (*db.DBFindAccountByIdResponse, error) {
+func (m *MockTiEMDBService) FindAccountById(ctx context.Context, in *dbpb.DBFindAccountByIdRequest, opts ...client.CallOption) (*dbpb.DBFindAccountByIdResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "FindAccountById", varargs...)
-	ret0, _ := ret[0].(*db.DBFindAccountByIdResponse)
+	ret0, _ := ret[0].(*dbpb.DBFindAccountByIdResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -357,14 +357,14 @@ func (mr *MockTiEMDBServiceMockRecorder) FindAccountById(ctx, in interface{}, op
 }
 
 // FindRolesByPermission mocks base method.
-func (m *MockTiEMDBService) FindRolesByPermission(ctx context.Context, in *db.DBFindRolesByPermissionRequest, opts ...client.CallOption) (*db.DBFindRolesByPermissionResponse, error) {
+func (m *MockTiEMDBService) FindRolesByPermission(ctx context.Context, in *dbpb.DBFindRolesByPermissionRequest, opts ...client.CallOption) (*dbpb.DBFindRolesByPermissionResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "FindRolesByPermission", varargs...)
-	ret0, _ := ret[0].(*db.DBFindRolesByPermissionResponse)
+	ret0, _ := ret[0].(*dbpb.DBFindRolesByPermissionResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -377,14 +377,14 @@ func (mr *MockTiEMDBServiceMockRecorder) FindRolesByPermission(ctx, in interface
 }
 
 // FindTenant mocks base method.
-func (m *MockTiEMDBService) FindTenant(ctx context.Context, in *db.DBFindTenantRequest, opts ...client.CallOption) (*db.DBFindTenantResponse, error) {
+func (m *MockTiEMDBService) FindTenant(ctx context.Context, in *dbpb.DBFindTenantRequest, opts ...client.CallOption) (*dbpb.DBFindTenantResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "FindTenant", varargs...)
-	ret0, _ := ret[0].(*db.DBFindTenantResponse)
+	ret0, _ := ret[0].(*dbpb.DBFindTenantResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -397,14 +397,14 @@ func (mr *MockTiEMDBServiceMockRecorder) FindTenant(ctx, in interface{}, opts ..
 }
 
 // FindTiupTaskByID mocks base method.
-func (m *MockTiEMDBService) FindTiupTaskByID(ctx context.Context, in *db.FindTiupTaskByIDRequest, opts ...client.CallOption) (*db.FindTiupTaskByIDResponse, error) {
+func (m *MockTiEMDBService) FindTiupTaskByID(ctx context.Context, in *dbpb.FindTiupTaskByIDRequest, opts ...client.CallOption) (*dbpb.FindTiupTaskByIDResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "FindTiupTaskByID", varargs...)
-	ret0, _ := ret[0].(*db.FindTiupTaskByIDResponse)
+	ret0, _ := ret[0].(*dbpb.FindTiupTaskByIDResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -417,14 +417,14 @@ func (mr *MockTiEMDBServiceMockRecorder) FindTiupTaskByID(ctx, in interface{}, o
 }
 
 // FindToken mocks base method.
-func (m *MockTiEMDBService) FindToken(ctx context.Context, in *db.DBFindTokenRequest, opts ...client.CallOption) (*db.DBFindTokenResponse, error) {
+func (m *MockTiEMDBService) FindToken(ctx context.Context, in *dbpb.DBFindTokenRequest, opts ...client.CallOption) (*dbpb.DBFindTokenResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "FindToken", varargs...)
-	ret0, _ := ret[0].(*db.DBFindTokenResponse)
+	ret0, _ := ret[0].(*dbpb.DBFindTokenResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -437,14 +437,14 @@ func (mr *MockTiEMDBServiceMockRecorder) FindToken(ctx, in interface{}, opts ...
 }
 
 // FindTrasnportRecordByID mocks base method.
-func (m *MockTiEMDBService) FindTrasnportRecordByID(ctx context.Context, in *db.DBFindTransportRecordByIDRequest, opts ...client.CallOption) (*db.DBFindTransportRecordByIDResponse, error) {
+func (m *MockTiEMDBService) FindTrasnportRecordByID(ctx context.Context, in *dbpb.DBFindTransportRecordByIDRequest, opts ...client.CallOption) (*dbpb.DBFindTransportRecordByIDResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "FindTrasnportRecordByID", varargs...)
-	ret0, _ := ret[0].(*db.DBFindTransportRecordByIDResponse)
+	ret0, _ := ret[0].(*dbpb.DBFindTransportRecordByIDResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -457,14 +457,14 @@ func (mr *MockTiEMDBServiceMockRecorder) FindTrasnportRecordByID(ctx, in interfa
 }
 
 // GetCurrentParametersRecord mocks base method.
-func (m *MockTiEMDBService) GetCurrentParametersRecord(ctx context.Context, in *db.DBGetCurrentParametersRequest, opts ...client.CallOption) (*db.DBGetCurrentParametersResponse, error) {
+func (m *MockTiEMDBService) GetCurrentParametersRecord(ctx context.Context, in *dbpb.DBGetCurrentParametersRequest, opts ...client.CallOption) (*dbpb.DBGetCurrentParametersResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetCurrentParametersRecord", varargs...)
-	ret0, _ := ret[0].(*db.DBGetCurrentParametersResponse)
+	ret0, _ := ret[0].(*dbpb.DBGetCurrentParametersResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -477,14 +477,14 @@ func (mr *MockTiEMDBServiceMockRecorder) GetCurrentParametersRecord(ctx, in inte
 }
 
 // GetFailureDomain mocks base method.
-func (m *MockTiEMDBService) GetFailureDomain(ctx context.Context, in *db.DBGetFailureDomainRequest, opts ...client.CallOption) (*db.DBGetFailureDomainResponse, error) {
+func (m *MockTiEMDBService) GetFailureDomain(ctx context.Context, in *dbpb.DBGetFailureDomainRequest, opts ...client.CallOption) (*dbpb.DBGetFailureDomainResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetFailureDomain", varargs...)
-	ret0, _ := ret[0].(*db.DBGetFailureDomainResponse)
+	ret0, _ := ret[0].(*dbpb.DBGetFailureDomainResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -497,14 +497,14 @@ func (mr *MockTiEMDBServiceMockRecorder) GetFailureDomain(ctx, in interface{}, o
 }
 
 // GetTiupTaskStatusByBizID mocks base method.
-func (m *MockTiEMDBService) GetTiupTaskStatusByBizID(ctx context.Context, in *db.GetTiupTaskStatusByBizIDRequest, opts ...client.CallOption) (*db.GetTiupTaskStatusByBizIDResponse, error) {
+func (m *MockTiEMDBService) GetTiupTaskStatusByBizID(ctx context.Context, in *dbpb.GetTiupTaskStatusByBizIDRequest, opts ...client.CallOption) (*dbpb.GetTiupTaskStatusByBizIDResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetTiupTaskStatusByBizID", varargs...)
-	ret0, _ := ret[0].(*db.GetTiupTaskStatusByBizIDResponse)
+	ret0, _ := ret[0].(*dbpb.GetTiupTaskStatusByBizIDResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -517,14 +517,14 @@ func (mr *MockTiEMDBServiceMockRecorder) GetTiupTaskStatusByBizID(ctx, in interf
 }
 
 // ListBackupRecords mocks base method.
-func (m *MockTiEMDBService) ListBackupRecords(ctx context.Context, in *db.DBListBackupRecordsRequest, opts ...client.CallOption) (*db.DBListBackupRecordsResponse, error) {
+func (m *MockTiEMDBService) ListBackupRecords(ctx context.Context, in *dbpb.DBListBackupRecordsRequest, opts ...client.CallOption) (*dbpb.DBListBackupRecordsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "ListBackupRecords", varargs...)
-	ret0, _ := ret[0].(*db.DBListBackupRecordsResponse)
+	ret0, _ := ret[0].(*dbpb.DBListBackupRecordsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -537,14 +537,14 @@ func (mr *MockTiEMDBServiceMockRecorder) ListBackupRecords(ctx, in interface{}, 
 }
 
 // ListCluster mocks base method.
-func (m *MockTiEMDBService) ListCluster(ctx context.Context, in *db.DBListClusterRequest, opts ...client.CallOption) (*db.DBListClusterResponse, error) {
+func (m *MockTiEMDBService) ListCluster(ctx context.Context, in *dbpb.DBListClusterRequest, opts ...client.CallOption) (*dbpb.DBListClusterResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "ListCluster", varargs...)
-	ret0, _ := ret[0].(*db.DBListClusterResponse)
+	ret0, _ := ret[0].(*dbpb.DBListClusterResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -557,14 +557,14 @@ func (mr *MockTiEMDBServiceMockRecorder) ListCluster(ctx, in interface{}, opts .
 }
 
 // ListFlows mocks base method.
-func (m *MockTiEMDBService) ListFlows(ctx context.Context, in *db.DBListFlowsRequest, opts ...client.CallOption) (*db.DBListFlowsResponse, error) {
+func (m *MockTiEMDBService) ListFlows(ctx context.Context, in *dbpb.DBListFlowsRequest, opts ...client.CallOption) (*dbpb.DBListFlowsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "ListFlows", varargs...)
-	ret0, _ := ret[0].(*db.DBListFlowsResponse)
+	ret0, _ := ret[0].(*dbpb.DBListFlowsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -577,14 +577,14 @@ func (mr *MockTiEMDBServiceMockRecorder) ListFlows(ctx, in interface{}, opts ...
 }
 
 // ListHost mocks base method.
-func (m *MockTiEMDBService) ListHost(ctx context.Context, in *db.DBListHostsRequest, opts ...client.CallOption) (*db.DBListHostsResponse, error) {
+func (m *MockTiEMDBService) ListHost(ctx context.Context, in *dbpb.DBListHostsRequest, opts ...client.CallOption) (*dbpb.DBListHostsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "ListHost", varargs...)
-	ret0, _ := ret[0].(*db.DBListHostsResponse)
+	ret0, _ := ret[0].(*dbpb.DBListHostsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -597,14 +597,14 @@ func (mr *MockTiEMDBServiceMockRecorder) ListHost(ctx, in interface{}, opts ...i
 }
 
 // ListTrasnportRecord mocks base method.
-func (m *MockTiEMDBService) ListTrasnportRecord(ctx context.Context, in *db.DBListTransportRecordRequest, opts ...client.CallOption) (*db.DBListTransportRecordResponse, error) {
+func (m *MockTiEMDBService) ListTrasnportRecord(ctx context.Context, in *dbpb.DBListTransportRecordRequest, opts ...client.CallOption) (*dbpb.DBListTransportRecordResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "ListTrasnportRecord", varargs...)
-	ret0, _ := ret[0].(*db.DBListTransportRecordResponse)
+	ret0, _ := ret[0].(*dbpb.DBListTransportRecordResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -617,14 +617,14 @@ func (mr *MockTiEMDBServiceMockRecorder) ListTrasnportRecord(ctx, in interface{}
 }
 
 // LoadCluster mocks base method.
-func (m *MockTiEMDBService) LoadCluster(ctx context.Context, in *db.DBLoadClusterRequest, opts ...client.CallOption) (*db.DBLoadClusterResponse, error) {
+func (m *MockTiEMDBService) LoadCluster(ctx context.Context, in *dbpb.DBLoadClusterRequest, opts ...client.CallOption) (*dbpb.DBLoadClusterResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "LoadCluster", varargs...)
-	ret0, _ := ret[0].(*db.DBLoadClusterResponse)
+	ret0, _ := ret[0].(*dbpb.DBLoadClusterResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -637,14 +637,14 @@ func (mr *MockTiEMDBServiceMockRecorder) LoadCluster(ctx, in interface{}, opts .
 }
 
 // LoadFlow mocks base method.
-func (m *MockTiEMDBService) LoadFlow(ctx context.Context, in *db.DBLoadFlowRequest, opts ...client.CallOption) (*db.DBLoadFlowResponse, error) {
+func (m *MockTiEMDBService) LoadFlow(ctx context.Context, in *dbpb.DBLoadFlowRequest, opts ...client.CallOption) (*dbpb.DBLoadFlowResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "LoadFlow", varargs...)
-	ret0, _ := ret[0].(*db.DBLoadFlowResponse)
+	ret0, _ := ret[0].(*dbpb.DBLoadFlowResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -657,14 +657,14 @@ func (mr *MockTiEMDBServiceMockRecorder) LoadFlow(ctx, in interface{}, opts ...i
 }
 
 // LoadTask mocks base method.
-func (m *MockTiEMDBService) LoadTask(ctx context.Context, in *db.DBLoadTaskRequest, opts ...client.CallOption) (*db.DBLoadTaskResponse, error) {
+func (m *MockTiEMDBService) LoadTask(ctx context.Context, in *dbpb.DBLoadTaskRequest, opts ...client.CallOption) (*dbpb.DBLoadTaskResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "LoadTask", varargs...)
-	ret0, _ := ret[0].(*db.DBLoadTaskResponse)
+	ret0, _ := ret[0].(*dbpb.DBLoadTaskResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -677,14 +677,14 @@ func (mr *MockTiEMDBServiceMockRecorder) LoadTask(ctx, in interface{}, opts ...i
 }
 
 // QueryBackupRecords mocks base method.
-func (m *MockTiEMDBService) QueryBackupRecords(ctx context.Context, in *db.DBQueryBackupRecordRequest, opts ...client.CallOption) (*db.DBQueryBackupRecordResponse, error) {
+func (m *MockTiEMDBService) QueryBackupRecords(ctx context.Context, in *dbpb.DBQueryBackupRecordRequest, opts ...client.CallOption) (*dbpb.DBQueryBackupRecordResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "QueryBackupRecords", varargs...)
-	ret0, _ := ret[0].(*db.DBQueryBackupRecordResponse)
+	ret0, _ := ret[0].(*dbpb.DBQueryBackupRecordResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -697,14 +697,14 @@ func (mr *MockTiEMDBServiceMockRecorder) QueryBackupRecords(ctx, in interface{},
 }
 
 // QueryBackupStrategy mocks base method.
-func (m *MockTiEMDBService) QueryBackupStrategy(ctx context.Context, in *db.DBQueryBackupStrategyRequest, opts ...client.CallOption) (*db.DBQueryBackupStrategyResponse, error) {
+func (m *MockTiEMDBService) QueryBackupStrategy(ctx context.Context, in *dbpb.DBQueryBackupStrategyRequest, opts ...client.CallOption) (*dbpb.DBQueryBackupStrategyResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "QueryBackupStrategy", varargs...)
-	ret0, _ := ret[0].(*db.DBQueryBackupStrategyResponse)
+	ret0, _ := ret[0].(*dbpb.DBQueryBackupStrategyResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -717,14 +717,14 @@ func (mr *MockTiEMDBServiceMockRecorder) QueryBackupStrategy(ctx, in interface{}
 }
 
 // QueryBackupStrategyByTime mocks base method.
-func (m *MockTiEMDBService) QueryBackupStrategyByTime(ctx context.Context, in *db.DBQueryBackupStrategyByTimeRequest, opts ...client.CallOption) (*db.DBQueryBackupStrategyByTimeResponse, error) {
+func (m *MockTiEMDBService) QueryBackupStrategyByTime(ctx context.Context, in *dbpb.DBQueryBackupStrategyByTimeRequest, opts ...client.CallOption) (*dbpb.DBQueryBackupStrategyByTimeResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "QueryBackupStrategyByTime", varargs...)
-	ret0, _ := ret[0].(*db.DBQueryBackupStrategyByTimeResponse)
+	ret0, _ := ret[0].(*dbpb.DBQueryBackupStrategyByTimeResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -737,14 +737,14 @@ func (mr *MockTiEMDBServiceMockRecorder) QueryBackupStrategyByTime(ctx, in inter
 }
 
 // RecycleResources mocks base method.
-func (m *MockTiEMDBService) RecycleResources(ctx context.Context, in *db.DBRecycleRequest, opts ...client.CallOption) (*db.DBRecycleResponse, error) {
+func (m *MockTiEMDBService) RecycleResources(ctx context.Context, in *dbpb.DBRecycleRequest, opts ...client.CallOption) (*dbpb.DBRecycleResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "RecycleResources", varargs...)
-	ret0, _ := ret[0].(*db.DBRecycleResponse)
+	ret0, _ := ret[0].(*dbpb.DBRecycleResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -757,14 +757,14 @@ func (mr *MockTiEMDBServiceMockRecorder) RecycleResources(ctx, in interface{}, o
 }
 
 // RemoveHost mocks base method.
-func (m *MockTiEMDBService) RemoveHost(ctx context.Context, in *db.DBRemoveHostRequest, opts ...client.CallOption) (*db.DBRemoveHostResponse, error) {
+func (m *MockTiEMDBService) RemoveHost(ctx context.Context, in *dbpb.DBRemoveHostRequest, opts ...client.CallOption) (*dbpb.DBRemoveHostResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "RemoveHost", varargs...)
-	ret0, _ := ret[0].(*db.DBRemoveHostResponse)
+	ret0, _ := ret[0].(*dbpb.DBRemoveHostResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -777,14 +777,14 @@ func (mr *MockTiEMDBServiceMockRecorder) RemoveHost(ctx, in interface{}, opts ..
 }
 
 // RemoveHostsInBatch mocks base method.
-func (m *MockTiEMDBService) RemoveHostsInBatch(ctx context.Context, in *db.DBRemoveHostsInBatchRequest, opts ...client.CallOption) (*db.DBRemoveHostsInBatchResponse, error) {
+func (m *MockTiEMDBService) RemoveHostsInBatch(ctx context.Context, in *dbpb.DBRemoveHostsInBatchRequest, opts ...client.CallOption) (*dbpb.DBRemoveHostsInBatchResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "RemoveHostsInBatch", varargs...)
-	ret0, _ := ret[0].(*db.DBRemoveHostsInBatchResponse)
+	ret0, _ := ret[0].(*dbpb.DBRemoveHostsInBatchResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -797,14 +797,14 @@ func (mr *MockTiEMDBServiceMockRecorder) RemoveHostsInBatch(ctx, in interface{},
 }
 
 // SaveBackupRecord mocks base method.
-func (m *MockTiEMDBService) SaveBackupRecord(ctx context.Context, in *db.DBSaveBackupRecordRequest, opts ...client.CallOption) (*db.DBSaveBackupRecordResponse, error) {
+func (m *MockTiEMDBService) SaveBackupRecord(ctx context.Context, in *dbpb.DBSaveBackupRecordRequest, opts ...client.CallOption) (*dbpb.DBSaveBackupRecordResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "SaveBackupRecord", varargs...)
-	ret0, _ := ret[0].(*db.DBSaveBackupRecordResponse)
+	ret0, _ := ret[0].(*dbpb.DBSaveBackupRecordResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -817,14 +817,14 @@ func (mr *MockTiEMDBServiceMockRecorder) SaveBackupRecord(ctx, in interface{}, o
 }
 
 // SaveBackupStrategy mocks base method.
-func (m *MockTiEMDBService) SaveBackupStrategy(ctx context.Context, in *db.DBSaveBackupStrategyRequest, opts ...client.CallOption) (*db.DBSaveBackupStrategyResponse, error) {
+func (m *MockTiEMDBService) SaveBackupStrategy(ctx context.Context, in *dbpb.DBSaveBackupStrategyRequest, opts ...client.CallOption) (*dbpb.DBSaveBackupStrategyResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "SaveBackupStrategy", varargs...)
-	ret0, _ := ret[0].(*db.DBSaveBackupStrategyResponse)
+	ret0, _ := ret[0].(*dbpb.DBSaveBackupStrategyResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -837,14 +837,14 @@ func (mr *MockTiEMDBServiceMockRecorder) SaveBackupStrategy(ctx, in interface{},
 }
 
 // SaveParametersRecord mocks base method.
-func (m *MockTiEMDBService) SaveParametersRecord(ctx context.Context, in *db.DBSaveParametersRequest, opts ...client.CallOption) (*db.DBSaveParametersResponse, error) {
+func (m *MockTiEMDBService) SaveParametersRecord(ctx context.Context, in *dbpb.DBSaveParametersRequest, opts ...client.CallOption) (*dbpb.DBSaveParametersResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "SaveParametersRecord", varargs...)
-	ret0, _ := ret[0].(*db.DBSaveParametersResponse)
+	ret0, _ := ret[0].(*dbpb.DBSaveParametersResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -857,14 +857,14 @@ func (mr *MockTiEMDBServiceMockRecorder) SaveParametersRecord(ctx, in interface{
 }
 
 // SaveRecoverRecord mocks base method.
-func (m *MockTiEMDBService) SaveRecoverRecord(ctx context.Context, in *db.DBSaveRecoverRecordRequest, opts ...client.CallOption) (*db.DBSaveRecoverRecordResponse, error) {
+func (m *MockTiEMDBService) SaveRecoverRecord(ctx context.Context, in *dbpb.DBSaveRecoverRecordRequest, opts ...client.CallOption) (*dbpb.DBSaveRecoverRecordResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "SaveRecoverRecord", varargs...)
-	ret0, _ := ret[0].(*db.DBSaveRecoverRecordResponse)
+	ret0, _ := ret[0].(*dbpb.DBSaveRecoverRecordResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -877,14 +877,14 @@ func (mr *MockTiEMDBServiceMockRecorder) SaveRecoverRecord(ctx, in interface{}, 
 }
 
 // SaveToken mocks base method.
-func (m *MockTiEMDBService) SaveToken(ctx context.Context, in *db.DBSaveTokenRequest, opts ...client.CallOption) (*db.DBSaveTokenResponse, error) {
+func (m *MockTiEMDBService) SaveToken(ctx context.Context, in *dbpb.DBSaveTokenRequest, opts ...client.CallOption) (*dbpb.DBSaveTokenResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "SaveToken", varargs...)
-	ret0, _ := ret[0].(*db.DBSaveTokenResponse)
+	ret0, _ := ret[0].(*dbpb.DBSaveTokenResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -897,14 +897,14 @@ func (mr *MockTiEMDBServiceMockRecorder) SaveToken(ctx, in interface{}, opts ...
 }
 
 // UpdateBackupRecord mocks base method.
-func (m *MockTiEMDBService) UpdateBackupRecord(ctx context.Context, in *db.DBUpdateBackupRecordRequest, opts ...client.CallOption) (*db.DBUpdateBackupRecordResponse, error) {
+func (m *MockTiEMDBService) UpdateBackupRecord(ctx context.Context, in *dbpb.DBUpdateBackupRecordRequest, opts ...client.CallOption) (*dbpb.DBUpdateBackupRecordResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "UpdateBackupRecord", varargs...)
-	ret0, _ := ret[0].(*db.DBUpdateBackupRecordResponse)
+	ret0, _ := ret[0].(*dbpb.DBUpdateBackupRecordResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -917,14 +917,14 @@ func (mr *MockTiEMDBServiceMockRecorder) UpdateBackupRecord(ctx, in interface{},
 }
 
 // UpdateClusterStatus mocks base method.
-func (m *MockTiEMDBService) UpdateClusterStatus(ctx context.Context, in *db.DBUpdateClusterStatusRequest, opts ...client.CallOption) (*db.DBUpdateClusterStatusResponse, error) {
+func (m *MockTiEMDBService) UpdateClusterStatus(ctx context.Context, in *dbpb.DBUpdateClusterStatusRequest, opts ...client.CallOption) (*dbpb.DBUpdateClusterStatusResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "UpdateClusterStatus", varargs...)
-	ret0, _ := ret[0].(*db.DBUpdateClusterStatusResponse)
+	ret0, _ := ret[0].(*dbpb.DBUpdateClusterStatusResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -937,14 +937,14 @@ func (mr *MockTiEMDBServiceMockRecorder) UpdateClusterStatus(ctx, in interface{}
 }
 
 // UpdateClusterTopologyConfig mocks base method.
-func (m *MockTiEMDBService) UpdateClusterTopologyConfig(ctx context.Context, in *db.DBUpdateTopologyConfigRequest, opts ...client.CallOption) (*db.DBUpdateTopologyConfigResponse, error) {
+func (m *MockTiEMDBService) UpdateClusterTopologyConfig(ctx context.Context, in *dbpb.DBUpdateTopologyConfigRequest, opts ...client.CallOption) (*dbpb.DBUpdateTopologyConfigResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "UpdateClusterTopologyConfig", varargs...)
-	ret0, _ := ret[0].(*db.DBUpdateTopologyConfigResponse)
+	ret0, _ := ret[0].(*dbpb.DBUpdateTopologyConfigResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -957,14 +957,14 @@ func (mr *MockTiEMDBServiceMockRecorder) UpdateClusterTopologyConfig(ctx, in int
 }
 
 // UpdateFlow mocks base method.
-func (m *MockTiEMDBService) UpdateFlow(ctx context.Context, in *db.DBUpdateFlowRequest, opts ...client.CallOption) (*db.DBUpdateFlowResponse, error) {
+func (m *MockTiEMDBService) UpdateFlow(ctx context.Context, in *dbpb.DBUpdateFlowRequest, opts ...client.CallOption) (*dbpb.DBUpdateFlowResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "UpdateFlow", varargs...)
-	ret0, _ := ret[0].(*db.DBUpdateFlowResponse)
+	ret0, _ := ret[0].(*dbpb.DBUpdateFlowResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -977,14 +977,14 @@ func (mr *MockTiEMDBServiceMockRecorder) UpdateFlow(ctx, in interface{}, opts ..
 }
 
 // UpdateTask mocks base method.
-func (m *MockTiEMDBService) UpdateTask(ctx context.Context, in *db.DBUpdateTaskRequest, opts ...client.CallOption) (*db.DBUpdateTaskResponse, error) {
+func (m *MockTiEMDBService) UpdateTask(ctx context.Context, in *dbpb.DBUpdateTaskRequest, opts ...client.CallOption) (*dbpb.DBUpdateTaskResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "UpdateTask", varargs...)
-	ret0, _ := ret[0].(*db.DBUpdateTaskResponse)
+	ret0, _ := ret[0].(*dbpb.DBUpdateTaskResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -997,14 +997,14 @@ func (mr *MockTiEMDBServiceMockRecorder) UpdateTask(ctx, in interface{}, opts ..
 }
 
 // UpdateTiupTask mocks base method.
-func (m *MockTiEMDBService) UpdateTiupTask(ctx context.Context, in *db.UpdateTiupTaskRequest, opts ...client.CallOption) (*db.UpdateTiupTaskResponse, error) {
+func (m *MockTiEMDBService) UpdateTiupTask(ctx context.Context, in *dbpb.UpdateTiupTaskRequest, opts ...client.CallOption) (*dbpb.UpdateTiupTaskResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "UpdateTiupTask", varargs...)
-	ret0, _ := ret[0].(*db.UpdateTiupTaskResponse)
+	ret0, _ := ret[0].(*dbpb.UpdateTiupTaskResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1017,14 +1017,14 @@ func (mr *MockTiEMDBServiceMockRecorder) UpdateTiupTask(ctx, in interface{}, opt
 }
 
 // UpdateTransportRecord mocks base method.
-func (m *MockTiEMDBService) UpdateTransportRecord(ctx context.Context, in *db.DBUpdateTransportRecordRequest, opts ...client.CallOption) (*db.DBUpdateTransportRecordResponse, error) {
+func (m *MockTiEMDBService) UpdateTransportRecord(ctx context.Context, in *dbpb.DBUpdateTransportRecordRequest, opts ...client.CallOption) (*dbpb.DBUpdateTransportRecordResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "UpdateTransportRecord", varargs...)
-	ret0, _ := ret[0].(*db.DBUpdateTransportRecordResponse)
+	ret0, _ := ret[0].(*dbpb.DBUpdateTransportRecordResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -1060,7 +1060,7 @@ func (m *MockTiEMDBServiceHandler) EXPECT() *MockTiEMDBServiceHandlerMockRecorde
 }
 
 // AddHost mocks base method.
-func (m *MockTiEMDBServiceHandler) AddHost(arg0 context.Context, arg1 *db.DBAddHostRequest, arg2 *db.DBAddHostResponse) error {
+func (m *MockTiEMDBServiceHandler) AddHost(arg0 context.Context, arg1 *dbpb.DBAddHostRequest, arg2 *dbpb.DBAddHostResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddHost", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1074,7 +1074,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) AddHost(arg0, arg1, arg2 interfa
 }
 
 // AddHostsInBatch mocks base method.
-func (m *MockTiEMDBServiceHandler) AddHostsInBatch(arg0 context.Context, arg1 *db.DBAddHostsInBatchRequest, arg2 *db.DBAddHostsInBatchResponse) error {
+func (m *MockTiEMDBServiceHandler) AddHostsInBatch(arg0 context.Context, arg1 *dbpb.DBAddHostsInBatchRequest, arg2 *dbpb.DBAddHostsInBatchResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddHostsInBatch", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1088,7 +1088,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) AddHostsInBatch(arg0, arg1, arg2
 }
 
 // AllocHosts mocks base method.
-func (m *MockTiEMDBServiceHandler) AllocHosts(arg0 context.Context, arg1 *db.DBAllocHostsRequest, arg2 *db.DBAllocHostsResponse) error {
+func (m *MockTiEMDBServiceHandler) AllocHosts(arg0 context.Context, arg1 *dbpb.DBAllocHostsRequest, arg2 *dbpb.DBAllocHostsResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AllocHosts", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1102,7 +1102,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) AllocHosts(arg0, arg1, arg2 inte
 }
 
 // AllocResources mocks base method.
-func (m *MockTiEMDBServiceHandler) AllocResources(arg0 context.Context, arg1 *db.DBAllocRequest, arg2 *db.DBAllocResponse) error {
+func (m *MockTiEMDBServiceHandler) AllocResources(arg0 context.Context, arg1 *dbpb.DBAllocRequest, arg2 *dbpb.DBAllocResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AllocResources", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1116,7 +1116,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) AllocResources(arg0, arg1, arg2 
 }
 
 // AllocResourcesInBatch mocks base method.
-func (m *MockTiEMDBServiceHandler) AllocResourcesInBatch(arg0 context.Context, arg1 *db.DBBatchAllocRequest, arg2 *db.DBBatchAllocResponse) error {
+func (m *MockTiEMDBServiceHandler) AllocResourcesInBatch(arg0 context.Context, arg1 *dbpb.DBBatchAllocRequest, arg2 *dbpb.DBBatchAllocResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AllocResourcesInBatch", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1130,7 +1130,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) AllocResourcesInBatch(arg0, arg1
 }
 
 // CheckDetails mocks base method.
-func (m *MockTiEMDBServiceHandler) CheckDetails(arg0 context.Context, arg1 *db.DBCheckDetailsRequest, arg2 *db.DBCheckDetailsResponse) error {
+func (m *MockTiEMDBServiceHandler) CheckDetails(arg0 context.Context, arg1 *dbpb.DBCheckDetailsRequest, arg2 *dbpb.DBCheckDetailsResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CheckDetails", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1144,7 +1144,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) CheckDetails(arg0, arg1, arg2 in
 }
 
 // CreateCluster mocks base method.
-func (m *MockTiEMDBServiceHandler) CreateCluster(arg0 context.Context, arg1 *db.DBCreateClusterRequest, arg2 *db.DBCreateClusterResponse) error {
+func (m *MockTiEMDBServiceHandler) CreateCluster(arg0 context.Context, arg1 *dbpb.DBCreateClusterRequest, arg2 *dbpb.DBCreateClusterResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateCluster", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1158,7 +1158,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) CreateCluster(arg0, arg1, arg2 i
 }
 
 // CreateFlow mocks base method.
-func (m *MockTiEMDBServiceHandler) CreateFlow(arg0 context.Context, arg1 *db.DBCreateFlowRequest, arg2 *db.DBCreateFlowResponse) error {
+func (m *MockTiEMDBServiceHandler) CreateFlow(arg0 context.Context, arg1 *dbpb.DBCreateFlowRequest, arg2 *dbpb.DBCreateFlowResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateFlow", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1172,7 +1172,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) CreateFlow(arg0, arg1, arg2 inte
 }
 
 // CreateInstance mocks base method.
-func (m *MockTiEMDBServiceHandler) CreateInstance(arg0 context.Context, arg1 *db.DBCreateInstanceRequest, arg2 *db.DBCreateInstanceResponse) error {
+func (m *MockTiEMDBServiceHandler) CreateInstance(arg0 context.Context, arg1 *dbpb.DBCreateInstanceRequest, arg2 *dbpb.DBCreateInstanceResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateInstance", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1186,7 +1186,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) CreateInstance(arg0, arg1, arg2 
 }
 
 // CreateTask mocks base method.
-func (m *MockTiEMDBServiceHandler) CreateTask(arg0 context.Context, arg1 *db.DBCreateTaskRequest, arg2 *db.DBCreateTaskResponse) error {
+func (m *MockTiEMDBServiceHandler) CreateTask(arg0 context.Context, arg1 *dbpb.DBCreateTaskRequest, arg2 *dbpb.DBCreateTaskResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateTask", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1200,7 +1200,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) CreateTask(arg0, arg1, arg2 inte
 }
 
 // CreateTiupTask mocks base method.
-func (m *MockTiEMDBServiceHandler) CreateTiupTask(arg0 context.Context, arg1 *db.CreateTiupTaskRequest, arg2 *db.CreateTiupTaskResponse) error {
+func (m *MockTiEMDBServiceHandler) CreateTiupTask(arg0 context.Context, arg1 *dbpb.CreateTiupTaskRequest, arg2 *dbpb.CreateTiupTaskResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateTiupTask", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1214,7 +1214,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) CreateTiupTask(arg0, arg1, arg2 
 }
 
 // CreateTransportRecord mocks base method.
-func (m *MockTiEMDBServiceHandler) CreateTransportRecord(arg0 context.Context, arg1 *db.DBCreateTransportRecordRequest, arg2 *db.DBCreateTransportRecordResponse) error {
+func (m *MockTiEMDBServiceHandler) CreateTransportRecord(arg0 context.Context, arg1 *dbpb.DBCreateTransportRecordRequest, arg2 *dbpb.DBCreateTransportRecordResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateTransportRecord", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1228,7 +1228,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) CreateTransportRecord(arg0, arg1
 }
 
 // DeleteBackupRecord mocks base method.
-func (m *MockTiEMDBServiceHandler) DeleteBackupRecord(arg0 context.Context, arg1 *db.DBDeleteBackupRecordRequest, arg2 *db.DBDeleteBackupRecordResponse) error {
+func (m *MockTiEMDBServiceHandler) DeleteBackupRecord(arg0 context.Context, arg1 *dbpb.DBDeleteBackupRecordRequest, arg2 *dbpb.DBDeleteBackupRecordResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteBackupRecord", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1242,7 +1242,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) DeleteBackupRecord(arg0, arg1, a
 }
 
 // DeleteCluster mocks base method.
-func (m *MockTiEMDBServiceHandler) DeleteCluster(arg0 context.Context, arg1 *db.DBDeleteClusterRequest, arg2 *db.DBDeleteClusterResponse) error {
+func (m *MockTiEMDBServiceHandler) DeleteCluster(arg0 context.Context, arg1 *dbpb.DBDeleteClusterRequest, arg2 *dbpb.DBDeleteClusterResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteCluster", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1256,7 +1256,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) DeleteCluster(arg0, arg1, arg2 i
 }
 
 // FindAccount mocks base method.
-func (m *MockTiEMDBServiceHandler) FindAccount(arg0 context.Context, arg1 *db.DBFindAccountRequest, arg2 *db.DBFindAccountResponse) error {
+func (m *MockTiEMDBServiceHandler) FindAccount(arg0 context.Context, arg1 *dbpb.DBFindAccountRequest, arg2 *dbpb.DBFindAccountResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindAccount", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1270,7 +1270,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) FindAccount(arg0, arg1, arg2 int
 }
 
 // FindAccountById mocks base method.
-func (m *MockTiEMDBServiceHandler) FindAccountById(arg0 context.Context, arg1 *db.DBFindAccountByIdRequest, arg2 *db.DBFindAccountByIdResponse) error {
+func (m *MockTiEMDBServiceHandler) FindAccountById(arg0 context.Context, arg1 *dbpb.DBFindAccountByIdRequest, arg2 *dbpb.DBFindAccountByIdResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindAccountById", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1284,7 +1284,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) FindAccountById(arg0, arg1, arg2
 }
 
 // FindRolesByPermission mocks base method.
-func (m *MockTiEMDBServiceHandler) FindRolesByPermission(arg0 context.Context, arg1 *db.DBFindRolesByPermissionRequest, arg2 *db.DBFindRolesByPermissionResponse) error {
+func (m *MockTiEMDBServiceHandler) FindRolesByPermission(arg0 context.Context, arg1 *dbpb.DBFindRolesByPermissionRequest, arg2 *dbpb.DBFindRolesByPermissionResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindRolesByPermission", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1298,7 +1298,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) FindRolesByPermission(arg0, arg1
 }
 
 // FindTenant mocks base method.
-func (m *MockTiEMDBServiceHandler) FindTenant(arg0 context.Context, arg1 *db.DBFindTenantRequest, arg2 *db.DBFindTenantResponse) error {
+func (m *MockTiEMDBServiceHandler) FindTenant(arg0 context.Context, arg1 *dbpb.DBFindTenantRequest, arg2 *dbpb.DBFindTenantResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindTenant", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1312,7 +1312,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) FindTenant(arg0, arg1, arg2 inte
 }
 
 // FindTiupTaskByID mocks base method.
-func (m *MockTiEMDBServiceHandler) FindTiupTaskByID(arg0 context.Context, arg1 *db.FindTiupTaskByIDRequest, arg2 *db.FindTiupTaskByIDResponse) error {
+func (m *MockTiEMDBServiceHandler) FindTiupTaskByID(arg0 context.Context, arg1 *dbpb.FindTiupTaskByIDRequest, arg2 *dbpb.FindTiupTaskByIDResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindTiupTaskByID", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1326,7 +1326,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) FindTiupTaskByID(arg0, arg1, arg
 }
 
 // FindToken mocks base method.
-func (m *MockTiEMDBServiceHandler) FindToken(arg0 context.Context, arg1 *db.DBFindTokenRequest, arg2 *db.DBFindTokenResponse) error {
+func (m *MockTiEMDBServiceHandler) FindToken(arg0 context.Context, arg1 *dbpb.DBFindTokenRequest, arg2 *dbpb.DBFindTokenResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindToken", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1340,7 +1340,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) FindToken(arg0, arg1, arg2 inter
 }
 
 // FindTrasnportRecordByID mocks base method.
-func (m *MockTiEMDBServiceHandler) FindTrasnportRecordByID(arg0 context.Context, arg1 *db.DBFindTransportRecordByIDRequest, arg2 *db.DBFindTransportRecordByIDResponse) error {
+func (m *MockTiEMDBServiceHandler) FindTrasnportRecordByID(arg0 context.Context, arg1 *dbpb.DBFindTransportRecordByIDRequest, arg2 *dbpb.DBFindTransportRecordByIDResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindTrasnportRecordByID", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1354,7 +1354,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) FindTrasnportRecordByID(arg0, ar
 }
 
 // GetCurrentParametersRecord mocks base method.
-func (m *MockTiEMDBServiceHandler) GetCurrentParametersRecord(arg0 context.Context, arg1 *db.DBGetCurrentParametersRequest, arg2 *db.DBGetCurrentParametersResponse) error {
+func (m *MockTiEMDBServiceHandler) GetCurrentParametersRecord(arg0 context.Context, arg1 *dbpb.DBGetCurrentParametersRequest, arg2 *dbpb.DBGetCurrentParametersResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCurrentParametersRecord", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1368,7 +1368,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) GetCurrentParametersRecord(arg0,
 }
 
 // GetFailureDomain mocks base method.
-func (m *MockTiEMDBServiceHandler) GetFailureDomain(arg0 context.Context, arg1 *db.DBGetFailureDomainRequest, arg2 *db.DBGetFailureDomainResponse) error {
+func (m *MockTiEMDBServiceHandler) GetFailureDomain(arg0 context.Context, arg1 *dbpb.DBGetFailureDomainRequest, arg2 *dbpb.DBGetFailureDomainResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFailureDomain", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1382,7 +1382,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) GetFailureDomain(arg0, arg1, arg
 }
 
 // GetTiupTaskStatusByBizID mocks base method.
-func (m *MockTiEMDBServiceHandler) GetTiupTaskStatusByBizID(arg0 context.Context, arg1 *db.GetTiupTaskStatusByBizIDRequest, arg2 *db.GetTiupTaskStatusByBizIDResponse) error {
+func (m *MockTiEMDBServiceHandler) GetTiupTaskStatusByBizID(arg0 context.Context, arg1 *dbpb.GetTiupTaskStatusByBizIDRequest, arg2 *dbpb.GetTiupTaskStatusByBizIDResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTiupTaskStatusByBizID", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1396,7 +1396,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) GetTiupTaskStatusByBizID(arg0, a
 }
 
 // ListBackupRecords mocks base method.
-func (m *MockTiEMDBServiceHandler) ListBackupRecords(arg0 context.Context, arg1 *db.DBListBackupRecordsRequest, arg2 *db.DBListBackupRecordsResponse) error {
+func (m *MockTiEMDBServiceHandler) ListBackupRecords(arg0 context.Context, arg1 *dbpb.DBListBackupRecordsRequest, arg2 *dbpb.DBListBackupRecordsResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListBackupRecords", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1410,7 +1410,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) ListBackupRecords(arg0, arg1, ar
 }
 
 // ListCluster mocks base method.
-func (m *MockTiEMDBServiceHandler) ListCluster(arg0 context.Context, arg1 *db.DBListClusterRequest, arg2 *db.DBListClusterResponse) error {
+func (m *MockTiEMDBServiceHandler) ListCluster(arg0 context.Context, arg1 *dbpb.DBListClusterRequest, arg2 *dbpb.DBListClusterResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListCluster", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1424,7 +1424,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) ListCluster(arg0, arg1, arg2 int
 }
 
 // ListFlows mocks base method.
-func (m *MockTiEMDBServiceHandler) ListFlows(arg0 context.Context, arg1 *db.DBListFlowsRequest, arg2 *db.DBListFlowsResponse) error {
+func (m *MockTiEMDBServiceHandler) ListFlows(arg0 context.Context, arg1 *dbpb.DBListFlowsRequest, arg2 *dbpb.DBListFlowsResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListFlows", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1438,7 +1438,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) ListFlows(arg0, arg1, arg2 inter
 }
 
 // ListHost mocks base method.
-func (m *MockTiEMDBServiceHandler) ListHost(arg0 context.Context, arg1 *db.DBListHostsRequest, arg2 *db.DBListHostsResponse) error {
+func (m *MockTiEMDBServiceHandler) ListHost(arg0 context.Context, arg1 *dbpb.DBListHostsRequest, arg2 *dbpb.DBListHostsResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListHost", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1452,7 +1452,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) ListHost(arg0, arg1, arg2 interf
 }
 
 // ListTrasnportRecord mocks base method.
-func (m *MockTiEMDBServiceHandler) ListTrasnportRecord(arg0 context.Context, arg1 *db.DBListTransportRecordRequest, arg2 *db.DBListTransportRecordResponse) error {
+func (m *MockTiEMDBServiceHandler) ListTrasnportRecord(arg0 context.Context, arg1 *dbpb.DBListTransportRecordRequest, arg2 *dbpb.DBListTransportRecordResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListTrasnportRecord", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1466,7 +1466,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) ListTrasnportRecord(arg0, arg1, 
 }
 
 // LoadCluster mocks base method.
-func (m *MockTiEMDBServiceHandler) LoadCluster(arg0 context.Context, arg1 *db.DBLoadClusterRequest, arg2 *db.DBLoadClusterResponse) error {
+func (m *MockTiEMDBServiceHandler) LoadCluster(arg0 context.Context, arg1 *dbpb.DBLoadClusterRequest, arg2 *dbpb.DBLoadClusterResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoadCluster", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1480,7 +1480,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) LoadCluster(arg0, arg1, arg2 int
 }
 
 // LoadFlow mocks base method.
-func (m *MockTiEMDBServiceHandler) LoadFlow(arg0 context.Context, arg1 *db.DBLoadFlowRequest, arg2 *db.DBLoadFlowResponse) error {
+func (m *MockTiEMDBServiceHandler) LoadFlow(arg0 context.Context, arg1 *dbpb.DBLoadFlowRequest, arg2 *dbpb.DBLoadFlowResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoadFlow", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1494,7 +1494,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) LoadFlow(arg0, arg1, arg2 interf
 }
 
 // LoadTask mocks base method.
-func (m *MockTiEMDBServiceHandler) LoadTask(arg0 context.Context, arg1 *db.DBLoadTaskRequest, arg2 *db.DBLoadTaskResponse) error {
+func (m *MockTiEMDBServiceHandler) LoadTask(arg0 context.Context, arg1 *dbpb.DBLoadTaskRequest, arg2 *dbpb.DBLoadTaskResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LoadTask", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1508,7 +1508,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) LoadTask(arg0, arg1, arg2 interf
 }
 
 // QueryBackupRecords mocks base method.
-func (m *MockTiEMDBServiceHandler) QueryBackupRecords(arg0 context.Context, arg1 *db.DBQueryBackupRecordRequest, arg2 *db.DBQueryBackupRecordResponse) error {
+func (m *MockTiEMDBServiceHandler) QueryBackupRecords(arg0 context.Context, arg1 *dbpb.DBQueryBackupRecordRequest, arg2 *dbpb.DBQueryBackupRecordResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryBackupRecords", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1522,7 +1522,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) QueryBackupRecords(arg0, arg1, a
 }
 
 // QueryBackupStrategy mocks base method.
-func (m *MockTiEMDBServiceHandler) QueryBackupStrategy(arg0 context.Context, arg1 *db.DBQueryBackupStrategyRequest, arg2 *db.DBQueryBackupStrategyResponse) error {
+func (m *MockTiEMDBServiceHandler) QueryBackupStrategy(arg0 context.Context, arg1 *dbpb.DBQueryBackupStrategyRequest, arg2 *dbpb.DBQueryBackupStrategyResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryBackupStrategy", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1536,7 +1536,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) QueryBackupStrategy(arg0, arg1, 
 }
 
 // QueryBackupStrategyByTime mocks base method.
-func (m *MockTiEMDBServiceHandler) QueryBackupStrategyByTime(arg0 context.Context, arg1 *db.DBQueryBackupStrategyByTimeRequest, arg2 *db.DBQueryBackupStrategyByTimeResponse) error {
+func (m *MockTiEMDBServiceHandler) QueryBackupStrategyByTime(arg0 context.Context, arg1 *dbpb.DBQueryBackupStrategyByTimeRequest, arg2 *dbpb.DBQueryBackupStrategyByTimeResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QueryBackupStrategyByTime", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1550,7 +1550,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) QueryBackupStrategyByTime(arg0, 
 }
 
 // RecycleResources mocks base method.
-func (m *MockTiEMDBServiceHandler) RecycleResources(arg0 context.Context, arg1 *db.DBRecycleRequest, arg2 *db.DBRecycleResponse) error {
+func (m *MockTiEMDBServiceHandler) RecycleResources(arg0 context.Context, arg1 *dbpb.DBRecycleRequest, arg2 *dbpb.DBRecycleResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RecycleResources", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1564,7 +1564,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) RecycleResources(arg0, arg1, arg
 }
 
 // RemoveHost mocks base method.
-func (m *MockTiEMDBServiceHandler) RemoveHost(arg0 context.Context, arg1 *db.DBRemoveHostRequest, arg2 *db.DBRemoveHostResponse) error {
+func (m *MockTiEMDBServiceHandler) RemoveHost(arg0 context.Context, arg1 *dbpb.DBRemoveHostRequest, arg2 *dbpb.DBRemoveHostResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveHost", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1578,7 +1578,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) RemoveHost(arg0, arg1, arg2 inte
 }
 
 // RemoveHostsInBatch mocks base method.
-func (m *MockTiEMDBServiceHandler) RemoveHostsInBatch(arg0 context.Context, arg1 *db.DBRemoveHostsInBatchRequest, arg2 *db.DBRemoveHostsInBatchResponse) error {
+func (m *MockTiEMDBServiceHandler) RemoveHostsInBatch(arg0 context.Context, arg1 *dbpb.DBRemoveHostsInBatchRequest, arg2 *dbpb.DBRemoveHostsInBatchResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveHostsInBatch", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1592,7 +1592,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) RemoveHostsInBatch(arg0, arg1, a
 }
 
 // SaveBackupRecord mocks base method.
-func (m *MockTiEMDBServiceHandler) SaveBackupRecord(arg0 context.Context, arg1 *db.DBSaveBackupRecordRequest, arg2 *db.DBSaveBackupRecordResponse) error {
+func (m *MockTiEMDBServiceHandler) SaveBackupRecord(arg0 context.Context, arg1 *dbpb.DBSaveBackupRecordRequest, arg2 *dbpb.DBSaveBackupRecordResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveBackupRecord", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1606,7 +1606,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) SaveBackupRecord(arg0, arg1, arg
 }
 
 // SaveBackupStrategy mocks base method.
-func (m *MockTiEMDBServiceHandler) SaveBackupStrategy(arg0 context.Context, arg1 *db.DBSaveBackupStrategyRequest, arg2 *db.DBSaveBackupStrategyResponse) error {
+func (m *MockTiEMDBServiceHandler) SaveBackupStrategy(arg0 context.Context, arg1 *dbpb.DBSaveBackupStrategyRequest, arg2 *dbpb.DBSaveBackupStrategyResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveBackupStrategy", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1620,7 +1620,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) SaveBackupStrategy(arg0, arg1, a
 }
 
 // SaveParametersRecord mocks base method.
-func (m *MockTiEMDBServiceHandler) SaveParametersRecord(arg0 context.Context, arg1 *db.DBSaveParametersRequest, arg2 *db.DBSaveParametersResponse) error {
+func (m *MockTiEMDBServiceHandler) SaveParametersRecord(arg0 context.Context, arg1 *dbpb.DBSaveParametersRequest, arg2 *dbpb.DBSaveParametersResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveParametersRecord", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1634,7 +1634,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) SaveParametersRecord(arg0, arg1,
 }
 
 // SaveRecoverRecord mocks base method.
-func (m *MockTiEMDBServiceHandler) SaveRecoverRecord(arg0 context.Context, arg1 *db.DBSaveRecoverRecordRequest, arg2 *db.DBSaveRecoverRecordResponse) error {
+func (m *MockTiEMDBServiceHandler) SaveRecoverRecord(arg0 context.Context, arg1 *dbpb.DBSaveRecoverRecordRequest, arg2 *dbpb.DBSaveRecoverRecordResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveRecoverRecord", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1648,7 +1648,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) SaveRecoverRecord(arg0, arg1, ar
 }
 
 // SaveToken mocks base method.
-func (m *MockTiEMDBServiceHandler) SaveToken(arg0 context.Context, arg1 *db.DBSaveTokenRequest, arg2 *db.DBSaveTokenResponse) error {
+func (m *MockTiEMDBServiceHandler) SaveToken(arg0 context.Context, arg1 *dbpb.DBSaveTokenRequest, arg2 *dbpb.DBSaveTokenResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveToken", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1662,7 +1662,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) SaveToken(arg0, arg1, arg2 inter
 }
 
 // UpdateBackupRecord mocks base method.
-func (m *MockTiEMDBServiceHandler) UpdateBackupRecord(arg0 context.Context, arg1 *db.DBUpdateBackupRecordRequest, arg2 *db.DBUpdateBackupRecordResponse) error {
+func (m *MockTiEMDBServiceHandler) UpdateBackupRecord(arg0 context.Context, arg1 *dbpb.DBUpdateBackupRecordRequest, arg2 *dbpb.DBUpdateBackupRecordResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateBackupRecord", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1676,7 +1676,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) UpdateBackupRecord(arg0, arg1, a
 }
 
 // UpdateClusterStatus mocks base method.
-func (m *MockTiEMDBServiceHandler) UpdateClusterStatus(arg0 context.Context, arg1 *db.DBUpdateClusterStatusRequest, arg2 *db.DBUpdateClusterStatusResponse) error {
+func (m *MockTiEMDBServiceHandler) UpdateClusterStatus(arg0 context.Context, arg1 *dbpb.DBUpdateClusterStatusRequest, arg2 *dbpb.DBUpdateClusterStatusResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateClusterStatus", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1690,7 +1690,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) UpdateClusterStatus(arg0, arg1, 
 }
 
 // UpdateClusterTopologyConfig mocks base method.
-func (m *MockTiEMDBServiceHandler) UpdateClusterTopologyConfig(arg0 context.Context, arg1 *db.DBUpdateTopologyConfigRequest, arg2 *db.DBUpdateTopologyConfigResponse) error {
+func (m *MockTiEMDBServiceHandler) UpdateClusterTopologyConfig(arg0 context.Context, arg1 *dbpb.DBUpdateTopologyConfigRequest, arg2 *dbpb.DBUpdateTopologyConfigResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateClusterTopologyConfig", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1704,7 +1704,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) UpdateClusterTopologyConfig(arg0
 }
 
 // UpdateFlow mocks base method.
-func (m *MockTiEMDBServiceHandler) UpdateFlow(arg0 context.Context, arg1 *db.DBUpdateFlowRequest, arg2 *db.DBUpdateFlowResponse) error {
+func (m *MockTiEMDBServiceHandler) UpdateFlow(arg0 context.Context, arg1 *dbpb.DBUpdateFlowRequest, arg2 *dbpb.DBUpdateFlowResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateFlow", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1718,7 +1718,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) UpdateFlow(arg0, arg1, arg2 inte
 }
 
 // UpdateTask mocks base method.
-func (m *MockTiEMDBServiceHandler) UpdateTask(arg0 context.Context, arg1 *db.DBUpdateTaskRequest, arg2 *db.DBUpdateTaskResponse) error {
+func (m *MockTiEMDBServiceHandler) UpdateTask(arg0 context.Context, arg1 *dbpb.DBUpdateTaskRequest, arg2 *dbpb.DBUpdateTaskResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateTask", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1732,7 +1732,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) UpdateTask(arg0, arg1, arg2 inte
 }
 
 // UpdateTiupTask mocks base method.
-func (m *MockTiEMDBServiceHandler) UpdateTiupTask(arg0 context.Context, arg1 *db.UpdateTiupTaskRequest, arg2 *db.UpdateTiupTaskResponse) error {
+func (m *MockTiEMDBServiceHandler) UpdateTiupTask(arg0 context.Context, arg1 *dbpb.UpdateTiupTaskRequest, arg2 *dbpb.UpdateTiupTaskResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateTiupTask", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -1746,7 +1746,7 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) UpdateTiupTask(arg0, arg1, arg2 
 }
 
 // UpdateTransportRecord mocks base method.
-func (m *MockTiEMDBServiceHandler) UpdateTransportRecord(arg0 context.Context, arg1 *db.DBUpdateTransportRecordRequest, arg2 *db.DBUpdateTransportRecordResponse) error {
+func (m *MockTiEMDBServiceHandler) UpdateTransportRecord(arg0 context.Context, arg1 *dbpb.DBUpdateTransportRecordRequest, arg2 *dbpb.DBUpdateTransportRecordResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateTransportRecord", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

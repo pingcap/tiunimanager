@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"io"
 	"net"
 	"net/http"
@@ -19,13 +20,12 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
 
 	"google.golang.org/grpc/codes"
 )
 
-func copyHostFromRsp(src *cluster.HostInfo, dst *HostInfo) {
+func copyHostFromRsp(src *clusterpb.HostInfo, dst *HostInfo) {
 	dst.ID = src.HostId
 	dst.HostName = src.HostName
 	dst.IP = src.Ip
@@ -63,7 +63,7 @@ func genHostSpec(cpuCores int32, mem int32) string {
 	return fmt.Sprintf("%dC%dG", cpuCores, mem)
 }
 
-func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
+func copyHostToReq(src *HostInfo, dst *clusterpb.HostInfo) error {
 	dst.HostName = src.HostName
 	dst.Ip = src.IP
 	dst.UserName = src.UserName
@@ -91,7 +91,7 @@ func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
 	dst.Reserved = src.Reserved
 
 	for _, v := range src.Disks {
-		dst.Disks = append(dst.Disks, &cluster.Disk{
+		dst.Disks = append(dst.Disks, &clusterpb.Disk{
 			Name:     v.Name,
 			Capacity: v.Capacity,
 			Status:   v.Status,
@@ -102,9 +102,9 @@ func copyHostToReq(src *HostInfo, dst *cluster.HostInfo) error {
 	return nil
 }
 
-func doImport(c *gin.Context, host *HostInfo) (rsp *cluster.ImportHostResponse, err error) {
-	importReq := cluster.ImportHostRequest{}
-	importReq.Host = new(cluster.HostInfo)
+func doImport(c *gin.Context, host *HostInfo) (rsp *clusterpb.ImportHostResponse, err error) {
+	importReq := clusterpb.ImportHostRequest{}
+	importReq.Host = new(clusterpb.HostInfo)
 	err = copyHostToReq(host, importReq.Host)
 	if err != nil {
 		return nil, err
@@ -112,9 +112,9 @@ func doImport(c *gin.Context, host *HostInfo) (rsp *cluster.ImportHostResponse, 
 	return client.ClusterClient.ImportHost(c, &importReq)
 }
 
-func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *cluster.ImportHostsInBatchResponse, err error) {
-	importReq := cluster.ImportHostsInBatchRequest{}
-	importReq.Hosts = make([]*cluster.HostInfo, len(hosts))
+func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *clusterpb.ImportHostsInBatchResponse, err error) {
+	importReq := clusterpb.ImportHostsInBatchRequest{}
+	importReq.Hosts = make([]*clusterpb.HostInfo, len(hosts))
 	var userName, passwd string
 	for i, host := range hosts {
 		if i == 0 {
@@ -125,7 +125,7 @@ func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *cluster.ImportHostsI
 				return nil, errors.New(errMsg)
 			}
 		}
-		importReq.Hosts[i] = new(cluster.HostInfo)
+		importReq.Hosts[i] = new(clusterpb.HostInfo)
 		err = copyHostToReq(host, importReq.Hosts[i])
 		if err != nil {
 			return nil, err
@@ -307,11 +307,11 @@ func ListHost(c *gin.Context) {
 		return
 	}
 
-	listHostReq := cluster.ListHostsRequest{
+	listHostReq := clusterpb.ListHostsRequest{
 		Purpose: hostQuery.Purpose,
 		Status:  int32(hostQuery.Status),
 	}
-	listHostReq.PageReq = new(cluster.PageDTO)
+	listHostReq.PageReq = new(clusterpb.PageDTO)
 	listHostReq.PageReq.Page = int32(hostQuery.Page)
 	listHostReq.PageReq.PageSize = int32(hostQuery.PageSize)
 
@@ -347,7 +347,7 @@ func HostDetails(c *gin.Context) {
 
 	hostId := c.Param("hostId")
 
-	HostDetailsReq := cluster.CheckDetailsRequest{
+	HostDetailsReq := clusterpb.CheckDetailsRequest{
 		HostId: hostId,
 	}
 
@@ -379,7 +379,7 @@ func RemoveHost(c *gin.Context) {
 
 	hostId := c.Param("hostId")
 
-	RemoveHostReq := cluster.RemoveHostRequest{
+	RemoveHostReq := clusterpb.RemoveHostRequest{
 		HostId: hostId,
 	}
 
@@ -434,7 +434,7 @@ func RemoveHosts(c *gin.Context) {
 		return
 	}
 
-	RemoveHostsReq := cluster.RemoveHostsInBatchRequest{
+	RemoveHostsReq := clusterpb.RemoveHostsInBatchRequest{
 		HostIds: hostIds,
 	}
 
@@ -479,9 +479,9 @@ func DownloadHostTemplateFile(c *gin.Context) {
 	c.File(filePath)
 }
 
-func copyAllocToReq(src []Allocation, dst *[]*cluster.AllocationReq) {
+func copyAllocToReq(src []Allocation, dst *[]*clusterpb.AllocationReq) {
 	for _, req := range src {
-		*dst = append(*dst, &cluster.AllocationReq{
+		*dst = append(*dst, &clusterpb.AllocationReq{
 			FailureDomain: req.FailureDomain,
 			CpuCores:      req.CpuCores,
 			Memory:        req.Memory,
@@ -490,7 +490,7 @@ func copyAllocToReq(src []Allocation, dst *[]*cluster.AllocationReq) {
 	}
 }
 
-func copyAllocFromRsp(src []*cluster.AllocHost, dst *[]AllocateRsp) {
+func copyAllocFromRsp(src []*clusterpb.AllocHost, dst *[]AllocateRsp) {
 	for i, host := range src {
 		plainPasswd, err := crypto.AesDecryptCFB(host.Passwd)
 		if err != nil {
@@ -530,7 +530,7 @@ func AllocHosts(c *gin.Context) {
 		return
 	}
 
-	allocReq := cluster.AllocHostsRequest{}
+	allocReq := clusterpb.AllocHostsRequest{}
 	copyAllocToReq(allocation.PdReq, &allocReq.PdReq)
 	copyAllocToReq(allocation.TidbReq, &allocReq.TidbReq)
 	copyAllocToReq(allocation.TikvReq, &allocReq.TikvReq)
@@ -577,7 +577,7 @@ func GetFailureDomain(c *gin.Context) {
 		return
 	}
 
-	GetDoaminReq := cluster.GetFailureDomainRequest{
+	GetDoaminReq := clusterpb.GetFailureDomainRequest{
 		FailureDomainType: int32(domain),
 	}
 

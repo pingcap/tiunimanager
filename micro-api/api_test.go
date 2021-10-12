@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -19,7 +20,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
-	managerPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -41,22 +41,22 @@ func Test_ListHosts_Succeed(t *testing.T) {
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostId2 := "fake-host-uuid-0002"
 	fakeService := InitFakeClusterClient()
-	fakeService.MockListHost(func(ctx context.Context, in *managerPb.ListHostsRequest, opts ...client.CallOption) (*managerPb.ListHostsResponse, error) {
+	fakeService.MockListHost(func(ctx context.Context, in *clusterpb.ListHostsRequest, opts ...client.CallOption) (*clusterpb.ListHostsResponse, error) {
 		if in.Status != -1 {
 			return nil, status.Errorf(codes.InvalidArgument, "file row count wrong")
 		}
-		rsp := new(managerPb.ListHostsResponse)
-		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp := new(clusterpb.ListHostsResponse)
+		rsp.Rs = new(clusterpb.ResponseStatus)
 		rsp.Rs.Code = int32(codes.OK)
-		rsp.HostList = append(rsp.HostList, &managerPb.HostInfo{
+		rsp.HostList = append(rsp.HostList, &clusterpb.HostInfo{
 			HostId: fakeHostId1,
 			Status: 2,
 		})
-		rsp.HostList = append(rsp.HostList, &managerPb.HostInfo{
+		rsp.HostList = append(rsp.HostList, &clusterpb.HostInfo{
 			HostId: fakeHostId2,
 			Status: 2,
 		})
-		rsp.PageReq = new(managerPb.PageDTO)
+		rsp.PageReq = new(clusterpb.PageDTO)
 		rsp.PageReq.Page = 1
 		rsp.PageReq.PageSize = 10
 		rsp.PageReq.Total = 1
@@ -91,12 +91,12 @@ func Test_ImportHost_Succeed(t *testing.T) {
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostIp := "l92.168.56.11"
 	fakeService := InitFakeClusterClient()
-	fakeService.MockImportHost(func(ctx context.Context, in *managerPb.ImportHostRequest, opts ...client.CallOption) (*managerPb.ImportHostResponse, error) {
+	fakeService.MockImportHost(func(ctx context.Context, in *clusterpb.ImportHostRequest, opts ...client.CallOption) (*clusterpb.ImportHostResponse, error) {
 		if in.Host.Ip != fakeHostIp || in.Host.Disks[0].Name != "nvme0p1" || in.Host.Disks[1].Path != "/mnt/disk2" {
 			return nil, status.Errorf(codes.InvalidArgument, "import host info failed")
 		}
-		rsp := new(managerPb.ImportHostResponse)
-		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp := new(clusterpb.ImportHostResponse)
+		rsp.Rs = new(clusterpb.ResponseStatus)
 		rsp.Rs.Code = int32(codes.OK)
 		rsp.HostId = fakeHostId1
 
@@ -165,7 +165,7 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostId2 := "fake-host-uuid-0002"
 	fakeService := InitFakeClusterClient()
-	fakeService.MockImportHostsInBatch(func(ctx context.Context, in *managerPb.ImportHostsInBatchRequest, opts ...client.CallOption) (*managerPb.ImportHostsInBatchResponse, error) {
+	fakeService.MockImportHostsInBatch(func(ctx context.Context, in *clusterpb.ImportHostsInBatchRequest, opts ...client.CallOption) (*clusterpb.ImportHostsInBatchResponse, error) {
 		if len(in.Hosts) != 3 {
 			return nil, status.Errorf(codes.InvalidArgument, "file row count wrong")
 		}
@@ -181,8 +181,8 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 		if in.Hosts[0].Region != "Region1" || in.Hosts[1].Arch != "X86" {
 			return nil, status.Errorf(codes.Internal, "Field error")
 		}
-		rsp := new(managerPb.ImportHostsInBatchResponse)
-		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp := new(clusterpb.ImportHostsInBatchResponse)
+		rsp.Rs = new(clusterpb.ResponseStatus)
 		rsp.HostIds = append(rsp.HostIds, fakeHostId1)
 		rsp.HostIds = append(rsp.HostIds, fakeHostId2)
 		return rsp, nil
@@ -218,12 +218,12 @@ func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
 	fakeHostId2 := "fake-host-uuid-0002"
 	fakeHostId3 := "fake-host-uuid-0003"
 	fakeService := InitFakeClusterClient()
-	fakeService.MockRemoveHostsInBatch(func(ctx context.Context, in *managerPb.RemoveHostsInBatchRequest, opts ...client.CallOption) (*managerPb.RemoveHostsInBatchResponse, error) {
+	fakeService.MockRemoveHostsInBatch(func(ctx context.Context, in *clusterpb.RemoveHostsInBatchRequest, opts ...client.CallOption) (*clusterpb.RemoveHostsInBatchResponse, error) {
 		if in.HostIds[0] != fakeHostId1 || in.HostIds[1] != fakeHostId2 || in.HostIds[2] != fakeHostId3 {
 			return nil, status.Errorf(codes.InvalidArgument, "input hostIds wrong")
 		}
-		rsp := new(managerPb.RemoveHostsInBatchResponse)
-		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp := new(clusterpb.RemoveHostsInBatchResponse)
+		rsp.Rs = new(clusterpb.ResponseStatus)
 		rsp.Rs.Code = int32(codes.OK)
 
 		return rsp, nil
@@ -244,12 +244,12 @@ func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
 func Test_RemoveHost_Succeed(t *testing.T) {
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeService := InitFakeClusterClient()
-	fakeService.MockRemoveHost(func(ctx context.Context, in *managerPb.RemoveHostRequest, opts ...client.CallOption) (*managerPb.RemoveHostResponse, error) {
+	fakeService.MockRemoveHost(func(ctx context.Context, in *clusterpb.RemoveHostRequest, opts ...client.CallOption) (*clusterpb.RemoveHostResponse, error) {
 		if in.HostId != fakeHostId1 {
 			return nil, status.Errorf(codes.InvalidArgument, "input hostIds wrong")
 		}
-		rsp := new(managerPb.RemoveHostResponse)
-		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp := new(clusterpb.RemoveHostResponse)
+		rsp.Rs = new(clusterpb.ResponseStatus)
 		rsp.Rs.Code = int32(codes.OK)
 
 		return rsp, nil
@@ -268,19 +268,19 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 	fakeDiskName := "sda"
 	fakeDiskPath := "/"
 	fakeService := InitFakeClusterClient()
-	fakeService.MockCheckDetails(func(ctx context.Context, in *managerPb.CheckDetailsRequest, opts ...client.CallOption) (*managerPb.CheckDetailsResponse, error) {
+	fakeService.MockCheckDetails(func(ctx context.Context, in *clusterpb.CheckDetailsRequest, opts ...client.CallOption) (*clusterpb.CheckDetailsResponse, error) {
 		if in.HostId != fakeHostId1 {
 			return nil, status.Errorf(codes.InvalidArgument, "input hostIds wrong")
 		}
-		rsp := new(managerPb.CheckDetailsResponse)
-		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp := new(clusterpb.CheckDetailsResponse)
+		rsp.Rs = new(clusterpb.ResponseStatus)
 		rsp.Rs.Code = int32(codes.OK)
-		rsp.Details = &managerPb.HostInfo{
+		rsp.Details = &clusterpb.HostInfo{
 			HostId:   fakeHostId1,
 			HostName: fakeHostName,
 			Ip:       fakeHostIp,
 		}
-		rsp.Details.Disks = append(rsp.Details.Disks, &managerPb.Disk{
+		rsp.Details.Disks = append(rsp.Details.Disks, &clusterpb.Disk{
 			Name:     fakeDiskName,
 			Path:     fakeDiskPath,
 			Capacity: 256,
@@ -323,26 +323,26 @@ func Test_GetFailureDomain_Succeed(t *testing.T) {
 	fakeZone2, fakeSpec2, fakeCount2, fakePurpose2 := "TEST_Zone2", "8u16g", 2, "Storage"
 	fakeZone3, fakeSpec3, fakeCount3, fakePurpose3 := "TEST_Zone3", "16u64g", 3, "Compute/Storage"
 	fakeService := InitFakeClusterClient()
-	fakeService.MockGetFailureDomain(func(ctx context.Context, in *managerPb.GetFailureDomainRequest, opts ...client.CallOption) (*managerPb.GetFailureDomainResponse, error) {
+	fakeService.MockGetFailureDomain(func(ctx context.Context, in *clusterpb.GetFailureDomainRequest, opts ...client.CallOption) (*clusterpb.GetFailureDomainResponse, error) {
 		if in.FailureDomainType != 2 {
 			return nil, status.Errorf(codes.InvalidArgument, "input failuredomain type wrong")
 		}
-		rsp := new(managerPb.GetFailureDomainResponse)
-		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp := new(clusterpb.GetFailureDomainResponse)
+		rsp.Rs = new(clusterpb.ResponseStatus)
 		rsp.Rs.Code = int32(codes.OK)
-		rsp.FdList = append(rsp.FdList, &managerPb.FailureDomainResource{
+		rsp.FdList = append(rsp.FdList, &clusterpb.FailureDomainResource{
 			FailureDomain: fakeZone1,
 			Spec:          fakeSpec1,
 			Count:         int32(fakeCount1),
 			Purpose:       fakePurpose1,
 		})
-		rsp.FdList = append(rsp.FdList, &managerPb.FailureDomainResource{
+		rsp.FdList = append(rsp.FdList, &clusterpb.FailureDomainResource{
 			FailureDomain: fakeZone2,
 			Spec:          fakeSpec2,
 			Count:         int32(fakeCount2),
 			Purpose:       fakePurpose2,
 		})
-		rsp.FdList = append(rsp.FdList, &managerPb.FailureDomainResource{
+		rsp.FdList = append(rsp.FdList, &clusterpb.FailureDomainResource{
 			FailureDomain: fakeZone3,
 			Spec:          fakeSpec3,
 			Count:         int32(fakeCount3),
@@ -374,51 +374,51 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 	fakeHostName3, fakeIp3, fakeDiskName3, fakeDiskPath3 := "TEST_HOST3", "192.168.56.13", "nvmep0", "/mnt/disk3"
 	fakeHostName4, fakeIp4, fakeDiskName4, fakeDiskPath4 := "TEST_HOST4", "192.168.56.14", "sdc", "/mnt/disk4"
 	fakeService := InitFakeClusterClient()
-	fakeService.MockAllocHosts(func(ctx context.Context, in *managerPb.AllocHostsRequest, opts ...client.CallOption) (*managerPb.AllocHostResponse, error) {
+	fakeService.MockAllocHosts(func(ctx context.Context, in *clusterpb.AllocHostsRequest, opts ...client.CallOption) (*clusterpb.AllocHostResponse, error) {
 		if in.PdReq[0].FailureDomain != "TEST_Zone1" || in.TidbReq[0].FailureDomain != "TEST_Zone2" || in.TikvReq[0].FailureDomain != "TEST_Zone3" || in.TikvReq[1].Memory != 64 {
 			return nil, status.Errorf(codes.InvalidArgument, "input allocHosts type wrong, %s, %s, %s, %d",
 				in.PdReq[0].FailureDomain, in.TidbReq[0].FailureDomain, in.TikvReq[0].FailureDomain, in.TikvReq[1].Memory)
 		}
-		rsp := new(managerPb.AllocHostResponse)
-		rsp.Rs = new(managerPb.ResponseStatus)
+		rsp := new(clusterpb.AllocHostResponse)
+		rsp.Rs = new(clusterpb.ResponseStatus)
 		rsp.Rs.Code = int32(codes.OK)
-		rsp.PdHosts = append(rsp.PdHosts, &managerPb.AllocHost{
+		rsp.PdHosts = append(rsp.PdHosts, &clusterpb.AllocHost{
 			HostName: fakeHostName1,
 			Ip:       fakeIp1,
 			UserName: "root",
 			Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428", // "admin2"
 		})
-		rsp.PdHosts[0].Disk = &managerPb.Disk{
+		rsp.PdHosts[0].Disk = &clusterpb.Disk{
 			Name: fakeDiskName1,
 			Path: fakeDiskPath1,
 		}
-		rsp.TidbHosts = append(rsp.TidbHosts, &managerPb.AllocHost{
+		rsp.TidbHosts = append(rsp.TidbHosts, &clusterpb.AllocHost{
 			HostName: fakeHostName2,
 			Ip:       fakeIp2,
 			UserName: "root",
 			Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		})
-		rsp.TidbHosts[0].Disk = &managerPb.Disk{
+		rsp.TidbHosts[0].Disk = &clusterpb.Disk{
 			Name: fakeDiskName2,
 			Path: fakeDiskPath2,
 		}
-		rsp.TikvHosts = append(rsp.TikvHosts, &managerPb.AllocHost{
+		rsp.TikvHosts = append(rsp.TikvHosts, &clusterpb.AllocHost{
 			HostName: fakeHostName3,
 			Ip:       fakeIp3,
 			UserName: "root",
 			Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		})
-		rsp.TikvHosts[0].Disk = &managerPb.Disk{
+		rsp.TikvHosts[0].Disk = &clusterpb.Disk{
 			Name: fakeDiskName3,
 			Path: fakeDiskPath3,
 		}
-		rsp.TikvHosts = append(rsp.TikvHosts, &managerPb.AllocHost{
+		rsp.TikvHosts = append(rsp.TikvHosts, &clusterpb.AllocHost{
 			HostName: fakeHostName4,
 			Ip:       fakeIp4,
 			UserName: "root",
 			Passwd:   "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		})
-		rsp.TikvHosts[1].Disk = &managerPb.Disk{
+		rsp.TikvHosts[1].Disk = &clusterpb.Disk{
 			Name: fakeDiskName4,
 			Path: fakeDiskPath4,
 		}

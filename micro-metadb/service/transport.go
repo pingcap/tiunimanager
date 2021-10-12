@@ -2,14 +2,14 @@ package service
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/client/metadb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
-	"github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"strconv"
 	"time"
 )
 
-func (d *DBServiceHandler)CreateTransportRecord(ctx context.Context, in *db.DBCreateTransportRecordRequest, out *db.DBCreateTransportRecordResponse) error {
+func (d *DBServiceHandler)CreateTransportRecord(ctx context.Context, in *metadb.db, out *metadb.db) error {
 	uintId, err := strconv.ParseInt(in.GetRecord().GetID(), 10, 64)
 	log := framework.LogWithContext(ctx)
 	record := &models.TransportRecord{
@@ -33,7 +33,7 @@ func (d *DBServiceHandler)CreateTransportRecord(ctx context.Context, in *db.DBCr
 	return nil
 }
 
-func (d *DBServiceHandler)UpdateTransportRecord(ctx context.Context, in *db.DBUpdateTransportRecordRequest, out *db.DBUpdateTransportRecordResponse) error {
+func (d *DBServiceHandler)UpdateTransportRecord(ctx context.Context, in *metadb.db, out *metadb.db) error {
 	log := framework.LogWithContext(ctx)
 	err := d.Dao().ClusterManager().UpdateTransportRecord(in.GetRecord().GetID(), in.GetRecord().GetClusterId(), in.GetRecord().GetStatus(), time.Unix(in.GetRecord().GetEndTime(), 0))
 	if err != nil {
@@ -44,7 +44,7 @@ func (d *DBServiceHandler)UpdateTransportRecord(ctx context.Context, in *db.DBUp
 	return nil
 }
 
-func (d *DBServiceHandler)FindTrasnportRecordByID(ctx context.Context, in *db.DBFindTransportRecordByIDRequest, out *db.DBFindTransportRecordByIDResponse) error {
+func (d *DBServiceHandler)FindTrasnportRecordByID(ctx context.Context, in *metadb.db, out *metadb.db) error {
 	log := framework.LogWithContext(ctx)
 	record, err := d.Dao().ClusterManager().FindTransportRecordById(in.GetRecordId())
 	if err != nil {
@@ -56,18 +56,18 @@ func (d *DBServiceHandler)FindTrasnportRecordByID(ctx context.Context, in *db.DB
 	return nil
 }
 
-func (d *DBServiceHandler)ListTrasnportRecord(ctx context.Context, in *db.DBListTransportRecordRequest, out *db.DBListTransportRecordResponse) error {
+func (d *DBServiceHandler)ListTrasnportRecord(ctx context.Context, in *metadb.db, out *metadb.db) error {
 	log := framework.LogWithContext(ctx)
 	records, total, err := d.Dao().ClusterManager().ListTransportRecord(in.GetClusterId(), in.GetRecordId(), (in.GetPage().GetPage() - 1) * in.GetPage().GetPageSize(), in.GetPage().GetPageSize())
 	if err != nil {
 		log.Errorf("ListTrasnportRecord failed, %s", err.Error())
 		return err
 	}
-	out.Records = make([]*db.TransportRecordDTO, len(records))
+	out.Records = make([]*metadb.db, len(records))
 	for index := 0; index < len(records); index ++ {
 		out.Records[index] = convertRecordDTO(records[index])
 	}
-	out.Page = &db.DBPageDTO{
+	out.Page = &metadb.db{
 		Page: in.GetPage().GetPage(),
 		PageSize: in.GetPage().GetPageSize(),
 		Total: int32(total),
@@ -76,8 +76,8 @@ func (d *DBServiceHandler)ListTrasnportRecord(ctx context.Context, in *db.DBList
 	return nil
 }
 
-func convertRecordDTO(record *models.TransportRecord) *db.TransportRecordDTO {
-	recordDTO := &db.TransportRecordDTO{
+func convertRecordDTO(record *models.TransportRecord) *metadb.db {
+	recordDTO := &metadb.db{
 		ID: strconv.Itoa(int(record.ID)),
 		ClusterId: record.ClusterId,
 		TransportType: record.TransportType,

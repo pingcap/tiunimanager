@@ -2,6 +2,7 @@ package clusterapi
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // Create create a cluster
@@ -41,7 +41,7 @@ func Create(c *gin.Context) {
 
 	baseInfo, demand := req.ConvertToDTO()
 
-	reqDTO := &cluster.ClusterCreateReqDTO{
+	reqDTO := &clusterpb.ClusterCreateReqDTO{
 		Operator: operator.ConvertToDTO(),
 		Cluster:  baseInfo,
 		Demands:  demand,
@@ -95,7 +95,7 @@ func Query(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	reqDTO := &cluster.ClusterQueryReqDTO{
+	reqDTO := &clusterpb.ClusterQueryReqDTO{
 		Operator:      operator.ConvertToDTO(),
 		PageReq:       queryReq.PageRequest.ConvertToDTO(),
 		ClusterId:     queryReq.ClusterId,
@@ -141,7 +141,7 @@ func Delete(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	reqDTO := &cluster.ClusterDeleteReqDTO{
+	reqDTO := &clusterpb.ClusterDeleteReqDTO{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
 	}
@@ -178,7 +178,7 @@ func Delete(c *gin.Context) {
 func Detail(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
-	reqDTO := &cluster.ClusterDetailReqDTO{
+	reqDTO := &clusterpb.ClusterDetailReqDTO{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
 	}
@@ -242,7 +242,7 @@ func ClusterKnowledge(c *gin.Context) {
 // @Router /clusters/{clusterId}/dashboard [get]
 func DescribeDashboard(c *gin.Context) {
 	operator := controller.GetOperator(c)
-	reqDTO := &cluster.DescribeDashboardRequest{
+	reqDTO := &clusterpb.DescribeDashboardRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
 	}
@@ -287,7 +287,7 @@ func Restore(c *gin.Context) {
 
 	baseInfo, demand := req.ConvertToDTO()
 
-	reqDTO := &cluster.RecoverRequest{
+	reqDTO := &clusterpb.RecoverRequest{
 		Operator: operator.ConvertToDTO(),
 		Cluster:  baseInfo,
 		Demands:  demand,

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
-	clusterpb "github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain/mock"
 	"github.com/pingcap/tiup/pkg/cluster/spec"

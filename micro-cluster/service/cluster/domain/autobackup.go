@@ -4,7 +4,7 @@ import (
 	ctx "context"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
-	clusterpb "github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/robfig/cron"

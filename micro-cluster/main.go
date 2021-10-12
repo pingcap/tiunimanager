@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/asim/go-micro/v3"
 	"github.com/pingcap-inc/tiem/library/client"
-	clusterpb "github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"

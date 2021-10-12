@@ -4,7 +4,7 @@ import (
 	ctx "context"
 	"errors"
 	"github.com/pingcap-inc/tiem/library/client"
-	clusterpb "github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"path/filepath"
 	"strconv"

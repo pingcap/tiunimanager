@@ -2,7 +2,7 @@ package host
 
 import (
 	"context"
-	clusterpb "github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"testing"
 

@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"time"
 
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
-func (handler *DBServiceHandler) CreateTiupTask(ctx context.Context, req *dbPb.CreateTiupTaskRequest, rsp *dbPb.CreateTiupTaskResponse) error {
+func (handler *DBServiceHandler) CreateTiupTask(ctx context.Context, req *dbpb.CreateTiupTaskRequest, rsp *dbpb.CreateTiupTaskResponse) error {
 	db := handler.Dao().Db()
 	id, e := models.CreateTiupTask(db, ctx, req.Type, req.BizID)
 	if e == nil {
@@ -20,7 +20,7 @@ func (handler *DBServiceHandler) CreateTiupTask(ctx context.Context, req *dbPb.C
 	return nil
 }
 
-func (handler *DBServiceHandler) UpdateTiupTask(ctx context.Context, req *dbPb.UpdateTiupTaskRequest, rsp *dbPb.UpdateTiupTaskResponse) error {
+func (handler *DBServiceHandler) UpdateTiupTask(ctx context.Context, req *dbpb.UpdateTiupTaskRequest, rsp *dbpb.UpdateTiupTaskResponse) error {
 	db := handler.Dao().Db()
 	e := models.UpdateTiupTaskStatus(db, ctx, req.Id, req.Status, req.ErrStr)
 	if e == nil {
@@ -31,7 +31,7 @@ func (handler *DBServiceHandler) UpdateTiupTask(ctx context.Context, req *dbPb.U
 	return nil
 }
 
-func (handler *DBServiceHandler) FindTiupTaskByID(ctx context.Context, req *dbPb.FindTiupTaskByIDRequest, rsp *dbPb.FindTiupTaskByIDResponse) error {
+func (handler *DBServiceHandler) FindTiupTaskByID(ctx context.Context, req *dbpb.FindTiupTaskByIDRequest, rsp *dbpb.FindTiupTaskByIDResponse) error {
 	db := handler.Dao().Db()
 	task, e := models.FindTiupTaskByID(db, ctx, req.Id)
 	if e == nil {
@@ -42,13 +42,13 @@ func (handler *DBServiceHandler) FindTiupTaskByID(ctx context.Context, req *dbPb
 			var zeroTime time.Time
 			deleteAt = zeroTime.String()
 		}
-		rsp.TiupTask = &dbPb.TiupTask{
+		rsp.TiupTask = &dbpb.TiupTask{
 			ID:        task.ID,
 			CreatedAt: task.CreatedAt.String(),
 			UpdatedAt: task.UpdatedAt.String(),
 			DeletedAt: deleteAt,
-			Type:      dbPb.TiupTaskType(task.Type),
-			Status:    dbPb.TiupTaskStatus(task.Status),
+			Type:      dbpb.TiupTaskType(task.Type),
+			Status:    dbpb.TiupTaskStatus(task.Status),
 			ErrorStr:  task.ErrorStr,
 		}
 	} else {
@@ -58,8 +58,8 @@ func (handler *DBServiceHandler) FindTiupTaskByID(ctx context.Context, req *dbPb
 	return nil
 }
 
-func (handler *DBServiceHandler) GetTiupTaskStatusByBizID(ctx context.Context, req *dbPb.GetTiupTaskStatusByBizIDRequest,
-	rsp *dbPb.GetTiupTaskStatusByBizIDResponse) error {
+func (handler *DBServiceHandler) GetTiupTaskStatusByBizID(ctx context.Context, req *dbpb.GetTiupTaskStatusByBizIDRequest,
+	rsp *dbpb.GetTiupTaskStatusByBizIDResponse) error {
 
 	db := handler.Dao().Db()
 	tasks, e := models.FindTiupTasksByBizID(db, ctx, req.BizID)
@@ -68,16 +68,16 @@ func (handler *DBServiceHandler) GetTiupTaskStatusByBizID(ctx context.Context, r
 		errStatStr := ""
 		processingCt := 0
 		for _, task := range tasks {
-			if task.Status == int(dbPb.TiupTaskStatus_Finished) {
-				rsp.Stat = dbPb.TiupTaskStatus_Finished
+			if task.Status == int(dbpb.TiupTaskStatus_Finished) {
+				rsp.Stat = dbpb.TiupTaskStatus_Finished
 				return nil
 			}
-			if task.Status == int(dbPb.TiupTaskStatus_Error) {
+			if task.Status == int(dbpb.TiupTaskStatus_Error) {
 				errStatStr = task.ErrorStr
 				errCt++
 				continue
 			}
-			if task.Status == int(dbPb.TiupTaskStatus_Processing) {
+			if task.Status == int(dbpb.TiupTaskStatus_Processing) {
 				processingCt++
 				continue
 			}
@@ -88,14 +88,14 @@ func (handler *DBServiceHandler) GetTiupTaskStatusByBizID(ctx context.Context, r
 			return nil
 		}
 		if errCt >= len(tasks) {
-			rsp.Stat = dbPb.TiupTaskStatus_Error
+			rsp.Stat = dbpb.TiupTaskStatus_Error
 			rsp.StatErrStr = errStatStr
 			return nil
 		} else {
 			if processingCt > 0 {
-				rsp.Stat = dbPb.TiupTaskStatus_Processing
+				rsp.Stat = dbpb.TiupTaskStatus_Processing
 			} else {
-				rsp.Stat = dbPb.TiupTaskStatus_Init
+				rsp.Stat = dbpb.TiupTaskStatus_Init
 			}
 			return nil
 		}

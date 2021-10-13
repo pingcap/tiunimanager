@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/asim/go-micro/v3"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/pingcap-inc/tiem/micro-metadb/registry"
 	dbService "github.com/pingcap-inc/tiem/micro-metadb/service"
 )
@@ -29,7 +29,7 @@ func main() {
 	log.Info("etcd client connect success")
 
 	f.PrepareService(func(service micro.Service) error {
-		return dbPb.RegisterTiEMDBServiceHandler(service.Server(), dbService.NewDBServiceHandler(f.GetDataDir(), f))
+		return dbpb.RegisterTiEMDBServiceHandler(service.Server(), dbService.NewDBServiceHandler(f.GetDataDir(), f))
 	})
 
 	err := f.StartService()

@@ -3,17 +3,17 @@ package main
 import (
 	"github.com/asim/go-micro/v3"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
-	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	tenantAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/adapt"
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 func main() {
@@ -26,12 +26,12 @@ func main() {
 	)
 
 	f.PrepareService(func(service micro.Service) error {
-		return clusterPb.RegisterClusterServiceHandler(service.Server(), clusterService.NewClusterServiceHandler(f))
+		return clusterpb.RegisterClusterServiceHandler(service.Server(), clusterService.NewClusterServiceHandler(f))
 	})
 
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.MetaDBService: func(service micro.Service) error {
-			client.DBClient = dbPb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
+			client.DBClient = dbpb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
 			return nil
 		},
 	})

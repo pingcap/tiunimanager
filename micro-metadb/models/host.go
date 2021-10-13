@@ -3,12 +3,13 @@ package models
 import (
 	"fmt"
 
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+
 	"github.com/pingcap-inc/tiem/library/common"
 	rt "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/library/util/bitmap"
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
@@ -262,7 +263,7 @@ func getPortsInRange(usedPorts []int32, start int32, end int32, count int) (*rt.
 	return result, nil
 }
 
-func markResourcesForUsed(tx *gorm.DB, applicant *dbPb.DBApplicant, resources []*Resource, exclusive bool) (err error) {
+func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []*Resource, exclusive bool) (err error) {
 	for _, resource := range resources {
 		if resource.DiskId != "" {
 			var disk rt.Disk
@@ -335,7 +336,7 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbPb.DBApplicant, resources []
 	return nil
 }
 
-func allocResourceInHost(tx *gorm.DB, applicant *dbPb.DBApplicant, seq int, require *dbPb.DBAllocRequirement) (results []rt.HostResource, err error) {
+func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, require *dbpb.DBAllocRequirement) (results []rt.HostResource, err error) {
 	hostId := require.Location.Host
 	if require.Count != 1 {
 		return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "request host count should be 1 for UserSpecifyHost allocation(%d)", require.Count)
@@ -453,7 +454,7 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbPb.DBApplicant, seq int, requ
 	return
 }
 
-func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.DBApplicant, seq int, require *dbPb.DBAllocRequirement, choosedHosts []string) (results []rt.HostResource, err error) {
+func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, require *dbpb.DBAllocRequirement, choosedHosts []string) (results []rt.HostResource, err error) {
 	region := require.Location.Region
 	zone := require.Location.Zone
 	var excludedHosts []string
@@ -573,7 +574,7 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbPb.DBApplicant, seq int, requ
 	return
 }
 
-func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbPb.DBAllocRequest) (results *rt.AllocRsp, err error) {
+func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbpb.DBAllocRequest) (results *rt.AllocRsp, err error) {
 	var choosedHosts []string
 	results = new(rt.AllocRsp)
 	for i, require := range req.Requires {
@@ -602,7 +603,7 @@ func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbPb.DBAllocRequest) (res
 	return
 }
 
-func (m *DAOResourceManager) AllocResources(req *dbPb.DBAllocRequest) (result *rt.AllocRsp, err error) {
+func (m *DAOResourceManager) AllocResources(req *dbpb.DBAllocRequest) (result *rt.AllocRsp, err error) {
 	tx := m.getDb().Begin()
 	result, err = m.doAlloc(tx, req)
 	if err != nil {
@@ -613,7 +614,7 @@ func (m *DAOResourceManager) AllocResources(req *dbPb.DBAllocRequest) (result *r
 	return
 }
 
-func (m *DAOResourceManager) AllocResourcesInBatch(batchReq *dbPb.DBBatchAllocRequest) (results *rt.BatchAllocResponse, err error) {
+func (m *DAOResourceManager) AllocResourcesInBatch(batchReq *dbpb.DBBatchAllocRequest) (results *rt.BatchAllocResponse, err error) {
 	results = new(rt.BatchAllocResponse)
 	tx := m.getDb().Begin()
 	for i, req := range batchReq.BatchRequests {
@@ -760,7 +761,7 @@ func recycleResourceForRequest(tx *gorm.DB, requestId string) (err error) {
 	return nil
 }
 
-func (m *DAOResourceManager) doRecycle(tx *gorm.DB, req *dbPb.DBRecycleRequire) (err error) {
+func (m *DAOResourceManager) doRecycle(tx *gorm.DB, req *dbpb.DBRecycleRequire) (err error) {
 	switch rt.RecycleType(req.RecycleType) {
 	case rt.RecycleHolder:
 		return recycleHolderResource(tx, req.HolderId)
@@ -774,7 +775,7 @@ func (m *DAOResourceManager) doRecycle(tx *gorm.DB, req *dbPb.DBRecycleRequire) 
 	return nil
 }
 
-func (m *DAOResourceManager) RecycleAllocResources(request *dbPb.DBRecycleRequest) (err error) {
+func (m *DAOResourceManager) RecycleAllocResources(request *dbpb.DBRecycleRequest) (err error) {
 	tx := m.getDb().Begin()
 	for i, req := range request.RecycleReqs {
 		err = m.doRecycle(tx, req)

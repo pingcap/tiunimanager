@@ -1,6 +1,7 @@
 package databaseapi
 
 import (
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 	"time"
@@ -8,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // ExportData
@@ -34,7 +34,7 @@ func ExportData(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	respDTO, err := client.ClusterClient.ExportData(framework.NewMicroCtxFromGinCtx(c), &cluster.DataExportRequest{
+	respDTO, err := client.ClusterClient.ExportData(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataExportRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: req.ClusterId,
 		UserName:  req.UserName,
@@ -87,7 +87,7 @@ func ImportData(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	respDTO, err := client.ClusterClient.ImportData(framework.NewMicroCtxFromGinCtx(c), &cluster.DataImportRequest{
+	respDTO, err := client.ClusterClient.ImportData(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataImportRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: req.ClusterId,
 		UserName:  req.UserName,
@@ -133,7 +133,7 @@ func DescribeDataTransport(c *gin.Context) {
 	}
 
 	operator := controller.GetOperator(c)
-	respDTO, err := client.ClusterClient.DescribeDataTransport(framework.NewMicroCtxFromGinCtx(c), &cluster.DataTransportQueryRequest{
+	respDTO, err := client.ClusterClient.DescribeDataTransport(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataTransportQueryRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: clusterId,
 		RecordId:  req.RecordId,

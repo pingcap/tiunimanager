@@ -177,10 +177,25 @@ func ImportDataPreCheck(req *clusterpb.DataImportRequest) error {
 			return fmt.Errorf("invalid param password %s", req.GetPassword())
 		}
 	*/
-	if req.GetFilePath() == "" {
-		return fmt.Errorf("invalid param filePath %s", req.GetFilePath())
-	}
-	if S3StorageType != req.GetStorageType() && NfsStorageType != req.GetStorageType() {
+	switch req.GetStorageType() {
+	case S3StorageType:
+		if req.GetEndpointUrl() == "" {
+			return fmt.Errorf("invalid param endpointUrl %s", req.GetEndpointUrl())
+		}
+		if req.GetBucketUrl() == "" {
+			return fmt.Errorf("invalid param bucketUrl %s", req.GetBucketUrl())
+		}
+		if req.GetAccessKey() == "" {
+			return fmt.Errorf("invalid param accessKey %s", req.GetAccessKey())
+		}
+		if req.GetSecretAccessKey() == "" {
+			return fmt.Errorf("invalid param secretAccessKey %s", req.GetSecretAccessKey())
+		}
+	case NfsStorageType:
+		if req.GetFilePath() == "" {
+			return fmt.Errorf("invalid param filePath %s", req.GetFilePath())
+		}
+	default:
 		return fmt.Errorf("invalid param storageType %s", req.GetStorageType())
 	}
 
@@ -275,7 +290,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (stri
 		ClusterId:   request.GetClusterId(),
 		UserName:    request.GetUserName(),
 		Password:    request.GetPassword(), //todo: need encrypt
-		FilePath:    request.GetFilePath(),
+		FilePath:    getDataImportFilePath(request),
 		RecordId:    resp.GetId(),
 		StorageType: request.GetStorageType(),
 		ConfigPath:  getDataImportConfigDir(request.GetClusterId(), TransportTypeImport),
@@ -346,6 +361,7 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	 *  and check-requirements = true can not pass lightning pre-check
 	 *  in real environment, config data-source-dir = user nfs storage, sorted-kv-dir = other disk, turn on pre-check
 	 */
+	//s3://nfs/tiem/export/SBw5TJr6So2TULUvTLodZA?access-key=minioadmin&secret-access-key=minioadmin&endpoint=http://minio.pingcap.net:9000&force-path-style=true
 	config := &DataImportConfig{
 		Lightning: LightningCfg{
 			Level:             "info",
@@ -357,7 +373,7 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 			SortedKvDir: info.ConfigPath, //todo: TBD
 		},
 		MyDumper: MyDumperCfg{
-			DataSourceDir: info.FilePath,
+			DataSourceDir: fmt.Sprintf("s3://%s", info.FilePath),
 		},
 		Tidb: TidbCfg{
 			Host:       tidbServer.Host,
@@ -377,6 +393,16 @@ func getDataImportConfigDir(clusterId string, transportType TransportType) strin
 }
 
 func getDataExportFilePath(request *clusterpb.DataExportRequest) string {
+	var filePath string
+	if S3StorageType == request.GetStorageType() {
+		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
+	} else {
+		filePath = request.GetFilePath()
+	}
+	return filePath
+}
+
+func getDataImportFilePath(request *clusterpb.DataImportRequest) string {
 	var filePath string
 	if S3StorageType == request.GetStorageType() {
 		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())

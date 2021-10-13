@@ -362,3 +362,24 @@ func Test_getDataExportFilePath_case2(t *testing.T) {
 	path := getDataExportFilePath(request)
 	assert.Equal(t, path, "/tmp/test")
 }
+
+func Test_getDataImportFilePath_case1(t *testing.T) {
+	request := &clusterpb.DataImportRequest{
+		StorageType: S3StorageType,
+		BucketUrl: "s3://test",
+		AccessKey: "admin",
+		SecretAccessKey: "admin",
+		EndpointUrl: "https://minio.pingcap.net:9000",
+	}
+	path := getDataImportFilePath(request)
+	assert.Equal(t, path, fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl()))
+}
+
+func Test_getDataImportFilePath_case2(t *testing.T) {
+	request := &clusterpb.DataImportRequest{
+		StorageType: NfsStorageType,
+		FilePath: "/tmp/test",
+	}
+	path := getDataImportFilePath(request)
+	assert.Equal(t, path, "/tmp/test")
+}

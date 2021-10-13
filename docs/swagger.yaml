@@ -405,11 +405,19 @@ definitions:
     type: object
   databaseapi.DataImportReq:
     properties:
+      accessKey:
+        type: string
+      bucketUrl:
+        type: string
       clusterId:
+        type: string
+      endpointUrl:
         type: string
       filePath:
         type: string
       password:
+        type: string
+      secretAccessKey:
         type: string
       storageType:
         type: string
@@ -722,6 +730,8 @@ definitions:
     properties:
       clusterComponent:
         $ref: '#/definitions/knowledge.ClusterComponent'
+      compentPortConstraint:
+        $ref: '#/definitions/knowledge.ComponentPortConstraint'
       componentConstraint:
         $ref: '#/definitions/knowledge.ComponentConstraint'
     type: object
@@ -771,6 +781,15 @@ definitions:
         items:
           type: integer
         type: array
+    type: object
+  knowledge.ComponentPortConstraint:
+    properties:
+      portCount:
+        type: integer
+      portRangeEnd:
+        type: integer
+      portRangeStart:
+        type: integer
     type: object
   knowledge.ParamValueConstraint:
     properties:

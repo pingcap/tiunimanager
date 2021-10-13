@@ -94,6 +94,10 @@ func ImportData(c *gin.Context) {
 		Password:  req.Password,
 		FilePath:  req.FilePath,
 		StorageType: req.StorageType,
+		BucketUrl: req.BucketUrl,
+		EndpointUrl: req.EndpointUrl,
+		AccessKey: req.AccessKey,
+		SecretAccessKey: req.SecretAccessKey,
 	}, controller.DefaultTimeout)
 
 	if err != nil {

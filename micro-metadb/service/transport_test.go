@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
-	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"testing"
 	"time"
 )
 
 func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
-	record := &db.TransportRecordDTO{
+	record := &dbpb.TransportRecordDTO{
 		ID:            "1111",
 		ClusterId:     "tc-123",
 		TransportType: "import",
@@ -17,10 +17,10 @@ func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
 		Status:        "Running",
 		StartTime:     time.Now().Unix(),
 	}
-	in := &db.DBCreateTransportRecordRequest{
+	in := &dbpb.DBCreateTransportRecordRequest{
 		Record: record,
 	}
-	out := &db.DBCreateTransportRecordResponse{}
+	out := &dbpb.DBCreateTransportRecordResponse{}
 
 	err := handler.CreateTransportRecord(context.TODO(), in, out)
 	if err != nil {
@@ -31,7 +31,7 @@ func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
 }
 
 func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
-	record := &db.TransportRecordDTO{
+	record := &dbpb.TransportRecordDTO{
 		ID:            "2222",
 		ClusterId:     "tc-123",
 		TransportType: "import",
@@ -40,10 +40,10 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 		Status:        "Running",
 		StartTime:     time.Now().Unix(),
 	}
-	createIn := &db.DBCreateTransportRecordRequest{
+	createIn := &dbpb.DBCreateTransportRecordRequest{
 		Record: record,
 	}
-	createOut := &db.DBCreateTransportRecordResponse{}
+	createOut := &dbpb.DBCreateTransportRecordResponse{}
 
 	err := handler.CreateTransportRecord(context.TODO(), createIn, createOut)
 	if err != nil {
@@ -54,10 +54,10 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 	record.Status = "Finish"
 	record.EndTime = time.Now().Unix()
 
-	updateIn := &db.DBUpdateTransportRecordRequest{
+	updateIn := &dbpb.DBUpdateTransportRecordRequest{
 		Record: record,
 	}
-	updateOut := &db.DBUpdateTransportRecordResponse{}
+	updateOut := &dbpb.DBUpdateTransportRecordResponse{}
 	err = handler.UpdateTransportRecord(context.TODO(), updateIn, updateOut)
 	if err != nil {
 		t.Errorf("TestDBServiceHandler_UpdateTransportRecord failed: %s", err.Error())
@@ -67,7 +67,7 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 }
 
 func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
-	record := &db.TransportRecordDTO{
+	record := &dbpb.TransportRecordDTO{
 		ID:            "3333",
 		ClusterId:     "tc-123",
 		TransportType: "import",
@@ -76,10 +76,10 @@ func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 		Status:        "Running",
 		StartTime:     time.Now().Unix(),
 	}
-	createIn := &db.DBCreateTransportRecordRequest{
+	createIn := &dbpb.DBCreateTransportRecordRequest{
 		Record: record,
 	}
-	createOut := &db.DBCreateTransportRecordResponse{}
+	createOut := &dbpb.DBCreateTransportRecordResponse{}
 
 	err := handler.CreateTransportRecord(context.TODO(), createIn, createOut)
 	if err != nil {
@@ -87,10 +87,10 @@ func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 		return
 	}
 
-	in := &db.DBFindTransportRecordByIDRequest{
+	in := &dbpb.DBFindTransportRecordByIDRequest{
 		RecordId: "3333",
 	}
-	out := &db.DBFindTransportRecordByIDResponse{}
+	out := &dbpb.DBFindTransportRecordByIDResponse{}
 	err = handler.FindTrasnportRecordByID(context.TODO(), in, out)
 	if err != nil {
 		t.Errorf("TestDBServiceHandler_FindTrasnportRecordByID failed: %s", err.Error())
@@ -100,7 +100,7 @@ func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 }
 
 func TestDBServiceHandler_ListTrasnportRecord(t *testing.T) {
-	record := &db.TransportRecordDTO{
+	record := &dbpb.TransportRecordDTO{
 		ID:            "4444",
 		ClusterId:     "tc-123",
 		TransportType: "import",
@@ -109,10 +109,10 @@ func TestDBServiceHandler_ListTrasnportRecord(t *testing.T) {
 		Status:        "Running",
 		StartTime:     time.Now().Unix(),
 	}
-	createIn := &db.DBCreateTransportRecordRequest{
+	createIn := &dbpb.DBCreateTransportRecordRequest{
 		Record: record,
 	}
-	createOut := &db.DBCreateTransportRecordResponse{}
+	createOut := &dbpb.DBCreateTransportRecordResponse{}
 
 	err := handler.CreateTransportRecord(context.TODO(), createIn, createOut)
 	if err != nil {
@@ -120,10 +120,10 @@ func TestDBServiceHandler_ListTrasnportRecord(t *testing.T) {
 		return
 	}
 
-	in := &db.DBListTransportRecordRequest{
+	in := &dbpb.DBListTransportRecordRequest{
 		ClusterId: "tc-123",
 	}
-	out := &db.DBListTransportRecordResponse{}
+	out := &dbpb.DBListTransportRecordResponse{}
 	err = handler.ListTrasnportRecord(context.TODO(), in, out)
 	if err != nil {
 		t.Errorf("TestDBServiceHandler_ListTrasnportRecord failed: %s", err.Error())

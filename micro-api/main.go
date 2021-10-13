@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/thirdparty/etcd_clientv2"
@@ -17,7 +18,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/route"
-	clusterPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // @title TiEM UI API
@@ -43,7 +43,7 @@ func main() {
 
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.ClusterService: func(service micro.Service) error {
-			client.ClusterClient = clusterPb.NewClusterService(string(framework.ClusterService), service.Client())
+			client.ClusterClient = clusterpb.NewClusterService(string(framework.ClusterService), service.Client())
 			return nil
 		},
 	})

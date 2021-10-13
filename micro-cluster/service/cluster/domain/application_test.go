@@ -1,8 +1,8 @@
 package domain
 
 import (
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/knowledge"
-	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
@@ -153,21 +153,21 @@ func Test_convertAllocationReq(t *testing.T) {
 }
 
 func Test_convertConfig(t *testing.T) {
-	config := convertConfig(&proto.AllocHostResponse{
-		PdHosts: []*proto.AllocHost{
-			{Ip: "127.0.0.1",Disk: &proto.Disk{Path: "/1/a"}},
-			{Ip: "127.0.0.1",Disk: &proto.Disk{Path: "/1/b"}},
-			{Ip: "127.0.0.1",Disk: &proto.Disk{Path: "/1/c"}},
+	config := convertConfig(&clusterpb.AllocHostResponse{
+		PdHosts: []*clusterpb.AllocHost{
+			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/1/a"}},
+			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/1/b"}},
+			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/1/c"}},
 		},
-		TidbHosts: []*proto.AllocHost{
-			{Ip: "127.0.0.1",Disk: &proto.Disk{Path: "/2/a"}},
-			{Ip: "127.0.0.1",Disk: &proto.Disk{Path: "/2/b"}},
-			{Ip: "127.0.0.1",Disk: &proto.Disk{Path: "/2/c"}},
+		TidbHosts: []*clusterpb.AllocHost{
+			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/2/a"}},
+			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/2/b"}},
+			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/2/c"}},
 		},
-		TikvHosts: []*proto.AllocHost{
-			{Ip: "127.0.0.1",Disk: &proto.Disk{Path: "/3/a"}},
-			{Ip: "127.0.0.1",Disk: &proto.Disk{Path: "/3/b"}},
-			{Ip: "127.0.0.1",Disk: &proto.Disk{Path: "/3/c"}},
+		TikvHosts: []*clusterpb.AllocHost{
+			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/3/a"}},
+			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/3/b"}},
+			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/3/c"}},
 		},
 	},
 	&Cluster{
@@ -180,7 +180,7 @@ func Test_convertConfig(t *testing.T) {
 }
 
 func Test_parseDistributionItemFromDTO(t *testing.T) {
-	r := parseDistributionItemFromDTO(&proto.DistributionItemDTO{
+	r := parseDistributionItemFromDTO(&clusterpb.DistributionItemDTO{
 		SpecCode: "5C9G",
 		ZoneCode: "zone1",
 		Count: 999,
@@ -192,10 +192,10 @@ func Test_parseDistributionItemFromDTO(t *testing.T) {
 }
 
 func Test_parseNodeDemandFromDTO(t *testing.T) {
-	r := parseNodeDemandFromDTO(&proto.ClusterNodeDemandDTO{
+	r := parseNodeDemandFromDTO(&clusterpb.ClusterNodeDemandDTO{
 		ComponentType: "TiDB",
 		TotalNodeCount: 3,
-		Items: []*proto.DistributionItemDTO{
+		Items: []*clusterpb.DistributionItemDTO{
 			{
 				SpecCode: "5C9G",
 				ZoneCode: "zone1",
@@ -214,7 +214,7 @@ func Test_parseNodeDemandFromDTO(t *testing.T) {
 }
 
 func Test_parseOperatorFromDTO(t *testing.T) {
-	gotOperator := parseOperatorFromDTO(&proto.OperatorDTO{
+	gotOperator := parseOperatorFromDTO(&clusterpb.OperatorDTO{
 		Id: "111",
 		Name: "ope",
 		TenantId: "222",
@@ -226,7 +226,7 @@ func Test_parseOperatorFromDTO(t *testing.T) {
 }
 
 func Test_parseRecoverInFoFromDTO(t *testing.T) {
-	gotInfo := parseRecoverInFoFromDTO(&proto.RecoverInfoDTO{
+	gotInfo := parseRecoverInFoFromDTO(&clusterpb.RecoverInfoDTO{
 		SourceClusterId: "111",
 		BackupRecordId: 222,
 	})
@@ -236,34 +236,34 @@ func Test_parseRecoverInFoFromDTO(t *testing.T) {
 }
 
 func TestCreateCluster(t *testing.T) {
-	got, err := CreateCluster(&proto.OperatorDTO {
+	got, err := CreateCluster(&clusterpb.OperatorDTO{
 		Id: "testoperator",
 		Name: "testoperator",
 		TenantId: "testoperator",
 	},
-	&proto.ClusterBaseInfoDTO{
+	&clusterpb.ClusterBaseInfoDTO{
 		ClusterName: "testCluster",
-		ClusterType: &proto.ClusterTypeDTO{
+		ClusterType: &clusterpb.ClusterTypeDTO{
 			Code: "TiDB",
 			Name: "TiDB",
 		},
-		ClusterVersion: &proto.ClusterVersionDTO{
+		ClusterVersion: &clusterpb.ClusterVersionDTO{
 			Code: "v5.0.0",
 			Name: "v5.0.0",
 		},
 	},
-	[]*proto.ClusterNodeDemandDTO{
-		{ComponentType: "TiDB", TotalNodeCount: 3, Items: []*proto.DistributionItemDTO{
+	[]*clusterpb.ClusterNodeDemandDTO{
+		{ComponentType: "TiDB", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
 			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
 			{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
 			{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
 		}},
-		{ComponentType: "TiKV", TotalNodeCount: 3, Items: []*proto.DistributionItemDTO{
+		{ComponentType: "TiKV", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
 			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
 			{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
 			{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
 		}},
-		{ComponentType: "PD", TotalNodeCount: 3, Items: []*proto.DistributionItemDTO{
+		{ComponentType: "PD", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
 			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
 		}},
 	})
@@ -273,7 +273,7 @@ func TestCreateCluster(t *testing.T) {
 }
 
 func TestDeleteCluster(t *testing.T) {
-	got, err := DeleteCluster(&proto.OperatorDTO {
+	got, err := DeleteCluster(&clusterpb.OperatorDTO{
 		Id: "testoperator",
 		Name: "testoperator",
 		TenantId: "testoperator",
@@ -285,7 +285,7 @@ func TestDeleteCluster(t *testing.T) {
 }
 
 func TestModifyParameters(t *testing.T) {
-	got, err := ModifyParameters(&proto.OperatorDTO {
+	got, err := ModifyParameters(&clusterpb.OperatorDTO{
 		Id: "testoperator",
 		Name: "testoperator",
 		TenantId: "testoperator",

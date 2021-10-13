@@ -3,6 +3,7 @@ package instanceapi
 import (
 	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 	"strconv"
@@ -15,7 +16,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/clusterapi"
-	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // QueryParams query params of a cluster
@@ -40,7 +40,7 @@ func QueryParams(c *gin.Context) {
 	}
 	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
-	resp, err := client.ClusterClient.QueryParameters(context.TODO(), &cluster.QueryClusterParametersRequest{
+	resp, err := client.ClusterClient.QueryParameters(context.TODO(), &clusterpb.QueryClusterParametersRequest{
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
@@ -110,7 +110,7 @@ func SubmitParams(c *gin.Context) {
 
 	jsonContent := string(jsonByte)
 
-	resp, err := client.ClusterClient.SaveParameters(context.TODO(), &cluster.SaveClusterParametersRequest{
+	resp, err := client.ClusterClient.SaveParameters(context.TODO(), &clusterpb.SaveClusterParametersRequest{
 		ClusterId:      clusterId,
 		ParametersJson: jsonContent,
 		Operator:       operator.ConvertToDTO(),
@@ -148,7 +148,7 @@ func Backup(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	resp, err := client.ClusterClient.CreateBackup(framework.NewMicroCtxFromGinCtx(c), &cluster.CreateBackupRequest{
+	resp, err := client.ClusterClient.CreateBackup(framework.NewMicroCtxFromGinCtx(c), &clusterpb.CreateBackupRequest{
 		ClusterId:   req.ClusterId,
 		BackupType:  req.BackupType,
 		BackupMethod: req.BackupMethod,
@@ -190,7 +190,7 @@ func QueryBackupStrategy(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
 
-	resp, err := client.ClusterClient.GetBackupStrategy(framework.NewMicroCtxFromGinCtx(c), &cluster.GetBackupStrategyRequest{
+	resp, err := client.ClusterClient.GetBackupStrategy(framework.NewMicroCtxFromGinCtx(c), &clusterpb.GetBackupStrategyRequest{
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
@@ -230,9 +230,9 @@ func SaveBackupStrategy(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
-	_, err := client.ClusterClient.SaveBackupStrategy(framework.NewMicroCtxFromGinCtx(c), &cluster.SaveBackupStrategyRequest{
+	_, err := client.ClusterClient.SaveBackupStrategy(framework.NewMicroCtxFromGinCtx(c), &clusterpb.SaveBackupStrategyRequest{
 		Operator: operator.ConvertToDTO(),
-		Strategy: &cluster.BackupStrategy{
+		Strategy: &clusterpb.BackupStrategy{
 			ClusterId:   clusterId,
 			BackupDate:  req.Strategy.BackupDate,
 			Period:      req.Strategy.Period,
@@ -265,7 +265,7 @@ func QueryBackup(c *gin.Context) {
 		return
 	}
 	operator := controller.GetOperator(c)
-	reqDTO := &cluster.QueryBackupRequest{
+	reqDTO := &clusterpb.QueryBackupRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: queryReq.ClusterId,
 		Page:      queryReq.PageRequest.ConvertToDTO(),
@@ -332,7 +332,7 @@ func DeleteBackup(c *gin.Context) {
 	}
 	operator := controller.GetOperator(c)
 
-	_, err = client.ClusterClient.DeleteBackupRecord(framework.NewMicroCtxFromGinCtx(c), &cluster.DeleteBackupRequest{
+	_, err = client.ClusterClient.DeleteBackupRecord(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DeleteBackupRequest{
 		BackupRecordId: int64(backupId),
 		Operator:       operator.ConvertToDTO(),
 		ClusterId:      req.ClusterId,

@@ -1,12 +1,12 @@
 package models
 
 import (
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -1299,32 +1299,32 @@ func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
 	//	defer Dao.ResourceManager().DeleteHost(id2)
 	//	defer Dao.ResourceManager().DeleteHost(id3)
 
-	loc := new(dbPb.DBLocation)
+	loc := new(dbpb.DBLocation)
 	loc.Region = "Region1"
 	loc.Zone = "Zone1"
-	filter := new(dbPb.DBFilter)
+	filter := new(dbpb.DBFilter)
 	filter.Arch = string(resource.X86)
 	filter.DiskType = string(resource.SSD)
 	filter.Purpose = string(resource.General)
-	require := new(dbPb.DBRequirement)
-	require.ComputeReq = new(dbPb.DBComputeRequirement)
+	require := new(dbpb.DBRequirement)
+	require.ComputeReq = new(dbpb.DBComputeRequirement)
 	require.ComputeReq.CpuCores = 4
 	require.ComputeReq.Memory = 8
-	require.DiskReq = new(dbPb.DBDiskRequirement)
+	require.DiskReq = new(dbpb.DBDiskRequirement)
 	require.DiskReq.Capacity = 256
 	require.DiskReq.DiskType = string(resource.SSD)
 	require.DiskReq.NeedDisk = true
-	require.PortReq = append(require.PortReq, &dbPb.DBPortRequirement{
+	require.PortReq = append(require.PortReq, &dbpb.DBPortRequirement{
 		Start:   10000,
 		End:     10010,
 		PortCnt: 5,
 	})
 
-	var test_req dbPb.DBAllocRequest
-	test_req.Applicant = new(dbPb.DBApplicant)
+	var test_req dbpb.DBAllocRequest
+	test_req.Applicant = new(dbpb.DBApplicant)
 	test_req.Applicant.HolderId = "TestCluster1"
 	test_req.Applicant.RequestId = "TestRequestID1"
-	test_req.Requires = append(test_req.Requires, &dbPb.DBAllocRequirement{
+	test_req.Requires = append(test_req.Requires, &dbpb.DBAllocRequirement{
 		Location:   loc,
 		HostFilter: filter,
 		Strategy:   int32(resource.RandomRack),
@@ -1333,7 +1333,7 @@ func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
 	})
 
 	type args struct {
-		request *dbPb.DBAllocRequest
+		request *dbpb.DBAllocRequest
 	}
 	tests := []struct {
 		name    string
@@ -1462,43 +1462,43 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 	//	defer Dao.ResourceManager().DeleteHost(id2)
 	//	defer Dao.ResourceManager().DeleteHost(id3)
 
-	loc := new(dbPb.DBLocation)
+	loc := new(dbpb.DBLocation)
 	loc.Region = "Region1"
 	loc.Zone = "Zone2"
-	filter1 := new(dbPb.DBFilter)
+	filter1 := new(dbpb.DBFilter)
 	filter1.Arch = string(resource.X86)
 	filter1.DiskType = string(resource.SSD)
 	filter1.Purpose = string(resource.General)
-	filter2 := new(dbPb.DBFilter)
+	filter2 := new(dbpb.DBFilter)
 	filter2.Arch = string(resource.X86)
 	filter2.DiskType = string(resource.SSD)
 	filter2.Purpose = string(resource.Storage)
-	require := new(dbPb.DBRequirement)
-	require.ComputeReq = new(dbPb.DBComputeRequirement)
+	require := new(dbpb.DBRequirement)
+	require.ComputeReq = new(dbpb.DBComputeRequirement)
 	require.ComputeReq.CpuCores = 4
 	require.ComputeReq.Memory = 8
-	require.DiskReq = new(dbPb.DBDiskRequirement)
+	require.DiskReq = new(dbpb.DBDiskRequirement)
 	require.DiskReq.Capacity = 256
 	require.DiskReq.DiskType = string(resource.SSD)
 	require.DiskReq.NeedDisk = true
-	require.PortReq = append(require.PortReq, &dbPb.DBPortRequirement{
+	require.PortReq = append(require.PortReq, &dbpb.DBPortRequirement{
 		Start:   10000,
 		End:     10010,
 		PortCnt: 5,
 	})
 
-	var test_req dbPb.DBAllocRequest
-	test_req.Applicant = new(dbPb.DBApplicant)
+	var test_req dbpb.DBAllocRequest
+	test_req.Applicant = new(dbpb.DBApplicant)
 	test_req.Applicant.HolderId = "TestCluster1"
 	test_req.Applicant.RequestId = "TestRequestID1"
-	test_req.Requires = append(test_req.Requires, &dbPb.DBAllocRequirement{
+	test_req.Requires = append(test_req.Requires, &dbpb.DBAllocRequirement{
 		Location:   loc,
 		HostFilter: filter1,
 		Strategy:   int32(resource.RandomRack),
 		Require:    require,
 		Count:      2,
 	})
-	test_req.Requires = append(test_req.Requires, &dbPb.DBAllocRequirement{
+	test_req.Requires = append(test_req.Requires, &dbpb.DBAllocRequirement{
 		Location:   loc,
 		HostFilter: filter2,
 		Strategy:   int32(resource.RandomRack),
@@ -1507,7 +1507,7 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 	})
 
 	type args struct {
-		request *dbPb.DBAllocRequest
+		request *dbpb.DBAllocRequest
 	}
 	tests := []struct {
 		name    string
@@ -1649,32 +1649,32 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 		defer Dao.ResourceManager().DeleteHost(id3)
 	*/
 
-	loc := new(dbPb.DBLocation)
+	loc := new(dbpb.DBLocation)
 	loc.Region = "Region1"
 	loc.Zone = "Zone3"
-	filter1 := new(dbPb.DBFilter)
+	filter1 := new(dbpb.DBFilter)
 	filter1.DiskType = string(resource.SSD)
 	filter1.Purpose = string(resource.General)
 	filter1.Arch = string(resource.X86)
-	require := new(dbPb.DBRequirement)
-	require.ComputeReq = new(dbPb.DBComputeRequirement)
+	require := new(dbpb.DBRequirement)
+	require.ComputeReq = new(dbpb.DBComputeRequirement)
 	require.ComputeReq.CpuCores = 4
 	require.ComputeReq.Memory = 8
-	require.DiskReq = new(dbPb.DBDiskRequirement)
+	require.DiskReq = new(dbpb.DBDiskRequirement)
 	require.DiskReq.Capacity = 256
 	require.DiskReq.DiskType = string(resource.SSD)
 	require.DiskReq.NeedDisk = true
-	require.PortReq = append(require.PortReq, &dbPb.DBPortRequirement{
+	require.PortReq = append(require.PortReq, &dbpb.DBPortRequirement{
 		Start:   10000,
 		End:     10015,
 		PortCnt: 5,
 	})
 
-	var test_req dbPb.DBAllocRequest
-	test_req.Applicant = new(dbPb.DBApplicant)
+	var test_req dbpb.DBAllocRequest
+	test_req.Applicant = new(dbpb.DBApplicant)
 	test_req.Applicant.HolderId = "TestCluster1"
 	test_req.Applicant.RequestId = "TestRequestID1"
-	test_req.Requires = append(test_req.Requires, &dbPb.DBAllocRequirement{
+	test_req.Requires = append(test_req.Requires, &dbpb.DBAllocRequirement{
 		Location:   loc,
 		HostFilter: filter1,
 		Strategy:   int32(resource.RandomRack),
@@ -1682,14 +1682,14 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 		Count:      3,
 	})
 
-	var batchReq dbPb.DBBatchAllocRequest
+	var batchReq dbpb.DBBatchAllocRequest
 	batchReq.BatchRequests = append(batchReq.BatchRequests, &test_req)
 	batchReq.BatchRequests = append(batchReq.BatchRequests, &test_req)
 	batchReq.BatchRequests = append(batchReq.BatchRequests, &test_req)
 	assert.Equal(t, 3, len(batchReq.BatchRequests))
 
 	type args struct {
-		request *dbPb.DBBatchAllocRequest
+		request *dbpb.DBBatchAllocRequest
 	}
 	tests := []struct {
 		name    string

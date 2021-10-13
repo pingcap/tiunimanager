@@ -254,16 +254,15 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
 		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_BACKUP_STRATEGY_QUERY_FAILED, Message: common.TiEMErrMsg[common.TIEM_BACKUP_STRATEGY_QUERY_FAILED]}
-		return err
 	} else {
 		response.Status = SuccessResponseStatus
 		response.Strategy = strategy
-		return nil
 	}
+	return nil
 }
 
 func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *clusterpb.QueryBackupRequest, response *clusterpb.QueryBackupResponse) (err error) {
-	result, err := client.DBClient.ListBackupRecords(context.TODO(), &dbpb.DBListBackupRecordsRequest{
+	result, err := client.DBClient.ListBackupRecords(ctx, &dbpb.DBListBackupRecordsRequest{
 		ClusterId: request.ClusterId,
 		StartTime: request.StartTime,
 		EndTime:   request.EndTime,

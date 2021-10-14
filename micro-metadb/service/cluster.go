@@ -367,7 +367,7 @@ func (handler *DBServiceHandler) QueryBackupStrategyByTime(ctx context.Context, 
 	result, err := handler.Dao().ClusterManager().QueryBackupStartegyByTime(req.GetWeekday(), req.GetStartHour())
 	if err != nil {
 		log.Errorf("QueryBackupStrategyByTime failed, req: %+v, error: %s", req, err.Error())
-		return nil
+		return err
 	}
 
 	resp.Status = ClusterSuccessResponseStatus

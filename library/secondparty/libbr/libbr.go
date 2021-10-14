@@ -572,7 +572,6 @@ func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd 
 		}
 		logger.Info("sql cmd return successfully")
 		successFp()
-		return
 	}()
 	return exitCh
 }

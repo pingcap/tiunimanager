@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/tiup/pkg/utils/rand"
 	"io/ioutil"
@@ -42,7 +42,7 @@ type Dashboard struct {
 var loginUrlSuffix string = "api/user/login"
 var defaultExpire int64 = 60 * 60 * 3 //3 hour expire
 
-func DescribeDashboard(ctx context.Context, ope *proto.OperatorDTO, clusterId string) (*Dashboard, error) {
+func DescribeDashboard(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string) (*Dashboard, error) {
 	//todo: check operator and clusterId
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil || clusterAggregation == nil || clusterAggregation.Cluster == nil {

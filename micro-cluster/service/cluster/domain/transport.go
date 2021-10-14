@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
-	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"os"
 	"strconv"
 	"time"
@@ -124,7 +124,7 @@ var contextDataTransportKey = "dataTransportInfo"
 var contextCtxKey = "ctx"
 var defaultTransportDirPrefix = "/tmp/tiem/transport" //todo: move to config
 
-func ExportDataPreCheck(req *proto.DataExportRequest) error {
+func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 	if req.GetClusterId() == "" {
 		return fmt.Errorf("invalid param clusterId %s", req.GetClusterId())
 	}
@@ -165,7 +165,7 @@ func ExportDataPreCheck(req *proto.DataExportRequest) error {
 	return nil
 }
 
-func ImportDataPreCheck(req *proto.DataImportRequest) error {
+func ImportDataPreCheck(req *clusterpb.DataImportRequest) error {
 	if req.GetClusterId() == "" {
 		return fmt.Errorf("invalid param clusterId %s", req.GetClusterId())
 	}
@@ -187,7 +187,7 @@ func ImportDataPreCheck(req *proto.DataImportRequest) error {
 	return nil
 }
 
-func ExportData(ctx context.Context, request *proto.DataExportRequest) (string, error) {
+func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (string, error) {
 	getLoggerWithContext(ctx).Infof("begin exportdata request %+v", request)
 	defer getLoggerWithContext(ctx).Infof("end exportdata")
 	//todo: check operator
@@ -199,8 +199,8 @@ func ExportData(ctx context.Context, request *proto.DataExportRequest) (string, 
 		return "", err
 	}
 
-	req := &db.DBCreateTransportRecordRequest{
-		Record: &db.TransportRecordDTO{
+	req := &dbpb.DBCreateTransportRecordRequest{
+		Record: &dbpb.TransportRecordDTO{
 			ClusterId:     request.GetClusterId(),
 			TenantId:      operator.TenantId,
 			TransportType: string(TransportTypeExport),
@@ -243,7 +243,7 @@ func ExportData(ctx context.Context, request *proto.DataExportRequest) (string, 
 	return info.RecordId, nil
 }
 
-func ImportData(ctx context.Context, request *proto.DataImportRequest) (string, error) {
+func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (string, error) {
 	getLoggerWithContext(ctx).Infof("begin importdata request %+v", request)
 	defer getLoggerWithContext(ctx).Infof("end importdata")
 	//todo: check operator
@@ -256,8 +256,8 @@ func ImportData(ctx context.Context, request *proto.DataImportRequest) (string, 
 		return "", err
 	}
 
-	req := &db.DBCreateTransportRecordRequest{
-		Record: &db.TransportRecordDTO{
+	req := &dbpb.DBCreateTransportRecordRequest{
+		Record: &dbpb.TransportRecordDTO{
 			ClusterId:     request.GetClusterId(),
 			TenantId:      operator.TenantId,
 			TransportType: string(TransportTypeImport),
@@ -296,11 +296,11 @@ func ImportData(ctx context.Context, request *proto.DataImportRequest) (string, 
 	return info.RecordId, nil
 }
 
-func DescribeDataTransportRecord(ctx context.Context, ope *proto.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*db.TransportRecordDTO, *db.DBPageDTO, error) {
+func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*dbpb.TransportRecordDTO, *dbpb.DBPageDTO, error) {
 	getLoggerWithContext(ctx).Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %s, page: %d, pageSize: %d", clusterId, recordId, page, pageSize)
 	defer getLoggerWithContext(ctx).Info("end DescribeDataTransportRecord")
-	req := &db.DBListTransportRecordRequest{
-		Page: &db.DBPageDTO{
+	req := &dbpb.DBListTransportRecordRequest{
+		Page: &dbpb.DBPageDTO{
 			Page:     page,
 			PageSize: pageSize,
 		},
@@ -376,7 +376,7 @@ func getDataImportConfigDir(clusterId string, transportType TransportType) strin
 	return fmt.Sprintf("%s/%s/%s", defaultTransportDirPrefix, clusterId, transportType)
 }
 
-func getDataExportFilePath(request *proto.DataExportRequest) string {
+func getDataExportFilePath(request *clusterpb.DataExportRequest) string {
 	var filePath string
 	if S3StorageType == request.GetStorageType() {
 		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
@@ -466,8 +466,8 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	info := flowContext.value(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
 
-	req := &db.DBUpdateTransportRecordRequest{
-		Record: &db.TransportRecordDTO{
+	req := &dbpb.DBUpdateTransportRecordRequest{
+		Record: &dbpb.TransportRecordDTO{
 			ID:        info.RecordId,
 			ClusterId: cluster.Id,
 			Status:    TransportStatusSuccess,
@@ -550,8 +550,8 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	info := flowContext.value(contextDataTransportKey).(*ExportInfo)
 	cluster := clusterAggregation.Cluster
 
-	req := &db.DBUpdateTransportRecordRequest{
-		Record: &db.TransportRecordDTO{
+	req := &dbpb.DBUpdateTransportRecordRequest{
+		Record: &dbpb.TransportRecordDTO{
 			ID:        info.RecordId,
 			ClusterId: cluster.Id,
 			Status:    TransportStatusSuccess,
@@ -634,8 +634,8 @@ func exportDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func updateTransportRecordFailed(ctx context.Context, recordId, clusterId string) error {
-	req := &db.DBUpdateTransportRecordRequest{
-		Record: &db.TransportRecordDTO{
+	req := &dbpb.DBUpdateTransportRecordRequest{
+		Record: &dbpb.TransportRecordDTO{
 			ID:        recordId,
 			ClusterId: clusterId,
 			Status:    TransportStatusFailed,

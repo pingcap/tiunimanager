@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
+	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	db "github.com/pingcap-inc/tiem/library/client/metadb/dbpb/mocks"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
-	db "github.com/pingcap-inc/tiem/micro-metadb/proto/mocks"
 	"os"
 	"testing"
 

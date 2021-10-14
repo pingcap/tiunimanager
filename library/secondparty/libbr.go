@@ -9,7 +9,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pingcap-inc/tiem/library/client"
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 )
 
 type DbConnParam struct {

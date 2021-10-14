@@ -4,17 +4,17 @@ import (
 	ctx "context"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	mock "github.com/pingcap-inc/tiem/library/client/metadb/dbpb/mocks"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
-	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
-	mock "github.com/pingcap-inc/tiem/micro-metadb/proto/mocks"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
 func TestSaveBackupStrategyPreCheck_case1(t *testing.T) {
-	err := SaveBackupStrategyPreCheck(&proto.OperatorDTO{}, &proto.BackupStrategy{
+	err := SaveBackupStrategyPreCheck(&clusterpb.OperatorDTO{}, &clusterpb.BackupStrategy{
 		Period:     "14:00-16:00",
 		BackupDate: "Monday,Tuesday,Thursday,Sunday",
 	})
@@ -22,7 +22,7 @@ func TestSaveBackupStrategyPreCheck_case1(t *testing.T) {
 }
 
 func TestSaveBackupStrategyPreCheck_case3(t *testing.T) {
-	err := SaveBackupStrategyPreCheck(&proto.OperatorDTO{}, &proto.BackupStrategy{
+	err := SaveBackupStrategyPreCheck(&clusterpb.OperatorDTO{}, &clusterpb.BackupStrategy{
 		Period:     "14:0016:00",
 		BackupDate: "Monday,Tuesday,Thursday,Sunday",
 	})
@@ -30,7 +30,7 @@ func TestSaveBackupStrategyPreCheck_case3(t *testing.T) {
 }
 
 func TestSaveBackupStrategyPreCheck_case4(t *testing.T) {
-	err := SaveBackupStrategyPreCheck(&proto.OperatorDTO{}, &proto.BackupStrategy{
+	err := SaveBackupStrategyPreCheck(&clusterpb.OperatorDTO{}, &clusterpb.BackupStrategy{
 		Period:     "18-16",
 		BackupDate: "Monday,Tuesday,Thursday,Sunday",
 	})
@@ -38,7 +38,7 @@ func TestSaveBackupStrategyPreCheck_case4(t *testing.T) {
 }
 
 func TestSaveBackupStrategyPreCheck_case5(t *testing.T) {
-	err := SaveBackupStrategyPreCheck(&proto.OperatorDTO{}, &proto.BackupStrategy{
+	err := SaveBackupStrategyPreCheck(&clusterpb.OperatorDTO{}, &clusterpb.BackupStrategy{
 		Period:     "14:00-16:00",
 		BackupDate: "Monday,weekday,Thursday,Sunday",
 	})
@@ -50,10 +50,10 @@ func TestBackup(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().SaveBackupRecord(gomock.Any(), gomock.Any()).Return(&db.DBSaveBackupRecordResponse{}, nil)
+	mockClient.EXPECT().SaveBackupRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBSaveBackupRecordResponse{}, nil)
 	client.DBClient = mockClient
 
-	_, err := Backup(ctx.Background(), &proto.OperatorDTO{
+	_, err := Backup(ctx.Background(), &clusterpb.OperatorDTO{
 		Id: "123",
 		Name: "123",
 		TenantId: "123",
@@ -63,13 +63,13 @@ func TestBackup(t *testing.T) {
 }
 
 func TestRecoverPreCheck(t *testing.T) {
-	request := &proto.RecoverRequest{
-		Operator: &proto.OperatorDTO{
+	request := &clusterpb.RecoverRequest{
+		Operator: &clusterpb.OperatorDTO{
 			Id: "123",
 			Name: "123",
 		},
-		Cluster: &proto.ClusterBaseInfoDTO{
-			RecoverInfo: &proto.RecoverInfoDTO{
+		Cluster: &clusterpb.ClusterBaseInfoDTO{
+			RecoverInfo: &clusterpb.RecoverInfoDTO{
 				BackupRecordId: 123,
 				SourceClusterId: "test-tidb",
 			},
@@ -82,14 +82,14 @@ func TestRecoverPreCheck(t *testing.T) {
 }
 
 func TestRecover(t *testing.T) {
-	_, err := Recover(ctx.Background(), &proto.OperatorDTO{
+	_, err := Recover(ctx.Background(), &clusterpb.OperatorDTO{
 		Id: "123",
 		Name: "123",
 		TenantId: "123",
-	}, &proto.ClusterBaseInfoDTO{
+	}, &clusterpb.ClusterBaseInfoDTO{
 			ClusterName: "test-tidb",
-			ClusterVersion: &proto.ClusterVersionDTO{Code: "v4.0.12", Name: "v4.0.12"},
-			ClusterType: &proto.ClusterTypeDTO{Code: "TiDB", Name: "TiDB"},
+			ClusterVersion: &clusterpb.ClusterVersionDTO{Code: "v4.0.12", Name: "v4.0.12"},
+			ClusterType: &clusterpb.ClusterTypeDTO{Code: "TiDB", Name: "TiDB"},
 	}, nil)
 
 	assert.NoError(t, err)
@@ -100,11 +100,11 @@ func TestDeleteBackup(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any()).Return(&db.DBQueryBackupRecordResponse{}, nil)
-	mockClient.EXPECT().DeleteBackupRecord(gomock.Any(), gomock.Any()).Return(&db.DBDeleteBackupRecordResponse{}, nil)
+	mockClient.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any()).Return(&dbpb.DBQueryBackupRecordResponse{}, nil)
+	mockClient.EXPECT().DeleteBackupRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBDeleteBackupRecordResponse{}, nil)
 	client.DBClient = mockClient
 
-	err := DeleteBackup(ctx.Background(), &proto.OperatorDTO{
+	err := DeleteBackup(ctx.Background(), &clusterpb.OperatorDTO{
 		Id: "123",
 		Name: "123",
 		TenantId: "123",
@@ -118,14 +118,14 @@ func TestSaveBackupStrategy(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().SaveBackupStrategy(gomock.Any(), gomock.Any()).Return(&db.DBSaveBackupStrategyResponse{}, nil)
+	mockClient.EXPECT().SaveBackupStrategy(gomock.Any(), gomock.Any()).Return(&dbpb.DBSaveBackupStrategyResponse{}, nil)
 	client.DBClient = mockClient
 
-	err := SaveBackupStrategy(ctx.Background(), &proto.OperatorDTO{
+	err := SaveBackupStrategy(ctx.Background(), &clusterpb.OperatorDTO{
 		Id: "123",
 		Name: "123",
 		TenantId: "123",
-	}, &proto.BackupStrategy{
+	}, &clusterpb.BackupStrategy{
 		ClusterId: "test-abc",
 		BackupDate: "Monday,Sunday",
 		Period: "12:00-13:00",
@@ -138,8 +138,8 @@ func TestQueryBackupStrategy(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().QueryBackupStrategy(gomock.Any(), gomock.Any()).Return(&db.DBQueryBackupStrategyResponse{
-		Strategy: &db.DBBackupStrategyDTO{
+	mockClient.EXPECT().QueryBackupStrategy(gomock.Any(), gomock.Any()).Return(&dbpb.DBQueryBackupStrategyResponse{
+		Strategy: &dbpb.DBBackupStrategyDTO{
 			TenantId: "123",
 			OperatorId: "123",
 			ClusterId: "test-abc",
@@ -150,7 +150,7 @@ func TestQueryBackupStrategy(t *testing.T) {
 	}, nil)
 	client.DBClient = mockClient
 
-	_, err := QueryBackupStrategy(ctx.Background(), &proto.OperatorDTO{
+	_, err := QueryBackupStrategy(ctx.Background(), &clusterpb.OperatorDTO{
 		Id: "123",
 		Name: "123",
 		TenantId: "123",
@@ -227,7 +227,7 @@ func Test_updateBackupRecord(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().UpdateBackupRecord(gomock.Any(), gomock.Any()).Return(&db.DBUpdateBackupRecordResponse{}, nil)
+	mockClient.EXPECT().UpdateBackupRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateBackupRecordResponse{}, nil)
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}

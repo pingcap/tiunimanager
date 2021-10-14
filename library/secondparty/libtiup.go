@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/client"
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 )
 
 func (secondMicro *SecondMicro) MicroSrvTiupDeploy(instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {

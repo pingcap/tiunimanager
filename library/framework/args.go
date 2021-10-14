@@ -18,6 +18,7 @@ import (
 //  LogLevel Minimum log level, default by info.
 type ClientArgs struct {
 	Host                 string
+	EnableHttps          bool
 	Port                 int
 	MetricsPort          int
 	RegistryClientPort   int
@@ -37,6 +38,12 @@ func AllFlags(receiver *ClientArgs) []cli.Flag {
 			Value:       "127.0.0.1",
 			Usage:       "Specify the host ip address.",
 			Destination: &receiver.Host,
+		},
+		&cli.BoolFlag{
+			Name:        "enable-https",
+			Value:       false,
+			Usage:       "Enable https for open-api.",
+			Destination: &receiver.EnableHttps,
 		},
 		&cli.IntFlag{
 			Name:        "port",

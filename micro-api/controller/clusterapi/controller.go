@@ -3,6 +3,7 @@ package clusterapi
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 	"time"
@@ -249,16 +250,20 @@ func DescribeDashboard(c *gin.Context) {
 	respDTO, err := client.ClusterClient.DescribeDashboard(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
 		status := respDTO.GetStatus()
-		result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
-			ClusterId: respDTO.GetClusterId(),
-			Url:       respDTO.GetUrl(),
-			Token:     respDTO.GetToken(),
-		})
+		if common.TIEM_SUCCESS == status.GetCode() {
+			result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
+				ClusterId: respDTO.GetClusterId(),
+				Url:       respDTO.GetUrl(),
+				Token:     respDTO.GetToken(),
+			})
 
-		c.JSON(http.StatusOK, result)
+			c.JSON(http.StatusOK, result)
+		} else {
+			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
+		}
 	}
 }
 
@@ -296,20 +301,18 @@ func Restore(c *gin.Context) {
 	respDTO, err := client.ClusterClient.RecoverCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
 		status := respDTO.GetRespStatus()
-		if status.Code != 0 {
-			c.JSON(http.StatusInternalServerError, controller.Fail(500, status.Message))
-			return
+		if common.TIEM_SUCCESS == status.GetCode() {
+			result := controller.BuildCommonResult(int(status.Code), status.Message, RecoverClusterRsp{
+				ClusterId:       respDTO.GetClusterId(),
+				ClusterBaseInfo: *ParseClusterBaseInfoFromDTO(respDTO.GetBaseInfo()),
+				StatusInfo:      *ParseStatusFromDTO(respDTO.GetClusterStatus()),
+			})
+			c.JSON(http.StatusOK, result)
+		} else {
+			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
 		}
-
-		result := controller.BuildCommonResult(int(status.Code), status.Message, RecoverClusterRsp{
-			ClusterId:       respDTO.GetClusterId(),
-			ClusterBaseInfo: *ParseClusterBaseInfoFromDTO(respDTO.GetBaseInfo()),
-			StatusInfo:      *ParseStatusFromDTO(respDTO.GetClusterStatus()),
-		})
-
-		c.JSON(http.StatusOK, result)
 	}
 }

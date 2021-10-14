@@ -125,7 +125,7 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb
 func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterpb.DataExportRequest, resp *clusterpb.DataExportResponse) error {
 	if err := domain.ExportDataPreCheck(req); err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_EXPORT_PARAM_INVALID, Message: common.TiEMErrMsg[common.TIEM_EXPORT_PARAM_INVALID]}
+		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_EXPORT_PARAM_INVALID, Message: err.Error()}
 		return nil
 	}
 
@@ -144,7 +144,7 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterpb.Da
 func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterpb.DataImportRequest, resp *clusterpb.DataImportResponse) error {
 	if err := domain.ImportDataPreCheck(req); err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_IMPORT_PARAM_INVALID, Message: common.TiEMErrMsg[common.TIEM_IMPORT_PARAM_INVALID]}
+		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_IMPORT_PARAM_INVALID, Message: err.Error()}
 		return nil
 	}
 
@@ -203,7 +203,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterpb.RecoverRequest, resp *clusterpb.RecoverResponse) (err error) {
 	if err = domain.RecoverPreCheck(req); err != nil {
 		getLoggerWithContext(ctx).Errorf("recover cluster pre check failed, %s", err.Error())
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_RECOVER_PARAM_INVALID, Message: common.TiEMErrMsg[common.TIEM_RECOVER_PARAM_INVALID]}
+		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_RECOVER_PARAM_INVALID, Message: err.Error()}
 		return nil
 	}
 
@@ -235,7 +235,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 	err = domain.SaveBackupStrategyPreCheck(request.GetOperator(), request.GetStrategy())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_BACKUP_STRATEGY_PARAM_INVALID, Message: common.TiEMErrMsg[common.TIEM_BACKUP_STRATEGY_PARAM_INVALID]}
+		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_BACKUP_STRATEGY_PARAM_INVALID, Message: err.Error()}
 		return nil
 	}
 

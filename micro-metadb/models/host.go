@@ -346,7 +346,7 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	exclusive := require.Require.Exclusive
 
 	needDisk := require.Require.DiskReq.NeedDisk
-	diskSpecify := require.Require.DiskReq.diskSpecify
+	diskSpecify := require.Require.DiskReq.DiskSpecify
 	diskType := rt.DiskType(require.Require.DiskReq.DiskType)
 	capacity := require.Require.DiskReq.Capacity
 
@@ -378,13 +378,17 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 		if diskSpecify == "" {
 			err = db.Where("disks.type = ? and disks.status = ? and disks.capacity >= ?", diskType, rt.DISK_AVAILABLE, capacity).Scan(&resources).Error
 		} else {
-			err = db.Where("disks.id = ?", diskSpecify).Scan(&resources).Error
+			err = db.Where("disks.id = ? and disks.status = ?", diskSpecify, rt.DISK_AVAILABLE).Scan(&resources).Error
 		}
 		if err != nil {
 			return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
 		}
 		if len(resources) < int(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "no disk in host(%s) after disk filter", hostId)
+			if diskSpecify == "" {
+				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "no available disk with type(%d) and capacity(%d) in host(%s) after disk filter", diskType, capacity, hostId)
+			} else {
+				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "disk (%s) not existed or it is not available in host(%s)", diskSpecify, hostId)
+			}
 		}
 	} else {
 		// No Limit in Reserved == false in this strategy

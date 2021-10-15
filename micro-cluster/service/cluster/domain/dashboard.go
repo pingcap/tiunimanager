@@ -24,15 +24,6 @@ type LoginResponse struct {
 	Expire time.Time `json:"expire"`
 }
 
-type ShareRequest struct {
-	ExpireInSeconds int64 `json:"expire_in_sec"`
-	RevokeWritePriv bool  `json:"revoke_write_priv"`
-}
-
-type ShareResponse struct {
-	Code string `json:"code"`
-}
-
 type Dashboard struct {
 	ClusterId string `json:"clusterId"`
 	Url       string `json:"url"`
@@ -40,7 +31,6 @@ type Dashboard struct {
 }
 
 var loginUrlSuffix string = "api/user/login"
-var defaultExpire int64 = 60 * 60 * 3 //3 hour expire
 
 func DescribeDashboard(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string) (*Dashboard, error) {
 	//todo: check operator and clusterId

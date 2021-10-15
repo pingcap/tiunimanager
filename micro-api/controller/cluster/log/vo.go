@@ -1,4 +1,4 @@
-package logapi
+package log
 
 import (
 	"time"

@@ -1,14 +1,15 @@
-package databaseapi
+package datatransport
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"net/http"
-	"time"
 )
 
 // ExportData
@@ -35,19 +36,19 @@ func ExportData(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
 	respDTO, err := client.ClusterClient.ExportData(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataExportRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: req.ClusterId,
-		UserName:  req.UserName,
-		Password:  req.Password,
-		FileType:  req.FileType,
-		Filter:    req.Filter,
-		Sql:       req.Sql,
-		FilePath:  req.FilePath,
-		StorageType: req.StorageType,
-		BucketUrl: req.BucketUrl,
-		BucketRegion: req.BucketRegion,
-		EndpointUrl: req.EndpointUrl,
-		AccessKey: req.AccessKey,
+		Operator:        operator.ConvertToDTO(),
+		ClusterId:       req.ClusterId,
+		UserName:        req.UserName,
+		Password:        req.Password,
+		FileType:        req.FileType,
+		Filter:          req.Filter,
+		Sql:             req.Sql,
+		FilePath:        req.FilePath,
+		StorageType:     req.StorageType,
+		BucketUrl:       req.BucketUrl,
+		BucketRegion:    req.BucketRegion,
+		EndpointUrl:     req.EndpointUrl,
+		AccessKey:       req.AccessKey,
 		SecretAccessKey: req.SecretAccessKey,
 	}, controller.DefaultTimeout)
 
@@ -90,15 +91,15 @@ func ImportData(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
 	respDTO, err := client.ClusterClient.ImportData(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataImportRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: req.ClusterId,
-		UserName:  req.UserName,
-		Password:  req.Password,
-		FilePath:  req.FilePath,
-		StorageType: req.StorageType,
-		BucketUrl: req.BucketUrl,
-		EndpointUrl: req.EndpointUrl,
-		AccessKey: req.AccessKey,
+		Operator:        operator.ConvertToDTO(),
+		ClusterId:       req.ClusterId,
+		UserName:        req.UserName,
+		Password:        req.Password,
+		FilePath:        req.FilePath,
+		StorageType:     req.StorageType,
+		BucketUrl:       req.BucketUrl,
+		EndpointUrl:     req.EndpointUrl,
+		AccessKey:       req.AccessKey,
 		SecretAccessKey: req.SecretAccessKey,
 	}, controller.DefaultTimeout)
 

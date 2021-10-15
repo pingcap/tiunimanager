@@ -1,4 +1,4 @@
-package logapi
+package log
 
 type SearchTiDBLogRsp struct {
 	Took    int                   `json:"took" example:"10"`

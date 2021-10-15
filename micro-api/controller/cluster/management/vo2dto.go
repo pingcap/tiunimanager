@@ -1,4 +1,4 @@
-package clusterapi
+package management
 
 import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -11,7 +11,7 @@ func (req *CreateReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO,
 
 	demandsDTO = make([]*clusterpb.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))
 
-	for _,demand := range req.NodeDemandList {
+	for _, demand := range req.NodeDemandList {
 		if demand.TotalNodeCount <= 0 {
 			framework.Log().Infof("Skip empty demand for component %s", demand.ComponentType)
 			continue
@@ -22,7 +22,7 @@ func (req *CreateReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO,
 			items[j] = &clusterpb.DistributionItemDTO{
 				ZoneCode: item.ZoneCode,
 				SpecCode: item.SpecCode,
-				Count: int32(item.Count),
+				Count:    int32(item.Count),
 			}
 		}
 
@@ -40,7 +40,7 @@ func (req *RestoreReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO
 
 	demandsDTO = make([]*clusterpb.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))
 
-	for _,demand := range req.NodeDemandList {
+	for _, demand := range req.NodeDemandList {
 		if demand.TotalNodeCount <= 0 {
 			framework.Log().Infof("Skip empty demand for component %s", demand.ComponentType)
 			continue
@@ -51,7 +51,7 @@ func (req *RestoreReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO
 			items[j] = &clusterpb.DistributionItemDTO{
 				ZoneCode: item.ZoneCode,
 				SpecCode: item.SpecCode,
-				Count: int32(item.Count),
+				Count:    int32(item.Count),
 			}
 		}
 
@@ -68,12 +68,12 @@ func (baseInfo *ClusterBaseInfo) ConvertToDTO() (dto *clusterpb.ClusterBaseInfoD
 	dto = &clusterpb.ClusterBaseInfoDTO{
 		ClusterName: baseInfo.ClusterName,
 
-		DbPassword : baseInfo.DbPassword,
-		ClusterType: controller.ConvertTypeDTO(baseInfo.ClusterType),
+		DbPassword:     baseInfo.DbPassword,
+		ClusterType:    controller.ConvertTypeDTO(baseInfo.ClusterType),
 		ClusterVersion: controller.ConvertVersionDTO(baseInfo.ClusterVersion),
-		Tags: baseInfo.Tags,
-		Tls: baseInfo.Tls,
-		RecoverInfo: controller.ConvertRecoverInfoDTO(baseInfo.RecoverInfo.SourceClusterId, baseInfo.RecoverInfo.BackupRecordId),
+		Tags:           baseInfo.Tags,
+		Tls:            baseInfo.Tls,
+		RecoverInfo:    controller.ConvertRecoverInfoDTO(baseInfo.RecoverInfo.SourceClusterId, baseInfo.RecoverInfo.BackupRecordId),
 	}
 
 	return
@@ -90,7 +90,7 @@ func (demand *ClusterNodeDemand) ConvertToDTO() (dto *clusterpb.ClusterNodeDeman
 		ComponentType: demand.ComponentType,
 
 		TotalNodeCount: int32(demand.TotalNodeCount),
-		Items: items,
+		Items:          items,
 	}
 	return
 }
@@ -99,7 +99,7 @@ func (item DistributionItem) ConvertToDTO() (dto *clusterpb.DistributionItemDTO)
 	dto = &clusterpb.DistributionItemDTO{
 		ZoneCode: item.ZoneCode,
 		SpecCode: item.SpecCode,
-		Count: int32(item.Count),
+		Count:    int32(item.Count),
 	}
 	return
 }

@@ -1,4 +1,4 @@
-package logapi
+package log
 
 type SearchTiDBLogReq struct {
 	Module    string `form:"module" example:"tidb"`

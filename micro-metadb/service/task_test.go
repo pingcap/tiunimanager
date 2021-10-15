@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"os"
 	"testing"
 )
@@ -11,8 +11,8 @@ import (
 func TestDBServiceHandler_CreateFlow(t *testing.T) {
 	type args struct {
 		ctx context.Context
-		req *dbpb.DBCreateFlowRequest
-		rsp *dbpb.DBCreateFlowResponse
+		req *dbPb.DBCreateFlowRequest
+		rsp *dbPb.DBCreateFlowResponse
 	}
 	tests := []struct {
 		name    string
@@ -20,9 +20,9 @@ func TestDBServiceHandler_CreateFlow(t *testing.T) {
 		wantErr bool
 		asserts []func(args *args) bool
 	}{
-		{"normal", args{nil, &dbpb.DBCreateFlowRequest{
-			Flow: &dbpb.DBFlowDTO{FlowName: "aaa", Operator: "111111"},
-		}, &dbpb.DBCreateFlowResponse{}}, false, []func(args *args) bool{
+		{"normal", args{nil, &dbPb.DBCreateFlowRequest{
+			Flow: &dbPb.DBFlowDTO{FlowName: "aaa", Operator: "111111"},
+		}, &dbPb.DBCreateFlowResponse{}}, false, []func(args *args) bool{
 			func(args *args) bool {
 				return args.req.Flow.FlowName == args.rsp.Flow.FlowName && args.rsp.Flow.Id > 0
 			},
@@ -50,8 +50,8 @@ func TestDBServiceHandler_CreateFlow(t *testing.T) {
 func TestDBServiceHandler_CreateTask(t *testing.T) {
 	type args struct {
 		ctx context.Context
-		req *dbpb.DBCreateTaskRequest
-		rsp *dbpb.DBCreateTaskResponse
+		req *dbPb.DBCreateTaskRequest
+		rsp *dbPb.DBCreateTaskResponse
 	}
 	tests := []struct {
 		name    string
@@ -73,8 +73,8 @@ func TestDBServiceHandler_CreateTask(t *testing.T) {
 func TestDBServiceHandler_LoadFlow(t *testing.T) {
 	type args struct {
 		ctx context.Context
-		req *dbpb.DBLoadFlowRequest
-		rsp *dbpb.DBLoadFlowResponse
+		req *dbPb.DBLoadFlowRequest
+		rsp *dbPb.DBLoadFlowResponse
 	}
 	tests := []struct {
 		name    string
@@ -96,8 +96,8 @@ func TestDBServiceHandler_LoadFlow(t *testing.T) {
 func TestDBServiceHandler_LoadTask(t *testing.T) {
 	type args struct {
 		ctx context.Context
-		req *dbpb.DBLoadTaskRequest
-		rsp *dbpb.DBLoadTaskResponse
+		req *dbPb.DBLoadTaskRequest
+		rsp *dbPb.DBLoadTaskResponse
 	}
 	tests := []struct {
 		name    string
@@ -119,8 +119,8 @@ func TestDBServiceHandler_LoadTask(t *testing.T) {
 func TestDBServiceHandler_UpdateFlow(t *testing.T) {
 	type args struct {
 		ctx context.Context
-		req *dbpb.DBUpdateFlowRequest
-		rsp *dbpb.DBUpdateFlowResponse
+		req *dbPb.DBUpdateFlowRequest
+		rsp *dbPb.DBUpdateFlowResponse
 	}
 	tests := []struct {
 		name    string
@@ -142,8 +142,8 @@ func TestDBServiceHandler_UpdateFlow(t *testing.T) {
 func TestDBServiceHandler_UpdateTask(t *testing.T) {
 	type args struct {
 		ctx context.Context
-		req *dbpb.DBUpdateTaskRequest
-		rsp *dbpb.DBUpdateTaskResponse
+		req *dbPb.DBUpdateTaskRequest
+		rsp *dbPb.DBUpdateTaskResponse
 	}
 	tests := []struct {
 		name    string

@@ -29,9 +29,9 @@ rm -f $PROTOC_ZIP
 ### Generate Protobuf files
 
 ```
-cd library/client/metadb/proto
+cd micro-metadb/proto
 protoc --proto_path=$GOPATH/src:. --micro_out=. --go_out=. *.proto
-cd library/client/cluster/proto
+cd micro-cluster/proto
 protoc --proto_path=$GOPATH/src:. --micro_out=. --go_out=. *.proto
 ```
 

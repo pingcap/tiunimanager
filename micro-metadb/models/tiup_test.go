@@ -2,14 +2,14 @@ package models
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"gorm.io/gorm"
 	"testing"
 )
 
 func TestCreateTiupTask(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		gotId, err := CreateTiupTask(Dao.Db(), context.TODO(), dbpb.TiupTaskType_Deploy, 12321)
+		gotId, err := CreateTiupTask(Dao.Db(), context.TODO(), db.TiupTaskType_Deploy, 12321)
 		if err != nil {
 			t.Errorf("CreateTiupTask() error = %v, wantErr nil", err)
 			return
@@ -21,7 +21,7 @@ func TestCreateTiupTask(t *testing.T) {
 }
 
 func TestFindTiupTaskByID(t *testing.T) {
-	id, err := CreateTiupTask(Dao.Db(), context.TODO(), dbpb.TiupTaskType_Deploy, 12321)
+	id, err := CreateTiupTask(Dao.Db(), context.TODO(), db.TiupTaskType_Deploy, 12321)
 	if err != nil {
 		t.Errorf("mock data CreateTiupTask error, err = %v", err)
 	}
@@ -39,7 +39,7 @@ func TestFindTiupTaskByID(t *testing.T) {
 
 func TestFindTiupTasksByBizID(t *testing.T) {
 	bizId := uint64(12321)
-	_, err := CreateTiupTask(Dao.Db(), context.TODO(), dbpb.TiupTaskType_Deploy, bizId)
+	_, err := CreateTiupTask(Dao.Db(), context.TODO(), db.TiupTaskType_Deploy, bizId)
 	if err != nil {
 		t.Errorf("mock data CreateTiupTask error, err = %v", err)
 	}
@@ -60,7 +60,7 @@ func TestUpdateTiupTaskStatus(t *testing.T) {
 		db         *gorm.DB
 		ctx        context.Context
 		id         uint64
-		taskStatus dbpb.TiupTaskStatus
+		taskStatus db.TiupTaskStatus
 		errStr     string
 	}
 	tests := []struct {

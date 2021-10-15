@@ -4,9 +4,9 @@ import (
 	ctx "context"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/framework"
+	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/robfig/cron"
 	"time"
 )
@@ -53,7 +53,7 @@ func (auto *autoBackupHandler) Run() {
 	getLogger().Infof("begin AutoBackupHandler Run at WeekDay: %s, Hour: %d", curWeekDay, curHour)
 	defer getLogger().Infof("end AutoBackupHandler Run")
 
-	resp, err := client.DBClient.QueryBackupStrategyByTime(ctx.TODO(), &dbpb.DBQueryBackupStrategyByTimeRequest{
+	resp, err := client.DBClient.QueryBackupStrategyByTime(ctx.TODO(), &db.DBQueryBackupStrategyByTimeRequest{
 		Weekday:   curWeekDay,
 		StartHour: uint32(curHour),
 	})
@@ -68,17 +68,17 @@ func (auto *autoBackupHandler) Run() {
 	}
 }
 
-func (auto *autoBackupHandler) doBackup(straegy *dbpb.DBBackupStrategyDTO) {
+func (auto *autoBackupHandler) doBackup(straegy *db.DBBackupStrategyDTO) {
 	getLogger().Infof("begin do auto backup for cluster %s", straegy.GetClusterId())
 	defer getLogger().Infof("end do auto backup for cluster %s", straegy.GetClusterId())
 
-	resp, err := client.DBClient.FindAccountById(ctx.TODO(), &dbpb.DBFindAccountByIdRequest{Id: straegy.GetOperatorId()})
+	resp, err := client.DBClient.FindAccountById(ctx.TODO(), &db.DBFindAccountByIdRequest{Id: straegy.GetOperatorId()})
 	if err != nil {
 		getLogger().Errorf("find account by id %s failed, %s", straegy.GetOperatorId(), err.Error())
 		return
 	}
 
-	ope := &clusterpb.OperatorDTO{
+	ope := &proto.OperatorDTO{
 		Id:       resp.GetAccount().GetId(),
 		TenantId: resp.GetAccount().GetTenantId(),
 		Name: resp.GetAccount().GetName(),

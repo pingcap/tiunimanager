@@ -15,7 +15,6 @@
 package controller
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"net/http"
 	"time"
 
@@ -23,6 +22,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 type ResultMark struct {
@@ -136,22 +136,22 @@ func GetOperator(c *gin.Context) *Operator {
 	}
 }
 
-func (o *Operator) ConvertToDTO() *clusterpb.OperatorDTO {
-	return &clusterpb.OperatorDTO{
+func (o *Operator) ConvertToDTO() *cluster.OperatorDTO {
+	return &cluster.OperatorDTO{
 		Id:       o.OperatorId,
 		Name:     o.OperatorName,
 		TenantId: o.TenantId,
 	}
 }
 
-func (p *PageRequest) ConvertToDTO() *clusterpb.PageDTO {
-	return &clusterpb.PageDTO{
+func (p *PageRequest) ConvertToDTO() *cluster.PageDTO {
+	return &cluster.PageDTO{
 		Page:     int32(p.Page),
 		PageSize: int32(p.PageSize),
 	}
 }
 
-func ParsePageFromDTO(dto *clusterpb.PageDTO) *Page {
+func ParsePageFromDTO(dto *cluster.PageDTO) *Page {
 	return &Page{
 		Page:     int(dto.Page),
 		PageSize: int(dto.PageSize),
@@ -159,7 +159,7 @@ func ParsePageFromDTO(dto *clusterpb.PageDTO) *Page {
 	}
 }
 
-func ParseUsageFromDTO(dto *clusterpb.UsageDTO) (usage *Usage) {
+func ParseUsageFromDTO(dto *cluster.UsageDTO) (usage *Usage) {
 	usage = &Usage{
 		Total:     dto.Total,
 		Used:      dto.Used,
@@ -168,10 +168,10 @@ func ParseUsageFromDTO(dto *clusterpb.UsageDTO) (usage *Usage) {
 	return
 }
 
-func ConvertVersionDTO(code string) (dto *clusterpb.ClusterVersionDTO) {
+func ConvertVersionDTO(code string) (dto *cluster.ClusterVersionDTO) {
 	version := knowledge.ClusterVersionFromCode(code)
 
-	dto = &clusterpb.ClusterVersionDTO{
+	dto = &cluster.ClusterVersionDTO{
 		Code: version.Code,
 		Name: version.Name,
 	}
@@ -179,18 +179,18 @@ func ConvertVersionDTO(code string) (dto *clusterpb.ClusterVersionDTO) {
 	return
 }
 
-func ConvertTypeDTO(code string) (dto *clusterpb.ClusterTypeDTO) {
+func ConvertTypeDTO(code string) (dto *cluster.ClusterTypeDTO) {
 	t := knowledge.ClusterTypeFromCode(code)
 
-	dto = &clusterpb.ClusterTypeDTO{
+	dto = &cluster.ClusterTypeDTO{
 		Code: t.Code,
 		Name: t.Name,
 	}
 	return
 }
 
-func ConvertRecoverInfoDTO(sourceClusterId string, backupRecordId int64) (dto *clusterpb.RecoverInfoDTO) {
-	return &clusterpb.RecoverInfoDTO{
+func ConvertRecoverInfoDTO(sourceClusterId string, backupRecordId int64) (dto *cluster.RecoverInfoDTO) {
+	return &cluster.RecoverInfoDTO{
 		SourceClusterId: sourceClusterId,
 		BackupRecordId: backupRecordId,
 	}

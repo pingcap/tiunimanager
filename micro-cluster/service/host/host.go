@@ -2,12 +2,12 @@ package host
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 
+	hostPb "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"google.golang.org/grpc/codes"
 )
 
@@ -18,7 +18,7 @@ func NewResourceManager() *ResourceManager {
 	return m
 }
 
-func copyHostToDBReq(src *clusterpb.HostInfo, dst *dbpb.DBHostInfoDTO) {
+func copyHostToDBReq(src *hostPb.HostInfo, dst *dbPb.DBHostInfoDTO) {
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
 	dst.UserName = src.UserName
@@ -41,7 +41,7 @@ func copyHostToDBReq(src *clusterpb.HostInfo, dst *dbpb.DBHostInfoDTO) {
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
-		dst.Disks = append(dst.Disks, &dbpb.DBDiskDTO{
+		dst.Disks = append(dst.Disks, &dbPb.DBDiskDTO{
 			Name:     disk.Name,
 			Path:     disk.Path,
 			Capacity: disk.Capacity,
@@ -51,7 +51,7 @@ func copyHostToDBReq(src *clusterpb.HostInfo, dst *dbpb.DBHostInfoDTO) {
 	}
 }
 
-func copyHostFromDBRsp(src *dbpb.DBHostInfoDTO, dst *clusterpb.HostInfo) {
+func copyHostFromDBRsp(src *dbPb.DBHostInfoDTO, dst *hostPb.HostInfo) {
 	dst.HostId = src.HostId
 	dst.HostName = src.HostName
 	dst.Ip = src.Ip
@@ -74,7 +74,7 @@ func copyHostFromDBRsp(src *dbpb.DBHostInfoDTO, dst *clusterpb.HostInfo) {
 	dst.CreateAt = src.CreateAt
 	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
-		dst.Disks = append(dst.Disks, &clusterpb.Disk{
+		dst.Disks = append(dst.Disks, &hostPb.Disk{
 			DiskId:   disk.DiskId,
 			Name:     disk.Name,
 			Path:     disk.Path,
@@ -86,9 +86,9 @@ func copyHostFromDBRsp(src *dbpb.DBHostInfoDTO, dst *clusterpb.HostInfo) {
 	}
 }
 
-func (m *ResourceManager) ImportHost(ctx context.Context, in *clusterpb.ImportHostRequest, out *clusterpb.ImportHostResponse) error {
-	var req dbpb.DBAddHostRequest
-	req.Host = new(dbpb.DBHostInfoDTO)
+func (m *ResourceManager) ImportHost(ctx context.Context, in *hostPb.ImportHostRequest, out *hostPb.ImportHostResponse) error {
+	var req dbPb.DBAddHostRequest
+	req.Host = new(dbPb.DBHostInfoDTO)
 	copyHostToDBReq(in.Host, req.Host)
 	var err error
 	rsp, err := client.DBClient.AddHost(ctx, &req)
@@ -96,7 +96,7 @@ func (m *ResourceManager) ImportHost(ctx context.Context, in *clusterpb.ImportHo
 		framework.Log().Errorf("import host %s error, %v", req.Host.Ip, err)
 		return err
 	}
-	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
@@ -109,10 +109,10 @@ func (m *ResourceManager) ImportHost(ctx context.Context, in *clusterpb.ImportHo
 	return nil
 }
 
-func (m *ResourceManager) ImportHostsInBatch(ctx context.Context, in *clusterpb.ImportHostsInBatchRequest, out *clusterpb.ImportHostsInBatchResponse) error {
-	var req dbpb.DBAddHostsInBatchRequest
+func (m *ResourceManager) ImportHostsInBatch(ctx context.Context, in *hostPb.ImportHostsInBatchRequest, out *hostPb.ImportHostsInBatchResponse) error {
+	var req dbPb.DBAddHostsInBatchRequest
 	for _, v := range in.Hosts {
-		var host dbpb.DBHostInfoDTO
+		var host dbPb.DBHostInfoDTO
 		copyHostToDBReq(v, &host)
 		req.Hosts = append(req.Hosts, &host)
 	}
@@ -122,7 +122,7 @@ func (m *ResourceManager) ImportHostsInBatch(ctx context.Context, in *clusterpb.
 		framework.Log().Errorf("import hosts in batch error, %v", err)
 		return err
 	}
-	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
@@ -135,15 +135,15 @@ func (m *ResourceManager) ImportHostsInBatch(ctx context.Context, in *clusterpb.
 	return nil
 }
 
-func (m *ResourceManager) RemoveHost(ctx context.Context, in *clusterpb.RemoveHostRequest, out *clusterpb.RemoveHostResponse) error {
-	var req dbpb.DBRemoveHostRequest
+func (m *ResourceManager) RemoveHost(ctx context.Context, in *hostPb.RemoveHostRequest, out *hostPb.RemoveHostResponse) error {
+	var req dbPb.DBRemoveHostRequest
 	req.HostId = in.HostId
 	rsp, err := client.DBClient.RemoveHost(ctx, &req)
 	if err != nil {
 		framework.Log().Errorf("remove host %s error, %v", req.HostId, err)
 		return err
 	}
-	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
@@ -155,15 +155,15 @@ func (m *ResourceManager) RemoveHost(ctx context.Context, in *clusterpb.RemoveHo
 	return nil
 }
 
-func (m *ResourceManager) RemoveHostsInBatch(ctx context.Context, in *clusterpb.RemoveHostsInBatchRequest, out *clusterpb.RemoveHostsInBatchResponse) error {
-	var req dbpb.DBRemoveHostsInBatchRequest
+func (m *ResourceManager) RemoveHostsInBatch(ctx context.Context, in *hostPb.RemoveHostsInBatchRequest, out *hostPb.RemoveHostsInBatchResponse) error {
+	var req dbPb.DBRemoveHostsInBatchRequest
 	req.HostIds = in.HostIds
 	rsp, err := client.DBClient.RemoveHostsInBatch(ctx, &req)
 	if err != nil {
 		framework.Log().Errorf("remove hosts in batch error, %v", err)
 		return err
 	}
-	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
@@ -175,11 +175,11 @@ func (m *ResourceManager) RemoveHostsInBatch(ctx context.Context, in *clusterpb.
 	return nil
 }
 
-func (m *ResourceManager) ListHost(ctx context.Context, in *clusterpb.ListHostsRequest, out *clusterpb.ListHostsResponse) error {
-	var req dbpb.DBListHostsRequest
+func (m *ResourceManager) ListHost(ctx context.Context, in *hostPb.ListHostsRequest, out *hostPb.ListHostsResponse) error {
+	var req dbPb.DBListHostsRequest
 	req.Purpose = in.Purpose
 	req.Status = in.Status
-	req.Page = new(dbpb.DBHostPageDTO)
+	req.Page = new(dbPb.DBHostPageDTO)
 	req.Page.Page = in.PageReq.Page
 	req.Page.PageSize = in.PageReq.PageSize
 	rsp, err := client.DBClient.ListHost(ctx, &req)
@@ -187,8 +187,8 @@ func (m *ResourceManager) ListHost(ctx context.Context, in *clusterpb.ListHostsR
 		framework.Log().Errorf("list hosts error, %v", err)
 		return err
 	}
-	out.Rs = new(clusterpb.ResponseStatus)
-	out.PageReq = new(clusterpb.PageDTO)
+	out.Rs = new(hostPb.ResponseStatus)
+	out.PageReq = new(hostPb.PageDTO)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 
@@ -199,7 +199,7 @@ func (m *ResourceManager) ListHost(ctx context.Context, in *clusterpb.ListHostsR
 
 	framework.Log().Infof("list %d hosts info from db service succeed", len(rsp.HostList))
 	for _, v := range rsp.HostList {
-		var host clusterpb.HostInfo
+		var host hostPb.HostInfo
 		copyHostFromDBRsp(v, &host)
 		out.HostList = append(out.HostList, &host)
 	}
@@ -209,15 +209,15 @@ func (m *ResourceManager) ListHost(ctx context.Context, in *clusterpb.ListHostsR
 	return nil
 }
 
-func (m *ResourceManager) CheckDetails(ctx context.Context, in *clusterpb.CheckDetailsRequest, out *clusterpb.CheckDetailsResponse) error {
-	var req dbpb.DBCheckDetailsRequest
+func (m *ResourceManager) CheckDetails(ctx context.Context, in *hostPb.CheckDetailsRequest, out *hostPb.CheckDetailsResponse) error {
+	var req dbPb.DBCheckDetailsRequest
 	req.HostId = in.HostId
 	rsp, err := client.DBClient.CheckDetails(ctx, &req)
 	if err != nil {
 		framework.Log().Errorf("check host %s details failed, %v", req.HostId, err)
 		return err
 	}
-	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 
@@ -227,15 +227,15 @@ func (m *ResourceManager) CheckDetails(ctx context.Context, in *clusterpb.CheckD
 	}
 
 	framework.Log().Infof("check host %s details from db service succeed", req.HostId)
-	out.Details = new(clusterpb.HostInfo)
+	out.Details = new(hostPb.HostInfo)
 	copyHostFromDBRsp(rsp.Details, out.Details)
 
 	return nil
 }
 
-func makeAllocReq(src []*clusterpb.AllocationReq) (dst []*dbpb.DBAllocationReq) {
+func makeAllocReq(src []*hostPb.AllocationReq) (dst []*dbPb.DBAllocationReq) {
 	for _, req := range src {
-		dst = append(dst, &dbpb.DBAllocationReq{
+		dst = append(dst, &dbPb.DBAllocationReq{
 			FailureDomain: req.FailureDomain,
 			CpuCores:      req.CpuCores,
 			Memory:        req.Memory,
@@ -246,8 +246,8 @@ func makeAllocReq(src []*clusterpb.AllocationReq) (dst []*dbpb.DBAllocationReq) 
 	return dst
 }
 
-func buildDiskFromDB(disk *dbpb.DBDiskDTO) *clusterpb.Disk {
-	var hd clusterpb.Disk
+func buildDiskFromDB(disk *dbPb.DBDiskDTO) *hostPb.Disk {
+	var hd hostPb.Disk
 	hd.DiskId = disk.DiskId
 	hd.Name = disk.Name
 	hd.Path = disk.Path
@@ -257,9 +257,9 @@ func buildDiskFromDB(disk *dbpb.DBDiskDTO) *clusterpb.Disk {
 	return &hd
 }
 
-func getAllocRsp(src []*dbpb.DBAllocHostDTO) (dst []*clusterpb.AllocHost) {
+func getAllocRsp(src []*dbPb.DBAllocHostDTO) (dst []*hostPb.AllocHost) {
 	for _, rsp := range src {
-		dst = append(dst, &clusterpb.AllocHost{
+		dst = append(dst, &hostPb.AllocHost{
 			HostName: rsp.HostName,
 			Ip:       rsp.Ip,
 			UserName: rsp.UserName,
@@ -272,8 +272,8 @@ func getAllocRsp(src []*dbpb.DBAllocHostDTO) (dst []*clusterpb.AllocHost) {
 	return dst
 }
 
-func (m *ResourceManager) AllocHosts(ctx context.Context, in *clusterpb.AllocHostsRequest, out *clusterpb.AllocHostResponse) error {
-	req := new(dbpb.DBAllocHostsRequest)
+func (m *ResourceManager) AllocHosts(ctx context.Context, in *hostPb.AllocHostsRequest, out *hostPb.AllocHostResponse) error {
+	req := new(dbPb.DBAllocHostsRequest)
 	req.PdReq = makeAllocReq(in.PdReq)
 	req.TidbReq = makeAllocReq(in.TidbReq)
 	req.TikvReq = makeAllocReq(in.TikvReq)
@@ -283,7 +283,7 @@ func (m *ResourceManager) AllocHosts(ctx context.Context, in *clusterpb.AllocHos
 		framework.Log().Errorf("alloc hosts error, %v", err)
 		return err
 	}
-	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 
@@ -298,15 +298,15 @@ func (m *ResourceManager) AllocHosts(ctx context.Context, in *clusterpb.AllocHos
 	return nil
 }
 
-func (m *ResourceManager) GetFailureDomain(ctx context.Context, in *clusterpb.GetFailureDomainRequest, out *clusterpb.GetFailureDomainResponse) error {
-	var req dbpb.DBGetFailureDomainRequest
+func (m *ResourceManager) GetFailureDomain(ctx context.Context, in *hostPb.GetFailureDomainRequest, out *hostPb.GetFailureDomainResponse) error {
+	var req dbPb.DBGetFailureDomainRequest
 	req.FailureDomainType = in.FailureDomainType
 	rsp, err := client.DBClient.GetFailureDomain(ctx, &req)
 	if err != nil {
 		framework.Log().Errorf("get failure domains error, %v", err)
 		return err
 	}
-	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs = new(hostPb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 
@@ -317,7 +317,7 @@ func (m *ResourceManager) GetFailureDomain(ctx context.Context, in *clusterpb.Ge
 
 	framework.Log().Infof("get failure domain type %d from db service succeed", req.FailureDomainType)
 	for _, v := range rsp.FdList {
-		out.FdList = append(out.FdList, &clusterpb.FailureDomainResource{
+		out.FdList = append(out.FdList, &hostPb.FailureDomainResource{
 			FailureDomain: v.FailureDomain,
 			Purpose:       v.Purpose,
 			Spec:          v.Spec,
@@ -327,37 +327,37 @@ func (m *ResourceManager) GetFailureDomain(ctx context.Context, in *clusterpb.Ge
 	return nil
 }
 
-func copyAllocRequirement(src *clusterpb.AllocRequirement, dst *dbpb.DBAllocRequirement) {
-	dst.Location = new(dbpb.DBLocation)
+func copyAllocRequirement(src *hostPb.AllocRequirement, dst *dbPb.DBAllocRequirement) {
+	dst.Location = new(dbPb.DBLocation)
 	dst.Location.Region = src.Location.Region
 	dst.Location.Zone = src.Location.Zone
 	dst.Location.Rack = src.Location.Rack
 	dst.Location.Host = src.Location.Host
 
-	dst.HostExcluded = new(dbpb.DBExcluded)
+	dst.HostExcluded = new(dbPb.DBExcluded)
 	if src.HostExcluded != nil {
 		dst.HostExcluded.Hosts = append(dst.HostExcluded.Hosts, src.HostExcluded.Hosts...)
 	}
 
-	dst.HostFilter = new(dbpb.DBFilter)
+	dst.HostFilter = new(dbPb.DBFilter)
 	dst.HostFilter.Arch = src.HostFilter.Arch
 	dst.HostFilter.Purpose = src.HostFilter.Purpose
 	dst.HostFilter.DiskType = src.HostFilter.DiskType
 
 	// copy requirement
-	dst.Require = new(dbpb.DBRequirement)
+	dst.Require = new(dbPb.DBRequirement)
 	dst.Require.Exclusive = src.Require.Exclusive
-	dst.Require.ComputeReq = new(dbpb.DBComputeRequirement)
+	dst.Require.ComputeReq = new(dbPb.DBComputeRequirement)
 	dst.Require.ComputeReq.CpuCores = src.Require.ComputeReq.CpuCores
 	dst.Require.ComputeReq.Memory = src.Require.ComputeReq.Memory
 
-	dst.Require.DiskReq = new(dbpb.DBDiskRequirement)
+	dst.Require.DiskReq = new(dbPb.DBDiskRequirement)
 	dst.Require.DiskReq.NeedDisk = src.Require.DiskReq.NeedDisk
 	dst.Require.DiskReq.DiskType = src.Require.DiskReq.DiskType
 	dst.Require.DiskReq.Capacity = src.Require.DiskReq.Capacity
 
 	for _, portReq := range src.Require.PortReq {
-		dst.Require.PortReq = append(dst.Require.PortReq, &dbpb.DBPortRequirement{
+		dst.Require.PortReq = append(dst.Require.PortReq, &dbPb.DBPortRequirement{
 			Start:   portReq.Start,
 			End:     portReq.End,
 			PortCnt: portReq.PortCnt,
@@ -368,14 +368,14 @@ func copyAllocRequirement(src *clusterpb.AllocRequirement, dst *dbpb.DBAllocRequ
 	dst.Count = src.Count
 }
 
-func buildDBAllocRequest(src *clusterpb.BatchAllocRequest, dst *dbpb.DBBatchAllocRequest) {
+func buildDBAllocRequest(src *hostPb.BatchAllocRequest, dst *dbPb.DBBatchAllocRequest) {
 	for _, request := range src.BatchRequests {
-		var dbReq dbpb.DBAllocRequest
-		dbReq.Applicant = new(dbpb.DBApplicant)
+		var dbReq dbPb.DBAllocRequest
+		dbReq.Applicant = new(dbPb.DBApplicant)
 		dbReq.Applicant.HolderId = request.Applicant.HolderId
 		dbReq.Applicant.RequestId = request.Applicant.RequestId
 		for _, require := range request.Requires {
-			var dbRequire dbpb.DBAllocRequirement
+			var dbRequire dbPb.DBAllocRequirement
 			copyAllocRequirement(require, &dbRequire)
 			dbReq.Requires = append(dbReq.Requires, &dbRequire)
 		}
@@ -383,29 +383,29 @@ func buildDBAllocRequest(src *clusterpb.BatchAllocRequest, dst *dbpb.DBBatchAllo
 	}
 }
 
-func copyResourcesInfoFromRsp(src *dbpb.DBHostResource, dst *clusterpb.HostResource) {
+func copyResourcesInfoFromRsp(src *dbPb.DBHostResource, dst *hostPb.HostResource) {
 	dst.Reqseq = src.Reqseq
 	dst.HostId = src.HostId
 	dst.HostIp = src.HostIp
 	dst.HostName = src.HostName
 	dst.Passwd = src.Passwd
 	dst.UserName = src.UserName
-	dst.ComputeRes = new(clusterpb.ComputeRequirement)
+	dst.ComputeRes = new(hostPb.ComputeRequirement)
 	dst.ComputeRes.CpuCores = src.ComputeRes.CpuCores
 	dst.ComputeRes.Memory = src.ComputeRes.Memory
-	dst.Location = new(clusterpb.Location)
+	dst.Location = new(hostPb.Location)
 	dst.Location.Region = src.Location.Region
 	dst.Location.Zone = src.Location.Zone
 	dst.Location.Rack = src.Location.Rack
 	dst.Location.Host = src.Location.Host
-	dst.DiskRes = new(clusterpb.DiskResource)
+	dst.DiskRes = new(hostPb.DiskResource)
 	dst.DiskRes.DiskId = src.DiskRes.DiskId
 	dst.DiskRes.DiskName = src.DiskRes.DiskName
 	dst.DiskRes.Path = src.DiskRes.Path
 	dst.DiskRes.Type = src.DiskRes.Type
 	dst.DiskRes.Capacity = src.DiskRes.Capacity
 	for _, portRes := range src.PortRes {
-		var portResource clusterpb.PortResource
+		var portResource hostPb.PortResource
 		portResource.Start = portRes.Start
 		portResource.End = portRes.End
 		portResource.Ports = append(portResource.Ports, portRes.Ports...)
@@ -413,15 +413,15 @@ func copyResourcesInfoFromRsp(src *dbpb.DBHostResource, dst *clusterpb.HostResou
 	}
 }
 
-func (m *ResourceManager) AllocResourcesInBatch(ctx context.Context, in *clusterpb.BatchAllocRequest, out *clusterpb.BatchAllocResponse) error {
-	var req dbpb.DBBatchAllocRequest
+func (m *ResourceManager) AllocResourcesInBatch(ctx context.Context, in *hostPb.BatchAllocRequest, out *hostPb.BatchAllocResponse) error {
+	var req dbPb.DBBatchAllocRequest
 	buildDBAllocRequest(in, &req)
 	rsp, err := client.DBClient.AllocResourcesInBatch(ctx, &req)
 	if err != nil {
 		framework.Log().Errorf("alloc resources error, %v", err)
 		return err
 	}
-	out.Rs = new(clusterpb.AllocResponseStatus)
+	out.Rs = new(hostPb.AllocResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 
@@ -432,12 +432,12 @@ func (m *ResourceManager) AllocResourcesInBatch(ctx context.Context, in *cluster
 
 	framework.Log().Infof("alloc resources from db service succeed, holde id: %s, repest id: %s", in.BatchRequests[0].Applicant.HolderId, in.BatchRequests[0].Applicant.RequestId)
 	for _, result := range rsp.BatchResults {
-		var res clusterpb.AllocResponse
-		res.Rs = new(clusterpb.AllocResponseStatus)
+		var res hostPb.AllocResponse
+		res.Rs = new(hostPb.AllocResponseStatus)
 		res.Rs.Code = result.Rs.Code
 		res.Rs.Message = result.Rs.Message
 		for _, r := range result.Results {
-			var hostResource clusterpb.HostResource
+			var hostResource hostPb.HostResource
 			copyResourcesInfoFromRsp(r, &hostResource)
 			res.Results = append(res.Results, &hostResource)
 		}
@@ -446,19 +446,19 @@ func (m *ResourceManager) AllocResourcesInBatch(ctx context.Context, in *cluster
 	return nil
 }
 
-func buildDBRecycleRequire(src *clusterpb.RecycleRequire, dst *dbpb.DBRecycleRequire) {
+func buildDBRecycleRequire(src *hostPb.RecycleRequire, dst *dbPb.DBRecycleRequire) {
 	dst.RecycleType = src.RecycleType
 	dst.HolderId = src.HolderId
 	dst.RequestId = src.RequestId
 	dst.HostId = src.HostId
 	dst.HostIp = src.HostIp
-	dst.ComputeReq = new(dbpb.DBComputeRequirement)
+	dst.ComputeReq = new(dbPb.DBComputeRequirement)
 	if src.ComputeReq != nil {
 		dst.ComputeReq.CpuCores = src.ComputeReq.CpuCores
 		dst.ComputeReq.Memory = src.ComputeReq.Memory
 	}
 
-	dst.DiskReq = new(dbpb.DBDiskResource)
+	dst.DiskReq = new(dbPb.DBDiskResource)
 	if src.DiskReq != nil {
 		dst.DiskReq.DiskId = src.DiskReq.DiskId
 		dst.DiskReq.DiskName = src.DiskReq.DiskName
@@ -468,7 +468,7 @@ func buildDBRecycleRequire(src *clusterpb.RecycleRequire, dst *dbpb.DBRecycleReq
 	}
 
 	for _, portReq := range src.PortReq {
-		var portResource dbpb.DBPortResource
+		var portResource dbPb.DBPortResource
 		portResource.Start = portReq.Start
 		portResource.End = portReq.End
 		portResource.Ports = append(portResource.Ports, portReq.Ports...)
@@ -477,10 +477,10 @@ func buildDBRecycleRequire(src *clusterpb.RecycleRequire, dst *dbpb.DBRecycleReq
 
 }
 
-func (m *ResourceManager) RecycleResources(ctx context.Context, in *clusterpb.RecycleRequest, out *clusterpb.RecycleResponse) error {
-	var req dbpb.DBRecycleRequest
+func (m *ResourceManager) RecycleResources(ctx context.Context, in *hostPb.RecycleRequest, out *hostPb.RecycleResponse) error {
+	var req dbPb.DBRecycleRequest
 	for _, request := range in.RecycleReqs {
-		var r dbpb.DBRecycleRequire
+		var r dbPb.DBRecycleRequire
 		buildDBRecycleRequire(request, &r)
 		req.RecycleReqs = append(req.RecycleReqs, &r)
 	}
@@ -489,7 +489,7 @@ func (m *ResourceManager) RecycleResources(ctx context.Context, in *clusterpb.Re
 		framework.Log().Errorf("recycle resources for type %d error, %v", err, in.RecycleReqs[0].RecycleType)
 		return err
 	}
-	out.Rs = new(clusterpb.AllocResponseStatus)
+	out.Rs = new(hostPb.AllocResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 

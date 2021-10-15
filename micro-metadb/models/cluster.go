@@ -2,9 +2,9 @@ package models
 
 import (
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"time"
 
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/pingcap/errors"
 	"gorm.io/gorm"
 )
@@ -360,7 +360,7 @@ func (m *DAOClusterManager) DeleteBackupRecord(id uint) (record *BackupRecord, e
 	return record, err
 }
 
-func (m *DAOClusterManager) SaveBackupRecord(record *dbpb.DBBackupRecordDTO) (do *BackupRecord, err error) {
+func (m *DAOClusterManager) SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do *BackupRecord, err error) {
 	do = &BackupRecord{
 		Record: Record{
 			TenantId:  record.GetTenantId(),
@@ -382,7 +382,7 @@ func (m *DAOClusterManager) SaveBackupRecord(record *dbpb.DBBackupRecordDTO) (do
 	return do, m.Db().Create(do).Error
 }
 
-func (m *DAOClusterManager) UpdateBackupRecord(record *dbpb.DBBackupRecordDTO) error {
+func (m *DAOClusterManager) UpdateBackupRecord(record *dbPb.DBBackupRecordDTO) error {
 	err := m.Db().Model(&BackupRecord{}).Where("id = ?", record.Id).Updates(BackupRecord{
 		Size:    record.GetSize(),
 		EndTime: time.Unix(record.GetEndTime(), 0),
@@ -474,7 +474,7 @@ func (m *DAOClusterManager) SaveRecoverRecord(tenantId, clusterId, operatorId st
 	return do, m.Db().Create(do).Error
 }
 
-func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbpb.DBBackupStrategyDTO) (*BackupStrategy, error) {
+func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDTO) (*BackupStrategy, error) {
 	strategyDO := BackupStrategy{
 		ClusterId: strategy.GetClusterId(),
 		OperatorId: strategy.GetOperatorId(),

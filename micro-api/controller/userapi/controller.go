@@ -1,7 +1,6 @@
 package userapi
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"net/http"
 
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
@@ -11,6 +10,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // Login login
@@ -33,7 +33,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	loginReq := clusterpb.LoginRequest{AccountName: req.UserName, Password: req.UserPassword}
+	loginReq := cluster.LoginRequest{AccountName: req.UserName, Password: req.UserPassword}
 	result, err := client.ClusterClient.Login(framework.NewMicroCtxFromGinCtx(c), &loginReq)
 
 	if err == nil {
@@ -65,7 +65,7 @@ func Logout(c *gin.Context) {
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 	}
-	logoutReq := clusterpb.LogoutRequest{TokenString: tokenStr}
+	logoutReq := cluster.LogoutRequest{TokenString: tokenStr}
 	result, err := client.ClusterClient.Logout(c, &logoutReq)
 
 	if err == nil {

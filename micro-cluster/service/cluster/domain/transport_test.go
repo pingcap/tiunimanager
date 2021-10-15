@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain/mock"
+	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -15,7 +15,7 @@ import (
 )
 
 func TestExportDataPreCheck_case1(t *testing.T) {
-	req := &clusterpb.DataExportRequest{
+	req := &proto.DataExportRequest{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -28,7 +28,7 @@ func TestExportDataPreCheck_case1(t *testing.T) {
 }
 
 func TestExportDataPreCheck_case2(t *testing.T) {
-	req := &clusterpb.DataExportRequest{
+	req := &proto.DataExportRequest{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -41,7 +41,7 @@ func TestExportDataPreCheck_case2(t *testing.T) {
 }
 
 func TestExportDataPreCheck_case3(t *testing.T) {
-	req := &clusterpb.DataExportRequest{
+	req := &proto.DataExportRequest{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -53,7 +53,7 @@ func TestExportDataPreCheck_case3(t *testing.T) {
 }
 
 func TestExportDataPreCheck_case4(t *testing.T) {
-	req := &clusterpb.DataExportRequest{
+	req := &proto.DataExportRequest{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -66,7 +66,7 @@ func TestExportDataPreCheck_case4(t *testing.T) {
 }
 
 func TestExportDataPreCheck_case5(t *testing.T) {
-	req := &clusterpb.DataExportRequest{
+	req := &proto.DataExportRequest{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -80,7 +80,7 @@ func TestExportDataPreCheck_case5(t *testing.T) {
 }
 
 func TestExportDataPreCheck_case6(t *testing.T) {
-	req := &clusterpb.DataExportRequest{
+	req := &proto.DataExportRequest{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -95,7 +95,7 @@ func TestExportDataPreCheck_case6(t *testing.T) {
 }
 
 func TestExportDataPreCheck_case7(t *testing.T) {
-	req := &clusterpb.DataExportRequest{
+	req := &proto.DataExportRequest{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -111,7 +111,7 @@ func TestExportDataPreCheck_case7(t *testing.T) {
 }
 
 func TestImportDataPreCheck(t *testing.T) {
-	req := &clusterpb.DataImportRequest{
+	req := &proto.DataImportRequest{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -127,11 +127,11 @@ func TestExportData(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().CreateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBCreateTransportRecordResponse{}, nil)
+	mockClient.EXPECT().CreateTransportRecord(gomock.Any(), gomock.Any()).Return(&db.DBCreateTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
-	request := &clusterpb.DataExportRequest{
-		Operator: &clusterpb.OperatorDTO{
+	request := &proto.DataExportRequest{
+		Operator: &proto.OperatorDTO{
 			Id: "123",
 			Name: "123",
 			TenantId: "123",
@@ -147,11 +147,11 @@ func TestImportData(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().CreateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBCreateTransportRecordResponse{}, nil)
+	mockClient.EXPECT().CreateTransportRecord(gomock.Any(), gomock.Any()).Return(&db.DBCreateTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
-	request := &clusterpb.DataImportRequest{
-		Operator: &clusterpb.OperatorDTO{
+	request := &proto.DataImportRequest{
+		Operator: &proto.OperatorDTO{
 			Id: "123",
 			Name: "123",
 			TenantId: "123",
@@ -167,11 +167,11 @@ func TestDescribeDataTransportRecord(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().ListTrasnportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBListTransportRecordResponse{}, nil)
+	mockClient.EXPECT().ListTrasnportRecord(gomock.Any(), gomock.Any()).Return(&db.DBListTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
-	request := &clusterpb.DataTransportQueryRequest{
-		Operator: &clusterpb.OperatorDTO{
+	request := &proto.DataTransportQueryRequest{
+		Operator: &proto.OperatorDTO{
 			Id: "123",
 			Name: "123",
 			TenantId: "123",
@@ -213,7 +213,7 @@ func Test_buildDataImportConfig(t *testing.T) {
 	ret := buildDataImportConfig(task, context)
 	assert.Equal(t, true, ret)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
-	_ = os.RemoveAll(info.ConfigPath)
+	os.RemoveAll(info.ConfigPath)
 }
 
 func Test_updateDataImportRecord(t *testing.T) {
@@ -221,7 +221,7 @@ func Test_updateDataImportRecord(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateTransportRecordResponse{}, nil)
+	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&db.DBUpdateTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
@@ -252,7 +252,7 @@ func Test_updateDataExportRecord(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateTransportRecordResponse{}, nil)
+	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&db.DBUpdateTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
@@ -282,7 +282,7 @@ func Test_exportDataFailed(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateTransportRecordResponse{}, nil)
+	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&db.DBUpdateTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
@@ -312,7 +312,7 @@ func Test_importDataFailed(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateTransportRecordResponse{}, nil)
+	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&db.DBUpdateTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
@@ -343,7 +343,7 @@ func Test_getDataImportConfigDir(t *testing.T) {
 }
 
 func Test_getDataExportFilePath_case1(t *testing.T) {
-	request := &clusterpb.DataExportRequest{
+	request := &proto.DataExportRequest{
 		StorageType: S3StorageType,
 		BucketUrl: "s3://test",
 		AccessKey: "admin",
@@ -355,31 +355,10 @@ func Test_getDataExportFilePath_case1(t *testing.T) {
 }
 
 func Test_getDataExportFilePath_case2(t *testing.T) {
-	request := &clusterpb.DataExportRequest{
+	request := &proto.DataExportRequest{
 		StorageType: NfsStorageType,
 		FilePath: "/tmp/test",
 	}
 	path := getDataExportFilePath(request)
-	assert.Equal(t, path, "/tmp/test")
-}
-
-func Test_getDataImportFilePath_case1(t *testing.T) {
-	request := &clusterpb.DataImportRequest{
-		StorageType: S3StorageType,
-		BucketUrl: "s3://test",
-		AccessKey: "admin",
-		SecretAccessKey: "admin",
-		EndpointUrl: "https://minio.pingcap.net:9000",
-	}
-	path := getDataImportFilePath(request)
-	assert.Equal(t, path, fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl()))
-}
-
-func Test_getDataImportFilePath_case2(t *testing.T) {
-	request := &clusterpb.DataImportRequest{
-		StorageType: NfsStorageType,
-		FilePath: "/tmp/test",
-	}
-	path := getDataImportFilePath(request)
 	assert.Equal(t, path, "/tmp/test")
 }

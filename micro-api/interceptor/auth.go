@@ -1,12 +1,12 @@
 package interceptor
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
 	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 const VisitorIdentityKey = "VisitorIdentity"
@@ -27,7 +27,7 @@ func VerifyIdentity(c *gin.Context) {
 	}
 
 	path := c.Request.URL
-	req := clusterpb.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
+	req := cluster.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
 
 	result, err := client.ClusterClient.VerifyIdentity(c, &req)
 	if err != nil {

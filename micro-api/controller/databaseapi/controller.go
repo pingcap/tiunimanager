@@ -1,14 +1,14 @@
 package databaseapi
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // ExportData
@@ -34,7 +34,7 @@ func ExportData(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	respDTO, err := client.ClusterClient.ExportData(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataExportRequest{
+	respDTO, err := client.ClusterClient.ExportData(framework.NewMicroCtxFromGinCtx(c), &cluster.DataExportRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: req.ClusterId,
 		UserName:  req.UserName,
@@ -52,17 +52,15 @@ func ExportData(c *gin.Context) {
 	}, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		status := respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
-			result := controller.BuildCommonResult(int(status.Code), status.Message, DataExportResp{
-				RecordId: respDTO.GetRecordId(),
-			})
-			c.JSON(http.StatusOK, result)
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, DataExportResp{
+			RecordId: respDTO.GetRecordId(),
+		})
+
+		c.JSON(http.StatusOK, result)
 	}
 }
 
@@ -89,31 +87,25 @@ func ImportData(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	respDTO, err := client.ClusterClient.ImportData(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataImportRequest{
+	respDTO, err := client.ClusterClient.ImportData(framework.NewMicroCtxFromGinCtx(c), &cluster.DataImportRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: req.ClusterId,
 		UserName:  req.UserName,
 		Password:  req.Password,
 		FilePath:  req.FilePath,
 		StorageType: req.StorageType,
-		BucketUrl: req.BucketUrl,
-		EndpointUrl: req.EndpointUrl,
-		AccessKey: req.AccessKey,
-		SecretAccessKey: req.SecretAccessKey,
 	}, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		status := respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
-			result := controller.BuildCommonResult(int(status.Code), status.Message, DataImportResp{
-				RecordId: respDTO.GetRecordId(),
-			})
-			c.JSON(http.StatusOK, result)
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, DataImportResp{
+			RecordId: respDTO.GetRecordId(),
+		})
+
+		c.JSON(http.StatusOK, result)
 	}
 }
 
@@ -141,7 +133,7 @@ func DescribeDataTransport(c *gin.Context) {
 	}
 
 	operator := controller.GetOperator(c)
-	respDTO, err := client.ClusterClient.DescribeDataTransport(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataTransportQueryRequest{
+	respDTO, err := client.ClusterClient.DescribeDataTransport(framework.NewMicroCtxFromGinCtx(c), &cluster.DataTransportQueryRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: clusterId,
 		RecordId:  req.RecordId,
@@ -149,28 +141,25 @@ func DescribeDataTransport(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		status := respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
-			data := &DataTransportRecordQueryResp{
-				TransportRecords: make([]*DataTransportInfo, len(respDTO.GetTransportInfos())),
-			}
-			for index, value := range respDTO.GetTransportInfos() {
-				data.TransportRecords[index] = &DataTransportInfo{
-					RecordId:      value.GetRecordId(),
-					ClusterId:     value.GetClusterId(),
-					TransportType: value.GetTransportType(),
-					Status:        value.GetStatus(),
-					FilePath:      value.GetFilePath(),
-					StartTime:     time.Unix(value.GetStartTime(), 0),
-					EndTime:       time.Unix(value.GetEndTime(), 0),
-				}
-			}
-			result := controller.SuccessWithPage(data, *controller.ParsePageFromDTO(respDTO.PageReq))
-			c.JSON(http.StatusOK, result)
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
+		data := &DataTransportRecordQueryResp{
+			TransportRecords: make([]*DataTransportInfo, len(respDTO.GetTransportInfos())),
 		}
+		for index, value := range respDTO.GetTransportInfos() {
+			data.TransportRecords[index] = &DataTransportInfo{
+				RecordId:      value.GetRecordId(),
+				ClusterId:     value.GetClusterId(),
+				TransportType: value.GetTransportType(),
+				Status:        value.GetStatus(),
+				FilePath:      value.GetFilePath(),
+				StartTime:     time.Unix(value.GetStartTime(), 0),
+				EndTime:       time.Unix(value.GetEndTime(), 0),
+			}
+		}
+
+		result := controller.SuccessWithPage(data, *controller.ParsePageFromDTO(respDTO.PageReq))
+
+		c.JSON(http.StatusOK, result)
 	}
 }

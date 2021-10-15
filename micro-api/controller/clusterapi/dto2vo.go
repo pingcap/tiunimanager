@@ -1,13 +1,13 @@
 package clusterapi
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"time"
 )
 
-func ParseClusterBaseInfoFromDTO(dto *clusterpb.ClusterBaseInfoDTO) (baseInfo *ClusterBaseInfo) {
+func ParseClusterBaseInfoFromDTO(dto *cluster.ClusterBaseInfoDTO) (baseInfo *ClusterBaseInfo) {
 	baseInfo = &ClusterBaseInfo{
 		ClusterName: dto.ClusterName,
 		DbPassword: dto.DbPassword,
@@ -20,7 +20,7 @@ func ParseClusterBaseInfoFromDTO(dto *clusterpb.ClusterBaseInfoDTO) (baseInfo *C
 	return
 }
 
-func ParseStatusFromDTO(dto *clusterpb.DisplayStatusDTO) (statusInfo *controller.StatusInfo) {
+func ParseStatusFromDTO(dto *cluster.DisplayStatusDTO) (statusInfo *controller.StatusInfo) {
 	statusInfo = &controller.StatusInfo{
 		StatusCode:      dto.StatusCode,
 		StatusName:      dto.StatusName,
@@ -33,7 +33,7 @@ func ParseStatusFromDTO(dto *clusterpb.DisplayStatusDTO) (statusInfo *controller
 	return
 }
 
-func ParseDisplayInfoFromDTO(dto *clusterpb.ClusterDisplayDTO) (displayInfo *ClusterDisplayInfo) {
+func ParseDisplayInfoFromDTO(dto *cluster.ClusterDisplayDTO) (displayInfo *ClusterDisplayInfo) {
 	displayInfo = &ClusterDisplayInfo{
 		ClusterId: dto.ClusterId,
 		ClusterBaseInfo: *ParseClusterBaseInfoFromDTO(dto.BaseInfo),
@@ -43,14 +43,14 @@ func ParseDisplayInfoFromDTO(dto *clusterpb.ClusterDisplayDTO) (displayInfo *Clu
 	return displayInfo
 }
 
-func ParseMaintenanceInfoFromDTO(dto *clusterpb.ClusterMaintenanceDTO) (maintenance *ClusterMaintenanceInfo) {
+func ParseMaintenanceInfoFromDTO(dto *cluster.ClusterMaintenanceDTO) (maintenance *ClusterMaintenanceInfo) {
 	maintenance = &ClusterMaintenanceInfo{
 		MaintainTaskCron: dto.MaintainTaskCron,
 	}
 	return
 }
 
-func ParseComponentInfoFromDTO(dto *clusterpb.ComponentInstanceDTO) (instance *ComponentInstance) {
+func ParseComponentInfoFromDTO(dto *cluster.ComponentInstanceDTO) (instance *ComponentInstance) {
 	nodes := make([]ComponentNodeDisplayInfo, len(dto.Nodes), len(dto.Nodes))
 
 	for i,v := range dto.Nodes {
@@ -65,7 +65,7 @@ func ParseComponentInfoFromDTO(dto *clusterpb.ComponentInstanceDTO) (instance *C
 	return
 }
 
-func ParseComponentNodeFromDTO(dto *clusterpb.ComponentNodeDisplayInfoDTO) (node *ComponentNodeDisplayInfo) {
+func ParseComponentNodeFromDTO(dto *cluster.ComponentNodeDisplayInfoDTO) (node *ComponentNodeDisplayInfo) {
 	if dto == nil || dto.Instance == nil {
 		return &ComponentNodeDisplayInfo{}
 	}
@@ -79,7 +79,7 @@ func ParseComponentNodeFromDTO(dto *clusterpb.ComponentNodeDisplayInfoDTO) (node
 	return
 }
 
-func ParseComponentNodeUsageFromDTO(dto *clusterpb.ComponentNodeUsageDTO) (usages *ComponentNodeUsageInfo) {
+func ParseComponentNodeUsageFromDTO(dto *cluster.ComponentNodeUsageDTO) (usages *ComponentNodeUsageInfo) {
 	usages = &ComponentNodeUsageInfo{
 		IoUtil: dto.IoUtil,
 		Iops: dto.Iops,
@@ -91,7 +91,7 @@ func ParseComponentNodeUsageFromDTO(dto *clusterpb.ComponentNodeUsageDTO) (usage
 	return
 }
 
-func ParseComponentNodeInstanceFromDTO(dto *clusterpb.ComponentNodeInstanceDTO) (instance *ComponentNodeInstanceInfo) {
+func ParseComponentNodeInstanceFromDTO(dto *cluster.ComponentNodeInstanceDTO) (instance *ComponentNodeInstanceInfo) {
 	instance = &ComponentNodeInstanceInfo{
 		HostId: dto.HostId,
 		Port: int(dto.Port),
@@ -103,7 +103,7 @@ func ParseComponentNodeInstanceFromDTO(dto *clusterpb.ComponentNodeInstanceDTO) 
 	return
 }
 
-func ParseComponentBaseInfoFromDTO(dto *clusterpb.ComponentBaseInfoDTO) (baseInfo *ComponentBaseInfo) {
+func ParseComponentBaseInfoFromDTO(dto *cluster.ComponentBaseInfoDTO) (baseInfo *ComponentBaseInfo) {
 	baseInfo = &ComponentBaseInfo{
 		ComponentType: dto.ComponentType,
 		ComponentName: dto.ComponentName,
@@ -111,7 +111,7 @@ func ParseComponentBaseInfoFromDTO(dto *clusterpb.ComponentBaseInfoDTO) (baseInf
 	return
 }
 
-func ParseInstanceInfoFromDTO(dto *clusterpb.ClusterInstanceDTO) (instance *ClusterInstanceInfo) {
+func ParseInstanceInfoFromDTO(dto *cluster.ClusterInstanceDTO) (instance *ClusterInstanceInfo) {
 	portList := make([]int, len(dto.PortList), len(dto.PortList))
 	for i,v := range dto.PortList {
 		portList[i] = int(v)

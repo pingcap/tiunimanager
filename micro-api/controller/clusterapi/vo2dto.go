@@ -1,32 +1,32 @@
 package clusterapi
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
-func (req *CreateReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO, demandsDTO []*clusterpb.ClusterNodeDemandDTO) {
+func (req *CreateReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, demandsDTO []*cluster.ClusterNodeDemandDTO) {
 	baseInfoDTO = req.ClusterBaseInfo.ConvertToDTO()
 
-	demandsDTO = make([]*clusterpb.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))
+	demandsDTO = make([]*cluster.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))
 
 	for _,demand := range req.NodeDemandList {
 		if demand.TotalNodeCount <= 0 {
 			framework.Log().Infof("Skip empty demand for component %s", demand.ComponentType)
 			continue
 		}
-		items := make([]*clusterpb.DistributionItemDTO, len(demand.DistributionItems), len(demand.DistributionItems))
+		items := make([]*cluster.DistributionItemDTO, len(demand.DistributionItems), len(demand.DistributionItems))
 
 		for j, item := range demand.DistributionItems {
-			items[j] = &clusterpb.DistributionItemDTO{
+			items[j] = &cluster.DistributionItemDTO{
 				ZoneCode: item.ZoneCode,
 				SpecCode: item.SpecCode,
 				Count: int32(item.Count),
 			}
 		}
 
-		demandsDTO = append(demandsDTO, &clusterpb.ClusterNodeDemandDTO{
+		demandsDTO = append(demandsDTO, &cluster.ClusterNodeDemandDTO{
 			ComponentType:  demand.ComponentType,
 			TotalNodeCount: int32(demand.TotalNodeCount),
 			Items:          items,
@@ -35,27 +35,27 @@ func (req *CreateReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO,
 	return
 }
 
-func (req *RestoreReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO, demandsDTO []*clusterpb.ClusterNodeDemandDTO) {
+func (req *RestoreReq) ConvertToDTO() (baseInfoDTO *cluster.ClusterBaseInfoDTO, demandsDTO []*cluster.ClusterNodeDemandDTO) {
 	baseInfoDTO = req.ClusterBaseInfo.ConvertToDTO()
 
-	demandsDTO = make([]*clusterpb.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))
+	demandsDTO = make([]*cluster.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))
 
 	for _,demand := range req.NodeDemandList {
 		if demand.TotalNodeCount <= 0 {
 			framework.Log().Infof("Skip empty demand for component %s", demand.ComponentType)
 			continue
 		}
-		items := make([]*clusterpb.DistributionItemDTO, len(demand.DistributionItems), len(demand.DistributionItems))
+		items := make([]*cluster.DistributionItemDTO, len(demand.DistributionItems), len(demand.DistributionItems))
 
 		for j, item := range demand.DistributionItems {
-			items[j] = &clusterpb.DistributionItemDTO{
+			items[j] = &cluster.DistributionItemDTO{
 				ZoneCode: item.ZoneCode,
 				SpecCode: item.SpecCode,
 				Count: int32(item.Count),
 			}
 		}
 
-		demandsDTO = append(demandsDTO, &clusterpb.ClusterNodeDemandDTO{
+		demandsDTO = append(demandsDTO, &cluster.ClusterNodeDemandDTO{
 			ComponentType:  demand.ComponentType,
 			TotalNodeCount: int32(demand.TotalNodeCount),
 			Items:          items,
@@ -64,8 +64,8 @@ func (req *RestoreReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO
 	return
 }
 
-func (baseInfo *ClusterBaseInfo) ConvertToDTO() (dto *clusterpb.ClusterBaseInfoDTO) {
-	dto = &clusterpb.ClusterBaseInfoDTO{
+func (baseInfo *ClusterBaseInfo) ConvertToDTO() (dto *cluster.ClusterBaseInfoDTO) {
+	dto = &cluster.ClusterBaseInfoDTO{
 		ClusterName: baseInfo.ClusterName,
 
 		DbPassword : baseInfo.DbPassword,
@@ -79,14 +79,14 @@ func (baseInfo *ClusterBaseInfo) ConvertToDTO() (dto *clusterpb.ClusterBaseInfoD
 	return
 }
 
-func (demand *ClusterNodeDemand) ConvertToDTO() (dto *clusterpb.ClusterNodeDemandDTO) {
-	items := make([]*clusterpb.DistributionItemDTO, len(demand.DistributionItems), len(demand.DistributionItems))
+func (demand *ClusterNodeDemand) ConvertToDTO() (dto *cluster.ClusterNodeDemandDTO) {
+	items := make([]*cluster.DistributionItemDTO, len(demand.DistributionItems), len(demand.DistributionItems))
 
 	for index, item := range demand.DistributionItems {
 		items[index] = item.ConvertToDTO()
 	}
 
-	dto = &clusterpb.ClusterNodeDemandDTO{
+	dto = &cluster.ClusterNodeDemandDTO{
 		ComponentType: demand.ComponentType,
 
 		TotalNodeCount: int32(demand.TotalNodeCount),
@@ -95,8 +95,8 @@ func (demand *ClusterNodeDemand) ConvertToDTO() (dto *clusterpb.ClusterNodeDeman
 	return
 }
 
-func (item DistributionItem) ConvertToDTO() (dto *clusterpb.DistributionItemDTO) {
-	dto = &clusterpb.DistributionItemDTO{
+func (item DistributionItem) ConvertToDTO() (dto *cluster.DistributionItemDTO) {
+	dto = &cluster.DistributionItemDTO{
 		ZoneCode: item.ZoneCode,
 		SpecCode: item.SpecCode,
 		Count: int32(item.Count),

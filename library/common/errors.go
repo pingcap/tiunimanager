@@ -40,22 +40,6 @@ const (
 	TIEM_RESOURCE_NOT_ALL_SUCCEED                  = 507
 	TIEM_RESOURCE_INVALID_STRATEGY                 = 508
 	TIEM_RESOURCE_INVAILD_RECYCLE_TYPE             = 509
-
-	TIEM_DASHBOARD_NOT_FOUND 	= 600
-	TIEM_EXPORT_PARAM_INVALID   = 601
-	TIEM_EXPORT_PROCESS_FAILED  = 602
-	TIEM_IMPORT_PARAM_INVALID   = 603
-	TIEM_IMPORT_PROCESS_FAILED  = 604
-	TIEM_TRANSPORT_RECORD_NOT_FOUND = 605
-	TIEM_BACKUP_PROCESS_FAILED = 606
-	TIEM_RECOVER_PARAM_INVALID = 607
-	TIEM_RECOVER_PROCESS_FAILED = 608
-	TIEM_BACKUP_RECORD_DELETE_FAILED = 609
-	TIEM_BACKUP_RECORD_QUERY_FAILED = 610
-	TIEM_BACKUP_STRATEGY_PARAM_INVALID = 611
-	TIEM_BACKUP_STRATEGY_SAVE_FAILED = 612
-	TIEM_BACKUP_STRATEGY_QUERY_FAILED = 613
-
 )
 
 var TiEMErrMsg = map[uint32]string{
@@ -82,19 +66,4 @@ var TiEMErrMsg = map[uint32]string{
 	TIEM_RESOURCE_NO_ENOUGH_PORT:                   "no enough port resource",
 	TIEM_RESOURCE_NOT_ALL_SUCCEED:                  "not all request succeed",
 	TIEM_RESOURCE_INVALID_STRATEGY:                 "invalid alloc strategy",
-
-	TIEM_DASHBOARD_NOT_FOUND: "dashboard is not found",
-	TIEM_EXPORT_PARAM_INVALID: "export data param invalid",
-	TIEM_EXPORT_PROCESS_FAILED: "export process failed",
-	TIEM_IMPORT_PARAM_INVALID: "import data param invalid",
-	TIEM_IMPORT_PROCESS_FAILED: "import process failed",
-	TIEM_TRANSPORT_RECORD_NOT_FOUND: "transport record is not found",
-	TIEM_BACKUP_PROCESS_FAILED: "backup process failed",
-	TIEM_RECOVER_PARAM_INVALID: "recover param invalid",
-	TIEM_RECOVER_PROCESS_FAILED: "recover process failed",
-	TIEM_BACKUP_RECORD_DELETE_FAILED: "delete backup record failed",
-	TIEM_BACKUP_RECORD_QUERY_FAILED: "query backup record failed",
-	TIEM_BACKUP_STRATEGY_PARAM_INVALID: "backup strategy param invalid",
-	TIEM_BACKUP_STRATEGY_SAVE_FAILED: "save backup strategy failed",
-	TIEM_BACKUP_STRATEGY_QUERY_FAILED: "query backup strategy failed",
 }

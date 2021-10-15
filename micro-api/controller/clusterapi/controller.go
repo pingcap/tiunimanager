@@ -2,8 +2,6 @@ package clusterapi
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 	"time"
@@ -15,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 // Create create a cluster
@@ -42,7 +41,7 @@ func Create(c *gin.Context) {
 
 	baseInfo, demand := req.ConvertToDTO()
 
-	reqDTO := &clusterpb.ClusterCreateReqDTO{
+	reqDTO := &cluster.ClusterCreateReqDTO{
 		Operator: operator.ConvertToDTO(),
 		Cluster:  baseInfo,
 		Demands:  demand,
@@ -96,7 +95,7 @@ func Query(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	reqDTO := &clusterpb.ClusterQueryReqDTO{
+	reqDTO := &cluster.ClusterQueryReqDTO{
 		Operator:      operator.ConvertToDTO(),
 		PageReq:       queryReq.PageRequest.ConvertToDTO(),
 		ClusterId:     queryReq.ClusterId,
@@ -142,7 +141,7 @@ func Delete(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	reqDTO := &clusterpb.ClusterDeleteReqDTO{
+	reqDTO := &cluster.ClusterDeleteReqDTO{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
 	}
@@ -179,7 +178,7 @@ func Delete(c *gin.Context) {
 func Detail(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
-	reqDTO := &clusterpb.ClusterDetailReqDTO{
+	reqDTO := &cluster.ClusterDetailReqDTO{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
 	}
@@ -243,27 +242,23 @@ func ClusterKnowledge(c *gin.Context) {
 // @Router /clusters/{clusterId}/dashboard [get]
 func DescribeDashboard(c *gin.Context) {
 	operator := controller.GetOperator(c)
-	reqDTO := &clusterpb.DescribeDashboardRequest{
+	reqDTO := &cluster.DescribeDashboardRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
 	}
 	respDTO, err := client.ClusterClient.DescribeDashboard(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		status := respDTO.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
-			result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
-				ClusterId: respDTO.GetClusterId(),
-				Url:       respDTO.GetUrl(),
-				Token:     respDTO.GetToken(),
-			})
+		result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
+			ClusterId: respDTO.GetClusterId(),
+			Url:       respDTO.GetUrl(),
+			Token:     respDTO.GetToken(),
+		})
 
-			c.JSON(http.StatusOK, result)
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
-		}
+		c.JSON(http.StatusOK, result)
 	}
 }
 
@@ -292,7 +287,7 @@ func Restore(c *gin.Context) {
 
 	baseInfo, demand := req.ConvertToDTO()
 
-	reqDTO := &clusterpb.RecoverRequest{
+	reqDTO := &cluster.RecoverRequest{
 		Operator: operator.ConvertToDTO(),
 		Cluster:  baseInfo,
 		Demands:  demand,
@@ -301,18 +296,20 @@ func Restore(c *gin.Context) {
 	respDTO, err := client.ClusterClient.RecoverCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
 		status := respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
-			result := controller.BuildCommonResult(int(status.Code), status.Message, RecoverClusterRsp{
-				ClusterId:       respDTO.GetClusterId(),
-				ClusterBaseInfo: *ParseClusterBaseInfoFromDTO(respDTO.GetBaseInfo()),
-				StatusInfo:      *ParseStatusFromDTO(respDTO.GetClusterStatus()),
-			})
-			c.JSON(http.StatusOK, result)
-		} else {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
+		if status.Code != 0 {
+			c.JSON(http.StatusInternalServerError, controller.Fail(500, status.Message))
+			return
 		}
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, RecoverClusterRsp{
+			ClusterId:       respDTO.GetClusterId(),
+			ClusterBaseInfo: *ParseClusterBaseInfoFromDTO(respDTO.GetBaseInfo()),
+			StatusInfo:      *ParseStatusFromDTO(respDTO.GetClusterStatus()),
+		})
+
+		c.JSON(http.StatusOK, result)
 	}
 }

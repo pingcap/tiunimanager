@@ -2,18 +2,18 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"time"
 
 	"github.com/pingcap/errors"
 
 	"github.com/pingcap-inc/tiem/library/common"
+	proto "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
-var SuccessResponseStatus = &dbpb.DbAuthResponseStatus{Code: 0}
+var SuccessResponseStatus = &proto.DbAuthResponseStatus{Code: 0}
 
-func (handler *DBServiceHandler) FindTenant(ctx context.Context, req *dbpb.DBFindTenantRequest, resp *dbpb.DBFindTenantResponse) error {
+func (handler *DBServiceHandler) FindTenant(ctx context.Context, req *proto.DBFindTenantRequest, resp *proto.DBFindTenantResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("FindTenant has invalid parameter")
 	}
@@ -23,14 +23,14 @@ func (handler *DBServiceHandler) FindTenant(ctx context.Context, req *dbpb.DBFin
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
-		resp.Tenant = &dbpb.DBTenantDTO{
+		resp.Tenant = &proto.DBTenantDTO{
 			Id:     tenant.ID,
 			Name:   tenant.Name,
 			Type:   int32(tenant.Type),
 			Status: int32(tenant.Status),
 		}
 	} else {
-		resp.Status = &dbpb.DbAuthResponseStatus{
+		resp.Status = &proto.DbAuthResponseStatus{
 			Code:    common.TIEM_TENANT_NOT_FOUND,
 			Message: err.Error(),
 		}
@@ -44,7 +44,7 @@ func (handler *DBServiceHandler) FindTenant(ctx context.Context, req *dbpb.DBFin
 	return err
 }
 
-func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *dbpb.DBFindAccountRequest, resp *dbpb.DBFindAccountResponse) error {
+func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *proto.DBFindAccountRequest, resp *proto.DBFindAccountResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("FindAccount has invalid parameter")
 	}
@@ -53,7 +53,7 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *dbpb.DBFi
 	account, err := accountManager.Find(req.GetName())
 	if err == nil {
 		resp.Status = SuccessResponseStatus
-		resp.Account = &dbpb.DBAccountDTO{
+		resp.Account = &proto.DBAccountDTO{
 			Id:        account.ID,
 			TenantId:  account.TenantId,
 			Name:      account.Name,
@@ -61,7 +61,7 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *dbpb.DBFi
 			FinalHash: account.FinalHash,
 		}
 	} else {
-		resp.Status = &dbpb.DbAuthResponseStatus{
+		resp.Status = &proto.DbAuthResponseStatus{
 			Code:    common.TIEM_ACCOUNT_NOT_FOUND,
 			Message: err.Error(),
 		}
@@ -80,9 +80,9 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *dbpb.DBFi
 	if req.WithRole && nil == err {
 		roles, err := accountManager.FetchAllRolesByAccount(account.TenantId, account.ID)
 		if err == nil {
-			roleDTOs := make([]*dbpb.DBRoleDTO, len(roles), cap(roles))
+			roleDTOs := make([]*proto.DBRoleDTO, len(roles), cap(roles))
 			for index, role := range roles {
-				roleDTOs[index] = &dbpb.DBRoleDTO{
+				roleDTOs[index] = &proto.DBRoleDTO{
 					TenantId: role.TenantId,
 					Name:     role.Name,
 					Status:   int32(role.Status),
@@ -91,7 +91,7 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *dbpb.DBFi
 			}
 			resp.Account.Roles = roleDTOs
 		} else {
-			resp.Status = &dbpb.DbAuthResponseStatus{
+			resp.Status = &proto.DbAuthResponseStatus{
 				Code:    common.TIEM_ACCOUNT_NOT_FOUND,
 				Message: err.Error(),
 			}
@@ -107,7 +107,7 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *dbpb.DBFi
 	return err
 }
 
-func (handler *DBServiceHandler) FindAccountById(cxt context.Context, req *dbpb.DBFindAccountByIdRequest, resp *dbpb.DBFindAccountByIdResponse) error {
+func (handler *DBServiceHandler) FindAccountById(cxt context.Context, req *proto.DBFindAccountByIdRequest, resp *proto.DBFindAccountByIdResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("FindAccount has invalid parameter")
 	}
@@ -116,7 +116,7 @@ func (handler *DBServiceHandler) FindAccountById(cxt context.Context, req *dbpb.
 	account, err := accountManager.FindById(req.GetId())
 	if err == nil {
 		resp.Status = SuccessResponseStatus
-		resp.Account = &dbpb.DBAccountDTO{
+		resp.Account = &proto.DBAccountDTO{
 			Id:        account.ID,
 			TenantId:  account.TenantId,
 			Name:      account.Name,
@@ -125,7 +125,7 @@ func (handler *DBServiceHandler) FindAccountById(cxt context.Context, req *dbpb.
 		}
 		log.Infof("Find account by id %s successful, error: %v", req.GetId(), err)
 	} else {
-		resp.Status = &dbpb.DbAuthResponseStatus{
+		resp.Status = &proto.DbAuthResponseStatus{
 			Code:    common.TIEM_ACCOUNT_NOT_FOUND,
 			Message: err.Error(),
 		}
@@ -138,7 +138,7 @@ func (handler *DBServiceHandler) FindAccountById(cxt context.Context, req *dbpb.
 	return err
 }
 
-func (handler *DBServiceHandler) SaveToken(cxt context.Context, req *dbpb.DBSaveTokenRequest, resp *dbpb.DBSaveTokenResponse) error {
+func (handler *DBServiceHandler) SaveToken(cxt context.Context, req *proto.DBSaveTokenRequest, resp *proto.DBSaveTokenResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveToken has invalid parameter, req: %v, resp: %v", req, resp)
 	}
@@ -149,7 +149,7 @@ func (handler *DBServiceHandler) SaveToken(cxt context.Context, req *dbpb.DBSave
 	if err == nil {
 		resp.Status = SuccessResponseStatus
 	} else {
-		resp.Status = &dbpb.DbAuthResponseStatus{
+		resp.Status = &proto.DbAuthResponseStatus{
 			Code:    common.TIEM_ADD_TOKEN_FAILED,
 			Message: err.Error(),
 		}
@@ -166,7 +166,7 @@ func (handler *DBServiceHandler) SaveToken(cxt context.Context, req *dbpb.DBSave
 	return err
 }
 
-func (handler *DBServiceHandler) FindToken(cxt context.Context, req *dbpb.DBFindTokenRequest, resp *dbpb.DBFindTokenResponse) error {
+func (handler *DBServiceHandler) FindToken(cxt context.Context, req *proto.DBFindTokenRequest, resp *proto.DBFindTokenResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("FindToken has invalid parameter, req: %v, resp: %v", req, resp)
 	}
@@ -176,7 +176,7 @@ func (handler *DBServiceHandler) FindToken(cxt context.Context, req *dbpb.DBFind
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
-		resp.Token = &dbpb.DBTokenDTO{
+		resp.Token = &proto.DBTokenDTO{
 			TokenString:    token.TokenString,
 			AccountId:      token.AccountId,
 			AccountName:    token.AccountName,
@@ -184,7 +184,7 @@ func (handler *DBServiceHandler) FindToken(cxt context.Context, req *dbpb.DBFind
 			ExpirationTime: token.ExpirationTime.Unix(),
 		}
 	} else {
-		resp.Status = &dbpb.DbAuthResponseStatus{
+		resp.Status = &proto.DbAuthResponseStatus{
 			Code:    common.TIEM_TOKEN_NOT_FOUND,
 			Message: err.Error(),
 		}
@@ -198,7 +198,7 @@ func (handler *DBServiceHandler) FindToken(cxt context.Context, req *dbpb.DBFind
 	return err
 }
 
-func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req *dbpb.DBFindRolesByPermissionRequest, resp *dbpb.DBFindRolesByPermissionResponse) error {
+func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req *proto.DBFindRolesByPermissionRequest, resp *proto.DBFindRolesByPermissionResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("FindRolesByPermission has invalid parameter req: %v, resp: %v", req, resp)
 	}
@@ -207,7 +207,7 @@ func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req 
 	permissionDO, err := accountManager.FetchPermission(req.TenantId, req.Code)
 
 	if nil == err {
-		resp.Permission = &dbpb.DBPermissionDTO{
+		resp.Permission = &proto.DBPermissionDTO{
 			TenantId: permissionDO.TenantId,
 			Code:     permissionDO.Code,
 			Name:     permissionDO.Name,
@@ -216,7 +216,7 @@ func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req 
 			Status:   int32(permissionDO.Status),
 		}
 	} else {
-		resp.Status = &dbpb.DbAuthResponseStatus{
+		resp.Status = &proto.DbAuthResponseStatus{
 			Code:    common.TIEM_QUERY_PERMISSION_FAILED,
 			Message: err.Error(),
 		}
@@ -226,9 +226,9 @@ func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req 
 	if nil == err {
 		roles, err := accountManager.FetchAllRolesByPermission(req.TenantId, permissionDO.ID)
 		if nil == err {
-			roleDTOs := make([]*dbpb.DBRoleDTO, len(roles), cap(roles))
+			roleDTOs := make([]*proto.DBRoleDTO, len(roles), cap(roles))
 			for index, role := range roles {
-				roleDTOs[index] = &dbpb.DBRoleDTO{
+				roleDTOs[index] = &proto.DBRoleDTO{
 					TenantId: role.TenantId,
 					Name:     role.Name,
 					Status:   int32(role.Status),
@@ -238,7 +238,7 @@ func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req 
 			resp.Status = SuccessResponseStatus
 			resp.Roles = roleDTOs
 		} else {
-			resp.Status = &dbpb.DbAuthResponseStatus{
+			resp.Status = &proto.DbAuthResponseStatus{
 				Code:    common.TIEM_QUERY_PERMISSION_FAILED,
 				Message: err.Error(),
 			}

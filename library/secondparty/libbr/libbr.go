@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"io"
 	"os"
 	"os/exec"
@@ -19,6 +18,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/sirupsen/logrus"
 )
 
@@ -155,10 +155,10 @@ type TaskStatusMapValue struct {
 type TaskStatus int
 
 const (
-	TaskStatusInit       TaskStatus = TaskStatus(dbpb.TiupTaskStatus_Init)
-	TaskStatusProcessing TaskStatus = TaskStatus(dbpb.TiupTaskStatus_Processing)
-	TaskStatusFinished   TaskStatus = TaskStatus(dbpb.TiupTaskStatus_Finished)
-	TaskStatusError      TaskStatus = TaskStatus(dbpb.TiupTaskStatus_Error)
+	TaskStatusInit       TaskStatus = TaskStatus(dbPb.TiupTaskStatus_Init)
+	TaskStatusProcessing TaskStatus = TaskStatus(dbPb.TiupTaskStatus_Processing)
+	TaskStatusFinished   TaskStatus = TaskStatus(dbPb.TiupTaskStatus_Finished)
+	TaskStatusError      TaskStatus = TaskStatus(dbPb.TiupTaskStatus_Error)
 )
 
 type TaskStatusMember struct {
@@ -656,9 +656,9 @@ func glMicroTaskStatusMapSyncer() {
 		glMicroTaskStatusMapMutex.Unlock()
 		logInFunc := logger.WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
-			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbpb.UpdateTiupTaskRequest{
+			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,
-				Status: dbpb.TiupTaskStatus(v.Status),
+				Status: dbPb.TiupTaskStatus(v.Status),
 				ErrStr: v.ErrorStr,
 			})
 			if rsp == nil || err != nil || rsp.ErrCode != 0 {
@@ -762,8 +762,8 @@ func backUp(backUpReq CmdBackUpReq) CmdBrResp {
 }
 
 func BackUp(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error) {
-	var req dbpb.CreateTiupTaskRequest
-	req.Type = dbpb.TiupTaskType_Backup
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Backup
 	req.BizID = bizId
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
@@ -833,8 +833,8 @@ func restore(restoreReq CmdRestoreReq) CmdBrResp {
 }
 
 func Restore(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error) {
-	var req dbpb.CreateTiupTaskRequest
-	req.Type = dbpb.TiupTaskType_Restore
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Restore
 	req.BizID = bizId
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
@@ -878,8 +878,8 @@ func ShowRestoreInfo(cluster ClusterFacade) CmdShowRestoreInfoResp {
 	return showRestoreInfoResp
 }
 
-func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbpb.TiupTaskStatus, errStr string, err error) {
-	var req dbpb.FindTiupTaskByIDRequest
+func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error) {
+	var req dbPb.FindTiupTaskByIDRequest
 	req.Id = taskID
 	logger.Debugf("FindTiupTaskByID: %d", taskID)
 	rsp, err := client.DBClient.FindTiupTaskByID(context.Background(), &req)

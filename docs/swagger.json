@@ -2758,25 +2758,13 @@
         "databaseapi.DataImportReq": {
             "type": "object",
             "properties": {
-                "accessKey": {
-                    "type": "string"
-                },
-                "bucketUrl": {
-                    "type": "string"
-                },
                 "clusterId": {
-                    "type": "string"
-                },
-                "endpointUrl": {
                     "type": "string"
                 },
                 "filePath": {
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
-                },
-                "secretAccessKey": {
                     "type": "string"
                 },
                 "storageType": {
@@ -3247,9 +3235,6 @@
                 "clusterComponent": {
                     "$ref": "#/definitions/knowledge.ClusterComponent"
                 },
-                "compentPortConstraint": {
-                    "$ref": "#/definitions/knowledge.ComponentPortConstraint"
-                },
                 "componentConstraint": {
                     "$ref": "#/definitions/knowledge.ComponentConstraint"
                 }
@@ -3325,20 +3310,6 @@
                     "items": {
                         "type": "integer"
                     }
-                }
-            }
-        },
-        "knowledge.ComponentPortConstraint": {
-            "type": "object",
-            "properties": {
-                "portCount": {
-                    "type": "integer"
-                },
-                "portRangeEnd": {
-                    "type": "integer"
-                },
-                "portRangeStart": {
-                    "type": "integer"
                 }
             }
         },

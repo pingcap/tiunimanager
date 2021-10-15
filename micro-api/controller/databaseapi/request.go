@@ -24,10 +24,6 @@ type DataImportReq struct {
 	Password      string     `json:"password"`
 	FilePath      string     `json:"filePath"`
 	StorageType   string 	 `json:"storageType"`
-	EndpointUrl   string 	 `json:"endpointUrl"`
-	BucketUrl     string 	 `json:"bucketUrl"`
-	AccessKey	  string     `json:"accessKey"`
-	SecretAccessKey string 	 `json:"secretAccessKey"`
 }
 
 type DataTransportQueryReq struct {

@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+import "db_auth.proto";
+import "db_host.proto";
+import "db_cluster.proto";
+import "db_tiup.proto";
+import "db_task.proto";
+import "db_transport.proto";
+import "db_allocation.proto";
+
+option go_package = "./;db";
+
+// TiDB Cloud Platform database service
+service TiEMDBService {
+    // Auth Module
+	rpc FindTenant(DBFindTenantRequest) returns (DBFindTenantResponse);
+	rpc FindAccount(DBFindAccountRequest) returns (DBFindAccountResponse);
+	rpc FindAccountById(DBFindAccountByIdRequest) returns (DBFindAccountByIdResponse);
+	rpc SaveToken(DBSaveTokenRequest) returns (DBSaveTokenResponse);
+	rpc FindToken(DBFindTokenRequest) returns (DBFindTokenResponse);
+	rpc FindRolesByPermission(DBFindRolesByPermissionRequest) returns (DBFindRolesByPermissionResponse);
+
+    // Host Module
+	rpc AddHost(DBAddHostRequest) returns (DBAddHostResponse);
+	rpc AddHostsInBatch(DBAddHostsInBatchRequest) returns (DBAddHostsInBatchResponse);
+	rpc RemoveHost(DBRemoveHostRequest) returns (DBRemoveHostResponse);
+	rpc RemoveHostsInBatch(DBRemoveHostsInBatchRequest) returns (DBRemoveHostsInBatchResponse);
+	rpc ListHost(DBListHostsRequest) returns (DBListHostsResponse);
+	rpc CheckDetails(DBCheckDetailsRequest) returns (DBCheckDetailsResponse);
+	rpc AllocHosts(DBAllocHostsRequest) returns (DBAllocHostsResponse);
+	rpc GetFailureDomain(DBGetFailureDomainRequest) returns (DBGetFailureDomainResponse);
+	rpc AllocResources(DBAllocRequest) returns (DBAllocResponse);
+	rpc AllocResourcesInBatch(DBBatchAllocRequest) returns (DBBatchAllocResponse);
+	rpc RecycleResources(DBRecycleRequest) returns (DBRecycleResponse);
+
+	// Cluster
+	rpc CreateCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);
+	rpc DeleteCluster(DBDeleteClusterRequest) returns (DBDeleteClusterResponse);
+	rpc UpdateClusterStatus(DBUpdateClusterStatusRequest) returns (DBUpdateClusterStatusResponse);
+	rpc UpdateClusterTopologyConfig(DBUpdateTopologyConfigRequest) returns (DBUpdateTopologyConfigResponse);
+	rpc CreateInstance(DBCreateInstanceRequest) returns (DBCreateInstanceResponse);
+
+	rpc LoadCluster(DBLoadClusterRequest) returns (DBLoadClusterResponse);
+	rpc ListCluster(DBListClusterRequest) returns (DBListClusterResponse);
+
+	// backup & recover & parameters
+	rpc SaveBackupRecord(DBSaveBackupRecordRequest) returns (DBSaveBackupRecordResponse);
+	rpc UpdateBackupRecord(DBUpdateBackupRecordRequest) returns (DBUpdateBackupRecordResponse);
+	rpc DeleteBackupRecord(DBDeleteBackupRecordRequest) returns (DBDeleteBackupRecordResponse);
+    rpc SaveBackupStrategy(DBSaveBackupStrategyRequest) returns (DBSaveBackupStrategyResponse);
+    rpc QueryBackupStrategy(DBQueryBackupStrategyRequest) returns (DBQueryBackupStrategyResponse);
+    rpc QueryBackupStrategyByTime(DBQueryBackupStrategyByTimeRequest) returns (DBQueryBackupStrategyByTimeResponse);
+    rpc QueryBackupRecords(DBQueryBackupRecordRequest) returns (DBQueryBackupRecordResponse);
+	rpc ListBackupRecords(DBListBackupRecordsRequest) returns (DBListBackupRecordsResponse);
+	rpc SaveRecoverRecord(DBSaveRecoverRecordRequest) returns (DBSaveRecoverRecordResponse);
+	rpc SaveParametersRecord(DBSaveParametersRequest) returns (DBSaveParametersResponse);
+	rpc GetCurrentParametersRecord(DBGetCurrentParametersRequest) returns (DBGetCurrentParametersResponse);
+
+	// Tiup Task
+	rpc CreateTiupTask(CreateTiupTaskRequest) returns (CreateTiupTaskResponse);
+	rpc UpdateTiupTask(UpdateTiupTaskRequest) returns (UpdateTiupTaskResponse);
+	rpc FindTiupTaskByID(FindTiupTaskByIDRequest) returns (FindTiupTaskByIDResponse);
+	rpc GetTiupTaskStatusByBizID(GetTiupTaskStatusByBizIDRequest) returns (GetTiupTaskStatusByBizIDResponse);
+
+	// Workflow and Task
+	rpc CreateFlow(DBCreateFlowRequest) returns (DBCreateFlowResponse);
+	rpc CreateTask(DBCreateTaskRequest) returns (DBCreateTaskResponse);
+	rpc UpdateFlow(DBUpdateFlowRequest) returns (DBUpdateFlowResponse);
+	rpc UpdateTask(DBUpdateTaskRequest) returns (DBUpdateTaskResponse);
+	rpc LoadFlow(DBLoadFlowRequest) returns (DBLoadFlowResponse);
+	rpc LoadTask(DBLoadTaskRequest) returns (DBLoadTaskResponse);
+	rpc ListFlows(DBListFlowsRequest) returns (DBListFlowsResponse);
+
+	// DataTransport
+	rpc CreateTransportRecord(DBCreateTransportRecordRequest) returns (DBCreateTransportRecordResponse);
+    rpc UpdateTransportRecord(DBUpdateTransportRecordRequest) returns (DBUpdateTransportRecordResponse);
+    rpc FindTrasnportRecordByID(DBFindTransportRecordByIDRequest) returns (DBFindTransportRecordByIDResponse);
+    rpc ListTrasnportRecord(DBListTransportRecordRequest) returns (DBListTransportRecordResponse);
+}

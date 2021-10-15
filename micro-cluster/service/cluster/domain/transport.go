@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
+	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"os"
 	"strconv"
 	"time"
@@ -124,7 +124,7 @@ var contextDataTransportKey = "dataTransportInfo"
 var contextCtxKey = "ctx"
 var defaultTransportDirPrefix = "/tmp/tiem/transport" //todo: move to config
 
-func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
+func ExportDataPreCheck(req *proto.DataExportRequest) error {
 	if req.GetClusterId() == "" {
 		return fmt.Errorf("invalid param clusterId %s", req.GetClusterId())
 	}
@@ -165,7 +165,7 @@ func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 	return nil
 }
 
-func ImportDataPreCheck(req *clusterpb.DataImportRequest) error {
+func ImportDataPreCheck(req *proto.DataImportRequest) error {
 	if req.GetClusterId() == "" {
 		return fmt.Errorf("invalid param clusterId %s", req.GetClusterId())
 	}
@@ -177,32 +177,17 @@ func ImportDataPreCheck(req *clusterpb.DataImportRequest) error {
 			return fmt.Errorf("invalid param password %s", req.GetPassword())
 		}
 	*/
-	switch req.GetStorageType() {
-	case S3StorageType:
-		if req.GetEndpointUrl() == "" {
-			return fmt.Errorf("invalid param endpointUrl %s", req.GetEndpointUrl())
-		}
-		if req.GetBucketUrl() == "" {
-			return fmt.Errorf("invalid param bucketUrl %s", req.GetBucketUrl())
-		}
-		if req.GetAccessKey() == "" {
-			return fmt.Errorf("invalid param accessKey %s", req.GetAccessKey())
-		}
-		if req.GetSecretAccessKey() == "" {
-			return fmt.Errorf("invalid param secretAccessKey %s", req.GetSecretAccessKey())
-		}
-	case NfsStorageType:
-		if req.GetFilePath() == "" {
-			return fmt.Errorf("invalid param filePath %s", req.GetFilePath())
-		}
-	default:
+	if req.GetFilePath() == "" {
+		return fmt.Errorf("invalid param filePath %s", req.GetFilePath())
+	}
+	if S3StorageType != req.GetStorageType() && NfsStorageType != req.GetStorageType() {
 		return fmt.Errorf("invalid param storageType %s", req.GetStorageType())
 	}
 
 	return nil
 }
 
-func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (string, error) {
+func ExportData(ctx context.Context, request *proto.DataExportRequest) (string, error) {
 	getLoggerWithContext(ctx).Infof("begin exportdata request %+v", request)
 	defer getLoggerWithContext(ctx).Infof("end exportdata")
 	//todo: check operator
@@ -214,8 +199,8 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (stri
 		return "", err
 	}
 
-	req := &dbpb.DBCreateTransportRecordRequest{
-		Record: &dbpb.TransportRecordDTO{
+	req := &db.DBCreateTransportRecordRequest{
+		Record: &db.TransportRecordDTO{
 			ClusterId:     request.GetClusterId(),
 			TenantId:      operator.TenantId,
 			TransportType: string(TransportTypeExport),
@@ -258,7 +243,7 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (stri
 	return info.RecordId, nil
 }
 
-func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (string, error) {
+func ImportData(ctx context.Context, request *proto.DataImportRequest) (string, error) {
 	getLoggerWithContext(ctx).Infof("begin importdata request %+v", request)
 	defer getLoggerWithContext(ctx).Infof("end importdata")
 	//todo: check operator
@@ -271,8 +256,8 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (stri
 		return "", err
 	}
 
-	req := &dbpb.DBCreateTransportRecordRequest{
-		Record: &dbpb.TransportRecordDTO{
+	req := &db.DBCreateTransportRecordRequest{
+		Record: &db.TransportRecordDTO{
 			ClusterId:     request.GetClusterId(),
 			TenantId:      operator.TenantId,
 			TransportType: string(TransportTypeImport),
@@ -290,7 +275,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (stri
 		ClusterId:   request.GetClusterId(),
 		UserName:    request.GetUserName(),
 		Password:    request.GetPassword(), //todo: need encrypt
-		FilePath:    getDataImportFilePath(request),
+		FilePath:    request.GetFilePath(),
 		RecordId:    resp.GetId(),
 		StorageType: request.GetStorageType(),
 		ConfigPath:  getDataImportConfigDir(request.GetClusterId(), TransportTypeImport),
@@ -311,11 +296,11 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (stri
 	return info.RecordId, nil
 }
 
-func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*dbpb.TransportRecordDTO, *dbpb.DBPageDTO, error) {
+func DescribeDataTransportRecord(ctx context.Context, ope *proto.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*db.TransportRecordDTO, *db.DBPageDTO, error) {
 	getLoggerWithContext(ctx).Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %s, page: %d, pageSize: %d", clusterId, recordId, page, pageSize)
 	defer getLoggerWithContext(ctx).Info("end DescribeDataTransportRecord")
-	req := &dbpb.DBListTransportRecordRequest{
-		Page: &dbpb.DBPageDTO{
+	req := &db.DBListTransportRecordRequest{
+		Page: &db.DBPageDTO{
 			Page:     page,
 			PageSize: pageSize,
 		},
@@ -361,7 +346,6 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	 *  and check-requirements = true can not pass lightning pre-check
 	 *  in real environment, config data-source-dir = user nfs storage, sorted-kv-dir = other disk, turn on pre-check
 	 */
-	//s3://nfs/tiem/export/SBw5TJr6So2TULUvTLodZA?access-key=minioadmin&secret-access-key=minioadmin&endpoint=http://minio.pingcap.net:9000&force-path-style=true
 	config := &DataImportConfig{
 		Lightning: LightningCfg{
 			Level:             "info",
@@ -392,17 +376,7 @@ func getDataImportConfigDir(clusterId string, transportType TransportType) strin
 	return fmt.Sprintf("%s/%s/%s", defaultTransportDirPrefix, clusterId, transportType)
 }
 
-func getDataExportFilePath(request *clusterpb.DataExportRequest) string {
-	var filePath string
-	if S3StorageType == request.GetStorageType() {
-		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
-	} else {
-		filePath = request.GetFilePath()
-	}
-	return filePath
-}
-
-func getDataImportFilePath(request *clusterpb.DataImportRequest) string {
+func getDataExportFilePath(request *proto.DataExportRequest) string {
 	var filePath string
 	if S3StorageType == request.GetStorageType() {
 		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
@@ -488,8 +462,8 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	info := flowContext.value(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
 
-	req := &dbpb.DBUpdateTransportRecordRequest{
-		Record: &dbpb.TransportRecordDTO{
+	req := &db.DBUpdateTransportRecordRequest{
+		Record: &db.TransportRecordDTO{
 			ID:        info.RecordId,
 			ClusterId: cluster.Id,
 			Status:    TransportStatusSuccess,
@@ -568,8 +542,8 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	info := flowContext.value(contextDataTransportKey).(*ExportInfo)
 	cluster := clusterAggregation.Cluster
 
-	req := &dbpb.DBUpdateTransportRecordRequest{
-		Record: &dbpb.TransportRecordDTO{
+	req := &db.DBUpdateTransportRecordRequest{
+		Record: &db.TransportRecordDTO{
 			ID:        info.RecordId,
 			ClusterId: cluster.Id,
 			Status:    TransportStatusSuccess,
@@ -652,8 +626,8 @@ func exportDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func updateTransportRecordFailed(ctx context.Context, recordId, clusterId string) error {
-	req := &dbpb.DBUpdateTransportRecordRequest{
-		Record: &dbpb.TransportRecordDTO{
+	req := &db.DBUpdateTransportRecordRequest{
+		Record: &db.TransportRecordDTO{
 			ID:        recordId,
 			ClusterId: clusterId,
 			Status:    TransportStatusFailed,

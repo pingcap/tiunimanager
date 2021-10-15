@@ -1,11 +1,11 @@
 package client
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
+	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
-var DBClient dbpb.TiEMDBService
+var DBClient db.TiEMDBService
 
-var ClusterClient clusterpb.ClusterService
+var ClusterClient cluster.ClusterService
 

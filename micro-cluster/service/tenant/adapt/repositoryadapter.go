@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	tenant "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
+	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"time"
 )
 
@@ -18,7 +18,7 @@ func InjectionMetaDbRepo () {
 }
 
 func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId string, code string) (p tenant.PermissionAggregation, err error) {
-	req := dbpb.DBFindRolesByPermissionRequest{
+	req := db.DBFindRolesByPermissionRequest{
 		TenantId: tenantId,
 		Code: code,
 	}
@@ -62,7 +62,7 @@ func (m MicroMetaDbRepo) LoadPermission(tenantId string, code string) (tenant.Pe
 }
 
 func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account tenant.AccountAggregation, err error) {
-	req := dbpb.DBFindAccountRequest{
+	req := db.DBFindAccountRequest{
 		Name: name,
 		WithRole: true,
 	}
@@ -101,8 +101,8 @@ func (m MicroMetaDbRepo) Provide(tiEMToken *tenant.TiEMToken) (tokenString strin
 	// 提供token，简单地使用UUID
 	tokenString = uuid.New().String()
 
-	req := dbpb.DBSaveTokenRequest{
-		Token: &dbpb.DBTokenDTO{
+	req := db.DBSaveTokenRequest{
+		Token: &db.DBTokenDTO{
 			TenantId: tiEMToken.TenantId,
 			AccountId: tiEMToken.AccountId,
 			AccountName: tiEMToken.AccountName,
@@ -117,8 +117,8 @@ func (m MicroMetaDbRepo) Provide(tiEMToken *tenant.TiEMToken) (tokenString strin
 }
 
 func (m MicroMetaDbRepo) Modify(tiEMToken *tenant.TiEMToken) error {
-	req := dbpb.DBSaveTokenRequest{
-		Token: &dbpb.DBTokenDTO{
+	req := db.DBSaveTokenRequest{
+		Token: &db.DBTokenDTO{
 			TenantId: tiEMToken.TenantId,
 			AccountId: tiEMToken.AccountId,
 			AccountName: tiEMToken.AccountName,
@@ -133,7 +133,7 @@ func (m MicroMetaDbRepo) Modify(tiEMToken *tenant.TiEMToken) error {
 }
 
 func (m MicroMetaDbRepo) GetToken(tokenString string) (token tenant.TiEMToken, err error) {
-	req := dbpb.DBFindTokenRequest{
+	req := db.DBFindTokenRequest{
 		TokenString: tokenString,
 	}
 
@@ -170,7 +170,7 @@ func (m MicroMetaDbRepo) AddAccount(a *tenant.Account) error {
 }
 
 func (m MicroMetaDbRepo) LoadAccountByName(name string) (account tenant.Account, err error) {
-	req := dbpb.DBFindAccountRequest{
+	req := db.DBFindAccountRequest{
 		Name: name,
 		WithRole: false,
 	}

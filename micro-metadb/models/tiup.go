@@ -2,11 +2,12 @@ package models
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+
+	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 
 	"gorm.io/gorm"
 )
@@ -41,10 +42,10 @@ const (
 	TiupTaskTypeDestroy TiupTaskType = "DESTROY"
 )
 
-func CreateTiupTask(db *gorm.DB, ctx context.Context, taskType dbpb.TiupTaskType, bizID uint64) (id uint64, err error) {
+func CreateTiupTask(db *gorm.DB, ctx context.Context, taskType dbPb.TiupTaskType, bizID uint64) (id uint64, err error) {
 	t := TiupTask{
 		Type:     int(taskType),
-		Status:   int(dbpb.TiupTaskStatus_Init),
+		Status:   int(dbPb.TiupTaskStatus_Init),
 		ErrorStr: "",
 		BizID:    bizID,
 	}
@@ -60,7 +61,7 @@ func CreateTiupTask(db *gorm.DB, ctx context.Context, taskType dbpb.TiupTaskType
 	return id, err
 }
 
-func UpdateTiupTaskStatus(db *gorm.DB, ctx context.Context, id uint64, taskStatus dbpb.TiupTaskStatus, errStr string) error {
+func UpdateTiupTaskStatus(db *gorm.DB, ctx context.Context, id uint64, taskStatus dbPb.TiupTaskStatus, errStr string) error {
 	t := TiupTask{
 		ID: id,
 	}

@@ -373,7 +373,7 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 			SortedKvDir: info.ConfigPath, //todo: TBD
 		},
 		MyDumper: MyDumperCfg{
-			DataSourceDir: fmt.Sprintf("s3://%s", info.FilePath),
+			DataSourceDir: info.FilePath,
 		},
 		Tidb: TidbCfg{
 			Host:       tidbServer.Host,

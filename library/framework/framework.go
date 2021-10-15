@@ -264,6 +264,10 @@ func (b *BaseFramework) GetTracer() *Tracer {
 	return b.trace
 }
 
+func (b *BaseFramework) GetCertificateInfo() *CertificateInfo {
+	return b.certificate
+}
+
 func (b *BaseFramework) GetEtcdClient() *EtcdClient {
 	return b.etcdClient
 }

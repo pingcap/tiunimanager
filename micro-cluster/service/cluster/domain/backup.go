@@ -92,7 +92,10 @@ func Backup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, b
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	ClusterRepo.Persist(clusterAggregation)
+	err = ClusterRepo.Persist(clusterAggregation)
+	if err != nil {
+		return nil, err
+	}
 	return clusterAggregation, nil
 }
 
@@ -166,7 +169,7 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 		OwnerId:        operator.Id,
 	}
 
-	demands := make([]*ClusterComponentDemand, len(demandDTOs), len(demandDTOs))
+	demands := make([]*ClusterComponentDemand, len(demandDTOs))
 
 	for i, v := range demandDTOs {
 		demands[i] = parseNodeDemandFromDTO(v)
@@ -198,7 +201,10 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	ClusterRepo.Persist(clusterAggregation)
+	err = ClusterRepo.Persist(clusterAggregation)
+	if err != nil {
+		return nil, err
+	}
 	return clusterAggregation, nil
 }
 

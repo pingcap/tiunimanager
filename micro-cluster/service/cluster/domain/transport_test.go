@@ -213,7 +213,7 @@ func Test_buildDataImportConfig(t *testing.T) {
 	ret := buildDataImportConfig(task, context)
 	assert.Equal(t, true, ret)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
-	os.RemoveAll(info.ConfigPath)
+	_ = os.RemoveAll(info.ConfigPath)
 }
 
 func Test_updateDataImportRecord(t *testing.T) {

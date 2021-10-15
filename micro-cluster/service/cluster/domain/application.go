@@ -4,14 +4,14 @@ import (
 	ctx "context"
 	"errors"
 	"github.com/pingcap-inc/tiem/library/client"
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
-	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
@@ -30,7 +30,7 @@ type ClusterAggregation struct {
 
 	UsedResources interface{}
 
-	AvailableResources *proto.AllocHostResponse
+	AvailableResources *clusterpb.AllocHostResponse
 
 	StatusModified bool
 	FlowModified   bool
@@ -46,7 +46,7 @@ type ClusterAggregation struct {
 
 var contextClusterKey = "clusterAggregation"
 
-func CreateCluster(ope *proto.OperatorDTO, clusterInfo *proto.ClusterBaseInfoDTO, demandDTOs []*proto.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
+func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	cluster := &Cluster{
@@ -100,7 +100,7 @@ func (clusterAggregation *ClusterAggregation) updateWorkFlow(flow *FlowWorkEntit
 	clusterAggregation.FlowModified = true
 }
 
-func DeleteCluster(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
+func DeleteCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
@@ -120,18 +120,18 @@ func DeleteCluster(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregatio
 	return clusterAggregation, nil
 }
 
-func ListCluster(ope *proto.OperatorDTO, req *proto.ClusterQueryReqDTO) ([]*ClusterAggregation, int, error) {
+func ListCluster(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterQueryReqDTO) ([]*ClusterAggregation, int, error) {
 	return ClusterRepo.Query(req.ClusterId, req.ClusterName, req.ClusterType, req.ClusterStatus, req.ClusterTag,
 		int(req.PageReq.Page), int(req.PageReq.PageSize))
 }
 
-func GetClusterDetail(ope *proto.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
+func GetClusterDetail(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
 	cluster, err := ClusterRepo.Load(clusterId)
 
 	return cluster, err
 }
 
-func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
+func ModifyParameters(ope *clusterpb.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
@@ -164,7 +164,7 @@ func ModifyParameters(ope *proto.OperatorDTO, clusterId string, content string) 
 	return clusterAggregation, nil
 }
 
-func GetParameters(ope *proto.OperatorDTO, clusterId string) (parameterJson string, err error) {
+func GetParameters(ope *clusterpb.OperatorDTO, clusterId string) (parameterJson string, err error) {
 	return InstanceRepo.QueryParameterJson(clusterId)
 }
 
@@ -187,7 +187,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 
 	demands := clusterAggregation.Cluster.Demands
 
-	clusterAggregation.AvailableResources = &proto.AllocHostResponse{}
+	clusterAggregation.AvailableResources = &clusterpb.AllocHostResponse{}
 	err := host.NewResourceManager().AllocHosts(ctx.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
 
 	if err != nil {
@@ -242,7 +242,7 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
-	var req dbPb.FindTiupTaskByIDRequest
+	var req dbpb.FindTiupTaskByIDRequest
 	req.Id = context.value("deployTaskId").(uint64)
 
 	for i := 0; i < 30; i++ {
@@ -253,12 +253,12 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 			task.Fail(err)
 			return false
 		}
-		if rsp.TiupTask.Status == dbPb.TiupTaskStatus_Error{
+		if rsp.TiupTask.Status == dbpb.TiupTaskStatus_Error {
 			getLogger().Errorf("deploy cluster error, %s", rsp.TiupTask.ErrorStr)
 			task.Fail(errors.New(rsp.TiupTask.ErrorStr))
 			return false
 		}
-		if rsp.TiupTask.Status == dbPb.TiupTaskStatus_Finished {
+		if rsp.TiupTask.Status == dbpb.TiupTaskStatus_Finished {
 			break
 		}
 	}
@@ -314,10 +314,10 @@ func destroyTasks(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func (aggregation *ClusterAggregation) ExtractStatusDTO() *proto.DisplayStatusDTO {
+func (aggregation *ClusterAggregation) ExtractStatusDTO() *clusterpb.DisplayStatusDTO {
 	cluster := aggregation.Cluster
 
-	dto := &proto.DisplayStatusDTO{
+	dto := &clusterpb.DisplayStatusDTO{
 		CreateTime:      cluster.CreateTime.Unix(),
 		UpdateTime:      cluster.UpdateTime.Unix(),
 		DeleteTime:      cluster.DeleteTime.Unix(),
@@ -335,8 +335,8 @@ func (aggregation *ClusterAggregation) ExtractStatusDTO() *proto.DisplayStatusDT
 	return dto
 }
 
-func (aggregation *ClusterAggregation) ExtractDisplayDTO() *proto.ClusterDisplayDTO {
-	dto := &proto.ClusterDisplayDTO{
+func (aggregation *ClusterAggregation) ExtractDisplayDTO() *clusterpb.ClusterDisplayDTO {
+	dto := &clusterpb.ClusterDisplayDTO{
 		ClusterId: aggregation.Cluster.Id,
 		BaseInfo:  aggregation.ExtractBaseInfoDTO(),
 		Status:    aggregation.ExtractStatusDTO(),
@@ -345,8 +345,8 @@ func (aggregation *ClusterAggregation) ExtractDisplayDTO() *proto.ClusterDisplay
 	return dto
 }
 
-func (aggregation *ClusterAggregation) ExtractMaintenanceDTO() *proto.ClusterMaintenanceDTO {
-	dto := &proto.ClusterMaintenanceDTO{}
+func (aggregation *ClusterAggregation) ExtractMaintenanceDTO() *clusterpb.ClusterMaintenanceDTO {
+	dto := &clusterpb.ClusterMaintenanceDTO{}
 	if aggregation.MaintainCronTask != nil {
 		dto.MaintainTaskCron = aggregation.MaintainCronTask.Cron
 	} else {
@@ -356,16 +356,16 @@ func (aggregation *ClusterAggregation) ExtractMaintenanceDTO() *proto.ClusterMai
 	return dto
 }
 
-func (aggregation *ClusterAggregation) ExtractBaseInfoDTO() *proto.ClusterBaseInfoDTO {
+func (aggregation *ClusterAggregation) ExtractBaseInfoDTO() *clusterpb.ClusterBaseInfoDTO {
 	cluster := aggregation.Cluster
-	return &proto.ClusterBaseInfoDTO{
+	return &clusterpb.ClusterBaseInfoDTO{
 		ClusterName: cluster.ClusterName,
 		DbPassword:  cluster.DbPassword,
-		ClusterType: &proto.ClusterTypeDTO{
+		ClusterType: &clusterpb.ClusterTypeDTO{
 			Code: cluster.ClusterType.Code,
 			Name: cluster.ClusterType.Name,
 		},
-		ClusterVersion: &proto.ClusterVersionDTO{
+		ClusterVersion: &clusterpb.ClusterVersionDTO{
 			Code: cluster.ClusterVersion.Code,
 			Name: cluster.ClusterVersion.Name,
 		},
@@ -374,11 +374,11 @@ func (aggregation *ClusterAggregation) ExtractBaseInfoDTO() *proto.ClusterBaseIn
 	}
 }
 
-func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRecordDTO {
+func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *clusterpb.BackupRecordDTO {
 	record := aggregation.LastBackupRecord
 	currentFlow := aggregation.CurrentWorkFlow
 
-	return &proto.BackupRecordDTO{
+	return &clusterpb.BackupRecordDTO{
 		Id:         record.Id,
 		ClusterId:  record.ClusterId,
 		BackupMethod: string(record.BackupMethod),
@@ -388,12 +388,12 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRec
 		StartTime: record.StartTime,
 		EndTime:   record.EndTime,
 		FilePath: record.FilePath,
-		DisplayStatus: &proto.DisplayStatusDTO {
+		DisplayStatus: &clusterpb.DisplayStatusDTO{
 			InProcessFlowId: int32(currentFlow.Id),
 			StatusCode:      strconv.Itoa(int(currentFlow.Status)),
 			StatusName:      currentFlow.Status.Display(),
 		},
-		Operator: &proto.OperatorDTO{
+		Operator: &clusterpb.OperatorDTO{
 			Id:       aggregation.CurrentOperator.Id,
 			Name:     aggregation.CurrentOperator.Name,
 			TenantId: aggregation.CurrentOperator.TenantId,
@@ -401,13 +401,13 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *proto.BackupRec
 	}
 }
 
-func (aggregation *ClusterAggregation) ExtractRecoverRecordDTO() *proto.BackupRecoverRecordDTO {
+func (aggregation *ClusterAggregation) ExtractRecoverRecordDTO() *clusterpb.BackupRecoverRecordDTO {
 	record := aggregation.LastRecoverRecord
 	currentFlow := aggregation.CurrentWorkFlow
-	return &proto.BackupRecoverRecordDTO{
+	return &clusterpb.BackupRecoverRecordDTO{
 		Id:        int64(record.Id),
 		ClusterId: record.ClusterId,
-		DisplayStatus: &proto.DisplayStatusDTO{
+		DisplayStatus: &clusterpb.DisplayStatusDTO{
 			InProcessFlowId: int32(currentFlow.Id),
 			StatusCode:      strconv.Itoa(int(currentFlow.Status)),
 			StatusName:      currentFlow.Status.Display(),
@@ -416,7 +416,7 @@ func (aggregation *ClusterAggregation) ExtractRecoverRecordDTO() *proto.BackupRe
 	}
 }
 
-func parseOperatorFromDTO(dto *proto.OperatorDTO) (operator *Operator) {
+func parseOperatorFromDTO(dto *clusterpb.OperatorDTO) (operator *Operator) {
 	operator = &Operator{
 		Id:       dto.Id,
 		Name:     dto.Name,
@@ -425,7 +425,7 @@ func parseOperatorFromDTO(dto *proto.OperatorDTO) (operator *Operator) {
 	return
 }
 
-func parseDistributionItemFromDTO(dto *proto.DistributionItemDTO) (item *ClusterNodeDistributionItem) {
+func parseDistributionItemFromDTO(dto *clusterpb.DistributionItemDTO) (item *ClusterNodeDistributionItem) {
 	item = &ClusterNodeDistributionItem{
 		ZoneCode: dto.ZoneCode,
 		SpecCode: dto.SpecCode,
@@ -434,7 +434,7 @@ func parseDistributionItemFromDTO(dto *proto.DistributionItemDTO) (item *Cluster
 	return
 }
 
-func parseRecoverInFoFromDTO(dto *proto.RecoverInfoDTO) (info RecoverInfo) {
+func parseRecoverInFoFromDTO(dto *clusterpb.RecoverInfoDTO) (info RecoverInfo) {
 	info = RecoverInfo{
 		SourceClusterId: dto.SourceClusterId,
 		BackupRecordId:  dto.BackupRecordId,
@@ -442,7 +442,7 @@ func parseRecoverInFoFromDTO(dto *proto.RecoverInfoDTO) (info RecoverInfo) {
 	return
 }
 
-func parseNodeDemandFromDTO(dto *proto.ClusterNodeDemandDTO) (demand *ClusterComponentDemand) {
+func parseNodeDemandFromDTO(dto *clusterpb.ClusterNodeDemandDTO) (demand *ClusterComponentDemand) {
 	items := make([]*ClusterNodeDistributionItem, len(dto.Items), len(dto.Items))
 
 	for i, v := range dto.Items {
@@ -458,23 +458,23 @@ func parseNodeDemandFromDTO(dto *proto.ClusterNodeDemandDTO) (demand *ClusterCom
 	return demand
 }
 
-func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *proto.AllocHostsRequest) {
-	req = &proto.AllocHostsRequest{}
+func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *clusterpb.AllocHostsRequest) {
+	req = &clusterpb.AllocHostsRequest{}
 
 	for _, d := range demands {
 		switch d.ComponentType.ComponentType {
 		case "TiDB":
-			req.TidbReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			req.TidbReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.TidbReq[i] = convertAllocationReq(v)
 			}
 		case "TiKV":
-			req.TikvReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			req.TikvReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.TikvReq[i] = convertAllocationReq(v)
 			}
 		case "PD":
-			req.PdReq = make([]*proto.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			req.PdReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.PdReq[i] = convertAllocationReq(v)
 			}
@@ -485,8 +485,8 @@ func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *proto.All
 	return
 }
 
-func convertAllocationReq(item *ClusterNodeDistributionItem) *proto.AllocationReq {
-	return &proto.AllocationReq{
+func convertAllocationReq(item *ClusterNodeDistributionItem) *clusterpb.AllocationReq {
+	return &clusterpb.AllocationReq{
 		FailureDomain: item.ZoneCode,
 		CpuCores:      int32(knowledge.ParseCpu(item.SpecCode)),
 		Memory:        int32(knowledge.ParseMemory(item.SpecCode)),
@@ -498,7 +498,7 @@ func tidbPort() int {
 	return DefaultTidbPort
 }
 
-func convertConfig(resource *proto.AllocHostResponse, cluster *Cluster) *spec.Specification {
+func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spec.Specification {
 
 	tidbHosts := resource.TidbHosts
 	tikvHosts := resource.TikvHosts

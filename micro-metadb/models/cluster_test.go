@@ -1,11 +1,10 @@
 package models
 
 import (
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"strings"
 	"testing"
 	"time"
-
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 func TestCreateCluster(t *testing.T) {
@@ -553,7 +552,7 @@ func TestListClusterDetails(t *testing.T) {
 func TestSaveBackupRecord(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
 	t.Run("normal", func(t *testing.T) {
-		record := &dbPb.DBBackupRecordDTO{
+		record := &dbpb.DBBackupRecordDTO{
 			TenantId:    "111",
 			ClusterId:   "111",
 			StartTime:   time.Now().Unix(),
@@ -594,7 +593,7 @@ func TestSaveRecoverRecord(t *testing.T) {
 
 func TestDeleteBackupRecord(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
-	rcd := &dbPb.DBBackupRecordDTO{
+	rcd := &dbpb.DBBackupRecordDTO{
 		TenantId:    "111",
 		ClusterId:   "111",
 		StartTime:   time.Now().Unix(),
@@ -637,7 +636,7 @@ func TestListBackupRecords(t *testing.T) {
 	brTbl := Dao.ClusterManager()
 	flow, _ := CreateFlow(MetaDB, "backup", "backup", "111", "111")
 	defer MetaDB.Delete(flow)
-	record := &dbPb.DBBackupRecordDTO{
+	record := &dbpb.DBBackupRecordDTO{
 		TenantId:    "111",
 		ClusterId:   "TestListBackupRecords",
 		StartTime:   time.Now().Unix(),

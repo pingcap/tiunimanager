@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+option go_package = "./../clusterpb/;clusterpb";
+
+message PageDTO {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 total = 3;
+}
+
+message ResponseStatusDTO {
+    int32 code = 1;
+    string message = 2;
+}
+
+message UsageDTO {
+    float total = 1;
+    float used = 2;
+    float usageRate = 3;
+}
+
+message OperatorDTO {
+    string id = 1;
+    string name = 2;
+    string tenantId = 3;
+}

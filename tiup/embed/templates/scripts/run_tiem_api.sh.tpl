@@ -17,4 +17,5 @@ exec env GODEBUG=madvdontneed=1 bin/openapi-server \
     --tracer-address="{{.TracerAddress}}" \
     --deploy-dir="{{.DeployDir}}" \
     --data-dir="{{.DataDir}}" \
+    --enable-https="{{.EnableHttps}}" \
     --log-level="{{.LogLevel}}"

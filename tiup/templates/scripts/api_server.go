@@ -36,6 +36,7 @@ type TiEMAPIServerScript struct {
 	RegistryEndpoints    string
 	TracerAddress        string
 	ElasticsearchAddress string
+	EnableHttps          bool
 }
 
 // NewTiEMAPIServerScript returns a TiEMAPIServerScript with given arguments
@@ -78,6 +79,12 @@ func (c *TiEMAPIServerScript) WithTracer(addr []string) *TiEMAPIServerScript {
 // WithElasticsearch set ElasticsearchAddress
 func (c *TiEMAPIServerScript) WithElasticsearch(addr []string) *TiEMAPIServerScript {
 	c.ElasticsearchAddress = strings.Join(addr, ",")
+	return c
+}
+
+// WithEnableHttps set EnableHttps
+func (c *TiEMAPIServerScript) WithEnableHttps(enableHttps bool) *TiEMAPIServerScript {
+	c.EnableHttps = enableHttps
 	return c
 }
 

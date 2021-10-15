@@ -41,6 +41,7 @@ type APIServerSpec struct {
 	Arch            string                 `yaml:"arch,omitempty"`
 	OS              string                 `yaml:"os,omitempty"`
 	LogLevel        string                 `yaml:"log_level,omitempty" default:"info" validate:"log_level:editable"`
+	EnableHttps     bool                   `yaml:"enable_https,omitempty" default:"true"`
 	ResourceControl meta.ResourceControl   `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
 }
 
@@ -161,7 +162,8 @@ func (i *APIServerInstance) InitConfig(
 		WithMetricsPort(spec.MetricsPort).
 		WithRegistry(i.topo.RegistryEndpoints()).
 		WithTracer(i.topo.TracerEndpoints()).
-		WithElasticsearch(i.topo.ElasticSearchAddress())
+		WithElasticsearch(i.topo.ElasticSearchAddress()).
+		WithEnableHttps(spec.EnableHttps)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_openapi-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
@@ -212,7 +214,8 @@ func (i *APIServerInstance) ScaleConfig(
 		WithMetricsPort(spec.MetricsPort).
 		WithRegistry(i.topo.RegistryEndpoints()).
 		WithTracer(i.topo.TracerEndpoints()).
-		WithElasticsearch(i.topo.ElasticSearchAddress())
+		WithElasticsearch(i.topo.ElasticSearchAddress()).
+		WithEnableHttps(spec.EnableHttps)
 
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_openapi-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)

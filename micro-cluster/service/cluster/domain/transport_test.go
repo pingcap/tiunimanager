@@ -3,6 +3,9 @@ package domain
 import (
 	ctx "context"
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -10,8 +13,6 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain/mock"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
-	"os"
-	"testing"
 )
 
 func TestExportDataPreCheck_case1(t *testing.T) {
@@ -213,7 +214,7 @@ func Test_buildDataImportConfig(t *testing.T) {
 	ret := buildDataImportConfig(task, context)
 	assert.Equal(t, true, ret)
 	info := context.value(contextDataTransportKey).(*ImportInfo)
-	os.RemoveAll(info.ConfigPath)
+	_ = os.RemoveAll(info.ConfigPath)
 }
 
 func Test_updateDataImportRecord(t *testing.T) {
@@ -360,5 +361,26 @@ func Test_getDataExportFilePath_case2(t *testing.T) {
 		FilePath:    "/tmp/test",
 	}
 	path := getDataExportFilePath(request)
+	assert.Equal(t, path, "/tmp/test")
+}
+
+func Test_getDataImportFilePath_case1(t *testing.T) {
+	request := &clusterpb.DataImportRequest{
+		StorageType:     S3StorageType,
+		BucketUrl:       "s3://test",
+		AccessKey:       "admin",
+		SecretAccessKey: "admin",
+		EndpointUrl:     "https://minio.pingcap.net:9000",
+	}
+	path := getDataImportFilePath(request)
+	assert.Equal(t, path, fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl()))
+}
+
+func Test_getDataImportFilePath_case2(t *testing.T) {
+	request := &clusterpb.DataImportRequest{
+		StorageType: NfsStorageType,
+		FilePath:    "/tmp/test",
+	}
+	path := getDataImportFilePath(request)
 	assert.Equal(t, path, "/tmp/test")
 }

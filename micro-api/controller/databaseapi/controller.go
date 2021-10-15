@@ -90,12 +90,16 @@ func ImportData(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
 	respDTO, err := client.ClusterClient.ImportData(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataImportRequest{
-		Operator:    operator.ConvertToDTO(),
-		ClusterId:   req.ClusterId,
-		UserName:    req.UserName,
-		Password:    req.Password,
-		FilePath:    req.FilePath,
-		StorageType: req.StorageType,
+		Operator:        operator.ConvertToDTO(),
+		ClusterId:       req.ClusterId,
+		UserName:        req.UserName,
+		Password:        req.Password,
+		FilePath:        req.FilePath,
+		StorageType:     req.StorageType,
+		BucketUrl:       req.BucketUrl,
+		EndpointUrl:     req.EndpointUrl,
+		AccessKey:       req.AccessKey,
+		SecretAccessKey: req.SecretAccessKey,
 	}, controller.DefaultTimeout)
 
 	if err != nil {

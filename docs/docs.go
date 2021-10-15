@@ -33,7 +33,12 @@ var doc = `{
     "paths": {
         "/backups": {
             "get": {
-                "description": "查询备份记录",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query backup records of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -43,29 +48,32 @@ var doc = `{
                 "tags": [
                     "cluster backup"
                 ],
-                "summary": "查询备份记录",
+                "summary": "query backup records of a cluster",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "clusterId",
                         "name": "clusterId",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
-                        "description": "page",
-                        "name": "request",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/instanceapi.BackupRecordQueryReq"
-                        }
+                        "type": "integer",
+                        "name": "endTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "startTime",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -111,6 +119,11 @@ var doc = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "backup",
                 "consumes": [
                     "application/json"
@@ -124,14 +137,7 @@ var doc = `{
                 "summary": "backup",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "要备份的集群信息",
+                        "description": "backup request",
                         "name": "backupReq",
                         "in": "body",
                         "required": true,
@@ -182,7 +188,12 @@ var doc = `{
         },
         "/backups/{backupId}": {
             "delete": {
-                "description": "删除备份记录",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "delete backup record",
                 "consumes": [
                     "application/json"
                 ],
@@ -192,21 +203,23 @@ var doc = `{
                 "tags": [
                     "cluster backup"
                 ],
-                "summary": "删除备份记录",
+                "summary": "delete backup record",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "type": "integer",
-                        "description": "删除备份ID",
+                        "description": "backup record id",
                         "name": "backupId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "backup delete request",
+                        "name": "backupDeleteReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/instanceapi.BackupDeleteReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -251,7 +264,12 @@ var doc = `{
         },
         "/backups/{backupId}/restore": {
             "post": {
-                "description": "恢复备份",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "recover backup record of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -261,15 +279,8 @@ var doc = `{
                 "tags": [
                     "cluster backup"
                 ],
-                "summary": "恢复备份",
+                "summary": "recover backup record of a cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "backupId",
@@ -278,7 +289,7 @@ var doc = `{
                         "required": true
                     },
                     {
-                        "description": "恢复备份请求",
+                        "description": "backup recover request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -327,74 +338,14 @@ var doc = `{
                 }
             }
         },
-        "/cluster/knowledge": {
-            "get": {
-                "description": "查看集群基本知识",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster"
-                ],
-                "summary": "查看集群基本知识",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/knowledge.ClusterTypeSpec"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
         "/clusters": {
             "get": {
-                "description": "查询集群列表",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query clusters",
                 "consumes": [
                     "application/json"
                 ],
@@ -404,15 +355,8 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "查询集群列表",
+                "summary": "query clusters",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "name": "clusterId",
@@ -492,7 +436,12 @@ var doc = `{
                 }
             },
             "post": {
-                "description": "创建集群接口",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "create a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -502,17 +451,10 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "创建集群接口",
+                "summary": "create a cluster",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "创建参数",
+                        "description": "create request",
                         "name": "createReq",
                         "in": "body",
                         "required": true,
@@ -561,9 +503,152 @@ var doc = `{
                 }
             }
         },
+        "/clusters/export": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "export",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster export"
+                ],
+                "summary": "export data from tidb cluster",
+                "parameters": [
+                    {
+                        "description": "cluster info for data export",
+                        "name": "dataExport",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/databaseapi.DataExportReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/databaseapi.DataExportResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/import": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "import",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster import"
+                ],
+                "summary": "import data to tidb cluster",
+                "parameters": [
+                    {
+                        "description": "cluster info for import data",
+                        "name": "dataImport",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/databaseapi.DataImportReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/databaseapi.DataImportResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}": {
             "get": {
-                "description": "查看集群详情",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "show details of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -573,18 +658,11 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "查看集群详情",
+                "summary": "show details of a cluster",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "集群ID",
+                        "description": "cluster id",
                         "name": "clusterId",
                         "in": "path",
                         "required": true
@@ -630,7 +708,12 @@ var doc = `{
                 }
             },
             "delete": {
-                "description": "删除集群",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "delete cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -640,18 +723,11 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "删除集群",
+                "summary": "delete cluster",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "待删除的集群ID",
+                        "description": "cluster id",
                         "name": "clusterId",
                         "in": "path",
                         "required": true
@@ -697,9 +773,81 @@ var doc = `{
                 }
             }
         },
+        "/clusters/{clusterId}/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "dashboard",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "dashboard",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/clusterapi.DescribeDashboardRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}/params": {
             "get": {
-                "description": "查询集群参数列表",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query params of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -709,15 +857,8 @@ var doc = `{
                 "tags": [
                     "cluster params"
                 ],
-                "summary": "查询集群参数列表",
+                "summary": "query params of a cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "integer",
                         "name": "page",
@@ -779,7 +920,12 @@ var doc = `{
                 }
             },
             "post": {
-                "description": "提交参数",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "submit params",
                 "consumes": [
                     "application/json"
                 ],
@@ -789,17 +935,10 @@ var doc = `{
                 "tags": [
                     "cluster params"
                 ],
-                "summary": "提交参数",
+                "summary": "submit params",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "要提交的参数信息",
+                        "description": "update params request",
                         "name": "updateReq",
                         "in": "body",
                         "required": true,
@@ -857,7 +996,12 @@ var doc = `{
         },
         "/clusters/{clusterId}/strategy": {
             "put": {
-                "description": "保存备份策略",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "save the backup strategy of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -867,15 +1011,8 @@ var doc = `{
                 "tags": [
                     "cluster backup"
                 ],
-                "summary": "保存备份策略",
+                "summary": "save the backup strategy of a cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "clusterId",
@@ -935,7 +1072,12 @@ var doc = `{
         },
         "/clusters/{clusterId}/strategy/": {
             "get": {
-                "description": "查询备份策略",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "show the backup strategy of a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -945,15 +1087,8 @@ var doc = `{
                 "tags": [
                     "cluster backup"
                 ],
-                "summary": "查询备份策略",
+                "summary": "show the backup strategy of a cluster",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "type": "string",
                         "description": "clusterId",
@@ -1005,9 +1140,315 @@ var doc = `{
                 }
             }
         },
+        "/clusters/{clusterId}/transport": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query records of import and export",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster data transport"
+                ],
+                "summary": "query records of import and export",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "recordId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/databaseapi.DataTransportRecordQueryResp"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/flowwork/{flowWorkId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "show details of a flow work",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "show details of a flow work",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "flow work id",
+                        "name": "flowWorkId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/taskapi.FlowWorkDetailInfo"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/flowworks": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query flow works",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "query flow works",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "clusterId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/taskapi.FlowWorkDisplayInfo"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/knowledges": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "show cluster knowledge",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "knowledge"
+                ],
+                "summary": "show cluster knowledge",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/knowledge.ClusterTypeSpec"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/resources/allochosts": {
             "post": {
-                "description": "按指定的配置分配主机资源",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "should be used in testing env",
                 "consumes": [
                     "application/json"
                 ],
@@ -1017,17 +1458,10 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "分配主机接口",
+                "summary": "Alloc host/disk resources for creating tidb cluster",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "主机分配请求",
+                        "description": "location and spec of hosts",
                         "name": "Alloc",
                         "in": "body",
                         "required": true,
@@ -1060,7 +1494,12 @@ var doc = `{
         },
         "/resources/failuredomains": {
             "get": {
-                "description": "查询指定故障域的资源情况",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get resource info in each failure domain",
                 "consumes": [
                     "application/json"
                 ],
@@ -1070,15 +1509,8 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "查询指定故障域的资源",
+                "summary": "Show the resources on failure domain view",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
                     {
                         "enum": [
                             1,
@@ -1086,7 +1518,7 @@ var doc = `{
                             3
                         ],
                         "type": "integer",
-                        "description": "指定故障域类型",
+                        "description": "failure domain type of dc/zone/rack",
                         "name": "failureDomainType",
                         "in": "query"
                     }
@@ -1097,7 +1529,7 @@ var doc = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                    "$ref": "#/definitions/controller.CommonResult"
                                 },
                                 {
                                     "type": "object",
@@ -1118,7 +1550,12 @@ var doc = `{
         },
         "/resources/host": {
             "post": {
-                "description": "将给定的主机信息导入系统",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "import one host by json",
                 "consumes": [
                     "application/json"
                 ],
@@ -1128,22 +1565,15 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "导入主机接口",
+                "summary": "Import a host to TiEM System",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "待导入的主机信息",
+                        "description": "Host information",
                         "name": "host",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/hostapi.HostInfo"
+                            "$ref": "#/definitions/resource.Host"
                         }
                     }
                 ],
@@ -1171,7 +1601,12 @@ var doc = `{
         },
         "/resources/hosts": {
             "get": {
-                "description": "展示目前所有主机",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get hosts lit",
                 "consumes": [
                     "application/json"
                 ],
@@ -1181,24 +1616,25 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "查询主机列表",
+                "summary": "Show all hosts list in TiEM",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "查询特定用途的主机列表",
-                        "name": "purpose",
+                        "type": "integer",
+                        "name": "pageSize",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "查询特定状态的主机列表",
+                        "name": "purpose",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "name": "status",
                         "in": "query"
                     }
@@ -1217,7 +1653,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/hostapi.HostInfo"
+                                                "$ref": "#/definitions/resource.Host"
                                             }
                                         }
                                     }
@@ -1228,7 +1664,12 @@ var doc = `{
                 }
             },
             "post": {
-                "description": "通过文件批量导入主机",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "import hosts by xlsx file",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -1238,18 +1679,11 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "通过文件批量导入主机",
+                "summary": "Import a batch of hosts to TiEM",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "type": "file",
-                        "description": "包含待导入主机信息的文件",
+                        "description": "hosts information in a xlsx file",
                         "name": "file",
                         "in": "formData",
                         "required": true
@@ -1282,7 +1716,12 @@ var doc = `{
         },
         "/resources/hosts-template/": {
             "get": {
-                "description": "将主机信息文件导出到本地",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get host template xlsx file",
                 "consumes": [
                     "application/json"
                 ],
@@ -1292,16 +1731,7 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "导出主机信息模板文件",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
+                "summary": "Download the host information template file for importing",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1314,7 +1744,12 @@ var doc = `{
         },
         "/resources/hosts/": {
             "delete": {
-                "description": "批量删除指定的主机",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "remove hosts by a list",
                 "consumes": [
                     "application/json"
                 ],
@@ -1324,17 +1759,10 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "批量删除指定的主机",
+                "summary": "Remove a batch of hosts",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "待删除的主机ID数组",
+                        "description": "list of host IDs",
                         "name": "hostIds",
                         "in": "body",
                         "required": true,
@@ -1370,7 +1798,12 @@ var doc = `{
         },
         "/resources/hosts/{hostId}": {
             "get": {
-                "description": "展示指定的主机的详细信息",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get one host by id",
                 "consumes": [
                     "application/json"
                 ],
@@ -1380,18 +1813,11 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "查询主机详情",
+                "summary": "Show a host",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "主机ID",
+                        "description": "host ID",
                         "name": "hostId",
                         "in": "path",
                         "required": true
@@ -1409,7 +1835,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/hostapi.HostInfo"
+                                            "$ref": "#/definitions/resource.Host"
                                         }
                                     }
                                 }
@@ -1419,7 +1845,12 @@ var doc = `{
                 }
             },
             "delete": {
-                "description": "删除指定的主机",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "remove a host by id",
                 "consumes": [
                     "application/json"
                 ],
@@ -1429,18 +1860,11 @@ var doc = `{
                 "tags": [
                     "resource"
                 ],
-                "summary": "删除指定的主机",
+                "summary": "Remove a host",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "待删除的主机ID",
+                        "description": "host id",
                         "name": "hostId",
                         "in": "path",
                         "required": true
@@ -1470,7 +1894,7 @@ var doc = `{
         },
         "/user/login": {
             "post": {
-                "description": "登录",
+                "description": "login",
                 "consumes": [
                     "application/json"
                 ],
@@ -1480,10 +1904,10 @@ var doc = `{
                 "tags": [
                     "platform"
                 ],
-                "summary": "登录接口",
+                "summary": "login",
                 "parameters": [
                     {
-                        "description": "登录用户信息",
+                        "description": "login info",
                         "name": "loginInfo",
                         "in": "body",
                         "required": true,
@@ -1528,7 +1952,12 @@ var doc = `{
         },
         "/user/logout": {
             "post": {
-                "description": "退出登录",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "logout",
                 "consumes": [
                     "application/json"
                 ],
@@ -1538,24 +1967,59 @@ var doc = `{
                 "tags": [
                     "platform"
                 ],
-                "summary": "退出登录",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token",
-                        "name": "Token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "description": "退出登录信息",
-                        "name": "logoutInfo",
-                        "in": "body",
+                "summary": "logout",
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/userapi.LogoutInfo"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/userapi.UserIdentity"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
                         }
                     }
+                }
+            }
+        },
+        "/user/profile": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
                 ],
+                "description": "profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "platform"
+                ],
+                "summary": "user profile",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1643,8 +2107,11 @@ var doc = `{
                 "memoryUsage": {
                     "$ref": "#/definitions/controller.Usage"
                 },
-                "port": {
-                    "type": "integer"
+                "portList": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "statusCode": {
                     "type": "string"
@@ -1872,6 +2339,20 @@ var doc = `{
                 }
             }
         },
+        "clusterapi.DescribeDashboardRsp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "clusterapi.DetailClusterRsp": {
             "type": "object",
             "properties": {
@@ -1932,8 +2413,11 @@ var doc = `{
                 "memoryUsage": {
                     "$ref": "#/definitions/controller.Usage"
                 },
-                "port": {
-                    "type": "integer"
+                "portList": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "statusCode": {
                     "type": "string"
@@ -2077,6 +2561,105 @@ var doc = `{
                 }
             }
         },
+        "databaseapi.DataExportReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "fileType": {
+                    "type": "string"
+                },
+                "filter": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "storageType": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "databaseapi.DataExportResp": {
+            "type": "object",
+            "properties": {
+                "recordId": {
+                    "type": "string"
+                }
+            }
+        },
+        "databaseapi.DataImportReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "storageType": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "databaseapi.DataImportResp": {
+            "type": "object",
+            "properties": {
+                "recordId": {
+                    "type": "string"
+                }
+            }
+        },
+        "databaseapi.DataTransportInfo": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "endTime": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "recordId": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "transportType": {
+                    "type": "string"
+                }
+            }
+        },
+        "databaseapi.DataTransportRecordQueryResp": {
+            "type": "object",
+            "properties": {
+                "transportRecords": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/databaseapi.DataTransportInfo"
+                    }
+                }
+            }
+        },
         "hostapi.AllocHostsReq": {
             "type": "object",
             "properties": {
@@ -2130,7 +2713,7 @@ var doc = `{
                     "type": "integer"
                 },
                 "disk": {
-                    "$ref": "#/definitions/hostapi.Disk"
+                    "$ref": "#/definitions/resource.Disk"
                 },
                 "hostName": {
                     "type": "string"
@@ -2140,6 +2723,12 @@ var doc = `{
                 },
                 "memory": {
                     "type": "integer"
+                },
+                "passwd": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
                 }
             }
         },
@@ -2156,30 +2745,6 @@ var doc = `{
                     "type": "string"
                 },
                 "memory": {
-                    "type": "integer"
-                }
-            }
-        },
-        "hostapi.Disk": {
-            "type": "object",
-            "properties": {
-                "capacity": {
-                    "description": "Disk size, Unit: GB",
-                    "type": "integer"
-                },
-                "diskId": {
-                    "type": "string"
-                },
-                "name": {
-                    "description": "[sda/sdb/nvmep0...]",
-                    "type": "string"
-                },
-                "path": {
-                    "description": "Disk mount path: [/data1]",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Disk Status, 0 for available, 1 for inused",
                     "type": "integer"
                 }
             }
@@ -2207,64 +2772,6 @@ var doc = `{
                 }
             }
         },
-        "hostapi.HostInfo": {
-            "type": "object",
-            "properties": {
-                "az": {
-                    "type": "string"
-                },
-                "cpuCores": {
-                    "type": "integer"
-                },
-                "dc": {
-                    "type": "string"
-                },
-                "disks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/hostapi.Disk"
-                    }
-                },
-                "hostId": {
-                    "type": "string"
-                },
-                "hostName": {
-                    "type": "string"
-                },
-                "ip": {
-                    "type": "string"
-                },
-                "kernel": {
-                    "type": "string"
-                },
-                "memory": {
-                    "description": "Host memory size, Unit:GB",
-                    "type": "integer"
-                },
-                "nic": {
-                    "description": "Host network type: 1GE or 10GE",
-                    "type": "string"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "purpose": {
-                    "description": "What Purpose is the host used for? [compute/storage or both]",
-                    "type": "string"
-                },
-                "rack": {
-                    "type": "string"
-                },
-                "spec": {
-                    "description": "Host Spec, init while importing",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Host Status, 0 for Online, 1 for offline",
-                    "type": "integer"
-                }
-            }
-        },
         "hostapi.SpecBaseInfo": {
             "type": "object",
             "properties": {
@@ -2287,9 +2794,29 @@ var doc = `{
                 }
             }
         },
+        "instanceapi.BackupDeleteReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                }
+            }
+        },
         "instanceapi.BackupRecord": {
             "type": "object",
             "properties": {
+                "backupMethod": {
+                    "description": "物理/逻辑",
+                    "type": "string"
+                },
+                "backupMode": {
+                    "description": "手动/自动",
+                    "type": "string"
+                },
+                "backupType": {
+                    "description": "全量/增量",
+                    "type": "string"
+                },
                 "clusterId": {
                     "type": "string"
                 },
@@ -2305,31 +2832,14 @@ var doc = `{
                 "operator": {
                     "$ref": "#/definitions/controller.Operator"
                 },
-                "range": {
-                    "type": "integer"
-                },
                 "size": {
-                    "type": "number"
+                    "type": "integer"
                 },
                 "startTime": {
                     "type": "string"
                 },
                 "status": {
                     "$ref": "#/definitions/controller.StatusInfo"
-                },
-                "way": {
-                    "type": "integer"
-                }
-            }
-        },
-        "instanceapi.BackupRecordQueryReq": {
-            "type": "object",
-            "properties": {
-                "page": {
-                    "type": "integer"
-                },
-                "pageSize": {
-                    "type": "integer"
                 }
             }
         },
@@ -2344,7 +2854,16 @@ var doc = `{
         "instanceapi.BackupReq": {
             "type": "object",
             "properties": {
+                "backupRange": {
+                    "type": "string"
+                },
+                "backupType": {
+                    "type": "string"
+                },
                 "clusterId": {
+                    "type": "string"
+                },
+                "filePath": {
                     "type": "string"
                 }
             }
@@ -2352,7 +2871,22 @@ var doc = `{
         "instanceapi.BackupStrategy": {
             "type": "object",
             "properties": {
-                "cronString": {
+                "backupDate": {
+                    "type": "string"
+                },
+                "backupRange": {
+                    "type": "string"
+                },
+                "backupType": {
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "period": {
                     "type": "string"
                 }
             }
@@ -2360,8 +2894,8 @@ var doc = `{
         "instanceapi.BackupStrategyUpdateReq": {
             "type": "object",
             "properties": {
-                "cronString": {
-                    "type": "string"
+                "strategy": {
+                    "$ref": "#/definitions/instanceapi.BackupStrategy"
                 }
             }
         },
@@ -2547,6 +3081,223 @@ var doc = `{
                 }
             }
         },
+        "resource.Disk": {
+            "type": "object",
+            "properties": {
+                "capacity": {
+                    "description": "Disk size, Unit: GB",
+                    "type": "integer"
+                },
+                "diskId": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "[sda/sdb/nvmep0...]",
+                    "type": "string"
+                },
+                "omitempty": {
+                    "type": "string"
+                },
+                "path": {
+                    "description": "Disk mount path: [/data1]",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Disk Status, 0 for available, 1 for inused",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Disk type: [nvme-ssd/ssd/sata]",
+                    "type": "string"
+                },
+                "usedby": {
+                    "description": "Disk is used by which cluster",
+                    "type": "string"
+                }
+            }
+        },
+        "resource.Host": {
+            "type": "object",
+            "properties": {
+                "az": {
+                    "type": "string"
+                },
+                "cpuCores": {
+                    "type": "integer"
+                },
+                "createTime": {
+                    "type": "integer"
+                },
+                "dc": {
+                    "type": "string"
+                },
+                "disks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/resource.Disk"
+                    }
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "hostName": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "kernel": {
+                    "type": "string"
+                },
+                "memory": {
+                    "description": "Host memory size, Unit:GB",
+                    "type": "integer"
+                },
+                "nic": {
+                    "description": "Host network type: 1GE or 10GE",
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "passwd": {
+                    "type": "string"
+                },
+                "performance": {
+                    "description": "Performance type of this host [High/Medium/Low]",
+                    "type": "string"
+                },
+                "purpose": {
+                    "description": "What Purpose is the host used for? [compute/storage/general]",
+                    "type": "string"
+                },
+                "rack": {
+                    "type": "string"
+                },
+                "spec": {
+                    "description": "Host Spec, init while importing",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Host Status, 0 for Online, 1 for offline",
+                    "type": "integer"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "taskapi.FlowWorkDetailInfo": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "flowWorkName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "manualOperator": {
+                    "type": "boolean"
+                },
+                "operatorId": {
+                    "type": "string"
+                },
+                "operatorName": {
+                    "type": "string"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/taskapi.FlowWorkTaskInfo"
+                    }
+                },
+                "tenantId": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "taskapi.FlowWorkDisplayInfo": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "flowWorkName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "manualOperator": {
+                    "type": "boolean"
+                },
+                "operatorId": {
+                    "type": "string"
+                },
+                "operatorName": {
+                    "type": "string"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "taskapi.FlowWorkTaskInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "taskName": {
+                    "type": "string"
+                }
+            }
+        },
         "userapi.LoginInfo": {
             "type": "object",
             "properties": {
@@ -2558,21 +3309,26 @@ var doc = `{
                 }
             }
         },
-        "userapi.LogoutInfo": {
-            "type": "object",
-            "properties": {
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
         "userapi.UserIdentity": {
             "type": "object",
             "properties": {
+                "tenantId": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
                 "userName": {
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
@@ -2589,7 +3345,7 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "localhost:8080",
+	Host:        "localhost:4116",
 	BasePath:    "/api/v1/",
 	Schemes:     []string{},
 	Title:       "TiEM UI API",

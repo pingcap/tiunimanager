@@ -15,17 +15,19 @@ var CopyWritingContainer = map[string]map[string]string{
 	"cn":{
 		CWClusterStatusUnlined: "未上线",
 		CWClusterStatusOnline:  "运行中",
-		CWClusterStatusOffline: "已停止",
+		CWClusterStatusOffline: "已下线",
 		CWClusterStatusDeleted: "已删除",
 		CWFlowCreateCluster:    "创建中",
 		CWFlowDeleteCluster:    "删除中",
 		CWFlowBackupCluster:    "备份中",
 		CWFlowRecoverCluster:   "恢复中",
 		CWFlowModifyParameters: "参数修改中",
+		CWFlowExportData: 		"数据导出中",
+		CWFlowImportData: 		"数据导出中",
 		CWTaskStatusInit:       "未开始",
-		CWTaskStatusProcessing: "处理中",
-		CWTaskStatusFinished:   "已完成",
-		CWTaskStatusError:      "已失败",
+		CWTaskStatusProcessing: "进行中",
+		CWTaskStatusFinished:   "完成",
+		CWTaskStatusError:      "失败",
 	},
 }
 
@@ -45,3 +47,6 @@ var CWFlowDeleteCluster = "CW_FlowDeleteCluster"
 var CWFlowBackupCluster = "CW_FlowBackupCluster"
 var CWFlowRecoverCluster = "CW_FlowRecoverCluster"
 var CWFlowModifyParameters = "CW_FlowModifyParameters"
+
+var CWFlowExportData = "CW_FlowExportData"
+var CWFlowImportData = "CW_FlowImportData"

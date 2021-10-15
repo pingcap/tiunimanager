@@ -1,8 +1,8 @@
 package instanceapi
 
 import (
-	"github.com/pingcap/tiem/library/knowledge"
-	"github.com/pingcap/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"time"
 )
 
@@ -17,18 +17,15 @@ type ParamInstance struct {
 }
 
 type BackupRecord struct {
-	ID 				int64	`json:"id"`
-	ClusterId 		string	`json:"clusterId"`
+	ID 				int64		`json:"id"`
+	ClusterId 		string		`json:"clusterId"`
 	StartTime 		time.Time	`json:"startTime"`
 	EndTime 		time.Time	`json:"endTime"`
-	Range 			int	`json:"range"`
-	Way 			int	`json:"way"`
+	BackupType		string		`json:"backupType"`		// 全量/增量
+	BackupMethod 	string		`json:"backupMethod"`	// 物理/逻辑
+	BackupMode 		string 		`json:"backupMode"`		// 手动/自动
 	Operator 		controller.Operator	`json:"operator"`
-	Size 			float32	`json:"size"`
+	Size 			uint64		`json:"size"`
 	Status 			controller.StatusInfo	`json:"status"`
-	FilePath 		string	`json:"filePath"`
-}
-
-type BackupStrategy struct {
-	CronString 			string	`json:"cronString"`
+	FilePath 		string		`json:"filePath"`
 }

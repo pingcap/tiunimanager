@@ -1,7 +1,7 @@
 package domain
 
 import (
-	copywriting2 "github.com/pingcap/tiem/library/copywriting"
+	copywriting2 "github.com/pingcap-inc/tiem/library/copywriting"
 )
 
 type ClusterStatus int
@@ -106,6 +106,8 @@ const (
 	FlowBackupCluster = "BackupCluster"
 	FlowRecoverCluster = "RecoverCluster"
 	FlowModifyParameters = "ModifyParameters"
+	FlowExportData = "ExportData"
+	FlowImportData = "ImportData"
 )
 
 type CronTaskType int8
@@ -117,15 +119,37 @@ const (
 )
 
 
-type BackupRange 		int
-type BackupType int
+type BackupRange string
+type BackupType string
+type BackupMode string
 
 const (
-	BackupRangeWhole BackupRange = 0
-	BackupRangeIncrement = 1
+	BackupRangeFull BackupRange = "full"
+	BackupRangeIncrement BackupRange = "incr"
 )
 
 const (
-	BackupTypeLogic BackupType = 0
-	BackupTypePhysics = 1
+	BackupModeAuto BackupMode = "auto"
+	BackupModeManual BackupMode = "manual"
 )
+
+const (
+	BackupTypeLogic BackupType = "logical"
+	BackupTypePhysics BackupType = "physical"
+)
+
+func checkBackupRangeValid(backupRange string) bool {
+	if string(BackupRangeFull) != backupRange &&
+		string(BackupRangeIncrement) != backupRange {
+		return false
+	}
+	return true
+}
+
+func checkBackupTypeValid(backupType string) bool {
+	if string(BackupTypeLogic) != backupType &&
+		string(BackupTypePhysics) != backupType {
+		return false
+	}
+	return true
+}

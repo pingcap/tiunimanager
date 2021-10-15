@@ -1,0 +1,82 @@
+# Copyright 2020 PingCAP, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+PROJECT=tiem
+GOPATH ?= $(shell go env GOPATH)
+P=8
+
+# Ensure GOPATH is set before running build process.
+ifeq "$(GOPATH)" ""
+  $(error Please set the environment variable GOPATH before running `make`)
+endif
+FAIL_ON_STDOUT := awk '{ print } END { if (NR > 0) { exit 1 } }'
+
+CURDIR := $(shell pwd)
+TEST_DIR := /tmp/tidb_em_test
+CODECOV_BASH := /tmp/codecovbash
+#path_to_add := $(addsuffix /bin,$(subst :,/bin:,$(GOPATH))):$(PWD)/tools/bin
+path_to_add := $(addsuffix /bin,$(subst :,/bin:,$(GOPATH)))
+export PATH := $(path_to_add):$(PATH)
+
+GO              := GO111MODULE=on go
+GOBUILD         := $(GO) build $(BUILD_FLAG) -tags codes
+#GOBUILDCOVERAGE := GOPATH=$(GOPATH) cd tidb-server; $(GO) test -coverpkg="../..." -c .
+GOTEST          := $(GO) test -p $(P)
+OVERALLS        := GO111MODULE=on overalls
+STATICCHECK     := GO111MODULE=on staticcheck
+TIEM_EDITION    ?= Enterprise
+
+# Ensure TIEM_EDITION is set to Community or Enterprise before running build process.
+ifneq "$(TIEM_EDITION)" "Enterprise"
+  $(error Please set the correct environment variable TIEM_EDITION before running `make`)
+endif
+
+# use 'make <target> PREFIX=/path/for/prefix' to overwrite the PREFIX value
+ifeq (${PREFIX},)
+    PREFIX := /usr/local
+endif
+
+ARCH      := "`uname -s`"
+LINUX     := "Linux"
+MAC       := "Darwin"
+PACKAGE_LIST  := go list ./...| grep -vE "docs|proto|library/util|micro-api"
+PACKAGES  ?= $$($(PACKAGE_LIST))
+#PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/pingcap/$(PROJECT)||'
+PACKAGE_DIRECTORIES := $(PACKAGE_LIST)
+FILES     := $$(find $$($(PACKAGE_DIRECTORIES)) -name "*.go")
+
+FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git)" | xargs bin/failpoint-ctl enable)
+FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git)" | xargs bin/failpoint-ctl disable)
+
+LDFLAGS += -X "github.com/pingcap/tiem/library/fristparty/util/versioninfo.TiEMReleaseVersion=$(shell git describe --tags --dirty --always)"
+LDFLAGS += -X "github.com/pingcap/tiem/library/firstparty/util/versioninfo.TiEMBuildTS=$(shell date -u '+%Y-%m-%d %H:%M:%S')"
+LDFLAGS += -X "github.com/pingcap/tiem/library/firstparty/util/versioninfo.TiEMGitHash=$(shell git rev-parse HEAD)"
+LDFLAGS += -X "github.com/pingcap/tiem/library/firstparty/util/versioninfo.TiEMGitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
+LDFLAGS += -X "github.com/pingcap/tiem/library/firstparty/util/versioninfo.TiEMEdition=$(TIEM_EDITION)"
+
+#TODO TEST_LDFLAGS =  -X "github.com/pingcap/tidb/config.checkBeforeDropLDFlag=1"
+#TODO COVERAGE_SERVER_LDFLAGS =  -X "github.com/pingcap/tidb/tidb-server.isCoverageServer=1"
+
+# TODO CHECK_LDFLAGS += $(LDFLAGS) ${TEST_LDFLAGS}
+
+RACE_FLAG =
+ifeq ("$(WITH_RACE)", "1")
+	RACE_FLAG = -race
+	GOBUILD   = GOPATH=$(GOPATH) $(GO) build
+endif
+
+CHECK_FLAG =
+ifeq ("$(WITH_CHECK)", "1")
+	CHECK_FLAG = $(TEST_LDFLAGS)
+endif

@@ -1,8 +1,8 @@
 package clusterapi
 
 import (
-	"github.com/pingcap/tiem/micro-api/controller"
-	"github.com/pingcap/tiem/micro-api/controller/hostapi"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
 )
 
 type ClusterBaseInfo struct {
@@ -18,7 +18,7 @@ type ClusterInstanceInfo struct {
 	IntranetConnectAddresses	[]string	`json:"intranetConnectAddresses"`
 	ExtranetConnectAddresses	[]string	`json:"extranetConnectAddresses"`
 	Whitelist					[]string	`json:"whitelist"`
-	Port 						int			`json:"port"`
+	PortList 					[]int			`json:"portList"`
 	DiskUsage           		controller.Usage	`json:"diskUsage"`
 	CpuUsage    				controller.Usage	`json:"cpuUsage"`
 	MemoryUsage 				controller.Usage	`json:"memoryUsage"`

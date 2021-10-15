@@ -33,4 +33,6 @@ type TaskRepository interface {
 
 	QueryCronTask(bizId string, cronTaskType int) (cronTask *CronTaskEntity, err error)
 	PersistCronTask(cronTask *CronTaskEntity) (err error)
+
+	ListFlows(bizId, keyword string, status int, page int, pageSize int) ([]*FlowWorkEntity, int, error)
 }

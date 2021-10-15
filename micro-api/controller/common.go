@@ -20,9 +20,9 @@ import (
 
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap/tiem/library/knowledge"
-	"github.com/pingcap/tiem/micro-api/security"
-	cluster "github.com/pingcap/tiem/micro-cluster/proto"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
+	cluster "github.com/pingcap-inc/tiem/micro-cluster/proto"
 )
 
 type ResultMark struct {
@@ -89,6 +89,11 @@ type Page struct {
 	Total    int `json:"total"`
 }
 
+var DefaultPageRequest = PageRequest{
+	1,
+	20,
+}
+
 type PageRequest struct {
 	Page     int `json:"page" form:"page"`
 	PageSize int `json:"pageSize" form:"pageSize"`
@@ -119,9 +124,9 @@ type Operator struct {
 }
 
 func GetOperator(c *gin.Context) *Operator {
-	v, _ := c.Get(security.VisitorIdentityKey)
+	v, _ := c.Get(interceptor.VisitorIdentityKey)
 
-	visitor, _ := v.(*security.VisitorIdentity)
+	visitor, _ := v.(*interceptor.VisitorIdentity)
 
 	return &Operator{
 		ManualOperator: true,

@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "common.proto";
 option go_package = "./;cluster";
 
 message ResponseStatus {
@@ -12,7 +13,9 @@ message Disk {
     string name = 2;            // [sda/sdb/nvmep0...]
     int32 capacity = 3;         // Disk size, Unit: GB
     string path = 4;            // Disk mount path: [/data1]
-    int32 status = 5;
+    string type = 5;
+    string usedBy = 6;
+    int32 status = 7;
 }
 
 message HostInfo {
@@ -22,15 +25,19 @@ message HostInfo {
     string az = 4;
     string rack = 5;
     string ip = 6;
-    int32 status = 7;
-    string os = 8;              // Host os
-    string kernel = 9;
-    string spec = 10;           // Host Spec ["4C8G/16C32g"]
-    int32 cpuCores = 11;        // Host cpu remains
-    int32 memory = 12;          // Host memory remains, Unit:GB
-    string nic = 13;            // Host network type: 1GE or 10GE
-    string purpose = 14;        // What Purpose is the host used for? [compute/storage or both]
-    repeated Disk disks = 15;
+    string userName = 7;
+    string passwd = 8;
+    int32 status = 9;
+    string os = 10;             // Host os
+    string kernel = 11;
+    string spec = 12;           // Host Spec ["4C8G/16C32g"]
+    int32 cpuCores = 13;        // Host cpu remains
+    int32 memory = 14;          // Host memory remains, Unit:GB
+    string nic = 15;            // Host network type: 1GE or 10GE
+    string purpose = 16;        // What Purpose is the host used for? [compute/storage or general]
+    string performance = 17;
+    int64 createAt = 18;
+    repeated Disk disks = 19;
 }
 
 // The request means "Get 3 '4C8G' Hosts in Zone3"
@@ -45,9 +52,11 @@ message AllocationReq {
 message AllocHost {
     string hostName = 1;
     string ip = 2;
-    int32 cpuCores = 3;
-    int32 memory = 4; 
-    Disk disk = 5;
+    string userName = 3;
+    string passwd = 4;
+    int32 cpuCores = 5;
+    int32 memory = 6;
+    Disk disk = 7;
 }
 
 message FailureDomainResource {
@@ -94,11 +103,13 @@ message RemoveHostsInBatchResponse {
 message ListHostsRequest {
     int32 status = 1;
     string purpose = 2;
+    PageDTO pageReq = 3;
 }
 
 message ListHostsResponse {
     ResponseStatus rs = 1;
     repeated HostInfo hostList = 2;
+    PageDTO pageReq = 3;
 }
 
 message CheckDetailsRequest {

@@ -1,0 +1,13 @@
+cluster.name: {{.Name}}
+network.host: 0.0.0.0
+http.port: {{.Port}}
+
+path:
+  data: {{.DataDir}}
+  logs: {{.LogDir}}
+
+discovery.type: single-node
+
+# xpack.license.self_generated.type: trial
+# xpack.security.enabled: true
+# xpack.monitoring.collection.enabled: true

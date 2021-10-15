@@ -1,0 +1,111 @@
+// Copyright 2021 PingCAP, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package manager
+
+import (
+	"context"
+	"crypto/tls"
+	"errors"
+	"strings"
+
+	"github.com/fatih/color"
+	"github.com/joomcode/errorx"
+	operator "github.com/pingcap-inc/tiem/tiup/operation"
+	"github.com/pingcap-inc/tiem/tiup/spec"
+	"github.com/pingcap-inc/tiem/tiup/task"
+	perrs "github.com/pingcap/errors"
+	"github.com/pingcap/tiup/pkg/cluster/clusterutil"
+	"github.com/pingcap/tiup/pkg/cluster/ctxt"
+	"github.com/pingcap/tiup/pkg/logger/log"
+	"github.com/pingcap/tiup/pkg/meta"
+	"github.com/pingcap/tiup/pkg/tui"
+)
+
+// ScaleIn the cluster.
+func (m *Manager) ScaleIn(
+	name string,
+	skipConfirm bool,
+	gOpt operator.Options,
+	scale func(builer *task.Builder, metadata spec.Metadata, tlsCfg *tls.Config),
+) error {
+	if err := clusterutil.ValidateClusterNameOrError(name); err != nil {
+		return err
+	}
+
+	var (
+		force bool     = gOpt.Force
+		nodes []string = gOpt.Nodes
+	)
+	if !skipConfirm {
+		if force {
+			if err := tui.PromptForConfirmOrAbortError(
+				color.HiRedString("Forcing scale in is unsafe and may result in data loss for stateful components.\n"+
+					"The process is irreversible and could NOT be cancelled.\n") +
+					"Only use `--force` when some of the servers are already permanently offline.\n" +
+					"Are you sure to continue? [y/N]:",
+			); err != nil {
+				return err
+			}
+		}
+
+		if err := tui.PromptForConfirmOrAbortError(
+			"This operation will delete the %s nodes in `%s` and all their data.\nDo you want to continue? [y/N]:",
+			strings.Join(nodes, ","),
+			color.HiYellowString(name)); err != nil {
+			return err
+		}
+
+		log.Infof("Scale-in nodes...")
+	}
+
+	metadata, err := m.meta(name)
+	if err != nil &&
+		!errors.Is(perrs.Cause(err), meta.ErrValidate) {
+		// ignore conflict check error, node may be deployed by former version
+		// that lack of some certain conflict checks
+		return err
+	}
+
+	topo := metadata.GetTopology()
+	base := metadata.GetBaseMeta()
+
+	// Regenerate configuration
+	regenConfigTasks := buildRegenConfigTasks(m, name, topo, base, nodes, true)
+
+	tlsCfg := &tls.Config{} // not implemented for tiem
+
+	b, err := m.sshTaskBuilder(name, topo, base.User, gOpt)
+	if err != nil {
+		return err
+	}
+
+	scale(b, metadata, tlsCfg)
+
+	t := b.
+		ParallelStep("+ Refresh instance configs", force, regenConfigTasks...).
+		Parallel(force, buildReloadPromTasks(metadata.GetTopology(), nodes...)...).
+		Build()
+
+	if err := t.Execute(ctxt.New(context.Background(), gOpt.Concurrency)); err != nil {
+		if errorx.Cast(err) != nil {
+			// FIXME: Map possible task errors and give suggestions.
+			return err
+		}
+		return perrs.Trace(err)
+	}
+
+	log.Infof("Scaled cluster `%s` in successfully", name)
+
+	return nil
+}

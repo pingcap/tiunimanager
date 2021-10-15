@@ -43,10 +43,10 @@ Setup:
 
 ```
 etcd --data-dir=data.etcd1 --name machine-1 \
-    --initial-advertise-peer-urls http://127.0.0.1:2380 --listen-peer-urls http://127.0.0.1:2380 \
-    --advertise-client-urls http://127.0.0.1:2379 --listen-client-urls http://127.0.0.1:2379 \
-    --initial-cluster machine-1=http://127.0.0.1:2380 \
-    --initial-cluster-state new --initial-cluster-token token-tiem
+    --initial-advertise-peer-urls http://127.0.0.1:4102 --listen-peer-urls http://127.0.0.1:4102 \
+    --advertise-client-urls http://127.0.0.1:4101 --listen-client-urls http://127.0.0.1:4101 \
+    --initial-cluster machine-1=http://127.0.0.1:4102 \
+    --initial-cluster-state new --initial-cluster-token token-tiem \
     &
 ```
 
@@ -63,26 +63,67 @@ And visit the web interface from port 16686.
 ### Run Service
 
 start micro-metadb
+```shell
+$ cd micro-metadb
+$ go run init.go main.go
 ```
-cd micro-metadb
-$ go run main.go
+or
+```shell
+$ cd micro-metadb
+$ go run init.go main.go \
+    --host=192.168.1.100 \
+    --port=4100 \
+    --registry-client-port=4101 \
+    --registry-peer-port=4102 \
+    --metrics-port=4121 \
+    --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
+    --tracer-address=192.168.1.100:4123 \
+    --deploy-dir=/tiem-deploy/tiem-metadb-4100 \
+    --data-dir=/tiem-data/tiem-metadb-4100 \
+    --log-level=info
 ```
 
 start micro-cluster
-```
-cd micro-metadb
+```shell
+$ cd micro-cluster
 $ go run main.go 
+```
+or
+```shell
+$ cd micro-cluster
+$ go run init.go main.go \
+    --host=192.168.1.100 \
+    --port=4110 \
+    --metrics-port=4121 \
+    --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
+    --tracer-address=192.168.1.100:4123 \
+    --deploy-dir=/tiem-deploy/tiem-cluster-4110 \
+    --data-dir=/tiem-data/tiem-cluster-4110 \
+    --log-level=info
 ```
 
 start micro-api
-```
-cd micro-api
+```shell
+$ cd micro-api
 $ go run main.go 
+```
+or
+```shell
+$ cd micro-api
+$ go run init.go main.go \
+    --host=192.168.1.100 \
+    --port=4116 \
+    --metrics-port=4121 \
+    --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
+    --tracer-address=192.168.1.100:4123 \
+    --deploy-dir=/tiem-deploy/tiem-api-4115 \
+    --data-dir=/tiem-data/tiem-api-4115 \
+    --log-level=info
 ```
 
 ### Try it out
-via swagger : http://localhost:8080/swagger/index.html
-or : http://localhost:8080/system/check
+via swagger : http://localhost:4116/swagger/index.html
+or : http://localhost:4116/system/check
 
 ### Watch Traces
 
@@ -115,9 +156,9 @@ func CheckUser(ctx context.Context, name, passwd string) error {
 	log := logger.WithContext(ctx).WithField("models", "CheckUser").WithField("name", name)
 	u, err := FindUserByName(ctx, name)
 	if err == nil {
-		log.Info("user:", u)
+		getLogger().Info("user:", u)
 		if nil == bcrypt.CompareHashAndPassword([]byte(u.FinalHash), []byte(u.Salt+passwd)) {
-			log.Debug("check success")
+			getLogger().Debug("check success")
 			return nil
 		} else {
 			return fmt.Errorf("failed")
@@ -133,13 +174,13 @@ func init() {
     var err error
     dbFile := "tiem.sqlite.db"
     log := logger.WithContext(nil).WithField("dbFile", dbFile)
-    log.Debug("init: sqlite.open")
+    getLogger().Debug("init: sqlite.open")
     db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
     /* ... */
 }
 ```
 
-Basically, use `logger.WithContext(ctx)` to get the `log` if there is a valid ctx to inherit, or otherwise, use `logger.WithContext(nil)` to get the default log.
+Basically, use `logger.WithContext(ctx)` to get the `log` if there is a valid ctx to inherit, or otherwise, use `logger.WithContext(nil)` to get the default getLogger().
 
 ```go
 func (d *Db) CheckUser(ctx context.Context, req *dbPb.CheckUserRequest, rsp *dbPb.CheckUserResponse) error {
@@ -147,9 +188,9 @@ func (d *Db) CheckUser(ctx context.Context, req *dbPb.CheckUserRequest, rsp *dbP
 	log := logger.WithContext(ctx)
 	e := models.CheckUser(ctx, req.Name, req.Passwd)
 	if e == nil {
-		log.Debug("CheckUser success")
+		getLogger().Debug("CheckUser success")
 	} else {
-		log.Errorf("CheckUser failed: %s", e)
+		getLogger().Errorf("CheckUser failed: %s", e)
 		rsp.ErrCode = 1
 		rsp.ErrStr = e.Error()
 	}

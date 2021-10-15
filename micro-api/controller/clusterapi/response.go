@@ -1,6 +1,6 @@
 package clusterapi
 
-import "github.com/pingcap/tiem/micro-api/controller"
+import "github.com/pingcap-inc/tiem/micro-api/controller"
 
 type CreateClusterRsp struct {
 	ClusterId 			string	`json:"clusterId"`
@@ -17,4 +17,10 @@ type DetailClusterRsp struct {
 	ClusterDisplayInfo
 	ClusterMaintenanceInfo
 	Components []ComponentInstance	`json:"components"`
+}
+
+type DescribeDashboardRsp struct {
+	ClusterId		string		`json:"clusterId"`
+	Url 			string 		`json:"url"`
+	Token 			string 		`json:"token"`
 }

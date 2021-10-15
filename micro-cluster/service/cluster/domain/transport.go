@@ -509,7 +509,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		"--host", tidbServer.Host,
 		"--filetype", info.FileType,
 		"-t", "8",
-		"-o", fmt.Sprintf("%s", info.FilePath),
+		"-o", info.FilePath,
 		"-r", "200000",
 		"-F", "256MiB"}
 	if info.Filter != "" {

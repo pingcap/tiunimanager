@@ -2,9 +2,9 @@ package models
 
 import (
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"time"
 
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/pingcap/errors"
 	"gorm.io/gorm"
 )
@@ -81,9 +81,9 @@ type BackupStrategy struct {
 	ClusterId  string `gorm:"not null;type:varchar(22);default:null"`
 	OperatorId string `gorm:"not null;type:varchar(22);default:null"`
 
-	BackupDate  string
-	StartHour   uint32
-	EndHour 	uint32
+	BackupDate string
+	StartHour  uint32
+	EndHour    uint32
 }
 
 type BackupRecordFetchResult struct {
@@ -360,7 +360,7 @@ func (m *DAOClusterManager) DeleteBackupRecord(id uint) (record *BackupRecord, e
 	return record, err
 }
 
-func (m *DAOClusterManager) SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do *BackupRecord, err error) {
+func (m *DAOClusterManager) SaveBackupRecord(record *dbpb.DBBackupRecordDTO) (do *BackupRecord, err error) {
 	do = &BackupRecord{
 		Record: Record{
 			TenantId:  record.GetTenantId(),
@@ -382,7 +382,7 @@ func (m *DAOClusterManager) SaveBackupRecord(record *dbPb.DBBackupRecordDTO) (do
 	return do, m.Db().Create(do).Error
 }
 
-func (m *DAOClusterManager) UpdateBackupRecord(record *dbPb.DBBackupRecordDTO) error {
+func (m *DAOClusterManager) UpdateBackupRecord(record *dbpb.DBBackupRecordDTO) error {
 	err := m.Db().Model(&BackupRecord{}).Where("id = ?", record.Id).Updates(BackupRecord{
 		Size:    record.GetSize(),
 		EndTime: time.Unix(record.GetEndTime(), 0),
@@ -415,7 +415,7 @@ func (m *DAOClusterManager) QueryBackupRecord(clusterId string, recordId int64) 
 		Flow:         &flow,
 	}, nil
 }
-func (m *DAOClusterManager) ListBackupRecords(clusterId string, startTime, endTime int64,offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
+func (m *DAOClusterManager) ListBackupRecords(clusterId string, startTime, endTime int64, offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
 
 	records := make([]*BackupRecord, length, length)
 	db := m.Db().Table(TABLE_NAME_BACKUP_RECORD).Where("cluster_id = ? and deleted_at is null", clusterId)
@@ -426,7 +426,7 @@ func (m *DAOClusterManager) ListBackupRecords(clusterId string, startTime, endTi
 		db = db.Where("end_time <= ?", time.Unix(endTime, 0))
 	}
 
-	err =db.Count(&total).Order("id desc").Offset(offset).Limit(length).
+	err = db.Count(&total).Order("id desc").Offset(offset).Limit(length).
 		Find(&records).
 		Error
 
@@ -474,16 +474,16 @@ func (m *DAOClusterManager) SaveRecoverRecord(tenantId, clusterId, operatorId st
 	return do, m.Db().Create(do).Error
 }
 
-func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbPb.DBBackupStrategyDTO) (*BackupStrategy, error) {
+func (m *DAOClusterManager) SaveBackupStrategy(strategy *dbpb.DBBackupStrategyDTO) (*BackupStrategy, error) {
 	strategyDO := BackupStrategy{
-		ClusterId: strategy.GetClusterId(),
+		ClusterId:  strategy.GetClusterId(),
 		OperatorId: strategy.GetOperatorId(),
 		Record: Record{
 			TenantId: strategy.GetTenantId(),
 		},
-		BackupDate:  strategy.GetBackupDate(),
-		StartHour:   strategy.GetStartHour(),
-		EndHour:     strategy.GetEndHour(),
+		BackupDate: strategy.GetBackupDate(),
+		StartHour:  strategy.GetStartHour(),
+		EndHour:    strategy.GetEndHour(),
 	}
 	result := m.Db().Table(TABLE_NAME_BACKUP_STRATEGY).Where("cluster_id = ?", strategy.ClusterId).First(&strategyDO)
 	if result.Error != nil {
@@ -519,7 +519,6 @@ func (m *DAOClusterManager) QueryBackupStartegy(clusterId string) (*BackupStrate
 
 	return &strategyDO, nil
 }
-
 
 func (m *DAOClusterManager) QueryBackupStartegyByTime(weekday string, startHour uint32) ([]*BackupStrategy, error) {
 	var strategyListDO []*BackupStrategy

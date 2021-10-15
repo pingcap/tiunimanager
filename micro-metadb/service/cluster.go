@@ -3,20 +3,19 @@ package service
 import (
 	"context"
 	"fmt"
-
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"gorm.io/gorm"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/pingcap/errors"
 )
 
-var ClusterSuccessResponseStatus = &dbPb.DBClusterResponseStatus{Code: 0}
-var ClusterNoResultResponseStatus = &dbPb.DBClusterResponseStatus{Code: 1}
-var BizErrResponseStatus = &dbPb.DBClusterResponseStatus{Code: 2}
+var ClusterSuccessResponseStatus = &dbpb.DBClusterResponseStatus{Code: 0}
+var ClusterNoResultResponseStatus = &dbpb.DBClusterResponseStatus{Code: 1}
+var BizErrResponseStatus = &dbpb.DBClusterResponseStatus{Code: 2}
 
-func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DBCreateClusterRequest, resp *dbPb.DBCreateClusterResponse) (err error) {
+func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DBCreateClusterRequest, resp *dbpb.DBCreateClusterResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("CreateCluster has invalid parameter")
 	}
@@ -43,7 +42,7 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbPb.DB
 	return nil
 }
 
-func (handler *DBServiceHandler) DeleteCluster(ctx context.Context, req *dbPb.DBDeleteClusterRequest, resp *dbPb.DBDeleteClusterResponse) (err error) {
+func (handler *DBServiceHandler) DeleteCluster(ctx context.Context, req *dbpb.DBDeleteClusterRequest, resp *dbpb.DBDeleteClusterResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("DeleteCluster has invalid parameter")
 	}
@@ -64,7 +63,7 @@ func (handler *DBServiceHandler) DeleteCluster(ctx context.Context, req *dbPb.DB
 	return err
 }
 
-func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbPb.DBCreateInstanceRequest, resp *dbPb.DBCreateInstanceResponse) (err error) {
+func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbpb.DBCreateInstanceRequest, resp *dbpb.DBCreateInstanceResponse) (err error) {
 	log := framework.Log()
 
 	if nil == req || nil == resp {
@@ -96,7 +95,7 @@ func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbPb.D
 	return err
 }
 
-func (handler *DBServiceHandler) UpdateClusterTopologyConfig(ctx context.Context, req *dbPb.DBUpdateTopologyConfigRequest, resp *dbPb.DBUpdateTopologyConfigResponse) (err error) {
+func (handler *DBServiceHandler) UpdateClusterTopologyConfig(ctx context.Context, req *dbpb.DBUpdateTopologyConfigRequest, resp *dbpb.DBUpdateTopologyConfigResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("UpdateClusterTopologyConfig has invalid parameter")
 	}
@@ -117,7 +116,7 @@ func (handler *DBServiceHandler) UpdateClusterTopologyConfig(ctx context.Context
 	return err
 }
 
-func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *dbPb.DBUpdateClusterStatusRequest, resp *dbPb.DBUpdateClusterStatusResponse) (err error) {
+func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *dbpb.DBUpdateClusterStatusRequest, resp *dbpb.DBUpdateClusterStatusResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("UpdateClusterStatus has invalid parameter")
 	}
@@ -149,7 +148,7 @@ func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *d
 	return err
 }
 
-func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLoadClusterRequest, resp *dbPb.DBLoadClusterResponse) (err error) {
+func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbpb.DBLoadClusterRequest, resp *dbpb.DBLoadClusterResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("LoadCluster has invalid parameter")
 	}
@@ -158,11 +157,11 @@ func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLo
 	result, err := clusterManager.FetchCluster(req.ClusterId)
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
-		resp.ClusterDetail = &dbPb.DBClusterDetailDTO{
-			Cluster:          convertToClusterDTO(result.Cluster, result.DemandRecord),
+		resp.ClusterDetail = &dbpb.DBClusterDetailDTO{
+			Cluster:              convertToClusterDTO(result.Cluster, result.DemandRecord),
 			TopologyConfigRecord: convertToConfigDTO(result.TopologyConfig),
-			Flow:             convertFlowToDTO(result.Flow),
-			ComponentInstances: convertToComponentInstanceDTO(result.ComponentInstances),
+			Flow:                 convertFlowToDTO(result.Flow),
+			ComponentInstances:   convertToComponentInstanceDTO(result.ComponentInstances),
 		}
 		log.Infof("LoadCluster successful, clusterId: %s, error: %v", req.GetClusterId(), err)
 	} else {
@@ -171,7 +170,7 @@ func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbPb.DBLo
 	return err
 }
 
-func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbPb.DBListClusterRequest, resp *dbPb.DBListClusterResponse) (err error) {
+func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbpb.DBListClusterRequest, resp *dbpb.DBListClusterResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("ListCluster has invalid parameter")
 	}
@@ -182,17 +181,17 @@ func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbPb.DBLi
 
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
-		resp.Page = &dbPb.DBPageDTO{
+		resp.Page = &dbpb.DBPageDTO{
 			Page:     req.PageReq.Page,
 			PageSize: req.PageReq.PageSize,
 			Total:    int32(total),
 		}
-		clusterDetails := make([]*dbPb.DBClusterDetailDTO, len(clusters), len(clusters))
+		clusterDetails := make([]*dbpb.DBClusterDetailDTO, len(clusters), len(clusters))
 		for i, v := range clusters {
-			clusterDetails[i] = &dbPb.DBClusterDetailDTO{
-				Cluster:          convertToClusterDTO(v.Cluster, v.DemandRecord),
+			clusterDetails[i] = &dbpb.DBClusterDetailDTO{
+				Cluster:              convertToClusterDTO(v.Cluster, v.DemandRecord),
 				TopologyConfigRecord: convertToConfigDTO(v.TopologyConfig),
-				Flow:             convertFlowToDTO(v.Flow),
+				Flow:                 convertFlowToDTO(v.Flow),
 			}
 		}
 		resp.Clusters = clusterDetails
@@ -205,9 +204,9 @@ func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbPb.DBLi
 	return err
 }
 
-func (handler *DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb.DBSaveBackupRecordRequest, resp *dbPb.DBSaveBackupRecordResponse) (err error) {
+func (handler *DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbpb.DBSaveBackupRecordRequest, resp *dbpb.DBSaveBackupRecordResponse) (err error) {
 	if nil == req || nil == resp {
-		return errors.Errorf("ListCluster has invalid parameter")
+		return errors.Errorf("SaveBackupRecord has invalid parameter")
 	}
 	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
@@ -216,28 +215,33 @@ func (handler *DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbPb
 	if err == nil {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.BackupRecord = convertToBackupRecordDTO(result)
-		log.Infof("SaveBackupRecord successful, tenantId: %s, clusterId: %s, operatorId: %s, filepath: %s, error: %s",
-			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.FilePath, err)
+		log.Infof("SaveBackupRecord success, tenantId: %s, clusterId: %s, operatorId: %s, filepath: %s",
+			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.FilePath)
 	} else {
-		log.Infof("SaveBackupRecord failed, tenantId: %s, clusterId: %s, operatorId: %s, filepath: %s, error: %s",
-			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.FilePath, err)
+		log.Errorf("SaveBackupRecord failed, tenantId: %s, clusterId: %s, operatorId: %s, filepath: %s, error: %s",
+			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.FilePath, err.Error())
 	}
 	return err
 }
 
-func (handler *DBServiceHandler) UpdateBackupRecord(ctx context.Context, req *dbPb.DBUpdateBackupRecordRequest, resp *dbPb.DBUpdateBackupRecordResponse) (err error) {
-
+func (handler *DBServiceHandler) UpdateBackupRecord(ctx context.Context, req *dbpb.DBUpdateBackupRecordRequest, resp *dbpb.DBUpdateBackupRecordResponse) (err error) {
+	if nil == req || nil == resp {
+		return errors.Errorf("UpdateBackupRecord has invalid parameter")
+	}
+	log := framework.LogWithContext(ctx)
 	dto := req.BackupRecord
 	err = handler.Dao().ClusterManager().UpdateBackupRecord(dto)
 	if err != nil {
-		return nil
+		log.Errorf("SaveBackupRecord failed, tenantId: %s, clusterId: %s, operatorId: %s, error: %s",
+			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), err.Error())
 	}
-
+	log.Infof("SaveBackupRecord success, tenantId: %s, clusterId: %s, operatorId: %s",
+		dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId())
 	resp.Status = ClusterSuccessResponseStatus
-	return nil
+	return err
 }
 
-func (handler *DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *dbPb.DBDeleteBackupRecordRequest, resp *dbPb.DBDeleteBackupRecordResponse) (err error) {
+func (handler *DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *dbpb.DBDeleteBackupRecordRequest, resp *dbpb.DBDeleteBackupRecordResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("DeleteBackupRecord has invalid parameter")
 	}
@@ -247,16 +251,21 @@ func (handler *DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *db
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.BackupRecord = convertToBackupRecordDTO(result)
-		log.Infof("DeleteBackupRecord successful, Id: %d, error: %v", req.GetId(), err)
+		log.Infof("DeleteBackupRecord success, Id: %d", req.GetId())
 	} else {
-		log.Infof("DeleteBackupRecord failed, Id: %d, error: %v", req.GetId(), err)
+		log.Errorf("DeleteBackupRecord failed, Id: %d, error: %s", req.GetId(), err.Error())
 	}
 	return err
 }
 
-func (handler *DBServiceHandler) QueryBackupRecords(ctx context.Context, req *dbPb.DBQueryBackupRecordRequest, resp *dbPb.DBQueryBackupRecordResponse) (err error) {
+func (handler *DBServiceHandler) QueryBackupRecords(ctx context.Context, req *dbpb.DBQueryBackupRecordRequest, resp *dbpb.DBQueryBackupRecordResponse) (err error) {
+	if nil == req || nil == resp {
+		return errors.Errorf("QueryBackupRecords has invalid parameter")
+	}
+	log := framework.LogWithContext(ctx)
 	result, err := handler.Dao().ClusterManager().QueryBackupRecord(req.ClusterId, req.RecordId)
 	if err != nil {
+		log.Errorf("QueryBackupRecords failed, clusterId: %d, error: %s", req.GetClusterId(), err.Error())
 		return err
 	}
 
@@ -265,7 +274,7 @@ func (handler *DBServiceHandler) QueryBackupRecords(ctx context.Context, req *db
 	return nil
 }
 
-func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbPb.DBListBackupRecordsRequest, resp *dbPb.DBListBackupRecordsResponse) (err error) {
+func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbpb.DBListBackupRecordsRequest, resp *dbpb.DBListBackupRecordsResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("ListBackupRecords has invalid parameter")
 	}
@@ -276,26 +285,26 @@ func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbP
 
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
-		resp.Page = &dbPb.DBPageDTO{
+		resp.Page = &dbpb.DBPageDTO{
 			Page:     req.Page.Page,
 			PageSize: req.Page.PageSize,
 			Total:    int32(total),
 		}
-		backupRecordDTOs := make([]*dbPb.DBDBBackupRecordDisplayDTO, len(backupRecords), len(backupRecords))
+		backupRecordDTOs := make([]*dbpb.DBDBBackupRecordDisplayDTO, len(backupRecords), len(backupRecords))
 		for i, v := range backupRecords {
 			backupRecordDTOs[i] = convertToBackupRecordDisplayDTO(v.BackupRecord, v.Flow)
 		}
 		resp.BackupRecords = backupRecordDTOs
-		log.Infof("ListBackupRecords successful, clusterId: %s, page: %d, page size: %d, error: %v",
-			req.GetClusterId(), req.GetPage().GetPage(), req.GetPage().GetPageSize(), err)
+		log.Infof("ListBackupRecords success, clusterId: %s, page: %d, page size: %d",
+			req.GetClusterId(), req.GetPage().GetPage(), req.GetPage().GetPageSize())
 	} else {
-		log.Infof("ListBackupRecords failed, clusterId: %s, page: %d, page size: %d, error: %v",
-			req.GetClusterId(), req.GetPage().GetPage(), req.GetPage().GetPageSize(), err)
+		log.Errorf("ListBackupRecords failed, clusterId: %s, page: %d, page size: %d, error: %s",
+			req.GetClusterId(), req.GetPage().GetPage(), req.GetPage().GetPageSize(), err.Error())
 	}
 	return err
 }
 
-func (handler *DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbPb.DBSaveRecoverRecordRequest, resp *dbPb.DBSaveRecoverRecordResponse) (err error) {
+func (handler *DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbpb.DBSaveRecoverRecordRequest, resp *dbpb.DBSaveRecoverRecordResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveRecoverRecord has invalid parameter")
 	}
@@ -306,37 +315,43 @@ func (handler *DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbP
 	if err == nil {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.RecoverRecord = convertToRecoverRecordDTO(result)
-		log.Infof("SaveRecoverRecord successful, tenantId: %s, clusterId: %s, operatorId: %s, recordId: %d, error: %v",
-			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.GetBackupRecordId(), err)
+		log.Infof("SaveRecoverRecord successful, tenantId: %s, clusterId: %s, operatorId: %s, recordId: %d",
+			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.GetBackupRecordId())
 	} else {
-		log.Infof("SaveRecoverRecord failed, tenantId: %s, clusterId: %s, operatorId: %s, recordId: %d, error: %v",
-			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.GetBackupRecordId(), err)
+		log.Errorf("SaveRecoverRecord failed, tenantId: %s, clusterId: %s, operatorId: %s, recordId: %d, error: %s",
+			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.GetBackupRecordId(), err.Error())
 	}
 	return err
 }
 
-func (handler *DBServiceHandler) SaveBackupStrategy(ctx context.Context, req *dbPb.DBSaveBackupStrategyRequest, resp *dbPb.DBSaveBackupStrategyResponse) (err error) {
+func (handler *DBServiceHandler) SaveBackupStrategy(ctx context.Context, req *dbpb.DBSaveBackupStrategyRequest, resp *dbpb.DBSaveBackupStrategyResponse) (err error) {
+	if nil == req || nil == resp {
+		return errors.Errorf("SaveBackupStrategy has invalid parameter")
+	}
 	dto := req.Strategy
+	log := framework.LogWithContext(ctx)
 	result, err := handler.Dao().ClusterManager().SaveBackupStrategy(dto)
 
 	if err != nil {
-		// todo
-		return nil
+		log.Errorf("SaveBackupStrategy failed, req: %+v, error: %s", dto, err.Error())
+		return err
 	}
-
+	log.Infof("SaveBackupStrategy success, req: %+v", dto)
 	resp.Status = ClusterSuccessResponseStatus
 	resp.Strategy = convertToBackupStrategyDTO(result)
 	return nil
 }
 
-func (handler *DBServiceHandler) QueryBackupStrategy(ctx context.Context, req *dbPb.DBQueryBackupStrategyRequest, resp *dbPb.DBQueryBackupStrategyResponse) (err error) {
-
+func (handler *DBServiceHandler) QueryBackupStrategy(ctx context.Context, req *dbpb.DBQueryBackupStrategyRequest, resp *dbpb.DBQueryBackupStrategyResponse) (err error) {
+	if nil == req || nil == resp {
+		return errors.Errorf("QueryBackupStrategy has invalid parameter")
+	}
+	log := framework.LogWithContext(ctx)
 	clusterId := req.ClusterId
 	result, err := handler.Dao().ClusterManager().QueryBackupStartegy(clusterId)
-
 	if err != nil {
-		// todo
-		return nil
+		log.Errorf("QueryBackupStrategy failed, clusterId: %s, error: %s", req.GetClusterId(), err.Error())
+		return err
 	}
 
 	resp.Status = ClusterSuccessResponseStatus
@@ -344,17 +359,19 @@ func (handler *DBServiceHandler) QueryBackupStrategy(ctx context.Context, req *d
 	return nil
 }
 
-func (handler *DBServiceHandler) QueryBackupStrategyByTime(ctx context.Context, req *dbPb.DBQueryBackupStrategyByTimeRequest, resp *dbPb.DBQueryBackupStrategyByTimeResponse) (err error) {
-
+func (handler *DBServiceHandler) QueryBackupStrategyByTime(ctx context.Context, req *dbpb.DBQueryBackupStrategyByTimeRequest, resp *dbpb.DBQueryBackupStrategyByTimeResponse) (err error) {
+	if nil == req || nil == resp {
+		return errors.Errorf("QueryBackupStrategyByTime has invalid parameter")
+	}
+	log := framework.LogWithContext(ctx)
 	result, err := handler.Dao().ClusterManager().QueryBackupStartegyByTime(req.GetWeekday(), req.GetStartHour())
-
 	if err != nil {
-		// todo
-		return nil
+		log.Errorf("QueryBackupStrategyByTime failed, req: %+v, error: %s", req, err.Error())
+		return err
 	}
 
 	resp.Status = ClusterSuccessResponseStatus
-	strategyList := make([]*dbPb.DBBackupStrategyDTO, len(result))
+	strategyList := make([]*dbpb.DBBackupStrategyDTO, len(result))
 	for i, v := range result {
 		strategyList[i] = convertToBackupStrategyDTO(v)
 	}
@@ -362,7 +379,7 @@ func (handler *DBServiceHandler) QueryBackupStrategyByTime(ctx context.Context, 
 	return nil
 }
 
-func (handler *DBServiceHandler) SaveParametersRecord(ctx context.Context, req *dbPb.DBSaveParametersRequest, resp *dbPb.DBSaveParametersResponse) (err error) {
+func (handler *DBServiceHandler) SaveParametersRecord(ctx context.Context, req *dbpb.DBSaveParametersRequest, resp *dbpb.DBSaveParametersResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveParametersRecord has invalid parameter")
 	}
@@ -382,7 +399,7 @@ func (handler *DBServiceHandler) SaveParametersRecord(ctx context.Context, req *
 	return err
 }
 
-func (handler *DBServiceHandler) GetCurrentParametersRecord(ctx context.Context, req *dbPb.DBGetCurrentParametersRequest, resp *dbPb.DBGetCurrentParametersResponse) (err error) {
+func (handler *DBServiceHandler) GetCurrentParametersRecord(ctx context.Context, req *dbpb.DBGetCurrentParametersRequest, resp *dbpb.DBGetCurrentParametersResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("GetCurrentParametersRecord has invalid parameter")
 	}
@@ -403,27 +420,27 @@ func (handler *DBServiceHandler) GetCurrentParametersRecord(ctx context.Context,
 	}
 }
 
-func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbPb.DBBackupRecordDTO) {
+func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbpb.DBBackupRecordDTO) {
 	if do == nil {
 		return nil
 	}
-	dto = &dbPb.DBBackupRecordDTO{
-		Id:          int64(do.ID),
-		TenantId:    do.TenantId,
-		ClusterId:   do.ClusterId,
-		StartTime:   do.StartTime.Unix(),
+	dto = &dbpb.DBBackupRecordDTO{
+		Id:           int64(do.ID),
+		TenantId:     do.TenantId,
+		ClusterId:    do.ClusterId,
+		StartTime:    do.StartTime.Unix(),
 		BackupMethod: do.BackupMethod,
-		BackupMode:  do.BackupMode,
-		BackupType:  do.BackupType,
-		StorageType: do.StorageType,
-		OperatorId:  do.OperatorId,
-		FilePath:    do.FilePath,
-		FlowId:      int64(do.FlowId),
+		BackupMode:   do.BackupMode,
+		BackupType:   do.BackupType,
+		StorageType:  do.StorageType,
+		OperatorId:   do.OperatorId,
+		FilePath:     do.FilePath,
+		FlowId:       int64(do.FlowId),
 	}
 	return
 }
 
-func convertToComponentInstance(dtos []*dbPb.DBComponentInstanceDTO) []*models.ComponentInstance {
+func convertToComponentInstance(dtos []*dbpb.DBComponentInstanceDTO) []*models.ComponentInstance {
 	if dtos == nil || len(dtos) == 0 {
 		return []*models.ComponentInstance{}
 	}
@@ -431,21 +448,21 @@ func convertToComponentInstance(dtos []*dbPb.DBComponentInstanceDTO) []*models.C
 	result := make([]*models.ComponentInstance, len(dtos), len(dtos))
 
 	for i, v := range dtos {
-		result[i] = &models.ComponentInstance {
+		result[i] = &models.ComponentInstance{
 			Entity: models.Entity{
 				ID:       v.Id,
 				Code:     v.Code,
 				TenantId: v.TenantId,
-				Status: int8(v.Status),
+				Status:   int8(v.Status),
 			},
-			ClusterId: v.ClusterId,
-			ComponentType: v.ComponentType,
-			Role: v.Role,
-			Spec: v.Spec,
-			Version: v.Version,
-			HostId: v.HostId,
-			DiskId: v.DiskId,
-			PortInfo: v.PortInfo,
+			ClusterId:      v.ClusterId,
+			ComponentType:  v.ComponentType,
+			Role:           v.Role,
+			Spec:           v.Spec,
+			Version:        v.Version,
+			HostId:         v.HostId,
+			DiskId:         v.DiskId,
+			PortInfo:       v.PortInfo,
 			AllocRequestId: v.AllocRequestId,
 		}
 	}
@@ -453,54 +470,54 @@ func convertToComponentInstance(dtos []*dbPb.DBComponentInstanceDTO) []*models.C
 	return result
 }
 
-func convertToComponentInstanceDTO(models []*models.ComponentInstance) []*dbPb.DBComponentInstanceDTO {
+func convertToComponentInstanceDTO(models []*models.ComponentInstance) []*dbpb.DBComponentInstanceDTO {
 	if models == nil || len(models) == 0 {
-		return []*dbPb.DBComponentInstanceDTO{}
+		return []*dbpb.DBComponentInstanceDTO{}
 	}
-	result := make([]*dbPb.DBComponentInstanceDTO, len(models), len(models))
+	result := make([]*dbpb.DBComponentInstanceDTO, len(models), len(models))
 
 	for i, v := range models {
-		result[i] = &dbPb.DBComponentInstanceDTO {
+		result[i] = &dbpb.DBComponentInstanceDTO{
 			Id:       v.ID,
 			Code:     v.Code,
 			TenantId: v.TenantId,
-			Status: int32(v.Status),
+			Status:   int32(v.Status),
 
-			ClusterId: v.ClusterId,
-			ComponentType: v.ComponentType,
-			Role: v.Role,
-			Spec: v.Spec,
-			Version: v.Version,
-			HostId: v.HostId,
-			DiskId: v.DiskId,
-			PortInfo: v.PortInfo,
+			ClusterId:      v.ClusterId,
+			ComponentType:  v.ComponentType,
+			Role:           v.Role,
+			Spec:           v.Spec,
+			Version:        v.Version,
+			HostId:         v.HostId,
+			DiskId:         v.DiskId,
+			PortInfo:       v.PortInfo,
 			AllocRequestId: v.AllocRequestId,
-			CreateTime: v.CreatedAt.Unix(),
-			UpdateTime: v.UpdatedAt.Unix(),
-			DeleteTime: deletedAtUnix(v.DeletedAt),
+			CreateTime:     v.CreatedAt.Unix(),
+			UpdateTime:     v.UpdatedAt.Unix(),
+			DeleteTime:     deletedAtUnix(v.DeletedAt),
 		}
 	}
 
 	return result
 }
 
-func convertToBackupRecordDisplayDTO(do *models.BackupRecord, flow *models.FlowDO) (dto *dbPb.DBDBBackupRecordDisplayDTO) {
+func convertToBackupRecordDisplayDTO(do *models.BackupRecord, flow *models.FlowDO) (dto *dbpb.DBDBBackupRecordDisplayDTO) {
 	if do == nil {
 		return nil
 	}
 
-	dto = &dbPb.DBDBBackupRecordDisplayDTO{
+	dto = &dbpb.DBDBBackupRecordDisplayDTO{
 		BackupRecord: convertToBackupRecordDTO(do),
 		Flow:         convertFlowToDTO(flow),
 	}
 	return
 }
 
-func convertToRecoverRecordDTO(do *models.RecoverRecord) (dto *dbPb.DBRecoverRecordDTO) {
+func convertToRecoverRecordDTO(do *models.RecoverRecord) (dto *dbpb.DBRecoverRecordDTO) {
 	if do == nil {
 		return nil
 	}
-	dto = &dbPb.DBRecoverRecordDTO{
+	dto = &dbpb.DBRecoverRecordDTO{
 		Id:             int64(do.ID),
 		TenantId:       do.TenantId,
 		ClusterId:      do.ClusterId,
@@ -512,29 +529,29 @@ func convertToRecoverRecordDTO(do *models.RecoverRecord) (dto *dbPb.DBRecoverRec
 	return
 }
 
-func convertToBackupStrategyDTO(do *models.BackupStrategy) (dto *dbPb.DBBackupStrategyDTO) {
+func convertToBackupStrategyDTO(do *models.BackupStrategy) (dto *dbpb.DBBackupStrategyDTO) {
 	if do == nil {
 		return nil
 	}
-	dto = &dbPb.DBBackupStrategyDTO{
-		Id:          int64(do.ID),
-		OperatorId:  do.OperatorId,
-		TenantId:    do.TenantId,
-		ClusterId:   do.ClusterId,
-		CreateTime:  do.CreatedAt.Unix(),
-		UpdateTime:  do.UpdatedAt.Unix(),
-		BackupDate:  do.BackupDate,
-		StartHour:   do.StartHour,
-		EndHour:     do.EndHour,
+	dto = &dbpb.DBBackupStrategyDTO{
+		Id:         int64(do.ID),
+		OperatorId: do.OperatorId,
+		TenantId:   do.TenantId,
+		ClusterId:  do.ClusterId,
+		CreateTime: do.CreatedAt.Unix(),
+		UpdateTime: do.UpdatedAt.Unix(),
+		BackupDate: do.BackupDate,
+		StartHour:  do.StartHour,
+		EndHour:    do.EndHour,
 	}
 	return
 }
 
-func convertToParameterRecordDTO(do *models.ParametersRecord) (dto *dbPb.DBParameterRecordDTO) {
+func convertToParameterRecordDTO(do *models.ParametersRecord) (dto *dbpb.DBParameterRecordDTO) {
 	if do == nil {
 		return nil
 	}
-	dto = &dbPb.DBParameterRecordDTO{
+	dto = &dbpb.DBParameterRecordDTO{
 		Id:         int64(do.ID),
 		TenantId:   do.TenantId,
 		ClusterId:  do.ClusterId,
@@ -546,11 +563,11 @@ func convertToParameterRecordDTO(do *models.ParametersRecord) (dto *dbPb.DBParam
 	return
 }
 
-func convertToClusterDTO(do *models.Cluster, demand *models.DemandRecord) (dto *dbPb.DBClusterDTO) {
+func convertToClusterDTO(do *models.Cluster, demand *models.DemandRecord) (dto *dbpb.DBClusterDTO) {
 	if do == nil {
 		return nil
 	}
-	dto = &dbPb.DBClusterDTO{
+	dto = &dbpb.DBClusterDTO{
 		Id:          do.ID,
 		Code:        do.Code,
 		Name:        do.Name,
@@ -574,11 +591,11 @@ func convertToClusterDTO(do *models.Cluster, demand *models.DemandRecord) (dto *
 	return
 }
 
-func convertToConfigDTO(do *models.TopologyConfig) (dto *dbPb.DBTopologyConfigDTO) {
+func convertToConfigDTO(do *models.TopologyConfig) (dto *dbpb.DBTopologyConfigDTO) {
 	if do == nil {
 		return nil
 	}
-	return &dbPb.DBTopologyConfigDTO{
+	return &dbpb.DBTopologyConfigDTO{
 		Id:         int32(do.ID),
 		TenantId:   do.TenantId,
 		ClusterId:  do.ClusterId,

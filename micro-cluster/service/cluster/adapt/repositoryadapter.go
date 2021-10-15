@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
-	db "github.com/pingcap-inc/tiem/micro-metadb/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"strconv"
 	"time"
@@ -23,13 +23,13 @@ func InjectionMetaDbRepo() {
 type ClusterRepoAdapter struct{}
 
 func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*domain.ClusterAggregation, int, error) {
-	req := &db.DBListClusterRequest{
+	req := &dbpb.DBListClusterRequest{
 		ClusterName:   clusterName,
 		ClusterId:     clusterId,
 		ClusterTag:    clusterTag,
 		ClusterStatus: clusterStatus,
 		ClusterType:   clusterType,
-		PageReq: &db.DBPageDTO{
+		PageReq: &dbpb.DBPageDTO{
 			Page:     int32(page),
 			PageSize: int32(pageSize),
 		},
@@ -60,7 +60,7 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 }
 
 func (c ClusterRepoAdapter) AddCluster(cluster *domain.Cluster) error {
-	req := &db.DBCreateClusterRequest{
+	req := &dbpb.DBCreateClusterRequest{
 		Cluster: ConvertClusterToDTO(cluster),
 	}
 
@@ -86,7 +86,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 	cluster := aggregation.Cluster
 
 	if aggregation.StatusModified || aggregation.FlowModified {
-		resp, err := client.DBClient.UpdateClusterStatus(context.TODO(), &db.DBUpdateClusterStatusRequest{
+		resp, err := client.DBClient.UpdateClusterStatus(context.TODO(), &dbpb.DBUpdateClusterStatusRequest{
 			ClusterId:    cluster.Id,
 			Status:       int32(cluster.Status),
 			UpdateStatus: aggregation.StatusModified,
@@ -104,7 +104,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 	}
 
 	if aggregation.ConfigModified {
-		resp, err := client.DBClient.UpdateClusterTopologyConfig(context.TODO(), &db.DBUpdateTopologyConfigRequest{
+		resp, err := client.DBClient.UpdateClusterTopologyConfig(context.TODO(), &dbpb.DBUpdateTopologyConfigRequest{
 			ClusterId: aggregation.Cluster.Id,
 			Content:   aggregation.CurrentTopologyConfigRecord.Content(),
 			TenantId:  aggregation.Cluster.TenantId,
@@ -157,8 +157,8 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 
 	if aggregation.LastParameterRecord != nil && aggregation.LastParameterRecord.Id == 0 {
 		record := aggregation.LastParameterRecord
-		resp, err := client.DBClient.SaveParametersRecord(context.TODO(), &db.DBSaveParametersRequest{
-			Parameters: &db.DBParameterRecordDTO{
+		resp, err := client.DBClient.SaveParametersRecord(context.TODO(), &dbpb.DBSaveParametersRequest{
+			Parameters: &dbpb.DBParameterRecordDTO{
 				TenantId:   cluster.TenantId,
 				ClusterId:  record.ClusterId,
 				OperatorId: record.OperatorId,
@@ -177,7 +177,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 }
 
 func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation, err error) {
-	req := &db.DBLoadClusterRequest{
+	req := &dbpb.DBLoadClusterRequest{
 		ClusterId: id,
 	}
 
@@ -203,7 +203,7 @@ func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation,
 type InstanceRepoAdapter struct{}
 
 func (c InstanceRepoAdapter) QueryParameterJson(clusterId string) (content string, err error) {
-	resp, err := client.DBClient.GetCurrentParametersRecord(context.TODO(), &db.DBGetCurrentParametersRequest{
+	resp, err := client.DBClient.GetCurrentParametersRecord(context.TODO(), &dbpb.DBGetCurrentParametersRequest{
 		ClusterId: clusterId,
 	})
 
@@ -227,11 +227,11 @@ func (c InstanceRepoAdapter) QueryParameterJson(clusterId string) (content strin
 type TaskRepoAdapter struct{}
 
 func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, pageSize int) ([]*domain.FlowWorkEntity, int, error) {
-	resp, err :=client.DBClient.ListFlows(context.TODO(), &db.DBListFlowsRequest{
+	resp, err := client.DBClient.ListFlows(context.TODO(), &dbpb.DBListFlowsRequest{
 		BizId:   bizId,
 		Keyword: keyword,
-		Status: int64(status),
-		Page: &db.DBTaskPageDTO{
+		Status:  int64(status),
+		Page: &dbpb.DBTaskPageDTO{
 			Page:     int32(page),
 			PageSize: int32(pageSize),
 		},
@@ -248,7 +248,7 @@ func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, 
 			FlowName:    v.FlowName,
 			StatusAlias: v.StatusAlias,
 			BizId:       v.BizId,
-			Status: domain.TaskStatus(v.Status),
+			Status:      domain.TaskStatus(v.Status),
 			Operator: &domain.Operator{
 				Name: v.Operator,
 			},
@@ -270,12 +270,12 @@ func (t TaskRepoAdapter) PersistCronTask(cronTask *domain.CronTaskEntity) (err e
 }
 
 func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
-	resp, err := client.DBClient.CreateFlow(context.TODO(), &db.DBCreateFlowRequest{
-		Flow: &db.DBFlowDTO{
+	resp, err := client.DBClient.CreateFlow(context.TODO(), &dbpb.DBCreateFlowRequest{
+		Flow: &dbpb.DBFlowDTO{
 			FlowName:    flowWork.FlowName,
 			StatusAlias: flowWork.StatusAlias,
 			BizId:       flowWork.BizId,
-			Operator: flowWork.Operator.Name,
+			Operator:    flowWork.Operator.Name,
 		},
 	})
 
@@ -292,8 +292,8 @@ func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
 }
 
 func (t TaskRepoAdapter) AddFlowTask(task *domain.TaskEntity, flowId uint) error {
-	resp, err := client.DBClient.CreateTask(context.TODO(), &db.DBCreateTaskRequest{
-		Task: &db.DBTaskDTO{
+	resp, err := client.DBClient.CreateTask(context.TODO(), &dbpb.DBCreateTaskRequest{
+		Task: &dbpb.DBTaskDTO{
 			TaskName:       task.TaskName,
 			TaskReturnType: strconv.Itoa(int(task.TaskReturnType)),
 			BizId:          task.BizId,
@@ -320,9 +320,9 @@ func (t TaskRepoAdapter) AddCronTask(cronTask *domain.CronTaskEntity) error {
 }
 
 func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
-	req := &db.DBUpdateFlowRequest{
-		FlowWithTasks: &db.DBFlowWithTaskDTO{
-			Flow: &db.DBFlowDTO{
+	req := &dbpb.DBUpdateFlowRequest{
+		FlowWithTasks: &dbpb.DBFlowWithTaskDTO{
+			Flow: &dbpb.DBFlowDTO{
 				Id:          int64(flowWork.FlowWork.Id),
 				BizId:       flowWork.FlowWork.BizId,
 				Status:      int32(flowWork.FlowWork.Status),
@@ -332,11 +332,11 @@ func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
 		},
 	}
 
-	tasks := make([]*db.DBTaskDTO, len(flowWork.Tasks), len(flowWork.Tasks))
+	tasks := make([]*dbpb.DBTaskDTO, len(flowWork.Tasks), len(flowWork.Tasks))
 	req.FlowWithTasks.Tasks = tasks
 
 	for i, v := range flowWork.Tasks {
-		tasks[i] = &db.DBTaskDTO{
+		tasks[i] = &dbpb.DBTaskDTO{
 			Id:             int64(v.Id),
 			Status:         int32(v.Status),
 			Result:         v.Result,
@@ -361,11 +361,11 @@ func (t TaskRepoAdapter) Load(id uint) (flowWork *domain.FlowWorkAggregation, er
 	panic("implement me")
 }
 
-func ConvertClusterToDTO(cluster *domain.Cluster) (dto *db.DBClusterDTO) {
+func ConvertClusterToDTO(cluster *domain.Cluster) (dto *dbpb.DBClusterDTO) {
 	if cluster == nil {
 		return
 	}
-	dto = &db.DBClusterDTO{
+	dto = &dbpb.DBClusterDTO{
 		Id:          cluster.Id,
 		Code:        cluster.Code,
 		Name:        cluster.ClusterName,
@@ -392,7 +392,7 @@ func ConvertClusterToDTO(cluster *domain.Cluster) (dto *db.DBClusterDTO) {
 	return
 }
 
-func ParseFromClusterDTO(dto *db.DBClusterDTO) (cluster *domain.Cluster) {
+func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 	if dto == nil {
 		return nil
 	}
@@ -419,7 +419,7 @@ func ParseFromClusterDTO(dto *db.DBClusterDTO) (cluster *domain.Cluster) {
 	return
 }
 
-func parseConfigRecordDTO(dto *db.DBTopologyConfigDTO) (record *domain.TopologyConfigRecord) {
+func parseConfigRecordDTO(dto *dbpb.DBTopologyConfigDTO) (record *domain.TopologyConfigRecord) {
 	if dto == nil {
 		return nil
 	}
@@ -437,7 +437,7 @@ func parseConfigRecordDTO(dto *db.DBTopologyConfigDTO) (record *domain.TopologyC
 	return
 }
 
-func parseFlowFromDTO(dto *db.DBFlowDTO) (flow *domain.FlowWorkEntity) {
+func parseFlowFromDTO(dto *dbpb.DBFlowDTO) (flow *domain.FlowWorkEntity) {
 	if dto == nil {
 		return nil
 	}

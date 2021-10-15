@@ -1,20 +1,20 @@
 package domain
 
 import (
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/knowledge"
-	proto "github.com/pingcap-inc/tiem/micro-cluster/proto"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"math/rand"
 )
 
-func (aggregation *ClusterAggregation) ExtractInstancesDTO() *proto.ClusterInstanceDTO {
-	dto := &proto.ClusterInstanceDTO {
-		Whitelist:           	[]string{},
-		DiskUsage:                MockUsage(),
-		CpuUsage:                 MockUsage(),
-		MemoryUsage:              MockUsage(),
-		StorageUsage:             MockUsage(),
-		BackupFileUsage:          MockUsage(),
+func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterInstanceDTO {
+	dto := &clusterpb.ClusterInstanceDTO{
+		Whitelist:       []string{},
+		DiskUsage:       MockUsage(),
+		CpuUsage:        MockUsage(),
+		MemoryUsage:     MockUsage(),
+		StorageUsage:    MockUsage(),
+		BackupFileUsage: MockUsage(),
 	}
 
 	if record := aggregation.CurrentTopologyConfigRecord; aggregation.CurrentTopologyConfigRecord != nil && record.ConfigModel != nil {
@@ -34,14 +34,14 @@ func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int64) {
 	addressList := make([]string, len(servers), len(servers))
 	portList := make([]int64, len(servers), len(servers))
 
-	for i,v := range servers {
+	for i, v := range servers {
 		addressList[i] = v.Host
 		portList[i] = int64(v.Port)
 	}
 	return addressList, addressList, portList
 }
 
-func (aggregation *ClusterAggregation) ExtractComponentDTOs() []*proto.ComponentInstanceDTO {
+func (aggregation *ClusterAggregation) ExtractComponentDTOs() []*clusterpb.ComponentInstanceDTO {
 	if record := aggregation.CurrentTopologyConfigRecord; aggregation.CurrentTopologyConfigRecord != nil && record.ConfigModel != nil {
 		config := record.ConfigModel
 		knowledge := knowledge.ClusterTypeSpecFromCode(aggregation.Cluster.ClusterType.Code)
@@ -51,16 +51,16 @@ func (aggregation *ClusterAggregation) ExtractComponentDTOs() []*proto.Component
 			}
 		}
 	}
-	return make([]*proto.ComponentInstanceDTO, 0)
+	return make([]*clusterpb.ComponentInstanceDTO, 0)
 }
 
-func appendAllComponentInstances(config *spec.Specification, knowledge *knowledge.ClusterVersionSpec) []*proto.ComponentInstanceDTO{
-	components := make([]*proto.ComponentInstanceDTO, 0, len(knowledge.ComponentSpecs))
+func appendAllComponentInstances(config *spec.Specification, knowledge *knowledge.ClusterVersionSpec) []*clusterpb.ComponentInstanceDTO {
+	components := make([]*clusterpb.ComponentInstanceDTO, 0, len(knowledge.ComponentSpecs))
 
 	for _, v := range knowledge.ComponentSpecs {
 		code := v.ClusterComponent.ComponentType
-		componentDTO := &proto.ComponentInstanceDTO {
-			BaseInfo: &proto.ComponentBaseInfoDTO{
+		componentDTO := &clusterpb.ComponentInstanceDTO{
+			BaseInfo: &clusterpb.ComponentBaseInfoDTO{
 				ComponentType: code,
 				ComponentName: v.ClusterComponent.ComponentName,
 			},
@@ -72,31 +72,31 @@ func appendAllComponentInstances(config *spec.Specification, knowledge *knowledg
 	return components
 }
 
-var ComponentAppender = map[string]func (*spec.Specification, string) []*proto.ComponentNodeDisplayInfoDTO {
+var ComponentAppender = map[string]func(*spec.Specification, string) []*clusterpb.ComponentNodeDisplayInfoDTO{
 	"TiDB": tiDBComponent,
 	"TiKV": tiKVComponent,
-	"PD": pDComponent,
+	"PD":   pDComponent,
 	//"TiFlash": tiFlashComponent,
 	//"TiCDC": tiCDCComponent,
 }
 
-func tiDBComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
+func tiDBComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	servers := config.TiDBServers
-	dto := make([]*proto.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
 	for i, v := range servers {
-		dto[i] = &proto.ComponentNodeDisplayInfoDTO{
-			NodeId: v.Host,
+		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
+			NodeId:  v.Host,
 			Version: version, // todo
-			Status: "运行中", // todo
-			Instance: &proto.ComponentNodeInstanceDTO{
+			Status:  "运行中",   // todo
+			Instance: &clusterpb.ComponentNodeInstanceDTO{
 				HostId: v.Host,
-				Port: int32(v.Port),
-				Role: mockRole(),
-				Spec: mockSpec(),
-				Zone: mockZone(),
+				Port:   int32(v.Port),
+				Role:   mockRole(),
+				Spec:   mockSpec(),
+				Zone:   mockZone(),
 			},
 
-			Usages: &proto.ComponentNodeUsageDTO{
+			Usages: &clusterpb.ComponentNodeUsageDTO{
 				IoUtil:       mockIoUtil(),
 				Iops:         mockIops(),
 				CpuUsage:     MockUsage(),
@@ -108,23 +108,23 @@ func tiDBComponent(config *spec.Specification, version string) []*proto.Componen
 	return dto
 }
 
-func tiKVComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
+func tiKVComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	servers := config.TiKVServers
-	dto := make([]*proto.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
 	for i, v := range servers {
-		dto[i] = &proto.ComponentNodeDisplayInfoDTO{
-			NodeId: v.Host,
+		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
+			NodeId:  v.Host,
 			Version: version, // todo
-			Status: "运行中", // todo
-			Instance: &proto.ComponentNodeInstanceDTO{
+			Status:  "运行中",   // todo
+			Instance: &clusterpb.ComponentNodeInstanceDTO{
 				HostId: v.Host,
-				Port: 20160,
-				Role: mockRole(),
-				Spec: mockSpec(),
-				Zone: mockZone(),
+				Port:   20160,
+				Role:   mockRole(),
+				Spec:   mockSpec(),
+				Zone:   mockZone(),
 			},
 
-			Usages: &proto.ComponentNodeUsageDTO{
+			Usages: &clusterpb.ComponentNodeUsageDTO{
 				IoUtil:       mockIoUtil(),
 				Iops:         mockIops(),
 				CpuUsage:     MockUsage(),
@@ -136,23 +136,23 @@ func tiKVComponent(config *spec.Specification, version string) []*proto.Componen
 	return dto
 }
 
-func pDComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
+func pDComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	servers := config.PDServers
-	dto := make([]*proto.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
 	for i, v := range servers {
-		dto[i] = &proto.ComponentNodeDisplayInfoDTO{
-			NodeId: v.Host,
+		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
+			NodeId:  v.Host,
 			Version: version, // todo
-			Status: "运行中", // todo
-			Instance: &proto.ComponentNodeInstanceDTO{
+			Status:  "运行中",   // todo
+			Instance: &clusterpb.ComponentNodeInstanceDTO{
 				HostId: v.Host,
-				Port: 2379,
-				Role: mockRole(),
-				Spec: mockSpec(),
-				Zone: mockZone(),
+				Port:   2379,
+				Role:   mockRole(),
+				Spec:   mockSpec(),
+				Zone:   mockZone(),
 			},
 
-			Usages: &proto.ComponentNodeUsageDTO{
+			Usages: &clusterpb.ComponentNodeUsageDTO{
 				IoUtil:       mockIoUtil(),
 				Iops:         mockIops(),
 				CpuUsage:     MockUsage(),
@@ -164,49 +164,49 @@ func pDComponent(config *spec.Specification, version string) []*proto.ComponentN
 	return dto
 }
 
-func tiCDCComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
-	dto := make([]*proto.ComponentNodeDisplayInfoDTO, 0, 0)
+func tiCDCComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0, 0)
 
 	return dto
 }
-func tiFlashComponent(config *spec.Specification, version string) []*proto.ComponentNodeDisplayInfoDTO {
-	dto := make([]*proto.ComponentNodeDisplayInfoDTO, 0, 0)
+func tiFlashComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0, 0)
 	return dto
 }
 
 // MockUsage TODO will be replaced with monitor implement
-func MockUsage() *proto.UsageDTO {
-	usage := &proto.UsageDTO{
-		Total:     100,
-		Used: float32(rand.Intn(100)),
+func MockUsage() *clusterpb.UsageDTO {
+	usage := &clusterpb.UsageDTO{
+		Total: 100,
+		Used:  float32(rand.Intn(100)),
 	}
 	usage.UsageRate = usage.Used / usage.Total
 	return usage
 }
 
-func mockRole() *proto.ComponentNodeRoleDTO{
-	return &proto.ComponentNodeRoleDTO{
+func mockRole() *clusterpb.ComponentNodeRoleDTO {
+	return &clusterpb.ComponentNodeRoleDTO{
 		RoleCode: "Leader",
 		RoleName: "Flower",
 	}
 }
 
-func mockSpec() *proto.SpecBaseInfoDTO {
-	return &proto.SpecBaseInfoDTO{
+func mockSpec() *clusterpb.SpecBaseInfoDTO {
+	return &clusterpb.SpecBaseInfoDTO{
 		SpecCode: knowledge.GenSpecCode(4, 8),
 		SpecName: knowledge.GenSpecCode(4, 8),
 	}
 }
 
-func mockZone() *proto.ZoneBaseInfoDTO {
-	return &proto.ZoneBaseInfoDTO{
+func mockZone() *clusterpb.ZoneBaseInfoDTO {
+	return &clusterpb.ZoneBaseInfoDTO{
 		ZoneCode: "TEST_Zone1",
 		ZoneName: "TEST_Zone1",
 	}
 }
 
 func mockIops() []float32 {
-	return []float32{10,20}
+	return []float32{10, 20}
 }
 
 func mockIoUtil() float32 {

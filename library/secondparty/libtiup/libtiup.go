@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"io"
 	"io/ioutil"
 	"os"
@@ -18,8 +19,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/sirupsen/logrus"
-
-	dbPb "github.com/pingcap-inc/tiem/micro-metadb/proto"
 )
 
 // micro service --fork&exec--> tiup manager --fork&exec--> tiup process
@@ -106,7 +105,7 @@ type CmdStartResp struct {
 }
 
 type CmdListResp struct {
-	info  string
+	info     string
 	ErrorStr string
 }
 
@@ -116,10 +115,10 @@ type CmdDestroyResp struct {
 type TaskStatus int
 
 const (
-	TaskStatusInit       TaskStatus = TaskStatus(dbPb.TiupTaskStatus_Init)
-	TaskStatusProcessing TaskStatus = TaskStatus(dbPb.TiupTaskStatus_Processing)
-	TaskStatusFinished   TaskStatus = TaskStatus(dbPb.TiupTaskStatus_Finished)
-	TaskStatusError      TaskStatus = TaskStatus(dbPb.TiupTaskStatus_Error)
+	TaskStatusInit       TaskStatus = TaskStatus(dbpb.TiupTaskStatus_Init)
+	TaskStatusProcessing TaskStatus = TaskStatus(dbpb.TiupTaskStatus_Processing)
+	TaskStatusFinished   TaskStatus = TaskStatus(dbpb.TiupTaskStatus_Finished)
+	TaskStatusError      TaskStatus = TaskStatus(dbpb.TiupTaskStatus_Error)
 )
 
 type TaskStatusMember struct {
@@ -171,7 +170,7 @@ type CmdClusterDisplayReq struct {
 
 type CmdClusterDisplayResp struct {
 	DisplayRespString string
-	ErrorStr             string
+	ErrorStr          string
 }
 
 type TaskStatusMapValue struct {
@@ -709,9 +708,9 @@ func glMicroTaskStatusMapSyncer() {
 		glMicroTaskStatusMapMutex.Unlock()
 		logInFunc := logger.WithField("glMicroTaskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
-			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
+			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbpb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,
-				Status: dbPb.TiupTaskStatus(v.Status),
+				Status: dbpb.TiupTaskStatus(v.Status),
 				ErrStr: v.ErrorStr,
 			})
 			if rsp == nil || err != nil || rsp.ErrCode != 0 {
@@ -743,8 +742,8 @@ func microTiupDeploy(deployReq CmdDeployReq) CmdDeployResp {
 }
 
 func MicroSrvTiupDeploy(instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	var req dbPb.CreateTiupTaskRequest
-	req.Type = dbPb.TiupTaskType_Deploy
+	var req dbpb.CreateTiupTaskRequest
+	req.Type = dbpb.TiupTaskType_Deploy
 	req.BizID = bizID
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
@@ -784,8 +783,8 @@ func microTiupList(req CmdListReq) CmdListResp {
 }
 
 func MicroSrvTiupList(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	var req dbPb.CreateTiupTaskRequest
-	req.Type = dbPb.TiupTaskType_List
+	var req dbpb.CreateTiupTaskRequest
+	req.Type = dbpb.TiupTaskType_List
 	req.BizID = bizID
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
@@ -823,8 +822,8 @@ func microTiupStart(req CmdStartReq) CmdStartResp {
 }
 
 func MicroSrvTiupStart(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	var req dbPb.CreateTiupTaskRequest
-	req.Type = dbPb.TiupTaskType_Start
+	var req dbpb.CreateTiupTaskRequest
+	req.Type = dbpb.TiupTaskType_Start
 	req.BizID = bizID
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
@@ -862,8 +861,8 @@ func microTiupDestroy(req CmdDestroyReq) CmdDestroyResp {
 }
 
 func MicroSrvTiupDestroy(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	var req dbPb.CreateTiupTaskRequest
-	req.Type = dbPb.TiupTaskType_Destroy
+	var req dbpb.CreateTiupTaskRequest
+	req.Type = dbpb.TiupTaskType_Destroy
 	req.BizID = bizID
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
@@ -881,8 +880,8 @@ func MicroSrvTiupDestroy(instanceName string, timeoutS int, flags []string, bizI
 	}
 }
 
-func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error) {
-	var req dbPb.FindTiupTaskByIDRequest
+func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbpb.TiupTaskStatus, errStr string, err error) {
+	var req dbpb.FindTiupTaskByIDRequest
 	req.Id = taskID
 	rsp, err := client.DBClient.FindTiupTaskByID(context.Background(), &req)
 	if err != nil || rsp.ErrCode != 0 {
@@ -896,8 +895,8 @@ func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr 
 	}
 }
 
-func MicroSrvTiupGetTaskStatusByBizID(bizID uint64) (stat dbPb.TiupTaskStatus, statErrStr string, err error) {
-	var req dbPb.GetTiupTaskStatusByBizIDRequest
+func MicroSrvTiupGetTaskStatusByBizID(bizID uint64) (stat dbpb.TiupTaskStatus, statErrStr string, err error) {
+	var req dbpb.GetTiupTaskStatusByBizIDRequest
 	req.BizID = bizID
 	rsp, err := client.DBClient.GetTiupTaskStatusByBizID(context.Background(), &req)
 	if err != nil || rsp.ErrCode != 0 {
@@ -947,8 +946,8 @@ func microTiupDumpling(dumplingReq CmdDumplingReq) CmdDumplingResp {
 }
 
 func MicroSrvTiupDumpling(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	var req dbPb.CreateTiupTaskRequest
-	req.Type = dbPb.TiupTaskType_Dumpling
+	var req dbpb.CreateTiupTaskRequest
+	req.Type = dbpb.TiupTaskType_Dumpling
 	req.BizID = bizID
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
@@ -985,8 +984,8 @@ func microTiupLightning(lightningReq CmdLightningReq) CmdLightningResp {
 }
 
 func MicroSrvTiupLightning(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	var req dbPb.CreateTiupTaskRequest
-	req.Type = dbPb.TiupTaskType_Lightning
+	var req dbpb.CreateTiupTaskRequest
+	req.Type = dbpb.TiupTaskType_Lightning
 	req.BizID = bizID
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {

@@ -19,7 +19,6 @@ import (
 
 	operator "github.com/pingcap-inc/tiem/tiup/operation"
 	"github.com/pingcap-inc/tiem/tiup/spec"
-	cspec "github.com/pingcap-inc/tiem/tiup/spec"
 	"github.com/pingcap-inc/tiem/tiup/task"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/tiup/pkg/logger/log"
@@ -38,7 +37,12 @@ func newScaleInCmd() *cobra.Command {
 
 			clusterName := args[0]
 
-			scale := func(b *task.Builder, imetadata cspec.Metadata, tlsCfg *tls.Config) {
+			scale := func(b *task.Builder, imetadata spec.Metadata, tlsCfg *tls.Config) {
+				metadata := imetadata.(*spec.TiEMMeta)
+				nodes := gOpt.Nodes
+
+				b.ClusterOperate(metadata.Topology, operator.ScaleInOperation, gOpt, tlsCfg).
+					UpdateMeta(clusterName, metadata, nodes)
 			}
 
 			return cm.ScaleIn(clusterName, skipConfirm, gOpt, scale)

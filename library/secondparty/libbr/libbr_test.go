@@ -3,7 +3,6 @@ package libbr
 import (
 	"fmt"
 	"testing"
-	"time"
 )
 
 var dbConnParam DbConnParam
@@ -67,31 +66,3 @@ func TestBrMgrInit(t *testing.T) {
 //	mgrHandleCmdRestoreReq(string(jsonMustMarshal(cmdRestoreReq)))
 //	loopUntilRestoreDone()
 //}
-
-func loopUntilBackupDone() {
-	for {
-		time.Sleep(time.Second)
-		resp := mgrHandleCmdShowBackUpInfoReq(string(jsonMustMarshal(cmdShowBackUpInfoReq)))
-		fmt.Println("taskId 0 status from api: ", resp)
-		glMgrStatusMapSync()
-		taskStatusMapValue := glMgrTaskStatusMap[0]
-		fmt.Println("taskId 0 status: ", taskStatusMapValue.stat.Status)
-		if taskStatusMapValue.stat.Status == TaskStatusError || taskStatusMapValue.stat.Status == TaskStatusFinished {
-			break
-		}
-	}
-}
-
-func loopUntilRestoreDone() {
-	for {
-		time.Sleep(time.Second)
-		resp := mgrHandleCmdShowRestoreInfoReq(string(jsonMustMarshal(cmdShowRestoreInfoReq)))
-		fmt.Println("taskId 0 status from api: ", resp)
-		glMgrStatusMapSync()
-		taskStatusMapValue := glMgrTaskStatusMap[0]
-		fmt.Println("taskId 0 status: ", taskStatusMapValue.stat.Status)
-		if taskStatusMapValue.stat.Status == TaskStatusError || taskStatusMapValue.stat.Status == TaskStatusFinished {
-			break
-		}
-	}
-}

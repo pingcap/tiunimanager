@@ -224,7 +224,7 @@ func glMgrStatusMapSync() {
 		var ok bool
 		select {
 		case statm, ok = <-glMgrTaskStatusCh:
-			assert(ok == true)
+			assert(ok)
 			consumedFlag = true
 		default:
 		}
@@ -292,7 +292,7 @@ func mgrHandleCmdStartReq(jsonStr string) CmdStartResp {
 }
 
 func mgrHandleCmdListReq(jsonStr string) CmdListResp {
-	ret := CmdListResp{}
+	var ret CmdListResp
 	var req CmdListReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
 	if err != nil {
@@ -1040,12 +1040,8 @@ type CmdChanMember struct {
 func microCmdChanRoutine(cch chan CmdChanMember, outReader io.Reader, inWriter io.Writer) {
 	outBufReader := bufio.NewReader(outReader)
 	for {
-		var cmdMember CmdChanMember
-		var ok bool
-		select {
-		case cmdMember, ok = <-cch:
-			assert(ok)
-		}
+		cmdMember, ok := <-cch
+		assert(ok)
 		bs := jsonMustMarshal(cmdMember.req)
 		bs = append(bs, '\n')
 		ct, err := inWriter.Write(bs)

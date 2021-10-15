@@ -150,11 +150,11 @@ func Backup(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
 	resp, err := client.ClusterClient.CreateBackup(framework.NewMicroCtxFromGinCtx(c), &clusterpb.CreateBackupRequest{
-		ClusterId:   req.ClusterId,
-		BackupType:  req.BackupType,
+		ClusterId:    req.ClusterId,
+		BackupType:   req.BackupType,
 		BackupMethod: req.BackupMethod,
-		FilePath:    req.FilePath,
-		Operator:    operator.ConvertToDTO(),
+		FilePath:     req.FilePath,
+		Operator:     operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
@@ -244,9 +244,9 @@ func SaveBackupStrategy(c *gin.Context) {
 	resp, err := client.ClusterClient.SaveBackupStrategy(framework.NewMicroCtxFromGinCtx(c), &clusterpb.SaveBackupStrategyRequest{
 		Operator: operator.ConvertToDTO(),
 		Strategy: &clusterpb.BackupStrategy{
-			ClusterId:   clusterId,
-			BackupDate:  req.Strategy.BackupDate,
-			Period:      req.Strategy.Period,
+			ClusterId:  clusterId,
+			BackupDate: req.Strategy.BackupDate,
+			Period:     req.Strategy.Period,
 		},
 	}, controller.DefaultTimeout)
 	if err != nil {

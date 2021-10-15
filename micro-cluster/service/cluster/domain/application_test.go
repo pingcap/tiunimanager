@@ -9,51 +9,51 @@ import (
 	"time"
 )
 
-func defaultOperator() *Operator{
-	return  &Operator{
-		Id: "testoperator",
-		Name: "testoperator",
+func defaultOperator() *Operator {
+	return &Operator{
+		Id:       "testoperator",
+		Name:     "testoperator",
 		TenantId: "testtenant",
 	}
 }
 
-func defaultFlow() *FlowWorkEntity{
+func defaultFlow() *FlowWorkEntity {
 	return &FlowWorkEntity{
-		Id: 1,
-		FlowName: "testflow",
-		Status: TaskStatusInit,
+		Id:          1,
+		FlowName:    "testflow",
+		Status:      TaskStatusInit,
 		StatusAlias: "创建中",
-		BizId: "testbizid",
+		BizId:       "testbizid",
 	}
 }
 
 func defaultCluster() *ClusterAggregation {
 	br := &BackupRecord{
-		Id: 222,
-		ClusterId: "111",
-		BackupType: BackupTypeFull,
-		BackupMode: BackupModeAuto,
+		Id:           222,
+		ClusterId:    "111",
+		BackupType:   BackupTypeFull,
+		BackupMode:   BackupModeAuto,
 		BackupMethod: BackupMethodPhysics,
-		StartTime: time.Now().Unix(),
-		EndTime: time.Now().Unix(),
+		StartTime:    time.Now().Unix(),
+		EndTime:      time.Now().Unix(),
 	}
 	return &ClusterAggregation{
 		Cluster: &Cluster{
-			Id: "testCluster",
+			Id:          "testCluster",
 			ClusterName: "testCluster",
-			Status: ClusterStatusOnline,
+			Status:      ClusterStatusOnline,
 		},
 		LastBackupRecord: br,
 		LastRecoverRecord: &RecoverRecord{
-			Id: 333,
-			ClusterId: "111",
+			Id:           333,
+			ClusterId:    "111",
 			BackupRecord: *br,
 		},
 
 		CurrentWorkFlow: defaultFlow(),
 		CurrentOperator: defaultOperator(),
 		MaintainCronTask: &CronTaskEntity{
-			ID: 222,
+			ID:   222,
 			Cron: "testcron",
 		},
 	}
@@ -155,24 +155,24 @@ func Test_convertAllocationReq(t *testing.T) {
 func Test_convertConfig(t *testing.T) {
 	config := convertConfig(&clusterpb.AllocHostResponse{
 		PdHosts: []*clusterpb.AllocHost{
-			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/1/a"}},
-			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/1/b"}},
-			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/1/c"}},
+			{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/1/a"}},
+			{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/1/b"}},
+			{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/1/c"}},
 		},
 		TidbHosts: []*clusterpb.AllocHost{
-			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/2/a"}},
-			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/2/b"}},
-			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/2/c"}},
+			{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/2/a"}},
+			{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/2/b"}},
+			{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/2/c"}},
 		},
 		TikvHosts: []*clusterpb.AllocHost{
-			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/3/a"}},
-			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/3/b"}},
-			{Ip: "127.0.0.1",Disk: &clusterpb.Disk{Path: "/3/c"}},
+			{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/3/a"}},
+			{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/3/b"}},
+			{Ip: "127.0.0.1", Disk: &clusterpb.Disk{Path: "/3/c"}},
 		},
 	},
-	&Cluster{
-		Id: "111",
-	})
+		&Cluster{
+			Id: "111",
+		})
 	assert.Equal(t, 3, len(config.TiKVServers))
 	assert.Equal(t, "111/tidb-data", config.GlobalOptions.DataDir)
 	assert.Equal(t, "127.0.0.1", config.PDServers[2].Host)
@@ -183,7 +183,7 @@ func Test_parseDistributionItemFromDTO(t *testing.T) {
 	r := parseDistributionItemFromDTO(&clusterpb.DistributionItemDTO{
 		SpecCode: "5C9G",
 		ZoneCode: "zone1",
-		Count: 999,
+		Count:    999,
 	})
 	assert.Equal(t, 999, r.Count)
 	assert.Equal(t, "5C9G", r.SpecCode)
@@ -193,7 +193,7 @@ func Test_parseDistributionItemFromDTO(t *testing.T) {
 
 func Test_parseNodeDemandFromDTO(t *testing.T) {
 	r := parseNodeDemandFromDTO(&clusterpb.ClusterNodeDemandDTO{
-		ComponentType: "TiDB",
+		ComponentType:  "TiDB",
 		TotalNodeCount: 3,
 		Items: []*clusterpb.DistributionItemDTO{
 			{
@@ -215,8 +215,8 @@ func Test_parseNodeDemandFromDTO(t *testing.T) {
 
 func Test_parseOperatorFromDTO(t *testing.T) {
 	gotOperator := parseOperatorFromDTO(&clusterpb.OperatorDTO{
-		Id: "111",
-		Name: "ope",
+		Id:       "111",
+		Name:     "ope",
 		TenantId: "222",
 	})
 	assert.Equal(t, "111", gotOperator.Id)
@@ -228,7 +228,7 @@ func Test_parseOperatorFromDTO(t *testing.T) {
 func Test_parseRecoverInFoFromDTO(t *testing.T) {
 	gotInfo := parseRecoverInFoFromDTO(&clusterpb.RecoverInfoDTO{
 		SourceClusterId: "111",
-		BackupRecordId: 222,
+		BackupRecordId:  222,
 	})
 	assert.Equal(t, "111", gotInfo.SourceClusterId)
 	assert.Equal(t, int64(222), gotInfo.BackupRecordId)
@@ -237,36 +237,36 @@ func Test_parseRecoverInFoFromDTO(t *testing.T) {
 
 func TestCreateCluster(t *testing.T) {
 	got, err := CreateCluster(&clusterpb.OperatorDTO{
-		Id: "testoperator",
-		Name: "testoperator",
+		Id:       "testoperator",
+		Name:     "testoperator",
 		TenantId: "testoperator",
 	},
-	&clusterpb.ClusterBaseInfoDTO{
-		ClusterName: "testCluster",
-		ClusterType: &clusterpb.ClusterTypeDTO{
-			Code: "TiDB",
-			Name: "TiDB",
+		&clusterpb.ClusterBaseInfoDTO{
+			ClusterName: "testCluster",
+			ClusterType: &clusterpb.ClusterTypeDTO{
+				Code: "TiDB",
+				Name: "TiDB",
+			},
+			ClusterVersion: &clusterpb.ClusterVersionDTO{
+				Code: "v5.0.0",
+				Name: "v5.0.0",
+			},
 		},
-		ClusterVersion: &clusterpb.ClusterVersionDTO{
-			Code: "v5.0.0",
-			Name: "v5.0.0",
-		},
-	},
-	[]*clusterpb.ClusterNodeDemandDTO{
-		{ComponentType: "TiDB", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
-			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
-			{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
-			{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
-		}},
-		{ComponentType: "TiKV", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
-			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
-			{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
-			{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
-		}},
-		{ComponentType: "PD", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
-			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
-		}},
-	})
+		[]*clusterpb.ClusterNodeDemandDTO{
+			{ComponentType: "TiDB", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+			}},
+			{ComponentType: "TiKV", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
+				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+			}},
+			{ComponentType: "PD", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
+			}},
+		})
 
 	assert.NoError(t, err)
 	assert.Equal(t, "testCluster", got.Cluster.ClusterName)
@@ -274,8 +274,8 @@ func TestCreateCluster(t *testing.T) {
 
 func TestDeleteCluster(t *testing.T) {
 	got, err := DeleteCluster(&clusterpb.OperatorDTO{
-		Id: "testoperator",
-		Name: "testoperator",
+		Id:       "testoperator",
+		Name:     "testoperator",
 		TenantId: "testoperator",
 	}, "testCluster")
 
@@ -286,8 +286,8 @@ func TestDeleteCluster(t *testing.T) {
 
 func TestModifyParameters(t *testing.T) {
 	got, err := ModifyParameters(&clusterpb.OperatorDTO{
-		Id: "testoperator",
-		Name: "testoperator",
+		Id:       "testoperator",
+		Name:     "testoperator",
 		TenantId: "testoperator",
 	}, "testCluster", "content")
 	assert.NoError(t, err)

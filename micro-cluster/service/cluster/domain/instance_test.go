@@ -9,15 +9,15 @@ import (
 
 func TestClusterAggregation_ExtractInstancesDTO(t *testing.T) {
 	got := buildAggregation().ExtractInstancesDTO()
-	assert.Equal(t, "127.0.0.1",got.ExtranetConnectAddresses[0])
+	assert.Equal(t, "127.0.0.1", got.ExtranetConnectAddresses[0])
 }
 
 func buildAggregation() *ClusterAggregation {
 	aggregation := &ClusterAggregation{
 		Cluster: &Cluster{
-			Id: "111",
-			TenantId: "222",
-			ClusterType: *knowledge.ClusterTypeFromCode("TiDB"),
+			Id:             "111",
+			TenantId:       "222",
+			ClusterType:    *knowledge.ClusterTypeFromCode("TiDB"),
 			ClusterVersion: *knowledge.ClusterVersionFromCode("v5.0.0"),
 		},
 		AvailableResources: &clusterpb.AllocHostResponse{

@@ -27,7 +27,7 @@ type LoginResponse struct {
 type Dashboard struct {
 	ClusterId string `json:"clusterId"`
 	Url       string `json:"url"`
-	Token 	  string `json:"token"`
+	Token     string `json:"token"`
 }
 
 var loginUrlSuffix string = "api/user/login"
@@ -40,10 +40,10 @@ func DescribeDashboard(ctx context.Context, ope *clusterpb.OperatorDTO, clusterI
 	}
 
 	/*
-	url, err := getDashboardUrl(clusterAggregation)
-	if err != nil {
-		return nil, err
-	}*/
+		url, err := getDashboardUrl(clusterAggregation)
+		if err != nil {
+			return nil, err
+		}*/
 	url := getDashboardUrlFromCluser(clusterAggregation)
 
 	token, err := getLoginToken(ctx, url, "root", "") //todo: replace by real data

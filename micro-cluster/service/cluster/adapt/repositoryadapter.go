@@ -227,10 +227,10 @@ func (c InstanceRepoAdapter) QueryParameterJson(clusterId string) (content strin
 type TaskRepoAdapter struct{}
 
 func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, pageSize int) ([]*domain.FlowWorkEntity, int, error) {
-	resp, err :=client.DBClient.ListFlows(context.TODO(), &dbpb.DBListFlowsRequest{
+	resp, err := client.DBClient.ListFlows(context.TODO(), &dbpb.DBListFlowsRequest{
 		BizId:   bizId,
 		Keyword: keyword,
-		Status: int64(status),
+		Status:  int64(status),
 		Page: &dbpb.DBTaskPageDTO{
 			Page:     int32(page),
 			PageSize: int32(pageSize),
@@ -248,7 +248,7 @@ func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, 
 			FlowName:    v.FlowName,
 			StatusAlias: v.StatusAlias,
 			BizId:       v.BizId,
-			Status: domain.TaskStatus(v.Status),
+			Status:      domain.TaskStatus(v.Status),
 			Operator: &domain.Operator{
 				Name: v.Operator,
 			},
@@ -275,7 +275,7 @@ func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
 			FlowName:    flowWork.FlowName,
 			StatusAlias: flowWork.StatusAlias,
 			BizId:       flowWork.BizId,
-			Operator: flowWork.Operator.Name,
+			Operator:    flowWork.Operator.Name,
 		},
 	})
 

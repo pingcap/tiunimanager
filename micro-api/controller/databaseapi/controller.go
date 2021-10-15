@@ -35,19 +35,19 @@ func ExportData(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
 	respDTO, err := client.ClusterClient.ExportData(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataExportRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: req.ClusterId,
-		UserName:  req.UserName,
-		Password:  req.Password,
-		FileType:  req.FileType,
-		Filter:    req.Filter,
-		Sql:       req.Sql,
-		FilePath:  req.FilePath,
-		StorageType: req.StorageType,
-		BucketUrl: req.BucketUrl,
-		BucketRegion: req.BucketRegion,
-		EndpointUrl: req.EndpointUrl,
-		AccessKey: req.AccessKey,
+		Operator:        operator.ConvertToDTO(),
+		ClusterId:       req.ClusterId,
+		UserName:        req.UserName,
+		Password:        req.Password,
+		FileType:        req.FileType,
+		Filter:          req.Filter,
+		Sql:             req.Sql,
+		FilePath:        req.FilePath,
+		StorageType:     req.StorageType,
+		BucketUrl:       req.BucketUrl,
+		BucketRegion:    req.BucketRegion,
+		EndpointUrl:     req.EndpointUrl,
+		AccessKey:       req.AccessKey,
 		SecretAccessKey: req.SecretAccessKey,
 	}, controller.DefaultTimeout)
 
@@ -90,15 +90,15 @@ func ImportData(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
 	respDTO, err := client.ClusterClient.ImportData(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataImportRequest{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: req.ClusterId,
-		UserName:  req.UserName,
-		Password:  req.Password,
-		FilePath:  req.FilePath,
-		StorageType: req.StorageType,
-		BucketUrl: req.BucketUrl,
-		EndpointUrl: req.EndpointUrl,
-		AccessKey: req.AccessKey,
+		Operator:        operator.ConvertToDTO(),
+		ClusterId:       req.ClusterId,
+		UserName:        req.UserName,
+		Password:        req.Password,
+		FilePath:        req.FilePath,
+		StorageType:     req.StorageType,
+		BucketUrl:       req.BucketUrl,
+		EndpointUrl:     req.EndpointUrl,
+		AccessKey:       req.AccessKey,
 		SecretAccessKey: req.SecretAccessKey,
 	}, controller.DefaultTimeout)
 

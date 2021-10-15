@@ -20,6 +20,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"github.com/pingcap-inc/tiem/micro-api/route"
 )
 
@@ -72,8 +73,15 @@ func initGinEngine(d *framework.BaseFramework) error {
 	// openapi-server service registry
 	serviceRegistry(d)
 
-	if err := g.Run(addr); err != nil {
-		d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
+	if d.GetClientArgs().EnableHttps {
+		g.Use(interceptor.TlsHandler(addr))
+		if err := g.RunTLS(addr, d.GetCertificateInfo().CertificateCrtFilePath, d.GetCertificateInfo().CertificateKeyFilePath); err != nil {
+			d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
+		}
+	} else {
+		if err := g.Run(addr); err != nil {
+			d.GetRootLogger().ForkFile(common.LogFileSystem).Fatal(err)
+		}
 	}
 
 	return nil

@@ -417,7 +417,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 		logInFunc.Info("cmd started")
 		//fmt.Println("cmd started")
 		successFp := func() {
-			logInFunc.Info("task finished, time cost", time.Now().Sub(t0))
+			logInFunc.Info("task finished, time cost", time.Since(t0))
 			//fmt.Println("task finished, time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
@@ -439,7 +439,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 					}
 				}
 			}
-			logInFunc.Error("task err:", err, "time cost", time.Now().Sub(t0))
+			logInFunc.Error("task err:", err, "time cost", time.Since(t0))
 			//fmt.Println("task err:", err, "time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,

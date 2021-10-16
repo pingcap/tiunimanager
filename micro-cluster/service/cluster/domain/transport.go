@@ -37,15 +37,15 @@ type ImportInfo struct {
 }
 
 type ExportInfo struct {
-	ClusterId   string
-	UserName    string
-	Password    string
-	FileType    string
-	RecordId    string
-	FilePath    string
-	Filter      string
-	Sql 		string
-	StorageType string
+	ClusterId    string
+	UserName     string
+	Password     string
+	FileType     string
+	RecordId     string
+	FilePath     string
+	Filter       string
+	Sql          string
+	StorageType  string
 	BucketRegion string
 }
 
@@ -231,15 +231,15 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (stri
 	}
 
 	info := &ExportInfo{
-		ClusterId:   request.GetClusterId(),
-		UserName:    request.GetUserName(),
-		Password:    request.GetPassword(), //todo: need encrypt
-		FileType:    request.GetFileType(),
-		RecordId:    resp.GetId(),
-		FilePath:    getDataExportFilePath(request),
-		Filter:      request.GetFilter(),
-		Sql:  		 request.GetSql(),
-		StorageType: request.GetStorageType(),
+		ClusterId:    request.GetClusterId(),
+		UserName:     request.GetUserName(),
+		Password:     request.GetPassword(), //todo: need encrypt
+		FileType:     request.GetFileType(),
+		RecordId:     resp.GetId(),
+		FilePath:     getDataExportFilePath(request),
+		Filter:       request.GetFilter(),
+		Sql:          request.GetSql(),
+		StorageType:  request.GetStorageType(),
 		BucketRegion: request.GetBucketRegion(),
 	}
 
@@ -386,7 +386,6 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	}
 	return config
 }
-
 
 func getDataImportConfigDir(clusterId string, transportType TransportType) string {
 	return fmt.Sprintf("%s/%s/%s", defaultTransportDirPrefix, clusterId, transportType)

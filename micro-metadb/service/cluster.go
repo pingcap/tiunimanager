@@ -158,10 +158,10 @@ func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbpb.DBLo
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.ClusterDetail = &dbpb.DBClusterDetailDTO{
-			Cluster:          convertToClusterDTO(result.Cluster, result.DemandRecord),
+			Cluster:              convertToClusterDTO(result.Cluster, result.DemandRecord),
 			TopologyConfigRecord: convertToConfigDTO(result.TopologyConfig),
-			Flow:             convertFlowToDTO(result.Flow),
-			ComponentInstances: convertToComponentInstanceDTO(result.ComponentInstances),
+			Flow:                 convertFlowToDTO(result.Flow),
+			ComponentInstances:   convertToComponentInstanceDTO(result.ComponentInstances),
 		}
 		log.Infof("LoadCluster successful, clusterId: %s, error: %v", req.GetClusterId(), err)
 	} else {
@@ -189,9 +189,9 @@ func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbpb.DBLi
 		clusterDetails := make([]*dbpb.DBClusterDetailDTO, len(clusters), len(clusters))
 		for i, v := range clusters {
 			clusterDetails[i] = &dbpb.DBClusterDetailDTO{
-				Cluster:          convertToClusterDTO(v.Cluster, v.DemandRecord),
+				Cluster:              convertToClusterDTO(v.Cluster, v.DemandRecord),
 				TopologyConfigRecord: convertToConfigDTO(v.TopologyConfig),
-				Flow:             convertFlowToDTO(v.Flow),
+				Flow:                 convertFlowToDTO(v.Flow),
 			}
 		}
 		resp.Clusters = clusterDetails
@@ -425,17 +425,17 @@ func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbpb.DBBackupRecord
 		return nil
 	}
 	dto = &dbpb.DBBackupRecordDTO{
-		Id:          int64(do.ID),
-		TenantId:    do.TenantId,
-		ClusterId:   do.ClusterId,
-		StartTime:   do.StartTime.Unix(),
+		Id:           int64(do.ID),
+		TenantId:     do.TenantId,
+		ClusterId:    do.ClusterId,
+		StartTime:    do.StartTime.Unix(),
 		BackupMethod: do.BackupMethod,
-		BackupMode:  do.BackupMode,
-		BackupType:  do.BackupType,
-		StorageType: do.StorageType,
-		OperatorId:  do.OperatorId,
-		FilePath:    do.FilePath,
-		FlowId:      int64(do.FlowId),
+		BackupMode:   do.BackupMode,
+		BackupType:   do.BackupType,
+		StorageType:  do.StorageType,
+		OperatorId:   do.OperatorId,
+		FilePath:     do.FilePath,
+		FlowId:       int64(do.FlowId),
 	}
 	return
 }
@@ -448,21 +448,21 @@ func convertToComponentInstance(dtos []*dbpb.DBComponentInstanceDTO) []*models.C
 	result := make([]*models.ComponentInstance, len(dtos), len(dtos))
 
 	for i, v := range dtos {
-		result[i] = &models.ComponentInstance {
+		result[i] = &models.ComponentInstance{
 			Entity: models.Entity{
 				ID:       v.Id,
 				Code:     v.Code,
 				TenantId: v.TenantId,
-				Status: int8(v.Status),
+				Status:   int8(v.Status),
 			},
-			ClusterId: v.ClusterId,
-			ComponentType: v.ComponentType,
-			Role: v.Role,
-			Spec: v.Spec,
-			Version: v.Version,
-			HostId: v.HostId,
-			DiskId: v.DiskId,
-			PortInfo: v.PortInfo,
+			ClusterId:      v.ClusterId,
+			ComponentType:  v.ComponentType,
+			Role:           v.Role,
+			Spec:           v.Spec,
+			Version:        v.Version,
+			HostId:         v.HostId,
+			DiskId:         v.DiskId,
+			PortInfo:       v.PortInfo,
 			AllocRequestId: v.AllocRequestId,
 		}
 	}
@@ -481,20 +481,20 @@ func convertToComponentInstanceDTO(models []*models.ComponentInstance) []*dbpb.D
 			Id:       v.ID,
 			Code:     v.Code,
 			TenantId: v.TenantId,
-			Status: int32(v.Status),
+			Status:   int32(v.Status),
 
-			ClusterId: v.ClusterId,
-			ComponentType: v.ComponentType,
-			Role: v.Role,
-			Spec: v.Spec,
-			Version: v.Version,
-			HostId: v.HostId,
-			DiskId: v.DiskId,
-			PortInfo: v.PortInfo,
+			ClusterId:      v.ClusterId,
+			ComponentType:  v.ComponentType,
+			Role:           v.Role,
+			Spec:           v.Spec,
+			Version:        v.Version,
+			HostId:         v.HostId,
+			DiskId:         v.DiskId,
+			PortInfo:       v.PortInfo,
 			AllocRequestId: v.AllocRequestId,
-			CreateTime: v.CreatedAt.Unix(),
-			UpdateTime: v.UpdatedAt.Unix(),
-			DeleteTime: deletedAtUnix(v.DeletedAt),
+			CreateTime:     v.CreatedAt.Unix(),
+			UpdateTime:     v.UpdatedAt.Unix(),
+			DeleteTime:     deletedAtUnix(v.DeletedAt),
 		}
 	}
 
@@ -534,15 +534,15 @@ func convertToBackupStrategyDTO(do *models.BackupStrategy) (dto *dbpb.DBBackupSt
 		return nil
 	}
 	dto = &dbpb.DBBackupStrategyDTO{
-		Id:          int64(do.ID),
-		OperatorId:  do.OperatorId,
-		TenantId:    do.TenantId,
-		ClusterId:   do.ClusterId,
-		CreateTime:  do.CreatedAt.Unix(),
-		UpdateTime:  do.UpdatedAt.Unix(),
-		BackupDate:  do.BackupDate,
-		StartHour:   do.StartHour,
-		EndHour:     do.EndHour,
+		Id:         int64(do.ID),
+		OperatorId: do.OperatorId,
+		TenantId:   do.TenantId,
+		ClusterId:  do.ClusterId,
+		CreateTime: do.CreatedAt.Unix(),
+		UpdateTime: do.UpdatedAt.Unix(),
+		BackupDate: do.BackupDate,
+		StartHour:  do.StartHour,
+		EndHour:    do.EndHour,
 	}
 	return
 }

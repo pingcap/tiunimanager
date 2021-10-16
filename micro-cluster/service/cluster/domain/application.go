@@ -263,7 +263,7 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 		}
 	}
 	getLogger().Infof("start cluster %s", cluster.ClusterName)
-	startTaskId, err := libtiup.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
+	startTaskId, err := libtiup.MicroSrvTiupStart(cluster.ClusterName, 0, []string{}, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call tiup api start cluster err = %s", err.Error())
 		task.Fail(err)
@@ -379,15 +379,15 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *clusterpb.Backu
 	currentFlow := aggregation.CurrentWorkFlow
 
 	return &clusterpb.BackupRecordDTO{
-		Id:         record.Id,
-		ClusterId:  record.ClusterId,
+		Id:           record.Id,
+		ClusterId:    record.ClusterId,
 		BackupMethod: string(record.BackupMethod),
-		BackupType: string(record.BackupType),
-		BackupMode:	string(record.BackupMode),
-		Size:      record.Size,
-		StartTime: record.StartTime,
-		EndTime:   record.EndTime,
-		FilePath: record.FilePath,
+		BackupType:   string(record.BackupType),
+		BackupMode:   string(record.BackupMode),
+		Size:         record.Size,
+		StartTime:    record.StartTime,
+		EndTime:      record.EndTime,
+		FilePath:     record.FilePath,
 		DisplayStatus: &clusterpb.DisplayStatusDTO{
 			InProcessFlowId: int32(currentFlow.Id),
 			StatusCode:      strconv.Itoa(int(currentFlow.Status)),
@@ -540,7 +540,7 @@ func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spe
 		tiupConfig.TiDBServers = append(tiupConfig.TiDBServers, &spec.TiDBSpec{
 			Host:      v.Ip,
 			DeployDir: filepath.Join(v.Disk.Path, cluster.Id, "tidb-deploy"),
-			Port: tidbPort(),
+			Port:      tidbPort(),
 		})
 	}
 	for _, v := range tikvHosts {

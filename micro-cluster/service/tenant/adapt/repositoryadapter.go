@@ -9,9 +9,9 @@ import (
 	"time"
 )
 
-type MicroMetaDbRepo struct {}
+type MicroMetaDbRepo struct{}
 
-func InjectionMetaDbRepo () {
+func InjectionMetaDbRepo() {
 	tenant.RbacRepo = &MicroMetaDbRepo{}
 	tenant.TenantRepo = &MicroMetaDbRepo{}
 	tenant.TokenMNG = &MicroMetaDbRepo{}
@@ -20,7 +20,7 @@ func InjectionMetaDbRepo () {
 func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId string, code string) (p tenant.PermissionAggregation, err error) {
 	req := dbpb.DBFindRolesByPermissionRequest{
 		TenantId: tenantId,
-		Code: code,
+		Code:     code,
 	}
 
 	resp, err := client.DBClient.FindRolesByPermission(context.TODO(), &req)
@@ -63,7 +63,7 @@ func (m MicroMetaDbRepo) LoadPermission(tenantId string, code string) (tenant.Pe
 
 func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account tenant.AccountAggregation, err error) {
 	req := dbpb.DBFindAccountRequest{
-		Name: name,
+		Name:     name,
 		WithRole: true,
 	}
 
@@ -103,11 +103,11 @@ func (m MicroMetaDbRepo) Provide(tiEMToken *tenant.TiEMToken) (tokenString strin
 
 	req := dbpb.DBSaveTokenRequest{
 		Token: &dbpb.DBTokenDTO{
-			TenantId: tiEMToken.TenantId,
-			AccountId: tiEMToken.AccountId,
-			AccountName: tiEMToken.AccountName,
+			TenantId:       tiEMToken.TenantId,
+			AccountId:      tiEMToken.AccountId,
+			AccountName:    tiEMToken.AccountName,
 			ExpirationTime: tiEMToken.ExpirationTime.Unix(),
-			TokenString: tokenString,
+			TokenString:    tokenString,
 		},
 	}
 
@@ -119,11 +119,11 @@ func (m MicroMetaDbRepo) Provide(tiEMToken *tenant.TiEMToken) (tokenString strin
 func (m MicroMetaDbRepo) Modify(tiEMToken *tenant.TiEMToken) error {
 	req := dbpb.DBSaveTokenRequest{
 		Token: &dbpb.DBTokenDTO{
-			TenantId: tiEMToken.TenantId,
-			AccountId: tiEMToken.AccountId,
-			AccountName: tiEMToken.AccountName,
+			TenantId:       tiEMToken.TenantId,
+			AccountId:      tiEMToken.AccountId,
+			AccountName:    tiEMToken.AccountName,
 			ExpirationTime: tiEMToken.ExpirationTime.Unix(),
-			TokenString: tiEMToken.TokenString,
+			TokenString:    tiEMToken.TokenString,
 		},
 	}
 
@@ -145,7 +145,7 @@ func (m MicroMetaDbRepo) GetToken(tokenString string) (token tenant.TiEMToken, e
 	dto := resp.Token
 
 	token.TokenString = dto.TokenString
-	token.AccountId =  dto.AccountId
+	token.AccountId = dto.AccountId
 	token.AccountName = dto.AccountName
 	token.TenantId = dto.TenantId
 	token.ExpirationTime = time.Unix(dto.ExpirationTime, 0)
@@ -171,7 +171,7 @@ func (m MicroMetaDbRepo) AddAccount(a *tenant.Account) error {
 
 func (m MicroMetaDbRepo) LoadAccountByName(name string) (account tenant.Account, err error) {
 	req := dbpb.DBFindAccountRequest{
-		Name: name,
+		Name:     name,
 		WithRole: false,
 	}
 
@@ -221,5 +221,3 @@ func (m MicroMetaDbRepo) AddPermissionBindings(bindings []tenant.PermissionBindi
 func (m MicroMetaDbRepo) AddRoleBindings(bindings []tenant.RoleBinding) error {
 	panic("implement me")
 }
-
-

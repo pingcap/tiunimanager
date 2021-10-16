@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 )
 
 type BackupRecordQueryReq struct {
@@ -36,4 +37,9 @@ type BackupReq struct {
 }
 type BackupRecoverReq struct {
 	ClusterId string `json:"clusterId"`
+}
+
+type RestoreReq struct {
+	management.ClusterBaseInfo
+	NodeDemandList []management.ClusterNodeDemand `json:"nodeDemandList"`
 }

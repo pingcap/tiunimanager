@@ -1,17 +1,10 @@
-package instanceapi
+package backuprestore
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"time"
+
+	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
-
-type ParamQueryReq struct {
-	controller.PageRequest
-}
-
-type ParamUpdateReq struct {
-	Values []ParamInstance `json:"values"`
-}
 
 type BackupRecordQueryReq struct {
 	controller.PageRequest
@@ -36,10 +29,10 @@ type BackupStrategyUpdateReq struct {
 }
 
 type BackupReq struct {
-	ClusterId   	string `json:"clusterId"`
-	BackupType  	string `json:"backupType"`
-	BackupMethod 	string `json:"backupMethod"`
-	FilePath    	string `json:"filePath"`
+	ClusterId    string `json:"clusterId"`
+	BackupType   string `json:"backupType"`
+	BackupMethod string `json:"backupMethod"`
+	FilePath     string `json:"filePath"`
 }
 type BackupRecoverReq struct {
 	ClusterId string `json:"clusterId"`

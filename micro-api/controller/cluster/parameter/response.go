@@ -1,4 +1,4 @@
-package instanceapi
+package parameter
 
 type ParamUpdateRsp struct {
 	Status    string `json:"status"`

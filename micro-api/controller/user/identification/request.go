@@ -1,4 +1,4 @@
-package userapi
+package identification
 
 type LoginInfo struct {
 	UserName     string `json:"userName"`

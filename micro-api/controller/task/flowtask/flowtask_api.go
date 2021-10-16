@@ -1,14 +1,15 @@
-package taskapi
+package flowtask
 
 import (
 	"context"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 // Query query flow works
@@ -34,8 +35,8 @@ func Query(c *gin.Context) {
 	reqDTO := &clusterpb.ListFlowsRequest{
 		BizId:   queryReq.ClusterId,
 		Keyword: queryReq.Keyword,
-		Status: int64(queryReq.Status),
-		Page: queryReq.PageRequest.ConvertToDTO(),
+		Status:  int64(queryReq.Status),
+		Page:    queryReq.PageRequest.ConvertToDTO(),
 	}
 
 	respDTO, err := client.ClusterClient.ListFlows(context.TODO(), reqDTO, controller.DefaultTimeout)
@@ -49,13 +50,13 @@ func Query(c *gin.Context) {
 
 		for i, v := range respDTO.Flows {
 			flows[i] = FlowWorkDisplayInfo{
-				Id: uint(v.Id),
+				Id:           uint(v.Id),
 				FlowWorkName: v.FlowName,
 				ClusterId:    v.BizId,
 				StatusInfo: controller.StatusInfo{
-					CreateTime:	time.Unix(v.CreateTime, 0),
-					UpdateTime:	time.Unix(v.UpdateTime, 0),
-					DeleteTime:	time.Unix(v.DeleteTime, 0),
+					CreateTime: time.Unix(v.CreateTime, 0),
+					UpdateTime: time.Unix(v.UpdateTime, 0),
+					DeleteTime: time.Unix(v.DeleteTime, 0),
 					StatusCode: strconv.Itoa(int(v.Status)),
 					StatusName: v.StatusName,
 				},

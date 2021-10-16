@@ -1,8 +1,9 @@
-package userapi
+package identification
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"net/http"
+
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 

@@ -1,4 +1,4 @@
-package userapi
+package identification
 
 type UserIdentity struct {
 	UserName string `json:"userName"`

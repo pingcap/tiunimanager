@@ -2,7 +2,7 @@ package management
 
 import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
+	"github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 )
 
 type ClusterBaseInfo struct {
@@ -69,11 +69,11 @@ type ComponentNodeDisplayInfo struct {
 }
 
 type ComponentNodeInstanceInfo struct {
-	HostId string               `json:"hostId"`
-	Port   int                  `json:"port"`
-	Role   ComponentNodeRole    `json:"role"`
-	Spec   hostapi.SpecBaseInfo `json:"spec"`
-	Zone   hostapi.ZoneBaseInfo `json:"zone"`
+	HostId string                 `json:"hostId"`
+	Port   int                    `json:"port"`
+	Role   ComponentNodeRole      `json:"role"`
+	Spec   warehouse.SpecBaseInfo `json:"spec"`
+	Zone   warehouse.ZoneBaseInfo `json:"zone"`
 }
 
 type ComponentNodeUsageInfo struct {

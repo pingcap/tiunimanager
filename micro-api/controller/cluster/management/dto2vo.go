@@ -5,7 +5,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
+	"github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 )
 
 func ParseClusterBaseInfoFromDTO(dto *clusterpb.ClusterBaseInfoDTO) (baseInfo *ClusterBaseInfo) {
@@ -97,8 +97,8 @@ func ParseComponentNodeInstanceFromDTO(dto *clusterpb.ComponentNodeInstanceDTO) 
 		HostId: dto.HostId,
 		Port:   int(dto.Port),
 		Role:   ComponentNodeRole{dto.Role.RoleCode, dto.Role.RoleName},
-		Spec:   hostapi.SpecBaseInfo{SpecCode: dto.Spec.SpecCode, SpecName: dto.Spec.SpecName},
-		Zone:   hostapi.ZoneBaseInfo{ZoneCode: dto.Zone.ZoneCode, ZoneName: dto.Zone.ZoneName},
+		Spec:   warehouse.SpecBaseInfo{SpecCode: dto.Spec.SpecCode, SpecName: dto.Spec.SpecName},
+		Zone:   warehouse.ZoneBaseInfo{ZoneCode: dto.Zone.ZoneCode, ZoneName: dto.Zone.ZoneName},
 	}
 
 	return

@@ -1,4 +1,4 @@
-package hostapi
+package management
 
 type DemoHostInfo struct {
 	HostId   string `json:"hostId"`
@@ -21,9 +21,6 @@ type HostDetailsRsp struct {
 	Host HostInfo `json:"host"`
 }
 
-type ZoneHostStockRsp struct {
-	AvailableStocks map[string][]ZoneHostStock
-}
 type AllocateRsp struct {
 	HostName string   `json:"hostName"`
 	Ip       string   `json:"ip"`
@@ -38,17 +35,4 @@ type AllocHostsRsp struct {
 	PdHosts   []AllocateRsp `json:"pdHosts"`
 	TidbHosts []AllocateRsp `json:"tidbHosts"`
 	TikvHosts []AllocateRsp `json:"tikvHosts"`
-}
-
-type DomainResource struct {
-	ZoneName string `json:"zoneName"`
-	ZoneCode string `json:"zoneCode"`
-	Purpose  string `json:"purpose"`
-	SpecName string `json:"specName"`
-	SpecCode string `json:"specCode"`
-	Count    int32  `json:"count"`
-}
-
-type DomainResourceRsp struct {
-	Resources []DomainResource `json:"resources"`
 }

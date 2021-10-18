@@ -81,7 +81,7 @@ func (auto *autoBackupHandler) doBackup(straegy *dbpb.DBBackupStrategyDTO) {
 	ope := &clusterpb.OperatorDTO{
 		Id:       resp.GetAccount().GetId(),
 		TenantId: resp.GetAccount().GetTenantId(),
-		Name: resp.GetAccount().GetName(),
+		Name:     resp.GetAccount().GetName(),
 	}
 	_, err = Backup(framework.NewMicroCtxFromGinCtx(&gin.Context{}), ope, straegy.GetClusterId(), "", "", BackupModeAuto, "")
 	if err != nil {

@@ -111,7 +111,7 @@ func (handler *DBServiceHandler) LoadTask(ctx context.Context, req *dbpb.DBLoadT
 
 func (handler *DBServiceHandler) ListFlows(ctx context.Context, req *dbpb.DBListFlowsRequest, rsp *dbpb.DBListFlowsResponse) error {
 	db := handler.Dao().Db()
-	flows, total, err := models.ListFlows(db, req.BizId, req.Keyword, int(req.Status), int(req.Page.Page - 1) * int(req.Page.PageSize), int(req.Page.PageSize))
+	flows, total, err := models.ListFlows(db, req.BizId, req.Keyword, int(req.Status), int(req.Page.Page-1)*int(req.Page.PageSize), int(req.Page.PageSize))
 	if nil == err {
 		rsp.Status = TaskSuccessResponseStatus
 		rsp.Page = &dbpb.DBTaskPageDTO{

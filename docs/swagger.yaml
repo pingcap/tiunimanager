@@ -1,158 +1,66 @@
 basePath: /api/v1/
 definitions:
-  clusterapi.ClusterDisplayInfo:
+  backuprestore.BackupDeleteReq:
     properties:
-      backupFileUsage:
-        $ref: '#/definitions/controller.Usage'
       clusterId:
         type: string
-      clusterName:
-        type: string
-      clusterType:
-        type: string
-      clusterVersion:
-        type: string
-      cpuUsage:
-        $ref: '#/definitions/controller.Usage'
-      createTime:
-        type: string
-      dbPassword:
-        type: string
-      deleteTime:
-        type: string
-      diskUsage:
-        $ref: '#/definitions/controller.Usage'
-      extranetConnectAddresses:
-        items:
-          type: string
-        type: array
-      inProcessFlowId:
-        type: integer
-      intranetConnectAddresses:
-        items:
-          type: string
-        type: array
-      memoryUsage:
-        $ref: '#/definitions/controller.Usage'
-      portList:
-        items:
-          type: integer
-        type: array
-      recoverInfo:
-        $ref: '#/definitions/clusterapi.RecoverInfo'
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      storageUsage:
-        $ref: '#/definitions/controller.Usage'
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
-      updateTime:
-        type: string
-      whitelist:
-        items:
-          type: string
-        type: array
     type: object
-  clusterapi.ClusterNodeDemand:
+  backuprestore.BackupRecord:
     properties:
-      componentType:
+      backupMethod:
+        description: 物理/逻辑
         type: string
-      distributionItems:
-        items:
-          $ref: '#/definitions/clusterapi.DistributionItem'
-        type: array
-      totalNodeCount:
+      backupMode:
+        description: 手动/自动
+        type: string
+      backupType:
+        description: 全量/增量
+        type: string
+      clusterId:
+        type: string
+      endTime:
+        type: string
+      filePath:
+        type: string
+      id:
         type: integer
-    type: object
-  clusterapi.ComponentInstance:
-    properties:
-      componentName:
-        type: string
-      componentType:
-        type: string
-      nodes:
-        items:
-          $ref: '#/definitions/clusterapi.ComponentNodeDisplayInfo'
-        type: array
-    type: object
-  clusterapi.ComponentNodeDisplayInfo:
-    properties:
-      cpuUsage:
-        $ref: '#/definitions/controller.Usage'
-      hostId:
-        type: string
-      ioUtil:
-        type: number
-      iops:
-        items:
-          type: number
-        type: array
-      memoryUsage:
-        $ref: '#/definitions/controller.Usage'
-      nodeId:
-        type: string
-      port:
+      operator:
+        $ref: '#/definitions/controller.Operator'
+      size:
         type: integer
-      role:
-        $ref: '#/definitions/clusterapi.ComponentNodeRole'
-      spec:
-        $ref: '#/definitions/hostapi.SpecBaseInfo'
+      startTime:
+        type: string
       status:
-        type: string
-      storageUsage:
-        $ref: '#/definitions/controller.Usage'
-      version:
-        type: string
-      zone:
-        $ref: '#/definitions/hostapi.ZoneBaseInfo'
+        $ref: '#/definitions/controller.StatusInfo'
     type: object
-  clusterapi.ComponentNodeRole:
+  backuprestore.BackupReq:
     properties:
-      roleCode:
+      backupMethod:
         type: string
-      roleName:
+      backupType:
         type: string
-    type: object
-  clusterapi.CreateClusterRsp:
-    properties:
       clusterId:
         type: string
-      clusterName:
-        type: string
-      clusterType:
-        type: string
-      clusterVersion:
-        type: string
-      createTime:
-        type: string
-      dbPassword:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      recoverInfo:
-        $ref: '#/definitions/clusterapi.RecoverInfo'
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
-      updateTime:
+      filePath:
         type: string
     type: object
-  clusterapi.CreateReq:
+  backuprestore.BackupStrategy:
+    properties:
+      backupDate:
+        type: string
+      clusterId:
+        type: string
+      nextBackupTime:
+        type: string
+      period:
+        type: string
+    type: object
+  backuprestore.BackupStrategyUpdateReq:
+    properties:
+      strategy:
+        $ref: '#/definitions/backuprestore.BackupStrategy'
+    type: object
+  backuprestore.RestoreReq:
     properties:
       clusterName:
         type: string
@@ -164,140 +72,10 @@ definitions:
         type: string
       nodeDemandList:
         items:
-          $ref: '#/definitions/clusterapi.ClusterNodeDemand'
+          $ref: '#/definitions/management.ClusterNodeDemand'
         type: array
       recoverInfo:
-        $ref: '#/definitions/clusterapi.RecoverInfo'
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
-    type: object
-  clusterapi.DeleteClusterRsp:
-    properties:
-      clusterId:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  clusterapi.DescribeDashboardRsp:
-    properties:
-      clusterId:
-        type: string
-      token:
-        type: string
-      url:
-        type: string
-    type: object
-  clusterapi.DetailClusterRsp:
-    properties:
-      backupFileUsage:
-        $ref: '#/definitions/controller.Usage'
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      clusterType:
-        type: string
-      clusterVersion:
-        type: string
-      components:
-        items:
-          $ref: '#/definitions/clusterapi.ComponentInstance'
-        type: array
-      cpuUsage:
-        $ref: '#/definitions/controller.Usage'
-      createTime:
-        type: string
-      dbPassword:
-        type: string
-      deleteTime:
-        type: string
-      diskUsage:
-        $ref: '#/definitions/controller.Usage'
-      extranetConnectAddresses:
-        items:
-          type: string
-        type: array
-      inProcessFlowId:
-        type: integer
-      intranetConnectAddresses:
-        items:
-          type: string
-        type: array
-      maintainTaskCron:
-        type: string
-      memoryUsage:
-        $ref: '#/definitions/controller.Usage'
-      portList:
-        items:
-          type: integer
-        type: array
-      recoverInfo:
-        $ref: '#/definitions/clusterapi.RecoverInfo'
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      storageUsage:
-        $ref: '#/definitions/controller.Usage'
-      tags:
-        items:
-          type: string
-        type: array
-      tls:
-        type: boolean
-      updateTime:
-        type: string
-      whitelist:
-        items:
-          type: string
-        type: array
-    type: object
-  clusterapi.DistributionItem:
-    properties:
-      count:
-        type: integer
-      specCode:
-        type: string
-      zoneCode:
-        type: string
-    type: object
-  clusterapi.RecoverInfo:
-    properties:
-      backupRecordId:
-        type: integer
-      sourceClusterId:
-        type: string
-    type: object
-  clusterapi.RestoreReq:
-    properties:
-      clusterName:
-        type: string
-      clusterType:
-        type: string
-      clusterVersion:
-        type: string
-      dbPassword:
-        type: string
-      nodeDemandList:
-        items:
-          $ref: '#/definitions/clusterapi.ClusterNodeDemand'
-        type: array
-      recoverInfo:
-        $ref: '#/definitions/clusterapi.RecoverInfo'
+        $ref: '#/definitions/management.RecoverInfo'
       tags:
         items:
           type: string
@@ -369,7 +147,7 @@ definitions:
       used:
         type: number
     type: object
-  databaseapi.DataExportReq:
+  datatransport.DataExportReq:
     properties:
       accessKey:
         type: string
@@ -398,30 +176,38 @@ definitions:
       userName:
         type: string
     type: object
-  databaseapi.DataExportResp:
+  datatransport.DataExportResp:
     properties:
       recordId:
         type: string
     type: object
-  databaseapi.DataImportReq:
+  datatransport.DataImportReq:
     properties:
+      accessKey:
+        type: string
+      bucketUrl:
+        type: string
       clusterId:
+        type: string
+      endpointUrl:
         type: string
       filePath:
         type: string
       password:
+        type: string
+      secretAccessKey:
         type: string
       storageType:
         type: string
       userName:
         type: string
     type: object
-  databaseapi.DataImportResp:
+  datatransport.DataImportResp:
     properties:
       recordId:
         type: string
     type: object
-  databaseapi.DataTransportInfo:
+  datatransport.DataTransportInfo:
     properties:
       clusterId:
         type: string
@@ -438,278 +224,101 @@ definitions:
       transportType:
         type: string
     type: object
-  databaseapi.DataTransportRecordQueryResp:
+  datatransport.DataTransportRecordQueryResp:
     properties:
       transportRecords:
         items:
-          $ref: '#/definitions/databaseapi.DataTransportInfo'
+          $ref: '#/definitions/datatransport.DataTransportInfo'
         type: array
     type: object
-  hostapi.AllocHostsReq:
+  flowtask.FlowWorkDetailInfo:
     properties:
-      pdReq:
-        items:
-          $ref: '#/definitions/hostapi.Allocation'
-        type: array
-      tidbReq:
-        items:
-          $ref: '#/definitions/hostapi.Allocation'
-        type: array
-      tikvReq:
-        items:
-          $ref: '#/definitions/hostapi.Allocation'
-        type: array
-    type: object
-  hostapi.AllocHostsRsp:
-    properties:
-      pdHosts:
-        items:
-          $ref: '#/definitions/hostapi.AllocateRsp'
-        type: array
-      tidbHosts:
-        items:
-          $ref: '#/definitions/hostapi.AllocateRsp'
-        type: array
-      tikvHosts:
-        items:
-          $ref: '#/definitions/hostapi.AllocateRsp'
-        type: array
-    type: object
-  hostapi.AllocateRsp:
-    properties:
-      cpuCore:
-        type: integer
-      disk:
-        $ref: '#/definitions/hostapi.DiskInfo'
-      hostName:
+      clusterId:
         type: string
-      ip:
+      clusterName:
         type: string
-      memory:
-        type: integer
-      passwd:
-        type: string
-      userName:
-        type: string
-    type: object
-  hostapi.Allocation:
-    properties:
-      count:
-        type: integer
-      cpuCores:
-        type: integer
-      failureDomain:
-        type: string
-      memory:
-        type: integer
-    type: object
-  hostapi.DiskInfo:
-    properties:
-      capacity:
-        description: 'Disk size, Unit: GB'
-        type: integer
-      diskId:
-        type: string
-      hostId:
-        type: string
-      name:
-        description: '[sda/sdb/nvmep0...]'
-        type: string
-      path:
-        description: 'Disk mount path: [/data1]'
-        type: string
-      status:
-        description: Disk Status, 0 for available, 1 for inused
-        type: integer
-      type:
-        description: 'Disk type: [nvme-ssd/ssd/sata]'
-        type: string
-      usedBy:
-        type: string
-    type: object
-  hostapi.DomainResource:
-    properties:
-      count:
-        type: integer
-      purpose:
-        type: string
-      specCode:
-        type: string
-      specName:
-        type: string
-      zoneCode:
-        type: string
-      zoneName:
-        type: string
-    type: object
-  hostapi.HostInfo:
-    properties:
-      arch:
-        description: x86 or arm64
-        type: string
-      az:
-        type: string
-      cpuCores:
-        description: Host cpu cores spec, init while importing
-        type: integer
       createTime:
-        type: integer
-      diskType:
-        description: Disk type of this host [sata/ssd/nvme_ssd]
         type: string
-      disks:
-        items:
-          $ref: '#/definitions/hostapi.DiskInfo'
-        type: array
-      freeCpuCores:
-        description: Unused CpuCore, used for allocation
-        type: integer
-      freeMemory:
-        description: Unused memory size, Unit:GB, used for allocation
-        type: integer
-      hostId:
+      deleteTime:
         type: string
-      hostName:
-        type: string
-      ip:
-        type: string
-      kernel:
-        type: string
-      memory:
-        description: Host memroy, init while importing
-        type: integer
-      nic:
-        description: 'Host network type: 1GE or 10GE'
-        type: string
-      os:
-        type: string
-      passwd:
-        type: string
-      purpose:
-        description: What Purpose is the host used for? [compute/storage/general]
-        type: string
-      rack:
-        type: string
-      region:
-        type: string
-      reserved:
-        description: Whether this host is reserved - will not be allocated
-        type: boolean
-      spec:
-        description: Host Spec, init while importing
-        type: string
-      stat:
-        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
-        type: integer
-      status:
-        description: Host Status, 0 for Online, 1 for offline
-        type: integer
-      userName:
-        type: string
-    type: object
-  hostapi.SpecBaseInfo:
-    properties:
-      specCode:
-        type: string
-      specName:
-        type: string
-    type: object
-  hostapi.ZoneBaseInfo:
-    properties:
-      zoneCode:
-        type: string
-      zoneName:
-        type: string
-    type: object
-  instanceapi.BackupDeleteReq:
-    properties:
-      clusterId:
-        type: string
-    type: object
-  instanceapi.BackupRecord:
-    properties:
-      backupMethod:
-        description: 物理/逻辑
-        type: string
-      backupMode:
-        description: 手动/自动
-        type: string
-      backupType:
-        description: 全量/增量
-        type: string
-      clusterId:
-        type: string
-      endTime:
-        type: string
-      filePath:
+      flowWorkName:
         type: string
       id:
         type: integer
-      operator:
-        $ref: '#/definitions/controller.Operator'
-      size:
+      inProcessFlowId:
         type: integer
-      startTime:
+      manualOperator:
+        type: boolean
+      operatorId:
         type: string
-      status:
-        $ref: '#/definitions/controller.StatusInfo'
-    type: object
-  instanceapi.BackupReq:
-    properties:
-      backupMethod:
+      operatorName:
         type: string
-      backupType:
+      statusCode:
         type: string
-      clusterId:
+      statusName:
         type: string
-      filePath:
-        type: string
-    type: object
-  instanceapi.BackupStrategy:
-    properties:
-      backupDate:
-        type: string
-      clusterId:
-        type: string
-      nextBackupTime:
-        type: string
-      period:
-        type: string
-    type: object
-  instanceapi.BackupStrategyUpdateReq:
-    properties:
-      strategy:
-        $ref: '#/definitions/instanceapi.BackupStrategy'
-    type: object
-  instanceapi.ParamInstance:
-    properties:
-      name:
-        type: string
-      value:
-        type: object
-    type: object
-  instanceapi.ParamItem:
-    properties:
-      currentValue:
-        $ref: '#/definitions/instanceapi.ParamInstance'
-      definition:
-        $ref: '#/definitions/knowledge.Parameter'
-    type: object
-  instanceapi.ParamUpdateReq:
-    properties:
-      values:
+      tasks:
         items:
-          $ref: '#/definitions/instanceapi.ParamInstance'
+          $ref: '#/definitions/flowtask.FlowWorkTaskInfo'
         type: array
+      tenantId:
+        type: string
+      updateTime:
+        type: string
     type: object
-  instanceapi.ParamUpdateRsp:
+  flowtask.FlowWorkDisplayInfo:
     properties:
       clusterId:
         type: string
-      status:
+      clusterName:
         type: string
-      taskId:
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      flowWorkName:
+        type: string
+      id:
         type: integer
+      inProcessFlowId:
+        type: integer
+      manualOperator:
+        type: boolean
+      operatorId:
+        type: string
+      operatorName:
+        type: string
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      tenantId:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  flowtask.FlowWorkTaskInfo:
+    properties:
+      id:
+        type: integer
+      taskName:
+        type: string
+    type: object
+  identification.LoginInfo:
+    properties:
+      userName:
+        type: string
+      userPassword:
+        type: string
+    type: object
+  identification.UserIdentity:
+    properties:
+      tenantId:
+        type: string
+      token:
+        type: string
+      userName:
+        type: string
     type: object
   knowledge.ClusterComponent:
     properties:
@@ -722,6 +331,8 @@ definitions:
     properties:
       clusterComponent:
         $ref: '#/definitions/knowledge.ClusterComponent'
+      compentPortConstraint:
+        $ref: '#/definitions/knowledge.ComponentPortConstraint'
       componentConstraint:
         $ref: '#/definitions/knowledge.ComponentConstraint'
     type: object
@@ -772,6 +383,15 @@ definitions:
           type: integer
         type: array
     type: object
+  knowledge.ComponentPortConstraint:
+    properties:
+      portCount:
+        type: integer
+      portRangeEnd:
+        type: integer
+      portRangeStart:
+        type: integer
+    type: object
   knowledge.ParamValueConstraint:
     properties:
       contrastValue:
@@ -798,7 +418,7 @@ definitions:
       unit:
         type: string
     type: object
-  logapi.SearchTiDBLogDetail:
+  log.SearchTiDBLogDetail:
     properties:
       clusterId:
         example: abc
@@ -831,103 +451,502 @@ definitions:
         example: "2021-09-23 14:23:10"
         type: string
     type: object
-  logapi.SearchTiDBLogRsp:
+  log.SearchTiDBLogRsp:
     properties:
       results:
         items:
-          $ref: '#/definitions/logapi.SearchTiDBLogDetail'
+          $ref: '#/definitions/log.SearchTiDBLogDetail'
         type: array
       took:
         example: 10
         type: integer
     type: object
-  taskapi.FlowWorkDetailInfo:
+  management.AllocHostsReq:
     properties:
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      flowWorkName:
-        type: string
-      id:
-        type: integer
-      inProcessFlowId:
-        type: integer
-      manualOperator:
-        type: boolean
-      operatorId:
-        type: string
-      operatorName:
-        type: string
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      tasks:
+      pdReq:
         items:
-          $ref: '#/definitions/taskapi.FlowWorkTaskInfo'
+          $ref: '#/definitions/management.Allocation'
         type: array
-      tenantId:
-        type: string
-      updateTime:
-        type: string
+      tidbReq:
+        items:
+          $ref: '#/definitions/management.Allocation'
+        type: array
+      tikvReq:
+        items:
+          $ref: '#/definitions/management.Allocation'
+        type: array
     type: object
-  taskapi.FlowWorkDisplayInfo:
+  management.AllocHostsRsp:
     properties:
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      flowWorkName:
-        type: string
-      id:
-        type: integer
-      inProcessFlowId:
-        type: integer
-      manualOperator:
-        type: boolean
-      operatorId:
-        type: string
-      operatorName:
-        type: string
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      tenantId:
-        type: string
-      updateTime:
-        type: string
+      pdHosts:
+        items:
+          $ref: '#/definitions/management.AllocateRsp'
+        type: array
+      tidbHosts:
+        items:
+          $ref: '#/definitions/management.AllocateRsp'
+        type: array
+      tikvHosts:
+        items:
+          $ref: '#/definitions/management.AllocateRsp'
+        type: array
     type: object
-  taskapi.FlowWorkTaskInfo:
+  management.AllocateRsp:
     properties:
-      id:
+      cpuCore:
         type: integer
-      taskName:
+      disk:
+        $ref: '#/definitions/management.DiskInfo'
+      hostName:
         type: string
-    type: object
-  userapi.LoginInfo:
-    properties:
+      ip:
+        type: string
+      memory:
+        type: integer
+      passwd:
+        type: string
       userName:
         type: string
-      userPassword:
+    type: object
+  management.Allocation:
+    properties:
+      count:
+        type: integer
+      cpuCores:
+        type: integer
+      failureDomain:
+        type: string
+      memory:
+        type: integer
+    type: object
+  management.ClusterDisplayInfo:
+    properties:
+      backupFileUsage:
+        $ref: '#/definitions/controller.Usage'
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      cpuUsage:
+        $ref: '#/definitions/controller.Usage'
+      createTime:
+        type: string
+      dbPassword:
+        type: string
+      deleteTime:
+        type: string
+      diskUsage:
+        $ref: '#/definitions/controller.Usage'
+      extranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      inProcessFlowId:
+        type: integer
+      intranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      memoryUsage:
+        $ref: '#/definitions/controller.Usage'
+      portList:
+        items:
+          type: integer
+        type: array
+      recoverInfo:
+        $ref: '#/definitions/management.RecoverInfo'
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      storageUsage:
+        $ref: '#/definitions/controller.Usage'
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+      updateTime:
+        type: string
+      whitelist:
+        items:
+          type: string
+        type: array
+    type: object
+  management.ClusterNodeDemand:
+    properties:
+      componentType:
+        type: string
+      distributionItems:
+        items:
+          $ref: '#/definitions/management.DistributionItem'
+        type: array
+      totalNodeCount:
+        type: integer
+    type: object
+  management.ComponentInstance:
+    properties:
+      componentName:
+        type: string
+      componentType:
+        type: string
+      nodes:
+        items:
+          $ref: '#/definitions/management.ComponentNodeDisplayInfo'
+        type: array
+    type: object
+  management.ComponentNodeDisplayInfo:
+    properties:
+      cpuUsage:
+        $ref: '#/definitions/controller.Usage'
+      hostId:
+        type: string
+      ioUtil:
+        type: number
+      iops:
+        items:
+          type: number
+        type: array
+      memoryUsage:
+        $ref: '#/definitions/controller.Usage'
+      nodeId:
+        type: string
+      port:
+        type: integer
+      role:
+        $ref: '#/definitions/management.ComponentNodeRole'
+      spec:
+        $ref: '#/definitions/warehouse.SpecBaseInfo'
+      status:
+        type: string
+      storageUsage:
+        $ref: '#/definitions/controller.Usage'
+      version:
+        type: string
+      zone:
+        $ref: '#/definitions/warehouse.ZoneBaseInfo'
+    type: object
+  management.ComponentNodeRole:
+    properties:
+      roleCode:
+        type: string
+      roleName:
         type: string
     type: object
-  userapi.UserIdentity:
+  management.CreateClusterRsp:
     properties:
-      tenantId:
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      createTime:
+        type: string
+      dbPassword:
+        type: string
+      deleteTime:
+        type: string
+      inProcessFlowId:
+        type: integer
+      recoverInfo:
+        $ref: '#/definitions/management.RecoverInfo'
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+      updateTime:
+        type: string
+    type: object
+  management.CreateReq:
+    properties:
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      dbPassword:
+        type: string
+      nodeDemandList:
+        items:
+          $ref: '#/definitions/management.ClusterNodeDemand'
+        type: array
+      recoverInfo:
+        $ref: '#/definitions/management.RecoverInfo'
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+    type: object
+  management.DeleteClusterRsp:
+    properties:
+      clusterId:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      inProcessFlowId:
+        type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  management.DescribeDashboardRsp:
+    properties:
+      clusterId:
         type: string
       token:
         type: string
+      url:
+        type: string
+    type: object
+  management.DetailClusterRsp:
+    properties:
+      backupFileUsage:
+        $ref: '#/definitions/controller.Usage'
+      clusterId:
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      components:
+        items:
+          $ref: '#/definitions/management.ComponentInstance'
+        type: array
+      cpuUsage:
+        $ref: '#/definitions/controller.Usage'
+      createTime:
+        type: string
+      dbPassword:
+        type: string
+      deleteTime:
+        type: string
+      diskUsage:
+        $ref: '#/definitions/controller.Usage'
+      extranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      inProcessFlowId:
+        type: integer
+      intranetConnectAddresses:
+        items:
+          type: string
+        type: array
+      maintainTaskCron:
+        type: string
+      memoryUsage:
+        $ref: '#/definitions/controller.Usage'
+      portList:
+        items:
+          type: integer
+        type: array
+      recoverInfo:
+        $ref: '#/definitions/management.RecoverInfo'
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      storageUsage:
+        $ref: '#/definitions/controller.Usage'
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+      updateTime:
+        type: string
+      whitelist:
+        items:
+          type: string
+        type: array
+    type: object
+  management.DiskInfo:
+    properties:
+      capacity:
+        description: 'Disk size, Unit: GB'
+        type: integer
+      diskId:
+        type: string
+      hostId:
+        type: string
+      name:
+        description: '[sda/sdb/nvmep0...]'
+        type: string
+      path:
+        description: 'Disk mount path: [/data1]'
+        type: string
+      status:
+        description: Disk Status, 0 for available, 1 for inused
+        type: integer
+      type:
+        description: 'Disk type: [nvme-ssd/ssd/sata]'
+        type: string
+      usedBy:
+        type: string
+    type: object
+  management.DistributionItem:
+    properties:
+      count:
+        type: integer
+      specCode:
+        type: string
+      zoneCode:
+        type: string
+    type: object
+  management.HostInfo:
+    properties:
+      arch:
+        description: x86 or arm64
+        type: string
+      az:
+        type: string
+      cpuCores:
+        description: Host cpu cores spec, init while importing
+        type: integer
+      createTime:
+        type: integer
+      diskType:
+        description: Disk type of this host [sata/ssd/nvme_ssd]
+        type: string
+      disks:
+        items:
+          $ref: '#/definitions/management.DiskInfo'
+        type: array
+      freeCpuCores:
+        description: Unused CpuCore, used for allocation
+        type: integer
+      freeMemory:
+        description: Unused memory size, Unit:GB, used for allocation
+        type: integer
+      hostId:
+        type: string
+      hostName:
+        type: string
+      ip:
+        type: string
+      kernel:
+        type: string
+      memory:
+        description: Host memroy, init while importing
+        type: integer
+      nic:
+        description: 'Host network type: 1GE or 10GE'
+        type: string
+      os:
+        type: string
+      passwd:
+        type: string
+      purpose:
+        description: What Purpose is the host used for? [compute/storage/general]
+        type: string
+      rack:
+        type: string
+      region:
+        type: string
+      reserved:
+        description: Whether this host is reserved - will not be allocated
+        type: boolean
+      spec:
+        description: Host Spec, init while importing
+        type: string
+      stat:
+        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+        type: integer
+      status:
+        description: Host Status, 0 for Online, 1 for offline
+        type: integer
       userName:
+        type: string
+    type: object
+  management.RecoverInfo:
+    properties:
+      backupRecordId:
+        type: integer
+      sourceClusterId:
+        type: string
+    type: object
+  parameter.ParamInstance:
+    properties:
+      name:
+        type: string
+      value:
+        type: object
+    type: object
+  parameter.ParamItem:
+    properties:
+      currentValue:
+        $ref: '#/definitions/parameter.ParamInstance'
+      definition:
+        $ref: '#/definitions/knowledge.Parameter'
+    type: object
+  parameter.ParamUpdateReq:
+    properties:
+      values:
+        items:
+          $ref: '#/definitions/parameter.ParamInstance'
+        type: array
+    type: object
+  parameter.ParamUpdateRsp:
+    properties:
+      clusterId:
+        type: string
+      status:
+        type: string
+      taskId:
+        type: integer
+    type: object
+  warehouse.DomainResource:
+    properties:
+      count:
+        type: integer
+      purpose:
+        type: string
+      specCode:
+        type: string
+      specName:
+        type: string
+      zoneCode:
+        type: string
+      zoneName:
+        type: string
+    type: object
+  warehouse.SpecBaseInfo:
+    properties:
+      specCode:
+        type: string
+      specName:
+        type: string
+    type: object
+  warehouse.ZoneBaseInfo:
+    properties:
+      zoneCode:
+        type: string
+      zoneName:
         type: string
     type: object
 host: localhost:4116
@@ -974,7 +993,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/instanceapi.BackupRecord'
+                    $ref: '#/definitions/backuprestore.BackupRecord'
                   type: array
               type: object
         "401":
@@ -1004,7 +1023,7 @@ paths:
         name: backupReq
         required: true
         schema:
-          $ref: '#/definitions/instanceapi.BackupReq'
+          $ref: '#/definitions/backuprestore.BackupReq'
       produces:
       - application/json
       responses:
@@ -1015,7 +1034,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/instanceapi.BackupRecord'
+                  $ref: '#/definitions/backuprestore.BackupRecord'
               type: object
         "401":
           description: Unauthorized
@@ -1050,7 +1069,7 @@ paths:
         name: backupDeleteReq
         required: true
         schema:
-          $ref: '#/definitions/instanceapi.BackupDeleteReq'
+          $ref: '#/definitions/backuprestore.BackupDeleteReq'
       produces:
       - application/json
       responses:
@@ -1118,7 +1137,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/clusterapi.ClusterDisplayInfo'
+                    $ref: '#/definitions/management.ClusterDisplayInfo'
                   type: array
               type: object
         "401":
@@ -1148,7 +1167,7 @@ paths:
         name: createReq
         required: true
         schema:
-          $ref: '#/definitions/clusterapi.CreateReq'
+          $ref: '#/definitions/management.CreateReq'
       produces:
       - application/json
       responses:
@@ -1159,7 +1178,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/clusterapi.CreateClusterRsp'
+                  $ref: '#/definitions/management.CreateClusterRsp'
               type: object
         "401":
           description: Unauthorized
@@ -1199,7 +1218,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/clusterapi.DeleteClusterRsp'
+                  $ref: '#/definitions/management.DeleteClusterRsp'
               type: object
         "401":
           description: Unauthorized
@@ -1238,7 +1257,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/clusterapi.DetailClusterRsp'
+                  $ref: '#/definitions/management.DetailClusterRsp'
               type: object
         "401":
           description: Unauthorized
@@ -1278,7 +1297,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/clusterapi.DescribeDashboardRsp'
+                  $ref: '#/definitions/management.DescribeDashboardRsp'
               type: object
         "401":
           description: Unauthorized
@@ -1325,7 +1344,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/instanceapi.ParamItem'
+                    $ref: '#/definitions/parameter.ParamItem'
                   type: array
               type: object
         "401":
@@ -1355,7 +1374,7 @@ paths:
         name: updateReq
         required: true
         schema:
-          $ref: '#/definitions/instanceapi.ParamUpdateReq'
+          $ref: '#/definitions/parameter.ParamUpdateReq'
       - description: clusterId
         in: path
         name: clusterId
@@ -1371,7 +1390,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/instanceapi.ParamUpdateRsp'
+                  $ref: '#/definitions/parameter.ParamUpdateRsp'
               type: object
         "401":
           description: Unauthorized
@@ -1406,7 +1425,7 @@ paths:
         name: updateReq
         required: true
         schema:
-          $ref: '#/definitions/instanceapi.BackupStrategyUpdateReq'
+          $ref: '#/definitions/backuprestore.BackupStrategyUpdateReq'
       produces:
       - application/json
       responses:
@@ -1417,7 +1436,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/instanceapi.BackupStrategy'
+                  $ref: '#/definitions/backuprestore.BackupStrategy'
               type: object
         "401":
           description: Unauthorized
@@ -1457,7 +1476,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/instanceapi.BackupStrategy'
+                  $ref: '#/definitions/backuprestore.BackupStrategy'
               type: object
         "401":
           description: Unauthorized
@@ -1507,7 +1526,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/databaseapi.DataTransportRecordQueryResp'
+                    $ref: '#/definitions/datatransport.DataTransportRecordQueryResp'
                   type: array
               type: object
         "401":
@@ -1538,7 +1557,7 @@ paths:
         name: dataExport
         required: true
         schema:
-          $ref: '#/definitions/databaseapi.DataExportReq'
+          $ref: '#/definitions/datatransport.DataExportReq'
       produces:
       - application/json
       responses:
@@ -1549,7 +1568,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/databaseapi.DataExportResp'
+                  $ref: '#/definitions/datatransport.DataExportResp'
               type: object
         "401":
           description: Unauthorized
@@ -1579,7 +1598,7 @@ paths:
         name: dataImport
         required: true
         schema:
-          $ref: '#/definitions/databaseapi.DataImportReq'
+          $ref: '#/definitions/datatransport.DataImportReq'
       produces:
       - application/json
       responses:
@@ -1590,7 +1609,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/databaseapi.DataImportResp'
+                  $ref: '#/definitions/datatransport.DataImportResp'
               type: object
         "401":
           description: Unauthorized
@@ -1620,7 +1639,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/clusterapi.RestoreReq'
+          $ref: '#/definitions/backuprestore.RestoreReq'
       produces:
       - application/json
       responses:
@@ -1671,7 +1690,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/taskapi.FlowWorkDetailInfo'
+                  $ref: '#/definitions/flowtask.FlowWorkDetailInfo'
               type: object
         "401":
           description: Unauthorized
@@ -1722,7 +1741,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/taskapi.FlowWorkDisplayInfo'
+                    $ref: '#/definitions/flowtask.FlowWorkDisplayInfo'
                   type: array
               type: object
         "401":
@@ -1831,7 +1850,7 @@ paths:
             - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
-                  $ref: '#/definitions/logapi.SearchTiDBLogRsp'
+                  $ref: '#/definitions/log.SearchTiDBLogRsp'
               type: object
         "401":
           description: Unauthorized
@@ -1857,7 +1876,7 @@ paths:
         name: Alloc
         required: true
         schema:
-          $ref: '#/definitions/hostapi.AllocHostsReq'
+          $ref: '#/definitions/management.AllocHostsReq'
       produces:
       - application/json
       responses:
@@ -1868,7 +1887,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/hostapi.AllocHostsRsp'
+                  $ref: '#/definitions/management.AllocHostsRsp'
               type: object
       security:
       - ApiKeyAuth: []
@@ -1900,7 +1919,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/hostapi.DomainResource'
+                    $ref: '#/definitions/warehouse.DomainResource'
                   type: array
               type: object
       security:
@@ -1919,7 +1938,7 @@ paths:
         name: host
         required: true
         schema:
-          $ref: '#/definitions/hostapi.HostInfo'
+          $ref: '#/definitions/management.HostInfo'
       produces:
       - application/json
       responses:
@@ -1966,7 +1985,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/hostapi.HostInfo'
+                    $ref: '#/definitions/management.HostInfo'
                   type: array
               type: object
       security:
@@ -2099,7 +2118,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/hostapi.HostInfo'
+                  $ref: '#/definitions/management.HostInfo'
               type: object
       security:
       - ApiKeyAuth: []
@@ -2117,7 +2136,7 @@ paths:
         name: loginInfo
         required: true
         schema:
-          $ref: '#/definitions/userapi.LoginInfo'
+          $ref: '#/definitions/identification.LoginInfo'
       produces:
       - application/json
       responses:
@@ -2128,7 +2147,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/userapi.UserIdentity'
+                  $ref: '#/definitions/identification.UserIdentity'
               type: object
         "401":
           description: Unauthorized
@@ -2156,7 +2175,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/userapi.UserIdentity'
+                  $ref: '#/definitions/identification.UserIdentity'
               type: object
         "401":
           description: Unauthorized
@@ -2186,7 +2205,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/userapi.UserIdentity'
+                  $ref: '#/definitions/identification.UserIdentity'
               type: object
         "401":
           description: Unauthorized

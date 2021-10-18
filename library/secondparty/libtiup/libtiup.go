@@ -105,7 +105,7 @@ type CmdStartResp struct {
 }
 
 type CmdListResp struct {
-	info  string
+	info     string
 	ErrorStr string
 }
 
@@ -170,7 +170,7 @@ type CmdClusterDisplayReq struct {
 
 type CmdClusterDisplayResp struct {
 	DisplayRespString string
-	ErrorStr             string
+	ErrorStr          string
 }
 
 type TaskStatusMapValue struct {

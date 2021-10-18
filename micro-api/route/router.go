@@ -3,15 +3,18 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	transportApi "github.com/pingcap-inc/tiem/micro-api/controller/business-data/import-export"
-	brApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/backup-restore"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/backuprestore"
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
-	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/management"
+	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
+	"github.com/pingcap-inc/tiem/micro-api/controller/platform/specs"
+	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
+	accountApi "github.com/pingcap-inc/tiem/micro-api/controller/user/account"
 	idApi "github.com/pingcap-inc/tiem/micro-api/controller/user/identification"
+
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -55,7 +58,7 @@ func Route(g *gin.Engine) {
 		{
 			profile.Use(interceptor.VerifyIdentity)
 			profile.Use(interceptor.AuditLog())
-			profile.GET("/profile", idApi.Profile)
+			profile.GET("/profile", accountApi.Profile)
 		}
 
 		cluster := apiV1.Group("/clusters")
@@ -66,35 +69,35 @@ func Route(g *gin.Engine) {
 			cluster.POST("/", clusterApi.Create)
 			cluster.GET("/", clusterApi.Query)
 			cluster.DELETE("/:clusterId", clusterApi.Delete)
-			cluster.POST("/restore", brApi.Restore)
+			cluster.POST("/restore", backuprestore.Restore)
 			cluster.GET("/:clusterId/dashboard", clusterApi.DescribeDashboard)
 			// Params
 			cluster.GET("/:clusterId/params", parameterApi.QueryParams)
 			cluster.POST("/:clusterId/params", parameterApi.SubmitParams)
 
 			// Backup Strategy
-			cluster.GET("/:clusterId/strategy", brApi.QueryBackupStrategy)
-			cluster.PUT("/:clusterId/strategy", brApi.SaveBackupStrategy)
+			cluster.GET("/:clusterId/strategy", backuprestore.QueryBackupStrategy)
+			cluster.PUT("/:clusterId/strategy", backuprestore.SaveBackupStrategy)
 			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
 
 			//Import and Export
-			cluster.POST("/import", transportApi.ImportData)
-			cluster.POST("/export", transportApi.ExportData)
-			cluster.GET("/:clusterId/transport", transportApi.DescribeDataTransport)
+			cluster.POST("/import", importexport.ImportData)
+			cluster.POST("/export", importexport.ExportData)
+			cluster.GET("/:clusterId/transport", importexport.DescribeDataTransport)
 		}
 
 		knowledge := apiV1.Group("/knowledges")
 		{
-			knowledge.GET("/", clusterApi.ClusterKnowledge)
+			knowledge.GET("/", specs.ClusterKnowledge)
 		}
 
 		backup := apiV1.Group("/backups")
 		{
 			backup.Use(interceptor.VerifyIdentity)
 			backup.Use(interceptor.AuditLog())
-			backup.POST("/", brApi.Backup)
-			backup.GET("/", brApi.QueryBackup)
-			backup.DELETE("/:backupId", brApi.DeleteBackup)
+			backup.POST("/", backuprestore.Backup)
+			backup.GET("/", backuprestore.QueryBackup)
+			backup.DELETE("/:backupId", backuprestore.DeleteBackup)
 			//backup.GET("/:backupId", instanceapi.DetailsBackup)
 		}
 

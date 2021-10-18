@@ -13,7 +13,7 @@ import (
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
-	tenantAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/adapt"
+	userAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/user/adapt"
 )
 
 func main() {
@@ -54,7 +54,7 @@ func loadKnowledge(f *framework.BaseFramework) error {
 }
 
 func initAdapter(f *framework.BaseFramework) error {
-	tenantAdapt.InjectionMetaDbRepo()
+	userAdapt.InjectionMetaDbRepo()
 	clusterAdapt.InjectionMetaDbRepo()
 	return nil
 }

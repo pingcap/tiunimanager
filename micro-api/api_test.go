@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -20,7 +21,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"github.com/pingcap-inc/tiem/micro-api/controller/resource/management"
 	"github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
@@ -72,8 +72,8 @@ func Test_ListHosts_Succeed(t *testing.T) {
 
 	type ResultWithPage struct {
 		controller.ResultMark
-		Data []management.HostInfo `json:"data"`
-		Page controller.Page       `json:"page"`
+		Data []hostresource.HostInfo `json:"data"`
+		Page controller.Page         `json:"page"`
 	}
 	var result ResultWithPage
 	err := json.Unmarshal(w.Body.Bytes(), &result)
@@ -134,7 +134,7 @@ func Test_ImportHost_Succeed(t *testing.T) {
 
 	type CommonResult struct {
 		controller.ResultMark
-		Data management.ImportHostRsp `json:"data"`
+		Data hostresource.ImportHostRsp `json:"data"`
 	}
 	var result CommonResult
 
@@ -201,7 +201,7 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 
 	type CommonResult struct {
 		controller.ResultMark
-		Data management.ImportHostsRsp `json:"data"`
+		Data hostresource.ImportHostsRsp `json:"data"`
 	}
 	var result CommonResult
 
@@ -298,7 +298,7 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 
 	type CommonResult struct {
 		controller.ResultMark
-		Data management.HostDetailsRsp `json:"data"`
+		Data hostresource.HostDetailsRsp `json:"data"`
 	}
 	var result CommonResult
 
@@ -467,7 +467,7 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 
 	type CommonResult struct {
 		controller.ResultMark
-		Data management.AllocHostsRsp `json:"data"`
+		Data hostresource.AllocHostsRsp `json:"data"`
 	}
 	var result CommonResult
 

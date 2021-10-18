@@ -443,7 +443,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	req.Id = flowContext.value("startTaskId").(uint64)
 
 	for i := 0; i < 30; i++ {
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 		rsp, err := client.DBClient.FindTiupTaskByID(ctx, &req)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("get start task err = %s", err.Error())

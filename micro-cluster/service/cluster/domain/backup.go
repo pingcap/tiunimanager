@@ -164,6 +164,10 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 		Tls:            clusterInfo.Tls,
 		TenantId:       operator.TenantId,
 		OwnerId:        operator.Id,
+		RecoverInfo:    RecoverInfo{
+			SourceClusterId: clusterInfo.GetRecoverInfo().GetSourceClusterId(),
+			BackupRecordId: clusterInfo.GetRecoverInfo().GetBackupRecordId(),
+		},
 	}
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs), len(demandDTOs))

@@ -441,12 +441,11 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	//todo: wait start task finished, temporary solution
 	var req dbpb.FindTiupTaskByIDRequest
 	req.Id = flowContext.value("startTaskId").(uint64)
-	getLoggerWithContext(ctx).Infof("startTask id : %d", req.Id)
-	time.Sleep(20 * time.Second)
-/*
+
 	for i := 0; i < 30; i++ {
-		time.Sleep(10 * time.Second)
-		rsp, err := client.DBClient.FindTiupTaskByID(ctx, &req)
+		time.Sleep(5 * time.Second)
+		getLoggerWithContext(ctx).Infof("startTask id : %d", req.Id)
+		rsp, err := client.DBClient.FindTiupTaskByID(context.TODO(), &req)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("get start task err = %s", err.Error())
 			task.Fail(err)
@@ -461,11 +460,11 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 			break
 		}
 	}
-*/
+
 	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
 
-	record, err := client.DBClient.QueryBackupRecords(ctx, &dbpb.DBQueryBackupRecordRequest{ClusterId: recoverInfo.SourceClusterId, RecordId: recoverInfo.BackupRecordId})
+	record, err := client.DBClient.QueryBackupRecords(context.TODO(), &dbpb.DBQueryBackupRecordRequest{ClusterId: recoverInfo.SourceClusterId, RecordId: recoverInfo.BackupRecordId})
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("query backup record failed, %s", err.Error())
 		return false

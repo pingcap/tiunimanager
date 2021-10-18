@@ -390,12 +390,13 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	record := clusterAggregation.LastBackupRecord
 
 	var req dbpb.FindTiupTaskByIDRequest
-	var resp dbpb.FindTiupTaskByIDResponse
+	var resp *dbpb.FindTiupTaskByIDResponse
+	var err error
 	req.Id = flowContext.value("backupTaskId").(uint64)
 
 	for i := 0; i < 30; i++ {
 		time.Sleep(5 * time.Second)
-		resp, err := client.DBClient.FindTiupTaskByID(context.TODO(), &req)
+		resp, err = client.DBClient.FindTiupTaskByID(context.TODO(), &req)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("get backup task err = %s", err.Error())
 			task.Fail(err)
@@ -412,7 +413,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	}
 	var backupInfo libbr.CmdBrResp
 	getLoggerWithContext(ctx).Infof("resp: %+v", resp)
-	err := json.Unmarshal([]byte(resp.GetTiupTask().GetErrorStr()), &backupInfo)
+	err = json.Unmarshal([]byte(resp.GetTiupTask().GetErrorStr()), &backupInfo)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("json unmarshal backup info failed, %s", err.Error())
 	} else {

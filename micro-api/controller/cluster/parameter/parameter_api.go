@@ -1,8 +1,8 @@
 package parameter
 
 import (
-	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -36,7 +36,7 @@ func QueryParams(c *gin.Context) {
 	}
 	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
-	resp, err := client.ClusterClient.QueryParameters(context.TODO(), &clusterpb.QueryClusterParametersRequest{
+	resp, err := client.ClusterClient.QueryParameters(framework.NewMicroCtxFromGinCtx(c), &clusterpb.QueryClusterParametersRequest{
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
@@ -106,7 +106,7 @@ func SubmitParams(c *gin.Context) {
 
 	jsonContent := string(jsonByte)
 
-	resp, err := client.ClusterClient.SaveParameters(context.TODO(), &clusterpb.SaveClusterParametersRequest{
+	resp, err := client.ClusterClient.SaveParameters(framework.NewMicroCtxFromGinCtx(c), &clusterpb.SaveClusterParametersRequest{
 		ClusterId:      clusterId,
 		ParametersJson: jsonContent,
 		Operator:       operator.ConvertToDTO(),

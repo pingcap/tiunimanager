@@ -1,7 +1,6 @@
 package management
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -48,7 +47,7 @@ func Create(c *gin.Context) {
 		Demands:  demand,
 	}
 
-	respDTO, err := client.ClusterClient.CreateCluster(context.TODO(), reqDTO, func(o *cli.CallOptions) {
+	respDTO, err := client.ClusterClient.CreateCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
 		o.RequestTimeout = time.Minute * 5
 		o.DialTimeout = time.Minute * 5
 	})
@@ -106,7 +105,7 @@ func Query(c *gin.Context) {
 		ClusterStatus: queryReq.ClusterStatus,
 	}
 
-	respDTO, err := client.ClusterClient.QueryCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.QueryCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -147,7 +146,7 @@ func Delete(c *gin.Context) {
 		ClusterId: c.Param("clusterId"),
 	}
 
-	respDTO, err := client.ClusterClient.DeleteCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.DeleteCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -184,7 +183,7 @@ func Detail(c *gin.Context) {
 		ClusterId: c.Param("clusterId"),
 	}
 
-	respDTO, err := client.ClusterClient.DetailCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.DetailCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))

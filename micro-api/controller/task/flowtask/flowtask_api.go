@@ -1,7 +1,7 @@
 package flowtask
 
 import (
-	"context"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 	"strconv"
 	"time"
@@ -39,7 +39,7 @@ func Query(c *gin.Context) {
 		Page:    queryReq.PageRequest.ConvertToDTO(),
 	}
 
-	respDTO, err := client.ClusterClient.ListFlows(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.ListFlows(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))

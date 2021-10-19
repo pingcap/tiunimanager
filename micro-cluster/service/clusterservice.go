@@ -301,7 +301,7 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 				FilePath:     v.BackupRecord.FilePath,
 				StartTime:    v.Flow.CreateTime,
 				EndTime:      v.Flow.UpdateTime,
-				Size:         v.BackupRecord.Size/1024/1024, //Byte to MByte
+				Size:         float32(v.BackupRecord.Size)/1024/1024, //Byte to MByte
 				Operator: &clusterpb.OperatorDTO{
 					Id: v.BackupRecord.OperatorId,
 				},

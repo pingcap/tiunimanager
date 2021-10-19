@@ -384,7 +384,7 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *clusterpb.Backu
 		BackupMethod: string(record.BackupMethod),
 		BackupType:   string(record.BackupType),
 		BackupMode:   string(record.BackupMode),
-		Size:         record.Size,
+		Size:         float32(record.Size)/1024/1024,
 		StartTime:    record.StartTime,
 		EndTime:      record.EndTime,
 		FilePath:     record.FilePath,

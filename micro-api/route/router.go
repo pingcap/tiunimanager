@@ -3,13 +3,18 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"github.com/pingcap-inc/tiem/micro-api/controller/clusterapi"
-	"github.com/pingcap-inc/tiem/micro-api/controller/databaseapi"
-	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
-	"github.com/pingcap-inc/tiem/micro-api/controller/instanceapi"
-	"github.com/pingcap-inc/tiem/micro-api/controller/logapi"
-	"github.com/pingcap-inc/tiem/micro-api/controller/taskapi"
-	"github.com/pingcap-inc/tiem/micro-api/controller/userapi"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/backuprestore"
+	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
+	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
+	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
+	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
+	"github.com/pingcap-inc/tiem/micro-api/controller/platform/specs"
+	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
+	warehouseApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
+	flowtaskApi "github.com/pingcap-inc/tiem/micro-api/controller/task/flowtask"
+	accountApi "github.com/pingcap-inc/tiem/micro-api/controller/user/account"
+	idApi "github.com/pingcap-inc/tiem/micro-api/controller/user/identification"
+
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -45,54 +50,54 @@ func Route(g *gin.Engine) {
 
 		user := apiV1.Group("/user")
 		{
-			user.POST("/login", userapi.Login)
-			user.POST("/logout", userapi.Logout)
+			user.POST("/login", idApi.Login)
+			user.POST("/logout", idApi.Logout)
 		}
 
 		profile := user.Group("")
 		{
 			profile.Use(interceptor.VerifyIdentity)
 			profile.Use(interceptor.AuditLog())
-			profile.GET("/profile", userapi.Profile)
+			profile.GET("/profile", accountApi.Profile)
 		}
 
 		cluster := apiV1.Group("/clusters")
 		{
 			cluster.Use(interceptor.VerifyIdentity)
 			cluster.Use(interceptor.AuditLog())
-			cluster.GET("/:clusterId", clusterapi.Detail)
-			cluster.POST("/", clusterapi.Create)
-			cluster.GET("/", clusterapi.Query)
-			cluster.DELETE("/:clusterId", clusterapi.Delete)
-			cluster.POST("/restore", clusterapi.Restore)
-			cluster.GET("/:clusterId/dashboard", clusterapi.DescribeDashboard)
+			cluster.GET("/:clusterId", clusterApi.Detail)
+			cluster.POST("/", clusterApi.Create)
+			cluster.GET("/", clusterApi.Query)
+			cluster.DELETE("/:clusterId", clusterApi.Delete)
+			cluster.POST("/restore", backuprestore.Restore)
+			cluster.GET("/:clusterId/dashboard", clusterApi.DescribeDashboard)
 			// Params
-			cluster.GET("/:clusterId/params", instanceapi.QueryParams)
-			cluster.POST("/:clusterId/params", instanceapi.SubmitParams)
+			cluster.GET("/:clusterId/params", parameterApi.QueryParams)
+			cluster.POST("/:clusterId/params", parameterApi.SubmitParams)
 
 			// Backup Strategy
-			cluster.GET("/:clusterId/strategy", instanceapi.QueryBackupStrategy)
-			cluster.PUT("/:clusterId/strategy", instanceapi.SaveBackupStrategy)
+			cluster.GET("/:clusterId/strategy", backuprestore.QueryBackupStrategy)
+			cluster.PUT("/:clusterId/strategy", backuprestore.SaveBackupStrategy)
 			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
 
 			//Import and Export
-			cluster.POST("/import", databaseapi.ImportData)
-			cluster.POST("/export", databaseapi.ExportData)
-			cluster.GET("/:clusterId/transport", databaseapi.DescribeDataTransport)
+			cluster.POST("/import", importexport.ImportData)
+			cluster.POST("/export", importexport.ExportData)
+			cluster.GET("/:clusterId/transport", importexport.DescribeDataTransport)
 		}
 
 		knowledge := apiV1.Group("/knowledges")
 		{
-			knowledge.GET("/", clusterapi.ClusterKnowledge)
+			knowledge.GET("/", specs.ClusterKnowledge)
 		}
 
 		backup := apiV1.Group("/backups")
 		{
 			backup.Use(interceptor.VerifyIdentity)
 			backup.Use(interceptor.AuditLog())
-			backup.POST("/", instanceapi.Backup)
-			backup.GET("/", instanceapi.QueryBackup)
-			backup.DELETE("/:backupId", instanceapi.DeleteBackup)
+			backup.POST("/", backuprestore.Backup)
+			backup.GET("/", backuprestore.QueryBackup)
+			backup.DELETE("/:backupId", backuprestore.DeleteBackup)
 			//backup.GET("/:backupId", instanceapi.DetailsBackup)
 		}
 
@@ -100,32 +105,32 @@ func Route(g *gin.Engine) {
 		{
 			flowworks.Use(interceptor.VerifyIdentity)
 			flowworks.Use(interceptor.AuditLog())
-			flowworks.GET("/", taskapi.Query)
+			flowworks.GET("/", flowtaskApi.Query)
 		}
 
 		host := apiV1.Group("/resources")
 		{
 			host.Use(interceptor.VerifyIdentity)
 			host.Use(interceptor.AuditLog())
-			host.POST("host", hostapi.ImportHost)
-			host.POST("hosts", hostapi.ImportHosts)
-			host.GET("hosts", hostapi.ListHost)
-			host.GET("hosts/:hostId", hostapi.HostDetails)
-			host.DELETE("hosts/:hostId", hostapi.RemoveHost)
-			host.DELETE("hosts", hostapi.RemoveHosts)
+			host.POST("host", resourceApi.ImportHost)
+			host.POST("hosts", resourceApi.ImportHosts)
+			host.GET("hosts", resourceApi.ListHost)
+			host.GET("hosts/:hostId", resourceApi.HostDetails)
+			host.DELETE("hosts/:hostId", resourceApi.RemoveHost)
+			host.DELETE("hosts", resourceApi.RemoveHosts)
 
-			host.GET("hosts-template", hostapi.DownloadHostTemplateFile)
+			host.GET("hosts-template", resourceApi.DownloadHostTemplateFile)
 
-			host.GET("failuredomains", hostapi.GetFailureDomain)
+			host.GET("failuredomains", warehouseApi.GetFailureDomain)
 
 			// Add allochosts API for debugging, not release.
-			host.POST("allochosts", hostapi.AllocHosts)
+			host.POST("allochosts", resourceApi.AllocHosts)
 		}
 
 		log := apiV1.Group("/logs")
 		{
 			log.Use(interceptor.VerifyIdentity)
-			log.GET("/tidb/:clusterId", logapi.SearchTiDBLog)
+			log.GET("/tidb/:clusterId", logApi.SearchTiDBLog)
 		}
 	}
 

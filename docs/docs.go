@@ -90,7 +90,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/instanceapi.BackupRecord"
+                                                "$ref": "#/definitions/backuprestore.BackupRecord"
                                             }
                                         }
                                     }
@@ -142,7 +142,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/instanceapi.BackupReq"
+                            "$ref": "#/definitions/backuprestore.BackupReq"
                         }
                     }
                 ],
@@ -158,7 +158,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/instanceapi.BackupRecord"
+                                            "$ref": "#/definitions/backuprestore.BackupRecord"
                                         }
                                     }
                                 }
@@ -218,7 +218,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/instanceapi.BackupDeleteReq"
+                            "$ref": "#/definitions/backuprestore.BackupDeleteReq"
                         }
                     }
                 ],
@@ -331,7 +331,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/clusterapi.ClusterDisplayInfo"
+                                                "$ref": "#/definitions/management.ClusterDisplayInfo"
                                             }
                                         }
                                     }
@@ -383,7 +383,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/clusterapi.CreateReq"
+                            "$ref": "#/definitions/management.CreateReq"
                         }
                     }
                 ],
@@ -399,7 +399,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/clusterapi.CreateClusterRsp"
+                                            "$ref": "#/definitions/management.CreateClusterRsp"
                                         }
                                     }
                                 }
@@ -452,7 +452,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/databaseapi.DataExportReq"
+                            "$ref": "#/definitions/importexport.DataExportReq"
                         }
                     }
                 ],
@@ -468,7 +468,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/databaseapi.DataExportResp"
+                                            "$ref": "#/definitions/importexport.DataExportResp"
                                         }
                                     }
                                 }
@@ -521,7 +521,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/databaseapi.DataImportReq"
+                            "$ref": "#/definitions/importexport.DataImportReq"
                         }
                     }
                 ],
@@ -537,7 +537,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/databaseapi.DataImportResp"
+                                            "$ref": "#/definitions/importexport.DataImportResp"
                                         }
                                     }
                                 }
@@ -590,7 +590,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/clusterapi.RestoreReq"
+                            "$ref": "#/definitions/backuprestore.RestoreReq"
                         }
                     }
                 ],
@@ -673,7 +673,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/clusterapi.DetailClusterRsp"
+                                            "$ref": "#/definitions/management.DetailClusterRsp"
                                         }
                                     }
                                 }
@@ -738,7 +738,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/clusterapi.DeleteClusterRsp"
+                                            "$ref": "#/definitions/management.DeleteClusterRsp"
                                         }
                                     }
                                 }
@@ -805,7 +805,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/clusterapi.DescribeDashboardRsp"
+                                            "$ref": "#/definitions/management.DescribeDashboardRsp"
                                         }
                                     }
                                 }
@@ -884,7 +884,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/instanceapi.ParamItem"
+                                                "$ref": "#/definitions/parameter.ParamItem"
                                             }
                                         }
                                     }
@@ -936,7 +936,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/instanceapi.ParamUpdateReq"
+                            "$ref": "#/definitions/parameter.ParamUpdateReq"
                         }
                     },
                     {
@@ -959,7 +959,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/instanceapi.ParamUpdateRsp"
+                                            "$ref": "#/definitions/parameter.ParamUpdateRsp"
                                         }
                                     }
                                 }
@@ -1019,7 +1019,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/instanceapi.BackupStrategyUpdateReq"
+                            "$ref": "#/definitions/backuprestore.BackupStrategyUpdateReq"
                         }
                     }
                 ],
@@ -1035,7 +1035,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/instanceapi.BackupStrategy"
+                                            "$ref": "#/definitions/backuprestore.BackupStrategy"
                                         }
                                     }
                                 }
@@ -1102,7 +1102,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/instanceapi.BackupStrategy"
+                                            "$ref": "#/definitions/backuprestore.BackupStrategy"
                                         }
                                     }
                                 }
@@ -1186,7 +1186,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/databaseapi.DataTransportRecordQueryResp"
+                                                "$ref": "#/definitions/importexport.DataTransportRecordQueryResp"
                                             }
                                         }
                                     }
@@ -1254,7 +1254,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/taskapi.FlowWorkDetailInfo"
+                                            "$ref": "#/definitions/flowtask.FlowWorkDetailInfo"
                                         }
                                     }
                                 }
@@ -1341,7 +1341,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/taskapi.FlowWorkDisplayInfo"
+                                                "$ref": "#/definitions/flowtask.FlowWorkDisplayInfo"
                                             }
                                         }
                                     }
@@ -1518,7 +1518,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/logapi.SearchTiDBLogRsp"
+                                            "$ref": "#/definitions/log.SearchTiDBLogRsp"
                                         }
                                     }
                                 }
@@ -1565,7 +1565,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/hostapi.AllocHostsReq"
+                            "$ref": "#/definitions/hostresource.AllocHostsReq"
                         }
                     }
                 ],
@@ -1581,7 +1581,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/hostapi.AllocHostsRsp"
+                                            "$ref": "#/definitions/hostresource.AllocHostsRsp"
                                         }
                                     }
                                 }
@@ -1636,7 +1636,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/hostapi.DomainResource"
+                                                "$ref": "#/definitions/warehouse.DomainResource"
                                             }
                                         }
                                     }
@@ -1672,7 +1672,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/hostapi.HostInfo"
+                            "$ref": "#/definitions/hostresource.HostInfo"
                         }
                     }
                 ],
@@ -1752,7 +1752,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/hostapi.HostInfo"
+                                                "$ref": "#/definitions/hostresource.HostInfo"
                                             }
                                         }
                                     }
@@ -1934,7 +1934,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/hostapi.HostInfo"
+                                            "$ref": "#/definitions/hostresource.HostInfo"
                                         }
                                     }
                                 }
@@ -2011,7 +2011,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/userapi.LoginInfo"
+                            "$ref": "#/definitions/identification.LoginInfo"
                         }
                     }
                 ],
@@ -2027,7 +2027,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/userapi.UserIdentity"
+                                            "$ref": "#/definitions/identification.UserIdentity"
                                         }
                                     }
                                 }
@@ -2079,7 +2079,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/userapi.UserIdentity"
+                                            "$ref": "#/definitions/identification.UserIdentity"
                                         }
                                     }
                                 }
@@ -2131,7 +2131,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/userapi.UserIdentity"
+                                            "$ref": "#/definitions/account.UserProfile"
                                         }
                                     }
                                 }
@@ -2155,238 +2155,109 @@ var doc = `{
         }
     },
     "definitions": {
-        "clusterapi.ClusterDisplayInfo": {
+        "account.UserProfile": {
             "type": "object",
             "properties": {
-                "backupFileUsage": {
-                    "$ref": "#/definitions/controller.Usage"
+                "tenantId": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "backuprestore.BackupDeleteReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                }
+            }
+        },
+        "backuprestore.BackupRecord": {
+            "type": "object",
+            "properties": {
+                "backupMethod": {
+                    "description": "物理/逻辑",
+                    "type": "string"
+                },
+                "backupMode": {
+                    "description": "手动/自动",
+                    "type": "string"
+                },
+                "backupType": {
+                    "description": "全量/增量",
+                    "type": "string"
                 },
                 "clusterId": {
                     "type": "string"
                 },
-                "clusterName": {
+                "endTime": {
                     "type": "string"
                 },
-                "clusterType": {
+                "filePath": {
                     "type": "string"
                 },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "cpuUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "diskUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "extranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "inProcessFlowId": {
+                "id": {
                     "type": "integer"
                 },
-                "intranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "operator": {
+                    "$ref": "#/definitions/controller.Operator"
                 },
-                "memoryUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "portList": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "recoverInfo": {
-                    "$ref": "#/definitions/clusterapi.RecoverInfo"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "storageUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tls": {
-                    "type": "boolean"
-                },
-                "updateTime": {
-                    "type": "string"
-                },
-                "whitelist": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "clusterapi.ClusterNodeDemand": {
-            "type": "object",
-            "properties": {
-                "componentType": {
-                    "type": "string"
-                },
-                "distributionItems": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clusterapi.DistributionItem"
-                    }
-                },
-                "totalNodeCount": {
-                    "type": "integer"
-                }
-            }
-        },
-        "clusterapi.ComponentInstance": {
-            "type": "object",
-            "properties": {
-                "componentName": {
-                    "type": "string"
-                },
-                "componentType": {
-                    "type": "string"
-                },
-                "nodes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clusterapi.ComponentNodeDisplayInfo"
-                    }
-                }
-            }
-        },
-        "clusterapi.ComponentNodeDisplayInfo": {
-            "type": "object",
-            "properties": {
-                "cpuUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "hostId": {
-                    "type": "string"
-                },
-                "ioUtil": {
-                    "type": "number"
-                },
-                "iops": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
-                    }
-                },
-                "memoryUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "nodeId": {
-                    "type": "string"
-                },
-                "port": {
+                "size": {
                     "type": "integer"
                 },
-                "role": {
-                    "$ref": "#/definitions/clusterapi.ComponentNodeRole"
-                },
-                "spec": {
-                    "$ref": "#/definitions/hostapi.SpecBaseInfo"
+                "startTime": {
+                    "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                },
-                "storageUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "version": {
-                    "type": "string"
-                },
-                "zone": {
-                    "$ref": "#/definitions/hostapi.ZoneBaseInfo"
+                    "$ref": "#/definitions/controller.StatusInfo"
                 }
             }
         },
-        "clusterapi.ComponentNodeRole": {
+        "backuprestore.BackupReq": {
             "type": "object",
             "properties": {
-                "roleCode": {
+                "backupMethod": {
                     "type": "string"
                 },
-                "roleName": {
+                "backupType": {
                     "type": "string"
-                }
-            }
-        },
-        "clusterapi.CreateClusterRsp": {
-            "type": "object",
-            "properties": {
+                },
                 "clusterId": {
                     "type": "string"
                 },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "recoverInfo": {
-                    "$ref": "#/definitions/clusterapi.RecoverInfo"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tls": {
-                    "type": "boolean"
-                },
-                "updateTime": {
+                "filePath": {
                     "type": "string"
                 }
             }
         },
-        "clusterapi.CreateReq": {
+        "backuprestore.BackupStrategy": {
+            "type": "object",
+            "properties": {
+                "backupDate": {
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                },
+                "nextBackupTime": {
+                    "type": "string"
+                },
+                "period": {
+                    "type": "string"
+                }
+            }
+        },
+        "backuprestore.BackupStrategyUpdateReq": {
+            "type": "object",
+            "properties": {
+                "strategy": {
+                    "$ref": "#/definitions/backuprestore.BackupStrategy"
+                }
+            }
+        },
+        "backuprestore.RestoreReq": {
             "type": "object",
             "properties": {
                 "clusterName": {
@@ -2404,209 +2275,11 @@ var doc = `{
                 "nodeDemandList": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/clusterapi.ClusterNodeDemand"
+                        "$ref": "#/definitions/management.ClusterNodeDemand"
                     }
                 },
                 "recoverInfo": {
-                    "$ref": "#/definitions/clusterapi.RecoverInfo"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tls": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "clusterapi.DeleteClusterRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "updateTime": {
-                    "type": "string"
-                }
-            }
-        },
-        "clusterapi.DescribeDashboardRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "clusterapi.DetailClusterRsp": {
-            "type": "object",
-            "properties": {
-                "backupFileUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "components": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clusterapi.ComponentInstance"
-                    }
-                },
-                "cpuUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "diskUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "extranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "intranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "maintainTaskCron": {
-                    "type": "string"
-                },
-                "memoryUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "portList": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "recoverInfo": {
-                    "$ref": "#/definitions/clusterapi.RecoverInfo"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "storageUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tls": {
-                    "type": "boolean"
-                },
-                "updateTime": {
-                    "type": "string"
-                },
-                "whitelist": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "clusterapi.DistributionItem": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "specCode": {
-                    "type": "string"
-                },
-                "zoneCode": {
-                    "type": "string"
-                }
-            }
-        },
-        "clusterapi.RecoverInfo": {
-            "type": "object",
-            "properties": {
-                "backupRecordId": {
-                    "type": "integer"
-                },
-                "sourceClusterId": {
-                    "type": "string"
-                }
-            }
-        },
-        "clusterapi.RestoreReq": {
-            "type": "object",
-            "properties": {
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "nodeDemandList": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clusterapi.ClusterNodeDemand"
-                    }
-                },
-                "recoverInfo": {
-                    "$ref": "#/definitions/clusterapi.RecoverInfo"
+                    "$ref": "#/definitions/management.RecoverInfo"
                 },
                 "tags": {
                     "type": "array",
@@ -2718,189 +2391,171 @@ var doc = `{
                 }
             }
         },
-        "databaseapi.DataExportReq": {
-            "type": "object",
-            "properties": {
-                "accessKey": {
-                    "type": "string"
-                },
-                "bucketRegion": {
-                    "type": "string"
-                },
-                "bucketUrl": {
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "endpointUrl": {
-                    "type": "string"
-                },
-                "filePath": {
-                    "type": "string"
-                },
-                "fileType": {
-                    "type": "string"
-                },
-                "filter": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "secretAccessKey": {
-                    "type": "string"
-                },
-                "sql": {
-                    "type": "string"
-                },
-                "storageType": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
-        "databaseapi.DataExportResp": {
-            "type": "object",
-            "properties": {
-                "recordId": {
-                    "type": "string"
-                }
-            }
-        },
-        "databaseapi.DataImportReq": {
-            "type": "object",
-            "properties": {
-                "accessKey": {
-                    "type": "string"
-                },
-                "bucketUrl": {
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "endpointUrl": {
-                    "type": "string"
-                },
-                "filePath": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "secretAccessKey": {
-                    "type": "string"
-                },
-                "storageType": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
-        "databaseapi.DataImportResp": {
-            "type": "object",
-            "properties": {
-                "recordId": {
-                    "type": "string"
-                }
-            }
-        },
-        "databaseapi.DataTransportInfo": {
+        "flowtask.FlowWorkDetailInfo": {
             "type": "object",
             "properties": {
                 "clusterId": {
                     "type": "string"
                 },
-                "endTime": {
+                "clusterName": {
                     "type": "string"
                 },
-                "filePath": {
+                "createTime": {
                     "type": "string"
                 },
-                "recordId": {
+                "deleteTime": {
                     "type": "string"
                 },
-                "startTime": {
+                "flowWorkName": {
                     "type": "string"
                 },
-                "status": {
+                "id": {
+                    "type": "integer"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "manualOperator": {
+                    "type": "boolean"
+                },
+                "operatorId": {
                     "type": "string"
                 },
-                "transportType": {
+                "operatorName": {
                     "type": "string"
-                }
-            }
-        },
-        "databaseapi.DataTransportRecordQueryResp": {
-            "type": "object",
-            "properties": {
-                "transportRecords": {
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "tasks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/databaseapi.DataTransportInfo"
+                        "$ref": "#/definitions/flowtask.FlowWorkTaskInfo"
                     }
+                },
+                "tenantId": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
                 }
             }
         },
-        "hostapi.AllocHostsReq": {
+        "flowtask.FlowWorkDisplayInfo": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "flowWorkName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "manualOperator": {
+                    "type": "boolean"
+                },
+                "operatorId": {
+                    "type": "string"
+                },
+                "operatorName": {
+                    "type": "string"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "tenantId": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "flowtask.FlowWorkTaskInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "taskName": {
+                    "type": "string"
+                }
+            }
+        },
+        "hostresource.AllocHostsReq": {
             "type": "object",
             "properties": {
                 "pdReq": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/hostapi.Allocation"
+                        "$ref": "#/definitions/hostresource.Allocation"
                     }
                 },
                 "tidbReq": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/hostapi.Allocation"
+                        "$ref": "#/definitions/hostresource.Allocation"
                     }
                 },
                 "tikvReq": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/hostapi.Allocation"
+                        "$ref": "#/definitions/hostresource.Allocation"
                     }
                 }
             }
         },
-        "hostapi.AllocHostsRsp": {
+        "hostresource.AllocHostsRsp": {
             "type": "object",
             "properties": {
                 "pdHosts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/hostapi.AllocateRsp"
+                        "$ref": "#/definitions/hostresource.AllocateRsp"
                     }
                 },
                 "tidbHosts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/hostapi.AllocateRsp"
+                        "$ref": "#/definitions/hostresource.AllocateRsp"
                     }
                 },
                 "tikvHosts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/hostapi.AllocateRsp"
+                        "$ref": "#/definitions/hostresource.AllocateRsp"
                     }
                 }
             }
         },
-        "hostapi.AllocateRsp": {
+        "hostresource.AllocateRsp": {
             "type": "object",
             "properties": {
                 "cpuCore": {
                     "type": "integer"
                 },
                 "disk": {
-                    "$ref": "#/definitions/hostapi.DiskInfo"
+                    "$ref": "#/definitions/hostresource.DiskInfo"
                 },
                 "hostName": {
                     "type": "string"
@@ -2919,7 +2574,7 @@ var doc = `{
                 }
             }
         },
-        "hostapi.Allocation": {
+        "hostresource.Allocation": {
             "type": "object",
             "properties": {
                 "count": {
@@ -2936,7 +2591,7 @@ var doc = `{
                 }
             }
         },
-        "hostapi.DiskInfo": {
+        "hostresource.DiskInfo": {
             "type": "object",
             "properties": {
                 "capacity": {
@@ -2970,30 +2625,7 @@ var doc = `{
                 }
             }
         },
-        "hostapi.DomainResource": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "purpose": {
-                    "type": "string"
-                },
-                "specCode": {
-                    "type": "string"
-                },
-                "specName": {
-                    "type": "string"
-                },
-                "zoneCode": {
-                    "type": "string"
-                },
-                "zoneName": {
-                    "type": "string"
-                }
-            }
-        },
-        "hostapi.HostInfo": {
+        "hostresource.HostInfo": {
             "type": "object",
             "properties": {
                 "arch": {
@@ -3017,7 +2649,7 @@ var doc = `{
                 "disks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/hostapi.DiskInfo"
+                        "$ref": "#/definitions/hostresource.DiskInfo"
                     }
                 },
                 "freeCpuCores": {
@@ -3085,51 +2717,126 @@ var doc = `{
                 }
             }
         },
-        "hostapi.SpecBaseInfo": {
+        "identification.LoginInfo": {
             "type": "object",
             "properties": {
-                "specCode": {
+                "userName": {
                     "type": "string"
                 },
-                "specName": {
+                "userPassword": {
                     "type": "string"
                 }
             }
         },
-        "hostapi.ZoneBaseInfo": {
+        "identification.UserIdentity": {
             "type": "object",
             "properties": {
-                "zoneCode": {
+                "tenantId": {
                     "type": "string"
                 },
-                "zoneName": {
+                "token": {
+                    "type": "string"
+                },
+                "userName": {
                     "type": "string"
                 }
             }
         },
-        "instanceapi.BackupDeleteReq": {
+        "importexport.DataExportReq": {
             "type": "object",
             "properties": {
+                "accessKey": {
+                    "type": "string"
+                },
+                "bucketRegion": {
+                    "type": "string"
+                },
+                "bucketUrl": {
+                    "type": "string"
+                },
                 "clusterId": {
                     "type": "string"
+                },
+                "endpointUrl": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "fileType": {
+                    "type": "string"
+                },
+                "filter": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "secretAccessKey": {
+                    "type": "string"
+                },
+                "sql": {
+                    "type": "string"
+                },
+                "storageType": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
                 }
             }
         },
-        "instanceapi.BackupRecord": {
+        "importexport.DataExportResp": {
             "type": "object",
             "properties": {
-                "backupMethod": {
-                    "description": "物理/逻辑",
+                "recordId": {
+                    "type": "string"
+                }
+            }
+        },
+        "importexport.DataImportReq": {
+            "type": "object",
+            "properties": {
+                "accessKey": {
                     "type": "string"
                 },
-                "backupMode": {
-                    "description": "手动/自动",
+                "bucketUrl": {
                     "type": "string"
                 },
-                "backupType": {
-                    "description": "全量/增量",
+                "clusterId": {
                     "type": "string"
                 },
+                "endpointUrl": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "secretAccessKey": {
+                    "type": "string"
+                },
+                "storageType": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "importexport.DataImportResp": {
+            "type": "object",
+            "properties": {
+                "recordId": {
+                    "type": "string"
+                }
+            }
+        },
+        "importexport.DataTransportInfo": {
+            "type": "object",
+            "properties": {
                 "clusterId": {
                     "type": "string"
                 },
@@ -3139,109 +2846,28 @@ var doc = `{
                 "filePath": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "operator": {
-                    "$ref": "#/definitions/controller.Operator"
-                },
-                "size": {
-                    "type": "integer"
+                "recordId": {
+                    "type": "string"
                 },
                 "startTime": {
                     "type": "string"
                 },
                 "status": {
-                    "$ref": "#/definitions/controller.StatusInfo"
-                }
-            }
-        },
-        "instanceapi.BackupReq": {
-            "type": "object",
-            "properties": {
-                "backupMethod": {
                     "type": "string"
                 },
-                "backupType": {
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "filePath": {
+                "transportType": {
                     "type": "string"
                 }
             }
         },
-        "instanceapi.BackupStrategy": {
+        "importexport.DataTransportRecordQueryResp": {
             "type": "object",
             "properties": {
-                "backupDate": {
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "nextBackupTime": {
-                    "type": "string"
-                },
-                "period": {
-                    "type": "string"
-                }
-            }
-        },
-        "instanceapi.BackupStrategyUpdateReq": {
-            "type": "object",
-            "properties": {
-                "strategy": {
-                    "$ref": "#/definitions/instanceapi.BackupStrategy"
-                }
-            }
-        },
-        "instanceapi.ParamInstance": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "object"
-                }
-            }
-        },
-        "instanceapi.ParamItem": {
-            "type": "object",
-            "properties": {
-                "currentValue": {
-                    "$ref": "#/definitions/instanceapi.ParamInstance"
-                },
-                "definition": {
-                    "$ref": "#/definitions/knowledge.Parameter"
-                }
-            }
-        },
-        "instanceapi.ParamUpdateReq": {
-            "type": "object",
-            "properties": {
-                "values": {
+                "transportRecords": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/instanceapi.ParamInstance"
+                        "$ref": "#/definitions/importexport.DataTransportInfo"
                     }
-                }
-            }
-        },
-        "instanceapi.ParamUpdateRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "taskId": {
-                    "type": "integer"
                 }
             }
         },
@@ -3397,7 +3023,7 @@ var doc = `{
                 }
             }
         },
-        "logapi.SearchTiDBLogDetail": {
+        "log.SearchTiDBLogDetail": {
             "type": "object",
             "properties": {
                 "clusterId": {
@@ -3442,13 +3068,13 @@ var doc = `{
                 }
             }
         },
-        "logapi.SearchTiDBLogRsp": {
+        "log.SearchTiDBLogRsp": {
             "type": "object",
             "properties": {
                 "results": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/logapi.SearchTiDBLogDetail"
+                        "$ref": "#/definitions/log.SearchTiDBLogDetail"
                     }
                 },
                 "took": {
@@ -3457,60 +3083,188 @@ var doc = `{
                 }
             }
         },
-        "taskapi.FlowWorkDetailInfo": {
+        "management.ClusterDisplayInfo": {
             "type": "object",
             "properties": {
+                "backupFileUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
                 "clusterId": {
                     "type": "string"
                 },
                 "clusterName": {
                     "type": "string"
                 },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
+                "cpuUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
                 "createTime": {
+                    "type": "string"
+                },
+                "dbPassword": {
                     "type": "string"
                 },
                 "deleteTime": {
                     "type": "string"
                 },
-                "flowWorkName": {
-                    "type": "string"
+                "diskUsage": {
+                    "$ref": "#/definitions/controller.Usage"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "manualOperator": {
-                    "type": "boolean"
-                },
-                "operatorId": {
-                    "type": "string"
-                },
-                "operatorName": {
-                    "type": "string"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "tasks": {
+                "extranetConnectAddresses": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/taskapi.FlowWorkTaskInfo"
+                        "type": "string"
                     }
                 },
-                "tenantId": {
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "intranetConnectAddresses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "memoryUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "portList": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "recoverInfo": {
+                    "$ref": "#/definitions/management.RecoverInfo"
+                },
+                "statusCode": {
                     "type": "string"
                 },
+                "statusName": {
+                    "type": "string"
+                },
+                "storageUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "type": "boolean"
+                },
                 "updateTime": {
+                    "type": "string"
+                },
+                "whitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "management.ClusterNodeDemand": {
+            "type": "object",
+            "properties": {
+                "componentType": {
+                    "type": "string"
+                },
+                "distributionItems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/management.DistributionItem"
+                    }
+                },
+                "totalNodeCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "management.ComponentInstance": {
+            "type": "object",
+            "properties": {
+                "componentName": {
+                    "type": "string"
+                },
+                "componentType": {
+                    "type": "string"
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/management.ComponentNodeDisplayInfo"
+                    }
+                }
+            }
+        },
+        "management.ComponentNodeDisplayInfo": {
+            "type": "object",
+            "properties": {
+                "cpuUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "ioUtil": {
+                    "type": "number"
+                },
+                "iops": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                },
+                "memoryUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "nodeId": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "role": {
+                    "$ref": "#/definitions/management.ComponentNodeRole"
+                },
+                "spec": {
+                    "$ref": "#/definitions/warehouse.SpecBaseInfo"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "storageUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "zone": {
+                    "$ref": "#/definitions/warehouse.ZoneBaseInfo"
+                }
+            }
+        },
+        "management.ComponentNodeRole": {
+            "type": "object",
+            "properties": {
+                "roleCode": {
+                    "type": "string"
+                },
+                "roleName": {
                     "type": "string"
                 }
             }
         },
-        "taskapi.FlowWorkDisplayInfo": {
+        "management.CreateClusterRsp": {
             "type": "object",
             "properties": {
                 "clusterId": {
@@ -3519,29 +3273,26 @@ var doc = `{
                 "clusterName": {
                     "type": "string"
                 },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
                 "createTime": {
+                    "type": "string"
+                },
+                "dbPassword": {
                     "type": "string"
                 },
                 "deleteTime": {
                     "type": "string"
                 },
-                "flowWorkName": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
                 "inProcessFlowId": {
                     "type": "integer"
                 },
-                "manualOperator": {
-                    "type": "boolean"
-                },
-                "operatorId": {
-                    "type": "string"
-                },
-                "operatorName": {
-                    "type": "string"
+                "recoverInfo": {
+                    "$ref": "#/definitions/management.RecoverInfo"
                 },
                 "statusCode": {
                     "type": "string"
@@ -3549,7 +3300,74 @@ var doc = `{
                 "statusName": {
                     "type": "string"
                 },
-                "tenantId": {
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "type": "boolean"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "management.CreateReq": {
+            "type": "object",
+            "properties": {
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
+                "dbPassword": {
+                    "type": "string"
+                },
+                "nodeDemandList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/management.ClusterNodeDemand"
+                    }
+                },
+                "recoverInfo": {
+                    "$ref": "#/definitions/management.RecoverInfo"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "management.DeleteClusterRsp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
                     "type": "string"
                 },
                 "updateTime": {
@@ -3557,38 +3375,231 @@ var doc = `{
                 }
             }
         },
-        "taskapi.FlowWorkTaskInfo": {
+        "management.DescribeDashboardRsp": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "taskName": {
-                    "type": "string"
-                }
-            }
-        },
-        "userapi.LoginInfo": {
-            "type": "object",
-            "properties": {
-                "userName": {
-                    "type": "string"
-                },
-                "userPassword": {
-                    "type": "string"
-                }
-            }
-        },
-        "userapi.UserIdentity": {
-            "type": "object",
-            "properties": {
-                "tenantId": {
+                "clusterId": {
                     "type": "string"
                 },
                 "token": {
                     "type": "string"
                 },
-                "userName": {
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "management.DetailClusterRsp": {
+            "type": "object",
+            "properties": {
+                "backupFileUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "clusterId": {
+                    "type": "string"
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
+                "components": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/management.ComponentInstance"
+                    }
+                },
+                "cpuUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "dbPassword": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "diskUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "extranetConnectAddresses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "intranetConnectAddresses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "maintainTaskCron": {
+                    "type": "string"
+                },
+                "memoryUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "portList": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "recoverInfo": {
+                    "$ref": "#/definitions/management.RecoverInfo"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "storageUsage": {
+                    "$ref": "#/definitions/controller.Usage"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "type": "boolean"
+                },
+                "updateTime": {
+                    "type": "string"
+                },
+                "whitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "management.DistributionItem": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "specCode": {
+                    "type": "string"
+                },
+                "zoneCode": {
+                    "type": "string"
+                }
+            }
+        },
+        "management.RecoverInfo": {
+            "type": "object",
+            "properties": {
+                "backupRecordId": {
+                    "type": "integer"
+                },
+                "sourceClusterId": {
+                    "type": "string"
+                }
+            }
+        },
+        "parameter.ParamInstance": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "object"
+                }
+            }
+        },
+        "parameter.ParamItem": {
+            "type": "object",
+            "properties": {
+                "currentValue": {
+                    "$ref": "#/definitions/parameter.ParamInstance"
+                },
+                "definition": {
+                    "$ref": "#/definitions/knowledge.Parameter"
+                }
+            }
+        },
+        "parameter.ParamUpdateReq": {
+            "type": "object",
+            "properties": {
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/parameter.ParamInstance"
+                    }
+                }
+            }
+        },
+        "parameter.ParamUpdateRsp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "taskId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "warehouse.DomainResource": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "purpose": {
+                    "type": "string"
+                },
+                "specCode": {
+                    "type": "string"
+                },
+                "specName": {
+                    "type": "string"
+                },
+                "zoneCode": {
+                    "type": "string"
+                },
+                "zoneName": {
+                    "type": "string"
+                }
+            }
+        },
+        "warehouse.SpecBaseInfo": {
+            "type": "object",
+            "properties": {
+                "specCode": {
+                    "type": "string"
+                },
+                "specName": {
+                    "type": "string"
+                }
+            }
+        },
+        "warehouse.ZoneBaseInfo": {
+            "type": "object",
+            "properties": {
+                "zoneCode": {
+                    "type": "string"
+                },
+                "zoneName": {
                     "type": "string"
                 }
             }

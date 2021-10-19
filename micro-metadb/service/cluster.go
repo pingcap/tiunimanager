@@ -265,7 +265,7 @@ func (handler *DBServiceHandler) QueryBackupRecords(ctx context.Context, req *db
 	log := framework.LogWithContext(ctx)
 	result, err := handler.Dao().ClusterManager().QueryBackupRecord(ctx, req.ClusterId, req.RecordId)
 	if err != nil {
-		log.Errorf("QueryBackupRecords failed, clusterId: %d, error: %s", req.GetClusterId(), err.Error())
+		log.Errorf("QueryBackupRecords failed, clusterId: %s, error: %s", req.GetClusterId(), err.Error())
 		return err
 	}
 

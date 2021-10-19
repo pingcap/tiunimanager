@@ -1,6 +1,10 @@
 package models
 
 import (
+	"context"
+	"errors"
+	"github.com/pingcap-inc/tiem/library/framework"
+	gormLog "gorm.io/gorm/logger"
 	"testing"
 	"time"
 )
@@ -347,4 +351,34 @@ func Test_generateEntityCode(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDaoLogger_Log(t *testing.T) {
+	DaoLogger := &DaoLogger{
+		p: framework.Current,
+		SlowThreshold: 100 * time.Millisecond,
+	}
+	DaoLogger.LogMode(gormLog.Info)
+	DaoLogger.Error(context.TODO(), "error")
+	DaoLogger.Warn(context.TODO(), "warn")
+	DaoLogger.Info(context.TODO(), "info")
+}
+
+func TestDaoLogger_Trace(t *testing.T) {
+	DaoLogger := &DaoLogger{
+		p: framework.Current,
+		SlowThreshold: 100 * time.Millisecond,
+	}
+
+	t.Run("error", func(t *testing.T) {
+		DaoLogger.Trace(context.TODO(), time.Now(), func() (string, int64) {return "select", 100}, errors.New("something wrong"))
+	})
+
+	t.Run("slow", func(t *testing.T) {
+		DaoLogger.Trace(context.TODO(), time.Now().AddDate(0, 0, -1), func() (string, int64) {return "select", 100}, nil)
+	})
+
+	t.Run("info", func(t *testing.T) {
+		DaoLogger.Trace(context.TODO(), time.Now(), func() (string, int64) {return "select", 100}, nil)
+	})
 }

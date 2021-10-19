@@ -32,8 +32,7 @@ func TestDBServiceHandler_CreateFlow(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testFile := "tmp/" + uuidutil.GenerateID()
 			os.MkdirAll(testFile, 0755)
-			d := NewDBServiceHandler(testFile, nil)
-			if err := d.CreateFlow(tt.args.ctx, tt.args.req, tt.args.rsp); (err != nil) != tt.wantErr {
+			if err := handler.CreateFlow(tt.args.ctx, tt.args.req, tt.args.rsp); (err != nil) != tt.wantErr {
 				t.Errorf("CreateFlow() error = %v, wantErr %v", err, tt.wantErr)
 			} else {
 				for _, f := range tt.asserts {
@@ -85,8 +84,7 @@ func TestDBServiceHandler_LoadFlow(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := &DBServiceHandler{}
-			if err := d.LoadFlow(tt.args.ctx, tt.args.req, tt.args.rsp); (err != nil) != tt.wantErr {
+			if err := handler.LoadFlow(tt.args.ctx, tt.args.req, tt.args.rsp); (err != nil) != tt.wantErr {
 				t.Errorf("LoadFlow() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -108,8 +106,7 @@ func TestDBServiceHandler_LoadTask(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := &DBServiceHandler{}
-			if err := d.LoadTask(tt.args.ctx, tt.args.req, tt.args.rsp); (err != nil) != tt.wantErr {
+			if err := handler.LoadTask(tt.args.ctx, tt.args.req, tt.args.rsp); (err != nil) != tt.wantErr {
 				t.Errorf("LoadTask() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -131,8 +128,7 @@ func TestDBServiceHandler_UpdateFlow(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := &DBServiceHandler{}
-			if err := d.UpdateFlow(tt.args.ctx, tt.args.req, tt.args.rsp); (err != nil) != tt.wantErr {
+			if err := handler.UpdateFlow(tt.args.ctx, tt.args.req, tt.args.rsp); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateFlow() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -154,8 +150,7 @@ func TestDBServiceHandler_UpdateTask(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			d := &DBServiceHandler{}
-			if err := d.UpdateTask(tt.args.ctx, tt.args.req, tt.args.rsp); (err != nil) != tt.wantErr {
+			if err := handler.UpdateTask(tt.args.ctx, tt.args.req, tt.args.rsp); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateTask() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

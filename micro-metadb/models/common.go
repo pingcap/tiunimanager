@@ -117,7 +117,7 @@ func generateEntityCode(name string) string {
 }
 
 type DaoLogger struct {
-	p *framework.BaseFramework
+	p framework.Framework
 	SlowThreshold time.Duration
 }
 
@@ -153,8 +153,8 @@ func (l DaoLogger) Trace(ctx context.Context, begin time.Time, fc func() (string
 		logger.Errorf(err.Error())
 	case elapsed > l.SlowThreshold:
 		logger.Warnf("SLOW SQL >= %v", l.SlowThreshold)
-	case l.p.GetRootLogger().LogLevel == framework.LogDebug:
-		logger.Debugf("execute sql")
+	case l.p.GetRootLogger().LogLevel == framework.LogDebug || l.p.GetRootLogger().LogLevel == framework.LogInfo:
+		logger.Infof("execute sql")
 	}
 
 }

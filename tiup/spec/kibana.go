@@ -183,7 +183,7 @@ func (i *KibanaInstance) InitConfig(
 	).
 		WithPort(spec.Port).
 		WithName(spec.Name).
-		WithElasticsearch(i.topo.ElasticSearchAddress())
+		WithElasticsearch(i.topo.ElasticSearchEndpoints())
 	fp := filepath.Join(paths.Cache, fmt.Sprintf("kibana_%s_%d.yml", i.GetHost(), i.GetPort()))
 	if err := cfg.ConfigToFile(fp); err != nil {
 		return err

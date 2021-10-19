@@ -270,7 +270,7 @@ func buildScaleOutTask(
 		topo.BaseTopo().MonitoredOptions,
 		base.Version,
 		gOpt,
-		mergedTopo.(*spec.Specification).ElasticSearchAddress(),
+		mergedTopo.(*spec.Specification).ElasticSearchEndpoints(),
 		mergedTopo.(*spec.Specification).TiEMLogPaths(),
 		p,
 	)
@@ -289,7 +289,7 @@ func buildScaleOutTask(
 		*topo.BaseTopo().GlobalOptions,
 		topo.BaseTopo().MonitoredOptions,
 		gOpt,
-		mergedTopo.(*spec.Specification).ElasticSearchAddress(),
+		mergedTopo.(*spec.Specification).ElasticSearchEndpoints(),
 		mergedTopo.(*spec.Specification).TiEMLogPaths(),
 		p,
 	)

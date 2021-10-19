@@ -40,6 +40,7 @@ http {
             try_files $uri $uri/ /index.html;
         }
 
+{{- if not .EnableHttps }}
         location ^~ /api {
             proxy_pass http://openapi-servers;
         }
@@ -47,13 +48,42 @@ http {
         location ~ ^/(swagger|system|web)/ {
             proxy_pass http://openapi-servers;
         }
+{{- end}}
 
         location ^~/etcd/ {
             proxy_pass http://etcdcluster/;
+        }
+
+        location ~ ^/env {
+            default_type application/json;
+            return 200 '{"protocol": "{{.Protocol}}", "tlsPort": {{.TlsPort}}, "service": {"grafana": "http://{{.GrafanaAddress}}/d/tiem000001/tiem-server?orgId=1&refresh=10s&kiosk=tv", "kibana": "http://{{.KibanaAddress}}/app/discover", "alert": "http://{{.AlertManagerAddress}}", "tracer": "http://{{.TracerAddress}}"}}';
         }
 
         location = /upstream_show {
             upstream_show;
         }
     }
+
+{{- if .EnableHttps }}
+
+    server {
+        listen {{.TlsPort}} ssl;
+        server_name  {{.ServerName}};
+
+        ssl_certificate  {{.DeployDir}}/cert/server.crt;
+        ssl_certificate_key {{.DeployDir}}/cert/server.key;
+        server_tokens off;
+
+        fastcgi_param   HTTPS               on;
+        fastcgi_param   HTTP_SCHEME         https;
+
+        location ^~ /api {
+            proxy_pass https://openapi-servers;
+        }
+
+        location ~ ^/(swagger|system|web)/ {
+            proxy_pass https://openapi-servers;
+        }
+    }
+{{- end}}
 }

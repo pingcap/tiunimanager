@@ -287,7 +287,7 @@ func (m *Manager) Deploy(
 		topo.GetMonitoredOptions(),
 		clusterVersion,
 		gOpt,
-		topo.(*spec.Specification).ElasticSearchAddress(),
+		topo.(*spec.Specification).ElasticSearchEndpoints(),
 		topo.(*spec.Specification).TiEMLogPaths(),
 		sshProxyProps,
 	)

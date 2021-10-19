@@ -40,6 +40,7 @@ type WebServerSpec struct {
 	SSHPort         int                  `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
 	ServerName      string               `yaml:"server_name,omitempty" default:"localhost" validate:"server_name:editable"`
 	Port            int                  `yaml:"port,omitempty" default:"4120"`
+	TlsPort         int                  `yaml:"tls_port,omitempty" default:"4119"`
 	DeployDir       string               `yaml:"deploy_dir,omitempty"`
 	DataDir         string               `yaml:"data_dir,omitempty"`
 	LogDir          string               `yaml:"log_dir,omitempty"`
@@ -106,6 +107,11 @@ func (c *WebServerComponent) Instances() []Instance {
 	ins := make([]Instance, 0)
 	for _, s := range c.Topology.WebServers {
 		s := s
+		ports := make([]int, 0)
+		if c.Topology.HasEnableHttps() {
+			ports = append(ports, s.TlsPort)
+		}
+		ports = append(ports, s.Port)
 		ins = append(ins, &WebServerInstance{
 			ServerName: s.ServerName,
 			BaseInstance: BaseInstance{
@@ -115,9 +121,7 @@ func (c *WebServerComponent) Instances() []Instance {
 				Port:         s.Port,
 				SSHP:         s.SSHPort,
 
-				Ports: []int{
-					s.Port,
-				},
+				Ports: ports,
 				Dirs: []string{
 					s.DeployDir,
 					s.DataDir,
@@ -188,6 +192,7 @@ func (i *WebServerInstance) InitConfig(
 		return errors.Annotatef(err, "execute: %s", cmd)
 	}
 
+	spec := i.InstanceSpec.(*WebServerSpec)
 	// render startup script
 	scpt := scripts.NewTiEMWebServerScript(
 		i.GetHost(),
@@ -213,6 +218,11 @@ func (i *WebServerInstance) InitConfig(
 		false); err != nil {
 		return err
 	}
+	if _, _, err := e.Execute(ctx,
+		fmt.Sprintf("cp -r %s/bin/cert %s/cert", paths.Deploy, paths.Deploy),
+		false); err != nil {
+		return err
+	}
 
 	// render config file
 	cfg := config.NewNginxConfig(
@@ -222,7 +232,13 @@ func (i *WebServerInstance) InitConfig(
 	).
 		WithPort(i.Port).
 		WithServerName(i.ServerName).
-		WithRegistryEndpoints(i.topo.RegistryEndpoints())
+		WithRegistryEndpoints(i.topo.RegistryEndpoints()).
+		WithEnableHttps(i.topo.HasEnableHttps()).
+		WithTlsPort(spec.TlsPort).
+		WithGrafanaAddress(i.topo.GrafanaEndpoints()).
+		WithKibanaAddress(i.topo.KibanaEndpoints()).
+		WithAlertManagerAddress(i.topo.AlertManagerEndpoints()).
+		WithTracerAddress(i.topo.TracerWebAddress())
 
 	fp = filepath.Join(paths.Cache, fmt.Sprintf("nginx_%s_%d.conf", i.GetHost(), i.GetPort()))
 	if err := cfg.ConfigToFile(fp); err != nil {
@@ -256,7 +272,7 @@ func (i *WebServerInstance) ScaleConfig(
 		return err
 	}
 
-	//spec := i.InstanceSpec.(*WebServerSpec)
+	spec := i.InstanceSpec.(*WebServerSpec)
 	scpt := scripts.NewTiEMWebServerScript(
 		i.GetHost(),
 		paths.Deploy,
@@ -285,7 +301,13 @@ func (i *WebServerInstance) ScaleConfig(
 	).
 		WithPort(i.Port).
 		WithServerName(i.ServerName).
-		WithRegistryEndpoints(i.topo.RegistryEndpoints())
+		WithRegistryEndpoints(i.topo.RegistryEndpoints()).
+		WithEnableHttps(i.topo.HasEnableHttps()).
+		WithTlsPort(spec.TlsPort).
+		WithGrafanaAddress(i.topo.GrafanaEndpoints()).
+		WithKibanaAddress(i.topo.KibanaEndpoints()).
+		WithAlertManagerAddress(i.topo.AlertManagerEndpoints()).
+		WithTracerAddress(i.topo.TracerWebAddress())
 
 	fp = filepath.Join(paths.Cache, fmt.Sprintf("nginx_%s_%d.conf", i.GetHost(), i.GetPort()))
 	if err := cfg.ConfigToFile(fp); err != nil {

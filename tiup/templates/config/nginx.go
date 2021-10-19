@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"os"
 	"path"
+	"strings"
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/tiup/embed"
@@ -25,12 +26,19 @@ import (
 
 // NginxConfig represent the data to generate Nginx config
 type NginxConfig struct {
-	IP                string
-	Port              int
-	ServerName        string
-	DeployDir         string
-	LogDir            string
-	RegistryEndpoints []string
+	IP                  string
+	Port                int
+	TlsPort             int
+	ServerName          string
+	DeployDir           string
+	LogDir              string
+	RegistryEndpoints   []string
+	EnableHttps         bool
+	Protocol            string
+	GrafanaAddress      string
+	KibanaAddress       string
+	AlertManagerAddress string
+	TracerAddress       string
 }
 
 // NewNginxConfig returns a NginxConfig
@@ -38,6 +46,7 @@ func NewNginxConfig(host, deployDir, logDir string) *NginxConfig {
 	return &NginxConfig{
 		IP:        host,
 		Port:      4120,
+		TlsPort:   4119,
 		DeployDir: deployDir,
 		LogDir:    logDir,
 	}
@@ -49,15 +58,59 @@ func (c *NginxConfig) WithPort(port int) *NginxConfig {
 	return c
 }
 
+// WithTlsPort sets TlsPort for NginxConfig
+func (c *NginxConfig) WithTlsPort(tlsPort int) *NginxConfig {
+	c.TlsPort = tlsPort
+	if !c.EnableHttps {
+		c.TlsPort = 0
+	}
+	return c
+}
+
 // WithServerName sets ServerName for NginxConfig
 func (c *NginxConfig) WithServerName(name string) *NginxConfig {
 	c.ServerName = name
 	return c
 }
 
-// WithRegistryEndpoints sets registry endpoints for NginxConfig
+// WithRegistryEndpoints sets RegistryEndpoints for NginxConfig
 func (c *NginxConfig) WithRegistryEndpoints(endpoints []string) *NginxConfig {
 	c.RegistryEndpoints = endpoints
+	return c
+}
+
+// WithEnableHttps sets EnableHttps for NginxConfig
+func (c *NginxConfig) WithEnableHttps(enableHttps bool) *NginxConfig {
+	c.EnableHttps = enableHttps
+	if enableHttps {
+		c.Protocol = "https"
+	} else {
+		c.Protocol = "http"
+	}
+	return c
+}
+
+// WithGrafanaAddress sets GrafanaAddress for NginxConfig
+func (c *NginxConfig) WithGrafanaAddress(grafanaAddress []string) *NginxConfig {
+	c.GrafanaAddress = strings.Join(grafanaAddress, ",")
+	return c
+}
+
+// WithKibanaAddress sets AlertManagerAddress for NginxConfig
+func (c *NginxConfig) WithKibanaAddress(kibanaAddress []string) *NginxConfig {
+	c.KibanaAddress = strings.Join(kibanaAddress, ",")
+	return c
+}
+
+// WithAlertManagerAddress sets AlertManagerAddress for NginxConfig
+func (c *NginxConfig) WithAlertManagerAddress(alertManagerAddress []string) *NginxConfig {
+	c.AlertManagerAddress = strings.Join(alertManagerAddress, ",")
+	return c
+}
+
+// WithTracerAddress sets TracerAddress for NginxConfig
+func (c *NginxConfig) WithTracerAddress(tracerAddress []string) *NginxConfig {
+	c.TracerAddress = strings.Join(tracerAddress, ",")
 	return c
 }
 

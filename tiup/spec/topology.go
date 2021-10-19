@@ -491,7 +491,43 @@ func (s *Specification) APIServerEndpoints() []string {
 	return result
 }
 
-// TracerEndpoints return the list of jaeger endpoints in the specification
+// AlertManagerEndpoints return the list of alert manager endpoints in the specification
+func (s *Specification) AlertManagerEndpoints() []string {
+	result := make([]string, 0)
+	for _, inst := range s.Alertmanagers {
+		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.WebPort))
+	}
+	return result
+}
+
+// MonitorEndpoints return the list of monitor prometheus endpoints in the specification
+func (s *Specification) MonitorEndpoints() []string {
+	result := make([]string, 0)
+	for _, inst := range s.Monitors {
+		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.Port))
+	}
+	return result
+}
+
+// GrafanaEndpoints return the list of grafana endpoints in the specification
+func (s *Specification) GrafanaEndpoints() []string {
+	result := make([]string, 0)
+	for _, inst := range s.Grafanas {
+		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.Port))
+	}
+	return result
+}
+
+// KibanaEndpoints return the list of kibana endpoints in the specification
+func (s *Specification) KibanaEndpoints() []string {
+	result := make([]string, 0)
+	for _, inst := range s.KibanaServers {
+		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.Port))
+	}
+	return result
+}
+
+// TracerEndpoints return the list of tracer endpoints in the specification
 func (s *Specification) TracerEndpoints() []string {
 	result := make([]string, 0)
 	for _, inst := range s.TracerServers {
@@ -500,13 +536,30 @@ func (s *Specification) TracerEndpoints() []string {
 	return result
 }
 
-// ElasticSearchAddress return the list of es endpoints in the specification
-func (s *Specification) ElasticSearchAddress() []string {
+// TracerWebAddress return the list of tracer web address in the specification
+func (s *Specification) TracerWebAddress() []string {
+	result := make([]string, 0)
+	for _, inst := range s.TracerServers {
+		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.QueryHTTPServePort))
+	}
+	return result
+}
+
+// ElasticSearchEndpoints return the list of es endpoints in the specification
+func (s *Specification) ElasticSearchEndpoints() []string {
 	result := make([]string, 0)
 	for _, inst := range s.ElasticSearchServers {
 		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.Port))
 	}
 	return result
+}
+
+// HasEnableHttps return has enable https in the specification
+func (s *Specification) HasEnableHttps() bool {
+	for _, inst := range s.APIServers {
+		return inst.EnableHttps == "true"
+	}
+	return false
 }
 
 // TiEMLogPaths return a list of paths to logs of TiEM components

@@ -20,6 +20,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/pingcap-inc/tiem/tiup/templates/config"
+
 	"github.com/pingcap-inc/tiem/tiup/templates/scripts"
 	"github.com/pingcap/tiup/pkg/cluster/ctxt"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -41,7 +43,7 @@ type APIServerSpec struct {
 	Arch            string                 `yaml:"arch,omitempty"`
 	OS              string                 `yaml:"os,omitempty"`
 	LogLevel        string                 `yaml:"log_level,omitempty" default:"info" validate:"log_level:editable"`
-	EnableHttps     bool                   `yaml:"enable_https,omitempty" default:"true"`
+	EnableHttps     string                 `yaml:"enable_https,omitempty" default:"true"`
 	ResourceControl meta.ResourceControl   `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
 }
 
@@ -50,7 +52,11 @@ func (s *APIServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 	client := utils.NewHTTPClient(statusQueryTimeout, tlsCfg)
 
 	path := "/system/check"
-	url := fmt.Sprintf("http://%s:%d%s", s.Host, s.Port, path)
+	protocol := "https"
+	if s.EnableHttps == "false" {
+		protocol = "http"
+	}
+	url := fmt.Sprintf("%s://%s:%d%s", protocol, s.Host, s.Port, path)
 
 	// body doesn't have any status section needed
 	body, err := client.Get(context.TODO(), url)
@@ -151,6 +157,23 @@ func (i *APIServerInstance) InitConfig(
 	}
 
 	spec := i.InstanceSpec.(*APIServerSpec)
+
+	cfg := config.NewAPIServerConfig().
+		WithPrometheusAddress(i.topo.MonitorEndpoints()).
+		WithGrafanaAddress(i.topo.GrafanaEndpoints()).
+		WithAlertManagerAddress(i.topo.AlertManagerEndpoints()).
+		WithKibanaAddress(i.topo.KibanaEndpoints()).
+		WithJaegerAddress(i.topo.TracerEndpoints()).
+		WithElasticsearchAddress(i.topo.ElasticSearchEndpoints())
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("openapi_%s_%d.yml", i.GetHost(), i.GetPort()))
+	if err := cfg.ConfigToFile(fp); err != nil {
+		return err
+	}
+	dst := filepath.Join(paths.Deploy, "conf", "env.yml")
+	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
+		return err
+	}
+
 	scpt := scripts.NewTiEMAPIServerScript(
 		i.GetHost(),
 		paths.Deploy,
@@ -162,14 +185,14 @@ func (i *APIServerInstance) InitConfig(
 		WithMetricsPort(spec.MetricsPort).
 		WithRegistry(i.topo.RegistryEndpoints()).
 		WithTracer(i.topo.TracerEndpoints()).
-		WithElasticsearch(i.topo.ElasticSearchAddress()).
+		WithElasticsearch(i.topo.ElasticSearchEndpoints()).
 		WithEnableHttps(spec.EnableHttps)
 
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_openapi-server_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp = filepath.Join(paths.Cache, fmt.Sprintf("run_openapi-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
-	dst := filepath.Join(paths.Deploy, "scripts", "run_openapi-server.sh")
+	dst = filepath.Join(paths.Deploy, "scripts", "run_openapi-server.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}
@@ -203,6 +226,22 @@ func (i *APIServerInstance) ScaleConfig(
 	}
 
 	spec := i.InstanceSpec.(*APIServerSpec)
+	cfg := config.NewAPIServerConfig().
+		WithPrometheusAddress(i.topo.MonitorEndpoints()).
+		WithGrafanaAddress(i.topo.GrafanaEndpoints()).
+		WithAlertManagerAddress(i.topo.AlertManagerEndpoints()).
+		WithKibanaAddress(i.topo.KibanaEndpoints()).
+		WithJaegerAddress(i.topo.TracerEndpoints()).
+		WithElasticsearchAddress(i.topo.ElasticSearchEndpoints())
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("openapi_%s_%d.yml", i.GetHost(), i.GetPort()))
+	if err := cfg.ConfigToFile(fp); err != nil {
+		return err
+	}
+	dst := filepath.Join(paths.Deploy, "conf", "env.yml")
+	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
+		return err
+	}
+
 	scpt := scripts.NewTiEMAPIServerScript(
 		i.GetHost(),
 		paths.Deploy,
@@ -214,16 +253,16 @@ func (i *APIServerInstance) ScaleConfig(
 		WithMetricsPort(spec.MetricsPort).
 		WithRegistry(i.topo.RegistryEndpoints()).
 		WithTracer(i.topo.TracerEndpoints()).
-		WithElasticsearch(i.topo.ElasticSearchAddress()).
+		WithElasticsearch(i.topo.ElasticSearchEndpoints()).
 		WithEnableHttps(spec.EnableHttps)
 
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("run_openapi-server_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp = filepath.Join(paths.Cache, fmt.Sprintf("run_openapi-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
 
-	dst := filepath.Join(paths.Deploy, "scripts", "run_openapi-server.sh")
+	dst = filepath.Join(paths.Deploy, "scripts", "run_openapi-server.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}

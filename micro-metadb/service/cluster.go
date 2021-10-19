@@ -22,9 +22,9 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DB
 	dto := req.Cluster
 	log := framework.Log()
 	clusterManager := handler.Dao().ClusterManager()
-	cluster, err := clusterManager.CreateCluster(dto.Name, dto.DbPassword, dto.ClusterType, dto.VersionCode, dto.Tls, dto.Tags, dto.OwnerId, dto.TenantId)
+	cluster, err := clusterManager.CreateCluster(ctx, dto.Name, dto.DbPassword, dto.ClusterType, dto.VersionCode, dto.Tls, dto.Tags, dto.OwnerId, dto.TenantId)
 	if nil == err {
-		do, demand, err := clusterManager.UpdateClusterDemand(cluster.ID, req.Cluster.Demands, cluster.TenantId)
+		do, demand, err := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
 		if err == nil {
 			resp.Status = ClusterSuccessResponseStatus
 			resp.Cluster = convertToClusterDTO(do, demand)
@@ -48,7 +48,7 @@ func (handler *DBServiceHandler) DeleteCluster(ctx context.Context, req *dbpb.DB
 	}
 	log := framework.Log()
 	clusterManager := handler.Dao().ClusterManager()
-	cluster, err := clusterManager.DeleteCluster(req.ClusterId)
+	cluster, err := clusterManager.DeleteCluster(ctx, req.ClusterId)
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.Cluster = convertToClusterDTO(cluster, nil)
@@ -74,9 +74,9 @@ func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbpb.D
 
 	clusterManager := handler.Dao().ClusterManager()
 
-	cluster, err := clusterManager.UpdateTopologyConfig(req.ClusterId, req.TopologyContent, req.TenantId)
+	cluster, err := clusterManager.UpdateTopologyConfig(ctx, req.ClusterId, req.TopologyContent, req.TenantId)
 	if err == nil {
-		componentInstances, err := clusterManager.AddClusterComponentInstance(req.ClusterId, convertToComponentInstance(req.ComponentInstances))
+		componentInstances, err := clusterManager.AddClusterComponentInstance(ctx, req.ClusterId, convertToComponentInstance(req.ComponentInstances))
 		if err == nil {
 			resp.Status = ClusterSuccessResponseStatus
 			resp.Cluster = convertToClusterDTO(cluster, nil)
@@ -101,7 +101,7 @@ func (handler *DBServiceHandler) UpdateClusterTopologyConfig(ctx context.Context
 	}
 	log := framework.Log()
 	clusterManager := handler.Dao().ClusterManager()
-	do, err := clusterManager.UpdateTopologyConfig(req.ClusterId, req.Content, req.TenantId)
+	do, err := clusterManager.UpdateTopologyConfig(ctx, req.ClusterId, req.Content, req.TenantId)
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.Cluster = convertToClusterDTO(do, nil)
@@ -125,7 +125,7 @@ func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *d
 	clusterManager := handler.Dao().ClusterManager()
 
 	if req.GetUpdateStatus() {
-		do, err = clusterManager.UpdateClusterStatus(req.ClusterId, int8(req.Status))
+		do, err = clusterManager.UpdateClusterStatus(ctx, req.ClusterId, int8(req.Status))
 		if nil != err {
 			log.Errorf("UpdateClusterStatus failed, clusterId: %s flowId: %d, ,error: %v",
 				req.GetClusterId(), req.GetFlowId(), err)
@@ -133,7 +133,7 @@ func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *d
 		}
 	}
 	if req.GetUpdateFlow() {
-		do, err = clusterManager.UpdateClusterFlowId(req.ClusterId, uint(req.FlowId))
+		do, err = clusterManager.UpdateClusterFlowId(ctx, req.ClusterId, uint(req.FlowId))
 	}
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
@@ -154,7 +154,7 @@ func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbpb.DBLo
 	}
 	log := framework.Log()
 	clusterManager := handler.Dao().ClusterManager()
-	result, err := clusterManager.FetchCluster(req.ClusterId)
+	result, err := clusterManager.FetchCluster(ctx, req.ClusterId)
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.ClusterDetail = &dbpb.DBClusterDetailDTO{
@@ -176,7 +176,7 @@ func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbpb.DBLi
 	}
 	log := framework.Log()
 	clusterManager := handler.Dao().ClusterManager()
-	clusters, total, err := clusterManager.ListClusterDetails(req.ClusterId, req.ClusterName, req.ClusterType, req.ClusterStatus, req.ClusterTag,
+	clusters, total, err := clusterManager.ListClusterDetails(ctx, req.ClusterId, req.ClusterName, req.ClusterType, req.ClusterStatus, req.ClusterTag,
 		int((req.PageReq.Page-1)*req.PageReq.PageSize), int(req.PageReq.PageSize))
 
 	if nil == err {
@@ -211,7 +211,7 @@ func (handler *DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbpb
 	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	dto := req.BackupRecord
-	result, err := clusterManager.SaveBackupRecord(dto)
+	result, err := clusterManager.SaveBackupRecord(ctx, dto)
 	if err == nil {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.BackupRecord = convertToBackupRecordDTO(result)
@@ -230,7 +230,7 @@ func (handler *DBServiceHandler) UpdateBackupRecord(ctx context.Context, req *db
 	}
 	log := framework.LogWithContext(ctx)
 	dto := req.BackupRecord
-	err = handler.Dao().ClusterManager().UpdateBackupRecord(dto)
+	err = handler.Dao().ClusterManager().UpdateBackupRecord(ctx, dto)
 	if err != nil {
 		log.Errorf("SaveBackupRecord failed, tenantId: %s, clusterId: %s, operatorId: %s, error: %s",
 			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), err.Error())
@@ -247,7 +247,7 @@ func (handler *DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *db
 	}
 	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
-	result, err := clusterManager.DeleteBackupRecord(uint(req.Id))
+	result, err := clusterManager.DeleteBackupRecord(ctx, uint(req.Id))
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.BackupRecord = convertToBackupRecordDTO(result)
@@ -263,7 +263,7 @@ func (handler *DBServiceHandler) QueryBackupRecords(ctx context.Context, req *db
 		return errors.Errorf("QueryBackupRecords has invalid parameter")
 	}
 	log := framework.LogWithContext(ctx)
-	result, err := handler.Dao().ClusterManager().QueryBackupRecord(req.ClusterId, req.RecordId)
+	result, err := handler.Dao().ClusterManager().QueryBackupRecord(ctx, req.ClusterId, req.RecordId)
 	if err != nil {
 		log.Errorf("QueryBackupRecords failed, clusterId: %d, error: %s", req.GetClusterId(), err.Error())
 		return err
@@ -280,7 +280,7 @@ func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbp
 	}
 	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
-	backupRecords, total, err := clusterManager.ListBackupRecords(req.ClusterId, req.StartTime, req.EndTime,
+	backupRecords, total, err := clusterManager.ListBackupRecords(ctx, req.ClusterId, req.StartTime, req.EndTime,
 		int((req.Page.Page-1)*req.Page.PageSize), int(req.Page.PageSize))
 
 	if nil == err {
@@ -311,7 +311,7 @@ func (handler *DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbp
 	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	dto := req.RecoverRecord
-	result, err := clusterManager.SaveRecoverRecord(dto.TenantId, dto.ClusterId, dto.OperatorId, uint(dto.BackupRecordId), uint(dto.FlowId))
+	result, err := clusterManager.SaveRecoverRecord(ctx, dto.TenantId, dto.ClusterId, dto.OperatorId, uint(dto.BackupRecordId), uint(dto.FlowId))
 	if err == nil {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.RecoverRecord = convertToRecoverRecordDTO(result)
@@ -330,7 +330,7 @@ func (handler *DBServiceHandler) SaveBackupStrategy(ctx context.Context, req *db
 	}
 	dto := req.Strategy
 	log := framework.LogWithContext(ctx)
-	result, err := handler.Dao().ClusterManager().SaveBackupStrategy(dto)
+	result, err := handler.Dao().ClusterManager().SaveBackupStrategy(ctx, dto)
 
 	if err != nil {
 		log.Errorf("SaveBackupStrategy failed, req: %+v, error: %s", dto, err.Error())
@@ -348,7 +348,7 @@ func (handler *DBServiceHandler) QueryBackupStrategy(ctx context.Context, req *d
 	}
 	log := framework.LogWithContext(ctx)
 	clusterId := req.ClusterId
-	result, err := handler.Dao().ClusterManager().QueryBackupStartegy(clusterId)
+	result, err := handler.Dao().ClusterManager().QueryBackupStartegy(ctx, clusterId)
 	if err != nil {
 		log.Errorf("QueryBackupStrategy failed, clusterId: %s, error: %s", req.GetClusterId(), err.Error())
 		return err
@@ -364,7 +364,7 @@ func (handler *DBServiceHandler) QueryBackupStrategyByTime(ctx context.Context, 
 		return errors.Errorf("QueryBackupStrategyByTime has invalid parameter")
 	}
 	log := framework.LogWithContext(ctx)
-	result, err := handler.Dao().ClusterManager().QueryBackupStartegyByTime(req.GetWeekday(), req.GetStartHour())
+	result, err := handler.Dao().ClusterManager().QueryBackupStartegyByTime(ctx, req.GetWeekday(), req.GetStartHour())
 	if err != nil {
 		log.Errorf("QueryBackupStrategyByTime failed, req: %+v, error: %s", req, err.Error())
 		return err
@@ -386,7 +386,7 @@ func (handler *DBServiceHandler) SaveParametersRecord(ctx context.Context, req *
 	log := framework.Log()
 	clusterManager := handler.Dao().ClusterManager()
 	dto := req.Parameters
-	result, err := clusterManager.SaveParameters(dto.TenantId, dto.ClusterId, dto.OperatorId, uint(dto.FlowId), dto.Content)
+	result, err := clusterManager.SaveParameters(ctx, dto.TenantId, dto.ClusterId, dto.OperatorId, uint(dto.FlowId), dto.Content)
 	if nil == err {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.Parameters = convertToParameterRecordDTO(result)
@@ -405,7 +405,7 @@ func (handler *DBServiceHandler) GetCurrentParametersRecord(ctx context.Context,
 	}
 	log := framework.Log()
 	clusterManager := handler.Dao().ClusterManager()
-	result, err := clusterManager.GetCurrentParameters(req.GetClusterId())
+	result, err := clusterManager.GetCurrentParameters(ctx, req.GetClusterId())
 	if err == nil {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.Parameters = convertToParameterRecordDTO(result)

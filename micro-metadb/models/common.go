@@ -1,7 +1,9 @@
 package models
 
 import (
+	"context"
 	"errors"
+	gormLog "gorm.io/gorm/logger"
 	"time"
 
 	"github.com/mozillazg/go-pinyin"
@@ -112,4 +114,47 @@ func generateEntityCode(name string) string {
 		previousSplitFlag = len(currentWord) > 1
 	}
 	return string(bytes)
+}
+
+type DaoLogger struct {
+	p *framework.BaseFramework
+	SlowThreshold time.Duration
+}
+
+// LogMode log mode
+func (l *DaoLogger) LogMode(level gormLog.LogLevel) gormLog.Interface {
+	return l
+}
+
+// Info print info
+func (l DaoLogger) Info(ctx context.Context, msg string, data ...interface{}) {
+	l.p.LogWithContext(ctx).Infof(msg)
+}
+
+// Warn print warn messages
+func (l DaoLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
+	l.p.LogWithContext(ctx).Warn(msg)
+}
+
+// Error print error messages
+func (l DaoLogger) Error(ctx context.Context, msg string, data ...interface{}) {
+	l.p.LogWithContext(ctx).Error(msg)
+}
+
+// Trace print sql message
+func (l DaoLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+	sql, rows := fc()
+	logger := l.p.LogWithContext(ctx).WithField("sql", sql).WithField("rows", rows)
+
+	elapsed := time.Since(begin)
+
+	switch {
+	case err != nil && (!errors.Is(err, gormLog.ErrRecordNotFound)):
+		logger.Errorf(err.Error())
+	case elapsed > l.SlowThreshold:
+		logger.Warnf("SLOW SQL >= %v", l.SlowThreshold)
+	case l.p.GetRootLogger().LogLevel == framework.LogDebug:
+		logger.Debugf("execute sql")
+	}
+
 }

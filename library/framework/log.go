@@ -1,13 +1,12 @@
 package framework
 
 import (
+	common2 "github.com/pingcap-inc/tiem/library/common"
 	"io"
 	"os"
 	"path"
 	"runtime"
 	"strings"
-
-	common2 "github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -103,18 +102,18 @@ func NewLogRecordFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *RootLo
 	return lr
 }
 
-func (lr *RootLogger) ForkFile(fileName string) *logrus.Entry {
-	if entry, ok := lr.forkFileEntry[fileName]; ok {
+func (p *RootLogger) ForkFile(fileName string) *logrus.Entry {
+	if entry, ok := p.forkFileEntry[fileName]; ok {
 		return entry
 	} else {
 
-		lr.forkFileEntry[fileName] = lr.forkEntry(fileName)
-		return lr.forkFileEntry[fileName]
+		p.forkFileEntry[fileName] = p.forkEntry(fileName)
+		return p.forkFileEntry[fileName]
 	}
 }
 
-func (lr *RootLogger) Entry() *logrus.Entry {
-	return lr.defaultLogEntry
+func (p *RootLogger) Entry() *logrus.Entry {
+	return p.defaultLogEntry
 }
 
 func Caller() logrus.Fields {
@@ -129,26 +128,26 @@ func Caller() logrus.Fields {
 	return map[string]interface{}{}
 }
 
-func (lr *RootLogger) forkEntry(fileName string) *logrus.Entry {
+func (p *RootLogger) forkEntry(fileName string) *logrus.Entry {
 	logger := logrus.New()
 
 	// Set log format
 	logger.SetFormatter(&logrus.JSONFormatter{})
 	// Set log level
-	logger.SetLevel(getLogLevel(lr.LogLevel))
+	logger.SetLevel(getLogLevel(p.LogLevel))
 
 	// Define output type writer
 	writers := []io.Writer{os.Stdout}
 
 	// Determine whether the log output contains the file type
-	if strings.Contains(strings.ToLower(lr.LogOutput), OutputFile) {
+	if strings.Contains(strings.ToLower(p.LogOutput), OutputFile) {
 		writers = append(writers, &lumberjack.Logger{
-			Filename:   lr.LogFileRoot + fileName + ".log",
-			MaxSize:    lr.LogMaxSize,
-			MaxAge:     lr.LogMaxAge,
-			MaxBackups: lr.LogMaxBackups,
-			LocalTime:  lr.LogLocalTime,
-			Compress:   lr.LogCompress,
+			Filename:   p.LogFileRoot + fileName + ".log",
+			MaxSize:    p.LogMaxSize,
+			MaxAge:     p.LogMaxAge,
+			MaxBackups: p.LogMaxBackups,
+			LocalTime:  p.LogLocalTime,
+			Compress:   p.LogCompress,
 		})
 	}
 	// remove the os.Stdout output
@@ -175,3 +174,5 @@ func getLogLevel(level string) logrus.Level {
 	}
 	return logrus.DebugLevel
 }
+
+

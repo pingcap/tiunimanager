@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"reflect"
 	"testing"
 	"time"
@@ -8,7 +9,7 @@ import (
 
 func TestAddToken(t *testing.T) {
 	accountManager := Dao.AccountManager()
-	accountManager.AddToken("existingToken", "", "", "111", time.Now().Add(10*time.Second))
+	accountManager.AddToken(context.TODO(), "existingToken", "", "", "111", time.Now().Add(10*time.Second))
 
 	type args struct {
 		tokenString    string
@@ -72,7 +73,7 @@ func TestFindToken(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotToken, err := accountManager.FindToken(tt.args.tokenString)
+			gotToken, err := accountManager.FindToken(context.TODO(), tt.args.tokenString)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindToken() error = %v, wantErr %v", err, tt.wantErr)
 				return

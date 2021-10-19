@@ -1,15 +1,17 @@
 package models
 
 import (
+	"context"
 	cryrand "crypto/rand"
 	"encoding/base64"
 	"fmt"
-
 	common2 "github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	gormLog "gorm.io/gorm/logger"
+	"time"
 
 	"github.com/pingcap/errors"
 
@@ -18,14 +20,19 @@ import (
 
 type DAOManager struct {
 	db              *gorm.DB
+	daoLogger 		gormLog.Interface
 	tables          map[string]interface{}
 	clusterManager  *DAOClusterManager
 	accountManager  *DAOAccountManager
 	resourceManager *DAOResourceManager
 }
 
-func NewDAOManager(d *gorm.DB) *DAOManager {
+func NewDAOManager(fw *framework.BaseFramework) *DAOManager {
 	m := new(DAOManager)
+	m.daoLogger = &DaoLogger{
+		p: fw,
+		SlowThreshold: 100 * time.Millisecond,
+	}
 	return m
 }
 
@@ -69,7 +76,9 @@ func (dao *DAOManager) InitDB(dataDir string) error {
 	var err error
 	dbFile := dataDir + common2.DBDirPrefix + common2.SqliteFileName
 	logins := framework.Log().WithField("database file path", dbFile)
-	dao.db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+	dao.db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{
+		Logger: dao.daoLogger,
+	})
 
 	if err != nil || dao.db.Error != nil {
 		logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, dao.db.Error)
@@ -153,11 +162,11 @@ Initial TiEM system default system account and tenant information
 func (dao *DAOManager) initSystemDefaultData() error {
 	accountManager := dao.AccountManager()
 	log := framework.Log()
-	rt, err := accountManager.AddTenant("TiEM system administration", 1, 0)
+	rt, err := accountManager.AddTenant(context.TODO(), "TiEM system administration", 1, 0)
 	framework.AssertNoErr(err)
-	role1, err := accountManager.AddRole(rt.ID, "administrators", "administrators", 0)
+	role1, err := accountManager.AddRole(context.TODO(), rt.ID, "administrators", "administrators", 0)
 	framework.AssertNoErr(err)
-	role2, err := accountManager.AddRole(rt.ID, "DBA", "DBA", 0)
+	role2, err := accountManager.AddRole(context.TODO(), rt.ID, "DBA", "DBA", 0)
 	framework.AssertNoErr(err)
 	userId1, err := dao.initUser(rt.ID, "admin")
 	framework.AssertNoErr(err)
@@ -167,20 +176,20 @@ func (dao *DAOManager) initSystemDefaultData() error {
 	log.Infof("initialization default tenant: %s, roles: %s, %s, users: %s, %s",
 		rt.Name, role1.Name, role2.Name, userId1, userId2)
 
-	err = accountManager.AddRoleBindings([]RoleBinding{
+	err = accountManager.AddRoleBindings(context.TODO(), []RoleBinding{
 		{Entity: Entity{TenantId: rt.ID, Status: 0}, RoleId: role1.ID, AccountId: userId1},
 		{Entity: Entity{TenantId: rt.ID, Status: 0}, RoleId: role2.ID, AccountId: userId2},
 	})
 	framework.AssertNoErr(err)
 
-	permission1, err := accountManager.AddPermission(rt.ID, "/api/v1/host/query", " Query hosts", "Query hosts", 2, 0)
+	permission1, err := accountManager.AddPermission(context.TODO(), rt.ID, "/api/v1/host/query", " Query hosts", "Query hosts", 2, 0)
 	framework.AssertNoErr(err)
-	permission2, err := accountManager.AddPermission(rt.ID, "/api/v1/instance/query", "Query cluster", "Query cluster", 2, 0)
+	permission2, err := accountManager.AddPermission(context.TODO(), rt.ID, "/api/v1/instance/query", "Query cluster", "Query cluster", 2, 0)
 	framework.AssertNoErr(err)
-	permission3, err := accountManager.AddPermission(rt.ID, "/api/v1/instance/create", "Create cluster", "Create cluster", 2, 0)
+	permission3, err := accountManager.AddPermission(context.TODO(), rt.ID, "/api/v1/instance/create", "Create cluster", "Create cluster", 2, 0)
 	framework.AssertNoErr(err)
 
-	err = accountManager.AddPermissionBindings([]PermissionBinding{
+	err = accountManager.AddPermissionBindings(context.TODO(), []PermissionBinding{
 		// Administrators can do everything
 		{Entity: Entity{TenantId: rt.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission1.ID},
 		{Entity: Entity{TenantId: rt.ID, Status: 0}, RoleId: role1.ID, PermissionId: permission2.ID},
@@ -196,7 +205,7 @@ func (dao *DAOManager) initSystemDefaultData() error {
 
 func (dao *DAOManager) InitResourceDataForDev() error {
 	log := framework.Log()
-	id1, err := dao.ResourceManager().CreateHost(&resource.Host{
+	id1, err := dao.ResourceManager().CreateHost(context.TODO(), &resource.Host{
 		HostName:     "TEST_HOST1",
 		IP:           "168.168.168.1",
 		UserName:     "root",
@@ -227,7 +236,7 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		log.Errorf("create TEST_HOST1 failed, %v\n", err)
 		return err
 	}
-	id2, err := dao.ResourceManager().CreateHost(&resource.Host{
+	id2, err := dao.ResourceManager().CreateHost(context.TODO(), &resource.Host{
 		HostName:     "TEST_HOST2",
 		IP:           "168.168.168.2",
 		UserName:     "root",
@@ -258,7 +267,7 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		log.Errorf("create TEST_HOST2 failed, %v\n", err)
 		return err
 	}
-	id3, err := dao.ResourceManager().CreateHost(&resource.Host{
+	id3, err := dao.ResourceManager().CreateHost(context.TODO(), &resource.Host{
 		HostName:     "TEST_HOST3",
 		IP:           "168.168.168.3",
 		UserName:     "root",
@@ -307,7 +316,7 @@ func (dao *DAOManager) initUser(tenantId string, name string) (string, error) {
 	s := salt + name
 	finalSalt, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)
 	framework.AssertNoErr(err)
-	rt, err := accountManager.Add(tenantId, name, salt, string(finalSalt), 0)
+	rt, err := accountManager.Add(context.TODO(), tenantId, name, salt, string(finalSalt), 0)
 
 	if nil != err {
 		log.Errorf("add account failed, error: %v, id: %s, name: %s", err, rt.ID, name)

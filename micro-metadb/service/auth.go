@@ -19,7 +19,7 @@ func (handler *DBServiceHandler) FindTenant(ctx context.Context, req *dbpb.DBFin
 	}
 	log := framework.Log()
 	accountManager := handler.Dao().AccountManager()
-	tenant, err := accountManager.FindTenantByName(req.GetName())
+	tenant, err := accountManager.FindTenantByName(ctx, req.GetName())
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
@@ -44,13 +44,13 @@ func (handler *DBServiceHandler) FindTenant(ctx context.Context, req *dbpb.DBFin
 	return err
 }
 
-func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *dbpb.DBFindAccountRequest, resp *dbpb.DBFindAccountResponse) error {
+func (handler *DBServiceHandler) FindAccount(ctx context.Context, req *dbpb.DBFindAccountRequest, resp *dbpb.DBFindAccountResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("FindAccount has invalid parameter")
 	}
 	log := framework.Log()
 	accountManager := handler.Dao().AccountManager()
-	account, err := accountManager.Find(req.GetName())
+	account, err := accountManager.Find(ctx, req.GetName())
 	if err == nil {
 		resp.Status = SuccessResponseStatus
 		resp.Account = &dbpb.DBAccountDTO{
@@ -78,7 +78,7 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *dbpb.DBFi
 	}
 
 	if req.WithRole && nil == err {
-		roles, err := accountManager.FetchAllRolesByAccount(account.TenantId, account.ID)
+		roles, err := accountManager.FetchAllRolesByAccount(ctx, account.TenantId, account.ID)
 		if err == nil {
 			roleDTOs := make([]*dbpb.DBRoleDTO, len(roles), cap(roles))
 			for index, role := range roles {
@@ -107,13 +107,13 @@ func (handler *DBServiceHandler) FindAccount(cxt context.Context, req *dbpb.DBFi
 	return err
 }
 
-func (handler *DBServiceHandler) FindAccountById(cxt context.Context, req *dbpb.DBFindAccountByIdRequest, resp *dbpb.DBFindAccountByIdResponse) error {
+func (handler *DBServiceHandler) FindAccountById(ctx context.Context, req *dbpb.DBFindAccountByIdRequest, resp *dbpb.DBFindAccountByIdResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("FindAccount has invalid parameter")
 	}
 	log := framework.Log()
 	accountManager := handler.Dao().AccountManager()
-	account, err := accountManager.FindById(req.GetId())
+	account, err := accountManager.FindById(ctx, req.GetId())
 	if err == nil {
 		resp.Status = SuccessResponseStatus
 		resp.Account = &dbpb.DBAccountDTO{
@@ -138,13 +138,13 @@ func (handler *DBServiceHandler) FindAccountById(cxt context.Context, req *dbpb.
 	return err
 }
 
-func (handler *DBServiceHandler) SaveToken(cxt context.Context, req *dbpb.DBSaveTokenRequest, resp *dbpb.DBSaveTokenResponse) error {
+func (handler *DBServiceHandler) SaveToken(ctx context.Context, req *dbpb.DBSaveTokenRequest, resp *dbpb.DBSaveTokenResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveToken has invalid parameter, req: %v, resp: %v", req, resp)
 	}
 	log := framework.Log()
 	accountManager := handler.Dao().AccountManager()
-	_, err := accountManager.AddToken(req.Token.TokenString, req.Token.AccountName, req.Token.AccountId, req.Token.TenantId, time.Unix(req.Token.ExpirationTime, 0))
+	_, err := accountManager.AddToken(ctx, req.Token.TokenString, req.Token.AccountName, req.Token.AccountId, req.Token.TenantId, time.Unix(req.Token.ExpirationTime, 0))
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
@@ -166,13 +166,13 @@ func (handler *DBServiceHandler) SaveToken(cxt context.Context, req *dbpb.DBSave
 	return err
 }
 
-func (handler *DBServiceHandler) FindToken(cxt context.Context, req *dbpb.DBFindTokenRequest, resp *dbpb.DBFindTokenResponse) error {
+func (handler *DBServiceHandler) FindToken(ctx context.Context, req *dbpb.DBFindTokenRequest, resp *dbpb.DBFindTokenResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("FindToken has invalid parameter, req: %v, resp: %v", req, resp)
 	}
 	log := framework.Log()
 	accountManager := handler.Dao().AccountManager()
-	token, err := accountManager.FindToken(req.GetTokenString())
+	token, err := accountManager.FindToken(ctx, req.GetTokenString())
 
 	if err == nil {
 		resp.Status = SuccessResponseStatus
@@ -198,13 +198,13 @@ func (handler *DBServiceHandler) FindToken(cxt context.Context, req *dbpb.DBFind
 	return err
 }
 
-func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req *dbpb.DBFindRolesByPermissionRequest, resp *dbpb.DBFindRolesByPermissionResponse) error {
+func (handler *DBServiceHandler) FindRolesByPermission(ctx context.Context, req *dbpb.DBFindRolesByPermissionRequest, resp *dbpb.DBFindRolesByPermissionResponse) error {
 	if nil == req || nil == resp {
 		return errors.Errorf("FindRolesByPermission has invalid parameter req: %v, resp: %v", req, resp)
 	}
 	log := framework.Log()
 	accountManager := handler.Dao().AccountManager()
-	permissionDO, err := accountManager.FetchPermission(req.TenantId, req.Code)
+	permissionDO, err := accountManager.FetchPermission(ctx, req.TenantId, req.Code)
 
 	if nil == err {
 		resp.Permission = &dbpb.DBPermissionDTO{
@@ -224,7 +224,7 @@ func (handler *DBServiceHandler) FindRolesByPermission(cxt context.Context, req 
 	}
 
 	if nil == err {
-		roles, err := accountManager.FetchAllRolesByPermission(req.TenantId, permissionDO.ID)
+		roles, err := accountManager.FetchAllRolesByPermission(ctx, req.TenantId, permissionDO.ID)
 		if nil == err {
 			roleDTOs := make([]*dbpb.DBRoleDTO, len(roles), cap(roles))
 			for index, role := range roles {

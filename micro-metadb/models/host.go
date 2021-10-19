@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
@@ -28,20 +29,20 @@ func (m *DAOResourceManager) SetDb(d *gorm.DB) {
 	m.db = d
 }
 
-func (m *DAOResourceManager) getDb() *gorm.DB {
-	return m.db
+func (m *DAOResourceManager) getDb(ctx context.Context) *gorm.DB {
+	return m.db.WithContext(ctx)
 }
 
-func (m *DAOResourceManager) CreateHost(host *rt.Host) (id string, err error) {
-	err = m.getDb().Create(host).Error
+func (m *DAOResourceManager) CreateHost(ctx context.Context, host *rt.Host) (id string, err error) {
+	err = m.getDb(ctx).Create(host).Error
 	if err != nil {
 		return
 	}
 	return host.ID, err
 }
 
-func (m *DAOResourceManager) CreateHostsInBatch(hosts []*rt.Host) (ids []string, err error) {
-	tx := m.getDb().Begin()
+func (m *DAOResourceManager) CreateHostsInBatch(ctx context.Context, hosts []*rt.Host) (ids []string, err error) {
+	tx := m.getDb(ctx).Begin()
 	for _, host := range hosts {
 		err = tx.Create(host).Error
 		if err != nil {
@@ -54,15 +55,15 @@ func (m *DAOResourceManager) CreateHostsInBatch(hosts []*rt.Host) (ids []string,
 	return
 }
 
-func (m *DAOResourceManager) DeleteHost(hostId string) (err error) {
-	err = m.getDb().Where("ID = ?", hostId).Delete(&rt.Host{
+func (m *DAOResourceManager) DeleteHost(ctx context.Context, hostId string) (err error) {
+	err = m.getDb(ctx).Where("ID = ?", hostId).Delete(&rt.Host{
 		ID: hostId,
 	}).Error
 	return
 }
 
-func (m *DAOResourceManager) DeleteHostsInBatch(hostIds []string) (err error) {
-	tx := m.getDb().Begin()
+func (m *DAOResourceManager) DeleteHostsInBatch(ctx context.Context, hostIds []string) (err error) {
+	tx := m.getDb(ctx).Begin()
 	for _, hostId := range hostIds {
 		var host rt.Host
 		if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
@@ -86,8 +87,8 @@ type ListHostReq struct {
 	Limit   int
 }
 
-func (m *DAOResourceManager) ListHosts(req ListHostReq) (hosts []rt.Host, err error) {
-	db := m.getDb().Table(TABLE_NAME_HOST)
+func (m *DAOResourceManager) ListHosts(ctx context.Context, req ListHostReq) (hosts []rt.Host, err error) {
+	db := m.getDb(ctx).Table(TABLE_NAME_HOST)
 	if err = db.Error; err != nil {
 		return nil, err
 	}
@@ -105,9 +106,9 @@ func (m *DAOResourceManager) ListHosts(req ListHostReq) (hosts []rt.Host, err er
 	return
 }
 
-func (m *DAOResourceManager) FindHostById(hostId string) (*rt.Host, error) {
+func (m *DAOResourceManager) FindHostById(ctx context.Context, hostId string) (*rt.Host, error) {
 	host := new(rt.Host)
-	err := m.getDb().First(host, "ID = ?", hostId).Error
+	err := m.getDb(ctx).First(host, "ID = ?", hostId).Error
 	return host, err
 }
 
@@ -179,10 +180,10 @@ func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, c
 	return
 }
 
-func (m *DAOResourceManager) AllocHosts(requests AllocReqs) (resources AllocRsps, err error) {
+func (m *DAOResourceManager) AllocHosts(ctx context.Context, requests AllocReqs) (resources AllocRsps, err error) {
 	log := framework.Log()
 	resources = make(AllocRsps)
-	tx := m.getDb().Begin()
+	tx := m.getDb(ctx).Begin()
 	for component, reqs := range requests {
 		for _, eachReq := range reqs {
 			log.Infof("alloc resources for component %s in %s (%dC%dG) x %d", component, eachReq.FailureDomain, eachReq.CpuCores, eachReq.Memory, eachReq.Count)
@@ -207,9 +208,9 @@ type FailureDomainResource struct {
 	Count         int
 }
 
-func (m *DAOResourceManager) GetFailureDomain(domain string) (res []FailureDomainResource, err error) {
+func (m *DAOResourceManager) GetFailureDomain(ctx context.Context, domain string) (res []FailureDomainResource, err error) {
 	selectStr := fmt.Sprintf("%s as FailureDomain, purpose, cpu_cores, memory, count(id) as Count", domain)
-	err = m.getDb().Table("hosts").Where("Status = ? and (Stat = ? or Stat = ?)", rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED).Select(selectStr).
+	err = m.getDb(ctx).Table("hosts").Where("Status = ? and (Stat = ? or Stat = ?)", rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED).Select(selectStr).
 		Group(domain).Group("purpose").Group("cpu_cores").Group("memory").Scan(&res).Error
 	return
 }
@@ -461,8 +462,8 @@ func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbpb.DBAllocRequest) (res
 	return
 }
 
-func (m *DAOResourceManager) AllocResources(req *dbpb.DBAllocRequest) (result *rt.AllocRsp, err error) {
-	tx := m.getDb().Begin()
+func (m *DAOResourceManager) AllocResources(ctx context.Context, req *dbpb.DBAllocRequest) (result *rt.AllocRsp, err error) {
+	tx := m.getDb(ctx).Begin()
 	result, err = m.doAlloc(tx, req)
 	if err != nil {
 		tx.Rollback()
@@ -472,9 +473,9 @@ func (m *DAOResourceManager) AllocResources(req *dbpb.DBAllocRequest) (result *r
 	return
 }
 
-func (m *DAOResourceManager) AllocResourcesInBatch(batchReq *dbpb.DBBatchAllocRequest) (results *rt.BatchAllocResponse, err error) {
+func (m *DAOResourceManager) AllocResourcesInBatch(ctx context.Context, batchReq *dbpb.DBBatchAllocRequest) (results *rt.BatchAllocResponse, err error) {
 	results = new(rt.BatchAllocResponse)
-	tx := m.getDb().Begin()
+	tx := m.getDb(ctx).Begin()
 	for i, req := range batchReq.BatchRequests {
 		var result *rt.AllocRsp
 		result, err = m.doAlloc(tx, req)
@@ -633,8 +634,8 @@ func (m *DAOResourceManager) doRecycle(tx *gorm.DB, req *dbpb.DBRecycleRequire) 
 	return nil
 }
 
-func (m *DAOResourceManager) RecycleAllocResources(request *dbpb.DBRecycleRequest) (err error) {
-	tx := m.getDb().Begin()
+func (m *DAOResourceManager) RecycleAllocResources(ctx context.Context, request *dbpb.DBRecycleRequest) (err error) {
+	tx := m.getDb(ctx).Begin()
 	for i, req := range request.RecycleReqs {
 		err = m.doRecycle(tx, req)
 		if err != nil {

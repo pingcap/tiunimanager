@@ -1,5 +1,12 @@
 basePath: /api/v1/
 definitions:
+  account.UserProfile:
+    properties:
+      tenantId:
+        type: string
+      userName:
+        type: string
+    type: object
   backuprestore.BackupDeleteReq:
     properties:
       clusterId:
@@ -147,90 +154,6 @@ definitions:
       used:
         type: number
     type: object
-  datatransport.DataExportReq:
-    properties:
-      accessKey:
-        type: string
-      bucketRegion:
-        type: string
-      bucketUrl:
-        type: string
-      clusterId:
-        type: string
-      endpointUrl:
-        type: string
-      filePath:
-        type: string
-      fileType:
-        type: string
-      filter:
-        type: string
-      password:
-        type: string
-      secretAccessKey:
-        type: string
-      sql:
-        type: string
-      storageType:
-        type: string
-      userName:
-        type: string
-    type: object
-  datatransport.DataExportResp:
-    properties:
-      recordId:
-        type: string
-    type: object
-  datatransport.DataImportReq:
-    properties:
-      accessKey:
-        type: string
-      bucketUrl:
-        type: string
-      clusterId:
-        type: string
-      endpointUrl:
-        type: string
-      filePath:
-        type: string
-      password:
-        type: string
-      secretAccessKey:
-        type: string
-      storageType:
-        type: string
-      userName:
-        type: string
-    type: object
-  datatransport.DataImportResp:
-    properties:
-      recordId:
-        type: string
-    type: object
-  datatransport.DataTransportInfo:
-    properties:
-      clusterId:
-        type: string
-      endTime:
-        type: string
-      filePath:
-        type: string
-      recordId:
-        type: string
-      startTime:
-        type: string
-      status:
-        type: string
-      transportType:
-        type: string
-    type: object
-  datatransport.DataTransportRecordQueryResp:
-    properties:
-      transportRecords:
-        items:
-          $ref: '#/definitions/datatransport.DataTransportInfo'
-        type: array
-    type: object
   flowtask.FlowWorkDetailInfo:
     properties:
       clusterId:
@@ -304,6 +227,153 @@ definitions:
       taskName:
         type: string
     type: object
+  hostresource.AllocHostsReq:
+    properties:
+      pdReq:
+        items:
+          $ref: '#/definitions/hostresource.Allocation'
+        type: array
+      tidbReq:
+        items:
+          $ref: '#/definitions/hostresource.Allocation'
+        type: array
+      tikvReq:
+        items:
+          $ref: '#/definitions/hostresource.Allocation'
+        type: array
+    type: object
+  hostresource.AllocHostsRsp:
+    properties:
+      pdHosts:
+        items:
+          $ref: '#/definitions/hostresource.AllocateRsp'
+        type: array
+      tidbHosts:
+        items:
+          $ref: '#/definitions/hostresource.AllocateRsp'
+        type: array
+      tikvHosts:
+        items:
+          $ref: '#/definitions/hostresource.AllocateRsp'
+        type: array
+    type: object
+  hostresource.AllocateRsp:
+    properties:
+      cpuCore:
+        type: integer
+      disk:
+        $ref: '#/definitions/hostresource.DiskInfo'
+      hostName:
+        type: string
+      ip:
+        type: string
+      memory:
+        type: integer
+      passwd:
+        type: string
+      userName:
+        type: string
+    type: object
+  hostresource.Allocation:
+    properties:
+      count:
+        type: integer
+      cpuCores:
+        type: integer
+      failureDomain:
+        type: string
+      memory:
+        type: integer
+    type: object
+  hostresource.DiskInfo:
+    properties:
+      capacity:
+        description: 'Disk size, Unit: GB'
+        type: integer
+      diskId:
+        type: string
+      hostId:
+        type: string
+      name:
+        description: '[sda/sdb/nvmep0...]'
+        type: string
+      path:
+        description: 'Disk mount path: [/data1]'
+        type: string
+      status:
+        description: Disk Status, 0 for available, 1 for inused
+        type: integer
+      type:
+        description: 'Disk type: [nvme-ssd/ssd/sata]'
+        type: string
+      usedBy:
+        type: string
+    type: object
+  hostresource.HostInfo:
+    properties:
+      arch:
+        description: x86 or arm64
+        type: string
+      az:
+        type: string
+      cpuCores:
+        description: Host cpu cores spec, init while importing
+        type: integer
+      createTime:
+        type: integer
+      diskType:
+        description: Disk type of this host [sata/ssd/nvme_ssd]
+        type: string
+      disks:
+        items:
+          $ref: '#/definitions/hostresource.DiskInfo'
+        type: array
+      freeCpuCores:
+        description: Unused CpuCore, used for allocation
+        type: integer
+      freeMemory:
+        description: Unused memory size, Unit:GB, used for allocation
+        type: integer
+      hostId:
+        type: string
+      hostName:
+        type: string
+      ip:
+        type: string
+      kernel:
+        type: string
+      memory:
+        description: Host memroy, init while importing
+        type: integer
+      nic:
+        description: 'Host network type: 1GE or 10GE'
+        type: string
+      os:
+        type: string
+      passwd:
+        type: string
+      purpose:
+        description: What Purpose is the host used for? [compute/storage/general]
+        type: string
+      rack:
+        type: string
+      region:
+        type: string
+      reserved:
+        description: Whether this host is reserved - will not be allocated
+        type: boolean
+      spec:
+        description: Host Spec, init while importing
+        type: string
+      stat:
+        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+        type: integer
+      status:
+        description: Host Status, 0 for Online, 1 for offline
+        type: integer
+      userName:
+        type: string
+    type: object
   identification.LoginInfo:
     properties:
       userName:
@@ -319,6 +389,90 @@ definitions:
         type: string
       userName:
         type: string
+    type: object
+  importexport.DataExportReq:
+    properties:
+      accessKey:
+        type: string
+      bucketRegion:
+        type: string
+      bucketUrl:
+        type: string
+      clusterId:
+        type: string
+      endpointUrl:
+        type: string
+      filePath:
+        type: string
+      fileType:
+        type: string
+      filter:
+        type: string
+      password:
+        type: string
+      secretAccessKey:
+        type: string
+      sql:
+        type: string
+      storageType:
+        type: string
+      userName:
+        type: string
+    type: object
+  importexport.DataExportResp:
+    properties:
+      recordId:
+        type: string
+    type: object
+  importexport.DataImportReq:
+    properties:
+      accessKey:
+        type: string
+      bucketUrl:
+        type: string
+      clusterId:
+        type: string
+      endpointUrl:
+        type: string
+      filePath:
+        type: string
+      password:
+        type: string
+      secretAccessKey:
+        type: string
+      storageType:
+        type: string
+      userName:
+        type: string
+    type: object
+  importexport.DataImportResp:
+    properties:
+      recordId:
+        type: string
+    type: object
+  importexport.DataTransportInfo:
+    properties:
+      clusterId:
+        type: string
+      endTime:
+        type: string
+      filePath:
+        type: string
+      recordId:
+        type: string
+      startTime:
+        type: string
+      status:
+        type: string
+      transportType:
+        type: string
+    type: object
+  importexport.DataTransportRecordQueryResp:
+    properties:
+      transportRecords:
+        items:
+          $ref: '#/definitions/importexport.DataTransportInfo'
+        type: array
     type: object
   knowledge.ClusterComponent:
     properties:
@@ -459,64 +613,6 @@ definitions:
         type: array
       took:
         example: 10
-        type: integer
-    type: object
-  management.AllocHostsReq:
-    properties:
-      pdReq:
-        items:
-          $ref: '#/definitions/management.Allocation'
-        type: array
-      tidbReq:
-        items:
-          $ref: '#/definitions/management.Allocation'
-        type: array
-      tikvReq:
-        items:
-          $ref: '#/definitions/management.Allocation'
-        type: array
-    type: object
-  management.AllocHostsRsp:
-    properties:
-      pdHosts:
-        items:
-          $ref: '#/definitions/management.AllocateRsp'
-        type: array
-      tidbHosts:
-        items:
-          $ref: '#/definitions/management.AllocateRsp'
-        type: array
-      tikvHosts:
-        items:
-          $ref: '#/definitions/management.AllocateRsp'
-        type: array
-    type: object
-  management.AllocateRsp:
-    properties:
-      cpuCore:
-        type: integer
-      disk:
-        $ref: '#/definitions/management.DiskInfo'
-      hostName:
-        type: string
-      ip:
-        type: string
-      memory:
-        type: integer
-      passwd:
-        type: string
-      userName:
-        type: string
-    type: object
-  management.Allocation:
-    properties:
-      count:
-        type: integer
-      cpuCores:
-        type: integer
-      failureDomain:
-        type: string
-      memory:
         type: integer
     type: object
   management.ClusterDisplayInfo:
@@ -785,30 +881,6 @@ definitions:
           type: string
         type: array
     type: object
-  management.DiskInfo:
-    properties:
-      capacity:
-        description: 'Disk size, Unit: GB'
-        type: integer
-      diskId:
-        type: string
-      hostId:
-        type: string
-      name:
-        description: '[sda/sdb/nvmep0...]'
-        type: string
-      path:
-        description: 'Disk mount path: [/data1]'
-        type: string
-      status:
-        description: Disk Status, 0 for available, 1 for inused
-        type: integer
-      type:
-        description: 'Disk type: [nvme-ssd/ssd/sata]'
-        type: string
-      usedBy:
-        type: string
-    type: object
   management.DistributionItem:
     properties:
       count:
@@ -816,71 +888,6 @@ definitions:
       specCode:
         type: string
       zoneCode:
-        type: string
-    type: object
-  management.HostInfo:
-    properties:
-      arch:
-        description: x86 or arm64
-        type: string
-      az:
-        type: string
-      cpuCores:
-        description: Host cpu cores spec, init while importing
-        type: integer
-      createTime:
-        type: integer
-      diskType:
-        description: Disk type of this host [sata/ssd/nvme_ssd]
-        type: string
-      disks:
-        items:
-          $ref: '#/definitions/management.DiskInfo'
-        type: array
-      freeCpuCores:
-        description: Unused CpuCore, used for allocation
-        type: integer
-      freeMemory:
-        description: Unused memory size, Unit:GB, used for allocation
-        type: integer
-      hostId:
-        type: string
-      hostName:
-        type: string
-      ip:
-        type: string
-      kernel:
-        type: string
-      memory:
-        description: Host memroy, init while importing
-        type: integer
-      nic:
-        description: 'Host network type: 1GE or 10GE'
-        type: string
-      os:
-        type: string
-      passwd:
-        type: string
-      purpose:
-        description: What Purpose is the host used for? [compute/storage/general]
-        type: string
-      rack:
-        type: string
-      region:
-        type: string
-      reserved:
-        description: Whether this host is reserved - will not be allocated
-        type: boolean
-      spec:
-        description: Host Spec, init while importing
-        type: string
-      stat:
-        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
-        type: integer
-      status:
-        description: Host Status, 0 for Online, 1 for offline
-        type: integer
-      userName:
         type: string
     type: object
   management.RecoverInfo:
@@ -1526,7 +1533,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/datatransport.DataTransportRecordQueryResp'
+                    $ref: '#/definitions/importexport.DataTransportRecordQueryResp'
                   type: array
               type: object
         "401":
@@ -1557,7 +1564,7 @@ paths:
         name: dataExport
         required: true
         schema:
-          $ref: '#/definitions/datatransport.DataExportReq'
+          $ref: '#/definitions/importexport.DataExportReq'
       produces:
       - application/json
       responses:
@@ -1568,7 +1575,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/datatransport.DataExportResp'
+                  $ref: '#/definitions/importexport.DataExportResp'
               type: object
         "401":
           description: Unauthorized
@@ -1598,7 +1605,7 @@ paths:
         name: dataImport
         required: true
         schema:
-          $ref: '#/definitions/datatransport.DataImportReq'
+          $ref: '#/definitions/importexport.DataImportReq'
       produces:
       - application/json
       responses:
@@ -1609,7 +1616,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/datatransport.DataImportResp'
+                  $ref: '#/definitions/importexport.DataImportResp'
               type: object
         "401":
           description: Unauthorized
@@ -1876,7 +1883,7 @@ paths:
         name: Alloc
         required: true
         schema:
-          $ref: '#/definitions/management.AllocHostsReq'
+          $ref: '#/definitions/hostresource.AllocHostsReq'
       produces:
       - application/json
       responses:
@@ -1887,7 +1894,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.AllocHostsRsp'
+                  $ref: '#/definitions/hostresource.AllocHostsRsp'
               type: object
       security:
       - ApiKeyAuth: []
@@ -1938,7 +1945,7 @@ paths:
         name: host
         required: true
         schema:
-          $ref: '#/definitions/management.HostInfo'
+          $ref: '#/definitions/hostresource.HostInfo'
       produces:
       - application/json
       responses:
@@ -1985,7 +1992,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/management.HostInfo'
+                    $ref: '#/definitions/hostresource.HostInfo'
                   type: array
               type: object
       security:
@@ -2118,7 +2125,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.HostInfo'
+                  $ref: '#/definitions/hostresource.HostInfo'
               type: object
       security:
       - ApiKeyAuth: []
@@ -2205,7 +2212,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/identification.UserIdentity'
+                  $ref: '#/definitions/account.UserProfile'
               type: object
         "401":
           description: Unauthorized

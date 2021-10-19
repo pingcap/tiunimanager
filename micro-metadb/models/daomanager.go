@@ -5,7 +5,7 @@ import (
 	cryrand "crypto/rand"
 	"encoding/base64"
 	"fmt"
-	common2 "github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
@@ -74,7 +74,7 @@ func (dao *DAOManager) Tables() map[string]interface{} {
 
 func (dao *DAOManager) InitDB(dataDir string) error {
 	var err error
-	dbFile := dataDir + common2.DBDirPrefix + common2.SqliteFileName
+	dbFile := dataDir + common.DBDirPrefix + common.SqliteFileName
 	logins := framework.Log().WithField("database file path", dbFile)
 	dao.db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{
 		Logger: dao.daoLogger,

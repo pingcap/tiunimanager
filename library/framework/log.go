@@ -1,7 +1,7 @@
 package framework
 
 import (
-	common2 "github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/common"
 	"io"
 	"os"
 	"path"
@@ -65,7 +65,7 @@ func DefaultRootLogger() *RootLogger {
 	lr := &RootLogger{
 		LogLevel:      "info",
 		LogOutput:     "file",
-		LogFileRoot:   "." + common2.LogDirPrefix,
+		LogFileRoot:   "." + common.LogDirPrefix,
 		LogFileName:   "default-server",
 		LogMaxSize:    512,
 		LogMaxAge:     30,
@@ -85,7 +85,7 @@ func NewLogRecordFromArgs(serviceName ServiceNameEnum, args *ClientArgs) *RootLo
 	lr := &RootLogger{
 		LogLevel:      args.LogLevel,
 		LogOutput:     "file",
-		LogFileRoot:   args.DataDir + common2.LogDirPrefix,
+		LogFileRoot:   args.DataDir + common.LogDirPrefix,
 		LogFileName:   serviceName.ServerName(),
 		LogMaxSize:    512,
 		LogMaxAge:     30,

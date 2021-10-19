@@ -420,7 +420,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		record.Size = backupInfo.Size
 	}
 
-	_, err = client.DBClient.UpdateBackupRecord(ctx, &dbpb.DBUpdateBackupRecordRequest{
+	_, err = client.DBClient.UpdateBackupRecord(context.TODO(), &dbpb.DBUpdateBackupRecordRequest{
 		BackupRecord: &dbpb.DBBackupRecordDTO{
 			Id:      record.Id,
 			Size:    record.Size,

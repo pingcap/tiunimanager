@@ -494,7 +494,7 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(ctx, req)
+	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return false
@@ -574,7 +574,7 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(ctx, req)
+	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return false
@@ -658,7 +658,7 @@ func updateTransportRecordFailed(ctx context.Context, recordId, clusterId string
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(ctx, req)
+	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return err

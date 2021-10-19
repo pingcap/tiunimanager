@@ -452,7 +452,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/datatransport.DataExportReq"
+                            "$ref": "#/definitions/importexport.DataExportReq"
                         }
                     }
                 ],
@@ -468,7 +468,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/datatransport.DataExportResp"
+                                            "$ref": "#/definitions/importexport.DataExportResp"
                                         }
                                     }
                                 }
@@ -521,7 +521,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/datatransport.DataImportReq"
+                            "$ref": "#/definitions/importexport.DataImportReq"
                         }
                     }
                 ],
@@ -537,7 +537,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/datatransport.DataImportResp"
+                                            "$ref": "#/definitions/importexport.DataImportResp"
                                         }
                                     }
                                 }
@@ -1186,7 +1186,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/datatransport.DataTransportRecordQueryResp"
+                                                "$ref": "#/definitions/importexport.DataTransportRecordQueryResp"
                                             }
                                         }
                                     }
@@ -1565,7 +1565,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/management.AllocHostsReq"
+                            "$ref": "#/definitions/hostresource.AllocHostsReq"
                         }
                     }
                 ],
@@ -1581,7 +1581,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.AllocHostsRsp"
+                                            "$ref": "#/definitions/hostresource.AllocHostsRsp"
                                         }
                                     }
                                 }
@@ -1672,7 +1672,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/management.HostInfo"
+                            "$ref": "#/definitions/hostresource.HostInfo"
                         }
                     }
                 ],
@@ -1752,7 +1752,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/management.HostInfo"
+                                                "$ref": "#/definitions/hostresource.HostInfo"
                                             }
                                         }
                                     }
@@ -1934,7 +1934,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.HostInfo"
+                                            "$ref": "#/definitions/hostresource.HostInfo"
                                         }
                                     }
                                 }
@@ -2131,7 +2131,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/identification.UserIdentity"
+                                            "$ref": "#/definitions/account.UserProfile"
                                         }
                                     }
                                 }
@@ -2155,6 +2155,17 @@ var doc = `{
         }
     },
     "definitions": {
+        "account.UserProfile": {
+            "type": "object",
+            "properties": {
+                "tenantId": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
         "backuprestore.BackupDeleteReq": {
             "type": "object",
             "properties": {
@@ -2380,135 +2391,6 @@ var doc = `{
                 }
             }
         },
-        "datatransport.DataExportReq": {
-            "type": "object",
-            "properties": {
-                "accessKey": {
-                    "type": "string"
-                },
-                "bucketRegion": {
-                    "type": "string"
-                },
-                "bucketUrl": {
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "endpointUrl": {
-                    "type": "string"
-                },
-                "filePath": {
-                    "type": "string"
-                },
-                "fileType": {
-                    "type": "string"
-                },
-                "filter": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "secretAccessKey": {
-                    "type": "string"
-                },
-                "sql": {
-                    "type": "string"
-                },
-                "storageType": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
-        "datatransport.DataExportResp": {
-            "type": "object",
-            "properties": {
-                "recordId": {
-                    "type": "string"
-                }
-            }
-        },
-        "datatransport.DataImportReq": {
-            "type": "object",
-            "properties": {
-                "accessKey": {
-                    "type": "string"
-                },
-                "bucketUrl": {
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "endpointUrl": {
-                    "type": "string"
-                },
-                "filePath": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "secretAccessKey": {
-                    "type": "string"
-                },
-                "storageType": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
-        "datatransport.DataImportResp": {
-            "type": "object",
-            "properties": {
-                "recordId": {
-                    "type": "string"
-                }
-            }
-        },
-        "datatransport.DataTransportInfo": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "endTime": {
-                    "type": "string"
-                },
-                "filePath": {
-                    "type": "string"
-                },
-                "recordId": {
-                    "type": "string"
-                },
-                "startTime": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "transportType": {
-                    "type": "string"
-                }
-            }
-        },
-        "datatransport.DataTransportRecordQueryResp": {
-            "type": "object",
-            "properties": {
-                "transportRecords": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/datatransport.DataTransportInfo"
-                    }
-                }
-            }
-        },
         "flowtask.FlowWorkDetailInfo": {
             "type": "object",
             "properties": {
@@ -2620,6 +2502,221 @@ var doc = `{
                 }
             }
         },
+        "hostresource.AllocHostsReq": {
+            "type": "object",
+            "properties": {
+                "pdReq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostresource.Allocation"
+                    }
+                },
+                "tidbReq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostresource.Allocation"
+                    }
+                },
+                "tikvReq": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostresource.Allocation"
+                    }
+                }
+            }
+        },
+        "hostresource.AllocHostsRsp": {
+            "type": "object",
+            "properties": {
+                "pdHosts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostresource.AllocateRsp"
+                    }
+                },
+                "tidbHosts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostresource.AllocateRsp"
+                    }
+                },
+                "tikvHosts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostresource.AllocateRsp"
+                    }
+                }
+            }
+        },
+        "hostresource.AllocateRsp": {
+            "type": "object",
+            "properties": {
+                "cpuCore": {
+                    "type": "integer"
+                },
+                "disk": {
+                    "$ref": "#/definitions/hostresource.DiskInfo"
+                },
+                "hostName": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "memory": {
+                    "type": "integer"
+                },
+                "passwd": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "hostresource.Allocation": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "cpuCores": {
+                    "type": "integer"
+                },
+                "failureDomain": {
+                    "type": "string"
+                },
+                "memory": {
+                    "type": "integer"
+                }
+            }
+        },
+        "hostresource.DiskInfo": {
+            "type": "object",
+            "properties": {
+                "capacity": {
+                    "description": "Disk size, Unit: GB",
+                    "type": "integer"
+                },
+                "diskId": {
+                    "type": "string"
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "name": {
+                    "description": "[sda/sdb/nvmep0...]",
+                    "type": "string"
+                },
+                "path": {
+                    "description": "Disk mount path: [/data1]",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Disk Status, 0 for available, 1 for inused",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Disk type: [nvme-ssd/ssd/sata]",
+                    "type": "string"
+                },
+                "usedBy": {
+                    "type": "string"
+                }
+            }
+        },
+        "hostresource.HostInfo": {
+            "type": "object",
+            "properties": {
+                "arch": {
+                    "description": "x86 or arm64",
+                    "type": "string"
+                },
+                "az": {
+                    "type": "string"
+                },
+                "cpuCores": {
+                    "description": "Host cpu cores spec, init while importing",
+                    "type": "integer"
+                },
+                "createTime": {
+                    "type": "integer"
+                },
+                "diskType": {
+                    "description": "Disk type of this host [sata/ssd/nvme_ssd]",
+                    "type": "string"
+                },
+                "disks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/hostresource.DiskInfo"
+                    }
+                },
+                "freeCpuCores": {
+                    "description": "Unused CpuCore, used for allocation",
+                    "type": "integer"
+                },
+                "freeMemory": {
+                    "description": "Unused memory size, Unit:GB, used for allocation",
+                    "type": "integer"
+                },
+                "hostId": {
+                    "type": "string"
+                },
+                "hostName": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "kernel": {
+                    "type": "string"
+                },
+                "memory": {
+                    "description": "Host memroy, init while importing",
+                    "type": "integer"
+                },
+                "nic": {
+                    "description": "Host network type: 1GE or 10GE",
+                    "type": "string"
+                },
+                "os": {
+                    "type": "string"
+                },
+                "passwd": {
+                    "type": "string"
+                },
+                "purpose": {
+                    "description": "What Purpose is the host used for? [compute/storage/general]",
+                    "type": "string"
+                },
+                "rack": {
+                    "type": "string"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "reserved": {
+                    "description": "Whether this host is reserved - will not be allocated",
+                    "type": "boolean"
+                },
+                "spec": {
+                    "description": "Host Spec, init while importing",
+                    "type": "string"
+                },
+                "stat": {
+                    "description": "Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "Host Status, 0 for Online, 1 for offline",
+                    "type": "integer"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
         "identification.LoginInfo": {
             "type": "object",
             "properties": {
@@ -2642,6 +2739,135 @@ var doc = `{
                 },
                 "userName": {
                     "type": "string"
+                }
+            }
+        },
+        "importexport.DataExportReq": {
+            "type": "object",
+            "properties": {
+                "accessKey": {
+                    "type": "string"
+                },
+                "bucketRegion": {
+                    "type": "string"
+                },
+                "bucketUrl": {
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                },
+                "endpointUrl": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "fileType": {
+                    "type": "string"
+                },
+                "filter": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "secretAccessKey": {
+                    "type": "string"
+                },
+                "sql": {
+                    "type": "string"
+                },
+                "storageType": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "importexport.DataExportResp": {
+            "type": "object",
+            "properties": {
+                "recordId": {
+                    "type": "string"
+                }
+            }
+        },
+        "importexport.DataImportReq": {
+            "type": "object",
+            "properties": {
+                "accessKey": {
+                    "type": "string"
+                },
+                "bucketUrl": {
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                },
+                "endpointUrl": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "secretAccessKey": {
+                    "type": "string"
+                },
+                "storageType": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "importexport.DataImportResp": {
+            "type": "object",
+            "properties": {
+                "recordId": {
+                    "type": "string"
+                }
+            }
+        },
+        "importexport.DataTransportInfo": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "endTime": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "recordId": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "transportType": {
+                    "type": "string"
+                }
+            }
+        },
+        "importexport.DataTransportRecordQueryResp": {
+            "type": "object",
+            "properties": {
+                "transportRecords": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/importexport.DataTransportInfo"
+                    }
                 }
             }
         },
@@ -2854,95 +3080,6 @@ var doc = `{
                 "took": {
                     "type": "integer",
                     "example": 10
-                }
-            }
-        },
-        "management.AllocHostsReq": {
-            "type": "object",
-            "properties": {
-                "pdReq": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.Allocation"
-                    }
-                },
-                "tidbReq": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.Allocation"
-                    }
-                },
-                "tikvReq": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.Allocation"
-                    }
-                }
-            }
-        },
-        "management.AllocHostsRsp": {
-            "type": "object",
-            "properties": {
-                "pdHosts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.AllocateRsp"
-                    }
-                },
-                "tidbHosts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.AllocateRsp"
-                    }
-                },
-                "tikvHosts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.AllocateRsp"
-                    }
-                }
-            }
-        },
-        "management.AllocateRsp": {
-            "type": "object",
-            "properties": {
-                "cpuCore": {
-                    "type": "integer"
-                },
-                "disk": {
-                    "$ref": "#/definitions/management.DiskInfo"
-                },
-                "hostName": {
-                    "type": "string"
-                },
-                "ip": {
-                    "type": "string"
-                },
-                "memory": {
-                    "type": "integer"
-                },
-                "passwd": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
-        "management.Allocation": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "cpuCores": {
-                    "type": "integer"
-                },
-                "failureDomain": {
-                    "type": "string"
-                },
-                "memory": {
-                    "type": "integer"
                 }
             }
         },
@@ -3350,40 +3487,6 @@ var doc = `{
                 }
             }
         },
-        "management.DiskInfo": {
-            "type": "object",
-            "properties": {
-                "capacity": {
-                    "description": "Disk size, Unit: GB",
-                    "type": "integer"
-                },
-                "diskId": {
-                    "type": "string"
-                },
-                "hostId": {
-                    "type": "string"
-                },
-                "name": {
-                    "description": "[sda/sdb/nvmep0...]",
-                    "type": "string"
-                },
-                "path": {
-                    "description": "Disk mount path: [/data1]",
-                    "type": "string"
-                },
-                "status": {
-                    "description": "Disk Status, 0 for available, 1 for inused",
-                    "type": "integer"
-                },
-                "type": {
-                    "description": "Disk type: [nvme-ssd/ssd/sata]",
-                    "type": "string"
-                },
-                "usedBy": {
-                    "type": "string"
-                }
-            }
-        },
         "management.DistributionItem": {
             "type": "object",
             "properties": {
@@ -3394,98 +3497,6 @@ var doc = `{
                     "type": "string"
                 },
                 "zoneCode": {
-                    "type": "string"
-                }
-            }
-        },
-        "management.HostInfo": {
-            "type": "object",
-            "properties": {
-                "arch": {
-                    "description": "x86 or arm64",
-                    "type": "string"
-                },
-                "az": {
-                    "type": "string"
-                },
-                "cpuCores": {
-                    "description": "Host cpu cores spec, init while importing",
-                    "type": "integer"
-                },
-                "createTime": {
-                    "type": "integer"
-                },
-                "diskType": {
-                    "description": "Disk type of this host [sata/ssd/nvme_ssd]",
-                    "type": "string"
-                },
-                "disks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.DiskInfo"
-                    }
-                },
-                "freeCpuCores": {
-                    "description": "Unused CpuCore, used for allocation",
-                    "type": "integer"
-                },
-                "freeMemory": {
-                    "description": "Unused memory size, Unit:GB, used for allocation",
-                    "type": "integer"
-                },
-                "hostId": {
-                    "type": "string"
-                },
-                "hostName": {
-                    "type": "string"
-                },
-                "ip": {
-                    "type": "string"
-                },
-                "kernel": {
-                    "type": "string"
-                },
-                "memory": {
-                    "description": "Host memroy, init while importing",
-                    "type": "integer"
-                },
-                "nic": {
-                    "description": "Host network type: 1GE or 10GE",
-                    "type": "string"
-                },
-                "os": {
-                    "type": "string"
-                },
-                "passwd": {
-                    "type": "string"
-                },
-                "purpose": {
-                    "description": "What Purpose is the host used for? [compute/storage/general]",
-                    "type": "string"
-                },
-                "rack": {
-                    "type": "string"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "reserved": {
-                    "description": "Whether this host is reserved - will not be allocated",
-                    "type": "boolean"
-                },
-                "spec": {
-                    "description": "Host Spec, init while importing",
-                    "type": "string"
-                },
-                "stat": {
-                    "description": "Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust",
-                    "type": "integer"
-                },
-                "status": {
-                    "description": "Host Status, 0 for Online, 1 for offline",
-                    "type": "integer"
-                },
-                "userName": {
                     "type": "string"
                 }
             }

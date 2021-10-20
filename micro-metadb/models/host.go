@@ -19,6 +19,7 @@ package models
 
 import (
 	"fmt"
+
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
 	"github.com/pingcap-inc/tiem/library/common"
@@ -352,6 +353,128 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []
 	return nil
 }
 
+func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, require *dbpb.DBAllocRequirement) (results []rt.HostResource, err error) {
+	hostId := require.Location.Host
+	if require.Count != 1 {
+		return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "request host count should be 1 for UserSpecifyHost allocation(%d)", require.Count)
+	}
+	reqCores := require.Require.ComputeReq.CpuCores
+	reqMem := require.Require.ComputeReq.Memory
+	exclusive := require.Require.Exclusive
+
+	needDisk := require.Require.DiskReq.NeedDisk
+	diskSpecify := require.Require.DiskReq.DiskSpecify
+	diskType := rt.DiskType(require.Require.DiskReq.DiskType)
+	capacity := require.Require.DiskReq.Capacity
+
+	var resources []*Resource
+	var count int64
+
+	if needDisk {
+		// No Limit in Reserved == false in this strategy
+		db := tx.Order("disks.capacity").Limit(int(require.Count)).Model(&rt.Disk{}).Select(
+			"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
+			"left join hosts on disks.host_id = hosts.id").Where("hosts.id = ?", hostId).Count(&count)
+
+		if count < int64(require.Count) {
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "no disk in host (%s)", hostId)
+		}
+		db = db.Where("hosts.free_cpu_cores >= ? and hosts.free_memory >= ?", reqCores, reqMem).Count(&count)
+		if count < int64(require.Count) {
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostId)
+		}
+		if !exclusive {
+			db = db.Where("hosts.status = ? and (hosts.stat = ? or hosts.stat = ?)", rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED).Count(&count)
+		} else {
+			// If need exclusive resource, only choosing from loadless hosts
+			db = db.Where("hosts.status = ? and hosts.stat = ?", rt.HOST_ONLINE, rt.HOST_LOADLESS).Count(&count)
+		}
+		if count < int64(require.Count) {
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostId, exclusive)
+		}
+		if diskSpecify == "" {
+			err = db.Where("disks.type = ? and disks.status = ? and disks.capacity >= ?", diskType, rt.DISK_AVAILABLE, capacity).Scan(&resources).Error
+		} else {
+			err = db.Where("disks.id = ? and disks.status = ?", diskSpecify, rt.DISK_AVAILABLE).Scan(&resources).Error
+		}
+		if err != nil {
+			return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
+		}
+		if len(resources) < int(require.Count) {
+			if diskSpecify == "" {
+				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "no available disk with type(%s) and capacity(%d) in host(%s) after disk filter", diskType, capacity, hostId)
+			} else {
+				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "disk (%s) not existed or it is not available in host(%s)", diskSpecify, hostId)
+			}
+		}
+	} else {
+		// No Limit in Reserved == false in this strategy
+		db := tx.Model(&rt.Host{}).Select("id as host_id, host_name, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("id = ?", hostId).Count(&count)
+		if count < int64(require.Count) {
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) is not existed", hostId)
+		}
+		db = db.Where("free_cpu_cores >= ? and free_memory >= ?", reqCores, reqMem).Count(&count)
+		if count < int64(require.Count) {
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostId)
+		}
+		if !exclusive {
+			err = db.Where("status = ? and (stat = ? or stat = ?)", rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED).Scan(&resources).Error
+		} else {
+			// If need exclusive resource, only choosing from loadless hosts
+			err = db.Where("status = ? and stat = ?", rt.HOST_ONLINE, rt.HOST_LOADLESS).Scan(&resources).Error
+		}
+		if err != nil {
+			return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
+		}
+		if len(resources) < int(require.Count) {
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostId, exclusive)
+		}
+	}
+
+	// 2. Choose Ports in Hosts
+	for _, resource := range resources {
+		var usedPorts []int32
+		tx.Order("port").Model(&rt.UsedPort{}).Select("port").Where("host_id = ?", resource.HostId).Scan(&usedPorts)
+		for _, portReq := range require.Require.PortReq {
+			res, err := getPortsInRange(usedPorts, portReq.Start, portReq.End, int(portReq.PortCnt))
+			if err != nil {
+				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_PORT, "host %s(%s) has no enough ports on range [%d, %d]", resource.HostId, resource.Ip, portReq.Start, portReq.End)
+			}
+			resource.portRes = append(resource.portRes, res)
+		}
+	}
+
+	// 3. Mark Resources in used
+	err = markResourcesForUsed(tx, applicant, resources, exclusive)
+	if err != nil {
+		return nil, err
+	}
+
+	// 4. make Results and Complete one Requirement
+	for _, resource := range resources {
+		result := rt.HostResource{
+			Reqseq:   int32(seq),
+			HostId:   resource.HostId,
+			HostName: resource.HostName,
+			HostIp:   resource.Ip,
+			UserName: resource.UserName,
+			Passwd:   resource.Passwd,
+		}
+		result.ComputeRes.CpuCores = int32(resource.CpuCores)
+		result.ComputeRes.Memory = int32(resource.Memory)
+		result.DiskRes.DiskId = resource.DiskId
+		result.DiskRes.DiskName = resource.DiskName
+		result.DiskRes.Path = resource.Path
+		result.DiskRes.Capacity = int32(resource.Capacity)
+		for _, portRes := range resource.portRes {
+			result.PortRes = append(result.PortRes, *portRes)
+		}
+
+		results = append(results, result)
+	}
+	return
+}
+
 func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, require *dbpb.DBAllocRequirement, choosedHosts []string) (results []rt.HostResource, err error) {
 	region := require.Location.Region
 	zone := require.Location.Zone
@@ -400,7 +523,25 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 				region, zone, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
 		}
 	} else {
-		err = nil
+		var count int64
+		db := tx.Order("hosts.free_cpu_cores desc").Order("hosts.free_memory desc").Limit(int(require.Count)).Model(&rt.Host{}).Select(
+			"id as host_id, host_name, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("reserved = 0")
+		if excludedHosts == nil {
+			db.Count(&count)
+		} else {
+			db.Not(map[string]interface{}{"hosts.ip": excludedHosts}).Count(&count)
+		}
+		if count < int64(require.Count) {
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "expect host count %d but only %d after excluded host list", require.Count, count)
+		}
+		if !exclusive {
+			err = db.Where("region = ? and az = ? and arch = ? and purpose = ? and disk_type = ? and status = ? and (stat = ? or stat = ?) and free_cpu_cores >= ? and free_memory >= ?",
+				region, zone, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Scan(&resources).Error
+		} else {
+			// If need exclusive resource, only choosing from loadless hosts
+			err = db.Where("region = ? and az = ? and arch = ? and purpose = ? and disk_type = ? and status = ? and stat = ? and free_cpu_cores >= ? and free_memory >= ?",
+				region, zone, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Scan(&resources).Error
+		}
 	}
 	if err != nil {
 		return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
@@ -471,6 +612,11 @@ func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbpb.DBAllocRequest) (res
 		case rt.DiffRackBestEffort:
 		case rt.UserSpecifyRack:
 		case rt.UserSpecifyHost:
+			res, err := allocResourceInHost(tx, req.Applicant, i, require)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "alloc resources in host %s with %dth require failed, %v", require.Location.Host, i, err)
+			}
+			results.Results = append(results.Results, res...)
 		default:
 			return nil, status.Errorf(common.TIEM_RESOURCE_INVALID_STRATEGY, "invalid alloc strategy %d", require.Strategy)
 		}

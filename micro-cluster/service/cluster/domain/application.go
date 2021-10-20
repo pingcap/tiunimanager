@@ -20,6 +20,7 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -401,7 +402,7 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *clusterpb.Backu
 		BackupMethod: string(record.BackupMethod),
 		BackupType:   string(record.BackupType),
 		BackupMode:   string(record.BackupMode),
-		Size:         record.Size,
+		Size:         float32(record.Size) / bytes.MB, //Byte to MByte
 		StartTime:    record.StartTime,
 		EndTime:      record.EndTime,
 		FilePath:     record.FilePath,

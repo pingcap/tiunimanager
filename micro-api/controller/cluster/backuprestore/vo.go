@@ -32,7 +32,7 @@ type BackupRecord struct {
 	BackupMethod string                `json:"backupMethod"` // 物理/逻辑
 	BackupMode   string                `json:"backupMode"`   // 手动/自动
 	Operator     controller.Operator   `json:"operator"`
-	Size         uint64                `json:"size"`
+	Size         float32               `json:"size"`
 	Status       controller.StatusInfo `json:"status"`
 	FilePath     string                `json:"filePath"`
 }

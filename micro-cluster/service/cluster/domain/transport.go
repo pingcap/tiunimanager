@@ -378,7 +378,6 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	 *  and check-requirements = true can not pass lightning pre-check
 	 *  in real environment, config data-source-dir = user nfs storage, sorted-kv-dir = other disk, turn on pre-check
 	 */
-	//s3://nfs/tiem/export/SBw5TJr6So2TULUvTLodZA?access-key=minioadmin&secret-access-key=minioadmin&endpoint=http://minio.pingcap.net:9000&force-path-style=true
 	config := &DataImportConfig{
 		Lightning: LightningCfg{
 			Level:             "info",
@@ -512,7 +511,7 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(ctx, req)
+	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return false
@@ -592,7 +591,7 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(ctx, req)
+	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return false
@@ -676,7 +675,7 @@ func updateTransportRecordFailed(ctx context.Context, recordId, clusterId string
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(ctx, req)
+	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return err

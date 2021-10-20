@@ -19,6 +19,7 @@ package service
 
 import (
 	"context"
+	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -318,7 +319,7 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 				FilePath:     v.BackupRecord.FilePath,
 				StartTime:    v.Flow.CreateTime,
 				EndTime:      v.Flow.UpdateTime,
-				Size:         v.BackupRecord.Size,
+				Size:         float32(v.BackupRecord.Size) / bytes.MB, //Byte to MByte
 				Operator: &clusterpb.OperatorDTO{
 					Id: v.BackupRecord.OperatorId,
 				},

@@ -19,6 +19,7 @@ package domain
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client"
@@ -44,7 +45,6 @@ type BackupRecord struct {
 	FilePath     string
 	StartTime    int64
 	EndTime      int64
-	BizId        uint64
 }
 
 type RecoverRecord struct {
@@ -181,6 +181,10 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 		Tls:            clusterInfo.Tls,
 		TenantId:       operator.TenantId,
 		OwnerId:        operator.Id,
+		RecoverInfo:    RecoverInfo{
+			SourceClusterId: clusterInfo.GetRecoverInfo().GetSourceClusterId(),
+			BackupRecordId: clusterInfo.GetRecoverInfo().GetBackupRecordId(),
+		},
 	}
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs), len(demandDTOs))
@@ -384,12 +388,12 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	}
 
 	getLoggerWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
-	_, err = libbr.BackUp(clusterFacade, storage, uint64(task.Id))
+	backupTaskId, err := libbr.BackUp(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		return false
 	}
-	record.BizId = uint64(task.Id)
+	flowContext.put("backupTaskId", backupTaskId)
 
 	return true
 }
@@ -402,29 +406,37 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
 	record := clusterAggregation.LastBackupRecord
 
-	//todo: update size
-	/*
-		configModel := clusterAggregation.CurrentTiUPConfigRecord.ConfigModel
-		cluster := clusterAggregation.Cluster
-		tidbServer := configModel.TiDBServers[0]
+	var req dbpb.FindTiupTaskByIDRequest
+	var resp *dbpb.FindTiupTaskByIDResponse
+	var err error
+	req.Id = flowContext.value("backupTaskId").(uint64)
 
-		clusterFacade := libbr.ClusterFacade{
-			DbConnParameter: libbr.DbConnParam{
-				Username: "root", //todo: replace admin account
-				Password: "",
-				Ip:	tidbServer.Host,
-				Port: strconv.Itoa(tidbServer.Port),
-			},
-			ClusterId: cluster.Id,
-			ClusterName: cluster.ClusterName,
-			TaskID: record.BizId,
+	for i := 0; i < 30; i++ {
+		time.Sleep(5 * time.Second)
+		resp, err = client.DBClient.FindTiupTaskByID(context.TODO(), &req)
+		if err != nil {
+			getLoggerWithContext(ctx).Errorf("get backup task err = %s", err.Error())
+			task.Fail(err)
+			return false
 		}
-		getLogger().Infof("begin call libbr api ShowBackUpInfo, %v", clusterFacade)
-		resp := libbr.ShowBackUpInfo(clusterFacade)
-		record.Size = resp.Size
-		getLogger().Infof("call libbr api ShowBackUpInfo resp, %v", resp)
-	*/
-	_, err := client.DBClient.UpdateBackupRecord(ctx, &dbpb.DBUpdateBackupRecordRequest{
+		if resp.TiupTask.Status == dbpb.TiupTaskStatus_Error {
+			getLoggerWithContext(ctx).Errorf("backup cluster error, %s", resp.TiupTask.ErrorStr)
+			task.Fail(errors.New(resp.TiupTask.ErrorStr))
+			return false
+		}
+		if resp.TiupTask.Status == dbpb.TiupTaskStatus_Finished {
+			break
+		}
+	}
+	var backupInfo libbr.CmdBrResp
+	err = json.Unmarshal([]byte(resp.GetTiupTask().GetErrorStr()), &backupInfo)
+	if err != nil {
+		getLoggerWithContext(ctx).Errorf("json unmarshal backup info resp: %+v, failed, %s", resp, err.Error())
+	} else {
+		record.Size = backupInfo.Size
+	}
+
+	_, err = client.DBClient.UpdateBackupRecord(context.TODO(), &dbpb.DBUpdateBackupRecordRequest{
 		BackupRecord: &dbpb.DBBackupRecordDTO{
 			Id:      record.Id,
 			Size:    record.Size,
@@ -457,7 +469,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 
 	for i := 0; i < 30; i++ {
 		time.Sleep(5 * time.Second)
-		rsp, err := client.DBClient.FindTiupTaskByID(ctx, &req)
+		rsp, err := client.DBClient.FindTiupTaskByID(context.TODO(), &req)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("get start task err = %s", err.Error())
 			task.Fail(err)
@@ -476,7 +488,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
 
-	record, err := client.DBClient.QueryBackupRecords(ctx, &dbpb.DBQueryBackupRecordRequest{ClusterId: recoverInfo.SourceClusterId, RecordId: recoverInfo.BackupRecordId})
+	record, err := client.DBClient.QueryBackupRecords(context.TODO(), &dbpb.DBQueryBackupRecordRequest{ClusterId: recoverInfo.SourceClusterId, RecordId: recoverInfo.BackupRecordId})
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("query backup record failed, %s", err.Error())
 		return false

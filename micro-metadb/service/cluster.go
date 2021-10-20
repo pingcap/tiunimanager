@@ -452,6 +452,7 @@ func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbpb.DBBackupRecord
 		StorageType:  do.StorageType,
 		OperatorId:   do.OperatorId,
 		FilePath:     do.FilePath,
+		Size:  		  do.Size,
 		FlowId:       int64(do.FlowId),
 	}
 	return

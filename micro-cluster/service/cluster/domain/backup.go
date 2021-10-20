@@ -431,8 +431,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	var backupInfo libbr.CmdBrResp
 	err = json.Unmarshal([]byte(resp.GetTiupTask().GetErrorStr()), &backupInfo)
 	if err != nil {
-		getLoggerWithContext(ctx).Infof("resp: %+v", resp)
-		getLoggerWithContext(ctx).Errorf("json unmarshal backup info failed, %s", err.Error())
+		getLoggerWithContext(ctx).Errorf("json unmarshal backup info resp: %+v, failed, %s", resp, err.Error())
 	} else {
 		record.Size = backupInfo.Size
 	}

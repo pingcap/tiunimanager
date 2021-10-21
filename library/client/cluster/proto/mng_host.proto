@@ -105,6 +105,24 @@ message RemoveHostsInBatchResponse {
     ResponseStatus rs = 1;
 }
 
+message UpdateHostStatusRequest {
+    int32 status = 1;
+    repeated string hostIds = 2;
+}
+
+message UpdateHostStatusResponse {
+    ResponseStatus rs = 1;
+}
+
+message ReserveHostRequest {
+    bool reserved = 1;
+    repeated string hostIds = 2;
+}
+
+message ReserveHostResponse {
+    ResponseStatus rs = 1;
+}
+
 message ListHostsRequest {
     int32 status = 1;
     string purpose = 2;

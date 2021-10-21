@@ -109,6 +109,24 @@ message DBRemoveHostsInBatchResponse {
     DBHostResponseStatus rs = 1;
 }
 
+message DBUpdateHostStatusRequest {
+    int32 status = 1;
+    repeated string hostIds = 2;
+}
+
+message DBUpdateHostStatusResponse {
+    DBHostResponseStatus rs = 1;
+}
+
+message DBReserveHostRequest {
+    bool reserved = 1;
+    repeated string hostIds = 2;
+}
+
+message DBReserveHostResponse {
+    DBHostResponseStatus rs = 1;
+}
+
 message DBListHostsRequest {
     int32 status = 1;
     string purpose = 2;

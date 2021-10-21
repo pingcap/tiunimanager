@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -25,6 +24,7 @@ type HostQuery struct {
 	controller.PageRequest
 	Purpose string `json:"purpose" form:"purpose"`
 	Status  int    `json:"status" form:"status"`
+	Stat    int    `json:"loadStat" form:"loadStat"`
 }
 
 type ExcelField int
@@ -47,6 +47,16 @@ const (
 	DISKTYPE_FIELD
 	DISKS_FIELD
 )
+
+type UpdateHostStatusReq struct {
+	Status  int32    `json:"status"`
+	HostIds []string `json:"hostIds"`
+}
+
+type ReserveHostReq struct {
+	Reserved bool     `json:"reserved"`
+	HostIds  []string `json:"hostIds"`
+}
 
 type Allocation struct {
 	FailureDomain string `json:"failureDomain"`

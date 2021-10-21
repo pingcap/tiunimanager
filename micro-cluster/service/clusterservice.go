@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,6 +18,9 @@ package service
 
 import (
 	"context"
+	"net/http"
+	"strconv"
+
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -26,8 +28,6 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/adapt"
 	user "github.com/pingcap-inc/tiem/micro-cluster/service/user/application"
-	"net/http"
-	"strconv"
 
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -44,9 +44,9 @@ var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
 	resourceManager *resource.ResourceManager
-	authManager *user.AuthManager
-	tenantManager *user.TenantManager
-	userManager *user.UserManager
+	authManager     *user.AuthManager
+	tenantManager   *user.TenantManager
+	userManager     *user.UserManager
 }
 
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
@@ -526,4 +526,12 @@ func (clusterManager *ClusterServiceHandler) AllocResourcesInBatch(ctx context.C
 
 func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Context, in *clusterpb.RecycleRequest, out *clusterpb.RecycleResponse) error {
 	return clusterManager.resourceManager.RecycleResources(ctx, in, out)
+}
+
+func (clusterManager *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, in *clusterpb.UpdateHostStatusRequest, out *clusterpb.UpdateHostStatusResponse) error {
+	return clusterManager.resourceManager.UpdateHostStatus(ctx, in, out)
+}
+
+func (clusterManager *ClusterServiceHandler) ReserveHost(ctx context.Context, in *clusterpb.ReserveHostRequest, out *clusterpb.ReserveHostResponse) error {
+	return clusterManager.resourceManager.ReserveHost(ctx, in, out)
 }

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,6 +18,7 @@ package resource
 
 import (
 	"context"
+
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
 	"github.com/asim/go-micro/v3/client"
@@ -202,6 +202,12 @@ func (s *DBFakeService) SaveBackupStrategy(ctx context.Context, in *dbpb.DBSaveB
 	panic("implement me")
 }
 func (s *DBFakeService) UpdateBackupRecord(ctx context.Context, in *dbpb.DBUpdateBackupRecordRequest, opts ...client.CallOption) (*dbpb.DBUpdateBackupRecordResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) UpdateHostStatus(ctx context.Context, in *dbpb.DBUpdateHostStatusRequest, opt ...client.CallOption) (*dbpb.DBUpdateHostStatusResponse, error) {
+	panic("implement me")
+}
+func (s *DBFakeService) ReserveHost(ctx context.Context, in *dbpb.DBReserveHostRequest, opt ...client.CallOption) (*dbpb.DBReserveHostResponse, error) {
 	panic("implement me")
 }
 

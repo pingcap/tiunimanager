@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -499,6 +498,82 @@ func DownloadHostTemplateFile(c *gin.Context) {
 	c.Header("Cache-Control", "no-cache")
 
 	c.File(filePath)
+}
+
+// UpdateHostStatus godoc
+// @Summary Update host status
+// @Description update host status by a list
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param updateReq body UpdateHostStatusReq true "change status in host list"
+// @Success 200 {object} controller.CommonResult{data=string}
+// @Router /resources/update-host-status/ [post]
+func UpdateHostStatus(c *gin.Context) {
+	var updateReq UpdateHostStatusReq
+	if err := c.ShouldBindJSON(&updateReq); err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		return
+	}
+
+	if str, dup := detectDuplicateElement(updateReq.HostIds); dup {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), str+" Is Duplicated in request"))
+		return
+	}
+
+	var updateHostStatusReq clusterpb.UpdateHostStatusRequest
+	updateHostStatusReq.Status = updateReq.Status
+	updateHostStatusReq.HostIds = append(updateHostStatusReq.HostIds, updateReq.HostIds...)
+
+	rsp, err := client.ClusterClient.UpdateHostStatus(c, &updateHostStatusReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
+	}
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+	c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
+}
+
+// ReserveHost godoc
+// @Summary Set whether a Host is reserved
+// @Description update host reserved status by a list
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param reserveReq body ReserveHostReq true "change reserved status in host list"
+// @Success 200 {object} controller.CommonResult{data=string}
+// @Router /resources/reserve-host/ [post]
+func ReserveHost(c *gin.Context) {
+	var reserveReq ReserveHostReq
+	if err := c.ShouldBindJSON(&reserveReq); err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		return
+	}
+
+	if str, dup := detectDuplicateElement(reserveReq.HostIds); dup {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), str+" Is Duplicated in request"))
+		return
+	}
+
+	var reserveHostReq clusterpb.ReserveHostRequest
+	reserveHostReq.Reserved = reserveReq.Reserved
+	reserveHostReq.HostIds = append(reserveHostReq.HostIds, reserveReq.HostIds...)
+
+	rsp, err := client.ClusterClient.ReserveHost(c, &reserveHostReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
+	}
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+	c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
 }
 
 func copyAllocToReq(src []Allocation, dst *[]*clusterpb.AllocationReq) {

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -20,8 +19,9 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"strings"
+
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
@@ -518,6 +518,56 @@ func (handler *DBServiceHandler) RecycleResources(ctx context.Context, in *dbpb.
 		} else {
 			out.Rs.Code = int32(codes.Internal)
 			out.Rs.Message = fmt.Sprintf("recycle resources failed, err: %v", err)
+		}
+		log.Warnln(out.Rs.Message)
+
+		// return nil to use rsp
+		return nil
+	}
+	out.Rs.Code = common.TIEM_SUCCESS
+	return nil
+}
+
+func (handler *DBServiceHandler) UpdateHostStatus(ctx context.Context, in *dbpb.DBUpdateHostStatusRequest, out *dbpb.DBUpdateHostStatusResponse) error {
+	log := framework.Log()
+	log.Infof("update host %v status to %d", in.HostIds, in.Status)
+	out.Rs = new(dbpb.DBHostResponseStatus)
+
+	resourceManager := handler.Dao().ResourceManager()
+	err := resourceManager.UpdateHostStatus(in)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			out.Rs.Code = int32(st.Code())
+			out.Rs.Message = st.Message()
+		} else {
+			out.Rs.Code = int32(codes.Internal)
+			out.Rs.Message = fmt.Sprintf("update host status failed, err: %v", err)
+		}
+		log.Warnln(out.Rs.Message)
+
+		// return nil to use rsp
+		return nil
+	}
+	out.Rs.Code = common.TIEM_SUCCESS
+	return nil
+}
+
+func (handler *DBServiceHandler) ReserveHost(ctx context.Context, in *dbpb.DBReserveHostRequest, out *dbpb.DBReserveHostResponse) error {
+	log := framework.Log()
+	log.Infof("set host %v reserved status to %v", in.HostIds, in.Reserved)
+	out.Rs = new(dbpb.DBHostResponseStatus)
+
+	resourceManager := handler.Dao().ResourceManager()
+	err := resourceManager.ReserveHost(in)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			out.Rs.Code = int32(st.Code())
+			out.Rs.Message = st.Message()
+		} else {
+			out.Rs.Code = int32(codes.Internal)
+			out.Rs.Message = fmt.Sprintf("update host status failed, err: %v", err)
 		}
 		log.Warnln(out.Rs.Message)
 

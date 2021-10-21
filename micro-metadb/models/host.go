@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -807,4 +806,38 @@ func (m *DAOResourceManager) RecycleAllocResources(request *dbpb.DBRecycleReques
 	}
 	tx.Commit()
 	return
+}
+
+func (m *DAOResourceManager) UpdateHostStatus(request *dbpb.DBUpdateHostStatusRequest) (err error) {
+	tx := m.getDb().Begin()
+	for _, hostId := range request.HostIds {
+		result := tx.Model(&rt.Host{}).Where("id = ?", hostId).Update("status", request.Status)
+		if result.Error != nil {
+			tx.Rollback()
+			return status.Errorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update host [%s] status to %d fail", hostId, request.Status)
+		}
+		if result.RowsAffected == 0 {
+			tx.Rollback()
+			return status.Errorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update invaild host [%s] status", hostId)
+		}
+	}
+	tx.Commit()
+	return nil
+}
+
+func (m *DAOResourceManager) ReserveHost(request *dbpb.DBReserveHostRequest) (err error) {
+	tx := m.getDb().Begin()
+	for _, hostId := range request.HostIds {
+		result := tx.Model(&rt.Host{}).Where("id = ?", hostId).Update("reserved", request.Reserved)
+		if result.Error != nil {
+			tx.Rollback()
+			return status.Errorf(common.TIEM_RESERVE_HOST_FAIL, "set host [%s] reserved status to %v fail", hostId, request.Reserved)
+		}
+		if result.RowsAffected == 0 {
+			tx.Rollback()
+			return status.Errorf(common.TIEM_RESERVE_HOST_FAIL, "set reserved status for invaild host [%s]", hostId)
+		}
+	}
+	tx.Commit()
+	return nil
 }

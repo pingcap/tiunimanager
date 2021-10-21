@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -40,4 +39,10 @@ type DescribeDashboardRsp struct {
 	ClusterId string `json:"clusterId"`
 	Url       string `json:"url"`
 	Token     string `json:"token"`
+}
+
+type DescribeMonitorRsp struct {
+	ClusterId  string `json:"clusterId" example:"abc"`
+	AlertUrl   string `json:"alertUrl" example:"http://127.0.0.1:9091"`
+	GrafanaUrl string `json:"grafanaUrl" example:"http://127.0.0.1:3000"`
 }

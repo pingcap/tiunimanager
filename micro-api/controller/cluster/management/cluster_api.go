@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -266,4 +265,44 @@ func DescribeDashboard(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
 		}
 	}
+}
+
+// DescribeMonitor monitoring link
+// @Summary monitoring link
+// @Description monitoring link
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
+// @Success 200 {object} controller.CommonResult{data=DescribeMonitorRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/monitor [get]
+func DescribeMonitor(c *gin.Context) {
+	operator := controller.GetOperator(c)
+	reqDTO := &clusterpb.DescribeMonitorRequest{
+		Operator:  operator.ConvertToDTO(),
+		ClusterId: c.Param("clusterId"),
+	}
+	respDTO, err := client.ClusterClient.DescribeMonitor(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+
+	status := respDTO.GetStatus()
+	if common.TIEM_SUCCESS != status.GetCode() {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
+		return
+	}
+
+	result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeMonitorRsp{
+		ClusterId:  respDTO.GetClusterId(),
+		AlertUrl:   respDTO.GetAlertUrl(),
+		GrafanaUrl: respDTO.GetGrafanaUrl(),
+	})
+	c.JSON(http.StatusOK, result)
 }

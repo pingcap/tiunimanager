@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -16,6 +15,8 @@
  ******************************************************************************/
 
 package domain
+
+import "github.com/pingcap/tiup/pkg/cluster/spec"
 
 func setupMockAdapter() {
 	TaskRepo = MockTaskRepo{}
@@ -83,8 +84,24 @@ func (m MockClusterRepo) Persist(aggregation *ClusterAggregation) error {
 func (m MockClusterRepo) Load(id string) (cluster *ClusterAggregation, err error) {
 	return &ClusterAggregation{
 		Cluster: &Cluster{
-			Id: "testCluster",
+			Id:          "testCluster",
 			ClusterName: "testCluster",
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				Alertmanagers: []*spec.AlertmanagerSpec{
+					{
+						Host:    "127.0.0.1",
+						WebPort: 9091,
+					},
+				},
+				Grafanas: []*spec.GrafanaSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 3000,
+					},
+				},
+			},
 		},
 	}, nil
 }

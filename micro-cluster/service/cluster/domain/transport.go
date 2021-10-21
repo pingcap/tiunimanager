@@ -273,7 +273,10 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (stri
 	flow.Start()
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
-	ClusterRepo.Persist(clusterAggregation)
+	err = ClusterRepo.Persist(clusterAggregation)
+	if err != nil {
+		return "", err
+	}
 	return info.RecordId, nil
 }
 
@@ -326,7 +329,10 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (stri
 	flow.Start()
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
-	ClusterRepo.Persist(clusterAggregation)
+	err = ClusterRepo.Persist(clusterAggregation)
+	if err != nil {
+		return "", err
+	}
 	return info.RecordId, nil
 }
 
@@ -552,7 +558,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		"--host", tidbServer.Host,
 		"--filetype", info.FileType,
 		"-t", "8",
-		"-o", fmt.Sprintf("%s", info.FilePath),
+		"-o", info.FilePath,
 		"-r", "200000",
 		"-F", "256MiB"}
 	if info.Filter != "" {

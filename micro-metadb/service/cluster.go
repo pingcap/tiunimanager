@@ -282,7 +282,7 @@ func (handler *DBServiceHandler) QueryBackupRecords(ctx context.Context, req *db
 	log := framework.LogWithContext(ctx)
 	result, err := handler.Dao().ClusterManager().QueryBackupRecord(req.ClusterId, req.RecordId)
 	if err != nil {
-		log.Errorf("QueryBackupRecords failed, clusterId: %d, error: %s", req.GetClusterId(), err.Error())
+		log.Errorf("QueryBackupRecords failed, clusterId: %s, error: %s", req.GetClusterId(), err.Error())
 		return err
 	}
 
@@ -307,7 +307,7 @@ func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbp
 			PageSize: req.Page.PageSize,
 			Total:    int32(total),
 		}
-		backupRecordDTOs := make([]*dbpb.DBDBBackupRecordDisplayDTO, len(backupRecords), len(backupRecords))
+		backupRecordDTOs := make([]*dbpb.DBDBBackupRecordDisplayDTO, len(backupRecords))
 		for i, v := range backupRecords {
 			backupRecordDTOs[i] = convertToBackupRecordDisplayDTO(v.BackupRecord, v.Flow)
 		}

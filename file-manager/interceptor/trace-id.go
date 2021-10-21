@@ -15,48 +15,23 @@
  *                                                                            *
  ******************************************************************************/
 
-package common
+package interceptor
 
-// micro service default port
-const (
-	DefaultMicroMetaDBPort  int = 4100
-	DefaultMicroClusterPort     = 4110
-	DefaultMicroApiPort         = 4116
-	DefaultMicroFilePort  		= 4118
-	DefaultMetricsPort          = 4121
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 )
 
-const (
-	TiEM          string = "tiem"
-	LogDirPrefix  string = "/logs/"
-	CertDirPrefix string = "/cert/"
-	DBDirPrefix   string = "/"
-
-	SqliteFileName string = "tiem.sqlite.db"
-
-	CrtFileName string = "server.crt"
-	KeyFileName string = "server.key"
-
-	LocalAddress string = "0.0.0.0"
-)
-
-const (
-	LogFileSystem  = "system"
-	LogFileTiupMgr = "tiupmgr"
-	LogFileBrMgr   = "tiupmgr"
-	LogFileLibTiup = "libtiup"
-	LogFileLibBr   = "tiupmgr"
-
-	LogFileAccess = "access"
-	LogFileAudit  = "audit"
-)
-
-const (
-	RegistryMicroServicePrefix = "/micro/registry/"
-	HttpProtocol               = "http://"
-)
-
-var (
-	TemplateFileName = "hostInfo_template.xlsx"
-	TemplateFilePath = "./etc"
-)
+// Tiem-X-Trace-ID
+func GinTraceIDHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.GetHeader(framework.TiEM_X_TRACE_ID_NAME)
+		if len(id) <= 0 {
+			id = uuidutil.GenerateID()
+		}
+		c.Set(framework.TiEM_X_TRACE_ID_NAME, id)
+		c.Header(framework.TiEM_X_TRACE_ID_NAME, id)
+		c.Next()
+	}
+}

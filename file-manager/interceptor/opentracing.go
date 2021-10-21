@@ -15,48 +15,35 @@
  *                                                                            *
  ******************************************************************************/
 
-package common
+package interceptor
 
-// micro service default port
-const (
-	DefaultMicroMetaDBPort  int = 4100
-	DefaultMicroClusterPort     = 4110
-	DefaultMicroApiPort         = 4116
-	DefaultMicroFilePort  		= 4118
-	DefaultMetricsPort          = 4121
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 )
 
-const (
-	TiEM          string = "tiem"
-	LogDirPrefix  string = "/logs/"
-	CertDirPrefix string = "/cert/"
-	DBDirPrefix   string = "/"
+func GinOpenTracing() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var parentSpan opentracing.Span
 
-	SqliteFileName string = "tiem.sqlite.db"
+		tracer := opentracing.GlobalTracer()
 
-	CrtFileName string = "server.crt"
-	KeyFileName string = "server.key"
-
-	LocalAddress string = "0.0.0.0"
-)
-
-const (
-	LogFileSystem  = "system"
-	LogFileTiupMgr = "tiupmgr"
-	LogFileBrMgr   = "tiupmgr"
-	LogFileLibTiup = "libtiup"
-	LogFileLibBr   = "tiupmgr"
-
-	LogFileAccess = "access"
-	LogFileAudit  = "audit"
-)
-
-const (
-	RegistryMicroServicePrefix = "/micro/registry/"
-	HttpProtocol               = "http://"
-)
-
-var (
-	TemplateFileName = "hostInfo_template.xlsx"
-	TemplateFilePath = "./etc"
-)
+		spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(c.Request.Header))
+		if err != nil {
+			parentSpan = tracer.StartSpan(c.Request.URL.Path)
+			defer parentSpan.Finish()
+		} else {
+			parentSpan = opentracing.StartSpan(
+				c.Request.URL.Path,
+				opentracing.ChildOf(spCtx),
+				opentracing.Tag{Key: string(ext.Component), Value: "HTTP"},
+				ext.SpanKindRPCServer,
+			)
+			defer parentSpan.Finish()
+		}
+		c.Set("Tracer", tracer)
+		c.Set("ParentSpan", parentSpan)
+		c.Next()
+	}
+}

@@ -15,48 +15,51 @@
  *                                                                            *
  ******************************************************************************/
 
-package common
+package interceptor
 
-// micro service default port
-const (
-	DefaultMicroMetaDBPort  int = 4100
-	DefaultMicroClusterPort     = 4110
-	DefaultMicroApiPort         = 4116
-	DefaultMicroFilePort  		= 4118
-	DefaultMetricsPort          = 4121
+import (
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/client"
+	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 )
 
-const (
-	TiEM          string = "tiem"
-	LogDirPrefix  string = "/logs/"
-	CertDirPrefix string = "/cert/"
-	DBDirPrefix   string = "/"
+const VisitorIdentityKey = "VisitorIdentity"
 
-	SqliteFileName string = "tiem.sqlite.db"
+type VisitorIdentity struct {
+	AccountId   string
+	AccountName string
+	TenantId    string
+}
 
-	CrtFileName string = "server.crt"
-	KeyFileName string = "server.key"
+func VerifyIdentity(c *gin.Context) {
 
-	LocalAddress string = "0.0.0.0"
-)
+	bearerTokenStr := c.GetHeader("Authorization")
 
-const (
-	LogFileSystem  = "system"
-	LogFileTiupMgr = "tiupmgr"
-	LogFileBrMgr   = "tiupmgr"
-	LogFileLibTiup = "libtiup"
-	LogFileLibBr   = "tiupmgr"
+	tokenString, err := utils.GetTokenFromBearer(bearerTokenStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
+	}
 
-	LogFileAccess = "access"
-	LogFileAudit  = "audit"
-)
+	path := c.Request.URL
+	req := clusterpb.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
 
-const (
-	RegistryMicroServicePrefix = "/micro/registry/"
-	HttpProtocol               = "http://"
-)
-
-var (
-	TemplateFileName = "hostInfo_template.xlsx"
-	TemplateFilePath = "./etc"
-)
+	result, err := client.ClusterClient.VerifyIdentity(c, &req)
+	if err != nil {
+		c.Error(err)
+		c.Status(http.StatusInternalServerError)
+		c.Abort()
+	} else if result.Status.Code != 0 {
+		c.Status(int(result.Status.Code))
+		c.Abort()
+	} else {
+		c.Set(VisitorIdentityKey, &VisitorIdentity{
+			AccountId:   result.AccountId,
+			AccountName: result.AccountName,
+			TenantId:    result.TenantId,
+		})
+		c.Next()
+	}
+}

@@ -15,48 +15,45 @@
  *                                                                            *
  ******************************************************************************/
 
-package common
+package route
 
-// micro service default port
-const (
-	DefaultMicroMetaDBPort  int = 4100
-	DefaultMicroClusterPort     = 4110
-	DefaultMicroApiPort         = 4116
-	DefaultMicroFilePort  		= 4118
-	DefaultMetricsPort          = 4121
+import (
+	"github.com/gin-gonic/gin"
+	file2 "github.com/pingcap-inc/tiem/file-manager/controller/file"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
+	swaggerFiles "github.com/swaggo/files" // swagger embed files
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-const (
-	TiEM          string = "tiem"
-	LogDirPrefix  string = "/logs/"
-	CertDirPrefix string = "/cert/"
-	DBDirPrefix   string = "/"
+func Route(g *gin.Engine) {
+	//check system
+	check := g.Group("/system")
+	{
+		check.GET("/check", controller.Hello)
+	}
 
-	SqliteFileName string = "tiem.sqlite.db"
+	// support swagger
+	swagger := g.Group("/swagger")
+	{
+		swagger.GET("/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 
-	CrtFileName string = "server.crt"
-	KeyFileName string = "server.key"
+	// api
+	apiV1 := g.Group("/api/v1")
+	{
+		apiV1.Use(interceptor.GinOpenTracing())
+		apiV1.Use(interceptor.GinTraceIDHandler())
+		apiV1.Use(interceptor.AccessLog(), gin.Recovery())
 
-	LocalAddress string = "0.0.0.0"
-)
+		file := apiV1.Group("/file")
+		{
+			file.Use(interceptor.VerifyIdentity)
+			file.Use(interceptor.AuditLog())
 
-const (
-	LogFileSystem  = "system"
-	LogFileTiupMgr = "tiupmgr"
-	LogFileBrMgr   = "tiupmgr"
-	LogFileLibTiup = "libtiup"
-	LogFileLibBr   = "tiupmgr"
+			file.POST("/upload", file2.UploadFile)
+			file.POST("/download", file2.DownloadFile)
+		}
+	}
 
-	LogFileAccess = "access"
-	LogFileAudit  = "audit"
-)
-
-const (
-	RegistryMicroServicePrefix = "/micro/registry/"
-	HttpProtocol               = "http://"
-)
-
-var (
-	TemplateFileName = "hostInfo_template.xlsx"
-	TemplateFilePath = "./etc"
-)
+}

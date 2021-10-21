@@ -15,48 +15,41 @@
  *                                                                            *
  ******************************************************************************/
 
-package common
+package interceptor
 
-// micro service default port
-const (
-	DefaultMicroMetaDBPort  int = 4100
-	DefaultMicroClusterPort     = 4110
-	DefaultMicroApiPort         = 4116
-	DefaultMicroFilePort  		= 4118
-	DefaultMetricsPort          = 4121
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	log "github.com/sirupsen/logrus"
 )
 
-const (
-	TiEM          string = "tiem"
-	LogDirPrefix  string = "/logs/"
-	CertDirPrefix string = "/cert/"
-	DBDirPrefix   string = "/"
+func AuditLog() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		visitor := &VisitorIdentity{
+			"unknown",
+			"unknown",
+			"unknown",
+		}
 
-	SqliteFileName string = "tiem.sqlite.db"
+		v, _ := c.Get(VisitorIdentityKey)
+		if v != nil {
+			visitor, _ = v.(*VisitorIdentity)
+		}
 
-	CrtFileName string = "server.crt"
-	KeyFileName string = "server.key"
+		path := c.Request.URL.Path
 
-	LocalAddress string = "0.0.0.0"
-)
+		entry := framework.LogForkFile(common.LogFileAudit).WithFields(log.Fields{
+			"operatorId":       visitor.AccountId,
+			"operatorName":     visitor.AccountName,
+			"operatorTenantId": visitor.TenantId,
 
-const (
-	LogFileSystem  = "system"
-	LogFileTiupMgr = "tiupmgr"
-	LogFileBrMgr   = "tiupmgr"
-	LogFileLibTiup = "libtiup"
-	LogFileLibBr   = "tiupmgr"
-
-	LogFileAccess = "access"
-	LogFileAudit  = "audit"
-)
-
-const (
-	RegistryMicroServicePrefix = "/micro/registry/"
-	HttpProtocol               = "http://"
-)
-
-var (
-	TemplateFileName = "hostInfo_template.xlsx"
-	TemplateFilePath = "./etc"
-)
+			"clientIP":  c.ClientIP(),
+			"method":    c.Request.Method,
+			"path":      path,
+			"referer":   c.Request.Referer(),
+			"userAgent": c.Request.UserAgent(),
+		})
+		entry.Info("some do something")
+	}
+}

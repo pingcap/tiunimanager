@@ -15,48 +15,28 @@
  *                                                                            *
  ******************************************************************************/
 
-package common
+package interceptor
 
-// micro service default port
-const (
-	DefaultMicroMetaDBPort  int = 4100
-	DefaultMicroClusterPort     = 4110
-	DefaultMicroApiPort         = 4116
-	DefaultMicroFilePort  		= 4118
-	DefaultMetricsPort          = 4121
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/unrolled/secure"
 )
 
-const (
-	TiEM          string = "tiem"
-	LogDirPrefix  string = "/logs/"
-	CertDirPrefix string = "/cert/"
-	DBDirPrefix   string = "/"
+func TlsHandler(addr string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		secureMiddleware := secure.New(secure.Options{
+			SSLRedirect: true,
+			SSLHost:     addr,
+		})
+		err := secureMiddleware.Process(c.Writer, c.Request)
 
-	SqliteFileName string = "tiem.sqlite.db"
+		// If there was an error, do not continue.
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, err.Error())
+		}
 
-	CrtFileName string = "server.crt"
-	KeyFileName string = "server.key"
-
-	LocalAddress string = "0.0.0.0"
-)
-
-const (
-	LogFileSystem  = "system"
-	LogFileTiupMgr = "tiupmgr"
-	LogFileBrMgr   = "tiupmgr"
-	LogFileLibTiup = "libtiup"
-	LogFileLibBr   = "tiupmgr"
-
-	LogFileAccess = "access"
-	LogFileAudit  = "audit"
-)
-
-const (
-	RegistryMicroServicePrefix = "/micro/registry/"
-	HttpProtocol               = "http://"
-)
-
-var (
-	TemplateFileName = "hostInfo_template.xlsx"
-	TemplateFilePath = "./etc"
-)
+		c.Next()
+	}
+}

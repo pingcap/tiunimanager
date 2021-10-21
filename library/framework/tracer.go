@@ -8,6 +8,7 @@ import (
 	"github.com/asim/go-micro/v3/metadata"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 )
@@ -60,6 +61,89 @@ func NewJaegerTracer(serviceName string, addr string) (opentracing.Tracer, io.Cl
 	)
 
 	return tracer, closer, err
+}
+
+type BackgroundTask struct {
+	fromCtx        context.Context
+	fromTraceID    string
+	currentCtx     context.Context
+	currentTraceID string
+	fn             func(context.Context) error
+	comments       string
+	// close to notify error return is ready
+	retNotifyCh chan struct{}
+	retErr      error
+}
+
+// NewBackgroundTask return a new background task but do not start it in this function call.
+func NewBackgroundTask(fromCtx context.Context, comments string, fn func(context.Context) error) *BackgroundTask {
+	currentTraceID := uuidutil.GenerateID()
+	var fromTraceID string
+	if fromCtx == nil {
+		fromTraceID = ""
+	} else {
+		fromTraceID = GetTraceIDFromContext(fromCtx)
+	}
+	t := &BackgroundTask{
+		fromCtx:        fromCtx,
+		fromTraceID:    fromTraceID,
+		currentCtx:     newMicroContextWithTraceID(context.Background(), currentTraceID),
+		currentTraceID: currentTraceID,
+		fn:             fn,
+		comments:       comments,
+		retNotifyCh:    make(chan struct{}),
+	}
+	return t
+}
+
+// Exec exec this task in current goroutine
+func (p *BackgroundTask) Exec() error {
+	if len(p.fromTraceID) > 0 {
+		LogWithContext(p.currentCtx).Infof("start new background task from traceID %s with comments: %s",
+			p.fromTraceID, p.comments,
+		)
+	} else {
+		LogWithContext(p.currentCtx).Infof("start new background task with comments: %s", p.comments)
+	}
+	err := p.fn(p.currentCtx)
+	p.retErr = err
+	close(p.retNotifyCh)
+	if err != nil {
+		LogWithContext(p.currentCtx).Errorf("background task returned an error: %s", err)
+	} else {
+		LogWithContext(p.currentCtx).Info("background task finished successfully")
+	}
+	return err
+}
+
+// Sync get the task's final return error value syncronously.
+func (p *BackgroundTask) Sync() error {
+	<-p.retNotifyCh
+	return p.retErr
+}
+
+// StartBackgroundTask new and start a background task in a newly created background goroutine
+func StartBackgroundTask(fromCtx context.Context, comments string, fn func(context.Context) error) *BackgroundTask {
+	t := NewBackgroundTask(fromCtx, comments, fn)
+	go func() {
+		t.Exec()
+	}()
+	return t
+}
+
+func example1(ctx context.Context) {
+	// current ctx
+	// could be a gin ctx, micro ctx, gorm ctx, or background task ctx
+	currentCtx := ctx
+	// start a background task in a newly created background goroutine
+	runningTask := StartBackgroundTask(currentCtx, "tidb backup routine", func(bgTaskCtx context.Context) error {
+		// do the backup task
+		return nil
+	})
+	// do sth. else
+	// get return err of the task
+	err := runningTask.Sync()
+	_ = err
 }
 
 // make a new micro ctx base on the gin ctx

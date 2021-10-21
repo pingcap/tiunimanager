@@ -1,3 +1,20 @@
+
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package framework
 
 import (
@@ -8,6 +25,9 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	prom "github.com/prometheus/client_golang/prometheus"
+
 	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/asim/go-micro/plugins/registry/etcd/v3"
@@ -17,7 +37,6 @@ import (
 	"github.com/asim/go-micro/v3/registry"
 	"github.com/asim/go-micro/v3/server"
 	"github.com/asim/go-micro/v3/transport"
-	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 )
@@ -36,6 +55,7 @@ type Framework interface {
 	GetTracer() *Tracer
 	GetEtcdClient() *EtcdClient
 	GetElasticsearchClient() *ElasticSearchClient
+	GetMetrics() *metrics.Metrics
 
 	GetServiceMeta() *ServiceMeta
 	StartService() error
@@ -76,6 +96,8 @@ type BaseFramework struct {
 	certificate   *CertificateInfo
 
 	elasticsearchClient *ElasticSearchClient
+
+	metrics *metrics.Metrics
 
 	serviceMeta  *ServiceMeta
 	microService micro.Service
@@ -129,6 +151,7 @@ func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFr
 
 	f.initEtcdClient()
 	f.initElasticsearchClient()
+	f.initMetrics()
 	return f
 }
 
@@ -211,6 +234,10 @@ func (b *BaseFramework) initElasticsearchClient() {
 	b.elasticsearchClient = InitElasticsearch(b.GetClientArgs().ElasticsearchAddress)
 }
 
+func (b *BaseFramework) initMetrics() {
+	b.metrics = metrics.InitMetrics()
+}
+
 func (b *BaseFramework) GetDeployDir() string {
 	return b.args.DeployDir
 }
@@ -264,12 +291,20 @@ func (b *BaseFramework) GetTracer() *Tracer {
 	return b.trace
 }
 
+func (b *BaseFramework) GetCertificateInfo() *CertificateInfo {
+	return b.certificate
+}
+
 func (b *BaseFramework) GetEtcdClient() *EtcdClient {
 	return b.etcdClient
 }
 
 func (b *BaseFramework) GetElasticsearchClient() *ElasticSearchClient {
 	return b.elasticsearchClient
+}
+
+func (b *BaseFramework) GetMetrics() *metrics.Metrics {
+	return b.metrics
 }
 
 func (b *BaseFramework) GetServiceMeta() *ServiceMeta {
@@ -291,16 +326,9 @@ func (b *BaseFramework) StartService() error {
 
 func (b *BaseFramework) prometheusBoot() {
 	// add boot_time metrics
-	bootTime := prom.NewGaugeVec(
-		prom.GaugeOpts{
-			Namespace: common.TiEM,
-			Name:      "boot_time",
-			Help:      "A gauge of micro service boot time.",
-		},
-		[]string{"service"},
-	)
-	prom.MustRegister(bootTime)
-	bootTime.With(prom.Labels{"service": b.GetServiceMeta().ServiceName.ServerName()}).SetToCurrentTime()
+	b.metrics.BootTimeGaugeMetric.
+		With(prom.Labels{metrics.ServiceLabel: b.GetServiceMeta().ServiceName.ServerName()}).
+		SetToCurrentTime()
 
 	http.Handle("/metrics", promhttp.Handler())
 	// 启动web服务，监听8085端口

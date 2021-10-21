@@ -1,3 +1,20 @@
+
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package domain
 
 import (
@@ -37,15 +54,15 @@ type ImportInfo struct {
 }
 
 type ExportInfo struct {
-	ClusterId   string
-	UserName    string
-	Password    string
-	FileType    string
-	RecordId    string
-	FilePath    string
-	Filter      string
-	Sql 		string
-	StorageType string
+	ClusterId    string
+	UserName     string
+	Password     string
+	FileType     string
+	RecordId     string
+	FilePath     string
+	Filter       string
+	Sql          string
+	StorageType  string
 	BucketRegion string
 }
 
@@ -177,10 +194,25 @@ func ImportDataPreCheck(req *clusterpb.DataImportRequest) error {
 			return fmt.Errorf("invalid param password %s", req.GetPassword())
 		}
 	*/
-	if req.GetFilePath() == "" {
-		return fmt.Errorf("invalid param filePath %s", req.GetFilePath())
-	}
-	if S3StorageType != req.GetStorageType() && NfsStorageType != req.GetStorageType() {
+	switch req.GetStorageType() {
+	case S3StorageType:
+		if req.GetEndpointUrl() == "" {
+			return fmt.Errorf("invalid param endpointUrl %s", req.GetEndpointUrl())
+		}
+		if req.GetBucketUrl() == "" {
+			return fmt.Errorf("invalid param bucketUrl %s", req.GetBucketUrl())
+		}
+		if req.GetAccessKey() == "" {
+			return fmt.Errorf("invalid param accessKey %s", req.GetAccessKey())
+		}
+		if req.GetSecretAccessKey() == "" {
+			return fmt.Errorf("invalid param secretAccessKey %s", req.GetSecretAccessKey())
+		}
+	case NfsStorageType:
+		if req.GetFilePath() == "" {
+			return fmt.Errorf("invalid param filePath %s", req.GetFilePath())
+		}
+	default:
 		return fmt.Errorf("invalid param storageType %s", req.GetStorageType())
 	}
 
@@ -216,15 +248,15 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (stri
 	}
 
 	info := &ExportInfo{
-		ClusterId:   request.GetClusterId(),
-		UserName:    request.GetUserName(),
-		Password:    request.GetPassword(), //todo: need encrypt
-		FileType:    request.GetFileType(),
-		RecordId:    resp.GetId(),
-		FilePath:    getDataExportFilePath(request),
-		Filter:      request.GetFilter(),
-		Sql:  		 request.GetSql(),
-		StorageType: request.GetStorageType(),
+		ClusterId:    request.GetClusterId(),
+		UserName:     request.GetUserName(),
+		Password:     request.GetPassword(), //todo: need encrypt
+		FileType:     request.GetFileType(),
+		RecordId:     resp.GetId(),
+		FilePath:     getDataExportFilePath(request),
+		Filter:       request.GetFilter(),
+		Sql:          request.GetSql(),
+		StorageType:  request.GetStorageType(),
 		BucketRegion: request.GetBucketRegion(),
 	}
 
@@ -278,7 +310,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (stri
 		ClusterId:   request.GetClusterId(),
 		UserName:    request.GetUserName(),
 		Password:    request.GetPassword(), //todo: need encrypt
-		FilePath:    request.GetFilePath(),
+		FilePath:    getDataImportFilePath(request),
 		RecordId:    resp.GetId(),
 		StorageType: request.GetStorageType(),
 		ConfigPath:  getDataImportConfigDir(request.GetClusterId(), TransportTypeImport),
@@ -377,12 +409,21 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	return config
 }
 
-
 func getDataImportConfigDir(clusterId string, transportType TransportType) string {
 	return fmt.Sprintf("%s/%s/%s", defaultTransportDirPrefix, clusterId, transportType)
 }
 
 func getDataExportFilePath(request *clusterpb.DataExportRequest) string {
+	var filePath string
+	if S3StorageType == request.GetStorageType() {
+		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
+	} else {
+		filePath = request.GetFilePath()
+	}
+	return filePath
+}
+
+func getDataImportFilePath(request *clusterpb.DataImportRequest) string {
 	var filePath string
 	if S3StorageType == request.GetStorageType() {
 		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
@@ -476,7 +517,7 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(ctx, req)
+	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return false
@@ -556,7 +597,7 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(ctx, req)
+	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return false
@@ -640,7 +681,7 @@ func updateTransportRecordFailed(ctx context.Context, recordId, clusterId string
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(ctx, req)
+	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return err

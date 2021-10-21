@@ -1,18 +1,39 @@
+
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package service
 
 import (
 	"context"
+	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
+	"github.com/pingcap-inc/tiem/micro-cluster/service/user/adapt"
+	user "github.com/pingcap-inc/tiem/micro-cluster/service/user/application"
 	"net/http"
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
-	domain2 "github.com/pingcap-inc/tiem/micro-cluster/service/tenant/domain"
+	userDomain "github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -22,21 +43,27 @@ var SuccessResponseStatus = &clusterpb.ResponseStatusDTO{Code: 0}
 var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
-	resourceManager *host.ResourceManager
+	resourceManager *resource.ResourceManager
+	authManager *user.AuthManager
+	tenantManager *user.TenantManager
+	userManager *user.UserManager
 }
 
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
 	handler := new(ClusterServiceHandler)
-	resourceManager := host.NewResourceManager()
-	handler.SetResourceManager(resourceManager)
+	handler.SetResourceManager(resource.NewResourceManager())
+	handler.userManager = user.NewUserManager(adapt.MicroMetaDbRepo{})
+	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
+	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
+
 	return handler
 }
 
-func (handler *ClusterServiceHandler) SetResourceManager(resourceManager *host.ResourceManager) {
+func (handler *ClusterServiceHandler) SetResourceManager(resourceManager *resource.ResourceManager) {
 	handler.resourceManager = resourceManager
 }
 
-func (handler *ClusterServiceHandler) ResourceManager() *host.ResourceManager {
+func (handler *ClusterServiceHandler) ResourceManager() *resource.ResourceManager {
 	return handler.resourceManager
 }
 
@@ -292,7 +319,7 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 				FilePath:     v.BackupRecord.FilePath,
 				StartTime:    v.Flow.CreateTime,
 				EndTime:      v.Flow.UpdateTime,
-				Size:         v.BackupRecord.Size,
+				Size:         float32(v.BackupRecord.Size) / bytes.MB, //Byte to MByte
 				Operator: &clusterpb.OperatorDTO{
 					Id: v.BackupRecord.OperatorId,
 				},
@@ -394,10 +421,10 @@ var ManageSuccessResponseStatus = &clusterpb.ManagerResponseStatus{
 	Code: 0,
 }
 
-func (*ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginRequest, resp *clusterpb.LoginResponse) error {
+func (p *ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginRequest, resp *clusterpb.LoginResponse) error {
 	log := framework.LogWithContext(ctx).WithField("fp", "ClusterServiceHandler.Login")
 	log.Debug("req:", req)
-	token, err := domain2.Login(req.GetAccountName(), req.GetPassword())
+	token, err := p.authManager.Login(req.GetAccountName(), req.GetPassword())
 
 	if err != nil {
 		resp.Status = &clusterpb.ManagerResponseStatus{
@@ -415,8 +442,8 @@ func (*ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginReq
 
 }
 
-func (*ClusterServiceHandler) Logout(ctx context.Context, req *clusterpb.LogoutRequest, resp *clusterpb.LogoutResponse) error {
-	accountName, err := domain2.Logout(req.TokenString)
+func (p *ClusterServiceHandler) Logout(ctx context.Context, req *clusterpb.LogoutRequest, resp *clusterpb.LogoutResponse) error {
+	accountName, err := p.authManager.Logout(req.TokenString)
 	if err != nil {
 		resp.Status = &clusterpb.ManagerResponseStatus{
 			Code:    http.StatusInternalServerError,
@@ -431,16 +458,16 @@ func (*ClusterServiceHandler) Logout(ctx context.Context, req *clusterpb.LogoutR
 
 }
 
-func (*ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterpb.VerifyIdentityRequest, resp *clusterpb.VerifyIdentityResponse) error {
-	tenantId, accountId, accountName, err := domain2.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
+func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterpb.VerifyIdentityRequest, resp *clusterpb.VerifyIdentityResponse) error {
+	tenantId, accountId, accountName, err := p.authManager.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
 
 	if err != nil {
-		if _, ok := err.(*domain2.UnauthorizedError); ok {
+		if _, ok := err.(*userDomain.UnauthorizedError); ok {
 			resp.Status = &clusterpb.ManagerResponseStatus{
 				Code:    http.StatusUnauthorized,
 				Message: "未登录或登录失效，请重试",
 			}
-		} else if _, ok := err.(*domain2.ForbiddenError); ok {
+		} else if _, ok := err.(*userDomain.ForbiddenError); ok {
 			resp.Status = &clusterpb.ManagerResponseStatus{
 				Code:    http.StatusForbidden,
 				Message: "无权限",

@@ -1,3 +1,20 @@
+
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package main
 
 import (
@@ -5,7 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -14,12 +31,14 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+
 	"github.com/asim/go-micro/v3/client"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"github.com/pingcap-inc/tiem/micro-api/controller/hostapi"
+	"github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -70,8 +89,8 @@ func Test_ListHosts_Succeed(t *testing.T) {
 
 	type ResultWithPage struct {
 		controller.ResultMark
-		Data []hostapi.HostInfo `json:"data"`
-		Page controller.Page    `json:"page"`
+		Data []hostresource.HostInfo `json:"data"`
+		Page controller.Page         `json:"page"`
 	}
 	var result ResultWithPage
 	err := json.Unmarshal(w.Body.Bytes(), &result)
@@ -132,7 +151,7 @@ func Test_ImportHost_Succeed(t *testing.T) {
 
 	type CommonResult struct {
 		controller.ResultMark
-		Data hostapi.ImportHostRsp `json:"data"`
+		Data hostresource.ImportHostRsp `json:"data"`
 	}
 	var result CommonResult
 
@@ -199,7 +218,7 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 
 	type CommonResult struct {
 		controller.ResultMark
-		Data hostapi.ImportHostsRsp `json:"data"`
+		Data hostresource.ImportHostsRsp `json:"data"`
 	}
 	var result CommonResult
 
@@ -296,7 +315,7 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 
 	type CommonResult struct {
 		controller.ResultMark
-		Data hostapi.HostDetailsRsp `json:"data"`
+		Data hostresource.HostDetailsRsp `json:"data"`
 	}
 	var result CommonResult
 
@@ -357,7 +376,7 @@ func Test_GetFailureDomain_Succeed(t *testing.T) {
 
 	type CommonResult struct {
 		controller.ResultMark
-		Data []hostapi.DomainResource `json:"data"`
+		Data []warehouse.DomainResource `json:"data"`
 	}
 	var result CommonResult
 
@@ -465,7 +484,7 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 
 	type CommonResult struct {
 		controller.ResultMark
-		Data hostapi.AllocHostsRsp `json:"data"`
+		Data hostresource.AllocHostsRsp `json:"data"`
 	}
 	var result CommonResult
 

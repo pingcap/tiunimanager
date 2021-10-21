@@ -1,3 +1,20 @@
+
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package domain
 
 import (
@@ -9,12 +26,12 @@ import (
 
 func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterInstanceDTO {
 	dto := &clusterpb.ClusterInstanceDTO{
-		Whitelist:           	[]string{},
-		DiskUsage:                MockUsage(),
-		CpuUsage:                 MockUsage(),
-		MemoryUsage:              MockUsage(),
-		StorageUsage:             MockUsage(),
-		BackupFileUsage:          MockUsage(),
+		Whitelist:       []string{},
+		DiskUsage:       MockUsage(),
+		CpuUsage:        MockUsage(),
+		MemoryUsage:     MockUsage(),
+		StorageUsage:    MockUsage(),
+		BackupFileUsage: MockUsage(),
 	}
 
 	if record := aggregation.CurrentTopologyConfigRecord; aggregation.CurrentTopologyConfigRecord != nil && record.ConfigModel != nil {
@@ -34,7 +51,7 @@ func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int64) {
 	addressList := make([]string, len(servers), len(servers))
 	portList := make([]int64, len(servers), len(servers))
 
-	for i,v := range servers {
+	for i, v := range servers {
 		addressList[i] = v.Host
 		portList[i] = int64(v.Port)
 	}
@@ -72,10 +89,10 @@ func appendAllComponentInstances(config *spec.Specification, knowledge *knowledg
 	return components
 }
 
-var ComponentAppender = map[string]func (*spec.Specification, string) []*clusterpb.ComponentNodeDisplayInfoDTO{
+var ComponentAppender = map[string]func(*spec.Specification, string) []*clusterpb.ComponentNodeDisplayInfoDTO{
 	"TiDB": tiDBComponent,
 	"TiKV": tiKVComponent,
-	"PD": pDComponent,
+	"PD":   pDComponent,
 	//"TiFlash": tiFlashComponent,
 	//"TiCDC": tiCDCComponent,
 }
@@ -85,15 +102,15 @@ func tiDBComponent(config *spec.Specification, version string) []*clusterpb.Comp
 	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
 	for i, v := range servers {
 		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
-			NodeId: v.Host,
+			NodeId:  v.Host,
 			Version: version, // todo
-			Status: "运行中", // todo
+			Status:  "运行中",   // todo
 			Instance: &clusterpb.ComponentNodeInstanceDTO{
 				HostId: v.Host,
-				Port: int32(v.Port),
-				Role: mockRole(),
-				Spec: mockSpec(),
-				Zone: mockZone(),
+				Port:   int32(v.Port),
+				Role:   mockRole(),
+				Spec:   mockSpec(),
+				Zone:   mockZone(),
 			},
 
 			Usages: &clusterpb.ComponentNodeUsageDTO{
@@ -113,15 +130,15 @@ func tiKVComponent(config *spec.Specification, version string) []*clusterpb.Comp
 	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
 	for i, v := range servers {
 		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
-			NodeId: v.Host,
+			NodeId:  v.Host,
 			Version: version, // todo
-			Status: "运行中", // todo
+			Status:  "运行中",   // todo
 			Instance: &clusterpb.ComponentNodeInstanceDTO{
 				HostId: v.Host,
-				Port: 20160,
-				Role: mockRole(),
-				Spec: mockSpec(),
-				Zone: mockZone(),
+				Port:   20160,
+				Role:   mockRole(),
+				Spec:   mockSpec(),
+				Zone:   mockZone(),
 			},
 
 			Usages: &clusterpb.ComponentNodeUsageDTO{
@@ -141,15 +158,15 @@ func pDComponent(config *spec.Specification, version string) []*clusterpb.Compon
 	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
 	for i, v := range servers {
 		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
-			NodeId: v.Host,
+			NodeId:  v.Host,
 			Version: version, // todo
-			Status: "运行中", // todo
+			Status:  "运行中",   // todo
 			Instance: &clusterpb.ComponentNodeInstanceDTO{
 				HostId: v.Host,
-				Port: 2379,
-				Role: mockRole(),
-				Spec: mockSpec(),
-				Zone: mockZone(),
+				Port:   2379,
+				Role:   mockRole(),
+				Spec:   mockSpec(),
+				Zone:   mockZone(),
 			},
 
 			Usages: &clusterpb.ComponentNodeUsageDTO{
@@ -177,8 +194,8 @@ func tiFlashComponent(config *spec.Specification, version string) []*clusterpb.C
 // MockUsage TODO will be replaced with monitor implement
 func MockUsage() *clusterpb.UsageDTO {
 	usage := &clusterpb.UsageDTO{
-		Total:     100,
-		Used: float32(rand.Intn(100)),
+		Total: 100,
+		Used:  float32(rand.Intn(100)),
 	}
 	usage.UsageRate = usage.Used / usage.Total
 	return usage
@@ -206,7 +223,7 @@ func mockZone() *clusterpb.ZoneBaseInfoDTO {
 }
 
 func mockIops() []float32 {
-	return []float32{10,20}
+	return []float32{10, 20}
 }
 
 func mockIoUtil() float32 {

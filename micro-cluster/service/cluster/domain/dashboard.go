@@ -1,3 +1,20 @@
+
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package domain
 
 import (
@@ -24,23 +41,13 @@ type LoginResponse struct {
 	Expire time.Time `json:"expire"`
 }
 
-type ShareRequest struct {
-	ExpireInSeconds int64 `json:"expire_in_sec"`
-	RevokeWritePriv bool  `json:"revoke_write_priv"`
-}
-
-type ShareResponse struct {
-	Code string `json:"code"`
-}
-
 type Dashboard struct {
 	ClusterId string `json:"clusterId"`
 	Url       string `json:"url"`
-	Token 	  string `json:"token"`
+	Token     string `json:"token"`
 }
 
 var loginUrlSuffix string = "api/user/login"
-var defaultExpire int64 = 60 * 60 * 3 //3 hour expire
 
 func DescribeDashboard(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string) (*Dashboard, error) {
 	//todo: check operator and clusterId
@@ -50,10 +57,10 @@ func DescribeDashboard(ctx context.Context, ope *clusterpb.OperatorDTO, clusterI
 	}
 
 	/*
-	url, err := getDashboardUrl(clusterAggregation)
-	if err != nil {
-		return nil, err
-	}*/
+		url, err := getDashboardUrl(clusterAggregation)
+		if err != nil {
+			return nil, err
+		}*/
 	url := getDashboardUrlFromCluser(clusterAggregation)
 
 	token, err := getLoginToken(ctx, url, "root", "") //todo: replace by real data

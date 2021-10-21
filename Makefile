@@ -23,8 +23,7 @@ TIEM_INSTALL_PREFIX = ${PREFIX}/tiem
 include Makefile.common
 
 .PHONY: all clean test gotest gotool help
-all:
-	build
+all: build
 
 # 1. build binary
 build:

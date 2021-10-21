@@ -1,18 +1,36 @@
+
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package domain
 
 import (
 	ctx "context"
 	"errors"
+	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
 	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/host"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
 )
@@ -188,7 +206,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	demands := clusterAggregation.Cluster.Demands
 
 	clusterAggregation.AvailableResources = &clusterpb.AllocHostResponse{}
-	err := host.NewResourceManager().AllocHosts(ctx.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
+	err := resource.NewResourceManager().AllocHosts(ctx.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
 
 	if err != nil {
 		// todo
@@ -387,15 +405,15 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *clusterpb.Backu
 	currentFlow := aggregation.CurrentWorkFlow
 
 	return &clusterpb.BackupRecordDTO{
-		Id:         record.Id,
-		ClusterId:  record.ClusterId,
+		Id:           record.Id,
+		ClusterId:    record.ClusterId,
 		BackupMethod: string(record.BackupMethod),
-		BackupType: string(record.BackupType),
-		BackupMode:	string(record.BackupMode),
-		Size:      record.Size,
-		StartTime: record.StartTime,
-		EndTime:   record.EndTime,
-		FilePath: record.FilePath,
+		BackupType:   string(record.BackupType),
+		BackupMode:   string(record.BackupMode),
+		Size:         float32(record.Size) / bytes.MB, //Byte to MByte
+		StartTime:    record.StartTime,
+		EndTime:      record.EndTime,
+		FilePath:     record.FilePath,
 		DisplayStatus: &clusterpb.DisplayStatusDTO{
 			InProcessFlowId: int32(currentFlow.Id),
 			StatusCode:      strconv.Itoa(int(currentFlow.Status)),
@@ -548,7 +566,7 @@ func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spe
 		tiupConfig.TiDBServers = append(tiupConfig.TiDBServers, &spec.TiDBSpec{
 			Host:      v.Ip,
 			DeployDir: filepath.Join(v.Disk.Path, cluster.Id, "tidb-deploy"),
-			Port: tidbPort(),
+			Port:      tidbPort(),
 		})
 	}
 	for _, v := range tikvHosts {

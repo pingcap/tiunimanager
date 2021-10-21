@@ -36,8 +36,9 @@ message DBComputeRequirement {
 
 message DBDiskRequirement {
 	bool needDisk = 1;
-	int32 capacity = 2;  // Reserved, not used by now
-	string diskType = 3; // Reserved, not used by now
+	int32 capacity = 2;  // filter disks by disk capacity
+	string diskType = 3; // filter disks by disk type
+	string diskSpecify = 4; // specify diskId
 }
 
 message DBPortRequirement {

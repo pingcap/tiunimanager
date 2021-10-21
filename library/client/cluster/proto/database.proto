@@ -11,6 +11,10 @@ message DataImportRequest {
     string  password = 4;
     string  filePath = 5;
     string  storageType = 6;
+    string  bucketUrl = 7;
+    string  endpointUrl = 8;
+    string  accessKey = 9;
+    string  secretAccessKey = 10;
 }
 
 message DataImportResponse {

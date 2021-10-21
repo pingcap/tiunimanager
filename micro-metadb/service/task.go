@@ -1,3 +1,20 @@
+
+/******************************************************************************
+ * Copyright (c)  2021 PingCAP, Inc.                                          *
+ * Licensed under the Apache License, Version 2.0 (the "License");            *
+ * you may not use this file except in compliance with the License.           *
+ * You may obtain a copy of the License at                                    *
+ *                                                                            *
+ * http://www.apache.org/licenses/LICENSE-2.0                                 *
+ *                                                                            *
+ * Unless required by applicable law or agreed to in writing, software        *
+ * distributed under the License is distributed on an "AS IS" BASIS,          *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+ * See the License for the specific language governing permissions and        *
+ * limitations under the License.                                             *
+ *                                                                            *
+ ******************************************************************************/
+
 package service
 
 import (
@@ -111,7 +128,7 @@ func (handler *DBServiceHandler) LoadTask(ctx context.Context, req *dbpb.DBLoadT
 
 func (handler *DBServiceHandler) ListFlows(ctx context.Context, req *dbpb.DBListFlowsRequest, rsp *dbpb.DBListFlowsResponse) error {
 	db := handler.Dao().Db()
-	flows, total, err := models.ListFlows(db, req.BizId, req.Keyword, int(req.Status), int(req.Page.Page - 1) * int(req.Page.PageSize), int(req.Page.PageSize))
+	flows, total, err := models.ListFlows(db, req.BizId, req.Keyword, int(req.Status), int(req.Page.Page-1)*int(req.Page.PageSize), int(req.Page.PageSize))
 	if nil == err {
 		rsp.Status = TaskSuccessResponseStatus
 		rsp.Page = &dbpb.DBTaskPageDTO{

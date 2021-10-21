@@ -43,6 +43,6 @@ type DescribeDashboardRsp struct {
 
 type DescribeMonitorRsp struct {
 	ClusterId  string `json:"clusterId" example:"abc"`
-	AlertUrl   string `json:"alertUrl" example:"http://127.0.0.1:9091"`
+	AlertUrl   string `json:"alertUrl" example:"http://127.0.0.1:9093"`
 	GrafanaUrl string `json:"grafanaUrl" example:"http://127.0.0.1:3000"`
 }

@@ -58,7 +58,7 @@ func TestGetMonitorUrlFromCluster(t *testing.T) {
 						Alertmanagers: []*spec.AlertmanagerSpec{
 							{
 								Host:    "127.0.0.1",
-								WebPort: 9091,
+								WebPort: 9093,
 							},
 						},
 						Grafanas: []*spec.GrafanaSpec{
@@ -76,7 +76,41 @@ func TestGetMonitorUrlFromCluster(t *testing.T) {
 					return m.ClusterId == "abc"
 				},
 				func(args *ClusterAggregation, m *Monitor) bool {
-					return m.AlertUrl == "http://127.0.0.1:9091"
+					return m.AlertUrl == "http://127.0.0.1:9093"
+				},
+				func(args *ClusterAggregation, m *Monitor) bool {
+					return m.GrafanaUrl == "http://127.0.0.1:3000"
+				},
+			},
+		},
+		{
+			"normal by no default port",
+			&ClusterAggregation{
+				Cluster: &Cluster{
+					Id: "abc",
+				},
+				CurrentTopologyConfigRecord: &TopologyConfigRecord{
+					ConfigModel: &spec.Specification{
+						Alertmanagers: []*spec.AlertmanagerSpec{
+							{
+								Host: "127.0.0.1",
+							},
+						},
+						Grafanas: []*spec.GrafanaSpec{
+							{
+								Host: "127.0.0.1",
+							},
+						},
+					},
+				},
+			},
+			false,
+			[]func(args *ClusterAggregation, m *Monitor) bool{
+				func(args *ClusterAggregation, m *Monitor) bool {
+					return m.ClusterId == "abc"
+				},
+				func(args *ClusterAggregation, m *Monitor) bool {
+					return m.AlertUrl == "http://127.0.0.1:9093"
 				},
 				func(args *ClusterAggregation, m *Monitor) bool {
 					return m.GrafanaUrl == "http://127.0.0.1:3000"
@@ -114,7 +148,7 @@ func TestGetMonitorUrlFromCluster(t *testing.T) {
 						Alertmanagers: []*spec.AlertmanagerSpec{
 							{
 								Host:    "127.0.0.1",
-								WebPort: 9091,
+								WebPort: 9093,
 							},
 						},
 					},

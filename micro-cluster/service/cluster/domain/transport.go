@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -20,14 +19,15 @@ package domain
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/BurntSushi/toml"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
-	"os"
-	"strconv"
-	"time"
 )
 
 type TransportType string
@@ -117,6 +117,8 @@ const (
 	DefaultTidbPort       int = 4000
 	DefaultTidbStatusPort int = 10080
 	DefaultPDClientPort   int = 2379
+	DefaultAlertPort      int = 9093
+	DefaultGrafanaPort    int = 3000
 )
 
 type TikvImporterCfg struct {

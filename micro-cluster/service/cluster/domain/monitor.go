@@ -63,13 +63,21 @@ func getMonitorUrl(clusterAggregation *ClusterAggregation) (*Monitor, error) {
 		return nil, errors.New("get cluster alert manager component failed")
 	}
 	alertServer := configModel.Alertmanagers[0]
-	alertUrl := fmt.Sprintf("http://%s:%d", alertServer.Host, alertServer.WebPort)
+	alertPort := alertServer.WebPort
+	if alertPort == 0 {
+		alertPort = DefaultAlertPort
+	}
+	alertUrl := fmt.Sprintf("http://%s:%d", alertServer.Host, alertPort)
 
 	if len(configModel.Grafanas) <= 0 {
 		return nil, errors.New("get cluster grafana component failed")
 	}
 	grafanaServer := configModel.Grafanas[0]
-	grafanaUrl := fmt.Sprintf("http://%s:%d", grafanaServer.Host, grafanaServer.Port)
+	grafanaPort := grafanaServer.Port
+	if grafanaPort == 0 {
+		grafanaPort = DefaultGrafanaPort
+	}
+	grafanaUrl := fmt.Sprintf("http://%s:%d", grafanaServer.Host, grafanaPort)
 
 	monitor := &Monitor{
 		ClusterId:  clusterAggregation.Cluster.Id,

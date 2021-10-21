@@ -188,7 +188,7 @@ func ImportHost(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(ImportHostRsp{HostId: rsp.HostId}))
 }
 
-func importExcelFile(r io.Reader) ([]*HostInfo, error) {
+func importExcelFile(r io.Reader, reserved bool) ([]*HostInfo, error) {
 	xlsx, err := excelize.OpenReader(r)
 	if err != nil {
 		return nil, err
@@ -198,6 +198,7 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 	for irow, row := range rows {
 		if irow > 0 {
 			var host HostInfo
+			host.Reserved = reserved
 			host.HostName = row[HOSTNAME_FIELD]
 			addr := net.ParseIP(row[IP_FILED])
 			if addr == nil {
@@ -232,11 +233,7 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 			host.Memory = int32(mem)
 			host.FreeMemory = host.Memory
 			host.Nic = row[NIC_FIELD]
-			host.Reserved, err = strconv.ParseBool(row[RESERVED_FIELD])
-			if err != nil {
-				errMsg := fmt.Sprintf("Row %d get boolean reserved failed, %v", irow, err)
-				return nil, errors.New(errMsg)
-			}
+
 			if err = resource.ValidPurposeType(row[PURPOSE_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, row[PURPOSE_FIELD], err)
 				return nil, errors.New(errMsg)
@@ -270,17 +267,25 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 // @Accept mpfd
 // @Produce json
 // @Security ApiKeyAuth
+// @Param hostReserved formData string true "whether hosts are reserved(won't be allocated) after import" default(false)
 // @Param file formData file true "hosts information in a xlsx file"
 // @Success 200 {object} controller.CommonResult{data=[]string}
 // @Router /resources/hosts [post]
 func ImportHosts(c *gin.Context) {
+	reservedStr := c.PostForm("hostReserved")
+	reserved, err := strconv.ParseBool(reservedStr)
+	if err != nil {
+		errmsg := fmt.Sprintf("GetFormData Error: %v", err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
+		return
+	}
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
 		errmsg := fmt.Sprintf("GetFormFile Error: %v", err)
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
-	hosts, err := importExcelFile(file)
+	hosts, err := importExcelFile(file, reserved)
 	if err != nil {
 		errmsg := fmt.Sprintf("Import File Error: %v", err)
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.InvalidArgument), errmsg))

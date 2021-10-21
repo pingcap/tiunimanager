@@ -30,6 +30,7 @@ service ClusterService {
     rpc SaveParameters(SaveClusterParametersRequest) returns (SaveClusterParametersResponse);
 
     rpc DescribeDashboard(DescribeDashboardRequest) returns (DescribeDashboardResponse);
+    rpc DescribeMonitor(DescribeMonitorRequest) returns (DescribeMonitorResponse);
 
     // Auth manager module
     rpc Login(LoginRequest) returns (LoginResponse);
@@ -344,6 +345,18 @@ message DescribeDashboardResponse {
     string clusterId = 2;
     string url = 3;
     string token = 4;
+}
+
+message DescribeMonitorRequest {
+    string clusterId = 1;
+    OperatorDTO operator = 2;
+}
+
+message DescribeMonitorResponse {
+    ResponseStatusDTO status = 1;
+    string clusterId = 2;
+    string alertUrl = 3;
+    string grafanaUrl = 4;
 }
 
 message FlowDTO {

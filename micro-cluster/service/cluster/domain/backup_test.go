@@ -245,6 +245,9 @@ func Test_updateBackupRecord(t *testing.T) {
 
 	mockClient := mock.NewMockTiEMDBService(ctrl)
 	mockClient.EXPECT().UpdateBackupRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateBackupRecordResponse{}, nil)
+	mockClient.EXPECT().FindTiupTaskByID(gomock.Any(), gomock.Any()).Return(&dbpb.FindTiupTaskByIDResponse{TiupTask: &dbpb.TiupTask{
+		Status : dbpb.TiupTaskStatus_Finished,
+	}}, nil)
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
@@ -256,6 +259,7 @@ func Test_updateBackupRecord(t *testing.T) {
 		},
 	})
 	context.put(contextCtxKey, ctx.Background())
+	context.put("backupTaskId", uint64(123))
 	ret := updateBackupRecord(task, context)
 
 	assert.Equal(t, true, ret)

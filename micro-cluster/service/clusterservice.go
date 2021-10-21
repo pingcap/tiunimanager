@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,6 +18,9 @@ package service
 
 import (
 	"context"
+	"net/http"
+	"strconv"
+
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -26,8 +28,6 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/adapt"
 	user "github.com/pingcap-inc/tiem/micro-cluster/service/user/application"
-	"net/http"
-	"strconv"
 
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -44,9 +44,9 @@ var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
 	resourceManager *resource.ResourceManager
-	authManager *user.AuthManager
-	tenantManager *user.TenantManager
-	userManager *user.UserManager
+	authManager     *user.AuthManager
+	tenantManager   *user.TenantManager
+	userManager     *user.UserManager
 }
 
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
@@ -377,6 +377,21 @@ func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *c
 		response.ClusterId = info.ClusterId
 		response.Url = info.Url
 		response.Token = info.Token
+	}
+
+	return nil
+}
+
+func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clusterpb.DescribeMonitorRequest, response *clusterpb.DescribeMonitorResponse) (err error) {
+	monitor, err := domain.DescribeMonitor(ctx, request.Operator, request.ClusterId)
+	if err != nil {
+		getLoggerWithContext(ctx).Error(err)
+		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_MONITOR_NOT_FOUND, Message: common.TiEMErrMsg[common.TIEM_MONITOR_NOT_FOUND]}
+	} else {
+		response.Status = SuccessResponseStatus
+		response.ClusterId = monitor.ClusterId
+		response.AlertUrl = monitor.AlertUrl
+		response.GrafanaUrl = monitor.GrafanaUrl
 	}
 
 	return nil

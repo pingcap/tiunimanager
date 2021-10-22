@@ -122,16 +122,9 @@ func (p *BackgroundTask) Sync() error {
 	return p.retErr
 }
 
-// StartBackgroundTask new and start a background task in a newly created background goroutine
-func StartBackgroundTask(fromCtx context.Context, comments string, fn func(context.Context) error) *BackgroundTask {
-	t := NewBackgroundTask(fromCtx, comments, fn)
-	go func() {
-		t.Exec()
-	}()
-	return t
-}
-
-func example1(ctx context.Context) {
+// StartBackgroundTask new and start a background task in a newly created background goroutine.
+// Here is example:
+/* func example1(ctx context.Context) {
 	// current ctx
 	// could be a gin ctx, micro ctx, gorm ctx, or background task ctx
 	currentCtx := ctx
@@ -140,10 +133,17 @@ func example1(ctx context.Context) {
 		// do the backup task
 		return nil
 	})
-	// do sth. else
+	// do something else
 	// get return err of the task
 	err := runningTask.Sync()
 	_ = err
+} */
+func StartBackgroundTask(fromCtx context.Context, comments string, fn func(context.Context) error) *BackgroundTask {
+	t := NewBackgroundTask(fromCtx, comments, fn)
+	go func() {
+		t.Exec()
+	}()
+	return t
 }
 
 // make a new micro ctx base on the gin ctx

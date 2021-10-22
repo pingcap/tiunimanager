@@ -126,7 +126,7 @@ func (p *BackgroundTask) Sync() error {
 // Here is example:
 /* func example1(ctx context.Context) {
 	// current ctx
-	// could be a gin ctx, micro ctx, gorm ctx, or background task ctx
+	// could be a gin ctx, micro ctx, gorm ctx, background task ctx or nil ctx
 	currentCtx := ctx
 	// start a background task in a newly created background goroutine
 	runningTask := StartBackgroundTask(currentCtx, "tidb backup routine", func(bgTaskCtx context.Context) error {

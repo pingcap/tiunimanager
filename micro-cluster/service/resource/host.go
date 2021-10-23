@@ -196,6 +196,7 @@ func (m *ResourceManager) ListHost(ctx context.Context, in *clusterpb.ListHostsR
 	var req dbpb.DBListHostsRequest
 	req.Purpose = in.Purpose
 	req.Status = in.Status
+	req.Stat = in.Stat
 	req.Page = new(dbpb.DBHostPageDTO)
 	req.Page.Page = in.PageReq.Page
 	req.Page.PageSize = in.PageReq.PageSize

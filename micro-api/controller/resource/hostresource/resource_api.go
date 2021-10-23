@@ -316,7 +316,8 @@ func ImportHosts(c *gin.Context) {
 // @Router /resources/hosts [get]
 func ListHost(c *gin.Context) {
 	hostQuery := HostQuery{
-		Status: -1,
+		Status: int(resource.HOST_WHATEVER),
+		Stat:   int(resource.HOST_STAT_WHATEVER),
 	}
 	if err := c.ShouldBindQuery(&hostQuery); err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
@@ -327,10 +328,16 @@ func ListHost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
+	if !resource.HostStat(hostQuery.Stat).IsValidForQuery() {
+		errmsg := fmt.Sprintf("input load stat %d is invalid for query", hostQuery.Status)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
+		return
+	}
 
 	listHostReq := clusterpb.ListHostsRequest{
 		Purpose: hostQuery.Purpose,
 		Status:  int32(hostQuery.Status),
+		Stat:    int32(hostQuery.Stat),
 	}
 	listHostReq.PageReq = new(clusterpb.PageDTO)
 	listHostReq.PageReq.Page = int32(hostQuery.Page)

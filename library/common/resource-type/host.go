@@ -85,21 +85,27 @@ func (s HostStatus) IsValidForUpdate() bool {
 }
 
 func (h Host) IsInused() bool {
-	return h.Stat == HOST_INUSED || h.Stat == HOST_EXHAUST
+	return h.Stat == int32(HOST_INUSED) || h.Stat == int32(HOST_EXHAUST)
 }
 
 func (h Host) IsAvailable() bool {
-	return (HostStatus(h.Status) == HOST_ONLINE && (h.Stat == HOST_LOADLESS || h.Stat == HOST_INUSED))
+	return (HostStatus(h.Status) == HOST_ONLINE && (h.Stat == int32(HOST_LOADLESS) || h.Stat == int32(HOST_INUSED)))
 }
 
 type HostStat int32
 
 const (
-	HOST_LOADLESS = iota
+	HOST_STAT_WHATEVER HostStat = iota - 1
+	HOST_LOADLESS
 	HOST_INUSED
 	HOST_EXHAUST
 	HOST_EXCLUSIVE
 )
+
+// Status is vailid for Query
+func (s HostStat) IsValidForQuery() bool {
+	return (s >= HOST_STAT_WHATEVER && s <= HOST_EXCLUSIVE)
+}
 
 type Host struct {
 	ID           string         `json:"hostId" gorm:"PrimaryKey"`

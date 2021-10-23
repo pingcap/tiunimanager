@@ -217,6 +217,7 @@ func (handler *DBServiceHandler) ListHost(ctx context.Context, req *dbpb.DBListH
 	log := framework.Log()
 	var hostReq models.ListHostReq
 	hostReq.Purpose = req.Purpose
+	hostReq.Stat = resource.HostStat(req.Stat)
 	hostReq.Status = resource.HostStatus(req.Status)
 	hostReq.Limit = int(req.Page.PageSize)
 	if req.Page.Page >= 1 {

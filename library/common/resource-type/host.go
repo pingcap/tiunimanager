@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -77,8 +76,12 @@ const (
 )
 
 // Status is vailid for Query
-func (s HostStatus) IsValid() bool {
+func (s HostStatus) IsValidForQuery() bool {
 	return (s >= HOST_WHATEVER && s <= HOST_DELETED)
+}
+
+func (s HostStatus) IsValidForUpdate() bool {
+	return (s >= HOST_ONLINE && s <= HOST_DELETED)
 }
 
 func (h Host) IsInused() bool {

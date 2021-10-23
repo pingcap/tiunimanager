@@ -322,8 +322,8 @@ func ListHost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
-	if !resource.HostStatus(hostQuery.Status).IsValid() {
-		errmsg := fmt.Sprintf("Input Status %d is Invalid", hostQuery.Status)
+	if !resource.HostStatus(hostQuery.Status).IsValidForQuery() {
+		errmsg := fmt.Sprintf("input status %d is invalid for query", hostQuery.Status)
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
@@ -516,7 +516,11 @@ func UpdateHostStatus(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
-
+	if !resource.HostStatus(updateReq.Status).IsValidForUpdate() {
+		errmsg := fmt.Sprintf("input status %d is invalid for update, [0:online,1:offline,2:deleted]", updateReq.Status)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
+		return
+	}
 	if str, dup := detectDuplicateElement(updateReq.HostIds); dup {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), str+" Is Duplicated in request"))
 		return

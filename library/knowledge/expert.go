@@ -105,10 +105,10 @@ func loadSpecKnowledge() {
 		"PD", "PD",
 	}
 
-	//tiFlashComponent := ClusterComponent{
-	//	"TiFlash", "TiFlash",
-	//}
-	//
+	tiFlashComponent := ClusterComponent{
+		"TiFlash", "TiFlash",
+	}
+
 	//tiCdcComponent := ClusterComponent{
 	//	"TiCDC", "TiCDC",
 	//}
@@ -137,13 +137,13 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10040, 10060, 2},
 			},
-			//{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
-			//	GenSpecCode(4, 32),
-			//	GenSpecCode(8, 64),
-			//	GenSpecCode(16, 128),
-			//}, 0},
-			//  ComponentPortConstraint{10060, 10120, 6},
-			//},
+			{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
+				GenSpecCode(4, 32),
+				GenSpecCode(8, 64),
+				GenSpecCode(16, 128),
+			}, 0},
+			 ComponentPortConstraint{10060, 10120, 6},
+			},
 			//{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
 			//	GenSpecCode(8, 16),
 			//	GenSpecCode(16, 64),
@@ -176,13 +176,13 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10040, 10060, 2},
 			},
-			//{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
-			//	GenSpecCode(4, 32),
-			//	GenSpecCode(8, 64),
-			//	GenSpecCode(16, 128),
-			//}, 0},
-			//  ComponentPortConstraint{10060, 10120, 6},
-			//},
+			{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
+				GenSpecCode(4, 32),
+				GenSpecCode(8, 64),
+				GenSpecCode(16, 128),
+			}, 0},
+			 ComponentPortConstraint{10060, 10120, 6},
+			},
 			//{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
 			//	GenSpecCode(8, 16),
 			//	GenSpecCode(16, 64),
@@ -199,7 +199,7 @@ func loadSpecKnowledge() {
 		Components: map[string]*ClusterComponent{tidbComponent.ComponentType: &tidbComponent,
 			tikvComponent.ComponentType: &tikvComponent,
 			pdComponent.ComponentType:   &pdComponent,
-			//tiFlashComponent.ComponentType: &tiFlashComponent,
+			tiFlashComponent.ComponentType: &tiFlashComponent,
 			//tiCdcComponent.ComponentType: &tiCdcComponent,
 		},
 	}

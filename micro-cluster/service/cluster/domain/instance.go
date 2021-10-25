@@ -93,7 +93,7 @@ var ComponentAppender = map[string]func(*spec.Specification, string) []*clusterp
 	"TiDB": tiDBComponent,
 	"TiKV": tiKVComponent,
 	"PD":   pDComponent,
-	//"TiFlash": tiFlashComponent,
+	"TiFlash": tiFlashComponent,
 	//"TiCDC": tiCDCComponent,
 }
 

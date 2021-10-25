@@ -329,7 +329,7 @@ func ListHost(c *gin.Context) {
 		return
 	}
 	if !resource.HostStat(hostQuery.Stat).IsValidForQuery() {
-		errmsg := fmt.Sprintf("input load stat %d is invalid for query", hostQuery.Status)
+		errmsg := fmt.Sprintf("input load stat %d is invalid for query", hostQuery.Stat)
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}

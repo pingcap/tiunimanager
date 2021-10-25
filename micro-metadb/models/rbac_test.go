@@ -18,6 +18,7 @@
 package models
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"reflect"
@@ -75,7 +76,7 @@ func TestAddAccount(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResult, err := accountManager.Add(tt.args.tenantId, tt.args.name, tt.args.salt, tt.args.finalHash, tt.args.status)
+			gotResult, err := accountManager.Add(context.TODO(), tt.args.tenantId, tt.args.name, tt.args.salt, tt.args.finalHash, tt.args.status)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AddAccount() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -156,7 +157,7 @@ func TestAddPermission(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResult, err := accountManager.AddPermission(tt.args.tenantId, tt.args.code, tt.args.name, tt.args.desc, tt.args.permissionType, tt.args.status)
+			gotResult, err := accountManager.AddPermission(context.TODO(), tt.args.tenantId, tt.args.code, tt.args.name, tt.args.desc, tt.args.permissionType, tt.args.status)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AddPermission() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -212,7 +213,7 @@ func TestAddPermissionBindings(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := accountManager.AddPermissionBindings(tt.args.bindings); (err != nil) != tt.wantErr {
+			if err := accountManager.AddPermissionBindings(context.TODO(), tt.args.bindings); (err != nil) != tt.wantErr {
 				t.Errorf("AddPermissionBindings() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -268,7 +269,7 @@ func TestAddRole(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResult, err := accountManager.AddRole(tt.args.tenantId, tt.args.name, tt.args.desc, tt.args.status)
+			gotResult, err := accountManager.AddRole(context.TODO(), tt.args.tenantId, tt.args.name, tt.args.desc, tt.args.status)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AddRole() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -298,7 +299,7 @@ func TestAddRoleBindings(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := accountManager.AddRoleBindings(tt.args.bindings); (err != nil) != tt.wantErr {
+			if err := accountManager.AddRoleBindings(context.TODO(), tt.args.bindings); (err != nil) != tt.wantErr {
 				t.Errorf("AddRoleBindings() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -308,15 +309,15 @@ func TestAddRoleBindings(t *testing.T) {
 func TestFetchAllRolesByAccount(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	accountId := uuid.New().String()
-	role1, err := accountManager.AddRole(defaultTenantId, "TestFetchAllRolesByAccount1", "TestFetchAllRolesByAccount", 0)
-	role2, err := accountManager.AddRole(defaultTenantId, "TestFetchAllRolesByAccount2", "TestFetchAllRolesByAccount", 0)
+	role1, err := accountManager.AddRole(context.TODO(), defaultTenantId, "TestFetchAllRolesByAccount1", "TestFetchAllRolesByAccount", 0)
+	role2, err := accountManager.AddRole(context.TODO(), defaultTenantId, "TestFetchAllRolesByAccount2", "TestFetchAllRolesByAccount", 0)
 
 	if err != nil {
 		t.Errorf("FetchAllRolesByAccount() error = %v", err)
 		return
 	}
 
-	accountManager.AddRoleBindings([]RoleBinding{
+	accountManager.AddRoleBindings(context.TODO(), []RoleBinding{
 		{Entity: Entity{TenantId: defaultTenantId, Status: 0}, RoleId: role1.ID, AccountId: accountId},
 		{Entity: Entity{TenantId: defaultTenantId, Status: 0}, RoleId: role2.ID, AccountId: accountId},
 	})
@@ -340,7 +341,7 @@ func TestFetchAllRolesByAccount(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResult, err := accountManager.FetchAllRolesByAccount(tt.args.tenantId, tt.args.accountId)
+			gotResult, err := accountManager.FetchAllRolesByAccount(context.TODO(), tt.args.tenantId, tt.args.accountId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FetchAllRolesByAccount() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -371,7 +372,7 @@ func TestFetchAllRolesByPermission(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResult, err := accountManager.FetchAllRolesByPermission(tt.args.tenantId, tt.args.permissionId)
+			gotResult, err := accountManager.FetchAllRolesByPermission(context.TODO(), tt.args.tenantId, tt.args.permissionId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FetchAllRolesByPermission() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -399,7 +400,7 @@ func TestFetchPermission(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResult, err := accountManager.FetchPermission(tt.args.tenantId, tt.args.code)
+			gotResult, err := accountManager.FetchPermission(context.TODO(), tt.args.tenantId, tt.args.code)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FetchPermission() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -427,7 +428,7 @@ func TestFetchRole(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResult, err := accountManager.FetchRole(tt.args.tenantId, tt.args.name)
+			gotResult, err := accountManager.FetchRole(context.TODO(), tt.args.tenantId, tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FetchRole() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -454,7 +455,7 @@ func TestFetchRolesByIds(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResult, err := accountManager.FetchRolesByIds(tt.args.roleIds)
+			gotResult, err := accountManager.FetchRolesByIds(context.TODO(), tt.args.roleIds)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FetchRolesByIds() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -481,7 +482,7 @@ func TestFindAccount(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResult, err := accountManager.Find(tt.args.name)
+			gotResult, err := accountManager.Find(context.TODO(), tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindAccount() error = %v, wantErr %v", err, tt.wantErr)
 				return

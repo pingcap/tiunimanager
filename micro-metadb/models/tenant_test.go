@@ -18,6 +18,7 @@
 package models
 
 import (
+	"context"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"testing"
 	"time"
@@ -44,7 +45,7 @@ func TestAddTenant(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotTenant, err := accountManager.AddTenant(tt.args.name, tt.args.tenantType, tt.args.status)
+			gotTenant, err := accountManager.AddTenant(context.TODO(), tt.args.name, tt.args.tenantType, tt.args.status)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AddTenant() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -63,9 +64,9 @@ func TestAddTenant(t *testing.T) {
 func TestFindTenantById(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	t.Run("normal", func(t *testing.T) {
-		tenant, _ := accountManager.AddTenant("tenantName", 1, 0)
+		tenant, _ := accountManager.AddTenant(context.TODO(), "tenantName", 1, 0)
 
-		gotTenant, err := accountManager.FindTenantById(tenant.ID)
+		gotTenant, err := accountManager.FindTenantById(context.TODO(), tenant.ID)
 		if err != nil {
 			t.Errorf("TestFindTenantById() error = %v", err)
 			return
@@ -81,8 +82,8 @@ func TestFindTenantById(t *testing.T) {
 		}
 	})
 	t.Run("no result", func(t *testing.T) {
-		accountManager.AddTenant("tenantName", 1, 0)
-		gotTenant, err := accountManager.FindTenantById("dfsaf")
+		accountManager.AddTenant(context.TODO(), "tenantName", 1, 0)
+		gotTenant, err := accountManager.FindTenantById(context.TODO(), "dfsaf")
 		if err == nil {
 			t.Errorf("TestFindTenantById() want err")
 			return
@@ -91,7 +92,7 @@ func TestFindTenantById(t *testing.T) {
 			t.Errorf("TestFindTenantById() want empty result, got = %v", gotTenant)
 			return
 		}
-		gotTenant, err = accountManager.FindTenantById("")
+		gotTenant, err = accountManager.FindTenantById(context.TODO(), "")
 		if err == nil {
 			t.Errorf("TestFindTenantById() want err")
 			return
@@ -108,9 +109,9 @@ func TestFindTenantById(t *testing.T) {
 func TestFindTenantByName(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	t.Run("normal", func(t *testing.T) {
-		tenant, _ := accountManager.AddTenant("testTenantName", 1, 0)
+		tenant, _ := accountManager.AddTenant(context.TODO(), "testTenantName", 1, 0)
 
-		gotTenant, err := accountManager.FindTenantByName(tenant.Name)
+		gotTenant, err := accountManager.FindTenantByName(context.TODO(), tenant.Name)
 		if err != nil {
 			t.Errorf("TestFindTenantByName() error = %v", err)
 			return
@@ -126,9 +127,9 @@ func TestFindTenantByName(t *testing.T) {
 		}
 	})
 	t.Run("no result", func(t *testing.T) {
-		accountManager.AddTenant("tenantName", 1, 0)
+		accountManager.AddTenant(context.TODO(), "tenantName", 1, 0)
 
-		gotTenant, err := accountManager.FindTenantByName("no_result_name")
+		gotTenant, err := accountManager.FindTenantByName(context.TODO(), "no_result_name")
 		if err == nil {
 			t.Errorf("TestFindTenantByName() want err")
 			return
@@ -137,7 +138,7 @@ func TestFindTenantByName(t *testing.T) {
 			t.Errorf("TestFindTenantByName() want empty result, got = %v", gotTenant)
 			return
 		}
-		gotTenant, err = accountManager.FindTenantByName("")
+		gotTenant, err = accountManager.FindTenantByName(context.TODO(), "")
 		if err == nil {
 			t.Errorf("TestFindTenantByName() want err")
 			return

@@ -28,7 +28,7 @@ type DBServiceHandler struct {
 
 func NewDBServiceHandler(dataDir string, fw *framework.BaseFramework) *DBServiceHandler {
 	handler := new(DBServiceHandler)
-	dao := new(models.DAOManager)
+	dao := models.NewDAOManager(fw)
 	handler.SetDao(dao)
 
 	dao.InitDB(dataDir)

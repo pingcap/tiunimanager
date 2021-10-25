@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -23,12 +22,41 @@ type ZoneHostStock struct {
 	Count int
 }
 
+type RegionBaseInfo struct {
+	RegionCode string `json:"regionCode"`
+	RegionName string `json:"regionName"`
+}
 type ZoneBaseInfo struct {
-	ZoneCode string
-	ZoneName string
+	ZoneCode string `json:"zoneCode"`
+	ZoneName string `json:"zoneName"`
+}
+
+type RackBaseInfo struct {
+	RackCode string `json:"rackCode"`
+	RackName string `json:"rackName"`
 }
 
 type SpecBaseInfo struct {
-	SpecCode string
-	SpecName string
+	SpecCode string `json:"specCode"`
+	SpecName string `json:"specName"`
+}
+
+type SpecStock struct {
+	SpecBaseInfo
+	Count int `json:"count"`
+}
+
+type RackStock struct {
+	RackBaseInfo
+	SpecStock []SpecStock `json:"specStock"`
+}
+
+type ZoneStock struct {
+	ZoneBaseInfo
+	RackStock []RackStock `json:"rackStock"`
+}
+
+type RegionStock struct {
+	RegionBaseInfo
+	ZoneStock []ZoneStock `json:"zoneStock"`
 }

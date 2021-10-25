@@ -16,30 +16,16 @@
 
 package warehouse
 
-import "github.com/pingcap-inc/tiem/library/common/resource-type"
+import (
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
+)
 
-type DomainResource struct {
-	ZoneName string `json:"zoneName"`
-	ZoneCode string `json:"zoneCode"`
-	Purpose  string `json:"purpose"`
-	SpecName string `json:"specName"`
-	SpecCode string `json:"specCode"`
-	Count    int32  `json:"count"`
+type GetRegionsRequest struct {
 }
 
-type DomainResourceRsp struct {
-	Resources []DomainResource `json:"resources"`
-}
-
-type RegionItem struct {
-	RegionInfo RegionBaseInfo `json:"regionInfo"`
-	Archs      []string       `json:"archArray"`
-}
-type GetRegionsResponse struct {
-	Regions []RegionItem `json:"regions"`
-}
-
-type GetRegionStockResponse struct {
-	Arch        resource.ArchType `json:"arch"`
-	RegionStock []RegionStock     `json:"regionStock"`
+type GetRegionStockRequest struct {
+	Arch   resource.ArchType `json:"arch"`
+	Region string            `json:"region"`
+	Zone   string            `json:"zone"`
+	Rack   string            `json:"rack"`
 }

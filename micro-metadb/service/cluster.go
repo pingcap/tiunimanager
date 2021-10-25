@@ -307,7 +307,7 @@ func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbp
 			PageSize: req.Page.PageSize,
 			Total:    int32(total),
 		}
-		backupRecordDTOs := make([]*dbpb.DBDBBackupRecordDisplayDTO, len(backupRecords), len(backupRecords))
+		backupRecordDTOs := make([]*dbpb.DBDBBackupRecordDisplayDTO, len(backupRecords))
 		for i, v := range backupRecords {
 			backupRecordDTOs[i] = convertToBackupRecordDisplayDTO(v.BackupRecord, v.Flow)
 		}

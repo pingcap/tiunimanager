@@ -666,13 +666,13 @@ func TestListBackupRecords(t *testing.T) {
 		FlowId:       int64(flow.ID),
 		Size:         0,
 	}
-	brTbl.SaveBackupRecord(context.TODO(), record)
-	brTbl.SaveBackupRecord(context.TODO(), record)
-	brTbl.SaveBackupRecord(context.TODO(), record)
-	brTbl.SaveBackupRecord(context.TODO(), record)
-	brTbl.SaveBackupRecord(context.TODO(), record)
-	brTbl.SaveBackupRecord(context.TODO(), record)
-	brTbl.SaveBackupRecord(context.TODO(), record)
+	_, _ = brTbl.SaveBackupRecord(context.TODO(), record)
+	_, _ = brTbl.SaveBackupRecord(context.TODO(), record)
+	_, _ = brTbl.SaveBackupRecord(context.TODO(), record)
+	_, _ = brTbl.SaveBackupRecord(context.TODO(), record)
+	_, _ = brTbl.SaveBackupRecord(context.TODO(), record)
+	_, _ = brTbl.SaveBackupRecord(context.TODO(), record)
+	_, _ = brTbl.SaveBackupRecord(context.TODO(), record)
 
 	t.Run("normal", func(t *testing.T) {
 		dos, total, err := brTbl.ListBackupRecords(context.TODO(), "TestListBackupRecords", 0, 0, 2, 2)

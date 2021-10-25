@@ -435,7 +435,7 @@ func (m *DAOClusterManager) QueryBackupRecord(ctx context.Context, clusterId str
 }
 func (m *DAOClusterManager) ListBackupRecords(ctx context.Context, clusterId string, startTime, endTime int64, offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
 
-	records := make([]*BackupRecord, length, length)
+	records := make([]*BackupRecord, length)
 	db := m.Db(ctx).Table(TABLE_NAME_BACKUP_RECORD).Where("cluster_id = ? and deleted_at is null", clusterId)
 	if startTime > 0 {
 		db = db.Where("start_time >= ?", time.Unix(startTime, 0))
@@ -450,8 +450,8 @@ func (m *DAOClusterManager) ListBackupRecords(ctx context.Context, clusterId str
 
 	if nil == err {
 		// query flows
-		flowIds := make([]int64, len(records), len(records))
-		dos = make([]*BackupRecordFetchResult, len(records), len(records))
+		flowIds := make([]int64, len(records))
+		dos = make([]*BackupRecordFetchResult, len(records))
 		for i, r := range records {
 			flowIds[i] = r.FlowId
 			dos[i] = &BackupRecordFetchResult{
@@ -459,7 +459,7 @@ func (m *DAOClusterManager) ListBackupRecords(ctx context.Context, clusterId str
 			}
 		}
 
-		flows := make([]*FlowDO, len(records), len(records))
+		flows := make([]*FlowDO, len(records))
 		err = m.Db(ctx).Find(&flows, flowIds).Error
 		if err != nil {
 			return nil, 0, errors.New(fmt.Sprintf("ListBackupRecord, query record failed, clusterId: %s, error: %v", clusterId, err))

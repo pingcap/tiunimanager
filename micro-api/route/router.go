@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -88,6 +87,7 @@ func Route(g *gin.Engine) {
 			cluster.DELETE("/:clusterId", clusterApi.Delete)
 			cluster.POST("/restore", backuprestore.Restore)
 			cluster.GET("/:clusterId/dashboard", clusterApi.DescribeDashboard)
+			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
 			// Params
 			cluster.GET("/:clusterId/params", parameterApi.QueryParams)
 			cluster.POST("/:clusterId/params", parameterApi.SubmitParams)

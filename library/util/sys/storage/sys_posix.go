@@ -1,3 +1,5 @@
+// +build linux darwin
+
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -13,8 +15,6 @@
  * limitations under the License.                                             *
  *                                                                            *
  ******************************************************************************/
-
-// +build linux darwin
 
 package storage
 

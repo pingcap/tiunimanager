@@ -322,7 +322,7 @@ func (m *DAOClusterManager) ListClusters(ctx context.Context, clusterId, cluster
 	if clusterTag != "" {
 		query = query.Where("tags like '%," + clusterTag + ",%'")
 	}
-	return clusters, total, query.Count(&total).Offset(offset).Limit(length).Find(&clusters).Error
+	return clusters, total, query.Order("updated_at desc").Count(&total).Offset(offset).Limit(length).Find(&clusters).Error
 }
 
 func (m *DAOClusterManager) CreateCluster(ctx context.Context, ClusterName, DbPassword, ClusterType, ClusterVersion string,

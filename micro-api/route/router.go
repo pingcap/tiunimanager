@@ -83,6 +83,8 @@ func Route(g *gin.Engine) {
 			cluster.Use(interceptor.AuditLog())
 			cluster.GET("/:clusterId", clusterApi.Detail)
 			cluster.POST("/", clusterApi.Create)
+			cluster.POST("/takeover", clusterApi.Takeover)
+
 			cluster.GET("/", clusterApi.Query)
 			cluster.DELETE("/:clusterId", clusterApi.Delete)
 			cluster.POST("/restore", backuprestore.Restore)

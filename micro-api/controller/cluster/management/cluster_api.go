@@ -227,6 +227,37 @@ func Detail(c *gin.Context) {
 	}
 }
 
+// Takeover takeover a cluster
+// @Summary takeover a cluster
+// @Description takeover a cluster
+// @Tags cluster
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param takeoverReq body TakeoverReq true "takeover request"
+// @Success 200 {object} controller.CommonResult{data=[]ClusterDisplayInfo}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /cluster/takeover [post]
+func Takeover(c *gin.Context) {
+	//operator := controller.GetOperator(c)
+
+	result := controller.BuildCommonResult(0, "", []ClusterDisplayInfo{
+		{
+			ClusterId: "1111111",
+			ClusterBaseInfo: ClusterBaseInfo{ClusterName: "clusterA"},
+			StatusInfo : controller.StatusInfo{},
+			ClusterInstanceInfo: ClusterInstanceInfo{},
+		},
+		{ClusterId: "2222222", ClusterBaseInfo: ClusterBaseInfo{
+			ClusterName: "clusterB",
+		}},
+	})
+
+	c.JSON(http.StatusOK, result)
+}
+
 // DescribeDashboard dashboard
 // @Summary dashboard
 // @Description dashboard

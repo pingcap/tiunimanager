@@ -819,7 +819,7 @@ definitions:
   management.DescribeMonitorRsp:
     properties:
       alertUrl:
-        example: http://127.0.0.1:9091
+        example: http://127.0.0.1:9093
         type: string
       clusterId:
         example: abc
@@ -907,6 +907,28 @@ definitions:
       backupRecordId:
         type: integer
       sourceClusterId:
+        type: string
+    type: object
+  management.TakeoverReq:
+    properties:
+      clusterNames:
+        items:
+          type: string
+        type: array
+      tiupIp:
+        example: 172.16.4.147
+        type: string
+      tiupPath:
+        example: .tiup/
+        type: string
+      tiupPort:
+        example: "22"
+        type: string
+      tiupUserName:
+        example: root
+        type: string
+      tiupUserPassword:
+        example: password
         type: string
     type: object
   parameter.ParamInstance:
@@ -1118,6 +1140,49 @@ paths:
       summary: delete backup record
       tags:
       - cluster backup
+  /cluster/takeover:
+    post:
+      consumes:
+      - application/json
+      description: takeover a cluster
+      parameters:
+      - description: takeover request
+        in: body
+        name: takeoverReq
+        required: true
+        schema:
+          $ref: '#/definitions/management.TakeoverReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/management.ClusterDisplayInfo'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: takeover a cluster
+      tags:
+      - cluster
   /clusters:
     get:
       consumes:

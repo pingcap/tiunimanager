@@ -125,6 +125,7 @@ const (
 	FlowModifyParameters = "ModifyParameters"
 	FlowExportData = "ExportData"
 	FlowImportData = "ImportData"
+	FlowTakeoverCluster = "TakeoverCluster"
 )
 
 type CronTaskType int8

@@ -73,7 +73,7 @@ func ExportData(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
 		status := respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if int32(common.TIEM_SUCCESS) == status.GetCode() {
 			result := controller.BuildCommonResult(int(status.Code), status.Message, DataExportResp{
 				RecordId: respDTO.GetRecordId(),
 			})
@@ -124,7 +124,7 @@ func ImportData(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
 		status := respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if int32(common.TIEM_SUCCESS) == status.GetCode() {
 			result := controller.BuildCommonResult(int(status.Code), status.Message, DataImportResp{
 				RecordId: respDTO.GetRecordId(),
 			})
@@ -170,7 +170,7 @@ func DescribeDataTransport(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
 		status := respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if int32(common.TIEM_SUCCESS) == status.GetCode() {
 			data := &DataTransportRecordQueryResp{
 				TransportRecords: make([]*DataTransportInfo, len(respDTO.GetTransportInfos())),
 			}

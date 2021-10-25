@@ -93,6 +93,12 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 	}
 }
 
+func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.ClusterTakeoverReqDTO, resp *clusterpb.ClusterTakeoverRespDTO) (err error) {
+	getLogger().Info("takeover clusters")
+
+
+	return nil
+}
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.ClusterQueryReqDTO, resp *clusterpb.ClusterQueryRespDTO) (err error) {
 	getLogger().Info("query cluster")
 	clusters, total, err := domain.ListCluster(req.Operator, req)

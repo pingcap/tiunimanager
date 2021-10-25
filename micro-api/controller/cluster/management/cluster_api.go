@@ -283,7 +283,7 @@ func DescribeDashboard(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
 		status := respDTO.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if int32(common.TIEM_SUCCESS) == status.GetCode() {
 			result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
 				ClusterId: respDTO.GetClusterId(),
 				Url:       respDTO.GetUrl(),
@@ -324,7 +324,7 @@ func DescribeMonitor(c *gin.Context) {
 	}
 
 	status := respDTO.GetStatus()
-	if common.TIEM_SUCCESS != status.GetCode() {
+	if int32(common.TIEM_SUCCESS) != status.GetCode() {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
 		return
 	}

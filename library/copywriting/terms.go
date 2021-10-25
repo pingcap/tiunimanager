@@ -59,6 +59,7 @@ var CWTaskStatusFinished = "CW_TaskStatusFinished"
 var CWTaskStatusError = "CW_TaskStatusError"
 
 var CWFlowCreateCluster = "CW_FlowCreateCluster"
+var CWFlowTakeoverCluster = "CW_FlowTakeoverCluster"
 var CWFlowDeleteCluster = "CW_FlowDeleteCluster"
 
 var CWFlowBackupCluster = "CW_FlowBackupCluster"

@@ -24,6 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
 	"path/filepath"
 	"strconv"
@@ -111,6 +112,54 @@ func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBas
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
+}
+
+// TakeoverClusters
+// @Description:
+// @Parameter ope
+// @Parameter req
+// @return []*ClusterAggregation
+// @return error
+func TakeoverClusters(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeoverReqDTO) ([]*ClusterAggregation, error) {
+	operator := parseOperatorFromDTO(ope)
+
+	if len(req.ClusterNames) != 0 {
+		return nil, common.NewBizError(common.TIEM_PARAMETER_INVALID)
+	}
+
+	clusterName := req.ClusterNames[0]
+	cluster := &Cluster{
+		ClusterName:    clusterName,
+		TenantId:       operator.TenantId,
+		OwnerId:        operator.Id,
+	}
+
+	// persist the cluster into database
+	err := ClusterRepo.AddCluster(cluster)
+
+	if err != nil {
+		return nil, err
+	}
+
+	clusterAggregation := &ClusterAggregation{
+		Cluster:          cluster,
+		MaintainCronTask: GetDefaultMaintainTask(),
+		CurrentOperator:  operator,
+	}
+
+	// Start the workflow to create a cluster instance
+	flow, err := CreateFlowWork(cluster.Id, FlowTakeoverCluster, operator)
+	if err != nil {
+		return nil, err
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+
+	flow.Start()
+
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
+	ClusterRepo.Persist(clusterAggregation)
+	return []*ClusterAggregation{clusterAggregation}, nil
 }
 
 func (clusterAggregation *ClusterAggregation) updateWorkFlow(flow *FlowWorkEntity) {
@@ -304,6 +353,28 @@ func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 }
 
 func modifyParameters(task *TaskEntity, context *FlowContext) bool {
+	task.Success(nil)
+	return true
+}
+
+func connectTiup(task *TaskEntity, context *FlowContext) bool {
+
+
+	task.Success(nil)
+	return true
+}
+
+func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
+	task.Success(nil)
+	return true
+}
+
+func buildTopology(task *TaskEntity, context *FlowContext) bool {
+	task.Success(nil)
+	return true
+}
+
+func takeoverResource(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)
 	return true
 }

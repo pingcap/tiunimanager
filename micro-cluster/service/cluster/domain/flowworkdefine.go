@@ -105,7 +105,6 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"fail":					{"fail", "", "", SyncFuncTask, exportDataFailed},
 		},
 		ContextParser: defaultContextParser,
-
 	},
 	FlowImportData: {
 		FlowName:    FlowImportData,
@@ -119,6 +118,19 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		},
 		ContextParser: defaultContextParser,
 
+	},
+	FlowTakeoverCluster: {
+		FlowName:    FlowTakeoverCluster,
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowTakeoverCluster),
+		TaskNodes: map[string]*TaskDefine{
+			"start":        {"connectTiup", "connected", "fail", SyncFuncTask, connectTiup},
+			"connected": {"fetchTopologyFile", "fetched", "fail", SyncFuncTask, fetchTopologyFile},
+			"fetched":   {"buildTopology", "built", "fail", SyncFuncTask, buildTopology},
+			"built":  {"takeoverResource", "success", "", SyncFuncTask, takeoverResource},
+			"success":		{"end", "", "", SyncFuncTask, ClusterEnd},
+			"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
+		},
+		ContextParser: defaultContextParser,
 	},
 }
 

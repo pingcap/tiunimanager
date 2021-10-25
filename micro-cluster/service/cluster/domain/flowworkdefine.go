@@ -160,7 +160,6 @@ type TaskDefine struct {
 func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
 	task.Status = TaskStatusFinished
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
-	clusterAggregation.CurrentWorkFlow.Status = task.Status
 	clusterAggregation.Cluster.WorkFlowId = 0
 	clusterAggregation.FlowModified = true
 	return true
@@ -169,7 +168,6 @@ func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
 func ClusterFail(task *TaskEntity, context *FlowContext) bool {
 	task.Status = TaskStatusError
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
-	clusterAggregation.CurrentWorkFlow.Status = task.Status
 	clusterAggregation.Cluster.WorkFlowId = 0
 	clusterAggregation.FlowModified = true
 	return true

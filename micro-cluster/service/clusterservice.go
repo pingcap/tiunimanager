@@ -325,7 +325,8 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 				},
 				DisplayStatus: &clusterpb.DisplayStatusDTO{
 					StatusCode:      strconv.Itoa(int(v.Flow.Status)),
-					StatusName:      v.Flow.StatusAlias,
+					//StatusName:      v.Flow.StatusAlias,
+					StatusName:   	 domain.TaskStatus(int(v.Flow.Status)).Display(),
 					InProcessFlowId: int32(v.Flow.Id),
 				},
 			}

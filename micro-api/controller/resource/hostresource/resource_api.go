@@ -28,6 +28,7 @@ import (
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -125,7 +126,7 @@ func doImport(c *gin.Context, host *HostInfo) (rsp *clusterpb.ImportHostResponse
 	if err != nil {
 		return nil, err
 	}
-	return client.ClusterClient.ImportHost(c, &importReq)
+	return client.ClusterClient.ImportHost(framework.NewMicroCtxFromGinCtx(c), &importReq)
 }
 
 func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *clusterpb.ImportHostsInBatchResponse, err error) {
@@ -148,7 +149,7 @@ func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *clusterpb.ImportHost
 		}
 	}
 
-	return client.ClusterClient.ImportHostsInBatch(c, &importReq)
+	return client.ClusterClient.ImportHostsInBatch(framework.NewMicroCtxFromGinCtx(c), &importReq)
 }
 
 // ImportHost godoc
@@ -343,7 +344,7 @@ func ListHost(c *gin.Context) {
 	listHostReq.PageReq.Page = int32(hostQuery.Page)
 	listHostReq.PageReq.PageSize = int32(hostQuery.PageSize)
 
-	rsp, err := client.ClusterClient.ListHost(c, &listHostReq)
+	rsp, err := client.ClusterClient.ListHost(framework.NewMicroCtxFromGinCtx(c), &listHostReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -379,7 +380,7 @@ func HostDetails(c *gin.Context) {
 		HostId: hostId,
 	}
 
-	rsp, err := client.ClusterClient.CheckDetails(c, &HostDetailsReq)
+	rsp, err := client.ClusterClient.CheckDetails(framework.NewMicroCtxFromGinCtx(c), &HostDetailsReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -411,7 +412,7 @@ func RemoveHost(c *gin.Context) {
 		HostId: hostId,
 	}
 
-	rsp, err := client.ClusterClient.RemoveHost(c, &RemoveHostReq)
+	rsp, err := client.ClusterClient.RemoveHost(framework.NewMicroCtxFromGinCtx(c), &RemoveHostReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -466,7 +467,7 @@ func RemoveHosts(c *gin.Context) {
 		HostIds: hostIds,
 	}
 
-	rsp, err := client.ClusterClient.RemoveHostsInBatch(c, &RemoveHostsReq)
+	rsp, err := client.ClusterClient.RemoveHostsInBatch(framework.NewMicroCtxFromGinCtx(c), &RemoveHostsReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -537,7 +538,7 @@ func UpdateHostStatus(c *gin.Context) {
 	updateHostStatusReq.Status = updateReq.Status
 	updateHostStatusReq.HostIds = append(updateHostStatusReq.HostIds, updateReq.HostIds...)
 
-	rsp, err := client.ClusterClient.UpdateHostStatus(c, &updateHostStatusReq)
+	rsp, err := client.ClusterClient.UpdateHostStatus(framework.NewMicroCtxFromGinCtx(c), &updateHostStatusReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -575,7 +576,7 @@ func ReserveHost(c *gin.Context) {
 	reserveHostReq.Reserved = reserveReq.Reserved
 	reserveHostReq.HostIds = append(reserveHostReq.HostIds, reserveReq.HostIds...)
 
-	rsp, err := client.ClusterClient.ReserveHost(c, &reserveHostReq)
+	rsp, err := client.ClusterClient.ReserveHost(framework.NewMicroCtxFromGinCtx(c), &reserveHostReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
@@ -643,7 +644,7 @@ func AllocHosts(c *gin.Context) {
 	copyAllocToReq(allocation.TidbReq, &allocReq.TidbReq)
 	copyAllocToReq(allocation.TikvReq, &allocReq.TikvReq)
 	//fmt.Println(allocReq.PdReq, allocReq.TidbReq, allocReq.TikvReq)
-	rsp, err := client.ClusterClient.AllocHosts(c, &allocReq)
+	rsp, err := client.ClusterClient.AllocHosts(framework.NewMicroCtxFromGinCtx(c), &allocReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return

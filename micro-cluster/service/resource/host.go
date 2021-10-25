@@ -110,17 +110,17 @@ func (m *ResourceManager) ImportHost(ctx context.Context, in *clusterpb.ImportHo
 	var err error
 	rsp, err := client.DBClient.AddHost(ctx, &req)
 	if err != nil {
-		framework.Log().Errorf("import host %s error, %v", req.Host.Ip, err)
+		framework.LogWithContext(ctx).Errorf("import host %s error, %v", req.Host.Ip, err)
 		return err
 	}
 	out.Rs = new(clusterpb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.Log().Warnf("import host failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("import host failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
-	framework.Log().Infof("import host(%s) succeed from db service: %s", in.Host.Ip, rsp.HostId)
+	framework.LogWithContext(ctx).Infof("import host(%s) succeed from db service: %s", in.Host.Ip, rsp.HostId)
 	out.HostId = rsp.HostId
 
 	return nil
@@ -136,17 +136,17 @@ func (m *ResourceManager) ImportHostsInBatch(ctx context.Context, in *clusterpb.
 	var err error
 	rsp, err := client.DBClient.AddHostsInBatch(ctx, &req)
 	if err != nil {
-		framework.Log().Errorf("import hosts in batch error, %v", err)
+		framework.LogWithContext(ctx).Errorf("import hosts in batch error, %v", err)
 		return err
 	}
 	out.Rs = new(clusterpb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.Log().Warnf("import hosts in batch failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("import hosts in batch failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
-	framework.Log().Infof("import %d hosts in batch succeed from db service.", len(rsp.HostIds))
+	framework.LogWithContext(ctx).Infof("import %d hosts in batch succeed from db service.", len(rsp.HostIds))
 	out.HostIds = rsp.HostIds
 
 	return nil
@@ -157,18 +157,18 @@ func (m *ResourceManager) RemoveHost(ctx context.Context, in *clusterpb.RemoveHo
 	req.HostId = in.HostId
 	rsp, err := client.DBClient.RemoveHost(ctx, &req)
 	if err != nil {
-		framework.Log().Errorf("remove host %s error, %v", req.HostId, err)
+		framework.LogWithContext(ctx).Errorf("remove host %s error, %v", req.HostId, err)
 		return err
 	}
 	out.Rs = new(clusterpb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.Log().Warnf("remove host %s failed from db service: %d, %s", req.HostId, rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("remove host %s failed from db service: %d, %s", req.HostId, rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	framework.Log().Infof("remove host %s succeed from db service", req.HostId)
+	framework.LogWithContext(ctx).Infof("remove host %s succeed from db service", req.HostId)
 	return nil
 }
 
@@ -177,18 +177,18 @@ func (m *ResourceManager) RemoveHostsInBatch(ctx context.Context, in *clusterpb.
 	req.HostIds = in.HostIds
 	rsp, err := client.DBClient.RemoveHostsInBatch(ctx, &req)
 	if err != nil {
-		framework.Log().Errorf("remove hosts in batch error, %v", err)
+		framework.LogWithContext(ctx).Errorf("remove hosts in batch error, %v", err)
 		return err
 	}
 	out.Rs = new(clusterpb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.Log().Warnf("remove hosts in batch failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("remove hosts in batch failed from db service: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	framework.Log().Infof("remove %d hosts succeed from db service", len(req.HostIds))
+	framework.LogWithContext(ctx).Infof("remove %d hosts succeed from db service", len(req.HostIds))
 	return nil
 }
 
@@ -202,7 +202,7 @@ func (m *ResourceManager) ListHost(ctx context.Context, in *clusterpb.ListHostsR
 	req.Page.PageSize = in.PageReq.PageSize
 	rsp, err := client.DBClient.ListHost(ctx, &req)
 	if err != nil {
-		framework.Log().Errorf("list hosts error, %v", err)
+		framework.LogWithContext(ctx).Errorf("list hosts error, %v", err)
 		return err
 	}
 	out.Rs = new(clusterpb.ResponseStatus)
@@ -211,11 +211,11 @@ func (m *ResourceManager) ListHost(ctx context.Context, in *clusterpb.ListHostsR
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.Log().Warnf("list hosts info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("list hosts info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	framework.Log().Infof("list %d hosts info from db service succeed", len(rsp.HostList))
+	framework.LogWithContext(ctx).Infof("list %d hosts info from db service succeed", len(rsp.HostList))
 	for _, v := range rsp.HostList {
 		var host clusterpb.HostInfo
 		copyHostFromDBRsp(v, &host)
@@ -232,7 +232,7 @@ func (m *ResourceManager) CheckDetails(ctx context.Context, in *clusterpb.CheckD
 	req.HostId = in.HostId
 	rsp, err := client.DBClient.CheckDetails(ctx, &req)
 	if err != nil {
-		framework.Log().Errorf("check host %s details failed, %v", req.HostId, err)
+		framework.LogWithContext(ctx).Errorf("check host %s details failed, %v", req.HostId, err)
 		return err
 	}
 	out.Rs = new(clusterpb.ResponseStatus)
@@ -240,11 +240,11 @@ func (m *ResourceManager) CheckDetails(ctx context.Context, in *clusterpb.CheckD
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.Log().Warnf("check host %s details from db service failed: %d, %s", req.HostId, rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("check host %s details from db service failed: %d, %s", req.HostId, rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	framework.Log().Infof("check host %s details from db service succeed", req.HostId)
+	framework.LogWithContext(ctx).Infof("check host %s details from db service succeed", req.HostId)
 	out.Details = new(clusterpb.HostInfo)
 	copyHostFromDBRsp(rsp.Details, out.Details)
 
@@ -298,7 +298,7 @@ func (m *ResourceManager) AllocHosts(ctx context.Context, in *clusterpb.AllocHos
 
 	rsp, err := client.DBClient.AllocHosts(ctx, req)
 	if err != nil {
-		framework.Log().Errorf("alloc hosts error, %v", err)
+		framework.LogWithContext(ctx).Errorf("alloc hosts error, %v", err)
 		return err
 	}
 	out.Rs = new(clusterpb.ResponseStatus)
@@ -306,7 +306,7 @@ func (m *ResourceManager) AllocHosts(ctx context.Context, in *clusterpb.AllocHos
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.Log().Warnf("alloc hosts from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("alloc hosts from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
@@ -321,7 +321,7 @@ func (m *ResourceManager) GetFailureDomain(ctx context.Context, in *clusterpb.Ge
 	req.FailureDomainType = in.FailureDomainType
 	rsp, err := client.DBClient.GetFailureDomain(ctx, &req)
 	if err != nil {
-		framework.Log().Errorf("get failure domains error, %v", err)
+		framework.LogWithContext(ctx).Errorf("get failure domains error, %v", err)
 		return err
 	}
 	out.Rs = new(clusterpb.ResponseStatus)
@@ -329,11 +329,11 @@ func (m *ResourceManager) GetFailureDomain(ctx context.Context, in *clusterpb.Ge
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.Log().Warnf("get failure domains info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("get failure domains info from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	framework.Log().Infof("get failure domain type %d from db service succeed", req.FailureDomainType)
+	framework.LogWithContext(ctx).Infof("get failure domain type %d from db service succeed", req.FailureDomainType)
 	for _, v := range rsp.FdList {
 		out.FdList = append(out.FdList, &clusterpb.FailureDomainResource{
 			FailureDomain: v.FailureDomain,
@@ -436,7 +436,7 @@ func (m *ResourceManager) AllocResourcesInBatch(ctx context.Context, in *cluster
 	buildDBAllocRequest(in, &req)
 	rsp, err := client.DBClient.AllocResourcesInBatch(ctx, &req)
 	if err != nil {
-		framework.Log().Errorf("alloc resources error, %v", err)
+		framework.LogWithContext(ctx).Errorf("alloc resources error, %v", err)
 		return err
 	}
 	out.Rs = new(clusterpb.AllocResponseStatus)
@@ -444,11 +444,11 @@ func (m *ResourceManager) AllocResourcesInBatch(ctx context.Context, in *cluster
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.Log().Warnf("alloc resources from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("alloc resources from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	framework.Log().Infof("alloc resources from db service succeed, holde id: %s, repest id: %s", in.BatchRequests[0].Applicant.HolderId, in.BatchRequests[0].Applicant.RequestId)
+	framework.LogWithContext(ctx).Infof("alloc resources from db service succeed, holde id: %s, repest id: %s", in.BatchRequests[0].Applicant.HolderId, in.BatchRequests[0].Applicant.RequestId)
 	for _, result := range rsp.BatchResults {
 		var res clusterpb.AllocResponse
 		res.Rs = new(clusterpb.AllocResponseStatus)
@@ -504,7 +504,7 @@ func (m *ResourceManager) RecycleResources(ctx context.Context, in *clusterpb.Re
 	}
 	rsp, err := client.DBClient.RecycleResources(ctx, &req)
 	if err != nil {
-		framework.Log().Errorf("recycle resources for type %d error, %v", err, in.RecycleReqs[0].RecycleType)
+		framework.LogWithContext(ctx).Errorf("recycle resources for type %d error, %v", err, in.RecycleReqs[0].RecycleType)
 		return err
 	}
 	out.Rs = new(clusterpb.AllocResponseStatus)
@@ -512,11 +512,11 @@ func (m *ResourceManager) RecycleResources(ctx context.Context, in *clusterpb.Re
 	out.Rs.Message = rsp.Rs.Message
 
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.Log().Warnf("recycle resources from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("recycle resources from db service failed: %d, %s", rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	framework.Log().Infof("recycle resources from db service succeed, recycle type %d, holderId %s, requestId %s", in.RecycleReqs[0].RecycleType, in.RecycleReqs[0].HolderId, in.RecycleReqs[0].RequestId)
+	framework.LogWithContext(ctx).Infof("recycle resources from db service succeed, recycle type %d, holderId %s, requestId %s", in.RecycleReqs[0].RecycleType, in.RecycleReqs[0].HolderId, in.RecycleReqs[0].RequestId)
 
 	return nil
 }
@@ -528,18 +528,18 @@ func (m *ResourceManager) UpdateHostStatus(ctx context.Context, in *clusterpb.Up
 
 	rsp, err := client.DBClient.UpdateHostStatus(ctx, &req)
 	if err != nil {
-		framework.Log().Errorf("update host status to %d for host[%v] error, %v", req.Status, req.HostIds, err)
+		framework.LogWithContext(ctx).Errorf("update host status to %d for host[%v] error, %v", req.Status, req.HostIds, err)
 		return err
 	}
 	out.Rs = new(clusterpb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.Log().Warnf("update host status to %d in batch failed from db service: %d, %s", req.Status, rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("update host status to %d in batch failed from db service: %d, %s", req.Status, rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	framework.Log().Infof("update host status to  %d succeed for hosts %v from db service", req.Status, req.HostIds)
+	framework.LogWithContext(ctx).Infof("update host status to  %d succeed for hosts %v from db service", req.Status, req.HostIds)
 	return nil
 }
 
@@ -550,17 +550,17 @@ func (m *ResourceManager) ReserveHost(ctx context.Context, in *clusterpb.Reserve
 
 	rsp, err := client.DBClient.ReserveHost(ctx, &req)
 	if err != nil {
-		framework.Log().Errorf("set reserve to %v for host[%v] error, %v", req.Reserved, req.HostIds, err)
+		framework.LogWithContext(ctx).Errorf("set reserve to %v for host[%v] error, %v", req.Reserved, req.HostIds, err)
 		return err
 	}
 	out.Rs = new(clusterpb.ResponseStatus)
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.Log().Warnf("update host reserved to %v in batch failed from db service: %d, %s", req.Reserved, rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("update host reserved to %v in batch failed from db service: %d, %s", req.Reserved, rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
-	framework.Log().Infof("update host reserved to %v succeed for hosts %v from db service", req.Reserved, req.HostIds)
+	framework.LogWithContext(ctx).Infof("update host reserved to %v succeed for hosts %v from db service", req.Reserved, req.HostIds)
 	return nil
 }

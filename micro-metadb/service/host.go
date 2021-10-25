@@ -76,7 +76,7 @@ func copyHostInfoFromReq(src *dbpb.DBHostInfoDTO, dst *resource.Host) {
 
 func (handler *DBServiceHandler) AddHost(ctx context.Context, req *dbpb.DBAddHostRequest, rsp *dbpb.DBAddHostResponse) error {
 	resourceManager := handler.Dao().ResourceManager()
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	var host resource.Host
 	copyHostInfoFromReq(req.Host, &host)
 
@@ -103,7 +103,7 @@ func (handler *DBServiceHandler) AddHost(ctx context.Context, req *dbpb.DBAddHos
 
 func (handler *DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbpb.DBAddHostsInBatchRequest, rsp *dbpb.DBAddHostsInBatchResponse) error {
 	resourceManager := handler.Dao().ResourceManager()
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	var hosts []*resource.Host
 	for _, v := range req.Hosts {
 		var host resource.Host
@@ -133,7 +133,7 @@ func (handler *DBServiceHandler) AddHostsInBatch(ctx context.Context, req *dbpb.
 
 func (handler *DBServiceHandler) RemoveHost(ctx context.Context, req *dbpb.DBRemoveHostRequest, rsp *dbpb.DBRemoveHostResponse) error {
 	resourceManager := handler.Dao().ResourceManager()
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	hostId := req.HostId
 	err := resourceManager.DeleteHost(ctx, hostId)
 	rsp.Rs = new(dbpb.DBHostResponseStatus)
@@ -157,7 +157,7 @@ func (handler *DBServiceHandler) RemoveHost(ctx context.Context, req *dbpb.DBRem
 
 func (handler *DBServiceHandler) RemoveHostsInBatch(ctx context.Context, req *dbpb.DBRemoveHostsInBatchRequest, rsp *dbpb.DBRemoveHostsInBatchResponse) error {
 	resourceManager := handler.Dao().ResourceManager()
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	err := resourceManager.DeleteHostsInBatch(ctx, req.HostIds)
 	rsp.Rs = new(dbpb.DBHostResponseStatus)
 	if err != nil {
@@ -214,7 +214,7 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbpb.DBHostInfoDTO) {
 
 func (handler *DBServiceHandler) ListHost(ctx context.Context, req *dbpb.DBListHostsRequest, rsp *dbpb.DBListHostsResponse) error {
 	resourceManager := handler.Dao().ResourceManager()
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	var hostReq models.ListHostReq
 	hostReq.Purpose = req.Purpose
 	hostReq.Stat = resource.HostStat(req.Stat)
@@ -255,7 +255,7 @@ func (handler *DBServiceHandler) ListHost(ctx context.Context, req *dbpb.DBListH
 }
 func (handler *DBServiceHandler) CheckDetails(ctx context.Context, req *dbpb.DBCheckDetailsRequest, rsp *dbpb.DBCheckDetailsResponse) error {
 	resourceManager := handler.Dao().ResourceManager()
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	host, err := resourceManager.FindHostById(ctx, req.HostId)
 	rsp.Rs = new(dbpb.DBHostResponseStatus)
 	if err != nil {
@@ -315,7 +315,7 @@ func buildAllocRsp(componet string, req models.AllocRsps, out *[]*dbpb.DBAllocHo
 
 func (handler *DBServiceHandler) AllocHosts(ctx context.Context, in *dbpb.DBAllocHostsRequest, out *dbpb.DBAllocHostsResponse) error {
 	resourceManager := handler.Dao().ResourceManager()
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	// Build up allocHosts request for model
 	req := make(models.AllocReqs)
 	copyAllocReq("PD", req, in.PdReq)
@@ -363,7 +363,7 @@ func getFailureDomainByType(fd resource.FailureDomain) (domain string, err error
 
 func (handler *DBServiceHandler) GetFailureDomain(ctx context.Context, req *dbpb.DBGetFailureDomainRequest, rsp *dbpb.DBGetFailureDomainResponse) error {
 
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	domainType := req.FailureDomainType
 	domain, err := getFailureDomainByType(resource.FailureDomain(domainType))
 	rsp.Rs = new(dbpb.DBHostResponseStatus)
@@ -440,7 +440,7 @@ func copyResultToRsp(src *resource.HostResource, dst *dbpb.DBHostResource) {
 }
 
 func (handler *DBServiceHandler) AllocResources(ctx context.Context, in *dbpb.DBAllocRequest, out *dbpb.DBAllocResponse) error {
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	log.Infof("Receive %d allocation requirement from %s in requestID %s\n", len(in.Requires), in.Applicant.HolderId, in.Applicant.RequestId)
 	resourceManager := handler.Dao().ResourceManager()
 	resources, err := resourceManager.AllocResources(ctx, in)
@@ -469,7 +469,7 @@ func (handler *DBServiceHandler) AllocResources(ctx context.Context, in *dbpb.DB
 }
 
 func (handler *DBServiceHandler) AllocResourcesInBatch(ctx context.Context, in *dbpb.DBBatchAllocRequest, out *dbpb.DBBatchAllocResponse) error {
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	log.Infof("Receive batch allocation with %d requests", len(in.BatchRequests))
 	out.Rs = new(dbpb.DBAllocResponseStatus)
 
@@ -505,7 +505,7 @@ func (handler *DBServiceHandler) AllocResourcesInBatch(ctx context.Context, in *
 }
 
 func (handler *DBServiceHandler) RecycleResources(ctx context.Context, in *dbpb.DBRecycleRequest, out *dbpb.DBRecycleResponse) error {
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	log.Infof("Receive recycle with %d requires", len(in.RecycleReqs))
 	out.Rs = new(dbpb.DBAllocResponseStatus)
 
@@ -530,7 +530,7 @@ func (handler *DBServiceHandler) RecycleResources(ctx context.Context, in *dbpb.
 }
 
 func (handler *DBServiceHandler) UpdateHostStatus(ctx context.Context, in *dbpb.DBUpdateHostStatusRequest, out *dbpb.DBUpdateHostStatusResponse) error {
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	log.Infof("update host %v status to %d", in.HostIds, in.Status)
 	out.Rs = new(dbpb.DBHostResponseStatus)
 
@@ -555,7 +555,7 @@ func (handler *DBServiceHandler) UpdateHostStatus(ctx context.Context, in *dbpb.
 }
 
 func (handler *DBServiceHandler) ReserveHost(ctx context.Context, in *dbpb.DBReserveHostRequest, out *dbpb.DBReserveHostResponse) error {
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	log.Infof("set host %v reserved status to %v", in.HostIds, in.Reserved)
 	out.Rs = new(dbpb.DBHostResponseStatus)
 

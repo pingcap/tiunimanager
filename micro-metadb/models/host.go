@@ -813,8 +813,8 @@ func (m *DAOResourceManager) RecycleAllocResources(ctx context.Context, request 
 	return
 }
 
-func (m *DAOResourceManager) UpdateHostStatus(request *dbpb.DBUpdateHostStatusRequest) (err error) {
-	tx := m.getDb().Begin()
+func (m *DAOResourceManager) UpdateHostStatus(ctx context.Context, request *dbpb.DBUpdateHostStatusRequest) (err error) {
+	tx := m.getDb(ctx).Begin()
 	for _, hostId := range request.HostIds {
 		result := tx.Model(&rt.Host{}).Where("id = ?", hostId).Update("status", request.Status)
 		if result.Error != nil {
@@ -830,8 +830,8 @@ func (m *DAOResourceManager) UpdateHostStatus(request *dbpb.DBUpdateHostStatusRe
 	return nil
 }
 
-func (m *DAOResourceManager) ReserveHost(request *dbpb.DBReserveHostRequest) (err error) {
-	tx := m.getDb().Begin()
+func (m *DAOResourceManager) ReserveHost(ctx context.Context, request *dbpb.DBReserveHostRequest) (err error) {
+	tx := m.getDb(ctx).Begin()
 	for _, hostId := range request.HostIds {
 		result := tx.Model(&rt.Host{}).Where("id = ?", hostId).Update("reserved", request.Reserved)
 		if result.Error != nil {

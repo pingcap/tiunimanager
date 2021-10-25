@@ -6,6 +6,7 @@ require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
 	github.com/BurntSushi/toml v0.4.1
 	github.com/HdrHistogram/hdrhistogram-go v1.1.1 // indirect
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/asim/go-micro/plugins/registry/etcd/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/plugins/wrapper/monitoring/prometheus/v3 v3.0.0-20210812172626-c7195aae9817
 	github.com/asim/go-micro/plugins/wrapper/trace/opentracing/v3 v3.0.0-20210812172626-c7195aae9817

@@ -535,7 +535,7 @@ func (handler *DBServiceHandler) UpdateHostStatus(ctx context.Context, in *dbpb.
 	out.Rs = new(dbpb.DBHostResponseStatus)
 
 	resourceManager := handler.Dao().ResourceManager()
-	err := resourceManager.UpdateHostStatus(in)
+	err := resourceManager.UpdateHostStatus(ctx, in)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok {
@@ -560,7 +560,7 @@ func (handler *DBServiceHandler) ReserveHost(ctx context.Context, in *dbpb.DBRes
 	out.Rs = new(dbpb.DBHostResponseStatus)
 
 	resourceManager := handler.Dao().ResourceManager()
-	err := resourceManager.ReserveHost(in)
+	err := resourceManager.ReserveHost(ctx, in)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok {

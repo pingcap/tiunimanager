@@ -41,7 +41,7 @@ func (d *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *dbpb.D
 		Status:        in.GetRecord().GetStatus(),
 		StartTime:     time.Unix(in.GetRecord().GetStartTime(), 0),
 	}
-	id, err := d.Dao().ClusterManager().CreateTransportRecord(record)
+	id, err := d.Dao().ClusterManager().CreateTransportRecord(ctx, record)
 	if err != nil {
 		log.Errorf("CreateTransportRecord failed, %s", err.Error())
 		return err
@@ -53,7 +53,7 @@ func (d *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *dbpb.D
 
 func (d *DBServiceHandler) UpdateTransportRecord(ctx context.Context, in *dbpb.DBUpdateTransportRecordRequest, out *dbpb.DBUpdateTransportRecordResponse) error {
 	log := framework.LogWithContext(ctx)
-	err := d.Dao().ClusterManager().UpdateTransportRecord(in.GetRecord().GetID(), in.GetRecord().GetClusterId(), in.GetRecord().GetStatus(), time.Unix(in.GetRecord().GetEndTime(), 0))
+	err := d.Dao().ClusterManager().UpdateTransportRecord(ctx, in.GetRecord().GetID(), in.GetRecord().GetClusterId(), in.GetRecord().GetStatus(), time.Unix(in.GetRecord().GetEndTime(), 0))
 	if err != nil {
 		log.Errorf("UpdateTransportRecord failed, %s", err.Error())
 		return err
@@ -64,7 +64,7 @@ func (d *DBServiceHandler) UpdateTransportRecord(ctx context.Context, in *dbpb.D
 
 func (d *DBServiceHandler) FindTrasnportRecordByID(ctx context.Context, in *dbpb.DBFindTransportRecordByIDRequest, out *dbpb.DBFindTransportRecordByIDResponse) error {
 	log := framework.LogWithContext(ctx)
-	record, err := d.Dao().ClusterManager().FindTransportRecordById(in.GetRecordId())
+	record, err := d.Dao().ClusterManager().FindTransportRecordById(ctx, in.GetRecordId())
 	if err != nil {
 		log.Errorf("FindTransportRecordById failed, %s", err.Error())
 		return err
@@ -76,7 +76,7 @@ func (d *DBServiceHandler) FindTrasnportRecordByID(ctx context.Context, in *dbpb
 
 func (d *DBServiceHandler) ListTrasnportRecord(ctx context.Context, in *dbpb.DBListTransportRecordRequest, out *dbpb.DBListTransportRecordResponse) error {
 	log := framework.LogWithContext(ctx)
-	records, total, err := d.Dao().ClusterManager().ListTransportRecord(in.GetClusterId(), in.GetRecordId(), (in.GetPage().GetPage()-1)*in.GetPage().GetPageSize(), in.GetPage().GetPageSize())
+	records, total, err := d.Dao().ClusterManager().ListTransportRecord(ctx, in.GetClusterId(), in.GetRecordId(), (in.GetPage().GetPage()-1)*in.GetPage().GetPageSize(), in.GetPage().GetPageSize())
 	if err != nil {
 		log.Errorf("ListTrasnportRecord failed, %s", err.Error())
 		return err

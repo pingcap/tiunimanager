@@ -834,6 +834,18 @@ definitions:
       url:
         type: string
     type: object
+  management.DescribeMonitorRsp:
+    properties:
+      alertUrl:
+        example: http://127.0.0.1:9093
+        type: string
+      clusterId:
+        example: abc
+        type: string
+      grafanaUrl:
+        example: http://127.0.0.1:3000
+        type: string
+    type: object
   management.DetailClusterRsp:
     properties:
       backupFileUsage:
@@ -1339,6 +1351,46 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: dashboard
+      tags:
+      - cluster
+  /clusters/{clusterId}/monitor:
+    get:
+      consumes:
+      - application/json
+      description: monitoring link
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/management.DescribeMonitorRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: monitoring link
       tags:
       - cluster
   /clusters/{clusterId}/params:

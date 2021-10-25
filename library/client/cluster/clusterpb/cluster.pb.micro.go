@@ -5,7 +5,7 @@ package clusterpb
 
 import (
 	fmt "fmt"
-	proto "google.golang.org/protobuf/proto"
+	proto "github.com/golang/protobuf/proto"
 	math "math"
 )
 
@@ -20,6 +20,12 @@ import (
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ api.Endpoint
@@ -53,6 +59,7 @@ type ClusterService interface {
 	QueryParameters(ctx context.Context, in *QueryClusterParametersRequest, opts ...client.CallOption) (*QueryClusterParametersResponse, error)
 	SaveParameters(ctx context.Context, in *SaveClusterParametersRequest, opts ...client.CallOption) (*SaveClusterParametersResponse, error)
 	DescribeDashboard(ctx context.Context, in *DescribeDashboardRequest, opts ...client.CallOption) (*DescribeDashboardResponse, error)
+	DescribeMonitor(ctx context.Context, in *DescribeMonitorRequest, opts ...client.CallOption) (*DescribeMonitorResponse, error)
 	// Auth manager module
 	Login(ctx context.Context, in *LoginRequest, opts ...client.CallOption) (*LoginResponse, error)
 	Logout(ctx context.Context, in *LogoutRequest, opts ...client.CallOption) (*LogoutResponse, error)
@@ -246,6 +253,16 @@ func (c *clusterService) DescribeDashboard(ctx context.Context, in *DescribeDash
 	return out, nil
 }
 
+func (c *clusterService) DescribeMonitor(ctx context.Context, in *DescribeMonitorRequest, opts ...client.CallOption) (*DescribeMonitorResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.DescribeMonitor", in)
+	out := new(DescribeMonitorResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterService) Login(ctx context.Context, in *LoginRequest, opts ...client.CallOption) (*LoginResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterService.Login", in)
 	out := new(LoginResponse)
@@ -426,6 +443,7 @@ type ClusterServiceHandler interface {
 	QueryParameters(context.Context, *QueryClusterParametersRequest, *QueryClusterParametersResponse) error
 	SaveParameters(context.Context, *SaveClusterParametersRequest, *SaveClusterParametersResponse) error
 	DescribeDashboard(context.Context, *DescribeDashboardRequest, *DescribeDashboardResponse) error
+	DescribeMonitor(context.Context, *DescribeMonitorRequest, *DescribeMonitorResponse) error
 	// Auth manager module
 	Login(context.Context, *LoginRequest, *LoginResponse) error
 	Logout(context.Context, *LogoutRequest, *LogoutResponse) error
@@ -465,6 +483,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		QueryParameters(ctx context.Context, in *QueryClusterParametersRequest, out *QueryClusterParametersResponse) error
 		SaveParameters(ctx context.Context, in *SaveClusterParametersRequest, out *SaveClusterParametersResponse) error
 		DescribeDashboard(ctx context.Context, in *DescribeDashboardRequest, out *DescribeDashboardResponse) error
+		DescribeMonitor(ctx context.Context, in *DescribeMonitorRequest, out *DescribeMonitorResponse) error
 		Login(ctx context.Context, in *LoginRequest, out *LoginResponse) error
 		Logout(ctx context.Context, in *LogoutRequest, out *LogoutResponse) error
 		VerifyIdentity(ctx context.Context, in *VerifyIdentityRequest, out *VerifyIdentityResponse) error
@@ -555,6 +574,10 @@ func (h *clusterServiceHandler) SaveParameters(ctx context.Context, in *SaveClus
 
 func (h *clusterServiceHandler) DescribeDashboard(ctx context.Context, in *DescribeDashboardRequest, out *DescribeDashboardResponse) error {
 	return h.ClusterServiceHandler.DescribeDashboard(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) DescribeMonitor(ctx context.Context, in *DescribeMonitorRequest, out *DescribeMonitorResponse) error {
+	return h.ClusterServiceHandler.DescribeMonitor(ctx, in, out)
 }
 
 func (h *clusterServiceHandler) Login(ctx context.Context, in *LoginRequest, out *LoginResponse) error {

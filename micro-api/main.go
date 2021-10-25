@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -22,6 +21,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -79,6 +79,9 @@ func main() {
 func initGinEngine(d *framework.BaseFramework) error {
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.New()
+
+	// enable cors access
+	g.Use(cors.Default())
 
 	g.Use(promMiddleware(d))
 

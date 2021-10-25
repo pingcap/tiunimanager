@@ -382,6 +382,21 @@ func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *c
 	return nil
 }
 
+func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clusterpb.DescribeMonitorRequest, response *clusterpb.DescribeMonitorResponse) (err error) {
+	monitor, err := domain.DescribeMonitor(ctx, request.Operator, request.ClusterId)
+	if err != nil {
+		getLoggerWithContext(ctx).Error(err)
+		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_MONITOR_NOT_FOUND, Message: common.TiEMErrMsg[common.TIEM_MONITOR_NOT_FOUND]}
+	} else {
+		response.Status = SuccessResponseStatus
+		response.ClusterId = monitor.ClusterId
+		response.AlertUrl = monitor.AlertUrl
+		response.GrafanaUrl = monitor.GrafanaUrl
+	}
+
+	return nil
+}
+
 func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterpb.ListFlowsRequest, response *clusterpb.ListFlowsResponse) (err error) {
 	flows, total, err := domain.TaskRepo.ListFlows(req.BizId, req.Keyword, int(req.Status), int(req.Page.Page), int(req.Page.PageSize))
 	if err != nil {

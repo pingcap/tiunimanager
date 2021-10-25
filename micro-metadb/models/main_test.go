@@ -39,7 +39,7 @@ func TestMain(m *testing.M) {
 
 	framework.InitBaseFrameworkForUt(framework.MetaDBService,
 		func(d *framework.BaseFramework) error {
-			Dao = new(DAOManager)
+			Dao = NewDAOManager(d)
 			Dao.InitDB(testFilePath)
 			Dao.InitTables()
 			Dao.AddTable("test_entitys", new(TestEntity))
@@ -48,6 +48,7 @@ func TestMain(m *testing.M) {
 			Dao.AddTable("test_datas", new(TestData))
 
 			MetaDB = Dao.Db()
+
 			Dao.SetAccountManager(NewDAOAccountManager(Dao.Db()))
 			Dao.SetClusterManager(NewDAOClusterManager(Dao.Db()))
 			Dao.SetResourceManager(NewDAOResourceManager(Dao.Db()))

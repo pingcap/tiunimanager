@@ -17,12 +17,12 @@
 package models
 
 import (
+	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"reflect"
 	"testing"
 	"time"
-
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/stretchr/testify/assert"
@@ -48,8 +48,8 @@ func TestCreateHost(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id, _ := Dao.ResourceManager().CreateHost(h)
-	defer Dao.ResourceManager().DeleteHost(id)
+	id, _ := Dao.ResourceManager().CreateHost(context.TODO(), h)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id)
 	type args struct {
 		host *resource.Host
 	}
@@ -98,8 +98,8 @@ func TestCreateHost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotId, err := Dao.ResourceManager().CreateHost(tt.args.host)
-			defer Dao.ResourceManager().DeleteHost(gotId)
+			gotId, err := Dao.ResourceManager().CreateHost(context.TODO(), tt.args.host)
+			defer Dao.ResourceManager().DeleteHost(context.TODO(), gotId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateHost() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -187,8 +187,8 @@ func TestCreateHostsInBatch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotIds, err := Dao.ResourceManager().CreateHostsInBatch(tt.args.hosts)
-			defer Dao.ResourceManager().DeleteHostsInBatch(gotIds)
+			gotIds, err := Dao.ResourceManager().CreateHostsInBatch(context.TODO(), tt.args.hosts)
+			defer Dao.ResourceManager().DeleteHostsInBatch(context.TODO(), gotIds)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateHostsInBatch() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -219,8 +219,8 @@ func TestDeleteHost(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id, _ := Dao.ResourceManager().CreateHost(h)
-	defer Dao.ResourceManager().DeleteHost(id)
+	id, _ := Dao.ResourceManager().CreateHost(context.TODO(), h)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id)
 	type args struct {
 		hostId string
 	}
@@ -234,7 +234,7 @@ func TestDeleteHost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Dao.ResourceManager().DeleteHost(tt.args.hostId); (err != nil) != tt.wantErr {
+			if err := Dao.ResourceManager().DeleteHost(context.TODO(), tt.args.hostId); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteHost() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -258,8 +258,8 @@ func TestDeleteHostsInBatch(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id1, _ := Dao.ResourceManager().CreateHost(h)
-	defer Dao.ResourceManager().DeleteHost(id1)
+	id1, _ := Dao.ResourceManager().CreateHost(context.TODO(), h)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
 	h2 := &resource.Host{
 		HostName:     "主机1",
 		IP:           "222.99.999.132",
@@ -276,8 +276,8 @@ func TestDeleteHostsInBatch(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id2, _ := Dao.ResourceManager().CreateHost(h2)
-	defer Dao.ResourceManager().DeleteHost(id2)
+	id2, _ := Dao.ResourceManager().CreateHost(context.TODO(), h2)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id2)
 
 	type args struct {
 		hostIds []string
@@ -292,7 +292,7 @@ func TestDeleteHostsInBatch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Dao.ResourceManager().DeleteHostsInBatch(tt.args.hostIds); (err != nil) != tt.wantErr {
+			if err := Dao.ResourceManager().DeleteHostsInBatch(context.TODO(), tt.args.hostIds); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteHostsInBatch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -395,8 +395,8 @@ func TestFindHostById(t *testing.T) {
 			{Name: "sdb", Path: "/tidb", Capacity: 256, Status: 1},
 		},
 	}
-	id1, _ := Dao.ResourceManager().CreateHost(h)
-	defer Dao.ResourceManager().DeleteHost(id1)
+	id1, _ := Dao.ResourceManager().CreateHost(context.TODO(), h)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
 	type args struct {
 		hostId string
 	}
@@ -413,7 +413,7 @@ func TestFindHostById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Dao.ResourceManager().FindHostById(tt.args.hostId)
+			got, err := Dao.ResourceManager().FindHostById(context.TODO(), tt.args.hostId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindHostById() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -441,7 +441,7 @@ func TestGetFailureDomain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRes, err := Dao.ResourceManager().GetFailureDomain(tt.args.domain)
+			gotRes, err := Dao.ResourceManager().GetFailureDomain(context.TODO(), tt.args.domain)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetFailureDomain() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -871,15 +871,15 @@ func CreateTestHost(region, zone, rack, hostName, ip, purpose, diskType string, 
 			Type:     diskType,
 		})
 	}
-	return Dao.ResourceManager().CreateHost(h)
+	return Dao.ResourceManager().CreateHost(context.TODO(), h)
 }
 func TestListHosts(t *testing.T) {
 	id1, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName1", "111.121.999.132", "TestCompute", string(resource.SSD), 17, 64, 1)
 	id2, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName2", "222.121.999.132", "TestCompute", string(resource.SSD), 16, 64, 0)
 	id3, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName3", "333.121.999.132", "whatever", string(resource.SSD), 15, 64, 0)
-	defer Dao.ResourceManager().DeleteHost(id1)
-	defer Dao.ResourceManager().DeleteHost(id2)
-	defer Dao.ResourceManager().DeleteHost(id3)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id2)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id3)
 
 	type args struct {
 		req ListHostReq
@@ -925,7 +925,7 @@ func TestListHosts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotHosts, err := Dao.ResourceManager().ListHosts(tt.args.req)
+			gotHosts, err := Dao.ResourceManager().ListHosts(context.TODO(), tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListHosts() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -944,9 +944,9 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 	id2, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName2", "474.111.111.112", string(resource.General), string(resource.SSD), 16, 64, 2)
 	id3, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName3", "474.111.111.113", string(resource.General), string(resource.SSD), 15, 64, 1)
 	// Host Status should be inused or exhausted, so delete would failed
-	defer Dao.ResourceManager().DeleteHost(id1)
-	defer Dao.ResourceManager().DeleteHost(id2)
-	defer Dao.ResourceManager().DeleteHost(id3)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id2)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id3)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
 	m["PD"] = append(m["PD"], &HostAllocReq{
@@ -981,7 +981,7 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp, err := Dao.ResourceManager().AllocHosts(tt.args.req)
+			rsp, err := Dao.ResourceManager().AllocHosts(context.TODO(), tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1015,7 +1015,7 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 func TestAllocHosts_1Host(t *testing.T) {
 	id1, _ := CreateTestHost("Region1", "Zone99", "3-1", "HostName1", "192.168.56.99", string(resource.General), string(resource.SSD), 17, 64, 3)
 	// Host Status should be inused or exhausted, so delete would failed
-	defer Dao.ResourceManager().DeleteHost(id1)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
 	m["PD"] = append(m["PD"], &HostAllocReq{
@@ -1050,7 +1050,7 @@ func TestAllocHosts_1Host(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp, err := Dao.ResourceManager().AllocHosts(tt.args.req)
+			rsp, err := Dao.ResourceManager().AllocHosts(context.TODO(), tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1077,7 +1077,7 @@ func TestAllocHosts_1Host(t *testing.T) {
 
 func TestAllocHosts_1Host_NotEnough(t *testing.T) {
 	id1, _ := CreateTestHost("Region1", "Zone100", "3-1", "HostName1", "192.168.56.100", string(resource.General), string(resource.SSD), 17, 64, 3)
-	defer Dao.ResourceManager().DeleteHost(id1)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
 	m["PD"] = append(m["PD"], &HostAllocReq{
@@ -1112,7 +1112,7 @@ func TestAllocHosts_1Host_NotEnough(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := Dao.ResourceManager().AllocHosts(tt.args.req)
+			_, err := Dao.ResourceManager().AllocHosts(context.TODO(), tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1181,7 +1181,7 @@ func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp, err := Dao.ResourceManager().AllocResources(tt.args.request)
+			rsp, err := Dao.ResourceManager().AllocResources(context.TODO(), tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1286,7 +1286,7 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp, err := Dao.ResourceManager().AllocResources(tt.args.request)
+			rsp, err := Dao.ResourceManager().AllocResources(context.TODO(), tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1394,7 +1394,7 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp, err := Dao.ResourceManager().AllocResourcesInBatch(tt.args.request)
+			rsp, err := Dao.ResourceManager().AllocResourcesInBatch(context.TODO(), tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1499,7 +1499,7 @@ func TestAllocResources_3RequestsInBatch_3Hosts_No_Disk(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp, err := Dao.ResourceManager().AllocResourcesInBatch(tt.args.request)
+			rsp, err := Dao.ResourceManager().AllocResourcesInBatch(context.TODO(), tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1656,7 +1656,7 @@ func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp, err := Dao.ResourceManager().AllocResourcesInBatch(tt.args.request)
+			rsp, err := Dao.ResourceManager().AllocResourcesInBatch(context.TODO(), tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1806,7 +1806,7 @@ func TestAllocResources_SpecifyHost_Strategy_No_Disk(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp, err := Dao.ResourceManager().AllocResourcesInBatch(tt.args.request)
+			rsp, err := Dao.ResourceManager().AllocResourcesInBatch(context.TODO(), tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
 			}

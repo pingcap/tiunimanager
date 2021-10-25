@@ -241,7 +241,7 @@ func glMgrStatusMapSync() {
 		var ok bool
 		select {
 		case statm, ok = <-glMgrTaskStatusCh:
-			assert(ok == true)
+			assert(ok)
 			consumedFlag = true
 		default:
 		}
@@ -309,7 +309,7 @@ func mgrHandleCmdStartReq(jsonStr string) CmdStartResp {
 }
 
 func mgrHandleCmdListReq(jsonStr string) CmdListResp {
-	ret := CmdListResp{}
+	var ret CmdListResp
 	var req CmdListReq
 	err := json.Unmarshal([]byte(jsonStr), &req)
 	if err != nil {
@@ -434,7 +434,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 		logInFunc.Info("cmd started")
 		//fmt.Println("cmd started")
 		successFp := func() {
-			logInFunc.Info("task finished, time cost", time.Now().Sub(t0))
+			logInFunc.Info("task finished, time cost", time.Since(t0))
 			//fmt.Println("task finished, time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
@@ -456,7 +456,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 					}
 				}
 			}
-			logInFunc.Error("task err:", err, "time cost", time.Now().Sub(t0))
+			logInFunc.Error("task err:", err, "time cost", time.Since(t0))
 			//fmt.Println("task err:", err, "time cost", time.Now().Sub(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
@@ -1057,12 +1057,8 @@ type CmdChanMember struct {
 func microCmdChanRoutine(cch chan CmdChanMember, outReader io.Reader, inWriter io.Writer) {
 	outBufReader := bufio.NewReader(outReader)
 	for {
-		var cmdMember CmdChanMember
-		var ok bool
-		select {
-		case cmdMember, ok = <-cch:
-			assert(ok)
-		}
+		cmdMember, ok := <-cch
+		assert(ok)
 		bs := jsonMustMarshal(cmdMember.req)
 		bs = append(bs, '\n')
 		ct, err := inWriter.Write(bs)

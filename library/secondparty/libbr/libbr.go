@@ -295,7 +295,7 @@ func glMgrStatusMapSync() {
 		var ok bool
 		select {
 		case statm, ok = <-glMgrTaskStatusCh:
-			assert(ok == true)
+			assert(ok)
 			consumedFlag = true
 		default:
 		}
@@ -441,7 +441,7 @@ func mgrStartNewBrShowBackUpInfoThruSQL(req *CmdShowBackUpInfoReq) CmdShowBackUp
 	t0 := time.Now()
 	err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.Queue_time, &resp.Execution_Time, &resp.Finish_Time, &resp.Connection)
 	successFp := func() {
-		logger.Info("showbackupinfo task finished, time cost", time.Now().Sub(t0))
+		logger.Info("showbackupinfo task finished, time cost", time.Since(t0))
 	}
 	if err != nil {
 		logger.Errorf("query sql cmd err: %v", err)
@@ -516,7 +516,7 @@ func mgrStartNewBrShowRestoreInfoThruSQL(req *CmdShowRestoreInfoReq) CmdShowRest
 	t0 := time.Now()
 	err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.Queue_time, &resp.Execution_Time, &resp.Finish_Time, &resp.Connection)
 	successFp := func() {
-		logger.Info("showretoreinfo task finished, time cost", time.Now().Sub(t0))
+		logger.Info("showretoreinfo task finished, time cost", time.Since(t0))
 	}
 	if err != nil {
 		logger.Errorf("query sql cmd err: %v", err)
@@ -580,7 +580,7 @@ func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd 
 			return
 		}
 		successFp := func() {
-			logger.Info("task finished, time cost", time.Now().Sub(t0))
+			logger.Info("task finished, time cost", time.Since(t0))
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusFinished,
@@ -589,7 +589,6 @@ func mgrStartNewBrTaskThruSQL(taskID uint64, dbConnParam *DbConnParam, brSQLCmd 
 		}
 		logger.Info("sql cmd return successfully")
 		successFp()
-		return
 	}()
 	return exitCh
 }
@@ -723,12 +722,8 @@ func microStartBrMgr(mgrLogFilePath string) chan CmdChanMember {
 func microCmdChanRoutine(cch chan CmdChanMember, outReader io.Reader, inWriter io.Writer) {
 	outBufReader := bufio.NewReader(outReader)
 	for {
-		var cmdMember CmdChanMember
-		var ok bool
-		select {
-		case cmdMember, ok = <-cch:
-			assert(ok)
-		}
+		cmdMember, ok := <-cch
+		assert(ok)
 		bs := jsonMustMarshal(cmdMember.req)
 		bs = append(bs, '\n')
 		ct, err := inWriter.Write(bs)

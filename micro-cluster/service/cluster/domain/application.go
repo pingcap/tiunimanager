@@ -439,6 +439,7 @@ func parseOperatorFromDTO(dto *clusterpb.OperatorDTO) (operator *Operator) {
 		Id:       dto.Id,
 		Name:     dto.Name,
 		TenantId: dto.TenantId,
+		ManualOperator: dto.ManualOperator,
 	}
 	return
 }

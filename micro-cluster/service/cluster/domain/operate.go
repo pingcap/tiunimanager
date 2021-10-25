@@ -21,10 +21,21 @@ import (
 	"time"
 )
 
+const SystemOperator = "System"
+
 type Operator struct {
 	Id 			string
 	Name 		string
 	TenantId 	string
+	ManualOperator bool
+}
+
+func BuildSystemOperator() *Operator {
+	return &Operator{
+		Id: SystemOperator,
+		Name: SystemOperator,
+		ManualOperator: false,
+	}
 }
 
 type OperateRecord struct {

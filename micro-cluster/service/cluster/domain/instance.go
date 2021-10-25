@@ -22,6 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"math/rand"
+	"strconv"
 )
 
 func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterInstanceDTO {
@@ -38,8 +39,8 @@ func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterI
 		dto.IntranetConnectAddresses, dto.ExtranetConnectAddresses, dto.PortList = ConnectAddresses(record.ConfigModel)
 	} else {
 		dto.PortList = []int64{4000}
-		dto.IntranetConnectAddresses = []string{"127.0.0.1"}
-		dto.ExtranetConnectAddresses = []string{"127.0.0.1"}
+		dto.IntranetConnectAddresses = []string{"127.0.0.1:4000"}
+		dto.ExtranetConnectAddresses = []string{"127.0.0.1:4000"}
 	}
 
 	return dto
@@ -52,8 +53,7 @@ func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int64) {
 	portList := make([]int64, len(servers), len(servers))
 
 	for i, v := range servers {
-		addressList[i] = v.Host
-		portList[i] = int64(v.Port)
+		addressList[i] = v.Host + ":" + strconv.Itoa(v.Port)
 	}
 	return addressList, addressList, portList
 }

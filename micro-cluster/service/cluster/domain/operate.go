@@ -30,6 +30,25 @@ type Operator struct {
 	ManualOperator bool
 }
 
+// GetOperatorFromName
+// @Description: get operator from name
+// @Parameter name
+// @return *Operator
+func GetOperatorFromName(name string) *Operator {
+	if name == SystemOperator {
+		return BuildSystemOperator()
+	}
+
+	// todo get from repository
+	return &Operator{
+		Name: name,
+		ManualOperator: true,
+	}
+}
+
+// BuildSystemOperator
+// @Description: system operator
+// @return *Operator
 func BuildSystemOperator() *Operator {
 	return &Operator{
 		Id: SystemOperator,

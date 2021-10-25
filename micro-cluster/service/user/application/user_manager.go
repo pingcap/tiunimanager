@@ -53,7 +53,7 @@ func (p *UserManager) CreateAccount(tenant *domain.Tenant, name, passwd string) 
 
 // FindAccountByName FindAccountByName
 func (p *UserManager) FindAccountByName(name string) (*domain.Account, error) {
-	a, err := p.rbacRepo.LoadAccountByName(name)
+	a, err := p.rbacRepo.(name)
 	if err != nil {
 		return nil, err
 	}

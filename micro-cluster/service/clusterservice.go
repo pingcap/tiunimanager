@@ -426,6 +426,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterpb.Lis
 				Name:     v.Operator.Name,
 				Id:       v.Operator.Id,
 				TenantId: v.Operator.TenantId,
+				ManualOperator: v.Operator.ManualOperator,
 			},
 		}
 	}

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -188,7 +187,7 @@ func ImportHost(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(ImportHostRsp{HostId: rsp.HostId}))
 }
 
-func importExcelFile(r io.Reader) ([]*HostInfo, error) {
+func importExcelFile(r io.Reader, reserved bool) ([]*HostInfo, error) {
 	xlsx, err := excelize.OpenReader(r)
 	if err != nil {
 		return nil, err
@@ -198,6 +197,7 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 	for irow, row := range rows {
 		if irow > 0 {
 			var host HostInfo
+			host.Reserved = reserved
 			host.HostName = row[HOSTNAME_FIELD]
 			addr := net.ParseIP(row[IP_FILED])
 			if addr == nil {
@@ -232,11 +232,7 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 			host.Memory = int32(mem)
 			host.FreeMemory = host.Memory
 			host.Nic = row[NIC_FIELD]
-			host.Reserved, err = strconv.ParseBool(row[RESERVED_FIELD])
-			if err != nil {
-				errMsg := fmt.Sprintf("Row %d get boolean reserved failed, %v", irow, err)
-				return nil, errors.New(errMsg)
-			}
+
 			if err = resource.ValidPurposeType(row[PURPOSE_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, row[PURPOSE_FIELD], err)
 				return nil, errors.New(errMsg)
@@ -270,17 +266,25 @@ func importExcelFile(r io.Reader) ([]*HostInfo, error) {
 // @Accept mpfd
 // @Produce json
 // @Security ApiKeyAuth
+// @Param hostReserved formData string true "whether hosts are reserved(won't be allocated) after import" default(false)
 // @Param file formData file true "hosts information in a xlsx file"
 // @Success 200 {object} controller.CommonResult{data=[]string}
 // @Router /resources/hosts [post]
 func ImportHosts(c *gin.Context) {
+	reservedStr := c.PostForm("hostReserved")
+	reserved, err := strconv.ParseBool(reservedStr)
+	if err != nil {
+		errmsg := fmt.Sprintf("GetFormData Error: %v", err)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
+		return
+	}
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
 		errmsg := fmt.Sprintf("GetFormFile Error: %v", err)
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
-	hosts, err := importExcelFile(file)
+	hosts, err := importExcelFile(file, reserved)
 	if err != nil {
 		errmsg := fmt.Sprintf("Import File Error: %v", err)
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.InvalidArgument), errmsg))
@@ -312,14 +316,20 @@ func ImportHosts(c *gin.Context) {
 // @Router /resources/hosts [get]
 func ListHost(c *gin.Context) {
 	hostQuery := HostQuery{
-		Status: -1,
+		Status: int(resource.HOST_WHATEVER),
+		Stat:   int(resource.HOST_STAT_WHATEVER),
 	}
 	if err := c.ShouldBindQuery(&hostQuery); err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
-	if !resource.HostStatus(hostQuery.Status).IsValid() {
-		errmsg := fmt.Sprintf("Input Status %d is Invalid", hostQuery.Status)
+	if !resource.HostStatus(hostQuery.Status).IsValidForQuery() {
+		errmsg := fmt.Sprintf("input status %d is invalid for query", hostQuery.Status)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
+		return
+	}
+	if !resource.HostStat(hostQuery.Stat).IsValidForQuery() {
+		errmsg := fmt.Sprintf("input load stat %d is invalid for query", hostQuery.Stat)
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
@@ -327,6 +337,7 @@ func ListHost(c *gin.Context) {
 	listHostReq := clusterpb.ListHostsRequest{
 		Purpose: hostQuery.Purpose,
 		Status:  int32(hostQuery.Status),
+		Stat:    int32(hostQuery.Stat),
 	}
 	listHostReq.PageReq = new(clusterpb.PageDTO)
 	listHostReq.PageReq.Page = int32(hostQuery.Page)
@@ -494,6 +505,86 @@ func DownloadHostTemplateFile(c *gin.Context) {
 	c.Header("Cache-Control", "no-cache")
 
 	c.File(filePath)
+}
+
+// UpdateHostStatus godoc
+// @Summary Update host status
+// @Description update host status by a list
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param updateReq body UpdateHostStatusReq true "change status in host list"
+// @Success 200 {object} controller.CommonResult{data=string}
+// @Router /resources/update-host-status/ [post]
+func UpdateHostStatus(c *gin.Context) {
+	var updateReq UpdateHostStatusReq
+	if err := c.ShouldBindJSON(&updateReq); err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		return
+	}
+	if !resource.HostStatus(updateReq.Status).IsValidForUpdate() {
+		errmsg := fmt.Sprintf("input status %d is invalid for update, [0:online,1:offline,2:deleted]", updateReq.Status)
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
+		return
+	}
+	if str, dup := detectDuplicateElement(updateReq.HostIds); dup {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), str+" Is Duplicated in request"))
+		return
+	}
+
+	var updateHostStatusReq clusterpb.UpdateHostStatusRequest
+	updateHostStatusReq.Status = updateReq.Status
+	updateHostStatusReq.HostIds = append(updateHostStatusReq.HostIds, updateReq.HostIds...)
+
+	rsp, err := client.ClusterClient.UpdateHostStatus(c, &updateHostStatusReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
+	}
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+	c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
+}
+
+// ReserveHost godoc
+// @Summary Set whether a Host is reserved
+// @Description update host reserved status by a list
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param reserveReq body ReserveHostReq true "change reserved status in host list"
+// @Success 200 {object} controller.CommonResult{data=string}
+// @Router /resources/reserve-host/ [post]
+func ReserveHost(c *gin.Context) {
+	var reserveReq ReserveHostReq
+	if err := c.ShouldBindJSON(&reserveReq); err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		return
+	}
+
+	if str, dup := detectDuplicateElement(reserveReq.HostIds); dup {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), str+" Is Duplicated in request"))
+		return
+	}
+
+	var reserveHostReq clusterpb.ReserveHostRequest
+	reserveHostReq.Reserved = reserveReq.Reserved
+	reserveHostReq.HostIds = append(reserveHostReq.HostIds, reserveReq.HostIds...)
+
+	rsp, err := client.ClusterClient.ReserveHost(c, &reserveHostReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
+	}
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+	c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
 }
 
 func copyAllocToReq(src []Allocation, dst *[]*clusterpb.AllocationReq) {

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -460,9 +459,9 @@ func TestHostStatus_IsAvailable(t *testing.T) {
 		h    resource.Host
 		want bool
 	}{
-		{"normal_online", resource.Host{Status: int32(resource.HOST_ONLINE), Stat: resource.HOST_LOADLESS}, true},
-		{"normal_inused", resource.Host{Status: int32(resource.HOST_ONLINE), Stat: resource.HOST_INUSED}, true},
-		{"want false", resource.Host{Status: int32(resource.HOST_OFFLINE), Stat: resource.HOST_INUSED}, false},
+		{"normal_online", resource.Host{Status: int32(resource.HOST_ONLINE), Stat: int32(resource.HOST_LOADLESS)}, true},
+		{"normal_inused", resource.Host{Status: int32(resource.HOST_ONLINE), Stat: int32(resource.HOST_INUSED)}, true},
+		{"want false", resource.Host{Status: int32(resource.HOST_OFFLINE), Stat: int32(resource.HOST_INUSED)}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -479,8 +478,8 @@ func TestHostStatus_IsInused(t *testing.T) {
 		h    resource.Host
 		want bool
 	}{
-		{"normal_inused", resource.Host{Status: int32(resource.HOST_ONLINE), Stat: resource.HOST_INUSED}, true},
-		{"want false", resource.Host{Status: int32(resource.HOST_ONLINE), Stat: resource.HOST_LOADLESS}, false},
+		{"normal_inused", resource.Host{Status: int32(resource.HOST_ONLINE), Stat: int32(resource.HOST_INUSED)}, true},
+		{"want false", resource.Host{Status: int32(resource.HOST_ONLINE), Stat: int32(resource.HOST_LOADLESS)}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

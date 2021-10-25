@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -100,6 +99,7 @@ func (m *DAOResourceManager) DeleteHostsInBatch(ctx context.Context, hostIds []s
 
 type ListHostReq struct {
 	Status  rt.HostStatus
+	Stat    rt.HostStat
 	Purpose string
 	Offset  int
 	Limit   int
@@ -116,6 +116,9 @@ func (m *DAOResourceManager) ListHosts(ctx context.Context, req ListHostReq) (ho
 		} else {
 			db = db.Unscoped().Where("status = ?", req.Status)
 		}
+	}
+	if req.Stat != rt.HOST_STAT_WHATEVER {
+		db = db.Where("stat = ?", req.Stat)
 	}
 	if req.Purpose != "" {
 		db = db.Where("purpose = ?", req.Purpose)
@@ -312,12 +315,12 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []
 		host.FreeCpuCores -= int32(resource.CpuCores)
 		host.FreeMemory -= int32(resource.Memory)
 		if exclusive {
-			host.Stat = rt.HOST_EXCLUSIVE
+			host.Stat = int32(rt.HOST_EXCLUSIVE)
 		} else {
 			if host.IsExhaust() {
-				host.Stat = rt.HOST_EXHAUST
+				host.Stat = int32(rt.HOST_EXHAUST)
 			} else {
-				host.Stat = rt.HOST_INUSED
+				host.Stat = int32(rt.HOST_INUSED)
 			}
 		}
 		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
@@ -714,9 +717,9 @@ func recycleResourcesInHosts(tx *gorm.DB, usedCompute []UsedComputeStatistic, us
 		host.FreeMemory += int32(usedCompute.TotalMemory)
 
 		if host.IsLoadless() {
-			host.Stat = rt.HOST_LOADLESS
+			host.Stat = int32(rt.HOST_LOADLESS)
 		} else {
-			host.Stat = rt.HOST_INUSED
+			host.Stat = int32(rt.HOST_INUSED)
 		}
 
 		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", usedCompute.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
@@ -808,4 +811,38 @@ func (m *DAOResourceManager) RecycleAllocResources(ctx context.Context, request 
 	}
 	tx.Commit()
 	return
+}
+
+func (m *DAOResourceManager) UpdateHostStatus(ctx context.Context, request *dbpb.DBUpdateHostStatusRequest) (err error) {
+	tx := m.getDb(ctx).Begin()
+	for _, hostId := range request.HostIds {
+		result := tx.Model(&rt.Host{}).Where("id = ?", hostId).Update("status", request.Status)
+		if result.Error != nil {
+			tx.Rollback()
+			return status.Errorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update host [%s] status to %d fail", hostId, request.Status)
+		}
+		if result.RowsAffected == 0 {
+			tx.Rollback()
+			return status.Errorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update invaild host [%s] status", hostId)
+		}
+	}
+	tx.Commit()
+	return nil
+}
+
+func (m *DAOResourceManager) ReserveHost(ctx context.Context, request *dbpb.DBReserveHostRequest) (err error) {
+	tx := m.getDb(ctx).Begin()
+	for _, hostId := range request.HostIds {
+		result := tx.Model(&rt.Host{}).Where("id = ?", hostId).Update("reserved", request.Reserved)
+		if result.Error != nil {
+			tx.Rollback()
+			return status.Errorf(common.TIEM_RESERVE_HOST_FAIL, "set host [%s] reserved status to %v fail", hostId, request.Reserved)
+		}
+		if result.RowsAffected == 0 {
+			tx.Rollback()
+			return status.Errorf(common.TIEM_RESERVE_HOST_FAIL, "set reserved status for invaild host [%s]", hostId)
+		}
+	}
+	tx.Commit()
+	return nil
 }

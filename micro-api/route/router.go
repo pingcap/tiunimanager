@@ -140,6 +140,8 @@ func Route(g *gin.Engine) {
 
 			host.GET("failuredomains", warehouseApi.GetFailureDomain)
 
+			host.POST("update-host-status", resourceApi.UpdateHostStatus)
+			host.POST("reserve-host", resourceApi.ReserveHost)
 			// Add allochosts API for debugging, not release.
 			host.POST("allochosts", resourceApi.AllocHosts)
 		}

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,6 +18,7 @@ package resource
 
 import (
 	"context"
+
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
@@ -196,6 +196,7 @@ func (m *ResourceManager) ListHost(ctx context.Context, in *clusterpb.ListHostsR
 	var req dbpb.DBListHostsRequest
 	req.Purpose = in.Purpose
 	req.Status = in.Status
+	req.Stat = in.Stat
 	req.Page = new(dbpb.DBHostPageDTO)
 	req.Page.Page = in.PageReq.Page
 	req.Page.PageSize = in.PageReq.PageSize
@@ -517,5 +518,49 @@ func (m *ResourceManager) RecycleResources(ctx context.Context, in *clusterpb.Re
 
 	framework.Log().Infof("recycle resources from db service succeed, recycle type %d, holderId %s, requestId %s", in.RecycleReqs[0].RecycleType, in.RecycleReqs[0].HolderId, in.RecycleReqs[0].RequestId)
 
+	return nil
+}
+
+func (m *ResourceManager) UpdateHostStatus(ctx context.Context, in *clusterpb.UpdateHostStatusRequest, out *clusterpb.UpdateHostStatusResponse) error {
+	var req dbpb.DBUpdateHostStatusRequest
+	req.Status = in.Status
+	req.HostIds = append(req.HostIds, in.HostIds...)
+
+	rsp, err := client.DBClient.UpdateHostStatus(ctx, &req)
+	if err != nil {
+		framework.Log().Errorf("update host status to %d for host[%v] error, %v", req.Status, req.HostIds, err)
+		return err
+	}
+	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs.Code = rsp.Rs.Code
+	out.Rs.Message = rsp.Rs.Message
+	if rsp.Rs.Code != int32(codes.OK) {
+		framework.Log().Warnf("update host status to %d in batch failed from db service: %d, %s", req.Status, rsp.Rs.Code, rsp.Rs.Message)
+		return nil
+	}
+
+	framework.Log().Infof("update host status to  %d succeed for hosts %v from db service", req.Status, req.HostIds)
+	return nil
+}
+
+func (m *ResourceManager) ReserveHost(ctx context.Context, in *clusterpb.ReserveHostRequest, out *clusterpb.ReserveHostResponse) error {
+	var req dbpb.DBReserveHostRequest
+	req.Reserved = in.Reserved
+	req.HostIds = append(req.HostIds, in.HostIds...)
+
+	rsp, err := client.DBClient.ReserveHost(ctx, &req)
+	if err != nil {
+		framework.Log().Errorf("set reserve to %v for host[%v] error, %v", req.Reserved, req.HostIds, err)
+		return err
+	}
+	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs.Code = rsp.Rs.Code
+	out.Rs.Message = rsp.Rs.Message
+	if rsp.Rs.Code != int32(codes.OK) {
+		framework.Log().Warnf("update host reserved to %v in batch failed from db service: %d, %s", req.Reserved, rsp.Rs.Code, rsp.Rs.Message)
+		return nil
+	}
+
+	framework.Log().Infof("update host reserved to %v succeed for hosts %v from db service", req.Reserved, req.HostIds)
 	return nil
 }

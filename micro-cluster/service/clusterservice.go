@@ -542,3 +542,11 @@ func (clusterManager *ClusterServiceHandler) AllocResourcesInBatch(ctx context.C
 func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Context, in *clusterpb.RecycleRequest, out *clusterpb.RecycleResponse) error {
 	return clusterManager.resourceManager.RecycleResources(ctx, in, out)
 }
+
+func (clusterManager *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, in *clusterpb.UpdateHostStatusRequest, out *clusterpb.UpdateHostStatusResponse) error {
+	return clusterManager.resourceManager.UpdateHostStatus(ctx, in, out)
+}
+
+func (clusterManager *ClusterServiceHandler) ReserveHost(ctx context.Context, in *clusterpb.ReserveHostRequest, out *clusterpb.ReserveHostResponse) error {
+	return clusterManager.resourceManager.ReserveHost(ctx, in, out)
+}

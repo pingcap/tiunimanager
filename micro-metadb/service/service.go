@@ -55,12 +55,12 @@ func (handler *DBServiceHandler) SetDao(dao *models.DAOManager) {
 
 func (handler *DBServiceHandler) HandleMetrics(start time.Time, funcName string, code string) {
 	duration := time.Now().Sub(start)
-	framework.Current.GetMetrics().MicroDurationHistogramMetric.With(prometheus.Labels{
+	framework.Current.GetMetrics().SqliteDurationHistogramMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
 		metrics.MethodLabel: funcName,
 		metrics.CodeLabel: code}).
 		Observe(duration.Seconds())
-	framework.Current.GetMetrics().MicroRequestsCounterMetric.With(prometheus.Labels{
+	framework.Current.GetMetrics().SqliteRequestsCounterMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
 		metrics.MethodLabel: funcName,
 		metrics.CodeLabel: code}).

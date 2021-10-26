@@ -1857,8 +1857,7 @@ var doc = `{
                         "default": "false",
                         "description": "whether hosts are reserved(won't be allocated) after import",
                         "name": "hostReserved",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
                         "type": "file",

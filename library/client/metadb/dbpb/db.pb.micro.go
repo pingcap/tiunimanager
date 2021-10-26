@@ -55,6 +55,8 @@ type TiEMDBService interface {
 	AllocResources(ctx context.Context, in *DBAllocRequest, opts ...client.CallOption) (*DBAllocResponse, error)
 	AllocResourcesInBatch(ctx context.Context, in *DBBatchAllocRequest, opts ...client.CallOption) (*DBBatchAllocResponse, error)
 	RecycleResources(ctx context.Context, in *DBRecycleRequest, opts ...client.CallOption) (*DBRecycleResponse, error)
+	UpdateHostStatus(ctx context.Context, in *DBUpdateHostStatusRequest, opts ...client.CallOption) (*DBUpdateHostStatusResponse, error)
+	ReserveHost(ctx context.Context, in *DBReserveHostRequest, opts ...client.CallOption) (*DBReserveHostResponse, error)
 	// Cluster
 	CreateCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, opts ...client.CallOption) (*DBDeleteClusterResponse, error)
@@ -270,6 +272,26 @@ func (c *tiEMDBService) AllocResourcesInBatch(ctx context.Context, in *DBBatchAl
 func (c *tiEMDBService) RecycleResources(ctx context.Context, in *DBRecycleRequest, opts ...client.CallOption) (*DBRecycleResponse, error) {
 	req := c.c.NewRequest(c.name, "TiEMDBService.RecycleResources", in)
 	out := new(DBRecycleResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiEMDBService) UpdateHostStatus(ctx context.Context, in *DBUpdateHostStatusRequest, opts ...client.CallOption) (*DBUpdateHostStatusResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.UpdateHostStatus", in)
+	out := new(DBUpdateHostStatusResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiEMDBService) ReserveHost(ctx context.Context, in *DBReserveHostRequest, opts ...client.CallOption) (*DBReserveHostResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.ReserveHost", in)
+	out := new(DBReserveHostResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -629,6 +651,8 @@ type TiEMDBServiceHandler interface {
 	AllocResources(context.Context, *DBAllocRequest, *DBAllocResponse) error
 	AllocResourcesInBatch(context.Context, *DBBatchAllocRequest, *DBBatchAllocResponse) error
 	RecycleResources(context.Context, *DBRecycleRequest, *DBRecycleResponse) error
+	UpdateHostStatus(context.Context, *DBUpdateHostStatusRequest, *DBUpdateHostStatusResponse) error
+	ReserveHost(context.Context, *DBReserveHostRequest, *DBReserveHostResponse) error
 	// Cluster
 	CreateCluster(context.Context, *DBCreateClusterRequest, *DBCreateClusterResponse) error
 	DeleteCluster(context.Context, *DBDeleteClusterRequest, *DBDeleteClusterResponse) error
@@ -688,6 +712,8 @@ func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, op
 		AllocResources(ctx context.Context, in *DBAllocRequest, out *DBAllocResponse) error
 		AllocResourcesInBatch(ctx context.Context, in *DBBatchAllocRequest, out *DBBatchAllocResponse) error
 		RecycleResources(ctx context.Context, in *DBRecycleRequest, out *DBRecycleResponse) error
+		UpdateHostStatus(ctx context.Context, in *DBUpdateHostStatusRequest, out *DBUpdateHostStatusResponse) error
+		ReserveHost(ctx context.Context, in *DBReserveHostRequest, out *DBReserveHostResponse) error
 		CreateCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, out *DBDeleteClusterResponse) error
 		UpdateClusterStatus(ctx context.Context, in *DBUpdateClusterStatusRequest, out *DBUpdateClusterStatusResponse) error
@@ -799,6 +825,14 @@ func (h *tiEMDBServiceHandler) AllocResourcesInBatch(ctx context.Context, in *DB
 
 func (h *tiEMDBServiceHandler) RecycleResources(ctx context.Context, in *DBRecycleRequest, out *DBRecycleResponse) error {
 	return h.TiEMDBServiceHandler.RecycleResources(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) UpdateHostStatus(ctx context.Context, in *DBUpdateHostStatusRequest, out *DBUpdateHostStatusResponse) error {
+	return h.TiEMDBServiceHandler.UpdateHostStatus(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) ReserveHost(ctx context.Context, in *DBReserveHostRequest, out *DBReserveHostResponse) error {
+	return h.TiEMDBServiceHandler.ReserveHost(ctx, in, out)
 }
 
 func (h *tiEMDBServiceHandler) CreateCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error {

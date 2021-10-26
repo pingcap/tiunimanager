@@ -18,13 +18,10 @@
 package libtiup
 
 import (
-	"fmt"
+	"github.com/pingcap-inc/tiem/library/common"
 	"os"
 	"os/exec"
 	"testing"
-	"time"
-
-	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 )
@@ -38,18 +35,6 @@ func init() {
 const (
 	cmdDeployNonJsonStr = "nonJsonStr"
 )
-
-func loopUntilDone() {
-	for {
-		time.Sleep(time.Second)
-		glMgrStatusMapSync()
-		taskStatusMapValue := glMgrTaskStatusMap[0]
-		fmt.Println("taskId 0 status: ", taskStatusMapValue.stat.Status)
-		if taskStatusMapValue.stat.Status == TaskStatusError || taskStatusMapValue.stat.Status == TaskStatusFinished {
-			break
-		}
-	}
-}
 
 func TestMgrHandleCmdDeployReqWithNonJsonStr(t *testing.T) {
 	if os.Getenv("BE_CRASHER") == "1" {

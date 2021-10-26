@@ -18,6 +18,7 @@
 package models
 
 import (
+	"context"
 	"github.com/pingcap-inc/tiem/library/util/slice"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -56,16 +57,16 @@ func TestDAOClusterManager_AddClusterComponentInstance(t *testing.T) {
 				AllocRequestId: "121212",
 			},
 		}
-		dataWithId, err := dao.AddClusterComponentInstance("cluster11", data)
+		dataWithId, err := dao.AddClusterComponentInstance(context.TODO(), "cluster11", data)
 		assert.NoError(t, err)
 		assert.NotNil(t, dataWithId)
 		assert.NotEmpty(t, dataWithId[1].ID)
-		dao.Db().Delete(dataWithId)
+		dao.Db(context.TODO()).Delete(dataWithId)
 	})
 
 	t.Run("empty", func(t *testing.T) {
 		data := []*ComponentInstance{}
-		_ , err := dao.AddClusterComponentInstance("whatever", data)
+		_ , err := dao.AddClusterComponentInstance(context.TODO(), "whatever", data)
 		assert.Error(t, err)
 	})
 
@@ -100,7 +101,7 @@ func TestDAOClusterManager_AddClusterComponentInstance(t *testing.T) {
 				AllocRequestId: "121212",
 			},
 		}
-		_ , err := dao.AddClusterComponentInstance("", data)
+		_ , err := dao.AddClusterComponentInstance(context.TODO(), "", data)
 		assert.Error(t, err)
 	})
 }
@@ -137,9 +138,9 @@ func TestDAOClusterManager_ListComponentInstances(t *testing.T) {
 			AllocRequestId: "121212",
 		},
 	}
-	ids , err := dao.AddClusterComponentInstance("cluster21", data1)
+	ids , err := dao.AddClusterComponentInstance(context.TODO(), "cluster21", data1)
 	assert.NoError(t, err)
-	defer dao.Db().Delete(ids)
+	defer dao.Db(context.TODO()).Delete(ids)
 
 	data2 := []*ComponentInstance{
 		{
@@ -157,12 +158,12 @@ func TestDAOClusterManager_ListComponentInstances(t *testing.T) {
 			AllocRequestId: "121212",
 		},
 	}
-	ids2 , err := dao.AddClusterComponentInstance("cluster22", data2)
+	ids2 , err := dao.AddClusterComponentInstance(context.TODO(), "cluster22", data2)
 	assert.NoError(t, err)
-	defer dao.Db().Delete(ids2)
+	defer dao.Db(context.TODO()).Delete(ids2)
 
 	t.Run("normal", func(t *testing.T) {
-		gotComponentInstances, err := dao.ListComponentInstances("cluster21")
+		gotComponentInstances, err := dao.ListComponentInstances(context.TODO(), "cluster21")
 		assert.NoError(t, err)
 		assert.NotNil(t, gotComponentInstances)
 		assert.Equal(t, 2, len(gotComponentInstances))
@@ -171,7 +172,7 @@ func TestDAOClusterManager_ListComponentInstances(t *testing.T) {
 		}))
 	})
 	t.Run("without cluster id", func(t *testing.T) {
-		_, err := dao.ListComponentInstances("")
+		_, err := dao.ListComponentInstances(context.TODO(), "")
 		assert.Error(t, err)
 	})
 }
@@ -208,9 +209,9 @@ func TestDAOClusterManager_ListComponentInstancesByHost(t *testing.T) {
 			AllocRequestId: "121212",
 		},
 	}
-	ids , err := dao.AddClusterComponentInstance("cluster31", data1)
+	ids , err := dao.AddClusterComponentInstance(context.TODO(), "cluster31", data1)
 	assert.NoError(t, err)
-	defer dao.Db().Delete(ids)
+	defer dao.Db(context.TODO()).Delete(ids)
 
 	data2 := []*ComponentInstance{
 		{
@@ -228,12 +229,12 @@ func TestDAOClusterManager_ListComponentInstancesByHost(t *testing.T) {
 			AllocRequestId: "121212",
 		},
 	}
-	ids2 , err := dao.AddClusterComponentInstance("cluster32", data2)
+	ids2 , err := dao.AddClusterComponentInstance(context.TODO(), "cluster32", data2)
 	assert.NoError(t, err)
-	defer dao.Db().Delete(ids2)
+	defer dao.Db(context.TODO()).Delete(ids2)
 
 	t.Run("normal", func(t *testing.T) {
-		gotComponentInstances, err := dao.ListComponentInstancesByHost("HostId31")
+		gotComponentInstances, err := dao.ListComponentInstancesByHost(context.TODO(), "HostId31")
 		assert.NoError(t, err)
 		assert.NotNil(t, gotComponentInstances)
 		assert.Equal(t, 2, len(gotComponentInstances))
@@ -242,7 +243,7 @@ func TestDAOClusterManager_ListComponentInstancesByHost(t *testing.T) {
 		}))
 	})
 	t.Run("without host id", func(t *testing.T) {
-		_, err := dao.ListComponentInstancesByHost("")
+		_, err := dao.ListComponentInstancesByHost(context.TODO(), "")
 		assert.Error(t, err)
 	})
 }

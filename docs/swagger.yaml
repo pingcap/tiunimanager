@@ -972,6 +972,17 @@ definitions:
       zoneName:
         type: string
     type: object
+  warehouse.RegionItem:
+    properties:
+      archArray:
+        items:
+          type: string
+        type: array
+      regionCode:
+        type: string
+      regionName:
+        type: string
+    type: object
   warehouse.SpecBaseInfo:
     properties:
       specCode:
@@ -2209,6 +2220,30 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Show a host
+      tags:
+      - resource
+  /resources/regions:
+    get:
+      consumes:
+      - application/json
+      description: get all regions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/warehouse.RegionItem'
+                  type: array
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get all regions
       tags:
       - resource
   /resources/reserve-host/:

@@ -2071,6 +2071,49 @@ var doc = `{
                 }
             }
         },
+        "/resources/regions": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get all regions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Get all regions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/warehouse.RegionItem"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/resources/reserve-host/": {
             "post": {
                 "security": [
@@ -3805,6 +3848,23 @@ var doc = `{
                     "type": "string"
                 },
                 "zoneName": {
+                    "type": "string"
+                }
+            }
+        },
+        "warehouse.RegionItem": {
+            "type": "object",
+            "properties": {
+                "archArray": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "regionCode": {
+                    "type": "string"
+                },
+                "regionName": {
                     "type": "string"
                 }
             }

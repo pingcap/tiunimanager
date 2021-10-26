@@ -65,7 +65,7 @@ func (mgr * FileManager) UploadFile(r *http.Request) error {
 	defer file.Close()
 	// Get and print out file size
 	fileSize := fileHeader.Size
-	fmt.Printf("File size (bytes): %v\n", fileSize)
+	fmt.Printf("File size bytes: %v\n", fileSize)
 	// validate file size
 	if fileSize > maxUploadSize {
 		return errors.New("file size reach max upload file size")

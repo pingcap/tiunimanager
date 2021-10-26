@@ -25,9 +25,10 @@ import (
 func UploadFile(c *gin.Context) {
 	err := service.FileMgr.UploadFile(c.Request)
 	if err != nil {
-		c.JSON(http.StatusOK, nil)
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+	} else {
+		c.JSON(http.StatusOK, controller.Success(nil))
 	}
-	c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 }
 
 func DownloadFile(c *gin.Context) {

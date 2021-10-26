@@ -267,12 +267,12 @@ func importExcelFile(r io.Reader, reserved bool) ([]*HostInfo, error) {
 // @Accept mpfd
 // @Produce json
 // @Security ApiKeyAuth
-// @Param hostReserved formData string true "whether hosts are reserved(won't be allocated) after import" default(false)
+// @Param hostReserved formData string false "whether hosts are reserved(won't be allocated) after import" default(false)
 // @Param file formData file true "hosts information in a xlsx file"
 // @Success 200 {object} controller.CommonResult{data=[]string}
 // @Router /resources/hosts [post]
 func ImportHosts(c *gin.Context) {
-	reservedStr := c.PostForm("hostReserved")
+	reservedStr := c.DefaultPostForm("hostReserved", "false")
 	reserved, err := strconv.ParseBool(reservedStr)
 	if err != nil {
 		errmsg := fmt.Sprintf("GetFormData Error: %v", err)

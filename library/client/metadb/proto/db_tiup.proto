@@ -18,6 +18,7 @@ enum TiupTaskType {
 	Lightning = 5;
 	Backup = 6;
 	Restore = 7;
+	Restart = 8;
 }
 
 message TiupTask {

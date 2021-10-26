@@ -19,7 +19,11 @@ package service
 
 import (
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
+	"github.com/prometheus/client_golang/prometheus"
+	"strconv"
+	"time"
 )
 
 type DBServiceHandler struct {
@@ -48,4 +52,18 @@ func (handler *DBServiceHandler) Dao() *models.DAOManager {
 
 func (handler *DBServiceHandler) SetDao(dao *models.DAOManager) {
 	handler.dao = dao
+}
+
+func (handler *DBServiceHandler) HandleMetrics(start time.Time, funcName string, code int) {
+	duration := time.Now().Sub(start)
+	framework.Current.GetMetrics().SqliteDurationHistogramMetric.With(prometheus.Labels{
+		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
+		metrics.MethodLabel: funcName,
+		metrics.CodeLabel: strconv.Itoa(code)}).
+		Observe(duration.Seconds())
+	framework.Current.GetMetrics().SqliteRequestsCounterMetric.With(prometheus.Labels{
+		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
+		metrics.MethodLabel: funcName,
+		metrics.CodeLabel: strconv.Itoa(code)}).
+		Inc()
 }

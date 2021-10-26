@@ -2082,7 +2082,6 @@ paths:
         description: whether hosts are reserved(won't be allocated) after import
         in: formData
         name: hostReserved
-        required: true
         type: string
       - description: hosts information in a xlsx file
         in: formData

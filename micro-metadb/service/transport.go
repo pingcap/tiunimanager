@@ -27,7 +27,9 @@ import (
 	"time"
 )
 
-func (d *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *dbpb.DBCreateTransportRecordRequest, out *dbpb.DBCreateTransportRecordResponse) error {
+func (handler *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *dbpb.DBCreateTransportRecordRequest, out *dbpb.DBCreateTransportRecordResponse) error {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "QueryBackupStrategyByTime", strconv.Itoa(int(out.GetErrCode())))
 	uintId, err := strconv.ParseInt(in.GetRecord().GetID(), 10, 64)
 	log := framework.LogWithContext(ctx)
 	record := &models.TransportRecord{
@@ -41,7 +43,7 @@ func (d *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *dbpb.D
 		Status:        in.GetRecord().GetStatus(),
 		StartTime:     time.Unix(in.GetRecord().GetStartTime(), 0),
 	}
-	id, err := d.Dao().ClusterManager().CreateTransportRecord(ctx, record)
+	id, err := handler.Dao().ClusterManager().CreateTransportRecord(ctx, record)
 	if err != nil {
 		log.Errorf("CreateTransportRecord failed, %s", err.Error())
 		return err
@@ -51,9 +53,11 @@ func (d *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *dbpb.D
 	return nil
 }
 
-func (d *DBServiceHandler) UpdateTransportRecord(ctx context.Context, in *dbpb.DBUpdateTransportRecordRequest, out *dbpb.DBUpdateTransportRecordResponse) error {
+func (handler *DBServiceHandler) UpdateTransportRecord(ctx context.Context, in *dbpb.DBUpdateTransportRecordRequest, out *dbpb.DBUpdateTransportRecordResponse) error {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "UpdateTransportRecord", strconv.Itoa(int(out.GetErrCode())))
 	log := framework.LogWithContext(ctx)
-	err := d.Dao().ClusterManager().UpdateTransportRecord(ctx, in.GetRecord().GetID(), in.GetRecord().GetClusterId(), in.GetRecord().GetStatus(), time.Unix(in.GetRecord().GetEndTime(), 0))
+	err := handler.Dao().ClusterManager().UpdateTransportRecord(ctx, in.GetRecord().GetID(), in.GetRecord().GetClusterId(), in.GetRecord().GetStatus(), time.Unix(in.GetRecord().GetEndTime(), 0))
 	if err != nil {
 		log.Errorf("UpdateTransportRecord failed, %s", err.Error())
 		return err
@@ -62,9 +66,11 @@ func (d *DBServiceHandler) UpdateTransportRecord(ctx context.Context, in *dbpb.D
 	return nil
 }
 
-func (d *DBServiceHandler) FindTrasnportRecordByID(ctx context.Context, in *dbpb.DBFindTransportRecordByIDRequest, out *dbpb.DBFindTransportRecordByIDResponse) error {
+func (handler *DBServiceHandler) FindTrasnportRecordByID(ctx context.Context, in *dbpb.DBFindTransportRecordByIDRequest, out *dbpb.DBFindTransportRecordByIDResponse) error {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "FindTrasnportRecordByID", strconv.Itoa(int(out.GetErrCode())))
 	log := framework.LogWithContext(ctx)
-	record, err := d.Dao().ClusterManager().FindTransportRecordById(ctx, in.GetRecordId())
+	record, err := handler.Dao().ClusterManager().FindTransportRecordById(ctx, in.GetRecordId())
 	if err != nil {
 		log.Errorf("FindTransportRecordById failed, %s", err.Error())
 		return err
@@ -74,9 +80,11 @@ func (d *DBServiceHandler) FindTrasnportRecordByID(ctx context.Context, in *dbpb
 	return nil
 }
 
-func (d *DBServiceHandler) ListTrasnportRecord(ctx context.Context, in *dbpb.DBListTransportRecordRequest, out *dbpb.DBListTransportRecordResponse) error {
+func (handler *DBServiceHandler) ListTrasnportRecord(ctx context.Context, in *dbpb.DBListTransportRecordRequest, out *dbpb.DBListTransportRecordResponse) error {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "ListTrasnportRecord", strconv.Itoa(int(out.GetErrCode())))
 	log := framework.LogWithContext(ctx)
-	records, total, err := d.Dao().ClusterManager().ListTransportRecord(ctx, in.GetClusterId(), in.GetRecordId(), (in.GetPage().GetPage()-1)*in.GetPage().GetPageSize(), in.GetPage().GetPageSize())
+	records, total, err := handler.Dao().ClusterManager().ListTransportRecord(ctx, in.GetClusterId(), in.GetRecordId(), (in.GetPage().GetPage()-1)*in.GetPage().GetPageSize(), in.GetPage().GetPageSize())
 	if err != nil {
 		log.Errorf("ListTrasnportRecord failed, %s", err.Error())
 		return err

@@ -85,3 +85,29 @@ func GetFailureDomain(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, controller.Success(res.Resources))
 }
+
+// GetRegions godoc
+// @Summary Get all regions
+// @Description get all regions
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} controller.CommonResult{data=[]RegionItem}
+// @Router /resources/regions [get]
+func GetRegions(c *gin.Context) {
+
+}
+
+// GetSpecStock godoc
+// @Summary Get the stocks of spec
+// @Description Get the stocks of each spec
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} controller.CommonResult{data=[]RegionItem}
+// @Router /resources/regions [get]
+func GetSpecStock(c *gin.Context) {
+
+}

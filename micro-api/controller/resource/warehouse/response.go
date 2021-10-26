@@ -32,8 +32,8 @@ type DomainResourceRsp struct {
 }
 
 type RegionItem struct {
-	RegionInfo RegionBaseInfo `json:"regionInfo"`
-	Archs      []string       `json:"archArray"`
+	RegionBaseInfo
+	Archs []string `json:"archArray"`
 }
 type GetRegionsResponse struct {
 	Regions []RegionItem `json:"regions"`

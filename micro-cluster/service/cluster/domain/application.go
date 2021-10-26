@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -20,14 +19,15 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"path/filepath"
+	"strconv"
+	"time"
+
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
-	"path/filepath"
-	"strconv"
-	"time"
 
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
@@ -135,6 +135,27 @@ func DeleteCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggreg
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	TaskRepo.Persist(flow)
 	ClusterRepo.Persist(clusterAggregation)
+	return clusterAggregation, nil
+}
+
+func RestartCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
+	operator := parseOperatorFromDTO(ope)
+
+	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	clusterAggregation.CurrentOperator = operator
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
+
+	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowRestartCluster, operator)
+	if err != nil {
+		return nil, err
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.Start()
+
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	return clusterAggregation, nil
 }
 
@@ -328,6 +349,17 @@ func freedResource(task *TaskEntity, context *FlowContext) bool {
 }
 
 func destroyTasks(task *TaskEntity, context *FlowContext) bool {
+	task.Success(nil)
+	return true
+}
+
+// clusterRestart
+// @Description: restart cluster
+// @Parameter task
+// @Parameter context
+// @return bool
+func clusterRestart(task *TaskEntity, context *FlowContext) bool {
+
 	task.Success(nil)
 	return true
 }

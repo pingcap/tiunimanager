@@ -130,6 +130,20 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 	}
 }
 
+func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.ClusterRestartReqDTO, resp *clusterpb.ClusterRestartRespDTO) (err error) {
+	getLogger().Info("restart cluster")
+
+	clusterAggregation, err := domain.RestartCluster(req.GetOperator(), req.GetClusterId())
+	if err != nil {
+		getLogger().Error(err)
+		return err
+	}
+	resp.RespStatus = SuccessResponseStatus
+	resp.ClusterId = clusterAggregation.Cluster.Id
+	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+	return nil
+}
+
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.ClusterDetailReqDTO, resp *clusterpb.ClusterDetailRespDTO) (err error) {
 	getLogger().Info("detail cluster")
 
@@ -324,9 +338,9 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 					Id: v.BackupRecord.OperatorId,
 				},
 				DisplayStatus: &clusterpb.DisplayStatusDTO{
-					StatusCode:      strconv.Itoa(int(v.Flow.Status)),
+					StatusCode: strconv.Itoa(int(v.Flow.Status)),
 					//StatusName:      v.Flow.StatusAlias,
-					StatusName:   	 domain.TaskStatus(int(v.Flow.Status)).Display(),
+					StatusName:      domain.TaskStatus(int(v.Flow.Status)).Display(),
 					InProcessFlowId: int32(v.Flow.Id),
 				},
 			}

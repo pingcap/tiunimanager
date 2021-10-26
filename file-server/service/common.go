@@ -13,44 +13,13 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package file
+package service
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/file-server/service"
-	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"net/http"
+	"github.com/pingcap-inc/tiem/library/framework"
+	log "github.com/sirupsen/logrus"
 )
 
-func UploadFile(c *gin.Context) {
-	err := service.FileMgr.UploadFile(c.Request)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-	} else {
-		c.JSON(http.StatusOK, controller.Success(nil))
-	}
+func getLogger() *log.Entry {
+	return framework.Log()
 }
-
-func DownloadFile(c *gin.Context) {
-	/*
-	curDir, _ := os.Getwd()
-	templateName := common.TemplateFileName
-	// The template file should be on tiem/etc/hostInfo_template.xlsx
-	filePath := filepath.Join(curDir, common.TemplateFilePath, templateName)
-
-	_, err := os.Stat(filePath)
-	if err != nil && !os.IsExist(err) {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
-	}
-
-	c.Header("Content-Type", "application/octet-stream")
-	c.Header("Content-Disposition", "attachment; filename="+templateName)
-	c.Header("Content-Transfer-Encoding", "binary")
-	c.Header("Cache-Control", "no-cache")
-
-	c.File(filePath)
-	*/
-
-}
-

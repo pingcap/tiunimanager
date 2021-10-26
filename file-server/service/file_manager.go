@@ -16,13 +16,16 @@
 package service
 
 import (
+	"archive/zip"
 	"errors"
 	"fmt"
 	"github.com/labstack/gommon/bytes"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -48,6 +51,7 @@ func InitFileManager() *FileManager {
 
 func (mgr * FileManager) UploadFile(r *http.Request) error {
 	if !mgr.checkUploadCnt() {
+		getLogger().Errorf("upload goroutine reach max, %d", maxUploadNum)
 		return errors.New("upload goroutine reach max")
 	}
 
@@ -100,6 +104,85 @@ func (mgr * FileManager) UploadFile(r *http.Request) error {
 
 func (mgr * FileManager) DownloadFile(r *http.Request) error {
 	//todo
+	return nil
+}
+
+func (mgr * FileManager) zipDir(dir string, zipFile string) error {
+	getLogger().Infof("begin zipDir: dir[%s] to file[%s]", dir, zipFile)
+	defer getLogger().Info("end zipDir")
+	fz, err := os.Create(zipFile)
+	if err != nil {
+		return fmt.Errorf("Create zip file failed: %s", err.Error())
+	}
+	defer fz.Close()
+
+	w := zip.NewWriter(fz)
+	defer w.Close()
+
+	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			relPath := strings.TrimPrefix(path, filepath.Dir(path))
+			fDest, err := w.Create(relPath)
+			if err != nil {
+				return fmt.Errorf("zip Create failed: %s", err.Error())
+			}
+			fSrc, err := os.Open(path)
+			if err != nil {
+				return fmt.Errorf("zip Open failed: %s", err.Error())
+			}
+			defer fSrc.Close()
+			_, err = io.Copy(fDest, fSrc)
+			if err != nil {
+				return fmt.Errorf("zip Copy failed: %s", err.Error())
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		getLogger().Errorf("filepath walk failed, %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (mgr * FileManager) unzipDir(zipFile string, dir string) error {
+	getLogger().Infof("begin unzipDir: file[%s] to dir[%s]", zipFile, dir)
+	defer getLogger().Info("end unzipDir")
+	r, err := zip.OpenReader(zipFile)
+	if err != nil {
+		return fmt.Errorf("Open zip file failed: %s", err.Error())
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		func() {
+			path := dir + string(filepath.Separator) + f.Name
+			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+				getLogger().Errorf("make filepath failed: %s", err.Error())
+				return
+			}
+			fDest, err := os.Create(path)
+			if err != nil {
+				getLogger().Errorf("unzip Create failed: %s", err.Error())
+				return
+			}
+			defer fDest.Close()
+
+			fSrc, err := f.Open()
+			if err != nil {
+				getLogger().Errorf("unzip Open failed: %s", err.Error())
+				return
+			}
+			defer fSrc.Close()
+
+			_, err = io.Copy(fDest, fSrc)
+			if err != nil {
+				getLogger().Errorf("unzip Copy failed: %s", err.Error())
+				return
+			}
+		}()
+	}
 	return nil
 }
 

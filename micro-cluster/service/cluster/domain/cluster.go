@@ -80,7 +80,7 @@ type TopologyConfigRecord struct {
 	Id 					uint
 	TenantId 			string
 	ClusterId 			string
-	ConfigModel 		*spec.Specification
+	ConfigModel 		spec.Metadata
 	CreateTime 			time.Time
 }
 
@@ -94,6 +94,3 @@ func (r TopologyConfigRecord) Content() string {
 	return string(bytes)
 }
 
-func (r *TopologyConfigRecord) ContainsTiFlash() bool {
-	return len(r.ConfigModel.TiFlashServers) > 0
-}

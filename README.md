@@ -64,13 +64,11 @@ And visit the web interface from port 16686.
 
 start micro-metadb
 ```shell
-$ cd micro-metadb
-$ go run init.go main.go
+$ go run micro-metadb/main.go
 ```
-or
+完整命令(如果同一台机器上启多个服务，则需要指定参数，否则会冲突)
 ```shell
-$ cd micro-metadb
-$ go run init.go main.go \
+$ go run micro-metadb/main.go \
     --host=192.168.1.100 \
     --port=4100 \
     --registry-client-port=4101 \
@@ -85,16 +83,14 @@ $ go run init.go main.go \
 
 start micro-cluster
 ```shell
-$ cd micro-cluster
-$ go run main.go 
+$ go run micro-cluster/main.go
 ```
 or
 ```shell
-$ cd micro-cluster
-$ go run init.go main.go \
+$ go run micro-cluster/main.go \
     --host=192.168.1.100 \
     --port=4110 \
-    --metrics-port=4121 \
+    --metrics-port=4122 \
     --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
     --tracer-address=192.168.1.100:4133 \
     --deploy-dir=/tiem-deploy/tiem-cluster-4110 \
@@ -104,16 +100,14 @@ $ go run init.go main.go \
 
 start micro-api
 ```shell
-$ cd micro-api
-$ go run main.go 
+$ go run micro-api/main.go
 ```
 or
 ```shell
-$ cd micro-api
-$ go run init.go main.go \
+$ go run micro-api/main.go \
     --host=192.168.1.100 \
     --port=4116 \
-    --metrics-port=4121 \
+    --metrics-port=4123 \
     --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
     --tracer-address=192.168.1.100:4133 \
     --elasticsearch-address=192.168.1.100:4127 \

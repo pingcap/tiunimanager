@@ -25,6 +25,14 @@ import (
 	"strconv"
 )
 
+type ComponentInstance struct {
+	Nodes []ComponentNodeInstance
+}
+
+type ComponentNodeInstance struct {
+
+}
+
 func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterInstanceDTO {
 	dto := &clusterpb.ClusterInstanceDTO{
 		Whitelist:       []string{},

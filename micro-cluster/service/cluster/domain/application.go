@@ -44,11 +44,13 @@ import (
 
 type ClusterAggregation struct {
 	Cluster *Cluster
+	ClusterMetadata spec.Metadata
+	ClusterComponents []ComponentInstance
+
+	CurrentWorkFlow             *FlowWorkEntity
+	CurrentOperator *Operator
 
 	CurrentTopologyConfigRecord *TopologyConfigRecord
-	CurrentWorkFlow             *FlowWorkEntity
-
-	CurrentOperator *Operator
 
 	MaintainCronTask *CronTaskEntity
 	HistoryWorkFLows []*FlowWorkEntity
@@ -633,8 +635,9 @@ func tidbPort() int {
 	return DefaultTidbPort
 }
 
-func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spec.Specification {
+func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) spec.Metadata {
 
+	meta := new(spec.ClusterMeta)
 	tidbHosts := resource.TidbHosts
 	tikvHosts := resource.TikvHosts
 	pdHosts := resource.PdHosts
@@ -686,5 +689,8 @@ func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spe
 		})
 	}
 
-	return tiupConfig
+	//meta.SetUser()
+	//meta.SetVersion()
+	meta.SetTopology(tiupConfig)
+	return meta
 }

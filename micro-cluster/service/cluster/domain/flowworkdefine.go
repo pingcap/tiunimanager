@@ -123,10 +123,9 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		FlowName:    FlowTakeoverCluster,
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowTakeoverCluster),
 		TaskNodes: map[string]*TaskDefine{
-			"start":        {"connectTiup", "connected", "fail", SyncFuncTask, connectTiup},
-			"connected": {"fetchTopologyFile", "fetched", "fail", SyncFuncTask, fetchTopologyFile},
-			"fetched":   {"buildTopology", "built", "fail", SyncFuncTask, buildTopology},
-			"built":  {"takeoverResource", "success", "", SyncFuncTask, takeoverResource},
+			"start":  		{"fetchTopologyFile", "fetched", "fail", SyncFuncTask, fetchTopologyFile},
+			"fetched":   	{"buildTopology", "built", "fail", SyncFuncTask, buildTopology},
+			"built":  		{"takeoverResource", "success", "", SyncFuncTask, takeoverResource},
 			"success":		{"end", "", "", SyncFuncTask, ClusterEnd},
 			"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
 		},

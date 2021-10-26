@@ -20,12 +20,18 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"fmt"
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+	"io"
+	"net"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -64,6 +70,7 @@ type ClusterAggregation struct {
 }
 
 var contextClusterKey = "clusterAggregation"
+var contextTakeoverReqKey = "takeoverRequest"
 
 func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
@@ -123,7 +130,7 @@ func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBas
 func TakeoverClusters(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeoverReqDTO) ([]*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
-	if len(req.ClusterNames) != 0 {
+	if len(req.ClusterNames) != 1 {
 		return nil, common.NewBizError(common.TIEM_PARAMETER_INVALID)
 	}
 
@@ -141,19 +148,20 @@ func TakeoverClusters(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeover
 		return nil, err
 	}
 
-	clusterAggregation := &ClusterAggregation{
+	clusterAggregation := &ClusterAggregation {
 		Cluster:          cluster,
 		MaintainCronTask: GetDefaultMaintainTask(),
 		CurrentOperator:  operator,
 	}
 
-	// Start the workflow to create a cluster instance
+	// Start the workflow to takeover a cluster instance
 	flow, err := CreateFlowWork(cluster.Id, FlowTakeoverCluster, operator)
 	if err != nil {
 		return nil, err
 	}
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.AddContext(contextTakeoverReqKey, req)
 
 	flow.Start()
 
@@ -357,14 +365,51 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func connectTiup(task *TaskEntity, context *FlowContext) bool {
-
-
-	task.Success(nil)
-	return true
-}
-
 func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
+	req := context.value(contextTakeoverReqKey).(*clusterpb.ClusterTakeoverReqDTO)
+	Conf := ssh.ClientConfig{User: req.TiupUserName,
+		Auth: []ssh.AuthMethod{ssh.Password(req.TiupUserPassword)},
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+		},
+	}
+	Client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiupIp, req.Port), &Conf)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+	defer Client.Close()
+
+	sftpClient, err := sftp.NewClient(Client)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	defer sftpClient.Close()
+
+	yamlFile := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiupPath, req.ClusterNames[0])
+	remoteFileName := yamlFile
+	remoteFile, err := sftpClient.Open(remoteFileName)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+	defer remoteFile.Close()
+
+	localFileName := req.ClusterNames[0] + ".yaml"
+	localFile, err := os.Create(localFileName)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+	defer localFile.Close()
+	_, err = io.Copy(localFile, remoteFile)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
 	task.Success(nil)
 	return true
 }

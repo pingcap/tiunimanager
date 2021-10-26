@@ -30,6 +30,7 @@ require (
 	github.com/pingcap/check v0.0.0-20200212061837-5e12011dc712
 	github.com/pingcap/errors v0.11.4
 	github.com/pingcap/tiup v1.5.5
+	github.com/pkg/sftp v1.10.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.8.1

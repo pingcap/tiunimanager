@@ -239,23 +239,46 @@ func Detail(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /cluster/takeover [post]
+// @Router /clusters/takeover [post]
 func Takeover(c *gin.Context) {
-	//operator := controller.GetOperator(c)
+	var req TakeoverReq
+	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+		_ = c.Error(err)
+		return
+	}
 
-	result := controller.BuildCommonResult(0, "", []ClusterDisplayInfo{
-		{
-			ClusterId: "1111111",
-			ClusterBaseInfo: ClusterBaseInfo{ClusterName: "clusterA"},
-			StatusInfo : controller.StatusInfo{},
-			ClusterInstanceInfo: ClusterInstanceInfo{},
-		},
-		{ClusterId: "2222222", ClusterBaseInfo: ClusterBaseInfo{
-			ClusterName: "clusterB",
-		}},
+	operator := controller.GetOperator(c)
+
+	reqDTO := &clusterpb.ClusterTakeoverReqDTO{
+		Operator: operator.ConvertToDTO(),
+		TiupIp: req.TiupIp,
+		Port: req.TiupPort,
+		TiupUserName: req.TiupUserName,
+		TiupUserPassword: req.TiupUserPassword,
+		TiupPath: req.TiupPath,
+		ClusterNames: req.ClusterNames,
+	}
+
+	respDTO, err := client.ClusterClient.TakeoverClusters(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
+		o.RequestTimeout = time.Minute * 5
+		o.DialTimeout = time.Minute * 5
 	})
 
-	c.JSON(http.StatusOK, result)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetRespStatus()
+
+		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters), len(respDTO.Clusters))
+
+		for i, v := range respDTO.Clusters {
+			clusters[i] = *ParseDisplayInfoFromDTO(v)
+		}
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, clusters)
+
+		c.JSON(http.StatusOK, result)
+	}
 }
 
 // DescribeDashboard dashboard

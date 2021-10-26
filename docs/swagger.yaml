@@ -1140,49 +1140,6 @@ paths:
       summary: delete backup record
       tags:
       - cluster backup
-  /cluster/takeover:
-    post:
-      consumes:
-      - application/json
-      description: takeover a cluster
-      parameters:
-      - description: takeover request
-        in: body
-        name: takeoverReq
-        required: true
-        schema:
-          $ref: '#/definitions/management.TakeoverReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/management.ClusterDisplayInfo'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: takeover a cluster
-      tags:
-      - cluster
   /clusters:
     get:
       consumes:
@@ -1791,6 +1748,49 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: restore a new cluster by backup record
+      tags:
+      - cluster
+  /clusters/takeover:
+    post:
+      consumes:
+      - application/json
+      description: takeover a cluster
+      parameters:
+      - description: takeover request
+        in: body
+        name: takeoverReq
+        required: true
+        schema:
+          $ref: '#/definitions/management.TakeoverReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/management.ClusterDisplayInfo'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: takeover a cluster
       tags:
       - cluster
   /flowwork/{flowWorkId}:

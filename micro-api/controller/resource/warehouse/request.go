@@ -23,8 +23,9 @@ import (
 type GetRegionsRequest struct {
 }
 
-type GetRegionStockRequest struct {
+type GetSpecStockRequest struct {
 	Arch   resource.ArchType `json:"arch"`
+	Label  string            `json:"label"`
 	Region string            `json:"region"`
 	Zone   string            `json:"zone"`
 	Rack   string            `json:"rack"`

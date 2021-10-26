@@ -564,3 +564,26 @@ func (m *ResourceManager) ReserveHost(ctx context.Context, in *clusterpb.Reserve
 	framework.LogWithContext(ctx).Infof("update host reserved to %v succeed for hosts %v from db service", req.Reserved, req.HostIds)
 	return nil
 }
+
+func (m *ResourceManager) GetRegions(ctx context.Context, in *clusterpb.GetRegionsRequest, out *clusterpb.GetRegionsResponse) error {
+	var req dbpb.DBGetRegionsRequest
+	rsp, err := client.DBClient.GetRegions(ctx, &req)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get regions error, %v", err)
+		return err
+	}
+	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs.Code = rsp.Rs.Code
+	out.Rs.Message = rsp.Rs.Message
+	if rsp.Rs.Code != int32(codes.OK) {
+		framework.LogWithContext(ctx).Warnf("get regions failed with errcode %d, errmsg: %s", rsp.Rs.Code, rsp.Rs.Message)
+		return nil
+	}
+	for _, v := range rsp.Regions {
+		var item clusterpb.RegionItem
+		item.Region = v.Region
+		item.Archs = append(item.Archs, v.Archs...)
+		out.Regions = append(out.Regions, &item)
+	}
+	return nil
+}

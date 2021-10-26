@@ -846,3 +846,20 @@ func (m *DAOResourceManager) ReserveHost(ctx context.Context, request *dbpb.DBRe
 	tx.Commit()
 	return nil
 }
+
+type DBRegionItem struct {
+	Region string
+	Arch   string
+	Count  int
+}
+
+func (m *DAOResourceManager) GetRegions(ctx context.Context) (regionItems []DBRegionItem, err error) {
+	tx := m.getDb(ctx).Begin()
+	err = tx.Model(&rt.Host{}).Select("region, arch, count(id) as count").Group("region").Group("arch").Order("region").Scan(&regionItems).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, status.Errorf(common.TIEM_GET_REGIONS_FAIL, "get regions failed, %v", err)
+	}
+	tx.Commit()
+	return
+}

@@ -324,9 +324,9 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 					Id: v.BackupRecord.OperatorId,
 				},
 				DisplayStatus: &clusterpb.DisplayStatusDTO{
-					StatusCode:      strconv.Itoa(int(v.Flow.Status)),
+					StatusCode: strconv.Itoa(int(v.Flow.Status)),
 					//StatusName:      v.Flow.StatusAlias,
-					StatusName:   	 domain.TaskStatus(int(v.Flow.Status)).Display(),
+					StatusName:      domain.TaskStatus(int(v.Flow.Status)).Display(),
 					InProcessFlowId: int32(v.Flow.Id),
 				},
 			}
@@ -550,4 +550,8 @@ func (clusterManager *ClusterServiceHandler) UpdateHostStatus(ctx context.Contex
 
 func (clusterManager *ClusterServiceHandler) ReserveHost(ctx context.Context, in *clusterpb.ReserveHostRequest, out *clusterpb.ReserveHostResponse) error {
 	return clusterManager.resourceManager.ReserveHost(ctx, in, out)
+}
+
+func (clusterManager *ClusterServiceHandler) GetRegions(ctx context.Context, in *clusterpb.GetRegionsRequest, out *clusterpb.GetRegionsResponse) error {
+	return clusterManager.resourceManager.GetRegions(ctx, in, out)
 }

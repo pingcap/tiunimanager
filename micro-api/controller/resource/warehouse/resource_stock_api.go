@@ -96,18 +96,25 @@ func GetFailureDomain(c *gin.Context) {
 // @Success 200 {object} controller.CommonResult{data=[]RegionItem}
 // @Router /resources/regions [get]
 func GetRegions(c *gin.Context) {
-
-}
-
-// GetSpecStock godoc
-// @Summary Get the stocks of spec
-// @Description Get the stocks of each spec
-// @Tags resource
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Success 200 {object} controller.CommonResult{data=[]RegionItem}
-// @Router /resources/regions [get]
-func GetSpecStock(c *gin.Context) {
-
+	var req clusterpb.GetRegionsRequest
+	rsp, err := client.ClusterClient.GetRegions(framework.NewMicroCtxFromGinCtx(c), &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+		return
+	}
+	if rsp.Rs.Code != int32(codes.OK) {
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+		return
+	}
+	res := GetRegionsResponse{
+		Regions: make([]RegionItem, 0, len(rsp.Regions)),
+	}
+	for _, v := range rsp.Regions {
+		var item RegionItem
+		item.RegionCode = v.Region
+		item.RegionName = service.GetDomainNameFromCode(v.Region)
+		item.Archs = append(item.Archs, v.Archs...)
+		res.Regions = append(res.Regions, item)
+	}
+	c.JSON(http.StatusOK, controller.Success(res.Regions))
 }

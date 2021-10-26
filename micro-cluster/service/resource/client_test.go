@@ -210,6 +210,9 @@ func (s *DBFakeService) UpdateHostStatus(ctx context.Context, in *dbpb.DBUpdateH
 func (s *DBFakeService) ReserveHost(ctx context.Context, in *dbpb.DBReserveHostRequest, opt ...client.CallOption) (*dbpb.DBReserveHostResponse, error) {
 	panic("implement me")
 }
+func (s *DBFakeService) GetRegions(ctx context.Context, in *dbpb.DBGetRegionsRequest, opt ...client.CallOption) (*dbpb.DBGetRegionsResponse, error) {
+	panic("implement me")
+}
 
 // Mock Tiup Task
 func (s *DBFakeService) CreateTiupTask(ctx context.Context, in *dbpb.CreateTiupTaskRequest, opts ...client.CallOption) (*dbpb.CreateTiupTaskResponse, error) {

@@ -578,3 +578,42 @@ func (handler *DBServiceHandler) ReserveHost(ctx context.Context, in *dbpb.DBRes
 	out.Rs.Code = common.TIEM_SUCCESS
 	return nil
 }
+
+func (handler *DBServiceHandler) GetRegions(ctx context.Context, in *dbpb.DBGetRegionsRequest, out *dbpb.DBGetRegionsResponse) error {
+	log := framework.LogWithContext(ctx)
+	out.Rs = new(dbpb.DBHostResponseStatus)
+
+	resourceManager := handler.Dao().ResourceManager()
+	regionItems, err := resourceManager.GetRegions(ctx)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			out.Rs.Code = int32(st.Code())
+			out.Rs.Message = st.Message()
+		} else {
+			out.Rs.Code = int32(codes.Internal)
+			out.Rs.Message = fmt.Sprintf("get regions failed, err: %v", err)
+		}
+		log.Warnln(out.Rs.Message)
+
+		// return nil to use rsp
+		return nil
+	}
+	out.Rs.Code = common.TIEM_SUCCESS
+	// Merge archs in the same region
+	curRegionName := ""
+	curMergeOutIndex := -1
+	for _, item := range regionItems {
+		if curRegionName != item.Region {
+			curMergeOutIndex++
+			curRegionName = item.Region
+			out.Regions = append(out.Regions, &dbpb.DBRegionItem{
+				Region: item.Region,
+			})
+			out.Regions[curMergeOutIndex].Archs = append(out.Regions[curMergeOutIndex].Archs, item.Arch)
+		} else {
+			out.Regions[curMergeOutIndex].Archs = append(out.Regions[curMergeOutIndex].Archs, item.Arch)
+		}
+	}
+	return nil
+}

@@ -78,17 +78,17 @@ func getLoggerWithContext(ctx context.Context) *log.Entry {
 	return framework.LogWithContext(ctx)
 }
 
-func handleMetrics(start time.Time, funcName string, code string) {
+func handleMetrics(start time.Time, funcName string, code int) {
 	duration := time.Now().Sub(start)
 	framework.Current.GetMetrics().MicroDurationHistogramMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
 		metrics.MethodLabel: funcName,
-		metrics.CodeLabel: code}).
+		metrics.CodeLabel: strconv.Itoa(code)}).
 		Observe(duration.Seconds())
 	framework.Current.GetMetrics().MicroRequestsCounterMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
 		metrics.MethodLabel: funcName,
-		metrics.CodeLabel: code}).
+		metrics.CodeLabel: strconv.Itoa(code)}).
 		Inc()
 }
 
@@ -168,7 +168,7 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb
 
 func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterpb.DataExportRequest, resp *clusterpb.DataExportResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "ExportData", strconv.Itoa(int(resp.GetRespStatus().GetCode())))
+	defer handleMetrics(start, "ExportData", int(resp.GetRespStatus().GetCode()))
 	if err := domain.ExportDataPreCheck(req); err != nil {
 		getLoggerWithContext(ctx).Error(err)
 		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_EXPORT_PARAM_INVALID, Message: err.Error()}
@@ -189,7 +189,7 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterpb.Da
 
 func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterpb.DataImportRequest, resp *clusterpb.DataImportResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "ImportData", strconv.Itoa(int(resp.GetRespStatus().GetCode())))
+	defer handleMetrics(start, "ImportData", int(resp.GetRespStatus().GetCode()))
 	if err := domain.ImportDataPreCheck(req); err != nil {
 		getLoggerWithContext(ctx).Error(err)
 		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_IMPORT_PARAM_INVALID, Message: err.Error()}
@@ -210,7 +210,7 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterpb.Da
 
 func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *clusterpb.DataTransportQueryRequest, resp *clusterpb.DataTransportQueryResponse) error {
 	start := time.Now()
-	defer handleMetrics(start, "DescribeDataTransport", strconv.Itoa(int(resp.GetRespStatus().GetCode())))
+	defer handleMetrics(start, "DescribeDataTransport", int(resp.GetRespStatus().GetCode()))
 	infos, page, err := domain.DescribeDataTransportRecord(ctx, req.GetOperator(), req.GetRecordId(), req.GetClusterId(), req.GetPageReq().GetPage(), req.GetPageReq().GetPageSize())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
@@ -240,7 +240,7 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 
 func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterpb.CreateBackupRequest, response *clusterpb.CreateBackupResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "CreateBackup", strconv.Itoa(int(response.GetStatus().GetCode())))
+	defer handleMetrics(start, "CreateBackup", int(response.GetStatus().GetCode()))
 	clusterAggregation, err := domain.Backup(ctx, request.Operator, request.ClusterId, request.BackupMethod, request.BackupType, domain.BackupModeManual, request.FilePath)
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
@@ -254,7 +254,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 
 func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterpb.RecoverRequest, resp *clusterpb.RecoverResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "RecoverCluster", strconv.Itoa(int(resp.GetRespStatus().GetCode())))
+	defer handleMetrics(start, "RecoverCluster", int(resp.GetRespStatus().GetCode()))
 	if err = domain.RecoverPreCheck(req); err != nil {
 		getLoggerWithContext(ctx).Errorf("recover cluster pre check failed, %s", err.Error())
 		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_RECOVER_PARAM_INVALID, Message: err.Error()}
@@ -276,7 +276,7 @@ func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterp
 
 func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *clusterpb.DeleteBackupRequest, response *clusterpb.DeleteBackupResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "DeleteBackupRecord", strconv.Itoa(int(response.GetStatus().GetCode())))
+	defer handleMetrics(start, "DeleteBackupRecord", int(response.GetStatus().GetCode()))
 	err = domain.DeleteBackup(ctx, request.Operator, request.GetClusterId(), request.GetBackupRecordId())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
@@ -289,7 +289,7 @@ func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *
 
 func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *clusterpb.SaveBackupStrategyRequest, response *clusterpb.SaveBackupStrategyResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "SaveBackupStrategy", strconv.Itoa(int(response.GetStatus().GetCode())))
+	defer handleMetrics(start, "SaveBackupStrategy", int(response.GetStatus().GetCode()))
 	err = domain.SaveBackupStrategyPreCheck(request.GetOperator(), request.GetStrategy())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
@@ -309,7 +309,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 
 func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *clusterpb.GetBackupStrategyRequest, response *clusterpb.GetBackupStrategyResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "GetBackupStrategy",  strconv.Itoa(int(response.GetStatus().GetCode())))
+	defer handleMetrics(start, "GetBackupStrategy",  int(response.GetStatus().GetCode()))
 	strategy, err := domain.QueryBackupStrategy(ctx, request.GetOperator(), request.GetClusterId())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
@@ -323,7 +323,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 
 func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *clusterpb.QueryBackupRequest, response *clusterpb.QueryBackupResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "QueryBackupRecord",  strconv.Itoa(int(response.GetStatus().GetCode())))
+	defer handleMetrics(start, "QueryBackupRecord", int(response.GetStatus().GetCode()))
 	result, err := client.DBClient.ListBackupRecords(ctx, &dbpb.DBListBackupRecordsRequest{
 		ClusterId: request.ClusterId,
 		StartTime: request.StartTime,
@@ -405,7 +405,7 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 
 func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *clusterpb.DescribeDashboardRequest, response *clusterpb.DescribeDashboardResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "DescribeDashboard",  strconv.Itoa(int(response.GetStatus().GetCode())))
+	defer handleMetrics(start, "DescribeDashboard", int(response.GetStatus().GetCode()))
 	info, err := domain.DescribeDashboard(ctx, request.Operator, request.ClusterId)
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)

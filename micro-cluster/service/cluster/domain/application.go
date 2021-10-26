@@ -30,6 +30,7 @@ import (
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -387,36 +388,30 @@ func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
 		task.Fail(err)
 		return false
 	}
-
 	defer sftpClient.Close()
 
-	yamlFile := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiupPath, req.ClusterNames[0])
-	remoteFileName := yamlFile
+	remoteFileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiupPath, req.ClusterNames[0])
 	remoteFile, err := sftpClient.Open(remoteFileName)
 	if err != nil {
 		task.Fail(err)
 		return false
 	}
 	defer remoteFile.Close()
-
-	localFileName := req.ClusterNames[0] + ".yaml"
-	localFile, err := os.Create(localFileName)
 	if err != nil {
 		task.Fail(err)
 		return false
 	}
-	defer localFile.Close()
-	_, err = io.Copy(localFile, remoteFile)
-	if err != nil {
-		task.Fail(err)
-		return false
-	}
+	clusterMetaData := spec.ClusterMeta{}
+	yaml.Unmarshal(yamlFile, &clusterMetaData)
 
 	task.Success(nil)
 	return true
 }
 
 func buildTopology(task *TaskEntity, context *FlowContext) bool {
+	req := context.value(contextTakeoverReqKey).(*clusterpb.ClusterTakeoverReqDTO)
+
+
 	task.Success(nil)
 	return true
 }

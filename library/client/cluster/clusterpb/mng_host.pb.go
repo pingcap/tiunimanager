@@ -1715,6 +1715,154 @@ func (x *GetFailureDomainResponse) GetFdList() []*FailureDomainResource {
 	return nil
 }
 
+type GetRegionsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *GetRegionsRequest) Reset() {
+	*x = GetRegionsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_mng_host_proto_msgTypes[26]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetRegionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRegionsRequest) ProtoMessage() {}
+
+func (x *GetRegionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_mng_host_proto_msgTypes[26]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetRegionsRequest.ProtoReflect.Descriptor instead.
+func (*GetRegionsRequest) Descriptor() ([]byte, []int) {
+	return file_mng_host_proto_rawDescGZIP(), []int{26}
+}
+
+type RegionItem struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Region string   `protobuf:"bytes,1,opt,name=region,proto3" json:"region,omitempty"`
+	Archs  []string `protobuf:"bytes,2,rep,name=archs,proto3" json:"archs,omitempty"`
+}
+
+func (x *RegionItem) Reset() {
+	*x = RegionItem{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_mng_host_proto_msgTypes[27]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RegionItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegionItem) ProtoMessage() {}
+
+func (x *RegionItem) ProtoReflect() protoreflect.Message {
+	mi := &file_mng_host_proto_msgTypes[27]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegionItem.ProtoReflect.Descriptor instead.
+func (*RegionItem) Descriptor() ([]byte, []int) {
+	return file_mng_host_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *RegionItem) GetRegion() string {
+	if x != nil {
+		return x.Region
+	}
+	return ""
+}
+
+func (x *RegionItem) GetArchs() []string {
+	if x != nil {
+		return x.Archs
+	}
+	return nil
+}
+
+type GetRegionsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Rs      *ResponseStatus `protobuf:"bytes,1,opt,name=rs,proto3" json:"rs,omitempty"`
+	Regions []*RegionItem   `protobuf:"bytes,2,rep,name=regions,proto3" json:"regions,omitempty"`
+}
+
+func (x *GetRegionsResponse) Reset() {
+	*x = GetRegionsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_mng_host_proto_msgTypes[28]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetRegionsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRegionsResponse) ProtoMessage() {}
+
+func (x *GetRegionsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_mng_host_proto_msgTypes[28]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetRegionsResponse.ProtoReflect.Descriptor instead.
+func (*GetRegionsResponse) Descriptor() ([]byte, []int) {
+	return file_mng_host_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *GetRegionsResponse) GetRs() *ResponseStatus {
+	if x != nil {
+		return x.Rs
+	}
+	return nil
+}
+
+func (x *GetRegionsResponse) GetRegions() []*RegionItem {
+	if x != nil {
+		return x.Regions
+	}
+	return nil
+}
+
 var File_mng_host_proto protoreflect.FileDescriptor
 
 var file_mng_host_proto_rawDesc = []byte{
@@ -1905,9 +2053,20 @@ var file_mng_host_proto_rawDesc = []byte{
 	0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x02, 0x72, 0x73, 0x12, 0x2e, 0x0a, 0x06, 0x66,
 	0x64, 0x4c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x46, 0x61,
 	0x69, 0x6c, 0x75, 0x72, 0x65, 0x44, 0x6f, 0x6d, 0x61, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x6f, 0x75,
-	0x72, 0x63, 0x65, 0x52, 0x06, 0x66, 0x64, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x1b, 0x5a, 0x19, 0x2e,
-	0x2f, 0x2e, 0x2e, 0x2f, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2f, 0x3b, 0x63,
-	0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x63, 0x65, 0x52, 0x06, 0x66, 0x64, 0x4c, 0x69, 0x73, 0x74, 0x22, 0x13, 0x0a, 0x11, 0x47,
+	0x65, 0x74, 0x52, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x22, 0x3a, 0x0a, 0x0a, 0x52, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x49, 0x74, 0x65, 0x6d, 0x12, 0x16,
+	0x0a, 0x06, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
+	0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x72, 0x63, 0x68, 0x73, 0x18,
+	0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x05, 0x61, 0x72, 0x63, 0x68, 0x73, 0x22, 0x5c, 0x0a, 0x12,
+	0x47, 0x65, 0x74, 0x52, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x1f, 0x0a, 0x02, 0x72, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f,
+	0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52,
+	0x02, 0x72, 0x73, 0x12, 0x25, 0x0a, 0x07, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x02,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x52, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x49, 0x74, 0x65,
+	0x6d, 0x52, 0x07, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x73, 0x42, 0x1b, 0x5a, 0x19, 0x2e, 0x2f,
+	0x2e, 0x2e, 0x2f, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2f, 0x3b, 0x63, 0x6c,
+	0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1922,7 +2081,7 @@ func file_mng_host_proto_rawDescGZIP() []byte {
 	return file_mng_host_proto_rawDescData
 }
 
-var file_mng_host_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_mng_host_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_mng_host_proto_goTypes = []interface{}{
 	(*ResponseStatus)(nil),             // 0: ResponseStatus
 	(*Disk)(nil),                       // 1: Disk
@@ -1950,7 +2109,10 @@ var file_mng_host_proto_goTypes = []interface{}{
 	(*AllocHostResponse)(nil),          // 23: AllocHostResponse
 	(*GetFailureDomainRequest)(nil),    // 24: GetFailureDomainRequest
 	(*GetFailureDomainResponse)(nil),   // 25: GetFailureDomainResponse
-	(*PageDTO)(nil),                    // 26: PageDTO
+	(*GetRegionsRequest)(nil),          // 26: GetRegionsRequest
+	(*RegionItem)(nil),                 // 27: RegionItem
+	(*GetRegionsResponse)(nil),         // 28: GetRegionsResponse
+	(*PageDTO)(nil),                    // 29: PageDTO
 }
 var file_mng_host_proto_depIdxs = []int32{
 	1,  // 0: HostInfo.disks:type_name -> Disk
@@ -1963,10 +2125,10 @@ var file_mng_host_proto_depIdxs = []int32{
 	0,  // 7: RemoveHostsInBatchResponse.rs:type_name -> ResponseStatus
 	0,  // 8: UpdateHostStatusResponse.rs:type_name -> ResponseStatus
 	0,  // 9: ReserveHostResponse.rs:type_name -> ResponseStatus
-	26, // 10: ListHostsRequest.pageReq:type_name -> PageDTO
+	29, // 10: ListHostsRequest.pageReq:type_name -> PageDTO
 	0,  // 11: ListHostsResponse.rs:type_name -> ResponseStatus
 	2,  // 12: ListHostsResponse.hostList:type_name -> HostInfo
-	26, // 13: ListHostsResponse.pageReq:type_name -> PageDTO
+	29, // 13: ListHostsResponse.pageReq:type_name -> PageDTO
 	0,  // 14: CheckDetailsResponse.rs:type_name -> ResponseStatus
 	2,  // 15: CheckDetailsResponse.details:type_name -> HostInfo
 	3,  // 16: AllocHostsRequest.pdReq:type_name -> AllocationReq
@@ -1978,11 +2140,13 @@ var file_mng_host_proto_depIdxs = []int32{
 	4,  // 22: AllocHostResponse.tikvHosts:type_name -> AllocHost
 	0,  // 23: GetFailureDomainResponse.rs:type_name -> ResponseStatus
 	5,  // 24: GetFailureDomainResponse.fdList:type_name -> FailureDomainResource
-	25, // [25:25] is the sub-list for method output_type
-	25, // [25:25] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	0,  // 25: GetRegionsResponse.rs:type_name -> ResponseStatus
+	27, // 26: GetRegionsResponse.regions:type_name -> RegionItem
+	27, // [27:27] is the sub-list for method output_type
+	27, // [27:27] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_mng_host_proto_init() }
@@ -2304,6 +2468,42 @@ func file_mng_host_proto_init() {
 				return nil
 			}
 		}
+		file_mng_host_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetRegionsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_mng_host_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RegionItem); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_mng_host_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetRegionsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2311,7 +2511,7 @@ func file_mng_host_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_mng_host_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   26,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

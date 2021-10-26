@@ -77,6 +77,7 @@ type ClusterService interface {
 	RecycleResources(ctx context.Context, in *RecycleRequest, opts ...client.CallOption) (*RecycleResponse, error)
 	UpdateHostStatus(ctx context.Context, in *UpdateHostStatusRequest, opts ...client.CallOption) (*UpdateHostStatusResponse, error)
 	ReserveHost(ctx context.Context, in *ReserveHostRequest, opts ...client.CallOption) (*ReserveHostResponse, error)
+	GetRegions(ctx context.Context, in *GetRegionsRequest, opts ...client.CallOption) (*GetRegionsResponse, error)
 	// task manager
 	ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...client.CallOption) (*ListFlowsResponse, error)
 }
@@ -413,6 +414,16 @@ func (c *clusterService) ReserveHost(ctx context.Context, in *ReserveHostRequest
 	return out, nil
 }
 
+func (c *clusterService) GetRegions(ctx context.Context, in *GetRegionsRequest, opts ...client.CallOption) (*GetRegionsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.GetRegions", in)
+	out := new(GetRegionsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterService) ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...client.CallOption) (*ListFlowsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterService.ListFlows", in)
 	out := new(ListFlowsResponse)
@@ -461,6 +472,7 @@ type ClusterServiceHandler interface {
 	RecycleResources(context.Context, *RecycleRequest, *RecycleResponse) error
 	UpdateHostStatus(context.Context, *UpdateHostStatusRequest, *UpdateHostStatusResponse) error
 	ReserveHost(context.Context, *ReserveHostRequest, *ReserveHostResponse) error
+	GetRegions(context.Context, *GetRegionsRequest, *GetRegionsResponse) error
 	// task manager
 	ListFlows(context.Context, *ListFlowsRequest, *ListFlowsResponse) error
 }
@@ -499,6 +511,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		RecycleResources(ctx context.Context, in *RecycleRequest, out *RecycleResponse) error
 		UpdateHostStatus(ctx context.Context, in *UpdateHostStatusRequest, out *UpdateHostStatusResponse) error
 		ReserveHost(ctx context.Context, in *ReserveHostRequest, out *ReserveHostResponse) error
+		GetRegions(ctx context.Context, in *GetRegionsRequest, out *GetRegionsResponse) error
 		ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error
 	}
 	type ClusterService struct {
@@ -638,6 +651,10 @@ func (h *clusterServiceHandler) UpdateHostStatus(ctx context.Context, in *Update
 
 func (h *clusterServiceHandler) ReserveHost(ctx context.Context, in *ReserveHostRequest, out *ReserveHostResponse) error {
 	return h.ClusterServiceHandler.ReserveHost(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) GetRegions(ctx context.Context, in *GetRegionsRequest, out *GetRegionsResponse) error {
+	return h.ClusterServiceHandler.GetRegions(ctx, in, out)
 }
 
 func (h *clusterServiceHandler) ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error {

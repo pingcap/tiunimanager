@@ -167,3 +167,16 @@ message GetFailureDomainResponse {
     repeated FailureDomainResource fdList = 2;
 }
 
+message GetRegionsRequest {
+
+}
+
+message RegionItem {
+    string region = 1;
+    repeated string archs = 2;
+}
+
+message GetRegionsResponse {
+    ResponseStatus rs = 1;
+    repeated RegionItem regions = 2;
+}

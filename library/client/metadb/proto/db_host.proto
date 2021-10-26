@@ -170,3 +170,17 @@ message DBGetFailureDomainResponse {
     DBHostResponseStatus rs = 1;
     repeated DBFailureDomainResource fdList = 2;
 }
+
+message DBGetRegionsRequest {
+
+}
+
+message DBRegionItem {
+    string region = 1;
+    repeated string archs = 2;
+}
+
+message DBGetRegionsResponse {
+    DBHostResponseStatus rs = 1;
+    repeated DBRegionItem regions = 2;
+}

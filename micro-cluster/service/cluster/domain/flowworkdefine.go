@@ -42,6 +42,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		},
 		ContextParser: defaultContextParser,
 	},
+
 	FlowDeleteCluster: {
 		FlowName:    FlowDeleteCluster,
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowDeleteCluster),

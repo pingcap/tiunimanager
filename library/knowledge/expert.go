@@ -221,3 +221,13 @@ func loadParameterKnowledge() {
 		ParameterKnowledge.Names[v.Name] = v
 	}
 }
+
+// GetComponentsForCluster
+// @Description: list all the components for a
+// @Parameter clusterCode
+// @Parameter versionCode
+// @return []*ClusterComponent
+func GetComponentsForCluster(clusterCode, versionCode string) []*ClusterComponent {
+	// todo
+	return nil
+}

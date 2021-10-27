@@ -35,7 +35,7 @@ func InjectionMetaDbRepo() {
 	domain.TaskRepo = TaskRepoAdapter{}
 	domain.ClusterRepo = ClusterRepoAdapter{}
 	domain.RemoteClusterProxy = RemoteClusterProxy{}
-	domain.MetadataMgr = TiUPMetadataManager{}
+	domain.MetadataMgr = NewTiUPTiDBMetadataManager()
 	domain.TopologyPlanner = DefaultTopologyPlanner{}
 }
 

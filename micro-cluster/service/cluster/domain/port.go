@@ -20,6 +20,7 @@ package domain
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
@@ -56,9 +57,9 @@ type MetadataManager interface {
 }
 
 type ClusterTopologyPlanner interface {
-	BuildComponents(ctx context.Context, cluster *Cluster, demands []*ClusterComponentDemand) ([]ComponentGroup, error)
-	AnalysisResourceRequest(ctx context.Context, components []ComponentGroup) (clusterpb.BatchAllocRequest, error)
-	ApplyResourceToComponents(ctx context.Context, components []ComponentGroup, response clusterpb.BatchAllocResponse) error
+	BuildComponents(cluster *Cluster, demands []*ClusterComponentDemand) ([]ComponentGroup, error)
+	AnalysisResourceRequest(components []ComponentGroup) (clusterpb.BatchAllocRequest, error)
+	ApplyResourceToComponents(components []ComponentGroup, response clusterpb.BatchAllocResponse) error
 }
 
 type TaskRepository interface {
@@ -76,3 +77,9 @@ type TaskRepository interface {
 
 	ListFlows(bizId, keyword string, status int, page int, pageSize int) ([]*FlowWorkEntity, int, error)
 }
+
+type ComponentParser interface {
+	GetComponent() knowledge.ClusterComponent
+	ParseComponent(spec *spec.Specification) *ComponentGroup
+}
+

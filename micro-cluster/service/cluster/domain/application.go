@@ -377,15 +377,30 @@ func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
 }
 
 func buildTopology(task *TaskEntity, context *FlowContext) bool {
-	//req := context.value(contextTakeoverReqKey).(*clusterpb.ClusterTakeoverReqDTO)
-	//
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 
+	components, err := MetadataMgr.ParseComponentsFromMetaData(clusterAggregation.ClusterMetadata)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	clusterAggregation.ClusterComponents = components
 	task.Success(nil)
 	return true
 }
 
 func takeoverResource(task *TaskEntity, context *FlowContext) bool {
-	task.Success(nil)
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+
+	allocReq , err := TopologyPlanner.AnalysisResourceRequest(nil, clusterAggregation.ClusterComponents)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	// todo takeover resource
+	task.Success(allocReq)
 	return true
 }
 

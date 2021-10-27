@@ -48,6 +48,8 @@ service ClusterService {
     rpc GetFailureDomain(GetFailureDomainRequest) returns (GetFailureDomainResponse);
     rpc AllocResourcesInBatch(BatchAllocRequest) returns (BatchAllocResponse);
     rpc RecycleResources(RecycleRequest) returns (RecycleResponse);
+    rpc UpdateHostStatus(UpdateHostStatusRequest) returns (UpdateHostStatusResponse);
+	rpc ReserveHost(ReserveHostRequest) returns (ReserveHostResponse);
 
     // task manager
     rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);

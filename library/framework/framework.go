@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -152,6 +151,8 @@ func InitBaseFrameworkFromArgs(serviceName ServiceNameEnum, opts ...Opt) *BaseFr
 	f.initEtcdClient()
 	f.initElasticsearchClient()
 	f.initMetrics()
+	// listen prometheus metrics
+	go f.prometheusBoot()
 	return f
 }
 
@@ -213,9 +214,6 @@ func (b *BaseFramework) initMicroService() {
 		micro.WrapClient(opentracing.NewClientWrapper(*b.trace)),
 	)
 	srv.Init()
-
-	// listen prometheus metrics
-	go b.prometheusBoot()
 
 	b.microService = srv
 

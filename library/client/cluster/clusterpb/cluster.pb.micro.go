@@ -76,6 +76,8 @@ type ClusterService interface {
 	GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, opts ...client.CallOption) (*GetFailureDomainResponse, error)
 	AllocResourcesInBatch(ctx context.Context, in *BatchAllocRequest, opts ...client.CallOption) (*BatchAllocResponse, error)
 	RecycleResources(ctx context.Context, in *RecycleRequest, opts ...client.CallOption) (*RecycleResponse, error)
+	UpdateHostStatus(ctx context.Context, in *UpdateHostStatusRequest, opts ...client.CallOption) (*UpdateHostStatusResponse, error)
+	ReserveHost(ctx context.Context, in *ReserveHostRequest, opts ...client.CallOption) (*ReserveHostResponse, error)
 	// task manager
 	ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...client.CallOption) (*ListFlowsResponse, error)
 }
@@ -402,6 +404,26 @@ func (c *clusterService) RecycleResources(ctx context.Context, in *RecycleReques
 	return out, nil
 }
 
+func (c *clusterService) UpdateHostStatus(ctx context.Context, in *UpdateHostStatusRequest, opts ...client.CallOption) (*UpdateHostStatusResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.UpdateHostStatus", in)
+	out := new(UpdateHostStatusResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) ReserveHost(ctx context.Context, in *ReserveHostRequest, opts ...client.CallOption) (*ReserveHostResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.ReserveHost", in)
+	out := new(ReserveHostResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterService) ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...client.CallOption) (*ListFlowsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterService.ListFlows", in)
 	out := new(ListFlowsResponse)
@@ -449,6 +471,8 @@ type ClusterServiceHandler interface {
 	GetFailureDomain(context.Context, *GetFailureDomainRequest, *GetFailureDomainResponse) error
 	AllocResourcesInBatch(context.Context, *BatchAllocRequest, *BatchAllocResponse) error
 	RecycleResources(context.Context, *RecycleRequest, *RecycleResponse) error
+	UpdateHostStatus(context.Context, *UpdateHostStatusRequest, *UpdateHostStatusResponse) error
+	ReserveHost(context.Context, *ReserveHostRequest, *ReserveHostResponse) error
 	// task manager
 	ListFlows(context.Context, *ListFlowsRequest, *ListFlowsResponse) error
 }
@@ -486,6 +510,8 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		GetFailureDomain(ctx context.Context, in *GetFailureDomainRequest, out *GetFailureDomainResponse) error
 		AllocResourcesInBatch(ctx context.Context, in *BatchAllocRequest, out *BatchAllocResponse) error
 		RecycleResources(ctx context.Context, in *RecycleRequest, out *RecycleResponse) error
+		UpdateHostStatus(ctx context.Context, in *UpdateHostStatusRequest, out *UpdateHostStatusResponse) error
+		ReserveHost(ctx context.Context, in *ReserveHostRequest, out *ReserveHostResponse) error
 		ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error
 	}
 	type ClusterService struct {
@@ -621,6 +647,14 @@ func (h *clusterServiceHandler) AllocResourcesInBatch(ctx context.Context, in *B
 
 func (h *clusterServiceHandler) RecycleResources(ctx context.Context, in *RecycleRequest, out *RecycleResponse) error {
 	return h.ClusterServiceHandler.RecycleResources(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) UpdateHostStatus(ctx context.Context, in *UpdateHostStatusRequest, out *UpdateHostStatusResponse) error {
+	return h.ClusterServiceHandler.UpdateHostStatus(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) ReserveHost(ctx context.Context, in *ReserveHostRequest, out *ReserveHostResponse) error {
+	return h.ClusterServiceHandler.ReserveHost(ctx, in, out)
 }
 
 func (h *clusterServiceHandler) ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error {

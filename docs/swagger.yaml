@@ -342,6 +342,9 @@ definitions:
         type: string
       kernel:
         type: string
+      loadStat:
+        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+        type: integer
       memory:
         description: Host memroy, init while importing
         type: integer
@@ -365,14 +368,29 @@ definitions:
       spec:
         description: Host Spec, init while importing
         type: string
-      stat:
-        description: Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
-        type: integer
       status:
         description: Host Status, 0 for Online, 1 for offline
         type: integer
       userName:
         type: string
+    type: object
+  hostresource.ReserveHostReq:
+    properties:
+      hostIds:
+        items:
+          type: string
+        type: array
+      reserved:
+        type: boolean
+    type: object
+  hostresource.UpdateHostStatusReq:
+    properties:
+      hostIds:
+        items:
+          type: string
+        type: array
+      status:
+        type: integer
     type: object
   identification.LoginInfo:
     properties:
@@ -2087,6 +2105,9 @@ paths:
       description: get hosts lit
       parameters:
       - in: query
+        name: loadStat
+        type: integer
+      - in: query
         name: page
         type: integer
       - in: query
@@ -2122,6 +2143,11 @@ paths:
       - multipart/form-data
       description: import hosts by xlsx file
       parameters:
+      - default: "false"
+        description: whether hosts are reserved(won't be allocated) after import
+        in: formData
+        name: hostReserved
+        type: string
       - description: hosts information in a xlsx file
         in: formData
         name: file
@@ -2247,6 +2273,64 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Show a host
+      tags:
+      - resource
+  /resources/reserve-host/:
+    post:
+      consumes:
+      - application/json
+      description: update host reserved status by a list
+      parameters:
+      - description: change reserved status in host list
+        in: body
+        name: reserveReq
+        required: true
+        schema:
+          $ref: '#/definitions/hostresource.ReserveHostReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Set whether a Host is reserved
+      tags:
+      - resource
+  /resources/update-host-status/:
+    post:
+      consumes:
+      - application/json
+      description: update host status by a list
+      parameters:
+      - description: change status in host list
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/hostresource.UpdateHostStatusReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update host status
       tags:
       - resource
   /user/login:

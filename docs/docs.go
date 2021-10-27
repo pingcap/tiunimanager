@@ -1858,6 +1858,11 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "name": "loadStat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
@@ -1919,6 +1924,13 @@ var doc = `{
                 ],
                 "summary": "Import a batch of hosts to TiEM",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "default": "false",
+                        "description": "whether hosts are reserved(won't be allocated) after import",
+                        "name": "hostReserved",
+                        "in": "formData"
+                    },
                     {
                         "type": "file",
                         "description": "hosts information in a xlsx file",
@@ -2106,6 +2118,108 @@ var doc = `{
                         "name": "hostId",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/reserve-host/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update host reserved status by a list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Set whether a Host is reserved",
+                "parameters": [
+                    {
+                        "description": "change reserved status in host list",
+                        "name": "reserveReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hostresource.ReserveHostReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/update-host-status/": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update host status by a list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Update host status",
+                "parameters": [
+                    {
+                        "description": "change status in host list",
+                        "name": "updateReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hostresource.UpdateHostStatusReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -2811,6 +2925,10 @@ var doc = `{
                 "kernel": {
                     "type": "string"
                 },
+                "loadStat": {
+                    "description": "Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust",
+                    "type": "integer"
+                },
                 "memory": {
                     "description": "Host memroy, init while importing",
                     "type": "integer"
@@ -2843,16 +2961,40 @@ var doc = `{
                     "description": "Host Spec, init while importing",
                     "type": "string"
                 },
-                "stat": {
-                    "description": "Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust",
-                    "type": "integer"
-                },
                 "status": {
                     "description": "Host Status, 0 for Online, 1 for offline",
                     "type": "integer"
                 },
                 "userName": {
                     "type": "string"
+                }
+            }
+        },
+        "hostresource.ReserveHostReq": {
+            "type": "object",
+            "properties": {
+                "hostIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "reserved": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "hostresource.UpdateHostStatusReq": {
+            "type": "object",
+            "properties": {
+                "hostIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "integer"
                 }
             }
         },

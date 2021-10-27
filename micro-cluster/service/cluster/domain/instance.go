@@ -46,8 +46,11 @@ type ComponentInstance struct {
 	Version  *knowledge.ClusterVersion
 
 	HostId   string
+	Ip 		 string
+
 	DiskId   string
 	PortInfo string
+
 	AllocRequestId string
 
 	CreatedAt time.Time

@@ -78,17 +78,17 @@ func (t TiUPTiDBMetadataManager) FetchFromRemoteCluster(ctx context.Context, req
 	return metadata, nil
 }
 
-func (t TiUPTiDBMetadataManager) RebuildMetadataFromComponents(cluster *domain.Cluster, components []domain.ComponentGroup) (spec.Metadata, error) {
+func (t TiUPTiDBMetadataManager) RebuildMetadataFromComponents(cluster *domain.Cluster, components []*domain.ComponentGroup) (spec.Metadata, error) {
 	panic("implement me")
 }
 
-func (t TiUPTiDBMetadataManager) ParseComponentsFromMetaData(metadata spec.Metadata) ([]domain.ComponentGroup, error) {
+func (t TiUPTiDBMetadataManager) ParseComponentsFromMetaData(metadata spec.Metadata) ([]*domain.ComponentGroup, error) {
 	version := metadata.GetBaseMeta().Version
 
 	clusterSpec := metadata.GetTopology().(*spec.Specification)
 	componentsList := knowledge.GetComponentsForCluster("TiDB", version)
 
-	componentGroups := make([]domain.ComponentGroup, 0)
+	componentGroups := make([]*domain.ComponentGroup, 0)
 	for _, component := range componentsList {
 		componentGroups = append(componentGroups, t.componentParsers[component.ComponentType].ParseComponent(clusterSpec))
 	}
@@ -102,18 +102,32 @@ func (t TiUPTiDBMetadataManager) ParseClusterInfoFromMetaData(meta spec.BaseMeta
 
 type TiDBComponentParser struct {}
 
-func (t TiDBComponentParser) GetComponent() knowledge.ClusterComponent {
-	return *knowledge.ClusterComponentFromCode("TiDB")
+func (t TiDBComponentParser) GetComponent() *knowledge.ClusterComponent {
+	return knowledge.ClusterComponentFromCode("TiDB")
 }
 
 func (t TiDBComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
-	group := domain.ComponentGroup{}
+	group := &domain.ComponentGroup{
+		ComponentType: t.GetComponent(),
+		Nodes: make([]domain.ComponentInstance, 0),
+	}
+
+	for _, tidbServer := range spec.TiDBServers {
+		componentInstance := domain.ComponentInstance {
+			ComponentType: t.GetComponent(),
+			Ip: tidbServer.Host,
+
+		}
+		group.Nodes = append(group.Nodes, componentInstance)
+	}
+
+	return group
 }
 
 type TiKVComponentParser struct {}
 
-func (t TiKVComponentParser) GetComponent() knowledge.ClusterComponent {
-	return *knowledge.ClusterComponentFromCode("TiKV")
+func (t TiKVComponentParser) GetComponent() *knowledge.ClusterComponent {
+	return knowledge.ClusterComponentFromCode("TiKV")
 }
 
 func (t TiKVComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
@@ -122,8 +136,8 @@ func (t TiKVComponentParser) ParseComponent(spec *spec.Specification) *domain.Co
 
 type PDComponentParser struct {}
 
-func (t PDComponentParser) GetComponent() knowledge.ClusterComponent {
-	return *knowledge.ClusterComponentFromCode("PD")
+func (t PDComponentParser) GetComponent() *knowledge.ClusterComponent {
+	return knowledge.ClusterComponentFromCode("PD")
 }
 
 func (t PDComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
@@ -132,8 +146,8 @@ func (t PDComponentParser) ParseComponent(spec *spec.Specification) *domain.Comp
 
 type TiFlashComponentParser struct {}
 
-func (t TiFlashComponentParser) GetComponent() knowledge.ClusterComponent {
-	return *knowledge.ClusterComponentFromCode("TiFlash")
+func (t TiFlashComponentParser) GetComponent() *knowledge.ClusterComponent {
+	return knowledge.ClusterComponentFromCode("TiFlash")
 }
 
 func (t TiFlashComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {

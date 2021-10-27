@@ -39,7 +39,7 @@ import (
 type ClusterAggregation struct {
 	Cluster *Cluster
 	ClusterMetadata spec.Metadata
-	ClusterComponents []ComponentGroup
+	ClusterComponents []*ComponentGroup
 
 	CurrentWorkFlow             *FlowWorkEntity
 	CurrentOperator *Operator
@@ -393,7 +393,7 @@ func buildTopology(task *TaskEntity, context *FlowContext) bool {
 func takeoverResource(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 
-	allocReq , err := TopologyPlanner.AnalysisResourceRequest(nil, clusterAggregation.ClusterComponents)
+	allocReq , err := TopologyPlanner.AnalysisResourceRequest(clusterAggregation.ClusterComponents)
 	if err != nil {
 		task.Fail(err)
 		return false

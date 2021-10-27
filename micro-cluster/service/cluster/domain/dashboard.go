@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap/errors"
-	"github.com/pingcap/tiup/pkg/utils/rand"
+	"github.com/pingcap/tiup/pkg/crypto/rand"
 	"io/ioutil"
 	"net/http"
 	"time"

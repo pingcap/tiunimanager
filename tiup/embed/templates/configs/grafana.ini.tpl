@@ -131,6 +131,8 @@ admin_user = {{.Username}}
 # default admin password, can be changed before first start of grafana,  or in profile settings
 admin_password = {{.Password}}
 
+allow_embedding = true
+
 # used for signing
 ;secret_key = SW2YcwTIb9zpOOhoPsMm
 

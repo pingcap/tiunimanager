@@ -196,6 +196,7 @@ else
 	go tool cover -func="$(TEST_DIR)/unit_cov.out"
 endif
 
+# only for CI, don't use this locally, use local_test instead
 test: add_test_file
 	GO111MODULE=off go get github.com/axw/gocov/gocov
 	GO111MODULE=off go get github.com/jstemmer/go-junit-report
@@ -229,7 +230,12 @@ failpoint-disable: build_failpoint_ctl
 	@$(FAILPOINT_DISABLE)
 
 lint:
+	# refer https://golangci-lint.run/usage/install/#local-installation to install golangci-lint firstly
 	golangci-lint run  --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml
+
+gosec:
+	go install github.com/securego/gosec/v2/cmd/gosec@latest
+	gosec -fmt=junit-xml -out=results.xml -stdout -verbose=text -exclude=G103,G104,G204,G304,G307,G401,G404,G501,G505,G601 ./... || true
 
 add_test_file:
 	build_helper/add_test_file.sh

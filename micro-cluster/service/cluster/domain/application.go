@@ -142,10 +142,10 @@ func RestartCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggre
 	operator := parseOperatorFromDTO(ope)
 
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
-	clusterAggregation.CurrentOperator = operator
 	if err != nil {
 		return clusterAggregation, errors.New("cluster not exist")
 	}
+	clusterAggregation.CurrentOperator = operator
 
 	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowRestartCluster, operator)
 	if err != nil {
@@ -155,8 +155,6 @@ func RestartCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggre
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()
 
-	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }
 
@@ -362,7 +360,6 @@ func destroyTasks(task *TaskEntity, context *FlowContext) bool {
 func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
-	cluster.Restart()
 
 	getLogger().Infof("restart cluster %s", cluster.ClusterName)
 	restartTaskId, err := libtiup.MicroSrvTiupRestart(cluster.ClusterName, 0, []string{}, uint64(task.Id))
@@ -374,18 +371,9 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 	context.put("restartTaskId", restartTaskId)
 	getLogger().Infof("got restartTaskId %s", strconv.Itoa(int(restartTaskId)))
 
-	task.Success(nil)
-	return true
-}
-
-func restartDone(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
-	cluster := clusterAggregation.Cluster
-	getLogger().Infof("get cluster %s status...", cluster.ClusterName)
-
 	go func() {
 		for {
-			stat, statErrStr, err := libtiup.MicroSrvTiupGetTaskStatusByBizID(uint64(task.Id))
+			stat, statErrStr, err := libtiup.MicroSrvTiupGetTaskStatus(restartTaskId)
 			if err != nil {
 				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
 			}
@@ -393,13 +381,23 @@ func restartDone(task *TaskEntity, context *FlowContext) bool {
 				getLogger().Infof(" cluster %s restart done.", cluster.ClusterName)
 				clusterAggregation.StatusModified = true
 				clusterAggregation.Cluster.Online()
-				ClusterRepo.Persist(clusterAggregation)
+				err := ClusterRepo.Persist(clusterAggregation)
+				if err != nil {
+					getLogger().Errorf("cluster repo persist err = %v", err)
+					return
+				}
 				break
 			}
 			time.Sleep(time.Second * 2)
 		}
 	}()
 
+	clusterAggregation.Cluster.Restart()
+	clusterAggregation.StatusModified = true
+	err = ClusterRepo.Persist(clusterAggregation)
+	if err != nil {
+		return false
+	}
 	task.Success(nil)
 	return true
 }

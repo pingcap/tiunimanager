@@ -399,7 +399,9 @@ func takeoverResource(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 
-	// todo takeover resource
+	allocResponse := &clusterpb.BatchAllocResponse{}
+	resource.NewResourceManager().AllocResourcesInBatch(nil, allocReq, allocResponse)
+
 	task.Success(allocReq)
 	return true
 }

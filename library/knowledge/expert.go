@@ -228,6 +228,12 @@ func loadParameterKnowledge() {
 // @Parameter versionCode
 // @return []*ClusterComponent
 func GetComponentsForCluster(clusterCode, versionCode string) []*ClusterComponent {
-	// todo
-	return nil
+	versionSpec := ClusterTypeSpecFromCode(clusterCode).GetVersionSpec(versionCode)
+	components := make([]*ClusterComponent, len(versionSpec.ComponentSpecs), len(versionSpec.ComponentSpecs))
+
+	for i, v := range versionSpec.ComponentSpecs {
+		components[i] = &v.ClusterComponent
+	}
+
+	return components
 }

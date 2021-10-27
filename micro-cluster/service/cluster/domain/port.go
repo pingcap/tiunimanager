@@ -58,7 +58,7 @@ type MetadataManager interface {
 
 type ClusterTopologyPlanner interface {
 	BuildComponents(cluster *Cluster, demands []*ClusterComponentDemand) ([]*ComponentGroup, error)
-	AnalysisResourceRequest(components []*ComponentGroup) (*clusterpb.BatchAllocRequest, error)
+	AnalysisResourceRequest(cluster *Cluster, components []*ComponentGroup) (*clusterpb.BatchAllocRequest, error)
 	ApplyResourceToComponents(components []*ComponentGroup, response *clusterpb.BatchAllocResponse) error
 }
 

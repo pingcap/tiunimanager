@@ -127,6 +127,8 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 
 	f.initOpts = opts
 	f.Init()
+	f.metrics = metrics.InitMetricsForUT()
+	f.serviceMeta = NewServiceMetaFromArgs(serviceName, f.args)
 
 	f.shutdownOpts = []Opt{
 		func(d *BaseFramework) error {

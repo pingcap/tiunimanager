@@ -20,6 +20,7 @@ package models
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"strings"
 	"testing"
 	"time"
@@ -568,6 +569,7 @@ func TestListClusterDetails(t *testing.T) {
 }
 
 func TestSaveBackupRecord(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	clusterTbl := Dao.ClusterManager()
 	t.Run("normal", func(t *testing.T) {
 		record := &dbpb.DBBackupRecordDTO{
@@ -595,6 +597,7 @@ func TestSaveBackupRecord(t *testing.T) {
 }
 
 func TestSaveRecoverRecord(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	clusterTbl := Dao.ClusterManager()
 	t.Run("normal", func(t *testing.T) {
 		gotDo, err := clusterTbl.SaveRecoverRecord(context.TODO(), "111", "111", "operator1", 1, 1)
@@ -610,6 +613,7 @@ func TestSaveRecoverRecord(t *testing.T) {
 }
 
 func TestDeleteBackupRecord(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	clusterTbl := Dao.ClusterManager()
 	rcd := &dbpb.DBBackupRecordDTO{
 		TenantId:     "111",
@@ -651,6 +655,7 @@ func TestDeleteBackupRecord(t *testing.T) {
 }
 
 func TestListBackupRecords(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	brTbl := Dao.ClusterManager()
 	flow, _ := CreateFlow(MetaDB, "backup", "backup", "111", "111")
 	defer MetaDB.Delete(flow)

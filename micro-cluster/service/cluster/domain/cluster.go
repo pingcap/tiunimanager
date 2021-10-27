@@ -80,7 +80,7 @@ type TopologyConfigRecord struct {
 	Id 					uint
 	TenantId 			string
 	ClusterId 			string
-	ConfigModel 		spec.Metadata
+	ConfigModel 		*spec.Specification
 	CreateTime 			time.Time
 }
 

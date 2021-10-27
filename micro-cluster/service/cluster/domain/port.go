@@ -17,11 +17,21 @@
 
 package domain
 
+import (
+	"context"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
+)
+
 var ClusterRepo ClusterRepository
 
 var TaskRepo TaskRepository
 
-var InstanceRepo InstanceRepository
+var RemoteClusterProxy ClusterAccessProxy
+
+var MetadataMgr MetadataManager
+
+var TopologyPlanner ClusterTopologyPlanner
 
 type ClusterRepository interface {
 	AddCluster (cluster *Cluster) error
@@ -34,8 +44,21 @@ type ClusterRepository interface {
 
 }
 
-type InstanceRepository interface {
+type ClusterAccessProxy interface {
 	QueryParameterJson(clusterId string) (string, error)
+}
+
+type MetadataManager interface {
+	FetchFromRemoteCluster(ctx context.Context, request *clusterpb.ClusterTakeoverReqDTO) (spec.Metadata, error)
+	RebuildMetadataFromComponents(cluster *Cluster, components []ComponentGroup) (spec.Metadata, error)
+	ParseComponentsFromMetaData(spec.Metadata) ([]ComponentGroup, error)
+	ParseClusterInfoFromMetaData(meta spec.BaseMeta) (user string, group string, version string)
+}
+
+type ClusterTopologyPlanner interface {
+	BuildComponents(ctx context.Context, cluster *Cluster, demands []*ClusterComponentDemand) ([]ComponentGroup, error)
+	AnalysisResourceRequest(ctx context.Context, components []ComponentGroup) (clusterpb.BatchAllocRequest, error)
+	ApplyResourceToComponents(ctx context.Context, components []ComponentGroup, response clusterpb.BatchAllocResponse) error
 }
 
 type TaskRepository interface {

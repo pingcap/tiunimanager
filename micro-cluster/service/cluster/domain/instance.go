@@ -23,14 +23,36 @@ import (
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"math/rand"
 	"strconv"
+	"time"
 )
 
-type ComponentInstance struct {
-	Nodes []ComponentNodeInstance
+type ComponentGroup struct {
+	ComponentType	*knowledge.ClusterComponent
+	Nodes 			[]ComponentInstance
 }
 
-type ComponentNodeInstance struct {
+type ComponentInstance struct {
+	ID        string
 
+	Code     string
+	TenantId string
+
+	Status   ClusterStatus
+	ClusterId 		string
+	ComponentType	*knowledge.ClusterComponent
+
+	Role     string
+	Spec     string
+	Version  *knowledge.ClusterVersion
+
+	HostId   string
+	DiskId   string
+	PortInfo string
+	AllocRequestId string
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
 }
 
 func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterInstanceDTO {

@@ -34,7 +34,9 @@ import (
 func InjectionMetaDbRepo() {
 	domain.TaskRepo = TaskRepoAdapter{}
 	domain.ClusterRepo = ClusterRepoAdapter{}
-	domain.InstanceRepo = InstanceRepoAdapter{}
+	domain.RemoteClusterProxy = RemoteClusterProxy{}
+	domain.MetadataMgr = TiUPMetadataManager{}
+	domain.TopologyPlanner = DefaultTopologyPlanner{}
 }
 
 type ClusterRepoAdapter struct{}
@@ -217,9 +219,9 @@ func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation,
 	}
 }
 
-type InstanceRepoAdapter struct{}
+type RemoteClusterProxy struct{}
 
-func (c InstanceRepoAdapter) QueryParameterJson(clusterId string) (content string, err error) {
+func (c RemoteClusterProxy) QueryParameterJson(clusterId string) (content string, err error) {
 	resp, err := client.DBClient.GetCurrentParametersRecord(context.TODO(), &dbpb.DBGetCurrentParametersRequest{
 		ClusterId: clusterId,
 	})

@@ -20,19 +20,12 @@ package domain
 import (
 	ctx "context"
 	"errors"
-	"fmt"
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
-	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
-	"io"
-	"io/ioutil"
-	"net"
-	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -46,7 +39,7 @@ import (
 type ClusterAggregation struct {
 	Cluster *Cluster
 	ClusterMetadata spec.Metadata
-	ClusterComponents []ComponentInstance
+	ClusterComponents []ComponentGroup
 
 	CurrentWorkFlow             *FlowWorkEntity
 	CurrentOperator *Operator
@@ -243,7 +236,7 @@ func ModifyParameters(ope *clusterpb.OperatorDTO, clusterId string, content stri
 }
 
 func GetParameters(ope *clusterpb.OperatorDTO, clusterId string) (parameterJson string, err error) {
-	return InstanceRepo.QueryParameterJson(clusterId)
+	return RemoteClusterProxy.QueryParameterJson(clusterId)
 }
 
 func (aggregation *ClusterAggregation) loadWorkFlow() error {
@@ -370,47 +363,22 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 
 func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
 	req := context.value(contextTakeoverReqKey).(*clusterpb.ClusterTakeoverReqDTO)
-	Conf := ssh.ClientConfig{User: req.TiupUserName,
-		Auth: []ssh.AuthMethod{ssh.Password(req.TiupUserPassword)},
-		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			return nil
-		},
-	}
-	Client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiupIp, req.Port), &Conf)
-	if err != nil {
-		task.Fail(err)
-		return false
-	}
-	defer Client.Close()
 
-	sftpClient, err := sftp.NewClient(Client)
+	metadata, err := MetadataMgr.FetchFromRemoteCluster(nil, req)
 	if err != nil {
 		task.Fail(err)
 		return false
 	}
-	defer sftpClient.Close()
 
-	remoteFileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiupPath, req.ClusterNames[0])
-	remoteFile, err := sftpClient.Open(remoteFileName)
-	if err != nil {
-		task.Fail(err)
-		return false
-	}
-	defer remoteFile.Close()
-	if err != nil {
-		task.Fail(err)
-		return false
-	}
-	clusterMetaData := spec.ClusterMeta{}
-	yaml.Unmarshal(yamlFile, &clusterMetaData)
-
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation.ClusterMetadata = metadata
 	task.Success(nil)
 	return true
 }
 
 func buildTopology(task *TaskEntity, context *FlowContext) bool {
-	req := context.value(contextTakeoverReqKey).(*clusterpb.ClusterTakeoverReqDTO)
-
+	//req := context.value(contextTakeoverReqKey).(*clusterpb.ClusterTakeoverReqDTO)
+	//
 
 	task.Success(nil)
 	return true
@@ -630,7 +598,7 @@ func tidbPort() int {
 	return DefaultTidbPort
 }
 
-func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) spec.Metadata {
+func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spec.Specification {
 
 	meta := new(spec.ClusterMeta)
 	tidbHosts := resource.TidbHosts
@@ -687,5 +655,5 @@ func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) spec
 	//meta.SetUser()
 	//meta.SetVersion()
 	meta.SetTopology(tiupConfig)
-	return meta
+	return tiupConfig
 }

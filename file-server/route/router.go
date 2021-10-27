@@ -46,8 +46,8 @@ func Route(g *gin.Engine) {
 			//file.Use(interceptor.VerifyIdentity)
 			//file.Use(interceptor.AuditLog())
 
-			file.POST("/upload", file2.UploadFile)
-			file.POST("/download", file2.DownloadFile)
+			file.POST("/upload", file2.UploadImportFile)
+			file.GET("/download/:clusterId", file2.DownloadExportFile)
 		}
 	}
 

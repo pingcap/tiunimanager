@@ -17,7 +17,6 @@ package service
 
 import (
 	"archive/zip"
-	"errors"
 	"fmt"
 	"github.com/labstack/gommon/bytes"
 	"io"
@@ -31,13 +30,11 @@ import (
 
 const maxUploadSize int64 = 1 * bytes.GB
 const maxUploadNum int32 = 3
-var uploadPath string = "/tmp"
 
 var FileMgr FileManager
 
 type FileManager struct {
 	maxUploadSize 	int64
-	uploadPath 		string
 	uploadCount 	int32
 	mutex 			sync.RWMutex
 }
@@ -49,33 +46,37 @@ func InitFileManager() *FileManager {
 	return &FileMgr
 }
 
-func (mgr * FileManager) UploadFile(r *http.Request) error {
+func (mgr * FileManager) UploadFile(r *http.Request, uploadPath string) error {
 	if !mgr.checkUploadCnt() {
 		getLogger().Errorf("upload goroutine reach max, %d", maxUploadNum)
-		return errors.New("upload goroutine reach max")
+		return fmt.Errorf("upload goroutine reach max, %d", maxUploadNum)
 	}
 
 	mgr.addUploadCnt()
 	defer mgr.reduceUploadCnt()
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+		getLogger().Errorf("could not parse multipart form: %s", err.Error())
 		return fmt.Errorf("could not parse multipart form: %s", err.Error())
 	}
 
 	// parse and validate file and post parameters
 	file, fileHeader, err := r.FormFile("file")
 	if err != nil {
+		getLogger().Errorf("form file failed, %s", err.Error())
 		return err
 	}
 	defer file.Close()
 	// Get and print out file size
 	fileSize := fileHeader.Size
-	fmt.Printf("File size bytes: %v\n", fileSize)
+	getLogger().Infof("File size bytes: %d", fileSize)
 	// validate file size
 	if fileSize > maxUploadSize {
-		return errors.New("file size reach max upload file size")
+		getLogger().Errorf("file size %d GB reach max upload file size %d GB", fileSize / bytes.GB, maxUploadSize / bytes.GB)
+		return fmt.Errorf("file size %d GB reach max upload file size %d GB", fileSize / bytes.GB, maxUploadSize / bytes.GB)
 	}
 	fileBytes, err := ioutil.ReadAll(file)
 	if err != nil {
+		getLogger().Errorf("ioutil.ReadAll failed, %s", err.Error())
 		return err
 	}
 
@@ -85,18 +86,25 @@ func (mgr * FileManager) UploadFile(r *http.Request) error {
 	case "application/zip":
 		break
 	default:
-		return errors.New("invalid file type")
+		getLogger().Errorf("invalid file type %s, not xxx.zip", detectedFileType)
+		return fmt.Errorf("invalid file type %s, not xxx.zip", detectedFileType)
 	}
 	newPath := filepath.Join(uploadPath, "data.zip")
-	fmt.Printf("FileType: %s, File: %s\n", detectedFileType, newPath)
+	getLogger().Infof("FileType: %s, File: %s", detectedFileType, newPath)
 
 	// write file
 	newFile, err := os.Create(newPath)
 	if err != nil {
+		getLogger().Errorf("create new file %s failed, %s", newPath, err.Error())
 		return err
 	}
 	defer newFile.Close() // idempotent, okay to call twice
-	if _, err := newFile.Write(fileBytes); err != nil || newFile.Close() != nil {
+	if _, err = newFile.Write(fileBytes); err != nil {
+		getLogger().Errorf("write new file failed %s", err.Error())
+		return err
+	}
+	if err = newFile.Close(); err != nil {
+		getLogger().Errorf("close file failed %s", err.Error())
 		return err
 	}
 	return nil
@@ -107,12 +115,12 @@ func (mgr * FileManager) DownloadFile(r *http.Request) error {
 	return nil
 }
 
-func (mgr * FileManager) zipDir(dir string, zipFile string) error {
+func (mgr * FileManager) ZipDir(dir string, zipFile string) error {
 	getLogger().Infof("begin zipDir: dir[%s] to file[%s]", dir, zipFile)
 	defer getLogger().Info("end zipDir")
 	fz, err := os.Create(zipFile)
 	if err != nil {
-		return fmt.Errorf("Create zip file failed: %s", err.Error())
+		return fmt.Errorf("Create zip file failed, %s", err.Error())
 	}
 	defer fz.Close()
 
@@ -146,7 +154,7 @@ func (mgr * FileManager) zipDir(dir string, zipFile string) error {
 	return nil
 }
 
-func (mgr * FileManager) unzipDir(zipFile string, dir string) error {
+func (mgr * FileManager) UnzipDir(zipFile string, dir string) error {
 	getLogger().Infof("begin unzipDir: file[%s] to dir[%s]", zipFile, dir)
 	defer getLogger().Info("end unzipDir")
 	r, err := zip.OpenReader(zipFile)

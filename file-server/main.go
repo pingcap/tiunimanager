@@ -40,7 +40,7 @@ import (
 func main() {
 	f := framework.InitBaseFrameworkFromArgs(framework.FileMngService,
 		defaultPortForLocal,
-		initFileManager,
+		initManager,
 	)
 
 	f.PrepareService(func(service micro.Service) error {
@@ -150,7 +150,8 @@ func computeApproximateRequestSize(r *http.Request) int {
 	return s
 }
 
-func initFileManager(f *framework.BaseFramework) error {
+func initManager(f *framework.BaseFramework) error {
 	service.InitFileManager()
+	service.InitDirManager()
 	return nil
 }

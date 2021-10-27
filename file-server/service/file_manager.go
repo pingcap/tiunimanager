@@ -17,7 +17,9 @@ package service
 
 import (
 	"archive/zip"
+	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/labstack/gommon/bytes"
 	"io"
 	"io/ioutil"
@@ -28,33 +30,40 @@ import (
 	"sync"
 )
 
-const maxUploadSize int64 = 1 * bytes.GB
+const maxFileSize int64 = 1 * bytes.GB
 const maxUploadNum int32 = 3
+const maxDownloadNum int32 = 3
 
 var FileMgr FileManager
 
 type FileManager struct {
-	maxUploadSize 	int64
+	maxFileSize 	int64
 	uploadCount 	int32
-	mutex 			sync.RWMutex
+	downloadCount 	int32
+	upMutex 		sync.Mutex
+	downMutex 		sync.Mutex
 }
 
 func InitFileManager() *FileManager {
 	FileMgr = FileManager{
 		uploadCount: 0,
+		downloadCount: 0,
+		maxFileSize: maxFileSize,
 	}
 	return &FileMgr
 }
 
 func (mgr * FileManager) UploadFile(r *http.Request, uploadPath string) error {
+	getLogger().Infof("begin UploadFile: uploadPath %s", uploadPath)
+	defer getLogger().Info("end UploadFile")
 	if !mgr.checkUploadCnt() {
 		getLogger().Errorf("upload goroutine reach max, %d", maxUploadNum)
 		return fmt.Errorf("upload goroutine reach max, %d", maxUploadNum)
 	}
-
 	mgr.addUploadCnt()
 	defer mgr.reduceUploadCnt()
-	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+
+	if err := r.ParseMultipartForm(mgr.maxFileSize); err != nil {
 		getLogger().Errorf("could not parse multipart form: %s", err.Error())
 		return fmt.Errorf("could not parse multipart form: %s", err.Error())
 	}
@@ -70,9 +79,9 @@ func (mgr * FileManager) UploadFile(r *http.Request, uploadPath string) error {
 	fileSize := fileHeader.Size
 	getLogger().Infof("File size bytes: %d", fileSize)
 	// validate file size
-	if fileSize > maxUploadSize {
-		getLogger().Errorf("file size %d GB reach max upload file size %d GB", fileSize / bytes.GB, maxUploadSize / bytes.GB)
-		return fmt.Errorf("file size %d GB reach max upload file size %d GB", fileSize / bytes.GB, maxUploadSize / bytes.GB)
+	if fileSize > mgr.maxFileSize {
+		getLogger().Errorf("file size %d GB reach max upload file size %d GB", fileSize / bytes.GB, mgr.maxFileSize / bytes.GB)
+		return fmt.Errorf("file size %d GB reach max upload file size %d GB", fileSize / bytes.GB, mgr.maxFileSize / bytes.GB)
 	}
 	fileBytes, err := ioutil.ReadAll(file)
 	if err != nil {
@@ -87,12 +96,17 @@ func (mgr * FileManager) UploadFile(r *http.Request, uploadPath string) error {
 		break
 	default:
 		getLogger().Errorf("invalid file type %s, not xxx.zip", detectedFileType)
-		return fmt.Errorf("invalid file type %s, not xxx.zip", detectedFileType)
+		return errors.New("invalid file type, not xxx.zip")
 	}
 	newPath := filepath.Join(uploadPath, "data.zip")
 	getLogger().Infof("FileType: %s, File: %s", detectedFileType, newPath)
 
 	// write file
+	err = os.MkdirAll(uploadPath, os.ModePerm)
+	if err != nil {
+		getLogger().Errorf("make dir %s failed, %s", uploadPath, err.Error())
+		return err
+	}
 	newFile, err := os.Create(newPath)
 	if err != nil {
 		getLogger().Errorf("create new file %s failed, %s", newPath, err.Error())
@@ -110,8 +124,32 @@ func (mgr * FileManager) UploadFile(r *http.Request, uploadPath string) error {
 	return nil
 }
 
-func (mgr * FileManager) DownloadFile(r *http.Request) error {
-	//todo
+func (mgr * FileManager) DownloadFile(c *gin.Context, filePath string) error {
+	getLogger().Infof("begin DownloadFile: filePath %s", filePath)
+	defer getLogger().Info("end DownloadFile")
+	if !mgr.checkUploadCnt() {
+		getLogger().Errorf("download goroutine reach max, %d", maxDownloadNum)
+		return fmt.Errorf("download goroutine reach max, %d", maxDownloadNum)
+	}
+	mgr.addDownloadCnt()
+	defer mgr.reduceDownloadCnt()
+
+	info, err := os.Stat(filePath)
+	if err != nil && !os.IsExist(err) {
+		getLogger().Errorf("stat file failed, %s", err.Error())
+		return err
+	}
+	if info.Size() > mgr.maxFileSize {
+		getLogger().Errorf("file size %d GB reach max download file size %d GB", info.Size() / bytes.GB, mgr.maxFileSize / bytes.GB)
+		return fmt.Errorf("file size %d GB reach max download file size %d GB", info.Size() / bytes.GB, mgr.maxFileSize / bytes.GB)
+	}
+
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Disposition", "attachment; filename="+DefaultDataFile)
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Header("Cache-Control", "no-cache")
+
+	c.File(filePath)
 	return nil
 }
 
@@ -120,7 +158,7 @@ func (mgr * FileManager) ZipDir(dir string, zipFile string) error {
 	defer getLogger().Info("end zipDir")
 	fz, err := os.Create(zipFile)
 	if err != nil {
-		return fmt.Errorf("Create zip file failed, %s", err.Error())
+		return fmt.Errorf("create zip file failed, %s", err.Error())
 	}
 	defer fz.Close()
 
@@ -132,16 +170,16 @@ func (mgr * FileManager) ZipDir(dir string, zipFile string) error {
 			relPath := strings.TrimPrefix(path, filepath.Dir(path))
 			fDest, err := w.Create(relPath)
 			if err != nil {
-				return fmt.Errorf("zip Create failed: %s", err.Error())
+				return fmt.Errorf("zip create failed: %s", err.Error())
 			}
 			fSrc, err := os.Open(path)
 			if err != nil {
-				return fmt.Errorf("zip Open failed: %s", err.Error())
+				return fmt.Errorf("zip open failed: %s", err.Error())
 			}
 			defer fSrc.Close()
 			_, err = io.Copy(fDest, fSrc)
 			if err != nil {
-				return fmt.Errorf("zip Copy failed: %s", err.Error())
+				return fmt.Errorf("zip copy failed: %s", err.Error())
 			}
 		}
 		return nil
@@ -159,7 +197,7 @@ func (mgr * FileManager) UnzipDir(zipFile string, dir string) error {
 	defer getLogger().Info("end unzipDir")
 	r, err := zip.OpenReader(zipFile)
 	if err != nil {
-		return fmt.Errorf("Open zip file failed: %s", err.Error())
+		return fmt.Errorf("open zip file failed: %s", err.Error())
 	}
 	defer r.Close()
 
@@ -172,21 +210,21 @@ func (mgr * FileManager) UnzipDir(zipFile string, dir string) error {
 			}
 			fDest, err := os.Create(path)
 			if err != nil {
-				getLogger().Errorf("unzip Create failed: %s", err.Error())
+				getLogger().Errorf("unzip create failed: %s", err.Error())
 				return
 			}
 			defer fDest.Close()
 
 			fSrc, err := f.Open()
 			if err != nil {
-				getLogger().Errorf("unzip Open failed: %s", err.Error())
+				getLogger().Errorf("unzip open failed: %s", err.Error())
 				return
 			}
 			defer fSrc.Close()
 
 			_, err = io.Copy(fDest, fSrc)
 			if err != nil {
-				getLogger().Errorf("unzip Copy failed: %s", err.Error())
+				getLogger().Errorf("unzip copy failed: %s", err.Error())
 				return
 			}
 		}()
@@ -195,19 +233,37 @@ func (mgr * FileManager) UnzipDir(zipFile string, dir string) error {
 }
 
 func (mgr *FileManager) addUploadCnt() {
-	mgr.mutex.Lock()
-	defer mgr.mutex.Unlock()
+	mgr.upMutex.Lock()
+	defer mgr.upMutex.Unlock()
 	mgr.uploadCount++
 }
 
 func (mgr *FileManager) reduceUploadCnt() {
-	mgr.mutex.Lock()
-	defer mgr.mutex.Unlock()
+	mgr.upMutex.Lock()
+	defer mgr.upMutex.Unlock()
 	if mgr.uploadCount > 0 {
 		mgr.uploadCount--
 	}
 }
 
 func (mgr *FileManager) checkUploadCnt() bool {
-	return mgr.uploadCount < maxUploadNum
+	return mgr.downloadCount < maxUploadNum
+}
+
+func (mgr *FileManager) addDownloadCnt() {
+	mgr.downMutex.Lock()
+	defer mgr.downMutex.Unlock()
+	mgr.downloadCount++
+}
+
+func (mgr *FileManager) reduceDownloadCnt() {
+	mgr.downMutex.Lock()
+	defer mgr.downMutex.Unlock()
+	if mgr.downloadCount > 0 {
+		mgr.downloadCount--
+	}
+}
+
+func (mgr *FileManager) checkDownloadCnt() bool {
+	return mgr.downloadCount < maxDownloadNum
 }

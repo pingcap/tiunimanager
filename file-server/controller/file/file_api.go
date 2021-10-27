@@ -17,31 +17,29 @@ package file
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"github.com/pingcap-inc/tiem/file-server/service"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"net/http"
-	"os"
 	"path/filepath"
 )
 
 func UploadImportFile(c *gin.Context) {
-	var req UploadRequest
-	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
-		_ = c.Error(err)
+	clusterId := c.Request.FormValue("clusterId")
+	if clusterId == "" {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, "invalid input empty clusterId"))
 		return
 	}
-	if req.ClusterId == "" {
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, "invalid input empty clusterId"))
-	}
-	uploadPath := service.DirMgr.GetImportPath(req.ClusterId)
+
+	uploadPath := service.DirMgr.GetImportPath(clusterId)
 	err := service.FileMgr.UploadFile(c.Request, uploadPath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		return
 	}
-	err = service.FileMgr.UnzipDir(filepath.Join(uploadPath, service.DefaultDataFile) + "/data.zip", uploadPath)
+	err = service.FileMgr.UnzipDir(filepath.Join(uploadPath, service.DefaultDataFile), filepath.Join(uploadPath, "data"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		return
 	}
 
 	c.JSON(http.StatusOK, controller.Success(nil))
@@ -50,23 +48,16 @@ func UploadImportFile(c *gin.Context) {
 func DownloadExportFile(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 	downloadPath := service.DirMgr.GetExportPath(clusterId)
-	err := service.FileMgr.ZipDir(downloadPath + "/data", filepath.Join(downloadPath, service.DefaultDataFile))
+	err := service.FileMgr.ZipDir(filepath.Join(downloadPath, "data"), filepath.Join(downloadPath, service.DefaultDataFile))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 	filePath := filepath.Join(downloadPath, service.DefaultDataFile)
-	_, err = os.Stat(filePath)
-	if err != nil && !os.IsExist(err) {
+	err = service.FileMgr.DownloadFile(c, filePath)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
-
-	c.Header("Content-Type", "application/octet-stream")
-	c.Header("Content-Disposition", "attachment; filename="+"data.zip")
-	c.Header("Content-Transfer-Encoding", "binary")
-	c.Header("Cache-Control", "no-cache")
-
-	c.File(filePath)
 }
 

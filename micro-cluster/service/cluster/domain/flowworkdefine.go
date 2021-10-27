@@ -118,7 +118,8 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowRestartCluster),
 		TaskNodes: map[string]*TaskDefine{
 			"start":       {"clusterRestart", "restartDone", "fail", SyncFuncTask, clusterRestart},
-			"restartDone": {"end", "", "fail", SyncFuncTask, ClusterEnd},
+			"restartDone": {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, restartDone},
+			"onlineDone":  {"end", "", "fail", SyncFuncTask, ClusterEnd},
 			"fail":        {"fail", "", "", SyncFuncTask, ClusterFail},
 		},
 		ContextParser: defaultContextParser,

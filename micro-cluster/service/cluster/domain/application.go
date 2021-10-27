@@ -156,6 +156,7 @@ func RestartCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggre
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
+	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
 }
 
@@ -359,6 +360,45 @@ func destroyTasks(task *TaskEntity, context *FlowContext) bool {
 // @Parameter context
 // @return bool
 func clusterRestart(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+	cluster.Restart()
+
+	getLogger().Infof("restart cluster %s", cluster.ClusterName)
+	restartTaskId, err := libtiup.MicroSrvTiupRestart(cluster.ClusterName, 0, []string{}, uint64(task.Id))
+	if err != nil {
+		getLogger().Errorf("call tiup api restart cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+	context.put("restartTaskId", restartTaskId)
+	getLogger().Infof("got restartTaskId %s", strconv.Itoa(int(restartTaskId)))
+
+	task.Success(nil)
+	return true
+}
+
+func restartDone(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+	getLogger().Infof("get cluster %s status...", cluster.ClusterName)
+
+	go func() {
+		for {
+			stat, statErrStr, err := libtiup.MicroSrvTiupGetTaskStatusByBizID(uint64(task.Id))
+			if err != nil {
+				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
+			}
+			if stat == dbpb.TiupTaskStatus_Finished {
+				getLogger().Infof(" cluster %s restart done.", cluster.ClusterName)
+				clusterAggregation.StatusModified = true
+				clusterAggregation.Cluster.Online()
+				ClusterRepo.Persist(clusterAggregation)
+				break
+			}
+			time.Sleep(time.Second * 2)
+		}
+	}()
 
 	task.Success(nil)
 	return true

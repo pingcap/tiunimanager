@@ -18,11 +18,12 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
-	"github.com/prometheus/client_golang/prometheus"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -82,13 +83,13 @@ func handleMetrics(start time.Time, funcName string, code int) {
 	duration := time.Now().Sub(start)
 	framework.Current.GetMetrics().MicroDurationHistogramMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
-		metrics.MethodLabel: funcName,
-		metrics.CodeLabel: strconv.Itoa(code)}).
+		metrics.MethodLabel:  funcName,
+		metrics.CodeLabel:    strconv.Itoa(code)}).
 		Observe(duration.Seconds())
 	framework.Current.GetMetrics().MicroRequestsCounterMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
-		metrics.MethodLabel: funcName,
-		metrics.CodeLabel: strconv.Itoa(code)}).
+		metrics.MethodLabel:  funcName,
+		metrics.CodeLabel:    strconv.Itoa(code)}).
 		Inc()
 }
 
@@ -323,7 +324,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 
 func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *clusterpb.GetBackupStrategyRequest, response *clusterpb.GetBackupStrategyResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "GetBackupStrategy",  int(response.GetStatus().GetCode()))
+	defer handleMetrics(start, "GetBackupStrategy", int(response.GetStatus().GetCode()))
 	strategy, err := domain.QueryBackupStrategy(ctx, request.GetOperator(), request.GetClusterId())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)

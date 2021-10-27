@@ -27,6 +27,7 @@ const (
 	ClusterStatusOnline  ClusterStatus = 1
 	ClusterStatusOffline ClusterStatus = 2
 	ClusterStatusDeleted ClusterStatus = 3
+	ClusterStatusRestart ClusterStatus = 4
 )
 
 var allClusterStatus = []ClusterStatus{
@@ -34,6 +35,7 @@ var allClusterStatus = []ClusterStatus{
 	ClusterStatusOnline,
 	ClusterStatusOffline,
 	ClusterStatusDeleted,
+	ClusterStatusRestart,
 }
 
 func ClusterStatusFromValue(v int) ClusterStatus {
@@ -57,6 +59,8 @@ func (s ClusterStatus) Display() string {
 		return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusOffline)
 	case ClusterStatusDeleted:
 		return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusDeleted)
+	case ClusterStatusRestart:
+		return copywriting2.DisplayByDefault(copywriting2.CWFlowRestartCluster)
 	}
 
 	panic("Unknown cluster status")

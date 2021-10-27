@@ -20,11 +20,13 @@ package service
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"testing"
 	"time"
 )
 
 func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	record := &dbpb.TransportRecordDTO{
 		ID:            "1111",
 		ClusterId:     "tc-123",
@@ -48,6 +50,7 @@ func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
 }
 
 func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	record := &dbpb.TransportRecordDTO{
 		ID:            "2222",
 		ClusterId:     "tc-123",
@@ -84,6 +87,7 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 }
 
 func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	record := &dbpb.TransportRecordDTO{
 		ID:            "3333",
 		ClusterId:     "tc-123",
@@ -117,6 +121,7 @@ func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 }
 
 func TestDBServiceHandler_ListTrasnportRecord(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	record := &dbpb.TransportRecordDTO{
 		ID:            "4444",
 		ClusterId:     "tc-123",

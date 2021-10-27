@@ -17,7 +17,9 @@
 
 package metrics
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 type Metrics struct {
 	// process boot metrics
@@ -59,6 +61,24 @@ func InitMetrics() *Metrics {
 		TiUPRequestsCounterMetric:      RegisterNewCounterVec(TiUPRequestsCounterMetricDef),
 		TiUPDurationHistogramMetric:    RegisterNewHistogramVec(TiUPDurationHistogramMetricDef),
 		ServerStartTimeGaugeMetric:     RegisterNewGaugeVec(ServerStartTimeGaugeMetricDef),
+	}
+	return &m
+}
+
+func InitMetricsForUT() *Metrics {
+	m := Metrics{
+		BootTimeGaugeMetric:            RegisterNewGaugeVecForUT(BootTimeGaugeMetricDef),
+		APIRequestsCounterMetric:       RegisterNewCounterVecForUT(APIRequestsCounterMetricDef),
+		RequestDurationHistogramMetric: RegisterNewHistogramVecForUT(RequestDurationHistogramMetricDef),
+		RequestSizeHistogramMetric:     RegisterNewHistogramVecForUT(RequestSizeHistogramMetricDef),
+		ResponseSizeHistogramMetric:    RegisterNewHistogramVecForUT(ResponseSizeHistogramMetricDef),
+		MicroRequestsCounterMetric:     RegisterNewCounterVecForUT(MicroRequestsCounterMetricDef),
+		MicroDurationHistogramMetric:   RegisterNewHistogramVecForUT(MicroDurationHistogramMetricDef),
+		SqliteRequestsCounterMetric:    RegisterNewCounterVecForUT(SqliteRequestsCounterMetricDef),
+		SqliteDurationHistogramMetric:  RegisterNewHistogramVecForUT(SqliteDurationHistogramMetricDef),
+		TiUPRequestsCounterMetric:      RegisterNewCounterVecForUT(TiUPRequestsCounterMetricDef),
+		TiUPDurationHistogramMetric:    RegisterNewHistogramVecForUT(TiUPDurationHistogramMetricDef),
+		ServerStartTimeGaugeMetric:     RegisterNewGaugeVecForUT(ServerStartTimeGaugeMetricDef),
 	}
 	return &m
 }

@@ -158,6 +158,26 @@ func RestartCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggre
 	return clusterAggregation, nil
 }
 
+func StopCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
+	operator := parseOperatorFromDTO(ope)
+
+	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
+	clusterAggregation.CurrentOperator = operator
+
+	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowRestartCluster, operator)
+	if err != nil {
+		return nil, err
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.Start()
+
+	return clusterAggregation, nil
+}
+
 func ListCluster(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterQueryReqDTO) ([]*ClusterAggregation, int, error) {
 	return ClusterRepo.Query(req.ClusterId, req.ClusterName, req.ClusterType, req.ClusterStatus, req.ClusterTag,
 		int(req.PageReq.Page), int(req.PageReq.PageSize))
@@ -410,6 +430,17 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 	if err != nil {
 		return false
 	}
+	task.Success(nil)
+	return true
+}
+
+// clusterStop
+// @Description: stop cluster
+// @Parameter task
+// @Parameter context
+// @return bool
+func clusterStop(task *TaskEntity, context *FlowContext) bool {
+
 	task.Success(nil)
 	return true
 }

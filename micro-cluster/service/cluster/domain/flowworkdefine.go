@@ -123,6 +123,16 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		},
 		ContextParser: defaultContextParser,
 	},
+	FlowStopCluster: {
+		FlowName:    FlowStopCluster,
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowStopCluster),
+		TaskNodes: map[string]*TaskDefine{
+			"start":    {"clusterStop", "stopDone", "fail", SyncFuncTask, clusterStop},
+			"stopDone": {"end", "", "fail", SyncFuncTask, ClusterEnd},
+			"fail":     {"fail", "", "", SyncFuncTask, ClusterFail},
+		},
+		ContextParser: defaultContextParser,
+	},
 }
 
 type FlowWorkDefine struct {

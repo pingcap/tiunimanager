@@ -23,12 +23,6 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the proto package it is being compiled against.
-// A compilation error at this line likely means your copy of the
-// proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
-
 // Reference imports to suppress errors if they are not otherwise used.
 var _ api.Endpoint
 var _ context.Context
@@ -50,6 +44,7 @@ type ClusterService interface {
 	DeleteCluster(ctx context.Context, in *ClusterDeleteReqDTO, opts ...client.CallOption) (*ClusterDeleteRespDTO, error)
 	DetailCluster(ctx context.Context, in *ClusterDetailReqDTO, opts ...client.CallOption) (*ClusterDetailRespDTO, error)
 	RestartCluster(ctx context.Context, in *ClusterRestartReqDTO, opts ...client.CallOption) (*ClusterRestartRespDTO, error)
+	StopCluster(ctx context.Context, in *ClusterStopReqDTO, opts ...client.CallOption) (*ClusterStopRespDTO, error)
 	ImportData(ctx context.Context, in *DataImportRequest, opts ...client.CallOption) (*DataImportResponse, error)
 	ExportData(ctx context.Context, in *DataExportRequest, opts ...client.CallOption) (*DataExportResponse, error)
 	DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, opts ...client.CallOption) (*DataTransportQueryResponse, error)
@@ -139,6 +134,16 @@ func (c *clusterService) DetailCluster(ctx context.Context, in *ClusterDetailReq
 func (c *clusterService) RestartCluster(ctx context.Context, in *ClusterRestartReqDTO, opts ...client.CallOption) (*ClusterRestartRespDTO, error) {
 	req := c.c.NewRequest(c.name, "ClusterService.RestartCluster", in)
 	out := new(ClusterRestartRespDTO)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) StopCluster(ctx context.Context, in *ClusterStopReqDTO, opts ...client.CallOption) (*ClusterStopRespDTO, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.StopCluster", in)
+	out := new(ClusterStopRespDTO)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -445,6 +450,7 @@ type ClusterServiceHandler interface {
 	DeleteCluster(context.Context, *ClusterDeleteReqDTO, *ClusterDeleteRespDTO) error
 	DetailCluster(context.Context, *ClusterDetailReqDTO, *ClusterDetailRespDTO) error
 	RestartCluster(context.Context, *ClusterRestartReqDTO, *ClusterRestartRespDTO) error
+	StopCluster(context.Context, *ClusterStopReqDTO, *ClusterStopRespDTO) error
 	ImportData(context.Context, *DataImportRequest, *DataImportResponse) error
 	ExportData(context.Context, *DataExportRequest, *DataExportResponse) error
 	DescribeDataTransport(context.Context, *DataTransportQueryRequest, *DataTransportQueryResponse) error
@@ -486,6 +492,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		DeleteCluster(ctx context.Context, in *ClusterDeleteReqDTO, out *ClusterDeleteRespDTO) error
 		DetailCluster(ctx context.Context, in *ClusterDetailReqDTO, out *ClusterDetailRespDTO) error
 		RestartCluster(ctx context.Context, in *ClusterRestartReqDTO, out *ClusterRestartRespDTO) error
+		StopCluster(ctx context.Context, in *ClusterStopReqDTO, out *ClusterStopRespDTO) error
 		ImportData(ctx context.Context, in *DataImportRequest, out *DataImportResponse) error
 		ExportData(ctx context.Context, in *DataExportRequest, out *DataExportResponse) error
 		DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, out *DataTransportQueryResponse) error
@@ -545,6 +552,10 @@ func (h *clusterServiceHandler) DetailCluster(ctx context.Context, in *ClusterDe
 
 func (h *clusterServiceHandler) RestartCluster(ctx context.Context, in *ClusterRestartReqDTO, out *ClusterRestartRespDTO) error {
 	return h.ClusterServiceHandler.RestartCluster(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) StopCluster(ctx context.Context, in *ClusterStopReqDTO, out *ClusterStopRespDTO) error {
+	return h.ClusterServiceHandler.StopCluster(ctx, in, out)
 }
 
 func (h *clusterServiceHandler) ImportData(ctx context.Context, in *DataImportRequest, out *DataImportResponse) error {

@@ -162,6 +162,20 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 	return nil
 }
 
+func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.ClusterStopReqDTO, resp *clusterpb.ClusterStopRespDTO) (err error) {
+	getLogger().Info("stop cluster")
+
+	clusterAggregation, err := domain.StopCluster(req.GetOperator(), req.GetClusterId())
+	if err != nil {
+		getLogger().Error(err)
+		return err
+	}
+	resp.RespStatus = SuccessResponseStatus
+	resp.ClusterId = clusterAggregation.Cluster.Id
+	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+	return nil
+}
+
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.ClusterDetailReqDTO, resp *clusterpb.ClusterDetailRespDTO) (err error) {
 	getLogger().Info("detail cluster")
 

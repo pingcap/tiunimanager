@@ -222,6 +222,50 @@ func Restart(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// Stop stop a cluster
+// @Summary stop a cluster
+// @Description stop a cluster
+// @Tags cluster
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
+// @Success 200 {object} controller.CommonResult{data=StopClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/restart [post]
+func Stop(c *gin.Context) {
+	operator := controller.GetOperator(c)
+
+	reqDTO := &clusterpb.ClusterStopReqDTO{
+		Operator:  operator.ConvertToDTO(),
+		ClusterId: c.Param("clusterId"),
+	}
+
+	respDTO, err := client.ClusterClient.StopCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
+		o.RequestTimeout = time.Minute * 5
+		o.DialTimeout = time.Minute * 5
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+
+	status := respDTO.GetRespStatus()
+	if status.Code != 0 {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, status.Message))
+		return
+	}
+
+	result := controller.BuildCommonResult(int(status.Code), status.Message, StopClusterRsp{
+		ClusterId:  respDTO.GetClusterId(),
+		StatusInfo: *ParseStatusFromDTO(respDTO.GetClusterStatus()),
+	})
+	c.JSON(http.StatusOK, result)
+}
+
 // Detail show details of a cluster
 // @Summary show details of a cluster
 // @Description show details of a cluster

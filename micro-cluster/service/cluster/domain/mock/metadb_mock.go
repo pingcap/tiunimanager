@@ -19,10 +19,17 @@ type MockTiEMDBService struct {
 	recorder *MockTiEMDBServiceMockRecorder
 }
 
-func (m *MockTiEMDBService) UpdateClusterInfo(ctx context.Context, in *dbpb.DBUpdateClusterInfoRequest, opts ...client.CallOption) (*dbpb.DBUpdateClusterInfoResponse, error) {
+func (m *MockTiEMDBService) UpdateHostStatus(ctx context.Context, in *dbpb.DBUpdateHostStatusRequest, opts ...client.CallOption) (*dbpb.DBUpdateHostStatusResponse, error) {
 	panic("implement me")
 }
 
+func (m *MockTiEMDBService) ReserveHost(ctx context.Context, in *dbpb.DBReserveHostRequest, opts ...client.CallOption) (*dbpb.DBReserveHostResponse, error) {
+	panic("implement me")
+}
+
+func (m *MockTiEMDBService) UpdateClusterInfo(ctx context.Context, in *dbpb.DBUpdateClusterInfoRequest, opts ...client.CallOption) (*dbpb.DBUpdateClusterInfoResponse, error) {
+	panic("implement me")
+}
 // MockTiEMDBServiceMockRecorder is the mock recorder for MockTiEMDBService.
 type MockTiEMDBServiceMockRecorder struct {
 	mock *MockTiEMDBService

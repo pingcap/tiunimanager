@@ -87,6 +87,7 @@ func Route(g *gin.Engine) {
 
 			cluster.GET("/", clusterApi.Query)
 			cluster.DELETE("/:clusterId", clusterApi.Delete)
+			cluster.POST("/:clusterId/restart", clusterApi.Restart)
 			cluster.POST("/restore", backuprestore.Restore)
 			cluster.GET("/:clusterId/dashboard", clusterApi.DescribeDashboard)
 			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
@@ -143,8 +144,7 @@ func Route(g *gin.Engine) {
 
 			host.GET("failuredomains", warehouseApi.GetFailureDomain)
 
-			host.POST("update-host-status", resourceApi.UpdateHostStatus)
-			host.POST("reserve-host", resourceApi.ReserveHost)
+			host.PUT("hosts", resourceApi.UpdateHost)
 			// Add allochosts API for debugging, not release.
 			host.POST("allochosts", resourceApi.AllocHosts)
 		}

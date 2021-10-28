@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,8 +18,9 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"testing"
+
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/stretchr/testify/assert"
@@ -44,7 +44,10 @@ type usedPortStatistic struct {
 
 func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 
-	Dao.InitResourceDataForDev()
+	err := Dao.InitResourceDataForDev()
+	if err != nil {
+		t.Errorf("InitResourceDataForDev failed in RecycleResources() error = %v, ", err)
+	}
 
 	type args struct {
 		ctx context.Context

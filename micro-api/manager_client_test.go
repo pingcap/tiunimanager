@@ -238,3 +238,7 @@ func (s *ClusterFakeService) UpdateHostStatus(ctx context.Context, in *clusterpb
 func (s *ClusterFakeService) ReserveHost(ctx context.Context, in *clusterpb.ReserveHostRequest, opts ...micro.CallOption) (*clusterpb.ReserveHostResponse, error) {
 	panic("implement me")
 }
+
+func (s *ClusterFakeService) DescribeMonitor(ctx context.Context, in *clusterpb.DescribeMonitorRequest, opts ...micro.CallOption) (*clusterpb.DescribeMonitorResponse, error) {
+	panic("implement me")
+}

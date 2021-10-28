@@ -19,10 +19,11 @@ package models
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/stretchr/testify/assert"
@@ -1853,4 +1854,23 @@ func TestAllocResources_SpecifyHost_Strategy_No_Disk(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUpdateHost(t *testing.T) {
+	id1, _ := CreateTestHost("Region1", "TestUpdateZone", "3-1", "HostName1", "474.111.111.140", string(resource.General), string(resource.SSD), 17, 64, 3)
+	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
+	reserved_req := dbpb.DBReserveHostRequest{
+		Reserved: true,
+	}
+	reserved_req.HostIds = append(reserved_req.HostIds, id1)
+	Dao.ResourceManager().ReserveHost(context.TODO(), &reserved_req)
+	update_req := dbpb.DBUpdateHostStatusRequest{
+		Status: 2,
+	}
+	update_req.HostIds = append(update_req.HostIds, id1)
+	Dao.ResourceManager().UpdateHostStatus(context.TODO(), &update_req)
+	var host resource.Host
+	MetaDB.First(&host, "IP = ?", "474.111.111.140")
+	assert.Equal(t, int32(2), host.Status)
+	assert.Equal(t, true, host.Reserved)
 }

@@ -124,6 +124,8 @@ func InitBaseFrameworkForUt(serviceName ServiceNameEnum, opts ...Opt) *BaseFrame
 	}
 	f.parseArgs(serviceName)
 
+	f.metrics = metrics.InitMetricsForUT()
+	f.serviceMeta = NewServiceMetaFromArgs(serviceName, f.args)
 	f.initOpts = opts
 	f.Init()
 

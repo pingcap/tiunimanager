@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,12 +17,13 @@
 package domain
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/stretchr/testify/assert"
 )
 
 func defaultOperator() *Operator {
@@ -291,6 +291,18 @@ func TestCreateCluster(t *testing.T) {
 
 func TestDeleteCluster(t *testing.T) {
 	got, err := DeleteCluster(&clusterpb.OperatorDTO{
+		Id:       "testoperator",
+		Name:     "testoperator",
+		TenantId: "testoperator",
+	}, "testCluster")
+
+	assert.NoError(t, err)
+	assert.Equal(t, "testCluster", got.Cluster.ClusterName)
+
+}
+
+func TestRestartCluster(t *testing.T) {
+	got, err := RestartCluster(&clusterpb.OperatorDTO{
 		Id:       "testoperator",
 		Name:     "testoperator",
 		TenantId: "testoperator",

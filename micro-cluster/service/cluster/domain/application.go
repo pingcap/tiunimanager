@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -20,14 +19,16 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"path/filepath"
+	"strconv"
+	"time"
+
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
-	"path/filepath"
-	"strconv"
-	"time"
 
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
@@ -37,11 +38,13 @@ import (
 
 type ClusterAggregation struct {
 	Cluster *Cluster
+	ClusterMetadata spec.Metadata
+	ClusterComponents []*ComponentGroup
+
+	CurrentWorkFlow             *FlowWorkEntity
+	CurrentOperator *Operator
 
 	CurrentTopologyConfigRecord *TopologyConfigRecord
-	CurrentWorkFlow             *FlowWorkEntity
-
-	CurrentOperator *Operator
 
 	MaintainCronTask *CronTaskEntity
 	HistoryWorkFLows []*FlowWorkEntity
@@ -50,6 +53,7 @@ type ClusterAggregation struct {
 
 	AvailableResources *clusterpb.AllocHostResponse
 
+	BaseInfoModified bool
 	StatusModified bool
 	FlowModified   bool
 
@@ -63,6 +67,7 @@ type ClusterAggregation struct {
 }
 
 var contextClusterKey = "clusterAggregation"
+var contextTakeoverReqKey = "takeoverRequest"
 
 func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
@@ -113,6 +118,55 @@ func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBas
 	return clusterAggregation, nil
 }
 
+// TakeoverClusters
+// @Description:
+// @Parameter ope
+// @Parameter req
+// @return []*ClusterAggregation
+// @return error
+func TakeoverClusters(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeoverReqDTO) ([]*ClusterAggregation, error) {
+	operator := parseOperatorFromDTO(ope)
+
+	if len(req.ClusterNames) != 1 {
+		return nil, common.NewBizError(common.TIEM_PARAMETER_INVALID)
+	}
+
+	clusterName := req.ClusterNames[0]
+	cluster := &Cluster{
+		ClusterName:    clusterName,
+		TenantId:       operator.TenantId,
+		OwnerId:        operator.Id,
+	}
+
+	// persist the cluster into database
+	err := ClusterRepo.AddCluster(cluster)
+
+	if err != nil {
+		return nil, err
+	}
+
+	clusterAggregation := &ClusterAggregation {
+		Cluster:          cluster,
+		MaintainCronTask: GetDefaultMaintainTask(),
+		CurrentOperator:  operator,
+	}
+
+	// Start the workflow to takeover a cluster instance
+	flow, err := CreateFlowWork(cluster.Id, FlowTakeoverCluster, operator)
+	if err != nil {
+		return nil, err
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.AddContext(contextTakeoverReqKey, req)
+
+	flow.Start()
+
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
+	ClusterRepo.Persist(clusterAggregation)
+	return []*ClusterAggregation{clusterAggregation}, nil
+}
+
 func (clusterAggregation *ClusterAggregation) updateWorkFlow(flow *FlowWorkEntity) {
 	clusterAggregation.CurrentWorkFlow = flow
 	clusterAggregation.FlowModified = true
@@ -135,6 +189,26 @@ func DeleteCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggreg
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	TaskRepo.Persist(flow)
 	ClusterRepo.Persist(clusterAggregation)
+	return clusterAggregation, nil
+}
+
+func RestartCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
+	operator := parseOperatorFromDTO(ope)
+
+	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
+	clusterAggregation.CurrentOperator = operator
+
+	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowRestartCluster, operator)
+	if err != nil {
+		return nil, err
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.Start()
+
 	return clusterAggregation, nil
 }
 
@@ -183,7 +257,7 @@ func ModifyParameters(ope *clusterpb.OperatorDTO, clusterId string, content stri
 }
 
 func GetParameters(ope *clusterpb.OperatorDTO, clusterId string) (parameterJson string, err error) {
-	return InstanceRepo.QueryParameterJson(clusterId)
+	return RemoteClusterProxy.QueryParameterJson(clusterId)
 }
 
 func (aggregation *ClusterAggregation) loadWorkFlow() error {
@@ -308,6 +382,67 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
+func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
+	req := context.value(contextTakeoverReqKey).(*clusterpb.ClusterTakeoverReqDTO)
+
+	metadata, err := MetadataMgr.FetchFromRemoteCluster(nil, req)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation.ClusterMetadata = metadata
+
+	clusterAggregation.CurrentTopologyConfigRecord = &TopologyConfigRecord{
+		TenantId:    clusterAggregation.Cluster.TenantId,
+		ClusterId:   clusterAggregation.Cluster.Id,
+		ConfigModel: metadata.GetTopology().(*spec.Specification),
+	}
+
+	clusterType, _, _, version := MetadataMgr.ParseClusterInfoFromMetaData(*metadata.GetBaseMeta())
+	cluster := clusterAggregation.Cluster
+	cluster.ClusterType = *knowledge.ClusterTypeFromCode(clusterType)
+	cluster.ClusterVersion = *knowledge.ClusterVersionFromCode(version)
+	cluster.Tags = []string{"takeover"}
+
+	clusterAggregation.ConfigModified = true
+	clusterAggregation.BaseInfoModified = true
+
+	task.Success(nil)
+	return true
+}
+
+func buildTopology(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+
+	components, err := MetadataMgr.ParseComponentsFromMetaData(clusterAggregation.ClusterMetadata)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	clusterAggregation.ClusterComponents = components
+	task.Success(nil)
+	return true
+}
+
+func takeoverResource(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+
+	allocReq , err := TopologyPlanner.AnalysisResourceRequest(clusterAggregation.Cluster, clusterAggregation.ClusterComponents)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	allocResponse := &clusterpb.BatchAllocResponse{}
+	resource.NewResourceManager().AllocResourcesInBatch(ctx.TODO(), allocReq, allocResponse)
+
+	task.Success(allocReq)
+	return true
+}
+
 func deleteCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.Cluster.Delete()
@@ -328,6 +463,68 @@ func freedResource(task *TaskEntity, context *FlowContext) bool {
 }
 
 func destroyTasks(task *TaskEntity, context *FlowContext) bool {
+	task.Success(nil)
+	return true
+}
+
+// clusterRestart
+// @Description: restart cluster
+// @Parameter task
+// @Parameter context
+// @return bool
+func clusterRestart(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	getLogger().Infof("restart cluster %s", cluster.ClusterName)
+	restartTaskId, err := libtiup.MicroSrvTiupRestart(cluster.ClusterName, 0, []string{}, uint64(task.Id))
+	if err != nil {
+		getLogger().Errorf("call tiup api restart cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+	context.put("restartTaskId", restartTaskId)
+	getLogger().Infof("got restartTaskId %s", strconv.Itoa(int(restartTaskId)))
+
+	go func() {
+		// get cluster restart status async
+		for {
+			stat, statErrStr, err := libtiup.MicroSrvTiupGetTaskStatus(restartTaskId)
+			if err != nil {
+				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
+				break
+			}
+			if stat == dbpb.TiupTaskStatus_Finished {
+				getLogger().Infof(" cluster %s restart done.", cluster.ClusterName)
+				clusterAggregation.StatusModified = true
+				clusterAggregation.Cluster.Online()
+				err := ClusterRepo.Persist(clusterAggregation)
+				if err != nil {
+					getLogger().Errorf("cluster repo persist err = %v", err)
+					return
+				}
+				break
+			} else if stat == dbpb.TiupTaskStatus_Error {
+				getLogger().Infof(" cluster %s restart fail.", cluster.ClusterName)
+				clusterAggregation.StatusModified = true
+				clusterAggregation.Cluster.Status = ClusterStatusOffline
+				err := ClusterRepo.Persist(clusterAggregation)
+				if err != nil {
+					getLogger().Errorf("cluster repo persist err = %v", err)
+					return
+				}
+				break
+			}
+			time.Sleep(time.Second * 2)
+		}
+	}()
+
+	clusterAggregation.Cluster.Restart()
+	clusterAggregation.StatusModified = true
+	err = ClusterRepo.Persist(clusterAggregation)
+	if err != nil {
+		return false
+	}
 	task.Success(nil)
 	return true
 }
@@ -439,6 +636,7 @@ func parseOperatorFromDTO(dto *clusterpb.OperatorDTO) (operator *Operator) {
 		Id:       dto.Id,
 		Name:     dto.Name,
 		TenantId: dto.TenantId,
+		ManualOperator: dto.ManualOperator,
 	}
 	return
 }
@@ -518,6 +716,7 @@ func tidbPort() int {
 
 func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spec.Specification {
 
+	meta := new(spec.ClusterMeta)
 	tidbHosts := resource.TidbHosts
 	tikvHosts := resource.TikvHosts
 	pdHosts := resource.PdHosts
@@ -545,6 +744,10 @@ func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spe
 	tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
 		Host:      pdHosts[0].Ip,
 		DeployDir: filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "grafanas-deploy"),
+		AnonymousEnable: true,
+		DefaultTheme: "light",
+		OrgName: "Main Org.",
+		OrgRole: "Viewer",
 	})
 	// Deal with PDServers, TiDBServers, TiKVServers
 	for _, v := range pdHosts {
@@ -569,5 +772,8 @@ func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spe
 		})
 	}
 
+	//meta.SetUser()
+	//meta.SetVersion()
+	meta.SetTopology(tiupConfig)
 	return tiupConfig
 }

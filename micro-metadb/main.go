@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -22,8 +21,10 @@ import (
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	"github.com/pingcap-inc/tiem/micro-metadb/registry"
 	dbService "github.com/pingcap-inc/tiem/micro-metadb/service"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func main() {
@@ -48,6 +49,10 @@ func main() {
 	f.PrepareService(func(service micro.Service) error {
 		return dbpb.RegisterTiEMDBServiceHandler(service.Server(), dbService.NewDBServiceHandler(f.GetDataDir(), f))
 	})
+
+	f.GetMetrics().ServerStartTimeGaugeMetric.
+		With(prometheus.Labels{metrics.ServiceLabel: f.GetServiceMeta().ServiceName.ServerName()}).
+		SetToCurrentTime()
 
 	err := f.StartService()
 	if nil != err {

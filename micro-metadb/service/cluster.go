@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"gorm.io/gorm"
+	"time"
 
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
@@ -109,6 +110,27 @@ func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbpb.D
 	log.Error(errMsg)
 
 	// todo handle error
+	return err
+}
+
+func (handler *DBServiceHandler) UpdateClusterInfo(ctx context.Context, req *dbpb.DBUpdateClusterInfoRequest, resp *dbpb.DBUpdateClusterInfoResponse) (err error) {
+	if nil == req || nil == resp {
+		return errors.Errorf("UpdateClusterInfo has invalid parameter")
+	}
+	log := framework.Log()
+	clusterManager := handler.Dao().ClusterManager()
+	do, err := clusterManager.UpdateClusterInfo(ctx, req.ClusterId, req.Name, req.ClusterType, req.VersionCode, req.Tags, req.Tls)
+	if nil == err {
+		resp.Status = ClusterSuccessResponseStatus
+		resp.Cluster = convertToClusterDTO(do, nil)
+		log.Infof("UpdateClusterInfo successful, clusterId: %s, req: %s, error: %v",
+			req.GetClusterId(), req, err)
+	} else {
+		err = errors.New(fmt.Sprintf("UpdateClusterInfo failed, clusterId: %s, req: %s, error: %v",
+			req.GetClusterId(), req, err))
+		log.Infof("UpdateClusterInfo failed, clusterId: %s, req: %s, error: %v",
+			req.GetClusterId(), req, err)
+	}
 	return err
 }
 
@@ -222,6 +244,8 @@ func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbpb.DBLi
 }
 
 func (handler *DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbpb.DBSaveBackupRecordRequest, resp *dbpb.DBSaveBackupRecordResponse) (err error) {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "SaveBackupRecord", int(resp.GetStatus().GetCode()))
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveBackupRecord has invalid parameter")
 	}
@@ -242,6 +266,8 @@ func (handler *DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbpb
 }
 
 func (handler *DBServiceHandler) UpdateBackupRecord(ctx context.Context, req *dbpb.DBUpdateBackupRecordRequest, resp *dbpb.DBUpdateBackupRecordResponse) (err error) {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "UpdateBackupRecord", int(resp.GetStatus().GetCode()))
 	if nil == req || nil == resp {
 		return errors.Errorf("UpdateBackupRecord has invalid parameter")
 	}
@@ -259,6 +285,8 @@ func (handler *DBServiceHandler) UpdateBackupRecord(ctx context.Context, req *db
 }
 
 func (handler *DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *dbpb.DBDeleteBackupRecordRequest, resp *dbpb.DBDeleteBackupRecordResponse) (err error) {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "DeleteBackupRecord", int(resp.GetStatus().GetCode()))
 	if nil == req || nil == resp {
 		return errors.Errorf("DeleteBackupRecord has invalid parameter")
 	}
@@ -276,6 +304,8 @@ func (handler *DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *db
 }
 
 func (handler *DBServiceHandler) QueryBackupRecords(ctx context.Context, req *dbpb.DBQueryBackupRecordRequest, resp *dbpb.DBQueryBackupRecordResponse) (err error) {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "QueryBackupRecords", int(resp.GetStatus().GetCode()))
 	if nil == req || nil == resp {
 		return errors.Errorf("QueryBackupRecords has invalid parameter")
 	}
@@ -292,6 +322,8 @@ func (handler *DBServiceHandler) QueryBackupRecords(ctx context.Context, req *db
 }
 
 func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbpb.DBListBackupRecordsRequest, resp *dbpb.DBListBackupRecordsResponse) (err error) {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "ListBackupRecords", int(resp.GetStatus().GetCode()))
 	if nil == req || nil == resp {
 		return errors.Errorf("ListBackupRecords has invalid parameter")
 	}
@@ -322,6 +354,8 @@ func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbp
 }
 
 func (handler *DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbpb.DBSaveRecoverRecordRequest, resp *dbpb.DBSaveRecoverRecordResponse) (err error) {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "SaveRecoverRecord", int(resp.GetStatus().GetCode()))
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveRecoverRecord has invalid parameter")
 	}
@@ -342,6 +376,8 @@ func (handler *DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbp
 }
 
 func (handler *DBServiceHandler) SaveBackupStrategy(ctx context.Context, req *dbpb.DBSaveBackupStrategyRequest, resp *dbpb.DBSaveBackupStrategyResponse) (err error) {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "SaveBackupStrategy", int(resp.GetStatus().GetCode()))
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveBackupStrategy has invalid parameter")
 	}
@@ -360,6 +396,8 @@ func (handler *DBServiceHandler) SaveBackupStrategy(ctx context.Context, req *db
 }
 
 func (handler *DBServiceHandler) QueryBackupStrategy(ctx context.Context, req *dbpb.DBQueryBackupStrategyRequest, resp *dbpb.DBQueryBackupStrategyResponse) (err error) {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "QueryBackupStrategy", int(resp.GetStatus().GetCode()))
 	if nil == req || nil == resp {
 		return errors.Errorf("QueryBackupStrategy has invalid parameter")
 	}
@@ -377,6 +415,8 @@ func (handler *DBServiceHandler) QueryBackupStrategy(ctx context.Context, req *d
 }
 
 func (handler *DBServiceHandler) QueryBackupStrategyByTime(ctx context.Context, req *dbpb.DBQueryBackupStrategyByTimeRequest, resp *dbpb.DBQueryBackupStrategyByTimeResponse) (err error) {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "QueryBackupStrategyByTime", int(resp.GetStatus().GetCode()))
 	if nil == req || nil == resp {
 		return errors.Errorf("QueryBackupStrategyByTime has invalid parameter")
 	}

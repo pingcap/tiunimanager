@@ -20,6 +20,7 @@ package models
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"strings"
 	"testing"
 	"time"
@@ -83,6 +84,7 @@ func TestDeleteCluster(t *testing.T) {
 			OwnerId: "111",
 		}
 		MetaDB.Create(cluster)
+		defer MetaDB.Delete(cluster)
 
 		newCluster, err := clusterTbl.DeleteCluster(context.TODO(), cluster.ID)
 
@@ -129,6 +131,7 @@ func TestUpdateClusterDemand(t *testing.T) {
 			OwnerId: "ttt",
 		}
 		MetaDB.Create(cluster)
+		defer MetaDB.Delete(cluster)
 
 		demandId := cluster.CurrentDemandId
 
@@ -167,6 +170,7 @@ func TestUpdateClusterFlowId(t *testing.T) {
 			OwnerId: "ttt",
 		}
 		MetaDB.Create(cluster)
+		defer MetaDB.Delete(cluster)
 
 		flowId := uint(111)
 
@@ -202,6 +206,7 @@ func TestUpdateClusterStatus(t *testing.T) {
 			OwnerId: "ttt",
 		}
 		MetaDB.Create(cluster)
+		defer MetaDB.Delete(cluster)
 
 		status := int8(2)
 
@@ -237,6 +242,7 @@ func TestUpdateTopologyConfig(t *testing.T) {
 			OwnerId: "ttt",
 		}
 		MetaDB.Create(cluster)
+		defer MetaDB.Delete(cluster)
 
 		currentConfigId := cluster.CurrentTopologyConfigId
 
@@ -264,44 +270,56 @@ func TestUpdateTopologyConfig(t *testing.T) {
 }
 
 func TestListClusters(t *testing.T) {
-	MetaDB.Create(&Cluster{
+	c1 := &Cluster{
 		Entity:  Entity{TenantId: "111"},
 		Type:    "test_type_1",
 		Name:    "test_cluster_name",
 		Tags:    ",tag,",
 		OwnerId: "ttt",
-	})
-	MetaDB.Create(&Cluster{
+	}
+	MetaDB.Create(c1)
+	defer MetaDB.Delete(c1)
+
+	c2 := &Cluster{
 		Entity:  Entity{TenantId: "111"},
 		Type:    "test_type_1",
 		Name:    "1111test",
 		Tags:    "tag,",
 		OwnerId: "ttt",
-	})
-	MetaDB.Create(&Cluster{
+	}
+	MetaDB.Create(c2)
+	defer MetaDB.Delete(c2)
+
+	c3 := &Cluster{
 		Entity:  Entity{TenantId: "111"},
 		Type:    "whatever",
 		Name:    "test_cluster_name",
 		Tags:    ",tag",
 		OwnerId: "ttt",
-	})
-	cluster := &Cluster{
+	}
+	MetaDB.Create(c3)
+	defer MetaDB.Delete(c3)
+
+	c4 := &Cluster{
 		Entity:  Entity{TenantId: "111"},
 		Type:    "test_type_1",
 		Name:    "whatever",
 		Tags:    "1,tag,2",
 		OwnerId: "ttt",
 	}
-	MetaDB.Create(cluster)
+	MetaDB.Create(c4)
+	defer MetaDB.Delete(c4)
 
-	MetaDB.Create(&Cluster{
+	c5 := &Cluster{
 		Entity:  Entity{TenantId: "111"},
 		OwnerId: "ttt",
-	})
+	}
+	MetaDB.Create(c5)
+	defer MetaDB.Delete(c5)
 
 	clusterTbl := Dao.ClusterManager()
 	t.Run("cluster id", func(t *testing.T) {
-		clusters, total, err := clusterTbl.ListClusters(context.TODO(), cluster.ID, "", "", "", "", 0, 10)
+		clusters, total, err := clusterTbl.ListClusters(context.TODO(), c4.ID, "", "", "", "", 0, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
@@ -314,8 +332,8 @@ func TestListClusters(t *testing.T) {
 			t.Errorf("ListClusters() clusters len = %v, want = %v", len(clusters), 1)
 		}
 
-		if clusters[0].ID != cluster.ID || clusters[0].Name != cluster.Name {
-			t.Errorf("ListClusters() clusters = %v, want = %v", clusters[0], cluster)
+		if clusters[0].ID != c4.ID || clusters[0].Name != c4.Name {
+			t.Errorf("ListClusters() clusters = %v, want = %v", clusters[0], c4)
 		}
 	})
 
@@ -362,7 +380,7 @@ func TestListClusters(t *testing.T) {
 	})
 
 	t.Run("cluster status", func(t *testing.T) {
-		clusterTbl.UpdateClusterStatus(context.TODO(), cluster.ID, 9)
+		clusterTbl.UpdateClusterStatus(context.TODO(), c4.ID, 9)
 		clusters, total, err := clusterTbl.ListClusters(context.TODO(), "", "", "", "0", "", 0, 10)
 
 		if err != nil {
@@ -502,21 +520,6 @@ func TestListClusters(t *testing.T) {
 }
 
 func TestListClusterDetails(t *testing.T) {
-	cluster1 := &Cluster{
-		Entity:  Entity{TenantId: "111"},
-		Type:    "someType",
-		Name:    "cluster1",
-		Tags:    "",
-		OwnerId: "me",
-	}
-	MetaDB.Create(cluster1)
-	f, _ := CreateFlow(MetaDB, "flow1", "flow1", cluster1.ID, "111")
-	defer MetaDB.Delete(f)
-	clusterTbl := Dao.ClusterManager()
-	cluster1, _, _ = clusterTbl.UpdateClusterDemand(context.TODO(), cluster1.ID, "demand1", "111")
-	cluster1, _ = clusterTbl.UpdateClusterFlowId(context.TODO(), cluster1.ID, f.ID)
-	cluster1, _ = clusterTbl.UpdateTopologyConfig(context.TODO(), cluster1.ID, "tiup1", "111")
-
 	for i := 0; i < 10; i++ {
 		MetaDB.Create(&Cluster{
 			Entity:  Entity{TenantId: "111"},
@@ -526,6 +529,23 @@ func TestListClusterDetails(t *testing.T) {
 			OwnerId: "me",
 		})
 	}
+	cluster1 := &Cluster{
+		Entity:  Entity{TenantId: "111"},
+		Type:    "someType",
+		Name:    "cluster1",
+		Tags:    "",
+		OwnerId: "me",
+	}
+	MetaDB.Create(cluster1)
+	defer MetaDB.Delete(cluster1)
+
+	f, _ := CreateFlow(MetaDB, "flow1", "flow1", cluster1.ID, "111")
+	defer MetaDB.Delete(f)
+	clusterTbl := Dao.ClusterManager()
+	cluster1, _, _ = clusterTbl.UpdateClusterDemand(context.TODO(), cluster1.ID, "demand1", "111")
+	cluster1, _ = clusterTbl.UpdateClusterFlowId(context.TODO(), cluster1.ID, f.ID)
+	cluster1, _ = clusterTbl.UpdateTopologyConfig(context.TODO(), cluster1.ID, "tiup1", "111")
+
 	cluster3 := &Cluster{
 		Entity:  Entity{TenantId: "111"},
 		Type:    "otherType",
@@ -568,6 +588,7 @@ func TestListClusterDetails(t *testing.T) {
 }
 
 func TestSaveBackupRecord(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	clusterTbl := Dao.ClusterManager()
 	t.Run("normal", func(t *testing.T) {
 		record := &dbpb.DBBackupRecordDTO{
@@ -595,6 +616,7 @@ func TestSaveBackupRecord(t *testing.T) {
 }
 
 func TestSaveRecoverRecord(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	clusterTbl := Dao.ClusterManager()
 	t.Run("normal", func(t *testing.T) {
 		gotDo, err := clusterTbl.SaveRecoverRecord(context.TODO(), "111", "111", "operator1", 1, 1)
@@ -610,6 +632,7 @@ func TestSaveRecoverRecord(t *testing.T) {
 }
 
 func TestDeleteBackupRecord(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	clusterTbl := Dao.ClusterManager()
 	rcd := &dbpb.DBBackupRecordDTO{
 		TenantId:     "111",
@@ -651,6 +674,7 @@ func TestDeleteBackupRecord(t *testing.T) {
 }
 
 func TestListBackupRecords(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	brTbl := Dao.ClusterManager()
 	flow, _ := CreateFlow(MetaDB, "backup", "backup", "111", "111")
 	defer MetaDB.Delete(flow)
@@ -876,4 +900,44 @@ func TestFetchCluster(t *testing.T) {
 		clusterTbl.UpdateClusterFlowId(context.TODO(), cluster.ID, 0)
 	})
 
+}
+
+func TestDAOClusterManager_UpdateClusterInfo(t *testing.T) {
+	clusterTbl := Dao.ClusterManager()
+	t.Run("normal update info", func(t *testing.T) {
+		cluster := &Cluster{
+			Entity:  Entity{TenantId: "111"},
+			OwnerId: "ttt",
+		}
+		MetaDB.Create(cluster)
+		defer MetaDB.Delete(cluster)
+
+		cluster, err := clusterTbl.UpdateClusterInfo(context.TODO(), cluster.ID, "newName", "TiDB", "v5.0.0", "213", true)
+
+		if err != nil {
+			t.Errorf("UpdateClusterInfo() error = %v", err)
+		}
+
+		if cluster.ID == "" {
+			t.Errorf("UpdateClusterInfo() cluster.ID empty")
+		}
+
+		if cluster.Name != "newName" {
+			t.Errorf("UpdateClusterInfo() want name = %s, got %s","newName",  cluster.Name)
+		}
+		if cluster.Type != "TiDB" {
+			t.Errorf("UpdateClusterInfo() want type = %s, got %s","TiDB",  cluster.Type)
+		}
+		if cluster.Tls != true {
+			t.Errorf("UpdateClusterInfo() want tls true, got false")
+		}
+	})
+
+	t.Run("empty clusterId", func(t *testing.T) {
+		_, err := clusterTbl.UpdateClusterInfo(context.TODO(), "", "newName", "TiDB", "v5.0.0", "213", true)
+		if err == nil {
+			t.Errorf("UpdateClusterInfo() want error, got nil")
+		}
+
+	})
 }

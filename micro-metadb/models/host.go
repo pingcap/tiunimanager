@@ -358,7 +358,7 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []
 }
 
 func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, require *dbpb.DBAllocRequirement) (results []rt.HostResource, err error) {
-	hostId := require.Location.Host
+	hostIp := require.Location.Host
 	if require.Count != 1 {
 		return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "request host count should be 1 for UserSpecifyHost allocation(%d)", require.Count)
 	}
@@ -378,14 +378,14 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 		// No Limit in Reserved == false in this strategy
 		db := tx.Order("disks.capacity").Limit(int(require.Count)).Model(&rt.Disk{}).Select(
 			"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
-			"left join hosts on disks.host_id = hosts.id").Where("hosts.id = ?", hostId).Count(&count)
+			"left join hosts on disks.host_id = hosts.id").Where("hosts.ip = ?", hostIp).Count(&count)
 
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "no disk in host (%s)", hostId)
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "no disk in host (%s)", hostIp)
 		}
 		db = db.Where("hosts.free_cpu_cores >= ? and hosts.free_memory >= ?", reqCores, reqMem).Count(&count)
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostId)
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostIp)
 		}
 		if !exclusive {
 			db = db.Where("hosts.status = ? and (hosts.stat = ? or hosts.stat = ?)", rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED).Count(&count)
@@ -394,7 +394,7 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			db = db.Where("hosts.status = ? and hosts.stat = ?", rt.HOST_ONLINE, rt.HOST_LOADLESS).Count(&count)
 		}
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostId, exclusive)
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostIp, exclusive)
 		}
 		if diskSpecify == "" {
 			err = db.Where("disks.type = ? and disks.status = ? and disks.capacity >= ?", diskType, rt.DISK_AVAILABLE, capacity).Scan(&resources).Error
@@ -406,20 +406,20 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 		}
 		if len(resources) < int(require.Count) {
 			if diskSpecify == "" {
-				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "no available disk with type(%s) and capacity(%d) in host(%s) after disk filter", diskType, capacity, hostId)
+				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "no available disk with type(%s) and capacity(%d) in host(%s) after disk filter", diskType, capacity, hostIp)
 			} else {
-				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "disk (%s) not existed or it is not available in host(%s)", diskSpecify, hostId)
+				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "disk (%s) not existed or it is not available in host(%s)", diskSpecify, hostIp)
 			}
 		}
 	} else {
 		// No Limit in Reserved == false in this strategy
-		db := tx.Model(&rt.Host{}).Select("id as host_id, host_name, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("id = ?", hostId).Count(&count)
+		db := tx.Model(&rt.Host{}).Select("id as host_id, host_name, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("ip = ?", hostIp).Count(&count)
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) is not existed", hostId)
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) is not existed", hostIp)
 		}
 		db = db.Where("free_cpu_cores >= ? and free_memory >= ?", reqCores, reqMem).Count(&count)
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostId)
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostIp)
 		}
 		if !exclusive {
 			err = db.Where("status = ? and (stat = ? or stat = ?)", rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED).Scan(&resources).Error
@@ -431,7 +431,7 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
 		}
 		if len(resources) < int(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostId, exclusive)
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostIp, exclusive)
 		}
 	}
 

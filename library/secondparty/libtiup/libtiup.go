@@ -49,6 +49,10 @@ const (
 	CmdDeployRespTypeStr           CmdTypeStr = "CmdDeployResp"
 	CmdStartReqTypeStr             CmdTypeStr = "CmdStartReq"
 	CmdStartRespTypeStr            CmdTypeStr = "CmdStartResp"
+	CmdRestartReqTypeStr           CmdTypeStr = "CmdRestartReq"
+	CmdRestartRespTypeStr          CmdTypeStr = "CmdRestartResp"
+	CmdStopReqTypeStr              CmdTypeStr = "CmdStopReq"
+	CmdStopRespTypeStr             CmdTypeStr = "CmdStopResp"
 	CmdListReqTypeStr              CmdTypeStr = "CmdListReq"
 	CmdListRespTypeStr             CmdTypeStr = "CmdListResp"
 	CmdDestroyReqTypeStr           CmdTypeStr = "CmdDestroyReq"
@@ -100,6 +104,22 @@ type CmdStartReq struct {
 	Flags        []string
 }
 
+type CmdRestartReq struct {
+	TaskID       uint64
+	InstanceName string
+	TimeoutS     int
+	TiupPath     string
+	Flags        []string
+}
+
+type CmdStopReq struct {
+	TaskID       uint64
+	InstanceName string
+	TimeoutS     int
+	TiupPath     string
+	Flags        []string
+}
+
 type CmdListReq struct {
 	TaskID   uint64
 	TimeoutS int
@@ -119,6 +139,12 @@ type CmdDeployResp struct {
 }
 
 type CmdStartResp struct {
+}
+
+type CmdRestartResp struct {
+}
+
+type CmdStopResp struct {
 }
 
 type CmdListResp struct {
@@ -305,6 +331,28 @@ func mgrHandleCmdStartReq(jsonStr string) CmdStartResp {
 		myPanic(fmt.Sprintln("json.Unmarshal CmdStartReq failed err:", err))
 	}
 	mgrStartNewTiupStartTask(req.TaskID, &req)
+	return ret
+}
+
+func mgrHandleCmdRestartReq(jsonStr string) CmdRestartResp {
+	ret := CmdRestartResp{}
+	var req CmdRestartReq
+	err := json.Unmarshal([]byte(jsonStr), &req)
+	if err != nil {
+		myPanic(fmt.Sprintln("json.unmarshal cmdrestartreq failed err:", err))
+	}
+	mgrStartNewTiupRestartTask(req.TaskID, &req)
+	return ret
+}
+
+func mgrHandleCmdStopReq(jsonStr string) CmdStopResp {
+	ret := CmdStopResp{}
+	var req CmdStopReq
+	err := json.Unmarshal([]byte(jsonStr), &req)
+	if err != nil {
+		myPanic(fmt.Sprintln("json.unmarshal cmdstopreq failed err:", err))
+	}
+	mgrStartNewTiupStopTask(req.TaskID, &req)
 	return ret
 }
 
@@ -504,6 +552,26 @@ func mgrStartNewTiupStartTask(taskID uint64, req *CmdStartReq) {
 	}()
 }
 
+func mgrStartNewTiupRestartTask(taskID uint64, req *CmdRestartReq) {
+	go func() {
+		var args []string
+		args = append(args, "cluster", "restart", req.InstanceName)
+		args = append(args, req.Flags...)
+		args = append(args, "--yes")
+		<-mgrStartNewTiupTask(taskID, req.TiupPath, args, req.TimeoutS)
+	}()
+}
+
+func mgrStartNewTiupStopTask(taskID uint64, req *CmdStopReq) {
+	go func() {
+		var args []string
+		args = append(args, "cluster", "stop", req.InstanceName)
+		args = append(args, req.Flags...)
+		args = append(args, "--yes")
+		<-mgrStartNewTiupTask(taskID, req.TiupPath, args, req.TimeoutS)
+	}()
+}
+
 func mgrStartNewTiupListTask(taskID uint64, req *CmdListReq) CmdListResp {
 	var ret CmdListResp
 	var args []string
@@ -652,6 +720,14 @@ func TiupMgrRoutine() {
 			case CmdGetAllTaskStatusReqTypeStr:
 				resp := mgrHandleCmdGetAllTaskStatusReq(cmd.Content)
 				cmdResp.TypeStr = CmdGetAllTaskStatusRespTypeStr
+				cmdResp.Content = string(jsonMustMarshal(&resp))
+			case CmdRestartReqTypeStr:
+				resp := mgrHandleCmdRestartReq(cmd.Content)
+				cmdResp.TypeStr = CmdRestartRespTypeStr
+				cmdResp.Content = string(jsonMustMarshal(&resp))
+			case CmdStopReqTypeStr:
+				resp := mgrHandleCmdStopReq(cmd.Content)
+				cmdResp.TypeStr = CmdStopRespTypeStr
 				cmdResp.Content = string(jsonMustMarshal(&resp))
 			default:
 				myPanic(fmt.Sprintln("unknown cmdStr.TypeStr:", cmd.TypeStr))
@@ -858,6 +934,87 @@ func MicroSrvTiupStart(instanceName string, timeoutS int, flags []string, bizID 
 	}
 }
 
+func microTiupRestart(req CmdRestartReq) CmdRestartResp {
+	assert(cap(glMicroCmdChan) > 0)
+	cmdReq := CmdReqOrResp{
+		TypeStr: CmdRestartReqTypeStr,
+		Content: string(jsonMustMarshal(&req)),
+	}
+	respCh := make(chan CmdReqOrResp, 1)
+	glMicroCmdChan <- CmdChanMember{
+		req:    cmdReq,
+		respCh: respCh,
+	}
+	respCmd := <-respCh
+	assert(respCmd.TypeStr == CmdRestartRespTypeStr)
+	var resp CmdRestartResp
+	err := json.Unmarshal([]byte(respCmd.Content), &resp)
+	assert(err == nil)
+	return resp
+}
+
+func MicroSrvTiupRestart(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	var req dbpb.CreateTiupTaskRequest
+	req.Type = dbpb.TiupTaskType_Restart
+	req.BizID = bizID
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	if rsp == nil || err != nil || rsp.ErrCode != 0 {
+		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
+		return 0, err
+	} else {
+		var req CmdRestartReq
+		req.TaskID = rsp.Id
+		req.InstanceName = instanceName
+		req.TimeoutS = timeoutS
+		req.TiupPath = glTiUPBinPath
+		req.Flags = flags
+		microTiupRestart(req)
+		return rsp.Id, nil
+	}
+}
+
+func microTiupStop(req CmdStopReq) CmdStopResp {
+	assert(cap(glMicroCmdChan) > 0)
+	cmdReq := CmdReqOrResp{
+		TypeStr: CmdStopReqTypeStr,
+		Content: string(jsonMustMarshal(&req)),
+	}
+	respCh := make(chan CmdReqOrResp, 1)
+	glMicroCmdChan <- CmdChanMember{
+		req:    cmdReq,
+		respCh: respCh,
+	}
+	respCmd := <-respCh
+	assert(respCmd.TypeStr == CmdStopRespTypeStr)
+	var resp CmdStopResp
+	err := json.Unmarshal([]byte(respCmd.Content), &resp)
+	assert(err == nil)
+	return resp
+}
+
+func MicroSrvTiupStop(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiupstop instancename: %s for bizid: %d", instanceName, bizID)
+	var req dbpb.CreateTiupTaskRequest
+	req.Type = dbpb.TiupTaskType_Stop
+	req.BizID = bizID
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	if rsp == nil || err != nil || rsp.ErrCode != 0 {
+		logger.Infof("microsrvtiupstop instancename: %s for bizid: %d, rsp:%v, err:%s", instanceName, bizID, err, rsp)
+		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
+		return 0, err
+	} else {
+		var req CmdStopReq
+		req.TaskID = rsp.Id
+		req.InstanceName = instanceName
+		req.TimeoutS = timeoutS
+		req.TiupPath = glTiUPBinPath
+		req.Flags = flags
+		microTiupStop(req)
+		logger.Infof("microsrvtiupstop instancename: %s for bizid: %d, taskid: %d sent", instanceName, bizID, rsp.Id)
+		return rsp.Id, nil
+	}
+}
+
 func microTiupDestroy(req CmdDestroyReq) CmdDestroyResp {
 	assert(cap(glMicroCmdChan) > 0)
 	cmdReq := CmdReqOrResp{
@@ -898,6 +1055,7 @@ func MicroSrvTiupDestroy(instanceName string, timeoutS int, flags []string, bizI
 }
 
 func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbpb.TiupTaskStatus, errStr string, err error) {
+	logger.Infof("microsrvtiupgettaskstaus for taskid: %d", taskID)
 	var req dbpb.FindTiupTaskByIDRequest
 	req.Id = taskID
 	rsp, err := client.DBClient.FindTiupTaskByID(context.Background(), &req)

@@ -50,7 +50,7 @@ endif
 ARCH      := "`uname -s`"
 LINUX     := "Linux"
 MAC       := "Darwin"
-PACKAGE_LIST  := go list ./...| grep -vE "docs|proto|library/util|micro-api|micro-metadb/service|micro-cluster/service/cluster/adapt|micro-cluster/service/tenant/adapt|^github.com/pingcap-inc/tiem/micro-cluster/service$$|clusterpb|dbpb|adapt"
+PACKAGE_LIST  := go list ./...| grep -vE "docs|proto|library/util|micro-api|micro-metadb/service|micro-cluster/service/cluster/adapt|micro-cluster/service/tenant/adapt|^github.com/pingcap-inc/tiem/micro-cluster/service$$|clusterpb|dbpb|adapt|test/mock"
 PACKAGES  ?= $$($(PACKAGE_LIST))
 #PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/pingcap/$(PROJECT)||'
 PACKAGE_DIRECTORIES := $(PACKAGE_LIST)

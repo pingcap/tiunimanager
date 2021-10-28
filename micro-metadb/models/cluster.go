@@ -21,6 +21,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/prometheus/client_golang/prometheus"
+	"strconv"
 	"time"
 
 	"github.com/pingcap/errors"
@@ -119,6 +123,14 @@ func NewDAOClusterManager(d *gorm.DB) *DAOClusterManager {
 	return m
 }
 
+func (m *DAOClusterManager) HandleMetrics(funcName string, code int) {
+	framework.Current.GetMetrics().SqliteRequestsCounterMetric.With(prometheus.Labels{
+		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
+		metrics.MethodLabel: funcName,
+		metrics.CodeLabel: strconv.Itoa(code)}).
+		Inc()
+}
+
 func (m *DAOClusterManager) SetDb(db *gorm.DB) {
 	m.db = db
 }
@@ -170,6 +182,19 @@ func (m *DAOClusterManager) UpdateClusterFlowId(ctx context.Context, clusterId s
 	return cluster, m.Db(ctx).Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_flow_id", flowId).Error
 }
 
+func (m *DAOClusterManager) UpdateClusterInfo(ctx context.Context, clusterId string, name, clusterType, versionCode, tags string, tls bool) (cluster *Cluster, err error) {
+	if "" == clusterId {
+		return nil, errors.New(fmt.Sprintf("UpdateClusterInfo has invalid parameter, clusterId: %s", clusterId))
+	}
+	cluster = &Cluster{}
+	return cluster, m.Db(ctx).Model(cluster).Where("id = ?", clusterId).First(cluster).
+		Update("name", name).
+		Update("type", clusterType).
+		Update("version", versionCode).
+		Update("tags", tags).
+		Update("tls", tls).
+		Error
+}
 func (m *DAOClusterManager) UpdateTopologyConfig(ctx context.Context, clusterId string, content string, tenantId string) (cluster *Cluster, err error) {
 	if "" == clusterId || "" == tenantId || "" == content {
 		return nil, errors.New(fmt.Sprintf("UpdateTopologyConfig has invalid parameter, clusterId: %s, content: %s", clusterId, content))
@@ -322,7 +347,7 @@ func (m *DAOClusterManager) ListClusters(ctx context.Context, clusterId, cluster
 	if clusterTag != "" {
 		query = query.Where("tags like '%," + clusterTag + ",%'")
 	}
-	return clusters, total, query.Count(&total).Offset(offset).Limit(length).Find(&clusters).Error
+	return clusters, total, query.Order("updated_at desc").Count(&total).Offset(offset).Limit(length).Find(&clusters).Error
 }
 
 func (m *DAOClusterManager) CreateCluster(ctx context.Context, ClusterName, DbPassword, ClusterType, ClusterVersion string,
@@ -375,6 +400,7 @@ func (m *DAOClusterManager) DeleteBackupRecord(ctx context.Context, id uint) (re
 	record = &BackupRecord{}
 	record.ID = id
 	err = m.Db(ctx).Where("id = ?", record.ID).Delete(record).Error
+	m.HandleMetrics(TABLE_NAME_BACKUP_RECORD, 0)
 	return record, err
 }
 
@@ -396,8 +422,9 @@ func (m *DAOClusterManager) SaveBackupRecord(ctx context.Context, record *dbpb.D
 		StartTime:    time.Unix(record.GetStartTime(), 0),
 		EndTime:      time.Unix(record.GetEndTime(), 0),
 	}
-
-	return do, m.Db(ctx).Create(do).Error
+	err = m.Db(ctx).Create(do).Error
+	m.HandleMetrics(TABLE_NAME_BACKUP_RECORD, 0)
+	return
 }
 
 func (m *DAOClusterManager) UpdateBackupRecord(ctx context.Context, record *dbpb.DBBackupRecordDTO) error {
@@ -408,7 +435,7 @@ func (m *DAOClusterManager) UpdateBackupRecord(ctx context.Context, record *dbpb
 			TenantId:  record.GetTenantId(),
 			UpdatedAt: time.Now(),
 		}}).Error
-
+	m.HandleMetrics(TABLE_NAME_BACKUP_RECORD, 0)
 	if err != nil {
 		return err
 	}
@@ -418,12 +445,14 @@ func (m *DAOClusterManager) UpdateBackupRecord(ctx context.Context, record *dbpb
 func (m *DAOClusterManager) QueryBackupRecord(ctx context.Context, clusterId string, recordId int64) (*BackupRecordFetchResult, error) {
 	record := BackupRecord{}
 	err := m.Db(ctx).Table("backup_records").Where("id = ? and cluster_id = ?", recordId, clusterId).First(&record).Error
+	m.HandleMetrics(TABLE_NAME_BACKUP_RECORD, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	flow := FlowDO{}
 	err = m.Db(ctx).Find(&flow, record.FlowId).Error
+	m.HandleMetrics(TABLE_NAME_FLOW, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -434,7 +463,6 @@ func (m *DAOClusterManager) QueryBackupRecord(ctx context.Context, clusterId str
 	}, nil
 }
 func (m *DAOClusterManager) ListBackupRecords(ctx context.Context, clusterId string, startTime, endTime int64, offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
-
 	records := make([]*BackupRecord, length)
 	db := m.Db(ctx).Table(TABLE_NAME_BACKUP_RECORD).Where("cluster_id = ? and deleted_at is null", clusterId)
 	if startTime > 0 {
@@ -447,7 +475,7 @@ func (m *DAOClusterManager) ListBackupRecords(ctx context.Context, clusterId str
 	err = db.Count(&total).Order("id desc").Offset(offset).Limit(length).
 		Find(&records).
 		Error
-
+	m.HandleMetrics(TABLE_NAME_BACKUP_RECORD, 0)
 	if nil == err {
 		// query flows
 		flowIds := make([]int64, len(records))
@@ -461,6 +489,7 @@ func (m *DAOClusterManager) ListBackupRecords(ctx context.Context, clusterId str
 
 		flows := make([]*FlowDO, len(records))
 		err = m.Db(ctx).Find(&flows, flowIds).Error
+		m.HandleMetrics(TABLE_NAME_FLOW, 0)
 		if err != nil {
 			return nil, 0, errors.New(fmt.Sprintf("ListBackupRecord, query record failed, clusterId: %s, error: %v", clusterId, err))
 		}
@@ -489,7 +518,10 @@ func (m *DAOClusterManager) SaveRecoverRecord(ctx context.Context, tenantId, clu
 		FlowId:         flowId,
 		BackupRecordId: backupRecordId,
 	}
-	return do, m.Db(ctx).Create(do).Error
+
+	err = m.Db(ctx).Create(do).Error
+	m.HandleMetrics(TABLE_NAME_BACKUP_RECORD, 0)
+	return
 }
 
 func (m *DAOClusterManager) SaveBackupStrategy(ctx context.Context, strategy *dbpb.DBBackupStrategyDTO) (*BackupStrategy, error) {
@@ -504,11 +536,13 @@ func (m *DAOClusterManager) SaveBackupStrategy(ctx context.Context, strategy *db
 		EndHour:    strategy.GetEndHour(),
 	}
 	result := m.Db(ctx).Table(TABLE_NAME_BACKUP_STRATEGY).Where("cluster_id = ?", strategy.ClusterId).First(&strategyDO)
+	m.HandleMetrics(TABLE_NAME_BACKUP_STRATEGY, 0)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			strategyDO.CreatedAt = time.Now()
 			strategyDO.UpdatedAt = time.Now()
 			err := m.Db(ctx).Create(&strategyDO).Error
+			m.HandleMetrics(TABLE_NAME_BACKUP_STRATEGY, 0)
 			if err != nil {
 				return nil, err
 			}
@@ -521,6 +555,7 @@ func (m *DAOClusterManager) SaveBackupStrategy(ctx context.Context, strategy *db
 		strategyDO.StartHour = strategy.GetStartHour()
 		strategyDO.EndHour = strategy.GetEndHour()
 		err := m.Db(ctx).Model(&strategyDO).Save(&strategyDO).Error
+		m.HandleMetrics(TABLE_NAME_BACKUP_STRATEGY, 0)
 		if err != nil {
 			return nil, err
 		}
@@ -531,6 +566,7 @@ func (m *DAOClusterManager) SaveBackupStrategy(ctx context.Context, strategy *db
 func (m *DAOClusterManager) QueryBackupStartegy(ctx context.Context, clusterId string) (*BackupStrategy, error) {
 	strategyDO := BackupStrategy{}
 	err := m.Db(ctx).Table(TABLE_NAME_BACKUP_STRATEGY).Where("cluster_id = ?", clusterId).First(&strategyDO).Error
+	m.HandleMetrics(TABLE_NAME_BACKUP_STRATEGY, 0)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
@@ -541,6 +577,7 @@ func (m *DAOClusterManager) QueryBackupStartegy(ctx context.Context, clusterId s
 func (m *DAOClusterManager) QueryBackupStartegyByTime(ctx context.Context, weekday string, startHour uint32) ([]*BackupStrategy, error) {
 	var strategyListDO []*BackupStrategy
 	err := m.Db(ctx).Table(TABLE_NAME_BACKUP_STRATEGY).Where("start_hour = ?", startHour).Where("backup_date like '%" + weekday + "%'").Find(&strategyListDO).Error
+	m.HandleMetrics(TABLE_NAME_BACKUP_STRATEGY, 0)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

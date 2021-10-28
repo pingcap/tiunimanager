@@ -634,6 +634,78 @@ var doc = `{
                 }
             }
         },
+        "/clusters/takeover": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "takeover a cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "takeover a cluster",
+                "parameters": [
+                    {
+                        "description": "takeover request",
+                        "name": "takeoverReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/management.TakeoverReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/management.ClusterDisplayInfo"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}": {
             "get": {
                 "security": [
@@ -1054,6 +1126,73 @@ var doc = `{
                 }
             }
         },
+        "/clusters/{clusterId}/restart": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "restart a cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "restart a cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/management.RestartClusterRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}/strategy": {
             "put": {
                 "security": [
@@ -1282,73 +1421,6 @@ var doc = `{
                 }
             }
         },
-        "/flowwork/{flowWorkId}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "show details of a flow work",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "show details of a flow work",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "flow work id",
-                        "name": "flowWorkId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/flowtask.FlowWorkDetailInfo"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
         "/flowworks": {
             "get": {
                 "security": [
@@ -1410,6 +1482,73 @@ var doc = `{
                                             "items": {
                                                 "$ref": "#/definitions/flowtask.FlowWorkDisplayInfo"
                                             }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/flowworks/{flowWorkId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "show details of a flow work",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "show details of a flow work",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "flow work id",
+                        "name": "flowWorkId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/flowtask.FlowWorkDetailInfo"
                                         }
                                     }
                                 }
@@ -1921,6 +2060,66 @@ var doc = `{
             }
         },
         "/resources/hosts/": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update host status by a list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Update host status",
+                "parameters": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "host id array",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "do update in host list",
+                        "name": "updateReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/hostresource.UpdateHostReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
@@ -2046,108 +2245,6 @@ var doc = `{
                         "name": "hostId",
                         "in": "path",
                         "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/resources/reserve-host/": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "update host reserved status by a list",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Set whether a Host is reserved",
-                "parameters": [
-                    {
-                        "description": "change reserved status in host list",
-                        "name": "reserveReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/hostresource.ReserveHostReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "/resources/update-host-status/": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "update host status by a list",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "resource"
-                ],
-                "summary": "Update host status",
-                "parameters": [
-                    {
-                        "description": "change status in host list",
-                        "name": "updateReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/hostresource.UpdateHostStatusReq"
-                        }
                     }
                 ],
                 "responses": {
@@ -2678,8 +2775,17 @@ var doc = `{
                 "id": {
                     "type": "integer"
                 },
+                "result": {
+                    "type": "string"
+                },
                 "taskName": {
                     "type": "string"
+                },
+                "taskParameters": {
+                    "type": "string"
+                },
+                "taskStatus": {
+                    "type": "integer"
                 }
             }
         },
@@ -2898,28 +3004,11 @@ var doc = `{
                 }
             }
         },
-        "hostresource.ReserveHostReq": {
+        "hostresource.UpdateHostReq": {
             "type": "object",
             "properties": {
-                "hostIds": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "reserved": {
                     "type": "boolean"
-                }
-            }
-        },
-        "hostresource.UpdateHostStatusReq": {
-            "type": "object",
-            "properties": {
-                "hostIds": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 },
                 "status": {
                     "type": "integer"
@@ -3735,6 +3824,63 @@ var doc = `{
                 },
                 "sourceClusterId": {
                     "type": "string"
+                }
+            }
+        },
+        "management.RestartClusterRsp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "management.TakeoverReq": {
+            "type": "object",
+            "properties": {
+                "clusterNames": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tiupIp": {
+                    "type": "string",
+                    "example": "172.16.4.147"
+                },
+                "tiupPath": {
+                    "type": "string",
+                    "example": ".tiup/"
+                },
+                "tiupPort": {
+                    "type": "string",
+                    "example": "22"
+                },
+                "tiupUserName": {
+                    "type": "string",
+                    "example": "root"
+                },
+                "tiupUserPassword": {
+                    "type": "string",
+                    "example": "password"
                 }
             }
         },

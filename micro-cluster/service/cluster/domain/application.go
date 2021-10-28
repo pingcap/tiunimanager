@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -20,14 +19,15 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"path/filepath"
+	"strconv"
+	"time"
+
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
-	"path/filepath"
-	"strconv"
-	"time"
 
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
@@ -135,6 +135,26 @@ func DeleteCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggreg
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	TaskRepo.Persist(flow)
 	ClusterRepo.Persist(clusterAggregation)
+	return clusterAggregation, nil
+}
+
+func RestartCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
+	operator := parseOperatorFromDTO(ope)
+
+	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
+	clusterAggregation.CurrentOperator = operator
+
+	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowRestartCluster, operator)
+	if err != nil {
+		return nil, err
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.Start()
+
 	return clusterAggregation, nil
 }
 
@@ -328,6 +348,68 @@ func freedResource(task *TaskEntity, context *FlowContext) bool {
 }
 
 func destroyTasks(task *TaskEntity, context *FlowContext) bool {
+	task.Success(nil)
+	return true
+}
+
+// clusterRestart
+// @Description: restart cluster
+// @Parameter task
+// @Parameter context
+// @return bool
+func clusterRestart(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	getLogger().Infof("restart cluster %s", cluster.ClusterName)
+	restartTaskId, err := libtiup.MicroSrvTiupRestart(cluster.ClusterName, 0, []string{}, uint64(task.Id))
+	if err != nil {
+		getLogger().Errorf("call tiup api restart cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+	context.put("restartTaskId", restartTaskId)
+	getLogger().Infof("got restartTaskId %s", strconv.Itoa(int(restartTaskId)))
+
+	go func() {
+		// get cluster restart status async
+		for {
+			stat, statErrStr, err := libtiup.MicroSrvTiupGetTaskStatus(restartTaskId)
+			if err != nil {
+				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
+				break
+			}
+			if stat == dbpb.TiupTaskStatus_Finished {
+				getLogger().Infof(" cluster %s restart done.", cluster.ClusterName)
+				clusterAggregation.StatusModified = true
+				clusterAggregation.Cluster.Online()
+				err := ClusterRepo.Persist(clusterAggregation)
+				if err != nil {
+					getLogger().Errorf("cluster repo persist err = %v", err)
+					return
+				}
+				break
+			} else if stat == dbpb.TiupTaskStatus_Error {
+				getLogger().Infof(" cluster %s restart fail.", cluster.ClusterName)
+				clusterAggregation.StatusModified = true
+				clusterAggregation.Cluster.Status = ClusterStatusOffline
+				err := ClusterRepo.Persist(clusterAggregation)
+				if err != nil {
+					getLogger().Errorf("cluster repo persist err = %v", err)
+					return
+				}
+				break
+			}
+			time.Sleep(time.Second * 2)
+		}
+	}()
+
+	clusterAggregation.Cluster.Restart()
+	clusterAggregation.StatusModified = true
+	err = ClusterRepo.Persist(clusterAggregation)
+	if err != nil {
+		return false
+	}
 	task.Success(nil)
 	return true
 }

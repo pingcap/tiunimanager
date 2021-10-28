@@ -14,6 +14,7 @@ service ClusterService {
     rpc QueryCluster(ClusterQueryReqDTO) returns (ClusterQueryRespDTO);
     rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
     rpc DetailCluster(ClusterDetailReqDTO) returns (ClusterDetailRespDTO);
+    rpc RestartCluster(ClusterRestartReqDTO) returns (ClusterRestartRespDTO);
 
     rpc ImportData(DataImportRequest) returns (DataImportResponse);
     rpc ExportData(DataExportRequest) returns (DataExportResponse);
@@ -105,6 +106,17 @@ message ClusterDetailRespDTO {
     ClusterDisplayDTO displayInfo = 2;
     ClusterMaintenanceDTO maintenanceInfo = 3;
     repeated ComponentInstanceDTO components = 4;
+}
+
+message ClusterRestartReqDTO {
+    OperatorDTO operator = 1;
+    string clusterId = 2;
+}
+
+message ClusterRestartRespDTO {
+    ResponseStatusDTO respStatus = 1;
+    string clusterId = 2;
+    DisplayStatusDTO clusterStatus = 3;
 }
 
 message ClusterMaintenanceDTO {

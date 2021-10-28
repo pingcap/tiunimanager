@@ -8,6 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+
 	client "github.com/asim/go-micro/v3/client"
 	gomock "github.com/golang/mock/gomock"
 	dbpb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -17,6 +19,14 @@ import (
 type MockTiEMDBService struct {
 	ctrl     *gomock.Controller
 	recorder *MockTiEMDBServiceMockRecorder
+}
+
+func (m *MockTiEMDBService) UpdateHostStatus(ctx context.Context, in *dbpb.DBUpdateHostStatusRequest, opts ...client.CallOption) (*dbpb.DBUpdateHostStatusResponse, error) {
+	panic("implement me")
+}
+
+func (m *MockTiEMDBService) ReserveHost(ctx context.Context, in *dbpb.DBReserveHostRequest, opts ...client.CallOption) (*dbpb.DBReserveHostResponse, error) {
+	panic("implement me")
 }
 
 // MockTiEMDBServiceMockRecorder is the mock recorder for MockTiEMDBService.

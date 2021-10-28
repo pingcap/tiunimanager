@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -28,6 +27,7 @@ const (
 	ClusterStatusOnline  ClusterStatus = 1
 	ClusterStatusOffline ClusterStatus = 2
 	ClusterStatusDeleted ClusterStatus = 3
+	ClusterStatusRestart ClusterStatus = 4
 )
 
 var allClusterStatus = []ClusterStatus{
@@ -35,6 +35,7 @@ var allClusterStatus = []ClusterStatus{
 	ClusterStatusOnline,
 	ClusterStatusOffline,
 	ClusterStatusDeleted,
+	ClusterStatusRestart,
 }
 
 func ClusterStatusFromValue(v int) ClusterStatus {
@@ -50,10 +51,16 @@ func ClusterStatusFromValue(v int) ClusterStatus {
 func (s ClusterStatus) Display() string {
 
 	switch s {
-	case ClusterStatusUnlined: return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusUnlined)
-	case ClusterStatusOnline: return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusOnline)
-	case ClusterStatusOffline: return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusOffline)
-	case ClusterStatusDeleted: return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusDeleted)
+	case ClusterStatusUnlined:
+		return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusUnlined)
+	case ClusterStatusOnline:
+		return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusOnline)
+	case ClusterStatusOffline:
+		return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusOffline)
+	case ClusterStatusDeleted:
+		return copywriting2.DisplayByDefault(copywriting2.CWClusterStatusDeleted)
+	case ClusterStatusRestart:
+		return copywriting2.DisplayByDefault(copywriting2.CWFlowRestartCluster)
 	}
 
 	panic("Unknown cluster status")
@@ -71,10 +78,14 @@ const (
 func (s TaskStatus) Display() string {
 
 	switch s {
-	case TaskStatusInit: return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusInit)
-	case TaskStatusProcessing: return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusProcessing)
-	case TaskStatusFinished: return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusFinished)
-	case TaskStatusError: return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusError)
+	case TaskStatusInit:
+		return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusInit)
+	case TaskStatusProcessing:
+		return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusProcessing)
+	case TaskStatusFinished:
+		return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusFinished)
+	case TaskStatusError:
+		return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusError)
 	}
 
 	panic("Unknown task status")
@@ -103,9 +114,9 @@ func TaskStatusFromValue(v int) TaskStatus {
 type CronStatus int
 
 const (
-	CronStatusValid 		CronStatus 	= 0
-	CronStatusInvalid 		CronStatus 	= 1
-	CronStatusDeleted 		CronStatus 	= 2
+	CronStatusValid   CronStatus = 0
+	CronStatusInvalid CronStatus = 1
+	CronStatusDeleted CronStatus = 2
 )
 
 type TaskReturnType int8
@@ -118,13 +129,14 @@ const (
 )
 
 const (
-	FlowCreateCluster = "CreateCluster"
-	FlowDeleteCluster = "DeleteCluster"
-	FlowBackupCluster = "BackupCluster"
-	FlowRecoverCluster = "RecoverCluster"
+	FlowCreateCluster    = "CreateCluster"
+	FlowDeleteCluster    = "DeleteCluster"
+	FlowBackupCluster    = "BackupCluster"
+	FlowRecoverCluster   = "RecoverCluster"
 	FlowModifyParameters = "ModifyParameters"
-	FlowExportData = "ExportData"
-	FlowImportData = "ImportData"
+	FlowExportData       = "ExportData"
+	FlowImportData       = "ImportData"
+	FlowRestartCluster   = "RestartCluster"
 )
 
 type CronTaskType int8
@@ -132,9 +144,8 @@ type CronTaskType int8
 const (
 	CronMaintainStart CronTaskType = 1
 	CronMaintainEnd   CronTaskType = 2
-	CronBackup 		  CronTaskType = 3
+	CronBackup        CronTaskType = 3
 )
-
 
 type BackupMethod string
 type BackupType string
@@ -142,23 +153,23 @@ type BackupMode string
 type StorageType string
 
 const (
-	BackupTypeFull BackupType = "full"
+	BackupTypeFull      BackupType = "full"
 	BackupTypeIncrement BackupType = "incr"
 )
 
 const (
-	BackupModeAuto BackupMode = "auto"
+	BackupModeAuto   BackupMode = "auto"
 	BackupModeManual BackupMode = "manual"
 )
 
 const (
-	BackupMethodLogic BackupMethod = "logical"
+	BackupMethodLogic   BackupMethod = "logical"
 	BackupMethodPhysics BackupMethod = "physical"
 )
 
 const (
 	StorageTypeLocal StorageType = "local"
-	StorageTypeS3 StorageType = "s3"
+	StorageTypeS3    StorageType = "s3"
 )
 
 func checkBackupTypeValid(backupType string) bool {
@@ -178,23 +189,23 @@ func checkBackupMethodValid(backupMethod string) bool {
 }
 
 const (
-	Sunday string = "Sunday"
-	Monday string = "Monday"
-	Tuesday string = "Tuesday"
+	Sunday    string = "Sunday"
+	Monday    string = "Monday"
+	Tuesday   string = "Tuesday"
 	Wednesday string = "Wednesday"
-	Thursday string = "Thursday"
-	Friday string = "Friday"
-	Saturday string = "Saturday"
+	Thursday  string = "Thursday"
+	Friday    string = "Friday"
+	Saturday  string = "Saturday"
 )
 
 var WeekDayMap = map[string]int{
-	Sunday: 0,
-	Monday: 1,
-	Tuesday: 2,
+	Sunday:    0,
+	Monday:    1,
+	Tuesday:   2,
 	Wednesday: 3,
-	Thursday: 4,
-	Friday: 5,
-	Saturday: 6}
+	Thursday:  4,
+	Friday:    5,
+	Saturday:  6}
 
 func checkWeekDayValid(day string) bool {
 	_, exist := WeekDayMap[day]

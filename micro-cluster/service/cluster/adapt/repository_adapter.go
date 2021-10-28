@@ -193,8 +193,11 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 	}
 
 	if aggregation.BaseInfoModified {
-		tagBytes, _ := json.Marshal(cluster.Tags)
-		_, err := client.DBClient.UpdateClusterInfo(context.TODO(), &dbpb.DBUpdateClusterInfoRequest{
+		tagBytes, err := json.Marshal(cluster.Tags)
+		if err != nil {
+			return err
+		}
+		client.DBClient.UpdateClusterInfo(context.TODO(), &dbpb.DBUpdateClusterInfoRequest{
 			ClusterId: aggregation.Cluster.Id,
 			Name:        cluster.ClusterName,
 			ClusterType: cluster.ClusterType.Code,
@@ -391,7 +394,47 @@ func (t TaskRepoAdapter) LoadFlowWork(id uint) (flow *domain.FlowWorkEntity, err
 }
 
 func (t TaskRepoAdapter) Load(id uint) (flowWork *domain.FlowWorkAggregation, err error) {
-	panic("implement me")
+	resp, err := client.DBClient.LoadFlow(context.TODO(), &dbpb.DBLoadFlowRequest{
+		Id: int64(id),
+	})
+	if err != nil {
+		framework.Log().Errorf("Load FlowWork error = %s", err.Error())
+		return nil, err
+	}
+
+	flowworkName := resp.FlowWithTasks.Flow.FlowName
+	flowDefinition := domain.FlowWorkDefineMap[flowworkName]
+	flowWork = &domain.FlowWorkAggregation{
+		FlowWork: &domain.FlowWorkEntity{},
+		Define: flowDefinition,
+		Tasks: ParseTaskDTOInBatch(resp.FlowWithTasks.Tasks),
+	}
+
+	return flowWork, nil
+}
+
+func ParseTaskDTOInBatch(dtoList []*dbpb.DBTaskDTO) []*domain.TaskEntity {
+	if dtoList == nil {
+		return nil
+	}
+
+	entities := make([]*domain.TaskEntity, 0)
+	for _, dto := range dtoList {
+		entities = append(entities, ParseTaskDTO(dto))
+	}
+
+	return entities
+}
+
+func ParseTaskDTO(dto *dbpb.DBTaskDTO) *domain.TaskEntity {
+	return &domain.TaskEntity{
+		Id: uint(dto.Id),
+		Status: domain.TaskStatusFromValue(int(dto.Status)),
+		TaskName: dto.TaskName,
+		BizId: dto.BizId,
+		Parameters: dto.Parameters,
+		Result: dto.Result,
+	}
 }
 
 func ConvertClusterToDTO(cluster *domain.Cluster) (dto *dbpb.DBClusterDTO) {

@@ -224,8 +224,14 @@ definitions:
     properties:
       id:
         type: integer
+      result:
+        type: string
       taskName:
         type: string
+      taskParameters:
+        type: string
+      taskStatus:
+        type: integer
     type: object
   hostresource.AllocHostsReq:
     properties:
@@ -1811,46 +1817,6 @@ paths:
       summary: takeover a cluster
       tags:
       - cluster
-  /flowwork/{flowWorkId}:
-    get:
-      consumes:
-      - application/json
-      description: show details of a flow work
-      parameters:
-      - description: flow work id
-        in: path
-        name: flowWorkId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/flowtask.FlowWorkDetailInfo'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: show details of a flow work
-      tags:
-      - task
   /flowworks:
     get:
       consumes:
@@ -1901,6 +1867,46 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: query flow works
+      tags:
+      - task
+  /flowworks/{flowWorkId}:
+    get:
+      consumes:
+      - application/json
+      description: show details of a flow work
+      parameters:
+      - description: flow work id
+        in: path
+        name: flowWorkId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/flowtask.FlowWorkDetailInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: show details of a flow work
       tags:
       - task
   /knowledges:

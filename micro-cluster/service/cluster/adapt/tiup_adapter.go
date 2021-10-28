@@ -91,9 +91,9 @@ func (t TiUPTiDBMetadataManager) FetchFromRemoteCluster(ctx context.Context, req
 	}
 
 	metadata := &spec.ClusterMeta{}
-	yaml.Unmarshal(dataByte, metadata)
+	err = yaml.Unmarshal(dataByte, metadata)
 
-	return metadata, nil
+	return metadata, err
 }
 
 func (t TiUPTiDBMetadataManager) RebuildMetadataFromComponents(cluster *domain.Cluster, components []*domain.ComponentGroup) (spec.Metadata, error) {

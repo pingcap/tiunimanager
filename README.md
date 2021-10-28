@@ -66,7 +66,7 @@ start micro-metadb
 ```shell
 $ go run micro-metadb/main.go
 ```
-完整命令(如果同一台机器上启多个服务，则需要指定参数，否则会冲突)
+or run with all args
 ```shell
 $ go run micro-metadb/main.go \
     --host=192.168.1.100 \

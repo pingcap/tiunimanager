@@ -1354,73 +1354,6 @@ var doc = `{
                 }
             }
         },
-        "/flowwork/{flowWorkId}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "show details of a flow work",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "task"
-                ],
-                "summary": "show details of a flow work",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "flow work id",
-                        "name": "flowWorkId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/flowtask.FlowWorkDetailInfo"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
         "/flowworks": {
             "get": {
                 "security": [
@@ -1482,6 +1415,73 @@ var doc = `{
                                             "items": {
                                                 "$ref": "#/definitions/flowtask.FlowWorkDisplayInfo"
                                             }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/flowworks/{flowWorkId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "show details of a flow work",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "task"
+                ],
+                "summary": "show details of a flow work",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "flow work id",
+                        "name": "flowWorkId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/flowtask.FlowWorkDetailInfo"
                                         }
                                     }
                                 }
@@ -2750,8 +2750,17 @@ var doc = `{
                 "id": {
                     "type": "integer"
                 },
+                "result": {
+                    "type": "string"
+                },
                 "taskName": {
                     "type": "string"
+                },
+                "taskParameters": {
+                    "type": "string"
+                },
+                "taskStatus": {
+                    "type": "integer"
                 }
             }
         },

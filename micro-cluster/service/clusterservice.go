@@ -80,7 +80,7 @@ func getLoggerWithContext(ctx context.Context) *log.Entry {
 }
 
 func handleMetrics(start time.Time, funcName string, code int) {
-	duration := time.Now().Sub(start)
+	duration := time.Since(start)
 	framework.Current.GetMetrics().MicroDurationHistogramMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
 		metrics.MethodLabel:  funcName,

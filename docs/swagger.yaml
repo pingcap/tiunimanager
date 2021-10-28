@@ -374,21 +374,10 @@ definitions:
       userName:
         type: string
     type: object
-  hostresource.ReserveHostReq:
+  hostresource.UpdateHostReq:
     properties:
-      hostIds:
-        items:
-          type: string
-        type: array
       reserved:
         type: boolean
-    type: object
-  hostresource.UpdateHostStatusReq:
-    properties:
-      hostIds:
-        items:
-          type: string
-        type: array
       status:
         type: integer
     type: object
@@ -2212,6 +2201,42 @@ paths:
       summary: Remove a batch of hosts
       tags:
       - resource
+    put:
+      consumes:
+      - application/json
+      description: update host status by a list
+      parameters:
+      - collectionFormat: multi
+        description: host id array
+        in: query
+        items:
+          type: string
+        name: id
+        required: true
+        type: array
+      - description: do update in host list
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/hostresource.UpdateHostReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update host status
+      tags:
+      - resource
   /resources/hosts/{hostId}:
     delete:
       consumes:
@@ -2265,64 +2290,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Show a host
-      tags:
-      - resource
-  /resources/reserve-host/:
-    post:
-      consumes:
-      - application/json
-      description: update host reserved status by a list
-      parameters:
-      - description: change reserved status in host list
-        in: body
-        name: reserveReq
-        required: true
-        schema:
-          $ref: '#/definitions/hostresource.ReserveHostReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  type: string
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Set whether a Host is reserved
-      tags:
-      - resource
-  /resources/update-host-status/:
-    post:
-      consumes:
-      - application/json
-      description: update host status by a list
-      parameters:
-      - description: change status in host list
-        in: body
-        name: updateReq
-        required: true
-        schema:
-          $ref: '#/definitions/hostresource.UpdateHostStatusReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  type: string
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Update host status
       tags:
       - resource
   /user/login:

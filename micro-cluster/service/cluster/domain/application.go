@@ -658,6 +658,10 @@ func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spe
 	tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
 		Host:      pdHosts[0].Ip,
 		DeployDir: filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "grafanas-deploy"),
+		AnonymousEnable: true,
+		DefaultTheme: "light",
+		OrgName: "Main Org.",
+		OrgRole: "Viewer",
 	})
 	// Deal with PDServers, TiDBServers, TiKVServers
 	for _, v := range pdHosts {

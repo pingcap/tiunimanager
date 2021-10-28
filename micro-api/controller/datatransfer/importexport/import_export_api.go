@@ -18,6 +18,7 @@
 package importexport
 
 import (
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"net/http"
 	"time"
 
@@ -43,6 +44,10 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/export [post]
 func ExportData(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "ExportData", int(status.GetCode()))
+
 	var req DataExportReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
@@ -72,7 +77,7 @@ func ExportData(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
-		status := respDTO.GetRespStatus()
+		status = respDTO.GetRespStatus()
 		if int32(common.TIEM_SUCCESS) == status.GetCode() {
 			result := controller.BuildCommonResult(int(status.Code), status.Message, DataExportResp{
 				RecordId: respDTO.GetRecordId(),
@@ -98,6 +103,10 @@ func ExportData(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/import [post]
 func ImportData(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "ImportData", int(status.GetCode()))
+
 	var req DataImportReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
@@ -123,7 +132,7 @@ func ImportData(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
-		status := respDTO.GetRespStatus()
+		status = respDTO.GetRespStatus()
 		if int32(common.TIEM_SUCCESS) == status.GetCode() {
 			result := controller.BuildCommonResult(int(status.Code), status.Message, DataImportResp{
 				RecordId: respDTO.GetRecordId(),
@@ -150,6 +159,10 @@ func ImportData(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/transport [get]
 func DescribeDataTransport(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "DescribeDataTransport", int(status.GetCode()))
+
 	clusterId := c.Param("clusterId")
 	var req DataTransportQueryReq
 	err := c.ShouldBindQuery(&req)
@@ -169,7 +182,7 @@ func DescribeDataTransport(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
-		status := respDTO.GetRespStatus()
+		status = respDTO.GetRespStatus()
 		if int32(common.TIEM_SUCCESS) == status.GetCode() {
 			data := &DataTransportRecordQueryResp{
 				TransportRecords: make([]*DataTransportInfo, len(respDTO.GetTransportInfos())),

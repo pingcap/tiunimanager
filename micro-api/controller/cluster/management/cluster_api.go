@@ -17,6 +17,7 @@
 package management
 
 import (
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"net/http"
 	"time"
 
@@ -295,6 +296,10 @@ func Takeover(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/dashboard [get]
 func DescribeDashboard(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "DescribeDashboard", int(status.GetCode()))
+
 	operator := controller.GetOperator(c)
 	reqDTO := &clusterpb.DescribeDashboardRequest{
 		Operator:  operator.ConvertToDTO(),
@@ -305,7 +310,7 @@ func DescribeDashboard(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
-		status := respDTO.GetStatus()
+		status = respDTO.GetStatus()
 		if int32(common.TIEM_SUCCESS) == status.GetCode() {
 			result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
 				ClusterId: respDTO.GetClusterId(),

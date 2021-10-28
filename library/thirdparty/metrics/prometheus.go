@@ -79,3 +79,51 @@ func RegisterNewSummaryVec(metricDef MetricDef) *prometheus.SummaryVec {
 	prometheus.MustRegister(metric)
 	return metric
 }
+
+func RegisterNewGaugeVecForUT(metricDef MetricDef) *prometheus.GaugeVec {
+	metric := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: common.TiEM,
+			Name:      metricDef.Name,
+			Help:      metricDef.Help,
+		},
+		metricDef.LabelNames,
+	)
+	return metric
+}
+
+func RegisterNewCounterVecForUT(metricDef MetricDef) *prometheus.CounterVec {
+	metric := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: common.TiEM,
+			Name:      metricDef.Name,
+			Help:      metricDef.Help,
+		},
+		metricDef.LabelNames,
+	)
+	return metric
+}
+
+func RegisterNewHistogramVecForUT(metricDef MetricDef) *prometheus.HistogramVec {
+	metric := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: common.TiEM,
+			Name:      metricDef.Name,
+			Help:      metricDef.Help,
+		},
+		metricDef.LabelNames,
+	)
+	return metric
+}
+
+func RegisterNewSummaryVecForUT(metricDef MetricDef) *prometheus.SummaryVec {
+	metric := prometheus.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Namespace: common.TiEM,
+			Name:      metricDef.Name,
+			Help:      metricDef.Help,
+		},
+		metricDef.LabelNames,
+	)
+	return metric
+}

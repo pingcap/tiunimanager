@@ -70,7 +70,6 @@ message ClusterCreateRespDTO {
     ClusterBaseInfoDTO baseInfo = 3;
     DisplayStatusDTO clusterStatus = 4;
 }
-
 message ClusterTakeoverReqDTO {
     OperatorDTO operator = 1;
     string tiupIp = 2;

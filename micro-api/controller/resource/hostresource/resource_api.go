@@ -508,84 +508,74 @@ func DownloadHostTemplateFile(c *gin.Context) {
 	c.File(filePath)
 }
 
-// UpdateHostStatus godoc
+// UpdateHost godoc
 // @Summary Update host status
 // @Description update host status by a list
 // @Tags resource
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param updateReq body UpdateHostStatusReq true "change status in host list"
+// @Param id query []string true "host id array" collectionFormat(multi)
+// @Param updateReq body UpdateHostReq true "do update in host list"
 // @Success 200 {object} controller.CommonResult{data=string}
-// @Router /resources/update-host-status/ [post]
-func UpdateHostStatus(c *gin.Context) {
-	var updateReq UpdateHostStatusReq
+// @Router /resources/hosts/ [put]
+func UpdateHost(c *gin.Context) {
+	hostIds := c.QueryArray("id")
+	if str, dup := detectDuplicateElement(hostIds); dup {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), str+" Is Duplicated in request"))
+		return
+	}
+
+	var updateReq UpdateHostReq
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
-	if !resource.HostStatus(updateReq.Status).IsValidForUpdate() {
-		errmsg := fmt.Sprintf("input status %d is invalid for update, [0:online,1:offline,2:deleted]", updateReq.Status)
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
-		return
-	}
-	if str, dup := detectDuplicateElement(updateReq.HostIds); dup {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), str+" Is Duplicated in request"))
+	if (updateReq.Status == nil && updateReq.Reserved == nil) || (updateReq.Status != nil && updateReq.Reserved != nil) {
+		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), "status/reserved both set/no-set at the same time"))
 		return
 	}
 
-	var updateHostStatusReq clusterpb.UpdateHostStatusRequest
-	updateHostStatusReq.Status = updateReq.Status
-	updateHostStatusReq.HostIds = append(updateHostStatusReq.HostIds, updateReq.HostIds...)
+	if updateReq.Status != nil {
+		if !resource.HostStatus((*updateReq.Status)).IsValidForUpdate() {
+			errmsg := fmt.Sprintf("input status %d is invalid for update, [0:online,1:offline,2:deleted]", *(updateReq.Status))
+			c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
+			return
+		}
 
-	rsp, err := client.ClusterClient.UpdateHostStatus(framework.NewMicroCtxFromGinCtx(c), &updateHostStatusReq)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
-		return
-	}
-	if rsp.Rs.Code != int32(codes.OK) {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
-		return
-	}
-	c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
-}
+		var updateHostStatusReq clusterpb.UpdateHostStatusRequest
+		updateHostStatusReq.Status = *(updateReq.Status)
+		updateHostStatusReq.HostIds = append(updateHostStatusReq.HostIds, hostIds...)
 
-// ReserveHost godoc
-// @Summary Set whether a Host is reserved
-// @Description update host reserved status by a list
-// @Tags resource
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param reserveReq body ReserveHostReq true "change reserved status in host list"
-// @Success 200 {object} controller.CommonResult{data=string}
-// @Router /resources/reserve-host/ [post]
-func ReserveHost(c *gin.Context) {
-	var reserveReq ReserveHostReq
-	if err := c.ShouldBindJSON(&reserveReq); err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
-		return
+		rsp, err := client.ClusterClient.UpdateHostStatus(framework.NewMicroCtxFromGinCtx(c), &updateHostStatusReq)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+			return
+		}
+		if rsp.Rs.Code != int32(codes.OK) {
+			c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+			return
+		}
+
+		c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
 	}
 
-	if str, dup := detectDuplicateElement(reserveReq.HostIds); dup {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), str+" Is Duplicated in request"))
-		return
-	}
+	if updateReq.Reserved != nil {
+		var reserveHostReq clusterpb.ReserveHostRequest
+		reserveHostReq.Reserved = *updateReq.Reserved
+		reserveHostReq.HostIds = append(reserveHostReq.HostIds, hostIds...)
 
-	var reserveHostReq clusterpb.ReserveHostRequest
-	reserveHostReq.Reserved = reserveReq.Reserved
-	reserveHostReq.HostIds = append(reserveHostReq.HostIds, reserveReq.HostIds...)
-
-	rsp, err := client.ClusterClient.ReserveHost(framework.NewMicroCtxFromGinCtx(c), &reserveHostReq)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
-		return
+		rsp, err := client.ClusterClient.ReserveHost(framework.NewMicroCtxFromGinCtx(c), &reserveHostReq)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+			return
+		}
+		if rsp.Rs.Code != int32(codes.OK) {
+			c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+			return
+		}
+		c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
 	}
-	if rsp.Rs.Code != int32(codes.OK) {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
-		return
-	}
-	c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
 }
 
 func copyAllocToReq(src []Allocation, dst *[]*clusterpb.AllocationReq) {

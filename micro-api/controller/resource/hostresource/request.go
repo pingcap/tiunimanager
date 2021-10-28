@@ -48,14 +48,9 @@ const (
 	DISKS_FIELD
 )
 
-type UpdateHostStatusReq struct {
-	Status  int32    `json:"status"`
-	HostIds []string `json:"hostIds"`
-}
-
-type ReserveHostReq struct {
-	Reserved bool     `json:"reserved"`
-	HostIds  []string `json:"hostIds"`
+type UpdateHostReq struct {
+	Status   *int32 `json:"status"`
+	Reserved *bool  `json:"reserved"`
 }
 
 type Allocation struct {

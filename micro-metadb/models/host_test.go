@@ -50,7 +50,7 @@ func TestCreateHost(t *testing.T) {
 		},
 	}
 	id, _ := Dao.ResourceManager().CreateHost(context.TODO(), h)
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id)
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id) }()
 	type args struct {
 		host *resource.Host
 	}
@@ -100,7 +100,7 @@ func TestCreateHost(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotId, err := Dao.ResourceManager().CreateHost(context.TODO(), tt.args.host)
-			defer Dao.ResourceManager().DeleteHost(context.TODO(), gotId)
+			defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), gotId) }()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateHost() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -189,7 +189,7 @@ func TestCreateHostsInBatch(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotIds, err := Dao.ResourceManager().CreateHostsInBatch(context.TODO(), tt.args.hosts)
-			defer Dao.ResourceManager().DeleteHostsInBatch(context.TODO(), gotIds)
+			defer func() { _ = Dao.ResourceManager().DeleteHostsInBatch(context.TODO(), gotIds) }()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateHostsInBatch() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -221,7 +221,7 @@ func TestDeleteHost(t *testing.T) {
 		},
 	}
 	id, _ := Dao.ResourceManager().CreateHost(context.TODO(), h)
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id)
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id) }()
 	type args struct {
 		hostId string
 	}
@@ -260,7 +260,7 @@ func TestDeleteHostsInBatch(t *testing.T) {
 		},
 	}
 	id1, _ := Dao.ResourceManager().CreateHost(context.TODO(), h)
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
 	h2 := &resource.Host{
 		HostName:     "主机1",
 		IP:           "222.99.999.132",
@@ -278,7 +278,7 @@ func TestDeleteHostsInBatch(t *testing.T) {
 		},
 	}
 	id2, _ := Dao.ResourceManager().CreateHost(context.TODO(), h2)
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id2)
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id2) }()
 
 	type args struct {
 		hostIds []string
@@ -397,7 +397,7 @@ func TestFindHostById(t *testing.T) {
 		},
 	}
 	id1, _ := Dao.ResourceManager().CreateHost(context.TODO(), h)
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
 	type args struct {
 		hostId string
 	}
@@ -878,9 +878,9 @@ func TestListHosts(t *testing.T) {
 	id1, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName1", "111.121.999.132", "TestCompute", string(resource.SSD), 17, 64, 1)
 	id2, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName2", "222.121.999.132", "TestCompute", string(resource.SSD), 16, 64, 0)
 	id3, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName3", "333.121.999.132", "whatever", string(resource.SSD), 15, 64, 0)
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id2)
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id3)
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id2) }()
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id3) }()
 
 	type args struct {
 		req ListHostReq
@@ -945,9 +945,9 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 	id2, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName2", "474.111.111.112", string(resource.General), string(resource.SSD), 16, 64, 2)
 	id3, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName3", "474.111.111.113", string(resource.General), string(resource.SSD), 15, 64, 1)
 	// Host Status should be inused or exhausted, so delete would failed
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id2)
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id3)
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id2) }()
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id3) }()
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
 	m["PD"] = append(m["PD"], &HostAllocReq{
@@ -1016,7 +1016,7 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 func TestAllocHosts_1Host(t *testing.T) {
 	id1, _ := CreateTestHost("Region1", "Zone99", "3-1", "HostName1", "192.168.56.99", string(resource.General), string(resource.SSD), 17, 64, 3)
 	// Host Status should be inused or exhausted, so delete would failed
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
 	m["PD"] = append(m["PD"], &HostAllocReq{
@@ -1078,7 +1078,7 @@ func TestAllocHosts_1Host(t *testing.T) {
 
 func TestAllocHosts_1Host_NotEnough(t *testing.T) {
 	id1, _ := CreateTestHost("Region1", "Zone100", "3-1", "HostName1", "192.168.56.100", string(resource.General), string(resource.SSD), 17, 64, 3)
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
 	m["PD"] = append(m["PD"], &HostAllocReq{
@@ -1858,17 +1858,19 @@ func TestAllocResources_SpecifyHost_Strategy_No_Disk(t *testing.T) {
 
 func TestUpdateHost(t *testing.T) {
 	id1, _ := CreateTestHost("Region1", "TestUpdateZone", "3-1", "HostName1", "474.111.111.140", string(resource.General), string(resource.SSD), 17, 64, 3)
-	defer Dao.ResourceManager().DeleteHost(context.TODO(), id1)
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
 	reserved_req := dbpb.DBReserveHostRequest{
 		Reserved: true,
 	}
 	reserved_req.HostIds = append(reserved_req.HostIds, id1)
-	Dao.ResourceManager().ReserveHost(context.TODO(), &reserved_req)
+	err := Dao.ResourceManager().ReserveHost(context.TODO(), &reserved_req)
+	assert.Equal(t, nil, err)
 	update_req := dbpb.DBUpdateHostStatusRequest{
 		Status: 2,
 	}
 	update_req.HostIds = append(update_req.HostIds, id1)
-	Dao.ResourceManager().UpdateHostStatus(context.TODO(), &update_req)
+	err = Dao.ResourceManager().UpdateHostStatus(context.TODO(), &update_req)
+	assert.Equal(t, nil, err)
 	var host resource.Host
 	MetaDB.First(&host, "IP = ?", "474.111.111.140")
 	assert.Equal(t, int32(2), host.Status)

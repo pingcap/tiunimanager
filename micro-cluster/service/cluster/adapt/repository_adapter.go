@@ -192,6 +192,22 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 		aggregation.LastParameterRecord.Id = uint(resp.Parameters.Id)
 	}
 
+	if aggregation.BaseInfoModified {
+		tagBytes, _ := json.Marshal(cluster.Tags)
+		_, err := client.DBClient.UpdateClusterInfo(context.TODO(), &dbpb.DBUpdateClusterInfoRequest{
+			ClusterId: aggregation.Cluster.Id,
+			Name:        cluster.ClusterName,
+			ClusterType: cluster.ClusterType.Code,
+			VersionCode: cluster.ClusterVersion.Code,
+			Tags:  		 string(tagBytes),
+			Tls:         cluster.Tls,
+		})
+
+		if err != nil {
+			// todo
+			return err
+		}
+	}
 	return nil
 }
 

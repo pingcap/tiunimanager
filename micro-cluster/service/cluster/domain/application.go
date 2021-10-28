@@ -53,6 +53,7 @@ type ClusterAggregation struct {
 
 	AvailableResources *clusterpb.AllocHostResponse
 
+	BaseInfoModified bool
 	StatusModified bool
 	FlowModified   bool
 
@@ -386,6 +387,7 @@ func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
 	cluster.Tags = []string{"takeover"}
 
 	clusterAggregation.ConfigModified = true
+	clusterAggregation.BaseInfoModified = true
 
 	task.Success(nil)
 	return true

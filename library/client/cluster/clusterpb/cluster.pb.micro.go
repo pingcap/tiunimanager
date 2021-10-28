@@ -48,6 +48,7 @@ type ClusterService interface {
 	DeleteCluster(ctx context.Context, in *ClusterDeleteReqDTO, opts ...client.CallOption) (*ClusterDeleteRespDTO, error)
 	DetailCluster(ctx context.Context, in *ClusterDetailReqDTO, opts ...client.CallOption) (*ClusterDetailRespDTO, error)
 	RestartCluster(ctx context.Context, in *ClusterRestartReqDTO, opts ...client.CallOption) (*ClusterRestartRespDTO, error)
+	TakeoverClusters(ctx context.Context, in *ClusterTakeoverReqDTO, opts ...client.CallOption) (*ClusterTakeoverRespDTO, error)
 	ImportData(ctx context.Context, in *DataImportRequest, opts ...client.CallOption) (*DataImportResponse, error)
 	ExportData(ctx context.Context, in *DataExportRequest, opts ...client.CallOption) (*DataExportResponse, error)
 	DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, opts ...client.CallOption) (*DataTransportQueryResponse, error)
@@ -80,6 +81,7 @@ type ClusterService interface {
 	ReserveHost(ctx context.Context, in *ReserveHostRequest, opts ...client.CallOption) (*ReserveHostResponse, error)
 	// task manager
 	ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...client.CallOption) (*ListFlowsResponse, error)
+	DetailFlow(ctx context.Context, in *DetailFlowRequest, opts ...client.CallOption) (*DetailFlowsResponse, error)
 }
 
 type clusterService struct {
@@ -137,6 +139,16 @@ func (c *clusterService) DetailCluster(ctx context.Context, in *ClusterDetailReq
 func (c *clusterService) RestartCluster(ctx context.Context, in *ClusterRestartReqDTO, opts ...client.CallOption) (*ClusterRestartRespDTO, error) {
 	req := c.c.NewRequest(c.name, "ClusterService.RestartCluster", in)
 	out := new(ClusterRestartRespDTO)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) TakeoverClusters(ctx context.Context, in *ClusterTakeoverReqDTO, opts ...client.CallOption) (*ClusterTakeoverRespDTO, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.TakeoverClusters", in)
+	out := new(ClusterTakeoverRespDTO)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -434,6 +446,16 @@ func (c *clusterService) ListFlows(ctx context.Context, in *ListFlowsRequest, op
 	return out, nil
 }
 
+func (c *clusterService) DetailFlow(ctx context.Context, in *DetailFlowRequest, opts ...client.CallOption) (*DetailFlowsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.DetailFlow", in)
+	out := new(DetailFlowsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterService service
 
 type ClusterServiceHandler interface {
@@ -443,6 +465,7 @@ type ClusterServiceHandler interface {
 	DeleteCluster(context.Context, *ClusterDeleteReqDTO, *ClusterDeleteRespDTO) error
 	DetailCluster(context.Context, *ClusterDetailReqDTO, *ClusterDetailRespDTO) error
 	RestartCluster(context.Context, *ClusterRestartReqDTO, *ClusterRestartRespDTO) error
+	TakeoverClusters(context.Context, *ClusterTakeoverReqDTO, *ClusterTakeoverRespDTO) error
 	ImportData(context.Context, *DataImportRequest, *DataImportResponse) error
 	ExportData(context.Context, *DataExportRequest, *DataExportResponse) error
 	DescribeDataTransport(context.Context, *DataTransportQueryRequest, *DataTransportQueryResponse) error
@@ -475,6 +498,7 @@ type ClusterServiceHandler interface {
 	ReserveHost(context.Context, *ReserveHostRequest, *ReserveHostResponse) error
 	// task manager
 	ListFlows(context.Context, *ListFlowsRequest, *ListFlowsResponse) error
+	DetailFlow(context.Context, *DetailFlowRequest, *DetailFlowsResponse) error
 }
 
 func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, opts ...server.HandlerOption) error {
@@ -484,6 +508,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		DeleteCluster(ctx context.Context, in *ClusterDeleteReqDTO, out *ClusterDeleteRespDTO) error
 		DetailCluster(ctx context.Context, in *ClusterDetailReqDTO, out *ClusterDetailRespDTO) error
 		RestartCluster(ctx context.Context, in *ClusterRestartReqDTO, out *ClusterRestartRespDTO) error
+		TakeoverClusters(ctx context.Context, in *ClusterTakeoverReqDTO, out *ClusterTakeoverRespDTO) error
 		ImportData(ctx context.Context, in *DataImportRequest, out *DataImportResponse) error
 		ExportData(ctx context.Context, in *DataExportRequest, out *DataExportResponse) error
 		DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, out *DataTransportQueryResponse) error
@@ -513,6 +538,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		UpdateHostStatus(ctx context.Context, in *UpdateHostStatusRequest, out *UpdateHostStatusResponse) error
 		ReserveHost(ctx context.Context, in *ReserveHostRequest, out *ReserveHostResponse) error
 		ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error
+		DetailFlow(ctx context.Context, in *DetailFlowRequest, out *DetailFlowsResponse) error
 	}
 	type ClusterService struct {
 		clusterService
@@ -543,6 +569,10 @@ func (h *clusterServiceHandler) DetailCluster(ctx context.Context, in *ClusterDe
 
 func (h *clusterServiceHandler) RestartCluster(ctx context.Context, in *ClusterRestartReqDTO, out *ClusterRestartRespDTO) error {
 	return h.ClusterServiceHandler.RestartCluster(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) TakeoverClusters(ctx context.Context, in *ClusterTakeoverReqDTO, out *ClusterTakeoverRespDTO) error {
+	return h.ClusterServiceHandler.TakeoverClusters(ctx, in, out)
 }
 
 func (h *clusterServiceHandler) ImportData(ctx context.Context, in *DataImportRequest, out *DataImportResponse) error {
@@ -659,4 +689,8 @@ func (h *clusterServiceHandler) ReserveHost(ctx context.Context, in *ReserveHost
 
 func (h *clusterServiceHandler) ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error {
 	return h.ClusterServiceHandler.ListFlows(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) DetailFlow(ctx context.Context, in *DetailFlowRequest, out *DetailFlowsResponse) error {
+	return h.ClusterServiceHandler.DetailFlow(ctx, in, out)
 }

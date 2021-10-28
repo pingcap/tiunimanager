@@ -16,3 +16,59 @@
  ******************************************************************************/
 
 package flowtask
+
+import (
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"strconv"
+	"time"
+)
+
+func ParseFlowFromDTO (dto *clusterpb.FlowDTO) FlowWorkDisplayInfo {
+	flow := FlowWorkDisplayInfo{
+		Id:           uint(dto.Id),
+		FlowWorkName: dto.FlowName,
+		ClusterId:    dto.BizId,
+		StatusInfo: controller.StatusInfo{
+			CreateTime: time.Unix(dto.CreateTime, 0),
+			UpdateTime: time.Unix(dto.UpdateTime, 0),
+			DeleteTime: time.Unix(dto.DeleteTime, 0),
+			StatusCode: strconv.Itoa(int(dto.Status)),
+			StatusName: dto.StatusName,
+		},
+	}
+
+	if dto.Operator != nil {
+		flow.ManualOperator = true
+		flow.OperatorName = dto.Operator.Name
+		flow.OperatorId = dto.Operator.Id
+		flow.TenantId = dto.Operator.TenantId
+	}
+	return flow
+}
+
+func ParseFlowWorkDetailInfoFromDTO (dto *clusterpb.FlowWithTaskDTO) FlowWorkDetailInfo {
+	flow := FlowWorkDetailInfo{
+		FlowWorkDisplayInfo: ParseFlowFromDTO(dto.Flow),
+		Tasks: make([]FlowWorkTaskInfo, 0),
+	}
+
+	if len(dto.Tasks) > 0 {
+		for _, t := range dto.Tasks {
+			flow.Tasks = append(flow.Tasks, ParseTaskFromDTO(t))
+		}
+	}
+
+	return flow
+}
+
+func ParseTaskFromDTO (dto *clusterpb.TaskDTO) FlowWorkTaskInfo {
+	task := FlowWorkTaskInfo {
+		Id:         uint(dto.Id),
+		TaskName:   dto.TaskName,
+		Parameters: dto.Parameters,
+		Result:     dto.Result,
+		Status: int(dto.Status),
+	}
+	return task
+}

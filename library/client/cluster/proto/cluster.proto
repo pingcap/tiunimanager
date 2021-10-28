@@ -15,6 +15,7 @@ service ClusterService {
     rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
     rpc DetailCluster(ClusterDetailReqDTO) returns (ClusterDetailRespDTO);
     rpc RestartCluster(ClusterRestartReqDTO) returns (ClusterRestartRespDTO);
+    rpc TakeoverClusters(ClusterTakeoverReqDTO) returns (ClusterTakeoverRespDTO);
 
     rpc ImportData(DataImportRequest) returns (DataImportResponse);
     rpc ExportData(DataExportRequest) returns (DataExportResponse);
@@ -54,6 +55,7 @@ service ClusterService {
 
     // task manager
     rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);
+    rpc DetailFlow(DetailFlowRequest) returns (DetailFlowsResponse);
 }
 
 message ClusterCreateReqDTO {
@@ -67,6 +69,21 @@ message ClusterCreateRespDTO {
     string clusterId = 2;
     ClusterBaseInfoDTO baseInfo = 3;
     DisplayStatusDTO clusterStatus = 4;
+}
+
+message ClusterTakeoverReqDTO {
+    OperatorDTO operator = 1;
+    string tiupIp = 2;
+    string port = 3;
+    string tiupUserName = 4;
+    string tiupUserPassword = 5;
+    string tiupPath = 6;
+    repeated string clusterNames = 7;
+}
+
+message ClusterTakeoverRespDTO {
+    ResponseStatusDTO respStatus = 1;
+    repeated ClusterDisplayDTO clusters = 2;
 }
 
 message ClusterQueryReqDTO {
@@ -386,6 +403,26 @@ message FlowDTO {
     int64 deleteTime = 10;
 }
 
+message TaskDTO {
+    int64 id = 1;
+    int32 status = 2;
+    string taskName = 3;
+    string taskReturnType = 4;
+    string bizId = 5;
+    string parameters = 6;
+    string result = 7;
+    int64 createTime = 8;
+    int64 updateTime = 9;
+    int64 deleteTime = 10;
+    int32 parentType = 11;
+    string parentId = 12;
+}
+
+message FlowWithTaskDTO {
+    FlowDTO flow = 1;
+    repeated TaskDTO tasks = 2;
+}
+
 message ListFlowsRequest {
     string bizId = 1;
     string keyword = 2;
@@ -398,4 +435,15 @@ message ListFlowsResponse {
     repeated FlowDTO flows = 2;
     PageDTO page = 3;
 }
+
+message DetailFlowRequest {
+    int64 flowId = 1;
+}
+
+message DetailFlowsResponse {
+    ResponseStatusDTO status = 1;
+    FlowWithTaskDTO flow = 2;
+}
+
+
 

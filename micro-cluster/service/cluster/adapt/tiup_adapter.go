@@ -29,10 +29,10 @@ func NewTiUPTiDBMetadataManager() *TiUPTiDBMetadataManager {
 	mgr.componentParsers[parser2.GetComponent().ComponentType] = parser2
 
 	parser3 := PDComponentParser{}
-	mgr.componentParsers[parser3.GetComponent().ComponentType] = parser2
+	mgr.componentParsers[parser3.GetComponent().ComponentType] = parser3
 
 	parser4 := TiFlashComponentParser{}
-	mgr.componentParsers[parser4.GetComponent().ComponentType] = parser2
+	mgr.componentParsers[parser4.GetComponent().ComponentType] = parser4
 
 	return mgr
 }

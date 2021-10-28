@@ -372,6 +372,15 @@ func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
 
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.ClusterMetadata = metadata
+
+	clusterAggregation.CurrentTopologyConfigRecord = &TopologyConfigRecord{
+		TenantId:    clusterAggregation.Cluster.TenantId,
+		ClusterId:   clusterAggregation.Cluster.Id,
+		ConfigModel: metadata.GetTopology().(*spec.Specification),
+	}
+
+	clusterAggregation.ConfigModified = true
+
 	task.Success(nil)
 	return true
 }
@@ -393,14 +402,14 @@ func buildTopology(task *TaskEntity, context *FlowContext) bool {
 func takeoverResource(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 
-	allocReq , err := TopologyPlanner.AnalysisResourceRequest(clusterAggregation.ClusterComponents)
+	allocReq , err := TopologyPlanner.AnalysisResourceRequest(clusterAggregation.Cluster, clusterAggregation.ClusterComponents)
 	if err != nil {
 		task.Fail(err)
 		return false
 	}
 
 	allocResponse := &clusterpb.BatchAllocResponse{}
-	resource.NewResourceManager().AllocResourcesInBatch(nil, allocReq, allocResponse)
+	resource.NewResourceManager().AllocResourcesInBatch(ctx.TODO(), allocReq, allocResponse)
 
 	task.Success(allocReq)
 	return true

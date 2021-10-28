@@ -226,13 +226,13 @@ func loadParameterKnowledge() {
 // @Description: list all the components for a
 // @Parameter clusterCode
 // @Parameter versionCode
-// @return []*ClusterComponent
-func GetComponentsForCluster(clusterCode, versionCode string) []*ClusterComponent {
+// @return []ClusterComponent
+func GetComponentsForCluster(clusterCode, versionCode string) []ClusterComponent {
 	versionSpec := ClusterTypeSpecFromCode(clusterCode).GetVersionSpec(versionCode)
-	components := make([]*ClusterComponent, len(versionSpec.ComponentSpecs), len(versionSpec.ComponentSpecs))
+	components := make([]ClusterComponent, len(versionSpec.ComponentSpecs))
 
 	for i, v := range versionSpec.ComponentSpecs {
-		components[i] = &v.ClusterComponent
+		components[i] = v.ClusterComponent
 	}
 
 	return components

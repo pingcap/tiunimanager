@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -23,6 +22,7 @@ import (
 	"strconv"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
@@ -61,7 +61,7 @@ func GetFailureDomain(c *gin.Context) {
 		FailureDomainType: int32(domain),
 	}
 
-	rsp, err := client.ClusterClient.GetFailureDomain(c, &GetDoaminReq)
+	rsp, err := client.ClusterClient.GetFailureDomain(framework.NewMicroCtxFromGinCtx(c), &GetDoaminReq)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return

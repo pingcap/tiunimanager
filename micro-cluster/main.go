@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -26,9 +25,11 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func main() {
@@ -50,6 +51,10 @@ func main() {
 			return nil
 		},
 	})
+
+	f.GetMetrics().ServerStartTimeGaugeMetric.
+		With(prometheus.Labels{metrics.ServiceLabel: f.GetServiceMeta().ServiceName.ServerName()}).
+		SetToCurrentTime()
 
 	f.StartService()
 }

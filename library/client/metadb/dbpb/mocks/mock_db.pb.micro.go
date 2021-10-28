@@ -796,6 +796,26 @@ func (mr *MockTiEMDBServiceMockRecorder) RemoveHostsInBatch(ctx, in interface{},
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveHostsInBatch", reflect.TypeOf((*MockTiEMDBService)(nil).RemoveHostsInBatch), varargs...)
 }
 
+// ReserveHost mocks base method.
+func (m *MockTiEMDBService) ReserveHost(ctx context.Context, in *dbpb.DBReserveHostRequest, opts ...client.CallOption) (*dbpb.DBReserveHostResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ReserveHost", varargs...)
+	ret0, _ := ret[0].(*dbpb.DBReserveHostResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReserveHost indicates an expected call of ReserveHost.
+func (mr *MockTiEMDBServiceMockRecorder) ReserveHost(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReserveHost", reflect.TypeOf((*MockTiEMDBService)(nil).ReserveHost), varargs...)
+}
+
 // SaveBackupRecord mocks base method.
 func (m *MockTiEMDBService) SaveBackupRecord(ctx context.Context, in *dbpb.DBSaveBackupRecordRequest, opts ...client.CallOption) (*dbpb.DBSaveBackupRecordResponse, error) {
 	m.ctrl.T.Helper()
@@ -974,6 +994,26 @@ func (mr *MockTiEMDBServiceMockRecorder) UpdateFlow(ctx, in interface{}, opts ..
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, in}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFlow", reflect.TypeOf((*MockTiEMDBService)(nil).UpdateFlow), varargs...)
+}
+
+// UpdateHostStatus mocks base method.
+func (m *MockTiEMDBService) UpdateHostStatus(ctx context.Context, in *dbpb.DBUpdateHostStatusRequest, opts ...client.CallOption) (*dbpb.DBUpdateHostStatusResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateHostStatus", varargs...)
+	ret0, _ := ret[0].(*dbpb.DBUpdateHostStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateHostStatus indicates an expected call of UpdateHostStatus.
+func (mr *MockTiEMDBServiceMockRecorder) UpdateHostStatus(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateHostStatus", reflect.TypeOf((*MockTiEMDBService)(nil).UpdateHostStatus), varargs...)
 }
 
 // UpdateTask mocks base method.
@@ -1591,6 +1631,20 @@ func (mr *MockTiEMDBServiceHandlerMockRecorder) RemoveHostsInBatch(arg0, arg1, a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveHostsInBatch", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).RemoveHostsInBatch), arg0, arg1, arg2)
 }
 
+// ReserveHost mocks base method.
+func (m *MockTiEMDBServiceHandler) ReserveHost(arg0 context.Context, arg1 *dbpb.DBReserveHostRequest, arg2 *dbpb.DBReserveHostResponse) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReserveHost", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ReserveHost indicates an expected call of ReserveHost.
+func (mr *MockTiEMDBServiceHandlerMockRecorder) ReserveHost(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReserveHost", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).ReserveHost), arg0, arg1, arg2)
+}
+
 // SaveBackupRecord mocks base method.
 func (m *MockTiEMDBServiceHandler) SaveBackupRecord(arg0 context.Context, arg1 *dbpb.DBSaveBackupRecordRequest, arg2 *dbpb.DBSaveBackupRecordResponse) error {
 	m.ctrl.T.Helper()
@@ -1715,6 +1769,20 @@ func (m *MockTiEMDBServiceHandler) UpdateFlow(arg0 context.Context, arg1 *dbpb.D
 func (mr *MockTiEMDBServiceHandlerMockRecorder) UpdateFlow(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateFlow", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).UpdateFlow), arg0, arg1, arg2)
+}
+
+// UpdateHostStatus mocks base method.
+func (m *MockTiEMDBServiceHandler) UpdateHostStatus(arg0 context.Context, arg1 *dbpb.DBUpdateHostStatusRequest, arg2 *dbpb.DBUpdateHostStatusResponse) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateHostStatus", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateHostStatus indicates an expected call of UpdateHostStatus.
+func (mr *MockTiEMDBServiceHandlerMockRecorder) UpdateHostStatus(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateHostStatus", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).UpdateHostStatus), arg0, arg1, arg2)
 }
 
 // UpdateTask mocks base method.

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,6 +18,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/pingcap-inc/tiem/library/client"
@@ -228,5 +228,13 @@ func (s *ClusterFakeService) ExportData(ctx context.Context, in *clusterpb.DataE
 }
 
 func (s *ClusterFakeService) DescribeDataTransport(ctx context.Context, in *clusterpb.DataTransportQueryRequest, opts ...micro.CallOption) (*clusterpb.DataTransportQueryResponse, error) {
+	panic("implement me")
+}
+
+func (s *ClusterFakeService) UpdateHostStatus(ctx context.Context, in *clusterpb.UpdateHostStatusRequest, opts ...micro.CallOption) (*clusterpb.UpdateHostStatusResponse, error) {
+	panic("implement me")
+}
+
+func (s *ClusterFakeService) ReserveHost(ctx context.Context, in *clusterpb.ReserveHostRequest, opts ...micro.CallOption) (*clusterpb.ReserveHostResponse, error) {
 	panic("implement me")
 }

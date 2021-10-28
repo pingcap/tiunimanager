@@ -422,7 +422,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	req.Id = flowContext.value("backupTaskId").(uint64)
 
 	for i := 0; i < 30; i++ {
-		time.Sleep(5 * time.Second)
+		time.Sleep(1 * time.Second)
 		resp, err = client.DBClient.FindTiupTaskByID(context.TODO(), &req)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("get backup task err = %s", err.Error())
@@ -478,7 +478,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	req.Id = flowContext.value("startTaskId").(uint64)
 
 	for i := 0; i < 30; i++ {
-		time.Sleep(5 * time.Second)
+		time.Sleep(1 * time.Second)
 		rsp, err := client.DBClient.FindTiupTaskByID(context.TODO(), &req)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("get start task err = %s", err.Error())

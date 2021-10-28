@@ -93,6 +93,10 @@ func initGinEngine(d *framework.BaseFramework) error {
 	// openapi-server service registry
 	serviceRegistry(d)
 
+	d.GetMetrics().ServerStartTimeGaugeMetric.
+		With(prometheus.Labels{metrics.ServiceLabel: d.GetServiceMeta().ServiceName.ServerName()}).
+		SetToCurrentTime()
+
 	if d.GetClientArgs().EnableHttps {
 		g.Use(interceptor.TlsHandler(addr))
 		if err := g.RunTLS(addr, d.GetCertificateInfo().CertificateCrtFilePath, d.GetCertificateInfo().CertificateKeyFilePath); err != nil {

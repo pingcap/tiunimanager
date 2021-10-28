@@ -18,7 +18,7 @@
 package backuprestore
 
 import (
-	"context"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"net/http"
 	"strconv"
 	"time"
@@ -50,7 +50,9 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups [post]
 func Backup(c *gin.Context) {
-
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Backup", int(status.GetCode()))
 	var req BackupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
@@ -69,7 +71,7 @@ func Backup(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
-		status := resp.GetStatus()
+		status = resp.GetStatus()
 		if common.TIEM_SUCCESS == status.GetCode() {
 			c.JSON(http.StatusOK, controller.Success(BackupRecord{
 				ID:           resp.GetBackupRecord().GetId(),
@@ -103,6 +105,10 @@ func Backup(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/strategy/ [get]
 func QueryBackupStrategy(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "QueryBackupStrategy", int(status.GetCode()))
+
 	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
 
@@ -113,7 +119,7 @@ func QueryBackupStrategy(c *gin.Context) {
 	if err != nil || resp == nil || resp.GetStrategy() == nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
-		status := resp.GetStatus()
+		status = resp.GetStatus()
 		if common.TIEM_SUCCESS == status.GetCode() {
 			c.JSON(http.StatusOK, controller.Success(BackupStrategy{
 				ClusterId:      resp.GetStrategy().GetClusterId(),
@@ -142,8 +148,11 @@ func QueryBackupStrategy(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/strategy [put]
 func SaveBackupStrategy(c *gin.Context) {
-	clusterId := c.Param("clusterId")
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "SaveBackupStrategy", int(status.GetCode()))
 
+	clusterId := c.Param("clusterId")
 	var req BackupStrategyUpdateReq
 	operator := controller.GetOperator(c)
 
@@ -162,7 +171,7 @@ func SaveBackupStrategy(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
-		status := resp.GetStatus()
+		status = resp.GetStatus()
 		if common.TIEM_SUCCESS == status.GetCode() {
 			c.JSON(http.StatusOK, controller.Success(nil))
 		} else {
@@ -185,6 +194,10 @@ func SaveBackupStrategy(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups [get]
 func QueryBackup(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "QueryBackup", int(status.GetCode()))
+
 	var queryReq BackupRecordQueryReq
 	if err := c.ShouldBindQuery(&queryReq); err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
@@ -203,7 +216,7 @@ func QueryBackup(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
-		status := resp.GetStatus()
+		status = resp.GetStatus()
 		if common.TIEM_SUCCESS == status.GetCode() {
 			records := make([]BackupRecord, len(resp.BackupRecords))
 			for i, v := range resp.BackupRecords {
@@ -248,6 +261,10 @@ func QueryBackup(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /backups/{backupId} [delete]
 func DeleteBackup(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "DeleteBackup", int(status.GetCode()))
+
 	backupId, err := strconv.Atoi(c.Param("backupId"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
@@ -268,7 +285,7 @@ func DeleteBackup(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		status := resp.GetStatus()
+		status = resp.GetStatus()
 		if common.TIEM_SUCCESS == status.GetCode() {
 			c.JSON(http.StatusOK, controller.Success(backupId))
 		} else {
@@ -291,8 +308,11 @@ func DeleteBackup(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/restore [post]
 func Restore(c *gin.Context) {
-	var req RestoreReq
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Restore", int(status.GetCode()))
 
+	var req RestoreReq
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
 		_ = c.Error(err)
 		return
@@ -308,12 +328,12 @@ func Restore(c *gin.Context) {
 		Demands:  demand,
 	}
 
-	respDTO, err := client.ClusterClient.RecoverCluster(context.TODO(), reqDTO, controller.DefaultTimeout)
+	respDTO, err := client.ClusterClient.RecoverCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	} else {
-		status := respDTO.GetRespStatus()
+		status = respDTO.GetRespStatus()
 		if common.TIEM_SUCCESS == status.GetCode() {
 			result := controller.BuildCommonResult(int(status.Code), status.Message, RecoverClusterRsp{
 				ClusterId:       respDTO.GetClusterId(),

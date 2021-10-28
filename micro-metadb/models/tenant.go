@@ -18,6 +18,7 @@
 package models
 
 import (
+	"context"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap/errors"
 	"gorm.io/gorm"
@@ -46,26 +47,26 @@ func (e *Tenant) BeforeCreate(*gorm.DB) (err error) {
 	return nil
 }
 
-func (m *DAOAccountManager) AddTenant(name string, tenantType, status int8) (t *Tenant, err error) {
+func (m *DAOAccountManager) AddTenant(ctx context.Context, name string, tenantType, status int8) (t *Tenant, err error) {
 	if name == " " || status < TENANT_STATUS_NORMAL || status > TENANT_STATUS_NORMAL {
 		return nil, errors.Errorf("add tenant has invalid parameter,name: %s, type: %d, status: %d", name, tenantType, status)
 	}
 	t = &Tenant{Type: tenantType, Name: name}
-	return t, m.Db().Create(t).Error
+	return t, m.Db(ctx).Create(t).Error
 }
 
-func (m *DAOAccountManager) FindTenantById(tenantId string) (t *Tenant, err error) {
+func (m *DAOAccountManager) FindTenantById(ctx context.Context, tenantId string) (t *Tenant, err error) {
 	if tenantId == "" {
 		return nil, errors.Errorf("FindTenantByDd has invalid parameter, tenantId: %s", tenantId)
 	}
 	t = &Tenant{}
-	return t, m.Db().Where("id = ?", tenantId).First(t).Error
+	return t, m.Db(ctx).Where("id = ?", tenantId).First(t).Error
 }
 
-func (m *DAOAccountManager) FindTenantByName(name string) (t *Tenant, err error) {
+func (m *DAOAccountManager) FindTenantByName(ctx context.Context, name string) (t *Tenant, err error) {
 	if name == "" {
 		return nil, errors.Errorf("FindTenantByName has invalid parameter, name: %s", name)
 	}
 	t = &Tenant{}
-	return t, m.Db().Where("name = ?", name).First(t).Error
+	return t, m.Db(ctx).Where("name = ?", name).First(t).Error
 }

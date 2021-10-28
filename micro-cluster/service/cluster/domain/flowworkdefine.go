@@ -41,6 +41,7 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		},
 		ContextParser: defaultContextParser,
 	},
+
 	FlowDeleteCluster: {
 		FlowName:    FlowDeleteCluster,
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowDeleteCluster),
@@ -120,6 +121,18 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 			"start":       {"clusterRestart", "restartDone", "fail", SyncFuncTask, clusterRestart},
 			"restartDone": {"end", "", "fail", SyncFuncTask, ClusterEnd},
 			"fail":        {"fail", "", "", SyncFuncTask, ClusterFail},
+		},
+		ContextParser: defaultContextParser,
+	},
+	FlowTakeoverCluster: {
+		FlowName:    FlowTakeoverCluster,
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowTakeoverCluster),
+		TaskNodes: map[string]*TaskDefine{
+			"start":  		{"fetchTopologyFile", "fetched", "fail", SyncFuncTask, fetchTopologyFile},
+			"fetched":   	{"buildTopology", "built", "fail", SyncFuncTask, buildTopology},
+			"built":  		{"takeoverResource", "success", "", SyncFuncTask, takeoverResource},
+			"success":		{"end", "", "", SyncFuncTask, ClusterEnd},
+			"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
 		},
 		ContextParser: defaultContextParser,
 	},

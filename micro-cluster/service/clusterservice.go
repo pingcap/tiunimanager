@@ -111,6 +111,23 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 	}
 }
 
+func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.ClusterTakeoverReqDTO, resp *clusterpb.ClusterTakeoverRespDTO) (err error) {
+	getLogger().Info("takeover clusters")
+	clusters, err := domain.TakeoverClusters(req.Operator, req)
+	if err != nil {
+		getLogger().Info(err)
+		return nil
+	} else {
+		resp.RespStatus = SuccessResponseStatus
+		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters), len(clusters))
+		for i, v := range clusters {
+			resp.Clusters[i] = v.ExtractDisplayDTO()
+		}
+
+		return nil
+	}
+}
+
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.ClusterQueryReqDTO, resp *clusterpb.ClusterQueryRespDTO) (err error) {
 	getLogger().Info("query cluster")
 	clusters, total, err := domain.ListCluster(req.Operator, req)
@@ -479,6 +496,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterpb.Lis
 				Name:     v.Operator.Name,
 				Id:       v.Operator.Id,
 				TenantId: v.Operator.TenantId,
+				ManualOperator: v.Operator.ManualOperator,
 			},
 		}
 	}

@@ -15,6 +15,7 @@ service ClusterService {
     rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
     rpc DetailCluster(ClusterDetailReqDTO) returns (ClusterDetailRespDTO);
     rpc RestartCluster(ClusterRestartReqDTO) returns (ClusterRestartRespDTO);
+    rpc TakeoverClusters(ClusterTakeoverReqDTO) returns (ClusterTakeoverRespDTO);
 
     rpc ImportData(DataImportRequest) returns (DataImportResponse);
     rpc ExportData(DataExportRequest) returns (DataExportResponse);
@@ -67,6 +68,20 @@ message ClusterCreateRespDTO {
     string clusterId = 2;
     ClusterBaseInfoDTO baseInfo = 3;
     DisplayStatusDTO clusterStatus = 4;
+}
+message ClusterTakeoverReqDTO {
+    OperatorDTO operator = 1;
+    string tiupIp = 2;
+    string port = 3;
+    string tiupUserName = 4;
+    string tiupUserPassword = 5;
+    string tiupPath = 6;
+    repeated string clusterNames = 7;
+}
+
+message ClusterTakeoverRespDTO {
+    ResponseStatusDTO respStatus = 1;
+    repeated ClusterDisplayDTO clusters = 2;
 }
 
 message ClusterQueryReqDTO {

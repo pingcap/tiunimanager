@@ -85,24 +85,18 @@ func (auto *autoBackupHandler) Run() {
 	}
 }
 
-func (auto *autoBackupHandler) doBackup(straegy *dbpb.DBBackupStrategyDTO) {
-	getLogger().Infof("begin do auto backup for cluster %s", straegy.GetClusterId())
-	defer getLogger().Infof("end do auto backup for cluster %s", straegy.GetClusterId())
-
-	resp, err := client.DBClient.FindAccountById(ctx.TODO(), &dbpb.DBFindAccountByIdRequest{Id: straegy.GetOperatorId()})
-	if err != nil {
-		getLogger().Errorf("find account by id %s failed, %s", straegy.GetOperatorId(), err.Error())
-		return
-	}
+func (auto *autoBackupHandler) doBackup(strategy *dbpb.DBBackupStrategyDTO) {
+	getLogger().Infof("begin do auto backup for cluster %s", strategy.GetClusterId())
+	defer getLogger().Infof("end do auto backup for cluster %s", strategy.GetClusterId())
 
 	ope := &clusterpb.OperatorDTO{
-		Id:       resp.GetAccount().GetId(),
-		TenantId: resp.GetAccount().GetTenantId(),
-		Name:     resp.GetAccount().GetName(),
+		Id:       SystemOperator,
+		Name:     SystemOperator,
+		ManualOperator: false,
 	}
-	_, err = Backup(framework.NewMicroCtxFromGinCtx(&gin.Context{}), ope, straegy.GetClusterId(), "", "", BackupModeAuto, "")
+	_, err := Backup(framework.NewMicroCtxFromGinCtx(&gin.Context{}), ope, strategy.GetClusterId(), "", "", BackupModeAuto, "")
 	if err != nil {
-		getLogger().Errorf("do backup for cluster %s failed, %s", straegy.GetClusterId(), err.Error())
+		getLogger().Errorf("do backup for cluster %s failed, %s", strategy.GetClusterId(), err.Error())
 		return
 	}
 }

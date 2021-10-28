@@ -22,7 +22,44 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"math/rand"
+	"strconv"
+	"time"
 )
+
+type ComponentGroup struct {
+	ComponentType	*knowledge.ClusterComponent
+	Nodes 			[]ComponentInstance
+}
+
+type ComponentInstance struct {
+	ID        string
+
+	Code     string
+	TenantId string
+
+	Status   ClusterStatus
+	ClusterId 		string
+	ComponentType	*knowledge.ClusterComponent
+
+	Role     string
+	Spec     string
+	Version  *knowledge.ClusterVersion
+
+	HostId   string
+	DiskId   string
+	PortInfo string
+	AllocRequestId string
+
+	Host 	 	string
+	DeployDir 	string
+	Cpu 		int
+	Memory 		int
+	PortList 	[]int
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
+}
 
 func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterInstanceDTO {
 	dto := &clusterpb.ClusterInstanceDTO{
@@ -38,8 +75,8 @@ func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterI
 		dto.IntranetConnectAddresses, dto.ExtranetConnectAddresses, dto.PortList = ConnectAddresses(record.ConfigModel)
 	} else {
 		dto.PortList = []int64{4000}
-		dto.IntranetConnectAddresses = []string{"127.0.0.1"}
-		dto.ExtranetConnectAddresses = []string{"127.0.0.1"}
+		dto.IntranetConnectAddresses = []string{"127.0.0.1:4000"}
+		dto.ExtranetConnectAddresses = []string{"127.0.0.1:4000"}
 	}
 
 	return dto
@@ -52,8 +89,7 @@ func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int64) {
 	portList := make([]int64, len(servers), len(servers))
 
 	for i, v := range servers {
-		addressList[i] = v.Host
-		portList[i] = int64(v.Port)
+		addressList[i] = v.Host + ":" + strconv.Itoa(v.Port)
 	}
 	return addressList, addressList, portList
 }
@@ -93,7 +129,7 @@ var ComponentAppender = map[string]func(*spec.Specification, string) []*clusterp
 	"TiDB": tiDBComponent,
 	"TiKV": tiKVComponent,
 	"PD":   pDComponent,
-	//"TiFlash": tiFlashComponent,
+	"TiFlash": tiFlashComponent,
 	//"TiCDC": tiCDCComponent,
 }
 

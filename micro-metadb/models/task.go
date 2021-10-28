@@ -101,7 +101,7 @@ func ListFlows(db *gorm.DB, bizId, keyword string, status int, offset int, lengt
 	if status >= 0 {
 		query = query.Where("status = ?", status)
 	}
-	err = query.Count(&total).Offset(offset).Limit(length).Find(&flows).Error
+	err = query.Order("id desc").Count(&total).Offset(offset).Limit(length).Find(&flows).Error
 	return flows, total, err
 }
 

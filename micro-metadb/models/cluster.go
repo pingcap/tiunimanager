@@ -182,6 +182,19 @@ func (m *DAOClusterManager) UpdateClusterFlowId(ctx context.Context, clusterId s
 	return cluster, m.Db(ctx).Model(cluster).Where("id = ?", clusterId).First(cluster).Update("current_flow_id", flowId).Error
 }
 
+func (m *DAOClusterManager) UpdateClusterInfo(ctx context.Context, clusterId string, name, clusterType, versionCode, tags string, tls bool) (cluster *Cluster, err error) {
+	if "" == clusterId {
+		return nil, errors.New(fmt.Sprintf("UpdateClusterInfo has invalid parameter, clusterId: %s", clusterId))
+	}
+	cluster = &Cluster{}
+	return cluster, m.Db(ctx).Model(cluster).Where("id = ?", clusterId).First(cluster).
+		Update("name", name).
+		Update("type", clusterType).
+		Update("version", versionCode).
+		Update("tags", tags).
+		Update("tls", tls).
+		Error
+}
 func (m *DAOClusterManager) UpdateTopologyConfig(ctx context.Context, clusterId string, content string, tenantId string) (cluster *Cluster, err error) {
 	if "" == clusterId || "" == tenantId || "" == content {
 		return nil, errors.New(fmt.Sprintf("UpdateTopologyConfig has invalid parameter, clusterId: %s, content: %s", clusterId, content))
@@ -334,7 +347,7 @@ func (m *DAOClusterManager) ListClusters(ctx context.Context, clusterId, cluster
 	if clusterTag != "" {
 		query = query.Where("tags like '%," + clusterTag + ",%'")
 	}
-	return clusters, total, query.Count(&total).Offset(offset).Limit(length).Find(&clusters).Error
+	return clusters, total, query.Order("updated_at desc").Count(&total).Offset(offset).Limit(length).Find(&clusters).Error
 }
 
 func (m *DAOClusterManager) CreateCluster(ctx context.Context, ClusterName, DbPassword, ClusterType, ClusterVersion string,

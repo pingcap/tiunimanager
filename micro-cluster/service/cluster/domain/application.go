@@ -27,6 +27,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
 
 	"github.com/pingcap-inc/tiem/library/knowledge"
@@ -37,11 +38,13 @@ import (
 
 type ClusterAggregation struct {
 	Cluster *Cluster
+	ClusterMetadata spec.Metadata
+	ClusterComponents []*ComponentGroup
+
+	CurrentWorkFlow             *FlowWorkEntity
+	CurrentOperator *Operator
 
 	CurrentTopologyConfigRecord *TopologyConfigRecord
-	CurrentWorkFlow             *FlowWorkEntity
-
-	CurrentOperator *Operator
 
 	MaintainCronTask *CronTaskEntity
 	HistoryWorkFLows []*FlowWorkEntity
@@ -50,6 +53,7 @@ type ClusterAggregation struct {
 
 	AvailableResources *clusterpb.AllocHostResponse
 
+	BaseInfoModified bool
 	StatusModified bool
 	FlowModified   bool
 
@@ -63,6 +67,7 @@ type ClusterAggregation struct {
 }
 
 var contextClusterKey = "clusterAggregation"
+var contextTakeoverReqKey = "takeoverRequest"
 
 func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
@@ -111,6 +116,55 @@ func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBas
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return clusterAggregation, nil
+}
+
+// TakeoverClusters
+// @Description:
+// @Parameter ope
+// @Parameter req
+// @return []*ClusterAggregation
+// @return error
+func TakeoverClusters(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeoverReqDTO) ([]*ClusterAggregation, error) {
+	operator := parseOperatorFromDTO(ope)
+
+	if len(req.ClusterNames) != 1 {
+		return nil, common.NewBizError(common.TIEM_PARAMETER_INVALID)
+	}
+
+	clusterName := req.ClusterNames[0]
+	cluster := &Cluster{
+		ClusterName:    clusterName,
+		TenantId:       operator.TenantId,
+		OwnerId:        operator.Id,
+	}
+
+	// persist the cluster into database
+	err := ClusterRepo.AddCluster(cluster)
+
+	if err != nil {
+		return nil, err
+	}
+
+	clusterAggregation := &ClusterAggregation {
+		Cluster:          cluster,
+		MaintainCronTask: GetDefaultMaintainTask(),
+		CurrentOperator:  operator,
+	}
+
+	// Start the workflow to takeover a cluster instance
+	flow, err := CreateFlowWork(cluster.Id, FlowTakeoverCluster, operator)
+	if err != nil {
+		return nil, err
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.AddContext(contextTakeoverReqKey, req)
+
+	flow.Start()
+
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
+	ClusterRepo.Persist(clusterAggregation)
+	return []*ClusterAggregation{clusterAggregation}, nil
 }
 
 func (clusterAggregation *ClusterAggregation) updateWorkFlow(flow *FlowWorkEntity) {
@@ -203,7 +257,7 @@ func ModifyParameters(ope *clusterpb.OperatorDTO, clusterId string, content stri
 }
 
 func GetParameters(ope *clusterpb.OperatorDTO, clusterId string) (parameterJson string, err error) {
-	return InstanceRepo.QueryParameterJson(clusterId)
+	return RemoteClusterProxy.QueryParameterJson(clusterId)
 }
 
 func (aggregation *ClusterAggregation) loadWorkFlow() error {
@@ -325,6 +379,67 @@ func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 
 func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)
+	return true
+}
+
+func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
+	req := context.value(contextTakeoverReqKey).(*clusterpb.ClusterTakeoverReqDTO)
+
+	metadata, err := MetadataMgr.FetchFromRemoteCluster(nil, req)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation.ClusterMetadata = metadata
+
+	clusterAggregation.CurrentTopologyConfigRecord = &TopologyConfigRecord{
+		TenantId:    clusterAggregation.Cluster.TenantId,
+		ClusterId:   clusterAggregation.Cluster.Id,
+		ConfigModel: metadata.GetTopology().(*spec.Specification),
+	}
+
+	clusterType, _, _, version := MetadataMgr.ParseClusterInfoFromMetaData(*metadata.GetBaseMeta())
+	cluster := clusterAggregation.Cluster
+	cluster.ClusterType = *knowledge.ClusterTypeFromCode(clusterType)
+	cluster.ClusterVersion = *knowledge.ClusterVersionFromCode(version)
+	cluster.Tags = []string{"takeover"}
+
+	clusterAggregation.ConfigModified = true
+	clusterAggregation.BaseInfoModified = true
+
+	task.Success(nil)
+	return true
+}
+
+func buildTopology(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+
+	components, err := MetadataMgr.ParseComponentsFromMetaData(clusterAggregation.ClusterMetadata)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	clusterAggregation.ClusterComponents = components
+	task.Success(nil)
+	return true
+}
+
+func takeoverResource(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+
+	allocReq , err := TopologyPlanner.AnalysisResourceRequest(clusterAggregation.Cluster, clusterAggregation.ClusterComponents)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	allocResponse := &clusterpb.BatchAllocResponse{}
+	resource.NewResourceManager().AllocResourcesInBatch(ctx.TODO(), allocReq, allocResponse)
+
+	task.Success(allocReq)
 	return true
 }
 
@@ -521,6 +636,7 @@ func parseOperatorFromDTO(dto *clusterpb.OperatorDTO) (operator *Operator) {
 		Id:       dto.Id,
 		Name:     dto.Name,
 		TenantId: dto.TenantId,
+		ManualOperator: dto.ManualOperator,
 	}
 	return
 }
@@ -600,6 +716,7 @@ func tidbPort() int {
 
 func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spec.Specification {
 
+	meta := new(spec.ClusterMeta)
 	tidbHosts := resource.TidbHosts
 	tikvHosts := resource.TikvHosts
 	pdHosts := resource.PdHosts
@@ -655,5 +772,8 @@ func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spe
 		})
 	}
 
+	//meta.SetUser()
+	//meta.SetVersion()
+	meta.SetTopology(tiupConfig)
 	return tiupConfig
 }

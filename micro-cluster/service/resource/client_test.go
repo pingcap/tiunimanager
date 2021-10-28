@@ -72,6 +72,10 @@ type DBFakeService struct {
 	mockLoadTask   func(ctx context.Context, in *dbpb.DBLoadTaskRequest, opts ...client.CallOption) (*dbpb.DBLoadTaskResponse, error)
 }
 
+func (s *DBFakeService) UpdateClusterInfo(ctx context.Context, in *dbpb.DBUpdateClusterInfoRequest, opts ...client.CallOption) (*dbpb.DBUpdateClusterInfoResponse, error) {
+	panic("implement me")
+}
+
 func (s *DBFakeService) FindAccountById(ctx context.Context, in *dbpb.DBFindAccountByIdRequest, opts ...client.CallOption) (*dbpb.DBFindAccountByIdResponse, error) {
 	panic("implement me")
 }

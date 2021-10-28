@@ -83,6 +83,8 @@ func Route(g *gin.Engine) {
 			cluster.Use(interceptor.AuditLog())
 			cluster.GET("/:clusterId", clusterApi.Detail)
 			cluster.POST("/", clusterApi.Create)
+			cluster.POST("/takeover", clusterApi.Takeover)
+
 			cluster.GET("/", clusterApi.Query)
 			cluster.DELETE("/:clusterId", clusterApi.Delete)
 			cluster.POST("/:clusterId/restart", clusterApi.Restart)
@@ -124,6 +126,7 @@ func Route(g *gin.Engine) {
 			flowworks.Use(interceptor.VerifyIdentity)
 			flowworks.Use(interceptor.AuditLog())
 			flowworks.GET("/", flowtaskApi.Query)
+			flowworks.GET("/:flowWorkId", flowtaskApi.Detail)
 		}
 
 		host := apiV1.Group("/resources")

@@ -23,4 +23,5 @@ message OperatorDTO {
     string id = 1;
     string name = 2;
     string tenantId = 3;
+    bool manualOperator = 4;
 }

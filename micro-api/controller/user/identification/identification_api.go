@@ -54,13 +54,13 @@ func Login(c *gin.Context) {
 
 	if err == nil {
 		if result.Status.Code != 0 {
-			c.JSON(http.StatusOK, controller.Fail(int(result.GetStatus().GetCode()), result.GetStatus().GetMessage()))
+			c.JSON(http.StatusBadRequest, controller.Fail(int(result.GetStatus().GetCode()), result.GetStatus().GetMessage()))
 		} else {
 			c.Header("Token", result.TokenString)
 			c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: req.UserName, Token: result.TokenString}))
 		}
 	} else {
-		c.JSON(http.StatusOK, controller.Fail(401, "账号或密码错误"))
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	}
 }
 

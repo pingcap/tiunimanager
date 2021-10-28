@@ -24,7 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain/mock"
+	mock "github.com/pingcap-inc/tiem/test/mock"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"

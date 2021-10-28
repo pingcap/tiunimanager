@@ -379,6 +379,12 @@ func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
 		ConfigModel: metadata.GetTopology().(*spec.Specification),
 	}
 
+	clusterType, _, _, version := MetadataMgr.ParseClusterInfoFromMetaData(*metadata.GetBaseMeta())
+	cluster := clusterAggregation.Cluster
+	cluster.ClusterType = *knowledge.ClusterTypeFromCode(clusterType)
+	cluster.ClusterVersion = *knowledge.ClusterVersionFromCode(version)
+	cluster.Tags = []string{"takeover"}
+
 	clusterAggregation.ConfigModified = true
 
 	task.Success(nil)

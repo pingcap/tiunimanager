@@ -53,7 +53,7 @@ type MetadataManager interface {
 	FetchFromRemoteCluster(ctx context.Context, request *clusterpb.ClusterTakeoverReqDTO) (spec.Metadata, error)
 	RebuildMetadataFromComponents(cluster *Cluster, components []*ComponentGroup) (spec.Metadata, error)
 	ParseComponentsFromMetaData(spec.Metadata) ([]*ComponentGroup, error)
-	ParseClusterInfoFromMetaData(meta spec.BaseMeta) (user string, group string, version string)
+	ParseClusterInfoFromMetaData(meta spec.BaseMeta) (clusterType string, user string, group string, version string)
 }
 
 type ClusterTopologyPlanner interface {

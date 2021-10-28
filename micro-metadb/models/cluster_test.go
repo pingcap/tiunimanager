@@ -877,3 +877,42 @@ func TestFetchCluster(t *testing.T) {
 	})
 
 }
+
+func TestDAOClusterManager_UpdateClusterInfo(t *testing.T) {
+	clusterTbl := Dao.ClusterManager()
+	t.Run("normal update info", func(t *testing.T) {
+		cluster := &Cluster{
+			Entity:  Entity{TenantId: "111"},
+			OwnerId: "ttt",
+		}
+		MetaDB.Create(cluster)
+
+		cluster, err := clusterTbl.UpdateClusterInfo(context.TODO(), cluster.ID, "newName", "TiDB", "v5.0.0", "213", true)
+
+		if err != nil {
+			t.Errorf("UpdateClusterInfo() error = %v", err)
+		}
+
+		if cluster.ID == "" {
+			t.Errorf("UpdateClusterInfo() cluster.ID empty")
+		}
+
+		if cluster.Name != "newName" {
+			t.Errorf("UpdateClusterInfo() want name = %s, got %s","newName",  cluster.Name)
+		}
+		if cluster.Type != "TiDB" {
+			t.Errorf("UpdateClusterInfo() want type = %s, got %s","TiDB",  cluster.Type)
+		}
+		if cluster.Tls != true {
+			t.Errorf("UpdateClusterInfo() want tls true, got false")
+		}
+	})
+
+	t.Run("empty clusterId", func(t *testing.T) {
+		_, err := clusterTbl.UpdateClusterInfo(context.TODO(), "", "newName", "TiDB", "v5.0.0", "213", true)
+		if err == nil {
+			t.Errorf("UpdateClusterInfo() want error, got nil")
+		}
+
+	})
+}

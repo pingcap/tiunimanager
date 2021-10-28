@@ -96,8 +96,8 @@ func (t TiUPTiDBMetadataManager) ParseComponentsFromMetaData(metadata spec.Metad
 	return componentGroups, nil
 }
 
-func (t TiUPTiDBMetadataManager) ParseClusterInfoFromMetaData(meta spec.BaseMeta) (user string, group string, version string) {
-	return meta.User, meta.Group, meta.Version
+func (t TiUPTiDBMetadataManager) ParseClusterInfoFromMetaData(meta spec.BaseMeta) (clusterType, user string, group string, version string) {
+	return "TiDB", meta.User, meta.Group, meta.Version
 }
 
 type TiDBComponentParser struct {}

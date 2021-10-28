@@ -66,6 +66,7 @@ type TiEMDBService interface {
 	// Cluster
 	CreateCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, opts ...client.CallOption) (*DBDeleteClusterResponse, error)
+	UpdateClusterInfo(ctx context.Context, in *DBUpdateClusterInfoRequest, opts ...client.CallOption) (*DBUpdateClusterInfoResponse, error)
 	UpdateClusterStatus(ctx context.Context, in *DBUpdateClusterStatusRequest, opts ...client.CallOption) (*DBUpdateClusterStatusResponse, error)
 	UpdateClusterTopologyConfig(ctx context.Context, in *DBUpdateTopologyConfigRequest, opts ...client.CallOption) (*DBUpdateTopologyConfigResponse, error)
 	CreateInstance(ctx context.Context, in *DBCreateInstanceRequest, opts ...client.CallOption) (*DBCreateInstanceResponse, error)
@@ -318,6 +319,16 @@ func (c *tiEMDBService) CreateCluster(ctx context.Context, in *DBCreateClusterRe
 func (c *tiEMDBService) DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, opts ...client.CallOption) (*DBDeleteClusterResponse, error) {
 	req := c.c.NewRequest(c.name, "TiEMDBService.DeleteCluster", in)
 	out := new(DBDeleteClusterResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiEMDBService) UpdateClusterInfo(ctx context.Context, in *DBUpdateClusterInfoRequest, opts ...client.CallOption) (*DBUpdateClusterInfoResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.UpdateClusterInfo", in)
+	out := new(DBUpdateClusterInfoResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -662,6 +673,7 @@ type TiEMDBServiceHandler interface {
 	// Cluster
 	CreateCluster(context.Context, *DBCreateClusterRequest, *DBCreateClusterResponse) error
 	DeleteCluster(context.Context, *DBDeleteClusterRequest, *DBDeleteClusterResponse) error
+	UpdateClusterInfo(context.Context, *DBUpdateClusterInfoRequest, *DBUpdateClusterInfoResponse) error
 	UpdateClusterStatus(context.Context, *DBUpdateClusterStatusRequest, *DBUpdateClusterStatusResponse) error
 	UpdateClusterTopologyConfig(context.Context, *DBUpdateTopologyConfigRequest, *DBUpdateTopologyConfigResponse) error
 	CreateInstance(context.Context, *DBCreateInstanceRequest, *DBCreateInstanceResponse) error
@@ -722,6 +734,7 @@ func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, op
 		ReserveHost(ctx context.Context, in *DBReserveHostRequest, out *DBReserveHostResponse) error
 		CreateCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, out *DBDeleteClusterResponse) error
+		UpdateClusterInfo(ctx context.Context, in *DBUpdateClusterInfoRequest, out *DBUpdateClusterInfoResponse) error
 		UpdateClusterStatus(ctx context.Context, in *DBUpdateClusterStatusRequest, out *DBUpdateClusterStatusResponse) error
 		UpdateClusterTopologyConfig(ctx context.Context, in *DBUpdateTopologyConfigRequest, out *DBUpdateTopologyConfigResponse) error
 		CreateInstance(ctx context.Context, in *DBCreateInstanceRequest, out *DBCreateInstanceResponse) error
@@ -847,6 +860,10 @@ func (h *tiEMDBServiceHandler) CreateCluster(ctx context.Context, in *DBCreateCl
 
 func (h *tiEMDBServiceHandler) DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, out *DBDeleteClusterResponse) error {
 	return h.TiEMDBServiceHandler.DeleteCluster(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) UpdateClusterInfo(ctx context.Context, in *DBUpdateClusterInfoRequest, out *DBUpdateClusterInfoResponse) error {
+	return h.TiEMDBServiceHandler.UpdateClusterInfo(ctx, in, out)
 }
 
 func (h *tiEMDBServiceHandler) UpdateClusterStatus(ctx context.Context, in *DBUpdateClusterStatusRequest, out *DBUpdateClusterStatusResponse) error {

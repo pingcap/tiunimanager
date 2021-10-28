@@ -999,6 +999,7 @@ func MicroSrvTiupStop(instanceName string, timeoutS int, flags []string, bizID u
 	req.BizID = bizID
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
+		logger.Infof("microsrvtiupstop instancename: %s for bizid: %d, rsp:%v, err:%s", instanceName, bizID, err, rsp)
 		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
 		return 0, err
 	} else {
@@ -1009,6 +1010,7 @@ func MicroSrvTiupStop(instanceName string, timeoutS int, flags []string, bizID u
 		req.TiupPath = glTiUPBinPath
 		req.Flags = flags
 		microTiupStop(req)
+		logger.Infof("microsrvtiupstop instancename: %s for bizid: %d, taskid: %d sent", instanceName, bizID, rsp.Id)
 		return rsp.Id, nil
 	}
 }

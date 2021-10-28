@@ -372,15 +372,27 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 	getLogger().Infof("got restartTaskId %s", strconv.Itoa(int(restartTaskId)))
 
 	go func() {
+		// get cluster restart status async
 		for {
 			stat, statErrStr, err := libtiup.MicroSrvTiupGetTaskStatus(restartTaskId)
 			if err != nil {
 				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
+				break
 			}
 			if stat == dbpb.TiupTaskStatus_Finished {
 				getLogger().Infof(" cluster %s restart done.", cluster.ClusterName)
 				clusterAggregation.StatusModified = true
 				clusterAggregation.Cluster.Online()
+				err := ClusterRepo.Persist(clusterAggregation)
+				if err != nil {
+					getLogger().Errorf("cluster repo persist err = %v", err)
+					return
+				}
+				break
+			} else if stat == dbpb.TiupTaskStatus_Error {
+				getLogger().Infof(" cluster %s restart fail.", cluster.ClusterName)
+				clusterAggregation.StatusModified = true
+				clusterAggregation.Cluster.Status = ClusterStatusOffline
 				err := ClusterRepo.Persist(clusterAggregation)
 				if err != nil {
 					getLogger().Errorf("cluster repo persist err = %v", err)

@@ -533,7 +533,7 @@ func mgrStartNewTiupDeployTask(taskID uint64, req *CmdDeployReq) {
 		return
 	}
 	go func() {
-		defer os.Remove(topologyTmpFilePath)
+		//defer os.Remove(topologyTmpFilePath)
 		var args []string
 		args = append(args, "cluster", "deploy", req.InstanceName, req.Version, topologyTmpFilePath)
 		args = append(args, req.Flags...)

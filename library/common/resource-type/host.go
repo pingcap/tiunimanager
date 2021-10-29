@@ -147,7 +147,8 @@ func (h Host) IsExhaust() bool {
 			break
 		}
 	}
-	return diskExaust || h.FreeCpuCores == 0 || h.FreeMemory == 0
+	computeExaust := (h.FreeCpuCores == 0 || h.FreeMemory == 0)
+	return diskExaust && computeExaust
 }
 
 func (h Host) IsLoadless() bool {

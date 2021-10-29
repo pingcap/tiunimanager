@@ -134,16 +134,16 @@ func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 			MetaDB.First(&host, "IP = ?", "168.168.168.1")
 			assert.Equal(t, int32(16-4-4-4), host.FreeCpuCores)
 			assert.Equal(t, int32(64-8-8-8), host.FreeMemory)
-			assert.True(t, host.Stat == int32(resource.HOST_EXHAUST))
+			assert.True(t, host.Stat == int32(resource.HOST_INUSED))
 			var host2 resource.Host
 			MetaDB.First(&host2, "IP = ?", "168.168.168.2")
 			assert.Equal(t, int32(16-4-4-4), host2.FreeCpuCores)
 			assert.Equal(t, int32(64-8-8-8), host2.FreeMemory)
-			assert.True(t, host2.Stat == int32(resource.HOST_EXHAUST))
+			assert.True(t, host2.Stat == int32(resource.HOST_INUSED))
 			var host3 resource.Host
 			MetaDB.First(&host3, "IP = ?", "168.168.168.3")
-			assert.Equal(t, int32(16-4-4-4), host3.FreeCpuCores)
-			assert.Equal(t, int32(64-8-8-8), host3.FreeMemory)
+			assert.Equal(t, int32(12-4-4-4), host3.FreeCpuCores)
+			assert.Equal(t, int32(24-8-8-8), host3.FreeMemory)
 			assert.True(t, host3.Stat == int32(resource.HOST_EXHAUST))
 
 			var usedComputes []UsedComputeStatistic

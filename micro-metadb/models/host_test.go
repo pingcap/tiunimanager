@@ -778,9 +778,13 @@ func TestHost_IsExhaust(t *testing.T) {
 		want   bool
 	}{
 		{"normal", fields{CpuCores: 4, Memory: 8, Disks: []resource.Disk{{Status: int32(resource.DISK_AVAILABLE)}}}, false},
-		{"without_disk", fields{CpuCores: 4, Memory: 8}, true},
-		{"without_cpu", fields{CpuCores: 0, Memory: 8, Disks: []resource.Disk{{Status: int32(resource.DISK_AVAILABLE)}}}, true},
-		{"without_momery", fields{CpuCores: 4, Memory: 0, Disks: []resource.Disk{{Status: int32(resource.DISK_AVAILABLE)}}}, true},
+		{"exhaust1", fields{CpuCores: 0, Memory: 0, Disks: []resource.Disk{{Status: int32(resource.DISK_INUSED)}}}, true},
+		{"exhaust2", fields{CpuCores: 0, Memory: 0, Disks: []resource.Disk{{Status: int32(resource.DISK_EXHAUST)}}}, true},
+		{"exhaust3", fields{CpuCores: 0, Memory: 0, Disks: []resource.Disk{{Status: int32(resource.DISK_EXHAUST)}, {Status: int32(resource.DISK_INUSED)}}}, true},
+		{"with_disk", fields{CpuCores: 0, Memory: 0, Disks: []resource.Disk{{Status: int32(resource.DISK_AVAILABLE)}}}, false},
+		{"without_disk", fields{CpuCores: 4, Memory: 8}, false},
+		{"without_cpu", fields{CpuCores: 0, Memory: 8, Disks: []resource.Disk{{Status: int32(resource.DISK_AVAILABLE)}}}, false},
+		{"without_momery", fields{CpuCores: 4, Memory: 0, Disks: []resource.Disk{{Status: int32(resource.DISK_AVAILABLE)}}}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -941,9 +945,9 @@ func TestListHosts(t *testing.T) {
 }
 
 func TestAllocHosts_3Hosts(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName1", "474.111.111.111", string(resource.General), string(resource.SSD), 17, 64, 1)
-	id2, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName2", "474.111.111.112", string(resource.General), string(resource.SSD), 16, 64, 2)
-	id3, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName3", "474.111.111.113", string(resource.General), string(resource.SSD), 15, 64, 1)
+	id1, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName1", "474.111.111.111", string(resource.General), string(resource.SSD), 17, 8, 1)
+	id2, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName2", "474.111.111.112", string(resource.General), string(resource.SSD), 7, 16, 2)
+	id3, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName3", "474.111.111.113", string(resource.General), string(resource.SSD), 4, 8, 1)
 	// Host Status should be inused or exhausted, so delete would failed
 	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
 	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id2) }()
@@ -997,17 +1001,17 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 			var host resource.Host
 			MetaDB.First(&host, "IP = ?", "474.111.111.111")
 			assert.Equal(t, int32(17-4), host.FreeCpuCores)
-			assert.Equal(t, int32(64-8), host.FreeMemory)
+			assert.Equal(t, int32(0), host.FreeMemory)
 			assert.True(t, host.Stat == int32(resource.HOST_EXHAUST))
 			var host2 resource.Host
 			MetaDB.First(&host2, "IP = ?", "474.111.111.112")
-			assert.Equal(t, int32(16-4), host2.FreeCpuCores)
-			assert.Equal(t, int32(64-8), host2.FreeMemory)
+			assert.Equal(t, int32(7-4), host2.FreeCpuCores)
+			assert.Equal(t, int32(16-8), host2.FreeMemory)
 			assert.True(t, host2.Stat == int32(resource.HOST_INUSED))
 			var host3 resource.Host
 			MetaDB.First(&host3, "IP = ?", "474.111.111.113")
-			assert.Equal(t, int32(15-4), host3.FreeCpuCores)
-			assert.Equal(t, int32(64-8), host3.FreeMemory)
+			assert.Equal(t, int32(0), host3.FreeCpuCores)
+			assert.Equal(t, int32(0), host3.FreeMemory)
 			assert.True(t, host3.Stat == int32(resource.HOST_EXHAUST))
 		})
 	}
@@ -1070,7 +1074,7 @@ func TestAllocHosts_1Host(t *testing.T) {
 			MetaDB.First(&host, "IP = ?", "192.168.56.99")
 			assert.Equal(t, int32(17-4-4-4), host.FreeCpuCores)
 			assert.Equal(t, int32(64-8-8-8), host.FreeMemory)
-			assert.True(t, host.Stat == int32(resource.HOST_EXHAUST))
+			assert.True(t, host.Stat == int32(resource.HOST_INUSED))
 
 		})
 	}
@@ -1203,7 +1207,7 @@ func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
 			MetaDB.First(&host, "IP = ?", "474.111.111.108")
 			assert.Equal(t, int32(17-4), host.FreeCpuCores)
 			assert.Equal(t, int32(64-8), host.FreeMemory)
-			assert.True(t, host.Stat == int32(resource.HOST_EXHAUST))
+			assert.True(t, host.Stat == int32(resource.HOST_INUSED))
 			var host2 resource.Host
 			MetaDB.First(&host2, "IP = ?", "474.111.111.109")
 			assert.Equal(t, int32(16-4), host2.FreeCpuCores)
@@ -1213,7 +1217,7 @@ func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
 			MetaDB.First(&host3, "IP = ?", "474.111.111.110")
 			assert.Equal(t, int32(15-4), host3.FreeCpuCores)
 			assert.Equal(t, int32(64-8), host3.FreeMemory)
-			assert.True(t, host3.Stat == int32(resource.HOST_EXHAUST))
+			assert.True(t, host3.Stat == int32(resource.HOST_INUSED))
 		})
 	}
 }
@@ -1306,7 +1310,7 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 			MetaDB.First(&host, "IP = ?", "474.111.111.114")
 			assert.Equal(t, int32(17-4), host.FreeCpuCores)
 			assert.Equal(t, int32(64-8), host.FreeMemory)
-			assert.True(t, host.Stat == int32(resource.HOST_EXHAUST))
+			assert.True(t, host.Stat == int32(resource.HOST_INUSED))
 			var host2 resource.Host
 			MetaDB.First(&host2, "IP = ?", "474.111.111.115")
 			assert.Equal(t, int32(16-4), host2.FreeCpuCores)
@@ -1316,7 +1320,7 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 			MetaDB.First(&host3, "IP = ?", "474.111.111.116")
 			assert.Equal(t, int32(15-4), host3.FreeCpuCores)
 			assert.Equal(t, int32(64-8), host3.FreeMemory)
-			assert.True(t, host3.Stat == int32(resource.HOST_EXHAUST))
+			assert.True(t, host3.Stat == int32(resource.HOST_INUSED))
 			//var usedPorts []int32
 			var usedPorts []resource.UsedPort
 			MetaDB.Order("port").Model(&resource.UsedPort{}).Where("host_id = ?", host3.ID).Scan(&usedPorts)
@@ -1331,7 +1335,7 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 }
 
 func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Zone3", "3-1", "HostName1", "474.111.111.117", string(resource.General), string(resource.SSD), 17, 64, 3)
+	id1, _ := CreateTestHost("Region1", "Zone3", "3-1", "HostName1", "474.111.111.117", string(resource.General), string(resource.SSD), 12, 24, 3)
 	id2, _ := CreateTestHost("Region1", "Zone3", "3-1", "HostName2", "474.111.111.118", string(resource.General), string(resource.SSD), 16, 64, 3)
 	id3, _ := CreateTestHost("Region1", "Zone3", "3-1", "HostName3", "474.111.111.119", string(resource.General), string(resource.SSD), 15, 64, 3)
 	t.Log(id1, id2, id3)
@@ -1411,19 +1415,19 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 			assert.Equal(t, int32(8), rsp.BatchResults[0].Results[0].ComputeRes.Memory)
 			var host resource.Host
 			MetaDB.First(&host, "IP = ?", "474.111.111.117")
-			assert.Equal(t, int32(17-4-4-4), host.FreeCpuCores)
-			assert.Equal(t, int32(64-8-8-8), host.FreeMemory)
+			assert.Equal(t, int32(12-4-4-4), host.FreeCpuCores)
+			assert.Equal(t, int32(24-8-8-8), host.FreeMemory)
 			assert.True(t, host.Stat == int32(resource.HOST_EXHAUST))
 			var host2 resource.Host
 			MetaDB.First(&host2, "IP = ?", "474.111.111.118")
 			assert.Equal(t, int32(16-4-4-4), host2.FreeCpuCores)
 			assert.Equal(t, int32(64-8-8-8), host2.FreeMemory)
-			assert.True(t, host2.Stat == int32(resource.HOST_EXHAUST))
+			assert.True(t, host2.Stat == int32(resource.HOST_INUSED))
 			var host3 resource.Host
 			MetaDB.First(&host3, "IP = ?", "474.111.111.119")
 			assert.Equal(t, int32(15-4-4-4), host3.FreeCpuCores)
 			assert.Equal(t, int32(64-8-8-8), host3.FreeMemory)
-			assert.True(t, host3.Stat == int32(resource.HOST_EXHAUST))
+			assert.True(t, host3.Stat == int32(resource.HOST_INUSED))
 			//var usedPorts []int32
 			var usedPorts []resource.UsedPort
 			MetaDB.Order("port").Model(&resource.UsedPort{}).Where("host_id = ?", host3.ID).Scan(&usedPorts)

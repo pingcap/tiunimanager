@@ -16,16 +16,16 @@ message TransportRecordDTO {
 }
 
 message DBCreateTransportRecordRequest {
-	TransportRecordDTO record = 1;
+    TransportRecordDTO record = 1;
 }
 
 message DBCreateTransportRecordResponse {
     DBClusterResponseStatus status = 1;
-	string id = 2;
+    string id = 2;
 }
 
 message DBUpdateTransportRecordRequest {
-	TransportRecordDTO record = 1;
+    TransportRecordDTO record = 1;
 }
 
 message DBUpdateTransportRecordResponse {
@@ -33,12 +33,12 @@ message DBUpdateTransportRecordResponse {
 }
 
 message DBFindTransportRecordByIDRequest {
-	string recordId = 1;
+    string recordId = 1;
 }
 
 message DBFindTransportRecordByIDResponse {
     DBClusterResponseStatus status = 1;
-	TransportRecordDTO record = 2;
+    TransportRecordDTO record = 2;
 }
 
 message DBListTransportRecordRequest {
@@ -48,7 +48,7 @@ message DBListTransportRecordRequest {
 }
 
 message DBListTransportRecordResponse {
-	DBClusterResponseStatus status = 1;
-	DBPageDTO page = 2;
-	repeated TransportRecordDTO records = 3;
+    DBClusterResponseStatus status = 1;
+    DBPageDTO page = 2;
+    repeated TransportRecordDTO records = 3;
 }

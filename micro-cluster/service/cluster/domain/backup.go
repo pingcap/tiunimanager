@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -41,7 +40,7 @@ type BackupRecord struct {
 	BackupMode   BackupMode
 	StorageType  StorageType
 	OperatorId   string
-	Size         uint64
+	Size         int64
 	FilePath     string
 	StartTime    int64
 	EndTime      int64
@@ -79,6 +78,7 @@ func Backup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, b
 		BackupType:   BackupTypeFull,
 		BackupMode:   backupMode,
 		OperatorId:   operator.Id,
+		Size:         -1,
 		FilePath:     getBackupPath(filePath, clusterId, time.Now(), string(BackupTypeFull)),
 		StartTime:    time.Now().Unix(),
 	}
@@ -184,9 +184,9 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 		Tls:            clusterInfo.Tls,
 		TenantId:       operator.TenantId,
 		OwnerId:        operator.Id,
-		RecoverInfo:    RecoverInfo{
+		RecoverInfo: RecoverInfo{
 			SourceClusterId: clusterInfo.GetRecoverInfo().GetSourceClusterId(),
-			BackupRecordId: clusterInfo.GetRecoverInfo().GetBackupRecordId(),
+			BackupRecordId:  clusterInfo.GetRecoverInfo().GetBackupRecordId(),
 		},
 	}
 
@@ -439,7 +439,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("json unmarshal backup info resp: %+v, failed, %s", resp, err.Error())
 	} else {
-		record.Size = backupInfo.Size
+		record.Size = int64(backupInfo.Size)
 	}
 
 	_, err = client.DBClient.UpdateBackupRecord(context.TODO(), &dbpb.DBUpdateBackupRecordRequest{

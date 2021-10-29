@@ -85,11 +85,11 @@ func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterI
 func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int64) {
 	servers := spec.TiDBServers
 
-	addressList := make([]string, len(servers), len(servers))
-	portList := make([]int64, len(servers), len(servers))
+	addressList := make([]string, 0)
+	portList := make([]int64, 0)
 
-	for i, v := range servers {
-		addressList[i] = v.Host + ":" + strconv.Itoa(v.Port)
+	for _, v := range servers {
+		addressList = append(addressList, v.Host + ":" + strconv.Itoa(v.Port))
 	}
 	return addressList, addressList, portList
 }

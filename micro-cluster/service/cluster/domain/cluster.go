@@ -17,7 +17,8 @@
 package domain
 
 import (
-	"encoding/json"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"gopkg.in/yaml.v2"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/knowledge"
@@ -93,7 +94,10 @@ type RecoverInfo struct {
 }
 
 func (r TopologyConfigRecord) Content() string {
-	bytes, _ := json.Marshal(r.ConfigModel)
+	bytes, err := yaml.Marshal(r.ConfigModel)
+	if err != nil {
+		framework.Log().Errorf("yaml.Marshal error, %s", err.Error())
+	}
 	return string(bytes)
 }
 

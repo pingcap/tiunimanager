@@ -20,9 +20,8 @@ message DBCreateTransportRecordRequest {
 }
 
 message DBCreateTransportRecordResponse {
-	int32 errCode = 1;
-	string errStr = 2;
-	string id = 3;
+    DBClusterResponseStatus status = 1;
+	string id = 2;
 }
 
 message DBUpdateTransportRecordRequest {
@@ -30,8 +29,7 @@ message DBUpdateTransportRecordRequest {
 }
 
 message DBUpdateTransportRecordResponse {
-	int32 errCode = 1;
-	string errStr = 2;
+    DBClusterResponseStatus status = 1;
 }
 
 message DBFindTransportRecordByIDRequest {
@@ -39,9 +37,8 @@ message DBFindTransportRecordByIDRequest {
 }
 
 message DBFindTransportRecordByIDResponse {
-	int32 errCode = 1;
-	string errStr = 2;
-	TransportRecordDTO record = 3;
+    DBClusterResponseStatus status = 1;
+	TransportRecordDTO record = 2;
 }
 
 message DBListTransportRecordRequest {
@@ -51,8 +48,7 @@ message DBListTransportRecordRequest {
 }
 
 message DBListTransportRecordResponse {
-	DBPageDTO page = 1;
-	int32 errCode = 2;
-	string errStr = 3;
-	repeated TransportRecordDTO records = 4;
+	DBClusterResponseStatus status = 1;
+	DBPageDTO page = 2;
+	repeated TransportRecordDTO records = 3;
 }

@@ -162,6 +162,8 @@ func TakeoverClusters(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeover
 
 	flow.Start()
 
+	clusterAggregation.Cluster.Online()
+	clusterAggregation.StatusModified = true
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return []*ClusterAggregation{clusterAggregation}, nil

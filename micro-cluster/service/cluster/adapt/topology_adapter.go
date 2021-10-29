@@ -46,6 +46,7 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(cluster *domain.Cluster,
 			requirementList = append(requirementList, &clusterpb.AllocRequirement{
 				Location: &clusterpb.Location{Host: instance.Host},
 				Require: &clusterpb.Requirement{
+					Exclusive:  false,
 					PortReq:    portRequirementList,
 					DiskReq:    &clusterpb.DiskRequirement{NeedDisk: false},
 					ComputeReq: &clusterpb.ComputeRequirement{CpuCores: 0, Memory: 0},

@@ -26,6 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"gopkg.in/yaml.v2"
 	"strconv"
 	"time"
 )
@@ -506,7 +507,7 @@ func parseConfigRecordDTO(dto *dbpb.DBTopologyConfigDTO) (record *domain.Topolog
 	}
 
 	spec := &spec.Specification{}
-	json.Unmarshal([]byte(dto.Content), spec)
+	yaml.Unmarshal([]byte(dto.Content), spec)
 
 	record.ConfigModel = spec
 	return

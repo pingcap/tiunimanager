@@ -63,7 +63,7 @@ func Query(c *gin.Context) {
 	} else {
 		status := respDTO.GetStatus()
 
-		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows), len(respDTO.Flows))
+		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows))
 
 		for i, v := range respDTO.Flows {
 			flows[i] = FlowWorkDisplayInfo{

@@ -281,11 +281,11 @@ func (m *DAOClusterManager) ListClusterDetails(ctx context.Context, clusterId, c
 		return nil, 0, errors.New(fmt.Sprintf("ListClusterDetails, query cluster lists failed, error: %v", err))
 	}
 
-	flowIds := make([]uint, len(clusters), len(clusters))
-	demandIds := make([]uint, len(clusters), len(clusters))
-	topologyConfigIds := make([]uint, len(clusters), len(clusters))
+	flowIds := make([]uint, len(clusters))
+	demandIds := make([]uint, len(clusters))
+	topologyConfigIds := make([]uint, len(clusters))
 
-	result = make([]*ClusterFetchResult, len(clusters), len(clusters))
+	result = make([]*ClusterFetchResult, len(clusters))
 	clusterMap := make(map[string]*ClusterFetchResult)
 
 	for i, c := range clusters {
@@ -298,7 +298,7 @@ func (m *DAOClusterManager) ListClusterDetails(ctx context.Context, clusterId, c
 		clusterMap[c.ID] = result[i]
 	}
 
-	flows := make([]*FlowDO, len(clusters), len(clusters))
+	flows := make([]*FlowDO, len(clusters))
 	err = m.Db(ctx).Find(&flows, flowIds).Error
 	if nil != err {
 		return nil, 0, errors.New(fmt.Sprintf("ListClusterDetails, query flow lists failed, error: %v", err))
@@ -307,7 +307,7 @@ func (m *DAOClusterManager) ListClusterDetails(ctx context.Context, clusterId, c
 		clusterMap[v.BizId].Flow = v
 	}
 
-	demands := make([]*DemandRecord, len(clusters), len(clusters))
+	demands := make([]*DemandRecord, len(clusters))
 	err = m.Db(ctx).Find(&demands, demandIds).Error
 	if nil != err {
 		return nil, 0, errors.New(fmt.Sprintf("ListClusterDetails, query demand lists failed, error: %v", err))
@@ -316,7 +316,7 @@ func (m *DAOClusterManager) ListClusterDetails(ctx context.Context, clusterId, c
 		clusterMap[v.ClusterId].DemandRecord = v
 	}
 
-	topologyConfigs := make([]*TopologyConfig, len(clusters), len(clusters))
+	topologyConfigs := make([]*TopologyConfig, len(clusters))
 	err = m.Db(ctx).Find(&topologyConfigs, topologyConfigIds).Error
 	if nil != err {
 		return nil, 0, errors.New(fmt.Sprintf("ListClusterDetails, query topology config lists failed, error: %v", err))
@@ -330,7 +330,7 @@ func (m *DAOClusterManager) ListClusterDetails(ctx context.Context, clusterId, c
 func (m *DAOClusterManager) ListClusters(ctx context.Context, clusterId, clusterName, clusterType, clusterStatus string,
 	clusterTag string, offset int, length int) (clusters []*Cluster, total int64, err error) {
 
-	clusters = make([]*Cluster, length, length)
+	clusters = make([]*Cluster, length)
 	query := m.Db(ctx).Table(TABLE_NAME_CLUSTER)
 	if clusterId != "" {
 		query = query.Where("id = ?", clusterId)

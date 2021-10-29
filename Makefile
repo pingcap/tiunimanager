@@ -197,7 +197,7 @@ else
 endif
 
 # don't run it locally, only for CI, use local_test instead
-test: add_test_file
+test: add_test_file mock
 	GO111MODULE=off go get github.com/axw/gocov/gocov
 	GO111MODULE=off go get github.com/jstemmer/go-junit-report
 	GO111MODULE=off go get github.com/AlekSi/gocov-xml
@@ -231,7 +231,7 @@ failpoint-disable: build_failpoint_ctl
 
 lint:
 	# refer https://golangci-lint.run/usage/install/#local-installation to install golangci-lint firstly
-	golangci-lint run  --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml
+	golangci-lint run --out-format=junit-xml  --timeout=10m --disable=errcheck -v ./... > golangci-lint-report.xml
 
 gosec:
 	go install github.com/securego/gosec/v2/cmd/gosec@latest

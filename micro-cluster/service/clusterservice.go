@@ -119,7 +119,7 @@ func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *cluste
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
-		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters), len(clusters))
+		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters))
 		for i, v := range clusters {
 			resp.Clusters[i] = v.ExtractDisplayDTO()
 		}
@@ -136,7 +136,7 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
-		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters), len(clusters))
+		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters))
 		for i, v := range clusters {
 			resp.Clusters[i] = v.ExtractDisplayDTO()
 		}
@@ -481,7 +481,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterpb.Lis
 		Total:    int32(total),
 	}
 
-	response.Flows = make([]*clusterpb.FlowDTO, len(flows), len(flows))
+	response.Flows = make([]*clusterpb.FlowDTO, len(flows))
 	for i, v := range flows {
 		response.Flows[i] = &clusterpb.FlowDTO{
 			Id:          int64(v.Id),

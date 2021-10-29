@@ -19,6 +19,7 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -82,7 +83,7 @@ func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBas
 		OwnerId:        operator.Id,
 	}
 
-	demands := make([]*ClusterComponentDemand, len(demandDTOs), len(demandDTOs))
+	demands := make([]*ClusterComponentDemand, len(demandDTOs))
 
 	for i, v := range demandDTOs {
 		demands[i] = parseNodeDemandFromDTO(v)
@@ -247,6 +248,7 @@ func ModifyParameters(ope *clusterpb.OperatorDTO, clusterId string, content stri
 	flow, err := CreateFlowWork(clusterId, FlowModifyParameters, operator)
 	if err != nil {
 		// todo
+		getLogger().Errorf("modify parameters clusterid = %s, content = %s, errStr: %s", clusterId, content, err.Error())
 	}
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
@@ -262,19 +264,19 @@ func GetParameters(ope *clusterpb.OperatorDTO, clusterId string) (parameterJson 
 	return RemoteClusterProxy.QueryParameterJson(clusterId)
 }
 
-func (aggregation *ClusterAggregation) loadWorkFlow() error {
-	if aggregation.Cluster.WorkFlowId > 0 && aggregation.CurrentWorkFlow == nil {
-		flowWork, err := TaskRepo.LoadFlowWork(aggregation.Cluster.WorkFlowId)
-		if err != nil {
-			return err
-		} else {
-			aggregation.CurrentWorkFlow = flowWork
-			return nil
-		}
-	}
-
-	return nil
-}
+//func (aggregation *ClusterAggregation) loadWorkFlow() error {
+//	if aggregation.Cluster.WorkFlowId > 0 && aggregation.CurrentWorkFlow == nil {
+//		flowWork, err := TaskRepo.LoadFlowWork(aggregation.Cluster.WorkFlowId)
+//		if err != nil {
+//			return err
+//		} else {
+//			aggregation.CurrentWorkFlow = flowWork
+//			return nil
+//		}
+//	}
+//
+//	return nil
+//}
 
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
@@ -286,6 +288,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 
 	if err != nil {
 		// todo
+		fmt.Println(err)
 	}
 
 	task.Success(nil)
@@ -321,7 +324,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 
 		cfgYamlStr := string(bs)
 		getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
-		deployTaskId, err := libtiup.MicroSrvTiupDeploy(
+		deployTaskId, _ := libtiup.MicroSrvTiupDeploy(
 			cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
 		)
 		context.put("deployTaskId", deployTaskId)
@@ -387,7 +390,7 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
 	req := context.value(contextTakeoverReqKey).(*clusterpb.ClusterTakeoverReqDTO)
 
-	metadata, err := MetadataMgr.FetchFromRemoteCluster(nil, req)
+	metadata, err := MetadataMgr.FetchFromRemoteCluster(ctx.TODO(), req)
 	if err != nil {
 		task.Fail(err)
 		return false
@@ -566,9 +569,10 @@ func (aggregation *ClusterAggregation) ExtractMaintenanceDTO() *clusterpb.Cluste
 	dto := &clusterpb.ClusterMaintenanceDTO{}
 	if aggregation.MaintainCronTask != nil {
 		dto.MaintainTaskCron = aggregation.MaintainCronTask.Cron
-	} else {
-		// default maintain ?
 	}
+	//else {
+	//	// default maintain ?
+	//}
 
 	return dto
 }
@@ -661,7 +665,7 @@ func parseRecoverInFoFromDTO(dto *clusterpb.RecoverInfoDTO) (info RecoverInfo) {
 }
 
 func parseNodeDemandFromDTO(dto *clusterpb.ClusterNodeDemandDTO) (demand *ClusterComponentDemand) {
-	items := make([]*ClusterNodeDistributionItem, len(dto.Items), len(dto.Items))
+	items := make([]*ClusterNodeDistributionItem, len(dto.Items))
 
 	for i, v := range dto.Items {
 		items[i] = parseDistributionItemFromDTO(v)
@@ -682,17 +686,17 @@ func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *clusterpb
 	for _, d := range demands {
 		switch d.ComponentType.ComponentType {
 		case "TiDB":
-			req.TidbReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			req.TidbReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.TidbReq[i] = convertAllocationReq(v)
 			}
 		case "TiKV":
-			req.TikvReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			req.TikvReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.TikvReq[i] = convertAllocationReq(v)
 			}
 		case "PD":
-			req.PdReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			req.PdReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.PdReq[i] = convertAllocationReq(v)
 			}

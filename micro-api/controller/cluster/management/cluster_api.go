@@ -129,7 +129,7 @@ func Query(c *gin.Context) {
 	} else {
 		status := respDTO.GetRespStatus()
 
-		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters), len(respDTO.Clusters))
+		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters))
 
 		for i, v := range respDTO.Clusters {
 			clusters[i] = *ParseDisplayInfoFromDTO(v)
@@ -255,7 +255,7 @@ func Detail(c *gin.Context) {
 		maintenance := respDTO.GetMaintenanceInfo()
 		components := respDTO.GetComponents()
 
-		componentInstances := make([]ComponentInstance, 0, 0)
+		componentInstances := make([]ComponentInstance, 0)
 		for _, v := range components {
 			if len(v.Nodes) > 0 {
 				componentInstances = append(componentInstances, *ParseComponentInfoFromDTO(v))
@@ -314,7 +314,7 @@ func Takeover(c *gin.Context) {
 	} else {
 		status := respDTO.GetRespStatus()
 
-		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters), len(respDTO.Clusters))
+		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters))
 
 		for i, v := range respDTO.Clusters {
 			clusters[i] = *ParseDisplayInfoFromDTO(v)

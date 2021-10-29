@@ -17,6 +17,7 @@
 package disk
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -96,6 +97,7 @@ func InitializeTempDir() error {
 				if err != nil {
 					// TODO getLogger().Warn("Remove temporary file error",
 					//	zap.String("tempStorageSubDir", filepath.Join(tempDir, subDir.Name())), zap.Error(err))
+					fmt.Println(err)
 				}
 			}
 		}()

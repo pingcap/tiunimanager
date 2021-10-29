@@ -90,7 +90,7 @@ func FetchFlow(db *gorm.DB, id uint) (flow FlowDO, err error) {
 }
 
 func ListFlows(db *gorm.DB, bizId, keyword string, status int, offset int, length int) (flows []*FlowDO, total int64, err error) {
-	flows = make([]*FlowDO, length, length)
+	flows = make([]*FlowDO, length)
 	query := db.Table(TABLE_NAME_FLOW)
 	if bizId != "" {
 		query = query.Where("biz_id = ?", bizId)

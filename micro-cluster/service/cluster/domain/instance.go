@@ -135,7 +135,7 @@ var ComponentAppender = map[string]func(*spec.Specification, string) []*clusterp
 
 func tiDBComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	servers := config.TiDBServers
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers))
 	for i, v := range servers {
 		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
 			NodeId:  v.Host,
@@ -163,7 +163,7 @@ func tiDBComponent(config *spec.Specification, version string) []*clusterpb.Comp
 
 func tiKVComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	servers := config.TiKVServers
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers))
 	for i, v := range servers {
 		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
 			NodeId:  v.Host,
@@ -191,7 +191,7 @@ func tiKVComponent(config *spec.Specification, version string) []*clusterpb.Comp
 
 func pDComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	servers := config.PDServers
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers))
 	for i, v := range servers {
 		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
 			NodeId:  v.Host,
@@ -217,13 +217,13 @@ func pDComponent(config *spec.Specification, version string) []*clusterpb.Compon
 	return dto
 }
 
-func tiCDCComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0, 0)
-
-	return dto
-}
+//func tiCDCComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
+//	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0, 0)
+//
+//	return dto
+//}
 func tiFlashComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0, 0)
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0)
 	return dto
 }
 

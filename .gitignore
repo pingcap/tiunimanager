@@ -11,3 +11,4 @@ data.etcd1/
 *.log
 /micro-metadb/models/testdata/
 etcd/
+/dbtest123.yaml

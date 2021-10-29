@@ -45,6 +45,7 @@ type ClusterService interface {
 	DetailCluster(ctx context.Context, in *ClusterDetailReqDTO, opts ...client.CallOption) (*ClusterDetailRespDTO, error)
 	RestartCluster(ctx context.Context, in *ClusterRestartReqDTO, opts ...client.CallOption) (*ClusterRestartRespDTO, error)
 	StopCluster(ctx context.Context, in *ClusterStopReqDTO, opts ...client.CallOption) (*ClusterStopRespDTO, error)
+	TakeoverClusters(ctx context.Context, in *ClusterTakeoverReqDTO, opts ...client.CallOption) (*ClusterTakeoverRespDTO, error)
 	ImportData(ctx context.Context, in *DataImportRequest, opts ...client.CallOption) (*DataImportResponse, error)
 	ExportData(ctx context.Context, in *DataExportRequest, opts ...client.CallOption) (*DataExportResponse, error)
 	DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, opts ...client.CallOption) (*DataTransportQueryResponse, error)
@@ -144,6 +145,16 @@ func (c *clusterService) RestartCluster(ctx context.Context, in *ClusterRestartR
 func (c *clusterService) StopCluster(ctx context.Context, in *ClusterStopReqDTO, opts ...client.CallOption) (*ClusterStopRespDTO, error) {
 	req := c.c.NewRequest(c.name, "ClusterService.StopCluster", in)
 	out := new(ClusterStopRespDTO)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) TakeoverClusters(ctx context.Context, in *ClusterTakeoverReqDTO, opts ...client.CallOption) (*ClusterTakeoverRespDTO, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.TakeoverClusters", in)
+	out := new(ClusterTakeoverRespDTO)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -451,6 +462,7 @@ type ClusterServiceHandler interface {
 	DetailCluster(context.Context, *ClusterDetailReqDTO, *ClusterDetailRespDTO) error
 	RestartCluster(context.Context, *ClusterRestartReqDTO, *ClusterRestartRespDTO) error
 	StopCluster(context.Context, *ClusterStopReqDTO, *ClusterStopRespDTO) error
+	TakeoverClusters(context.Context, *ClusterTakeoverReqDTO, *ClusterTakeoverRespDTO) error
 	ImportData(context.Context, *DataImportRequest, *DataImportResponse) error
 	ExportData(context.Context, *DataExportRequest, *DataExportResponse) error
 	DescribeDataTransport(context.Context, *DataTransportQueryRequest, *DataTransportQueryResponse) error
@@ -493,6 +505,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		DetailCluster(ctx context.Context, in *ClusterDetailReqDTO, out *ClusterDetailRespDTO) error
 		RestartCluster(ctx context.Context, in *ClusterRestartReqDTO, out *ClusterRestartRespDTO) error
 		StopCluster(ctx context.Context, in *ClusterStopReqDTO, out *ClusterStopRespDTO) error
+		TakeoverClusters(ctx context.Context, in *ClusterTakeoverReqDTO, out *ClusterTakeoverRespDTO) error
 		ImportData(ctx context.Context, in *DataImportRequest, out *DataImportResponse) error
 		ExportData(ctx context.Context, in *DataExportRequest, out *DataExportResponse) error
 		DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, out *DataTransportQueryResponse) error
@@ -556,6 +569,10 @@ func (h *clusterServiceHandler) RestartCluster(ctx context.Context, in *ClusterR
 
 func (h *clusterServiceHandler) StopCluster(ctx context.Context, in *ClusterStopReqDTO, out *ClusterStopRespDTO) error {
 	return h.ClusterServiceHandler.StopCluster(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) TakeoverClusters(ctx context.Context, in *ClusterTakeoverReqDTO, out *ClusterTakeoverRespDTO) error {
+	return h.ClusterServiceHandler.TakeoverClusters(ctx, in, out)
 }
 
 func (h *clusterServiceHandler) ImportData(ctx context.Context, in *DataImportRequest, out *DataImportResponse) error {

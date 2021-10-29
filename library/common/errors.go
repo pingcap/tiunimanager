@@ -16,6 +16,38 @@
 
 package common
 
+type TIEM_BIZ_ERROR_CODE uint32
+
+type TiEMBizError struct {
+	Code    TIEM_BIZ_ERROR_CODE
+	Message string
+}
+
+func NewBizError(code TIEM_BIZ_ERROR_CODE) *TiEMBizError {
+	if TIEM_SUCCESS == code {
+		return nil
+	}
+
+	return &TiEMBizError{
+		Code:    code,
+		Message: TiEMErrMsg[code],
+	}
+}
+
+func NewBizErrorWithMessage(code TIEM_BIZ_ERROR_CODE, message string) *TiEMBizError {
+	if TIEM_SUCCESS == code {
+		return nil
+	}
+	return &TiEMBizError{
+		Code:    code,
+		Message: message,
+	}
+}
+
+func (err TiEMBizError) Error() string {
+	return err.Message
+}
+
 // tiem all errno
 const (
 	TIEM_SUCCESS           = 0
@@ -62,7 +94,7 @@ const (
 	TIEM_MONITOR_NOT_FOUND             = 614
 )
 
-var TiEMErrMsg = map[uint32]string{
+var TiEMErrMsg = map[TIEM_BIZ_ERROR_CODE]string{
 	TIEM_SUCCESS:           "successful",
 	TIEM_PARAMETER_INVALID: "parameter is invalid",
 	TIEM_ACCOUNT_NOT_FOUND: "account is not found",

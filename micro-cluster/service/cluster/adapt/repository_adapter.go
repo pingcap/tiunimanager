@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -34,7 +33,9 @@ import (
 func InjectionMetaDbRepo() {
 	domain.TaskRepo = TaskRepoAdapter{}
 	domain.ClusterRepo = ClusterRepoAdapter{}
-	domain.InstanceRepo = InstanceRepoAdapter{}
+	domain.RemoteClusterProxy = RemoteClusterProxy{}
+	domain.MetadataMgr = NewTiUPTiDBMetadataManager()
+	domain.TopologyPlanner = DefaultTopologyPlanner{}
 }
 
 type ClusterRepoAdapter struct{}
@@ -190,6 +191,25 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 		aggregation.LastParameterRecord.Id = uint(resp.Parameters.Id)
 	}
 
+	if aggregation.BaseInfoModified {
+		tagBytes, err := json.Marshal(cluster.Tags)
+		if err != nil {
+			return err
+		}
+		client.DBClient.UpdateClusterInfo(context.TODO(), &dbpb.DBUpdateClusterInfoRequest{
+			ClusterId:   aggregation.Cluster.Id,
+			Name:        cluster.ClusterName,
+			ClusterType: cluster.ClusterType.Code,
+			VersionCode: cluster.ClusterVersion.Code,
+			Tags:        string(tagBytes),
+			Tls:         cluster.Tls,
+		})
+
+		if err != nil {
+			// todo
+			return err
+		}
+	}
 	return nil
 }
 
@@ -217,9 +237,9 @@ func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation,
 	}
 }
 
-type InstanceRepoAdapter struct{}
+type RemoteClusterProxy struct{}
 
-func (c InstanceRepoAdapter) QueryParameterJson(clusterId string) (content string, err error) {
+func (c RemoteClusterProxy) QueryParameterJson(clusterId string) (content string, err error) {
 	resp, err := client.DBClient.GetCurrentParametersRecord(context.TODO(), &dbpb.DBGetCurrentParametersRequest{
 		ClusterId: clusterId,
 	})
@@ -266,11 +286,9 @@ func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, 
 			StatusAlias: v.StatusAlias,
 			BizId:       v.BizId,
 			Status:      domain.TaskStatus(v.Status),
-			Operator: &domain.Operator{
-				Name: v.Operator,
-			},
-			CreateTime: time.Unix(v.CreateTime, 0),
-			UpdateTime: time.Unix(v.UpdateTime, 0),
+			Operator:    domain.GetOperatorFromName(v.Operator),
+			CreateTime:  time.Unix(v.CreateTime, 0),
+			UpdateTime:  time.Unix(v.UpdateTime, 0),
 		}
 	}
 
@@ -375,7 +393,47 @@ func (t TaskRepoAdapter) LoadFlowWork(id uint) (flow *domain.FlowWorkEntity, err
 }
 
 func (t TaskRepoAdapter) Load(id uint) (flowWork *domain.FlowWorkAggregation, err error) {
-	panic("implement me")
+	resp, err := client.DBClient.LoadFlow(context.TODO(), &dbpb.DBLoadFlowRequest{
+		Id: int64(id),
+	})
+	if err != nil {
+		framework.Log().Errorf("Load FlowWork error = %s", err.Error())
+		return nil, err
+	}
+
+	flowworkName := resp.FlowWithTasks.Flow.FlowName
+	flowDefinition := domain.FlowWorkDefineMap[flowworkName]
+	flowWork = &domain.FlowWorkAggregation{
+		FlowWork: &domain.FlowWorkEntity{},
+		Define:   flowDefinition,
+		Tasks:    ParseTaskDTOInBatch(resp.FlowWithTasks.Tasks),
+	}
+
+	return flowWork, nil
+}
+
+func ParseTaskDTOInBatch(dtoList []*dbpb.DBTaskDTO) []*domain.TaskEntity {
+	if dtoList == nil {
+		return nil
+	}
+
+	entities := make([]*domain.TaskEntity, 0)
+	for _, dto := range dtoList {
+		entities = append(entities, ParseTaskDTO(dto))
+	}
+
+	return entities
+}
+
+func ParseTaskDTO(dto *dbpb.DBTaskDTO) *domain.TaskEntity {
+	return &domain.TaskEntity{
+		Id:         uint(dto.Id),
+		Status:     domain.TaskStatusFromValue(int(dto.Status)),
+		TaskName:   dto.TaskName,
+		BizId:      dto.BizId,
+		Parameters: dto.Parameters,
+		Result:     dto.Result,
+	}
 }
 
 func ConvertClusterToDTO(cluster *domain.Cluster) (dto *dbpb.DBClusterDTO) {

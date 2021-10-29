@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -105,10 +104,10 @@ func loadSpecKnowledge() {
 		"PD", "PD",
 	}
 
-	//tiFlashComponent := ClusterComponent{
-	//	"TiFlash", "TiFlash",
-	//}
-	//
+	tiFlashComponent := ClusterComponent{
+		"TiFlash", "TiFlash",
+	}
+
 	//tiCdcComponent := ClusterComponent{
 	//	"TiCDC", "TiCDC",
 	//}
@@ -137,13 +136,13 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10040, 10060, 2},
 			},
-			//{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
-			//	GenSpecCode(4, 32),
-			//	GenSpecCode(8, 64),
-			//	GenSpecCode(16, 128),
-			//}, 0},
-			//  ComponentPortConstraint{10060, 10120, 6},
-			//},
+			{tiFlashComponent, ComponentConstraint{false, []int{3}, []string{
+				GenSpecCode(4, 32),
+				GenSpecCode(8, 64),
+				GenSpecCode(16, 128),
+			}, 0},
+				ComponentPortConstraint{10060, 10120, 6},
+			},
 			//{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
 			//	GenSpecCode(8, 16),
 			//	GenSpecCode(16, 64),
@@ -176,13 +175,13 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10040, 10060, 2},
 			},
-			//{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
-			//	GenSpecCode(4, 32),
-			//	GenSpecCode(8, 64),
-			//	GenSpecCode(16, 128),
-			//}, 0},
-			//  ComponentPortConstraint{10060, 10120, 6},
-			//},
+			{tiFlashComponent, ComponentConstraint{false, []int{3}, []string{
+				GenSpecCode(4, 32),
+				GenSpecCode(8, 64),
+				GenSpecCode(16, 128),
+			}, 0},
+				ComponentPortConstraint{10060, 10120, 6},
+			},
 			//{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
 			//	GenSpecCode(8, 16),
 			//	GenSpecCode(16, 64),
@@ -197,9 +196,9 @@ func loadSpecKnowledge() {
 		Types:    map[string]*ClusterType{tidbType.Code: &tidbType},
 		Versions: map[string]*ClusterVersion{tidbV4_0_12.Code: &tidbV4_0_12, tidbV5_0_0.Code: &tidbV5_0_0},
 		Components: map[string]*ClusterComponent{tidbComponent.ComponentType: &tidbComponent,
-			tikvComponent.ComponentType: &tikvComponent,
-			pdComponent.ComponentType:   &pdComponent,
-			//tiFlashComponent.ComponentType: &tiFlashComponent,
+			tikvComponent.ComponentType:    &tikvComponent,
+			pdComponent.ComponentType:      &pdComponent,
+			tiFlashComponent.ComponentType: &tiFlashComponent,
 			//tiCdcComponent.ComponentType: &tiCdcComponent,
 		},
 	}
@@ -220,4 +219,20 @@ func loadParameterKnowledge() {
 	for _, v := range ParameterKnowledge.Parameters {
 		ParameterKnowledge.Names[v.Name] = v
 	}
+}
+
+// GetComponentsForCluster
+// @Description: list all the components for a
+// @Parameter clusterCode
+// @Parameter versionCode
+// @return []ClusterComponent
+func GetComponentsForCluster(clusterCode, versionCode string) []ClusterComponent {
+	versionSpec := ClusterTypeSpecFromCode(clusterCode).GetVersionSpec(versionCode)
+	components := make([]ClusterComponent, len(versionSpec.ComponentSpecs))
+
+	for i, v := range versionSpec.ComponentSpecs {
+		components[i] = v.ClusterComponent
+	}
+
+	return components
 }

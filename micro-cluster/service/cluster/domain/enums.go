@@ -138,6 +138,7 @@ const (
 	FlowImportData       = "ImportData"
 	FlowRestartCluster   = "RestartCluster"
 	FlowStopCluster      = "StopCluster"
+	FlowTakeoverCluster  = "TakeoverCluster"
 )
 
 type CronTaskType int8

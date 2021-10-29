@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -110,6 +109,27 @@ func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbpb.D
 	log.Error(errMsg)
 
 	// todo handle error
+	return err
+}
+
+func (handler *DBServiceHandler) UpdateClusterInfo(ctx context.Context, req *dbpb.DBUpdateClusterInfoRequest, resp *dbpb.DBUpdateClusterInfoResponse) (err error) {
+	if nil == req || nil == resp {
+		return errors.Errorf("UpdateClusterInfo has invalid parameter")
+	}
+	log := framework.Log()
+	clusterManager := handler.Dao().ClusterManager()
+	do, err := clusterManager.UpdateClusterInfo(ctx, req.ClusterId, req.Name, req.ClusterType, req.VersionCode, req.Tags, req.Tls)
+	if nil == err {
+		resp.Status = ClusterSuccessResponseStatus
+		resp.Cluster = convertToClusterDTO(do, nil)
+		log.Infof("UpdateClusterInfo successful, clusterId: %s, req: %s, error: %v",
+			req.GetClusterId(), req, err)
+	} else {
+		err = errors.New(fmt.Sprintf("UpdateClusterInfo failed, clusterId: %s, req: %s, error: %v",
+			req.GetClusterId(), req, err))
+		log.Infof("UpdateClusterInfo failed, clusterId: %s, req: %s, error: %v",
+			req.GetClusterId(), req, err)
+	}
 	return err
 }
 
@@ -471,7 +491,7 @@ func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbpb.DBBackupRecord
 		StorageType:  do.StorageType,
 		OperatorId:   do.OperatorId,
 		FilePath:     do.FilePath,
-		Size:  		  do.Size,
+		Size:         do.Size,
 		FlowId:       int64(do.FlowId),
 	}
 	return

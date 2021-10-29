@@ -104,6 +104,19 @@ message DBUpdateClusterStatusResponse {
     DBClusterDTO cluster = 2;
 }
 
+message DBUpdateClusterInfoRequest {
+    string clusterId = 1;
+    string name = 2;
+    string clusterType = 3;
+    string versionCode = 4;
+    string tags = 5;
+    bool tls = 6;
+}
+
+message DBUpdateClusterInfoResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+}
 message DBCreateInstanceRequest {
     string clusterId = 1;
     string tenantId = 2;

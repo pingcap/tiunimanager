@@ -1560,7 +1560,7 @@ func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
 	loc1 := new(dbpb.DBLocation)
 	loc1.Region = "Region1"
 	loc1.Zone = "Zone4"
-	loc1.Host = id1
+	loc1.Host = "474.111.111.127"
 
 	require1 := new(dbpb.DBRequirement)
 	require1.ComputeReq = new(dbpb.DBComputeRequirement)
@@ -1590,7 +1590,7 @@ func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
 	loc2 := new(dbpb.DBLocation)
 	loc2.Region = "Region1"
 	loc2.Zone = "Zone4"
-	loc2.Host = id2
+	loc2.Host = "474.111.111.128"
 
 	require2 := new(dbpb.DBRequirement)
 	require2.ComputeReq = new(dbpb.DBComputeRequirement)
@@ -1616,7 +1616,7 @@ func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
 	loc3 := new(dbpb.DBLocation)
 	loc3.Region = "Region1"
 	loc3.Zone = "Zone4"
-	loc3.Host = id3
+	loc3.Host = "474.111.111.129"
 
 	require3 := new(dbpb.DBRequirement)
 	require3.ComputeReq = new(dbpb.DBComputeRequirement)
@@ -1714,7 +1714,7 @@ func TestAllocResources_SpecifyHost_Strategy_No_Disk(t *testing.T) {
 	loc1 := new(dbpb.DBLocation)
 	loc1.Region = "Region1"
 	loc1.Zone = "Zone5"
-	loc1.Host = id1
+	loc1.Host = "474.111.111.137"
 
 	require1 := new(dbpb.DBRequirement)
 	require1.ComputeReq = new(dbpb.DBComputeRequirement)
@@ -1742,7 +1742,7 @@ func TestAllocResources_SpecifyHost_Strategy_No_Disk(t *testing.T) {
 	loc2 := new(dbpb.DBLocation)
 	loc2.Region = "Region1"
 	loc2.Zone = "Zone5"
-	loc2.Host = id2
+	loc2.Host = "474.111.111.138"
 
 	require2 := new(dbpb.DBRequirement)
 	require2.ComputeReq = new(dbpb.DBComputeRequirement)
@@ -1768,7 +1768,7 @@ func TestAllocResources_SpecifyHost_Strategy_No_Disk(t *testing.T) {
 	loc3 := new(dbpb.DBLocation)
 	loc3.Region = "Region1"
 	loc3.Zone = "Zone5"
-	loc3.Host = id3
+	loc3.Host = "474.111.111.139"
 
 	require3 := new(dbpb.DBRequirement)
 	require3.ComputeReq = new(dbpb.DBComputeRequirement)

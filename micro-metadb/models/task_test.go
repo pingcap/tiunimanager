@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -530,8 +529,12 @@ func TestBatchFetchFlows(t *testing.T) {
 
 func TestListFlows(t *testing.T) {
 	MetaDB.Model(FlowDO{}).Where("id > 0").Delete(&FlowDO{})
+	flow0, _ := CreateFlow(MetaDB, "fdadsfsaf", "fewqfdsagfsda", "sdagdfagfds", "gfdafser")
+
 	flow1, _ := CreateFlow(MetaDB, "flow1", "TestListFlows", "121212", "111")
 	flow2, _ := CreateFlow(MetaDB, "TestListFlows", "TestListFlows", "9999999", "111")
+	defer MetaDB.Delete(flow0)
+
 	defer MetaDB.Delete(flow1)
 	defer MetaDB.Delete(flow2)
 
@@ -570,6 +573,6 @@ func TestListFlows(t *testing.T) {
 		assert.NoError(t, err)
 		assert.True(t, total > 2)
 		assert.Equal(t, flow2.StatusAlias, got[0].StatusAlias)
-		assert.Equal(t, "9999999", got[0].BizId)
+		assert.Equal(t, "121212", got[0].BizId)
 	})
 }

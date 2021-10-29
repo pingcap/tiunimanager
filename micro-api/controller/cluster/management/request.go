@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -33,4 +32,13 @@ type QueryReq struct {
 	ClusterType   string `json:"clusterType" form:"clusterType"`
 	ClusterStatus string `json:"clusterStatus" form:"clusterStatus"`
 	ClusterTag    string `json:"clusterTag" form:"clusterTag"`
+}
+
+type TakeoverReq struct {
+	TiupIp           string   `json:"tiupIp" example:"172.16.4.147" form:"tiupIp"`
+	TiupPort         string   `json:"tiupPort" example:"22" form:"tiupPort"`
+	TiupUserName     string   `json:"tiupUserName" example:"root" form:"tiupUserName"`
+	TiupUserPassword string   `json:"tiupUserPassword" example:"password" form:"tiupUserPassword"`
+	TiupPath         string   `json:"tiupPath" example:".tiup/" form:"tiupPath"`
+	ClusterNames     []string `json:"clusterNames" form:"clusterNames"`
 }

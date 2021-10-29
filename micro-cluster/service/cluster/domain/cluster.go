@@ -96,7 +96,3 @@ func (r TopologyConfigRecord) Content() string {
 	bytes, _ := json.Marshal(r.ConfigModel)
 	return string(bytes)
 }
-
-func (r *TopologyConfigRecord) ContainsTiFlash() bool {
-	return len(r.ConfigModel.TiFlashServers) > 0
-}

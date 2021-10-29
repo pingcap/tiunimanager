@@ -19,7 +19,6 @@ package domain
 import (
 	ctx "context"
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -289,7 +288,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 
 	if err != nil {
 		// todo
-		fmt.Println(err)
+		getLogger().Error(err)
 	}
 
 	task.Success(nil)

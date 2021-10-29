@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -35,14 +34,13 @@ var MetadataMgr MetadataManager
 var TopologyPlanner ClusterTopologyPlanner
 
 type ClusterRepository interface {
-	AddCluster (cluster *Cluster) error
+	AddCluster(cluster *Cluster) error
 
 	Persist(aggregation *ClusterAggregation) error
 
-	Load (id string) (cluster *ClusterAggregation, err error)
+	Load(id string) (cluster *ClusterAggregation, err error)
 
-	Query (clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error)
-
+	Query(clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error)
 }
 
 type ClusterAccessProxy interface {
@@ -82,4 +80,3 @@ type ComponentParser interface {
 	GetComponent() *knowledge.ClusterComponent
 	ParseComponent(spec *spec.Specification) *ComponentGroup
 }
-

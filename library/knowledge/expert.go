@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -138,12 +137,12 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10040, 10060, 2},
 			},
-			{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
+			{tiFlashComponent, ComponentConstraint{false, []int{3}, []string{
 				GenSpecCode(4, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
 			}, 0},
-			 ComponentPortConstraint{10060, 10120, 6},
+				ComponentPortConstraint{10060, 10120, 6},
 			},
 			//{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
 			//	GenSpecCode(8, 16),
@@ -177,12 +176,12 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10040, 10060, 2},
 			},
-			{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
+			{tiFlashComponent, ComponentConstraint{false, []int{3}, []string{
 				GenSpecCode(4, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
 			}, 0},
-			 ComponentPortConstraint{10060, 10120, 6},
+				ComponentPortConstraint{10060, 10120, 6},
 			},
 			//{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
 			//	GenSpecCode(8, 16),
@@ -217,7 +216,7 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10040, 10060, 2},
 			},
-			{tiFlashComponent, ComponentConstraint{false,[]int{3}, []string{
+			{tiFlashComponent, ComponentConstraint{false, []int{3}, []string{
 				GenSpecCode(4, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
@@ -237,8 +236,8 @@ func loadSpecKnowledge() {
 		Types:    map[string]*ClusterType{tidbType.Code: &tidbType},
 		Versions: map[string]*ClusterVersion{tidbV4_0_12.Code: &tidbV4_0_12, tidbV5_0_0.Code: &tidbV5_0_0, tidbV5_2_2.Code: &tidbV5_2_2},
 		Components: map[string]*ClusterComponent{tidbComponent.ComponentType: &tidbComponent,
-			tikvComponent.ComponentType: &tikvComponent,
-			pdComponent.ComponentType:   &pdComponent,
+			tikvComponent.ComponentType:    &tikvComponent,
+			pdComponent.ComponentType:      &pdComponent,
 			tiFlashComponent.ComponentType: &tiFlashComponent,
 			//tiCdcComponent.ComponentType: &tiCdcComponent,
 		},

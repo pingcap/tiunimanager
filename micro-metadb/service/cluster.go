@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -492,7 +491,7 @@ func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbpb.DBBackupRecord
 		StorageType:  do.StorageType,
 		OperatorId:   do.OperatorId,
 		FilePath:     do.FilePath,
-		Size:  		  do.Size,
+		Size:         do.Size,
 		FlowId:       int64(do.FlowId),
 	}
 	return

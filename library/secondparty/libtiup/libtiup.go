@@ -475,7 +475,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
-				ErrorStr: fmt.Sprintln(err),
+				ErrorStr: fmt.Sprintf("%+v, errStr: %s", err, err.Error()),
 			}
 			return
 		}
@@ -509,7 +509,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
-				ErrorStr: fmt.Sprintln(err),
+				ErrorStr: fmt.Sprintf("%+v, errStr: %s", err, err.Error()),
 			}
 			return
 		} else {

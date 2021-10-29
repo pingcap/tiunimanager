@@ -167,7 +167,8 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 
 func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.ClusterRestartReqDTO, resp *clusterpb.ClusterRestartRespDTO) (err error) {
 	getLogger().Info("restart cluster")
-	defer handleMetrics(time.Now(), "RestartCluster", int(resp.GetRespStatus().GetCode()))
+	start := time.Now()
+	defer handleMetrics(start, "RestartCluster", int(resp.GetRespStatus().GetCode()))
 
 	clusterAggregation, err := domain.RestartCluster(req.GetOperator(), req.GetClusterId())
 	if err != nil {
@@ -182,7 +183,8 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 
 func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.ClusterStopReqDTO, resp *clusterpb.ClusterStopRespDTO) (err error) {
 	getLogger().Info("stop cluster")
-	defer handleMetrics(time.Now(), "StopCluster", int(resp.GetRespStatus().GetCode()))
+	start := time.Now()
+	defer handleMetrics(start, "StopCluster", int(resp.GetRespStatus().GetCode()))
 
 	clusterAggregation, err := domain.StopCluster(req.GetOperator(), req.GetClusterId())
 	if err != nil {
@@ -469,7 +471,8 @@ func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *c
 }
 
 func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clusterpb.DescribeMonitorRequest, response *clusterpb.DescribeMonitorResponse) (err error) {
-	defer handleMetrics(time.Now(), "DescribeMonitor", int(response.GetStatus().GetCode()))
+	start := time.Now()
+	defer handleMetrics(start, "DescribeMonitor", int(response.GetStatus().GetCode()))
 	monitor, err := domain.DescribeMonitor(ctx, request.Operator, request.ClusterId)
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)

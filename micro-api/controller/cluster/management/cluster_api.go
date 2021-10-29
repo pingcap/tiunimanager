@@ -195,7 +195,8 @@ func Delete(c *gin.Context) {
 // @Router /clusters/{clusterId}/restart [post]
 func Restart(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
-	defer interceptor.HandleMetrics(time.Now(), "Restart", int(status.GetCode()))
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Restart", int(status.GetCode()))
 	operator := controller.GetOperator(c)
 
 	reqDTO := &clusterpb.ClusterRestartReqDTO{
@@ -242,7 +243,8 @@ func Restart(c *gin.Context) {
 // @Router /clusters/{clusterId}/restart [post]
 func Stop(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
-	defer interceptor.HandleMetrics(time.Now(), "Stop", int(status.GetCode()))
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Stop", int(status.GetCode()))
 	operator := controller.GetOperator(c)
 
 	reqDTO := &clusterpb.ClusterStopReqDTO{
@@ -435,7 +437,8 @@ func DescribeDashboard(c *gin.Context) {
 // @Router /clusters/{clusterId}/monitor [get]
 func DescribeMonitor(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
-	defer interceptor.HandleMetrics(time.Now(), "DescribeMonitor", int(status.GetCode()))
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "DescribeMonitor", int(status.GetCode()))
 	operator := controller.GetOperator(c)
 	reqDTO := &clusterpb.DescribeMonitorRequest{
 		Operator:  operator.ConvertToDTO(),

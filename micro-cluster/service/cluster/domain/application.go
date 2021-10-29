@@ -184,8 +184,7 @@ func DeleteCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggreg
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	var flow *FlowWorkAggregation
-	flow, err = CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster, operator)
+	flow, _ := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster, operator)
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()
 
@@ -600,7 +599,7 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 	// cluster stopping intermediate state
 	clusterAggregation.Cluster.Status = ClusterStatusStopping
 	clusterAggregation.StatusModified = true
-	err = ClusterRepo.Persist(clusterAggregation)
+	ClusterRepo.Persist(clusterAggregation)
 	task.Success(nil)
 	return true
 }

@@ -42,12 +42,12 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DB
 	clusterManager := handler.Dao().ClusterManager()
 	cluster, err := clusterManager.CreateCluster(ctx, dto.Name, dto.DbPassword, dto.ClusterType, dto.VersionCode, dto.Tls, dto.Tags, dto.OwnerId, dto.TenantId)
 	if nil == err {
-		do, demand, err := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
-		if err == nil {
+		do, demand, newErr := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
+		if newErr == nil {
 			resp.Status = ClusterSuccessResponseStatus
 			resp.Cluster = convertToClusterDTO(do, demand)
 		} else {
-			err = fmt.Errorf("CreateCluster failed, update cluster demand failed, clusterId: %s, tenantId: %s, errors: %v", cluster.ID, cluster.TenantId, err)
+			err = fmt.Errorf("CreateCluster failed, update cluster demand failed, clusterId: %s, tenantId: %s, errors: %v", cluster.ID, cluster.TenantId, newErr)
 		}
 	}
 	if nil == err {

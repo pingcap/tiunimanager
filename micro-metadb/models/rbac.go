@@ -19,7 +19,6 @@ package models
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"gorm.io/gorm"
 )
@@ -170,7 +169,7 @@ func (m *DAOAccountManager) FetchAllRolesByAccount(ctx context.Context, tenantId
 
 func (m *DAOAccountManager) FetchRolesByIds(ctx context.Context, roleIds []string) (result []Role, err error) {
 	if len(roleIds) <= 0 {
-		return nil, errors.New(fmt.Sprintf("FetchRolesByIds failed, roleIds: %v", roleIds))
+		return nil, fmt.Errorf("FetchRolesByIds failed, roleIds: %v", roleIds)
 	}
 	return result, m.Db(ctx).Where("id in ?", roleIds).Find(&result).Error
 }

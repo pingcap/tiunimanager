@@ -17,9 +17,10 @@
 package management
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"net/http"
 	"time"
+
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -193,6 +194,8 @@ func Delete(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/restart [post]
 func Restart(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	defer interceptor.HandleMetrics(time.Now(), "Restart", int(status.GetCode()))
 	operator := controller.GetOperator(c)
 
 	reqDTO := &clusterpb.ClusterRestartReqDTO{
@@ -206,11 +209,12 @@ func Restart(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.GetCode()), status.GetMessage()))
 		return
 	}
 
-	status := respDTO.GetRespStatus()
+	status = respDTO.GetRespStatus()
 	if status.Code != 0 {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, status.Message))
 		return
@@ -237,6 +241,8 @@ func Restart(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/restart [post]
 func Stop(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	defer interceptor.HandleMetrics(time.Now(), "Stop", int(status.GetCode()))
 	operator := controller.GetOperator(c)
 
 	reqDTO := &clusterpb.ClusterStopReqDTO{
@@ -250,11 +256,12 @@ func Stop(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.GetCode()), status.GetMessage()))
 		return
 	}
 
-	status := respDTO.GetRespStatus()
+	status = respDTO.GetRespStatus()
 	if status.Code != 0 {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, status.Message))
 		return
@@ -427,6 +434,8 @@ func DescribeDashboard(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/monitor [get]
 func DescribeMonitor(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	defer interceptor.HandleMetrics(time.Now(), "DescribeMonitor", int(status.GetCode()))
 	operator := controller.GetOperator(c)
 	reqDTO := &clusterpb.DescribeMonitorRequest{
 		Operator:  operator.ConvertToDTO(),
@@ -435,11 +444,12 @@ func DescribeMonitor(c *gin.Context) {
 	respDTO, err := client.ClusterClient.DescribeMonitor(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.GetCode()), status.GetMessage()))
 		return
 	}
 
-	status := respDTO.GetStatus()
+	status = respDTO.GetStatus()
 	if int32(common.TIEM_SUCCESS) != status.GetCode() {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
 		return

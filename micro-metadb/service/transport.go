@@ -28,7 +28,7 @@ import (
 
 func (handler *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *dbpb.DBCreateTransportRecordRequest, out *dbpb.DBCreateTransportRecordResponse) error {
 	start := time.Now()
-	defer handler.HandleMetrics(start, "QueryBackupStrategyByTime", int(out.GetErrCode()))
+	defer handler.HandleMetrics(start, "QueryBackupStrategyByTime", int(out.GetStatus().GetCode()))
 	intId, _ := strconv.ParseInt(in.GetRecord().GetID(), 10, 64)
 	log := framework.LogWithContext(ctx)
 	record := &models.TransportRecord{

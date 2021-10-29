@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -30,11 +29,11 @@ import (
 func (handler *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *dbpb.DBCreateTransportRecordRequest, out *dbpb.DBCreateTransportRecordResponse) error {
 	start := time.Now()
 	defer handler.HandleMetrics(start, "QueryBackupStrategyByTime", int(out.GetErrCode()))
-	uintId, err := strconv.ParseInt(in.GetRecord().GetID(), 10, 64)
+	intId, _ := strconv.ParseInt(in.GetRecord().GetID(), 10, 64)
 	log := framework.LogWithContext(ctx)
 	record := &models.TransportRecord{
 		Record: models.Record{
-			ID: uint(uintId),
+			ID: uint(intId),
 		},
 		ClusterId:     in.GetRecord().GetClusterId(),
 		TransportType: in.GetRecord().GetTransportType(),

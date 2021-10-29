@@ -172,8 +172,10 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 
 	clusterAggregation, err := domain.RestartCluster(req.GetOperator(), req.GetClusterId())
 	if err != nil {
+		resp.RespStatus = BizErrorResponseStatus
+		resp.RespStatus.Message = err.Error()
 		getLogger().Error(err)
-		return err
+		return nil
 	}
 	resp.RespStatus = SuccessResponseStatus
 	resp.ClusterId = clusterAggregation.Cluster.Id
@@ -188,8 +190,10 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.C
 
 	clusterAggregation, err := domain.StopCluster(req.GetOperator(), req.GetClusterId())
 	if err != nil {
+		resp.RespStatus = BizErrorResponseStatus
+		resp.RespStatus.Message = err.Error()
 		getLogger().Error(err)
-		return err
+		return nil
 	}
 	resp.RespStatus = SuccessResponseStatus
 	resp.ClusterId = clusterAggregation.Cluster.Id

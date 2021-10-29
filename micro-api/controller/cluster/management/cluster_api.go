@@ -405,7 +405,8 @@ func DescribeDashboard(c *gin.Context) {
 	respDTO, err := client.ClusterClient.DescribeDashboard(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = respDTO.GetStatus()
 		if int32(common.TIEM_SUCCESS) == status.GetCode() {

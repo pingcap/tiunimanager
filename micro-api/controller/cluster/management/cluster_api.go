@@ -295,13 +295,13 @@ func Takeover(c *gin.Context) {
 	operator := controller.GetOperator(c)
 
 	reqDTO := &clusterpb.ClusterTakeoverReqDTO{
-		Operator: operator.ConvertToDTO(),
-		TiupIp: req.TiupIp,
-		Port: req.TiupPort,
-		TiupUserName: req.TiupUserName,
+		Operator:         operator.ConvertToDTO(),
+		TiupIp:           req.TiupIp,
+		Port:             req.TiupPort,
+		TiupUserName:     req.TiupUserName,
 		TiupUserPassword: req.TiupUserPassword,
-		TiupPath: req.TiupPath,
-		ClusterNames: req.ClusterNames,
+		TiupPath:         req.TiupPath,
+		ClusterNames:     req.ClusterNames,
 	}
 
 	respDTO, err := client.ClusterClient.TakeoverClusters(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
@@ -352,7 +352,8 @@ func DescribeDashboard(c *gin.Context) {
 	respDTO, err := client.ClusterClient.DescribeDashboard(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = respDTO.GetStatus()
 		if int32(common.TIEM_SUCCESS) == status.GetCode() {

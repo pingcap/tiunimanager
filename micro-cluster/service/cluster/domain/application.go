@@ -440,6 +440,41 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 // @Parameter context
 // @return bool
 func clusterStop(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	getLogger().Infof("stop cluster %s", cluster.ClusterName)
+	stopTaskId, err := libtiup.MicroSrvTiupStop(cluster.ClusterName, 0, []string{}, uint64(task.Id))
+	if err != nil {
+		getLogger().Errorf("call tiup api stop cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+	context.put("stopTaskId", stopTaskId)
+	getLogger().Infof("got stopTaskId %s", strconv.Itoa(int(stopTaskId)))
+
+	go func() {
+		// get cluster stop status async
+		for {
+			stat, statErrStr, err := libtiup.MicroSrvTiupGetTaskStatus(stopTaskId)
+			if err != nil {
+				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
+				break
+			}
+			if stat == dbpb.TiupTaskStatus_Finished || stat == dbpb.TiupTaskStatus_Error {
+				getLogger().Infof(" cluster %s stop done. tiup stat: %v", cluster.ClusterName, stat)
+				clusterAggregation.StatusModified = true
+				clusterAggregation.Cluster.Status = ClusterStatusOffline
+				err := ClusterRepo.Persist(clusterAggregation)
+				if err != nil {
+					getLogger().Errorf("cluster repo persist err = %v", err)
+					return
+				}
+				break
+			}
+			time.Sleep(time.Second * 2)
+		}
+	}()
 
 	task.Success(nil)
 	return true
@@ -656,12 +691,12 @@ func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spe
 		DeployDir: filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "alertmanagers-deploy"),
 	})
 	tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
-		Host:      pdHosts[0].Ip,
-		DeployDir: filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "grafanas-deploy"),
+		Host:            pdHosts[0].Ip,
+		DeployDir:       filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "grafanas-deploy"),
 		AnonymousEnable: true,
-		DefaultTheme: "light",
-		OrgName: "Main Org.",
-		OrgRole: "Viewer",
+		DefaultTheme:    "light",
+		OrgName:         "Main Org.",
+		OrgRole:         "Viewer",
 	})
 	// Deal with PDServers, TiDBServers, TiKVServers
 	for _, v := range pdHosts {

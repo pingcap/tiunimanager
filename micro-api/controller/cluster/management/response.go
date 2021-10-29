@@ -41,6 +41,11 @@ type DescribeDashboardRsp struct {
 	Token     string `json:"token"`
 }
 
+type RestartClusterRsp struct {
+	ClusterId string `json:"clusterId"`
+	controller.StatusInfo
+}
+
 type DescribeMonitorRsp struct {
 	ClusterId  string `json:"clusterId" example:"abc"`
 	AlertUrl   string `json:"alertUrl" example:"http://127.0.0.1:9093"`

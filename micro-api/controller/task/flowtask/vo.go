@@ -36,4 +36,7 @@ type FlowWorkDetailInfo struct {
 type FlowWorkTaskInfo struct {
 	Id       uint   `json:"id"`
 	TaskName string `json:"taskName"`
+	Parameters string `json:"taskParameters"`
+	Result string `json:"result"`
+	Status int   `json:"taskStatus"`
 }

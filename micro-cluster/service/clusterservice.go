@@ -18,11 +18,12 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
-	"github.com/prometheus/client_golang/prometheus"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -79,16 +80,16 @@ func getLoggerWithContext(ctx context.Context) *log.Entry {
 }
 
 func handleMetrics(start time.Time, funcName string, code int) {
-	duration := time.Now().Sub(start)
+	duration := time.Since(start)
 	framework.Current.GetMetrics().MicroDurationHistogramMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
-		metrics.MethodLabel: funcName,
-		metrics.CodeLabel: strconv.Itoa(code)}).
+		metrics.MethodLabel:  funcName,
+		metrics.CodeLabel:    strconv.Itoa(code)}).
 		Observe(duration.Seconds())
 	framework.Current.GetMetrics().MicroRequestsCounterMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
-		metrics.MethodLabel: funcName,
-		metrics.CodeLabel: strconv.Itoa(code)}).
+		metrics.MethodLabel:  funcName,
+		metrics.CodeLabel:    strconv.Itoa(code)}).
 		Inc()
 }
 
@@ -106,6 +107,23 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 		resp.ClusterId = clusterAggregation.Cluster.Id
 		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
 		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+		return nil
+	}
+}
+
+func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.ClusterTakeoverReqDTO, resp *clusterpb.ClusterTakeoverRespDTO) (err error) {
+	getLogger().Info("takeover clusters")
+	clusters, err := domain.TakeoverClusters(req.Operator, req)
+	if err != nil {
+		getLogger().Info(err)
+		return nil
+	} else {
+		resp.RespStatus = SuccessResponseStatus
+		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters), len(clusters))
+		for i, v := range clusters {
+			resp.Clusters[i] = v.ExtractDisplayDTO()
+		}
+
 		return nil
 	}
 }
@@ -145,6 +163,20 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 		return nil
 	}
+}
+
+func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.ClusterRestartReqDTO, resp *clusterpb.ClusterRestartRespDTO) (err error) {
+	getLogger().Info("restart cluster")
+
+	clusterAggregation, err := domain.RestartCluster(req.GetOperator(), req.GetClusterId())
+	if err != nil {
+		getLogger().Error(err)
+		return err
+	}
+	resp.RespStatus = SuccessResponseStatus
+	resp.ClusterId = clusterAggregation.Cluster.Id
+	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+	return nil
 }
 
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.ClusterDetailReqDTO, resp *clusterpb.ClusterDetailRespDTO) (err error) {
@@ -309,7 +341,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 
 func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *clusterpb.GetBackupStrategyRequest, response *clusterpb.GetBackupStrategyResponse) (err error) {
 	start := time.Now()
-	defer handleMetrics(start, "GetBackupStrategy",  int(response.GetStatus().GetCode()))
+	defer handleMetrics(start, "GetBackupStrategy", int(response.GetStatus().GetCode()))
 	strategy, err := domain.QueryBackupStrategy(ctx, request.GetOperator(), request.GetClusterId())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
@@ -359,9 +391,9 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 					Id: v.BackupRecord.OperatorId,
 				},
 				DisplayStatus: &clusterpb.DisplayStatusDTO{
-					StatusCode:      strconv.Itoa(int(v.Flow.Status)),
+					StatusCode: strconv.Itoa(int(v.Flow.Status)),
 					//StatusName:      v.Flow.StatusAlias,
-					StatusName:   	 domain.TaskStatus(int(v.Flow.Status)).Display(),
+					StatusName:      domain.TaskStatus(int(v.Flow.Status)).Display(),
 					InProcessFlowId: int32(v.Flow.Id),
 				},
 			}
@@ -464,6 +496,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterpb.Lis
 				Name:     v.Operator.Name,
 				Id:       v.Operator.Id,
 				TenantId: v.Operator.TenantId,
+				ManualOperator: v.Operator.ManualOperator,
 			},
 		}
 	}

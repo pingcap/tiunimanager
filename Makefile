@@ -196,7 +196,7 @@ else
 	go tool cover -func="$(TEST_DIR)/unit_cov.out"
 endif
 
-# only for CI, don't use this locally, use local_test instead
+# don't run it locally, only for CI, use local_test instead
 test: add_test_file
 	GO111MODULE=off go get github.com/axw/gocov/gocov
 	GO111MODULE=off go get github.com/jstemmer/go-junit-report
@@ -204,7 +204,7 @@ test: add_test_file
 	go test -v ${PACKAGES} -coverprofile=cover.out |go-junit-report > test.xml
 	gocov convert cover.out | gocov-xml > coverage.xml
 
-local_test:
+local_test: mock
 	mkdir -p "$(TEST_DIR)"
 	-go test -v ./... -coverprofile="$(TEST_DIR)/cover.out"
 	go tool cover -html "$(TEST_DIR)/cover.out" -o "$(TEST_DIR)/cover.html"
@@ -239,3 +239,7 @@ gosec:
 
 add_test_file:
 	build_helper/add_test_file.sh
+
+mock:
+	go get github.com/golang/mock/mockgen
+	mockgen -destination ./test/mock/mock_db.pb.micro.go -package db -source ./library/client/metadb/dbpb/db.pb.micro.go

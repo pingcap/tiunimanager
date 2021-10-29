@@ -104,7 +104,7 @@ func Query(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /flowwork/{flowWorkId} [get]
+// @Router /flowworks/{flowWorkId} [get]
 func Detail(c *gin.Context) {
 
 }

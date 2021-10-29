@@ -224,8 +224,14 @@ definitions:
     properties:
       id:
         type: integer
+      result:
+        type: string
       taskName:
         type: string
+      taskParameters:
+        type: string
+      taskStatus:
+        type: integer
     type: object
   hostresource.AllocHostsReq:
     properties:
@@ -374,21 +380,10 @@ definitions:
       userName:
         type: string
     type: object
-  hostresource.ReserveHostReq:
+  hostresource.UpdateHostReq:
     properties:
-      hostIds:
-        items:
-          type: string
-        type: array
       reserved:
         type: boolean
-    type: object
-  hostresource.UpdateHostStatusReq:
-    properties:
-      hostIds:
-        items:
-          type: string
-        type: array
       status:
         type: integer
     type: object
@@ -925,6 +920,45 @@ definitions:
       backupRecordId:
         type: integer
       sourceClusterId:
+        type: string
+    type: object
+  management.RestartClusterRsp:
+    properties:
+      clusterId:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      inProcessFlowId:
+        type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  management.TakeoverReq:
+    properties:
+      clusterNames:
+        items:
+          type: string
+        type: array
+      tiupIp:
+        example: 172.16.4.147
+        type: string
+      tiupPath:
+        example: .tiup/
+        type: string
+      tiupPort:
+        example: "22"
+        type: string
+      tiupUserName:
+        example: root
+        type: string
+      tiupUserPassword:
+        example: password
         type: string
     type: object
   parameter.ParamInstance:
@@ -1486,6 +1520,46 @@ paths:
       summary: submit params
       tags:
       - cluster params
+  /clusters/{clusterId}/restart:
+    post:
+      consumes:
+      - application/json
+      description: restart a cluster
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/management.RestartClusterRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: restart a cluster
+      tags:
+      - cluster
   /clusters/{clusterId}/strategy:
     put:
       consumes:
@@ -1746,17 +1820,18 @@ paths:
       summary: restore a new cluster by backup record
       tags:
       - cluster
-  /flowwork/{flowWorkId}:
-    get:
+  /clusters/takeover:
+    post:
       consumes:
       - application/json
-      description: show details of a flow work
+      description: takeover a cluster
       parameters:
-      - description: flow work id
-        in: path
-        name: flowWorkId
+      - description: takeover request
+        in: body
+        name: takeoverReq
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/management.TakeoverReq'
       produces:
       - application/json
       responses:
@@ -1767,7 +1842,9 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/flowtask.FlowWorkDetailInfo'
+                  items:
+                    $ref: '#/definitions/management.ClusterDisplayInfo'
+                  type: array
               type: object
         "401":
           description: Unauthorized
@@ -1783,9 +1860,9 @@ paths:
             $ref: '#/definitions/controller.CommonResult'
       security:
       - ApiKeyAuth: []
-      summary: show details of a flow work
+      summary: takeover a cluster
       tags:
-      - task
+      - cluster
   /flowworks:
     get:
       consumes:
@@ -1836,6 +1913,46 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: query flow works
+      tags:
+      - task
+  /flowworks/{flowWorkId}:
+    get:
+      consumes:
+      - application/json
+      description: show details of a flow work
+      parameters:
+      - description: flow work id
+        in: path
+        name: flowWorkId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/flowtask.FlowWorkDetailInfo'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: show details of a flow work
       tags:
       - task
   /knowledges:
@@ -2155,6 +2272,42 @@ paths:
       summary: Remove a batch of hosts
       tags:
       - resource
+    put:
+      consumes:
+      - application/json
+      description: update host status by a list
+      parameters:
+      - collectionFormat: multi
+        description: host id array
+        in: query
+        items:
+          type: string
+        name: id
+        required: true
+        type: array
+      - description: do update in host list
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/hostresource.UpdateHostReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: string
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update host status
+      tags:
+      - resource
   /resources/hosts/{hostId}:
     delete:
       consumes:
@@ -2208,64 +2361,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Show a host
-      tags:
-      - resource
-  /resources/reserve-host/:
-    post:
-      consumes:
-      - application/json
-      description: update host reserved status by a list
-      parameters:
-      - description: change reserved status in host list
-        in: body
-        name: reserveReq
-        required: true
-        schema:
-          $ref: '#/definitions/hostresource.ReserveHostReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  type: string
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Set whether a Host is reserved
-      tags:
-      - resource
-  /resources/update-host-status/:
-    post:
-      consumes:
-      - application/json
-      description: update host status by a list
-      parameters:
-      - description: change status in host list
-        in: body
-        name: updateReq
-        required: true
-        schema:
-          $ref: '#/definitions/hostresource.UpdateHostStatusReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  type: string
-              type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Update host status
       tags:
       - resource
   /user/login:

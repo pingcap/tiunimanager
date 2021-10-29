@@ -49,12 +49,14 @@ func GetFailureDomain(c *gin.Context) {
 	domainStr := c.Query("failureDomainType")
 	if domainStr == "" {
 		domain = int(resource.ZONE)
-	}
-	domain, err := strconv.Atoi(domainStr)
-	if err != nil || domain > int(resource.RACK) || domain < int(resource.REGION) {
-		errmsg := fmt.Sprintf("Input domainType [%s] Invalid: %v", c.Query("failureDomainType"), err)
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
-		return
+	} else {
+		domainInt, err := strconv.Atoi(domainStr) // #nosec G109
+		if err != nil || domainInt > int(resource.RACK) || domainInt < int(resource.REGION) {
+			errmsg := fmt.Sprintf("Input domainType [%s] Invalid: %v", domainStr, err)
+			c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
+			return
+		}
+		domain = domainInt
 	}
 
 	GetDoaminReq := clusterpb.GetFailureDomainRequest{

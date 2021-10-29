@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,42 +17,47 @@
 package domain
 
 import (
-	"encoding/json"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"gopkg.in/yaml.v2"
+	"time"
+
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
-	"time"
 )
 
 type Cluster struct {
-	Id         			string
-	Code 				string
-	TenantId   			string
+	Id       string
+	Code     string
+	TenantId string
 
-	ClusterName    		string
-	DbPassword     		string
-	ClusterType    		knowledge.ClusterType
-	ClusterVersion 		knowledge.ClusterVersion
-	Tags           		[]string
-	Tls            		bool
-	RecoverInfo			RecoverInfo
-	Status 				ClusterStatus
+	ClusterName    string
+	DbPassword     string
+	ClusterType    knowledge.ClusterType
+	ClusterVersion knowledge.ClusterVersion
+	Tags           []string
+	Tls            bool
+	RecoverInfo    RecoverInfo
+	Status         ClusterStatus
 
-	Demands 			[]*ClusterComponentDemand
+	Demands []*ClusterComponentDemand
 
-	WorkFlowId 			uint
+	WorkFlowId uint
 
-	OwnerId 			string
+	OwnerId string
 
-	CreateTime 			time.Time
-	UpdateTime 			time.Time
-	DeleteTime 			time.Time
+	CreateTime time.Time
+	UpdateTime time.Time
+	DeleteTime time.Time
 }
 
-func (c *Cluster) Online()  {
+func (c *Cluster) Online() {
 	c.Status = ClusterStatusOnline
 }
-func (c *Cluster) Delete()  {
+func (c *Cluster) Delete() {
 	c.Status = ClusterStatusDeleted
+}
+func (c *Cluster) Restart() {
+	c.Status = ClusterStatusRestart
 }
 
 type ClusterComponentDemand struct {
@@ -63,37 +67,37 @@ type ClusterComponentDemand struct {
 }
 
 type ClusterDemandRecord struct {
-	Id 					uint
-	TenantId 			string
-	ClusterId 			string
-	Content 			[]*ClusterComponentDemand
-	CreateTime  		time.Time
+	Id         uint
+	TenantId   string
+	ClusterId  string
+	Content    []*ClusterComponentDemand
+	CreateTime time.Time
 }
 
 type ClusterNodeDistributionItem struct {
-	ZoneCode 		string
-	SpecCode		string
-	Count  			int
+	ZoneCode string
+	SpecCode string
+	Count    int
 }
 
 type TopologyConfigRecord struct {
-	Id 					uint
-	TenantId 			string
-	ClusterId 			string
-	ConfigModel 		*spec.Specification
-	CreateTime 			time.Time
+	Id          uint
+	TenantId    string
+	ClusterId   string
+	ConfigModel *spec.Specification
+	CreateTime  time.Time
 }
 
 type RecoverInfo struct {
-	SourceClusterId		string
-	BackupRecordId 		int64
+	SourceClusterId string
+	BackupRecordId  int64
 }
 
 func (r TopologyConfigRecord) Content() string {
-	bytes, _ := json.Marshal(r.ConfigModel)
+	bytes, err := yaml.Marshal(r.ConfigModel)
+	if err != nil {
+		framework.Log().Errorf("yaml.Marshal error, %s", err.Error())
+	}
 	return string(bytes)
 }
 
-func (r *TopologyConfigRecord) ContainsTiFlash() bool {
-	return len(r.ConfigModel.TiFlashServers) > 0
-}

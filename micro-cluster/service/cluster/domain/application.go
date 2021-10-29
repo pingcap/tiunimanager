@@ -221,7 +221,7 @@ func StopCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregat
 	}
 	clusterAggregation.CurrentOperator = operator
 
-	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowRestartCluster, operator)
+	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowStopCluster, operator)
 	if err != nil {
 		return nil, err
 	}
@@ -539,6 +539,7 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 		}
 	}()
 
+	// cluster restart intermediate state
 	clusterAggregation.Cluster.Restart()
 	clusterAggregation.StatusModified = true
 	err = ClusterRepo.Persist(clusterAggregation)
@@ -591,6 +592,10 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 		}
 	}()
 
+	// cluster stopping intermediate state
+	clusterAggregation.Cluster.Status = ClusterStatusStopping
+	clusterAggregation.StatusModified = true
+	err = ClusterRepo.Persist(clusterAggregation)
 	task.Success(nil)
 	return true
 }

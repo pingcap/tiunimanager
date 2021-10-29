@@ -44,60 +44,76 @@ func (handler *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *
 	}
 	id, err := handler.Dao().ClusterManager().CreateTransportRecord(ctx, record)
 	if err != nil {
+		out.Status = BizErrResponseStatus
+		out.Status.Message = err.Error()
 		log.Errorf("CreateTransportRecord failed, %s", err.Error())
-		return err
+	} else {
+		out.Status = ClusterSuccessResponseStatus
+		out.Id = id
+		log.Infof("CreateTransportRecord success")
 	}
-	out.Id = id
-	log.Infof("CreateTransportRecord success")
+
 	return nil
 }
 
 func (handler *DBServiceHandler) UpdateTransportRecord(ctx context.Context, in *dbpb.DBUpdateTransportRecordRequest, out *dbpb.DBUpdateTransportRecordResponse) error {
 	start := time.Now()
-	defer handler.HandleMetrics(start, "UpdateTransportRecord", int(out.GetErrCode()))
+	defer handler.HandleMetrics(start, "UpdateTransportRecord", int(out.GetStatus().GetCode()))
 	log := framework.LogWithContext(ctx)
 	err := handler.Dao().ClusterManager().UpdateTransportRecord(ctx, in.GetRecord().GetID(), in.GetRecord().GetClusterId(), in.GetRecord().GetStatus(), time.Unix(in.GetRecord().GetEndTime(), 0))
 	if err != nil {
+		out.Status = BizErrResponseStatus
+		out.Status.Message = err.Error()
 		log.Errorf("UpdateTransportRecord failed, %s", err.Error())
-		return err
+	} else {
+		out.Status = ClusterSuccessResponseStatus
+		log.Infof("UpdateTransportRecord success")
 	}
-	log.Infof("UpdateTransportRecord success")
+
 	return nil
 }
 
 func (handler *DBServiceHandler) FindTrasnportRecordByID(ctx context.Context, in *dbpb.DBFindTransportRecordByIDRequest, out *dbpb.DBFindTransportRecordByIDResponse) error {
 	start := time.Now()
-	defer handler.HandleMetrics(start, "FindTrasnportRecordByID", int(out.GetErrCode()))
+	defer handler.HandleMetrics(start, "FindTrasnportRecordByID", int(out.GetStatus().GetCode()))
 	log := framework.LogWithContext(ctx)
 	record, err := handler.Dao().ClusterManager().FindTransportRecordById(ctx, in.GetRecordId())
 	if err != nil {
+		out.Status = BizErrResponseStatus
+		out.Status.Message = err.Error()
 		log.Errorf("FindTransportRecordById failed, %s", err.Error())
-		return err
+	} else {
+		out.Status = ClusterSuccessResponseStatus
+		out.Record = convertRecordDTO(record)
+		log.Infof("FindTrasnportRecordByID success, %v", out)
 	}
-	out.Record = convertRecordDTO(record)
-	log.Infof("FindTrasnportRecordByID success, %v", out)
+
 	return nil
 }
 
 func (handler *DBServiceHandler) ListTrasnportRecord(ctx context.Context, in *dbpb.DBListTransportRecordRequest, out *dbpb.DBListTransportRecordResponse) error {
 	start := time.Now()
-	defer handler.HandleMetrics(start, "ListTrasnportRecord", int(out.GetErrCode()))
+	defer handler.HandleMetrics(start, "ListTrasnportRecord", int(out.GetStatus().GetCode()))
 	log := framework.LogWithContext(ctx)
 	records, total, err := handler.Dao().ClusterManager().ListTransportRecord(ctx, in.GetClusterId(), in.GetRecordId(), (in.GetPage().GetPage()-1)*in.GetPage().GetPageSize(), in.GetPage().GetPageSize())
 	if err != nil {
+		out.Status = BizErrResponseStatus
+		out.Status.Message = err.Error()
 		log.Errorf("ListTrasnportRecord failed, %s", err.Error())
-		return err
+	} else {
+		out.Status = ClusterSuccessResponseStatus
+		out.Records = make([]*dbpb.TransportRecordDTO, len(records))
+		for index := 0; index < len(records); index++ {
+			out.Records[index] = convertRecordDTO(records[index])
+		}
+		out.Page = &dbpb.DBPageDTO{
+			Page:     in.GetPage().GetPage(),
+			PageSize: in.GetPage().GetPageSize(),
+			Total:    int32(total),
+		}
+		log.Infof("ListTrasnportRecord success, %v", out)
 	}
-	out.Records = make([]*dbpb.TransportRecordDTO, len(records))
-	for index := 0; index < len(records); index++ {
-		out.Records[index] = convertRecordDTO(records[index])
-	}
-	out.Page = &dbpb.DBPageDTO{
-		Page:     in.GetPage().GetPage(),
-		PageSize: in.GetPage().GetPageSize(),
-		Total:    int32(total),
-	}
-	log.Infof("ListTrasnportRecord success, %v", out)
+
 	return nil
 }
 

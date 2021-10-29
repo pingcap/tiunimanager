@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -126,8 +125,8 @@ func NewDAOClusterManager(d *gorm.DB) *DAOClusterManager {
 func (m *DAOClusterManager) HandleMetrics(funcName string, code int) {
 	framework.Current.GetMetrics().SqliteRequestsCounterMetric.With(prometheus.Labels{
 		metrics.ServiceLabel: framework.Current.GetServiceMeta().ServiceName.ServerName(),
-		metrics.MethodLabel: funcName,
-		metrics.CodeLabel: strconv.Itoa(code)}).
+		metrics.MethodLabel:  funcName,
+		metrics.CodeLabel:    strconv.Itoa(code)}).
 		Inc()
 }
 

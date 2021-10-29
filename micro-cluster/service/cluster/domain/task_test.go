@@ -229,6 +229,21 @@ func initFlow() {
 				return &c
 			},
 		},
+		FlowStopCluster: {
+			FlowName:    FlowStopCluster,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowStopCluster),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				c := make(FlowContext)
+				return &c
+			},
+		},
 	}
 }
 

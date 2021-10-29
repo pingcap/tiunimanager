@@ -57,7 +57,7 @@ func (c *Cluster) Delete() {
 	c.Status = ClusterStatusDeleted
 }
 func (c *Cluster) Restart() {
-	c.Status = ClusterStatusRestart
+	c.Status = ClusterStatusRestarting
 }
 
 type ClusterComponentDemand struct {
@@ -100,4 +100,3 @@ func (r TopologyConfigRecord) Content() string {
 	}
 	return string(bytes)
 }
-

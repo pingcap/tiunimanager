@@ -1118,7 +1118,7 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "restart a cluster",
+                "description": "stop a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -1128,7 +1128,7 @@
                 "tags": [
                     "cluster"
                 ],
-                "summary": "restart a cluster",
+                "summary": "stop a cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -1150,7 +1150,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.RestartClusterRsp"
+                                            "$ref": "#/definitions/management.StopClusterRsp"
                                         }
                                     }
                                 }
@@ -3813,6 +3813,32 @@
             }
         },
         "management.RestartClusterRsp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "management.StopClusterRsp": {
             "type": "object",
             "properties": {
                 "clusterId": {

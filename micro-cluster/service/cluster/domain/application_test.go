@@ -313,6 +313,18 @@ func TestRestartCluster(t *testing.T) {
 
 }
 
+func TestStopCluster(t *testing.T) {
+	got, err := StopCluster(&clusterpb.OperatorDTO{
+		Id:       "testoperator",
+		Name:     "testoperator",
+		TenantId: "testoperator",
+	}, "testCluster")
+
+	assert.NoError(t, err)
+	assert.Equal(t, "testCluster", got.Cluster.ClusterName)
+
+}
+
 func TestModifyParameters(t *testing.T) {
 	got, err := ModifyParameters(&clusterpb.OperatorDTO{
 		Id:       "testoperator",

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -69,7 +68,8 @@ func Backup(c *gin.Context) {
 		Operator:     operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = resp.GetStatus()
 		if common.TIEM_SUCCESS == status.GetCode() {
@@ -117,7 +117,8 @@ func QueryBackupStrategy(c *gin.Context) {
 		Operator:  operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
 	if err != nil || resp == nil || resp.GetStrategy() == nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = resp.GetStatus()
 		if common.TIEM_SUCCESS == status.GetCode() {
@@ -169,7 +170,8 @@ func SaveBackupStrategy(c *gin.Context) {
 		},
 	}, controller.DefaultTimeout)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = resp.GetStatus()
 		if common.TIEM_SUCCESS == status.GetCode() {
@@ -200,6 +202,7 @@ func QueryBackup(c *gin.Context) {
 
 	var queryReq BackupRecordQueryReq
 	if err := c.ShouldBindQuery(&queryReq); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
@@ -214,7 +217,8 @@ func QueryBackup(c *gin.Context) {
 
 	resp, err := client.ClusterClient.QueryBackupRecord(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = resp.GetStatus()
 		if common.TIEM_SUCCESS == status.GetCode() {
@@ -267,7 +271,8 @@ func DeleteBackup(c *gin.Context) {
 
 	backupId, err := strconv.Atoi(c.Param("backupId"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -283,7 +288,8 @@ func DeleteBackup(c *gin.Context) {
 		ClusterId:      req.ClusterId,
 	}, controller.DefaultTimeout)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = resp.GetStatus()
 		if common.TIEM_SUCCESS == status.GetCode() {
@@ -314,6 +320,7 @@ func Restore(c *gin.Context) {
 
 	var req RestoreReq
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		_ = c.Error(err)
 		return
 	}
@@ -331,7 +338,8 @@ func Restore(c *gin.Context) {
 	respDTO, err := client.ClusterClient.RecoverCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = respDTO.GetRespStatus()
 		if common.TIEM_SUCCESS == status.GetCode() {

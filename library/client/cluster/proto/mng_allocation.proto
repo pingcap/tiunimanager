@@ -10,6 +10,7 @@ message AllocResponseStatus {
 message Applicant {
 	string holderId = 1;
 	string requestId = 2;
+	bool takeoverOperation = 3;
 }
 
 message Location {

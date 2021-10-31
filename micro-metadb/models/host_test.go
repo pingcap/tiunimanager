@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
 
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/stretchr/testify/assert"
@@ -1875,4 +1876,69 @@ func TestUpdateHost(t *testing.T) {
 	MetaDB.First(&host, "IP = ?", "474.111.111.140")
 	assert.Equal(t, int32(2), host.Status)
 	assert.Equal(t, true, host.Reserved)
+}
+
+func TestAllocResources_SpecifyHost_Strategy_TakeOver(t *testing.T) {
+	id1, _ := CreateTestHost("Region1", "Zone4", "3-1", "HostName1", "474.111.111.147", string(resource.General), string(resource.SSD), 17, 64, 3)
+	reserved_req := dbpb.DBReserveHostRequest{
+		Reserved: true,
+	}
+	reserved_req.HostIds = append(reserved_req.HostIds, id1)
+	err := Dao.ResourceManager().ReserveHost(context.TODO(), &reserved_req)
+	assert.Equal(t, nil, err)
+	var host resource.Host
+	MetaDB.First(&host, "IP = ?", "474.111.111.147")
+	assert.Equal(t, true, host.Reserved)
+
+	// Host Status should be inused or exhausted, so delete would failed
+	/*
+		defer Dao.ResourceManager().DeleteHost(id1)
+	*/
+
+	loc1 := new(dbpb.DBLocation)
+	loc1.Region = "Region1"
+	loc1.Zone = "Zone4"
+	loc1.Host = "474.111.111.147"
+
+	require1 := new(dbpb.DBRequirement)
+	require1.ComputeReq = new(dbpb.DBComputeRequirement)
+	require1.ComputeReq.CpuCores = 4
+	require1.ComputeReq.Memory = 8
+	require1.DiskReq = new(dbpb.DBDiskRequirement)
+	require1.DiskReq.Capacity = 256
+	require1.DiskReq.DiskType = string(resource.SSD)
+	require1.DiskReq.NeedDisk = true
+	require1.PortReq = append(require1.PortReq, &dbpb.DBPortRequirement{
+		Start:   10000,
+		End:     10015,
+		PortCnt: 5,
+	})
+
+	var test_req dbpb.DBAllocRequest
+	test_req.Applicant = new(dbpb.DBApplicant)
+	test_req.Applicant.HolderId = "TestCluster1"
+	test_req.Applicant.RequestId = "TestRequestID1"
+	test_req.Requires = append(test_req.Requires, &dbpb.DBAllocRequirement{
+		Location: loc1,
+		Strategy: int32(resource.UserSpecifyHost),
+		Require:  require1,
+		Count:    1,
+	})
+
+	var batchReq dbpb.DBBatchAllocRequest
+	batchReq.BatchRequests = append(batchReq.BatchRequests, &test_req)
+	assert.Equal(t, 1, len(batchReq.BatchRequests))
+
+	rsp, err := Dao.ResourceManager().AllocResourcesInBatch(context.TODO(), &batchReq)
+	assert.True(t, nil == rsp && err != nil)
+	t.Log(err)
+	st, ok := status.FromError(err)
+	assert.Equal(t, true, ok)
+	assert.True(t, common.TIEM_RESOURCE_NOT_ALL_SUCCEED == st.Code())
+
+	batchReq.BatchRequests[0].Applicant.TakeoverOperation = true
+	rsp, err2 := Dao.ResourceManager().AllocResourcesInBatch(context.TODO(), &batchReq)
+	t.Log(err2)
+	assert.Equal(t, nil, err2)
+	assert.True(t, rsp.BatchResults[0].Results[0].HostId == id1)
 }

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -27,6 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"gopkg.in/yaml.v2"
 	"strconv"
 	"time"
 )
@@ -198,11 +198,11 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 			return err
 		}
 		client.DBClient.UpdateClusterInfo(context.TODO(), &dbpb.DBUpdateClusterInfoRequest{
-			ClusterId: aggregation.Cluster.Id,
+			ClusterId:   aggregation.Cluster.Id,
 			Name:        cluster.ClusterName,
 			ClusterType: cluster.ClusterType.Code,
 			VersionCode: cluster.ClusterVersion.Code,
-			Tags:  		 string(tagBytes),
+			Tags:        string(tagBytes),
 			Tls:         cluster.Tls,
 		})
 
@@ -287,9 +287,9 @@ func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, 
 			StatusAlias: v.StatusAlias,
 			BizId:       v.BizId,
 			Status:      domain.TaskStatus(v.Status),
-			Operator: domain.GetOperatorFromName(v.Operator),
-			CreateTime: time.Unix(v.CreateTime, 0),
-			UpdateTime: time.Unix(v.UpdateTime, 0),
+			Operator:    domain.GetOperatorFromName(v.Operator),
+			CreateTime:  time.Unix(v.CreateTime, 0),
+			UpdateTime:  time.Unix(v.UpdateTime, 0),
 		}
 	}
 
@@ -406,8 +406,8 @@ func (t TaskRepoAdapter) Load(id uint) (flowWork *domain.FlowWorkAggregation, er
 	flowDefinition := domain.FlowWorkDefineMap[flowworkName]
 	flowWork = &domain.FlowWorkAggregation{
 		FlowWork: &domain.FlowWorkEntity{},
-		Define: flowDefinition,
-		Tasks: ParseTaskDTOInBatch(resp.FlowWithTasks.Tasks),
+		Define:   flowDefinition,
+		Tasks:    ParseTaskDTOInBatch(resp.FlowWithTasks.Tasks),
 	}
 
 	return flowWork, nil
@@ -428,12 +428,12 @@ func ParseTaskDTOInBatch(dtoList []*dbpb.DBTaskDTO) []*domain.TaskEntity {
 
 func ParseTaskDTO(dto *dbpb.DBTaskDTO) *domain.TaskEntity {
 	return &domain.TaskEntity{
-		Id: uint(dto.Id),
-		Status: domain.TaskStatusFromValue(int(dto.Status)),
-		TaskName: dto.TaskName,
-		BizId: dto.BizId,
+		Id:         uint(dto.Id),
+		Status:     domain.TaskStatusFromValue(int(dto.Status)),
+		TaskName:   dto.TaskName,
+		BizId:      dto.BizId,
 		Parameters: dto.Parameters,
-		Result: dto.Result,
+		Result:     dto.Result,
 	}
 }
 
@@ -507,7 +507,7 @@ func parseConfigRecordDTO(dto *dbpb.DBTopologyConfigDTO) (record *domain.Topolog
 	}
 
 	spec := &spec.Specification{}
-	json.Unmarshal([]byte(dto.Content), spec)
+	yaml.Unmarshal([]byte(dto.Content), spec)
 
 	record.ConfigModel = spec
 	return

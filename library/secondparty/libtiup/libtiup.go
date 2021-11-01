@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -475,7 +474,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
-				ErrorStr: fmt.Sprintln(err),
+				ErrorStr: fmt.Sprintf("%+v, errStr: %s", err, err.Error()),
 			}
 			return
 		}
@@ -509,7 +508,7 @@ func mgrStartNewTiupTask(taskID uint64, tiupPath string, tiupArgs []string, Time
 			glMgrTaskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
-				ErrorStr: fmt.Sprintln(err),
+				ErrorStr: fmt.Sprintf("%+v, errStr: %s", err, err.Error()),
 			}
 			return
 		} else {
@@ -533,7 +532,7 @@ func mgrStartNewTiupDeployTask(taskID uint64, req *CmdDeployReq) {
 		return
 	}
 	go func() {
-		defer os.Remove(topologyTmpFilePath)
+		//defer os.Remove(topologyTmpFilePath)
 		var args []string
 		args = append(args, "cluster", "deploy", req.InstanceName, req.Version, topologyTmpFilePath)
 		args = append(args, req.Flags...)
@@ -755,6 +754,7 @@ var glTiUPMgrPath string
 var glTiUPBinPath string
 
 func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
+	logger.Infof("microinit tiupmgrpath: %s, tiupbinpath: %s, mgrlogfilepath: %s", tiupMgrPath, tiupBinPath, mgrLogFilePath)
 	configPath := ""
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
@@ -835,6 +835,7 @@ func microTiupDeploy(deployReq CmdDeployReq) CmdDeployResp {
 }
 
 func MicroSrvTiupDeploy(instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiupdeploy instancename: %s, version: %s, configstryaml: %s, timeout: %d, flags: %v, bizid: %d", instanceName, version, configStrYaml, timeoutS, flags, bizID)
 	var req dbpb.CreateTiupTaskRequest
 	req.Type = dbpb.TiupTaskType_Deploy
 	req.BizID = bizID
@@ -876,6 +877,7 @@ func microTiupList(req CmdListReq) CmdListResp {
 }
 
 func MicroSrvTiupList(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiuplist timeout: %d, flags: %v, bizid: %d", timeoutS, flags, bizID)
 	var req dbpb.CreateTiupTaskRequest
 	req.Type = dbpb.TiupTaskType_List
 	req.BizID = bizID
@@ -915,6 +917,7 @@ func microTiupStart(req CmdStartReq) CmdStartResp {
 }
 
 func MicroSrvTiupStart(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiupstart instancename: %s, timeout: %d, flags: %v, bizid: %d", instanceName, timeoutS, flags, bizID)
 	var req dbpb.CreateTiupTaskRequest
 	req.Type = dbpb.TiupTaskType_Start
 	req.BizID = bizID
@@ -954,6 +957,7 @@ func microTiupRestart(req CmdRestartReq) CmdRestartResp {
 }
 
 func MicroSrvTiupRestart(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiuprestart instancename: %s, timeout: %d, flags: %v, bizid: %d", instanceName, timeoutS, flags, bizID)
 	var req dbpb.CreateTiupTaskRequest
 	req.Type = dbpb.TiupTaskType_Restart
 	req.BizID = bizID
@@ -993,7 +997,7 @@ func microTiupStop(req CmdStopReq) CmdStopResp {
 }
 
 func MicroSrvTiupStop(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	logger.Infof("microsrvtiupstop instancename: %s for bizid: %d", instanceName, bizID)
+	logger.Infof("microsrvtiupstop instancename: %s, timeout: %d, flags: %v, bizid: %d", instanceName, timeoutS, flags, bizID)
 	var req dbpb.CreateTiupTaskRequest
 	req.Type = dbpb.TiupTaskType_Stop
 	req.BizID = bizID
@@ -1035,6 +1039,7 @@ func microTiupDestroy(req CmdDestroyReq) CmdDestroyResp {
 }
 
 func MicroSrvTiupDestroy(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiupstop instancename: %s, timeout: %d, flags: %v, bizid: %d", instanceName, timeoutS, flags, bizID)
 	var req dbpb.CreateTiupTaskRequest
 	req.Type = dbpb.TiupTaskType_Destroy
 	req.BizID = bizID
@@ -1071,6 +1076,7 @@ func MicroSrvTiupGetTaskStatus(taskID uint64) (stat dbpb.TiupTaskStatus, errStr 
 }
 
 func MicroSrvTiupGetTaskStatusByBizID(bizID uint64) (stat dbpb.TiupTaskStatus, statErrStr string, err error) {
+	logger.Infof("microsrvtiupgettaskstausbybizid: %d", bizID)
 	var req dbpb.GetTiupTaskStatusByBizIDRequest
 	req.BizID = bizID
 	rsp, err := client.DBClient.GetTiupTaskStatusByBizID(context.Background(), &req)
@@ -1121,6 +1127,7 @@ func microTiupDumpling(dumplingReq CmdDumplingReq) CmdDumplingResp {
 }
 
 func MicroSrvTiupDumpling(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiupdumpling, timeouts: %d, flags: %v, bizid: %d", timeoutS, flags, bizID)
 	var req dbpb.CreateTiupTaskRequest
 	req.Type = dbpb.TiupTaskType_Dumpling
 	req.BizID = bizID
@@ -1159,6 +1166,7 @@ func microTiupLightning(lightningReq CmdLightningReq) CmdLightningResp {
 }
 
 func MicroSrvTiupLightning(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiuplightning, timeouts: %d, flags: %v, bizid: %d", timeoutS, flags, bizID)
 	var req dbpb.CreateTiupTaskRequest
 	req.Type = dbpb.TiupTaskType_Lightning
 	req.BizID = bizID
@@ -1196,10 +1204,11 @@ func microSrvTiupClusterDisplay(clusterDisplayReq CmdClusterDisplayReq) CmdClust
 	return resp
 }
 
-func MicroSrvTiupClusterDisplay(clusterName string, timeoutS int, flags []string) *CmdClusterDisplayResp {
+func MicroSrvTiupClusterDisplay(instanceName string, timeoutS int, flags []string) *CmdClusterDisplayResp {
+	logger.Infof("microsrvtiupclusterdisplay, instanceName: %s, timeouts: %d, flags: %v", instanceName, timeoutS, flags)
 	var clusterDisplayResp CmdClusterDisplayResp
 	var clusterDisplayReq CmdClusterDisplayReq
-	clusterDisplayReq.ClusterName = clusterName
+	clusterDisplayReq.ClusterName = instanceName
 	clusterDisplayReq.TimeoutS = timeoutS
 	clusterDisplayReq.TiupPath = glTiUPBinPath
 	clusterDisplayReq.Flags = flags

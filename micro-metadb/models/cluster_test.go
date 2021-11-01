@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -923,10 +922,10 @@ func TestDAOClusterManager_UpdateClusterInfo(t *testing.T) {
 		}
 
 		if cluster.Name != "newName" {
-			t.Errorf("UpdateClusterInfo() want name = %s, got %s","newName",  cluster.Name)
+			t.Errorf("UpdateClusterInfo() want name = %s, got %s", "newName", cluster.Name)
 		}
 		if cluster.Type != "TiDB" {
-			t.Errorf("UpdateClusterInfo() want type = %s, got %s","TiDB",  cluster.Type)
+			t.Errorf("UpdateClusterInfo() want type = %s, got %s", "TiDB", cluster.Type)
 		}
 		if cluster.Tls != true {
 			t.Errorf("UpdateClusterInfo() want tls true, got false")

@@ -19,27 +19,27 @@ package common
 type TIEM_BIZ_ERROR_CODE uint32
 
 type TiEMBizError struct {
-	Code TIEM_BIZ_ERROR_CODE
+	Code    TIEM_BIZ_ERROR_CODE
 	Message string
 }
 
 func NewBizError(code TIEM_BIZ_ERROR_CODE) *TiEMBizError {
-	if TIEM_SUCCESS == code  {
+	if TIEM_SUCCESS == code {
 		return nil
 	}
 
 	return &TiEMBizError{
-		Code: code,
+		Code:    code,
 		Message: TiEMErrMsg[code],
 	}
 }
 
 func NewBizErrorWithMessage(code TIEM_BIZ_ERROR_CODE, message string) *TiEMBizError {
-	if TIEM_SUCCESS == code  {
+	if TIEM_SUCCESS == code {
 		return nil
 	}
 	return &TiEMBizError{
-		Code: code,
+		Code:    code,
 		Message: message,
 	}
 }

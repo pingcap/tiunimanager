@@ -5,16 +5,14 @@ package clusterpb
 
 import (
 	fmt "fmt"
+	proto "google.golang.org/protobuf/proto"
 	math "math"
+)
 
-	proto "github.com/golang/protobuf/proto"
-
+import (
 	context "context"
-
 	api "github.com/asim/go-micro/v3/api"
-
 	client "github.com/asim/go-micro/v3/client"
-
 	server "github.com/asim/go-micro/v3/server"
 )
 

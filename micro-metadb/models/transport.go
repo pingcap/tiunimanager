@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -30,6 +29,7 @@ type TransportRecord struct {
 	FilePath      string
 	TenantId      string
 	Status        string
+	StorageType   string
 	StartTime     time.Time
 	EndTime       time.Time
 }

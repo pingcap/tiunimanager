@@ -12,7 +12,8 @@ message TransportRecordDTO {
 	string TenantId = 5;
 	string Status = 6;
 	int64 StartTime = 7;
-	int64 EndTime   = 8;
+	int64 EndTime = 8;
+	string StorageType = 9;
 }
 
 message DBCreateTransportRecordRequest {

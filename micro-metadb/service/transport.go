@@ -38,6 +38,7 @@ func (handler *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *
 		ClusterId:     in.GetRecord().GetClusterId(),
 		TransportType: in.GetRecord().GetTransportType(),
 		FilePath:      in.GetRecord().GetFilePath(),
+		StorageType:   in.GetRecord().GetStorageType(),
 		TenantId:      in.GetRecord().GetTenantId(),
 		Status:        in.GetRecord().GetStatus(),
 		StartTime:     time.Unix(in.GetRecord().GetStartTime(), 0),

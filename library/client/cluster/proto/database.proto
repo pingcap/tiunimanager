@@ -9,12 +9,11 @@ message DataImportRequest {
     string  clusterId = 2;
     string  userName = 3;
     string  password = 4;
-    string  filePath = 5;
-    string  storageType = 6;
-    string  bucketUrl = 7;
-    string  endpointUrl = 8;
-    string  accessKey = 9;
-    string  secretAccessKey = 10;
+    string  storageType = 5;
+    string  bucketUrl = 6;
+    string  endpointUrl = 7;
+    string  accessKey = 8;
+    string  secretAccessKey = 9;
 }
 
 message DataImportResponse {
@@ -31,12 +30,11 @@ message DataExportRequest {
     string  fileType = 6;
     string  filter = 7;
     string  sql = 8;
-    string  filePath = 9;
-    string  bucketUrl = 10;
-    string  bucketRegion = 11;
-    string  endpointUrl = 12;
-    string  accessKey = 13;
-    string  secretAccessKey = 14;
+    string  bucketUrl = 9;
+    string  bucketRegion = 10;
+    string  endpointUrl = 11;
+    string  accessKey = 12;
+    string  secretAccessKey = 13;
 }
 
 message DataExportResponse {
@@ -59,6 +57,7 @@ message DataTransportInfo {
     int64 endTime = 5;
     string status = 6;
     string filePath = 7;
+    string storageType = 8;
 }
 
 message DataTransportQueryResponse {

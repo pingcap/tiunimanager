@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -37,6 +36,7 @@ type DataTransportInfo struct {
 	EndTime       time.Time `json:"endTime"`
 	Status        string    `json:"status"`
 	FilePath      string    `json:"filePath"`
+	StorageType   string    `json:"storageType"`
 }
 
 type DataTransportRecordQueryResp struct {

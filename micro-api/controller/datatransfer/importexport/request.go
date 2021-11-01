@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -26,7 +25,6 @@ type DataExportReq struct {
 	FileType        string `json:"fileType"`
 	Filter          string `json:"filter"`
 	Sql             string `json:"sql"`
-	FilePath        string `json:"filePath"`
 	StorageType     string `json:"storageType"`
 	EndpointUrl     string `json:"endpointUrl"`
 	BucketUrl       string `json:"bucketUrl"`
@@ -39,7 +37,6 @@ type DataImportReq struct {
 	ClusterId       string `json:"clusterId"`
 	UserName        string `json:"userName"`
 	Password        string `json:"password"`
-	FilePath        string `json:"filePath"`
 	StorageType     string `json:"storageType"`
 	EndpointUrl     string `json:"endpointUrl"`
 	BucketUrl       string `json:"bucketUrl"`

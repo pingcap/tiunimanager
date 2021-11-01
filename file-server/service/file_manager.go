@@ -37,23 +37,23 @@ const maxDownloadNum int32 = 3
 var FileMgr FileManager
 
 type FileManager struct {
-	maxFileSize 	int64
-	uploadCount 	int32
-	downloadCount 	int32
-	upMutex 		sync.Mutex
-	downMutex 		sync.Mutex
+	maxFileSize   int64
+	uploadCount   int32
+	downloadCount int32
+	upMutex       sync.Mutex
+	downMutex     sync.Mutex
 }
 
 func InitFileManager() *FileManager {
 	FileMgr = FileManager{
-		uploadCount: 0,
+		uploadCount:   0,
 		downloadCount: 0,
-		maxFileSize: maxFileSize,
+		maxFileSize:   maxFileSize,
 	}
 	return &FileMgr
 }
 
-func (mgr * FileManager) UploadFile(r *http.Request, uploadPath string) error {
+func (mgr *FileManager) UploadFile(r *http.Request, uploadPath string) error {
 	getLogger().Infof("begin UploadFile: uploadPath %s", uploadPath)
 	defer getLogger().Info("end UploadFile")
 	if !mgr.checkUploadCnt() {
@@ -80,8 +80,8 @@ func (mgr * FileManager) UploadFile(r *http.Request, uploadPath string) error {
 	getLogger().Infof("File size bytes: %d", fileSize)
 	// validate file size
 	if fileSize > mgr.maxFileSize {
-		getLogger().Errorf("file size %d GB reach max upload file size %d GB", fileSize / bytes.GB, mgr.maxFileSize / bytes.GB)
-		return fmt.Errorf("file size %d GB reach max upload file size %d GB", fileSize / bytes.GB, mgr.maxFileSize / bytes.GB)
+		getLogger().Errorf("file size %d GB reach max upload file size %d GB", fileSize/bytes.GB, mgr.maxFileSize/bytes.GB)
+		return fmt.Errorf("file size %d GB reach max upload file size %d GB", fileSize/bytes.GB, mgr.maxFileSize/bytes.GB)
 	}
 	fileBytes, err := ioutil.ReadAll(file)
 	if err != nil {
@@ -96,12 +96,17 @@ func (mgr * FileManager) UploadFile(r *http.Request, uploadPath string) error {
 		break
 	default:
 		getLogger().Errorf("invalid file type %s, not xxx.zip", detectedFileType)
-		return errors.New("invalid file type, not xxx.zip")
+		return errors.New("invalid file type, not .zip")
 	}
 	newPath := filepath.Join(uploadPath, "data.zip")
 	getLogger().Infof("FileType: %s, File: %s", detectedFileType, newPath)
 
 	// write file
+	err = os.RemoveAll(uploadPath)
+	if err != nil {
+		getLogger().Errorf("remove dir %s failed, %s", uploadPath, err.Error())
+		return err
+	}
 	err = os.MkdirAll(uploadPath, os.ModePerm)
 	if err != nil {
 		getLogger().Errorf("make dir %s failed, %s", uploadPath, err.Error())
@@ -124,7 +129,7 @@ func (mgr * FileManager) UploadFile(r *http.Request, uploadPath string) error {
 	return nil
 }
 
-func (mgr * FileManager) DownloadFile(c *gin.Context, filePath string) error {
+func (mgr *FileManager) DownloadFile(c *gin.Context, filePath string) error {
 	getLogger().Infof("begin DownloadFile: filePath %s", filePath)
 	defer getLogger().Info("end DownloadFile")
 	if !mgr.checkUploadCnt() {
@@ -140,8 +145,8 @@ func (mgr * FileManager) DownloadFile(c *gin.Context, filePath string) error {
 		return err
 	}
 	if info.Size() > mgr.maxFileSize {
-		getLogger().Errorf("file size %d GB reach max download file size %d GB", info.Size() / bytes.GB, mgr.maxFileSize / bytes.GB)
-		return fmt.Errorf("file size %d GB reach max download file size %d GB", info.Size() / bytes.GB, mgr.maxFileSize / bytes.GB)
+		getLogger().Errorf("file size %d GB reach max download file size %d GB", info.Size()/bytes.GB, mgr.maxFileSize/bytes.GB)
+		return fmt.Errorf("file size %d GB reach max download file size %d GB", info.Size()/bytes.GB, mgr.maxFileSize/bytes.GB)
 	}
 
 	c.Header("Content-Type", "application/octet-stream")
@@ -153,7 +158,7 @@ func (mgr * FileManager) DownloadFile(c *gin.Context, filePath string) error {
 	return nil
 }
 
-func (mgr * FileManager) ZipDir(dir string, zipFile string) error {
+func (mgr *FileManager) ZipDir(dir string, zipFile string) error {
 	getLogger().Infof("begin zipDir: dir[%s] to file[%s]", dir, zipFile)
 	defer getLogger().Info("end zipDir")
 	fz, err := os.Create(zipFile)
@@ -192,7 +197,7 @@ func (mgr * FileManager) ZipDir(dir string, zipFile string) error {
 	return nil
 }
 
-func (mgr * FileManager) UnzipDir(zipFile string, dir string) error {
+func (mgr *FileManager) UnzipDir(zipFile string, dir string) error {
 	getLogger().Infof("begin unzipDir: file[%s] to dir[%s]", zipFile, dir)
 	defer getLogger().Info("end unzipDir")
 	r, err := zip.OpenReader(zipFile)

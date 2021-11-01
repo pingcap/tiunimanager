@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -22,7 +21,7 @@ const (
 	DefaultMicroMetaDBPort  int = 4100
 	DefaultMicroClusterPort     = 4110
 	DefaultMicroApiPort         = 4116
-	DefaultMicroFilePort  		= 4118
+	DefaultMicroFilePort        = 4118
 	DefaultMetricsPort          = 4121
 )
 
@@ -59,4 +58,9 @@ const (
 var (
 	TemplateFileName = "hostInfo_template.xlsx"
 	TemplateFilePath = "./etc"
+)
+
+var (
+	DefaultImportDir string = "/tmp/tiem/import"
+	DefaultExportDir string = "/tmp/tiem/export"
 )

@@ -17,41 +17,25 @@ package service
 
 import (
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/common"
 	"path/filepath"
 )
 
-//todo: get from config center
-var importDir string = "/tmp/tiem/import"
-var exportDir string = "/tmp/tiem/export"
 var DirMgr DirManager
 
 type DirManager struct {
-	ImportDir string
-	ExportDir string
 }
 
 func InitDirManager() *DirManager {
-	importAbsDir, err := filepath.Abs(importDir)
-	if err != nil {
-		getLogger().Fatalf("import dir %s is not vaild", importDir)
-		return nil
-	}
-	exportAbsDir, err := filepath.Abs(exportDir)
-	if err != nil {
-		getLogger().Fatalf("export dir %s is not vaild", exportDir)
-		return nil
-	}
-	DirMgr = DirManager{
-		ImportDir: importAbsDir,
-		ExportDir: exportAbsDir,
-	}
+	DirMgr = DirManager{}
 	return &DirMgr
 }
 
-func (mgr *DirManager) GetImportPath(clusterId string) string {
-	return fmt.Sprintf("%s/%s", mgr.ImportDir, clusterId)
-}
-
-func (mgr *DirManager) GetExportPath(clusterId string) string {
-	return fmt.Sprintf("%s/%s", mgr.ExportDir, clusterId)
+func (mgr *DirManager) GetImportPath(clusterId string) (string, error) {
+	importAbsDir, err := filepath.Abs(common.DefaultImportDir) //todo: get from config center
+	if err != nil {
+		getLogger().Errorf("import dir %s is not vaild", common.DefaultImportDir)
+		return "", fmt.Errorf("import dir %s is not vaild", common.DefaultImportDir)
+	}
+	return fmt.Sprintf("%s/%s/temp", importAbsDir, clusterId), nil
 }

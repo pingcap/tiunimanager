@@ -20,8 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -143,7 +145,6 @@ type TidbCfg struct {
 
 var contextDataTransportKey = "dataTransportInfo"
 var contextCtxKey = "ctx"
-var defaultTransportDirPrefix = "/tmp/tiem/transport" //todo: move to config
 
 func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 	if req.GetClusterId() == "" {
@@ -176,8 +177,9 @@ func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 			return fmt.Errorf("invalid param secretAccessKey %s", req.GetSecretAccessKey())
 		}
 	case NfsStorageType:
-		if req.GetFilePath() == "" {
-			return fmt.Errorf("invalid param filePath %s", req.GetFilePath())
+		if _, err := filepath.Abs(common.DefaultExportDir); err != nil { //todo: get from config center
+			getLogger().Errorf("import dir %s is not vaild", common.DefaultExportDir)
+			return fmt.Errorf("import dir %s is not vaild", common.DefaultExportDir)
 		}
 	default:
 		return fmt.Errorf("invalid param storageType %s", req.GetStorageType())
@@ -213,9 +215,11 @@ func ImportDataPreCheck(req *clusterpb.DataImportRequest) error {
 			return fmt.Errorf("invalid param secretAccessKey %s", req.GetSecretAccessKey())
 		}
 	case NfsStorageType:
-		if req.GetFilePath() == "" {
-			return fmt.Errorf("invalid param filePath %s", req.GetFilePath())
+		if _, err := filepath.Abs(common.DefaultImportDir); err != nil { //todo: get from config center
+			getLogger().Errorf("import dir %s is not vaild", common.DefaultImportDir)
+			return fmt.Errorf("import dir %s is not vaild", common.DefaultImportDir)
 		}
+
 	default:
 		return fmt.Errorf("invalid param storageType %s", req.GetStorageType())
 	}
@@ -226,7 +230,7 @@ func ImportDataPreCheck(req *clusterpb.DataImportRequest) error {
 func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (string, error) {
 	getLoggerWithContext(ctx).Infof("begin exportdata request %+v", request)
 	defer getLoggerWithContext(ctx).Infof("end exportdata")
-	//todo: check operator
+
 	operator := parseOperatorFromDTO(request.GetOperator())
 	getLoggerWithContext(ctx).Info(operator)
 	clusterAggregation, err := ClusterRepo.Load(request.GetClusterId())
@@ -235,12 +239,17 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (stri
 		return "", err
 	}
 
+	exportTime := time.Now()
+	exportPrefix, _ := filepath.Abs(common.DefaultExportDir) //todo: get from config
+	exportDir := filepath.Join(exportPrefix, exportTime.Format("2006-01-02_15:04:05"))
+
 	req := &dbpb.DBCreateTransportRecordRequest{
 		Record: &dbpb.TransportRecordDTO{
 			ClusterId:     request.GetClusterId(),
 			TenantId:      operator.TenantId,
 			TransportType: string(TransportTypeExport),
-			FilePath:      getDataExportFilePath(request),
+			FilePath:      getDataExportFilePath(request, exportDir),
+			StorageType:   request.GetStorageType(),
 			Status:        TransportStatusRunning,
 			StartTime:     time.Now().Unix(),
 			EndTime:       time.Now().Unix(),
@@ -260,7 +269,7 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (stri
 		Password:     request.GetPassword(), //todo: need encrypt
 		FileType:     request.GetFileType(),
 		RecordId:     resp.GetId(),
-		FilePath:     getDataExportFilePath(request),
+		FilePath:     getDataExportFilePath(request, exportDir),
 		Filter:       request.GetFilter(),
 		Sql:          request.GetSql(),
 		StorageType:  request.GetStorageType(),
@@ -298,12 +307,24 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (stri
 		return "", err
 	}
 
+	importTime := time.Now()
+	importPrefix, _ := filepath.Abs(common.DefaultImportDir) //todo: get from config
+	importDir := filepath.Join(importPrefix, importTime.Format("2006-01-02_15:04:05"))
+	if NfsStorageType == request.GetStorageType() {
+		err = os.Rename(filepath.Join(importPrefix, "temp"), importDir)
+		if err != nil {
+			getLoggerWithContext(ctx).Errorf("move import dir failed, %s", err.Error())
+			return "", err
+		}
+	}
+
+	//todo: add record item
 	req := &dbpb.DBCreateTransportRecordRequest{
 		Record: &dbpb.TransportRecordDTO{
 			ClusterId:     request.GetClusterId(),
 			TenantId:      operator.TenantId,
 			TransportType: string(TransportTypeImport),
-			FilePath:      request.GetFilePath(),
+			FilePath:      getDataImportFilePath(request, importDir),
 			Status:        TransportStatusRunning,
 			StartTime:     time.Now().Unix(),
 			EndTime:       time.Now().Unix(),
@@ -320,10 +341,10 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (stri
 		ClusterId:   request.GetClusterId(),
 		UserName:    request.GetUserName(),
 		Password:    request.GetPassword(), //todo: need encrypt
-		FilePath:    getDataImportFilePath(request),
+		FilePath:    getDataImportFilePath(request, importDir),
 		RecordId:    resp.GetId(),
 		StorageType: request.GetStorageType(),
-		ConfigPath:  getDataImportConfigDir(request.GetClusterId(), TransportTypeImport),
+		ConfigPath:  importDir,
 	}
 
 	// Start the workflow
@@ -422,26 +443,22 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	return config
 }
 
-func getDataImportConfigDir(clusterId string, transportType TransportType) string {
-	return fmt.Sprintf("%s/%s/%s", defaultTransportDirPrefix, clusterId, transportType)
-}
-
-func getDataExportFilePath(request *clusterpb.DataExportRequest) string {
+func getDataExportFilePath(request *clusterpb.DataExportRequest, exportDir string) string {
 	var filePath string
 	if S3StorageType == request.GetStorageType() {
 		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
 	} else {
-		filePath = request.GetFilePath()
+		filePath = filepath.Join(exportDir, "data")
 	}
 	return filePath
 }
 
-func getDataImportFilePath(request *clusterpb.DataImportRequest) string {
+func getDataImportFilePath(request *clusterpb.DataImportRequest, importDir string) string {
 	var filePath string
 	if S3StorageType == request.GetStorageType() {
 		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
 	} else {
-		filePath = request.GetFilePath()
+		filePath = filepath.Join(importDir, "data")
 	}
 	return filePath
 }
@@ -627,40 +644,6 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	return true
 }
 
-/*
-func compressExportData(task *TaskEntity, context *FlowContext) bool {
-	getLogger().Info("begin compressExportData")
-	defer getLogger().Info("end compressExportData")
-
-	info := context.value(contextDataTransportKey).(*ExportInfo)
-
-	dataDir := fmt.Sprintf("%s/data", info.FilePath)
-	dataZipDir := fmt.Sprintf("%s/data.zip", info.FilePath)
-	if err := zipDir(dataDir, dataZipDir); err != nil {
-		getLogger().Errorf("compress export data failed, %s", err.Error())
-		return false
-	}
-
-	return true
-}
-
-func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
-	getLogger().Info("begin deCompressImportData")
-	defer getLogger().Info("end deCompressImportData")
-
-	info := context.value(contextDataTransportKey).(*ImportInfo)
-
-	dataDir := fmt.Sprintf("%s/data", info.ConfigPath)
-	dataZipDir := info.FilePath
-	if err := unzipDir(dataZipDir, dataDir); err != nil {
-		getLogger().Errorf("deCompress import data failed, %s", err.Error())
-		return false
-	}
-
-	return true
-}
-*/
-
 func importDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
 	ctx := flowContext.value(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin importDataFailed")
@@ -714,84 +697,3 @@ func updateTransportRecordFailed(ctx context.Context, recordId, clusterId string
 	getLoggerWithContext(ctx).Infof("update data transport record success, %v", resp)
 	return nil
 }
-
-/*
-func zipDir(dir string, zipFile string) error {
-	getLogger().Infof("begin zipDir: dir[%s] to file[%s]", dir, zipFile)
-	defer getLogger().Info("end zipDir")
-	fz, err := os.Create(zipFile)
-	if err != nil {
-		return fmt.Errorf("Create zip file failed: %s", err.Error())
-	}
-	defer fz.Close()
-
-	w := zip.NewWriter(fz)
-	defer w.Close()
-
-	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			relPath := strings.TrimPrefix(path, filepath.Dir(path))
-			fDest, err := w.Create(relPath)
-			if err != nil {
-				return fmt.Errorf("zip Create failed: %s", err.Error())
-			}
-			fSrc, err := os.Open(path)
-			if err != nil {
-				return fmt.Errorf("zip Open failed: %s", err.Error())
-			}
-			defer fSrc.Close()
-			_, err = io.Copy(fDest, fSrc)
-			if err != nil {
-				return fmt.Errorf("zip Copy failed: %s", err.Error())
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		getLogger().Errorf("filepath walk failed, %s", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func unzipDir(zipFile string, dir string) error {
-	getLogger().Infof("begin unzipDir: file[%s] to dir[%s]", zipFile, dir)
-	defer getLogger().Info("end unzipDir")
-	r, err := zip.OpenReader(zipFile)
-	if err != nil {
-		return fmt.Errorf("Open zip file failed: %s", err.Error())
-	}
-	defer r.Close()
-
-	for _, f := range r.File {
-		func() {
-			path := dir + string(filepath.Separator) + f.Name
-			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-				getLogger().Errorf("make filepath failed: %s", err.Error())
-				return
-			}
-			fDest, err := os.Create(path)
-			if err != nil {
-				getLogger().Errorf("unzip Create failed: %s", err.Error())
-				return
-			}
-			defer fDest.Close()
-
-			fSrc, err := f.Open()
-			if err != nil {
-				getLogger().Errorf("unzip Open failed: %s", err.Error())
-				return
-			}
-			defer fSrc.Close()
-
-			_, err = io.Copy(fDest, fSrc)
-			if err != nil {
-				getLogger().Errorf("unzip Copy failed: %s", err.Error())
-				return
-			}
-		}()
-	}
-	return nil
-}
-*/

@@ -30,8 +30,13 @@ func UploadImportFile(c *gin.Context) {
 		return
 	}
 
-	uploadPath := service.DirMgr.GetImportPath(clusterId)
-	err := service.FileMgr.UploadFile(c.Request, uploadPath)
+	uploadPath, err := service.DirMgr.GetImportPath(clusterId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	err = service.FileMgr.UploadFile(c.Request, uploadPath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
@@ -46,9 +51,9 @@ func UploadImportFile(c *gin.Context) {
 }
 
 func DownloadExportFile(c *gin.Context) {
-	clusterId := c.Param("clusterId")
-	downloadPath := service.DirMgr.GetExportPath(clusterId)
-	err := service.FileMgr.ZipDir(filepath.Join(downloadPath, "data"), filepath.Join(downloadPath, service.DefaultDataFile))
+	downloadPath := c.Param("downloadPath")
+
+	err := service.FileMgr.ZipDir(filepath.Join(downloadPath, "data"), filepath.Join(filepath.Dir(downloadPath), service.DefaultDataFile))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
@@ -60,4 +65,3 @@ func DownloadExportFile(c *gin.Context) {
 		return
 	}
 }
-

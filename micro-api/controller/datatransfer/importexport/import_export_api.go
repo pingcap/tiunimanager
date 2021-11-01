@@ -65,7 +65,6 @@ func ExportData(c *gin.Context) {
 		FileType:        req.FileType,
 		Filter:          req.Filter,
 		Sql:             req.Sql,
-		FilePath:        req.FilePath,
 		StorageType:     req.StorageType,
 		BucketUrl:       req.BucketUrl,
 		BucketRegion:    req.BucketRegion,
@@ -123,7 +122,6 @@ func ImportData(c *gin.Context) {
 		ClusterId:       req.ClusterId,
 		UserName:        req.UserName,
 		Password:        req.Password,
-		FilePath:        req.FilePath,
 		StorageType:     req.StorageType,
 		BucketUrl:       req.BucketUrl,
 		EndpointUrl:     req.EndpointUrl,
@@ -199,6 +197,7 @@ func DescribeDataTransport(c *gin.Context) {
 					TransportType: value.GetTransportType(),
 					Status:        value.GetStatus(),
 					FilePath:      value.GetFilePath(),
+					StorageType:   value.GetStorageType(),
 					StartTime:     time.Unix(value.GetStartTime(), 0),
 					EndTime:       time.Unix(value.GetEndTime(), 0),
 				}

@@ -490,8 +490,8 @@ func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 		DeleteTime:     time.Unix(dto.DeleteTime, 0),
 	}
 
-	json.Unmarshal([]byte(dto.Tags), cluster.Tags)
-	json.Unmarshal([]byte(dto.Demands), cluster.Demands)
+	json.Unmarshal([]byte(dto.Tags), &cluster.Tags)
+	json.Unmarshal([]byte(dto.Demands), &cluster.Demands)
 
 	return
 }

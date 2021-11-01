@@ -578,3 +578,68 @@ func (handler *DBServiceHandler) ReserveHost(ctx context.Context, in *dbpb.DBRes
 	out.Rs.Code = common.TIEM_SUCCESS
 	return nil
 }
+
+type node struct {
+	Code     string
+	Prefix   string
+	Name     string
+	subNodes []*node
+}
+
+func (handler *DBServiceHandler) buildHierarchy(Items []models.Item) (r *node) {
+	root := node{
+		Code: "root",
+	}
+	var regions map[string]*node = make(map[string]*node)
+	var region2zones map[string][]*node = make(map[string][]*node)
+	var zone2racks map[string][]*node = make(map[string][]*node)
+	var rack2hosts map[string][]*node = make(map[string][]*node)
+	for _, item := range Items {
+		region, ok := regions[item.Region]
+		if !ok {
+			regions[item.Region] = &node{
+				Code: item.Region,
+			}
+		}
+	}
+	return &root
+}
+
+func (handler *DBServiceHandler) GetHierarchy(ctx context.Context, in *dbpb.DBGetHierarchyRequest, out *dbpb.DBGetHierarchyResponse) error {
+	log := framework.LogWithContext(ctx)
+	out.Rs = new(dbpb.DBHostResponseStatus)
+
+	resourceManager := handler.Dao().ResourceManager()
+	Items, err := resourceManager.GetHostItems(ctx)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			out.Rs.Code = int32(st.Code())
+			out.Rs.Message = st.Message()
+		} else {
+			out.Rs.Code = int32(codes.Internal)
+			out.Rs.Message = fmt.Sprintf("get host items failed, err: %v", err)
+		}
+		log.Warnln(out.Rs.Message)
+
+		// return nil to use rsp
+		return nil
+	}
+	out.Rs.Code = common.TIEM_SUCCESS
+	// Merge archs in the same region
+	curRegionName := ""
+	curMergeOutIndex := -1
+	for _, item := range Items {
+		if curRegionName != item.Region {
+			curMergeOutIndex++
+			curRegionName = item.Region
+			out.Regions = append(out.Regions, &dbpb.DBRegionItem{
+				Region: item.Region,
+			})
+			out.Regions[curMergeOutIndex].Archs = append(out.Regions[curMergeOutIndex].Archs, item.Arch)
+		} else {
+			out.Regions[curMergeOutIndex].Archs = append(out.Regions[curMergeOutIndex].Archs, item.Arch)
+		}
+	}
+	return nil
+}

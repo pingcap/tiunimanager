@@ -846,3 +846,22 @@ func (m *DAOResourceManager) ReserveHost(ctx context.Context, request *dbpb.DBRe
 	tx.Commit()
 	return nil
 }
+
+type Item struct {
+	Region string
+	Az     string
+	Rack   string
+	Ip     string
+	Name   string
+}
+
+func (m *DAOResourceManager) GetHostItems(ctx context.Context) (Items []Item, err error) {
+	tx := m.getDb(ctx).Begin()
+	err = tx.Model(&rt.Host{}).Select("region, az, rack, ip, name").Order("region").Order("az").Order("rack").Order("ip").Scan(&Items).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get hierarchy failed, %v", err)
+	}
+	tx.Commit()
+	return
+}

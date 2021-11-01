@@ -8,7 +8,6 @@ linters:
     - ineffassign
     - typecheck
     - varcheck
-    #- errcheck
     - unused
     - structcheck
     - deadcode
@@ -33,3 +32,4 @@ linters-settings:
     go: "1.16"
     # https://staticcheck.io/docs/options#checks
     checks: [ "all"]
+

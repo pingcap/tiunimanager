@@ -19,10 +19,10 @@ package common
 // micro service default port
 const (
 	DefaultMicroMetaDBPort  int = 4100
-	DefaultMicroClusterPort     = 4110
-	DefaultMicroApiPort         = 4116
-	DefaultMicroFilePort        = 4118
-	DefaultMetricsPort          = 4121
+	DefaultMicroClusterPort int = 4110
+	DefaultMicroApiPort     int = 4116
+	DefaultMicroFilePort    int = 4118
+	DefaultMetricsPort      int = 4121
 )
 
 const (

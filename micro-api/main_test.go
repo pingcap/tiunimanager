@@ -21,13 +21,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/route"
+	"os"
 	"testing"
 )
 
 var g *gin.Engine
 
 func TestMain(m *testing.M) {
-	f := framework.InitBaseFrameworkForUt(framework.ApiService)
+	framework.InitBaseFrameworkForUt(framework.ApiService)
 
 	gin.SetMode(gin.ReleaseMode)
 	g = gin.New()
@@ -44,7 +45,6 @@ func TestMain(m *testing.M) {
 	//	}
 	//}()
 
-	m.Run()
-	f.Shutdown()
+	os.Exit(m.Run())
 
 }

@@ -136,7 +136,7 @@ func (handler *DBServiceHandler) ListFlows(ctx context.Context, req *dbpb.DBList
 			PageSize: req.Page.PageSize,
 			Total:    int32(total),
 		}
-		flowDTOs := make([]*dbpb.DBFlowDTO, len(flows), len(flows))
+		flowDTOs := make([]*dbpb.DBFlowDTO, len(flows))
 		for i, v := range flows {
 			flowDTOs[i] = convertFlowToDTO(v)
 		}
@@ -205,7 +205,7 @@ func convertTaskToDTO(do *models.TaskDO) (dto *dbpb.DBTaskDTO) {
 }
 
 func batchConvertTaskToDTO(dos []*models.TaskDO) (dtos []*dbpb.DBTaskDTO) {
-	dtos = make([]*dbpb.DBTaskDTO, len(dos), len(dos))
+	dtos = make([]*dbpb.DBTaskDTO, len(dos))
 
 	for i, v := range dos {
 		dtos[i] = convertTaskToDTO(v)
@@ -214,7 +214,7 @@ func batchConvertTaskToDTO(dos []*models.TaskDO) (dtos []*dbpb.DBTaskDTO) {
 }
 
 func batchParseTaskDTO(dtos []*dbpb.DBTaskDTO) (dos []*models.TaskDO) {
-	dos = make([]*models.TaskDO, len(dtos), len(dtos))
+	dos = make([]*models.TaskDO, len(dtos))
 
 	for i, v := range dtos {
 		dos[i] = parseTaskDTO(v)

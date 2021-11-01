@@ -15,7 +15,6 @@
  *                                                                            *
  ******************************************************************************/
 
-
 package adapt
 
 import (
@@ -134,7 +133,6 @@ func (t TiDBComponentParser) ParseComponent(spec *spec.Specification) *domain.Co
 		componentInstance := domain.ComponentInstance {
 			ComponentType: t.GetComponent(),
 			Host: server.Host,
-			DeployDir: server.DeployDir,
 			PortList: []int{server.Port, server.StatusPort},
 		}
 		group.Nodes = append(group.Nodes, componentInstance)
@@ -159,7 +157,6 @@ func (t TiKVComponentParser) ParseComponent(spec *spec.Specification) *domain.Co
 		componentInstance := domain.ComponentInstance {
 			ComponentType: t.GetComponent(),
 			Host: server.Host,
-			DeployDir: server.DeployDir,
 			PortList: []int{server.Port, server.StatusPort},
 		}
 		group.Nodes = append(group.Nodes, componentInstance)
@@ -184,7 +181,6 @@ func (t PDComponentParser) ParseComponent(spec *spec.Specification) *domain.Comp
 		componentInstance := domain.ComponentInstance {
 			ComponentType: t.GetComponent(),
 			Host: server.Host,
-			DeployDir: server.DeployDir,
 			PortList: []int{server.ClientPort, server.PeerPort},
 		}
 		group.Nodes = append(group.Nodes, componentInstance)
@@ -209,7 +205,6 @@ func (t TiFlashComponentParser) ParseComponent(spec *spec.Specification) *domain
 		componentInstance := domain.ComponentInstance {
 			ComponentType: t.GetComponent(),
 			Host: server.Host,
-			DeployDir: server.DeployDir,
 			PortList: []int{server.TCPPort, server.HTTPPort, server.StatusPort, server.FlashProxyPort, server.FlashServicePort, server.FlashProxyStatusPort},
 		}
 		group.Nodes = append(group.Nodes, componentInstance)

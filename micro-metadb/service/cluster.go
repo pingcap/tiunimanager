@@ -41,12 +41,12 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DB
 	clusterManager := handler.Dao().ClusterManager()
 	cluster, err := clusterManager.CreateCluster(ctx, dto.Name, dto.DbPassword, dto.ClusterType, dto.VersionCode, dto.Tls, dto.Tags, dto.OwnerId, dto.TenantId)
 	if nil == err {
-		do, demand, err := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
-		if err == nil {
+		do, demand, newErr := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
+		if newErr == nil {
 			resp.Status = ClusterSuccessResponseStatus
 			resp.Cluster = convertToClusterDTO(do, demand)
 		} else {
-			err = errors.New(fmt.Sprintf("CreateCluster failed, update cluster demand failed, clusterId: %s, tenantId: %s, errors: %v", cluster.ID, cluster.TenantId, err))
+			err = fmt.Errorf("CreateCluster failed, update cluster demand failed, clusterId: %s, tenantId: %s, errors: %v", cluster.ID, cluster.TenantId, newErr)
 		}
 	}
 	if nil == err {
@@ -224,7 +224,7 @@ func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbpb.DBLi
 			PageSize: req.PageReq.PageSize,
 			Total:    int32(total),
 		}
-		clusterDetails := make([]*dbpb.DBClusterDetailDTO, len(clusters), len(clusters))
+		clusterDetails := make([]*dbpb.DBClusterDetailDTO, len(clusters))
 		for i, v := range clusters {
 			clusterDetails[i] = &dbpb.DBClusterDetailDTO{
 				Cluster:              convertToClusterDTO(v.Cluster, v.DemandRecord),
@@ -515,11 +515,11 @@ func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbpb.DBBackupRecord
 }
 
 func convertToComponentInstance(dtos []*dbpb.DBComponentInstanceDTO) []*models.ComponentInstance {
-	if dtos == nil || len(dtos) == 0 {
+	if len(dtos) == 0 {
 		return []*models.ComponentInstance{}
 	}
 
-	result := make([]*models.ComponentInstance, len(dtos), len(dtos))
+	result := make([]*models.ComponentInstance, len(dtos))
 
 	for i, v := range dtos {
 		result[i] = &models.ComponentInstance{
@@ -545,10 +545,10 @@ func convertToComponentInstance(dtos []*dbpb.DBComponentInstanceDTO) []*models.C
 }
 
 func convertToComponentInstanceDTO(models []*models.ComponentInstance) []*dbpb.DBComponentInstanceDTO {
-	if models == nil || len(models) == 0 {
+	if len(models) == 0 {
 		return []*dbpb.DBComponentInstanceDTO{}
 	}
-	result := make([]*dbpb.DBComponentInstanceDTO, len(models), len(models))
+	result := make([]*dbpb.DBComponentInstanceDTO, len(models))
 
 	for i, v := range models {
 		result[i] = &dbpb.DBComponentInstanceDTO{

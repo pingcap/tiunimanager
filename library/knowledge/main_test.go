@@ -18,10 +18,11 @@
 package knowledge
 
 import (
+	"os"
 	"testing"
 )
 
 func TestMain(m *testing.M) {
 	LoadKnowledge()
-	m.Run()
+	os.Exit(m.Run())
 }

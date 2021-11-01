@@ -198,7 +198,7 @@ func (b *BaseFramework) loadCert() *tls.Config {
 	if err != nil {
 		panic("load certificate file failed")
 	}
-	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true} // #nosec G402
 }
 
 func (b *BaseFramework) initMicroService() {

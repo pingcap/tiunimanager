@@ -64,7 +64,7 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 		return nil, 0, err
 	}
 
-	clusters := make([]*domain.ClusterAggregation, len(resp.Clusters), len(resp.Clusters))
+	clusters := make([]*domain.ClusterAggregation, len(resp.Clusters))
 	for i, v := range resp.Clusters {
 		cluster := &domain.ClusterAggregation{}
 		cluster.Cluster = ParseFromClusterDTO(v.Cluster)
@@ -279,7 +279,7 @@ func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, 
 		framework.Log().Errorf("AddFlowWork error = %s", err.Error())
 		return nil, 0, err
 	}
-	flows := make([]*domain.FlowWorkEntity, len(resp.Flows), len(resp.Flows))
+	flows := make([]*domain.FlowWorkEntity, len(resp.Flows))
 	for i, v := range resp.Flows {
 		flows[i] = &domain.FlowWorkEntity{
 			Id:          uint(v.Id),
@@ -341,6 +341,7 @@ func (t TaskRepoAdapter) AddFlowTask(task *domain.TaskEntity, flowId uint) error
 
 	if err != nil {
 		// todo
+		framework.Log().Errorf("addflowtask flowid = %d, errStr: %s", flowId, err.Error())
 	}
 
 	if resp.Status.Code != 0 {
@@ -368,7 +369,7 @@ func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
 		},
 	}
 
-	tasks := make([]*dbpb.DBTaskDTO, len(flowWork.Tasks), len(flowWork.Tasks))
+	tasks := make([]*dbpb.DBTaskDTO, len(flowWork.Tasks))
 	req.FlowWithTasks.Tasks = tasks
 
 	for i, v := range flowWork.Tasks {
@@ -489,8 +490,8 @@ func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 		DeleteTime:     time.Unix(dto.DeleteTime, 0),
 	}
 
-	json.Unmarshal([]byte(dto.Tags), cluster.Tags)
-	json.Unmarshal([]byte(dto.Demands), cluster.Demands)
+	json.Unmarshal([]byte(dto.Tags), &cluster.Tags)
+	json.Unmarshal([]byte(dto.Demands), &cluster.Demands)
 
 	return
 }

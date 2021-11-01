@@ -69,7 +69,7 @@ func ParseMaintenanceInfoFromDTO(dto *clusterpb.ClusterMaintenanceDTO) (maintena
 }
 
 func ParseComponentInfoFromDTO(dto *clusterpb.ComponentInstanceDTO) (instance *ComponentInstance) {
-	nodes := make([]ComponentNodeDisplayInfo, len(dto.Nodes), len(dto.Nodes))
+	nodes := make([]ComponentNodeDisplayInfo, len(dto.Nodes))
 
 	for i, v := range dto.Nodes {
 		nodes[i] = *ParseComponentNodeFromDTO(v)
@@ -130,7 +130,7 @@ func ParseComponentBaseInfoFromDTO(dto *clusterpb.ComponentBaseInfoDTO) (baseInf
 }
 
 func ParseInstanceInfoFromDTO(dto *clusterpb.ClusterInstanceDTO) (instance *ClusterInstanceInfo) {
-	portList := make([]int, len(dto.PortList), len(dto.PortList))
+	portList := make([]int, len(dto.PortList))
 	for i, v := range dto.PortList {
 		portList[i] = int(v)
 	}

@@ -50,7 +50,6 @@ func TestMgrHandleCmdDeployReqWithNonJsonStr(t *testing.T) {
 	t.Fatalf("process ran with err %v, want exit status 1", err)
 }
 
-// todo: make it standalone(depends on tiup binary), comment out for now
 /**
 func TestMgrHandleCmdDeployReq(t *testing.T) {
 	cmdDeployReq := CmdDeployReq{
@@ -66,7 +65,6 @@ func TestMgrHandleCmdDeployReq(t *testing.T) {
 }
 */
 
-// todo: make it standalone(depends on tiup binary), comment out for now
 /**
 func TestMgrHandleCmdStartReq(t *testing.T) {
 	cmdStartReq := CmdStartReq{
@@ -80,7 +78,6 @@ func TestMgrHandleCmdStartReq(t *testing.T) {
 }
 */
 
-// todo: make it standalone(depends on tiup binary), comment out for now
 /**
 func TestMgrHandleCmdDestroyReq(t *testing.T) {
 	cmdDestroyReq := CmdDestroyReq{
@@ -94,7 +91,6 @@ func TestMgrHandleCmdDestroyReq(t *testing.T) {
 }
 */
 
-// todo: make it standalone(depends on tiup binary), comment out for now
 /**
 func TestMgrHandleClusterDisplayReq(t *testing.T) {
 	cmdClusterDisplayReq := CmdClusterDisplayReq{

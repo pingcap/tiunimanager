@@ -206,6 +206,11 @@ func (i *APIServerInstance) InitConfig(
 		false); err != nil {
 		return err
 	}
+	if _, _, err := e.Execute(ctx,
+		fmt.Sprintf("cp -r %s/bin/etc %s/", paths.Deploy, paths.Deploy),
+		false); err != nil {
+		return err
+	}
 
 	// no config file needed
 	return nil

@@ -627,6 +627,8 @@ type ProgressRate struct {
 }
 
 func MicroInit(brMgrPath, mgrLogFilePath string) {
+	framework.LogForkFile(common.LogFileSystem).Infof("microinit brmgrpath: %s, mgrlogfilepath: %s", brMgrPath, mgrLogFilePath)
+
 	configPath := ""
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]

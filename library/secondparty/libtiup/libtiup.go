@@ -754,6 +754,8 @@ var glTiUPMgrPath string
 var glTiUPBinPath string
 
 func MicroInit(tiupMgrPath, tiupBinPath, mgrLogFilePath string) {
+	framework.LogForkFile(common.LogFileSystem).Infof("microinit tiupmgrpath: %s, tiupbinpath: %s, mgrlogfilepath: %s", tiupMgrPath, tiupBinPath, mgrLogFilePath)
+
 	configPath := ""
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]

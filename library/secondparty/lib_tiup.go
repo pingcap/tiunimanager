@@ -15,8 +15,8 @@ import (
 type TiUPComponentTypeStr string
 
 const (
-	ClusterComponentTypeStr	TiUPComponentTypeStr = "cluster"
-	DMComponentTypeStr		TiUPComponentTypeStr = "dm"
+	ClusterComponentTypeStr TiUPComponentTypeStr = "cluster"
+	DMComponentTypeStr      TiUPComponentTypeStr = "dm"
 )
 
 func (secondMicro *SecondMicro) MicroSrvTiupDeploy(tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
@@ -355,7 +355,7 @@ func (secondMicro *SecondMicro) startNewTiupTask(taskID uint64, tiupPath string,
 		}
 		logInFunc.Info("cmd started")
 		successFp := func() {
-			logInFunc.Info("task finished, time cost", time.Now().Sub(t0))
+			logInFunc.Info("task finished, time cost", time.Since(t0))
 			secondMicro.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusFinished,
@@ -374,7 +374,7 @@ func (secondMicro *SecondMicro) startNewTiupTask(taskID uint64, tiupPath string,
 					}
 				}
 			}
-			logInFunc.Error("task err:", err, "time cost", time.Now().Sub(t0))
+			logInFunc.Error("task err:", err, "time cost", time.Since(t0))
 			secondMicro.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,

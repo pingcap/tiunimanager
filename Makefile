@@ -219,7 +219,7 @@ failpoint-disable: build_failpoint_ctl
 
 lint:
 	# refer https://golangci-lint.run/usage/install/#local-installation to install golangci-lint firstly
-	golangci-lint run --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml
+	-golangci-lint run --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml
 
 gosec:
 	go install github.com/securego/gosec/v2/cmd/gosec@latest

@@ -10,10 +10,10 @@ import (
 type TaskStatus int
 
 const (
-	TaskStatusInit  	 	= TaskStatus(dbPb.TiupTaskStatus_Init)
-	TaskStatusProcessing  	= TaskStatus(dbPb.TiupTaskStatus_Processing)
-	TaskStatusFinished   	= TaskStatus(dbPb.TiupTaskStatus_Finished)
-	TaskStatusError			= TaskStatus(dbPb.TiupTaskStatus_Error)
+	TaskStatusInit       = TaskStatus(dbPb.TiupTaskStatus_Init)
+	TaskStatusProcessing = TaskStatus(dbPb.TiupTaskStatus_Processing)
+	TaskStatusFinished   = TaskStatus(dbPb.TiupTaskStatus_Finished)
+	TaskStatusError      = TaskStatus(dbPb.TiupTaskStatus_Error)
 )
 
 type TaskStatusMember struct {
@@ -24,8 +24,8 @@ type TaskStatusMember struct {
 
 type TaskStatusMapValue struct {
 	validFlag bool // flag to help check if the value in the taskStatusMap
-	stat   TaskStatusMember
-	readct uint64 // the count that the value has been read
+	stat      TaskStatusMember
+	readct    uint64 // the count that the value has been read
 }
 
 // sync(put or update) all TaskStatus to database(synced in tiUPMicro.syncedTaskStatusMap) from taskStatusMap(valid ones)
@@ -91,7 +91,7 @@ func (secondMicro *SecondMicro) syncTaskStatusMap() {
 		var ok bool
 		select {
 		case statm, ok = <-secondMicro.taskStatusCh:
-			assert(ok == true)
+			assert(ok)
 			consumedFlag = true
 		default:
 		}
@@ -115,10 +115,10 @@ func (secondMicro *SecondMicro) syncTaskStatusMap() {
 }
 
 /**
-	1. delete all TaskStatusFinished and TaskStatusError tasks which have been read before from the memory
-	2. put all the rest TaskStatusMember into the result list
-	3. increment the read count of rest TaskStatusMember
- */
+1. delete all TaskStatusFinished and TaskStatusError tasks which have been read before from the memory
+2. put all the rest TaskStatusMember into the result list
+3. increment the read count of rest TaskStatusMember
+*/
 func (secondMicro *SecondMicro) getAllValidTaskStatus() (ret []TaskStatusMember) {
 	var needDeleteTaskList []uint64
 	for k, v := range secondMicro.taskStatusMap {

@@ -34,9 +34,9 @@ type ClusterFacade struct {
 	ClusterId       string // todo: need to know the usage
 	ClusterName     string // todo: need to know the usage
 	//PdAddress 			string
-	RateLimitM      string
-	Concurrency     string
-	CheckSum        string
+	RateLimitM  string
+	Concurrency string
+	CheckSum    string
 }
 
 type BrStorage struct {
@@ -122,7 +122,7 @@ func execShowBackUpInfoThruSQL(db *sql.DB, showBackupSQLCmd string) (resp CmdSho
 	t0 := time.Now()
 	err := db.QueryRow(showBackupSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.Queue_time, &resp.Execution_Time, &resp.Finish_Time, &resp.Connection)
 	successFp := func() {
-		logger.Info("showbackupinfo task finished, time cost", time.Now().Sub(t0))
+		logger.Info("showbackupinfo task finished, time cost", time.Since(t0))
 	}
 	if err != nil {
 		logger.Errorf("query sql cmd err: %v", err)
@@ -219,7 +219,7 @@ func execShowRestoreInfoThruSQL(db *sql.DB, showRestoreSQLCmd string) (resp CmdS
 	t0 := time.Now()
 	err := db.QueryRow(showRestoreSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.Queue_time, &resp.Execution_Time, &resp.Finish_Time, &resp.Connection)
 	successFp := func() {
-		logger.Info("showretoreinfo task finished, time cost", time.Now().Sub(t0))
+		logger.Info("showretoreinfo task finished, time cost", time.Since(t0))
 	}
 	if err != nil {
 		logger.Errorf("query sql cmd err: %v", err)
@@ -272,7 +272,7 @@ func (secondMicro *SecondMicro) startNewBrTaskThruSQL(taskID uint64, dbConnParam
 			return
 		}
 		successFp := func() {
-			logger.Info("task finished, time cost", time.Now().Sub(t0))
+			logger.Info("task finished, time cost", time.Since(t0))
 			secondMicro.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusFinished,
@@ -281,7 +281,6 @@ func (secondMicro *SecondMicro) startNewBrTaskThruSQL(taskID uint64, dbConnParam
 		}
 		logger.Info("sql cmd return successfully")
 		successFp()
-		return
 	}()
 	return exitCh
 }

@@ -18,9 +18,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/micro-metadb/models"
 
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/stretchr/testify/assert"
@@ -188,4 +190,40 @@ func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 
 		})
 	}
+}
+
+func printTree(root *node, pre string) {
+	if root == nil {
+		return
+	}
+	fmt.Println(pre, "Code: ", root.Code, "Prefix: ", root.Prefix, "Name: ", root.Name)
+	for _, subNode := range root.subNodes {
+		printTree(subNode, "--"+pre)
+	}
+}
+
+func TestDBServiceHandler_Build_Hierarchy(t *testing.T) {
+	Items := []models.Item{
+		{Region: "Region1", Az: "Region1,Zone1", Rack: "Region1,Zone1,Rack1", Ip: "111.111.111.111", Name: "Host1"},
+		{Region: "Region1", Az: "Region1,Zone2", Rack: "Region1,Zone2,Rack1", Ip: "111.111.111.112", Name: "Host2"},
+		{Region: "Region2", Az: "Region2,Zone3", Rack: "Region2,Zone3,Rack2", Ip: "111.111.111.113", Name: "Host3"},
+		{Region: "Region2", Az: "Region2,Zone3", Rack: "Region2,Zone3,Rack3", Ip: "111.111.111.114", Name: "Host4"},
+		{Region: "Region3", Az: "Region3,Zone4", Rack: "Region3,Zone4,Rack4", Ip: "111.111.111.115", Name: "Host5"},
+		{Region: "Region3", Az: "Region3,Zone5", Rack: "Region3,Zone5,Rack1", Ip: "111.111.111.116", Name: "Host6"},
+		{Region: "Region3", Az: "Region3,Zone5", Rack: "Region3,Zone5,Rack1", Ip: "111.111.111.117", Name: "Host7"},
+	}
+	root := handler.buildHierarchy(Items)
+	assert.Equal(t, 3, len(root.subNodes))
+	assert.Equal(t, 2, len(root.subNodes[0].subNodes))
+	assert.Equal(t, 2, len(root.subNodes[0].subNodes))
+	assert.Equal(t, 1, len(root.subNodes[1].subNodes))
+	assert.Equal(t, 2, len(root.subNodes[2].subNodes))
+
+	printTree(root, "-->")
+
+	fmt.Println("----------------------------------------------------------------------------------------------")
+
+	newRoot := handler.trimTree(root, resource.HOST, 10)
+	printTree(newRoot, "-->")
+	fmt.Println("root subnodes:", len(newRoot.subNodes))
 }

@@ -41,6 +41,15 @@ func GetDomainNameFromCode(failureDomain string) string {
 	return failureDomain[pos+1:]
 }
 
+func getDomainPrefixFromCode(failureDomain string) string {
+	pos := strings.LastIndex(failureDomain, ",")
+	if pos == -1 {
+		// No found ","
+		return failureDomain
+	}
+	return failureDomain[:pos]
+}
+
 func copyHostInfoFromReq(src *dbpb.DBHostInfoDTO, dst *resource.Host) {
 	dst.HostName = src.HostName
 	dst.IP = src.Ip
@@ -586,25 +595,83 @@ type node struct {
 	subNodes []*node
 }
 
-func (handler *DBServiceHandler) buildHierarchy(Items []models.Item) (r *node) {
+func addSubNode(current map[string]*node, code string, subNode *node) (parent *node) {
+	if parent, ok := current[code]; ok {
+		parent.subNodes = append(parent.subNodes, subNode)
+		return nil
+	} else {
+		parent := node{
+			Code:   code,
+			Prefix: getDomainPrefixFromCode(code),
+			Name:   GetDomainNameFromCode(code),
+		}
+		parent.subNodes = append(parent.subNodes, subNode)
+		current[code] = &parent
+		return &parent
+	}
+}
+
+func (handler *DBServiceHandler) buildHierarchy(Items []models.Item) *node {
 	root := node{
 		Code: "root",
 	}
 	var regions map[string]*node = make(map[string]*node)
-	var region2zones map[string][]*node = make(map[string][]*node)
-	var zone2racks map[string][]*node = make(map[string][]*node)
-	var rack2hosts map[string][]*node = make(map[string][]*node)
+	var zones map[string]*node = make(map[string]*node)
+	var racks map[string]*node = make(map[string]*node)
 	for _, item := range Items {
-		region, ok := regions[item.Region]
-		if !ok {
-			regions[item.Region] = &node{
-				Code: item.Region,
-			}
+		hostItem := node{
+			Code:     genDomainCodeByName(item.Ip, item.Name),
+			Prefix:   item.Ip,
+			Name:     item.Name,
+			subNodes: nil,
+		}
+		newRack := addSubNode(racks, item.Rack, &hostItem)
+		if newRack == nil {
+			continue
+		}
+		newZone := addSubNode(zones, item.Az, newRack)
+		if newZone == nil {
+			continue
+		}
+		newRegion := addSubNode(regions, item.Region, newZone)
+		if newRegion != nil {
+			root.subNodes = append(root.subNodes, newRegion)
 		}
 	}
 	return &root
 }
 
+func (handler *DBServiceHandler) trimTree(root *node, level resource.FailureDomain, depth int) *node {
+	newRoot := node{
+		Code: "root",
+	}
+	levelNodes := root.subNodes
+
+	for l := resource.REGION; l < level; l++ {
+		var subnodes []*node
+		for _, node := range levelNodes {
+			subnodes = append(subnodes, node.subNodes...)
+		}
+		levelNodes = subnodes
+	}
+	newRoot.subNodes = levelNodes
+
+	leafNodes := levelNodes
+	for d := 0; d < depth; d++ {
+		var subnodes []*node
+		for _, node := range leafNodes {
+			subnodes = append(subnodes, node.subNodes...)
+		}
+		leafNodes = subnodes
+	}
+	for _, node := range leafNodes {
+		node.subNodes = nil
+	}
+
+	return &newRoot
+}
+
+/*
 func (handler *DBServiceHandler) GetHierarchy(ctx context.Context, in *dbpb.DBGetHierarchyRequest, out *dbpb.DBGetHierarchyResponse) error {
 	log := framework.LogWithContext(ctx)
 	out.Rs = new(dbpb.DBHostResponseStatus)
@@ -626,20 +693,7 @@ func (handler *DBServiceHandler) GetHierarchy(ctx context.Context, in *dbpb.DBGe
 		return nil
 	}
 	out.Rs.Code = common.TIEM_SUCCESS
-	// Merge archs in the same region
-	curRegionName := ""
-	curMergeOutIndex := -1
-	for _, item := range Items {
-		if curRegionName != item.Region {
-			curMergeOutIndex++
-			curRegionName = item.Region
-			out.Regions = append(out.Regions, &dbpb.DBRegionItem{
-				Region: item.Region,
-			})
-			out.Regions[curMergeOutIndex].Archs = append(out.Regions[curMergeOutIndex].Archs, item.Arch)
-		} else {
-			out.Regions[curMergeOutIndex].Archs = append(out.Regions[curMergeOutIndex].Archs, item.Arch)
-		}
-	}
+
 	return nil
 }
+*/

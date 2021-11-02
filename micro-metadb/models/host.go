@@ -855,9 +855,19 @@ type Item struct {
 	Name   string
 }
 
-func (m *DAOResourceManager) GetHostItems(ctx context.Context) (Items []Item, err error) {
+func (m *DAOResourceManager) GetHostItems(ctx context.Context, filter rt.Filter) (Items []Item, err error) {
 	tx := m.getDb(ctx).Begin()
-	err = tx.Model(&rt.Host{}).Select("region, az, rack, ip, name").Order("region").Order("az").Order("rack").Order("ip").Scan(&Items).Error
+	db := tx.Model(&rt.Host{}).Select("region, az, rack, ip, name")
+	if filter.Arch != "" {
+		db = db.Where("arch = ?", filter.Arch)
+	}
+	if filter.Purpose != "" {
+		db = db.Where("purpose = ?", filter.Purpose)
+	}
+	if filter.DiskType != "" {
+		db = db.Where("disk_type = ?", filter.DiskType)
+	}
+	err = db.Order("region").Order("az").Order("rack").Order("ip").Scan(&Items).Error
 	if err != nil {
 		tx.Rollback()
 		return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get hierarchy failed, %v", err)

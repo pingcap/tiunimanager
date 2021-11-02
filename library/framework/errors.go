@@ -21,6 +21,10 @@ import (
 	"github.com/pingcap-inc/tiem/library/common"
 )
 
+//
+// TiEMError
+// @Description: TiEM business error
+// Always get TiEMError from TiEMErrorBuilder.build(), limited to SimpleError, CustomizeMessageError, WrapError, ErrorBuilder().build()
 type TiEMError struct {
 	code  common.TIEM_ERROR_CODE
 	msg   string
@@ -69,6 +73,8 @@ type TiEMErrorBuilder struct {
 	template TiEMError
 }
 
+// ErrorBuilder
+// @return TiEMErrorBuilder
 func ErrorBuilder() TiEMErrorBuilder {
 	return TiEMErrorBuilder{
 		template: TiEMError{},
@@ -106,6 +112,10 @@ func (t TiEMErrorBuilder) Context(ctx context.Context) TiEMErrorBuilder {
 	return t
 }
 
+// Build
+// @Description: the only way to get a efficient TiEMError
+// @Receiver t
+// @return TiEMError
 func (t TiEMErrorBuilder) Build() TiEMError {
 
 	return t.template

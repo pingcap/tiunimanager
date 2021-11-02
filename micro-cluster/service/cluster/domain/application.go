@@ -19,6 +19,7 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -128,7 +129,7 @@ func TakeoverClusters(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeover
 	operator := parseOperatorFromDTO(ope)
 
 	if len(req.ClusterNames) != 1 {
-		return nil, common.NewBizError(common.TIEM_PARAMETER_INVALID)
+		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 
 	clusterName := req.ClusterNames[0]

@@ -17,6 +17,7 @@
 package importexport
 
 import (
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"net/http"
 	"time"
@@ -195,9 +196,9 @@ func DescribeDataTransport(c *gin.Context) {
 					RecordId:      value.GetRecordId(),
 					ClusterId:     value.GetClusterId(),
 					TransportType: value.GetTransportType(),
-					Status:        value.GetStatus(),
 					FilePath:      value.GetFilePath(),
 					StorageType:   value.GetStorageType(),
+					Status:        *management.ParseStatusFromDTO(value.DisplayStatus),
 					StartTime:     time.Unix(value.GetStartTime(), 0),
 					EndTime:       time.Unix(value.GetEndTime(), 0),
 				}

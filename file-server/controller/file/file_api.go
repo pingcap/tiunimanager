@@ -52,13 +52,14 @@ func UploadImportFile(c *gin.Context) {
 
 func DownloadExportFile(c *gin.Context) {
 	downloadPath := c.Param("downloadPath")
+	filePath := filepath.Join(filepath.Dir(downloadPath), service.DefaultDataFile)
 
-	err := service.FileMgr.ZipDir(filepath.Join(downloadPath, "data"), filepath.Join(filepath.Dir(downloadPath), service.DefaultDataFile))
+	err := service.FileMgr.ZipDir(downloadPath, filePath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
-	filePath := filepath.Join(downloadPath, service.DefaultDataFile)
+
 	err = service.FileMgr.DownloadFile(c, filePath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))

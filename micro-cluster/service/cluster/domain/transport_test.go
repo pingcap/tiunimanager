@@ -191,7 +191,7 @@ func TestDescribeDataTransportRecord(t *testing.T) {
 			TenantId: "123",
 		},
 	}
-	_, _, err := DescribeDataTransportRecord(ctx.Background(), request.GetOperator(), "123", "123", 1, 10)
+	_, _, err := DescribeDataTransportRecord(ctx.Background(), request.GetOperator(), 123, "123", 1, 10)
 	assert.NoError(t, err)
 }
 
@@ -203,7 +203,7 @@ func Test_buildDataImportConfig(t *testing.T) {
 		UserName:    "root",
 		Password:    "",
 		FilePath:    "filePath",
-		RecordId:    "123",
+		RecordId:    123,
 		StorageType: S3StorageType,
 		ConfigPath:  "configPath",
 	})
@@ -245,7 +245,7 @@ func Test_updateDataImportRecord(t *testing.T) {
 		UserName:    "root",
 		Password:    "",
 		FilePath:    "filePath",
-		RecordId:    "123",
+		RecordId:    123,
 		StorageType: S3StorageType,
 		ConfigPath:  "configPath",
 	})
@@ -276,7 +276,7 @@ func Test_updateDataExportRecord(t *testing.T) {
 		UserName:    "root",
 		Password:    "",
 		FilePath:    "filePath",
-		RecordId:    "123",
+		RecordId:    123,
 		StorageType: S3StorageType,
 	})
 	context.put(contextClusterKey, &ClusterAggregation{
@@ -306,7 +306,7 @@ func Test_exportDataFailed(t *testing.T) {
 		UserName:    "root",
 		Password:    "",
 		FilePath:    "filePath",
-		RecordId:    "123",
+		RecordId:    123,
 		StorageType: S3StorageType,
 	})
 	context.put(contextClusterKey, &ClusterAggregation{
@@ -336,7 +336,7 @@ func Test_importDataFailed(t *testing.T) {
 		UserName:    "root",
 		Password:    "",
 		FilePath:    "filePath",
-		RecordId:    "123",
+		RecordId:    123,
 		StorageType: S3StorageType,
 	})
 	context.put(contextClusterKey, &ClusterAggregation{

@@ -22,25 +22,23 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
 
-	"strconv"
 	"time"
 )
 
 func (handler *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *dbpb.DBCreateTransportRecordRequest, out *dbpb.DBCreateTransportRecordResponse) error {
 	start := time.Now()
 	defer handler.HandleMetrics(start, "QueryBackupStrategyByTime", int(out.GetStatus().GetCode()))
-	intId, _ := strconv.ParseInt(in.GetRecord().GetID(), 10, 64)
 	log := framework.LogWithContext(ctx)
 	record := &models.TransportRecord{
 		Record: models.Record{
-			ID: uint(intId),
+			ID:       uint(in.GetRecord().GetRecordId()),
+			TenantId: in.GetRecord().GetTenantId(),
 		},
 		ClusterId:     in.GetRecord().GetClusterId(),
 		TransportType: in.GetRecord().GetTransportType(),
 		FilePath:      in.GetRecord().GetFilePath(),
 		StorageType:   in.GetRecord().GetStorageType(),
-		TenantId:      in.GetRecord().GetTenantId(),
-		Status:        in.GetRecord().GetStatus(),
+		FlowId:        in.GetRecord().GetFlowId(),
 		StartTime:     time.Unix(in.GetRecord().GetStartTime(), 0),
 	}
 	id, err := handler.Dao().ClusterManager().CreateTransportRecord(ctx, record)
@@ -50,7 +48,7 @@ func (handler *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *
 		log.Errorf("CreateTransportRecord failed, %s", err.Error())
 	} else {
 		out.Status = ClusterSuccessResponseStatus
-		out.Id = id
+		out.RecordId = int64(id)
 		log.Infof("CreateTransportRecord success")
 	}
 
@@ -61,7 +59,7 @@ func (handler *DBServiceHandler) UpdateTransportRecord(ctx context.Context, in *
 	start := time.Now()
 	defer handler.HandleMetrics(start, "UpdateTransportRecord", int(out.GetStatus().GetCode()))
 	log := framework.LogWithContext(ctx)
-	err := handler.Dao().ClusterManager().UpdateTransportRecord(ctx, in.GetRecord().GetID(), in.GetRecord().GetClusterId(), in.GetRecord().GetStatus(), time.Unix(in.GetRecord().GetEndTime(), 0))
+	err := handler.Dao().ClusterManager().UpdateTransportRecord(ctx, int(in.GetRecord().GetRecordId()), in.GetRecord().GetClusterId(), time.Unix(in.GetRecord().GetEndTime(), 0))
 	if err != nil {
 		out.Status = BizErrResponseStatus
 		out.Status.Message = err.Error()
@@ -78,14 +76,14 @@ func (handler *DBServiceHandler) FindTrasnportRecordByID(ctx context.Context, in
 	start := time.Now()
 	defer handler.HandleMetrics(start, "FindTrasnportRecordByID", int(out.GetStatus().GetCode()))
 	log := framework.LogWithContext(ctx)
-	record, err := handler.Dao().ClusterManager().FindTransportRecordById(ctx, in.GetRecordId())
+	record, err := handler.Dao().ClusterManager().FindTransportRecordById(ctx, int(in.GetRecordId()))
 	if err != nil {
 		out.Status = BizErrResponseStatus
 		out.Status.Message = err.Error()
 		log.Errorf("FindTransportRecordById failed, %s", err.Error())
 	} else {
 		out.Status = ClusterSuccessResponseStatus
-		out.Record = convertRecordDTO(record)
+		out.Record = convertTransportRecordDTO(record)
 		log.Infof("FindTrasnportRecordByID success, %v", out)
 	}
 
@@ -96,36 +94,50 @@ func (handler *DBServiceHandler) ListTrasnportRecord(ctx context.Context, in *db
 	start := time.Now()
 	defer handler.HandleMetrics(start, "ListTrasnportRecord", int(out.GetStatus().GetCode()))
 	log := framework.LogWithContext(ctx)
-	records, total, err := handler.Dao().ClusterManager().ListTransportRecord(ctx, in.GetClusterId(), in.GetRecordId(), (in.GetPage().GetPage()-1)*in.GetPage().GetPageSize(), in.GetPage().GetPageSize())
+	result, total, err := handler.Dao().ClusterManager().ListTransportRecord(ctx, in.GetClusterId(), int(in.GetRecordId()), (in.GetPage().GetPage()-1)*in.GetPage().GetPageSize(), in.GetPage().GetPageSize())
 	if err != nil {
 		out.Status = BizErrResponseStatus
 		out.Status.Message = err.Error()
 		log.Errorf("ListTrasnportRecord failed, %s", err.Error())
 	} else {
-		out.Status = ClusterSuccessResponseStatus
-		out.Records = make([]*dbpb.TransportRecordDTO, len(records))
-		for index := 0; index < len(records); index++ {
-			out.Records[index] = convertRecordDTO(records[index])
-		}
 		out.Page = &dbpb.DBPageDTO{
-			Page:     in.GetPage().GetPage(),
-			PageSize: in.GetPage().GetPageSize(),
+			Page:     out.Page.Page,
+			PageSize: out.Page.PageSize,
 			Total:    int32(total),
 		}
+		transportRecordDTOs := make([]*dbpb.DBTransportRecordDisplayDTO, len(result))
+		for i, v := range result {
+			transportRecordDTOs[i] = convertToTransportRecordDisplayDTO(v.TransportRecord, v.Flow)
+		}
+		out.Records = transportRecordDTOs
+		out.Status = ClusterSuccessResponseStatus
 		log.Infof("ListTrasnportRecord success, %v", out)
 	}
 
 	return nil
 }
 
-func convertRecordDTO(record *models.TransportRecord) *dbpb.TransportRecordDTO {
+func convertToTransportRecordDisplayDTO(do *models.TransportRecord, flow *models.FlowDO) (dto *dbpb.DBTransportRecordDisplayDTO) {
+	if do == nil {
+		return nil
+	}
+
+	dto = &dbpb.DBTransportRecordDisplayDTO{
+		Record: convertTransportRecordDTO(do),
+		Flow:   convertFlowToDTO(flow),
+	}
+	return
+}
+
+func convertTransportRecordDTO(record *models.TransportRecord) *dbpb.TransportRecordDTO {
 	recordDTO := &dbpb.TransportRecordDTO{
-		ID:            strconv.Itoa(int(record.ID)),
+		RecordId:      int64(record.ID),
 		ClusterId:     record.ClusterId,
 		TransportType: record.TransportType,
 		TenantId:      record.TenantId,
 		FilePath:      record.FilePath,
-		Status:        record.Status,
+		StorageType:   record.StorageType,
+		FlowId:        record.FlowId,
 		StartTime:     record.StartTime.Unix(),
 		EndTime:       record.EndTime.Unix(),
 	}

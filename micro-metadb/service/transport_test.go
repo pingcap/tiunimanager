@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -28,12 +27,11 @@ import (
 func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
 	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	record := &dbpb.TransportRecordDTO{
-		ID:            "1111",
+		RecordId:      1111,
 		ClusterId:     "tc-123",
 		TransportType: "import",
 		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
 		TenantId:      "admin",
-		Status:        "Running",
 		StartTime:     time.Now().Unix(),
 	}
 	in := &dbpb.DBCreateTransportRecordRequest{
@@ -52,12 +50,11 @@ func TestDBServiceHandler_CreateTransportRecord(t *testing.T) {
 func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	record := &dbpb.TransportRecordDTO{
-		ID:            "2222",
+		RecordId:      2222,
 		ClusterId:     "tc-123",
 		TransportType: "import",
 		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
 		TenantId:      "admin",
-		Status:        "Running",
 		StartTime:     time.Now().Unix(),
 	}
 	createIn := &dbpb.DBCreateTransportRecordRequest{
@@ -71,7 +68,6 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 		return
 	}
 
-	record.Status = "Finish"
 	record.EndTime = time.Now().Unix()
 
 	updateIn := &dbpb.DBUpdateTransportRecordRequest{
@@ -89,12 +85,11 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	record := &dbpb.TransportRecordDTO{
-		ID:            "3333",
+		RecordId:      3333,
 		ClusterId:     "tc-123",
 		TransportType: "import",
 		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
 		TenantId:      "admin",
-		Status:        "Running",
 		StartTime:     time.Now().Unix(),
 	}
 	createIn := &dbpb.DBCreateTransportRecordRequest{
@@ -109,7 +104,7 @@ func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 	}
 
 	in := &dbpb.DBFindTransportRecordByIDRequest{
-		RecordId: "3333",
+		RecordId: 3333,
 	}
 	out := &dbpb.DBFindTransportRecordByIDResponse{}
 	err = handler.FindTrasnportRecordByID(context.TODO(), in, out)
@@ -123,12 +118,11 @@ func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 func TestDBServiceHandler_ListTrasnportRecord(t *testing.T) {
 	framework.InitBaseFrameworkForUt(framework.MetaDBService)
 	record := &dbpb.TransportRecordDTO{
-		ID:            "4444",
+		RecordId:      4444,
 		ClusterId:     "tc-123",
 		TransportType: "import",
 		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
 		TenantId:      "admin",
-		Status:        "Running",
 		StartTime:     time.Now().Unix(),
 	}
 	createIn := &dbpb.DBCreateTransportRecordRequest{

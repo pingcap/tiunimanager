@@ -1,19 +1,20 @@
 syntax = "proto3";
 
 import "db_cluster.proto";
+import "db_task.proto";
 
 option go_package = "./../dbpb/;dbpb";
 
 message TransportRecordDTO {
-	string ID = 1;
+	int64 recordId = 1;
 	string ClusterId = 2;
 	string TransportType = 3;
 	string FilePath = 4;
 	string TenantId = 5;
-	string Status = 6;
-	int64 StartTime = 7;
-	int64 EndTime = 8;
-	string StorageType = 9;
+	int64 StartTime = 6;
+	int64 EndTime = 7;
+	string StorageType = 8;
+	int64 FlowId = 9;
 }
 
 message DBCreateTransportRecordRequest {
@@ -22,7 +23,7 @@ message DBCreateTransportRecordRequest {
 
 message DBCreateTransportRecordResponse {
     DBClusterResponseStatus status = 1;
-    string id = 2;
+    int64 recordId = 2;
 }
 
 message DBUpdateTransportRecordRequest {
@@ -34,7 +35,7 @@ message DBUpdateTransportRecordResponse {
 }
 
 message DBFindTransportRecordByIDRequest {
-    string recordId = 1;
+    int64 recordId = 1;
 }
 
 message DBFindTransportRecordByIDResponse {
@@ -45,11 +46,16 @@ message DBFindTransportRecordByIDResponse {
 message DBListTransportRecordRequest {
     DBPageDTO page = 1;
 	string clusterId = 2;
-	string recordId = 3;
+    int64 recordId = 3;
+}
+
+message DBTransportRecordDisplayDTO {
+    TransportRecordDTO record = 1;
+    DBFlowDTO flow = 2;
 }
 
 message DBListTransportRecordResponse {
     DBClusterResponseStatus status = 1;
     DBPageDTO page = 2;
-    repeated TransportRecordDTO records = 3;
+    repeated DBTransportRecordDisplayDTO records = 3;
 }

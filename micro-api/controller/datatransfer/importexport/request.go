@@ -46,5 +46,5 @@ type DataImportReq struct {
 
 type DataTransportQueryReq struct {
 	controller.PageRequest
-	RecordId string `json:"recordId" form:"recordId"`
+	RecordId int64 `json:"recordId" form:"recordId"`
 }

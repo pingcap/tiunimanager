@@ -277,15 +277,21 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 			Total:    page.GetTotal(),
 		}
 		resp.TransportInfos = make([]*clusterpb.DataTransportInfo, len(infos))
-		for index := 0; index < len(infos); index++ {
-			resp.TransportInfos[index] = &clusterpb.DataTransportInfo{
-				RecordId:      infos[index].ID,
-				ClusterId:     infos[index].ClusterId,
-				TransportType: infos[index].TransportType,
-				FilePath:      infos[index].FilePath,
-				Status:        infos[index].Status,
-				StartTime:     infos[index].StartTime,
-				EndTime:       infos[index].EndTime,
+		for i, v := range infos { //todo: flow status
+			resp.TransportInfos[i] = &clusterpb.DataTransportInfo{
+				RecordId:      infos[i].GetRecord().GetRecordId(),
+				ClusterId:     infos[i].GetRecord().GetClusterId(),
+				TransportType: infos[i].GetRecord().GetTransportType(),
+				StorageType:   infos[i].GetRecord().GetStorageType(),
+				FilePath:      infos[i].GetRecord().GetFilePath(),
+				StartTime:     infos[i].GetRecord().GetStartTime(),
+				EndTime:       infos[i].GetRecord().GetEndTime(),
+				DisplayStatus: &clusterpb.DisplayStatusDTO{
+					StatusCode: strconv.Itoa(int(v.Flow.Status)),
+					//StatusName:      v.Flow.StatusAlias,
+					StatusName:      domain.TaskStatus(int(v.Flow.Status)).Display(),
+					InProcessFlowId: int32(v.Flow.Id),
+				},
 			}
 		}
 	}

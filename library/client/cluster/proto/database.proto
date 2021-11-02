@@ -18,7 +18,7 @@ message DataImportRequest {
 
 message DataImportResponse {
     ResponseStatusDTO respStatus = 1;
-    string recordId = 2;
+    int64 recordId = 2;
 }
 
 message DataExportRequest {
@@ -39,25 +39,25 @@ message DataExportRequest {
 
 message DataExportResponse {
     ResponseStatusDTO respStatus = 1;
-    string recordId = 2;
+    int64 recordId = 2;
 }
 
 message DataTransportQueryRequest {
     PageDTO pageReq = 1;
     OperatorDTO operator = 2;
     string  clusterId = 3;
-    string  recordId = 4;
+    int64  recordId = 4;
 }
 
 message DataTransportInfo {
-    string RecordId = 1;
+    int64 RecordId = 1;
     string clusterId = 2;
     string transportType = 3;
     int64 startTime = 4;
     int64 endTime = 5;
-    string status = 6;
-    string filePath = 7;
-    string storageType = 8;
+    string filePath = 6;
+    string storageType = 7;
+    DisplayStatusDTO displayStatus = 8;
 }
 
 message DataTransportQueryResponse {

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -32,8 +31,6 @@ func TestDAOClusterManager_CreateTransportRecord(t *testing.T) {
 		ClusterId:     "tc-123",
 		TransportType: "import",
 		FilePath:      "path1",
-		TenantId:      "tenant-cc",
-		Status:        "Running",
 		StartTime:     time.Now(),
 		EndTime:       time.Now(),
 	}
@@ -42,7 +39,7 @@ func TestDAOClusterManager_CreateTransportRecord(t *testing.T) {
 		t.Errorf("TestDAOClusterManager_CreateTransportRecord failed, %s", err.Error())
 		return
 	}
-	t.Logf("TestDAOClusterManager_CreateTransportRecord success, id: %s", id)
+	t.Logf("TestDAOClusterManager_CreateTransportRecord success, id: %d", id)
 }
 
 func TestDAOClusterManager_UpdateTransportRecord(t *testing.T) {
@@ -54,8 +51,6 @@ func TestDAOClusterManager_UpdateTransportRecord(t *testing.T) {
 		ClusterId:     "tc-123",
 		TransportType: "import",
 		FilePath:      "path1",
-		TenantId:      "tenant-cc",
-		Status:        "Running",
 		StartTime:     time.Now(),
 		EndTime:       time.Now(),
 	}
@@ -65,7 +60,7 @@ func TestDAOClusterManager_UpdateTransportRecord(t *testing.T) {
 		return
 	}
 
-	err = Dao.ClusterManager().UpdateTransportRecord(context.TODO(), id, record.ClusterId, "Finish", time.Now())
+	err = Dao.ClusterManager().UpdateTransportRecord(context.TODO(), id, record.ClusterId, time.Now())
 	if err != nil {
 		t.Errorf("TestDAOClusterManager_UpdateTransportRecord update record failed, %s", err.Error())
 		return
@@ -82,8 +77,6 @@ func TestDAOClusterManager_FindTransportRecordById(t *testing.T) {
 		ClusterId:     "tc-123",
 		TransportType: "import",
 		FilePath:      "path1",
-		TenantId:      "tenant-cc",
-		Status:        "Running",
 		StartTime:     time.Now(),
 		EndTime:       time.Now(),
 	}
@@ -110,8 +103,6 @@ func TestDAOClusterManager_ListTransportRecord(t *testing.T) {
 		ClusterId:     "tc-123",
 		TransportType: "import",
 		FilePath:      "path1",
-		TenantId:      "tenant-cc",
-		Status:        "Running",
 		StartTime:     time.Now(),
 		EndTime:       time.Now(),
 	}
@@ -121,7 +112,7 @@ func TestDAOClusterManager_ListTransportRecord(t *testing.T) {
 		return
 	}
 
-	list, total, err := Dao.ClusterManager().ListTransportRecord(context.TODO(), record.ClusterId, "", 0, 10)
+	list, total, err := Dao.ClusterManager().ListTransportRecord(context.TODO(), record.ClusterId, 44, 0, 10)
 	if err != nil {
 		t.Errorf("TestDAOClusterManager_ListTransportRecord create record failed, %s", err.Error())
 		return

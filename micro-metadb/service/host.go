@@ -464,7 +464,7 @@ func (handler *DBServiceHandler) AllocResources(ctx context.Context, in *dbpb.DB
 		copyResultToRsp(&r, &hostResource)
 		out.Results = append(out.Results, &hostResource)
 	}
-	out.Rs.Code = common.TIEM_SUCCESS
+	out.Rs.Code = int32(common.TIEM_SUCCESS)
 	return nil
 }
 
@@ -492,7 +492,7 @@ func (handler *DBServiceHandler) AllocResourcesInBatch(ctx context.Context, in *
 	for _, result := range resources.BatchResults {
 		var rsp dbpb.DBAllocResponse
 		rsp.Rs = new(dbpb.DBAllocResponseStatus)
-		rsp.Rs.Code = common.TIEM_SUCCESS
+		rsp.Rs.Code = int32(common.TIEM_SUCCESS)
 		for _, r := range result.Results {
 			var hostResource dbpb.DBHostResource
 			copyResultToRsp(&r, &hostResource)
@@ -500,7 +500,7 @@ func (handler *DBServiceHandler) AllocResourcesInBatch(ctx context.Context, in *
 		}
 		out.BatchResults = append(out.BatchResults, &rsp)
 	}
-	out.Rs.Code = common.TIEM_SUCCESS
+	out.Rs.Code = int32(common.TIEM_SUCCESS)
 	return nil
 }
 
@@ -525,7 +525,7 @@ func (handler *DBServiceHandler) RecycleResources(ctx context.Context, in *dbpb.
 		// return nil to use rsp
 		return nil
 	}
-	out.Rs.Code = common.TIEM_SUCCESS
+	out.Rs.Code = int32(common.TIEM_SUCCESS)
 	return nil
 }
 

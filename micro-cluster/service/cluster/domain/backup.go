@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -27,6 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/micro-metadb/service"
 	"os"
 	"strconv"
 	"strings"
@@ -99,7 +99,11 @@ func Backup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, b
 	})
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("save backup record failed, %s", err.Error())
-		return nil, errors.New("save backup record failed")
+		return nil, err
+	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("save backup record failed, %s", resp.GetStatus().GetMessage())
+		return nil, fmt.Errorf("save backup record failed, %s", resp.GetStatus().GetMessage())
 	}
 	record.Id = resp.GetBackupRecord().GetId()
 	clusterAggregation.LastBackupRecord = record
@@ -125,6 +129,10 @@ func DeleteBackup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId str
 		getLoggerWithContext(ctx).Errorf("query backup record %d of cluster %s failed, %s", bakId, clusterId, err.Error())
 		return fmt.Errorf("query backup record %d of cluster %s failed, %s", bakId, clusterId, err.Error())
 	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("query backup record %d of cluster %s failed, %s", bakId, clusterId, resp.GetStatus().GetMessage())
+		return fmt.Errorf("query backup record %d of cluster %s failed, %s", bakId, clusterId, resp.GetStatus().GetMessage())
+	}
 	getLoggerWithContext(ctx).Infof("query backup record to be deleted, record: %v", resp.GetBackupRecords().GetBackupRecord())
 	filePath := resp.GetBackupRecords().GetBackupRecord().GetFilePath() //backup dir
 
@@ -138,6 +146,10 @@ func DeleteBackup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId str
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("delete metadb backup record failed, %s", err.Error())
 		return fmt.Errorf("delete metadb backup record failed, %s", err.Error())
+	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("delete metadb backup record failed, %s", resp.GetStatus().GetMessage())
+		return fmt.Errorf("delete metadb backup record failed, %s", resp.GetStatus().GetMessage())
 	}
 
 	return nil
@@ -184,9 +196,9 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 		Tls:            clusterInfo.Tls,
 		TenantId:       operator.TenantId,
 		OwnerId:        operator.Id,
-		RecoverInfo:    RecoverInfo{
+		RecoverInfo: RecoverInfo{
 			SourceClusterId: clusterInfo.GetRecoverInfo().GetSourceClusterId(),
-			BackupRecordId: clusterInfo.GetRecoverInfo().GetBackupRecordId(),
+			BackupRecordId:  clusterInfo.GetRecoverInfo().GetBackupRecordId(),
 		},
 	}
 
@@ -270,7 +282,7 @@ func SaveBackupStrategy(ctx context.Context, ope *clusterpb.OperatorDTO, strateg
 	startHour, _ := strconv.Atoi(starts[0])
 	endHour, _ := strconv.Atoi(ends[0])
 
-	_, err := client.DBClient.SaveBackupStrategy(ctx, &dbpb.DBSaveBackupStrategyRequest{
+	resp, err := client.DBClient.SaveBackupStrategy(ctx, &dbpb.DBSaveBackupStrategyRequest{
 		Strategy: &dbpb.DBBackupStrategyDTO{
 			TenantId:   ope.TenantId,
 			OperatorId: ope.GetId(),
@@ -284,6 +296,10 @@ func SaveBackupStrategy(ctx context.Context, ope *clusterpb.OperatorDTO, strateg
 		getLoggerWithContext(ctx).Error(err)
 		return err
 	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Error(resp.GetStatus().GetMessage())
+		return fmt.Errorf("save backup strategy failed %s", resp.GetStatus().GetMessage())
+	}
 
 	return nil
 }
@@ -295,20 +311,24 @@ func QueryBackupStrategy(ctx context.Context, ope *clusterpb.OperatorDTO, cluste
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
 		return nil, err
-	} else {
-		strategy := &clusterpb.BackupStrategy{
-			ClusterId:  resp.GetStrategy().GetClusterId(),
-			BackupDate: resp.GetStrategy().GetBackupDate(),
-			Period:     fmt.Sprintf("%d:00-%d:00", resp.GetStrategy().GetStartHour(), resp.GetStrategy().GetEndHour()),
-		}
-		nextBackupTime, err := calculateNextBackupTime(time.Now(), resp.GetStrategy().GetBackupDate(), int(resp.GetStrategy().GetStartHour()))
-		if err != nil {
-			getLoggerWithContext(ctx).Warnf("calculateNextBackupTime failed, %s", err.Error())
-		} else {
-			strategy.NextBackupTime = nextBackupTime.Unix()
-		}
-		return strategy, nil
 	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Error(resp.GetStatus().GetMessage())
+		return nil, fmt.Errorf("query backup strategy failed %s", resp.GetStatus().GetMessage())
+	}
+
+	strategy := &clusterpb.BackupStrategy{
+		ClusterId:  resp.GetStrategy().GetClusterId(),
+		BackupDate: resp.GetStrategy().GetBackupDate(),
+		Period:     fmt.Sprintf("%d:00-%d:00", resp.GetStrategy().GetStartHour(), resp.GetStrategy().GetEndHour()),
+	}
+	nextBackupTime, err := calculateNextBackupTime(time.Now(), resp.GetStrategy().GetBackupDate(), int(resp.GetStrategy().GetStartHour()))
+	if err != nil {
+		getLoggerWithContext(ctx).Warnf("calculateNextBackupTime failed, %s", err.Error())
+	} else {
+		strategy.NextBackupTime = nextBackupTime.Unix()
+	}
+	return strategy, nil
 }
 
 func calculateNextBackupTime(now time.Time, weekdayStr string, hour int) (time.Time, error) {
@@ -442,7 +462,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		record.Size = backupInfo.Size
 	}
 
-	_, err = client.DBClient.UpdateBackupRecord(context.TODO(), &dbpb.DBUpdateBackupRecordRequest{
+	updateResp, err := client.DBClient.UpdateBackupRecord(context.TODO(), &dbpb.DBUpdateBackupRecordRequest{
 		BackupRecord: &dbpb.DBBackupRecordDTO{
 			Id:      record.Id,
 			Size:    record.Size,
@@ -450,7 +470,11 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		},
 	})
 	if err != nil {
-		getLoggerWithContext(ctx).Errorf("update backup record for cluster[%s] failed, %s", clusterAggregation.Cluster.Id, err.Error())
+		getLoggerWithContext(ctx).Errorf("update backup record for cluster %s failed, %s", clusterAggregation.Cluster.Id, err.Error())
+		return false
+	}
+	if updateResp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("update backup record for cluster %s failed, %s", clusterAggregation.Cluster.Id, updateResp.GetStatus().GetMessage())
 		return false
 	}
 	return true
@@ -497,6 +521,10 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	record, err := client.DBClient.QueryBackupRecords(context.TODO(), &dbpb.DBQueryBackupRecordRequest{ClusterId: recoverInfo.SourceClusterId, RecordId: recoverInfo.BackupRecordId})
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("query backup record failed, %s", err.Error())
+		return false
+	}
+	if record.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("query backup record failed, %s", record.GetStatus().GetMessage())
 		return false
 	}
 

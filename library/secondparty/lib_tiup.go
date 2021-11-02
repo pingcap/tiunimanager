@@ -93,6 +93,68 @@ func (secondMicro *SecondMicro) startNewTiupStartTask(taskID uint64, req *CmdSta
 	}()
 }
 
+func (secondMicro *SecondMicro) MicroSrvTiupRestart(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Restart
+	req.BizID = bizID
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	if rsp == nil || err != nil || rsp.ErrCode != 0 {
+		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
+		return 0, err
+	} else {
+		var req CmdStartReq
+		req.TiUPComponent = tiupComponent
+		req.TaskID = rsp.Id
+		req.InstanceName = instanceName
+		req.TimeoutS = timeoutS
+		req.TiupPath = secondMicro.TiupBinPath
+		req.Flags = flags
+		secondMicro.startNewTiupRestartTask(req.TaskID, &req)
+		return rsp.Id, nil
+	}
+}
+
+func (secondMicro *SecondMicro) startNewTiupRestartTask(taskID uint64, req *CmdStartReq) {
+	go func() {
+		var args []string
+		args = append(args, string(req.TiUPComponent), "restart", req.InstanceName)
+		args = append(args, req.Flags...)
+		args = append(args, "--yes")
+		<-secondMicro.startNewTiupTask(taskID, req.TiupPath, args, req.TimeoutS)
+	}()
+}
+
+func (secondMicro *SecondMicro) MicroSrvTiupStop(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Stop
+	req.BizID = bizID
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	if rsp == nil || err != nil || rsp.ErrCode != 0 {
+		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
+		return 0, err
+	} else {
+		var req CmdStartReq
+		req.TiUPComponent = tiupComponent
+		req.TaskID = rsp.Id
+		req.InstanceName = instanceName
+		req.TimeoutS = timeoutS
+		req.TiupPath = secondMicro.TiupBinPath
+		req.Flags = flags
+		secondMicro.startNewTiupStopTask(req.TaskID, &req)
+		return rsp.Id, nil
+	}
+}
+
+func (secondMicro *SecondMicro) startNewTiupStopTask(taskID uint64, req *CmdStartReq) {
+	go func() {
+		var args []string
+		args = append(args, string(req.TiUPComponent), "stop", req.InstanceName)
+		args = append(args, req.Flags...)
+		args = append(args, "--yes")
+		<-secondMicro.startNewTiupTask(taskID, req.TiupPath, args, req.TimeoutS)
+	}()
+}
+
 func (secondMicro *SecondMicro) MicroSrvTiupList(tiupComponent TiUPComponentTypeStr, timeoutS int, flags []string) (resp *CmdListResp, err error) {
 	var req CmdListReq
 	req.TiUPComponent = tiupComponent

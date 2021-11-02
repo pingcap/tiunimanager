@@ -6,9 +6,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	db "github.com/pingcap-inc/tiem/library/client/metadb/dbpb/mocks"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	db "github.com/pingcap-inc/tiem/test/mock"
 	"os"
 	"testing"
 )
@@ -109,6 +109,84 @@ func TestSecondMicro_MicroSrvTiupStart_Success(t *testing.T) {
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
 	taskID, err := secondMicro1.MicroSrvTiupStart(ClusterComponentTypeStr, "test-tidb", 0, []string{}, 0)
+	if taskID != 1 || err != nil {
+		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
+	}
+}
+
+func TestSecondMicro_MicroSrvTiupRestart_Fail(t *testing.T) {
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Restart
+	req.BizID = 0
+
+	expectedErr := errors.New("Fail Create tiup task")
+
+	mockCtl := gomock.NewController(t)
+	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
+
+	taskID, err := secondMicro1.MicroSrvTiupRestart(ClusterComponentTypeStr, "test-tidb", 0, []string{}, 0)
+	if taskID != 0 || err == nil {
+		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
+	}
+}
+
+func TestSecondMicro_MicroSrvTiupRestart_Success(t *testing.T) {
+
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Restart
+	req.BizID = 0
+
+	var resp dbPb.CreateTiupTaskResponse
+	resp.ErrCode = 0
+	resp.Id = 1
+
+	mockCtl := gomock.NewController(t)
+	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
+
+	taskID, err := secondMicro1.MicroSrvTiupRestart(ClusterComponentTypeStr, "test-tidb", 0, []string{}, 0)
+	if taskID != 1 || err != nil {
+		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
+	}
+}
+
+func TestSecondMicro_MicroSrvTiupStop_Fail(t *testing.T) {
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Stop
+	req.BizID = 0
+
+	expectedErr := errors.New("Fail Create tiup task")
+
+	mockCtl := gomock.NewController(t)
+	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
+
+	taskID, err := secondMicro1.MicroSrvTiupStop(ClusterComponentTypeStr, "test-tidb", 0, []string{}, 0)
+	if taskID != 0 || err == nil {
+		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
+	}
+}
+
+func TestSecondMicro_MicroSrvTiupStop_Success(t *testing.T) {
+
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Stop
+	req.BizID = 0
+
+	var resp dbPb.CreateTiupTaskResponse
+	resp.ErrCode = 0
+	resp.Id = 1
+
+	mockCtl := gomock.NewController(t)
+	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
+
+	taskID, err := secondMicro1.MicroSrvTiupStop(ClusterComponentTypeStr, "test-tidb", 0, []string{}, 0)
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
@@ -276,7 +354,7 @@ func TestSecondMicro_MicroSrvTiupGetTaskStatus_Success(t *testing.T) {
 	resp.ErrCode = 0
 	resp.ErrStr = ""
 	resp.TiupTask = &dbPb.TiupTask{
-		ID: 1,
+		ID:     1,
 		Status: dbPb.TiupTaskStatus_Init,
 	}
 

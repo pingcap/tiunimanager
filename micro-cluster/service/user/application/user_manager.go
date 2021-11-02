@@ -62,7 +62,7 @@ func (p *UserManager) FindAccountByName(name string) (*domain.Account, error) {
 }
 
 func (p *UserManager) Empower(role *domain.Role, permissions []domain.Permission) error {
-	bindings := make([]domain.PermissionBinding, len(permissions), len(permissions))
+	bindings := make([]domain.PermissionBinding, len(permissions))
 
 	for index, r := range permissions {
 		bindings[index] = domain.PermissionBinding{Role: role, Permission: &r, Status: domain.Valid}
@@ -96,36 +96,36 @@ func (p *UserManager) FindRoleByName(tenant *domain.Tenant, name string) (*domai
 	return &r, e
 }
 
-func (p *UserManager) createPermission(tenant *domain.Tenant, code, name ,desc string, permissionType domain.PermissionType) (*domain.Permission, error) {
-	if tenant == nil || !tenant.Status.IsValid(){
-		return nil, fmt.Errorf("tenant not valid")
-	}
+//func (p *UserManager) createPermission(tenant *domain.Tenant, code, name ,desc string, permissionType domain.PermissionType) (*domain.Permission, error) {
+//	if tenant == nil || !tenant.Status.IsValid(){
+//		return nil, fmt.Errorf("tenant not valid")
+//	}
+//
+//	existed, e := p.findPermissionByCode(tenant.Id, code)
+//
+//	if e != nil {
+//		return nil, e
+//	} else if !(nil == existed) {
+//		return nil, fmt.Errorf("permission already exist")
+//	}
+//
+//	permission := domain.Permission{
+//		TenantId: tenant.Id,
+//		Code:     code,
+//		Name:     name,
+//		Type:     permissionType,
+//		Desc:     desc,
+//		Status:   domain.Valid,
+//	}
+//
+//	p.rbacRepo.AddPermission(&permission)
+//	return &permission, nil
+//}
 
-	existed, e := p.findPermissionByCode(tenant.Id, code)
-
-	if e != nil {
-		return nil, e
-	} else if !(nil == existed) {
-		return nil, fmt.Errorf("permission already exist")
-	}
-
-	permission := domain.Permission{
-		TenantId: tenant.Id,
-		Code:     code,
-		Name:     name,
-		Type:     permissionType,
-		Desc:     desc,
-		Status:   domain.Valid,
-	}
-
-	p.rbacRepo.AddPermission(&permission)
-	return &permission, nil
-}
-
-func (p *UserManager) findPermissionByCode(tenantId string, code string) (*domain.Permission, error) {
-	a,e := p.rbacRepo.LoadPermission(tenantId, code)
-	return &a, e
-}
+//func (p *UserManager) findPermissionByCode(tenantId string, code string) (*domain.Permission, error) {
+//	a,e := p.rbacRepo.LoadPermission(tenantId, code)
+//	return &a, e
+//}
 
 // findAccountExtendInfo 根据名称获取账号及扩展信息
 func (p *UserManager) findAccountAggregation(name string) (*domain.AccountAggregation, error) {

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -42,12 +41,12 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DB
 	clusterManager := handler.Dao().ClusterManager()
 	cluster, err := clusterManager.CreateCluster(ctx, dto.Name, dto.DbPassword, dto.ClusterType, dto.VersionCode, dto.Tls, dto.Tags, dto.OwnerId, dto.TenantId)
 	if nil == err {
-		do, demand, err := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
-		if err == nil {
+		do, demand, newErr := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
+		if newErr == nil {
 			resp.Status = ClusterSuccessResponseStatus
 			resp.Cluster = convertToClusterDTO(do, demand)
 		} else {
-			err = errors.New(fmt.Sprintf("CreateCluster failed, update cluster demand failed, clusterId: %s, tenantId: %s, errors: %v", cluster.ID, cluster.TenantId, err))
+			err = fmt.Errorf("CreateCluster failed, update cluster demand failed, clusterId: %s, tenantId: %s, errors: %v", cluster.ID, cluster.TenantId, newErr)
 		}
 	}
 	if nil == err {
@@ -110,6 +109,27 @@ func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbpb.D
 	log.Error(errMsg)
 
 	// todo handle error
+	return err
+}
+
+func (handler *DBServiceHandler) UpdateClusterInfo(ctx context.Context, req *dbpb.DBUpdateClusterInfoRequest, resp *dbpb.DBUpdateClusterInfoResponse) (err error) {
+	if nil == req || nil == resp {
+		return errors.Errorf("UpdateClusterInfo has invalid parameter")
+	}
+	log := framework.Log()
+	clusterManager := handler.Dao().ClusterManager()
+	do, err := clusterManager.UpdateClusterInfo(ctx, req.ClusterId, req.Name, req.ClusterType, req.VersionCode, req.Tags, req.Tls)
+	if nil == err {
+		resp.Status = ClusterSuccessResponseStatus
+		resp.Cluster = convertToClusterDTO(do, nil)
+		log.Infof("UpdateClusterInfo successful, clusterId: %s, req: %s, error: %v",
+			req.GetClusterId(), req, err)
+	} else {
+		err = errors.New(fmt.Sprintf("UpdateClusterInfo failed, clusterId: %s, req: %s, error: %v",
+			req.GetClusterId(), req, err))
+		log.Infof("UpdateClusterInfo failed, clusterId: %s, req: %s, error: %v",
+			req.GetClusterId(), req, err)
+	}
 	return err
 }
 
@@ -204,7 +224,7 @@ func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbpb.DBLi
 			PageSize: req.PageReq.PageSize,
 			Total:    int32(total),
 		}
-		clusterDetails := make([]*dbpb.DBClusterDetailDTO, len(clusters), len(clusters))
+		clusterDetails := make([]*dbpb.DBClusterDetailDTO, len(clusters))
 		for i, v := range clusters {
 			clusterDetails[i] = &dbpb.DBClusterDetailDTO{
 				Cluster:              convertToClusterDTO(v.Cluster, v.DemandRecord),
@@ -238,10 +258,12 @@ func (handler *DBServiceHandler) SaveBackupRecord(ctx context.Context, req *dbpb
 		log.Infof("SaveBackupRecord success, tenantId: %s, clusterId: %s, operatorId: %s, filepath: %s",
 			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.FilePath)
 	} else {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
 		log.Errorf("SaveBackupRecord failed, tenantId: %s, clusterId: %s, operatorId: %s, filepath: %s, error: %s",
 			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.FilePath, err.Error())
 	}
-	return err
+	return nil
 }
 
 func (handler *DBServiceHandler) UpdateBackupRecord(ctx context.Context, req *dbpb.DBUpdateBackupRecordRequest, resp *dbpb.DBUpdateBackupRecordResponse) (err error) {
@@ -256,11 +278,14 @@ func (handler *DBServiceHandler) UpdateBackupRecord(ctx context.Context, req *db
 	if err != nil {
 		log.Errorf("SaveBackupRecord failed, tenantId: %s, clusterId: %s, operatorId: %s, error: %s",
 			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), err.Error())
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
+	} else {
+		log.Infof("SaveBackupRecord success, tenantId: %s, clusterId: %s, operatorId: %s",
+			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId())
+		resp.Status = ClusterSuccessResponseStatus
 	}
-	log.Infof("SaveBackupRecord success, tenantId: %s, clusterId: %s, operatorId: %s",
-		dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId())
-	resp.Status = ClusterSuccessResponseStatus
-	return err
+	return nil
 }
 
 func (handler *DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *dbpb.DBDeleteBackupRecordRequest, resp *dbpb.DBDeleteBackupRecordResponse) (err error) {
@@ -277,9 +302,11 @@ func (handler *DBServiceHandler) DeleteBackupRecord(ctx context.Context, req *db
 		resp.BackupRecord = convertToBackupRecordDTO(result)
 		log.Infof("DeleteBackupRecord success, Id: %d", req.GetId())
 	} else {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
 		log.Errorf("DeleteBackupRecord failed, Id: %d, error: %s", req.GetId(), err.Error())
 	}
-	return err
+	return nil
 }
 
 func (handler *DBServiceHandler) QueryBackupRecords(ctx context.Context, req *dbpb.DBQueryBackupRecordRequest, resp *dbpb.DBQueryBackupRecordResponse) (err error) {
@@ -291,12 +318,13 @@ func (handler *DBServiceHandler) QueryBackupRecords(ctx context.Context, req *db
 	log := framework.LogWithContext(ctx)
 	result, err := handler.Dao().ClusterManager().QueryBackupRecord(ctx, req.ClusterId, req.RecordId)
 	if err != nil {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
 		log.Errorf("QueryBackupRecords failed, clusterId: %s, error: %s", req.GetClusterId(), err.Error())
-		return err
+	} else {
+		resp.Status = ClusterSuccessResponseStatus
+		resp.BackupRecords = convertToBackupRecordDisplayDTO(result.BackupRecord, result.Flow)
 	}
-
-	resp.Status = ClusterSuccessResponseStatus
-	resp.BackupRecords = convertToBackupRecordDisplayDTO(result.BackupRecord, result.Flow)
 	return nil
 }
 
@@ -326,10 +354,12 @@ func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbp
 		log.Infof("ListBackupRecords success, clusterId: %s, page: %d, page size: %d",
 			req.GetClusterId(), req.GetPage().GetPage(), req.GetPage().GetPageSize())
 	} else {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
 		log.Errorf("ListBackupRecords failed, clusterId: %s, page: %d, page size: %d, error: %s",
 			req.GetClusterId(), req.GetPage().GetPage(), req.GetPage().GetPageSize(), err.Error())
 	}
-	return err
+	return nil
 }
 
 func (handler *DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbpb.DBSaveRecoverRecordRequest, resp *dbpb.DBSaveRecoverRecordResponse) (err error) {
@@ -348,10 +378,12 @@ func (handler *DBServiceHandler) SaveRecoverRecord(ctx context.Context, req *dbp
 		log.Infof("SaveRecoverRecord successful, tenantId: %s, clusterId: %s, operatorId: %s, recordId: %d",
 			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.GetBackupRecordId())
 	} else {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
 		log.Errorf("SaveRecoverRecord failed, tenantId: %s, clusterId: %s, operatorId: %s, recordId: %d, error: %s",
 			dto.GetTenantId(), dto.GetClusterId(), dto.GetOperatorId(), dto.GetBackupRecordId(), err.Error())
 	}
-	return err
+	return nil
 }
 
 func (handler *DBServiceHandler) SaveBackupStrategy(ctx context.Context, req *dbpb.DBSaveBackupStrategyRequest, resp *dbpb.DBSaveBackupStrategyResponse) (err error) {
@@ -365,12 +397,14 @@ func (handler *DBServiceHandler) SaveBackupStrategy(ctx context.Context, req *db
 	result, err := handler.Dao().ClusterManager().SaveBackupStrategy(ctx, dto)
 
 	if err != nil {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
 		log.Errorf("SaveBackupStrategy failed, req: %+v, error: %s", dto, err.Error())
-		return err
+	} else {
+		log.Infof("SaveBackupStrategy success, req: %+v", dto)
+		resp.Status = ClusterSuccessResponseStatus
+		resp.Strategy = convertToBackupStrategyDTO(result)
 	}
-	log.Infof("SaveBackupStrategy success, req: %+v", dto)
-	resp.Status = ClusterSuccessResponseStatus
-	resp.Strategy = convertToBackupStrategyDTO(result)
 	return nil
 }
 
@@ -384,12 +418,13 @@ func (handler *DBServiceHandler) QueryBackupStrategy(ctx context.Context, req *d
 	clusterId := req.ClusterId
 	result, err := handler.Dao().ClusterManager().QueryBackupStartegy(ctx, clusterId)
 	if err != nil {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
 		log.Errorf("QueryBackupStrategy failed, clusterId: %s, error: %s", req.GetClusterId(), err.Error())
-		return err
+	} else {
+		resp.Status = ClusterSuccessResponseStatus
+		resp.Strategy = convertToBackupStrategyDTO(result)
 	}
-
-	resp.Status = ClusterSuccessResponseStatus
-	resp.Strategy = convertToBackupStrategyDTO(result)
 	return nil
 }
 
@@ -402,16 +437,18 @@ func (handler *DBServiceHandler) QueryBackupStrategyByTime(ctx context.Context, 
 	log := framework.LogWithContext(ctx)
 	result, err := handler.Dao().ClusterManager().QueryBackupStartegyByTime(ctx, req.GetWeekday(), req.GetStartHour())
 	if err != nil {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
 		log.Errorf("QueryBackupStrategyByTime failed, req: %+v, error: %s", req, err.Error())
-		return err
+	} else {
+		resp.Status = ClusterSuccessResponseStatus
+		strategyList := make([]*dbpb.DBBackupStrategyDTO, len(result))
+		for i, v := range result {
+			strategyList[i] = convertToBackupStrategyDTO(v)
+		}
+		resp.Strategys = strategyList
 	}
 
-	resp.Status = ClusterSuccessResponseStatus
-	strategyList := make([]*dbpb.DBBackupStrategyDTO, len(result))
-	for i, v := range result {
-		strategyList[i] = convertToBackupStrategyDTO(v)
-	}
-	resp.Strategys = strategyList
 	return nil
 }
 
@@ -471,18 +508,18 @@ func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbpb.DBBackupRecord
 		StorageType:  do.StorageType,
 		OperatorId:   do.OperatorId,
 		FilePath:     do.FilePath,
-		Size:  		  do.Size,
+		Size:         do.Size,
 		FlowId:       int64(do.FlowId),
 	}
 	return
 }
 
 func convertToComponentInstance(dtos []*dbpb.DBComponentInstanceDTO) []*models.ComponentInstance {
-	if dtos == nil || len(dtos) == 0 {
+	if len(dtos) == 0 {
 		return []*models.ComponentInstance{}
 	}
 
-	result := make([]*models.ComponentInstance, len(dtos), len(dtos))
+	result := make([]*models.ComponentInstance, len(dtos))
 
 	for i, v := range dtos {
 		result[i] = &models.ComponentInstance{
@@ -508,10 +545,10 @@ func convertToComponentInstance(dtos []*dbpb.DBComponentInstanceDTO) []*models.C
 }
 
 func convertToComponentInstanceDTO(models []*models.ComponentInstance) []*dbpb.DBComponentInstanceDTO {
-	if models == nil || len(models) == 0 {
+	if len(models) == 0 {
 		return []*dbpb.DBComponentInstanceDTO{}
 	}
-	result := make([]*dbpb.DBComponentInstanceDTO, len(models), len(models))
+	result := make([]*dbpb.DBComponentInstanceDTO, len(models))
 
 	for i, v := range models {
 		result[i] = &dbpb.DBComponentInstanceDTO{

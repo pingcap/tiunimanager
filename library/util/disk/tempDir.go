@@ -61,7 +61,7 @@ func InitializeTempDir() error {
 	tempDir := "/tmp"// TODO config.GetGlobalConfig().TempStoragePath
 	_, err := os.Stat(tempDir)
 	if err != nil && !os.IsExist(err) {
-		err = os.MkdirAll(tempDir, 0755)
+		err = os.MkdirAll(tempDir, 0750)
 		if err != nil {
 			return err
 		}
@@ -92,11 +92,11 @@ func InitializeTempDir() error {
 				case lockFile, recordDir:
 					continue
 				}
-				err := os.RemoveAll(filepath.Join(tempDir, subDir.Name()))
-				if err != nil {
-					// TODO getLogger().Warn("Remove temporary file error",
-					//	zap.String("tempStorageSubDir", filepath.Join(tempDir, subDir.Name())), zap.Error(err))
-				}
+				_ = os.RemoveAll(filepath.Join(tempDir, subDir.Name()))
+				//if err != nil {
+				//	// TODO getLogger().Warn("Remove temporary file error",
+				//	//	zap.String("tempStorageSubDir", filepath.Join(tempDir, subDir.Name())), zap.Error(err))
+				//}
 			}
 		}()
 	}
@@ -115,7 +115,7 @@ func CleanUp() {
 func CheckAndCreateDir(path string) error {
 	_, err := os.Stat(path)
 	if err != nil && !os.IsExist(err) {
-		err = os.MkdirAll(path, 0755)
+		err = os.MkdirAll(path, 0750)
 		if err != nil {
 			return err
 		}

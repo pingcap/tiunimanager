@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -22,7 +21,44 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"math/rand"
+	"strconv"
+	"time"
 )
+
+type ComponentGroup struct {
+	ComponentType *knowledge.ClusterComponent
+	Nodes         []ComponentInstance
+}
+
+type ComponentInstance struct {
+	ID string
+
+	Code     string
+	TenantId string
+
+	Status        ClusterStatus
+	ClusterId     string
+	ComponentType *knowledge.ClusterComponent
+
+	Role    string
+	Spec    string
+	Version *knowledge.ClusterVersion
+
+	HostId         string
+	DiskId         string
+	PortInfo       string
+	AllocRequestId string
+
+	Host      string
+	DeployDir string
+	Cpu       int
+	Memory    int
+	PortList  []int
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt time.Time
+}
 
 func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterInstanceDTO {
 	dto := &clusterpb.ClusterInstanceDTO{
@@ -38,8 +74,8 @@ func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterI
 		dto.IntranetConnectAddresses, dto.ExtranetConnectAddresses, dto.PortList = ConnectAddresses(record.ConfigModel)
 	} else {
 		dto.PortList = []int64{4000}
-		dto.IntranetConnectAddresses = []string{"127.0.0.1"}
-		dto.ExtranetConnectAddresses = []string{"127.0.0.1"}
+		dto.IntranetConnectAddresses = []string{"127.0.0.1:4000"}
+		dto.ExtranetConnectAddresses = []string{"127.0.0.1:4000"}
 	}
 
 	return dto
@@ -48,12 +84,11 @@ func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterI
 func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int64) {
 	servers := spec.TiDBServers
 
-	addressList := make([]string, len(servers), len(servers))
-	portList := make([]int64, len(servers), len(servers))
+	addressList := make([]string, 0)
+	portList := make([]int64, 0)
 
-	for i, v := range servers {
-		addressList[i] = v.Host
-		portList[i] = int64(v.Port)
+	for _, v := range servers {
+		addressList = append(addressList, v.Host+":"+strconv.Itoa(v.Port))
 	}
 	return addressList, addressList, portList
 }
@@ -90,16 +125,16 @@ func appendAllComponentInstances(config *spec.Specification, knowledge *knowledg
 }
 
 var ComponentAppender = map[string]func(*spec.Specification, string) []*clusterpb.ComponentNodeDisplayInfoDTO{
-	"TiDB": tiDBComponent,
-	"TiKV": tiKVComponent,
-	"PD":   pDComponent,
-	//"TiFlash": tiFlashComponent,
+	"TiDB":    tiDBComponent,
+	"TiKV":    tiKVComponent,
+	"PD":      pDComponent,
+	"TiFlash": tiFlashComponent,
 	//"TiCDC": tiCDCComponent,
 }
 
 func tiDBComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	servers := config.TiDBServers
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers))
 	for i, v := range servers {
 		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
 			NodeId:  v.Host,
@@ -127,7 +162,7 @@ func tiDBComponent(config *spec.Specification, version string) []*clusterpb.Comp
 
 func tiKVComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	servers := config.TiKVServers
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers))
 	for i, v := range servers {
 		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
 			NodeId:  v.Host,
@@ -155,7 +190,7 @@ func tiKVComponent(config *spec.Specification, version string) []*clusterpb.Comp
 
 func pDComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	servers := config.PDServers
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers))
 	for i, v := range servers {
 		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
 			NodeId:  v.Host,
@@ -181,13 +216,13 @@ func pDComponent(config *spec.Specification, version string) []*clusterpb.Compon
 	return dto
 }
 
-func tiCDCComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0, 0)
-
-	return dto
-}
+//func tiCDCComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
+//	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0, 0)
+//
+//	return dto
+//}
 func tiFlashComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0, 0)
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0)
 	return dto
 }
 

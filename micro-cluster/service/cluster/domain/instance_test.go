@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -26,7 +25,7 @@ import (
 
 func TestClusterAggregation_ExtractInstancesDTO(t *testing.T) {
 	got := buildAggregation().ExtractInstancesDTO()
-	assert.Equal(t, "127.0.0.1", got.ExtranetConnectAddresses[0])
+	assert.Equal(t, "127.0.0.1:4000", got.ExtranetConnectAddresses[0])
 }
 
 func buildAggregation() *ClusterAggregation {

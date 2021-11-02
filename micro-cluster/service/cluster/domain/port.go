@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -17,25 +16,48 @@
 
 package domain
 
+import (
+	"context"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/knowledge"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
+)
+
 var ClusterRepo ClusterRepository
 
 var TaskRepo TaskRepository
 
-var InstanceRepo InstanceRepository
+var RemoteClusterProxy ClusterAccessProxy
+
+var MetadataMgr MetadataManager
+
+var TopologyPlanner ClusterTopologyPlanner
 
 type ClusterRepository interface {
-	AddCluster (cluster *Cluster) error
+	AddCluster(cluster *Cluster) error
 
 	Persist(aggregation *ClusterAggregation) error
 
-	Load (id string) (cluster *ClusterAggregation, err error)
+	Load(id string) (cluster *ClusterAggregation, err error)
 
-	Query (clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error)
-
+	Query(clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error)
 }
 
-type InstanceRepository interface {
+type ClusterAccessProxy interface {
 	QueryParameterJson(clusterId string) (string, error)
+}
+
+type MetadataManager interface {
+	FetchFromRemoteCluster(ctx context.Context, request *clusterpb.ClusterTakeoverReqDTO) (spec.Metadata, error)
+	RebuildMetadataFromComponents(cluster *Cluster, components []*ComponentGroup) (spec.Metadata, error)
+	ParseComponentsFromMetaData(spec.Metadata) ([]*ComponentGroup, error)
+	ParseClusterInfoFromMetaData(meta spec.BaseMeta) (clusterType string, user string, group string, version string)
+}
+
+type ClusterTopologyPlanner interface {
+	BuildComponents(cluster *Cluster, demands []*ClusterComponentDemand) ([]*ComponentGroup, error)
+	AnalysisResourceRequest(cluster *Cluster, components []*ComponentGroup) (*clusterpb.BatchAllocRequest, error)
+	ApplyResourceToComponents(components []*ComponentGroup, response *clusterpb.BatchAllocResponse) error
 }
 
 type TaskRepository interface {
@@ -52,4 +74,9 @@ type TaskRepository interface {
 	PersistCronTask(cronTask *CronTaskEntity) (err error)
 
 	ListFlows(bizId, keyword string, status int, page int, pageSize int) ([]*FlowWorkEntity, int, error)
+}
+
+type ComponentParser interface {
+	GetComponent() *knowledge.ClusterComponent
+	ParseComponent(spec *spec.Specification) *ComponentGroup
 }

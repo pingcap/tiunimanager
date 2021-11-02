@@ -17,9 +17,10 @@
 package management
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"net/http"
 	"time"
+
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -129,7 +130,7 @@ func Query(c *gin.Context) {
 	} else {
 		status := respDTO.GetRespStatus()
 
-		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters), len(respDTO.Clusters))
+		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters))
 
 		for i, v := range respDTO.Clusters {
 			clusters[i] = *ParseDisplayInfoFromDTO(v)
@@ -179,6 +180,102 @@ func Delete(c *gin.Context) {
 	}
 }
 
+// Restart restart a cluster
+// @Summary restart a cluster
+// @Description restart a cluster
+// @Tags cluster
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
+// @Success 200 {object} controller.CommonResult{data=RestartClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/restart [post]
+func Restart(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Restart", int(status.GetCode()))
+	operator := controller.GetOperator(c)
+
+	reqDTO := &clusterpb.ClusterRestartReqDTO{
+		Operator:  operator.ConvertToDTO(),
+		ClusterId: c.Param("clusterId"),
+	}
+
+	respDTO, err := client.ClusterClient.RestartCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
+		o.RequestTimeout = time.Minute * 5
+		o.DialTimeout = time.Minute * 5
+	})
+
+	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.GetCode()), status.GetMessage()))
+		return
+	}
+
+	status = respDTO.GetRespStatus()
+	if status.Code != 0 {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, status.Message))
+		return
+	}
+
+	result := controller.BuildCommonResult(int(status.Code), status.Message, RestartClusterRsp{
+		ClusterId:  respDTO.GetClusterId(),
+		StatusInfo: *ParseStatusFromDTO(respDTO.GetClusterStatus()),
+	})
+	c.JSON(http.StatusOK, result)
+}
+
+// Stop stop a cluster
+// @Summary stop a cluster
+// @Description stop a cluster
+// @Tags cluster
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
+// @Success 200 {object} controller.CommonResult{data=StopClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/restart [post]
+func Stop(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Stop", int(status.GetCode()))
+	operator := controller.GetOperator(c)
+
+	reqDTO := &clusterpb.ClusterStopReqDTO{
+		Operator:  operator.ConvertToDTO(),
+		ClusterId: c.Param("clusterId"),
+	}
+
+	respDTO, err := client.ClusterClient.StopCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
+		o.RequestTimeout = time.Minute * 5
+		o.DialTimeout = time.Minute * 5
+	})
+
+	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.GetCode()), status.GetMessage()))
+		return
+	}
+
+	status = respDTO.GetRespStatus()
+	if status.Code != 0 {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, status.Message))
+		return
+	}
+
+	result := controller.BuildCommonResult(int(status.Code), status.Message, StopClusterRsp{
+		ClusterId:  respDTO.GetClusterId(),
+		StatusInfo: *ParseStatusFromDTO(respDTO.GetClusterStatus()),
+	})
+	c.JSON(http.StatusOK, result)
+}
+
 // Detail show details of a cluster
 // @Summary show details of a cluster
 // @Description show details of a cluster
@@ -211,7 +308,7 @@ func Detail(c *gin.Context) {
 		maintenance := respDTO.GetMaintenanceInfo()
 		components := respDTO.GetComponents()
 
-		componentInstances := make([]ComponentInstance, 0, 0)
+		componentInstances := make([]ComponentInstance, 0)
 		for _, v := range components {
 			if len(v.Nodes) > 0 {
 				componentInstances = append(componentInstances, *ParseComponentInfoFromDTO(v))
@@ -223,6 +320,60 @@ func Detail(c *gin.Context) {
 			ClusterMaintenanceInfo: *ParseMaintenanceInfoFromDTO(maintenance),
 			Components:             componentInstances,
 		})
+
+		c.JSON(http.StatusOK, result)
+	}
+}
+
+// Takeover takeover a cluster
+// @Summary takeover a cluster
+// @Description takeover a cluster
+// @Tags cluster
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param takeoverReq body TakeoverReq true "takeover request"
+// @Success 200 {object} controller.CommonResult{data=[]ClusterDisplayInfo}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/takeover [post]
+func Takeover(c *gin.Context) {
+	var req TakeoverReq
+	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	operator := controller.GetOperator(c)
+
+	reqDTO := &clusterpb.ClusterTakeoverReqDTO{
+		Operator:         operator.ConvertToDTO(),
+		TiupIp:           req.TiupIp,
+		Port:             req.TiupPort,
+		TiupUserName:     req.TiupUserName,
+		TiupUserPassword: req.TiupUserPassword,
+		TiupPath:         req.TiupPath,
+		ClusterNames:     req.ClusterNames,
+	}
+
+	respDTO, err := client.ClusterClient.TakeoverClusters(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
+		o.RequestTimeout = time.Minute * 5
+		o.DialTimeout = time.Minute * 5
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetRespStatus()
+
+		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters))
+
+		for i, v := range respDTO.Clusters {
+			clusters[i] = *ParseDisplayInfoFromDTO(v)
+		}
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, clusters)
 
 		c.JSON(http.StatusOK, result)
 	}
@@ -254,10 +405,11 @@ func DescribeDashboard(c *gin.Context) {
 	respDTO, err := client.ClusterClient.DescribeDashboard(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = respDTO.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if int32(common.TIEM_SUCCESS) == status.GetCode() {
 			result := controller.BuildCommonResult(int(status.Code), status.Message, DescribeDashboardRsp{
 				ClusterId: respDTO.GetClusterId(),
 				Url:       respDTO.GetUrl(),
@@ -285,6 +437,9 @@ func DescribeDashboard(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/monitor [get]
 func DescribeMonitor(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "DescribeMonitor", int(status.GetCode()))
 	operator := controller.GetOperator(c)
 	reqDTO := &clusterpb.DescribeMonitorRequest{
 		Operator:  operator.ConvertToDTO(),
@@ -293,12 +448,13 @@ func DescribeMonitor(c *gin.Context) {
 	respDTO, err := client.ClusterClient.DescribeMonitor(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.GetCode()), status.GetMessage()))
 		return
 	}
 
-	status := respDTO.GetStatus()
-	if common.TIEM_SUCCESS != status.GetCode() {
+	status = respDTO.GetStatus()
+	if int32(common.TIEM_SUCCESS) != status.GetCode() {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
 		return
 	}

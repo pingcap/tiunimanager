@@ -19,6 +19,7 @@ enum TiupTaskType {
 	Backup = 6;
 	Restore = 7;
 	Restart = 8;
+	Stop = 9;
 }
 
 message TiupTask {

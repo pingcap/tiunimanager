@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -29,18 +28,20 @@ func Display(key string, language string) string {
 
 // CopyWritingContainer map[language]map[copyWritingKey]copyWritingValue
 var CopyWritingContainer = map[string]map[string]string{
-	"cn":{
+	"cn": {
 		CWClusterStatusUnlined: "未上线",
 		CWClusterStatusOnline:  "运行中",
 		CWClusterStatusOffline: "已下线",
 		CWClusterStatusDeleted: "已删除",
 		CWFlowCreateCluster:    "创建中",
 		CWFlowDeleteCluster:    "删除中",
+		CWFlowRestartCluster:   "重启中",
+		CWFlowStopCluster:      "停止中",
 		CWFlowBackupCluster:    "备份中",
 		CWFlowRecoverCluster:   "恢复中",
 		CWFlowModifyParameters: "参数修改中",
-		CWFlowExportData: 		"数据导出中",
-		CWFlowImportData: 		"数据导出中",
+		CWFlowExportData:       "数据导出中",
+		CWFlowImportData:       "数据导出中",
 		CWTaskStatusInit:       "未开始",
 		CWTaskStatusProcessing: "进行中",
 		CWTaskStatusFinished:   "完成",
@@ -59,7 +60,10 @@ var CWTaskStatusFinished = "CW_TaskStatusFinished"
 var CWTaskStatusError = "CW_TaskStatusError"
 
 var CWFlowCreateCluster = "CW_FlowCreateCluster"
+var CWFlowTakeoverCluster = "CW_FlowTakeoverCluster"
 var CWFlowDeleteCluster = "CW_FlowDeleteCluster"
+var CWFlowRestartCluster = "CW_FlowRestartCluster"
+var CWFlowStopCluster = "CW_FlowStopCluster"
 
 var CWFlowBackupCluster = "CW_FlowBackupCluster"
 var CWFlowRecoverCluster = "CW_FlowRecoverCluster"

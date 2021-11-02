@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -51,6 +50,7 @@ func ExportData(c *gin.Context) {
 	var req DataExportReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		_ = c.Error(err)
 		return
 	}
@@ -75,10 +75,11 @@ func ExportData(c *gin.Context) {
 	}, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if int32(common.TIEM_SUCCESS) == status.GetCode() {
 			result := controller.BuildCommonResult(int(status.Code), status.Message, DataExportResp{
 				RecordId: respDTO.GetRecordId(),
 			})
@@ -110,6 +111,7 @@ func ImportData(c *gin.Context) {
 	var req DataImportReq
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		_ = c.Error(err)
 		return
 	}
@@ -130,10 +132,11 @@ func ImportData(c *gin.Context) {
 	}, controller.DefaultTimeout)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if int32(common.TIEM_SUCCESS) == status.GetCode() {
 			result := controller.BuildCommonResult(int(status.Code), status.Message, DataImportResp{
 				RecordId: respDTO.GetRecordId(),
 			})
@@ -167,6 +170,7 @@ func DescribeDataTransport(c *gin.Context) {
 	var req DataTransportQueryReq
 	err := c.ShouldBindQuery(&req)
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		_ = c.Error(err)
 		return
 	}
@@ -180,10 +184,11 @@ func DescribeDataTransport(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if int32(common.TIEM_SUCCESS) == status.GetCode() {
 			data := &DataTransportRecordQueryResp{
 				TransportRecords: make([]*DataTransportInfo, len(respDTO.GetTransportInfos())),
 			}

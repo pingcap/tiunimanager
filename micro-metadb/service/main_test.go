@@ -55,5 +55,5 @@ func TestMain(m *testing.M) {
 			return nil
 		},
 	)
-	m.Run()
+	os.Exit(m.Run())
 }

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -34,6 +33,9 @@ type FlowWorkDetailInfo struct {
 }
 
 type FlowWorkTaskInfo struct {
-	Id       uint   `json:"id"`
-	TaskName string `json:"taskName"`
+	Id         uint   `json:"id"`
+	TaskName   string `json:"taskName"`
+	Parameters string `json:"taskParameters"`
+	Result     string `json:"result"`
+	Status     int    `json:"taskStatus"`
 }

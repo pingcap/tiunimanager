@@ -21,7 +21,7 @@ import "github.com/pingcap/tiup/pkg/cluster/spec"
 func setupMockAdapter() {
 	TaskRepo = MockTaskRepo{}
 	ClusterRepo = MockClusterRepo{}
-	InstanceRepo = MockInstanceRepo{}
+	RemoteClusterProxy = MockInstanceRepo{}
 }
 
 type MockTaskRepo struct{}

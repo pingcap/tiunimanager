@@ -154,7 +154,7 @@ func (r *Reader) ReadAt(p []byte, off int64) (nn int, err error) {
 	cursor := off / checksumPayloadSize * checksumBlockSize
 
 	buf := checksumReaderBufPool.Get().([]byte)
-	defer checksumReaderBufPool.Put(buf)
+	defer checksumReaderBufPool.Put(&buf)
 
 	var n int
 	for len(p) > 0 && err == nil {

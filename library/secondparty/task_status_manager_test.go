@@ -6,7 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	db "github.com/pingcap-inc/tiem/library/client/metadb/dbpb/mocks"
+	db "github.com/pingcap-inc/tiem/test/mock"
 	"testing"
 	"time"
 )

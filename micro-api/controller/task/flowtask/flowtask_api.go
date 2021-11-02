@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -63,7 +62,7 @@ func Query(c *gin.Context) {
 	} else {
 		status := respDTO.GetStatus()
 
-		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows), len(respDTO.Flows))
+		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows))
 
 		for i, v := range respDTO.Flows {
 			flows[i] = FlowWorkDisplayInfo{
@@ -104,7 +103,7 @@ func Query(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /flowwork/{flowWorkId} [get]
+// @Router /flowworks/{flowWorkId} [get]
 func Detail(c *gin.Context) {
 
 }

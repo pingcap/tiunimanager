@@ -16,7 +16,9 @@
 
 package common
 
-// tiem all errno
+type TIEM_ERROR_CODE int32
+
+// all tiem error code
 const (
 	TIEM_SUCCESS           = 0
 	TIEM_PARAMETER_INVALID = 1
@@ -62,7 +64,7 @@ const (
 	TIEM_MONITOR_NOT_FOUND             = 614
 )
 
-var TiEMErrMsg = map[uint32]string{
+var TiEMErrMsg = map[TIEM_ERROR_CODE]string{
 	TIEM_SUCCESS:           "successful",
 	TIEM_PARAMETER_INVALID: "parameter is invalid",
 	TIEM_ACCOUNT_NOT_FOUND: "account is not found",

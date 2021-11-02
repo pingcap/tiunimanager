@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -24,7 +23,7 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap/errors"
-	"github.com/pingcap/tiup/pkg/utils/rand"
+	"github.com/pingcap/tiup/pkg/crypto/rand"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -53,16 +52,10 @@ func DescribeDashboard(ctx context.Context, ope *clusterpb.OperatorDTO, clusterI
 	//todo: check operator and clusterId
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
 	if err != nil || clusterAggregation == nil || clusterAggregation.Cluster == nil {
-		return nil, errors.New("load cluster aggregation")
+		return nil, errors.New("load cluster aggregation failed")
 	}
 
-	/*
-		url, err := getDashboardUrl(clusterAggregation)
-		if err != nil {
-			return nil, err
-		}*/
 	url := getDashboardUrlFromCluser(clusterAggregation)
-
 	token, err := getLoginToken(ctx, url, "root", "") //todo: replace by real data
 	if err != nil {
 		return nil, err

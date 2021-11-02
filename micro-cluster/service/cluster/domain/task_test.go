@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -20,9 +19,10 @@ package domain
 import (
 	"errors"
 	"fmt"
-	copywriting2 "github.com/pingcap-inc/tiem/library/copywriting"
 	"reflect"
 	"testing"
+
+	copywriting2 "github.com/pingcap-inc/tiem/library/copywriting"
 )
 
 func testStart(task *TaskEntity, context *FlowContext) bool {
@@ -106,11 +106,11 @@ func initFlow() {
 			FlowName:    FlowCreateCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
 			TaskNodes: map[string]*TaskDefine{
-				"start":        {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done":  {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -122,11 +122,11 @@ func initFlow() {
 			FlowName:    FlowDeleteCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowDeleteCluster),
 			TaskNodes: map[string]*TaskDefine{
-				"start":        {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done":  {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -138,11 +138,11 @@ func initFlow() {
 			FlowName:    FlowBackupCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowBackupCluster),
 			TaskNodes: map[string]*TaskDefine{
-				"start":        {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done":  {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -154,11 +154,11 @@ func initFlow() {
 			FlowName:    FlowRecoverCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowRecoverCluster),
 			TaskNodes: map[string]*TaskDefine{
-				"start":        {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done":  {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -170,11 +170,11 @@ func initFlow() {
 			FlowName:    FlowModifyParameters,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowModifyParameters),
 			TaskNodes: map[string]*TaskDefine{
-				"start":        {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done":  {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -186,11 +186,11 @@ func initFlow() {
 			FlowName:    FlowExportData,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowExportData),
 			TaskNodes: map[string]*TaskDefine{
-				"start":        {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done":  {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -202,14 +202,44 @@ func initFlow() {
 			FlowName:    FlowImportData,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowImportData),
 			TaskNodes: map[string]*TaskDefine{
-				"start":        {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done":  {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":         {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
+				c := make(FlowContext)
+				return &c
+			},
+		},
+		FlowRestartCluster: {
+			FlowName:    FlowRestartCluster,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowRestartCluster),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				c := make(FlowContext)
+				return &c
+			},
+		},
+		FlowStopCluster: {
+			FlowName:    FlowStopCluster,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowStopCluster),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
 				c := make(FlowContext)
 				return &c
 			},
@@ -384,7 +414,7 @@ func TestTaskEntity_Fail(t1 *testing.T) {
 		Result         string
 	}
 	type args struct {
-		e error
+		//e error
 	}
 	tests := []struct {
 		name   string
@@ -453,7 +483,7 @@ func TestTaskEntity_Success(t1 *testing.T) {
 		Result         string
 	}
 	type args struct {
-		result interface{}
+		//result interface{}
 	}
 	tests := []struct {
 		name   string

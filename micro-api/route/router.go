@@ -77,15 +77,15 @@ func Route(g *gin.Engine) {
 			profile.GET("/profile", accountApi.Profile)
 		}
 
+		apiV1.Use(interceptor.VerifyIdentity).Use(interceptor.AuditLog()).POST("/clusters", clusterApi.Create)
+		apiV1.Use(interceptor.VerifyIdentity).Use(interceptor.AuditLog()).GET("/clusters", clusterApi.Query)
 		cluster := apiV1.Group("/clusters")
 		{
 			cluster.Use(interceptor.VerifyIdentity)
 			cluster.Use(interceptor.AuditLog())
 			cluster.GET("/:clusterId", clusterApi.Detail)
-			cluster.POST("/", clusterApi.Create)
 			cluster.POST("/takeover", clusterApi.Takeover)
 
-			cluster.GET("/", clusterApi.Query)
 			cluster.DELETE("/:clusterId", clusterApi.Delete)
 			cluster.POST("/:clusterId/restart", clusterApi.Restart)
 			cluster.POST("/:clusterId/stop", clusterApi.Stop)
@@ -107,26 +107,23 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId/transport", importexport.DescribeDataTransport)
 		}
 
-		knowledge := apiV1.Group("/knowledges")
-		{
-			knowledge.GET("/", specs.ClusterKnowledge)
-		}
+		apiV1.Use(interceptor.VerifyIdentity).Use(interceptor.AuditLog()).GET("/knowledges", specs.ClusterKnowledge)
 
+		apiV1.Use(interceptor.VerifyIdentity).Use(interceptor.AuditLog()).POST("/backups", backuprestore.Backup)
+		apiV1.Use(interceptor.VerifyIdentity).Use(interceptor.AuditLog()).GET("/backups", backuprestore.QueryBackup)
 		backup := apiV1.Group("/backups")
 		{
 			backup.Use(interceptor.VerifyIdentity)
 			backup.Use(interceptor.AuditLog())
-			backup.POST("/", backuprestore.Backup)
-			backup.GET("/", backuprestore.QueryBackup)
 			backup.DELETE("/:backupId", backuprestore.DeleteBackup)
 			//backup.GET("/:backupId", instanceapi.DetailsBackup)
 		}
 
+		apiV1.Use(interceptor.VerifyIdentity).Use(interceptor.AuditLog()).GET("/flowworks", flowtaskApi.Query)
 		flowworks := apiV1.Group("/flowworks")
 		{
 			flowworks.Use(interceptor.VerifyIdentity)
 			flowworks.Use(interceptor.AuditLog())
-			flowworks.GET("/", flowtaskApi.Query)
 			flowworks.GET("/:flowWorkId", flowtaskApi.Detail)
 		}
 

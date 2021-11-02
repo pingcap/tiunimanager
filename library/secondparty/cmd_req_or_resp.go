@@ -1,6 +1,7 @@
 package secondparty
 
 type CmdDeployReq struct {
+	TiUPComponent	  TiUPComponentTypeStr
 	TaskID        uint64
 	InstanceName  string
 	Version       string
@@ -11,6 +12,7 @@ type CmdDeployReq struct {
 }
 
 type CmdStartReq struct {
+	TiUPComponent	  TiUPComponentTypeStr
 	TaskID       uint64
 	InstanceName string
 	TimeoutS     int
@@ -19,6 +21,7 @@ type CmdStartReq struct {
 }
 
 type CmdListReq struct {
+	TiUPComponent	  TiUPComponentTypeStr
 	TaskID   uint64
 	TimeoutS int
 	TiupPath string
@@ -26,6 +29,7 @@ type CmdListReq struct {
 }
 
 type CmdDestroyReq struct {
+	TiUPComponent	  TiUPComponentTypeStr
 	TaskID       uint64
 	InstanceName string
 	TimeoutS     int
@@ -55,14 +59,15 @@ type CmdLightningReq struct {
 	Flags    []string
 }
 
-type CmdClusterDisplayReq struct {
-	ClusterName string
+type CmdDisplayReq struct {
+	TiUPComponent	  TiUPComponentTypeStr
+	InstanceName string
 	TimeoutS    int
 	TiupPath    string
 	Flags       []string
 }
 
-type CmdClusterDisplayResp struct {
+type CmdDisplayResp struct {
 	DisplayRespString string
 }
 

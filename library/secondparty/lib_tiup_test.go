@@ -34,7 +34,7 @@ func TestSecondMicro_MicroSrvTiupDeploy_Fail(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
 
-	taskID, err := secondMicro1.MicroSrvTiupDeploy("test-tidb", "v1", "", 0, []string{}, 0)
+	taskID, err := secondMicro1.MicroSrvTiupDeploy(ClusterComponentTypeStr, "test-tidb", "v1", "", 0, []string{}, 0)
 	if taskID != 0 || err == nil {
 		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
 	}
@@ -55,21 +55,21 @@ func TestSecondMicro_MicroSrvTiupDeploy_Success(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	taskID, err := secondMicro1.MicroSrvTiupDeploy("test-tidb", "v1", "", 0, []string{}, 0)
+	taskID, err := secondMicro1.MicroSrvTiupDeploy(ClusterComponentTypeStr, "test-tidb", "v1", "", 0, []string{}, 0)
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
 }
 
 func TestSecondMicro_MicroSrvTiupList(t *testing.T) {
-	_, err := secondMicro1.MicroSrvTiupList(0, []string{})
+	_, err := secondMicro1.MicroSrvTiupList(ClusterComponentTypeStr, 0, []string{})
 	if err == nil {
 		t.Errorf("case: create tiup task successfully. err(expected: not nil, actual: nil)")
 	}
 }
 
 func TestSecondMicro_MicroSrvTiupList_WithTimeOut(t *testing.T) {
-	_, err := secondMicro1.MicroSrvTiupList(1, []string{})
+	_, err := secondMicro1.MicroSrvTiupList(ClusterComponentTypeStr, 1, []string{})
 	if err == nil {
 		t.Errorf("case: create tiup task successfully. err(expected: not nil, actual: nil)")
 	}
@@ -87,7 +87,7 @@ func TestSecondMicro_MicroSrvTiupStart_Fail(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
 
-	taskID, err := secondMicro1.MicroSrvTiupStart("test-tidb", 0, []string{}, 0)
+	taskID, err := secondMicro1.MicroSrvTiupStart(ClusterComponentTypeStr, "test-tidb", 0, []string{}, 0)
 	if taskID != 0 || err == nil {
 		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
 	}
@@ -108,7 +108,7 @@ func TestSecondMicro_MicroSrvTiupStart_Success(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	taskID, err := secondMicro1.MicroSrvTiupStart("test-tidb", 0, []string{}, 0)
+	taskID, err := secondMicro1.MicroSrvTiupStart(ClusterComponentTypeStr, "test-tidb", 0, []string{}, 0)
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
@@ -126,7 +126,7 @@ func TestSecondMicro_MicroSrvTiupDestroy_Fail(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
 
-	taskID, err := secondMicro1.MicroSrvTiupDestroy("test-tidb", 0, []string{}, 0)
+	taskID, err := secondMicro1.MicroSrvTiupDestroy(ClusterComponentTypeStr, "test-tidb", 0, []string{}, 0)
 	if taskID != 0 || err == nil {
 		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
 	}
@@ -147,7 +147,7 @@ func TestSecondMicro_MicroSrvTiupDestroy_Success(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	taskID, err := secondMicro1.MicroSrvTiupDestroy("test-tidb", 0, []string{}, 0)
+	taskID, err := secondMicro1.MicroSrvTiupDestroy(ClusterComponentTypeStr, "test-tidb", 0, []string{}, 0)
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
@@ -165,7 +165,7 @@ func TestSecondMicro_MicroSrvTiupDumpling_Fail(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
 
-	taskID, err := secondMicro1.MicroSrvTiupDumpling(0, []string{}, 0)
+	taskID, err := secondMicro1.MicroSrvDumpling(0, []string{}, 0)
 	if taskID != 0 || err == nil {
 		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
 	}
@@ -186,7 +186,7 @@ func TestSecondMicro_MicroSrvTiupDumpling_Success(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	taskID, err := secondMicro1.MicroSrvTiupDumpling(0, []string{}, 0)
+	taskID, err := secondMicro1.MicroSrvDumpling(0, []string{}, 0)
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
@@ -204,7 +204,7 @@ func TestSecondMicro_MicroSrvTiupLightning_Fail(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
 
-	taskID, err := secondMicro1.MicroSrvTiupLightning(0, []string{}, 0)
+	taskID, err := secondMicro1.MicroSrvLightning(0, []string{}, 0)
 	if taskID != 0 || err == nil {
 		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
 	}
@@ -225,7 +225,7 @@ func TestSecondMicro_MicroSrvTiupLightning_Success(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	taskID, err := secondMicro1.MicroSrvTiupLightning(0, []string{}, 0)
+	taskID, err := secondMicro1.MicroSrvLightning(0, []string{}, 0)
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
@@ -233,7 +233,7 @@ func TestSecondMicro_MicroSrvTiupLightning_Success(t *testing.T) {
 
 func TestSecondMicro_MicroSrvTiupClusterDisplay(t *testing.T) {
 
-	_, err := secondMicro1.MicroSrvTiupClusterDisplay("test-tidb", 0, []string{})
+	_, err := secondMicro1.MicroSrvTiupDisplay(ClusterComponentTypeStr, "test-tidb", 0, []string{})
 	if err == nil {
 		t.Errorf("case: cluster display. err(expected: not nil, actual: nil)")
 	}
@@ -241,7 +241,7 @@ func TestSecondMicro_MicroSrvTiupClusterDisplay(t *testing.T) {
 
 func TestSecondMicro_MicroSrvTiupClusterDisplay_WithTimeout(t *testing.T) {
 
-	_, err := secondMicro1.MicroSrvTiupClusterDisplay("test-tidb", 1, []string{})
+	_, err := secondMicro1.MicroSrvTiupDisplay(ClusterComponentTypeStr, "test-tidb", 1, []string{})
 	if err == nil {
 		t.Errorf("case: cluster display. err(expected: not nil, actual: nil)")
 	}
@@ -262,7 +262,7 @@ func TestSecondMicro_MicroSrvTiupGetTaskStatus_Fail(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().FindTiupTaskByID(context.Background(), gomock.Eq(&req)).Return(&resp, expectedErr)
 
-	_, errStr, err := secondMicro1.MicroSrvTiupGetTaskStatus(1)
+	_, errStr, err := secondMicro1.MicroSrvGetTaskStatus(1)
 	if errStr != "" || err == nil {
 		t.Errorf("case: fail find tiup task by id intentionally. errStr(expected: %s, actual: %s), err(expected: %v, actual: %v)", "", errStr, expectedErr, err)
 	}
@@ -285,7 +285,7 @@ func TestSecondMicro_MicroSrvTiupGetTaskStatus_Success(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().FindTiupTaskByID(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	stat, errStr, err := secondMicro1.MicroSrvTiupGetTaskStatus(1)
+	stat, errStr, err := secondMicro1.MicroSrvGetTaskStatus(1)
 	if stat != dbPb.TiupTaskStatus_Init || errStr != "" || err != nil {
 		t.Errorf("case: find tiup task by id successfully. stat(expected: %d, actual: %d), errStr(expected: %s, actual: %s), err(expected: %v, actual: %v)", dbPb.TiupTaskStatus_Init, stat, "", errStr, nil, err)
 	}
@@ -306,7 +306,7 @@ func TestSecondMicro_MicroSrvTiupGetTaskStatusByBizID_Fail(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().GetTiupTaskStatusByBizID(context.Background(), gomock.Eq(&req)).Return(&resp, expectedErr)
 
-	_, errStr, err := secondMicro1.MicroSrvTiupGetTaskStatusByBizID(0)
+	_, errStr, err := secondMicro1.MicroSrvGetTaskStatusByBizID(0)
 	if errStr != "" || err == nil {
 		t.Errorf("case: fail find tiup task by BizId intentionally. errStr(expected: %s, actual: %s), err(expected: %v, actual: %v)", "", errStr, expectedErr, err)
 	}
@@ -327,7 +327,7 @@ func TestSecondMicro_MicroSrvTiupGetTaskStatusByBizID_Success(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().GetTiupTaskStatusByBizID(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	stat, statErrStr, err := secondMicro1.MicroSrvTiupGetTaskStatusByBizID(0)
+	stat, statErrStr, err := secondMicro1.MicroSrvGetTaskStatusByBizID(0)
 	if stat != dbPb.TiupTaskStatus_Init || statErrStr != "" || err != nil {
 		t.Errorf("case: find tiup task by id successfully. stat(expected: %d, actual: %d), statErrStr(expected: %s, actual: %s), err(expected: %v, actual: %v)", dbPb.TiupTaskStatus_Init, stat, "", statErrStr, nil, err)
 	}

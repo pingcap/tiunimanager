@@ -398,7 +398,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	secondMicro = &secondparty.SecondMicro{
 		TiupBinPath: "tiup",
 	}
-	backupTaskId, err := secondMicro.BackUp(clusterFacade, storage, uint64(task.Id))
+	backupTaskId, err := secondMicro.MicroSrvBackUp(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		return false
@@ -531,7 +531,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	secondMicro = &secondparty.SecondMicro{
 		TiupBinPath: "tiup",
 	}
-	_, err = secondMicro.Restore(clusterFacade, storage, uint64(task.Id))
+	_, err = secondMicro.MicroSrvRestore(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call restore api failed, %s", err.Error())
 		return false

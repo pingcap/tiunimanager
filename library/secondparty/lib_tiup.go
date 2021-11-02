@@ -12,7 +12,14 @@ import (
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 )
 
-func (secondMicro *SecondMicro) MicroSrvTiupDeploy(instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+type TiUPComponentTypeStr string
+
+const (
+	ClusterComponentTypeStr	TiUPComponentTypeStr = "cluster"
+	DMComponentTypeStr		TiUPComponentTypeStr = "dm"
+)
+
+func (secondMicro *SecondMicro) MicroSrvTiupDeploy(tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Deploy
 	req.BizID = bizID
@@ -22,6 +29,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupDeploy(instanceName string, version 
 		return 0, err
 	} else {
 		var deployReq CmdDeployReq
+		deployReq.TiUPComponent = tiupComponent
 		deployReq.InstanceName = instanceName
 		deployReq.Version = version
 		deployReq.ConfigStrYaml = configStrYaml
@@ -47,14 +55,14 @@ func (secondMicro *SecondMicro) startNewTiupDeployTask(taskID uint64, req *CmdDe
 	go func() {
 		defer os.Remove(topologyTmpFilePath)
 		var args []string
-		args = append(args, "cluster", "deploy", req.InstanceName, req.Version, topologyTmpFilePath)
+		args = append(args, string(req.TiUPComponent), "deploy", req.InstanceName, req.Version, topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
 		<-secondMicro.startNewTiupTask(taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupStart(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+func (secondMicro *SecondMicro) MicroSrvTiupStart(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Start
 	req.BizID = bizID
@@ -64,6 +72,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupStart(instanceName string, timeoutS 
 		return 0, err
 	} else {
 		var req CmdStartReq
+		req.TiUPComponent = tiupComponent
 		req.TaskID = rsp.Id
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
@@ -77,15 +86,16 @@ func (secondMicro *SecondMicro) MicroSrvTiupStart(instanceName string, timeoutS 
 func (secondMicro *SecondMicro) startNewTiupStartTask(taskID uint64, req *CmdStartReq) {
 	go func() {
 		var args []string
-		args = append(args, "cluster", "start", req.InstanceName)
+		args = append(args, string(req.TiUPComponent), "start", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
 		<-secondMicro.startNewTiupTask(taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupList(timeoutS int, flags []string) (resp *CmdListResp, err error) {
+func (secondMicro *SecondMicro) MicroSrvTiupList(tiupComponent TiUPComponentTypeStr, timeoutS int, flags []string) (resp *CmdListResp, err error) {
 	var req CmdListReq
+	req.TiUPComponent = tiupComponent
 	req.TimeoutS = timeoutS
 	req.TiupPath = secondMicro.TiupBinPath
 	req.Flags = flags
@@ -95,7 +105,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupList(timeoutS int, flags []string) (
 
 func (secondMicro *SecondMicro) startNewTiupListTask(req *CmdListReq) (resp CmdListResp, err error) {
 	var args []string
-	args = append(args, "cluster", "list")
+	args = append(args, string(req.TiUPComponent), "list")
 	args = append(args, req.Flags...)
 	args = append(args, "--yes")
 
@@ -121,7 +131,7 @@ func (secondMicro *SecondMicro) startNewTiupListTask(req *CmdListReq) (resp CmdL
 	return
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupDestroy(instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+func (secondMicro *SecondMicro) MicroSrvTiupDestroy(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Destroy
 	req.BizID = bizID
@@ -131,6 +141,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupDestroy(instanceName string, timeout
 		return 0, err
 	} else {
 		var req CmdDestroyReq
+		req.TiUPComponent = tiupComponent
 		req.TaskID = rsp.Id
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
@@ -144,14 +155,14 @@ func (secondMicro *SecondMicro) MicroSrvTiupDestroy(instanceName string, timeout
 func (secondMicro *SecondMicro) startNewTiupDestroyTask(taskID uint64, req *CmdDestroyReq) {
 	go func() {
 		var args []string
-		args = append(args, "cluster", "destroy", req.InstanceName)
+		args = append(args, string(req.TiUPComponent), "destroy", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
 		<-secondMicro.startNewTiupTask(taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupDumpling(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+func (secondMicro *SecondMicro) MicroSrvDumpling(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Dumpling
 	req.BizID = bizID
@@ -179,7 +190,7 @@ func (secondMicro *SecondMicro) startNewTiupDumplingTask(taskID uint64, req *Cmd
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupLightning(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+func (secondMicro *SecondMicro) MicroSrvLightning(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Lightning
 	req.BizID = bizID
@@ -207,20 +218,21 @@ func (secondMicro *SecondMicro) startNewTiupLightningTask(taskID uint64, req *Cm
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupClusterDisplay(clusterName string, timeoutS int, flags []string) (resp *CmdClusterDisplayResp, err error) {
-	var clusterDisplayReq CmdClusterDisplayReq
-	clusterDisplayReq.ClusterName = clusterName
-	clusterDisplayReq.TimeoutS = timeoutS
-	clusterDisplayReq.TiupPath = secondMicro.TiupBinPath
-	clusterDisplayReq.Flags = flags
-	cmdClusterDisplayResp, err := secondMicro.startNewTiupClusterDisplayTask(&clusterDisplayReq)
+func (secondMicro *SecondMicro) MicroSrvTiupDisplay(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string) (resp *CmdDisplayResp, err error) {
+	var req CmdDisplayReq
+	req.TiUPComponent = tiupComponent
+	req.InstanceName = instanceName
+	req.TimeoutS = timeoutS
+	req.TiupPath = secondMicro.TiupBinPath
+	req.Flags = flags
+	cmdClusterDisplayResp, err := secondMicro.startNewTiupClusterDisplayTask(&req)
 	return &cmdClusterDisplayResp, err
 }
 
-func (secondMicro *SecondMicro) startNewTiupClusterDisplayTask(req *CmdClusterDisplayReq) (resp CmdClusterDisplayResp, err error) {
+func (secondMicro *SecondMicro) startNewTiupClusterDisplayTask(req *CmdDisplayReq) (resp CmdDisplayResp, err error) {
 	var args []string
-	args = append(args, "cluster", "display")
-	args = append(args, req.ClusterName)
+	args = append(args, string(req.TiUPComponent), "display")
+	args = append(args, req.InstanceName)
 	args = append(args, req.Flags...)
 
 	logger.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))

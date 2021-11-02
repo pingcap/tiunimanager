@@ -52,7 +52,7 @@ func TestSecondMicro_BackUp_Fail(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
 
-	taskID, err := secondMicro2.BackUp(clusterFacade, storage, 0)
+	taskID, err := secondMicro2.MicroSrvBackUp(clusterFacade, storage, 0)
 	if taskID != 0 || err == nil {
 		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
 	}
@@ -82,7 +82,7 @@ func TestSecondMicro_BackUp_Success1_DontCareAsyncResult(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	taskID, err := secondMicro2.BackUp(clusterFacade, storage, 0)
+	taskID, err := secondMicro2.MicroSrvBackUp(clusterFacade, storage, 0)
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
@@ -108,7 +108,7 @@ func TestSecondMicro_BackUp_Success2_DontCareAsyncResult(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	taskID, err := secondMicro2.BackUp(clusterFacade, storage, 0)
+	taskID, err := secondMicro2.MicroSrvBackUp(clusterFacade, storage, 0)
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
@@ -129,14 +129,14 @@ func TestSecondMicro_BackUp_Success3_DontCareAsyncResult(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	taskID, err := secondMicro2.BackUp(clusterFacade, storage, 0)
+	taskID, err := secondMicro2.MicroSrvBackUp(clusterFacade, storage, 0)
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
 }
 
 func TestSecondMicro_ShowBackUpInfo_Fail(t *testing.T) {
-	resp := secondMicro2.ShowBackUpInfo(clusterFacade)
+	resp := secondMicro2.MicroSrvShowBackUpInfo(clusterFacade)
 	if resp.Destination == "" && resp.ErrorStr == "" {
 		t.Errorf("case: show backup info. either Destination(%s) or ErrorStr(%s) should have zero value", resp.Destination, resp.ErrorStr)
 	}
@@ -190,7 +190,7 @@ func TestSecondMicro_Restore_Fail(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
 
-	taskID, err := secondMicro2.Restore(clusterFacade, storage, 0)
+	taskID, err := secondMicro2.MicroSrvRestore(clusterFacade, storage, 0)
 	if taskID != 0 || err == nil {
 		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
 	}
@@ -220,7 +220,7 @@ func TestSecondMicro_Restore_Success1_DontCareAsyncResult(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	taskID, err := secondMicro2.Restore(clusterFacade, storage, 0)
+	taskID, err := secondMicro2.MicroSrvRestore(clusterFacade, storage, 0)
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
@@ -246,7 +246,7 @@ func TestSecondMicro_Restore_Success2_DontCareAsyncResult(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	taskID, err := secondMicro2.Restore(clusterFacade, storage, 0)
+	taskID, err := secondMicro2.MicroSrvRestore(clusterFacade, storage, 0)
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
@@ -267,14 +267,14 @@ func TestSecondMicro_Restore_Success3_DontCareAsyncResult(t *testing.T) {
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
-	taskID, err := secondMicro2.Restore(clusterFacade, storage, 0)
+	taskID, err := secondMicro2.MicroSrvRestore(clusterFacade, storage, 0)
 	if taskID != 1 || err != nil {
 		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
 }
 
 func TestSecondMicro_ShowRestoreInfo_Fail(t *testing.T) {
-	resp := secondMicro2.ShowRestoreInfo(clusterFacade)
+	resp := secondMicro2.MicroSrvShowRestoreInfo(clusterFacade)
 	if resp.Destination == "" && resp.ErrorStr == "" {
 		t.Errorf("case: show restore info. either Destination(%s) or ErrorStr(%v) should have zero value", resp.Destination, resp.ErrorStr)
 	}

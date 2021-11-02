@@ -250,7 +250,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 			TiupBinPath: "tiup",
 		}
 		deployTaskId, err := secondMicro.MicroSrvTiupDeploy(
-			cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
+			secondparty.ClusterComponentTypeStr, cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
 		)
 		context.put("deployTaskId", deployTaskId)
 		getLogger().Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
@@ -289,7 +289,9 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	secondMicro = &secondparty.SecondMicro{
 		TiupBinPath: "tiup",
 	}
-	startTaskId, err := secondMicro.MicroSrvTiupStart(cluster.ClusterName,  0, []string{}, uint64(task.Id))
+	startTaskId, err := secondMicro.MicroSrvTiupStart(
+		secondparty.ClusterComponentTypeStr, cluster.ClusterName,  0, []string{}, uint64(task.Id),
+	)
 	if err != nil {
 		getLogger().Errorf("call tiup api start cluster err = %s", err.Error())
 		task.Fail(err)

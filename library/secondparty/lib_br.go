@@ -44,7 +44,7 @@ type BrStorage struct {
 	Root        string // "/tmp/backup"
 }
 
-func (secondMicro *SecondMicro) BackUp(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error) {
+func (secondMicro *SecondMicro) MicroSrvBackUp(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Backup
 	req.BizID = bizId
@@ -96,7 +96,7 @@ func (secondMicro *SecondMicro) startNewBrBackUpTaskThruSQL(taskID uint64, req *
 	}()
 }
 
-func (secondMicro *SecondMicro) ShowBackUpInfo(cluster ClusterFacade) CmdShowBackUpInfoResp {
+func (secondMicro *SecondMicro) MicroSrvShowBackUpInfo(cluster ClusterFacade) CmdShowBackUpInfoResp {
 	var showBackUpInfoReq CmdShowBackUpInfoReq
 	showBackUpInfoReq.DbConnParameter = cluster.DbConnParameter
 	showBackUpInfoResp := secondMicro.startNewBrShowBackUpInfoThruSQL(&showBackUpInfoReq)
@@ -141,7 +141,7 @@ func execShowBackUpInfoThruSQL(db *sql.DB, showBackupSQLCmd string) (resp CmdSho
 	return
 }
 
-func (secondMicro *SecondMicro) Restore(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error) {
+func (secondMicro *SecondMicro) MicroSrvRestore(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Restore
 	req.BizID = bizId
@@ -193,7 +193,7 @@ func (secondMicro *SecondMicro) startNewBrRestoreTaskThruSQL(taskID uint64, req 
 	}()
 }
 
-func (secondMicro *SecondMicro) ShowRestoreInfo(cluster ClusterFacade) CmdShowRestoreInfoResp {
+func (secondMicro *SecondMicro) MicroSrvShowRestoreInfo(cluster ClusterFacade) CmdShowRestoreInfoResp {
 	var showRestoreInfoReq CmdShowRestoreInfoReq
 	showRestoreInfoReq.DbConnParameter = cluster.DbConnParameter
 	showRestoreInfoResp := secondMicro.startNewBrShowRestoreInfoThruSQL(&showRestoreInfoReq)

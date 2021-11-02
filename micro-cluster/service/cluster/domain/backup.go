@@ -394,11 +394,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	}
 
 	getLoggerWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
-	var secondMicro secondparty.MicroSrv
-	secondMicro = &secondparty.SecondMicro{
-		TiupBinPath: "tiup",
-	}
-	backupTaskId, err := secondMicro.MicroSrvBackUp(clusterFacade, storage, uint64(task.Id))
+	backupTaskId, err := secondparty.SecondParty.MicroSrvBackUp(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		return false
@@ -527,11 +523,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		Root:        fmt.Sprintf("%s/%s", record.GetBackupRecords().GetBackupRecord().GetFilePath(), "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
 	getLoggerWithContext(ctx).Infof("begin call brmgr restore api, clusterFacade %v, storage %v", clusterFacade, storage)
-	var secondMicro secondparty.MicroSrv
-	secondMicro = &secondparty.SecondMicro{
-		TiupBinPath: "tiup",
-	}
-	_, err = secondMicro.MicroSrvRestore(clusterFacade, storage, uint64(task.Id))
+	_, err = secondparty.SecondParty.MicroSrvRestore(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call restore api failed, %s", err.Error())
 		return false

@@ -225,11 +225,11 @@ func (secondMicro *SecondMicro) MicroSrvTiupDisplay(tiupComponent TiUPComponentT
 	req.TimeoutS = timeoutS
 	req.TiupPath = secondMicro.TiupBinPath
 	req.Flags = flags
-	cmdClusterDisplayResp, err := secondMicro.startNewTiupClusterDisplayTask(&req)
-	return &cmdClusterDisplayResp, err
+	cmdDisplayResp, err := secondMicro.startNewTiupDisplayTask(&req)
+	return &cmdDisplayResp, err
 }
 
-func (secondMicro *SecondMicro) startNewTiupClusterDisplayTask(req *CmdDisplayReq) (resp CmdDisplayResp, err error) {
+func (secondMicro *SecondMicro) startNewTiupDisplayTask(req *CmdDisplayReq) (resp CmdDisplayResp, err error) {
 	var args []string
 	args = append(args, string(req.TiUPComponent), "display")
 	args = append(args, req.InstanceName)

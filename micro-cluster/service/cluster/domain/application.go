@@ -245,11 +245,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 
 		cfgYamlStr := string(bs)
 		getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
-		var secondMicro secondparty.MicroSrv
-		secondMicro = &secondparty.SecondMicro{
-			TiupBinPath: "tiup",
-		}
-		deployTaskId, err := secondMicro.MicroSrvTiupDeploy(
+		deployTaskId, err := secondparty.SecondParty.MicroSrvTiupDeploy(
 			secondparty.ClusterComponentTypeStr, cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
 		)
 		context.put("deployTaskId", deployTaskId)
@@ -285,11 +281,7 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 		}
 	}
 	getLogger().Infof("start cluster %s", cluster.ClusterName)
-	var secondMicro secondparty.MicroSrv
-	secondMicro = &secondparty.SecondMicro{
-		TiupBinPath: "tiup",
-	}
-	startTaskId, err := secondMicro.MicroSrvTiupStart(
+	startTaskId, err := secondparty.SecondParty.MicroSrvTiupStart(
 		secondparty.ClusterComponentTypeStr, cluster.ClusterName,  0, []string{}, uint64(task.Id),
 	)
 	if err != nil {

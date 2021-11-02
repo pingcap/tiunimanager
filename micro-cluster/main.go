@@ -60,11 +60,10 @@ func main() {
 }
 
 func initLibForDev(f *framework.BaseFramework) error {
-	var secondMicro secondparty.MicroSrv
-	secondMicro = &secondparty.SecondMicro{
+	secondparty.SecondParty = &secondparty.SecondMicro{
 		TiupBinPath: "tiup",
 	}
-	secondMicro.MicroInit(f.GetDataDir()+common.LogDirPrefix)
+	secondparty.SecondParty.MicroInit(f.GetDataDir()+common.LogDirPrefix)
 	return nil
 }
 

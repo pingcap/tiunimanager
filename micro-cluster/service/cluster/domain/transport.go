@@ -490,11 +490,7 @@ func importDataToCluster(task *TaskEntity, flowContext *FlowContext) bool {
 
 	//tiup tidb-lightning -config tidb-lightning.toml
 	//todo: tiupmgr not return failed err
-	var secondMicro secondparty.MicroSrv
-	secondMicro = &secondparty.SecondMicro{
-		TiupBinPath: "tiup",
-	}
-	resp, err := secondMicro.MicroSrvLightning(0,
+	resp, err := secondparty.SecondParty.MicroSrvLightning(0,
 		[]string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)},
 		uint64(task.Id))
 	if err != nil {
@@ -575,11 +571,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		cmd = append(cmd, "--s3.region", fmt.Sprintf("\"%s\"", info.BucketRegion))
 	}
 	getLoggerWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v", cmd)
-	var secondMicro secondparty.MicroSrv
-	secondMicro = &secondparty.SecondMicro{
-		TiupBinPath: "tiup",
-	}
-	resp, err := secondMicro.MicroSrvDumpling(0, cmd, uint64(task.Id))
+	resp, err := secondparty.SecondParty.MicroSrvDumpling(0, cmd, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call tiup dumpling api failed, %s", err.Error())
 		return false

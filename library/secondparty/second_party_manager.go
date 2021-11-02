@@ -12,6 +12,10 @@ import (
 	"sync"
 )
 
+var SecondParty MicroSrv
+
+var logger *logrus.Entry
+
 type MicroSrv interface {
 	MicroInit(mgrLogFilePath string)
 	MicroSrvTiupDeploy(tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
@@ -36,8 +40,6 @@ type SecondMicro struct {
 	syncedTaskStatusMap     map[uint64]TaskStatusMapValue
 	taskStatusMapMutex 		sync.Mutex
 }
-
-var logger *logrus.Entry
 
 func (secondMicro *SecondMicro) MicroInit(mgrLogFilePath string) {
 	configPath := ""

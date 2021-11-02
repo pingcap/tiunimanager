@@ -81,7 +81,7 @@ func initGinEngine(d *framework.BaseFramework) error {
 	g := gin.New()
 
 	// enable cors access
-	g.Use(cors.Default())
+	g.Use(cors.New(corsConfig()))
 
 	g.Use(promMiddleware(d))
 
@@ -109,6 +109,21 @@ func initGinEngine(d *framework.BaseFramework) error {
 	}
 
 	return nil
+}
+
+// corsConfig
+// @Description: build cors config
+// @return cors.Config
+func corsConfig() cors.Config {
+	config := cors.DefaultConfig()
+	config.AllowHeaders = []string{"*"}
+	config.AllowOrigins = []string{}
+	config.AllowAllOrigins = false
+	config.AllowCredentials = true
+	config.AllowOriginFunc = func(origin string) bool {
+		return true
+	}
+	return config
 }
 
 // serviceRegistry registry openapi-server service

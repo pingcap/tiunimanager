@@ -113,8 +113,8 @@ func Test_convertAllocHostsRequest(t *testing.T) {
 	demands := []*ClusterComponentDemand{
 		{
 			ComponentType: &knowledge.ClusterComponent{
-				"TiDB",
-				"TiDB",
+				ComponentType: "TiDB",
+				ComponentName: "TiDB",
 			},
 			TotalNodeCount: 999,
 			DistributionItems: []*ClusterNodeDistributionItem{
@@ -127,8 +127,8 @@ func Test_convertAllocHostsRequest(t *testing.T) {
 		},
 		{
 			ComponentType: &knowledge.ClusterComponent{
-				"TiKV",
-				"TiKV",
+				ComponentType: "TiKV",
+				ComponentName: "TiKV",
 			},
 			TotalNodeCount: 3,
 			DistributionItems: []*ClusterNodeDistributionItem{
@@ -141,8 +141,8 @@ func Test_convertAllocHostsRequest(t *testing.T) {
 		},
 		{
 			ComponentType: &knowledge.ClusterComponent{
-				"PD",
-				"PD",
+				ComponentType: "PD",
+				ComponentName: "PD",
 			},
 			TotalNodeCount: 3,
 			DistributionItems: []*ClusterNodeDistributionItem{
@@ -303,6 +303,18 @@ func TestDeleteCluster(t *testing.T) {
 
 func TestRestartCluster(t *testing.T) {
 	got, err := RestartCluster(&clusterpb.OperatorDTO{
+		Id:       "testoperator",
+		Name:     "testoperator",
+		TenantId: "testoperator",
+	}, "testCluster")
+
+	assert.NoError(t, err)
+	assert.Equal(t, "testCluster", got.Cluster.ClusterName)
+
+}
+
+func TestStopCluster(t *testing.T) {
+	got, err := StopCluster(&clusterpb.OperatorDTO{
 		Id:       "testoperator",
 		Name:     "testoperator",
 		TenantId: "testoperator",

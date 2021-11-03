@@ -19,6 +19,7 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -37,11 +38,11 @@ import (
 )
 
 type ClusterAggregation struct {
-	Cluster *Cluster
-	ClusterMetadata spec.Metadata
+	Cluster           *Cluster
+	ClusterMetadata   spec.Metadata
 	ClusterComponents []*ComponentGroup
 
-	CurrentWorkFlow             *FlowWorkEntity
+	CurrentWorkFlow *FlowWorkEntity
 	CurrentOperator *Operator
 
 	CurrentTopologyConfigRecord *TopologyConfigRecord
@@ -54,8 +55,8 @@ type ClusterAggregation struct {
 	AvailableResources *clusterpb.AllocHostResponse
 
 	BaseInfoModified bool
-	StatusModified bool
-	FlowModified   bool
+	StatusModified   bool
+	FlowModified     bool
 
 	ConfigModified bool
 
@@ -82,7 +83,7 @@ func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBas
 		OwnerId:        operator.Id,
 	}
 
-	demands := make([]*ClusterComponentDemand, len(demandDTOs), len(demandDTOs))
+	demands := make([]*ClusterComponentDemand, len(demandDTOs))
 
 	for i, v := range demandDTOs {
 		demands[i] = parseNodeDemandFromDTO(v)
@@ -128,14 +129,14 @@ func TakeoverClusters(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeover
 	operator := parseOperatorFromDTO(ope)
 
 	if len(req.ClusterNames) != 1 {
-		return nil, common.NewBizError(common.TIEM_PARAMETER_INVALID)
+		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 
 	clusterName := req.ClusterNames[0]
 	cluster := &Cluster{
-		ClusterName:    clusterName,
-		TenantId:       operator.TenantId,
-		OwnerId:        operator.Id,
+		ClusterName: clusterName,
+		TenantId:    operator.TenantId,
+		OwnerId:     operator.Id,
 	}
 
 	// persist the cluster into database
@@ -145,7 +146,7 @@ func TakeoverClusters(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeover
 		return nil, err
 	}
 
-	clusterAggregation := &ClusterAggregation {
+	clusterAggregation := &ClusterAggregation{
 		Cluster:          cluster,
 		MaintainCronTask: GetDefaultMaintainTask(),
 		CurrentOperator:  operator,
@@ -162,6 +163,8 @@ func TakeoverClusters(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeover
 
 	flow.Start()
 
+	clusterAggregation.Cluster.Online()
+	clusterAggregation.StatusModified = true
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(clusterAggregation)
 	return []*ClusterAggregation{clusterAggregation}, nil
@@ -182,7 +185,7 @@ func DeleteCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggreg
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster, operator)
+	flow, _ := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster, operator)
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()
 
@@ -202,6 +205,26 @@ func RestartCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggre
 	clusterAggregation.CurrentOperator = operator
 
 	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowRestartCluster, operator)
+	if err != nil {
+		return nil, err
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.Start()
+
+	return clusterAggregation, nil
+}
+
+func StopCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
+	operator := parseOperatorFromDTO(ope)
+
+	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
+	clusterAggregation.CurrentOperator = operator
+
+	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowStopCluster, operator)
 	if err != nil {
 		return nil, err
 	}
@@ -245,6 +268,7 @@ func ModifyParameters(ope *clusterpb.OperatorDTO, clusterId string, content stri
 	flow, err := CreateFlowWork(clusterId, FlowModifyParameters, operator)
 	if err != nil {
 		// todo
+		getLogger().Errorf("modify parameters clusterid = %s, content = %s, errStr: %s", clusterId, content, err.Error())
 	}
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
@@ -260,19 +284,19 @@ func GetParameters(ope *clusterpb.OperatorDTO, clusterId string) (parameterJson 
 	return RemoteClusterProxy.QueryParameterJson(clusterId)
 }
 
-func (aggregation *ClusterAggregation) loadWorkFlow() error {
-	if aggregation.Cluster.WorkFlowId > 0 && aggregation.CurrentWorkFlow == nil {
-		flowWork, err := TaskRepo.LoadFlowWork(aggregation.Cluster.WorkFlowId)
-		if err != nil {
-			return err
-		} else {
-			aggregation.CurrentWorkFlow = flowWork
-			return nil
-		}
-	}
-
-	return nil
-}
+//func (aggregation *ClusterAggregation) loadWorkFlow() error {
+//	if aggregation.Cluster.WorkFlowId > 0 && aggregation.CurrentWorkFlow == nil {
+//		flowWork, err := TaskRepo.LoadFlowWork(aggregation.Cluster.WorkFlowId)
+//		if err != nil {
+//			return err
+//		} else {
+//			aggregation.CurrentWorkFlow = flowWork
+//			return nil
+//		}
+//	}
+//
+//	return nil
+//}
 
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
@@ -284,6 +308,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 
 	if err != nil {
 		// todo
+		getLogger().Error(err)
 	}
 
 	task.Success(nil)
@@ -319,7 +344,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 
 		cfgYamlStr := string(bs)
 		getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
-		deployTaskId, err := libtiup.MicroSrvTiupDeploy(
+		deployTaskId, _ := libtiup.MicroSrvTiupDeploy(
 			cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
 		)
 		context.put("deployTaskId", deployTaskId)
@@ -385,7 +410,7 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
 	req := context.value(contextTakeoverReqKey).(*clusterpb.ClusterTakeoverReqDTO)
 
-	metadata, err := MetadataMgr.FetchFromRemoteCluster(nil, req)
+	metadata, err := MetadataMgr.FetchFromRemoteCluster(ctx.TODO(), req)
 	if err != nil {
 		task.Fail(err)
 		return false
@@ -430,7 +455,7 @@ func buildTopology(task *TaskEntity, context *FlowContext) bool {
 func takeoverResource(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
 
-	allocReq , err := TopologyPlanner.AnalysisResourceRequest(clusterAggregation.Cluster, clusterAggregation.ClusterComponents)
+	allocReq, err := TopologyPlanner.AnalysisResourceRequest(clusterAggregation.Cluster, clusterAggregation.ClusterComponents)
 	if err != nil {
 		task.Fail(err)
 		return false
@@ -519,12 +544,63 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 		}
 	}()
 
+	// cluster restart intermediate state
 	clusterAggregation.Cluster.Restart()
 	clusterAggregation.StatusModified = true
 	err = ClusterRepo.Persist(clusterAggregation)
 	if err != nil {
 		return false
 	}
+	task.Success(nil)
+	return true
+}
+
+// clusterStop
+// @Description: stop cluster
+// @Parameter task
+// @Parameter context
+// @return bool
+func clusterStop(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	getLogger().Infof("stop cluster %s", cluster.ClusterName)
+	stopTaskId, err := libtiup.MicroSrvTiupStop(cluster.ClusterName, 0, []string{}, uint64(task.Id))
+	if err != nil {
+		getLogger().Errorf("call tiup api stop cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+	context.put("stopTaskId", stopTaskId)
+	getLogger().Infof("got stopTaskId %s", strconv.Itoa(int(stopTaskId)))
+
+	go func() {
+		// get cluster stop status async
+		for {
+			stat, statErrStr, err := libtiup.MicroSrvTiupGetTaskStatus(stopTaskId)
+			if err != nil {
+				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
+				break
+			}
+			if stat == dbpb.TiupTaskStatus_Finished || stat == dbpb.TiupTaskStatus_Error {
+				getLogger().Infof(" cluster %s stop done. tiup stat: %v", cluster.ClusterName, stat)
+				clusterAggregation.StatusModified = true
+				clusterAggregation.Cluster.Status = ClusterStatusOffline
+				err := ClusterRepo.Persist(clusterAggregation)
+				if err != nil {
+					getLogger().Errorf("cluster repo persist err = %v", err)
+					return
+				}
+				break
+			}
+			time.Sleep(time.Second * 2)
+		}
+	}()
+
+	// cluster stopping intermediate state
+	clusterAggregation.Cluster.Status = ClusterStatusStopping
+	clusterAggregation.StatusModified = true
+	ClusterRepo.Persist(clusterAggregation)
 	task.Success(nil)
 	return true
 }
@@ -564,9 +640,10 @@ func (aggregation *ClusterAggregation) ExtractMaintenanceDTO() *clusterpb.Cluste
 	dto := &clusterpb.ClusterMaintenanceDTO{}
 	if aggregation.MaintainCronTask != nil {
 		dto.MaintainTaskCron = aggregation.MaintainCronTask.Cron
-	} else {
-		// default maintain ?
 	}
+	//else {
+	//	// default maintain ?
+	//}
 
 	return dto
 }
@@ -633,9 +710,9 @@ func (aggregation *ClusterAggregation) ExtractRecoverRecordDTO() *clusterpb.Back
 
 func parseOperatorFromDTO(dto *clusterpb.OperatorDTO) (operator *Operator) {
 	operator = &Operator{
-		Id:       dto.Id,
-		Name:     dto.Name,
-		TenantId: dto.TenantId,
+		Id:             dto.Id,
+		Name:           dto.Name,
+		TenantId:       dto.TenantId,
 		ManualOperator: dto.ManualOperator,
 	}
 	return
@@ -659,7 +736,7 @@ func parseRecoverInFoFromDTO(dto *clusterpb.RecoverInfoDTO) (info RecoverInfo) {
 }
 
 func parseNodeDemandFromDTO(dto *clusterpb.ClusterNodeDemandDTO) (demand *ClusterComponentDemand) {
-	items := make([]*ClusterNodeDistributionItem, len(dto.Items), len(dto.Items))
+	items := make([]*ClusterNodeDistributionItem, len(dto.Items))
 
 	for i, v := range dto.Items {
 		items[i] = parseDistributionItemFromDTO(v)
@@ -680,17 +757,17 @@ func convertAllocHostsRequest(demands []*ClusterComponentDemand) (req *clusterpb
 	for _, d := range demands {
 		switch d.ComponentType.ComponentType {
 		case "TiDB":
-			req.TidbReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			req.TidbReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.TidbReq[i] = convertAllocationReq(v)
 			}
 		case "TiKV":
-			req.TikvReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			req.TikvReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.TikvReq[i] = convertAllocationReq(v)
 			}
 		case "PD":
-			req.PdReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems), len(d.DistributionItems))
+			req.PdReq = make([]*clusterpb.AllocationReq, len(d.DistributionItems))
 			for i, v := range d.DistributionItems {
 				req.PdReq[i] = convertAllocationReq(v)
 			}
@@ -742,12 +819,12 @@ func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spe
 		DeployDir: filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "alertmanagers-deploy"),
 	})
 	tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
-		Host:      pdHosts[0].Ip,
-		DeployDir: filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "grafanas-deploy"),
+		Host:            pdHosts[0].Ip,
+		DeployDir:       filepath.Join(pdHosts[0].Disk.Path, cluster.Id, "grafanas-deploy"),
 		AnonymousEnable: true,
-		DefaultTheme: "light",
-		OrgName: "Main Org.",
-		OrgRole: "Viewer",
+		DefaultTheme:    "light",
+		OrgName:         "Main Org.",
+		OrgRole:         "Viewer",
 	})
 	// Deal with PDServers, TiDBServers, TiKVServers
 	for _, v := range pdHosts {

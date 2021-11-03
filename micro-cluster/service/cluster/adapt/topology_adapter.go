@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -39,21 +38,22 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(cluster *domain.Cluster,
 			portRequirementList := make([]*clusterpb.PortRequirement, 0)
 			for _, port := range instance.PortList {
 				portRequirementList = append(portRequirementList, &clusterpb.PortRequirement{
-					Start: int32(port),
-					End:int32(port + 1),
+					Start:   int32(port),
+					End:     int32(port + 1),
 					PortCnt: 1,
 				})
 			}
 			requirementList = append(requirementList, &clusterpb.AllocRequirement{
 				Location: &clusterpb.Location{Host: instance.Host},
 				Require: &clusterpb.Requirement{
-					PortReq: portRequirementList,
-					DiskReq: &clusterpb.DiskRequirement{NeedDisk: false},
+					Exclusive:  false,
+					PortReq:    portRequirementList,
+					DiskReq:    &clusterpb.DiskRequirement{NeedDisk: false},
 					ComputeReq: &clusterpb.ComputeRequirement{CpuCores: 0, Memory: 0},
 				},
 				Count:      1,
 				HostFilter: &clusterpb.Filter{},
-				Strategy: int32(resource.UserSpecifyHost),
+				Strategy:   int32(resource.UserSpecifyHost),
 			})
 		}
 	}
@@ -62,7 +62,7 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(cluster *domain.Cluster,
 		BatchRequests: []*clusterpb.AllocRequest{
 			{
 				Applicant: &clusterpb.Applicant{
-					HolderId: cluster.Id,
+					HolderId:  cluster.Id,
 					RequestId: uuidutil.GenerateID(),
 				},
 
@@ -77,4 +77,3 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(cluster *domain.Cluster,
 func (d DefaultTopologyPlanner) ApplyResourceToComponents(components []*domain.ComponentGroup, response *clusterpb.BatchAllocResponse) error {
 	panic("implement me")
 }
-

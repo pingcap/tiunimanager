@@ -119,7 +119,7 @@ func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *cluste
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
-		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters), len(clusters))
+		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters))
 		for i, v := range clusters {
 			resp.Clusters[i] = v.ExtractDisplayDTO()
 		}
@@ -136,7 +136,7 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
-		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters), len(clusters))
+		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters))
 		for i, v := range clusters {
 			resp.Clusters[i] = v.ExtractDisplayDTO()
 		}
@@ -167,11 +167,33 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 
 func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.ClusterRestartReqDTO, resp *clusterpb.ClusterRestartRespDTO) (err error) {
 	getLogger().Info("restart cluster")
+	start := time.Now()
+	defer handleMetrics(start, "RestartCluster", int(resp.GetRespStatus().GetCode()))
 
 	clusterAggregation, err := domain.RestartCluster(req.GetOperator(), req.GetClusterId())
 	if err != nil {
+		resp.RespStatus = BizErrorResponseStatus
+		resp.RespStatus.Message = err.Error()
 		getLogger().Error(err)
-		return err
+		return nil
+	}
+	resp.RespStatus = SuccessResponseStatus
+	resp.ClusterId = clusterAggregation.Cluster.Id
+	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+	return nil
+}
+
+func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.ClusterStopReqDTO, resp *clusterpb.ClusterStopRespDTO) (err error) {
+	getLogger().Info("stop cluster")
+	start := time.Now()
+	defer handleMetrics(start, "StopCluster", int(resp.GetRespStatus().GetCode()))
+
+	clusterAggregation, err := domain.StopCluster(req.GetOperator(), req.GetClusterId())
+	if err != nil {
+		resp.RespStatus = BizErrorResponseStatus
+		resp.RespStatus.Message = err.Error()
+		getLogger().Error(err)
+		return nil
 	}
 	resp.RespStatus = SuccessResponseStatus
 	resp.ClusterId = clusterAggregation.Cluster.Id
@@ -453,6 +475,8 @@ func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *c
 }
 
 func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clusterpb.DescribeMonitorRequest, response *clusterpb.DescribeMonitorResponse) (err error) {
+	start := time.Now()
+	defer handleMetrics(start, "DescribeMonitor", int(response.GetStatus().GetCode()))
 	monitor, err := domain.DescribeMonitor(ctx, request.Operator, request.ClusterId)
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
@@ -481,7 +505,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterpb.Lis
 		Total:    int32(total),
 	}
 
-	response.Flows = make([]*clusterpb.FlowDTO, len(flows), len(flows))
+	response.Flows = make([]*clusterpb.FlowDTO, len(flows))
 	for i, v := range flows {
 		response.Flows[i] = &clusterpb.FlowDTO{
 			Id:          int64(v.Id),
@@ -493,9 +517,9 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterpb.Lis
 			CreateTime:  v.CreateTime.Unix(),
 			UpdateTime:  v.UpdateTime.Unix(),
 			Operator: &clusterpb.OperatorDTO{
-				Name:     v.Operator.Name,
-				Id:       v.Operator.Id,
-				TenantId: v.Operator.TenantId,
+				Name:           v.Operator.Name,
+				Id:             v.Operator.Id,
+				TenantId:       v.Operator.TenantId,
 				ManualOperator: v.Operator.ManualOperator,
 			},
 		}

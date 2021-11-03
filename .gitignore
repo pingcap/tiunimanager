@@ -1,6 +1,7 @@
 /tiem.iml
 .DS_Store
 golangci-lint-report.xml
+results.xml
 .idea/
 data.etcd1/
 *.db

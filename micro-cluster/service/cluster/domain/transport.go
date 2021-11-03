@@ -18,7 +18,9 @@ package domain
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-metadb/service"
 	"os"
 	"strconv"
 	"time"
@@ -248,6 +250,9 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (stri
 	if err != nil {
 		return "", err
 	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		return "", errors.New(resp.GetStatus().GetMessage())
+	}
 
 	info := &ExportInfo{
 		ClusterId:    request.GetClusterId(),
@@ -308,6 +313,9 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (stri
 	if err != nil {
 		return "", err
 	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		return "", errors.New(resp.GetStatus().GetMessage())
+	}
 	info := &ImportInfo{
 		ClusterId:   request.GetClusterId(),
 		UserName:    request.GetUserName(),
@@ -350,6 +358,9 @@ func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO
 	resp, err := client.DBClient.ListTrasnportRecord(ctx, req)
 	if err != nil {
 		return nil, nil, err
+	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		return nil, nil, errors.New(resp.GetStatus().GetMessage())
 	}
 
 	return resp.GetRecords(), resp.GetPage(), nil
@@ -466,7 +477,7 @@ func buildDataImportConfig(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 	filePath := fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0766)
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0600)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("create import toml config failed, %s", err.Error())
 		return false
@@ -522,6 +533,10 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
+		return false
+	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", resp.GetStatus().GetMessage())
 		return false
 	}
 	getLoggerWithContext(ctx).Infof("update data transport record success, %v", resp)
@@ -602,6 +617,10 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
+		return false
+	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", resp.GetStatus().GetMessage())
 		return false
 	}
 	getLoggerWithContext(ctx).Infof("update data transport record success, %v", resp)
@@ -687,6 +706,10 @@ func updateTransportRecordFailed(ctx context.Context, recordId, clusterId string
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return err
+	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", resp.GetStatus().GetMessage())
+		return errors.New(resp.GetStatus().GetMessage())
 	}
 	getLoggerWithContext(ctx).Infof("update data transport record success, %v", resp)
 	return nil

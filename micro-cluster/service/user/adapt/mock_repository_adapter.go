@@ -66,12 +66,12 @@ func mockData() {
 
 	permissions = []domain.PermissionAggregation{
 		{
-			domain.Permission{Code: TestPath1},
-			Roles,
+			Permission: domain.Permission{Code: TestPath1},
+			Roles: Roles,
 		},
 		{
-			domain.Permission{Code: TestPath2},
-			[]domain.Role{},
+			Permission: domain.Permission{Code: TestPath2},
+			Roles: []domain.Role{},
 		},
 	}
 }

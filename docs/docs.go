@@ -1133,7 +1133,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "restart a cluster",
+                "description": "stop a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -1143,7 +1143,7 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "restart a cluster",
+                "summary": "stop a cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -1165,7 +1165,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.RestartClusterRsp"
+                                            "$ref": "#/definitions/management.StopClusterRsp"
                                         }
                                     }
                                 }
@@ -3828,6 +3828,32 @@ var doc = `{
             }
         },
         "management.RestartClusterRsp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "management.StopClusterRsp": {
             "type": "object",
             "properties": {
                 "clusterId": {

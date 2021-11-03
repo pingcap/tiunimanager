@@ -15,6 +15,7 @@ service ClusterService {
     rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
     rpc DetailCluster(ClusterDetailReqDTO) returns (ClusterDetailRespDTO);
     rpc RestartCluster(ClusterRestartReqDTO) returns (ClusterRestartRespDTO);
+    rpc StopCluster(ClusterStopReqDTO) returns (ClusterStopRespDTO);
     rpc TakeoverClusters(ClusterTakeoverReqDTO) returns (ClusterTakeoverRespDTO);
 
     rpc ImportData(DataImportRequest) returns (DataImportResponse);
@@ -130,6 +131,17 @@ message ClusterRestartReqDTO {
 }
 
 message ClusterRestartRespDTO {
+    ResponseStatusDTO respStatus = 1;
+    string clusterId = 2;
+    DisplayStatusDTO clusterStatus = 3;
+}
+
+message ClusterStopReqDTO {
+    OperatorDTO operator = 1;
+    string clusterId = 2;
+}
+
+message ClusterStopRespDTO {
     ResponseStatusDTO respStatus = 1;
     string clusterId = 2;
     DisplayStatusDTO clusterStatus = 3;

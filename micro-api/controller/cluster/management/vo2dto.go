@@ -33,7 +33,7 @@ func (req *CreateReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO,
 			framework.Log().Infof("Skip empty demand for component %s", demand.ComponentType)
 			continue
 		}
-		items := make([]*clusterpb.DistributionItemDTO, len(demand.DistributionItems), len(demand.DistributionItems))
+		items := make([]*clusterpb.DistributionItemDTO, len(demand.DistributionItems))
 
 		for j, item := range demand.DistributionItems {
 			items[j] = &clusterpb.DistributionItemDTO{
@@ -68,7 +68,7 @@ func (baseInfo *ClusterBaseInfo) ConvertToDTO() (dto *clusterpb.ClusterBaseInfoD
 }
 
 func (demand *ClusterNodeDemand) ConvertToDTO() (dto *clusterpb.ClusterNodeDemandDTO) {
-	items := make([]*clusterpb.DistributionItemDTO, len(demand.DistributionItems), len(demand.DistributionItems))
+	items := make([]*clusterpb.DistributionItemDTO, len(demand.DistributionItems))
 
 	for index, item := range demand.DistributionItems {
 		items[index] = item.ConvertToDTO()

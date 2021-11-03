@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -27,6 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"gopkg.in/yaml.v2"
 	"strconv"
 	"time"
 )
@@ -64,7 +64,7 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 		return nil, 0, err
 	}
 
-	clusters := make([]*domain.ClusterAggregation, len(resp.Clusters), len(resp.Clusters))
+	clusters := make([]*domain.ClusterAggregation, len(resp.Clusters))
 	for i, v := range resp.Clusters {
 		cluster := &domain.ClusterAggregation{}
 		cluster.Cluster = ParseFromClusterDTO(v.Cluster)
@@ -198,11 +198,11 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 			return err
 		}
 		client.DBClient.UpdateClusterInfo(context.TODO(), &dbpb.DBUpdateClusterInfoRequest{
-			ClusterId: aggregation.Cluster.Id,
+			ClusterId:   aggregation.Cluster.Id,
 			Name:        cluster.ClusterName,
 			ClusterType: cluster.ClusterType.Code,
 			VersionCode: cluster.ClusterVersion.Code,
-			Tags:  		 string(tagBytes),
+			Tags:        string(tagBytes),
 			Tls:         cluster.Tls,
 		})
 
@@ -279,7 +279,7 @@ func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, 
 		framework.Log().Errorf("AddFlowWork error = %s", err.Error())
 		return nil, 0, err
 	}
-	flows := make([]*domain.FlowWorkEntity, len(resp.Flows), len(resp.Flows))
+	flows := make([]*domain.FlowWorkEntity, len(resp.Flows))
 	for i, v := range resp.Flows {
 		flows[i] = &domain.FlowWorkEntity{
 			Id:          uint(v.Id),
@@ -287,9 +287,9 @@ func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, 
 			StatusAlias: v.StatusAlias,
 			BizId:       v.BizId,
 			Status:      domain.TaskStatus(v.Status),
-			Operator: domain.GetOperatorFromName(v.Operator),
-			CreateTime: time.Unix(v.CreateTime, 0),
-			UpdateTime: time.Unix(v.UpdateTime, 0),
+			Operator:    domain.GetOperatorFromName(v.Operator),
+			CreateTime:  time.Unix(v.CreateTime, 0),
+			UpdateTime:  time.Unix(v.UpdateTime, 0),
 		}
 	}
 
@@ -341,6 +341,7 @@ func (t TaskRepoAdapter) AddFlowTask(task *domain.TaskEntity, flowId uint) error
 
 	if err != nil {
 		// todo
+		framework.Log().Errorf("addflowtask flowid = %d, errStr: %s", flowId, err.Error())
 	}
 
 	if resp.Status.Code != 0 {
@@ -368,7 +369,7 @@ func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
 		},
 	}
 
-	tasks := make([]*dbpb.DBTaskDTO, len(flowWork.Tasks), len(flowWork.Tasks))
+	tasks := make([]*dbpb.DBTaskDTO, len(flowWork.Tasks))
 	req.FlowWithTasks.Tasks = tasks
 
 	for i, v := range flowWork.Tasks {
@@ -406,8 +407,8 @@ func (t TaskRepoAdapter) Load(id uint) (flowWork *domain.FlowWorkAggregation, er
 	flowDefinition := domain.FlowWorkDefineMap[flowworkName]
 	flowWork = &domain.FlowWorkAggregation{
 		FlowWork: &domain.FlowWorkEntity{},
-		Define: flowDefinition,
-		Tasks: ParseTaskDTOInBatch(resp.FlowWithTasks.Tasks),
+		Define:   flowDefinition,
+		Tasks:    ParseTaskDTOInBatch(resp.FlowWithTasks.Tasks),
 	}
 
 	return flowWork, nil
@@ -428,12 +429,12 @@ func ParseTaskDTOInBatch(dtoList []*dbpb.DBTaskDTO) []*domain.TaskEntity {
 
 func ParseTaskDTO(dto *dbpb.DBTaskDTO) *domain.TaskEntity {
 	return &domain.TaskEntity{
-		Id: uint(dto.Id),
-		Status: domain.TaskStatusFromValue(int(dto.Status)),
-		TaskName: dto.TaskName,
-		BizId: dto.BizId,
+		Id:         uint(dto.Id),
+		Status:     domain.TaskStatusFromValue(int(dto.Status)),
+		TaskName:   dto.TaskName,
+		BizId:      dto.BizId,
 		Parameters: dto.Parameters,
-		Result: dto.Result,
+		Result:     dto.Result,
 	}
 }
 
@@ -489,8 +490,8 @@ func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 		DeleteTime:     time.Unix(dto.DeleteTime, 0),
 	}
 
-	json.Unmarshal([]byte(dto.Tags), cluster.Tags)
-	json.Unmarshal([]byte(dto.Demands), cluster.Demands)
+	json.Unmarshal([]byte(dto.Tags), &cluster.Tags)
+	json.Unmarshal([]byte(dto.Demands), &cluster.Demands)
 
 	return
 }
@@ -507,7 +508,7 @@ func parseConfigRecordDTO(dto *dbpb.DBTopologyConfigDTO) (record *domain.Topolog
 	}
 
 	spec := &spec.Specification{}
-	json.Unmarshal([]byte(dto.Content), spec)
+	yaml.Unmarshal([]byte(dto.Content), spec)
 
 	record.ConfigModel = spec
 	return

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -61,7 +60,7 @@ func Query(c *gin.Context) {
 	} else {
 		status := respDTO.GetStatus()
 
-		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows), len(respDTO.Flows))
+		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows))
 
 		for i, v := range respDTO.Flows {
 			flows[i] = ParseFlowFromDTO(v)

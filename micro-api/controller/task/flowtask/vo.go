@@ -32,7 +32,12 @@ type FlowWorkDisplayInfo struct {
 
 type FlowWorkDetailInfo struct {
 	FlowWorkDisplayInfo
+	FlowWorkDefineInfo
 	Tasks []FlowWorkTaskInfo `json:"tasks"`
+}
+
+type FlowWorkDefineInfo struct {
+	TaskName []string    `json:"taskName"`
 }
 
 type FlowWorkTaskInfo struct {

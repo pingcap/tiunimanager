@@ -180,6 +180,10 @@ definitions:
         type: string
       statusName:
         type: string
+      taskName:
+        items:
+          type: string
+        type: array
       tasks:
         items:
           $ref: '#/definitions/flowtask.FlowWorkTaskInfo'

@@ -2708,6 +2708,12 @@ var doc = `{
                 "statusName": {
                     "type": "string"
                 },
+                "taskName": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "tasks": {
                     "type": "array",
                     "items": {

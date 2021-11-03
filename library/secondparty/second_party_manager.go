@@ -59,6 +59,8 @@ type SecondMicro struct {
 }
 
 func (secondMicro *SecondMicro) MicroInit(mgrLogFilePath string) {
+	framework.LogForkFile(common.LogFileSystem).Infof("microinit secondmicro: %v, mgrlogfilepath: %s", secondMicro, mgrLogFilePath)
+
 	configPath := ""
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]

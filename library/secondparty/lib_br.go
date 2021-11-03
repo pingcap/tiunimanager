@@ -60,6 +60,7 @@ type BrStorage struct {
 }
 
 func (secondMicro *SecondMicro) MicroSrvBackUp(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvbackup, clusterfacade: %v, storage: %v, bizid: %d", cluster, storage, bizId)
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Backup
 	req.BizID = bizId
@@ -112,6 +113,7 @@ func (secondMicro *SecondMicro) startNewBrBackUpTaskThruSQL(taskID uint64, req *
 }
 
 func (secondMicro *SecondMicro) MicroSrvShowBackUpInfo(cluster ClusterFacade) CmdShowBackUpInfoResp {
+	logger.Infof("microsrvshowbackupinfo, clusterfacade: %v", cluster)
 	var showBackUpInfoReq CmdShowBackUpInfoReq
 	showBackUpInfoReq.DbConnParameter = cluster.DbConnParameter
 	showBackUpInfoResp := secondMicro.startNewBrShowBackUpInfoThruSQL(&showBackUpInfoReq)
@@ -157,6 +159,7 @@ func execShowBackUpInfoThruSQL(db *sql.DB, showBackupSQLCmd string) (resp CmdSho
 }
 
 func (secondMicro *SecondMicro) MicroSrvRestore(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvrestore, clusterfacade: %v, storage: %v, bizid: %d", cluster, storage, bizId)
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Restore
 	req.BizID = bizId
@@ -209,6 +212,7 @@ func (secondMicro *SecondMicro) startNewBrRestoreTaskThruSQL(taskID uint64, req 
 }
 
 func (secondMicro *SecondMicro) MicroSrvShowRestoreInfo(cluster ClusterFacade) CmdShowRestoreInfoResp {
+	logger.Infof("microsrvshowrestoreinfo, clusterfacade: %v", cluster)
 	var showRestoreInfoReq CmdShowRestoreInfoReq
 	showRestoreInfoReq.DbConnParameter = cluster.DbConnParameter
 	showRestoreInfoResp := secondMicro.startNewBrShowRestoreInfoThruSQL(&showRestoreInfoReq)

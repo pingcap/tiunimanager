@@ -35,6 +35,7 @@ const (
 )
 
 func (secondMicro *SecondMicro) MicroSrvTiupDeploy(tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiupdeploy tiupcomponent: %s, instancename: %s, version: %s, configstryaml: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, version, configStrYaml, timeoutS, flags, bizID)
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Deploy
 	req.BizID = bizID
@@ -78,6 +79,7 @@ func (secondMicro *SecondMicro) startNewTiupDeployTask(taskID uint64, req *CmdDe
 }
 
 func (secondMicro *SecondMicro) MicroSrvTiupStart(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiupstart tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, timeoutS, flags, bizID)
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Start
 	req.BizID = bizID
@@ -109,6 +111,7 @@ func (secondMicro *SecondMicro) startNewTiupStartTask(taskID uint64, req *CmdSta
 }
 
 func (secondMicro *SecondMicro) MicroSrvTiupRestart(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiuprestart tiupcomponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, timeoutS, flags, bizID)
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Restart
 	req.BizID = bizID
@@ -140,6 +143,7 @@ func (secondMicro *SecondMicro) startNewTiupRestartTask(taskID uint64, req *CmdS
 }
 
 func (secondMicro *SecondMicro) MicroSrvTiupStop(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiupstop tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, timeoutS, flags, bizID)
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Stop
 	req.BizID = bizID
@@ -171,6 +175,7 @@ func (secondMicro *SecondMicro) startNewTiupStopTask(taskID uint64, req *CmdStar
 }
 
 func (secondMicro *SecondMicro) MicroSrvTiupList(tiupComponent TiUPComponentTypeStr, timeoutS int, flags []string) (resp *CmdListResp, err error) {
+	logger.Infof("microsrvtiuplist tiupComponent: %s, timeout: %d, flags: %v", string(tiupComponent), timeoutS, flags)
 	var req CmdListReq
 	req.TiUPComponent = tiupComponent
 	req.TimeoutS = timeoutS
@@ -209,6 +214,7 @@ func (secondMicro *SecondMicro) startNewTiupListTask(req *CmdListReq) (resp CmdL
 }
 
 func (secondMicro *SecondMicro) MicroSrvTiupDestroy(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvtiupstop tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, timeoutS, flags, bizID)
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Destroy
 	req.BizID = bizID
@@ -240,6 +246,7 @@ func (secondMicro *SecondMicro) startNewTiupDestroyTask(taskID uint64, req *CmdD
 }
 
 func (secondMicro *SecondMicro) MicroSrvDumpling(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvdumpling, timeouts: %d, flags: %v, bizid: %d", timeoutS, flags, bizID)
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Dumpling
 	req.BizID = bizID
@@ -268,6 +275,7 @@ func (secondMicro *SecondMicro) startNewTiupDumplingTask(taskID uint64, req *Cmd
 }
 
 func (secondMicro *SecondMicro) MicroSrvLightning(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	logger.Infof("microsrvlightning, timeouts: %d, flags: %v, bizid: %d", timeoutS, flags, bizID)
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Lightning
 	req.BizID = bizID
@@ -296,6 +304,7 @@ func (secondMicro *SecondMicro) startNewTiupLightningTask(taskID uint64, req *Cm
 }
 
 func (secondMicro *SecondMicro) MicroSrvTiupDisplay(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string) (resp *CmdDisplayResp, err error) {
+	logger.Infof("microsrvtiupclusterdisplay tiupcomponent: %s,  instanceName: %s, timeouts: %d, flags: %v", string(tiupComponent), instanceName, timeoutS, flags)
 	var req CmdDisplayReq
 	req.TiUPComponent = tiupComponent
 	req.InstanceName = instanceName

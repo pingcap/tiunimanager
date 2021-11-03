@@ -414,7 +414,7 @@ func TestTaskEntity_Fail(t1 *testing.T) {
 		Result         string
 	}
 	type args struct {
-		e error
+		//e error
 	}
 	tests := []struct {
 		name   string
@@ -483,7 +483,7 @@ func TestTaskEntity_Success(t1 *testing.T) {
 		Result         string
 	}
 	type args struct {
-		result interface{}
+		//result interface{}
 	}
 	tests := []struct {
 		name   string

@@ -144,7 +144,7 @@ func (p *AuthManager) checkAuth(account *domain.AccountAggregation, permission *
 
 	accountRoles := account.Roles
 
-	if accountRoles == nil || len(accountRoles) == 0 {
+	if len(accountRoles) == 0 {
 		return false, nil
 	}
 
@@ -156,7 +156,7 @@ func (p *AuthManager) checkAuth(account *domain.AccountAggregation, permission *
 
 	allowedRoles := permission.Roles
 
-	if allowedRoles == nil || len(allowedRoles) == 0 {
+	if len(allowedRoles) == 0 {
 		return false, nil
 	}
 

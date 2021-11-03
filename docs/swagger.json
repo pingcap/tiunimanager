@@ -16,7 +16,7 @@
     "host": "localhost:4116",
     "basePath": "/api/v1/",
     "paths": {
-        "/backups": {
+        "/backups/": {
             "get": {
                 "security": [
                     {
@@ -247,7 +247,7 @@
                 }
             }
         },
-        "/clusters": {
+        "/clusters/": {
             "get": {
                 "security": [
                     {
@@ -1406,7 +1406,7 @@
                 }
             }
         },
-        "/flowworks": {
+        "/flowworks/": {
             "get": {
                 "security": [
                     {
@@ -1561,7 +1561,7 @@
                 }
             }
         },
-        "/knowledges": {
+        "/knowledges/": {
             "get": {
                 "security": [
                     {

@@ -40,7 +40,7 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /flowworks [get]
+// @Router /flowworks/ [get]
 func Query(c *gin.Context) {
 	var queryReq QueryReq
 	if err := c.ShouldBindQuery(&queryReq); err != nil {
@@ -62,7 +62,7 @@ func Query(c *gin.Context) {
 	} else {
 		status := respDTO.GetStatus()
 
-		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows), len(respDTO.Flows))
+		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows))
 
 		for i, v := range respDTO.Flows {
 			flows[i] = FlowWorkDisplayInfo{

@@ -165,7 +165,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 		// receive the taskId and start ticker
 		ticker := time.NewTicker(1 * time.Second)
 		bizId := task.Id
-		for _ = range ticker.C {
+		for range ticker.C {
 			// todo check bizId
 			//status, s, err := Operator.CheckProgress(uint64(f.CurrentTask.id))
 			//			if err != nil {

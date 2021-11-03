@@ -31,7 +31,7 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/backups": {
+        "/backups/": {
             "get": {
                 "security": [
                     {
@@ -262,7 +262,7 @@ var doc = `{
                 }
             }
         },
-        "/clusters": {
+        "/clusters/": {
             "get": {
                 "security": [
                     {
@@ -1421,7 +1421,7 @@ var doc = `{
                 }
             }
         },
-        "/flowworks": {
+        "/flowworks/": {
             "get": {
                 "security": [
                     {
@@ -1576,7 +1576,7 @@ var doc = `{
                 }
             }
         },
-        "/knowledges": {
+        "/knowledges/": {
             "get": {
                 "security": [
                     {

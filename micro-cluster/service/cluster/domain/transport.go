@@ -477,7 +477,7 @@ func buildDataImportConfig(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 	filePath := fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0766)
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0600)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("create import toml config failed, %s", err.Error())
 		return false

@@ -241,8 +241,8 @@ func (handler *DBServiceHandler) FindRolesByPermission(ctx context.Context, req 
 	}
 
 	if nil == err {
-		roles, err := accountManager.FetchAllRolesByPermission(ctx, req.TenantId, permissionDO.ID)
-		if nil == err {
+		roles, newErr := accountManager.FetchAllRolesByPermission(ctx, req.TenantId, permissionDO.ID)
+		if nil == newErr {
 			roleDTOs := make([]*dbpb.DBRoleDTO, len(roles), cap(roles))
 			for index, role := range roles {
 				roleDTOs[index] = &dbpb.DBRoleDTO{
@@ -257,9 +257,9 @@ func (handler *DBServiceHandler) FindRolesByPermission(ctx context.Context, req 
 		} else {
 			resp.Status = &dbpb.DbAuthResponseStatus{
 				Code:    common.TIEM_QUERY_PERMISSION_FAILED,
-				Message: err.Error(),
+				Message: newErr.Error(),
 			}
-			err = errors.Errorf("FindRolesByPermission query database failed, tenantId: %s, code: %s, error: %v", req.TenantId, req.Code, err)
+			err = errors.Errorf("FindRolesByPermission query database failed, tenantId: %s, code: %s, error: %v", req.TenantId, req.Code, newErr)
 		}
 	}
 

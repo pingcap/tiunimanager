@@ -132,7 +132,7 @@ func (mgr *FileManager) UploadFile(r *http.Request, uploadPath string) error {
 func (mgr *FileManager) DownloadFile(c *gin.Context, filePath string) error {
 	getLogger().Infof("begin DownloadFile: filePath %s", filePath)
 	defer getLogger().Info("end DownloadFile")
-	if !mgr.checkUploadCnt() {
+	if !mgr.checkDownloadCnt() {
 		getLogger().Errorf("download goroutine reach max, %d", maxDownloadNum)
 		return fmt.Errorf("download goroutine reach max, %d", maxDownloadNum)
 	}

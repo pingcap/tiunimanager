@@ -19,13 +19,7 @@ package main
 import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/file-server/service"
-	"net/http"
 	"time"
-
-	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/pingcap-inc/tiem/library/thirdparty/etcd_clientv2"
-	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 
 	"github.com/asim/go-micro/v3"
 	"github.com/gin-gonic/gin"
@@ -34,6 +28,7 @@ import (
 	"github.com/pingcap-inc/tiem/file-server/route"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/thirdparty/etcd_clientv2"
 )
 
 func main() {
@@ -101,6 +96,7 @@ func defaultPortForLocal(f *framework.BaseFramework) error {
 	return nil
 }
 
+/*
 // prometheus http metrics
 func promMiddleware(d *framework.BaseFramework) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -148,7 +144,7 @@ func computeApproximateRequestSize(r *http.Request) int {
 	}
 	return s
 }
-
+*/
 func initManager(f *framework.BaseFramework) error {
 	service.InitFileManager()
 	service.InitDirManager()

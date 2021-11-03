@@ -205,7 +205,7 @@ func Test_buildDataImportConfig(t *testing.T) {
 		FilePath:    "filePath",
 		RecordId:    123,
 		StorageType: S3StorageType,
-		ConfigPath:  "configPath",
+		ConfigPath:  "/tmp/test-ut",
 	})
 	context.put(contextClusterKey, &ClusterAggregation{
 		CurrentTopologyConfigRecord: &TopologyConfigRecord{

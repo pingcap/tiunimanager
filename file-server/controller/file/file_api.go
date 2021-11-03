@@ -26,7 +26,6 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"net/http"
 	"path/filepath"
-	"strconv"
 )
 
 func UploadImportFile(c *gin.Context) {
@@ -57,13 +56,14 @@ func UploadImportFile(c *gin.Context) {
 }
 
 func DownloadExportFile(c *gin.Context) {
-	recordId, err := strconv.Atoi(c.Param("recordId"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("input record id invalid, %s", err.Error())))
-		return
-	}
+	/*
+		recordId, err := strconv.Atoi(c.Param("recordId"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("input record id invalid, %s", err.Error())))
+			return
+		}*/
 	req := &dbpb.DBFindTransportRecordByIDRequest{
-		RecordId: int64(recordId),
+		RecordId: int64(2),
 	}
 	resp, err := client.DBClient.FindTrasnportRecordByID(framework.NewMicroCtxFromGinCtx(c), req)
 	if err != nil {

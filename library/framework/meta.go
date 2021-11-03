@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -42,7 +41,7 @@ func (s ServiceNameEnum) ServerName() string {
 	case ApiService:
 		return "openapi-server"
 	case FileMngService:
-		return "filemanager-server"
+		return "file-server"
 	default:
 		log.Error("unexpected ServiceName")
 		return ""

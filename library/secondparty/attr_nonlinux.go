@@ -1,4 +1,4 @@
-// +build linux
+// +build !linux
 
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
@@ -16,12 +16,10 @@
  *                                                                            *
  ******************************************************************************/
 
-package libtiup
+package secondparty
 
 import "syscall"
 
 func genSysProcAttr() *syscall.SysProcAttr {
-	return &syscall.SysProcAttr{
-		Pdeathsig: syscall.SIGTERM,
-	}
+	return &syscall.SysProcAttr{}
 }

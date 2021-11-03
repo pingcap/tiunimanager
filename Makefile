@@ -28,24 +28,12 @@ all: build
 # 1. build binary
 build:
 	@echo "build TiEM server start."
-	make build_tiupcmd
-	make build_brcmd
 	make build_openapi_server
 	make build_cluster_server
 	make build_metadb_server
 	@echo "build TiEM all server successful."
 
 #Compile all TiEM microservices
-build_tiupcmd:
-	@echo "build tiupcmd start."
-	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${TIUPCMD_BINARY} library/secondparty/tiupcmd/main.go
-	@echo "build tiupcmd sucessufully."
-
-build_brcmd:
-	@echo "build brcmd start."
-	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${BRCMD_BINARY} library/secondparty/brcmd/main.go
-	@echo "build brcmd sucessufully."
-
 build_openapi_server:
 	@echo "build openapi-server start."
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${OPENAPI_SERVER_BINARY} micro-api/*.go
@@ -197,16 +185,16 @@ else
 endif
 
 # don't run it locally, only for CI, use local_test instead
-test: add_test_file mock
+test: add_test_file build mock
 	GO111MODULE=off go get github.com/axw/gocov/gocov
 	GO111MODULE=off go get github.com/jstemmer/go-junit-report
 	GO111MODULE=off go get github.com/AlekSi/gocov-xml
 	go test -v ${PACKAGES} -coverprofile=cover.out |go-junit-report > test.xml
 	gocov convert cover.out | gocov-xml > coverage.xml
 
-local_test: mock
+local_test: build mock
 	mkdir -p "$(TEST_DIR)"
-	-go test -v ./... -coverprofile="$(TEST_DIR)/cover.out"
+	-go test -v ${PACKAGES} -coverprofile="$(TEST_DIR)/cover.out"
 	go tool cover -html "$(TEST_DIR)/cover.out" -o "$(TEST_DIR)/cover.html"
 	echo "check coverage info by opening $(TEST_DIR)/cover.html through browser"
 
@@ -231,7 +219,7 @@ failpoint-disable: build_failpoint_ctl
 
 lint:
 	# refer https://golangci-lint.run/usage/install/#local-installation to install golangci-lint firstly
-	golangci-lint run --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml
+	-golangci-lint run --out-format=junit-xml  --timeout=10m -v ./... > golangci-lint-report.xml
 
 gosec:
 	go install github.com/securego/gosec/v2/cmd/gosec@latest

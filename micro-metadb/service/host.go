@@ -612,6 +612,9 @@ func addSubNode(current map[string]*node, code string, subNode *node) (parent *n
 }
 
 func (handler *DBServiceHandler) buildHierarchy(Items []models.Item) *node {
+	if Items == nil || len(Items) == 0 {
+		return nil
+	}
 	root := node{
 		Code: "root",
 	}
@@ -671,13 +674,30 @@ func (handler *DBServiceHandler) trimTree(root *node, level resource.FailureDoma
 	return &newRoot
 }
 
-/*
+func copyHierarchyToRsp(root *node, dst **dbpb.DBNode) {
+	*dst = &dbpb.DBNode{
+		Code:   root.Code,
+		Name:   root.Name,
+		Prefix: root.Prefix,
+	}
+	(*dst).SubNodes = make([]*dbpb.DBNode, len(root.subNodes))
+	for i, subNode := range root.subNodes {
+		copyHierarchyToRsp(subNode, &((*dst).SubNodes[i]))
+	}
+}
+
 func (handler *DBServiceHandler) GetHierarchy(ctx context.Context, in *dbpb.DBGetHierarchyRequest, out *dbpb.DBGetHierarchyResponse) error {
 	log := framework.LogWithContext(ctx)
+	filter := resource.Filter{
+		Arch:     in.Filter.Arch,
+		Purpose:  in.Filter.Purpose,
+		DiskType: in.Filter.DiskType,
+	}
+	log.Infof("Receive GetHierarchy Request for arch = %s, purpose = %s, disktype = %s\n", filter.Arch, filter.Purpose, filter.DiskType)
 	out.Rs = new(dbpb.DBHostResponseStatus)
 
 	resourceManager := handler.Dao().ResourceManager()
-	Items, err := resourceManager.GetHostItems(ctx)
+	Items, err := resourceManager.GetHostItems(ctx, filter)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok {
@@ -692,8 +712,16 @@ func (handler *DBServiceHandler) GetHierarchy(ctx context.Context, in *dbpb.DBGe
 		// return nil to use rsp
 		return nil
 	}
+	wholeTree := handler.buildHierarchy(Items)
+	if wholeTree == nil {
+		out.Rs.Code = common.TIEM_RESOURCE_NO_STOCK
+		out.Rs.Message = fmt.Sprintf("no stocks with filter:%v", filter)
+		return nil
+	}
+	root := handler.trimTree(wholeTree, resource.FailureDomain(in.Level), int(in.Depth))
+	copyHierarchyToRsp(root, &out.Root)
+
 	out.Rs.Code = common.TIEM_SUCCESS
 
 	return nil
 }
-*/

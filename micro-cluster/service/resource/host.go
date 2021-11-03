@@ -557,10 +557,47 @@ func (m *ResourceManager) ReserveHost(ctx context.Context, in *clusterpb.Reserve
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.LogWithContext(ctx).Warnf("update host reserved to %v in batch failed from db service: %d, %s", req.Reserved, rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("update hosts[%v] reserved to %v in batch failed from db service: %d, %s", req.HostIds, req.Reserved, rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
 	framework.LogWithContext(ctx).Infof("update host reserved to %v succeed for hosts %v from db service", req.Reserved, req.HostIds)
+	return nil
+}
+
+func copyHierarchyFromRsp(root *dbpb.DBNode, dst **clusterpb.Node) {
+	*dst = &clusterpb.Node{
+		Code:   root.Code,
+		Name:   root.Name,
+		Prefix: root.Prefix,
+	}
+	(*dst).SubNodes = make([]*clusterpb.Node, len(root.SubNodes))
+	for i, subNode := range root.SubNodes {
+		copyHierarchyFromRsp(subNode, &((*dst).SubNodes[i]))
+	}
+}
+
+func (m *ResourceManager) GetHierarchy(ctx context.Context, in *clusterpb.GetHierarchyRequest, out *clusterpb.GetHierarchyResponse) error {
+	var req dbpb.DBGetHierarchyRequest
+	req.Filter = &dbpb.DBHostFilter{
+		Arch:     in.Filter.Arch,
+		Purpose:  in.Filter.Purpose,
+		DiskType: in.Filter.DiskType,
+	}
+	req.Level = in.Level
+	req.Depth = in.Depth
+	rsp, err := client.DBClient.GetHierarchy(ctx, &req)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get hierarchy on level %d, depth %d for filter[%v] error, %v", req.Level, req.Depth, req.Filter, err)
+		return err
+	}
+	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs.Code = rsp.Rs.Code
+	out.Rs.Message = rsp.Rs.Message
+	if rsp.Rs.Code != int32(codes.OK) {
+		framework.LogWithContext(ctx).Warnf("get hierarchy on level %d, depth %d for filter[%v] failed from db service: %d, %s", req.Level, req.Depth, req.Filter, rsp.Rs.Code, rsp.Rs.Message)
+		return nil
+	}
+	copyHierarchyFromRsp(rsp.Root, &out.Root)
 	return nil
 }

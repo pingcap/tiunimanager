@@ -645,3 +645,7 @@ func (clusterManager *ClusterServiceHandler) UpdateHostStatus(ctx context.Contex
 func (clusterManager *ClusterServiceHandler) ReserveHost(ctx context.Context, in *clusterpb.ReserveHostRequest, out *clusterpb.ReserveHostResponse) error {
 	return clusterManager.resourceManager.ReserveHost(ctx, in, out)
 }
+
+func (clusterManager *ClusterServiceHandler) GetHierarchy(ctx context.Context, in *clusterpb.GetHierarchyRequest, out *clusterpb.GetHierarchyResponse) error {
+	return clusterManager.resourceManager.GetHierarchy(ctx, in, out)
+}

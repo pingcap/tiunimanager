@@ -857,7 +857,7 @@ type Item struct {
 
 func (m *DAOResourceManager) GetHostItems(ctx context.Context, filter rt.Filter) (Items []Item, err error) {
 	tx := m.getDb(ctx).Begin()
-	db := tx.Model(&rt.Host{}).Select("region, az, rack, ip, name")
+	db := tx.Model(&rt.Host{}).Select("region, az, rack, ip, host_name")
 	if filter.Arch != "" {
 		db = db.Where("arch = ?", filter.Arch)
 	}

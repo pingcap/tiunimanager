@@ -84,10 +84,12 @@ func (t *TaskEntity) Success(result interface{}) {
 			t.Result = string(r)
 		}
 	}
+	t.EndTime = time.Now().Unix()
 }
 
 func (t *TaskEntity) Fail(e error) {
 	t.Status = TaskStatusError
+	t.EndTime = time.Now().Unix()
 	t.Result = e.Error()
 }
 
@@ -148,6 +150,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 		Status:         TaskStatusInit,
 		TaskName:       taskDefine.Name,
 		TaskReturnType: taskDefine.ReturnType,
+		StartTime: time.Now().Unix(),
 	}
 
 	TaskRepo.AddFlowTask(task, flow.FlowWork.Id)

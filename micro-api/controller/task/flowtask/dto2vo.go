@@ -50,6 +50,9 @@ func ParseFlowFromDTO (dto *clusterpb.FlowDTO) FlowWorkDisplayInfo {
 func ParseFlowWorkDetailInfoFromDTO (dto *clusterpb.FlowWithTaskDTO) FlowWorkDetailInfo {
 	flow := FlowWorkDetailInfo{
 		FlowWorkDisplayInfo: ParseFlowFromDTO(dto.Flow),
+		FlowWorkDefineInfo: FlowWorkDefineInfo{
+			TaskName: dto.TaskDef,
+		},
 		Tasks: make([]FlowWorkTaskInfo, 0),
 	}
 

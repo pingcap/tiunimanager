@@ -310,14 +310,9 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 
 	importTime := time.Now()
 	importPrefix, _ := filepath.Abs(common.DefaultImportDir) //todo: get from config
-	importDir := filepath.Join(importPrefix, fmt.Sprintf("%s_%s", importTime.Format("2006-01-02_15:04:05"), request.GetStorageType()))
+	importDir := filepath.Join(importPrefix, request.GetClusterId(), fmt.Sprintf("%s_%s", importTime.Format("2006-01-02_15:04:05"), request.GetStorageType()))
 	if NfsStorageType == request.GetStorageType() {
-		err = os.MkdirAll(importDir, os.ModePerm)
-		if err != nil {
-			getLoggerWithContext(ctx).Errorf("mkdir import dir failed, %s", err.Error())
-			return 0, err
-		}
-		err = os.Rename(filepath.Join(importPrefix, "temp"), importDir)
+		err = os.Rename(filepath.Join(importPrefix, request.GetClusterId(), "temp"), importDir)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("move import dir failed, %s", err.Error())
 			return 0, err

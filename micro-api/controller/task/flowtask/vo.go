@@ -16,7 +16,10 @@
 
 package flowtask
 
-import "github.com/pingcap-inc/tiem/micro-api/controller"
+import (
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"time"
+)
 
 type FlowWorkDisplayInfo struct {
 	Id           uint   `json:"id"`
@@ -38,4 +41,6 @@ type FlowWorkTaskInfo struct {
 	Parameters string `json:"taskParameters"`
 	Result     string `json:"result"`
 	Status     int    `json:"taskStatus"`
+	StartTime time.Time `json:"startTime"`
+	EndTime time.Time `json:"endTime"`
 }

@@ -222,9 +222,13 @@ definitions:
     type: object
   flowtask.FlowWorkTaskInfo:
     properties:
+      endTime:
+        type: string
       id:
         type: integer
       result:
+        type: string
+      startTime:
         type: string
       taskName:
         type: string
@@ -1334,7 +1338,7 @@ paths:
         in: path
         name: clusterId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -1942,7 +1946,7 @@ paths:
         in: path
         name: flowWorkId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:

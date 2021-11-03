@@ -726,7 +726,7 @@ var doc = `{
                 "summary": "show details of a cluster",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "cluster id",
                         "name": "clusterId",
                         "in": "path",
@@ -1529,7 +1529,7 @@ var doc = `{
                 "summary": "show details of a flow work",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "flow work id",
                         "name": "flowWorkId",
                         "in": "path",
@@ -2772,10 +2772,16 @@ var doc = `{
         "flowtask.FlowWorkTaskInfo": {
             "type": "object",
             "properties": {
+                "endTime": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
                 "result": {
+                    "type": "string"
+                },
+                "startTime": {
                     "type": "string"
                 },
                 "taskName": {

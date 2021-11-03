@@ -69,6 +69,8 @@ func ParseTaskFromDTO (dto *clusterpb.TaskDTO) FlowWorkTaskInfo {
 		Parameters: dto.Parameters,
 		Result:     dto.Result,
 		Status: int(dto.Status),
+		StartTime: time.Unix(dto.StartTime, 0),
+		EndTime: time.Unix(dto.EndTime, 0),
 	}
 	return task
 }

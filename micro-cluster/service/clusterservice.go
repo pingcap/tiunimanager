@@ -53,6 +53,10 @@ type ClusterServiceHandler struct {
 	userManager     *user.UserManager
 }
 
+func (handler *ClusterServiceHandler) DetailFlow(ctx context.Context, request *clusterpb.DetailFlowRequest, response *clusterpb.DetailFlowsResponse) error {
+	panic("implement me")
+}
+
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
 	handler := new(ClusterServiceHandler)
 	handler.SetResourceManager(resource.NewResourceManager())

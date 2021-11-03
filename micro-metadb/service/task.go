@@ -19,6 +19,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
@@ -162,7 +163,7 @@ func convertFlowToDTO(do *models.FlowDO) (dto *dbpb.DBFlowDTO) {
 	dto.UpdateTime = do.UpdatedAt.Unix()
 	dto.Operator = do.Operator
 
-	dto.DeleteTime = deletedAtUnix(do.DeletedAt)
+	dto.DeleteTime = nullTimeUnix(sql.NullTime(do.DeletedAt))
 	return
 }
 
@@ -194,6 +195,8 @@ func convertTaskToDTO(do *models.TaskDO) (dto *dbpb.DBTaskDTO) {
 	dto.ParentId = do.ParentId
 	dto.ParentType = int32(do.ParentType)
 
+	dto.StartTime = nullTimeUnix(do.StartTime)
+	dto.EndTime = nullTimeUnix(do.EndTime)
 	dto.Parameters = do.Parameters
 	dto.Result = do.Result
 	dto.TaskName = do.Name

@@ -431,6 +431,7 @@ message TaskDTO {
 message FlowWithTaskDTO {
     FlowDTO flow = 1;
     repeated TaskDTO tasks = 2;
+    repeated string TaskDef = 3;
 }
 
 message ListFlowsRequest {

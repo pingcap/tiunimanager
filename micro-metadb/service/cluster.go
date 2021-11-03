@@ -18,9 +18,9 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	"gorm.io/gorm"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -568,7 +568,7 @@ func convertToComponentInstanceDTO(models []*models.ComponentInstance) []*dbpb.D
 			AllocRequestId: v.AllocRequestId,
 			CreateTime:     v.CreatedAt.Unix(),
 			UpdateTime:     v.UpdatedAt.Unix(),
-			DeleteTime:     deletedAtUnix(v.DeletedAt),
+			DeleteTime:     nullTimeUnix(sql.NullTime(v.DeletedAt)),
 		}
 	}
 
@@ -656,7 +656,7 @@ func convertToClusterDTO(do *models.Cluster, demand *models.DemandRecord) (dto *
 		OwnerId:     do.OwnerId,
 		CreateTime:  do.CreatedAt.Unix(),
 		UpdateTime:  do.UpdatedAt.Unix(),
-		DeleteTime:  deletedAtUnix(do.DeletedAt),
+		DeleteTime:  nullTimeUnix(sql.NullTime(do.DeletedAt)),
 	}
 
 	if demand != nil {
@@ -678,7 +678,7 @@ func convertToConfigDTO(do *models.TopologyConfig) (dto *dbpb.DBTopologyConfigDT
 	}
 }
 
-func deletedAtUnix(at gorm.DeletedAt) (unix int64) {
+func nullTimeUnix(at sql.NullTime) (unix int64) {
 	if at.Valid {
 		return at.Time.Unix()
 	}

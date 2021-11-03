@@ -17,6 +17,7 @@
 package models
 
 import (
+	"database/sql"
 	"gorm.io/gorm"
 )
 
@@ -34,11 +35,13 @@ func (do FlowDO) TableName() string {
 type TaskDO struct {
 	Data
 	ParentType int8   `gorm:"default:0"`
-	ParentId   string `gorm:"default:null"`
+	ParentId   string `gorm:"default:null;index"`
 	Name       string `gorm:"default:null"`
 	ReturnType string `gorm:"default:null"`
 	Parameters string `gorm:"default:null"`
 	Result     string `gorm:"default:null"`
+	StartTime  sql.NullTime
+	EndTime    sql.NullTime
 }
 
 func (do TaskDO) TableName() string {

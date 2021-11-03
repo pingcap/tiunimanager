@@ -21,10 +21,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"time"
 )
 
+//
 // FlowWorkEntity
+// @Description: flowwork entity
 type FlowWorkEntity struct {
 	Id             uint
 	FlowName       string
@@ -51,7 +54,10 @@ func (c FlowWorkEntity) Finished() bool {
 	return c.Status.Finished()
 }
 
+//
 // TaskEntity
+// @Description: task entity
+//
 type TaskEntity struct {
 	Id             uint
 	Status         TaskStatus
@@ -60,6 +66,8 @@ type TaskEntity struct {
 	BizId          string
 	Parameters     string
 	Result         string
+	StartTime      int64
+	EndTime        int64
 }
 
 func (t *TaskEntity) Processing() {
@@ -83,7 +91,10 @@ func (t *TaskEntity) Fail(e error) {
 	t.Result = e.Error()
 }
 
+//
 // FlowWorkAggregation
+// @Description: flowwork aggregation with flowwork definition and tasks
+//
 type FlowWorkAggregation struct {
 	FlowWork    *FlowWorkEntity
 	Define      *FlowWorkDefine
@@ -181,6 +192,31 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 			break
 		}
 	}
+}
+
+func (flow *FlowWorkAggregation) GetAllTaskDef() []string {
+	// todo how to sort task def
+	var nodeNames []string
+	for _, node := range flow.Define.TaskNodes {
+		nodeNames = append(nodeNames, node.Name)
+	}
+	return nodeNames
+}
+
+func (flow *FlowWorkAggregation) ExtractTaskDTO() []*clusterpb.TaskDTO {
+	var tasks []*clusterpb.TaskDTO
+	for _, task := range flow.Tasks {
+		tasks = append(tasks, &clusterpb.TaskDTO {
+			Id:     int64(task.Id),
+			Status: int32(task.Status),
+			TaskName: task.TaskName,
+			Result: task.Result,
+			Parameters: task.Parameters,
+			StartTime: task.StartTime,
+			EndTime: task.EndTime,
+		})
+	}
+	return tasks
 }
 
 type CronTaskEntity struct {

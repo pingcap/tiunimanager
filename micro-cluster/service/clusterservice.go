@@ -277,7 +277,7 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 			Total:    page.GetTotal(),
 		}
 		resp.TransportInfos = make([]*clusterpb.DataTransportInfo, len(infos))
-		for i, v := range infos { //todo: flow status
+		for i, v := range infos {
 			resp.TransportInfos[i] = &clusterpb.DataTransportInfo{
 				RecordId:      infos[i].GetRecord().GetRecordId(),
 				ClusterId:     infos[i].GetRecord().GetClusterId(),

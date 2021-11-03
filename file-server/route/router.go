@@ -46,7 +46,7 @@ func Route(g *gin.Engine) {
 			//file.Use(interceptor.AuditLog())
 
 			file.POST("/import/upload", file2.UploadImportFile)
-			file.GET("/export/download/:downloadPath", file2.DownloadExportFile)
+			file.GET("/export/download/:recordId", file2.DownloadExportFile)
 		}
 	}
 

@@ -67,7 +67,7 @@ func (m *DAOClusterManager) FindTransportRecordById(ctx context.Context, recordI
 func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId string, recordId int, offset int32, length int32) (dos []*TransportRecordFetchResult, total int64, err error) {
 	records := make([]*TransportRecord, length)
 
-	db := m.Db(ctx).Table(TABLE_NAME_TRANSPORT_RECORD)
+	db := m.Db(ctx).Table(TABLE_NAME_TRANSPORT_RECORD).Where("deleted_at is null")
 	if clusterId != "" {
 		db.Where("cluster_id = ?", clusterId)
 	}
@@ -90,7 +90,7 @@ func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId s
 		err = m.Db(ctx).Find(&flows, flowIds).Error
 		m.HandleMetrics(TABLE_NAME_FLOW, 0)
 		if err != nil {
-			return nil, 0, fmt.Errorf("ListTransportRecord, query record failed, clusterId: %s, error: %v", clusterId, err)
+			return nil, 0, fmt.Errorf("ListTransportRecord, query record failed, clusterId: %s, error: %s", clusterId, err.Error())
 		}
 
 		flowMap := make(map[int64]*FlowDO)

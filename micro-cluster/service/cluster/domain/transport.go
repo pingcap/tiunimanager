@@ -34,13 +34,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 )
 
-type TransportType string
-
-const (
-	TransportTypeExport TransportType = "export"
-	TransportTypeImport TransportType = "import"
-)
-
 type ImportInfo struct {
 	ClusterId   string
 	UserName    string
@@ -103,11 +96,6 @@ const (
 )
 
 const (
-	NfsStorageType string = "nfs"
-	S3StorageType  string = "s3"
-)
-
-const (
 	FileTypeCSV string = "csv"
 	FileTypeSQL string = "sql"
 )
@@ -158,7 +146,7 @@ func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 		return fmt.Errorf("invalid param fileType %s", req.GetFileType())
 	}
 	switch req.GetStorageType() {
-	case S3StorageType:
+	case common.S3StorageType:
 		if req.GetEndpointUrl() == "" {
 			return fmt.Errorf("invalid param endpointUrl %s", req.GetEndpointUrl())
 		}
@@ -171,7 +159,7 @@ func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 		if req.GetSecretAccessKey() == "" {
 			return fmt.Errorf("invalid param secretAccessKey %s", req.GetSecretAccessKey())
 		}
-	case NfsStorageType:
+	case common.NfsStorageType:
 		if _, err := filepath.Abs(common.DefaultExportDir); err != nil { //todo: get from config
 			getLogger().Errorf("import dir %s is not vaild", common.DefaultExportDir)
 			return fmt.Errorf("import dir %s is not vaild", common.DefaultExportDir)
@@ -196,7 +184,7 @@ func ImportDataPreCheck(req *clusterpb.DataImportRequest) error {
 		}
 	*/
 	switch req.GetStorageType() {
-	case S3StorageType:
+	case common.S3StorageType:
 		if req.GetEndpointUrl() == "" {
 			return fmt.Errorf("invalid param endpointUrl %s", req.GetEndpointUrl())
 		}
@@ -209,7 +197,7 @@ func ImportDataPreCheck(req *clusterpb.DataImportRequest) error {
 		if req.GetSecretAccessKey() == "" {
 			return fmt.Errorf("invalid param secretAccessKey %s", req.GetSecretAccessKey())
 		}
-	case NfsStorageType:
+	case common.NfsStorageType:
 		if _, err := filepath.Abs(common.DefaultImportDir); err != nil { //todo: get from config
 			getLogger().Errorf("import dir %s is not vaild", common.DefaultImportDir)
 			return fmt.Errorf("import dir %s is not vaild", common.DefaultImportDir)
@@ -247,7 +235,7 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (int6
 		Record: &dbpb.TransportRecordDTO{
 			ClusterId:     request.GetClusterId(),
 			TenantId:      operator.TenantId,
-			TransportType: string(TransportTypeExport),
+			TransportType: string(common.TransportTypeExport),
 			FilePath:      getDataExportFilePath(request, exportDir),
 			StorageType:   request.GetStorageType(),
 			FlowId:        int64(flow.FlowWork.Id),
@@ -311,7 +299,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 	importTime := time.Now()
 	importPrefix, _ := filepath.Abs(common.DefaultImportDir) //todo: get from config
 	importDir := filepath.Join(importPrefix, request.GetClusterId(), fmt.Sprintf("%s_%s", importTime.Format("2006-01-02_15:04:05"), request.GetStorageType()))
-	if NfsStorageType == request.GetStorageType() {
+	if common.NfsStorageType == request.GetStorageType() {
 		err = os.Rename(filepath.Join(importPrefix, request.GetClusterId(), "temp"), importDir)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("move import dir failed, %s", err.Error())
@@ -323,7 +311,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 		Record: &dbpb.TransportRecordDTO{
 			ClusterId:     request.GetClusterId(),
 			TenantId:      operator.TenantId,
-			TransportType: string(TransportTypeImport),
+			TransportType: string(common.TransportTypeImport),
 			StorageType:   request.GetStorageType(),
 			FilePath:      getDataImportFilePath(request, importDir),
 			FlowId:        int64(flow.FlowWork.Id),
@@ -446,7 +434,7 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 
 func getDataExportFilePath(request *clusterpb.DataExportRequest, exportDir string) string {
 	var filePath string
-	if S3StorageType == request.GetStorageType() {
+	if common.S3StorageType == request.GetStorageType() {
 		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
 	} else {
 		filePath = filepath.Join(exportDir, "data")
@@ -456,7 +444,7 @@ func getDataExportFilePath(request *clusterpb.DataExportRequest, exportDir strin
 
 func getDataImportFilePath(request *clusterpb.DataImportRequest, importDir string) string {
 	var filePath string
-	if S3StorageType == request.GetStorageType() {
+	if common.S3StorageType == request.GetStorageType() {
 		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
 	} else {
 		filePath = filepath.Join(importDir, "data")
@@ -593,7 +581,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		tidbServerPort = DefaultTidbPort
 	}
 
-	if NfsStorageType == info.StorageType {
+	if common.NfsStorageType == info.StorageType {
 		if err := cleanDataTransportDir(ctx, info.FilePath); err != nil {
 			getLoggerWithContext(ctx).Errorf("clean export directory failed, %s", err.Error())
 			task.Fail(fmt.Errorf("clean export directory failed, %s", err.Error()))
@@ -618,7 +606,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	if FileTypeCSV == info.FileType && info.Sql != "" {
 		cmd = append(cmd, "--sql", info.Sql)
 	}
-	if S3StorageType == info.StorageType && info.BucketRegion != "" {
+	if common.S3StorageType == info.StorageType && info.BucketRegion != "" {
 		cmd = append(cmd, "--s3.region", fmt.Sprintf("\"%s\"", info.BucketRegion))
 	}
 	getLoggerWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v", cmd)

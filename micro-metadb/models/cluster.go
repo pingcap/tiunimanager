@@ -490,7 +490,7 @@ func (m *DAOClusterManager) ListBackupRecords(ctx context.Context, clusterId str
 		err = m.Db(ctx).Find(&flows, flowIds).Error
 		m.HandleMetrics(TABLE_NAME_FLOW, 0)
 		if err != nil {
-			return nil, 0, errors.New(fmt.Sprintf("ListBackupRecord, query record failed, clusterId: %s, error: %v", clusterId, err))
+			return nil, 0, fmt.Errorf("ListBackupRecord, query record failed, clusterId: %s, error: %s", clusterId, err.Error())
 		}
 
 		flowMap := make(map[int64]*FlowDO)

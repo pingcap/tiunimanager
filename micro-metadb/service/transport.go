@@ -101,8 +101,8 @@ func (handler *DBServiceHandler) ListTrasnportRecord(ctx context.Context, in *db
 		log.Errorf("ListTrasnportRecord failed, %s", err.Error())
 	} else {
 		out.Page = &dbpb.DBPageDTO{
-			Page:     out.Page.Page,
-			PageSize: out.Page.PageSize,
+			Page:     in.Page.Page,
+			PageSize: in.Page.PageSize,
 			Total:    int32(total),
 		}
 		transportRecordDTOs := make([]*dbpb.DBTransportRecordDisplayDTO, len(result))

@@ -16,11 +16,17 @@
 package file
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/file-server/service"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"net/http"
 	"path/filepath"
+	"strconv"
 )
 
 func UploadImportFile(c *gin.Context) {
@@ -51,10 +57,34 @@ func UploadImportFile(c *gin.Context) {
 }
 
 func DownloadExportFile(c *gin.Context) {
-	downloadPath := c.Param("downloadPath")
+	recordId, err := strconv.Atoi(c.Param("recordId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("input record id invalid, %s", err.Error())))
+		return
+	}
+	req := &dbpb.DBFindTransportRecordByIDRequest{
+		RecordId: int64(recordId),
+	}
+	resp, err := client.DBClient.FindTrasnportRecordByID(framework.NewMicroCtxFromGinCtx(c), req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", err.Error())))
+		return
+	}
+
+	record := resp.GetRecord()
+	if record.GetStorageType() != common.NfsStorageType {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("storage type %s can not download", record.GetStorageType())))
+		return
+	}
+	if record.GetTransportType() != string(common.TransportTypeExport) {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("transport type %s can not download", record.GetTransportType())))
+		return
+	}
+
+	downloadPath := resp.GetRecord().GetFilePath()
 	filePath := filepath.Join(filepath.Dir(downloadPath), service.DefaultDataFile)
 
-	err := service.FileMgr.ZipDir(downloadPath, filePath)
+	err = service.FileMgr.ZipDir(downloadPath, filePath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return

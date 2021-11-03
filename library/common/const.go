@@ -60,7 +60,13 @@ var (
 	TemplateFilePath = "./etc"
 )
 
-var (
-	DefaultImportDir string = "/tmp/tiem/import"
-	DefaultExportDir string = "/tmp/tiem/export"
+type TransportType string
+
+const (
+	DefaultImportDir    string        = "/tmp/tiem/import"
+	DefaultExportDir    string        = "/tmp/tiem/export"
+	NfsStorageType      string        = "nfs"
+	S3StorageType       string        = "s3"
+	TransportTypeExport TransportType = "export"
+	TransportTypeImport TransportType = "import"
 )

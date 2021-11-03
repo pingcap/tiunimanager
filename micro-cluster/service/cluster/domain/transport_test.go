@@ -19,6 +19,7 @@ package domain
 import (
 	ctx "context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/common"
 	"os"
 	"testing"
 
@@ -37,7 +38,7 @@ func TestExportDataPreCheck_case1(t *testing.T) {
 		UserName:    "root",
 		Password:    "",
 		FileType:    FileTypeCSV,
-		StorageType: NfsStorageType,
+		StorageType: common.NfsStorageType,
 	}
 	err := ExportDataPreCheck(req)
 	assert.NoError(t, err)
@@ -61,7 +62,7 @@ func TestExportDataPreCheck_case3(t *testing.T) {
 		UserName:    "root",
 		Password:    "",
 		FileType:    FileTypeCSV,
-		StorageType: S3StorageType,
+		StorageType: common.S3StorageType,
 	}
 	err := ExportDataPreCheck(req)
 	assert.NotNil(t, err)
@@ -73,7 +74,7 @@ func TestExportDataPreCheck_case4(t *testing.T) {
 		UserName:    "root",
 		Password:    "",
 		FileType:    FileTypeCSV,
-		StorageType: S3StorageType,
+		StorageType: common.S3StorageType,
 		EndpointUrl: "https://minio.pingcap.net:9000",
 	}
 	err := ExportDataPreCheck(req)
@@ -86,7 +87,7 @@ func TestExportDataPreCheck_case5(t *testing.T) {
 		UserName:    "root",
 		Password:    "",
 		FileType:    FileTypeCSV,
-		StorageType: S3StorageType,
+		StorageType: common.S3StorageType,
 		EndpointUrl: "https://minio.pingcap.net:9000",
 		BucketUrl:   "s3://test",
 	}
@@ -100,7 +101,7 @@ func TestExportDataPreCheck_case6(t *testing.T) {
 		UserName:    "root",
 		Password:    "",
 		FileType:    FileTypeCSV,
-		StorageType: S3StorageType,
+		StorageType: common.S3StorageType,
 		EndpointUrl: "https://minio.pingcap.net:9000",
 		BucketUrl:   "s3://test",
 		AccessKey:   "admin",
@@ -115,7 +116,7 @@ func TestExportDataPreCheck_case7(t *testing.T) {
 		UserName:        "root",
 		Password:        "",
 		FileType:        FileTypeCSV,
-		StorageType:     S3StorageType,
+		StorageType:     common.S3StorageType,
 		EndpointUrl:     "https://minio.pingcap.net:9000",
 		BucketUrl:       "s3://test",
 		AccessKey:       "admin",
@@ -130,7 +131,7 @@ func TestImportDataPreCheck(t *testing.T) {
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
-		StorageType: NfsStorageType,
+		StorageType: common.NfsStorageType,
 	}
 	err := ImportDataPreCheck(req)
 	assert.NoError(t, err)
@@ -204,7 +205,7 @@ func Test_buildDataImportConfig(t *testing.T) {
 		Password:    "",
 		FilePath:    "filePath",
 		RecordId:    123,
-		StorageType: S3StorageType,
+		StorageType: common.S3StorageType,
 		ConfigPath:  "/tmp/test-ut",
 	})
 	context.put(contextClusterKey, &ClusterAggregation{
@@ -247,7 +248,7 @@ func Test_updateDataImportRecord(t *testing.T) {
 		Password:    "",
 		FilePath:    "filePath",
 		RecordId:    123,
-		StorageType: S3StorageType,
+		StorageType: common.S3StorageType,
 		ConfigPath:  "configPath",
 	})
 	context.put(contextClusterKey, &ClusterAggregation{
@@ -278,7 +279,7 @@ func Test_updateDataExportRecord(t *testing.T) {
 		Password:    "",
 		FilePath:    "filePath",
 		RecordId:    123,
-		StorageType: S3StorageType,
+		StorageType: common.S3StorageType,
 	})
 	context.put(contextClusterKey, &ClusterAggregation{
 		Cluster: &Cluster{
@@ -308,7 +309,7 @@ func Test_exportDataFailed(t *testing.T) {
 		Password:    "",
 		FilePath:    "filePath",
 		RecordId:    123,
-		StorageType: S3StorageType,
+		StorageType: common.S3StorageType,
 	})
 	context.put(contextClusterKey, &ClusterAggregation{
 		Cluster: &Cluster{
@@ -338,7 +339,7 @@ func Test_importDataFailed(t *testing.T) {
 		Password:    "",
 		FilePath:    "filePath",
 		RecordId:    123,
-		StorageType: S3StorageType,
+		StorageType: common.S3StorageType,
 	})
 	context.put(contextClusterKey, &ClusterAggregation{
 		Cluster: &Cluster{
@@ -354,7 +355,7 @@ func Test_importDataFailed(t *testing.T) {
 
 func Test_getDataExportFilePath_case1(t *testing.T) {
 	request := &clusterpb.DataExportRequest{
-		StorageType:     S3StorageType,
+		StorageType:     common.S3StorageType,
 		BucketUrl:       "s3://test",
 		AccessKey:       "admin",
 		SecretAccessKey: "admin",
@@ -366,7 +367,7 @@ func Test_getDataExportFilePath_case1(t *testing.T) {
 
 func Test_getDataExportFilePath_case2(t *testing.T) {
 	request := &clusterpb.DataExportRequest{
-		StorageType: NfsStorageType,
+		StorageType: common.NfsStorageType,
 	}
 	path := getDataExportFilePath(request, "/tmp/test")
 	assert.Equal(t, path, "/tmp/test/data")
@@ -374,7 +375,7 @@ func Test_getDataExportFilePath_case2(t *testing.T) {
 
 func Test_getDataImportFilePath_case1(t *testing.T) {
 	request := &clusterpb.DataImportRequest{
-		StorageType:     S3StorageType,
+		StorageType:     common.S3StorageType,
 		BucketUrl:       "s3://test",
 		AccessKey:       "admin",
 		SecretAccessKey: "admin",
@@ -386,7 +387,7 @@ func Test_getDataImportFilePath_case1(t *testing.T) {
 
 func Test_getDataImportFilePath_case2(t *testing.T) {
 	request := &clusterpb.DataImportRequest{
-		StorageType: NfsStorageType,
+		StorageType: common.NfsStorageType,
 	}
 	path := getDataImportFilePath(request, "/tmp/test")
 	assert.Equal(t, path, "/tmp/test/data")

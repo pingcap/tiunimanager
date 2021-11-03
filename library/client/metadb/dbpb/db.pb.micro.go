@@ -5,7 +5,7 @@ package dbpb
 
 import (
 	fmt "fmt"
-	proto "google.golang.org/protobuf/proto"
+	proto "github.com/golang/protobuf/proto"
 	math "math"
 )
 
@@ -20,6 +20,12 @@ import (
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ api.Endpoint
@@ -57,6 +63,7 @@ type TiEMDBService interface {
 	RecycleResources(ctx context.Context, in *DBRecycleRequest, opts ...client.CallOption) (*DBRecycleResponse, error)
 	UpdateHostStatus(ctx context.Context, in *DBUpdateHostStatusRequest, opts ...client.CallOption) (*DBUpdateHostStatusResponse, error)
 	ReserveHost(ctx context.Context, in *DBReserveHostRequest, opts ...client.CallOption) (*DBReserveHostResponse, error)
+	GetHierarchy(ctx context.Context, in *DBGetHierarchyRequest, opts ...client.CallOption) (*DBGetHierarchyResponse, error)
 	// Cluster
 	CreateCluster(ctx context.Context, in *DBCreateClusterRequest, opts ...client.CallOption) (*DBCreateClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, opts ...client.CallOption) (*DBDeleteClusterResponse, error)
@@ -293,6 +300,16 @@ func (c *tiEMDBService) UpdateHostStatus(ctx context.Context, in *DBUpdateHostSt
 func (c *tiEMDBService) ReserveHost(ctx context.Context, in *DBReserveHostRequest, opts ...client.CallOption) (*DBReserveHostResponse, error) {
 	req := c.c.NewRequest(c.name, "TiEMDBService.ReserveHost", in)
 	out := new(DBReserveHostResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tiEMDBService) GetHierarchy(ctx context.Context, in *DBGetHierarchyRequest, opts ...client.CallOption) (*DBGetHierarchyResponse, error) {
+	req := c.c.NewRequest(c.name, "TiEMDBService.GetHierarchy", in)
+	out := new(DBGetHierarchyResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -664,6 +681,7 @@ type TiEMDBServiceHandler interface {
 	RecycleResources(context.Context, *DBRecycleRequest, *DBRecycleResponse) error
 	UpdateHostStatus(context.Context, *DBUpdateHostStatusRequest, *DBUpdateHostStatusResponse) error
 	ReserveHost(context.Context, *DBReserveHostRequest, *DBReserveHostResponse) error
+	GetHierarchy(context.Context, *DBGetHierarchyRequest, *DBGetHierarchyResponse) error
 	// Cluster
 	CreateCluster(context.Context, *DBCreateClusterRequest, *DBCreateClusterResponse) error
 	DeleteCluster(context.Context, *DBDeleteClusterRequest, *DBDeleteClusterResponse) error
@@ -726,6 +744,7 @@ func RegisterTiEMDBServiceHandler(s server.Server, hdlr TiEMDBServiceHandler, op
 		RecycleResources(ctx context.Context, in *DBRecycleRequest, out *DBRecycleResponse) error
 		UpdateHostStatus(ctx context.Context, in *DBUpdateHostStatusRequest, out *DBUpdateHostStatusResponse) error
 		ReserveHost(ctx context.Context, in *DBReserveHostRequest, out *DBReserveHostResponse) error
+		GetHierarchy(ctx context.Context, in *DBGetHierarchyRequest, out *DBGetHierarchyResponse) error
 		CreateCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DBDeleteClusterRequest, out *DBDeleteClusterResponse) error
 		UpdateClusterInfo(ctx context.Context, in *DBUpdateClusterInfoRequest, out *DBUpdateClusterInfoResponse) error
@@ -846,6 +865,10 @@ func (h *tiEMDBServiceHandler) UpdateHostStatus(ctx context.Context, in *DBUpdat
 
 func (h *tiEMDBServiceHandler) ReserveHost(ctx context.Context, in *DBReserveHostRequest, out *DBReserveHostResponse) error {
 	return h.TiEMDBServiceHandler.ReserveHost(ctx, in, out)
+}
+
+func (h *tiEMDBServiceHandler) GetHierarchy(ctx context.Context, in *DBGetHierarchyRequest, out *DBGetHierarchyResponse) error {
+	return h.TiEMDBServiceHandler.GetHierarchy(ctx, in, out)
 }
 
 func (h *tiEMDBServiceHandler) CreateCluster(ctx context.Context, in *DBCreateClusterRequest, out *DBCreateClusterResponse) error {

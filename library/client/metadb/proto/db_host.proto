@@ -170,3 +170,27 @@ message DBGetFailureDomainResponse {
     DBHostResponseStatus rs = 1;
     repeated DBFailureDomainResource fdList = 2;
 }
+
+message DBHostFilter {
+	string arch = 1;
+	string purpose  = 2;
+	string diskType = 3;
+}
+
+message DBGetHierarchyRequest {
+    DBHostFilter filter = 1;
+    int32 level = 2;
+    int32 depth = 3;
+}
+
+message DBNode {
+    string code = 1;
+    string prefix = 2;
+    string name = 3;
+    repeated DBNode subNodes = 4;
+}
+
+message DBGetHierarchyResponse {
+    DBHostResponseStatus rs = 1;
+    DBNode root = 2;
+}

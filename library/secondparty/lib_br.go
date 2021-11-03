@@ -137,7 +137,7 @@ func (secondMicro *SecondMicro) startNewBrShowBackUpInfoThruSQL(req *CmdShowBack
 
 func execShowBackUpInfoThruSQL(db *sql.DB, showBackupSQLCmd string) (resp CmdShowBackUpInfoResp) {
 	t0 := time.Now()
-	err := db.QueryRow(showBackupSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.Queue_time, &resp.Execution_Time, &resp.Finish_Time, &resp.Connection)
+	err := db.QueryRow(showBackupSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.QueueTime, &resp.ExecutionTime, &resp.FinishTime, &resp.Connection)
 	successFp := func() {
 		logger.Info("showbackupinfo task finished, time cost", time.Since(t0))
 	}
@@ -236,7 +236,7 @@ func (secondMicro *SecondMicro) startNewBrShowRestoreInfoThruSQL(req *CmdShowRes
 
 func execShowRestoreInfoThruSQL(db *sql.DB, showRestoreSQLCmd string) (resp CmdShowRestoreInfoResp) {
 	t0 := time.Now()
-	err := db.QueryRow(showRestoreSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.Queue_time, &resp.Execution_Time, &resp.Finish_Time, &resp.Connection)
+	err := db.QueryRow(showRestoreSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.QueueTime, &resp.ExecutionTime, &resp.FinishTime, &resp.Connection)
 	successFp := func() {
 		logger.Info("showretoreinfo task finished, time cost", time.Since(t0))
 	}

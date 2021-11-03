@@ -115,16 +115,16 @@ type CmdShowBackUpInfoReq struct {
 }
 
 type CmdShowBackUpInfoResp struct {
-	Destination    string
-	Size           uint64
-	BackupTS       uint64
-	State          string
-	Progress       float32
-	Queue_time     string
-	Execution_Time string
-	Finish_Time    *string
-	Connection     string
-	ErrorStr       string
+	Destination   string
+	Size          uint64
+	BackupTS      uint64
+	State         string
+	Progress      float32
+	QueueTime     string
+	ExecutionTime string
+	FinishTime    *string
+	Connection    string
+	ErrorStr      string
 }
 
 type CmdRestoreReq struct {
@@ -148,14 +148,14 @@ type CmdShowRestoreInfoReq struct {
 }
 
 type CmdShowRestoreInfoResp struct {
-	Destination    string
-	Size           uint64
-	BackupTS       uint64
-	State          string
-	Progress       float32
-	Queue_time     string
-	Execution_Time string
-	Finish_Time    *string
-	Connection     string
-	ErrorStr       string
+	Destination   string
+	Size          uint64
+	BackupTS      uint64
+	State         string
+	Progress      float32
+	QueueTime     string
+	ExecutionTime string
+	FinishTime    *string
+	Connection    string
+	ErrorStr      string
 }

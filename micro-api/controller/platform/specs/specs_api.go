@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -35,7 +34,7 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /knowledges [get]
+// @Router /knowledges/ [get]
 func ClusterKnowledge(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(knowledge.SpecKnowledge.Specs))
 }

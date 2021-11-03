@@ -522,7 +522,7 @@ func TestFlowWorkAggregation_AddContext(t *testing.T) {
 }
 
 func TestFlowWorkAggregation_GetAllTaskDef(t *testing.T) {
-	flow , err := CreateFlowWork("CreateCluster", "CreateCluster", &Operator{})
+	flow , err := CreateFlowWork("testFlow", "testFlow", &Operator{})
 	if err == nil {
 		def := flow.GetAllTaskDef()
 		assert.True(t, len(def) > 0)

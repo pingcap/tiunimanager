@@ -242,3 +242,19 @@ func (s *ClusterFakeService) ReserveHost(ctx context.Context, in *clusterpb.Rese
 func (s *ClusterFakeService) DescribeMonitor(ctx context.Context, in *clusterpb.DescribeMonitorRequest, opts ...micro.CallOption) (*clusterpb.DescribeMonitorResponse, error) {
 	panic("implement me")
 }
+
+func (s *ClusterFakeService) RestartCluster(ctx context.Context, in *clusterpb.ClusterRestartReqDTO, opts ...micro.CallOption) (*clusterpb.ClusterRestartRespDTO, error) {
+	panic("implement me")
+}
+
+func (s *ClusterFakeService) StopCluster(ctx context.Context, in *clusterpb.ClusterStopReqDTO, opts ...micro.CallOption) (*clusterpb.ClusterStopRespDTO, error) {
+	panic("implement me")
+}
+
+func (s *ClusterFakeService) TakeoverClusters(ctx context.Context, in *clusterpb.ClusterTakeoverReqDTO, opts ...micro.CallOption) (*clusterpb.ClusterTakeoverRespDTO, error) {
+	panic("implement me")
+}
+
+func (s *ClusterFakeService) GetHierarchy(ctx context.Context, in *clusterpb.GetHierarchyRequest, opts ...micro.CallOption) (*clusterpb.GetHierarchyResponse, error) {
+	panic("implement me")
+}

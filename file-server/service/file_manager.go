@@ -209,7 +209,7 @@ func (mgr *FileManager) UnzipDir(zipFile string, dir string) error {
 	for _, f := range r.File {
 		func() {
 			path := dir + string(filepath.Separator) + f.Name
-			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Dir(path), 0750); err != nil {
 				getLogger().Errorf("make filepath failed: %s", err.Error())
 				return
 			}
@@ -227,11 +227,23 @@ func (mgr *FileManager) UnzipDir(zipFile string, dir string) error {
 			}
 			defer fSrc.Close()
 
-			_, err = io.Copy(fDest, fSrc)
-			if err != nil {
-				getLogger().Errorf("unzip copy failed: %s", err.Error())
-				return
+			for {
+				_, err := io.CopyN(fDest, fSrc, 1024)
+				if err != nil {
+					if err == io.EOF {
+						break
+					}
+					getLogger().Errorf("unzip copy failed: %s", err.Error())
+					return
+				}
 			}
+			/*
+				_, err = io.Copy(fDest, fSrc)
+				if err != nil {
+					getLogger().Errorf("unzip copy failed: %s", err.Error())
+					return
+				}
+			*/
 		}()
 	}
 	return nil

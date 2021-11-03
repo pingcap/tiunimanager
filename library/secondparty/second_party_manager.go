@@ -65,7 +65,7 @@ func (secondMicro *SecondMicro) MicroInit(mgrLogFilePath string) {
 	if len(os.Args) > 1 {
 		configPath = os.Args[1]
 	}
-	logger = framework.LogForkFile(configPath + common.LogFileLibTiup)
+	logger = framework.LogForkFile(configPath + common.LogFileSecondParty)
 
 	secondMicro.syncedTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	secondMicro.taskStatusCh = make(chan TaskStatusMember, 1024)

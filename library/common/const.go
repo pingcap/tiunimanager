@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -40,10 +39,9 @@ const (
 )
 
 const (
-	LogFileSystem  = "system"
-	LogFileTiupMgr = "tiupmgr"
-	LogFileBrMgr   = "brmgr"
-	LogFileLibTiup = "libtiup"
+	LogFileSystem      = "system"
+	LogFileSecondParty = "secondparty"
+	LogFileLibTiup     = "libtiup"
 
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"

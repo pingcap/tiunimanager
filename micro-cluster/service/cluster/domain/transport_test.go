@@ -224,9 +224,10 @@ func Test_buildDataImportConfig(t *testing.T) {
 		},
 	})
 	context.put(contextCtxKey, ctx.Background())
+	info := context.value(contextDataTransportKey).(*ImportInfo)
+	_ = os.MkdirAll(info.ConfigPath, os.ModePerm)
 	ret := buildDataImportConfig(task, context)
 	assert.Equal(t, true, ret)
-	info := context.value(contextDataTransportKey).(*ImportInfo)
 	_ = os.RemoveAll(info.ConfigPath)
 }
 

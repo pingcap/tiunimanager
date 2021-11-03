@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -47,7 +46,7 @@ func Route(g *gin.Engine) {
 			//file.Use(interceptor.AuditLog())
 
 			file.POST("/import/upload", file2.UploadImportFile)
-			file.GET("/export/download", file2.DownloadExportFile)
+			file.GET("/export/download/:downloadPath", file2.DownloadExportFile)
 		}
 	}
 

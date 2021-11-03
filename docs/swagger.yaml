@@ -1049,7 +1049,7 @@ info:
   title: TiEM UI API
   version: "1.0"
 paths:
-  /backups:
+  /backups/:
     get:
       consumes:
       - application/json
@@ -1187,7 +1187,7 @@ paths:
       summary: delete backup record
       tags:
       - cluster backup
-  /clusters:
+  /clusters/:
     get:
       consumes:
       - application/json
@@ -1880,7 +1880,7 @@ paths:
       summary: takeover a cluster
       tags:
       - cluster
-  /flowworks:
+  /flowworks/:
     get:
       consumes:
       - application/json
@@ -1972,7 +1972,7 @@ paths:
       summary: show details of a flow work
       tags:
       - task
-  /knowledges:
+  /knowledges/:
     get:
       consumes:
       - application/json

@@ -46,7 +46,7 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters [post]
+// @Router /clusters/ [post]
 func Create(c *gin.Context) {
 	var req CreateReq
 
@@ -101,7 +101,7 @@ func Create(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters [get]
+// @Router /clusters/ [get]
 func Query(c *gin.Context) {
 
 	var queryReq QueryReq

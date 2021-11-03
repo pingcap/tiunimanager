@@ -612,7 +612,7 @@ func addSubNode(current map[string]*node, code string, subNode *node) (parent *n
 }
 
 func (handler *DBServiceHandler) buildHierarchy(Items []models.Item) *node {
-	if Items == nil || len(Items) == 0 {
+	if len(Items) == 0 {
 		return nil
 	}
 	root := node{

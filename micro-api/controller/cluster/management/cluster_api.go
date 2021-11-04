@@ -18,6 +18,7 @@ package management
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
@@ -350,7 +351,7 @@ func Takeover(c *gin.Context) {
 	reqDTO := &clusterpb.ClusterTakeoverReqDTO{
 		Operator:         operator.ConvertToDTO(),
 		TiupIp:           req.TiupIp,
-		Port:             req.TiupPort,
+		Port:             strconv.Itoa(req.TiupPort),
 		TiupUserName:     req.TiupUserName,
 		TiupUserPassword: req.TiupUserPassword,
 		TiupPath:         req.TiupPath,

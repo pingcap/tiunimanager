@@ -384,6 +384,8 @@ func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
 			Parameters:     v.Parameters,
 			ParentId:       strconv.Itoa(int(flowWork.FlowWork.Id)),
 			ParentType:     0,
+			StartTime:      v.StartTime,
+			EndTime:        v.EndTime,
 		}
 	}
 

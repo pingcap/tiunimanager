@@ -24,8 +24,10 @@ import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	dbService "github.com/pingcap-inc/tiem/micro-metadb/service"
 	"net/http"
 	"path/filepath"
+	"strconv"
 )
 
 func UploadImportFile(c *gin.Context) {
@@ -56,18 +58,21 @@ func UploadImportFile(c *gin.Context) {
 }
 
 func DownloadExportFile(c *gin.Context) {
-	/*
-		recordId, err := strconv.Atoi(c.Param("recordId"))
-		if err != nil {
-			c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("input record id invalid, %s", err.Error())))
-			return
-		}*/
+	recordId, err := strconv.Atoi(c.Param("recordId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("input record id invalid, %s", err.Error())))
+		return
+	}
 	req := &dbpb.DBFindTransportRecordByIDRequest{
-		RecordId: int64(2),
+		RecordId: int64(recordId),
 	}
 	resp, err := client.DBClient.FindTrasnportRecordByID(framework.NewMicroCtxFromGinCtx(c), req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", err.Error())))
+		return
+	}
+	if resp.GetStatus() != dbService.ClusterSuccessResponseStatus {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", resp.GetStatus().GetMessage())))
 		return
 	}
 

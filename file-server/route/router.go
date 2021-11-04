@@ -19,7 +19,7 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/file-server/controller"
-	file2 "github.com/pingcap-inc/tiem/file-server/controller/file"
+	files "github.com/pingcap-inc/tiem/file-server/controller/file"
 	swaggerFiles "github.com/swaggo/files" // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -45,8 +45,8 @@ func Route(g *gin.Engine) {
 			//file.Use(interceptor.VerifyIdentity)
 			//file.Use(interceptor.AuditLog())
 
-			file.POST("/import/upload", file2.UploadImportFile)
-			file.GET("/export/download/:recordId", file2.DownloadExportFile)
+			file.POST("/import/upload", files.UploadImportFile)
+			file.GET("/export/download/:recordId", files.DownloadExportFile)
 		}
 	}
 

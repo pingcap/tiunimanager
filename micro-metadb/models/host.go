@@ -18,6 +18,7 @@ package models
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -855,9 +856,10 @@ type Item struct {
 	Name   string
 }
 
-func (m *DAOResourceManager) GetHostItems(ctx context.Context, filter rt.Filter) (Items []Item, err error) {
+func (m *DAOResourceManager) GetHostItems(ctx context.Context, filter rt.Filter, level int32, depth int32) (Items []Item, err error) {
+	leafLevel := level + depth
 	tx := m.getDb(ctx).Begin()
-	db := tx.Model(&rt.Host{}).Select("region, az, rack, ip, host_name")
+	db := tx.Model(&rt.Host{}).Select("region, az, rack, ip, host_name as name")
 	if filter.Arch != "" {
 		db = db.Where("arch = ?", filter.Arch)
 	}
@@ -867,7 +869,20 @@ func (m *DAOResourceManager) GetHostItems(ctx context.Context, filter rt.Filter)
 	if filter.DiskType != "" {
 		db = db.Where("disk_type = ?", filter.DiskType)
 	}
-	err = db.Order("region").Order("az").Order("rack").Order("ip").Scan(&Items).Error
+	switch rt.FailureDomain(leafLevel) {
+	case rt.REGION:
+		err = db.Group("region").Scan(&Items).Error
+	case rt.ZONE:
+		err = db.Group("region").Group("az").Scan(&Items).Error
+	case rt.RACK:
+		err = db.Group("region").Group("az").Group("rack").Scan(&Items).Error
+	case rt.HOST:
+		// Build whole tree with hosts
+		err = db.Order("region").Order("az").Order("rack").Order("ip").Scan(&Items).Error
+	default:
+		errMsg := fmt.Sprintf("invaild leaf level %d, level = %d, depth = %d", leafLevel, level, depth)
+		err = errors.New(errMsg)
+	}
 	if err != nil {
 		tx.Rollback()
 		return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get hierarchy failed, %v", err)

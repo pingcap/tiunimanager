@@ -697,7 +697,7 @@ func (handler *DBServiceHandler) GetHierarchy(ctx context.Context, in *dbpb.DBGe
 	out.Rs = new(dbpb.DBHostResponseStatus)
 
 	resourceManager := handler.Dao().ResourceManager()
-	Items, err := resourceManager.GetHostItems(ctx, filter)
+	Items, err := resourceManager.GetHostItems(ctx, filter, in.Level, in.Depth)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if ok {

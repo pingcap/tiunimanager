@@ -1838,6 +1838,73 @@
                 }
             }
         },
+        "/resources/hierarchy": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get resource hierarchy-tree",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Show the resources hierarchy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "Arch",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2,
+                            3,
+                            4
+                        ],
+                        "type": "integer",
+                        "description": "failure domain type of region/zone/rack/host",
+                        "name": "level",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "hierarchy depth",
+                        "name": "depth",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/warehouse.Node"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/resources/host": {
             "post": {
                 "security": [
@@ -3974,6 +4041,26 @@
                 },
                 "zoneName": {
                     "type": "string"
+                }
+            }
+        },
+        "warehouse.Node": {
+            "type": "object",
+            "properties": {
+                "Code": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                },
+                "Prefix": {
+                    "type": "string"
+                },
+                "SubNodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/warehouse.Node"
+                    }
                 }
             }
         },

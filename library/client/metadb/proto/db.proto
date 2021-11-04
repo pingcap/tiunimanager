@@ -34,6 +34,7 @@ service TiEMDBService {
 	rpc RecycleResources(DBRecycleRequest) returns (DBRecycleResponse);
 	rpc UpdateHostStatus(DBUpdateHostStatusRequest) returns (DBUpdateHostStatusResponse);
 	rpc ReserveHost(DBReserveHostRequest) returns (DBReserveHostResponse);
+	rpc GetHierarchy(DBGetHierarchyRequest) returns (DBGetHierarchyResponse);
 
 	// Cluster
 	rpc CreateCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);

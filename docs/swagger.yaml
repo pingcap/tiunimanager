@@ -1031,6 +1031,19 @@ definitions:
       zoneName:
         type: string
     type: object
+  warehouse.Node:
+    properties:
+      Code:
+        type: string
+      Name:
+        type: string
+      Prefix:
+        type: string
+      SubNodes:
+        items:
+          $ref: '#/definitions/warehouse.Node'
+        type: array
+    type: object
   warehouse.SpecBaseInfo:
     properties:
       specCode:
@@ -2144,6 +2157,47 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Show the resources on failure domain view
+      tags:
+      - resource
+  /resources/hierarchy:
+    get:
+      consumes:
+      - application/json
+      description: get resource hierarchy-tree
+      parameters:
+      - in: query
+        name: Arch
+        type: string
+      - description: failure domain type of region/zone/rack/host
+        enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        in: query
+        name: level
+        required: true
+        type: integer
+      - description: hierarchy depth
+        in: query
+        name: depth
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/warehouse.Node'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Show the resources hierarchy
       tags:
       - resource
   /resources/host:

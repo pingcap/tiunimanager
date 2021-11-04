@@ -4696,7 +4696,7 @@ var file_cluster_proto_rawDesc = []byte{
 	0x74, 0x75, 0x73, 0x44, 0x54, 0x4f, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x24,
 	0x0a, 0x04, 0x66, 0x6c, 0x6f, 0x77, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x46,
 	0x6c, 0x6f, 0x77, 0x57, 0x69, 0x74, 0x68, 0x54, 0x61, 0x73, 0x6b, 0x44, 0x54, 0x4f, 0x52, 0x04,
-	0x66, 0x6c, 0x6f, 0x77, 0x32, 0xc3, 0x12, 0x0a, 0x0e, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72,
+	0x66, 0x6c, 0x6f, 0x77, 0x32, 0x80, 0x13, 0x0a, 0x0e, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72,
 	0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3c, 0x0a, 0x0d, 0x43, 0x72, 0x65, 0x61, 0x74,
 	0x65, 0x43, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x12, 0x14, 0x2e, 0x43, 0x6c, 0x75, 0x73, 0x74,
 	0x65, 0x72, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x44, 0x54, 0x4f, 0x1a, 0x15,
@@ -4837,16 +4837,20 @@ var file_cluster_proto_rawDesc = []byte{
 	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x38, 0x0a, 0x0b, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x48,
 	0x6f, 0x73, 0x74, 0x12, 0x13, 0x2e, 0x52, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x48, 0x6f, 0x73,
 	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x52, 0x65, 0x73, 0x65, 0x72,
-	0x76, 0x65, 0x48, 0x6f, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32,
-	0x0a, 0x09, 0x4c, 0x69, 0x73, 0x74, 0x46, 0x6c, 0x6f, 0x77, 0x73, 0x12, 0x11, 0x2e, 0x4c, 0x69,
-	0x73, 0x74, 0x46, 0x6c, 0x6f, 0x77, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x12,
-	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x46, 0x6c, 0x6f, 0x77, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x36, 0x0a, 0x0a, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x46, 0x6c, 0x6f, 0x77,
-	0x12, 0x12, 0x2e, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x46, 0x6c, 0x6f, 0x77, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x46, 0x6c, 0x6f,
-	0x77, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x1b, 0x5a, 0x19, 0x2e, 0x2f,
-	0x2e, 0x2e, 0x2f, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2f, 0x3b, 0x63, 0x6c,
-	0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x76, 0x65, 0x48, 0x6f, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3b,
+	0x0a, 0x0c, 0x47, 0x65, 0x74, 0x48, 0x69, 0x65, 0x72, 0x61, 0x72, 0x63, 0x68, 0x79, 0x12, 0x14,
+	0x2e, 0x47, 0x65, 0x74, 0x48, 0x69, 0x65, 0x72, 0x61, 0x72, 0x63, 0x68, 0x79, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x1a, 0x15, 0x2e, 0x47, 0x65, 0x74, 0x48, 0x69, 0x65, 0x72, 0x61, 0x72,
+	0x63, 0x68, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x09, 0x4c,
+	0x69, 0x73, 0x74, 0x46, 0x6c, 0x6f, 0x77, 0x73, 0x12, 0x11, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x46,
+	0x6c, 0x6f, 0x77, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x12, 0x2e, 0x4c, 0x69,
+	0x73, 0x74, 0x46, 0x6c, 0x6f, 0x77, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x36, 0x0a, 0x0a, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x46, 0x6c, 0x6f, 0x77, 0x12, 0x12, 0x2e,
+	0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x46, 0x6c, 0x6f, 0x77, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x14, 0x2e, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x46, 0x6c, 0x6f, 0x77, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x1b, 0x5a, 0x19, 0x2e, 0x2f, 0x2e, 0x2e, 0x2f,
+	0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2f, 0x3b, 0x63, 0x6c, 0x75, 0x73, 0x74,
+	0x65, 0x72, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4947,24 +4951,26 @@ var file_cluster_proto_goTypes = []interface{}{
 	(*RecycleRequest)(nil),                 // 81: RecycleRequest
 	(*UpdateHostStatusRequest)(nil),        // 82: UpdateHostStatusRequest
 	(*ReserveHostRequest)(nil),             // 83: ReserveHostRequest
-	(*DataImportResponse)(nil),             // 84: DataImportResponse
-	(*DataExportResponse)(nil),             // 85: DataExportResponse
-	(*DataTransportQueryResponse)(nil),     // 86: DataTransportQueryResponse
-	(*LoginResponse)(nil),                  // 87: LoginResponse
-	(*LogoutResponse)(nil),                 // 88: LogoutResponse
-	(*VerifyIdentityResponse)(nil),         // 89: VerifyIdentityResponse
-	(*ImportHostResponse)(nil),             // 90: ImportHostResponse
-	(*ImportHostsInBatchResponse)(nil),     // 91: ImportHostsInBatchResponse
-	(*RemoveHostResponse)(nil),             // 92: RemoveHostResponse
-	(*RemoveHostsInBatchResponse)(nil),     // 93: RemoveHostsInBatchResponse
-	(*ListHostsResponse)(nil),              // 94: ListHostsResponse
-	(*CheckDetailsResponse)(nil),           // 95: CheckDetailsResponse
-	(*AllocHostResponse)(nil),              // 96: AllocHostResponse
-	(*GetFailureDomainResponse)(nil),       // 97: GetFailureDomainResponse
-	(*BatchAllocResponse)(nil),             // 98: BatchAllocResponse
-	(*RecycleResponse)(nil),                // 99: RecycleResponse
-	(*UpdateHostStatusResponse)(nil),       // 100: UpdateHostStatusResponse
-	(*ReserveHostResponse)(nil),            // 101: ReserveHostResponse
+	(*GetHierarchyRequest)(nil),            // 84: GetHierarchyRequest
+	(*DataImportResponse)(nil),             // 85: DataImportResponse
+	(*DataExportResponse)(nil),             // 86: DataExportResponse
+	(*DataTransportQueryResponse)(nil),     // 87: DataTransportQueryResponse
+	(*LoginResponse)(nil),                  // 88: LoginResponse
+	(*LogoutResponse)(nil),                 // 89: LogoutResponse
+	(*VerifyIdentityResponse)(nil),         // 90: VerifyIdentityResponse
+	(*ImportHostResponse)(nil),             // 91: ImportHostResponse
+	(*ImportHostsInBatchResponse)(nil),     // 92: ImportHostsInBatchResponse
+	(*RemoveHostResponse)(nil),             // 93: RemoveHostResponse
+	(*RemoveHostsInBatchResponse)(nil),     // 94: RemoveHostsInBatchResponse
+	(*ListHostsResponse)(nil),              // 95: ListHostsResponse
+	(*CheckDetailsResponse)(nil),           // 96: CheckDetailsResponse
+	(*AllocHostResponse)(nil),              // 97: AllocHostResponse
+	(*GetFailureDomainResponse)(nil),       // 98: GetFailureDomainResponse
+	(*BatchAllocResponse)(nil),             // 99: BatchAllocResponse
+	(*RecycleResponse)(nil),                // 100: RecycleResponse
+	(*UpdateHostStatusResponse)(nil),       // 101: UpdateHostStatusResponse
+	(*ReserveHostResponse)(nil),            // 102: ReserveHostResponse
+	(*GetHierarchyResponse)(nil),           // 103: GetHierarchyResponse
 }
 var file_cluster_proto_depIdxs = []int32{
 	60,  // 0: ClusterCreateReqDTO.operator:type_name -> OperatorDTO
@@ -5095,47 +5101,49 @@ var file_cluster_proto_depIdxs = []int32{
 	81,  // 125: ClusterService.RecycleResources:input_type -> RecycleRequest
 	82,  // 126: ClusterService.UpdateHostStatus:input_type -> UpdateHostStatusRequest
 	83,  // 127: ClusterService.ReserveHost:input_type -> ReserveHostRequest
-	56,  // 128: ClusterService.ListFlows:input_type -> ListFlowsRequest
-	58,  // 129: ClusterService.DetailFlow:input_type -> DetailFlowRequest
-	1,   // 130: ClusterService.CreateCluster:output_type -> ClusterCreateRespDTO
-	5,   // 131: ClusterService.QueryCluster:output_type -> ClusterQueryRespDTO
-	7,   // 132: ClusterService.DeleteCluster:output_type -> ClusterDeleteRespDTO
-	9,   // 133: ClusterService.DetailCluster:output_type -> ClusterDetailRespDTO
-	11,  // 134: ClusterService.RestartCluster:output_type -> ClusterRestartRespDTO
-	13,  // 135: ClusterService.StopCluster:output_type -> ClusterStopRespDTO
-	3,   // 136: ClusterService.TakeoverClusters:output_type -> ClusterTakeoverRespDTO
-	84,  // 137: ClusterService.ImportData:output_type -> DataImportResponse
-	85,  // 138: ClusterService.ExportData:output_type -> DataExportResponse
-	86,  // 139: ClusterService.DescribeDataTransport:output_type -> DataTransportQueryResponse
-	32,  // 140: ClusterService.QueryBackupRecord:output_type -> QueryBackupResponse
-	34,  // 141: ClusterService.CreateBackup:output_type -> CreateBackupResponse
-	36,  // 142: ClusterService.RecoverCluster:output_type -> RecoverResponse
-	39,  // 143: ClusterService.DeleteBackupRecord:output_type -> DeleteBackupResponse
-	42,  // 144: ClusterService.SaveBackupStrategy:output_type -> SaveBackupStrategyResponse
-	44,  // 145: ClusterService.GetBackupStrategy:output_type -> GetBackupStrategyResponse
-	46,  // 146: ClusterService.QueryParameters:output_type -> QueryClusterParametersResponse
-	48,  // 147: ClusterService.SaveParameters:output_type -> SaveClusterParametersResponse
-	50,  // 148: ClusterService.DescribeDashboard:output_type -> DescribeDashboardResponse
-	52,  // 149: ClusterService.DescribeMonitor:output_type -> DescribeMonitorResponse
-	87,  // 150: ClusterService.Login:output_type -> LoginResponse
-	88,  // 151: ClusterService.Logout:output_type -> LogoutResponse
-	89,  // 152: ClusterService.VerifyIdentity:output_type -> VerifyIdentityResponse
-	90,  // 153: ClusterService.ImportHost:output_type -> ImportHostResponse
-	91,  // 154: ClusterService.ImportHostsInBatch:output_type -> ImportHostsInBatchResponse
-	92,  // 155: ClusterService.RemoveHost:output_type -> RemoveHostResponse
-	93,  // 156: ClusterService.RemoveHostsInBatch:output_type -> RemoveHostsInBatchResponse
-	94,  // 157: ClusterService.ListHost:output_type -> ListHostsResponse
-	95,  // 158: ClusterService.CheckDetails:output_type -> CheckDetailsResponse
-	96,  // 159: ClusterService.AllocHosts:output_type -> AllocHostResponse
-	97,  // 160: ClusterService.GetFailureDomain:output_type -> GetFailureDomainResponse
-	98,  // 161: ClusterService.AllocResourcesInBatch:output_type -> BatchAllocResponse
-	99,  // 162: ClusterService.RecycleResources:output_type -> RecycleResponse
-	100, // 163: ClusterService.UpdateHostStatus:output_type -> UpdateHostStatusResponse
-	101, // 164: ClusterService.ReserveHost:output_type -> ReserveHostResponse
-	57,  // 165: ClusterService.ListFlows:output_type -> ListFlowsResponse
-	59,  // 166: ClusterService.DetailFlow:output_type -> DetailFlowsResponse
-	130, // [130:167] is the sub-list for method output_type
-	93,  // [93:130] is the sub-list for method input_type
+	84,  // 128: ClusterService.GetHierarchy:input_type -> GetHierarchyRequest
+	56,  // 129: ClusterService.ListFlows:input_type -> ListFlowsRequest
+	58,  // 130: ClusterService.DetailFlow:input_type -> DetailFlowRequest
+	1,   // 131: ClusterService.CreateCluster:output_type -> ClusterCreateRespDTO
+	5,   // 132: ClusterService.QueryCluster:output_type -> ClusterQueryRespDTO
+	7,   // 133: ClusterService.DeleteCluster:output_type -> ClusterDeleteRespDTO
+	9,   // 134: ClusterService.DetailCluster:output_type -> ClusterDetailRespDTO
+	11,  // 135: ClusterService.RestartCluster:output_type -> ClusterRestartRespDTO
+	13,  // 136: ClusterService.StopCluster:output_type -> ClusterStopRespDTO
+	3,   // 137: ClusterService.TakeoverClusters:output_type -> ClusterTakeoverRespDTO
+	85,  // 138: ClusterService.ImportData:output_type -> DataImportResponse
+	86,  // 139: ClusterService.ExportData:output_type -> DataExportResponse
+	87,  // 140: ClusterService.DescribeDataTransport:output_type -> DataTransportQueryResponse
+	32,  // 141: ClusterService.QueryBackupRecord:output_type -> QueryBackupResponse
+	34,  // 142: ClusterService.CreateBackup:output_type -> CreateBackupResponse
+	36,  // 143: ClusterService.RecoverCluster:output_type -> RecoverResponse
+	39,  // 144: ClusterService.DeleteBackupRecord:output_type -> DeleteBackupResponse
+	42,  // 145: ClusterService.SaveBackupStrategy:output_type -> SaveBackupStrategyResponse
+	44,  // 146: ClusterService.GetBackupStrategy:output_type -> GetBackupStrategyResponse
+	46,  // 147: ClusterService.QueryParameters:output_type -> QueryClusterParametersResponse
+	48,  // 148: ClusterService.SaveParameters:output_type -> SaveClusterParametersResponse
+	50,  // 149: ClusterService.DescribeDashboard:output_type -> DescribeDashboardResponse
+	52,  // 150: ClusterService.DescribeMonitor:output_type -> DescribeMonitorResponse
+	88,  // 151: ClusterService.Login:output_type -> LoginResponse
+	89,  // 152: ClusterService.Logout:output_type -> LogoutResponse
+	90,  // 153: ClusterService.VerifyIdentity:output_type -> VerifyIdentityResponse
+	91,  // 154: ClusterService.ImportHost:output_type -> ImportHostResponse
+	92,  // 155: ClusterService.ImportHostsInBatch:output_type -> ImportHostsInBatchResponse
+	93,  // 156: ClusterService.RemoveHost:output_type -> RemoveHostResponse
+	94,  // 157: ClusterService.RemoveHostsInBatch:output_type -> RemoveHostsInBatchResponse
+	95,  // 158: ClusterService.ListHost:output_type -> ListHostsResponse
+	96,  // 159: ClusterService.CheckDetails:output_type -> CheckDetailsResponse
+	97,  // 160: ClusterService.AllocHosts:output_type -> AllocHostResponse
+	98,  // 161: ClusterService.GetFailureDomain:output_type -> GetFailureDomainResponse
+	99,  // 162: ClusterService.AllocResourcesInBatch:output_type -> BatchAllocResponse
+	100, // 163: ClusterService.RecycleResources:output_type -> RecycleResponse
+	101, // 164: ClusterService.UpdateHostStatus:output_type -> UpdateHostStatusResponse
+	102, // 165: ClusterService.ReserveHost:output_type -> ReserveHostResponse
+	103, // 166: ClusterService.GetHierarchy:output_type -> GetHierarchyResponse
+	57,  // 167: ClusterService.ListFlows:output_type -> ListFlowsResponse
+	59,  // 168: ClusterService.DetailFlow:output_type -> DetailFlowsResponse
+	131, // [131:169] is the sub-list for method output_type
+	93,  // [93:131] is the sub-list for method input_type
 	93,  // [93:93] is the sub-list for extension type_name
 	93,  // [93:93] is the sub-list for extension extendee
 	0,   // [0:93] is the sub-list for field type_name

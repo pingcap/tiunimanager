@@ -44,6 +44,10 @@ type ClusterFakeService struct {
 	mockRecycleResources      func(ctx context.Context, in *clusterpb.RecycleRequest, opts ...micro.CallOption) (*clusterpb.RecycleResponse, error)
 }
 
+func (s *ClusterFakeService) DetailFlow(ctx context.Context, in *clusterpb.DetailFlowRequest, opts ...micro.CallOption) (*clusterpb.DetailFlowsResponse, error) {
+	panic("implement me")
+}
+
 func (s *ClusterFakeService) ListFlows(ctx context.Context, in *clusterpb.ListFlowsRequest, opts ...micro.CallOption) (*clusterpb.ListFlowsResponse, error) {
 	panic("implement me")
 }

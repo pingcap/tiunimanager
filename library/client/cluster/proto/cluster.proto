@@ -53,6 +53,7 @@ service ClusterService {
     rpc RecycleResources(RecycleRequest) returns (RecycleResponse);
     rpc UpdateHostStatus(UpdateHostStatusRequest) returns (UpdateHostStatusResponse);
 	rpc ReserveHost(ReserveHostRequest) returns (ReserveHostResponse);
+    rpc GetHierarchy(GetHierarchyRequest) returns (GetHierarchyResponse);
 
     // task manager
     rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);

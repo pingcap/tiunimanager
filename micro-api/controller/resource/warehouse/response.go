@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -32,4 +31,15 @@ type DomainResource struct {
 
 type DomainResourceRsp struct {
 	Resources []DomainResource `json:"resources"`
+}
+
+type Node struct {
+	Code     string `json:"Code"`
+	Prefix   string `json:"Prefix"`
+	Name     string `json:"Name"`
+	SubNodes []Node `json:"SubNodes"`
+}
+
+type GetHierarchyRsp struct {
+	Root Node `json:"Root"`
 }

@@ -23,6 +23,4 @@ import (
 
 var DBClient dbpb.TiEMDBService
 
-var DBClient2 dbpb.TiEMDBService
-
 var ClusterClient clusterpb.ClusterService

@@ -67,7 +67,12 @@ func DownloadExportFile(c *gin.Context) {
 		RecordId: int64(recordId),
 	}
 	framework.Log().Infof("begin find records %+v", req)
-	resp, err := client.DBClient2.FindTrasnportRecordByID(framework.NewMicroCtxFromGinCtx(c), req)
+	out, err := client.DBClient.ListTrasnportRecord(framework.NewMicroCtxFromGinCtx(c), &dbpb.DBListTransportRecordRequest{
+		RecordId: int64(recordId),
+	})
+	framework.Log().Infof("out: %+v", out)
+
+	resp, err := client.DBClient.FindTrasnportRecordByID(framework.NewMicroCtxFromGinCtx(c), req)
 	if err != nil {
 		framework.Log().Error("111111")
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", err.Error())))

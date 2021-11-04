@@ -89,6 +89,10 @@ func Detail(c *gin.Context) {
 	//operator := controller.GetOperator(c)
 	flowWorkId, err := strconv.Atoi(c.Param("flowWorkId"))
 
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		return
+	}
 	reqDTO := &clusterpb.DetailFlowRequest {
 		FlowId: int64(flowWorkId),
 	}

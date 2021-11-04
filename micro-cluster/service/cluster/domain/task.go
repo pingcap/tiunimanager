@@ -198,10 +198,12 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 }
 
 func (flow *FlowWorkAggregation) GetAllTaskDef() []string {
-	// todo how to sort task def
 	var nodeNames []string
-	for _, node := range flow.Define.TaskNodes {
+	node := flow.Define.TaskNodes["start"]
+
+	for node != nil && node.Name != "end" && node.Name != "fail" {
 		nodeNames = append(nodeNames, node.Name)
+		node = flow.Define.TaskNodes[node.SuccessEvent]
 	}
 	return nodeNames
 }

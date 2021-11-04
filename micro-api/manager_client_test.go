@@ -254,3 +254,7 @@ func (s *ClusterFakeService) StopCluster(ctx context.Context, in *clusterpb.Clus
 func (s *ClusterFakeService) TakeoverClusters(ctx context.Context, in *clusterpb.ClusterTakeoverReqDTO, opts ...micro.CallOption) (*clusterpb.ClusterTakeoverRespDTO, error) {
 	panic("implement me")
 }
+
+func (s *ClusterFakeService) GetHierarchy(ctx context.Context, in *clusterpb.GetHierarchyRequest, opts ...micro.CallOption) (*clusterpb.GetHierarchyResponse, error) {
+	panic("implement me")
+}

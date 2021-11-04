@@ -46,6 +46,7 @@ const (
 	TIEM_RESOURCE_INVAILD_RECYCLE_TYPE             = 509
 	TIEM_UPDATE_HOST_STATUS_FAIL                   = 510
 	TIEM_RESERVE_HOST_FAIL                         = 511
+	TIEM_RESOURCE_NO_STOCK                         = 512
 
 	TIEM_DASHBOARD_NOT_FOUND           = 600
 	TIEM_EXPORT_PARAM_INVALID          = 601

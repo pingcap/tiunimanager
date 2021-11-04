@@ -29,10 +29,10 @@ import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
 
 	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
 )
@@ -344,8 +344,8 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 
 		cfgYamlStr := string(bs)
 		getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
-		deployTaskId, _ := libtiup.MicroSrvTiupDeploy(
-			cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
+		deployTaskId, _ := secondparty.SecondParty.MicroSrvTiupDeploy(
+			secondparty.ClusterComponentTypeStr, cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
 		)
 		context.put("deployTaskId", deployTaskId)
 		getLogger().Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
@@ -380,7 +380,9 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 		}
 	}
 	getLogger().Infof("start cluster %s", cluster.ClusterName)
-	startTaskId, err := libtiup.MicroSrvTiupStart(cluster.ClusterName, 0, []string{}, uint64(task.Id))
+	startTaskId, err := secondparty.SecondParty.MicroSrvTiupStart(
+		secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id),
+	)
 	if err != nil {
 		getLogger().Errorf("call tiup api start cluster err = %s", err.Error())
 		task.Fail(err)
@@ -502,7 +504,7 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 	cluster := clusterAggregation.Cluster
 
 	getLogger().Infof("restart cluster %s", cluster.ClusterName)
-	restartTaskId, err := libtiup.MicroSrvTiupRestart(cluster.ClusterName, 0, []string{}, uint64(task.Id))
+	restartTaskId, err := secondparty.SecondParty.MicroSrvTiupRestart(secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call tiup api restart cluster err = %s", err.Error())
 		task.Fail(err)
@@ -514,7 +516,7 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 	go func() {
 		// get cluster restart status async
 		for {
-			stat, statErrStr, err := libtiup.MicroSrvTiupGetTaskStatus(restartTaskId)
+			stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(restartTaskId)
 			if err != nil {
 				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
 				break
@@ -565,7 +567,7 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 	cluster := clusterAggregation.Cluster
 
 	getLogger().Infof("stop cluster %s", cluster.ClusterName)
-	stopTaskId, err := libtiup.MicroSrvTiupStop(cluster.ClusterName, 0, []string{}, uint64(task.Id))
+	stopTaskId, err := secondparty.SecondParty.MicroSrvTiupStop(secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call tiup api stop cluster err = %s", err.Error())
 		task.Fail(err)
@@ -577,7 +579,7 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 	go func() {
 		// get cluster stop status async
 		for {
-			stat, statErrStr, err := libtiup.MicroSrvTiupGetTaskStatus(stopTaskId)
+			stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(stopTaskId)
 			if err != nil {
 				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
 				break

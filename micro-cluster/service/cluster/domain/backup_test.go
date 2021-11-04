@@ -23,7 +23,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	mock "github.com/pingcap-inc/tiem/test/mock"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -232,9 +232,9 @@ func Test_calculateNextBackupTime_case6(t *testing.T) {
 
 func Test_convertBrStorageType(t *testing.T) {
 	result, _ := convertBrStorageType(string(StorageTypeS3))
-	assert.Equal(t, libbr.StorageTypeS3, result)
+	assert.Equal(t, secondparty.StorageTypeS3, result)
 	result, _ = convertBrStorageType(string(StorageTypeLocal))
-	assert.Equal(t, libbr.StorageTypeLocal, result)
+	assert.Equal(t, secondparty.StorageTypeLocal, result)
 	_, err := convertBrStorageType("data")
 	assert.NotNil(t, err)
 }

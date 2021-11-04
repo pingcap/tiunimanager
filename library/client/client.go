@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -23,5 +22,7 @@ import (
 )
 
 var DBClient dbpb.TiEMDBService
+
+var DBClient2 dbpb.TiEMDBService
 
 var ClusterClient clusterpb.ClusterService

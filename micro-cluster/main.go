@@ -48,7 +48,7 @@ func main() {
 
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.MetaDBService: func(service micro.Service) error {
-			client.DBClient = dbpb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
+			client.DBClient2 = dbpb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
 			return nil
 		},
 	})

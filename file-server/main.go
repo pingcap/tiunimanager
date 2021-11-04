@@ -34,7 +34,7 @@ import (
 )
 
 func main() {
-	f := framework.InitBaseFrameworkFromArgs(framework.FileMngService,
+	f := framework.InitBaseFrameworkFromArgs(framework.FileService,
 		defaultPortForLocal,
 		initManager,
 	)

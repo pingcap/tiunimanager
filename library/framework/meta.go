@@ -29,7 +29,7 @@ const (
 	MetaDBService  ServiceNameEnum = "go.micro.tiem.db"
 	ClusterService ServiceNameEnum = "go.micro.tiem.cluster"
 	ApiService     ServiceNameEnum = "go.micro.tiem.api"
-	FileMngService ServiceNameEnum = "go.micro.tiem.filemng"
+	FileService    ServiceNameEnum = "go.micro.tiem.filemng"
 )
 
 func (s ServiceNameEnum) ServerName() string {
@@ -40,7 +40,7 @@ func (s ServiceNameEnum) ServerName() string {
 		return "cluster-server"
 	case ApiService:
 		return "openapi-server"
-	case FileMngService:
+	case FileService:
 		return "file-server"
 	default:
 		log.Error("unexpected ServiceName")

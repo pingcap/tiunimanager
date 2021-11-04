@@ -66,16 +66,19 @@ func DownloadExportFile(c *gin.Context) {
 	req := &dbpb.DBFindTransportRecordByIDRequest{
 		RecordId: int64(recordId),
 	}
+	framework.Log().Infof("begin find records %+v", req)
 	resp, err := client.DBClient.FindTrasnportRecordByID(framework.NewMicroCtxFromGinCtx(c), req)
 	if err != nil {
+		framework.Log().Error("111111")
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", err.Error())))
 		return
 	}
 	if resp.GetStatus() != dbService.ClusterSuccessResponseStatus {
+		framework.Log().Error("222222")
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", resp.GetStatus().GetMessage())))
 		return
 	}
-
+	framework.Log().Info(resp.GetRecord())
 	record := resp.GetRecord()
 	if record.GetStorageType() != common.NfsStorageType {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("storage type %s can not download", record.GetStorageType())))

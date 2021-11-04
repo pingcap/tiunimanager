@@ -846,3 +846,22 @@ func (m *DAOResourceManager) ReserveHost(ctx context.Context, request *dbpb.DBRe
 	tx.Commit()
 	return nil
 }
+
+type HostCondition struct {
+	Status *int32
+	Stat   *int32
+	Arch   *string
+}
+type DiskCondition struct {
+	Type     *string
+	Capacity *int32
+	Status   *int32
+}
+type StockCondition struct {
+	HostCondition HostCondition
+	DiskCondition DiskCondition
+}
+
+func (m *DAOResourceManager) GetStocks(ctx context.Context, stockCondion StockCondition) (err error) {
+	return nil
+}

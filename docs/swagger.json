@@ -3894,8 +3894,8 @@
                     "example": ".tiup/"
                 },
                 "tiupPort": {
-                    "type": "string",
-                    "example": "22"
+                    "type": "integer",
+                    "example": 22
                 },
                 "tiupUserName": {
                     "type": "string",

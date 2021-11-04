@@ -977,8 +977,8 @@ definitions:
         example: .tiup/
         type: string
       tiupPort:
-        example: "22"
-        type: string
+        example: 22
+        type: integer
       tiupUserName:
         example: root
         type: string

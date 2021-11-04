@@ -25,7 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
 	"os"
 	"strconv"
@@ -395,8 +395,8 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 
-	clusterFacade := libbr.ClusterFacade{
-		DbConnParameter: libbr.DbConnParam{
+	clusterFacade := secondparty.ClusterFacade{
+		DbConnParameter: secondparty.DbConnParam{
 			Username: "root", //todo: replace admin account
 			Password: "",
 			Ip:       tidbServer.Host,
@@ -408,13 +408,13 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		ClusterName: cluster.ClusterName,
 		TaskID:      uint64(task.Id),
 	}
-	storage := libbr.BrStorage{
+	storage := secondparty.BrStorage{
 		StorageType: storageType,
 		Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
 
 	getLoggerWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
-	backupTaskId, err := libbr.BackUp(clusterFacade, storage, uint64(task.Id))
+	backupTaskId, err := secondparty.SecondParty.MicroSrvBackUp(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		return false
@@ -454,7 +454,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			break
 		}
 	}
-	var backupInfo libbr.CmdBrResp
+	var backupInfo secondparty.CmdBrResp
 	err = json.Unmarshal([]byte(resp.GetTiupTask().GetErrorStr()), &backupInfo)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("json unmarshal backup info resp: %+v, failed, %s", resp, err.Error())
@@ -534,8 +534,8 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 
-	clusterFacade := libbr.ClusterFacade{
-		DbConnParameter: libbr.DbConnParam{
+	clusterFacade := secondparty.ClusterFacade{
+		DbConnParameter: secondparty.DbConnParam{
 			Username: "root", //todo: replace admin account
 			Password: "",
 			Ip:       tidbServer.Host,
@@ -546,12 +546,12 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		ClusterId:   cluster.Id,
 		ClusterName: cluster.ClusterName,
 	}
-	storage := libbr.BrStorage{
+	storage := secondparty.BrStorage{
 		StorageType: storageType,
 		Root:        fmt.Sprintf("%s/%s", record.GetBackupRecords().GetBackupRecord().GetFilePath(), "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
 	getLoggerWithContext(ctx).Infof("begin call brmgr restore api, clusterFacade %v, storage %v", clusterFacade, storage)
-	_, err = libbr.Restore(clusterFacade, storage, uint64(task.Id))
+	_, err = secondparty.SecondParty.MicroSrvRestore(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call restore api failed, %s", err.Error())
 		return false
@@ -559,11 +559,11 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	return true
 }
 
-func convertBrStorageType(storageType string) (libbr.StorageType, error) {
+func convertBrStorageType(storageType string) (secondparty.StorageType, error) {
 	if string(StorageTypeS3) == storageType {
-		return libbr.StorageTypeS3, nil
+		return secondparty.StorageTypeS3, nil
 	} else if string(StorageTypeLocal) == storageType {
-		return libbr.StorageTypeLocal, nil
+		return secondparty.StorageTypeLocal, nil
 	} else {
 		return "", fmt.Errorf("invalid storage type, %s", storageType)
 	}

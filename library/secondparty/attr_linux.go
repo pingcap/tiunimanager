@@ -1,3 +1,4 @@
+// +build linux
 
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
@@ -15,16 +16,12 @@
  *                                                                            *
  ******************************************************************************/
 
-package main
+package secondparty
 
-import (
-	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
-)
+import "syscall"
 
-func init() {
-	libtiup.TiupMgrInit()
-}
-
-func main() {
-	libtiup.TiupMgrRoutine()
+func genSysProcAttr() *syscall.SysProcAttr {
+	return &syscall.SysProcAttr{
+		Pdeathsig: syscall.SIGTERM,
+	}
 }

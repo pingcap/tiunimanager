@@ -189,8 +189,6 @@ func convertTaskToDTO(do *models.TaskDO) (dto *dbpb.DBTaskDTO) {
 
 	dto.BizId = do.BizId
 	dto.Status = int32(do.Status)
-	dto.StartTime = do.CreatedAt.Unix()
-	dto.EndTime = do.UpdatedAt.Unix()
 
 	dto.ParentId = do.ParentId
 	dto.ParentType = int32(do.ParentType)

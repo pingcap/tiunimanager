@@ -122,6 +122,8 @@ func init() {
 		newRestartCmd(),
 		newUpgradeCmd(),
 		newDestroyCmd(),
+		newPullCmd(),
+		newPushCmd(),
 	)
 }
 

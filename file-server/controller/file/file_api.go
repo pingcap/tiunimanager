@@ -74,12 +74,10 @@ func DownloadExportFile(c *gin.Context) {
 
 	resp, err := client.DBClient.FindTrasnportRecordByID(framework.NewMicroCtxFromGinCtx(c), req)
 	if err != nil {
-		framework.Log().Error("111111")
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", err.Error())))
 		return
 	}
-	if resp.GetStatus() != dbService.ClusterSuccessResponseStatus {
-		framework.Log().Error("222222")
+	if resp.GetStatus() != dbService.ClusterSuccessResponseStatus || resp.GetRecord() == nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", resp.GetStatus().GetMessage())))
 		return
 	}

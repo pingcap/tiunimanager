@@ -39,15 +39,15 @@ func main() {
 		initManager,
 	)
 
-	f.PrepareService(func(service micro.Service) error {
-		return initGinEngine(f)
-	})
-
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.MetaDBService: func(service micro.Service) error {
 			client.DBClient = dbpb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
 			return nil
 		},
+	})
+
+	f.PrepareService(func(service micro.Service) error {
+		return initGinEngine(f)
 	})
 
 	//f.StartService()

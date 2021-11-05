@@ -5,7 +5,7 @@ package clusterpb
 
 import (
 	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
+	proto "google.golang.org/protobuf/proto"
 	math "math"
 )
 
@@ -20,12 +20,6 @@ import (
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-
-// This is a compile-time assertion to ensure that this generated file
-// is compatible with the proto package it is being compiled against.
-// A compilation error at this line likely means your copy of the
-// proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ api.Endpoint
@@ -81,6 +75,7 @@ type ClusterService interface {
 	UpdateHostStatus(ctx context.Context, in *UpdateHostStatusRequest, opts ...client.CallOption) (*UpdateHostStatusResponse, error)
 	ReserveHost(ctx context.Context, in *ReserveHostRequest, opts ...client.CallOption) (*ReserveHostResponse, error)
 	GetHierarchy(ctx context.Context, in *GetHierarchyRequest, opts ...client.CallOption) (*GetHierarchyResponse, error)
+	GetStocks(ctx context.Context, in *GetStocksRequest, opts ...client.CallOption) (*GetStocksResponse, error)
 	// task manager
 	ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...client.CallOption) (*ListFlowsResponse, error)
 }
@@ -457,6 +452,16 @@ func (c *clusterService) GetHierarchy(ctx context.Context, in *GetHierarchyReque
 	return out, nil
 }
 
+func (c *clusterService) GetStocks(ctx context.Context, in *GetStocksRequest, opts ...client.CallOption) (*GetStocksResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.GetStocks", in)
+	out := new(GetStocksResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterService) ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...client.CallOption) (*ListFlowsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterService.ListFlows", in)
 	out := new(ListFlowsResponse)
@@ -509,6 +514,7 @@ type ClusterServiceHandler interface {
 	UpdateHostStatus(context.Context, *UpdateHostStatusRequest, *UpdateHostStatusResponse) error
 	ReserveHost(context.Context, *ReserveHostRequest, *ReserveHostResponse) error
 	GetHierarchy(context.Context, *GetHierarchyRequest, *GetHierarchyResponse) error
+	GetStocks(context.Context, *GetStocksRequest, *GetStocksResponse) error
 	// task manager
 	ListFlows(context.Context, *ListFlowsRequest, *ListFlowsResponse) error
 }
@@ -551,6 +557,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		UpdateHostStatus(ctx context.Context, in *UpdateHostStatusRequest, out *UpdateHostStatusResponse) error
 		ReserveHost(ctx context.Context, in *ReserveHostRequest, out *ReserveHostResponse) error
 		GetHierarchy(ctx context.Context, in *GetHierarchyRequest, out *GetHierarchyResponse) error
+		GetStocks(ctx context.Context, in *GetStocksRequest, out *GetStocksResponse) error
 		ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error
 	}
 	type ClusterService struct {
@@ -706,6 +713,10 @@ func (h *clusterServiceHandler) ReserveHost(ctx context.Context, in *ReserveHost
 
 func (h *clusterServiceHandler) GetHierarchy(ctx context.Context, in *GetHierarchyRequest, out *GetHierarchyResponse) error {
 	return h.ClusterServiceHandler.GetHierarchy(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) GetStocks(ctx context.Context, in *GetStocksRequest, out *GetStocksResponse) error {
+	return h.ClusterServiceHandler.GetStocks(ctx, in, out)
 }
 
 func (h *clusterServiceHandler) ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error {

@@ -35,6 +35,7 @@ service TiEMDBService {
 	rpc UpdateHostStatus(DBUpdateHostStatusRequest) returns (DBUpdateHostStatusResponse);
 	rpc ReserveHost(DBReserveHostRequest) returns (DBReserveHostResponse);
 	rpc GetHierarchy(DBGetHierarchyRequest) returns (DBGetHierarchyResponse);
+	rpc GetStocks(DBGetStocksRequest) returns (DBGetStocksResponse);
 
 	// Cluster
 	rpc CreateCluster(DBCreateClusterRequest) returns (DBCreateClusterResponse);

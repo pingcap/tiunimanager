@@ -914,43 +914,43 @@ type Stock struct {
 	FreeDiskCapacity int
 }
 
-func (m *DAOResourceManager) GetStocks(ctx context.Context, stockCondion StockCondition) (stocks []Stock, err error) {
+func (m *DAOResourceManager) GetStocks(ctx context.Context, stockCondition StockCondition) (stocks []Stock, err error) {
 	tx := m.getDb(ctx).Begin()
 	db := tx.Model(&rt.Host{}).Select(
 		"sum(hosts.free_cpu_cores) as free_cpu_cores, sum(hosts.free_memory) as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
 		"left join disks on disks.host_id = hosts.id")
-	if stockCondion.DiskCondition.Status != nil {
-		db = db.Where("disks.status = ?", stockCondion.DiskCondition.Status)
+	if stockCondition.DiskCondition.Status != nil {
+		db = db.Where("disks.status = ?", stockCondition.DiskCondition.Status)
 	}
-	if stockCondion.DiskCondition.Type != nil {
-		db = db.Where("disks.type = ?", stockCondion.DiskCondition.Type)
+	if stockCondition.DiskCondition.Type != nil {
+		db = db.Where("disks.type = ?", stockCondition.DiskCondition.Type)
 	}
-	if stockCondion.DiskCondition.Capacity != nil {
-		db = db.Where("disks.capacity >= ?", stockCondion.DiskCondition.Capacity)
+	if stockCondition.DiskCondition.Capacity != nil {
+		db = db.Where("disks.capacity >= ?", stockCondition.DiskCondition.Capacity)
 	}
 	db = db.Group("hosts.id")
 	// Filter by Location
-	if stockCondion.Location.Host != "" {
-		db = db.Having("hosts.ip = ?", stockCondion.Location.Host)
+	if stockCondition.Location.Host != "" {
+		db = db.Having("hosts.ip = ?", stockCondition.Location.Host)
 	}
-	if stockCondion.Location.Rack != "" {
-		db = db.Having("hosts.rack = ?", stockCondion.Location.Rack)
+	if stockCondition.Location.Rack != "" {
+		db = db.Having("hosts.rack = ?", stockCondition.Location.Rack)
 	}
-	if stockCondion.Location.Zone != "" {
-		db = db.Having("hosts.az = ?", stockCondion.Location.Zone)
+	if stockCondition.Location.Zone != "" {
+		db = db.Having("hosts.az = ?", stockCondition.Location.Zone)
 	}
-	if stockCondion.Location.Region != "" {
-		db = db.Having("hosts.region = ?", stockCondion.Location.Region)
+	if stockCondition.Location.Region != "" {
+		db = db.Having("hosts.region = ?", stockCondition.Location.Region)
 	}
 	// Filter by host fields
-	if stockCondion.HostCondition.Arch != nil {
-		db = db.Having("hosts.arch = ?", stockCondion.HostCondition.Arch)
+	if stockCondition.HostCondition.Arch != nil {
+		db = db.Having("hosts.arch = ?", stockCondition.HostCondition.Arch)
 	}
-	if stockCondion.HostCondition.Status != nil {
-		db = db.Having("hosts.status = ?", stockCondion.HostCondition.Status)
+	if stockCondition.HostCondition.Status != nil {
+		db = db.Having("hosts.status = ?", stockCondition.HostCondition.Status)
 	}
-	if stockCondion.HostCondition.Stat != nil {
-		db = db.Having("hosts.stat = ?", stockCondion.HostCondition.Stat)
+	if stockCondition.HostCondition.Stat != nil {
+		db = db.Having("hosts.stat = ?", stockCondition.HostCondition.Stat)
 	}
 
 	err = db.Scan(&stocks).Error

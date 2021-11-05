@@ -601,3 +601,53 @@ func (m *ResourceManager) GetHierarchy(ctx context.Context, in *clusterpb.GetHie
 	copyHierarchyFromRsp(rsp.Root, &out.Root)
 	return nil
 }
+
+func (m *ResourceManager) copyStockFilter(src *clusterpb.GetStocksRequest, dst *dbpb.DBGetStocksRequest) {
+	if src.Location != nil {
+		dst.Location = new(dbpb.DBStockLocation)
+		dst.Location.Region = src.Location.Region
+		dst.Location.Zone = src.Location.Zone
+		dst.Location.Rack = src.Location.Rack
+		dst.Location.Host = src.Location.Host
+	}
+	if src.HostFilter != nil {
+		dst.HostFilter = new(dbpb.DBStockHostFilter)
+		dst.HostFilter.Status = src.HostFilter.Status
+		dst.HostFilter.Stat = src.HostFilter.Stat
+		dst.HostFilter.Arch = src.HostFilter.Arch
+	}
+	if src.DiskFilter != nil {
+		dst.DiskFilter = new(dbpb.DBStockDiskFilter)
+		dst.DiskFilter.Status = src.DiskFilter.Status
+		dst.DiskFilter.Capacity = src.DiskFilter.Capacity
+		dst.DiskFilter.Type = src.DiskFilter.Type
+	}
+}
+
+func (m *ResourceManager) copyStockResult(src *dbpb.DBStocks, dst *clusterpb.Stocks) {
+	dst.FreeHostCount = src.FreeHostCount
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
+	dst.FreeDiskCount = src.FreeDiskCount
+	dst.FreeDiskCapacity = src.FreeDiskCapacity
+}
+
+func (m *ResourceManager) GetStocks(ctx context.Context, in *clusterpb.GetStocksRequest, out *clusterpb.GetStocksResponse) error {
+	var req dbpb.DBGetStocksRequest
+	m.copyStockFilter(in, &req)
+	rsp, err := client.DBClient.GetStocks(ctx, &req)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get stocks on location %v, host filter [%v], disk filter [%v] error, %v", req.Location, req.HostFilter, req.DiskFilter, err)
+		return err
+	}
+	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs.Code = rsp.Rs.Code
+	out.Rs.Message = rsp.Rs.Message
+	if rsp.Rs.Code != int32(codes.OK) {
+		framework.LogWithContext(ctx).Warnf("get stocks on location %v, host filter [%v], disk filter [%v], failed from db service: %d, %s", req.Location, req.HostFilter, req.DiskFilter, rsp.Rs.Code, rsp.Rs.Message)
+		return nil
+	}
+	out.Stocks = new(clusterpb.Stocks)
+	m.copyStockResult(rsp.Stocks, out.Stocks)
+	return nil
+}

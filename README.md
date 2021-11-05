@@ -23,18 +23,18 @@ make test
 ### Run Service
 If you want to run the service locally, try the following commands, good luck!!
 
-start micro-metadb
+start metadb-server
 
 ```shell
 $ ./bin/metadb-server --host=127.0.0.1 --registry-address=127.0.0.1:4101
 ```
 
-start micro-cluster
+start cluster-server
 ```shell
 $ ./bin/cluster-server --host=127.0.0.1 --metrics-port=4122 --registry-address=127.0.0.1:4101
 ```
 
-start micro-api
+start openapi-server
 ```shell
 $ ./bin/openapi-server --host=127.0.0.1 --metrics-port=4123 --registry-address=127.0.0.1:4101 --elasticsearch-address=127.0.0.1:9200
 ```

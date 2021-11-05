@@ -18,6 +18,7 @@ package management
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
@@ -46,7 +47,7 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters [post]
+// @Router /clusters/ [post]
 func Create(c *gin.Context) {
 	var req CreateReq
 
@@ -101,7 +102,7 @@ func Create(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters [get]
+// @Router /clusters/ [get]
 func Query(c *gin.Context) {
 
 	var queryReq QueryReq
@@ -350,7 +351,7 @@ func Takeover(c *gin.Context) {
 	reqDTO := &clusterpb.ClusterTakeoverReqDTO{
 		Operator:         operator.ConvertToDTO(),
 		TiupIp:           req.TiupIp,
-		Port:             req.TiupPort,
+		Port:             strconv.Itoa(req.TiupPort),
 		TiupUserName:     req.TiupUserName,
 		TiupUserPassword: req.TiupUserPassword,
 		TiupPath:         req.TiupPath,

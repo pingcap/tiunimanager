@@ -31,7 +31,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	"github.com/pingcap-inc/tiem/library/secondparty/libtiup"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 )
 
 type ImportInfo struct {
@@ -216,13 +216,13 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (int6
 
 	operator := parseOperatorFromDTO(request.GetOperator())
 	getLoggerWithContext(ctx).Info(operator)
-	clusterAggregation, err := ClusterRepo.Load(request.GetClusterId())
+	clusterAggregation, err := ClusterRepo.Load(ctx, request.GetClusterId())
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("load cluster %s aggregation from metadb failed", request.GetClusterId())
 		return 0, err
 	}
 
-	flow, err := CreateFlowWork(request.GetClusterId(), FlowExportData, operator)
+	flow, err := CreateFlowWork(ctx, request.GetClusterId(), FlowExportData, operator)
 	if err != nil {
 		return 0, err
 	}
@@ -271,7 +271,7 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (int6
 	flow.Start()
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
-	err = ClusterRepo.Persist(clusterAggregation)
+	err = ClusterRepo.Persist(ctx, clusterAggregation)
 	if err != nil {
 		return 0, err
 	}
@@ -285,13 +285,13 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 	operator := parseOperatorFromDTO(request.GetOperator())
 	getLoggerWithContext(ctx).Info(operator)
 
-	clusterAggregation, err := ClusterRepo.Load(request.GetClusterId())
+	clusterAggregation, err := ClusterRepo.Load(ctx, request.GetClusterId())
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("load cluster %s aggregation from metadb failed", request.GetClusterId())
 		return 0, err
 	}
 
-	flow, err := CreateFlowWork(request.GetClusterId(), FlowImportData, operator)
+	flow, err := CreateFlowWork(ctx, request.GetClusterId(), FlowImportData, operator)
 	if err != nil {
 		return 0, err
 	}
@@ -343,7 +343,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 	flow.Start()
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
-	err = ClusterRepo.Persist(clusterAggregation)
+	err = ClusterRepo.Persist(ctx, clusterAggregation)
 	if err != nil {
 		return 0, err
 	}
@@ -465,12 +465,12 @@ func cleanDataTransportDir(ctx context.Context, filepath string) error {
 }
 
 func buildDataImportConfig(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin buildDataImportConfig")
 	defer getLoggerWithContext(ctx).Info("end buildDataImportConfig")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
-	info := flowContext.value(contextDataTransportKey).(*ImportInfo)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
+	info := flowContext.GetData(contextDataTransportKey).(*ImportInfo)
 
 	config := convertTomlConfig(clusterAggregation, info)
 	if config == nil {
@@ -498,14 +498,14 @@ func buildDataImportConfig(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func importDataToCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin importDataToCluster")
 	defer getLoggerWithContext(ctx).Info("end importDataToCluster")
 
-	info := flowContext.value(contextDataTransportKey).(*ImportInfo)
+	info := flowContext.GetData(contextDataTransportKey).(*ImportInfo)
 
 	//tiup tidb-lightning -config tidb-lightning.toml
-	importTaskId, err := libtiup.MicroSrvTiupLightning(0,
+	importTaskId, err := secondparty.SecondParty.MicroSrvLightning(0,
 		[]string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)},
 		uint64(task.Id))
 	if err != nil {
@@ -516,7 +516,7 @@ func importDataToCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	getLoggerWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, importTaskId %d", importTaskId)
 
 	for {
-		stat, statErrStr, err := libtiup.MicroSrvTiupGetTaskStatus(importTaskId)
+		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(importTaskId)
 		if err != nil {
 			getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
 			task.Fail(fmt.Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error()))
@@ -536,12 +536,12 @@ func importDataToCluster(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin updateDataImportRecord")
 	defer getLoggerWithContext(ctx).Info("end updateDataImportRecord")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
-	info := flowContext.value(contextDataTransportKey).(*ImportInfo)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
+	info := flowContext.GetData(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
 
 	req := &dbpb.DBUpdateTransportRecordRequest{
@@ -551,7 +551,7 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
+	resp, err := client.DBClient.UpdateTransportRecord(flowContext, req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		task.Fail(fmt.Errorf("update data transport record failed, %s", err.Error()))
@@ -568,12 +568,12 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin exportDataFromCluster")
 	defer getLoggerWithContext(ctx).Info("end exportDataFromCluster")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
-	info := flowContext.value(contextDataTransportKey).(*ExportInfo)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
+	info := flowContext.GetData(contextDataTransportKey).(*ExportInfo)
 	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
 	tidbServerPort := tidbServer.Port
@@ -610,7 +610,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		cmd = append(cmd, "--s3.region", fmt.Sprintf("\"%s\"", info.BucketRegion))
 	}
 	getLoggerWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v", cmd)
-	exportTaskId, err := libtiup.MicroSrvTiupDumpling(0, cmd, uint64(task.Id))
+	exportTaskId, err := secondparty.SecondParty.MicroSrvDumpling(0, cmd, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call tiup dumpling api failed, %s", err.Error())
 		task.Fail(fmt.Errorf("call tiup dumpling api failed, %s", err.Error()))
@@ -620,7 +620,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	getLoggerWithContext(ctx).Infof("call tiupmgr succee, exportTaskId: %d", exportTaskId)
 
 	for {
-		stat, statErrStr, err := libtiup.MicroSrvTiupGetTaskStatus(exportTaskId)
+		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(exportTaskId)
 		if err != nil {
 			getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
 			task.Fail(fmt.Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error()))
@@ -640,12 +640,12 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin updateDataExportRecord")
 	defer getLoggerWithContext(ctx).Info("end updateDataExportRecord")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
-	info := flowContext.value(contextDataTransportKey).(*ExportInfo)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
+	info := flowContext.GetData(contextDataTransportKey).(*ExportInfo)
 	cluster := clusterAggregation.Cluster
 
 	req := &dbpb.DBUpdateTransportRecordRequest{
@@ -655,7 +655,7 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
+	resp, err := client.DBClient.UpdateTransportRecord(flowContext, req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		task.Fail(fmt.Errorf("update data transport record failed, %s", err.Error()))
@@ -672,12 +672,12 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func importDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin importDataFailed")
 	defer getLoggerWithContext(ctx).Info("end importDataFailed")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
-	info := flowContext.value(contextDataTransportKey).(*ImportInfo)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
+	info := flowContext.GetData(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
 
 	if err := updateTransportRecordFailed(ctx, info.RecordId, cluster.Id); err != nil {
@@ -689,12 +689,12 @@ func importDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func exportDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin exportDataFailed")
 	defer getLoggerWithContext(ctx).Info("end exportDataFailed")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
-	info := flowContext.value(contextDataTransportKey).(*ExportInfo)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
+	info := flowContext.GetData(contextDataTransportKey).(*ExportInfo)
 	cluster := clusterAggregation.Cluster
 
 	if err := updateTransportRecordFailed(ctx, info.RecordId, cluster.Id); err != nil {
@@ -713,7 +713,7 @@ func updateTransportRecordFailed(ctx context.Context, recordId int64, clusterId 
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
+	resp, err := client.DBClient.UpdateTransportRecord(ctx, req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return err

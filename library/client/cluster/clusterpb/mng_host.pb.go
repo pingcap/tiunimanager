@@ -1715,6 +1715,258 @@ func (x *GetFailureDomainResponse) GetFdList() []*FailureDomainResource {
 	return nil
 }
 
+type HostFilter struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Arch     string `protobuf:"bytes,1,opt,name=arch,proto3" json:"arch,omitempty"`
+	Purpose  string `protobuf:"bytes,2,opt,name=purpose,proto3" json:"purpose,omitempty"`
+	DiskType string `protobuf:"bytes,3,opt,name=diskType,proto3" json:"diskType,omitempty"`
+}
+
+func (x *HostFilter) Reset() {
+	*x = HostFilter{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_mng_host_proto_msgTypes[26]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *HostFilter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HostFilter) ProtoMessage() {}
+
+func (x *HostFilter) ProtoReflect() protoreflect.Message {
+	mi := &file_mng_host_proto_msgTypes[26]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HostFilter.ProtoReflect.Descriptor instead.
+func (*HostFilter) Descriptor() ([]byte, []int) {
+	return file_mng_host_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *HostFilter) GetArch() string {
+	if x != nil {
+		return x.Arch
+	}
+	return ""
+}
+
+func (x *HostFilter) GetPurpose() string {
+	if x != nil {
+		return x.Purpose
+	}
+	return ""
+}
+
+func (x *HostFilter) GetDiskType() string {
+	if x != nil {
+		return x.DiskType
+	}
+	return ""
+}
+
+type GetHierarchyRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Filter *HostFilter `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
+	Level  int32       `protobuf:"varint,2,opt,name=level,proto3" json:"level,omitempty"`
+	Depth  int32       `protobuf:"varint,3,opt,name=depth,proto3" json:"depth,omitempty"`
+}
+
+func (x *GetHierarchyRequest) Reset() {
+	*x = GetHierarchyRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_mng_host_proto_msgTypes[27]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetHierarchyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetHierarchyRequest) ProtoMessage() {}
+
+func (x *GetHierarchyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_mng_host_proto_msgTypes[27]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetHierarchyRequest.ProtoReflect.Descriptor instead.
+func (*GetHierarchyRequest) Descriptor() ([]byte, []int) {
+	return file_mng_host_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *GetHierarchyRequest) GetFilter() *HostFilter {
+	if x != nil {
+		return x.Filter
+	}
+	return nil
+}
+
+func (x *GetHierarchyRequest) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *GetHierarchyRequest) GetDepth() int32 {
+	if x != nil {
+		return x.Depth
+	}
+	return 0
+}
+
+type Node struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Code     string  `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	Prefix   string  `protobuf:"bytes,2,opt,name=prefix,proto3" json:"prefix,omitempty"`
+	Name     string  `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	SubNodes []*Node `protobuf:"bytes,4,rep,name=subNodes,proto3" json:"subNodes,omitempty"`
+}
+
+func (x *Node) Reset() {
+	*x = Node{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_mng_host_proto_msgTypes[28]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Node) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Node) ProtoMessage() {}
+
+func (x *Node) ProtoReflect() protoreflect.Message {
+	mi := &file_mng_host_proto_msgTypes[28]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Node.ProtoReflect.Descriptor instead.
+func (*Node) Descriptor() ([]byte, []int) {
+	return file_mng_host_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *Node) GetCode() string {
+	if x != nil {
+		return x.Code
+	}
+	return ""
+}
+
+func (x *Node) GetPrefix() string {
+	if x != nil {
+		return x.Prefix
+	}
+	return ""
+}
+
+func (x *Node) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Node) GetSubNodes() []*Node {
+	if x != nil {
+		return x.SubNodes
+	}
+	return nil
+}
+
+type GetHierarchyResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Rs   *ResponseStatus `protobuf:"bytes,1,opt,name=rs,proto3" json:"rs,omitempty"`
+	Root *Node           `protobuf:"bytes,2,opt,name=root,proto3" json:"root,omitempty"`
+}
+
+func (x *GetHierarchyResponse) Reset() {
+	*x = GetHierarchyResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_mng_host_proto_msgTypes[29]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetHierarchyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetHierarchyResponse) ProtoMessage() {}
+
+func (x *GetHierarchyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_mng_host_proto_msgTypes[29]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetHierarchyResponse.ProtoReflect.Descriptor instead.
+func (*GetHierarchyResponse) Descriptor() ([]byte, []int) {
+	return file_mng_host_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *GetHierarchyResponse) GetRs() *ResponseStatus {
+	if x != nil {
+		return x.Rs
+	}
+	return nil
+}
+
+func (x *GetHierarchyResponse) GetRoot() *Node {
+	if x != nil {
+		return x.Root
+	}
+	return nil
+}
+
 var File_mng_host_proto protoreflect.FileDescriptor
 
 var file_mng_host_proto_rawDesc = []byte{
@@ -1905,9 +2157,33 @@ var file_mng_host_proto_rawDesc = []byte{
 	0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x02, 0x72, 0x73, 0x12, 0x2e, 0x0a, 0x06, 0x66,
 	0x64, 0x4c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x46, 0x61,
 	0x69, 0x6c, 0x75, 0x72, 0x65, 0x44, 0x6f, 0x6d, 0x61, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x6f, 0x75,
-	0x72, 0x63, 0x65, 0x52, 0x06, 0x66, 0x64, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x1b, 0x5a, 0x19, 0x2e,
-	0x2f, 0x2e, 0x2e, 0x2f, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2f, 0x3b, 0x63,
-	0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x63, 0x65, 0x52, 0x06, 0x66, 0x64, 0x4c, 0x69, 0x73, 0x74, 0x22, 0x56, 0x0a, 0x0a, 0x48,
+	0x6f, 0x73, 0x74, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x61, 0x72, 0x63,
+	0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x61, 0x72, 0x63, 0x68, 0x12, 0x18, 0x0a,
+	0x07, 0x70, 0x75, 0x72, 0x70, 0x6f, 0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
+	0x70, 0x75, 0x72, 0x70, 0x6f, 0x73, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x64, 0x69, 0x73, 0x6b, 0x54,
+	0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x64, 0x69, 0x73, 0x6b, 0x54,
+	0x79, 0x70, 0x65, 0x22, 0x66, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x48, 0x69, 0x65, 0x72, 0x61, 0x72,
+	0x63, 0x68, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x23, 0x0a, 0x06, 0x66, 0x69,
+	0x6c, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x48, 0x6f, 0x73,
+	0x74, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x12,
+	0x14, 0x0a, 0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05,
+	0x6c, 0x65, 0x76, 0x65, 0x6c, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x70, 0x74, 0x68, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x64, 0x65, 0x70, 0x74, 0x68, 0x22, 0x69, 0x0a, 0x04, 0x4e,
+	0x6f, 0x64, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x70, 0x72, 0x65, 0x66, 0x69,
+	0x78, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x70, 0x72, 0x65, 0x66, 0x69, 0x78, 0x12,
+	0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e,
+	0x61, 0x6d, 0x65, 0x12, 0x21, 0x0a, 0x08, 0x73, 0x75, 0x62, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x18,
+	0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x05, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x08, 0x73, 0x75,
+	0x62, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x22, 0x52, 0x0a, 0x14, 0x47, 0x65, 0x74, 0x48, 0x69, 0x65,
+	0x72, 0x61, 0x72, 0x63, 0x68, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1f,
+	0x0a, 0x02, 0x72, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x02, 0x72, 0x73, 0x12,
+	0x19, 0x0a, 0x04, 0x72, 0x6f, 0x6f, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x05, 0x2e,
+	0x4e, 0x6f, 0x64, 0x65, 0x52, 0x04, 0x72, 0x6f, 0x6f, 0x74, 0x42, 0x1b, 0x5a, 0x19, 0x2e, 0x2f,
+	0x2e, 0x2e, 0x2f, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2f, 0x3b, 0x63, 0x6c,
+	0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1922,7 +2198,7 @@ func file_mng_host_proto_rawDescGZIP() []byte {
 	return file_mng_host_proto_rawDescData
 }
 
-var file_mng_host_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_mng_host_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_mng_host_proto_goTypes = []interface{}{
 	(*ResponseStatus)(nil),             // 0: ResponseStatus
 	(*Disk)(nil),                       // 1: Disk
@@ -1950,7 +2226,11 @@ var file_mng_host_proto_goTypes = []interface{}{
 	(*AllocHostResponse)(nil),          // 23: AllocHostResponse
 	(*GetFailureDomainRequest)(nil),    // 24: GetFailureDomainRequest
 	(*GetFailureDomainResponse)(nil),   // 25: GetFailureDomainResponse
-	(*PageDTO)(nil),                    // 26: PageDTO
+	(*HostFilter)(nil),                 // 26: HostFilter
+	(*GetHierarchyRequest)(nil),        // 27: GetHierarchyRequest
+	(*Node)(nil),                       // 28: Node
+	(*GetHierarchyResponse)(nil),       // 29: GetHierarchyResponse
+	(*PageDTO)(nil),                    // 30: PageDTO
 }
 var file_mng_host_proto_depIdxs = []int32{
 	1,  // 0: HostInfo.disks:type_name -> Disk
@@ -1963,10 +2243,10 @@ var file_mng_host_proto_depIdxs = []int32{
 	0,  // 7: RemoveHostsInBatchResponse.rs:type_name -> ResponseStatus
 	0,  // 8: UpdateHostStatusResponse.rs:type_name -> ResponseStatus
 	0,  // 9: ReserveHostResponse.rs:type_name -> ResponseStatus
-	26, // 10: ListHostsRequest.pageReq:type_name -> PageDTO
+	30, // 10: ListHostsRequest.pageReq:type_name -> PageDTO
 	0,  // 11: ListHostsResponse.rs:type_name -> ResponseStatus
 	2,  // 12: ListHostsResponse.hostList:type_name -> HostInfo
-	26, // 13: ListHostsResponse.pageReq:type_name -> PageDTO
+	30, // 13: ListHostsResponse.pageReq:type_name -> PageDTO
 	0,  // 14: CheckDetailsResponse.rs:type_name -> ResponseStatus
 	2,  // 15: CheckDetailsResponse.details:type_name -> HostInfo
 	3,  // 16: AllocHostsRequest.pdReq:type_name -> AllocationReq
@@ -1978,11 +2258,15 @@ var file_mng_host_proto_depIdxs = []int32{
 	4,  // 22: AllocHostResponse.tikvHosts:type_name -> AllocHost
 	0,  // 23: GetFailureDomainResponse.rs:type_name -> ResponseStatus
 	5,  // 24: GetFailureDomainResponse.fdList:type_name -> FailureDomainResource
-	25, // [25:25] is the sub-list for method output_type
-	25, // [25:25] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	26, // 25: GetHierarchyRequest.filter:type_name -> HostFilter
+	28, // 26: Node.subNodes:type_name -> Node
+	0,  // 27: GetHierarchyResponse.rs:type_name -> ResponseStatus
+	28, // 28: GetHierarchyResponse.root:type_name -> Node
+	29, // [29:29] is the sub-list for method output_type
+	29, // [29:29] is the sub-list for method input_type
+	29, // [29:29] is the sub-list for extension type_name
+	29, // [29:29] is the sub-list for extension extendee
+	0,  // [0:29] is the sub-list for field type_name
 }
 
 func init() { file_mng_host_proto_init() }
@@ -2304,6 +2588,54 @@ func file_mng_host_proto_init() {
 				return nil
 			}
 		}
+		file_mng_host_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*HostFilter); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_mng_host_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetHierarchyRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_mng_host_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Node); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_mng_host_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetHierarchyResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2311,7 +2643,7 @@ func file_mng_host_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_mng_host_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   26,
+			NumMessages:   30,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -167,3 +167,26 @@ message GetFailureDomainResponse {
     repeated FailureDomainResource fdList = 2;
 }
 
+message HostFilter {
+	string arch = 1;
+	string purpose  = 2;
+	string diskType = 3;
+}
+
+message GetHierarchyRequest {
+    HostFilter filter = 1;
+    int32 level = 2;
+    int32 depth = 3;
+}
+
+message Node {
+    string code = 1;
+    string prefix = 2;
+    string name = 3;
+    repeated Node subNodes = 4;
+}
+
+message GetHierarchyResponse {
+    ResponseStatus rs = 1;
+    Node root = 2;
+}

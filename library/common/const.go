@@ -40,11 +40,9 @@ const (
 )
 
 const (
-	LogFileSystem  = "system"
-	LogFileTiupMgr = "tiupmgr"
-	LogFileBrMgr   = "tiupmgr"
-	LogFileLibTiup = "libtiup"
-	LogFileLibBr   = "tiupmgr"
+	LogFileSystem      = "system"
+	LogFileSecondParty = "secondparty"
+	LogFileLibTiup     = "libtiup"
 
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"

@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -62,30 +64,30 @@ func (t TiUPTiDBMetadataManager) FetchFromRemoteCluster(ctx context.Context, req
 	}
 	Client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiupIp, req.Port), &Conf)
 	if err != nil {
-		return nil, err
+		framework.LogWithContext(ctx).Errorf("FetchFromRemoteCluster, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh dial error", err)
 	}
 	defer Client.Close()
 
 	sftpClient, err := sftp.NewClient(Client)
 	if err != nil {
-		return nil, err
+		framework.LogWithContext(ctx).Errorf("FetchFromRemoteCluster, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "new sftp client error", err)
 	}
 	defer sftpClient.Close()
 
 	remoteFileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiupPath, req.ClusterNames[0])
 	remoteFile, err := sftpClient.Open(remoteFileName)
 	if err != nil {
-		return nil, err
+		framework.LogWithContext(ctx).Errorf("FetchFromRemoteCluster, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "open sftp client error", err)
 	}
 	defer remoteFile.Close()
-	if err != nil {
-		return nil, err
-	}
+
 	dataByte, err := ioutil.ReadAll(remoteFile)
 	if err != nil {
-		if err != nil {
-			return nil, err
-		}
+		framework.LogWithContext(ctx).Errorf("FetchFromRemoteCluster, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
 	}
 
 	metadata := &spec.ClusterMeta{}
@@ -94,11 +96,11 @@ func (t TiUPTiDBMetadataManager) FetchFromRemoteCluster(ctx context.Context, req
 	return metadata, err
 }
 
-func (t TiUPTiDBMetadataManager) RebuildMetadataFromComponents(cluster *domain.Cluster, components []*domain.ComponentGroup) (spec.Metadata, error) {
+func (t TiUPTiDBMetadataManager) RebuildMetadataFromComponents(ctx context.Context, cluster *domain.Cluster, components []*domain.ComponentGroup) (spec.Metadata, error) {
 	panic("implement me")
 }
 
-func (t TiUPTiDBMetadataManager) ParseComponentsFromMetaData(metadata spec.Metadata) ([]*domain.ComponentGroup, error) {
+func (t TiUPTiDBMetadataManager) ParseComponentsFromMetaData(ctx context.Context, metadata spec.Metadata) ([]*domain.ComponentGroup, error) {
 	version := metadata.GetBaseMeta().Version
 
 	clusterSpec := metadata.GetTopology().(*spec.Specification)
@@ -112,7 +114,7 @@ func (t TiUPTiDBMetadataManager) ParseComponentsFromMetaData(metadata spec.Metad
 	return componentGroups, nil
 }
 
-func (t TiUPTiDBMetadataManager) ParseClusterInfoFromMetaData(meta spec.BaseMeta) (clusterType, user string, group string, version string) {
+func (t TiUPTiDBMetadataManager) ParseClusterInfoFromMetaData(ctx context.Context, meta spec.BaseMeta) (clusterType, user string, group string, version string) {
 	return "TiDB", meta.User, meta.Group, meta.Version
 }
 

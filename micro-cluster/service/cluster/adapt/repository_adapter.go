@@ -22,6 +22,7 @@ import (
 	"errors"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
@@ -383,6 +384,8 @@ func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
 			Parameters:     v.Parameters,
 			ParentId:       strconv.Itoa(int(flowWork.FlowWork.Id)),
 			ParentType:     0,
+			StartTime:      v.StartTime,
+			EndTime:        v.EndTime,
 		}
 	}
 
@@ -399,19 +402,31 @@ func (t TaskRepoAdapter) Load(id uint) (flowWork *domain.FlowWorkAggregation, er
 		Id: int64(id),
 	})
 	if err != nil {
-		framework.Log().Errorf("Load FlowWork error = %s", err.Error())
-		return nil, err
+		framework.Log().Errorf("Call metadb rpc method [%s] failed, error: %s", "LoadFlow", err.Error())
+		return nil, framework.WrapError(common.TIEM_METADB_SERVER_CALL_ERROR, common.TiEMErrMsg[common.TIEM_METADB_SERVER_CALL_ERROR], err)
 	}
+	if resp.Status.Code != 0 {
+		framework.Log().Errorf("LoadFlowWork failed, error: %s", resp.Status.Message)
+		return nil, framework.CustomizeMessageError(common.TIEM_ERROR_CODE(resp.Status.Code), resp.Status.Message)
+	} else {
+		flowDTO := resp.FlowWithTasks
+		flowEntity := &domain.FlowWorkEntity{
+			Id:          uint(flowDTO.Flow.Id),
+			FlowName:    flowDTO.Flow.FlowName,
+			StatusAlias: flowDTO.Flow.StatusAlias,
+			BizId:       flowDTO.Flow.BizId,
+			Status:      domain.TaskStatus(flowDTO.Flow.Status),
+			Operator:    domain.GetOperatorFromName(flowDTO.Flow.Operator),
+			CreateTime:  time.Unix(flowDTO.Flow.CreateTime, 0),
+			UpdateTime:  time.Unix(flowDTO.Flow.UpdateTime, 0),
+		}
 
-	flowworkName := resp.FlowWithTasks.Flow.FlowName
-	flowDefinition := domain.FlowWorkDefineMap[flowworkName]
-	flowWork = &domain.FlowWorkAggregation{
-		FlowWork: &domain.FlowWorkEntity{},
-		Define:   flowDefinition,
-		Tasks:    ParseTaskDTOInBatch(resp.FlowWithTasks.Tasks),
+		return &domain.FlowWorkAggregation{
+			FlowWork: flowEntity,
+			Tasks: ParseTaskDTOInBatch(resp.FlowWithTasks.Tasks),
+			Define: domain.FlowWorkDefineMap[flowEntity.FlowName],
+		}, nil
 	}
-
-	return flowWork, nil
 }
 
 func ParseTaskDTOInBatch(dtoList []*dbpb.DBTaskDTO) []*domain.TaskEntity {

@@ -18,6 +18,7 @@ package management
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
@@ -283,7 +284,7 @@ func Stop(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param clusterId path string true "cluster id"
+// @Param clusterId path int true "cluster id"
 // @Success 200 {object} controller.CommonResult{data=DetailClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -350,7 +351,7 @@ func Takeover(c *gin.Context) {
 	reqDTO := &clusterpb.ClusterTakeoverReqDTO{
 		Operator:         operator.ConvertToDTO(),
 		TiupIp:           req.TiupIp,
-		Port:             req.TiupPort,
+		Port:             strconv.Itoa(req.TiupPort),
 		TiupUserName:     req.TiupUserName,
 		TiupUserPassword: req.TiupUserPassword,
 		TiupPath:         req.TiupPath,

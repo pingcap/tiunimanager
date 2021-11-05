@@ -527,6 +527,40 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterpb.Lis
 	return err
 }
 
+func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *clusterpb.DetailFlowRequest, response *clusterpb.DetailFlowsResponse) error {
+	flowwork, err := domain.TaskRepo.Load(uint(request.FlowId))
+	if e, ok := err.(framework.TiEMError); ok {
+		response.Status = &clusterpb.ResponseStatusDTO{
+			Code: int32(e.GetCode()),
+			Message: e.GetMsg(),
+		}
+	} else {
+		response.Status = SuccessResponseStatus
+		response.Flow = &clusterpb.FlowWithTaskDTO{
+			Flow: &clusterpb.FlowDTO{
+				Id:          int64(flowwork.FlowWork.Id),
+				FlowName:    flowwork.FlowWork.FlowName,
+				StatusAlias: flowwork.FlowWork.StatusAlias,
+				BizId:       flowwork.FlowWork.BizId,
+				Status:      int32(flowwork.FlowWork.Status),
+				StatusName:  flowwork.FlowWork.Status.Display(),
+				CreateTime:  flowwork.FlowWork.CreateTime.Unix(),
+				UpdateTime:  flowwork.FlowWork.UpdateTime.Unix(),
+				Operator: &clusterpb.OperatorDTO{
+					Name:           flowwork.FlowWork.Operator.Name,
+					Id:             flowwork.FlowWork.Operator.Id,
+					TenantId:       flowwork.FlowWork.Operator.TenantId,
+					ManualOperator: flowwork.FlowWork.Operator.ManualOperator,
+				},
+			},
+			TaskDef: flowwork.GetAllTaskDef(),
+			Tasks: flowwork.ExtractTaskDTO(),
+		}
+	}
+
+	return nil
+}
+
 var ManageSuccessResponseStatus = &clusterpb.ManagerResponseStatus{
 	Code: 0,
 }

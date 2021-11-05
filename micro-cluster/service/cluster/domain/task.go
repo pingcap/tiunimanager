@@ -21,10 +21,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"time"
 )
 
+//
 // FlowWorkEntity
+// @Description: flowwork entity
 type FlowWorkEntity struct {
 	Id             uint
 	FlowName       string
@@ -51,7 +54,10 @@ func (c FlowWorkEntity) Finished() bool {
 	return c.Status.Finished()
 }
 
+//
 // TaskEntity
+// @Description: task entity
+//
 type TaskEntity struct {
 	Id             uint
 	Status         TaskStatus
@@ -60,6 +66,8 @@ type TaskEntity struct {
 	BizId          string
 	Parameters     string
 	Result         string
+	StartTime      int64
+	EndTime        int64
 }
 
 func (t *TaskEntity) Processing() {
@@ -76,14 +84,19 @@ func (t *TaskEntity) Success(result interface{}) {
 			t.Result = string(r)
 		}
 	}
+	t.EndTime = time.Now().Unix()
 }
 
 func (t *TaskEntity) Fail(e error) {
 	t.Status = TaskStatusError
+	t.EndTime = time.Now().Unix()
 	t.Result = e.Error()
 }
 
+//
 // FlowWorkAggregation
+// @Description: flowwork aggregation with flowwork definition and tasks
+//
 type FlowWorkAggregation struct {
 	FlowWork    *FlowWorkEntity
 	Define      *FlowWorkDefine
@@ -137,6 +150,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 		Status:         TaskStatusInit,
 		TaskName:       taskDefine.Name,
 		TaskReturnType: taskDefine.ReturnType,
+		StartTime: time.Now().Unix(),
 	}
 
 	TaskRepo.AddFlowTask(task, flow.FlowWork.Id)
@@ -181,6 +195,33 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 			break
 		}
 	}
+}
+
+func (flow *FlowWorkAggregation) GetAllTaskDef() []string {
+	var nodeNames []string
+	node := flow.Define.TaskNodes["start"]
+
+	for node != nil && node.Name != "end" && node.Name != "fail" {
+		nodeNames = append(nodeNames, node.Name)
+		node = flow.Define.TaskNodes[node.SuccessEvent]
+	}
+	return nodeNames
+}
+
+func (flow *FlowWorkAggregation) ExtractTaskDTO() []*clusterpb.TaskDTO {
+	var tasks []*clusterpb.TaskDTO
+	for _, task := range flow.Tasks {
+		tasks = append(tasks, &clusterpb.TaskDTO {
+			Id:     int64(task.Id),
+			Status: int32(task.Status),
+			TaskName: task.TaskName,
+			Result: task.Result,
+			Parameters: task.Parameters,
+			StartTime: task.StartTime,
+			EndTime: task.EndTime,
+		})
+	}
+	return tasks
 }
 
 type CronTaskEntity struct {

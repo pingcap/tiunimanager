@@ -19,6 +19,7 @@ package domain
 import (
 	"errors"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 
@@ -518,4 +519,25 @@ func TestFlowWorkAggregation_AddContext(t *testing.T) {
 			t.Errorf("AddContext() get wrong value, got = %v, want = %v", v, 123)
 		}
 	})
+}
+
+func TestFlowWorkAggregation_GetAllTaskDef(t *testing.T) {
+	flow , err := CreateFlowWork("testFlow", "testFlow", &Operator{})
+	if err == nil {
+		def := flow.GetAllTaskDef()
+		assert.True(t, len(def) > 0)
+	}
+}
+
+func TestFlowWorkAggregation_ExtractTaskDTO(t *testing.T) {
+	flow := FlowWorkAggregation {
+		Tasks: []*TaskEntity{
+			{Id: 1, Status: 1, TaskName: "name1"},
+			{Id: 2, Status: 0, TaskName: "name1"},
+		},
+	}
+	tasks := flow.ExtractTaskDTO()
+	assert.Equal(t, 2, len(tasks))
+	assert.Equal(t, int64(1), tasks[0].Id)
+
 }

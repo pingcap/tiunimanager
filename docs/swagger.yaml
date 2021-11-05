@@ -180,6 +180,10 @@ definitions:
         type: string
       statusName:
         type: string
+      taskName:
+        items:
+          type: string
+        type: array
       tasks:
         items:
           $ref: '#/definitions/flowtask.FlowWorkTaskInfo'
@@ -222,9 +226,13 @@ definitions:
     type: object
   flowtask.FlowWorkTaskInfo:
     properties:
+      endTime:
+        type: string
       id:
         type: integer
       result:
+        type: string
+      startTime:
         type: string
       taskName:
         type: string
@@ -969,8 +977,8 @@ definitions:
         example: .tiup/
         type: string
       tiupPort:
-        example: "22"
-        type: string
+        example: 22
+        type: integer
       tiupUserName:
         example: root
         type: string
@@ -1347,7 +1355,7 @@ paths:
         in: path
         name: clusterId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -1955,7 +1963,7 @@ paths:
         in: path
         name: flowWorkId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:

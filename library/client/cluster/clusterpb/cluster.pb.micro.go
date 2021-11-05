@@ -83,6 +83,7 @@ type ClusterService interface {
 	GetHierarchy(ctx context.Context, in *GetHierarchyRequest, opts ...client.CallOption) (*GetHierarchyResponse, error)
 	// task manager
 	ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...client.CallOption) (*ListFlowsResponse, error)
+	DetailFlow(ctx context.Context, in *DetailFlowRequest, opts ...client.CallOption) (*DetailFlowsResponse, error)
 }
 
 type clusterService struct {
@@ -467,6 +468,16 @@ func (c *clusterService) ListFlows(ctx context.Context, in *ListFlowsRequest, op
 	return out, nil
 }
 
+func (c *clusterService) DetailFlow(ctx context.Context, in *DetailFlowRequest, opts ...client.CallOption) (*DetailFlowsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.DetailFlow", in)
+	out := new(DetailFlowsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for ClusterService service
 
 type ClusterServiceHandler interface {
@@ -511,6 +522,7 @@ type ClusterServiceHandler interface {
 	GetHierarchy(context.Context, *GetHierarchyRequest, *GetHierarchyResponse) error
 	// task manager
 	ListFlows(context.Context, *ListFlowsRequest, *ListFlowsResponse) error
+	DetailFlow(context.Context, *DetailFlowRequest, *DetailFlowsResponse) error
 }
 
 func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, opts ...server.HandlerOption) error {
@@ -552,6 +564,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		ReserveHost(ctx context.Context, in *ReserveHostRequest, out *ReserveHostResponse) error
 		GetHierarchy(ctx context.Context, in *GetHierarchyRequest, out *GetHierarchyResponse) error
 		ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error
+		DetailFlow(ctx context.Context, in *DetailFlowRequest, out *DetailFlowsResponse) error
 	}
 	type ClusterService struct {
 		clusterService
@@ -710,4 +723,8 @@ func (h *clusterServiceHandler) GetHierarchy(ctx context.Context, in *GetHierarc
 
 func (h *clusterServiceHandler) ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error {
 	return h.ClusterServiceHandler.ListFlows(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) DetailFlow(ctx context.Context, in *DetailFlowRequest, out *DetailFlowsResponse) error {
+	return h.ClusterServiceHandler.DetailFlow(ctx, in, out)
 }

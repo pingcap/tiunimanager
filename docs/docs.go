@@ -726,7 +726,7 @@ var doc = `{
                 "summary": "show details of a cluster",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "cluster id",
                         "name": "clusterId",
                         "in": "path",
@@ -1529,7 +1529,7 @@ var doc = `{
                 "summary": "show details of a flow work",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "flow work id",
                         "name": "flowWorkId",
                         "in": "path",
@@ -2775,6 +2775,12 @@ var doc = `{
                 "statusName": {
                     "type": "string"
                 },
+                "taskName": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "tasks": {
                     "type": "array",
                     "items": {
@@ -2839,10 +2845,16 @@ var doc = `{
         "flowtask.FlowWorkTaskInfo": {
             "type": "object",
             "properties": {
+                "endTime": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
                 "result": {
+                    "type": "string"
+                },
+                "startTime": {
                     "type": "string"
                 },
                 "taskName": {
@@ -3964,8 +3976,8 @@ var doc = `{
                     "example": ".tiup/"
                 },
                 "tiupPort": {
-                    "type": "string",
-                    "example": "22"
+                    "type": "integer",
+                    "example": 22
                 },
                 "tiupUserName": {
                     "type": "string",

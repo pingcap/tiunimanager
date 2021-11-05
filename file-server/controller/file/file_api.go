@@ -72,7 +72,7 @@ func DownloadExportFile(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", err.Error())))
 		return
 	}
-	if resp.GetStatus() != dbService.ClusterSuccessResponseStatus || resp.GetRecord() == nil {
+	if resp.GetStatus().GetCode() != dbService.ClusterSuccessResponseStatus.GetCode() || resp.GetRecord() == nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", resp.GetStatus().GetMessage())))
 		return
 	}

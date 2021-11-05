@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "db_cluster.proto";
 
-option go_package = "./../dbpb/;dbpb";
+option go_package = "./dbpb/;dbpb";
 
 message TransportRecordDTO {
 	string ID = 1;

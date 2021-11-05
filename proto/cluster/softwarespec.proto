@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "./../clusterpb/;clusterpb";
+option go_package = "./clusterpb/;clusterpb";
 
 message ClusterTypeDTO {
     string code = 1;

@@ -18,6 +18,7 @@
 package application
 
 import (
+	"context"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/adapt"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
 	"reflect"
@@ -25,10 +26,10 @@ import (
 )
 
 func TestAccessible(t *testing.T) {
-	myToken, _ := authManager.Login(adapt.TestMyName, adapt.TestMyPassword)
-	otherToken, _ := authManager.Login(adapt.TestOtherName, adapt.TestOtherPassword)
-	invalidToken, _ := authManager.Login(adapt.TestMyName, adapt.TestMyPassword)
-	authManager.Logout(invalidToken)
+	myToken, _ := authManager.Login(context.TODO(), adapt.TestMyName, adapt.TestMyPassword)
+	otherToken, _ := authManager.Login(context.TODO(), adapt.TestOtherName, adapt.TestOtherPassword)
+	invalidToken, _ := authManager.Login(context.TODO(), adapt.TestMyName, adapt.TestMyPassword)
+	authManager.Logout(context.TODO(), invalidToken)
 	SkipAuth = false
 
 	type args struct {
@@ -54,7 +55,7 @@ func TestAccessible(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotTenantId, _, gotAccountName, err := authManager.Accessible(tt.args.pathType, tt.args.path, tt.args.tokenString)
+			gotTenantId, _, gotAccountName, err := authManager.Accessible(context.TODO(), tt.args.pathType, tt.args.path, tt.args.tokenString)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Accessible() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -104,18 +105,18 @@ func TestLogin(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotTokenString, err := authManager.Login(tt.args.userName, tt.args.password)
+			gotTokenString, err := authManager.Login(context.TODO(), tt.args.userName, tt.args.password)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Login() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			authManager.Logout(gotTokenString)
+			authManager.Logout(context.TODO(), gotTokenString)
 		})
 	}
 }
 
 func TestLogout(t *testing.T) {
-	tokenString, _ := authManager.Login(adapt.TestMyName, adapt.TestMyPassword)
+	tokenString, _ := authManager.Login(context.TODO(), adapt.TestMyName, adapt.TestMyPassword)
 	type args struct {
 		tokenString string
 	}
@@ -131,7 +132,7 @@ func TestLogout(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := authManager.Logout(tt.args.tokenString)
+			got, err := authManager.Logout(context.TODO(), tt.args.tokenString)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Logout() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -362,7 +363,7 @@ func Test_findAccountAggregation(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := userManager.findAccountAggregation(tt.args.name)
+			got, err := userManager.findAccountAggregation(context.TODO(), tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("findAccountAggregation() error = %v, wantErr %v", err, tt.wantErr)
 				return

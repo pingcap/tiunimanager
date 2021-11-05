@@ -26,6 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	mock "github.com/pingcap-inc/tiem/test/mock"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/context"
 	"testing"
 	"time"
 )
@@ -93,7 +94,7 @@ func TestRecoverPreCheck(t *testing.T) {
 		},
 	}
 
-	err := RecoverPreCheck(request)
+	err := RecoverPreCheck(context.TODO(), request)
 
 	assert.NoError(t, err)
 }
@@ -251,15 +252,15 @@ func Test_updateBackupRecord(t *testing.T) {
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := &FlowContext{}
-	context.put(contextClusterKey, &ClusterAggregation{
+	context := NewFlowContext(ctx.TODO())
+	context.SetData(contextClusterKey, &ClusterAggregation{
 		LastBackupRecord: &BackupRecord{
 			Id:   123,
 			Size: 1000,
 		},
 	})
-	context.put(contextCtxKey, ctx.Background())
-	context.put("backupTaskId", uint64(123))
+	context.SetData(contextCtxKey, ctx.Background())
+	context.SetData("backupTaskId", uint64(123))
 	ret := updateBackupRecord(task, context)
 
 	assert.Equal(t, true, ret)

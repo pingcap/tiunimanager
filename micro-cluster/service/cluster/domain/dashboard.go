@@ -50,7 +50,7 @@ var loginUrlSuffix string = "api/user/login"
 
 func DescribeDashboard(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string) (*Dashboard, error) {
 	//todo: check operator and clusterId
-	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
 	if err != nil || clusterAggregation == nil || clusterAggregation.Cluster == nil {
 		return nil, errors.New("load cluster aggregation failed")
 	}

@@ -17,6 +17,7 @@
 package domain
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +28,7 @@ import (
 )
 
 func testStart(task *TaskEntity, context *FlowContext) bool {
-	context.put("testKey", 999)
+	context.SetData("testKey", 999)
 	task.Success("testStart")
 	return true
 }
@@ -55,8 +56,7 @@ func initFlow() {
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 		"testFlow2": {
@@ -70,8 +70,7 @@ func initFlow() {
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 		"testFlow3": {
@@ -84,8 +83,7 @@ func initFlow() {
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 		"testFlow4": {
@@ -99,8 +97,7 @@ func initFlow() {
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 		FlowCreateCluster: {
@@ -115,8 +112,7 @@ func initFlow() {
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 		FlowDeleteCluster: {
@@ -131,8 +127,7 @@ func initFlow() {
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 		FlowBackupCluster: {
@@ -147,8 +142,7 @@ func initFlow() {
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 		FlowRecoverCluster: {
@@ -163,8 +157,7 @@ func initFlow() {
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 		FlowModifyParameters: {
@@ -179,8 +172,7 @@ func initFlow() {
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 		FlowExportData: {
@@ -195,8 +187,7 @@ func initFlow() {
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 		FlowImportData: {
@@ -211,8 +202,7 @@ func initFlow() {
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 		FlowRestartCluster: {
@@ -226,8 +216,7 @@ func initFlow() {
 				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 		FlowStopCluster: {
@@ -241,8 +230,7 @@ func initFlow() {
 				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
-				c := make(FlowContext)
-				return &c
+				return nil
 			},
 		},
 	}
@@ -267,7 +255,7 @@ func TestCreateFlowWork(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := CreateFlowWork(tt.args.bizId, tt.args.defineName, nil)
+			got, err := CreateFlowWork(context.TODO(), tt.args.bizId, tt.args.defineName, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateFlowWork() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -283,7 +271,7 @@ func TestCreateFlowWork(t *testing.T) {
 
 func TestFlowWorkAggregation_Destroy(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		flow, _ := CreateFlowWork("111", "testFlow2", nil)
+		flow, _ := CreateFlowWork(context.TODO(), "111", "testFlow2", nil)
 		flow.Start()
 		flow.Destroy()
 		if !flow.FlowWork.Finished() {
@@ -303,19 +291,19 @@ func TestFlowWorkAggregation_Destroy(t *testing.T) {
 
 func TestFlowWorkAggregation_Start(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		flow, _ := CreateFlowWork("1111", "testFlow", nil)
+		flow, _ := CreateFlowWork(context.TODO(), "1111", "testFlow", nil)
 		flow.Start()
 		if !flow.FlowWork.Finished() {
 			t.Errorf("Start() not finished")
 		}
 
-		value, ok := flow.Context.value("testKey").(int)
+		value, ok := flow.Context.GetData("testKey").(int)
 		if !ok || 999 != value {
-			t.Errorf("Start() get wrong value of testKey, want = 999, got = %v", 999)
+			t.Errorf("Start() get wrong GetData of testKey, want = 999, got = %v", 999)
 		}
 	})
 	t.Run("callback", func(t *testing.T) {
-		flow, _ := CreateFlowWork("2222", "testFlow2", nil)
+		flow, _ := CreateFlowWork(context.TODO(), "2222", "testFlow2", nil)
 		flow.Start()
 		if flow.FlowWork.Finished() {
 			t.Errorf("Start() finished")
@@ -325,19 +313,19 @@ func TestFlowWorkAggregation_Start(t *testing.T) {
 		}
 	})
 	t.Run("polling", func(t *testing.T) {
-		flow, _ := CreateFlowWork("4444", "testFlow4", nil)
+		flow, _ := CreateFlowWork(context.TODO(), "4444", "testFlow4", nil)
 		flow.Start()
 		if !flow.FlowWork.Finished() {
 			t.Errorf("Start() not finished")
 		}
 
-		value, ok := flow.Context.value("testKey").(int)
+		value, ok := flow.Context.GetData("testKey").(int)
 		if !ok || 999 != value {
-			t.Errorf("Start() get wrong value of testKey, want = 999, got = %v", 999)
+			t.Errorf("Start() get wrong GetData of testKey, want = 999, got = %v", 999)
 		}
 	})
 	t.Run("error", func(t *testing.T) {
-		flow, _ := CreateFlowWork("3333", "testFlow3", nil)
+		flow, _ := CreateFlowWork(context.TODO(), "3333", "testFlow3", nil)
 		flow.Start()
 		if !flow.FlowWork.Finished() {
 			t.Errorf("Start() finished")
@@ -512,17 +500,17 @@ func TestTaskEntity_Success(t1 *testing.T) {
 
 func TestFlowWorkAggregation_AddContext(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		got, _ := CreateFlowWork("1111", "testFlow", nil)
+		got, _ := CreateFlowWork(context.TODO(), "1111", "testFlow", nil)
 		got.AddContext("TestFlowWorkAggregation_AddContext", 123)
-		v, ok := got.Context.value("TestFlowWorkAggregation_AddContext").(int)
+		v, ok := got.Context.GetData("TestFlowWorkAggregation_AddContext").(int)
 		if !ok || v != 123 {
-			t.Errorf("AddContext() get wrong value, got = %v, want = %v", v, 123)
+			t.Errorf("AddContext() get wrong GetData, got = %v, want = %v", v, 123)
 		}
 	})
 }
 
 func TestFlowWorkAggregation_GetAllTaskDef(t *testing.T) {
-	flow , err := CreateFlowWork("testFlow", "testFlow", &Operator{})
+	flow , err := CreateFlowWork(context.TODO(), "testFlow", "testFlow", &Operator{})
 	if err == nil {
 		def := flow.GetAllTaskDef()
 		assert.True(t, len(def) > 0)

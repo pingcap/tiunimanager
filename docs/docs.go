@@ -726,7 +726,7 @@ var doc = `{
                 "summary": "show details of a cluster",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "cluster id",
                         "name": "clusterId",
                         "in": "path",

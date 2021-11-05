@@ -18,6 +18,7 @@
 package domain
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -40,14 +41,24 @@ type FlowWorkEntity struct {
 	UpdateTime time.Time
 }
 
-type FlowContext map[string]interface{}
-
-func (c FlowContext) value(key string) interface{} {
-	return c[key]
+type FlowContext struct {
+	context.Context
+	FlowData map[string]interface{}
 }
 
-func (c FlowContext) put(key string, value interface{}) {
-	c[key] = value
+func NewFlowContext(ctx context.Context) *FlowContext {
+	return &FlowContext{
+		ctx,
+		map[string]interface{}{},
+	}
+}
+
+func (c FlowContext) GetData(key string) interface{} {
+	return c.FlowData[key]
+}
+
+func (c FlowContext) SetData(key string, value interface{}) {
+	c.FlowData[key] = value
 }
 
 func (c FlowWorkEntity) Finished() bool {
@@ -105,15 +116,15 @@ type FlowWorkAggregation struct {
 	Context     FlowContext
 }
 
-func CreateFlowWork(bizId string, defineName string, operator *Operator) (*FlowWorkAggregation, error) {
+func CreateFlowWork(ctx context.Context, bizId string, defineName string, operator *Operator) (*FlowWorkAggregation, error) {
 	define := FlowWorkDefineMap[defineName]
 	if define == nil {
 		return nil, errors.New("workflow undefined")
 	}
-	context := make(map[string]interface{})
+	flowData := make(map[string]interface{})
 
-	flow := define.getInstance(bizId, context, operator)
-	TaskRepo.AddFlowWork(flow.FlowWork)
+	flow := define.getInstance(ctx , bizId, flowData, operator)
+	TaskRepo.AddFlowWork(ctx, flow.FlowWork)
 	return flow, nil
 }
 
@@ -121,17 +132,17 @@ func (flow *FlowWorkAggregation) Start() {
 	flow.FlowWork.Status = TaskStatusProcessing
 	start := flow.Define.TaskNodes["start"]
 	flow.handle(start)
-	TaskRepo.Persist(flow)
+	TaskRepo.Persist(flow.Context, flow)
 }
 
 func (flow *FlowWorkAggregation) Destroy() {
 	flow.FlowWork.Status = TaskStatusError
 	flow.CurrentTask.Fail(errors.New("workflow destroy"))
-	TaskRepo.Persist(flow)
+	TaskRepo.Persist(flow.Context, flow)
 }
 
 func (flow *FlowWorkAggregation) AddContext(key string, value interface{}) {
-	flow.Context.put(key, value)
+	flow.Context.SetData(key, value)
 }
 
 func (flow *FlowWorkAggregation) executeTask(task *TaskEntity, taskDefine *TaskDefine) bool {
@@ -153,7 +164,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 		StartTime: time.Now().Unix(),
 	}
 
-	TaskRepo.AddFlowTask(task, flow.FlowWork.Id)
+	TaskRepo.AddFlowTask(flow.Context, task, flow.FlowWork.Id)
 	handleSuccess := flow.executeTask(task, taskDefine)
 
 	if !handleSuccess {

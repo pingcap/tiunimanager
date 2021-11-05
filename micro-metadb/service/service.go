@@ -18,6 +18,7 @@
 package service
 
 import (
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
@@ -37,7 +38,7 @@ func NewDBServiceHandler(dataDir string, fw *framework.BaseFramework) *DBService
 
 	dao.InitDB(dataDir)
 	if dao.Db().Migrator().HasTable(&models.Tenant{}) {
-		framework.Log().Warn("data existed, skip initialization")
+		framework.LogForkFile(common.LogFileSystem).Warn("data existed, skip initialization")
 		return handler
 	} else {
 		dao.InitTables()

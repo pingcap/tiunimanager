@@ -34,7 +34,7 @@ func (handler *DBServiceHandler) FindTenant(ctx context.Context, req *dbpb.DBFin
 	if nil == req || nil == resp {
 		return errors.Errorf("FindTenant has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	accountManager := handler.Dao().AccountManager()
 	tenant, err := accountManager.FindTenantByName(ctx, req.GetName())
 
@@ -65,7 +65,7 @@ func (handler *DBServiceHandler) FindAccount(ctx context.Context, req *dbpb.DBFi
 	if nil == req || nil == resp {
 		return errors.Errorf("FindAccount has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	accountManager := handler.Dao().AccountManager()
 	account, err := accountManager.Find(ctx, req.GetName())
 	if err == nil {
@@ -128,7 +128,7 @@ func (handler *DBServiceHandler) FindAccountById(ctx context.Context, req *dbpb.
 	if nil == req || nil == resp {
 		return errors.Errorf("FindAccount has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	accountManager := handler.Dao().AccountManager()
 	account, err := accountManager.FindById(ctx, req.GetId())
 	if err == nil {
@@ -159,7 +159,7 @@ func (handler *DBServiceHandler) SaveToken(ctx context.Context, req *dbpb.DBSave
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveToken has invalid parameter, req: %v, resp: %v", req, resp)
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	accountManager := handler.Dao().AccountManager()
 	_, err := accountManager.AddToken(ctx, req.Token.TokenString, req.Token.AccountName, req.Token.AccountId, req.Token.TenantId, time.Unix(req.Token.ExpirationTime, 0))
 
@@ -187,7 +187,7 @@ func (handler *DBServiceHandler) FindToken(ctx context.Context, req *dbpb.DBFind
 	if nil == req || nil == resp {
 		return errors.Errorf("FindToken has invalid parameter, req: %v, resp: %v", req, resp)
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	accountManager := handler.Dao().AccountManager()
 	token, err := accountManager.FindToken(ctx, req.GetTokenString())
 
@@ -219,7 +219,7 @@ func (handler *DBServiceHandler) FindRolesByPermission(ctx context.Context, req 
 	if nil == req || nil == resp {
 		return errors.Errorf("FindRolesByPermission has invalid parameter req: %v, resp: %v", req, resp)
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	accountManager := handler.Dao().AccountManager()
 	permissionDO, err := accountManager.FetchPermission(ctx, req.TenantId, req.Code)
 

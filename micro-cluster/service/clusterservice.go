@@ -71,10 +71,6 @@ func (handler *ClusterServiceHandler) ResourceManager() *resource.ResourceManage
 	return handler.resourceManager
 }
 
-func getLogger() *log.Entry {
-	return framework.Log()
-}
-
 func getLoggerWithContext(ctx context.Context) *log.Entry {
 	return framework.LogWithContext(ctx)
 }
@@ -94,11 +90,11 @@ func handleMetrics(start time.Time, funcName string, code int) {
 }
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb.ClusterCreateReqDTO, resp *clusterpb.ClusterCreateRespDTO) (err error) {
-	getLogger().Info("create cluster")
+	framework.LogWithContext(ctx).Info("create cluster")
 	clusterAggregation, err := domain.CreateCluster(ctx, req.GetOperator(), req.GetCluster(), req.GetDemands())
 
 	if err != nil {
-		getLogger().Info(err)
+		framework.LogWithContext(ctx).Info(err)
 		resp.RespStatus = BizErrorResponseStatus
 		resp.RespStatus.Message = err.Error()
 		return nil
@@ -112,10 +108,10 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 }
 
 func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.ClusterTakeoverReqDTO, resp *clusterpb.ClusterTakeoverRespDTO) (err error) {
-	getLogger().Info("takeover clusters")
+	framework.LogWithContext(ctx).Info("takeover clusters")
 	clusters, err := domain.TakeoverClusters(ctx, req.Operator, req)
 	if err != nil {
-		getLogger().Info(err)
+		framework.LogWithContext(ctx).Info(err)
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -129,10 +125,10 @@ func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *cluste
 }
 
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.ClusterQueryReqDTO, resp *clusterpb.ClusterQueryRespDTO) (err error) {
-	getLogger().Info("query cluster")
+	framework.LogWithContext(ctx).Info("query cluster")
 	clusters, total, err := domain.ListCluster(ctx, req.Operator, req)
 	if err != nil {
-		getLogger().Info(err)
+		framework.LogWithContext(ctx).Info(err)
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -150,12 +146,12 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 }
 
 func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.ClusterDeleteReqDTO, resp *clusterpb.ClusterDeleteRespDTO) (err error) {
-	getLogger().Info("delete cluster")
+	framework.LogWithContext(ctx).Info("delete cluster")
 
 	clusterAggregation, err := domain.DeleteCluster(ctx, req.GetOperator(), req.GetClusterId())
 	if err != nil {
 		// todo
-		getLogger().Info(err)
+		framework.LogWithContext(ctx).Info(err)
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -166,7 +162,7 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 }
 
 func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.ClusterRestartReqDTO, resp *clusterpb.ClusterRestartRespDTO) (err error) {
-	getLogger().Info("restart cluster")
+	framework.LogWithContext(ctx).Info("restart cluster")
 	start := time.Now()
 	defer handleMetrics(start, "RestartCluster", int(resp.GetRespStatus().GetCode()))
 
@@ -174,7 +170,7 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 	if err != nil {
 		resp.RespStatus = BizErrorResponseStatus
 		resp.RespStatus.Message = err.Error()
-		getLogger().Error(err)
+		framework.LogWithContext(ctx).Error(err)
 		return nil
 	}
 	resp.RespStatus = SuccessResponseStatus
@@ -184,7 +180,7 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 }
 
 func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.ClusterStopReqDTO, resp *clusterpb.ClusterStopRespDTO) (err error) {
-	getLogger().Info("stop cluster")
+	framework.LogWithContext(ctx).Info("stop cluster")
 	start := time.Now()
 	defer handleMetrics(start, "StopCluster", int(resp.GetRespStatus().GetCode()))
 
@@ -192,7 +188,7 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.C
 	if err != nil {
 		resp.RespStatus = BizErrorResponseStatus
 		resp.RespStatus.Message = err.Error()
-		getLogger().Error(err)
+		framework.LogWithContext(ctx).Error(err)
 		return nil
 	}
 	resp.RespStatus = SuccessResponseStatus
@@ -202,13 +198,13 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.C
 }
 
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.ClusterDetailReqDTO, resp *clusterpb.ClusterDetailRespDTO) (err error) {
-	getLogger().Info("detail cluster")
+	framework.LogWithContext(ctx).Info("detail cluster")
 
 	cluster, err := domain.GetClusterDetail(ctx, req.Operator, req.ClusterId)
 
 	if err != nil {
 		// todo
-		getLogger().Info(err)
+		framework.LogWithContext(ctx).Info(err)
 		return nil
 	} else {
 		resp.RespStatus = SuccessResponseStatus
@@ -429,7 +425,7 @@ func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *clu
 	content, err := domain.GetParameters(ctx, request.Operator, request.ClusterId)
 
 	if err != nil {
-		getLogger().Info(err)
+		framework.LogWithContext(ctx).Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
@@ -446,7 +442,7 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 
 	if err != nil {
 		// todo
-		getLogger().Info(err)
+		framework.LogWithContext(ctx).Info(err)
 		return nil
 	} else {
 		response.Status = SuccessResponseStatus
@@ -494,7 +490,7 @@ func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clu
 func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterpb.ListFlowsRequest, response *clusterpb.ListFlowsResponse) (err error) {
 	flows, total, err := domain.TaskRepo.ListFlows(ctx, req.BizId, req.Keyword, int(req.Status), int(req.Page.Page), int(req.Page.PageSize))
 	if err != nil {
-		getLogger().Error(err)
+		framework.LogWithContext(ctx).Error(err)
 		return err
 	}
 

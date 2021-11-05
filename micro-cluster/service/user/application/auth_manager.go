@@ -19,7 +19,8 @@ package application
 
 import (
 	"context"
-	"errors"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/commons"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/ports"
@@ -90,7 +91,7 @@ var SkipAuth = true
 // Accessible
 func (p *AuthManager) Accessible(ctx context.Context, pathType string, path string, tokenString string) (tenantId string, accountId, accountName string, err error) {
 	if path == "" {
-		err = errors.New("path cannot be blank")
+		err = framework.CustomizeMessageError(common.TIEM_PARAMETER_INVALID, "path empty")
 		return
 	}
 
@@ -109,19 +110,16 @@ func (p *AuthManager) Accessible(ctx context.Context, pathType string, path stri
 		return
 	}
 
-	// 校验token有效
 	if !token.IsValid() {
 		err = &domain.UnauthorizedError{}
 		return
 	}
 
-	// 根据token查用户
 	account, err := p.userManager.findAccountAggregation(ctx, accountName)
 	if err != nil {
 		return
 	}
 
-	// 查权限
 	permission, err := p.userManager.findPermissionAggregationByCode(ctx, tenantId, path)
 	if err != nil {
 		return

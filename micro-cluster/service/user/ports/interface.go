@@ -61,12 +61,12 @@ type RbacRepository interface {
 
 type TokenHandler interface {
 
-	// Provide 提供一个有效的token
+	// Provide provide a valid token string
 	Provide (ctx context.Context, tiEMToken *domain.TiEMToken) (string, error)
 
-	// Modify 修改token
+	// Modify
 	Modify (ctx context.Context, tiEMToken *domain.TiEMToken) error
 
-	// GetToken 获取一个token
+	// GetToken get token by tokenString
 	GetToken(ctx context.Context, tokenString string) (domain.TiEMToken, error)
 }

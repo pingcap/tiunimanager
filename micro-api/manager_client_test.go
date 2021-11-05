@@ -258,3 +258,7 @@ func (s *ClusterFakeService) TakeoverClusters(ctx context.Context, in *clusterpb
 func (s *ClusterFakeService) GetHierarchy(ctx context.Context, in *clusterpb.GetHierarchyRequest, opts ...micro.CallOption) (*clusterpb.GetHierarchyResponse, error) {
 	panic("implement me")
 }
+
+func (s *ClusterFakeService) GetStocks(ctx context.Context, in *clusterpb.GetStocksRequest, opts ...micro.CallOption) (*clusterpb.GetStocksResponse, error) {
+	panic("implement me")
+}

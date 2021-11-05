@@ -217,6 +217,9 @@ func (s *DBFakeService) ReserveHost(ctx context.Context, in *dbpb.DBReserveHostR
 func (s *DBFakeService) GetHierarchy(ctx context.Context, in *dbpb.DBGetHierarchyRequest, opt ...client.CallOption) (*dbpb.DBGetHierarchyResponse, error) {
 	panic("implement me")
 }
+func (s *DBFakeService) GetStocks(ctx context.Context, in *dbpb.DBGetStocksRequest, opt ...client.CallOption) (*dbpb.DBGetStocksResponse, error) {
+	panic("implement me")
+}
 
 // Mock Tiup Task
 func (s *DBFakeService) CreateTiupTask(ctx context.Context, in *dbpb.CreateTiupTaskRequest, opts ...client.CallOption) (*dbpb.CreateTiupTaskResponse, error) {

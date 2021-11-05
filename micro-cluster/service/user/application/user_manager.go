@@ -18,6 +18,7 @@
 package application
 
 import (
+	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/ports"
@@ -32,12 +33,12 @@ func NewUserManager(rbacRepo ports.RbacRepository) *UserManager {
 }
 
 // CreateAccount CreateAccount
-func (p *UserManager) CreateAccount(tenant *domain.Tenant, name, passwd string) (*domain.Account, error) {
+func (p *UserManager) CreateAccount(ctx context.Context, tenant *domain.Tenant, name, passwd string) (*domain.Account, error) {
 	if tenant == nil || !tenant.Status.IsValid() {
 		return nil, fmt.Errorf("tenant not valid")
 	}
 
-	existed, e := p.FindAccountByName(name)
+	existed, e := p.FindAccountByName(ctx, name)
 
 	if e == nil && existed != nil {
 		return existed, fmt.Errorf("account already exist")
@@ -46,14 +47,14 @@ func (p *UserManager) CreateAccount(tenant *domain.Tenant, name, passwd string) 
 	account := domain.Account{Name: name, Status: domain.Valid}
 
 	account.GenSaltAndHash(passwd)
-	p.rbacRepo.AddAccount(&account)
+	p.rbacRepo.AddAccount(ctx, &account)
 
 	return &account, nil
 }
 
 // FindAccountByName FindAccountByName
-func (p *UserManager) FindAccountByName(name string) (*domain.Account, error) {
-	a, err := p.rbacRepo.LoadAccountByName(name)
+func (p *UserManager) FindAccountByName(ctx context.Context, name string) (*domain.Account, error) {
+	a, err := p.rbacRepo.LoadAccountByName(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -61,16 +62,16 @@ func (p *UserManager) FindAccountByName(name string) (*domain.Account, error) {
 	return &a, err
 }
 
-func (p *UserManager) Empower(role *domain.Role, permissions []domain.Permission) error {
+func (p *UserManager) Empower(ctx context.Context, role *domain.Role, permissions []domain.Permission) error {
 	bindings := make([]domain.PermissionBinding, len(permissions))
 
 	for index, r := range permissions {
 		bindings[index] = domain.PermissionBinding{Role: role, Permission: &r, Status: domain.Valid}
 	}
-	return p.rbacRepo.AddPermissionBindings(bindings)
+	return p.rbacRepo.AddPermissionBindings(ctx, bindings)
 }
 
-func (p *UserManager) CreateRole(tenant *domain.Tenant, name string, desc string) (*domain.Role, error) {
+func (p *UserManager) CreateRole(ctx context.Context, tenant *domain.Tenant, name string, desc string) (*domain.Role, error) {
 	if tenant == nil || !tenant.Status.IsValid() {
 		return nil, fmt.Errorf("tenant not valid")
 	}
@@ -78,7 +79,7 @@ func (p *UserManager) CreateRole(tenant *domain.Tenant, name string, desc string
 		return nil, fmt.Errorf("empty role name")
 	}
 
-	existed, e := p.FindRoleByName(tenant, name)
+	existed, e := p.FindRoleByName(ctx, tenant, name)
 
 	if e == nil && existed != nil {
 		return existed, fmt.Errorf("role already exist")
@@ -86,50 +87,19 @@ func (p *UserManager) CreateRole(tenant *domain.Tenant, name string, desc string
 
 	role := domain.Role{TenantId: tenant.Id, Name: name, Desc: desc, Status: domain.Valid}
 
-	p.rbacRepo.AddRole(&role)
+	p.rbacRepo.AddRole(ctx, &role)
 	return &role, nil
 
 }
 
-func (p *UserManager) FindRoleByName(tenant *domain.Tenant, name string) (*domain.Role, error) {
-	r, e := p.rbacRepo.LoadRole(tenant.Id, name)
+func (p *UserManager) FindRoleByName(ctx context.Context, tenant *domain.Tenant, name string) (*domain.Role, error) {
+	r, e := p.rbacRepo.LoadRole(ctx, tenant.Id, name)
 	return &r, e
 }
 
-//func (p *UserManager) createPermission(tenant *domain.Tenant, code, name ,desc string, permissionType domain.PermissionType) (*domain.Permission, error) {
-//	if tenant == nil || !tenant.Status.IsValid(){
-//		return nil, fmt.Errorf("tenant not valid")
-//	}
-//
-//	existed, e := p.findPermissionByCode(tenant.Id, code)
-//
-//	if e != nil {
-//		return nil, e
-//	} else if !(nil == existed) {
-//		return nil, fmt.Errorf("permission already exist")
-//	}
-//
-//	permission := domain.Permission{
-//		TenantId: tenant.Id,
-//		Code:     code,
-//		Name:     name,
-//		Type:     permissionType,
-//		Desc:     desc,
-//		Status:   domain.Valid,
-//	}
-//
-//	p.rbacRepo.AddPermission(&permission)
-//	return &permission, nil
-//}
-
-//func (p *UserManager) findPermissionByCode(tenantId string, code string) (*domain.Permission, error) {
-//	a,e := p.rbacRepo.LoadPermission(tenantId, code)
-//	return &a, e
-//}
-
-// findAccountExtendInfo 根据名称获取账号及扩展信息
-func (p *UserManager) findAccountAggregation(name string) (*domain.AccountAggregation, error) {
-	a, err := p.rbacRepo.LoadAccountAggregation(name)
+// findAccountExtendInfo
+func (p *UserManager) findAccountAggregation(ctx context.Context, name string) (*domain.AccountAggregation, error) {
+	a, err := p.rbacRepo.LoadAccountAggregation(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -137,8 +107,8 @@ func (p *UserManager) findAccountAggregation(name string) (*domain.AccountAggreg
 	return &a, err
 }
 
-func (p *UserManager) findPermissionAggregationByCode(tenantId string, code string) (*domain.PermissionAggregation, error) {
-	a, e := p.rbacRepo.LoadPermissionAggregation(tenantId, code)
+func (p *UserManager) findPermissionAggregationByCode(ctx context.Context, tenantId string, code string) (*domain.PermissionAggregation, error) {
+	a, e := p.rbacRepo.LoadPermissionAggregation(ctx, tenantId, code)
 	return &a, e
 }
 

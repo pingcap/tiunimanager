@@ -124,7 +124,7 @@ func CreateFlowWork(ctx context.Context, bizId string, defineName string, operat
 	flowData := make(map[string]interface{})
 
 	flow := define.getInstance(ctx , bizId, flowData, operator)
-	TaskRepo.AddFlowWork(flow.FlowWork)
+	TaskRepo.AddFlowWork(ctx, flow.FlowWork)
 	return flow, nil
 }
 
@@ -132,13 +132,13 @@ func (flow *FlowWorkAggregation) Start() {
 	flow.FlowWork.Status = TaskStatusProcessing
 	start := flow.Define.TaskNodes["start"]
 	flow.handle(start)
-	TaskRepo.Persist(flow)
+	TaskRepo.Persist(flow.Context, flow)
 }
 
 func (flow *FlowWorkAggregation) Destroy() {
 	flow.FlowWork.Status = TaskStatusError
 	flow.CurrentTask.Fail(errors.New("workflow destroy"))
-	TaskRepo.Persist(flow)
+	TaskRepo.Persist(flow.Context, flow)
 }
 
 func (flow *FlowWorkAggregation) AddContext(key string, value interface{}) {
@@ -164,7 +164,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 		StartTime: time.Now().Unix(),
 	}
 
-	TaskRepo.AddFlowTask(task, flow.FlowWork.Id)
+	TaskRepo.AddFlowTask(flow.Context, task, flow.FlowWork.Id)
 	handleSuccess := flow.executeTask(task, taskDefine)
 
 	if !handleSuccess {

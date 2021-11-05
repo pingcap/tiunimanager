@@ -26,6 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	mock "github.com/pingcap-inc/tiem/test/mock"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/context"
 	"testing"
 	"time"
 )
@@ -93,7 +94,7 @@ func TestRecoverPreCheck(t *testing.T) {
 		},
 	}
 
-	err := RecoverPreCheck(request)
+	err := RecoverPreCheck(context.TODO(), request)
 
 	assert.NoError(t, err)
 }

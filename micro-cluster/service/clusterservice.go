@@ -130,7 +130,7 @@ func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *cluste
 
 func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.ClusterQueryReqDTO, resp *clusterpb.ClusterQueryRespDTO) (err error) {
 	getLogger().Info("query cluster")
-	clusters, total, err := domain.ListCluster(req.Operator, req)
+	clusters, total, err := domain.ListCluster(ctx, req.Operator, req)
 	if err != nil {
 		getLogger().Info(err)
 		return nil
@@ -204,7 +204,7 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.C
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.ClusterDetailReqDTO, resp *clusterpb.ClusterDetailRespDTO) (err error) {
 	getLogger().Info("detail cluster")
 
-	cluster, err := domain.GetClusterDetail(req.Operator, req.ClusterId)
+	cluster, err := domain.GetClusterDetail(ctx, req.Operator, req.ClusterId)
 
 	if err != nil {
 		// todo
@@ -309,7 +309,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterpb.RecoverRequest, resp *clusterpb.RecoverResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "RecoverCluster", int(resp.GetRespStatus().GetCode()))
-	if err = domain.RecoverPreCheck(req); err != nil {
+	if err = domain.RecoverPreCheck(ctx, req); err != nil {
 		getLoggerWithContext(ctx).Errorf("recover cluster pre check failed, %s", err.Error())
 		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_RECOVER_PARAM_INVALID, Message: err.Error()}
 		return nil
@@ -426,7 +426,7 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 
 func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *clusterpb.QueryClusterParametersRequest, response *clusterpb.QueryClusterParametersResponse) (err error) {
 
-	content, err := domain.GetParameters(request.Operator, request.ClusterId)
+	content, err := domain.GetParameters(ctx, request.Operator, request.ClusterId)
 
 	if err != nil {
 		getLogger().Info(err)
@@ -492,7 +492,7 @@ func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clu
 }
 
 func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterpb.ListFlowsRequest, response *clusterpb.ListFlowsResponse) (err error) {
-	flows, total, err := domain.TaskRepo.ListFlows(req.BizId, req.Keyword, int(req.Status), int(req.Page.Page), int(req.Page.PageSize))
+	flows, total, err := domain.TaskRepo.ListFlows(ctx, req.BizId, req.Keyword, int(req.Status), int(req.Page.Page), int(req.Page.PageSize))
 	if err != nil {
 		getLogger().Error(err)
 		return err
@@ -528,7 +528,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterpb.Lis
 }
 
 func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *clusterpb.DetailFlowRequest, response *clusterpb.DetailFlowsResponse) error {
-	flowwork, err := domain.TaskRepo.Load(uint(request.FlowId))
+	flowwork, err := domain.TaskRepo.Load(ctx, uint(request.FlowId))
 	if e, ok := err.(framework.TiEMError); ok {
 		response.Status = &clusterpb.ResponseStatusDTO{
 			Code: int32(e.GetCode()),
@@ -568,7 +568,7 @@ var ManageSuccessResponseStatus = &clusterpb.ManagerResponseStatus{
 func (p *ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginRequest, resp *clusterpb.LoginResponse) error {
 	log := framework.LogWithContext(ctx).WithField("fp", "ClusterServiceHandler.Login")
 	log.Debug("req:", req)
-	token, err := p.authManager.Login(req.GetAccountName(), req.GetPassword())
+	token, err := p.authManager.Login(ctx, req.GetAccountName(), req.GetPassword())
 
 	if err != nil {
 		resp.Status = &clusterpb.ManagerResponseStatus{
@@ -587,7 +587,7 @@ func (p *ClusterServiceHandler) Login(ctx context.Context, req *clusterpb.LoginR
 }
 
 func (p *ClusterServiceHandler) Logout(ctx context.Context, req *clusterpb.LogoutRequest, resp *clusterpb.LogoutResponse) error {
-	accountName, err := p.authManager.Logout(req.TokenString)
+	accountName, err := p.authManager.Logout(ctx, req.TokenString)
 	if err != nil {
 		resp.Status = &clusterpb.ManagerResponseStatus{
 			Code:    http.StatusInternalServerError,
@@ -603,7 +603,7 @@ func (p *ClusterServiceHandler) Logout(ctx context.Context, req *clusterpb.Logou
 }
 
 func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *clusterpb.VerifyIdentityRequest, resp *clusterpb.VerifyIdentityResponse) error {
-	tenantId, accountId, accountName, err := p.authManager.Accessible(req.GetAuthType(), req.GetPath(), req.GetTokenString())
+	tenantId, accountId, accountName, err := p.authManager.Accessible(ctx, req.GetAuthType(), req.GetPath(), req.GetTokenString())
 
 	if err != nil {
 		if _, ok := err.(*userDomain.UnauthorizedError); ok {

@@ -142,9 +142,9 @@ func (handler *DBServiceHandler) ListFlows(ctx context.Context, req *dbpb.DBList
 			flowDTOs[i] = convertFlowToDTO(v)
 		}
 		rsp.Flows = flowDTOs
-		framework.Log().Infof("ListFlows successful, total: %d", total)
+		framework.LogWithContext(ctx).Infof("ListFlows successful, total: %d", total)
 	} else {
-		framework.Log().Infof("ListFlows failed, error: %s", err.Error())
+		framework.LogWithContext(ctx).Infof("ListFlows failed, error: %s", err.Error())
 	}
 	return err
 }

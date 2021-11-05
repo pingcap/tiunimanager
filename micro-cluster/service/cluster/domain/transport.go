@@ -229,7 +229,7 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (stri
 	//todo: check operator
 	operator := parseOperatorFromDTO(request.GetOperator())
 	getLoggerWithContext(ctx).Info(operator)
-	clusterAggregation, err := ClusterRepo.Load(request.GetClusterId())
+	clusterAggregation, err := ClusterRepo.Load(ctx, request.GetClusterId())
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("load cluster %s aggregation from metadb failed", request.GetClusterId())
 		return "", err
@@ -278,7 +278,7 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (stri
 	flow.Start()
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
-	err = ClusterRepo.Persist(clusterAggregation)
+	err = ClusterRepo.Persist(ctx, clusterAggregation)
 	if err != nil {
 		return "", err
 	}
@@ -292,7 +292,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (stri
 	operator := parseOperatorFromDTO(request.GetOperator())
 	getLoggerWithContext(ctx).Info(operator)
 
-	clusterAggregation, err := ClusterRepo.Load(request.GetClusterId())
+	clusterAggregation, err := ClusterRepo.Load(ctx, request.GetClusterId())
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("load cluster %s aggregation from metadb failed", request.GetClusterId())
 		return "", err
@@ -337,7 +337,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (stri
 	flow.Start()
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
-	err = ClusterRepo.Persist(clusterAggregation)
+	err = ClusterRepo.Persist(ctx, clusterAggregation)
 	if err != nil {
 		return "", err
 	}
@@ -530,7 +530,7 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
+	resp, err := client.DBClient.UpdateTransportRecord(flowContext, req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return false
@@ -614,7 +614,7 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
+	resp, err := client.DBClient.UpdateTransportRecord(flowContext, req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return false
@@ -702,7 +702,7 @@ func updateTransportRecordFailed(ctx context.Context, recordId, clusterId string
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(context.TODO(), req)
+	resp, err := client.DBClient.UpdateTransportRecord(ctx, req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		return err

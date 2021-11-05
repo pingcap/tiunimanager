@@ -284,7 +284,7 @@ func Stop(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param clusterId path int true "cluster id"
+// @Param clusterId path string true "cluster id"
 // @Success 200 {object} controller.CommonResult{data=DetailClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

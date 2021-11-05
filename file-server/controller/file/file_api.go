@@ -66,9 +66,6 @@ func DownloadExportFile(c *gin.Context) {
 	req := &dbpb.DBFindTransportRecordByIDRequest{
 		RecordId: int64(recordId),
 	}
-	framework.Log().Infof("begin find records %+v", req)
-	out, err := client.DBClient.FindTrasnportRecordByID(framework.NewMicroCtxFromGinCtx(c), req)
-	framework.Log().Infof("out: %+v", out)
 
 	resp, err := client.DBClient.FindTrasnportRecordByID(framework.NewMicroCtxFromGinCtx(c), req)
 	if err != nil {

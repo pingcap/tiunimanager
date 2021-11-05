@@ -16,6 +16,7 @@
 package secondparty
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os/exec"
@@ -366,13 +367,16 @@ func (secondMicro *SecondMicro) startNewTiupTask(taskID uint64, tiupPath string,
 		}
 		defer cancelFp()
 		cmd.SysProcAttr = genSysProcAttr()
+		var out, stderr bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
 		t0 := time.Now()
 		if err := cmd.Start(); err != nil {
-			logInFunc.Error("cmd start err", err)
+			logInFunc.Errorf("cmd start err: %+v, errStr: %s", err, stderr.String())
 			secondMicro.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
-				ErrorStr: fmt.Sprintf("%+v, errStr: %s", err, err.Error()),
+				ErrorStr: fmt.Sprintf("cmd start err: %+v, errStr: %s", err, stderr.String()),
 			}
 			return
 		}
@@ -388,7 +392,7 @@ func (secondMicro *SecondMicro) startNewTiupTask(taskID uint64, tiupPath string,
 		logInFunc.Info("cmd wait")
 		err := cmd.Wait()
 		if err != nil {
-			logInFunc.Error("cmd wait return with err", err)
+			logInFunc.Errorf("cmd wait return with err: %+v, errStr: %s", err, stderr.String())
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
 					if status.ExitStatus() == 0 {
@@ -397,11 +401,11 @@ func (secondMicro *SecondMicro) startNewTiupTask(taskID uint64, tiupPath string,
 					}
 				}
 			}
-			logInFunc.Error("task err:", err, "time cost", time.Since(t0))
+			logInFunc.Errorf("cmd wait return with err: %+v, errStr: %s, time cost: %v", err, stderr.String(), time.Since(t0))
 			secondMicro.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
-				ErrorStr: fmt.Sprintf("%+v, errStr: %s", err, err.Error()),
+				ErrorStr: fmt.Sprintf("cmd wait return with err: %+v, errStr: %s, time cost: %v", err, stderr.String(), time.Since(t0)),
 			}
 			return
 		} else {

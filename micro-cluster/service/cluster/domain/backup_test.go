@@ -251,15 +251,15 @@ func Test_updateBackupRecord(t *testing.T) {
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := &FlowContext{}
-	context.put(contextClusterKey, &ClusterAggregation{
+	context := NewFlowContext(ctx.TODO())
+	context.SetData(contextClusterKey, &ClusterAggregation{
 		LastBackupRecord: &BackupRecord{
 			Id:   123,
 			Size: 1000,
 		},
 	})
-	context.put(contextCtxKey, ctx.Background())
-	context.put("backupTaskId", uint64(123))
+	context.SetData(contextCtxKey, ctx.Background())
+	context.SetData("backupTaskId", uint64(123))
 	ret := updateBackupRecord(task, context)
 
 	assert.Equal(t, true, ret)

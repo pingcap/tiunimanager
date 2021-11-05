@@ -20,6 +20,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -62,30 +64,30 @@ func (t TiUPTiDBMetadataManager) FetchFromRemoteCluster(ctx context.Context, req
 	}
 	Client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiupIp, req.Port), &Conf)
 	if err != nil {
-		return nil, err
+		framework.Log().Errorf("FetchFromRemoteCluster, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh dial error", err)
 	}
 	defer Client.Close()
 
 	sftpClient, err := sftp.NewClient(Client)
 	if err != nil {
-		return nil, err
+		framework.Log().Errorf("FetchFromRemoteCluster, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "new sftp client error", err)
 	}
 	defer sftpClient.Close()
 
 	remoteFileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiupPath, req.ClusterNames[0])
 	remoteFile, err := sftpClient.Open(remoteFileName)
 	if err != nil {
-		return nil, err
+		framework.Log().Errorf("FetchFromRemoteCluster, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "open sftp client error", err)
 	}
 	defer remoteFile.Close()
-	if err != nil {
-		return nil, err
-	}
+
 	dataByte, err := ioutil.ReadAll(remoteFile)
 	if err != nil {
-		if err != nil {
-			return nil, err
-		}
+		framework.Log().Errorf("FetchFromRemoteCluster, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
 	}
 
 	metadata := &spec.ClusterMeta{}

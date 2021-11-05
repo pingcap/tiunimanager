@@ -95,7 +95,7 @@ func handleMetrics(start time.Time, funcName string, code int) {
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb.ClusterCreateReqDTO, resp *clusterpb.ClusterCreateRespDTO) (err error) {
 	getLogger().Info("create cluster")
-	clusterAggregation, err := domain.CreateCluster(req.GetOperator(), req.GetCluster(), req.GetDemands())
+	clusterAggregation, err := domain.CreateCluster(ctx, req.GetOperator(), req.GetCluster(), req.GetDemands())
 
 	if err != nil {
 		getLogger().Info(err)
@@ -113,7 +113,7 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 
 func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.ClusterTakeoverReqDTO, resp *clusterpb.ClusterTakeoverRespDTO) (err error) {
 	getLogger().Info("takeover clusters")
-	clusters, err := domain.TakeoverClusters(req.Operator, req)
+	clusters, err := domain.TakeoverClusters(ctx, req.Operator, req)
 	if err != nil {
 		getLogger().Info(err)
 		return nil
@@ -152,7 +152,7 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.ClusterDeleteReqDTO, resp *clusterpb.ClusterDeleteRespDTO) (err error) {
 	getLogger().Info("delete cluster")
 
-	clusterAggregation, err := domain.DeleteCluster(req.GetOperator(), req.GetClusterId())
+	clusterAggregation, err := domain.DeleteCluster(ctx, req.GetOperator(), req.GetClusterId())
 	if err != nil {
 		// todo
 		getLogger().Info(err)
@@ -170,7 +170,7 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 	start := time.Now()
 	defer handleMetrics(start, "RestartCluster", int(resp.GetRespStatus().GetCode()))
 
-	clusterAggregation, err := domain.RestartCluster(req.GetOperator(), req.GetClusterId())
+	clusterAggregation, err := domain.RestartCluster(ctx, req.GetOperator(), req.GetClusterId())
 	if err != nil {
 		resp.RespStatus = BizErrorResponseStatus
 		resp.RespStatus.Message = err.Error()
@@ -188,7 +188,7 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.C
 	start := time.Now()
 	defer handleMetrics(start, "StopCluster", int(resp.GetRespStatus().GetCode()))
 
-	clusterAggregation, err := domain.StopCluster(req.GetOperator(), req.GetClusterId())
+	clusterAggregation, err := domain.StopCluster(ctx, req.GetOperator(), req.GetClusterId())
 	if err != nil {
 		resp.RespStatus = BizErrorResponseStatus
 		resp.RespStatus.Message = err.Error()
@@ -442,7 +442,7 @@ func (c ClusterServiceHandler) QueryParameters(ctx context.Context, request *clu
 
 func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clusterpb.SaveClusterParametersRequest, response *clusterpb.SaveClusterParametersResponse) (err error) {
 
-	clusterAggregation, err := domain.ModifyParameters(request.Operator, request.ClusterId, request.ParametersJson)
+	clusterAggregation, err := domain.ModifyParameters(ctx, request.Operator, request.ClusterId, request.ParametersJson)
 
 	if err != nil {
 		// todo

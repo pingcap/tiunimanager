@@ -70,7 +70,7 @@ type ClusterAggregation struct {
 var contextClusterKey = "clusterAggregation"
 var contextTakeoverReqKey = "takeoverRequest"
 
-func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
+func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	cluster := &Cluster{
@@ -105,7 +105,7 @@ func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBas
 
 	// Start the workflow to create a cluster instance
 
-	flow, err := CreateFlowWork(cluster.Id, FlowCreateCluster, operator)
+	flow, err := CreateFlowWork(ctx, cluster.Id, FlowCreateCluster, operator)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func CreateCluster(ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBas
 // @Parameter req
 // @return []*ClusterAggregation
 // @return error
-func TakeoverClusters(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeoverReqDTO) ([]*ClusterAggregation, error) {
+func TakeoverClusters(ctx ctx.Context, ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeoverReqDTO) ([]*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	if len(req.ClusterNames) != 1 {
@@ -153,7 +153,7 @@ func TakeoverClusters(ope *clusterpb.OperatorDTO, req *clusterpb.ClusterTakeover
 	}
 
 	// Start the workflow to takeover a cluster instance
-	flow, err := CreateFlowWork(cluster.Id, FlowTakeoverCluster, operator)
+	flow, err := CreateFlowWork(ctx, cluster.Id, FlowTakeoverCluster, operator)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func (clusterAggregation *ClusterAggregation) updateWorkFlow(flow *FlowWorkEntit
 	clusterAggregation.FlowModified = true
 }
 
-func DeleteCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
+func DeleteCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
@@ -185,7 +185,7 @@ func DeleteCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggreg
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	flow, _ := CreateFlowWork(clusterAggregation.Cluster.Id, FlowDeleteCluster, operator)
+	flow, _ := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowDeleteCluster, operator)
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()
 
@@ -195,7 +195,7 @@ func DeleteCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggreg
 	return clusterAggregation, nil
 }
 
-func RestartCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
+func RestartCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
@@ -204,7 +204,7 @@ func RestartCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggre
 	}
 	clusterAggregation.CurrentOperator = operator
 
-	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowRestartCluster, operator)
+	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowRestartCluster, operator)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func RestartCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggre
 	return clusterAggregation, nil
 }
 
-func StopCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
+func StopCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
@@ -224,7 +224,7 @@ func StopCluster(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregat
 	}
 	clusterAggregation.CurrentOperator = operator
 
-	flow, err := CreateFlowWork(clusterAggregation.Cluster.Id, FlowStopCluster, operator)
+	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowStopCluster, operator)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func GetClusterDetail(ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAgg
 	return cluster, err
 }
 
-func ModifyParameters(ope *clusterpb.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
+func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	clusterAggregation, err := ClusterRepo.Load(clusterId)
@@ -265,7 +265,7 @@ func ModifyParameters(ope *clusterpb.OperatorDTO, clusterId string, content stri
 	//	return clusterAggregation, errors.New("incomplete processing flow")
 	//}
 
-	flow, err := CreateFlowWork(clusterId, FlowModifyParameters, operator)
+	flow, err := CreateFlowWork(ctx, clusterId, FlowModifyParameters, operator)
 	if err != nil {
 		// todo
 		getLogger().Errorf("modify parameters clusterid = %s, content = %s, errStr: %s", clusterId, content, err.Error())
@@ -299,7 +299,7 @@ func GetParameters(ope *clusterpb.OperatorDTO, clusterId string) (parameterJson 
 //}
 
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 
 	demands := clusterAggregation.Cluster.Demands
 
@@ -316,7 +316,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func buildConfig(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 
 	config := &TopologyConfigRecord{
 		TenantId:    clusterAggregation.Cluster.TenantId,
@@ -331,7 +331,7 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 }
 
 func deployCluster(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	spec := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 
@@ -347,7 +347,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 		deployTaskId, _ := secondparty.SecondParty.MicroSrvTiupDeploy(
 			secondparty.ClusterComponentTypeStr, cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
 		)
-		context.put("deployTaskId", deployTaskId)
+		context.SetData("deployTaskId", deployTaskId)
 		getLogger().Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
 	}
 
@@ -356,11 +356,11 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 }
 
 func startupCluster(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
 	var req dbpb.FindTiupTaskByIDRequest
-	req.Id = context.value("deployTaskId").(uint64)
+	req.Id = context.GetData("deployTaskId").(uint64)
 
 	for i := 0; i < 30; i++ {
 		time.Sleep(10 * time.Second)
@@ -388,7 +388,7 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 		task.Fail(err)
 		return false
 	}
-	context.put("startTaskId", startTaskId)
+	context.SetData("startTaskId", startTaskId)
 	getLogger().Infof("got startTaskId %s", strconv.Itoa(int(startTaskId)))
 
 	task.Success(nil)
@@ -396,7 +396,7 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 }
 
 func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.StatusModified = true
 	clusterAggregation.Cluster.Online()
 
@@ -410,7 +410,7 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 }
 
 func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
-	req := context.value(contextTakeoverReqKey).(*clusterpb.ClusterTakeoverReqDTO)
+	req := context.GetData(contextTakeoverReqKey).(*clusterpb.ClusterTakeoverReqDTO)
 
 	metadata, err := MetadataMgr.FetchFromRemoteCluster(ctx.TODO(), req)
 	if err != nil {
@@ -418,7 +418,7 @@ func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.ClusterMetadata = metadata
 
 	clusterAggregation.CurrentTopologyConfigRecord = &TopologyConfigRecord{
@@ -441,7 +441,7 @@ func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {
 }
 
 func buildTopology(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 
 	components, err := MetadataMgr.ParseComponentsFromMetaData(clusterAggregation.ClusterMetadata)
 	if err != nil {
@@ -455,7 +455,7 @@ func buildTopology(task *TaskEntity, context *FlowContext) bool {
 }
 
 func takeoverResource(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 
 	allocReq, err := TopologyPlanner.AnalysisResourceRequest(clusterAggregation.Cluster, clusterAggregation.ClusterComponents)
 	if err != nil {
@@ -471,7 +471,7 @@ func takeoverResource(task *TaskEntity, context *FlowContext) bool {
 }
 
 func deleteCluster(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.Cluster.Delete()
 	clusterAggregation.StatusModified = true
 
@@ -500,7 +500,7 @@ func destroyTasks(task *TaskEntity, context *FlowContext) bool {
 // @Parameter context
 // @return bool
 func clusterRestart(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
 	getLogger().Infof("restart cluster %s", cluster.ClusterName)
@@ -510,7 +510,7 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 		task.Fail(err)
 		return false
 	}
-	context.put("restartTaskId", restartTaskId)
+	context.SetData("restartTaskId", restartTaskId)
 	getLogger().Infof("got restartTaskId %s", strconv.Itoa(int(restartTaskId)))
 
 	go func() {
@@ -563,7 +563,7 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 // @Parameter context
 // @return bool
 func clusterStop(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
 	getLogger().Infof("stop cluster %s", cluster.ClusterName)
@@ -573,7 +573,7 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 		task.Fail(err)
 		return false
 	}
-	context.put("stopTaskId", stopTaskId)
+	context.SetData("stopTaskId", stopTaskId)
 	getLogger().Infof("got stopTaskId %s", strconv.Itoa(int(stopTaskId)))
 
 	go func() {

@@ -76,7 +76,7 @@ func NewJaegerTracer(serviceName string, addr string) (opentracing.Tracer, io.Cl
 	tracer, closer, err := cfg.NewTracer(
 		jaegercfg.Reporter(reporter),
 	)
-
+	context.Background()
 	return tracer, closer, err
 }
 

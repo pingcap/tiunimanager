@@ -69,7 +69,7 @@ func Backup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, b
 	clusterAggregation.CurrentOperator = operator
 	cluster := clusterAggregation.Cluster
 
-	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster, operator)
+	flow, _ := CreateFlowWork(ctx, clusterId, FlowBackupCluster, operator)
 
 	//todo: only support FULL Physics backup now
 	record := &BackupRecord{
@@ -224,7 +224,7 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 
 	// Start the workflow to create a cluster instance
 
-	flow, err := CreateFlowWork(cluster.Id, FlowRecoverCluster, operator)
+	flow, err := CreateFlowWork(ctx, cluster.Id, FlowRecoverCluster, operator)
 	if err != nil {
 		return nil, err
 	}
@@ -375,11 +375,11 @@ func getBackupPath(filePrefix string, clusterId string, time time.Time, backupRa
 }
 
 func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin backupCluster")
 	defer getLoggerWithContext(ctx).Info("end backupCluster")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	record := clusterAggregation.LastBackupRecord
 	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
@@ -419,23 +419,23 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		getLoggerWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		return false
 	}
-	flowContext.put("backupTaskId", backupTaskId)
+	flowContext.SetData("backupTaskId", backupTaskId)
 
 	return true
 }
 
 func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin updateBackupRecord")
 	defer getLoggerWithContext(ctx).Info("end updateBackupRecord")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 	record := clusterAggregation.LastBackupRecord
 
 	var req dbpb.FindTiupTaskByIDRequest
 	var resp *dbpb.FindTiupTaskByIDResponse
 	var err error
-	req.Id = flowContext.value("backupTaskId").(uint64)
+	req.Id = flowContext.GetData("backupTaskId").(uint64)
 
 	for i := 0; i < 30; i++ {
 		time.Sleep(1 * time.Second)
@@ -481,11 +481,11 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin recoverFromSrcCluster")
 	defer getLoggerWithContext(ctx).Info("end recoverFromSrcCluster")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	recoverInfo := cluster.RecoverInfo
 	if recoverInfo.SourceClusterId == "" || recoverInfo.BackupRecordId <= 0 {
@@ -495,7 +495,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 
 	//todo: wait start task finished, temporary solution
 	var req dbpb.FindTiupTaskByIDRequest
-	req.Id = flowContext.value("startTaskId").(uint64)
+	req.Id = flowContext.GetData("startTaskId").(uint64)
 
 	for i := 0; i < 30; i++ {
 		time.Sleep(1 * time.Second)

@@ -72,6 +72,7 @@ func (topo *Specification) ComponentsByStartOrder() (comps []Component) {
 	comps = append(comps, &ClusterServerComponent{topo})
 	comps = append(comps, &WebServerComponent{topo})
 	comps = append(comps, &KibanaComponent{topo})
+	comps = append(comps, &FilebeatComponent{topo})
 	return
 }
 
@@ -88,6 +89,7 @@ func (topo *Specification) ComponentsByUpdateOrder() (comps []Component) {
 	comps = append(comps, &AlertManagerComponent{Topology: topo})
 	comps = append(comps, &ElasticSearchComponent{topo})
 	comps = append(comps, &KibanaComponent{topo})
+	comps = append(comps, &FilebeatComponent{topo})
 	return
 }
 

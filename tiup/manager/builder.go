@@ -369,7 +369,6 @@ func buildMonitoredDeployTask(
 	for _, comp := range []string{
 		spec.ComponentNodeExporter,
 		spec.ComponentBlackboxExporter,
-		spec.ComponentFilebeat,
 	} {
 		version := m.bindVersion(comp, version)
 
@@ -448,8 +447,6 @@ func buildMonitoredDeployTask(
 						Log:    logDir,
 						Cache:  m.specManager.Path(name, spec.TempConfigPath),
 					},
-					esHosts[0],
-					tiemHosts,
 				)
 
 			deployCompTasks = append(deployCompTasks, tb.BuildAsStep(fmt.Sprintf("  - Copy %s -> %s", comp, host)))
@@ -477,7 +474,6 @@ func buildRefreshMonitoredConfigTasks(
 	ports := map[string]int{
 		spec.ComponentNodeExporter:     monitoredOptions.NodeExporterPort,
 		spec.ComponentBlackboxExporter: monitoredOptions.BlackboxExporterPort,
-		spec.ComponentFilebeat:         0, // no need to listen any port
 	}
 
 	tasks := []*task.StepDisplay{}
@@ -485,7 +481,6 @@ func buildRefreshMonitoredConfigTasks(
 	for _, comp := range []string{
 		spec.ComponentNodeExporter,
 		spec.ComponentBlackboxExporter,
-		spec.ComponentFilebeat,
 	} {
 		for host, info := range uniqueHosts {
 			if noAgentHosts.Exist(host) {
@@ -532,8 +527,6 @@ func buildRefreshMonitoredConfigTasks(
 						Log:    logDir,
 						Cache:  m.specManager.Path(name, spec.TempConfigPath),
 					},
-					esHosts[0],
-					tiemHosts,
 				).
 				SystemCtl(
 					host,

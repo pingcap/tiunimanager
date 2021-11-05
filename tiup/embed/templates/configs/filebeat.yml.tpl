@@ -28,8 +28,10 @@ filebeat.config.modules:
   reload.enabled: true
   reload.period: 5s
 
+{{- if .HasAllLogs }}
 filebeat:
   inputs:
+{{- if .HasGeneralLogs }}
     - type: log
       enabled: true
       paths:
@@ -45,6 +47,8 @@ filebeat:
       include_lines:  [  ]
       exclude_lines: [  ]
       fields_under_root: true
+{{- end}}
+{{- if .HasAuditLogs }}
     - type: log
       enabled: true
       paths:
@@ -60,6 +64,8 @@ filebeat:
       #include_lines:  [  ]
       exclude_lines: [  ]
       fields_under_root: true
+{{- end}}
+{{- end}}
   
 output.elasticsearch:
   hosts: "${esAddress:{{.ElasticSearchHost}}}"

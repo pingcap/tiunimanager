@@ -118,6 +118,24 @@ func (u *UpdateMeta) Execute(ctx context.Context) error {
 	}
 	topo.Alertmanagers = alertmanagers
 
+	kibanas := make([]*spec.KibanaSpec, 0)
+	for i, instance := range (&spec.KibanaComponent{Topology: topo}).Instances() {
+		if deleted.Exist(instance.ID()) {
+			continue
+		}
+		kibanas = append(kibanas, topo.KibanaServers[i])
+	}
+	topo.KibanaServers = kibanas
+
+	filebeats := make([]*spec.FilebeatSpec, 0)
+	for i, instance := range (&spec.FilebeatComponent{Topology: topo}).Instances() {
+		if deleted.Exist(instance.ID()) {
+			continue
+		}
+		filebeats = append(filebeats, topo.FilebeatServers[i])
+	}
+	topo.FilebeatServers = filebeats
+
 	return spec.SaveMetadata(u.cluster, u.metadata)
 }
 

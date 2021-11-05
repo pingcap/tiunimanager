@@ -277,7 +277,7 @@ func (i *BaseInstance) ServiceName() string {
 	default:
 		name = i.Name
 	}
-	if i.GetMainPort() > 0 {
+	if i.GetMainPort() >= 0 {
 		return fmt.Sprintf("%s-%d.service", name, i.GetMainPort())
 	}
 	return fmt.Sprintf("%s.service", name)

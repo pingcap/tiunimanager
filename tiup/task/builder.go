@@ -19,7 +19,6 @@ import (
 
 	operator "github.com/pingcap-inc/tiem/tiup/operation"
 	"github.com/pingcap-inc/tiem/tiup/spec"
-	"github.com/pingcap-inc/tiem/tiup/templates/config"
 	"github.com/pingcap/tiup/pkg/cluster/executor"
 	cspec "github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/pingcap/tiup/pkg/crypto"
@@ -237,8 +236,6 @@ func (b *Builder) MonitoredConfig(
 	options *cspec.MonitoredOptions,
 	deployUser string,
 	paths meta.DirPaths,
-	es string,
-	tiemHosts map[string]*config.LogPathInfo,
 ) *Builder {
 	b.tasks = append(b.tasks, &MonitoredConfig{
 		name:       name,
@@ -248,8 +245,6 @@ func (b *Builder) MonitoredConfig(
 		options:    options,
 		deployUser: deployUser,
 		paths:      paths,
-		esHost:     es,
-		tiemHosts:  tiemHosts,
 	})
 	return b
 }

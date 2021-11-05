@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"os"
 	"path"
+	"strings"
 	"text/template"
 
 	"github.com/pingcap-inc/tiem/tiup/embed"
@@ -33,24 +34,29 @@ type LogPathInfo struct {
 type FilebeatConfig struct {
 	Host              string
 	DeployDir         string
+	DataDir           string
 	LogDir            string
 	ElasticSearchHost string
 	GeneralLogs       []string
 	AuditLogs         []string
+	HasAllLogs        bool
+	HasGeneralLogs    bool
+	HasAuditLogs      bool
 }
 
 // NewFilebeatConfig returns a FilebeatConfig
-func NewFilebeatConfig(host, deployDir, logDir string) *FilebeatConfig {
+func NewFilebeatConfig(host, deployDir, dataDir, logDir string) *FilebeatConfig {
 	return &FilebeatConfig{
 		Host:      host,
 		DeployDir: deployDir,
+		DataDir:   dataDir,
 		LogDir:    logDir,
 	}
 }
 
 // WithElasticSearch sets es host
-func (c *FilebeatConfig) WithElasticSearch(es string) *FilebeatConfig {
-	c.ElasticSearchHost = es
+func (c *FilebeatConfig) WithElasticSearch(esAddress []string) *FilebeatConfig {
+	c.ElasticSearchHost = strings.Join(esAddress, ",")
 	return c
 }
 
@@ -59,6 +65,21 @@ func (c *FilebeatConfig) WithTiEMLogs(paths map[string]*LogPathInfo) *FilebeatCo
 	if p, ok := paths[c.Host]; ok {
 		c.GeneralLogs = append(c.GeneralLogs, p.GeneralLogs.Slice()...)
 		c.AuditLogs = append(c.AuditLogs, p.AuditLogs.Slice()...)
+	}
+	if len(c.GeneralLogs) <= 0 {
+		c.HasGeneralLogs = false
+	} else {
+		c.HasGeneralLogs = true
+	}
+	if len(c.AuditLogs) <= 0 {
+		c.HasAuditLogs = false
+	} else {
+		c.HasAuditLogs = true
+	}
+	if len(c.GeneralLogs) <= 0 && len(c.AuditLogs) <= 0 {
+		c.HasAllLogs = false
+	} else {
+		c.HasAllLogs = true
 	}
 	return c
 }

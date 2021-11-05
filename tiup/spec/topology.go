@@ -100,6 +100,7 @@ type Specification struct {
 	TracerServers        []*TracerServerSpec    `yaml:"tracer_servers"`
 	ElasticSearchServers []*ElasticSearchSpec   `yaml:"elasticsearch_servers"`
 	KibanaServers        []*KibanaSpec          `yaml:"kibana_servers,omitempty"`
+	FilebeatServers      []*FilebeatSpec        `yaml:"filebeat_servers,omitempty"`
 	Monitors             []*PrometheusSpec      `yaml:"monitoring_servers,omitempty"`
 	Grafanas             []*GrafanaSpec         `yaml:"grafana_servers,omitempty"`
 	Alertmanagers        []*AlertmanagerSpec    `yaml:"alertmanager_servers,omitempty"`
@@ -322,6 +323,24 @@ func (s *Specification) portConflictsDetect() error {
 		}
 	}
 
+	return nil
+}
+
+func (s *Specification) filebeatInstanceDetect() error {
+	hosts := make(map[string]int, 0)
+	for _, filebeat := range s.FilebeatServers {
+		count := hosts[filebeat.Host]
+		hosts[filebeat.Host] = count + 1
+		if hosts[filebeat.Host] > 1 {
+			return &meta.ValidateErr{
+				Type:   meta.TypeConflict,
+				Target: "instance",
+				LHS:    fmt.Sprintf("%s:%d.%d", filebeat.Config, count, 1),
+				RHS:    fmt.Sprintf("%s:%d.%d", filebeat.Config, count, 1),
+				Value:  filebeat.Host,
+			}
+		}
+	}
 	return nil
 }
 
@@ -617,6 +636,10 @@ func (s *Specification) Validate() error {
 		return err
 	}
 
+	if err := s.filebeatInstanceDetect(); err != nil {
+		return err
+	}
+
 	return spec.RelativePathDetect(s, isSkipField)
 }
 
@@ -673,6 +696,7 @@ func (s *Specification) Merge(that Topology) Topology {
 		TracerServers:        append(s.TracerServers, spec.TracerServers...),
 		ElasticSearchServers: append(s.ElasticSearchServers, spec.ElasticSearchServers...),
 		KibanaServers:        append(s.KibanaServers, spec.KibanaServers...),
+		FilebeatServers:      append(s.FilebeatServers, spec.FilebeatServers...),
 		Monitors:             append(s.Monitors, spec.Monitors...),
 		Grafanas:             append(s.Grafanas, spec.Grafanas...),
 		Alertmanagers:        append(s.Alertmanagers, spec.Alertmanagers...),
@@ -827,5 +851,5 @@ func getPort(v reflect.Value) string {
 			return fmt.Sprintf("%d", v.Field(i).Int())
 		}
 	}
-	return ""
+	return "0"
 }

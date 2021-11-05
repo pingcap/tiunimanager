@@ -43,8 +43,6 @@ type MonitoredConfig struct {
 	deployUser string
 	tlsEnabled bool
 	paths      meta.DirPaths
-	esHost     string
-	tiemHosts  map[string]*config.LogPathInfo
 }
 
 // Execute implements the Task interface
@@ -52,7 +50,6 @@ func (m *MonitoredConfig) Execute(ctx context.Context) error {
 	ports := map[string]int{
 		spec.ComponentNodeExporter:     m.options.NodeExporterPort,
 		spec.ComponentBlackboxExporter: m.options.BlackboxExporterPort,
-		spec.ComponentFilebeat:         0, // no need to listen any port
 	}
 	// Copy to remote server
 	exec, found := ctxt.GetInner(ctx).GetExecutor(m.host)
@@ -82,21 +79,6 @@ func (m *MonitoredConfig) Execute(ctx context.Context) error {
 		sh = scripts.
 			NewBlackboxExporterScript(m.paths.Deploy, m.paths.Log).
 			WithPort(uint64(m.options.BlackboxExporterPort))
-	case spec.ComponentFilebeat:
-		if err := m.syncFilebeatConfig(
-			ctx,
-			exec,
-			config.NewFilebeatConfig(
-				m.host,
-				m.paths.Deploy,
-				m.paths.Log,
-			).
-				WithElasticSearch(m.esHost).
-				WithTiEMLogs(m.tiemHosts),
-		); err != nil {
-			return err
-		}
-		sh = scripts.NewFilebeatScript(m.paths.Deploy)
 	default:
 		return fmt.Errorf("unknown monitored component %s", m.component)
 	}
@@ -169,15 +151,6 @@ func (m *MonitoredConfig) syncBlackboxConfig(ctx context.Context, exec ctxt.Exec
 		return err
 	}
 	dst := filepath.Join(m.paths.Deploy, "conf", "blackbox.yml")
-	return exec.Transfer(ctx, fp, dst, false, 0)
-}
-
-func (m *MonitoredConfig) syncFilebeatConfig(ctx context.Context, exec ctxt.Executor, cfg template.ConfigGenerator) error {
-	fp := filepath.Join(m.paths.Cache, fmt.Sprintf("filebeat_%s.yaml", m.host))
-	if err := cfg.ConfigToFile(fp); err != nil {
-		return err
-	}
-	dst := filepath.Join(m.paths.Deploy, "conf", "filebeat.yml")
 	return exec.Transfer(ctx, fp, dst, false, 0)
 }
 

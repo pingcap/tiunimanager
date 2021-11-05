@@ -267,7 +267,6 @@ func systemctlMonitor(ctx context.Context, hosts []string, noAgentHosts set.Stri
 	for _, comp := range []string{
 		spec.ComponentNodeExporter,
 		spec.ComponentBlackboxExporter,
-		spec.ComponentFilebeat,
 	} {
 		log.Infof("%s component %s", actionPrevMsgs[action], comp)
 
@@ -436,8 +435,7 @@ func EnableComponent(ctx context.Context, instances []spec.Instance, noAgentHost
 		// skip certain instances
 		switch name {
 		case spec.ComponentNodeExporter,
-			spec.ComponentBlackboxExporter,
-			spec.ComponentFilebeat:
+			spec.ComponentBlackboxExporter:
 			if noAgentHosts.Exist(ins.GetHost()) {
 				log.Debugf("Ignored enabling/disabling %s for %s:%d", name, ins.GetHost(), ins.GetPort())
 				continue
@@ -475,8 +473,7 @@ func StartComponent(ctx context.Context, instances []spec.Instance, noAgentHosts
 		ins := ins
 		switch name {
 		case spec.ComponentNodeExporter,
-			spec.ComponentBlackboxExporter,
-			spec.ComponentFilebeat:
+			spec.ComponentBlackboxExporter:
 			if noAgentHosts.Exist(ins.GetHost()) {
 				log.Debugf("Ignored starting %s for %s:%d", name, ins.GetHost(), ins.GetPort())
 				continue
@@ -538,8 +535,7 @@ func StopComponent(ctx context.Context, instances []spec.Instance, noAgentHosts 
 		ins := ins
 		switch name {
 		case spec.ComponentNodeExporter,
-			spec.ComponentBlackboxExporter,
-			spec.ComponentFilebeat:
+			spec.ComponentBlackboxExporter:
 			if noAgentHosts.Exist(ins.GetHost()) {
 				log.Debugf("Ignored stopping %s for %s:%d", name, ins.GetHost(), ins.GetPort())
 				continue
@@ -610,6 +606,5 @@ func monitorPortMap(options *cspec.MonitoredOptions) map[string]int {
 	return map[string]int{
 		spec.ComponentNodeExporter:     options.NodeExporterPort,
 		spec.ComponentBlackboxExporter: options.BlackboxExporterPort,
-		spec.ComponentFilebeat:         0, // no public port needed
 	}
 }

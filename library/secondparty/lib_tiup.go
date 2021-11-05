@@ -18,7 +18,6 @@ package secondparty
 import (
 	"context"
 	"fmt"
-	"os"
 	"os/exec"
 	"syscall"
 	"time"
@@ -69,7 +68,7 @@ func (secondMicro *SecondMicro) startNewTiupDeployTask(taskID uint64, req *CmdDe
 		return
 	}
 	go func() {
-		defer os.Remove(topologyTmpFilePath)
+		//defer os.Remove(topologyTmpFilePath)
 		var args []string
 		args = append(args, string(req.TiUPComponent), "deploy", req.InstanceName, req.Version, topologyTmpFilePath)
 		args = append(args, req.Flags...)
@@ -373,7 +372,7 @@ func (secondMicro *SecondMicro) startNewTiupTask(taskID uint64, tiupPath string,
 			secondMicro.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
-				ErrorStr: fmt.Sprintln(err),
+				ErrorStr: fmt.Sprintf("%+v, errStr: %s", err, err.Error()),
 			}
 			return
 		}
@@ -402,7 +401,7 @@ func (secondMicro *SecondMicro) startNewTiupTask(taskID uint64, tiupPath string,
 			secondMicro.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
-				ErrorStr: fmt.Sprintln(err),
+				ErrorStr: fmt.Sprintf("%+v, errStr: %s", err, err.Error()),
 			}
 			return
 		} else {

@@ -516,6 +516,26 @@ func (mr *MockTiEMDBServiceMockRecorder) GetHierarchy(ctx, in interface{}, opts 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHierarchy", reflect.TypeOf((*MockTiEMDBService)(nil).GetHierarchy), varargs...)
 }
 
+// GetStocks mocks base method.
+func (m *MockTiEMDBService) GetStocks(ctx context.Context, in *dbpb.DBGetStocksRequest, opts ...client.CallOption) (*dbpb.DBGetStocksResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetStocks", varargs...)
+	ret0, _ := ret[0].(*dbpb.DBGetStocksResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetStocks indicates an expected call of GetStocks.
+func (mr *MockTiEMDBServiceMockRecorder) GetStocks(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStocks", reflect.TypeOf((*MockTiEMDBService)(nil).GetStocks), varargs...)
+}
+
 // GetTiupTaskStatusByBizID mocks base method.
 func (m *MockTiEMDBService) GetTiupTaskStatusByBizID(ctx context.Context, in *dbpb.GetTiupTaskStatusByBizIDRequest, opts ...client.CallOption) (*dbpb.GetTiupTaskStatusByBizIDResponse, error) {
 	m.ctrl.T.Helper()
@@ -1473,6 +1493,20 @@ func (m *MockTiEMDBServiceHandler) GetHierarchy(arg0 context.Context, arg1 *dbpb
 func (mr *MockTiEMDBServiceHandlerMockRecorder) GetHierarchy(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHierarchy", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).GetHierarchy), arg0, arg1, arg2)
+}
+
+// GetStocks mocks base method.
+func (m *MockTiEMDBServiceHandler) GetStocks(arg0 context.Context, arg1 *dbpb.DBGetStocksRequest, arg2 *dbpb.DBGetStocksResponse) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStocks", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// GetStocks indicates an expected call of GetStocks.
+func (mr *MockTiEMDBServiceHandlerMockRecorder) GetStocks(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStocks", reflect.TypeOf((*MockTiEMDBServiceHandler)(nil).GetStocks), arg0, arg1, arg2)
 }
 
 // GetTiupTaskStatusByBizID mocks base method.

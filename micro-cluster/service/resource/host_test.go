@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,11 +18,14 @@ package resource
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"testing"
 
 	"github.com/asim/go-micro/v3/client"
+	"github.com/golang/mock/gomock"
+	rpc_client "github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	mock "github.com/pingcap-inc/tiem/test/mock"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -89,8 +91,11 @@ func genHostRspFromDB(hostId string) *dbpb.DBHostInfoDTO {
 func Test_ImportHost_Succeed(t *testing.T) {
 	fake_str := "import succeed"
 	fake_hostId := "xxxx-xxxx-yyyy-yyyy"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockAddHost(func(ctx context.Context, in *dbpb.DBAddHostRequest, opts ...client.CallOption) (*dbpb.DBAddHostResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().AddHost(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBAddHostRequest, opts ...client.CallOption) (*dbpb.DBAddHostResponse, error) {
 		if in.Host.HostName == "TEST_HOST1" {
 			rsp := new(dbpb.DBAddHostResponse)
 			rsp.Rs = new(dbpb.DBHostResponseStatus)
@@ -102,6 +107,7 @@ func Test_ImportHost_Succeed(t *testing.T) {
 			return nil, status.Error(codes.Internal, "BAD REQUEST")
 		}
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.ImportHostRequest)
 	in.Host = genHostInfo("TEST_HOST1")
@@ -118,10 +124,13 @@ func Test_ImportHost_Succeed(t *testing.T) {
 
 func Test_ImportHost_WithErr(t *testing.T) {
 	fake_str := "host already exists"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockAddHost(func(ctx context.Context, in *dbpb.DBAddHostRequest, opts ...client.CallOption) (*dbpb.DBAddHostResponse, error) {
-		return nil, status.Errorf(codes.AlreadyExists, fake_str)
-	})
+	//fakeDBClient := InitMockDBClient()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().AddHost(gomock.Any(), gomock.Any()).Return(nil, status.Errorf(codes.AlreadyExists, fake_str))
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.ImportHostRequest)
 	in.Host = genHostInfo("TEST_HOST1")
@@ -143,14 +152,18 @@ func Test_ImportHost_WithErr(t *testing.T) {
 
 func Test_ImportHost_WithErrCode(t *testing.T) {
 	fake_str := "Host Ip is not Invalid"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockAddHost(func(ctx context.Context, in *dbpb.DBAddHostRequest, opts ...client.CallOption) (*dbpb.DBAddHostResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().AddHost(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBAddHostRequest, opts ...client.CallOption) (*dbpb.DBAddHostResponse, error) {
 		rsp := new(dbpb.DBAddHostResponse)
 		rsp.Rs = new(dbpb.DBHostResponseStatus)
 		rsp.Rs.Code = int32(codes.InvalidArgument)
 		rsp.Rs.Message = fake_str
 		return rsp, nil
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.ImportHostRequest)
 	in.Host = genHostInfo("TEST_HOST1")
@@ -169,8 +182,10 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 	fake_str := "import succeed"
 	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
 	fake_hostId2 := "yyyy-yyyy-xxxx-xxxx"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockAddHostsInBatch(func(ctx context.Context, in *dbpb.DBAddHostsInBatchRequest, opts ...client.CallOption) (*dbpb.DBAddHostsInBatchResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().AddHostsInBatch(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBAddHostsInBatchRequest, opts ...client.CallOption) (*dbpb.DBAddHostsInBatchResponse, error) {
 		if in.Hosts[0].HostName == "TEST_HOST1" && in.Hosts[1].HostName == "TEST_HOST2" {
 			rsp := new(dbpb.DBAddHostsInBatchResponse)
 			rsp.Rs = new(dbpb.DBHostResponseStatus)
@@ -184,6 +199,7 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 			return nil, status.Error(codes.Internal, "BAD REQUEST")
 		}
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.ImportHostsInBatchRequest)
 	in.Hosts = append(in.Hosts, genHostInfo("TEST_HOST1"))
@@ -201,10 +217,11 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 
 func Test_ImportHostsInBatch_WithErr(t *testing.T) {
 	fake_str := "host already exists"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockAddHostsInBatch(func(ctx context.Context, in *dbpb.DBAddHostsInBatchRequest, opts ...client.CallOption) (*dbpb.DBAddHostsInBatchResponse, error) {
-		return nil, status.Errorf(codes.AlreadyExists, fake_str)
-	})
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().AddHostsInBatch(gomock.Any(), gomock.Any()).Return(nil, status.Errorf(codes.AlreadyExists, fake_str))
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.ImportHostsInBatchRequest)
 	in.Hosts = append(in.Hosts, genHostInfo("TEST_HOST1"))
@@ -227,14 +244,17 @@ func Test_ImportHostsInBatch_WithErr(t *testing.T) {
 
 func Test_ImportHostsInBatch_WithErrCode(t *testing.T) {
 	fake_str := "Host Ip is not Invalid"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockAddHostsInBatch(func(ctx context.Context, in *dbpb.DBAddHostsInBatchRequest, opts ...client.CallOption) (*dbpb.DBAddHostsInBatchResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().AddHostsInBatch(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBAddHostsInBatchRequest, opts ...client.CallOption) (*dbpb.DBAddHostsInBatchResponse, error) {
 		rsp := new(dbpb.DBAddHostsInBatchResponse)
 		rsp.Rs = new(dbpb.DBHostResponseStatus)
 		rsp.Rs.Code = int32(codes.InvalidArgument)
 		rsp.Rs.Message = fake_str
 		return rsp, nil
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.ImportHostsInBatchRequest)
 	in.Hosts = append(in.Hosts, genHostInfo("TEST_HOST1"))
@@ -253,8 +273,10 @@ func Test_ImportHostsInBatch_WithErrCode(t *testing.T) {
 func Test_RemoveHost_Succeed(t *testing.T) {
 	fake_str := "remove succeed"
 	fake_hostId := "xxxx-xxxx-yyyy-yyyy"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockRemoveHost(func(ctx context.Context, in *dbpb.DBRemoveHostRequest, opts ...client.CallOption) (*dbpb.DBRemoveHostResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().RemoveHost(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBRemoveHostRequest, opts ...client.CallOption) (*dbpb.DBRemoveHostResponse, error) {
 		if in.HostId == fake_hostId {
 			rsp := new(dbpb.DBRemoveHostResponse)
 			rsp.Rs = new(dbpb.DBHostResponseStatus)
@@ -265,6 +287,7 @@ func Test_RemoveHost_Succeed(t *testing.T) {
 			return nil, status.Error(codes.Internal, "BAD REQUEST")
 		}
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.RemoveHostRequest)
 	in.HostId = fake_hostId
@@ -282,10 +305,11 @@ func Test_RemoveHost_Succeed(t *testing.T) {
 func Test_RemoveHost_WithErr(t *testing.T) {
 	fake_hostId := "xxxx-xxxx-yyyy-yyyy"
 	fake_str := "host not exists"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockRemoveHost(func(ctx context.Context, in *dbpb.DBRemoveHostRequest, opts ...client.CallOption) (*dbpb.DBRemoveHostResponse, error) {
-		return nil, status.Errorf(codes.NotFound, fake_str)
-	})
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().RemoveHost(gomock.Any(), gomock.Any()).Return(nil, status.Errorf(codes.NotFound, fake_str))
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.RemoveHostRequest)
 	in.HostId = fake_hostId
@@ -308,14 +332,17 @@ func Test_RemoveHost_WithErr(t *testing.T) {
 func Test_RemovetHost_WithErrCode(t *testing.T) {
 	fake_hostId := "xxxx-xxxx-yyyy-yyyy"
 	fake_str := "Host Id is not Invalid"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockRemoveHost(func(ctx context.Context, in *dbpb.DBRemoveHostRequest, opts ...client.CallOption) (*dbpb.DBRemoveHostResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().RemoveHost(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBRemoveHostRequest, opts ...client.CallOption) (*dbpb.DBRemoveHostResponse, error) {
 		rsp := new(dbpb.DBRemoveHostResponse)
 		rsp.Rs = new(dbpb.DBHostResponseStatus)
 		rsp.Rs.Code = int32(codes.InvalidArgument)
 		rsp.Rs.Message = fake_str
 		return rsp, nil
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.RemoveHostRequest)
 	in.HostId = fake_hostId
@@ -333,8 +360,10 @@ func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
 	fake_str := "remove in batch succeed"
 	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
 	fake_hostId2 := "yyyy-yyyy-xxxx-xxxx"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockRemoveHostsInBatch(func(ctx context.Context, in *dbpb.DBRemoveHostsInBatchRequest, opts ...client.CallOption) (*dbpb.DBRemoveHostsInBatchResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().RemoveHostsInBatch(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBRemoveHostsInBatchRequest, opts ...client.CallOption) (*dbpb.DBRemoveHostsInBatchResponse, error) {
 		if in.HostIds[0] == fake_hostId1 && in.HostIds[1] == fake_hostId2 {
 			rsp := new(dbpb.DBRemoveHostsInBatchResponse)
 			rsp.Rs = new(dbpb.DBHostResponseStatus)
@@ -345,6 +374,7 @@ func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
 			return nil, status.Error(codes.Internal, "BAD REQUEST")
 		}
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.RemoveHostsInBatchRequest)
 	in.HostIds = append(in.HostIds, fake_hostId1)
@@ -364,10 +394,11 @@ func Test_RemoveHostsInBatch_WithErr(t *testing.T) {
 	fake_str := "host already exists"
 	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
 	fake_hostId2 := "yyyy-yyyy-xxxx-xxxx"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockRemoveHostsInBatch(func(ctx context.Context, in *dbpb.DBRemoveHostsInBatchRequest, opts ...client.CallOption) (*dbpb.DBRemoveHostsInBatchResponse, error) {
-		return nil, status.Errorf(codes.NotFound, fake_str)
-	})
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().RemoveHostsInBatch(gomock.Any(), gomock.Any()).Return(nil, status.Errorf(codes.NotFound, fake_str))
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.RemoveHostsInBatchRequest)
 	in.HostIds = append(in.HostIds, fake_hostId1)
@@ -392,14 +423,17 @@ func Test_RemoveHostsInBatch_WithErrCode(t *testing.T) {
 	fake_str := "Host Ip is not Invalid"
 	fake_hostId1 := "xxxx-xxxx-yyyy-yyyy"
 	fake_hostId2 := "yyyy-yyyy-xxxx-xxxx"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockRemoveHostsInBatch(func(ctx context.Context, in *dbpb.DBRemoveHostsInBatchRequest, opts ...client.CallOption) (*dbpb.DBRemoveHostsInBatchResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().RemoveHostsInBatch(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBRemoveHostsInBatchRequest, opts ...client.CallOption) (*dbpb.DBRemoveHostsInBatchResponse, error) {
 		rsp := new(dbpb.DBRemoveHostsInBatchResponse)
 		rsp.Rs = new(dbpb.DBHostResponseStatus)
 		rsp.Rs.Code = int32(codes.InvalidArgument)
 		rsp.Rs.Message = fake_str
 		return rsp, nil
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.RemoveHostsInBatchRequest)
 	in.HostIds = append(in.HostIds, fake_hostId1)
@@ -418,8 +452,10 @@ func Test_RemoveHostsInBatch_WithErrCode(t *testing.T) {
 func Test_CheckDetails_Succeed(t *testing.T) {
 	fake_str := "check details succeed"
 	fake_hostId := "this-isxx-axxx-fake"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockCheckDetails(func(ctx context.Context, in *dbpb.DBCheckDetailsRequest, opts ...client.CallOption) (*dbpb.DBCheckDetailsResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().CheckDetails(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBCheckDetailsRequest, opts ...client.CallOption) (*dbpb.DBCheckDetailsResponse, error) {
 		if in.HostId == fake_hostId {
 			rsp := new(dbpb.DBCheckDetailsResponse)
 			rsp.Rs = new(dbpb.DBHostResponseStatus)
@@ -431,6 +467,7 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 			return nil, status.Error(codes.Internal, "BAD REQUEST")
 		}
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.CheckDetailsRequest)
 	in.HostId = fake_hostId
@@ -449,8 +486,10 @@ func Test_ListHosts_Succeed(t *testing.T) {
 	fake_str := "list hosts succeed"
 	fake_hostId1 := "this-isxf-irst-fake"
 	fake_hostId2 := "this-isse-cond-fake"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockListHost(func(ctx context.Context, in *dbpb.DBListHostsRequest, opts ...client.CallOption) (*dbpb.DBListHostsResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().ListHost(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBListHostsRequest, opts ...client.CallOption) (*dbpb.DBListHostsResponse, error) {
 		if in.Page.PageSize == 2 {
 			rsp := new(dbpb.DBListHostsResponse)
 			rsp.Rs = new(dbpb.DBHostResponseStatus)
@@ -465,6 +504,7 @@ func Test_ListHosts_Succeed(t *testing.T) {
 			return nil, status.Error(codes.Internal, "BAD REQUEST")
 		}
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.ListHostsRequest)
 	in.PageReq = new(clusterpb.PageDTO)
@@ -484,8 +524,10 @@ func Test_GetFailureDomain_Succeed(t *testing.T) {
 	fake_str := "get failuredomain succeed"
 	fake_name1 := "TEST_Zone1"
 	fake_name2 := "TEST_Zone2"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockGetFailureDomain(func(ctx context.Context, in *dbpb.DBGetFailureDomainRequest, opts ...client.CallOption) (*dbpb.DBGetFailureDomainResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().GetFailureDomain(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBGetFailureDomainRequest, opts ...client.CallOption) (*dbpb.DBGetFailureDomainResponse, error) {
 		if in.FailureDomainType == 2 {
 			rsp := new(dbpb.DBGetFailureDomainResponse)
 			rsp.Rs = new(dbpb.DBHostResponseStatus)
@@ -506,6 +548,7 @@ func Test_GetFailureDomain_Succeed(t *testing.T) {
 			return nil, status.Error(codes.Internal, "BAD REQUEST")
 		}
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.GetFailureDomainRequest)
 	in.FailureDomainType = 2
@@ -522,8 +565,10 @@ func Test_GetFailureDomain_Succeed(t *testing.T) {
 
 func Test_AllocHosts_Succeed(t *testing.T) {
 	fake_str := "alloc hosts succeed"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockAllocHosts(func(ctx context.Context, in *dbpb.DBAllocHostsRequest, opts ...client.CallOption) (*dbpb.DBAllocHostsResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().AllocHosts(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBAllocHostsRequest, opts ...client.CallOption) (*dbpb.DBAllocHostsResponse, error) {
 		rsp := new(dbpb.DBAllocHostsResponse)
 		rsp.Rs = new(dbpb.DBHostResponseStatus)
 		if in.PdReq[0].FailureDomain == "Zone1" && in.TidbReq[0].Count == 1 && in.TikvReq[0].FailureDomain == "Zone2" {
@@ -558,6 +603,7 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 			return nil, status.Errorf(codes.Internal, "BAD REQUEST in Alloc Hosts, pd zone %s, tidb count %d, tikv zone %s", in.PdReq[0].FailureDomain, in.TidbReq[0].Count, in.TikvReq[0].FailureDomain)
 		}
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.AllocHostsRequest)
 	in.PdReq = append(in.PdReq, &clusterpb.AllocationReq{
@@ -599,8 +645,10 @@ func Test_AllocResourcesInBatch_Succeed(t *testing.T) {
 	fake_holder_id := "TEST_holder1"
 	fake_request_id := "TEST_reqeust1"
 	fake_disk_id1 := "TEST_disk_id1"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockAllocResourcesInBatch(func(ctx context.Context, in *dbpb.DBBatchAllocRequest, opts ...client.CallOption) (*dbpb.DBBatchAllocResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().AllocResourcesInBatch(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBBatchAllocRequest, opts ...client.CallOption) (*dbpb.DBBatchAllocResponse, error) {
 		rsp := new(dbpb.DBBatchAllocResponse)
 		rsp.Rs = new(dbpb.DBAllocResponseStatus)
 		if in.BatchRequests[0].Applicant.HolderId == fake_holder_id && in.BatchRequests[1].Applicant.RequestId == fake_request_id &&
@@ -647,6 +695,7 @@ func Test_AllocResourcesInBatch_Succeed(t *testing.T) {
 		rsp.BatchResults = append(rsp.BatchResults, &two_rsp)
 		return rsp, nil
 	})
+	rpc_client.DBClient = mockClient
 
 	in := new(clusterpb.BatchAllocRequest)
 
@@ -710,8 +759,10 @@ func Test_AllocResourcesInBatch_Succeed(t *testing.T) {
 
 func Test_RecycleResources_Succeed(t *testing.T) {
 	fake_cluster_id := "TEST_Fake_CLUSTER_ID"
-	fakeDBClient := InitMockDBClient()
-	fakeDBClient.MockRecycleResources(func(ctx context.Context, in *dbpb.DBRecycleRequest, opts ...client.CallOption) (*dbpb.DBRecycleResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().RecycleResources(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *dbpb.DBRecycleRequest, opts ...client.CallOption) (*dbpb.DBRecycleResponse, error) {
 		rsp := new(dbpb.DBRecycleResponse)
 		rsp.Rs = new(dbpb.DBAllocResponseStatus)
 		if in.RecycleReqs[0].RecycleType == 2 && in.RecycleReqs[0].HolderId == fake_cluster_id {
@@ -721,6 +772,7 @@ func Test_RecycleResources_Succeed(t *testing.T) {
 		}
 		return rsp, nil
 	})
+	rpc_client.DBClient = mockClient
 
 	var req clusterpb.RecycleRequest
 	var require clusterpb.RecycleRequire

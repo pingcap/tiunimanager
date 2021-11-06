@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,15 +18,16 @@ package domain
 
 import (
 	ctx "context"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	mock "github.com/pingcap-inc/tiem/test/mock"
+	mock "github.com/pingcap-inc/tiem/test/mockdb"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestSaveBackupStrategyPreCheck_case1(t *testing.T) {
@@ -246,7 +246,7 @@ func Test_updateBackupRecord(t *testing.T) {
 	mockClient := mock.NewMockTiEMDBService(ctrl)
 	mockClient.EXPECT().UpdateBackupRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateBackupRecordResponse{}, nil)
 	mockClient.EXPECT().FindTiupTaskByID(gomock.Any(), gomock.Any()).Return(&dbpb.FindTiupTaskByIDResponse{TiupTask: &dbpb.TiupTask{
-		Status : dbpb.TiupTaskStatus_Finished,
+		Status: dbpb.TiupTaskStatus_Finished,
 	}}, nil)
 	client.DBClient = mockClient
 

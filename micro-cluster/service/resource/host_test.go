@@ -25,7 +25,7 @@ import (
 	rpc_client "github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	mock "github.com/pingcap-inc/tiem/test/mock"
+	mock "github.com/pingcap-inc/tiem/test/mockdb"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -124,7 +124,6 @@ func Test_ImportHost_Succeed(t *testing.T) {
 
 func Test_ImportHost_WithErr(t *testing.T) {
 	fake_str := "host already exists"
-	//fakeDBClient := InitMockDBClient()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 

@@ -230,4 +230,5 @@ add_test_file:
 
 mock:
 	go get github.com/golang/mock/mockgen
-	mockgen -destination ./test/mock/mock_db.pb.micro.go -package db -source ./library/client/metadb/dbpb/db.pb.micro.go
+	mockgen -destination ./test/mockdb/mock_db.pb.micro.go -package mockdb -source ./library/client/metadb/dbpb/db.pb.micro.go
+	mockgen -destination ./test/mockcluster/mock_cluster.pb.micro.go -package mockcluster -source ./library/client/cluster/clusterpb/cluster.pb.micro.go

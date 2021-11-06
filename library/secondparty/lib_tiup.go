@@ -204,9 +204,13 @@ func (secondMicro *SecondMicro) startNewTiupListTask(req *CmdListReq) (resp CmdL
 	}
 	defer cancelFp()
 	cmd.SysProcAttr = genSysProcAttr()
+	var out, stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
 	var data []byte
 	if data, err = cmd.Output(); err != nil {
-		logger.Error("cmd start err", err)
+		logger.Errorf("cmd start err: %+v, errStr: %s", err, stderr.String())
+		err = fmt.Errorf("cmd start err: %+v, errStr: %s", err, stderr.String())
 		return
 	}
 	resp.ListRespStr = string(data)
@@ -335,9 +339,13 @@ func (secondMicro *SecondMicro) startNewTiupDisplayTask(req *CmdDisplayReq) (res
 	}
 	defer cancelFp()
 	cmd.SysProcAttr = genSysProcAttr()
+	var out, stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
 	var data []byte
 	if data, err = cmd.Output(); err != nil {
-		logger.Error("cmd start err", err)
+		logger.Errorf("cmd start err: %+v, errStr: %s", err, stderr.String())
+		err = fmt.Errorf("cmd start err: %+v, errStr: %s", err, stderr.String())
 		return
 	}
 	resp.DisplayRespString = string(data)

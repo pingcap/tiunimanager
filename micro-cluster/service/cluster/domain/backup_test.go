@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,12 +18,15 @@ package domain
 
 import (
 	ctx "context"
+	"errors"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/secondparty"
-	mock "github.com/pingcap-inc/tiem/test/mock"
+	"github.com/pingcap-inc/tiem/micro-metadb/service"
+	"github.com/pingcap-inc/tiem/test/mock"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"testing"
@@ -113,7 +115,7 @@ func TestRecover(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestDeleteBackup(t *testing.T) {
+func TestDeleteBackup_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -131,7 +133,81 @@ func TestDeleteBackup(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestSaveBackupStrategy(t *testing.T) {
+func TestDeleteBackup_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any()).Return(&dbpb.DBQueryBackupRecordResponse{}, errors.New("failed"))
+	client.DBClient = mockClient
+
+	err := DeleteBackup(ctx.Background(), &clusterpb.OperatorDTO{
+		Id:       "123",
+		Name:     "123",
+		TenantId: "123",
+	}, "test-abc", 123)
+
+	assert.NotNil(t, err)
+}
+
+func TestDeleteBackup_case3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any()).Return(&dbpb.DBQueryBackupRecordResponse{
+		Status: service.BizErrResponseStatus,
+	}, nil)
+	client.DBClient = mockClient
+
+	err := DeleteBackup(ctx.Background(), &clusterpb.OperatorDTO{
+		Id:       "123",
+		Name:     "123",
+		TenantId: "123",
+	}, "test-abc", 123)
+
+	assert.NotNil(t, err)
+}
+
+func TestDeleteBackup_case4(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any()).Return(&dbpb.DBQueryBackupRecordResponse{}, nil)
+	mockClient.EXPECT().DeleteBackupRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBDeleteBackupRecordResponse{}, errors.New("failed"))
+	client.DBClient = mockClient
+
+	err := DeleteBackup(ctx.Background(), &clusterpb.OperatorDTO{
+		Id:       "123",
+		Name:     "123",
+		TenantId: "123",
+	}, "test-abc", 123)
+
+	assert.NotNil(t, err)
+}
+
+func TestDeleteBackup_case5(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any()).Return(&dbpb.DBQueryBackupRecordResponse{}, nil)
+	mockClient.EXPECT().DeleteBackupRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBDeleteBackupRecordResponse{
+		Status: service.BizErrResponseStatus,
+	}, nil)
+	client.DBClient = mockClient
+
+	err := DeleteBackup(ctx.Background(), &clusterpb.OperatorDTO{
+		Id:       "123",
+		Name:     "123",
+		TenantId: "123",
+	}, "test-abc", 123)
+
+	assert.NotNil(t, err)
+}
+
+func TestSaveBackupStrategy_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -149,6 +225,48 @@ func TestSaveBackupStrategy(t *testing.T) {
 		Period:     "12:00-13:00",
 	})
 	assert.NoError(t, err)
+}
+
+func TestSaveBackupStrategy_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().SaveBackupStrategy(gomock.Any(), gomock.Any()).Return(&dbpb.DBSaveBackupStrategyResponse{}, errors.New("failed"))
+	client.DBClient = mockClient
+
+	err := SaveBackupStrategy(ctx.Background(), &clusterpb.OperatorDTO{
+		Id:       "123",
+		Name:     "123",
+		TenantId: "123",
+	}, &clusterpb.BackupStrategy{
+		ClusterId:  "test-abc",
+		BackupDate: "Monday,Sunday",
+		Period:     "12:00-13:00",
+	})
+	assert.NotNil(t, err)
+}
+
+func TestSaveBackupStrategy_case3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().SaveBackupStrategy(gomock.Any(), gomock.Any()).Return(&dbpb.DBSaveBackupStrategyResponse{
+		Status: service.BizErrResponseStatus,
+	}, nil)
+	client.DBClient = mockClient
+
+	err := SaveBackupStrategy(ctx.Background(), &clusterpb.OperatorDTO{
+		Id:       "123",
+		Name:     "123",
+		TenantId: "123",
+	}, &clusterpb.BackupStrategy{
+		ClusterId:  "test-abc",
+		BackupDate: "Monday,Sunday",
+		Period:     "12:00-13:00",
+	})
+	assert.NotNil(t, err)
 }
 
 func TestQueryBackupStrategy(t *testing.T) {
@@ -247,21 +365,480 @@ func Test_updateBackupRecord(t *testing.T) {
 	mockClient := mock.NewMockTiEMDBService(ctrl)
 	mockClient.EXPECT().UpdateBackupRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateBackupRecordResponse{}, nil)
 	mockClient.EXPECT().FindTiupTaskByID(gomock.Any(), gomock.Any()).Return(&dbpb.FindTiupTaskByIDResponse{TiupTask: &dbpb.TiupTask{
-		Status : dbpb.TiupTaskStatus_Finished,
+		Status: dbpb.TiupTaskStatus_Finished,
 	}}, nil)
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := NewFlowContext(ctx.TODO())
-	context.SetData(contextClusterKey, &ClusterAggregation{
+	flowCtx := NewFlowContext(ctx.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
 		LastBackupRecord: &BackupRecord{
 			Id:   123,
 			Size: 1000,
 		},
 	})
-	context.SetData(contextCtxKey, ctx.Background())
-	context.SetData("backupTaskId", uint64(123))
-	ret := updateBackupRecord(task, context)
+	flowCtx.SetData(contextCtxKey, ctx.Background())
+	flowCtx.SetData("backupTaskId", uint64(123))
+	ret := updateBackupRecord(task, flowCtx)
 
 	assert.Equal(t, true, ret)
+}
+
+func Test_backupCluster_case1(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mock.NewMockMicroSrv(ctrl)
+	mockTiup.EXPECT().MicroSrvBackUp(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "success", nil)
+	secondparty.SecondParty = mockTiup
+
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(ctx.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData(contextCtxKey, ctx.Background())
+	flowCtx.SetData("backupTaskId", uint64(123))
+	ret := backupCluster(task, flowCtx)
+
+	assert.Equal(t, true, ret)
+}
+
+func Test_backupCluster_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mock.NewMockMicroSrv(ctrl)
+	mockTiup.EXPECT().MicroSrvBackUp(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any()).Return(dbpb.TiupTaskStatus_Error, "ERROR", nil)
+	secondparty.SecondParty = mockTiup
+
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(ctx.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData(contextCtxKey, ctx.Background())
+	flowCtx.SetData("backupTaskId", uint64(123))
+	ret := backupCluster(task, flowCtx)
+
+	assert.Equal(t, false, ret)
+}
+
+func Test_backupCluster_case3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mock.NewMockMicroSrv(ctrl)
+	mockTiup.EXPECT().MicroSrvBackUp(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("failed"))
+	secondparty.SecondParty = mockTiup
+
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(ctx.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData(contextCtxKey, ctx.Background())
+	flowCtx.SetData("backupTaskId", uint64(123))
+	ret := backupCluster(task, flowCtx)
+
+	assert.Equal(t, false, ret)
+}
+
+func Test_recoverFromSrcCluster_case1(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mock.NewMockMicroSrv(ctrl)
+	mockTiup.EXPECT().MicroSrvRestore(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "success", nil)
+	secondparty.SecondParty = mockTiup
+
+	mockDB := mock.NewMockTiEMDBService(ctrl)
+	mockDB.EXPECT().FindTiupTaskByID(gomock.Any(), gomock.Any()).Return(&dbpb.FindTiupTaskByIDResponse{
+		TiupTask: &dbpb.TiupTask{
+			Status: dbpb.TiupTaskStatus_Finished,
+		},
+	}, nil)
+	mockDB.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any()).Return(&dbpb.DBQueryBackupRecordResponse{
+		Status: &dbpb.DBClusterResponseStatus{
+			Code: service.ClusterSuccessResponseStatus.GetCode(),
+		},
+		BackupRecords: &dbpb.DBDBBackupRecordDisplayDTO{
+			BackupRecord: &dbpb.DBBackupRecordDTO{
+				StorageType: string(StorageTypeS3),
+				FilePath:    "/tmp/test",
+			},
+		},
+	}, nil)
+	client.DBClient = mockDB
+
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(ctx.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+			RecoverInfo: RecoverInfo{
+				SourceClusterId: "src-tidb",
+				BackupRecordId:  123,
+			},
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData(contextCtxKey, ctx.Background())
+	flowCtx.SetData("startTaskId", uint64(123))
+	ret := recoverFromSrcCluster(task, flowCtx)
+
+	assert.Equal(t, true, ret)
+}
+
+func Test_recoverFromSrcCluster_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mock.NewMockMicroSrv(ctrl)
+	mockTiup.EXPECT().MicroSrvRestore(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any()).Return(dbpb.TiupTaskStatus_Error, "ERROR", nil)
+	secondparty.SecondParty = mockTiup
+
+	mockDB := mock.NewMockTiEMDBService(ctrl)
+	mockDB.EXPECT().FindTiupTaskByID(gomock.Any(), gomock.Any()).Return(&dbpb.FindTiupTaskByIDResponse{
+		TiupTask: &dbpb.TiupTask{
+			Status: dbpb.TiupTaskStatus_Finished,
+		},
+	}, nil)
+	mockDB.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any()).Return(&dbpb.DBQueryBackupRecordResponse{
+		Status: &dbpb.DBClusterResponseStatus{
+			Code: service.ClusterSuccessResponseStatus.GetCode(),
+		},
+		BackupRecords: &dbpb.DBDBBackupRecordDisplayDTO{
+			BackupRecord: &dbpb.DBBackupRecordDTO{
+				StorageType: string(StorageTypeS3),
+				FilePath:    "/tmp/test",
+			},
+		},
+	}, nil)
+	client.DBClient = mockDB
+
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(ctx.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+			RecoverInfo: RecoverInfo{
+				SourceClusterId: "src-tidb",
+				BackupRecordId:  123,
+			},
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData(contextCtxKey, ctx.Background())
+	flowCtx.SetData("startTaskId", uint64(123))
+	ret := recoverFromSrcCluster(task, flowCtx)
+
+	assert.Equal(t, false, ret)
+}
+
+func Test_recoverFromSrcCluster_case3(t *testing.T) {
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(ctx.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+			RecoverInfo: RecoverInfo{
+				SourceClusterId: "",
+				BackupRecordId:  123,
+			},
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData(contextCtxKey, ctx.Background())
+	flowCtx.SetData("startTaskId", uint64(123))
+	ret := recoverFromSrcCluster(task, flowCtx)
+
+	assert.Equal(t, true, ret)
+}
+
+func Test_recoverFromSrcCluster_case4(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := mock.NewMockTiEMDBService(ctrl)
+	mockDB.EXPECT().FindTiupTaskByID(gomock.Any(), gomock.Any()).Return(&dbpb.FindTiupTaskByIDResponse{
+		TiupTask: &dbpb.TiupTask{
+			Status: dbpb.TiupTaskStatus_Finished,
+		},
+	}, nil)
+	mockDB.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any()).Return(&dbpb.DBQueryBackupRecordResponse{
+		Status: &dbpb.DBClusterResponseStatus{
+			Code: service.ClusterSuccessResponseStatus.GetCode(),
+		},
+		BackupRecords: &dbpb.DBDBBackupRecordDisplayDTO{
+			BackupRecord: &dbpb.DBBackupRecordDTO{
+				StorageType: string(StorageTypeS3),
+				FilePath:    "/tmp/test",
+			},
+		},
+	}, errors.New("failed"))
+	client.DBClient = mockDB
+
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(ctx.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+			RecoverInfo: RecoverInfo{
+				SourceClusterId: "src-tidb",
+				BackupRecordId:  123,
+			},
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData(contextCtxKey, ctx.Background())
+	flowCtx.SetData("startTaskId", uint64(123))
+	ret := recoverFromSrcCluster(task, flowCtx)
+
+	assert.Equal(t, false, ret)
+}
+
+func Test_recoverFromSrcCluster_case5(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockDB := mock.NewMockTiEMDBService(ctrl)
+	mockDB.EXPECT().FindTiupTaskByID(gomock.Any(), gomock.Any()).Return(&dbpb.FindTiupTaskByIDResponse{
+		TiupTask: &dbpb.TiupTask{
+			Status: dbpb.TiupTaskStatus_Finished,
+		},
+	}, nil)
+	mockDB.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any()).Return(&dbpb.DBQueryBackupRecordResponse{
+		Status: &dbpb.DBClusterResponseStatus{
+			Code: service.ClusterSuccessResponseStatus.GetCode(),
+		},
+		BackupRecords: &dbpb.DBDBBackupRecordDisplayDTO{
+			BackupRecord: &dbpb.DBBackupRecordDTO{
+				StorageType: "oss",
+				FilePath:    "/tmp/test",
+			},
+		},
+	}, nil)
+	client.DBClient = mockDB
+
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(ctx.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+			RecoverInfo: RecoverInfo{
+				SourceClusterId: "src-tidb",
+				BackupRecordId:  123,
+			},
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData(contextCtxKey, ctx.Background())
+	flowCtx.SetData("startTaskId", uint64(123))
+	ret := recoverFromSrcCluster(task, flowCtx)
+
+	assert.Equal(t, false, ret)
+}
+
+func Test_recoverFromSrcCluster_case6(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mock.NewMockMicroSrv(ctrl)
+	mockTiup.EXPECT().MicroSrvRestore(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("failed"))
+	secondparty.SecondParty = mockTiup
+
+	mockDB := mock.NewMockTiEMDBService(ctrl)
+	mockDB.EXPECT().FindTiupTaskByID(gomock.Any(), gomock.Any()).Return(&dbpb.FindTiupTaskByIDResponse{
+		TiupTask: &dbpb.TiupTask{
+			Status: dbpb.TiupTaskStatus_Finished,
+		},
+	}, nil)
+	mockDB.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any()).Return(&dbpb.DBQueryBackupRecordResponse{
+		Status: &dbpb.DBClusterResponseStatus{
+			Code: service.ClusterSuccessResponseStatus.GetCode(),
+		},
+		BackupRecords: &dbpb.DBDBBackupRecordDisplayDTO{
+			BackupRecord: &dbpb.DBBackupRecordDTO{
+				StorageType: string(StorageTypeS3),
+				FilePath:    "/tmp/test",
+			},
+		},
+	}, nil)
+	client.DBClient = mockDB
+
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(ctx.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+			RecoverInfo: RecoverInfo{
+				SourceClusterId: "src-tidb",
+				BackupRecordId:  123,
+			},
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData(contextCtxKey, ctx.Background())
+	flowCtx.SetData("startTaskId", uint64(123))
+	ret := recoverFromSrcCluster(task, flowCtx)
+
+	assert.Equal(t, false, ret)
 }

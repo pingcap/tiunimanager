@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -26,7 +25,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"google.golang.org/grpc/codes"
 
 	"github.com/gin-gonic/gin"
@@ -52,12 +53,17 @@ const (
 // @Failure 500 {object} controller.CommonResult
 // @Router /logs/tidb/{clusterId} [get]
 func SearchTiDBLog(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "SearchTiDBLog", int(status.GetCode()))
+
 	clusterId := c.Param("clusterId")
 
 	var reqParams SearchTiDBLogReq
 	err := c.ShouldBindQuery(&reqParams)
 	if err != nil {
 		framework.Log().Error(err)
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
@@ -66,11 +72,13 @@ func SearchTiDBLog(c *gin.Context) {
 	query, err := buildSearchTiDBReqParams(clusterId, reqParams)
 	if err != nil {
 		framework.Log().Error(err)
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	if err = json.NewEncoder(&buf).Encode(query); err != nil {
 		framework.Log().Errorf("Error encoding query: %s", err)
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
@@ -87,11 +95,13 @@ func SearchTiDBLog(c *gin.Context) {
 	resp, err := esClient.Search(tidbLogIndexPrefix, &buf, from, reqParams.PageSize)
 	if err != nil {
 		framework.Log().Errorf("search tidb log error: %v", err)
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
 	}
 	if resp.IsError() || resp.StatusCode != 200 {
 		framework.Log().Errorf("search tidb failed! response [%v]", resp.String())
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal),
 			fmt.Sprintf("search tidb failed! response: [%v]", resp.String())))
 		return

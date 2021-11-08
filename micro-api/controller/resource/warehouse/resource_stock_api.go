@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -29,6 +30,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
 
 	"google.golang.org/grpc/codes"
@@ -45,6 +47,10 @@ import (
 // @Success 200 {object} controller.CommonResult{data=[]DomainResource}
 // @Router /resources/failuredomains [get]
 func GetFailureDomain(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "GetFailureDomain", int(status.GetCode()))
+
 	var domain int
 	domainStr := c.Query("failureDomainType")
 	if domainStr == "" {
@@ -53,6 +59,7 @@ func GetFailureDomain(c *gin.Context) {
 		domainInt, err := strconv.Atoi(domainStr) // #nosec G109
 		if err != nil || domainInt > int(resource.RACK) || domainInt < int(resource.REGION) {
 			errmsg := fmt.Sprintf("Input domainType [%s] Invalid: %v", domainStr, err)
+			status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 			c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 			return
 		}
@@ -65,10 +72,14 @@ func GetFailureDomain(c *gin.Context) {
 
 	rsp, err := client.ClusterClient.GetFailureDomain(framework.NewMicroCtxFromGinCtx(c), &GetDoaminReq)
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
 	}
+
+	status = rsp.GetStatus()
 	if rsp.Rs.Code != int32(codes.OK) {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}
@@ -114,12 +125,18 @@ func copyHierarchyFromRsp(root *clusterpb.Node, dst *Node) {
 // @Success 200 {object} controller.CommonResult{data=Node}
 // @Router /resources/hierarchy [get]
 func GetHierarchy(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "GetHierarchy", int(status.GetCode()))
+
 	var filter HostFilter
 	if err := c.ShouldBindQuery(&filter); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
 	if err := resource.ValidArch(filter.Arch); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
@@ -128,6 +145,7 @@ func GetHierarchy(c *gin.Context) {
 	levelInt, err := strconv.Atoi(levelStr) // #nosec G109
 	if err != nil || levelInt > int(resource.HOST) || levelInt < int(resource.REGION) {
 		errmsg := fmt.Sprintf("Input domainType [%s] invalid: %v", levelStr, err)
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
@@ -138,6 +156,7 @@ func GetHierarchy(c *gin.Context) {
 	depthInt, err := strconv.Atoi(depthStr)
 	if err != nil || depthInt < 0 || levelInt+depthInt > int(resource.HOST) {
 		errmsg := fmt.Sprintf("Input depth [%s] invalid or is not vaild(level+depth>4) where level is [%d]: %v", depthStr, level, err)
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
@@ -152,10 +171,14 @@ func GetHierarchy(c *gin.Context) {
 	}
 	rsp, err := client.ClusterClient.GetHierarchy(framework.NewMicroCtxFromGinCtx(c), &GetHierarchyReq)
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
 	}
+
+	status = rsp.GetStatus()
 	if rsp.Rs.Code != int32(codes.OK) {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}

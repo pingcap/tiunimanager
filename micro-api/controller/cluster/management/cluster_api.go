@@ -49,9 +49,14 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/ [post]
 func Create(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Create", int(status.GetCode()))
+
 	var req CreateReq
 
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		_ = c.Error(err)
 		return
 	}
@@ -72,9 +77,10 @@ func Create(c *gin.Context) {
 	})
 
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		status := respDTO.GetRespStatus()
+		status = respDTO.GetRespStatus()
 		if status.Code != 0 {
 			c.JSON(http.StatusInternalServerError, controller.Fail(500, status.Message))
 			return
@@ -104,10 +110,14 @@ func Create(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/ [get]
 func Query(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Query", int(status.GetCode()))
 
 	var queryReq QueryReq
 
 	if err := c.ShouldBindQuery(&queryReq); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		_ = c.Error(err)
 		return
 	}
@@ -127,9 +137,10 @@ func Query(c *gin.Context) {
 	respDTO, err := client.ClusterClient.QueryCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		status := respDTO.GetRespStatus()
+		status = respDTO.GetRespStatus()
 
 		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters))
 
@@ -157,6 +168,9 @@ func Query(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId} [delete]
 func Delete(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Delete", int(status.GetCode()))
 
 	operator := controller.GetOperator(c)
 
@@ -168,9 +182,10 @@ func Delete(c *gin.Context) {
 	respDTO, err := client.ClusterClient.DeleteCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		status := respDTO.GetRespStatus()
+		status = respDTO.GetRespStatus()
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, DeleteClusterRsp{
 			ClusterId:  respDTO.GetClusterId(),
@@ -198,6 +213,7 @@ func Restart(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
 	defer interceptor.HandleMetrics(start, "Restart", int(status.GetCode()))
+
 	operator := controller.GetOperator(c)
 
 	reqDTO := &clusterpb.ClusterRestartReqDTO{
@@ -246,6 +262,7 @@ func Stop(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
 	defer interceptor.HandleMetrics(start, "Stop", int(status.GetCode()))
+
 	operator := controller.GetOperator(c)
 
 	reqDTO := &clusterpb.ClusterStopReqDTO{
@@ -291,6 +308,10 @@ func Stop(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId} [get]
 func Detail(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Detail", int(status.GetCode()))
+
 	operator := controller.GetOperator(c)
 
 	reqDTO := &clusterpb.ClusterDetailReqDTO{
@@ -301,9 +322,10 @@ func Detail(c *gin.Context) {
 	respDTO, err := client.ClusterClient.DetailCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		status := respDTO.GetRespStatus()
+		status = respDTO.GetRespStatus()
 
 		display := respDTO.GetDisplayInfo()
 		maintenance := respDTO.GetMaintenanceInfo()
@@ -340,8 +362,13 @@ func Detail(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/takeover [post]
 func Takeover(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Takeover", int(status.GetCode()))
+
 	var req TakeoverReq
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		_ = c.Error(err)
 		return
 	}
@@ -364,9 +391,10 @@ func Takeover(c *gin.Context) {
 	})
 
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		status := respDTO.GetRespStatus()
+		status = respDTO.GetRespStatus()
 
 		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters))
 
@@ -441,6 +469,7 @@ func DescribeMonitor(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
 	defer interceptor.HandleMetrics(start, "DescribeMonitor", int(status.GetCode()))
+
 	operator := controller.GetOperator(c)
 	reqDTO := &clusterpb.DescribeMonitorRequest{
 		Operator:  operator.ConvertToDTO(),

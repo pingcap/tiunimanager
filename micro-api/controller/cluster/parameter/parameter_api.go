@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,8 +18,10 @@ package parameter
 
 import (
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
+	"time"
+
+	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 )
 
 // QueryParams query params of a cluster
@@ -46,8 +48,13 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/params [get]
 func QueryParams(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "QueryParams", int(status.GetCode()))
+
 	var req ParamQueryReq
 	if err := c.ShouldBindQuery(&req); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		_ = c.Error(err)
 		return
 	}
@@ -59,8 +66,10 @@ func QueryParams(c *gin.Context) {
 	}, controller.DefaultTimeout)
 
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
+		status = resp.GetStatus()
 		instances := make([]ParamInstance, 0)
 
 		err = json.Unmarshal([]byte(resp.GetParametersJson()), &instances)
@@ -108,9 +117,14 @@ func QueryParams(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/params [post]
 func SubmitParams(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "SubmitParams", int(status.GetCode()))
+
 	var req ParamUpdateReq
 
 	if err := c.ShouldBindJSON(&req); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		_ = c.Error(err)
 		return
 	}
@@ -129,8 +143,10 @@ func SubmitParams(c *gin.Context) {
 		Operator:       operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
+		status = resp.GetStatus()
 		c.JSON(http.StatusOK, controller.Success(ParamUpdateRsp{
 			ClusterId: clusterId,
 			TaskId:    uint(resp.DisplayInfo.InProcessFlowId),

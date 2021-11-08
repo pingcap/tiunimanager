@@ -17,10 +17,11 @@
 package backuprestore
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -52,6 +53,7 @@ func Backup(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
 	defer interceptor.HandleMetrics(start, "Backup", int(status.GetCode()))
+
 	var req BackupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))

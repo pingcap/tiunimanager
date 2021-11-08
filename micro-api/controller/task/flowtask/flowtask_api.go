@@ -17,13 +17,16 @@
 package flowtask
 
 import (
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"net/http"
-	"strconv"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 )
 
 // Query query flow works
@@ -40,6 +43,10 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /flowworks/ [get]
 func Query(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Query", int(status.GetCode()))
+
 	var queryReq QueryReq
 	if err := c.ShouldBindQuery(&queryReq); err != nil {
 		_ = c.Error(err)
@@ -56,9 +63,10 @@ func Query(c *gin.Context) {
 	respDTO, err := client.ClusterClient.ListFlows(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		status := respDTO.GetStatus()
+		status = respDTO.GetStatus()
 
 		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows))
 
@@ -86,23 +94,29 @@ func Query(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /flowworks/{flowWorkId} [get]
 func Detail(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Detail", int(status.GetCode()))
+
 	//operator := controller.GetOperator(c)
 	flowWorkId, err := strconv.Atoi(c.Param("flowWorkId"))
 
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
-	reqDTO := &clusterpb.DetailFlowRequest {
+	reqDTO := &clusterpb.DetailFlowRequest{
 		FlowId: int64(flowWorkId),
 	}
 
 	respDTO, err := client.ClusterClient.DetailFlow(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
 	} else {
-		status := respDTO.GetStatus()
+		status = respDTO.GetStatus()
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, ParseFlowWorkDetailInfoFromDTO(respDTO.Flow))
 

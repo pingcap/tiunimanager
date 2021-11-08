@@ -26,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -38,6 +39,7 @@ import (
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 
 	"google.golang.org/grpc/codes"
 )
@@ -163,8 +165,13 @@ func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *clusterpb.ImportHost
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /resources/host [post]
 func ImportHost(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "ImportHost", int(status.GetCode()))
+
 	var host HostInfo
 	if err := c.ShouldBindJSON(&host); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
@@ -176,11 +183,14 @@ func ImportHost(c *gin.Context) {
 
 	rsp, err := doImport(c, &host)
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
 	}
 
+	status = rsp.GetStatus()
 	if rsp.Rs.Code != int32(codes.OK) {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}
@@ -272,32 +282,43 @@ func importExcelFile(r io.Reader, reserved bool) ([]*HostInfo, error) {
 // @Success 200 {object} controller.CommonResult{data=[]string}
 // @Router /resources/hosts [post]
 func ImportHosts(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "ImportHosts", int(status.GetCode()))
+
 	reservedStr := c.DefaultPostForm("hostReserved", "false")
 	reserved, err := strconv.ParseBool(reservedStr)
 	if err != nil {
 		errmsg := fmt.Sprintf("GetFormData Error: %v", err)
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
 		errmsg := fmt.Sprintf("GetFormFile Error: %v", err)
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
 	hosts, err := importExcelFile(file, reserved)
 	if err != nil {
 		errmsg := fmt.Sprintf("Import File Error: %v", err)
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.InvalidArgument), errmsg))
 		return
 	}
 
 	rsp, err := doImportBatch(c, hosts)
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
 	}
+
+	status = rsp.GetStatus()
 	if rsp.Rs.Code != int32(codes.OK) {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}
@@ -316,11 +337,16 @@ func ImportHosts(c *gin.Context) {
 // @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
 // @Router /resources/hosts [get]
 func ListHost(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "ListHost", int(status.GetCode()))
+
 	hostQuery := HostQuery{
 		Status: int(resource.HOST_WHATEVER),
 		Stat:   int(resource.HOST_STAT_WHATEVER),
 	}
 	if err := c.ShouldBindQuery(&hostQuery); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
@@ -346,10 +372,14 @@ func ListHost(c *gin.Context) {
 
 	rsp, err := client.ClusterClient.ListHost(framework.NewMicroCtxFromGinCtx(c), &listHostReq)
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
 	}
+
+	status = rsp.GetStatus()
 	if rsp.Rs.Code != int32(codes.OK) {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}
@@ -373,6 +403,9 @@ func ListHost(c *gin.Context) {
 // @Success 200 {object} controller.CommonResult{data=HostInfo}
 // @Router /resources/hosts/{hostId} [get]
 func HostDetails(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "HostDetails", int(status.GetCode()))
 
 	hostId := c.Param("hostId")
 
@@ -382,10 +415,13 @@ func HostDetails(c *gin.Context) {
 
 	rsp, err := client.ClusterClient.CheckDetails(framework.NewMicroCtxFromGinCtx(c), &HostDetailsReq)
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
 	}
+	status = rsp.GetStatus()
 	if rsp.Rs.Code != int32(codes.OK) {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}
@@ -405,6 +441,9 @@ func HostDetails(c *gin.Context) {
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /resources/hosts/{hostId} [delete]
 func RemoveHost(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "RemoveHost", int(status.GetCode()))
 
 	hostId := c.Param("hostId")
 
@@ -414,10 +453,14 @@ func RemoveHost(c *gin.Context) {
 
 	rsp, err := client.ClusterClient.RemoveHost(framework.NewMicroCtxFromGinCtx(c), &RemoveHostReq)
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
 	}
+
+	status = rsp.GetStatus()
 	if rsp.Rs.Code != int32(codes.OK) {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}
@@ -451,9 +494,13 @@ func detectDuplicateElement(hostIds []string) (string, bool) {
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /resources/hosts/ [delete]
 func RemoveHosts(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "RemoveHosts", int(status.GetCode()))
 
 	var hostIds []string
 	if err := c.ShouldBindJSON(&hostIds); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
@@ -469,10 +516,14 @@ func RemoveHosts(c *gin.Context) {
 
 	rsp, err := client.ClusterClient.RemoveHostsInBatch(framework.NewMicroCtxFromGinCtx(c), &RemoveHostsReq)
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
 	}
+
+	status = rsp.GetStatus()
 	if rsp.Rs.Code != int32(codes.OK) {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}
@@ -489,6 +540,10 @@ func RemoveHosts(c *gin.Context) {
 // @Success 200 {file} file
 // @Router /resources/hosts-template/ [get]
 func DownloadHostTemplateFile(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "DownloadHostTemplateFile", int(status.GetCode()))
+
 	curDir, _ := os.Getwd()
 	templateName := common.TemplateFileName
 	// The template file should be on tiem/etc/hostInfo_template.xlsx
@@ -496,6 +551,7 @@ func DownloadHostTemplateFile(c *gin.Context) {
 
 	_, err := os.Stat(filePath)
 	if err != nil && !os.IsExist(err) {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.NotFound), err.Error()))
 		return
 	}
@@ -520,6 +576,10 @@ func DownloadHostTemplateFile(c *gin.Context) {
 // @Success 200 {object} controller.CommonResult{data=string}
 // @Router /resources/hosts/ [put]
 func UpdateHost(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "UpdateHost", int(status.GetCode()))
+
 	hostIds := c.QueryArray("id")
 	if str, dup := detectDuplicateElement(hostIds); dup {
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), str+" Is Duplicated in request"))
@@ -528,6 +588,7 @@ func UpdateHost(c *gin.Context) {
 
 	var updateReq UpdateHostReq
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
@@ -549,10 +610,14 @@ func UpdateHost(c *gin.Context) {
 
 		rsp, err := client.ClusterClient.UpdateHostStatus(framework.NewMicroCtxFromGinCtx(c), &updateHostStatusReq)
 		if err != nil {
+			status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 			c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 			return
 		}
+
+		status = rsp.GetStatus()
 		if rsp.Rs.Code != int32(codes.OK) {
+			status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 			c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 			return
 		}
@@ -567,10 +632,13 @@ func UpdateHost(c *gin.Context) {
 
 		rsp, err := client.ClusterClient.ReserveHost(framework.NewMicroCtxFromGinCtx(c), &reserveHostReq)
 		if err != nil {
+			status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 			c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 			return
 		}
+		status = rsp.GetStatus()
 		if rsp.Rs.Code != int32(codes.OK) {
+			status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 			c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 			return
 		}
@@ -623,8 +691,13 @@ func copyAllocFromRsp(src []*clusterpb.AllocHost, dst *[]AllocateRsp) {
 // @Success 200 {object} controller.CommonResult{data=AllocHostsRsp}
 // @Router /resources/allochosts [post]
 func AllocHosts(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "AllocHosts", int(status.GetCode()))
+
 	var allocation AllocHostsReq
 	if err := c.ShouldBindJSON(&allocation); err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
 		return
 	}
@@ -636,11 +709,13 @@ func AllocHosts(c *gin.Context) {
 	//fmt.Println(allocReq.PdReq, allocReq.TidbReq, allocReq.TikvReq)
 	rsp, err := client.ClusterClient.AllocHosts(framework.NewMicroCtxFromGinCtx(c), &allocReq)
 	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
 	}
-
+	status = rsp.GetStatus()
 	if rsp.Rs.Code != int32(codes.OK) {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
 		return
 	}

@@ -1,0 +1,192 @@
+syntax = "proto3";
+
+import "common.proto";
+option go_package = "./clusterpb/;clusterpb";
+
+message ResponseStatus {
+    int32 code = 1;
+    string message = 2;
+}
+
+message Disk {
+    string diskId = 1;
+    string name = 2;            // [sda/sdb/nvmep0...]
+    int32 capacity = 3;         // Disk size, Unit: GB
+    string path = 4;            // Disk mount path: [/data1]
+    string type = 5;
+    string usedBy = 6;
+    int32 status = 7;
+}
+
+message HostInfo {
+    string hostId = 1;
+    string hostName = 2;
+    string region = 3;
+    string az = 4;
+    string rack = 5;
+    string ip = 6;
+    string userName = 7;
+    string passwd = 8;
+    int32 status = 9;
+    int32 stat = 10;
+    string arch = 11;
+    string os = 12;             // Host os
+    string kernel = 13;
+    string spec = 14;           // Host Spec ["4C8G/16C32g"]
+    int32 cpuCores = 15;        // Host cpu cores spec
+    int32 memory = 16;          // Host memory spec
+    int32 freeCpuCores = 17;    // Host cpu remains
+    int32 freeMemory = 18;      // Host memory remains, Unit:GB
+    string nic = 19;            // Host network type: 1GE or 10GE
+    string purpose = 20;        // What Purpose is the host used for? [compute/storage or general]
+    string diskType = 21;
+    bool reserved = 22;
+    int64 createAt = 23;
+    repeated Disk disks = 24;
+}
+
+// The request means "Get 3 '4C8G' Hosts in Zone3"
+message AllocationReq {
+    string failureDomain = 1;
+    int32 cpuCores = 2;
+    int32 memory = 3;
+    int32 count = 4;
+    string purpose = 5;
+}
+
+message AllocHost {
+    string hostName = 1;
+    string ip = 2;
+    string userName = 3;
+    string passwd = 4;
+    int32 cpuCores = 5;
+    int32 memory = 6;
+    Disk disk = 7;
+}
+
+message FailureDomainResource {
+    string failureDomain = 1;
+    string purpose = 2;
+    string spec = 3;
+    int32 count = 4;
+}
+
+message ImportHostRequest {
+    HostInfo host = 1;
+}
+
+message ImportHostResponse {
+    ResponseStatus rs = 1;
+    string HostId = 2;
+}
+
+message ImportHostsInBatchRequest {
+    repeated HostInfo hosts = 1;
+}
+
+message ImportHostsInBatchResponse {
+    ResponseStatus rs = 1;
+    repeated string HostIds = 2;
+}
+
+message RemoveHostRequest {
+    string hostId = 1;
+}
+
+message RemoveHostResponse {
+    ResponseStatus rs = 1;
+}
+
+message RemoveHostsInBatchRequest {
+    repeated string hostIds = 1;
+}
+
+message RemoveHostsInBatchResponse {
+    ResponseStatus rs = 1;
+}
+
+message UpdateHostStatusRequest {
+    int32 status = 1;
+    repeated string hostIds = 2;
+}
+
+message UpdateHostStatusResponse {
+    ResponseStatus rs = 1;
+}
+
+message ReserveHostRequest {
+    bool reserved = 1;
+    repeated string hostIds = 2;
+}
+
+message ReserveHostResponse {
+    ResponseStatus rs = 1;
+}
+
+message ListHostsRequest {
+    int32 status = 1;
+    int32 stat = 2;
+    string purpose = 3;
+    PageDTO pageReq = 4;
+}
+
+message ListHostsResponse {
+    ResponseStatus rs = 1;
+    repeated HostInfo hostList = 2;
+    PageDTO pageReq = 3;
+}
+
+message CheckDetailsRequest {
+    string hostId = 1;
+}
+
+message CheckDetailsResponse {
+    ResponseStatus rs = 1;
+    HostInfo details = 2;
+}
+
+message AllocHostsRequest {
+    repeated AllocationReq pdReq = 1;
+    repeated AllocationReq tidbReq = 2;
+    repeated AllocationReq tikvReq = 3;
+}
+
+message AllocHostResponse {
+    ResponseStatus rs = 1;
+    repeated AllocHost pdHosts = 2;
+    repeated AllocHost tidbHosts = 3;
+    repeated AllocHost tikvHosts = 4;
+}
+
+message GetFailureDomainRequest {
+    int32 failureDomainType = 1;
+}
+
+message GetFailureDomainResponse {
+    ResponseStatus rs = 1;
+    repeated FailureDomainResource fdList = 2;
+}
+
+message HostFilter {
+	string arch = 1;
+	string purpose  = 2;
+	string diskType = 3;
+}
+
+message GetHierarchyRequest {
+    HostFilter filter = 1;
+    int32 level = 2;
+    int32 depth = 3;
+}
+
+message Node {
+    string code = 1;
+    string prefix = 2;
+    string name = 3;
+    repeated Node subNodes = 4;
+}
+
+message GetHierarchyResponse {
+    ResponseStatus rs = 1;
+    Node root = 2;
+}

@@ -13,3 +13,6 @@ data.etcd1/
 /micro-metadb/models/testdata/
 etcd/
 /dbtest123.yaml
+library/client/cluster
+library/client/metadb
+library/framework/logs

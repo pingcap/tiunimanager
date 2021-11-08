@@ -17,6 +17,7 @@
 package adapt
 
 import (
+	"context"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
@@ -26,11 +27,11 @@ import (
 type DefaultTopologyPlanner struct {
 }
 
-func (d DefaultTopologyPlanner) BuildComponents(cluster *domain.Cluster, demands []*domain.ClusterComponentDemand) ([]*domain.ComponentGroup, error) {
+func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, cluster *domain.Cluster, demands []*domain.ClusterComponentDemand) ([]*domain.ComponentGroup, error) {
 	panic("implement me")
 }
 
-func (d DefaultTopologyPlanner) AnalysisResourceRequest(cluster *domain.Cluster, components []*domain.ComponentGroup) (*clusterpb.BatchAllocRequest, error) {
+func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, cluster *domain.Cluster, components []*domain.ComponentGroup) (*clusterpb.BatchAllocRequest, error) {
 	requirementList := make([]*clusterpb.AllocRequirement, 0)
 
 	for _, component := range components {
@@ -74,6 +75,6 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(cluster *domain.Cluster,
 	return allocReq, nil
 }
 
-func (d DefaultTopologyPlanner) ApplyResourceToComponents(components []*domain.ComponentGroup, response *clusterpb.BatchAllocResponse) error {
+func (d DefaultTopologyPlanner) ApplyResourceToComponents(ctx context.Context, components []*domain.ComponentGroup, response *clusterpb.BatchAllocResponse) error {
 	panic("implement me")
 }

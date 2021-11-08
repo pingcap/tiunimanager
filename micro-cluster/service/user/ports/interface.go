@@ -18,54 +18,55 @@
 package ports
 
 import (
+	"context"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
 )
 
 type TenantRepository interface {
-	AddTenant(*domain.Tenant) error
+	AddTenant(ctx context.Context, tenant *domain.Tenant) error
 
-	LoadTenantByName(name string)  (domain.Tenant, error)
+	LoadTenantByName(ctx context.Context, name string)  (domain.Tenant, error)
 
-	LoadTenantById(id string)  (domain.Tenant, error)
+	LoadTenantById(ctx context.Context, id string)  (domain.Tenant, error)
 }
 
 type RbacRepository interface {
 
-	AddAccount(a *domain.Account) error
+	AddAccount(ctx context.Context, a *domain.Account) error
 
-	LoadAccountByName(name string) (domain.Account, error)
+	LoadAccountByName(ctx context.Context, name string) (domain.Account, error)
 
-	LoadAccountAggregation(name string) (domain.AccountAggregation, error)
+	LoadAccountAggregation(ctx context.Context, name string) (domain.AccountAggregation, error)
 
-	LoadAccountById(id string) (domain.Account, error)
+	LoadAccountById(ctx context.Context, id string) (domain.Account, error)
 
-	AddRole(r *domain.Role) error
+	AddRole(ctx context.Context, r *domain.Role) error
 
-	LoadRole(tenantId string, name string) (domain.Role, error)
+	LoadRole(ctx context.Context, tenantId string, name string) (domain.Role, error)
 
-	AddPermission(r *domain.Permission) error
+	AddPermission(ctx context.Context, r *domain.Permission) error
 
-	LoadPermissionAggregation(tenantId string, code string) (domain.PermissionAggregation, error)
+	LoadPermissionAggregation(ctx context.Context, tenantId string, code string) (domain.PermissionAggregation, error)
 
-	LoadPermission(tenantId string, code string) (domain.Permission, error)
+	LoadPermission(ctx context.Context, tenantId string, code string) (domain.Permission, error)
 
-	LoadAllRolesByAccount(account *domain.Account) ([]domain.Role, error)
+	LoadAllRolesByAccount(ctx context.Context, account *domain.Account) ([]domain.Role, error)
 
-	LoadAllRolesByPermission(permission *domain.Permission) ([]domain.Role, error)
+	LoadAllRolesByPermission(ctx context.Context, permission *domain.Permission) ([]domain.Role, error)
 
-	AddPermissionBindings(bindings []domain.PermissionBinding) error
+	AddPermissionBindings(ctx context.Context, bindings []domain.PermissionBinding) error
 
-	AddRoleBindings(bindings []domain.RoleBinding) error
+	AddRoleBindings(ctx context.Context, bindings []domain.RoleBinding) error
 }
 
 type TokenHandler interface {
 
-	// Provide 提供一个有效的token
-	Provide (tiEMToken *domain.TiEMToken) (string, error)
+	// Provide provide a valid token string
+	Provide (ctx context.Context, tiEMToken *domain.TiEMToken) (string, error)
 
-	// Modify 修改token
-	Modify (tiEMToken *domain.TiEMToken) error
+	// Modify
+	Modify (ctx context.Context, tiEMToken *domain.TiEMToken) error
 
-	// GetToken 获取一个token
-	GetToken(tokenString string) (domain.TiEMToken, error)
+	// GetToken get token by tokenString
+	GetToken(ctx context.Context, tokenString string) (domain.TiEMToken, error)
 }

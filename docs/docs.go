@@ -31,7 +31,7 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/backups": {
+        "/backups/": {
             "get": {
                 "security": [
                     {
@@ -262,7 +262,7 @@ var doc = `{
                 }
             }
         },
-        "/clusters": {
+        "/clusters/": {
             "get": {
                 "security": [
                     {
@@ -1421,7 +1421,7 @@ var doc = `{
                 }
             }
         },
-        "/flowworks": {
+        "/flowworks/": {
             "get": {
                 "security": [
                     {
@@ -1529,7 +1529,7 @@ var doc = `{
                 "summary": "show details of a flow work",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "flow work id",
                         "name": "flowWorkId",
                         "in": "path",
@@ -1576,7 +1576,7 @@ var doc = `{
                 }
             }
         },
-        "/knowledges": {
+        "/knowledges/": {
             "get": {
                 "security": [
                     {
@@ -1844,6 +1844,73 @@ var doc = `{
                                             "items": {
                                                 "$ref": "#/definitions/warehouse.DomainResource"
                                             }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/hierarchy": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get resource hierarchy-tree",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Show the resources hierarchy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "Arch",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2,
+                            3,
+                            4
+                        ],
+                        "type": "integer",
+                        "description": "failure domain type of region/zone/rack/host",
+                        "name": "level",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "hierarchy depth",
+                        "name": "depth",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/warehouse.Node"
                                         }
                                     }
                                 }
@@ -2708,6 +2775,12 @@ var doc = `{
                 "statusName": {
                     "type": "string"
                 },
+                "taskName": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "tasks": {
                     "type": "array",
                     "items": {
@@ -2772,10 +2845,16 @@ var doc = `{
         "flowtask.FlowWorkTaskInfo": {
             "type": "object",
             "properties": {
+                "endTime": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
                 "result": {
+                    "type": "string"
+                },
+                "startTime": {
                     "type": "string"
                 },
                 "taskName": {
@@ -3897,8 +3976,8 @@ var doc = `{
                     "example": ".tiup/"
                 },
                 "tiupPort": {
-                    "type": "string",
-                    "example": "22"
+                    "type": "integer",
+                    "example": 22
                 },
                 "tiupUserName": {
                     "type": "string",
@@ -3977,6 +4056,26 @@ var doc = `{
                 },
                 "zoneName": {
                     "type": "string"
+                }
+            }
+        },
+        "warehouse.Node": {
+            "type": "object",
+            "properties": {
+                "Code": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                },
+                "Prefix": {
+                    "type": "string"
+                },
+                "SubNodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/warehouse.Node"
+                    }
                 }
             }
         },

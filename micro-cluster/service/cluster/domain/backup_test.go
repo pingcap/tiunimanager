@@ -23,9 +23,10 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	mock "github.com/pingcap-inc/tiem/test/mock"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/context"
 	"testing"
 	"time"
 )
@@ -93,7 +94,7 @@ func TestRecoverPreCheck(t *testing.T) {
 		},
 	}
 
-	err := RecoverPreCheck(request)
+	err := RecoverPreCheck(context.TODO(), request)
 
 	assert.NoError(t, err)
 }
@@ -232,9 +233,9 @@ func Test_calculateNextBackupTime_case6(t *testing.T) {
 
 func Test_convertBrStorageType(t *testing.T) {
 	result, _ := convertBrStorageType(string(StorageTypeS3))
-	assert.Equal(t, libbr.StorageTypeS3, result)
+	assert.Equal(t, secondparty.StorageTypeS3, result)
 	result, _ = convertBrStorageType(string(StorageTypeLocal))
-	assert.Equal(t, libbr.StorageTypeLocal, result)
+	assert.Equal(t, secondparty.StorageTypeLocal, result)
 	_, err := convertBrStorageType("data")
 	assert.NotNil(t, err)
 }
@@ -251,15 +252,15 @@ func Test_updateBackupRecord(t *testing.T) {
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := &FlowContext{}
-	context.put(contextClusterKey, &ClusterAggregation{
+	context := NewFlowContext(ctx.TODO())
+	context.SetData(contextClusterKey, &ClusterAggregation{
 		LastBackupRecord: &BackupRecord{
 			Id:   123,
 			Size: 1000,
 		},
 	})
-	context.put(contextCtxKey, ctx.Background())
-	context.put("backupTaskId", uint64(123))
+	context.SetData(contextCtxKey, ctx.Background())
+	context.SetData("backupTaskId", uint64(123))
 	ret := updateBackupRecord(task, context)
 
 	assert.Equal(t, true, ret)

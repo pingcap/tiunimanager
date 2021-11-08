@@ -18,6 +18,7 @@
 package application
 
 import (
+	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/ports"
@@ -32,8 +33,8 @@ func NewTenantManager(tenantRepo ports.TenantRepository) *TenantManager {
 }
 
 // CreateTenant 创建租户
-func (p *TenantManager) CreateTenant(name string) (*domain.Tenant, error) {
-	existed, e := p.FindTenant(name)
+func (p *TenantManager) CreateTenant(ctx context.Context, name string) (*domain.Tenant, error) {
+	existed, e := p.FindTenant(ctx, name)
 
 	if e == nil && existed != nil {
 		return existed, fmt.Errorf("tenant already exist")
@@ -45,12 +46,12 @@ func (p *TenantManager) CreateTenant(name string) (*domain.Tenant, error) {
 }
 
 // FindTenant 查找租户
-func (p *TenantManager) FindTenant(name string) (*domain.Tenant, error) {
-	tenant, err := p.tenantRepo.LoadTenantByName(name)
+func (p *TenantManager) FindTenant(ctx context.Context, name string) (*domain.Tenant, error) {
+	tenant, err := p.tenantRepo.LoadTenantByName(ctx, name)
 	return &tenant, err
 }
 
-func (p *TenantManager) FindTenantById(id string) (*domain.Tenant, error) {
-	tenant, err := p.tenantRepo.LoadTenantById(id)
+func (p *TenantManager) FindTenantById(ctx context.Context, id string) (*domain.Tenant, error) {
+	tenant, err := p.tenantRepo.LoadTenantById(ctx, id)
 	return &tenant, err
 }

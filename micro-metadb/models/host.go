@@ -890,3 +890,74 @@ func (m *DAOResourceManager) GetHostItems(ctx context.Context, filter rt.Filter,
 	tx.Commit()
 	return
 }
+
+type HostCondition struct {
+	Status *int32
+	Stat   *int32
+	Arch   *string
+}
+type DiskCondition struct {
+	Type     *string
+	Capacity *int32
+	Status   *int32
+}
+type StockCondition struct {
+	Location      rt.Location
+	HostCondition HostCondition
+	DiskCondition DiskCondition
+}
+
+type Stock struct {
+	FreeCpuCores     int
+	FreeMemory       int
+	FreeDiskCount    int
+	FreeDiskCapacity int
+}
+
+func (m *DAOResourceManager) GetStocks(ctx context.Context, stockCondition StockCondition) (stocks []Stock, err error) {
+	tx := m.getDb(ctx).Begin()
+	db := tx.Model(&rt.Host{}).Select(
+		"hosts.free_cpu_cores as free_cpu_cores, hosts.free_memory as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
+		"left join disks on disks.host_id = hosts.id")
+	if stockCondition.DiskCondition.Status != nil {
+		db = db.Where("disks.status = ?", stockCondition.DiskCondition.Status)
+	}
+	if stockCondition.DiskCondition.Type != nil {
+		db = db.Where("disks.type = ?", stockCondition.DiskCondition.Type)
+	}
+	if stockCondition.DiskCondition.Capacity != nil {
+		db = db.Where("disks.capacity >= ?", stockCondition.DiskCondition.Capacity)
+	}
+	db = db.Group("hosts.id")
+	// Filter by Location
+	if stockCondition.Location.Host != "" {
+		db = db.Having("hosts.ip = ?", stockCondition.Location.Host)
+	}
+	if stockCondition.Location.Rack != "" {
+		db = db.Having("hosts.rack = ?", stockCondition.Location.Rack)
+	}
+	if stockCondition.Location.Zone != "" {
+		db = db.Having("hosts.az = ?", stockCondition.Location.Zone)
+	}
+	if stockCondition.Location.Region != "" {
+		db = db.Having("hosts.region = ?", stockCondition.Location.Region)
+	}
+	// Filter by host fields
+	if stockCondition.HostCondition.Arch != nil {
+		db = db.Having("hosts.arch = ?", stockCondition.HostCondition.Arch)
+	}
+	if stockCondition.HostCondition.Status != nil {
+		db = db.Having("hosts.status = ?", stockCondition.HostCondition.Status)
+	}
+	if stockCondition.HostCondition.Stat != nil {
+		db = db.Having("hosts.stat = ?", stockCondition.HostCondition.Stat)
+	}
+
+	err = db.Scan(&stocks).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get stocks failed, %v", err)
+	}
+	tx.Commit()
+	return
+}

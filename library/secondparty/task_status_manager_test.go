@@ -18,12 +18,13 @@ package secondparty
 import (
 	"context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	db "github.com/pingcap-inc/tiem/test/mock"
-	"testing"
-	"time"
+	"github.com/pingcap-inc/tiem/test/mockdb"
 )
 
 var secondMicro *SecondMicro
@@ -64,7 +65,7 @@ func Test_taskStatusMapSyncer_NothingUpdate(t *testing.T) {
 
 func Test_taskStatusMapSyncer_updateButFail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
-	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
 	client.DBClient = mockDBClient
 
 	syncReq := dbPb.UpdateTiupTaskRequest{
@@ -98,7 +99,7 @@ func Test_taskStatusMapSyncer_updateButFail(t *testing.T) {
 
 func Test_taskStatusMapSyncer_updateAndSucceed(t *testing.T) {
 	mockCtl := gomock.NewController(t)
-	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
 	client.DBClient = mockDBClient
 
 	syncReq := dbPb.UpdateTiupTaskRequest{

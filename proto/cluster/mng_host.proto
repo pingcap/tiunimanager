@@ -42,7 +42,8 @@ message HostInfo {
     string diskType = 21;
     bool reserved = 22;
     int64 createAt = 23;
-    repeated Disk disks = 24;
+    int64 updateAt = 24;
+    repeated Disk disks = 25;
 }
 
 // The request means "Get 3 '4C8G' Hosts in Zone3"
@@ -189,4 +190,41 @@ message Node {
 message GetHierarchyResponse {
     ResponseStatus rs = 1;
     Node root = 2;
+}
+
+message StockLocation {
+	string region = 1;
+	string zone = 2;
+	string rack = 3;
+	string host = 4;
+}
+
+message StockHostFilter {
+    string arch = 1;
+    int32 status = 2;
+    int32 stat = 3;
+}
+
+message StockDiskFilter {
+    string type = 1;
+    int32 status = 2;
+    int32 capacity = 3;
+}
+
+message GetStocksRequest {
+    StockLocation location = 1;
+    StockHostFilter hostFilter = 2;
+    StockDiskFilter diskFilter = 3;
+}
+
+message Stocks {
+    int32 freeHostCount = 1;
+    int32 freeCpuCores = 2;
+    int32 freeMemory = 3;
+    int32 freeDiskCount = 4;
+    int32 freeDiskCapacity = 5;
+}
+message GetStocksResponse {
+    ResponseStatus rs = 1;
+    Stocks stocks = 2;
 }

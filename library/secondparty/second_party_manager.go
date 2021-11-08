@@ -23,7 +23,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/sirupsen/logrus"
-	"os"
 	"sync"
 )
 
@@ -32,7 +31,7 @@ var SecondParty MicroSrv
 var logger *logrus.Entry
 
 type MicroSrv interface {
-	MicroInit(mgrLogFilePath string)
+	MicroInit()
 	MicroSrvTiupDeploy(tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
 	MicroSrvTiupStart(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
 	MicroSrvTiupRestart(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
@@ -58,15 +57,9 @@ type SecondMicro struct {
 	taskStatusMapMutex  sync.Mutex
 }
 
-func (secondMicro *SecondMicro) MicroInit(mgrLogFilePath string) {
-	framework.LogForkFile(common.LogFileSystem).Infof("microinit secondmicro: %v, mgrlogfilepath: %s", secondMicro, mgrLogFilePath)
-
-	configPath := ""
-	if len(os.Args) > 1 {
-		configPath = os.Args[1]
-	}
-	logger = framework.LogForkFile(configPath + common.LogFileSecondParty)
-
+func (secondMicro *SecondMicro) MicroInit() {
+	logger = framework.LogForkFile(common.LogFileSecondParty)
+	logger.Infof("microinit secondmicro: %+v", secondMicro)
 	secondMicro.syncedTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	secondMicro.taskStatusCh = make(chan TaskStatusMember, 1024)
 	secondMicro.taskStatusMap = make(map[uint64]TaskStatusMapValue)

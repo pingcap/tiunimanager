@@ -32,7 +32,7 @@ func init() {
 	secondMicro = &SecondMicro{
 		TiupBinPath: "mock_tiup",
 	}
-	secondMicro.MicroInit("")
+	secondMicro.MicroInit()
 }
 
 func Test_MicroInit(t *testing.T) {

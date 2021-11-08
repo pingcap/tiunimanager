@@ -63,7 +63,7 @@ func initLibForDev(f *framework.BaseFramework) error {
 	secondparty.SecondParty = &secondparty.SecondMicro{
 		TiupBinPath: "tiup",
 	}
-	secondparty.SecondParty.MicroInit(f.GetDataDir()+common.LogDirPrefix)
+	secondparty.SecondParty.MicroInit()
 	return nil
 }
 

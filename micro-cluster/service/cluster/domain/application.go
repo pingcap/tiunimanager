@@ -345,7 +345,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 		cfgYamlStr := string(bs)
 		getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
 		deployTaskId, _ := secondparty.SecondParty.MicroSrvTiupDeploy(
-			secondparty.ClusterComponentTypeStr, cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/root/.ssh/tiup_rsa"}, uint64(task.Id),
+			secondparty.ClusterComponentTypeStr, cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, uint64(task.Id),
 		)
 		context.SetData("deployTaskId", deployTaskId)
 		getLogger().Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))

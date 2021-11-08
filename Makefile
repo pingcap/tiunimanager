@@ -200,8 +200,9 @@ clean:
 	@if [ -f ${TIEM_BINARY_DIR}/vfsgendev ] ; then rm ${TIEM_BINARY_DIR}/vfsgendev; fi
 	@if [ -f ${TIEM_BINARY_DIR}/golangci-lint ] ; then rm ${TIEM_BINARY_DIR}/golangci-lint; fi
 	@if [ -f ${TIEM_BINARY_DIR}/errdoc-gen ] ; then rm ${TIEM_BINARY_DIR}/errdoc-gen; fi
-	@if [ -f ${GENERATE_TARGET_DIR}/cluster ] ; then rm -rf ${GENERATE_TARGET_DIR}/cluster; fi
-	@if [ -f ${GENERATE_TARGET_DIR}/metadb ] ; then rm -rf ${GENERATE_TARGET_DIR}/metadb; fi
+	@if [ -d ${GENERATE_TARGET_DIR}/cluster ] ; then rm -rf ${GENERATE_TARGET_DIR}/cluster; fi
+	@if [ -d ${GENERATE_TARGET_DIR}/metadb ] ; then rm -rf ${GENERATE_TARGET_DIR}/metadb; fi
+	@if [ -d ${CURDIR}/test ] ; then rm -rf ${CURDIR}/test; fi
 
 help:
 	@echo "make build, build binary for all servers"

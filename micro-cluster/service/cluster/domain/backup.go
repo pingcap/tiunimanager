@@ -148,8 +148,8 @@ func DeleteBackup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId str
 		return fmt.Errorf("delete metadb backup record failed, %s", err.Error())
 	}
 	if delResp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
-		getLoggerWithContext(ctx).Errorf("delete metadb backup record failed, %s", resp.GetStatus().GetMessage())
-		return fmt.Errorf("delete metadb backup record failed, %s", resp.GetStatus().GetMessage())
+		getLoggerWithContext(ctx).Errorf("delete metadb backup record failed, %s", delResp.GetStatus().GetMessage())
+		return fmt.Errorf("delete metadb backup record failed, %s", delResp.GetStatus().GetMessage())
 	}
 
 	return nil

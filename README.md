@@ -21,7 +21,7 @@ make test
 ```
 
 ### Run Service
-If you want to run the service locally, try the following commands, good luck!!
+If you want to run the service locally, try the following commands, enjoy it!
 
 start metadb-server
 

@@ -25,6 +25,7 @@
 package domain
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,7 +35,7 @@ import (
 
 func TestDescribeMonitor(t *testing.T) {
 	setupMockAdapter()
-	monitor, err := DescribeMonitor(nil, nil, "testCluster")
+	monitor, err := DescribeMonitor(context.TODO(), nil, "testCluster")
 	assert.Nil(t, err)
 	assert.NotNil(t, monitor)
 }

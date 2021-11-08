@@ -18,9 +18,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/micro-metadb/models"
 
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/stretchr/testify/assert"
@@ -192,4 +194,100 @@ func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 
 		})
 	}
+}
+
+func printTree(root *node, pre string) {
+	if root == nil {
+		return
+	}
+	fmt.Println(pre, "Code: ", root.Code, "Prefix: ", root.Prefix, "Name: ", root.Name)
+	for _, subNode := range root.subNodes {
+		printTree(subNode, "--"+pre)
+	}
+}
+
+func printDBTree(root *dbpb.DBNode, pre string) {
+	if root == nil {
+		return
+	}
+	fmt.Println(pre, "Code: ", root.Code, "Prefix: ", root.Prefix, "Name: ", root.Name)
+	for _, subNode := range root.SubNodes {
+		printDBTree(subNode, "--"+pre)
+	}
+}
+
+func generateItems() []models.Item {
+	Items := []models.Item{
+		{Region: "Region1", Az: "Region1,Zone1", Rack: "Region1,Zone1,Rack1", Ip: "111.111.111.111", Name: "Host1"},
+		{Region: "Region1", Az: "Region1,Zone2", Rack: "Region1,Zone2,Rack1", Ip: "111.111.111.112", Name: "Host2"},
+		{Region: "Region2", Az: "Region2,Zone3", Rack: "Region2,Zone3,Rack2", Ip: "111.111.111.113", Name: "Host3"},
+		{Region: "Region2", Az: "Region2,Zone3", Rack: "Region2,Zone3,Rack3", Ip: "111.111.111.114", Name: "Host4"},
+		{Region: "Region3", Az: "Region3,Zone4", Rack: "Region3,Zone4,Rack4", Ip: "111.111.111.115", Name: "Host5"},
+		{Region: "Region3", Az: "Region3,Zone5", Rack: "Region3,Zone5,Rack1", Ip: "111.111.111.116", Name: "Host6"},
+		{Region: "Region3", Az: "Region3,Zone5", Rack: "Region3,Zone5,Rack1", Ip: "111.111.111.117", Name: "Host7"},
+	}
+	return Items
+}
+
+func TestDBServiceHandler_Build_Hierarchy(t *testing.T) {
+	Items := generateItems()
+	root := handler.buildHierarchy(Items)
+	assert.Equal(t, 3, len(root.subNodes))
+	assert.Equal(t, 2, len(root.subNodes[0].subNodes))
+	assert.Equal(t, 1, len(root.subNodes[1].subNodes))
+	assert.Equal(t, 2, len(root.subNodes[2].subNodes))
+
+	printTree(root, "-->")
+}
+
+func TestDBServiceHandler_TrimRegion_Hierarchy(t *testing.T) {
+	Items := generateItems()
+	root := handler.buildHierarchy(Items)
+
+	newRoot := handler.trimTree(root, resource.REGION, 1)
+	printTree(newRoot, "-->")
+	assert.Equal(t, 3, len(newRoot.subNodes)) // Regions
+	assert.Equal(t, 2, len(newRoot.subNodes[0].subNodes))
+	assert.Equal(t, 1, len(newRoot.subNodes[1].subNodes))
+	assert.Equal(t, 2, len(newRoot.subNodes[2].subNodes))
+	assert.True(t, newRoot.subNodes[0].subNodes[1].subNodes == nil)
+	assert.True(t, newRoot.subNodes[1].subNodes[0].subNodes == nil)
+	assert.True(t, newRoot.subNodes[2].subNodes[0].subNodes == nil)
+}
+
+func TestDBServiceHandler_TrimZone_Hierarchy(t *testing.T) {
+	Items := generateItems()
+	root := handler.buildHierarchy(Items)
+
+	newRoot := handler.trimTree(root, resource.ZONE, 2)
+	printTree(newRoot, "-->")
+	assert.Equal(t, 5, len(newRoot.subNodes)) // Zones
+	assert.Equal(t, 1, len(newRoot.subNodes[0].subNodes))
+	assert.Equal(t, 1, len(newRoot.subNodes[1].subNodes))
+	assert.Equal(t, 2, len(newRoot.subNodes[2].subNodes))
+	assert.Equal(t, 1, len(newRoot.subNodes[3].subNodes))
+	assert.Equal(t, 1, len(newRoot.subNodes[4].subNodes))
+}
+
+func TestDBServiceHandler_TrimRack_Hierarchy(t *testing.T) {
+	Items := generateItems()
+	root := handler.buildHierarchy(Items)
+
+	newRoot := handler.trimTree(root, resource.RACK, 0)
+	printTree(newRoot, "-->")
+	assert.Equal(t, 6, len(newRoot.subNodes)) // Racks
+	assert.True(t, newRoot.subNodes[2].subNodes == nil)
+}
+
+func TestDBServiceHandler_Copy_Hierarchy(t *testing.T) {
+	Items := generateItems()
+	root := handler.buildHierarchy(Items)
+	var newRoot *dbpb.DBNode
+	copyHierarchyToRsp(root, &newRoot)
+	assert.Equal(t, 3, len(newRoot.SubNodes))
+	assert.Equal(t, 2, len(newRoot.SubNodes[0].SubNodes))
+	assert.Equal(t, 1, len(newRoot.SubNodes[1].SubNodes))
+	assert.Equal(t, 2, len(newRoot.SubNodes[2].SubNodes))
+
+	printDBTree(newRoot, "-->")
 }

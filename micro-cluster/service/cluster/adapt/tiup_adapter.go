@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -15,13 +14,14 @@
  *                                                                            *
  ******************************************************************************/
 
-
 package adapt
 
 import (
 	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
@@ -38,7 +38,7 @@ type TiUPTiDBMetadataManager struct {
 
 func NewTiUPTiDBMetadataManager() *TiUPTiDBMetadataManager {
 	mgr := new(TiUPTiDBMetadataManager)
-	mgr.componentParsers = map[string]domain.ComponentParser {}
+	mgr.componentParsers = map[string]domain.ComponentParser{}
 
 	parser := TiDBComponentParser{}
 	mgr.componentParsers[parser.GetComponent().ComponentType] = parser
@@ -64,30 +64,30 @@ func (t TiUPTiDBMetadataManager) FetchFromRemoteCluster(ctx context.Context, req
 	}
 	Client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiupIp, req.Port), &Conf)
 	if err != nil {
-		return nil, err
+		framework.LogWithContext(ctx).Errorf("FetchFromRemoteCluster, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh dial error", err)
 	}
 	defer Client.Close()
 
 	sftpClient, err := sftp.NewClient(Client)
 	if err != nil {
-		return nil, err
+		framework.LogWithContext(ctx).Errorf("FetchFromRemoteCluster, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "new sftp client error", err)
 	}
 	defer sftpClient.Close()
 
 	remoteFileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", req.TiupPath, req.ClusterNames[0])
 	remoteFile, err := sftpClient.Open(remoteFileName)
 	if err != nil {
-		return nil, err
+		framework.LogWithContext(ctx).Errorf("FetchFromRemoteCluster, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "open sftp client error", err)
 	}
 	defer remoteFile.Close()
-	if err != nil {
-		return nil, err
-	}
+
 	dataByte, err := ioutil.ReadAll(remoteFile)
 	if err != nil {
-		if err != nil {
-			return nil, err
-		}
+		framework.LogWithContext(ctx).Errorf("FetchFromRemoteCluster, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
 	}
 
 	metadata := &spec.ClusterMeta{}
@@ -96,11 +96,11 @@ func (t TiUPTiDBMetadataManager) FetchFromRemoteCluster(ctx context.Context, req
 	return metadata, err
 }
 
-func (t TiUPTiDBMetadataManager) RebuildMetadataFromComponents(cluster *domain.Cluster, components []*domain.ComponentGroup) (spec.Metadata, error) {
+func (t TiUPTiDBMetadataManager) RebuildMetadataFromComponents(ctx context.Context, cluster *domain.Cluster, components []*domain.ComponentGroup) (spec.Metadata, error) {
 	panic("implement me")
 }
 
-func (t TiUPTiDBMetadataManager) ParseComponentsFromMetaData(metadata spec.Metadata) ([]*domain.ComponentGroup, error) {
+func (t TiUPTiDBMetadataManager) ParseComponentsFromMetaData(ctx context.Context, metadata spec.Metadata) ([]*domain.ComponentGroup, error) {
 	version := metadata.GetBaseMeta().Version
 
 	clusterSpec := metadata.GetTopology().(*spec.Specification)
@@ -114,11 +114,11 @@ func (t TiUPTiDBMetadataManager) ParseComponentsFromMetaData(metadata spec.Metad
 	return componentGroups, nil
 }
 
-func (t TiUPTiDBMetadataManager) ParseClusterInfoFromMetaData(meta spec.BaseMeta) (clusterType, user string, group string, version string) {
+func (t TiUPTiDBMetadataManager) ParseClusterInfoFromMetaData(ctx context.Context, meta spec.BaseMeta) (clusterType, user string, group string, version string) {
 	return "TiDB", meta.User, meta.Group, meta.Version
 }
 
-type TiDBComponentParser struct {}
+type TiDBComponentParser struct{}
 
 func (t TiDBComponentParser) GetComponent() *knowledge.ClusterComponent {
 	return knowledge.ClusterComponentFromCode("TiDB")
@@ -127,15 +127,15 @@ func (t TiDBComponentParser) GetComponent() *knowledge.ClusterComponent {
 func (t TiDBComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
 	group := &domain.ComponentGroup{
 		ComponentType: t.GetComponent(),
-		Nodes: make([]domain.ComponentInstance, 0),
+		Nodes:         make([]domain.ComponentInstance, 0),
 	}
 
 	for _, server := range spec.TiDBServers {
-		componentInstance := domain.ComponentInstance {
+		componentInstance := domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
-			Host: server.Host,
-			DeployDir: server.DeployDir,
-			PortList: []int{server.Port, server.StatusPort},
+			Host:          server.Host,
+			DeployDir:     server.DeployDir,
+			PortList:      []int{server.Port, server.StatusPort},
 		}
 		group.Nodes = append(group.Nodes, componentInstance)
 	}
@@ -143,7 +143,7 @@ func (t TiDBComponentParser) ParseComponent(spec *spec.Specification) *domain.Co
 	return group
 }
 
-type TiKVComponentParser struct {}
+type TiKVComponentParser struct{}
 
 func (t TiKVComponentParser) GetComponent() *knowledge.ClusterComponent {
 	return knowledge.ClusterComponentFromCode("TiKV")
@@ -152,15 +152,15 @@ func (t TiKVComponentParser) GetComponent() *knowledge.ClusterComponent {
 func (t TiKVComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
 	group := &domain.ComponentGroup{
 		ComponentType: t.GetComponent(),
-		Nodes: make([]domain.ComponentInstance, 0),
+		Nodes:         make([]domain.ComponentInstance, 0),
 	}
 
 	for _, server := range spec.TiKVServers {
-		componentInstance := domain.ComponentInstance {
+		componentInstance := domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
-			Host: server.Host,
-			DeployDir: server.DeployDir,
-			PortList: []int{server.Port, server.StatusPort},
+			Host:          server.Host,
+			DeployDir:     server.DeployDir,
+			PortList:      []int{server.Port, server.StatusPort},
 		}
 		group.Nodes = append(group.Nodes, componentInstance)
 	}
@@ -168,7 +168,7 @@ func (t TiKVComponentParser) ParseComponent(spec *spec.Specification) *domain.Co
 	return group
 }
 
-type PDComponentParser struct {}
+type PDComponentParser struct{}
 
 func (t PDComponentParser) GetComponent() *knowledge.ClusterComponent {
 	return knowledge.ClusterComponentFromCode("PD")
@@ -177,15 +177,15 @@ func (t PDComponentParser) GetComponent() *knowledge.ClusterComponent {
 func (t PDComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
 	group := &domain.ComponentGroup{
 		ComponentType: t.GetComponent(),
-		Nodes: make([]domain.ComponentInstance, 0),
+		Nodes:         make([]domain.ComponentInstance, 0),
 	}
 
 	for _, server := range spec.PDServers {
-		componentInstance := domain.ComponentInstance {
+		componentInstance := domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
-			Host: server.Host,
-			DeployDir: server.DeployDir,
-			PortList: []int{server.ClientPort, server.PeerPort},
+			Host:          server.Host,
+			DeployDir:     server.DeployDir,
+			PortList:      []int{server.ClientPort, server.PeerPort},
 		}
 		group.Nodes = append(group.Nodes, componentInstance)
 	}
@@ -193,7 +193,7 @@ func (t PDComponentParser) ParseComponent(spec *spec.Specification) *domain.Comp
 	return group
 }
 
-type TiFlashComponentParser struct {}
+type TiFlashComponentParser struct{}
 
 func (t TiFlashComponentParser) GetComponent() *knowledge.ClusterComponent {
 	return knowledge.ClusterComponentFromCode("TiFlash")
@@ -202,15 +202,15 @@ func (t TiFlashComponentParser) GetComponent() *knowledge.ClusterComponent {
 func (t TiFlashComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
 	group := &domain.ComponentGroup{
 		ComponentType: t.GetComponent(),
-		Nodes: make([]domain.ComponentInstance, 0),
+		Nodes:         make([]domain.ComponentInstance, 0),
 	}
 
 	for _, server := range spec.TiFlashServers {
-		componentInstance := domain.ComponentInstance {
+		componentInstance := domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
-			Host: server.Host,
-			DeployDir: server.DeployDir,
-			PortList: []int{server.TCPPort, server.HTTPPort, server.StatusPort, server.FlashProxyPort, server.FlashServicePort, server.FlashProxyStatusPort},
+			Host:          server.Host,
+			DeployDir:     server.DeployDir,
+			PortList:      []int{server.TCPPort, server.HTTPPort, server.StatusPort, server.FlashProxyPort, server.FlashServicePort, server.FlashProxyStatusPort},
 		}
 		group.Nodes = append(group.Nodes, componentInstance)
 	}

@@ -28,13 +28,13 @@ import (
 
 type MicroMetaDbRepo struct{}
 
-func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId string, code string) (p domain.PermissionAggregation, err error) {
+func (m MicroMetaDbRepo) LoadPermissionAggregation(ctx context.Context, tenantId string, code string) (p domain.PermissionAggregation, err error) {
 	req := dbpb.DBFindRolesByPermissionRequest{
 		TenantId: tenantId,
 		Code:     code,
 	}
 
-	resp, err := client.DBClient.FindRolesByPermission(context.TODO(), &req)
+	resp, err := client.DBClient.FindRolesByPermission(ctx, &req)
 	if err != nil {
 		return
 	}
@@ -68,17 +68,17 @@ func (m MicroMetaDbRepo) LoadPermissionAggregation(tenantId string, code string)
 	return
 }
 
-func (m MicroMetaDbRepo) LoadPermission(tenantId string, code string) (domain.Permission, error) {
+func (m MicroMetaDbRepo) LoadPermission(ctx context.Context, tenantId string, code string) (domain.Permission, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account domain.AccountAggregation, err error) {
+func (m MicroMetaDbRepo) LoadAccountAggregation(ctx context.Context, name string) (account domain.AccountAggregation, err error) {
 	req := dbpb.DBFindAccountRequest{
 		Name:     name,
 		WithRole: true,
 	}
 
-	resp, err := client.DBClient.FindAccount(context.TODO(), &req)
+	resp, err := client.DBClient.FindAccount(ctx, &req)
 	if err != nil {
 		return
 	}
@@ -108,7 +108,7 @@ func (m MicroMetaDbRepo) LoadAccountAggregation(name string) (account domain.Acc
 	return
 }
 
-func (m MicroMetaDbRepo) Provide(tiEMToken *domain.TiEMToken) (tokenString string, err error) {
+func (m MicroMetaDbRepo) Provide(ctx context.Context, tiEMToken *domain.TiEMToken) (tokenString string, err error) {
 	// 提供token，简单地使用UUID
 	tokenString = uuid.New().String()
 
@@ -122,12 +122,12 @@ func (m MicroMetaDbRepo) Provide(tiEMToken *domain.TiEMToken) (tokenString strin
 		},
 	}
 
-	_, err = client.DBClient.SaveToken(context.TODO(), &req)
+	_, err = client.DBClient.SaveToken(ctx, &req)
 
 	return
 }
 
-func (m MicroMetaDbRepo) Modify(tiEMToken *domain.TiEMToken) error {
+func (m MicroMetaDbRepo) Modify(ctx context.Context, tiEMToken *domain.TiEMToken) error {
 	req := dbpb.DBSaveTokenRequest{
 		Token: &dbpb.DBTokenDTO{
 			TenantId:       tiEMToken.TenantId,
@@ -138,17 +138,17 @@ func (m MicroMetaDbRepo) Modify(tiEMToken *domain.TiEMToken) error {
 		},
 	}
 
-	_, err := client.DBClient.SaveToken(context.TODO(), &req)
+	_, err := client.DBClient.SaveToken(ctx, &req)
 
 	return err
 }
 
-func (m MicroMetaDbRepo) GetToken(tokenString string) (token domain.TiEMToken, err error) {
+func (m MicroMetaDbRepo) GetToken(ctx context.Context, tokenString string) (token domain.TiEMToken, err error) {
 	req := dbpb.DBFindTokenRequest{
 		TokenString: tokenString,
 	}
 
-	resp, err := client.DBClient.FindToken(context.TODO(), &req)
+	resp, err := client.DBClient.FindToken(ctx, &req)
 	if err != nil {
 		return
 	}
@@ -164,29 +164,29 @@ func (m MicroMetaDbRepo) GetToken(tokenString string) (token domain.TiEMToken, e
 	return
 }
 
-func (m MicroMetaDbRepo) AddTenant(tenant *domain.Tenant) error {
+func (m MicroMetaDbRepo) AddTenant(ctx context.Context, tenant *domain.Tenant) error {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadTenantByName(name string) (domain.Tenant, error) {
+func (m MicroMetaDbRepo) LoadTenantByName(ctx context.Context, name string) (domain.Tenant, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadTenantById(id string) (domain.Tenant, error) {
+func (m MicroMetaDbRepo) LoadTenantById(ctx context.Context, id string) (domain.Tenant, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) AddAccount(a *domain.Account) error {
+func (m MicroMetaDbRepo) AddAccount(ctx context.Context, a *domain.Account) error {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadAccountByName(name string) (account domain.Account, err error) {
+func (m MicroMetaDbRepo) LoadAccountByName(ctx context.Context, name string) (account domain.Account, err error) {
 	req := dbpb.DBFindAccountRequest{
 		Name:     name,
 		WithRole: false,
 	}
 
-	resp, err := client.DBClient.FindAccount(context.TODO(), &req)
+	resp, err := client.DBClient.FindAccount(ctx, &req)
 	if err != nil {
 		return
 	}
@@ -201,34 +201,34 @@ func (m MicroMetaDbRepo) LoadAccountByName(name string) (account domain.Account,
 	return
 }
 
-func (m MicroMetaDbRepo) LoadAccountById(id string) (domain.Account, error) {
+func (m MicroMetaDbRepo) LoadAccountById(ctx context.Context, id string) (domain.Account, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) AddRole(r *domain.Role) error {
+func (m MicroMetaDbRepo) AddRole(ctx context.Context, r *domain.Role) error {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadRole(tenantId string, name string) (domain.Role, error) {
+func (m MicroMetaDbRepo) LoadRole(ctx context.Context, tenantId string, name string) (domain.Role, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) AddPermission(r *domain.Permission) error {
+func (m MicroMetaDbRepo) AddPermission(ctx context.Context, r *domain.Permission) error {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadAllRolesByAccount(account *domain.Account) ([]domain.Role, error) {
+func (m MicroMetaDbRepo) LoadAllRolesByAccount(ctx context.Context, account *domain.Account) ([]domain.Role, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) LoadAllRolesByPermission(permission *domain.Permission) ([]domain.Role, error) {
+func (m MicroMetaDbRepo) LoadAllRolesByPermission(ctx context.Context, permission *domain.Permission) ([]domain.Role, error) {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) AddPermissionBindings(bindings []domain.PermissionBinding) error {
+func (m MicroMetaDbRepo) AddPermissionBindings(ctx context.Context, bindings []domain.PermissionBinding) error {
 	panic("implement me")
 }
 
-func (m MicroMetaDbRepo) AddRoleBindings(bindings []domain.RoleBinding) error {
+func (m MicroMetaDbRepo) AddRoleBindings(ctx context.Context, bindings []domain.RoleBinding) error {
 	panic("implement me")
 }

@@ -16,6 +16,25 @@ PROJECT=tiem
 GOPATH ?= $(shell go env GOPATH)
 P=8
 
+# Get system info, include OS and ARCH
+OS ?= $(shell uname -s)
+ifeq ($(OS), Darwin)
+    OS := osx
+else ifeq ($(OS), darwin)
+    OS := osx
+else ifeq ($(OS), Linux)
+    OS := linux
+endif
+
+ARCH ?= $(shell uname -m)
+ifeq ($(ARCH), arm64)
+    ARCH := x86_64
+else ifeq ($(ARCH), amd64)
+    ARCH := x86_64
+else ifeq ($(ARCH), aarch64)
+    ARCH := aarch_64
+endif
+
 # Ensure GOPATH is set before running build process.
 ifeq "$(GOPATH)" ""
   $(error Please set the environment variable GOPATH before running `make`)
@@ -24,10 +43,9 @@ FAIL_ON_STDOUT := awk '{ print } END { if (NR > 0) { exit 1 } }'
 
 CURDIR := $(shell pwd)
 TEST_DIR := /tmp/tidb_em_test
-CODECOV_BASH := /tmp/codecovbash
-#path_to_add := $(addsuffix /bin,$(subst :,/bin:,$(GOPATH))):$(PWD)/tools/bin
-path_to_add := $(addsuffix /bin,$(subst :,/bin:,$(GOPATH)))
-export PATH := $(path_to_add):$(PATH)
+CODECOV_BASH := /tmp/codecov_bash
+EXTERN_PATH := $(addsuffix /bin,$(subst :,/bin:,$(GOPATH)))
+export PATH := $(EXTERN_PATH):$(PATH)
 
 GO              := GO111MODULE=on go
 GOBUILD         := $(GO) build $(BUILD_FLAG) -tags codes
@@ -47,7 +65,6 @@ ifeq (${PREFIX},)
     PREFIX := /usr/local
 endif
 
-ARCH      := "`uname -s`"
 LINUX     := "Linux"
 MAC       := "Darwin"
 PACKAGE_LIST  := go list ./...| grep -vE "docs|proto|library/util|micro-api|micro-metadb/service|micro-cluster/service/cluster/adapt|micro-cluster/service/tenant/adapt|^github.com/pingcap-inc/tiem/micro-cluster/service$$|clusterpb|dbpb|adapt|test/mock"

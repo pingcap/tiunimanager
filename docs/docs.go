@@ -31,7 +31,7 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/backups": {
+        "/backups/": {
             "get": {
                 "security": [
                     {
@@ -262,7 +262,7 @@ var doc = `{
                 }
             }
         },
-        "/clusters": {
+        "/clusters/": {
             "get": {
                 "security": [
                     {
@@ -1133,7 +1133,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "restart a cluster",
+                "description": "stop a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -1143,7 +1143,7 @@ var doc = `{
                 "tags": [
                     "cluster"
                 ],
-                "summary": "restart a cluster",
+                "summary": "stop a cluster",
                 "parameters": [
                     {
                         "type": "string",
@@ -1165,7 +1165,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.RestartClusterRsp"
+                                            "$ref": "#/definitions/management.StopClusterRsp"
                                         }
                                     }
                                 }
@@ -1421,7 +1421,7 @@ var doc = `{
                 }
             }
         },
-        "/flowworks": {
+        "/flowworks/": {
             "get": {
                 "security": [
                     {
@@ -1529,7 +1529,7 @@ var doc = `{
                 "summary": "show details of a flow work",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "flow work id",
                         "name": "flowWorkId",
                         "in": "path",
@@ -1576,7 +1576,7 @@ var doc = `{
                 }
             }
         },
-        "/knowledges": {
+        "/knowledges/": {
             "get": {
                 "security": [
                     {
@@ -1844,6 +1844,73 @@ var doc = `{
                                             "items": {
                                                 "$ref": "#/definitions/warehouse.DomainResource"
                                             }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/hierarchy": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get resource hierarchy-tree",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Show the resources hierarchy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "Arch",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2,
+                            3,
+                            4
+                        ],
+                        "type": "integer",
+                        "description": "failure domain type of region/zone/rack/host",
+                        "name": "level",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "hierarchy depth",
+                        "name": "depth",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/warehouse.Node"
                                         }
                                     }
                                 }
@@ -2260,6 +2327,98 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/resources/stocks": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get resource stocks in specified conditions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Show the resources stocks",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "Arch",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "Capacity",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "DiskStatus",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "DiskType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "HostIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "HostStatus",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "LoadStat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "Rack",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "Region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "Zone",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/warehouse.Stocks"
                                         }
                                     }
                                 }
@@ -2708,6 +2867,12 @@ var doc = `{
                 "statusName": {
                     "type": "string"
                 },
+                "taskName": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "tasks": {
                     "type": "array",
                     "items": {
@@ -2772,10 +2937,16 @@ var doc = `{
         "flowtask.FlowWorkTaskInfo": {
             "type": "object",
             "properties": {
+                "endTime": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
                 "result": {
+                    "type": "string"
+                },
+                "startTime": {
                     "type": "string"
                 },
                 "taskName": {
@@ -2997,6 +3168,9 @@ var doc = `{
                 },
                 "status": {
                     "description": "Host Status, 0 for Online, 1 for offline",
+                    "type": "integer"
+                },
+                "updateTime": {
                     "type": "integer"
                 },
                 "userName": {
@@ -3853,6 +4027,32 @@ var doc = `{
                 }
             }
         },
+        "management.StopClusterRsp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
         "management.TakeoverReq": {
             "type": "object",
             "properties": {
@@ -3871,8 +4071,8 @@ var doc = `{
                     "example": ".tiup/"
                 },
                 "tiupPort": {
-                    "type": "string",
-                    "example": "22"
+                    "type": "integer",
+                    "example": 22
                 },
                 "tiupUserName": {
                     "type": "string",
@@ -3954,6 +4154,26 @@ var doc = `{
                 }
             }
         },
+        "warehouse.Node": {
+            "type": "object",
+            "properties": {
+                "Code": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                },
+                "Prefix": {
+                    "type": "string"
+                },
+                "SubNodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/warehouse.Node"
+                    }
+                }
+            }
+        },
         "warehouse.SpecBaseInfo": {
             "type": "object",
             "properties": {
@@ -3962,6 +4182,26 @@ var doc = `{
                 },
                 "specName": {
                     "type": "string"
+                }
+            }
+        },
+        "warehouse.Stocks": {
+            "type": "object",
+            "properties": {
+                "freeCpuCores": {
+                    "type": "integer"
+                },
+                "freeDiskCapacity": {
+                    "type": "integer"
+                },
+                "freeDiskCount": {
+                    "type": "integer"
+                },
+                "freeHostCount": {
+                    "type": "integer"
+                },
+                "freeMemory": {
+                    "type": "integer"
                 }
             }
         },

@@ -198,7 +198,7 @@ func (b *BaseFramework) loadCert() *tls.Config {
 	if err != nil {
 		panic("load certificate file failed")
 	}
-	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	return &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true} // #nosec G402
 }
 
 func (b *BaseFramework) initMicroService() {
@@ -337,7 +337,7 @@ func (b *BaseFramework) prometheusBoot() {
 		if metricsPort <= 0 {
 			metricsPort = common.DefaultMetricsPort
 		}
-		Log().Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
+		LogForkFile(common.LogFileSystem).Infof("prometheus listen address [0.0.0.0:%d]", metricsPort)
 		err := http.ListenAndServe(common.LocalAddress+":"+strconv.Itoa(metricsPort), nil)
 		if err != nil {
 			Log().Errorf("prometheus listen and serve error: %v", err)

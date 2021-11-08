@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,15 +18,17 @@ package domain
 
 import (
 	ctx "context"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
-	mock "github.com/pingcap-inc/tiem/test/mock"
+	"github.com/pingcap-inc/tiem/library/secondparty"
+	mock "github.com/pingcap-inc/tiem/test/mockdb"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
+	"golang.org/x/net/context"
 )
 
 func TestSaveBackupStrategyPreCheck_case1(t *testing.T) {
@@ -93,7 +94,7 @@ func TestRecoverPreCheck(t *testing.T) {
 		},
 	}
 
-	err := RecoverPreCheck(request)
+	err := RecoverPreCheck(context.TODO(), request)
 
 	assert.NoError(t, err)
 }
@@ -232,9 +233,9 @@ func Test_calculateNextBackupTime_case6(t *testing.T) {
 
 func Test_convertBrStorageType(t *testing.T) {
 	result, _ := convertBrStorageType(string(StorageTypeS3))
-	assert.Equal(t, libbr.StorageTypeS3, result)
+	assert.Equal(t, secondparty.StorageTypeS3, result)
 	result, _ = convertBrStorageType(string(StorageTypeLocal))
-	assert.Equal(t, libbr.StorageTypeLocal, result)
+	assert.Equal(t, secondparty.StorageTypeLocal, result)
 	_, err := convertBrStorageType("data")
 	assert.NotNil(t, err)
 }
@@ -246,20 +247,20 @@ func Test_updateBackupRecord(t *testing.T) {
 	mockClient := mock.NewMockTiEMDBService(ctrl)
 	mockClient.EXPECT().UpdateBackupRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateBackupRecordResponse{}, nil)
 	mockClient.EXPECT().FindTiupTaskByID(gomock.Any(), gomock.Any()).Return(&dbpb.FindTiupTaskByIDResponse{TiupTask: &dbpb.TiupTask{
-		Status : dbpb.TiupTaskStatus_Finished,
+		Status: dbpb.TiupTaskStatus_Finished,
 	}}, nil)
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := &FlowContext{}
-	context.put(contextClusterKey, &ClusterAggregation{
+	context := NewFlowContext(ctx.TODO())
+	context.SetData(contextClusterKey, &ClusterAggregation{
 		LastBackupRecord: &BackupRecord{
 			Id:   123,
 			Size: 1000,
 		},
 	})
-	context.put(contextCtxKey, ctx.Background())
-	context.put("backupTaskId", uint64(123))
+	context.SetData(contextCtxKey, ctx.Background())
+	context.SetData("backupTaskId", uint64(123))
 	ret := updateBackupRecord(task, context)
 
 	assert.Equal(t, true, ret)

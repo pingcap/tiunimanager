@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -27,7 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	mock "github.com/pingcap-inc/tiem/test/mock"
+	mock "github.com/pingcap-inc/tiem/test/mockdb"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
 )
@@ -201,8 +200,9 @@ func TestDescribeDataTransportRecord(t *testing.T) {
 
 func Test_buildDataImportConfig(t *testing.T) {
 	task := &TaskEntity{}
-	context := &FlowContext{}
-	context.put(contextDataTransportKey, &ImportInfo{
+	context := NewFlowContext(ctx.TODO())
+
+	context.SetData(contextDataTransportKey, &ImportInfo{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -211,7 +211,7 @@ func Test_buildDataImportConfig(t *testing.T) {
 		StorageType: S3StorageType,
 		ConfigPath:  "configPath",
 	})
-	context.put(contextClusterKey, &ClusterAggregation{
+	context.SetData(contextClusterKey, &ClusterAggregation{
 		CurrentTopologyConfigRecord: &TopologyConfigRecord{
 			ConfigModel: &spec.Specification{
 				TiDBServers: []*spec.TiDBSpec{
@@ -227,10 +227,10 @@ func Test_buildDataImportConfig(t *testing.T) {
 			},
 		},
 	})
-	context.put(contextCtxKey, ctx.Background())
+	context.SetData(contextCtxKey, ctx.Background())
 	ret := buildDataImportConfig(task, context)
 	assert.Equal(t, true, ret)
-	info := context.value(contextDataTransportKey).(*ImportInfo)
+	info := context.GetData(contextDataTransportKey).(*ImportInfo)
 	_ = os.RemoveAll(info.ConfigPath)
 }
 
@@ -243,8 +243,8 @@ func Test_updateDataImportRecord(t *testing.T) {
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := &FlowContext{}
-	context.put(contextDataTransportKey, &ImportInfo{
+	context := NewFlowContext(ctx.TODO())
+	context.SetData(contextDataTransportKey, &ImportInfo{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -253,12 +253,12 @@ func Test_updateDataImportRecord(t *testing.T) {
 		StorageType: S3StorageType,
 		ConfigPath:  "configPath",
 	})
-	context.put(contextClusterKey, &ClusterAggregation{
+	context.SetData(contextClusterKey, &ClusterAggregation{
 		Cluster: &Cluster{
 			Id: "test-abc",
 		},
 	})
-	context.put(contextCtxKey, ctx.Background())
+	context.SetData(contextCtxKey, ctx.Background())
 
 	ret := updateDataImportRecord(task, context)
 
@@ -274,8 +274,8 @@ func Test_updateDataExportRecord(t *testing.T) {
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := &FlowContext{}
-	context.put(contextDataTransportKey, &ExportInfo{
+	context := NewFlowContext(ctx.TODO())
+	context.SetData(contextDataTransportKey, &ExportInfo{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -283,12 +283,12 @@ func Test_updateDataExportRecord(t *testing.T) {
 		RecordId:    "123",
 		StorageType: S3StorageType,
 	})
-	context.put(contextClusterKey, &ClusterAggregation{
+	context.SetData(contextClusterKey, &ClusterAggregation{
 		Cluster: &Cluster{
 			Id: "test-abc",
 		},
 	})
-	context.put(contextCtxKey, ctx.Background())
+	context.SetData(contextCtxKey, ctx.Background())
 
 	ret := updateDataExportRecord(task, context)
 
@@ -304,8 +304,8 @@ func Test_exportDataFailed(t *testing.T) {
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := &FlowContext{}
-	context.put(contextDataTransportKey, &ExportInfo{
+	context := NewFlowContext(ctx.TODO())
+	context.SetData(contextDataTransportKey, &ExportInfo{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -313,12 +313,12 @@ func Test_exportDataFailed(t *testing.T) {
 		RecordId:    "123",
 		StorageType: S3StorageType,
 	})
-	context.put(contextClusterKey, &ClusterAggregation{
+	context.SetData(contextClusterKey, &ClusterAggregation{
 		Cluster: &Cluster{
 			Id: "test-abc",
 		},
 	})
-	context.put(contextCtxKey, ctx.Background())
+	context.SetData(contextCtxKey, ctx.Background())
 
 	ret := exportDataFailed(task, context)
 
@@ -334,8 +334,8 @@ func Test_importDataFailed(t *testing.T) {
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := &FlowContext{}
-	context.put(contextDataTransportKey, &ImportInfo{
+	context := NewFlowContext(ctx.TODO())
+	context.SetData(contextDataTransportKey, &ImportInfo{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -343,12 +343,12 @@ func Test_importDataFailed(t *testing.T) {
 		RecordId:    "123",
 		StorageType: S3StorageType,
 	})
-	context.put(contextClusterKey, &ClusterAggregation{
+	context.SetData(contextClusterKey, &ClusterAggregation{
 		Cluster: &Cluster{
 			Id: "test-abc",
 		},
 	})
-	context.put(contextCtxKey, ctx.Background())
+	context.SetData(contextCtxKey, ctx.Background())
 
 	ret := importDataFailed(task, context)
 

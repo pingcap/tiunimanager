@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+import "db_cluster.proto";
+
+option go_package = "./dbpb/;dbpb";
+
+message TransportRecordDTO {
+	string ID = 1;
+	string ClusterId = 2;
+	string TransportType = 3;
+	string FilePath = 4;
+	string TenantId = 5;
+	string Status = 6;
+	int64 StartTime = 7;
+	int64 EndTime   = 8;
+}
+
+message DBCreateTransportRecordRequest {
+    TransportRecordDTO record = 1;
+}
+
+message DBCreateTransportRecordResponse {
+    DBClusterResponseStatus status = 1;
+    string id = 2;
+}
+
+message DBUpdateTransportRecordRequest {
+    TransportRecordDTO record = 1;
+}
+
+message DBUpdateTransportRecordResponse {
+    DBClusterResponseStatus status = 1;
+}
+
+message DBFindTransportRecordByIDRequest {
+    string recordId = 1;
+}
+
+message DBFindTransportRecordByIDResponse {
+    DBClusterResponseStatus status = 1;
+    TransportRecordDTO record = 2;
+}
+
+message DBListTransportRecordRequest {
+    DBPageDTO page = 1;
+	string clusterId = 2;
+	string recordId = 3;
+}
+
+message DBListTransportRecordResponse {
+    DBClusterResponseStatus status = 1;
+    DBPageDTO page = 2;
+    repeated TransportRecordDTO records = 3;
+}

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -51,18 +50,12 @@ var loginUrlSuffix string = "api/user/login"
 
 func DescribeDashboard(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string) (*Dashboard, error) {
 	//todo: check operator and clusterId
-	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
 	if err != nil || clusterAggregation == nil || clusterAggregation.Cluster == nil {
-		return nil, errors.New("load cluster aggregation")
+		return nil, errors.New("load cluster aggregation failed")
 	}
 
-	/*
-		url, err := getDashboardUrl(clusterAggregation)
-		if err != nil {
-			return nil, err
-		}*/
 	url := getDashboardUrlFromCluser(clusterAggregation)
-
 	token, err := getLoginToken(ctx, url, "root", "") //todo: replace by real data
 	if err != nil {
 		return nil, err

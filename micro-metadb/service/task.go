@@ -19,6 +19,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
@@ -136,14 +137,14 @@ func (handler *DBServiceHandler) ListFlows(ctx context.Context, req *dbpb.DBList
 			PageSize: req.Page.PageSize,
 			Total:    int32(total),
 		}
-		flowDTOs := make([]*dbpb.DBFlowDTO, len(flows), len(flows))
+		flowDTOs := make([]*dbpb.DBFlowDTO, len(flows))
 		for i, v := range flows {
 			flowDTOs[i] = convertFlowToDTO(v)
 		}
 		rsp.Flows = flowDTOs
-		framework.Log().Infof("ListFlows successful, total: %d", total)
+		framework.LogWithContext(ctx).Infof("ListFlows successful, total: %d", total)
 	} else {
-		framework.Log().Infof("ListFlows failed, error: %s", err.Error())
+		framework.LogWithContext(ctx).Infof("ListFlows failed, error: %s", err.Error())
 	}
 	return err
 }
@@ -162,7 +163,7 @@ func convertFlowToDTO(do *models.FlowDO) (dto *dbpb.DBFlowDTO) {
 	dto.UpdateTime = do.UpdatedAt.Unix()
 	dto.Operator = do.Operator
 
-	dto.DeleteTime = deletedAtUnix(do.DeletedAt)
+	dto.DeleteTime = nullTimeUnix(sql.NullTime(do.DeletedAt))
 	return
 }
 
@@ -188,14 +189,12 @@ func convertTaskToDTO(do *models.TaskDO) (dto *dbpb.DBTaskDTO) {
 
 	dto.BizId = do.BizId
 	dto.Status = int32(do.Status)
-	dto.CreateTime = do.CreatedAt.Unix()
-	dto.UpdateTime = do.UpdatedAt.Unix()
-
-	dto.DeleteTime = deletedAtUnix(do.DeletedAt)
 
 	dto.ParentId = do.ParentId
 	dto.ParentType = int32(do.ParentType)
 
+	dto.StartTime = nullTimeUnix(do.StartTime)
+	dto.EndTime = nullTimeUnix(do.EndTime)
 	dto.Parameters = do.Parameters
 	dto.Result = do.Result
 	dto.TaskName = do.Name
@@ -205,7 +204,7 @@ func convertTaskToDTO(do *models.TaskDO) (dto *dbpb.DBTaskDTO) {
 }
 
 func batchConvertTaskToDTO(dos []*models.TaskDO) (dtos []*dbpb.DBTaskDTO) {
-	dtos = make([]*dbpb.DBTaskDTO, len(dos), len(dos))
+	dtos = make([]*dbpb.DBTaskDTO, len(dos))
 
 	for i, v := range dos {
 		dtos[i] = convertTaskToDTO(v)
@@ -214,7 +213,7 @@ func batchConvertTaskToDTO(dos []*models.TaskDO) (dtos []*dbpb.DBTaskDTO) {
 }
 
 func batchParseTaskDTO(dtos []*dbpb.DBTaskDTO) (dos []*models.TaskDO) {
-	dos = make([]*models.TaskDO, len(dtos), len(dtos))
+	dos = make([]*models.TaskDO, len(dtos))
 
 	for i, v := range dtos {
 		dos[i] = parseTaskDTO(v)

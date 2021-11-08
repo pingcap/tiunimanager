@@ -30,8 +30,8 @@ func TestAddToken(t *testing.T) {
 
 	type args struct {
 		tokenString    string
-		accountName    string
-		accountId      string
+		//accountName    string
+		//accountId      string
 		tenantId       string
 		expirationTime time.Time
 	}

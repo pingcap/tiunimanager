@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -90,8 +89,8 @@ func (auto *autoBackupHandler) doBackup(strategy *dbpb.DBBackupStrategyDTO) {
 	defer getLogger().Infof("end do auto backup for cluster %s", strategy.GetClusterId())
 
 	ope := &clusterpb.OperatorDTO{
-		Id:       SystemOperator,
-		Name:     SystemOperator,
+		Id:             SystemOperator,
+		Name:           SystemOperator,
 		ManualOperator: false,
 	}
 	_, err := Backup(framework.NewMicroCtxFromGinCtx(&gin.Context{}), ope, strategy.GetClusterId(), "", "", BackupModeAuto, "")

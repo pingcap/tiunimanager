@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -35,51 +34,49 @@ var MetadataMgr MetadataManager
 var TopologyPlanner ClusterTopologyPlanner
 
 type ClusterRepository interface {
-	AddCluster (cluster *Cluster) error
+	AddCluster(ctx context.Context, cluster *Cluster) error
 
-	Persist(aggregation *ClusterAggregation) error
+	Persist(ctx context.Context, aggregation *ClusterAggregation) error
 
-	Load (id string) (cluster *ClusterAggregation, err error)
+	Load(ctx context.Context, id string) (cluster *ClusterAggregation, err error)
 
-	Query (clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error)
-
+	Query(ctx context.Context, clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error)
 }
 
 type ClusterAccessProxy interface {
-	QueryParameterJson(clusterId string) (string, error)
+	QueryParameterJson(ctx context.Context, clusterId string) (string, error)
 }
 
 type MetadataManager interface {
 	FetchFromRemoteCluster(ctx context.Context, request *clusterpb.ClusterTakeoverReqDTO) (spec.Metadata, error)
-	RebuildMetadataFromComponents(cluster *Cluster, components []*ComponentGroup) (spec.Metadata, error)
-	ParseComponentsFromMetaData(spec.Metadata) ([]*ComponentGroup, error)
-	ParseClusterInfoFromMetaData(meta spec.BaseMeta) (clusterType string, user string, group string, version string)
+	RebuildMetadataFromComponents(ctx context.Context, cluster *Cluster, components []*ComponentGroup) (spec.Metadata, error)
+	ParseComponentsFromMetaData(ctx context.Context, meta spec.Metadata) ([]*ComponentGroup, error)
+	ParseClusterInfoFromMetaData(ctx context.Context, meta spec.BaseMeta) (clusterType string, user string, group string, version string)
 }
 
 type ClusterTopologyPlanner interface {
-	BuildComponents(cluster *Cluster, demands []*ClusterComponentDemand) ([]*ComponentGroup, error)
-	AnalysisResourceRequest(cluster *Cluster, components []*ComponentGroup) (*clusterpb.BatchAllocRequest, error)
-	ApplyResourceToComponents(components []*ComponentGroup, response *clusterpb.BatchAllocResponse) error
+	BuildComponents(ctx context.Context, cluster *Cluster, demands []*ClusterComponentDemand) ([]*ComponentGroup, error)
+	AnalysisResourceRequest(ctx context.Context, cluster *Cluster, components []*ComponentGroup) (*clusterpb.BatchAllocRequest, error)
+	ApplyResourceToComponents(ctx context.Context, components []*ComponentGroup, response *clusterpb.BatchAllocResponse) error
 }
 
 type TaskRepository interface {
-	AddFlowWork(flowWork *FlowWorkEntity) error
-	AddFlowTask(task *TaskEntity, flowId uint) error
-	AddCronTask(cronTask *CronTaskEntity) error
+	AddFlowWork(ctx context.Context, flowWork *FlowWorkEntity) error
+	AddFlowTask(ctx context.Context, task *TaskEntity, flowId uint) error
+	AddCronTask(ctx context.Context, cronTask *CronTaskEntity) error
 
-	Persist(flowWork *FlowWorkAggregation) error
+	Persist(ctx context.Context, flowWork *FlowWorkAggregation) error
 
-	LoadFlowWork(id uint) (*FlowWorkEntity, error)
-	Load(id uint) (flowWork *FlowWorkAggregation, err error)
+	LoadFlowWork(ctx context.Context, id uint) (*FlowWorkEntity, error)
+	Load(ctx context.Context, id uint) (flowWork *FlowWorkAggregation, err error)
 
-	QueryCronTask(bizId string, cronTaskType int) (cronTask *CronTaskEntity, err error)
-	PersistCronTask(cronTask *CronTaskEntity) (err error)
+	QueryCronTask(ctx context.Context, bizId string, cronTaskType int) (cronTask *CronTaskEntity, err error)
+	PersistCronTask(ctx context.Context, cronTask *CronTaskEntity) (err error)
 
-	ListFlows(bizId, keyword string, status int, page int, pageSize int) ([]*FlowWorkEntity, int, error)
+	ListFlows(ctx context.Context, bizId, keyword string, status int, page int, pageSize int) ([]*FlowWorkEntity, int, error)
 }
 
 type ComponentParser interface {
 	GetComponent() *knowledge.ClusterComponent
 	ParseComponent(spec *spec.Specification) *ComponentGroup
 }
-

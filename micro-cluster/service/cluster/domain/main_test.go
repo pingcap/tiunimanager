@@ -20,6 +20,7 @@ package domain
 import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
+	"os"
 	"testing"
 )
 
@@ -38,5 +39,5 @@ func TestMain(m *testing.M) {
 			return nil
 		},
 	)
-	m.Run()
+	os.Exit(m.Run())
 }

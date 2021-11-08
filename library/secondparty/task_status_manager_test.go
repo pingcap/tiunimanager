@@ -18,12 +18,13 @@ package secondparty
 import (
 	"context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	"github.com/pingcap-inc/tiem/test/mock"
-	"testing"
-	"time"
+	db "github.com/pingcap-inc/tiem/test/mockdb"
 )
 
 var secondMicro *SecondMicro

@@ -209,6 +209,7 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbpb.DBHostInfoDTO) {
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved
 	dst.CreateAt = src.CreatedAt.Unix()
+	dst.UpdateAt = src.UpdatedAt.Unix()
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbpb.DBDiskDTO{
 			DiskId:   disk.ID,
@@ -721,6 +722,73 @@ func (handler *DBServiceHandler) GetHierarchy(ctx context.Context, in *dbpb.DBGe
 	root := handler.trimTree(wholeTree, resource.FailureDomain(in.Level), int(in.Depth))
 	copyHierarchyToRsp(root, &out.Root)
 
+	out.Rs.Code = common.TIEM_SUCCESS
+
+	return nil
+}
+
+func (handler *DBServiceHandler) buildStockCondition(cond *models.StockCondition, in *dbpb.DBGetStocksRequest) {
+	if in.Location != nil {
+		cond.Location.Region = in.Location.Region
+		cond.Location.Zone = in.Location.Zone
+		cond.Location.Rack = in.Location.Rack
+		cond.Location.Host = in.Location.Host
+	}
+	if in.HostFilter != nil {
+		if in.HostFilter.Status != int32(resource.HOST_WHATEVER) {
+			cond.HostCondition.Status = &in.HostFilter.Status
+		}
+		if in.HostFilter.Stat != int32(resource.HOST_STAT_WHATEVER) {
+			cond.HostCondition.Stat = &in.HostFilter.Stat
+		}
+		if in.HostFilter.Arch != "" {
+			cond.HostCondition.Arch = &in.HostFilter.Arch
+		}
+	}
+	if in.DiskFilter != nil {
+		if in.DiskFilter.Status != int32(resource.DISK_STATUS_WHATEVER) {
+			cond.DiskCondition.Status = &in.DiskFilter.Status
+		}
+		if in.DiskFilter.Capacity != 0 {
+			cond.DiskCondition.Capacity = &in.DiskFilter.Capacity
+		}
+		if in.DiskFilter.Type != "" {
+			cond.DiskCondition.Type = &in.DiskFilter.Type
+		}
+	}
+}
+
+func (handler *DBServiceHandler) GetStocks(ctx context.Context, in *dbpb.DBGetStocksRequest, out *dbpb.DBGetStocksResponse) error {
+	log := framework.LogWithContext(ctx)
+	var cond models.StockCondition
+	handler.buildStockCondition(&cond, in)
+	log.Infof("Receive GetStocks Request for cond = %v\n", cond)
+	out.Rs = new(dbpb.DBHostResponseStatus)
+
+	resourceManager := handler.Dao().ResourceManager()
+	stocks, err := resourceManager.GetStocks(ctx, cond)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			out.Rs.Code = int32(st.Code())
+			out.Rs.Message = st.Message()
+		} else {
+			out.Rs.Code = int32(codes.Internal)
+			out.Rs.Message = fmt.Sprintf("get host items failed, err: %v", err)
+		}
+		log.Warnln(out.Rs.Message)
+
+		// return nil to use rsp
+		return nil
+	}
+	out.Stocks = new(dbpb.DBStocks)
+	out.Stocks.FreeHostCount = int32(len(stocks))
+	for _, stock := range stocks {
+		out.Stocks.FreeCpuCores += int32(stock.FreeCpuCores)
+		out.Stocks.FreeMemory += int32(stock.FreeMemory)
+		out.Stocks.FreeDiskCount += int32(stock.FreeDiskCount)
+		out.Stocks.FreeDiskCapacity += int32(stock.FreeDiskCapacity)
+	}
 	out.Rs.Code = common.TIEM_SUCCESS
 
 	return nil

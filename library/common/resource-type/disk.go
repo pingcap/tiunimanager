@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -43,12 +42,17 @@ func ValidDiskType(diskType string) error {
 type DiskStatus int32
 
 const (
-	DISK_AVAILABLE DiskStatus = iota
+	DISK_STATUS_WHATEVER DiskStatus = iota - 1
+	DISK_AVAILABLE
 	DISK_RESERVED
 	DISK_INUSED
 	DISK_EXHAUST
 	DISK_ERROR
 )
+
+func (s DiskStatus) IsValidForQuery() bool {
+	return (s >= DISK_STATUS_WHATEVER && s <= DISK_ERROR)
+}
 
 func (s DiskStatus) IsInused() bool {
 	return s == DISK_INUSED

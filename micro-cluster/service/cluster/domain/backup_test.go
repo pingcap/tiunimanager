@@ -19,18 +19,19 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
-	"github.com/pingcap-inc/tiem/test/mock"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"github.com/pingcap-inc/tiem/test/mockdb"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
-	"testing"
-	"time"
 )
 
 func TestSaveBackupStrategyPreCheck_case1(t *testing.T) {

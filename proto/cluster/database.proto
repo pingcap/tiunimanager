@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+import "common.proto";
+
+option go_package = "./clusterpb/;clusterpb";
+
+message DataImportRequest {
+    OperatorDTO operator = 1;
+    string  clusterId = 2;
+    string  userName = 3;
+    string  password = 4;
+    string  filePath = 5;
+    string  storageType = 6;
+    string  bucketUrl = 7;
+    string  endpointUrl = 8;
+    string  accessKey = 9;
+    string  secretAccessKey = 10;
+}
+
+message DataImportResponse {
+    ResponseStatusDTO respStatus = 1;
+    string recordId = 2;
+}
+
+message DataExportRequest {
+    OperatorDTO operator = 1;
+    string  clusterId = 2;
+    string  userName = 3;
+    string  password = 4;
+    string  storageType = 5;
+    string  fileType = 6;
+    string  filter = 7;
+    string  sql = 8;
+    string  filePath = 9;
+    string  bucketUrl = 10;
+    string  bucketRegion = 11;
+    string  endpointUrl = 12;
+    string  accessKey = 13;
+    string  secretAccessKey = 14;
+}
+
+message DataExportResponse {
+    ResponseStatusDTO respStatus = 1;
+    string recordId = 2;
+}
+
+message DataTransportQueryRequest {
+    PageDTO pageReq = 1;
+    OperatorDTO operator = 2;
+    string  clusterId = 3;
+    string  recordId = 4;
+}
+
+message DataTransportInfo {
+    string RecordId = 1;
+    string clusterId = 2;
+    string transportType = 3;
+    int64 startTime = 4;
+    int64 endTime = 5;
+    string status = 6;
+    string filePath = 7;
+}
+
+message DataTransportQueryResponse {
+    PageDTO pageReq = 1;
+    ResponseStatusDTO respStatus = 2;
+    repeated DataTransportInfo transportInfos = 3;
+}

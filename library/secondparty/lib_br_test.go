@@ -24,7 +24,7 @@ import (
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	db "github.com/pingcap-inc/tiem/test/mock"
+	"github.com/pingcap-inc/tiem/test/mock"
 	"os"
 	"testing"
 
@@ -63,7 +63,7 @@ func TestSecondMicro_BackUp_Fail(t *testing.T) {
 	expectedErr := errors.New("Fail Create tiup task")
 
 	mockCtl := gomock.NewController(t)
-	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	mockDBClient := mock.NewMockTiEMDBService(mockCtl)
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
 
@@ -93,7 +93,7 @@ func TestSecondMicro_BackUp_Success1_DontCareAsyncResult(t *testing.T) {
 	resp.Id = 1
 
 	mockCtl := gomock.NewController(t)
-	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	mockDBClient := mock.NewMockTiEMDBService(mockCtl)
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
@@ -119,7 +119,7 @@ func TestSecondMicro_BackUp_Success2_DontCareAsyncResult(t *testing.T) {
 	resp.Id = 1
 
 	mockCtl := gomock.NewController(t)
-	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	mockDBClient := mock.NewMockTiEMDBService(mockCtl)
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
@@ -140,7 +140,7 @@ func TestSecondMicro_BackUp_Success3_DontCareAsyncResult(t *testing.T) {
 	resp.Id = 1
 
 	mockCtl := gomock.NewController(t)
-	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	mockDBClient := mock.NewMockTiEMDBService(mockCtl)
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
@@ -201,7 +201,7 @@ func TestSecondMicro_Restore_Fail(t *testing.T) {
 	expectedErr := errors.New("Fail Create tiup task")
 
 	mockCtl := gomock.NewController(t)
-	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	mockDBClient := mock.NewMockTiEMDBService(mockCtl)
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
 
@@ -231,7 +231,7 @@ func TestSecondMicro_Restore_Success1_DontCareAsyncResult(t *testing.T) {
 	resp.Id = 1
 
 	mockCtl := gomock.NewController(t)
-	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	mockDBClient := mock.NewMockTiEMDBService(mockCtl)
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
@@ -257,7 +257,7 @@ func TestSecondMicro_Restore_Success2_DontCareAsyncResult(t *testing.T) {
 	resp.Id = 1
 
 	mockCtl := gomock.NewController(t)
-	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	mockDBClient := mock.NewMockTiEMDBService(mockCtl)
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 
@@ -278,7 +278,7 @@ func TestSecondMicro_Restore_Success3_DontCareAsyncResult(t *testing.T) {
 	resp.Id = 1
 
 	mockCtl := gomock.NewController(t)
-	mockDBClient := db.NewMockTiEMDBService(mockCtl)
+	mockDBClient := mock.NewMockTiEMDBService(mockCtl)
 	client.DBClient = mockDBClient
 	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
 

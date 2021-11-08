@@ -414,7 +414,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	}
 
 	getLoggerWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
-	backupTaskId, err := secondparty.SecondParty.MicroSrvBackUp(clusterFacade, storage, uint64(task.Id))
+	backupTaskId, err := secondparty.SecondParty.MicroSrvBackUp(flowContext.Context, clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		return false
@@ -422,7 +422,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	flowContext.SetData("backupTaskId", backupTaskId)
 
 	for {
-		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(backupTaskId)
+		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(flowContext.Context, backupTaskId)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
 			task.Fail(err)
@@ -567,7 +567,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		Root:        fmt.Sprintf("%s/%s", record.GetBackupRecords().GetBackupRecord().GetFilePath(), "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
 	getLoggerWithContext(ctx).Infof("begin call brmgr restore api, clusterFacade %v, storage %v", clusterFacade, storage)
-	restoreTaskId, err := secondparty.SecondParty.MicroSrvRestore(clusterFacade, storage, uint64(task.Id))
+	restoreTaskId, err := secondparty.SecondParty.MicroSrvRestore(flowContext.Context, clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call restore api failed, %s", err.Error())
 		task.Fail(err)
@@ -575,7 +575,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	}
 
 	for {
-		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(restoreTaskId)
+		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(flowContext.Context, restoreTaskId)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
 			task.Fail(err)

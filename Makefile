@@ -218,14 +218,14 @@ else
 endif
 
 # don't run it locally, only for CI, use test instead
-ci_test: add_test_file build mock
+ci_test: add_test_file prepare proto build mock
 	GO111MODULE=off go get github.com/axw/gocov/gocov
 	GO111MODULE=off go get github.com/jstemmer/go-junit-report
 	GO111MODULE=off go get github.com/AlekSi/gocov-xml
 	go test -v ${PACKAGES} -coverprofile=cover.out |go-junit-report > test.xml
 	gocov convert cover.out | gocov-xml > coverage.xml
 
-test: build mock
+test: prepare proto build mock
 	mkdir -p "$(TEST_DIR)"
 	-go test -v ${PACKAGES} -coverprofile="$(TEST_DIR)/cover.out"
 	go tool cover -html "$(TEST_DIR)/cover.out" -o "$(TEST_DIR)/cover.html"

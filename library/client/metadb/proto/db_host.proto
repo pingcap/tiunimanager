@@ -55,7 +55,8 @@ message DBHostInfoDTO {
     string diskType = 21;
     bool reserved = 22;
     int64 createAt = 23;
-    repeated DBDiskDTO disks = 24;
+    int64 updateAt = 24;
+    repeated DBDiskDTO disks = 25;
 }
 
 message DBAllocHostDTO {

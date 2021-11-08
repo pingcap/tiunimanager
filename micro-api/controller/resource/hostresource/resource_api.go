@@ -63,6 +63,7 @@ func copyHostFromRsp(src *clusterpb.HostInfo, dst *HostInfo) {
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.CreatedAt = src.CreateAt
+	dst.UpdatedAt = src.UpdateAt
 	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, DiskInfo{

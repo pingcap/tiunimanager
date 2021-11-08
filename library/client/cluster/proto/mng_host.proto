@@ -42,7 +42,8 @@ message HostInfo {
     string diskType = 21;
     bool reserved = 22;
     int64 createAt = 23;
-    repeated Disk disks = 24;
+    int64 updateAt = 24;
+    repeated Disk disks = 25;
 }
 
 // The request means "Get 3 '4C8G' Hosts in Zone3"

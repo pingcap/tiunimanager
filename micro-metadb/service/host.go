@@ -209,6 +209,7 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbpb.DBHostInfoDTO) {
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved
 	dst.CreateAt = src.CreatedAt.Unix()
+	dst.UpdateAt = src.UpdatedAt.Unix()
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbpb.DBDiskDTO{
 			DiskId:   disk.ID,

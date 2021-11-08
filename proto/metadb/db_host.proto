@@ -55,7 +55,8 @@ message DBHostInfoDTO {
     string diskType = 21;
     bool reserved = 22;
     int64 createAt = 23;
-    repeated DBDiskDTO disks = 24;
+    int64 updateAt = 24;
+    repeated DBDiskDTO disks = 25;
 }
 
 message DBAllocHostDTO {
@@ -193,4 +194,41 @@ message DBNode {
 message DBGetHierarchyResponse {
     DBHostResponseStatus rs = 1;
     DBNode root = 2;
+}
+
+message DBStockLocation {
+	string region = 1;
+	string zone = 2;
+	string rack = 3;
+	string host = 4;
+}
+
+message DBStockHostFilter {
+    string arch = 1;
+    int32 status = 2;
+    int32 stat = 3;
+}
+
+message DBStockDiskFilter {
+    string type = 1;
+    int32 status = 2;
+    int32 capacity = 3;
+}
+
+message DBGetStocksRequest {
+    DBStockLocation location = 1;
+    DBStockHostFilter hostFilter = 2;
+    DBStockDiskFilter diskFilter = 3;
+}
+
+message DBStocks {
+    int32 freeHostCount = 1;
+    int32 freeCpuCores = 2;
+    int32 freeMemory = 3;
+    int32 freeDiskCount = 4;
+    int32 freeDiskCapacity = 5;
+}
+message DBGetStocksResponse {
+    DBHostResponseStatus rs = 1;
+    DBStocks stocks = 2;
 }

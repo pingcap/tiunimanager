@@ -385,6 +385,8 @@ definitions:
       status:
         description: Host Status, 0 for Online, 1 for offline
         type: integer
+      updateTime:
+        type: integer
       userName:
         type: string
     type: object
@@ -1050,6 +1052,19 @@ definitions:
         type: string
       specName:
         type: string
+    type: object
+  warehouse.Stocks:
+    properties:
+      freeCpuCores:
+        type: integer
+      freeDiskCapacity:
+        type: integer
+      freeDiskCount:
+        type: integer
+      freeHostCount:
+        type: integer
+      freeMemory:
+        type: integer
     type: object
   warehouse.ZoneBaseInfo:
     properties:
@@ -2440,6 +2455,59 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Show a host
+      tags:
+      - resource
+  /resources/stocks:
+    get:
+      consumes:
+      - application/json
+      description: get resource stocks in specified conditions
+      parameters:
+      - in: query
+        name: Arch
+        type: string
+      - in: query
+        name: Capacity
+        type: integer
+      - in: query
+        name: DiskStatus
+        type: integer
+      - in: query
+        name: DiskType
+        type: string
+      - in: query
+        name: HostIp
+        type: string
+      - in: query
+        name: HostStatus
+        type: integer
+      - in: query
+        name: LoadStat
+        type: integer
+      - in: query
+        name: Rack
+        type: string
+      - in: query
+        name: Region
+        type: string
+      - in: query
+        name: Zone
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/warehouse.Stocks'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Show the resources stocks
       tags:
       - resource
   /user/login:

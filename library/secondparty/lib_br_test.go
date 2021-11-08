@@ -19,14 +19,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	db "github.com/pingcap-inc/tiem/test/mock"
-	"os"
-	"testing"
+	db "github.com/pingcap-inc/tiem/test/mockdb"
 
 	"github.com/DATA-DOG/go-sqlmock"
 )

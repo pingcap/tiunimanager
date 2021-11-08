@@ -19,11 +19,42 @@ OPENAPI_SERVER_BINARY = ${TIEM_BINARY_DIR}/openapi-server
 CLUSTER_SERVER_BINARY = ${TIEM_BINARY_DIR}/cluster-server
 METADB_SERVER_BINARY = ${TIEM_BINARY_DIR}/metadb-server
 TIEM_INSTALL_PREFIX = ${PREFIX}/tiem
+PROTOC_GEN_MICRO = github.com/asim/go-micro/cmd/protoc-gen-micro/v3@v3.7.0
+PROTOC_GEN_GO = google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
+PROTOBUF_VERSION = 3.14.0
+PROTOC_PKG = protoc-$(PROTOBUF_VERSION)-$(OS)-$(ARCH).zip
+PROTOC_URL = https://github.com/protocolbuffers/protobuf/releases/download/v$(PROTOBUF_VERSION)/$(PROTOC_PKG)
+GENERATE_TARGET_DIR = $(CURDIR)/library/client/
 
 include Makefile.common
 
-.PHONY: all clean test gotest gotool help
-all: build
+.PHONY: all clean test gotest gotool help proto
+all: prepare proto build
+
+# download protoc-gen-micro, protoc-gen-go and protoc
+prepare:
+	@if [ ! -f "$(GOPATH)/bin/protoc-gen-micro" ]; then echo "download $(PROTOC_GEN_MICRO)"; fi
+	@if [ ! -f "$(GOPATH)/bin/protoc-gen-micro" ]; then $(GO) install $(PROTOC_GEN_MICRO); fi
+	@if [ ! -f "$(GOPATH)/bin/protoc-gen-go" ]; then echo "download $(PROTOC_GEN_GO)"; fi
+	@if [ ! -f "$(GOPATH)/bin/protoc-gen-go" ]; then $(GO) install $(PROTOC_GEN_GO); fi
+
+	@if [ ! -f "$(GOPATH)/bin/protoc" ]; then echo "download $(PROTOC_URL)"; fi
+	@if [ ! -f "$(GOPATH)/bin/protoc" ]; then curl -OL $(PROTOC_URL); fi
+	@if [ -f "$(CURDIR)/$(PROTOC_PKG)" ]; then unzip -o $(PROTOC_PKG) -d $(GOPATH) bin/protoc; fi
+	@if [ -f "$(CURDIR)/$(PROTOC_PKG)" ]; then unzip -o $(PROTOC_PKG) -d $(GOPATH) 'include/*'; fi
+	@if [ -f "$(CURDIR)/$(PROTOC_PKG)" ]; then rm -rf $(PROTOC_PKG); fi
+
+# generate protobuf files
+proto:
+	@echo "start to generate protobuf files"
+	@if [ ! -d "$(GENERATE_TARGET_DIR)/cluster" ]; then mkdir -p $(GENERATE_TARGET_DIR)/cluster; fi
+	@if [ ! -d "$(GENERATE_TARGET_DIR)/metadb" ]; then mkdir -p $(GENERATE_TARGET_DIR)/metadb; fi
+	protoc --proto_path=$(CURDIR)/proto/cluster:$(GOPATH)/include --micro_out=$(GENERATE_TARGET_DIR)/cluster \
+		--go_out=$(GENERATE_TARGET_DIR)/cluster $(CURDIR)/proto/cluster/*.proto
+	protoc --proto_path=$(CURDIR)/proto/metadb:$(GOPATH)/include --micro_out=$(GENERATE_TARGET_DIR)/metadb \
+		--go_out=$(GENERATE_TARGET_DIR)/metadb $(CURDIR)/proto/metadb/*.proto
+	@echo "generate protobuf files successfully"
+
 
 # 1. build binary
 build:
@@ -31,23 +62,23 @@ build:
 	make build_openapi_server
 	make build_cluster_server
 	make build_metadb_server
-	@echo "build TiEM all server successful."
+	@echo "build TiEM all server successfully."
 
 #Compile all TiEM microservices
 build_openapi_server:
 	@echo "build openapi-server start."
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${OPENAPI_SERVER_BINARY} micro-api/*.go
-	@echo "build openapi-server sucessufully."
+	@echo "build openapi-server successfully."
 
 build_cluster_server:
 	@echo "build cluster-server start."
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${CLUSTER_SERVER_BINARY} micro-cluster/*.go
-	@echo "build cluster-server sucessufully."
+	@echo "build cluster-server successfully."
 
 build_metadb_server:
 	@echo "build metadb-server start."
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${METADB_SERVER_BINARY} micro-metadb/*.go
-	@echo "build metadb-server sucessufully."
+	@echo "build metadb-server successfully."
 
 #2. R&D to test the code themselves for compliance before submitting it
 devselfcheck:
@@ -60,7 +91,7 @@ devselfcheck:
 	make check_unconvert
 	make check_lint
 	make check_vet
-	make local_test
+	make test
 	@echo "self check complete."
 
 gotool:
@@ -72,7 +103,7 @@ gotool:
 	make build_errdoc_gen
 	make build_golangci_lint
 	make build_vfsgendev
-	@echo "build compilation toolchain successful."
+	@echo "build compilation toolchain successfully."
 
 #Get and compile the tools required in the project
 build_revive: build_helper/go.mod
@@ -160,6 +191,8 @@ clean:
 	@if [ -f ${TIEM_BINARY_DIR}/vfsgendev ] ; then rm ${TIEM_BINARY_DIR}/vfsgendev; fi
 	@if [ -f ${TIEM_BINARY_DIR}/golangci-lint ] ; then rm ${TIEM_BINARY_DIR}/golangci-lint; fi
 	@if [ -f ${TIEM_BINARY_DIR}/errdoc-gen ] ; then rm ${TIEM_BINARY_DIR}/errdoc-gen; fi
+	@if [ -f ${GENERATE_TARGET_DIR}/cluster ] ; then rm -rf ${GENERATE_TARGET_DIR}/cluster; fi
+	@if [ -f ${GENERATE_TARGET_DIR}/metadb ] ; then rm -rf ${GENERATE_TARGET_DIR}/metadb; fi
 
 help:
 	@echo "make build, build binary for all servers"
@@ -184,15 +217,15 @@ else
 	go tool cover -func="$(TEST_DIR)/unit_cov.out"
 endif
 
-# don't run it locally, only for CI, use local_test instead
-test: add_test_file build mock
+# don't run it locally, only for CI, use test instead
+ci_test: add_test_file prepare proto build mock
 	GO111MODULE=off go get github.com/axw/gocov/gocov
 	GO111MODULE=off go get github.com/jstemmer/go-junit-report
 	GO111MODULE=off go get github.com/AlekSi/gocov-xml
 	go test -v ${PACKAGES} -coverprofile=cover.out |go-junit-report > test.xml
 	gocov convert cover.out | gocov-xml > coverage.xml
 
-local_test: build mock
+test: prepare proto build mock
 	mkdir -p "$(TEST_DIR)"
 	-go test -v ${PACKAGES} -coverprofile="$(TEST_DIR)/cover.out"
 	go tool cover -html "$(TEST_DIR)/cover.out" -o "$(TEST_DIR)/cover.html"

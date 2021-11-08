@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "./../dbpb/;dbpb";
+option go_package = "./dbpb/;dbpb";
 
 message DbAuthResponseStatus {
 	int32 code = 1;

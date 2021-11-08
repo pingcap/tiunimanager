@@ -40,6 +40,7 @@ type HostInfo struct {
 	DiskType     string     `json:"diskType"` // Disk type of this host [sata/ssd/nvme_ssd]
 	Reserved     bool       `json:"reserved"` // Whether this host is reserved - will not be allocated
 	CreatedAt    int64      `json:"createTime"`
+	UpdatedAt    int64      `json:"updateTime"`
 	Disks        []DiskInfo `json:"disks"`
 }
 

@@ -18,9 +18,9 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	"gorm.io/gorm"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -37,16 +37,16 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DB
 		return errors.Errorf("CreateCluster has invalid parameter")
 	}
 	dto := req.Cluster
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	cluster, err := clusterManager.CreateCluster(ctx, dto.Name, dto.DbPassword, dto.ClusterType, dto.VersionCode, dto.Tls, dto.Tags, dto.OwnerId, dto.TenantId)
 	if nil == err {
-		do, demand, err := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
-		if err == nil {
+		do, demand, newErr := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
+		if newErr == nil {
 			resp.Status = ClusterSuccessResponseStatus
 			resp.Cluster = convertToClusterDTO(do, demand)
 		} else {
-			err = errors.New(fmt.Sprintf("CreateCluster failed, update cluster demand failed, clusterId: %s, tenantId: %s, errors: %v", cluster.ID, cluster.TenantId, err))
+			err = fmt.Errorf("CreateCluster failed, update cluster demand failed, clusterId: %s, tenantId: %s, errors: %v", cluster.ID, cluster.TenantId, newErr)
 		}
 	}
 	if nil == err {
@@ -63,7 +63,7 @@ func (handler *DBServiceHandler) DeleteCluster(ctx context.Context, req *dbpb.DB
 	if nil == req || nil == resp {
 		return errors.Errorf("DeleteCluster has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	cluster, err := clusterManager.DeleteCluster(ctx, req.ClusterId)
 	if nil == err {
@@ -81,7 +81,7 @@ func (handler *DBServiceHandler) DeleteCluster(ctx context.Context, req *dbpb.DB
 }
 
 func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbpb.DBCreateInstanceRequest, resp *dbpb.DBCreateInstanceResponse) (err error) {
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 
 	if nil == req || nil == resp {
 		log.Error("CreateInstance has invalid parameter")
@@ -116,7 +116,7 @@ func (handler *DBServiceHandler) UpdateClusterInfo(ctx context.Context, req *dbp
 	if nil == req || nil == resp {
 		return errors.Errorf("UpdateClusterInfo has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	do, err := clusterManager.UpdateClusterInfo(ctx, req.ClusterId, req.Name, req.ClusterType, req.VersionCode, req.Tags, req.Tls)
 	if nil == err {
@@ -137,7 +137,7 @@ func (handler *DBServiceHandler) UpdateClusterTopologyConfig(ctx context.Context
 	if nil == req || nil == resp {
 		return errors.Errorf("UpdateClusterTopologyConfig has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	do, err := clusterManager.UpdateTopologyConfig(ctx, req.ClusterId, req.Content, req.TenantId)
 	if nil == err {
@@ -159,7 +159,7 @@ func (handler *DBServiceHandler) UpdateClusterStatus(ctx context.Context, req *d
 		return errors.Errorf("UpdateClusterStatus has invalid parameter")
 	}
 	var do *models.Cluster
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 
 	if req.GetUpdateStatus() {
@@ -190,7 +190,7 @@ func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbpb.DBLo
 	if nil == req || nil == resp {
 		return errors.Errorf("LoadCluster has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	result, err := clusterManager.FetchCluster(ctx, req.ClusterId)
 	if nil == err {
@@ -212,7 +212,7 @@ func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbpb.DBLi
 	if nil == req || nil == resp {
 		return errors.Errorf("ListCluster has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	clusters, total, err := clusterManager.ListClusterDetails(ctx, req.ClusterId, req.ClusterName, req.ClusterType, req.ClusterStatus, req.ClusterTag,
 		int((req.PageReq.Page-1)*req.PageReq.PageSize), int(req.PageReq.PageSize))
@@ -224,7 +224,7 @@ func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbpb.DBLi
 			PageSize: req.PageReq.PageSize,
 			Total:    int32(total),
 		}
-		clusterDetails := make([]*dbpb.DBClusterDetailDTO, len(clusters), len(clusters))
+		clusterDetails := make([]*dbpb.DBClusterDetailDTO, len(clusters))
 		for i, v := range clusters {
 			clusterDetails[i] = &dbpb.DBClusterDetailDTO{
 				Cluster:              convertToClusterDTO(v.Cluster, v.DemandRecord),
@@ -456,7 +456,7 @@ func (handler *DBServiceHandler) SaveParametersRecord(ctx context.Context, req *
 	if nil == req || nil == resp {
 		return errors.Errorf("SaveParametersRecord has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	dto := req.Parameters
 	result, err := clusterManager.SaveParameters(ctx, dto.TenantId, dto.ClusterId, dto.OperatorId, uint(dto.FlowId), dto.Content)
@@ -476,7 +476,7 @@ func (handler *DBServiceHandler) GetCurrentParametersRecord(ctx context.Context,
 	if nil == req || nil == resp {
 		return errors.Errorf("GetCurrentParametersRecord has invalid parameter")
 	}
-	log := framework.Log()
+	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
 	result, err := clusterManager.GetCurrentParameters(ctx, req.GetClusterId())
 	if err == nil {
@@ -515,11 +515,11 @@ func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbpb.DBBackupRecord
 }
 
 func convertToComponentInstance(dtos []*dbpb.DBComponentInstanceDTO) []*models.ComponentInstance {
-	if dtos == nil || len(dtos) == 0 {
+	if len(dtos) == 0 {
 		return []*models.ComponentInstance{}
 	}
 
-	result := make([]*models.ComponentInstance, len(dtos), len(dtos))
+	result := make([]*models.ComponentInstance, len(dtos))
 
 	for i, v := range dtos {
 		result[i] = &models.ComponentInstance{
@@ -545,10 +545,10 @@ func convertToComponentInstance(dtos []*dbpb.DBComponentInstanceDTO) []*models.C
 }
 
 func convertToComponentInstanceDTO(models []*models.ComponentInstance) []*dbpb.DBComponentInstanceDTO {
-	if models == nil || len(models) == 0 {
+	if len(models) == 0 {
 		return []*dbpb.DBComponentInstanceDTO{}
 	}
-	result := make([]*dbpb.DBComponentInstanceDTO, len(models), len(models))
+	result := make([]*dbpb.DBComponentInstanceDTO, len(models))
 
 	for i, v := range models {
 		result[i] = &dbpb.DBComponentInstanceDTO{
@@ -568,7 +568,7 @@ func convertToComponentInstanceDTO(models []*models.ComponentInstance) []*dbpb.D
 			AllocRequestId: v.AllocRequestId,
 			CreateTime:     v.CreatedAt.Unix(),
 			UpdateTime:     v.UpdatedAt.Unix(),
-			DeleteTime:     deletedAtUnix(v.DeletedAt),
+			DeleteTime:     nullTimeUnix(sql.NullTime(v.DeletedAt)),
 		}
 	}
 
@@ -656,7 +656,7 @@ func convertToClusterDTO(do *models.Cluster, demand *models.DemandRecord) (dto *
 		OwnerId:     do.OwnerId,
 		CreateTime:  do.CreatedAt.Unix(),
 		UpdateTime:  do.UpdatedAt.Unix(),
-		DeleteTime:  deletedAtUnix(do.DeletedAt),
+		DeleteTime:  nullTimeUnix(sql.NullTime(do.DeletedAt)),
 	}
 
 	if demand != nil {
@@ -678,7 +678,7 @@ func convertToConfigDTO(do *models.TopologyConfig) (dto *dbpb.DBTopologyConfigDT
 	}
 }
 
-func deletedAtUnix(at gorm.DeletedAt) (unix int64) {
+func nullTimeUnix(at sql.NullTime) (unix int64) {
 	if at.Valid {
 		return at.Time.Unix()
 	}

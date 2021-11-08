@@ -89,6 +89,7 @@ func copyHostFromDBRsp(src *dbpb.DBHostInfoDTO, dst *clusterpb.HostInfo) {
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.CreateAt = src.CreateAt
+	dst.UpdateAt = src.UpdateAt
 	dst.Reserved = src.Reserved
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &clusterpb.Disk{
@@ -557,10 +558,97 @@ func (m *ResourceManager) ReserveHost(ctx context.Context, in *clusterpb.Reserve
 	out.Rs.Code = rsp.Rs.Code
 	out.Rs.Message = rsp.Rs.Message
 	if rsp.Rs.Code != int32(codes.OK) {
-		framework.LogWithContext(ctx).Warnf("update host reserved to %v in batch failed from db service: %d, %s", req.Reserved, rsp.Rs.Code, rsp.Rs.Message)
+		framework.LogWithContext(ctx).Warnf("update hosts[%v] reserved to %v in batch failed from db service: %d, %s", req.HostIds, req.Reserved, rsp.Rs.Code, rsp.Rs.Message)
 		return nil
 	}
 
 	framework.LogWithContext(ctx).Infof("update host reserved to %v succeed for hosts %v from db service", req.Reserved, req.HostIds)
+	return nil
+}
+
+func copyHierarchyFromRsp(root *dbpb.DBNode, dst **clusterpb.Node) {
+	*dst = &clusterpb.Node{
+		Code:   root.Code,
+		Name:   root.Name,
+		Prefix: root.Prefix,
+	}
+	(*dst).SubNodes = make([]*clusterpb.Node, len(root.SubNodes))
+	for i, subNode := range root.SubNodes {
+		copyHierarchyFromRsp(subNode, &((*dst).SubNodes[i]))
+	}
+}
+
+func (m *ResourceManager) GetHierarchy(ctx context.Context, in *clusterpb.GetHierarchyRequest, out *clusterpb.GetHierarchyResponse) error {
+	var req dbpb.DBGetHierarchyRequest
+	req.Filter = &dbpb.DBHostFilter{
+		Arch:     in.Filter.Arch,
+		Purpose:  in.Filter.Purpose,
+		DiskType: in.Filter.DiskType,
+	}
+	req.Level = in.Level
+	req.Depth = in.Depth
+	rsp, err := client.DBClient.GetHierarchy(ctx, &req)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get hierarchy on level %d, depth %d for filter[%v] error, %v", req.Level, req.Depth, req.Filter, err)
+		return err
+	}
+	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs.Code = rsp.Rs.Code
+	out.Rs.Message = rsp.Rs.Message
+	if rsp.Rs.Code != int32(codes.OK) {
+		framework.LogWithContext(ctx).Warnf("get hierarchy on level %d, depth %d for filter[%v] failed from db service: %d, %s", req.Level, req.Depth, req.Filter, rsp.Rs.Code, rsp.Rs.Message)
+		return nil
+	}
+	copyHierarchyFromRsp(rsp.Root, &out.Root)
+	return nil
+}
+
+func (m *ResourceManager) copyStockFilter(src *clusterpb.GetStocksRequest, dst *dbpb.DBGetStocksRequest) {
+	if src.Location != nil {
+		dst.Location = new(dbpb.DBStockLocation)
+		dst.Location.Region = src.Location.Region
+		dst.Location.Zone = src.Location.Zone
+		dst.Location.Rack = src.Location.Rack
+		dst.Location.Host = src.Location.Host
+	}
+	if src.HostFilter != nil {
+		dst.HostFilter = new(dbpb.DBStockHostFilter)
+		dst.HostFilter.Status = src.HostFilter.Status
+		dst.HostFilter.Stat = src.HostFilter.Stat
+		dst.HostFilter.Arch = src.HostFilter.Arch
+	}
+	if src.DiskFilter != nil {
+		dst.DiskFilter = new(dbpb.DBStockDiskFilter)
+		dst.DiskFilter.Status = src.DiskFilter.Status
+		dst.DiskFilter.Capacity = src.DiskFilter.Capacity
+		dst.DiskFilter.Type = src.DiskFilter.Type
+	}
+}
+
+func (m *ResourceManager) copyStockResult(src *dbpb.DBStocks, dst *clusterpb.Stocks) {
+	dst.FreeHostCount = src.FreeHostCount
+	dst.FreeCpuCores = src.FreeCpuCores
+	dst.FreeMemory = src.FreeMemory
+	dst.FreeDiskCount = src.FreeDiskCount
+	dst.FreeDiskCapacity = src.FreeDiskCapacity
+}
+
+func (m *ResourceManager) GetStocks(ctx context.Context, in *clusterpb.GetStocksRequest, out *clusterpb.GetStocksResponse) error {
+	var req dbpb.DBGetStocksRequest
+	m.copyStockFilter(in, &req)
+	rsp, err := client.DBClient.GetStocks(ctx, &req)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get stocks on location %v, host filter [%v], disk filter [%v] error, %v", req.Location, req.HostFilter, req.DiskFilter, err)
+		return err
+	}
+	out.Rs = new(clusterpb.ResponseStatus)
+	out.Rs.Code = rsp.Rs.Code
+	out.Rs.Message = rsp.Rs.Message
+	if rsp.Rs.Code != int32(codes.OK) {
+		framework.LogWithContext(ctx).Warnf("get stocks on location %v, host filter [%v], disk filter [%v], failed from db service: %d, %s", req.Location, req.HostFilter, req.DiskFilter, rsp.Rs.Code, rsp.Rs.Message)
+		return nil
+	}
+	out.Stocks = new(clusterpb.Stocks)
+	m.copyStockResult(rsp.Stocks, out.Stocks)
 	return nil
 }

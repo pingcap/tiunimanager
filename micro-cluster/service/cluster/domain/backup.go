@@ -25,7 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/knowledge"
-	"github.com/pingcap-inc/tiem/library/secondparty/libbr"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
 	"os"
 	"strconv"
@@ -61,7 +61,7 @@ func Backup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, b
 	getLoggerWithContext(ctx).Infof("Begin do Backup, clusterId: %s, backupMethod: %s, backupType: %s, backupMode: %s, filePath: %s", clusterId, backupMethod, backupType, backupMode, filePath)
 	defer getLoggerWithContext(ctx).Infof("End do Backup")
 	operator := parseOperatorFromDTO(ope)
-	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
 	if err != nil || clusterAggregation == nil {
 		return nil, fmt.Errorf("load cluster %s aggregation failed", clusterId)
 	}
@@ -69,7 +69,7 @@ func Backup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, b
 	clusterAggregation.CurrentOperator = operator
 	cluster := clusterAggregation.Cluster
 
-	flow, _ := CreateFlowWork(clusterId, FlowBackupCluster, operator)
+	flow, _ := CreateFlowWork(ctx, clusterId, FlowBackupCluster, operator)
 
 	//todo: only support FULL Physics backup now
 	record := &BackupRecord{
@@ -113,7 +113,7 @@ func Backup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, b
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	err = ClusterRepo.Persist(clusterAggregation)
+	err = ClusterRepo.Persist(ctx, clusterAggregation)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func DeleteBackup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId str
 	return nil
 }
 
-func RecoverPreCheck(req *clusterpb.RecoverRequest) error {
+func RecoverPreCheck(ctx context.Context, req *clusterpb.RecoverRequest) error {
 	if req.GetCluster() == nil {
 		return fmt.Errorf("invalid input cluster info")
 	}
@@ -164,7 +164,7 @@ func RecoverPreCheck(req *clusterpb.RecoverRequest) error {
 		return fmt.Errorf("invalid recover info param")
 	}
 
-	srcClusterArg, err := ClusterRepo.Load(recoverInfo.SourceClusterId)
+	srcClusterArg, err := ClusterRepo.Load(ctx, recoverInfo.SourceClusterId)
 	if err != nil || srcClusterArg == nil {
 		return fmt.Errorf("load recover src cluster %s aggregation", recoverInfo.SourceClusterId)
 	}
@@ -211,7 +211,7 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 	cluster.Demands = demands
 
 	// persist the cluster into database
-	err := ClusterRepo.AddCluster(cluster)
+	err := ClusterRepo.AddCluster(ctx, cluster)
 
 	if err != nil {
 		return nil, err
@@ -224,7 +224,7 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 
 	// Start the workflow to create a cluster instance
 
-	flow, err := CreateFlowWork(cluster.Id, FlowRecoverCluster, operator)
+	flow, err := CreateFlowWork(ctx, cluster.Id, FlowRecoverCluster, operator)
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +234,7 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	err = ClusterRepo.Persist(clusterAggregation)
+	err = ClusterRepo.Persist(ctx, clusterAggregation)
 	if err != nil {
 		return nil, err
 	}
@@ -375,11 +375,11 @@ func getBackupPath(filePrefix string, clusterId string, time time.Time, backupRa
 }
 
 func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin backupCluster")
 	defer getLoggerWithContext(ctx).Info("end backupCluster")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	record := clusterAggregation.LastBackupRecord
 	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
@@ -395,8 +395,8 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 
-	clusterFacade := libbr.ClusterFacade{
-		DbConnParameter: libbr.DbConnParam{
+	clusterFacade := secondparty.ClusterFacade{
+		DbConnParameter: secondparty.DbConnParam{
 			Username: "root", //todo: replace admin account
 			Password: "",
 			Ip:       tidbServer.Host,
@@ -408,38 +408,38 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		ClusterName: cluster.ClusterName,
 		TaskID:      uint64(task.Id),
 	}
-	storage := libbr.BrStorage{
+	storage := secondparty.BrStorage{
 		StorageType: storageType,
 		Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
 
 	getLoggerWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
-	backupTaskId, err := libbr.BackUp(clusterFacade, storage, uint64(task.Id))
+	backupTaskId, err := secondparty.SecondParty.MicroSrvBackUp(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		return false
 	}
-	flowContext.put("backupTaskId", backupTaskId)
+	flowContext.SetData("backupTaskId", backupTaskId)
 
 	return true
 }
 
 func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin updateBackupRecord")
 	defer getLoggerWithContext(ctx).Info("end updateBackupRecord")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 	record := clusterAggregation.LastBackupRecord
 
 	var req dbpb.FindTiupTaskByIDRequest
 	var resp *dbpb.FindTiupTaskByIDResponse
 	var err error
-	req.Id = flowContext.value("backupTaskId").(uint64)
+	req.Id = flowContext.GetData("backupTaskId").(uint64)
 
 	for i := 0; i < 30; i++ {
 		time.Sleep(1 * time.Second)
-		resp, err = client.DBClient.FindTiupTaskByID(context.TODO(), &req)
+		resp, err = client.DBClient.FindTiupTaskByID(flowContext, &req)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("get backup task err = %s", err.Error())
 			task.Fail(err)
@@ -454,7 +454,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			break
 		}
 	}
-	var backupInfo libbr.CmdBrResp
+	var backupInfo secondparty.CmdBrResp
 	err = json.Unmarshal([]byte(resp.GetTiupTask().GetErrorStr()), &backupInfo)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("json unmarshal backup info resp: %+v, failed, %s", resp, err.Error())
@@ -462,7 +462,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		record.Size = backupInfo.Size
 	}
 
-	updateResp, err := client.DBClient.UpdateBackupRecord(context.TODO(), &dbpb.DBUpdateBackupRecordRequest{
+	updateResp, err := client.DBClient.UpdateBackupRecord(flowContext, &dbpb.DBUpdateBackupRecordRequest{
 		BackupRecord: &dbpb.DBBackupRecordDTO{
 			Id:      record.Id,
 			Size:    record.Size,
@@ -481,11 +481,11 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.value(contextCtxKey).(context.Context)
+	ctx := flowContext.GetData(contextCtxKey).(context.Context)
 	getLoggerWithContext(ctx).Info("begin recoverFromSrcCluster")
 	defer getLoggerWithContext(ctx).Info("end recoverFromSrcCluster")
 
-	clusterAggregation := flowContext.value(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 	recoverInfo := cluster.RecoverInfo
 	if recoverInfo.SourceClusterId == "" || recoverInfo.BackupRecordId <= 0 {
@@ -495,11 +495,11 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 
 	//todo: wait start task finished, temporary solution
 	var req dbpb.FindTiupTaskByIDRequest
-	req.Id = flowContext.value("startTaskId").(uint64)
+	req.Id = flowContext.GetData("startTaskId").(uint64)
 
 	for i := 0; i < 30; i++ {
 		time.Sleep(1 * time.Second)
-		rsp, err := client.DBClient.FindTiupTaskByID(context.TODO(), &req)
+		rsp, err := client.DBClient.FindTiupTaskByID(flowContext, &req)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("get start task err = %s", err.Error())
 			task.Fail(err)
@@ -518,7 +518,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
 
-	record, err := client.DBClient.QueryBackupRecords(context.TODO(), &dbpb.DBQueryBackupRecordRequest{ClusterId: recoverInfo.SourceClusterId, RecordId: recoverInfo.BackupRecordId})
+	record, err := client.DBClient.QueryBackupRecords(flowContext, &dbpb.DBQueryBackupRecordRequest{ClusterId: recoverInfo.SourceClusterId, RecordId: recoverInfo.BackupRecordId})
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("query backup record failed, %s", err.Error())
 		return false
@@ -534,8 +534,8 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 
-	clusterFacade := libbr.ClusterFacade{
-		DbConnParameter: libbr.DbConnParam{
+	clusterFacade := secondparty.ClusterFacade{
+		DbConnParameter: secondparty.DbConnParam{
 			Username: "root", //todo: replace admin account
 			Password: "",
 			Ip:       tidbServer.Host,
@@ -546,12 +546,12 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		ClusterId:   cluster.Id,
 		ClusterName: cluster.ClusterName,
 	}
-	storage := libbr.BrStorage{
+	storage := secondparty.BrStorage{
 		StorageType: storageType,
 		Root:        fmt.Sprintf("%s/%s", record.GetBackupRecords().GetBackupRecord().GetFilePath(), "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
 	getLoggerWithContext(ctx).Infof("begin call brmgr restore api, clusterFacade %v, storage %v", clusterFacade, storage)
-	_, err = libbr.Restore(clusterFacade, storage, uint64(task.Id))
+	_, err = secondparty.SecondParty.MicroSrvRestore(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call restore api failed, %s", err.Error())
 		return false
@@ -559,11 +559,11 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	return true
 }
 
-func convertBrStorageType(storageType string) (libbr.StorageType, error) {
+func convertBrStorageType(storageType string) (secondparty.StorageType, error) {
 	if string(StorageTypeS3) == storageType {
-		return libbr.StorageTypeS3, nil
+		return secondparty.StorageTypeS3, nil
 	} else if string(StorageTypeLocal) == storageType {
-		return libbr.StorageTypeLocal, nil
+		return secondparty.StorageTypeLocal, nil
 	} else {
 		return "", fmt.Errorf("invalid storage type, %s", storageType)
 	}

@@ -180,6 +180,10 @@ definitions:
         type: string
       statusName:
         type: string
+      taskName:
+        items:
+          type: string
+        type: array
       tasks:
         items:
           $ref: '#/definitions/flowtask.FlowWorkTaskInfo'
@@ -222,9 +226,13 @@ definitions:
     type: object
   flowtask.FlowWorkTaskInfo:
     properties:
+      endTime:
+        type: string
       id:
         type: integer
       result:
+        type: string
+      startTime:
         type: string
       taskName:
         type: string
@@ -376,6 +384,8 @@ definitions:
         type: string
       status:
         description: Host Status, 0 for Online, 1 for offline
+        type: integer
+      updateTime:
         type: integer
       userName:
         type: string
@@ -969,8 +979,8 @@ definitions:
         example: .tiup/
         type: string
       tiupPort:
-        example: "22"
-        type: string
+        example: 22
+        type: integer
       tiupUserName:
         example: root
         type: string
@@ -1023,12 +1033,38 @@ definitions:
       zoneName:
         type: string
     type: object
+  warehouse.Node:
+    properties:
+      Code:
+        type: string
+      Name:
+        type: string
+      Prefix:
+        type: string
+      SubNodes:
+        items:
+          $ref: '#/definitions/warehouse.Node'
+        type: array
+    type: object
   warehouse.SpecBaseInfo:
     properties:
       specCode:
         type: string
       specName:
         type: string
+    type: object
+  warehouse.Stocks:
+    properties:
+      freeCpuCores:
+        type: integer
+      freeDiskCapacity:
+        type: integer
+      freeDiskCount:
+        type: integer
+      freeHostCount:
+        type: integer
+      freeMemory:
+        type: integer
     type: object
   warehouse.ZoneBaseInfo:
     properties:
@@ -1049,7 +1085,7 @@ info:
   title: TiEM UI API
   version: "1.0"
 paths:
-  /backups:
+  /backups/:
     get:
       consumes:
       - application/json
@@ -1187,7 +1223,7 @@ paths:
       summary: delete backup record
       tags:
       - cluster backup
-  /clusters:
+  /clusters/:
     get:
       consumes:
       - application/json
@@ -1880,7 +1916,7 @@ paths:
       summary: takeover a cluster
       tags:
       - cluster
-  /flowworks:
+  /flowworks/:
     get:
       consumes:
       - application/json
@@ -1942,7 +1978,7 @@ paths:
         in: path
         name: flowWorkId
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -1972,7 +2008,7 @@ paths:
       summary: show details of a flow work
       tags:
       - task
-  /knowledges:
+  /knowledges/:
     get:
       consumes:
       - application/json
@@ -2136,6 +2172,47 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Show the resources on failure domain view
+      tags:
+      - resource
+  /resources/hierarchy:
+    get:
+      consumes:
+      - application/json
+      description: get resource hierarchy-tree
+      parameters:
+      - in: query
+        name: Arch
+        type: string
+      - description: failure domain type of region/zone/rack/host
+        enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        in: query
+        name: level
+        required: true
+        type: integer
+      - description: hierarchy depth
+        in: query
+        name: depth
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/warehouse.Node'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Show the resources hierarchy
       tags:
       - resource
   /resources/host:
@@ -2378,6 +2455,59 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Show a host
+      tags:
+      - resource
+  /resources/stocks:
+    get:
+      consumes:
+      - application/json
+      description: get resource stocks in specified conditions
+      parameters:
+      - in: query
+        name: Arch
+        type: string
+      - in: query
+        name: Capacity
+        type: integer
+      - in: query
+        name: DiskStatus
+        type: integer
+      - in: query
+        name: DiskType
+        type: string
+      - in: query
+        name: HostIp
+        type: string
+      - in: query
+        name: HostStatus
+        type: integer
+      - in: query
+        name: LoadStat
+        type: integer
+      - in: query
+        name: Rack
+        type: string
+      - in: query
+        name: Region
+        type: string
+      - in: query
+        name: Zone
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/warehouse.Stocks'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Show the resources stocks
       tags:
       - resource
   /user/login:

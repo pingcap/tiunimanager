@@ -17,15 +17,13 @@
 package flowtask
 
 import (
-	"github.com/pingcap-inc/tiem/library/framework"
-	"net/http"
-	"strconv"
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"net/http"
+	"strconv"
 )
 
 // Query query flow works
@@ -40,7 +38,7 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /flowworks [get]
+// @Router /flowworks/ [get]
 func Query(c *gin.Context) {
 	var queryReq QueryReq
 	if err := c.ShouldBindQuery(&queryReq); err != nil {
@@ -62,27 +60,10 @@ func Query(c *gin.Context) {
 	} else {
 		status := respDTO.GetStatus()
 
-		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows), len(respDTO.Flows))
+		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows))
 
 		for i, v := range respDTO.Flows {
-			flows[i] = FlowWorkDisplayInfo{
-				Id:           uint(v.Id),
-				FlowWorkName: v.FlowName,
-				ClusterId:    v.BizId,
-				StatusInfo: controller.StatusInfo{
-					CreateTime: time.Unix(v.CreateTime, 0),
-					UpdateTime: time.Unix(v.UpdateTime, 0),
-					DeleteTime: time.Unix(v.DeleteTime, 0),
-					StatusCode: strconv.Itoa(int(v.Status)),
-					StatusName: v.StatusName,
-				},
-			}
-			if v.Operator != nil {
-				flows[i].ManualOperator = true
-				flows[i].OperatorName = v.Operator.Name
-				flows[i].OperatorId = v.Operator.Id
-				flows[i].TenantId = v.Operator.TenantId
-			}
+			flows[i] = ParseFlowFromDTO(v)
 		}
 
 		result := controller.BuildResultWithPage(int(status.Code), status.Message, controller.ParsePageFromDTO(respDTO.Page), flows)
@@ -98,12 +79,33 @@ func Query(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param flowWorkId path string true "flow work id"
+// @Param flowWorkId path int true "flow work id"
 // @Success 200 {object} controller.CommonResult{data=FlowWorkDetailInfo}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /flowworks/{flowWorkId} [get]
 func Detail(c *gin.Context) {
+	//operator := controller.GetOperator(c)
+	flowWorkId, err := strconv.Atoi(c.Param("flowWorkId"))
 
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		return
+	}
+	reqDTO := &clusterpb.DetailFlowRequest {
+		FlowId: int64(flowWorkId),
+	}
+
+	respDTO, err := client.ClusterClient.DetailFlow(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := respDTO.GetStatus()
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, ParseFlowWorkDetailInfoFromDTO(respDTO.Flow))
+
+		c.JSON(http.StatusOK, result)
+	}
 }

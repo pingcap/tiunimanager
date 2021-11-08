@@ -48,7 +48,7 @@ type Monitor struct {
 // @return *Monitor
 // @return error
 func DescribeMonitor(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string) (*Monitor, error) {
-	clusterAggregation, err := ClusterRepo.Load(clusterId)
+	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
 	if err != nil || clusterAggregation == nil || clusterAggregation.Cluster == nil {
 		return nil, errors.New("load cluster aggregation failed")
 	}

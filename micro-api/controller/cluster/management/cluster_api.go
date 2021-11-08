@@ -18,6 +18,7 @@ package management
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
@@ -46,7 +47,7 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters [post]
+// @Router /clusters/ [post]
 func Create(c *gin.Context) {
 	var req CreateReq
 
@@ -101,7 +102,7 @@ func Create(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters [get]
+// @Router /clusters/ [get]
 func Query(c *gin.Context) {
 
 	var queryReq QueryReq
@@ -130,7 +131,7 @@ func Query(c *gin.Context) {
 	} else {
 		status := respDTO.GetRespStatus()
 
-		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters), len(respDTO.Clusters))
+		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters))
 
 		for i, v := range respDTO.Clusters {
 			clusters[i] = *ParseDisplayInfoFromDTO(v)
@@ -308,7 +309,7 @@ func Detail(c *gin.Context) {
 		maintenance := respDTO.GetMaintenanceInfo()
 		components := respDTO.GetComponents()
 
-		componentInstances := make([]ComponentInstance, 0, 0)
+		componentInstances := make([]ComponentInstance, 0)
 		for _, v := range components {
 			if len(v.Nodes) > 0 {
 				componentInstances = append(componentInstances, *ParseComponentInfoFromDTO(v))
@@ -350,7 +351,7 @@ func Takeover(c *gin.Context) {
 	reqDTO := &clusterpb.ClusterTakeoverReqDTO{
 		Operator:         operator.ConvertToDTO(),
 		TiupIp:           req.TiupIp,
-		Port:             req.TiupPort,
+		Port:             strconv.Itoa(req.TiupPort),
 		TiupUserName:     req.TiupUserName,
 		TiupUserPassword: req.TiupUserPassword,
 		TiupPath:         req.TiupPath,
@@ -367,7 +368,7 @@ func Takeover(c *gin.Context) {
 	} else {
 		status := respDTO.GetRespStatus()
 
-		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters), len(respDTO.Clusters))
+		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters))
 
 		for i, v := range respDTO.Clusters {
 			clusters[i] = *ParseDisplayInfoFromDTO(v)

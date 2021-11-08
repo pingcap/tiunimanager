@@ -18,6 +18,7 @@
 package application
 
 import (
+	"context"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
 	"reflect"
 	"testing"
@@ -43,7 +44,7 @@ func TestCreateAccount(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := userManager.CreateAccount(tt.args.tenant, tt.args.name, tt.args.passwd)
+			got, err := userManager.CreateAccount(context.TODO(), tt.args.tenant, tt.args.name, tt.args.passwd)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateAccount() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -71,7 +72,7 @@ func Test_findAccountByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := userManager.FindAccountByName(tt.args.name)
+			got, err := userManager.FindAccountByName(context.TODO(), tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindAccountByName() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -111,7 +112,7 @@ func TestRole_empower(t *testing.T) {
 				Desc:     tt.fields.Desc,
 				Status:   tt.fields.Status,
 			}
-			if err := userManager.Empower(role, tt.args.permissions); (err != nil) != tt.wantErr {
+			if err := userManager.Empower(context.TODO(), role, tt.args.permissions); (err != nil) != tt.wantErr {
 				t.Errorf("Empower() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -143,7 +144,7 @@ func TestRole_persist(t *testing.T) {
 				Status:   tt.fields.Status,
 			}
 
-			if err := userManager.rbacRepo.AddRole(role); (err != nil) != tt.wantErr {
+			if err := userManager.rbacRepo.AddRole(context.TODO(), role); (err != nil) != tt.wantErr {
 				t.Errorf("persist() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -171,7 +172,7 @@ func Test_createRole(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := userManager.CreateRole(tt.args.tenant, tt.args.name, tt.args.desc)
+			got, err := userManager.CreateRole(context.TODO(), tt.args.tenant, tt.args.name, tt.args.desc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateRole() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -204,7 +205,7 @@ func Test_findRoleByName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := userManager.FindRoleByName(tt.args.tenant, tt.args.name)
+			got, err := userManager.FindRoleByName(context.TODO(), tt.args.tenant, tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindRoleByName() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -1942,3 +1942,89 @@ func TestAllocResources_SpecifyHost_Strategy_TakeOver(t *testing.T) {
 	assert.Equal(t, nil, err2)
 	assert.True(t, rsp.BatchResults[0].Results[0].HostId == id1)
 }
+
+func TestGetStocks(t *testing.T) {
+	id1, _ := CreateTestHost("Region47", "Region47,Zone15", "Region47,Zone15,3-1", "HostName1", "474.110.115.137", string(resource.General), string(resource.SSD), 17, 64, 3)
+	id2, _ := CreateTestHost("Region47", "Region47,Zone15", "Region47,Zone15,3-1", "HostName2", "474.110.115.138", string(resource.General), string(resource.SSD), 16, 64, 3)
+	id3, _ := CreateTestHost("Region47", "Region47,Zone25", "Region47,Zone25,3-1", "HostName3", "474.110.115.139", string(resource.General), string(resource.SSD), 15, 64, 3)
+
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id2) }()
+	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id3) }()
+	type args struct {
+		req StockCondition
+	}
+	ssdType := resource.SSD
+	archX86 := resource.X86
+	diskStatusAvailable := resource.DISK_AVAILABLE
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		asserts []func(result []Stock) bool
+	}{
+		{"Zone25", args{req: StockCondition{
+			Location:      resource.Location{Zone: "Region47,Zone25"},
+			HostCondition: HostCondition{Arch: (*string)(&archX86)},
+			DiskCondition: DiskCondition{Type: (*string)(&ssdType), Status: (*int32)(&diskStatusAvailable)},
+		}}, false, []func(result []Stock) bool{
+			func(result []Stock) bool { return len(result) == 1 },
+			func(result []Stock) bool {
+				return result[0].FreeCpuCores == 15 && result[0].FreeMemory == 64 && result[0].FreeDiskCount == 3 && result[0].FreeDiskCapacity == 256*3
+			},
+		}},
+		{"Zone15", args{req: StockCondition{
+			Location:      resource.Location{Zone: "Region47,Zone15"},
+			HostCondition: HostCondition{Arch: (*string)(&archX86)},
+			DiskCondition: DiskCondition{Type: (*string)(&ssdType), Status: (*int32)(&diskStatusAvailable)},
+		}}, false, []func(result []Stock) bool{
+			func(result []Stock) bool { return len(result) == 2 },
+			func(result []Stock) bool {
+				var free_cpu_cores int
+				var free_memory int
+				var free_disk_capacity int
+				var free_disk_count int
+				for i := 0; i < len(result); i++ {
+					free_cpu_cores += result[i].FreeCpuCores
+					free_memory += result[i].FreeMemory
+					free_disk_count += result[i].FreeDiskCount
+					free_disk_capacity += result[i].FreeDiskCapacity
+				}
+				return free_cpu_cores == 33 && free_memory == 128 && free_disk_count == 6 && free_disk_capacity == 256*2*3
+			},
+		}},
+		{"Region47", args{req: StockCondition{
+			Location:      resource.Location{Region: "Region47"},
+			DiskCondition: DiskCondition{Status: (*int32)(&diskStatusAvailable)},
+		}}, false, []func(result []Stock) bool{
+			func(result []Stock) bool { return len(result) == 3 },
+			func(result []Stock) bool {
+				var free_cpu_cores int
+				var free_memory int
+				var free_disk_capacity int
+				var free_disk_count int
+				for i := 0; i < len(result); i++ {
+					free_cpu_cores += result[i].FreeCpuCores
+					free_memory += result[i].FreeMemory
+					free_disk_count += result[i].FreeDiskCount
+					free_disk_capacity += result[i].FreeDiskCapacity
+				}
+				return free_cpu_cores == 48 && free_memory == 192 && free_disk_count == 9 && free_disk_capacity == 256*3*3
+			},
+		}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stocks, err := Dao.ResourceManager().GetStocks(context.TODO(), tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ListHosts() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, assert := range tt.asserts {
+				if !assert(stocks) {
+					t.Errorf("ListHosts() assert false, index = %v, stocks %v", i, stocks)
+				}
+			}
+		})
+	}
+}

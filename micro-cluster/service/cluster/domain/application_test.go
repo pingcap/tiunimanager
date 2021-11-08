@@ -17,6 +17,7 @@
 package domain
 
 import (
+	"context"
 	"strconv"
 	"testing"
 	"time"
@@ -113,8 +114,8 @@ func Test_convertAllocHostsRequest(t *testing.T) {
 	demands := []*ClusterComponentDemand{
 		{
 			ComponentType: &knowledge.ClusterComponent{
-				"TiDB",
-				"TiDB",
+				ComponentType: "TiDB",
+				ComponentName: "TiDB",
 			},
 			TotalNodeCount: 999,
 			DistributionItems: []*ClusterNodeDistributionItem{
@@ -127,8 +128,8 @@ func Test_convertAllocHostsRequest(t *testing.T) {
 		},
 		{
 			ComponentType: &knowledge.ClusterComponent{
-				"TiKV",
-				"TiKV",
+				ComponentType: "TiKV",
+				ComponentName: "TiKV",
 			},
 			TotalNodeCount: 3,
 			DistributionItems: []*ClusterNodeDistributionItem{
@@ -141,8 +142,8 @@ func Test_convertAllocHostsRequest(t *testing.T) {
 		},
 		{
 			ComponentType: &knowledge.ClusterComponent{
-				"PD",
-				"PD",
+				ComponentType: "PD",
+				ComponentName: "PD",
 			},
 			TotalNodeCount: 3,
 			DistributionItems: []*ClusterNodeDistributionItem{
@@ -253,7 +254,7 @@ func Test_parseRecoverInFoFromDTO(t *testing.T) {
 }
 
 func TestCreateCluster(t *testing.T) {
-	got, err := CreateCluster(&clusterpb.OperatorDTO{
+	got, err := CreateCluster(context.TODO(), &clusterpb.OperatorDTO{
 		Id:       "testoperator",
 		Name:     "testoperator",
 		TenantId: "testoperator",
@@ -290,7 +291,7 @@ func TestCreateCluster(t *testing.T) {
 }
 
 func TestDeleteCluster(t *testing.T) {
-	got, err := DeleteCluster(&clusterpb.OperatorDTO{
+	got, err := DeleteCluster(context.TODO(), &clusterpb.OperatorDTO{
 		Id:       "testoperator",
 		Name:     "testoperator",
 		TenantId: "testoperator",
@@ -302,7 +303,7 @@ func TestDeleteCluster(t *testing.T) {
 }
 
 func TestRestartCluster(t *testing.T) {
-	got, err := RestartCluster(&clusterpb.OperatorDTO{
+	got, err := RestartCluster(context.TODO(), &clusterpb.OperatorDTO{
 		Id:       "testoperator",
 		Name:     "testoperator",
 		TenantId: "testoperator",
@@ -314,7 +315,7 @@ func TestRestartCluster(t *testing.T) {
 }
 
 func TestStopCluster(t *testing.T) {
-	got, err := StopCluster(&clusterpb.OperatorDTO{
+	got, err := StopCluster(context.TODO(), &clusterpb.OperatorDTO{
 		Id:       "testoperator",
 		Name:     "testoperator",
 		TenantId: "testoperator",
@@ -326,7 +327,7 @@ func TestStopCluster(t *testing.T) {
 }
 
 func TestModifyParameters(t *testing.T) {
-	got, err := ModifyParameters(&clusterpb.OperatorDTO{
+	got, err := ModifyParameters(context.TODO(), &clusterpb.OperatorDTO{
 		Id:       "testoperator",
 		Name:     "testoperator",
 		TenantId: "testoperator",

@@ -18,6 +18,7 @@
 package adapt
 
 import (
+	"context"
 	"errors"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
@@ -66,35 +67,35 @@ func mockData() {
 
 	permissions = []domain.PermissionAggregation{
 		{
-			domain.Permission{Code: TestPath1},
-			Roles,
+			Permission: domain.Permission{Code: TestPath1},
+			Roles: Roles,
 		},
 		{
-			domain.Permission{Code: TestPath2},
-			[]domain.Role{},
+			Permission: domain.Permission{Code: TestPath2},
+			Roles: []domain.Role{},
 		},
 	}
 }
 
-func (m MockRepo) AddTenant(tenant *domain.Tenant) error {
+func (m MockRepo) AddTenant(ctx context.Context, tenant *domain.Tenant) error {
 	panic("implement me")
 }
 
-func (m MockRepo) LoadTenantByName(name string) (domain.Tenant, error) {
+func (m MockRepo) LoadTenantByName(ctx context.Context, name string) (domain.Tenant, error) {
 	if name == "notExisted" {
 		return domain.Tenant{}, errors.New("tenant not existed")
 	}
 	return domain.Tenant{Name: name}, nil
 }
 
-func (m MockRepo) LoadTenantById(id string) (domain.Tenant, error) {
+func (m MockRepo) LoadTenantById(ctx context.Context, id string) (domain.Tenant, error) {
 	if id == "notExisted" {
 		return domain.Tenant{}, errors.New("tenant not existed")
 	}
 	return domain.Tenant{Id: id}, nil
 }
 
-func (m MockRepo) LoadAccountByName(name string) (domain.Account, error) {
+func (m MockRepo) LoadAccountByName(ctx context.Context, name string) (domain.Account, error) {
 	if name == "" {
 		return domain.Account{}, errors.New("name empty")
 	}
@@ -110,7 +111,7 @@ func (m MockRepo) LoadAccountByName(name string) (domain.Account, error) {
 	return domain.Account{}, errors.New("no account found")
 }
 
-func (m MockRepo) LoadAccountAggregation(name string) (domain.AccountAggregation, error) {
+func (m MockRepo) LoadAccountAggregation(ctx context.Context, name string) (domain.AccountAggregation, error) {
 	if name == "" {
 		return domain.AccountAggregation{}, errors.New("name empty")
 	}
@@ -132,11 +133,11 @@ func (m MockRepo) LoadAccountAggregation(name string) (domain.AccountAggregation
 	return domain.AccountAggregation{}, errors.New("noaccount")
 }
 
-func (m MockRepo) LoadAccountById(id string) (domain.Account, error) {
+func (m MockRepo) LoadAccountById(ctx context.Context, id string) (domain.Account, error) {
 	panic("implement me")
 }
 
-func (m MockRepo) LoadRole(tenantId string, name string) (domain.Role, error) {
+func (m MockRepo) LoadRole(ctx context.Context, tenantId string, name string) (domain.Role, error) {
 	if name == "" {
 		return domain.Role{}, errors.New("name empty")
 	}
@@ -148,7 +149,7 @@ func (m MockRepo) LoadRole(tenantId string, name string) (domain.Role, error) {
 	return domain.Role{TenantId: tenantId, Id: uuidutil.GenerateID(), Name: name, Status: domain.Valid}, nil
 }
 
-func (m MockRepo) LoadPermissionAggregation(tenantId string, code string) (domain.PermissionAggregation, error) {
+func (m MockRepo) LoadPermissionAggregation(ctx context.Context, tenantId string, code string) (domain.PermissionAggregation, error) {
 	for _, p := range permissions {
 		if p.Code == code {
 			return p, nil
@@ -157,41 +158,41 @@ func (m MockRepo) LoadPermissionAggregation(tenantId string, code string) (domai
 	return domain.PermissionAggregation{}, errors.New("no permission found")
 }
 
-func (m MockRepo) LoadPermission(tenantId string, code string) (domain.Permission, error) {
+func (m MockRepo) LoadPermission(ctx context.Context, tenantId string, code string) (domain.Permission, error) {
 	panic("implement me")
 }
 
-func (m MockRepo) LoadAllRolesByAccount(account *domain.Account) ([]domain.Role, error) {
+func (m MockRepo) LoadAllRolesByAccount(ctx context.Context, account *domain.Account) ([]domain.Role, error) {
 	panic("implement me")
 }
 
-func (m MockRepo) LoadAllRolesByPermission(permission *domain.Permission) ([]domain.Role, error) {
+func (m MockRepo) LoadAllRolesByPermission(ctx context.Context, permission *domain.Permission) ([]domain.Role, error) {
 	panic("implement me")
 }
 
-func (m MockRepo) AddAccount(a *domain.Account) error {
+func (m MockRepo) AddAccount(ctx context.Context, a *domain.Account) error {
 	a.Id = uuidutil.GenerateID()
 	return nil
 }
 
-func (m MockRepo) AddRole(r *domain.Role) error {
+func (m MockRepo) AddRole(ctx context.Context, r *domain.Role) error {
 	r.Id = uuidutil.GenerateID()
 	return nil
 }
 
-func (m MockRepo) AddPermission(r *domain.Permission) error {
+func (m MockRepo) AddPermission(ctx context.Context, r *domain.Permission) error {
 	panic("implement me")
 }
 
-func (m MockRepo) AddPermissionBindings(bindings []domain.PermissionBinding) error {
+func (m MockRepo) AddPermissionBindings(ctx context.Context, bindings []domain.PermissionBinding) error {
 	return nil
 }
 
-func (m MockRepo) AddRoleBindings(bindings []domain.RoleBinding) error {
+func (m MockRepo) AddRoleBindings(ctx context.Context, bindings []domain.RoleBinding) error {
 	return nil
 }
 
-func (m MockRepo) Provide(tiEMToken *domain.TiEMToken) (string, error) {
+func (m MockRepo) Provide(ctx context.Context, tiEMToken *domain.TiEMToken) (string, error) {
 	tiEMToken.TokenString = uuidutil.GenerateID()
 
 	Tokens = append(Tokens, tiEMToken)
@@ -199,7 +200,7 @@ func (m MockRepo) Provide(tiEMToken *domain.TiEMToken) (string, error) {
 	return tiEMToken.TokenString, nil
 }
 
-func (m MockRepo) Modify(tiEMToken *domain.TiEMToken) error {
+func (m MockRepo) Modify(ctx context.Context, tiEMToken *domain.TiEMToken) error {
 	for index, token := range Tokens {
 		if token.TokenString == tiEMToken.TokenString {
 			Tokens[index] = tiEMToken
@@ -210,7 +211,7 @@ func (m MockRepo) Modify(tiEMToken *domain.TiEMToken) error {
 	return errors.New("token not exist")
 }
 
-func (m MockRepo) GetToken(tokenString string) (domain.TiEMToken, error) {
+func (m MockRepo) GetToken(ctx context.Context, tokenString string) (domain.TiEMToken, error) {
 	for _, token := range Tokens {
 		if token.TokenString == tokenString {
 			return *token, nil

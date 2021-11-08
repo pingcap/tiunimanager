@@ -47,7 +47,7 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /backups [post]
+// @Router /backups/ [post]
 func Backup(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
@@ -194,7 +194,7 @@ func SaveBackupStrategy(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /backups [get]
+// @Router /backups/ [get]
 func QueryBackup(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()

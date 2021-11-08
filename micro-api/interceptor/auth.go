@@ -19,6 +19,7 @@ package interceptor
 
 import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -46,7 +47,7 @@ func VerifyIdentity(c *gin.Context) {
 	path := c.Request.URL
 	req := clusterpb.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
 
-	result, err := client.ClusterClient.VerifyIdentity(c, &req)
+	result, err := client.ClusterClient.VerifyIdentity(framework.NewMicroCtxFromGinCtx(c), &req)
 	if err != nil {
 		c.Error(err)
 		c.Status(http.StatusInternalServerError)

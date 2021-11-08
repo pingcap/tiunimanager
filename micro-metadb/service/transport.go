@@ -29,11 +29,11 @@ import (
 func (handler *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *dbpb.DBCreateTransportRecordRequest, out *dbpb.DBCreateTransportRecordResponse) error {
 	start := time.Now()
 	defer handler.HandleMetrics(start, "QueryBackupStrategyByTime", int(out.GetStatus().GetCode()))
-	uintId, err := strconv.ParseInt(in.GetRecord().GetID(), 10, 64)
+	intId, _ := strconv.ParseInt(in.GetRecord().GetID(), 10, 64)
 	log := framework.LogWithContext(ctx)
 	record := &models.TransportRecord{
 		Record: models.Record{
-			ID: uint(uintId),
+			ID: uint(intId),
 		},
 		ClusterId:     in.GetRecord().GetClusterId(),
 		TransportType: in.GetRecord().GetTransportType(),

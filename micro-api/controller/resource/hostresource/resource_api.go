@@ -133,16 +133,7 @@ func doImport(c *gin.Context, host *HostInfo) (rsp *clusterpb.ImportHostResponse
 func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *clusterpb.ImportHostsInBatchResponse, err error) {
 	importReq := clusterpb.ImportHostsInBatchRequest{}
 	importReq.Hosts = make([]*clusterpb.HostInfo, len(hosts))
-	var userName, passwd string
 	for i, host := range hosts {
-		if i == 0 {
-			userName, passwd = host.UserName, host.Passwd
-		} else {
-			if userName != host.UserName || passwd != host.Passwd {
-				errMsg := fmt.Sprintf("Row %d has a diff user(%s) or passwd(%s)", i, host.UserName, host.Passwd)
-				return nil, errors.New(errMsg)
-			}
-		}
 		importReq.Hosts[i] = new(clusterpb.HostInfo)
 		err = copyHostToReq(host, importReq.Hosts[i])
 		if err != nil {

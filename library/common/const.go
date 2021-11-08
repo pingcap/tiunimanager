@@ -57,4 +57,4 @@ var (
 	TemplateFilePath = "./etc"
 )
 
-const SlowSqlThreshold = 200
+const SlowSqlThreshold = 100

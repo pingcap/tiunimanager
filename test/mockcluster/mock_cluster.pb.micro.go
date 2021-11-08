@@ -256,6 +256,26 @@ func (mr *MockClusterServiceMockRecorder) DetailCluster(ctx, in interface{}, opt
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetailCluster", reflect.TypeOf((*MockClusterService)(nil).DetailCluster), varargs...)
 }
 
+// DetailFlow mocks base method.
+func (m *MockClusterService) DetailFlow(ctx context.Context, in *clusterpb.DetailFlowRequest, opts ...client.CallOption) (*clusterpb.DetailFlowsResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DetailFlow", varargs...)
+	ret0, _ := ret[0].(*clusterpb.DetailFlowsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DetailFlow indicates an expected call of DetailFlow.
+func (mr *MockClusterServiceMockRecorder) DetailFlow(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetailFlow", reflect.TypeOf((*MockClusterService)(nil).DetailFlow), varargs...)
+}
+
 // ExportData mocks base method.
 func (m *MockClusterService) ExportData(ctx context.Context, in *clusterpb.DataExportRequest, opts ...client.CallOption) (*clusterpb.DataExportResponse, error) {
 	m.ctrl.T.Helper()
@@ -971,6 +991,20 @@ func (m *MockClusterServiceHandler) DetailCluster(arg0 context.Context, arg1 *cl
 func (mr *MockClusterServiceHandlerMockRecorder) DetailCluster(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetailCluster", reflect.TypeOf((*MockClusterServiceHandler)(nil).DetailCluster), arg0, arg1, arg2)
+}
+
+// DetailFlow mocks base method.
+func (m *MockClusterServiceHandler) DetailFlow(arg0 context.Context, arg1 *clusterpb.DetailFlowRequest, arg2 *clusterpb.DetailFlowsResponse) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DetailFlow", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DetailFlow indicates an expected call of DetailFlow.
+func (mr *MockClusterServiceHandlerMockRecorder) DetailFlow(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DetailFlow", reflect.TypeOf((*MockClusterServiceHandler)(nil).DetailFlow), arg0, arg1, arg2)
 }
 
 // ExportData mocks base method.

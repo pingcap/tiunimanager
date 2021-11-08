@@ -917,7 +917,7 @@ type Stock struct {
 func (m *DAOResourceManager) GetStocks(ctx context.Context, stockCondition StockCondition) (stocks []Stock, err error) {
 	tx := m.getDb(ctx).Begin()
 	db := tx.Model(&rt.Host{}).Select(
-		"sum(hosts.free_cpu_cores) as free_cpu_cores, sum(hosts.free_memory) as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
+		"hosts.free_cpu_cores as free_cpu_cores, hosts.free_memory as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
 		"left join disks on disks.host_id = hosts.id")
 	if stockCondition.DiskCondition.Status != nil {
 		db = db.Where("disks.status = ?", stockCondition.DiskCondition.Status)

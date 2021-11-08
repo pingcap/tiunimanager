@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "./../clusterpb/;clusterpb";
+option go_package = "./clusterpb/;clusterpb";
 
 message PageDTO {
     int32 page = 1;

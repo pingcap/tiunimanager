@@ -6,7 +6,7 @@ import "database.proto";
 import "mng_auth.proto";
 import "mng_host.proto";
 import "mng_allocation.proto";
-option go_package = "./../clusterpb/;clusterpb";
+option go_package = "./clusterpb/;clusterpb";
 
 service ClusterService {
     // Cluster manager module

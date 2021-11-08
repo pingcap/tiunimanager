@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "common.proto";
 
-option go_package = "./../clusterpb/;clusterpb";
+option go_package = "./clusterpb/;clusterpb";
 
 message DataImportRequest {
     OperatorDTO operator = 1;

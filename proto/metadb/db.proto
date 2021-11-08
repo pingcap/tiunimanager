@@ -8,7 +8,7 @@ import "db_task.proto";
 import "db_transport.proto";
 import "db_allocation.proto";
 
-option go_package = "./../dbpb/;dbpb";
+option go_package = "./dbpb/;dbpb";
 
 // TiDB Cloud Platform database service
 service TiEMDBService {

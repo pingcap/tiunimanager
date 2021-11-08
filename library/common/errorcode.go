@@ -21,10 +21,15 @@ type TIEM_ERROR_CODE int32
 // all tiem error code
 const (
 	TIEM_SUCCESS           = 0
+	TIEM_METADB_SERVER_CALL_ERROR = 9998
+	TIEM_CLUSTER_SERVER_CALL_ERROR = 9999
+
 	TIEM_PARAMETER_INVALID = 1
 
-	TIEM_ACCOUNT_NOT_FOUND = 100
-	TIME_ACCOUNT_EXIST     = 101
+	TIEM_TAKEOVER_SSH_CONNECT_ERROR = 20109
+	TIEM_TAKEOVER_SFTP_ERROR        = 20110
+	TIEM_ACCOUNT_NOT_FOUND          = 100
+	TIME_ACCOUNT_EXIST              = 101
 
 	TIEM_TENANT_NOT_FOUND = 200
 	TIEM_TENANT_EXIST     = 201
@@ -67,6 +72,9 @@ const (
 
 var TiEMErrMsg = map[TIEM_ERROR_CODE]string{
 	TIEM_SUCCESS:           "successful",
+	TIEM_METADB_SERVER_CALL_ERROR:         "call metadb-Server failed",
+	TIEM_CLUSTER_SERVER_CALL_ERROR:         "call cluster-Server failed",
+
 	TIEM_PARAMETER_INVALID: "parameter is invalid",
 	TIEM_ACCOUNT_NOT_FOUND: "account is not found",
 	TIME_ACCOUNT_EXIST:     "account is exist",

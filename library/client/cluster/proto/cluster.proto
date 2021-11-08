@@ -58,6 +58,7 @@ service ClusterService {
 
     // task manager
     rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);
+    rpc DetailFlow(DetailFlowRequest) returns (DetailFlowsResponse);
 }
 
 message ClusterCreateReqDTO {
@@ -415,6 +416,26 @@ message FlowDTO {
     int64 deleteTime = 10;
 }
 
+message TaskDTO {
+    int64 id = 1;
+    int32 status = 2;
+    string taskName = 3;
+    string taskReturnType = 4;
+    string bizId = 5;
+    string parameters = 6;
+    string result = 7;
+    int64 startTime = 8;
+    int64 endTime = 9;
+    int32 parentType = 10;
+    string parentId = 11;
+}
+
+message FlowWithTaskDTO {
+    FlowDTO flow = 1;
+    repeated TaskDTO tasks = 2;
+    repeated string TaskDef = 3;
+}
+
 message ListFlowsRequest {
     string bizId = 1;
     string keyword = 2;
@@ -427,4 +448,15 @@ message ListFlowsResponse {
     repeated FlowDTO flows = 2;
     PageDTO page = 3;
 }
+
+message DetailFlowRequest {
+    int64 flowId = 1;
+}
+
+message DetailFlowsResponse {
+    ResponseStatusDTO status = 1;
+    FlowWithTaskDTO flow = 2;
+}
+
+
 

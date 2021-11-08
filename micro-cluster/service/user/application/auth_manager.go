@@ -18,7 +18,9 @@
 package application
 
 import (
-	"errors"
+	"context"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/commons"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/ports"
@@ -35,8 +37,8 @@ func NewAuthManager(userManager  *UserManager, 	tokenHandler ports.TokenHandler)
 }
 
 // Login
-func (p *AuthManager) Login(userName, password string) (tokenString string, err error) {
-	account, err := p.userManager.FindAccountByName(userName)
+func (p *AuthManager) Login(ctx context.Context, userName, password string) (tokenString string, err error) {
+	account, err := p.userManager.FindAccountByName(ctx, userName)
 
 	if err != nil {
 		return
@@ -52,7 +54,7 @@ func (p *AuthManager) Login(userName, password string) (tokenString string, err 
 		return
 	}
 
-	token, err := p.CreateToken(account.Id, account.Name, account.TenantId)
+	token, err := p.CreateToken(ctx, account.Id, account.Name, account.TenantId)
 
 	if err != nil {
 		return
@@ -64,8 +66,8 @@ func (p *AuthManager) Login(userName, password string) (tokenString string, err 
 }
 
 // Logout
-func (p *AuthManager) Logout(tokenString string) (string, error) {
-	token, err := p.tokenHandler.GetToken(tokenString)
+func (p *AuthManager) Logout(ctx context.Context, tokenString string) (string, error) {
+	token, err := p.tokenHandler.GetToken(ctx, tokenString)
 
 	if err != nil {
 		return "", &domain.UnauthorizedError{}
@@ -75,7 +77,7 @@ func (p *AuthManager) Logout(tokenString string) (string, error) {
 		accountName := token.AccountName
 		token.Destroy()
 
-		err := p.tokenHandler.Modify(&token)
+		err := p.tokenHandler.Modify(ctx, &token)
 		if err != nil {
 			return "", err
 		}
@@ -87,13 +89,13 @@ func (p *AuthManager) Logout(tokenString string) (string, error) {
 var SkipAuth = true
 
 // Accessible
-func (p *AuthManager) Accessible(pathType string, path string, tokenString string) (tenantId string, accountId, accountName string, err error) {
+func (p *AuthManager) Accessible(ctx context.Context, pathType string, path string, tokenString string) (tenantId string, accountId, accountName string, err error) {
 	if path == "" {
-		err = errors.New("path cannot be blank")
+		err = framework.CustomizeMessageError(common.TIEM_PARAMETER_INVALID, "path empty")
 		return
 	}
 
-	token, err := p.tokenHandler.GetToken(tokenString)
+	token, err := p.tokenHandler.GetToken(ctx, tokenString)
 
 	if err != nil {
 		return
@@ -108,20 +110,17 @@ func (p *AuthManager) Accessible(pathType string, path string, tokenString strin
 		return
 	}
 
-	// 校验token有效
 	if !token.IsValid() {
 		err = &domain.UnauthorizedError{}
 		return
 	}
 
-	// 根据token查用户
-	account, err := p.userManager.findAccountAggregation(accountName)
+	account, err := p.userManager.findAccountAggregation(ctx, accountName)
 	if err != nil {
 		return
 	}
 
-	// 查权限
-	permission, err := p.userManager.findPermissionAggregationByCode(tenantId, path)
+	permission, err := p.userManager.findPermissionAggregationByCode(ctx, tenantId, path)
 	if err != nil {
 		return
 	}
@@ -169,7 +168,7 @@ func (p *AuthManager) checkAuth(account *domain.AccountAggregation, permission *
 	return false, nil
 }
 
-func (p *AuthManager) CreateToken(accountId string, accountName string, tenantId string) (domain.TiEMToken, error) {
+func (p *AuthManager) CreateToken(ctx context.Context, accountId string, accountName string, tenantId string) (domain.TiEMToken, error) {
 	token := domain.TiEMToken{
 		AccountName: accountName,
 		AccountId: accountId,
@@ -177,7 +176,7 @@ func (p *AuthManager) CreateToken(accountId string, accountName string, tenantId
 		ExpirationTime: time.Now().Add(commons.DefaultTokenValidPeriod),
 	}
 
-	tokenString, err := p.tokenHandler.Provide(&token)
+	tokenString, err := p.tokenHandler.Provide(ctx, &token)
 	token.TokenString = tokenString
 	return token, err
 }

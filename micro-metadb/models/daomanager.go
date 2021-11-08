@@ -24,10 +24,13 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
+	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormLog "gorm.io/gorm/logger"
+	"strconv"
 	"time"
 
 	"github.com/pingcap/errors"
@@ -87,6 +90,64 @@ func (dao *DAOManager) SetDb(db *gorm.DB) {
 
 func (dao *DAOManager) Tables() map[string]interface{} {
 	return dao.tables
+}
+
+const StartTime = "StartTime"
+
+func (dao *DAOManager) InitMetrics() {
+	before := func (db *gorm.DB) {
+		db.InstanceSet(StartTime, time.Now())
+		return
+	}
+
+	after := func(method string, db *gorm.DB) {
+		code := db.Error == nil
+
+		framework.Current.GetMetrics().SqliteRequestsCounterMetric.With(prometheus.Labels{
+			metrics.ServiceLabel: db.Name(),
+			metrics.MethodLabel:  method,
+			metrics.CodeLabel:    strconv.FormatBool(code)}).
+			Inc()
+
+		startTime, ok := db.InstanceGet(StartTime)
+
+		if ok {
+			duration := time.Since(startTime.(time.Time)).Milliseconds()
+			framework.Current.GetMetrics().SqliteDurationHistogramMetric.With(prometheus.Labels{
+				metrics.ServiceLabel: db.Name(),
+				metrics.MethodLabel:  method,
+				metrics.CodeLabel:    strconv.FormatBool(code)}).
+				Observe(float64(duration))
+
+			if duration > common.SlowSqlThreshold {
+				framework.Current.GetMetrics().SqliteRequestsCounterMetric.With(prometheus.Labels{
+					metrics.ServiceLabel: db.Name(),
+					metrics.MethodLabel:  method,
+					metrics.CodeLabel:    "slow"}).
+					Inc()
+			}
+		}
+
+	}
+	dao.db.Callback().Create().Register("gorm:before_create", before)
+	dao.db.Callback().Create().Register("gorm:after_create", func(db *gorm.DB) {
+		after("Create", db)
+	})
+
+	dao.db.Callback().Create().Register("gorm:before_query", before)
+	dao.db.Callback().Create().Register("gorm:after_query", func(db *gorm.DB) {
+		after("Query", db)
+	})
+
+	dao.db.Callback().Create().Register("gorm:before_delete", before)
+	dao.db.Callback().Create().Register("gorm:after_delete", func(db *gorm.DB) {
+		after("Delete", db)
+	})
+
+	dao.db.Callback().Create().Register("gorm:before_update", before)
+	dao.db.Callback().Create().Register("gorm:after_update", func(db *gorm.DB) {
+		after("Update", db)
+	})
 }
 
 func (dao *DAOManager) InitDB(dataDir string) error {

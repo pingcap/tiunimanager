@@ -59,5 +59,5 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/sqlite v1.1.4
-	gorm.io/gorm v1.21.13
+	gorm.io/gorm v1.22.2
 )

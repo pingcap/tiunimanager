@@ -392,6 +392,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	storageType, err := convertBrStorageType(string(record.StorageType))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("convert storage type failed, %s", err.Error())
+		task.Fail(err)
 		return false
 	}
 
@@ -417,6 +418,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	backupTaskId, err := secondparty.SecondParty.MicroSrvBackUp(clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
+		task.Fail(err)
 		return false
 	}
 	flowContext.SetData("backupTaskId", backupTaskId)
@@ -489,6 +491,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		getLoggerWithContext(ctx).Errorf("update backup record for cluster %s failed, %s", clusterAggregation.Cluster.Id, updateResp.GetStatus().GetMessage())
 		return false
 	}
+	task.Success(nil)
 	return true
 }
 

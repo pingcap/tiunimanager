@@ -3170,6 +3170,9 @@ var doc = `{
                     "description": "Host Status, 0 for Online, 1 for offline",
                     "type": "integer"
                 },
+                "updateTime": {
+                    "type": "integer"
+                },
                 "userName": {
                     "type": "string"
                 }

@@ -337,7 +337,7 @@ func (t TaskRepoAdapter) AddFlowTask(ctx context.Context, task *domain.TaskEntit
 			Parameters:     task.Parameters,
 			ParentId:       strconv.Itoa(int(flowId)),
 			ParentType:     0,
-			StartTime: task.StartTime,
+			StartTime:      task.StartTime,
 		},
 	})
 

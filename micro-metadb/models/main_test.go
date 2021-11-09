@@ -42,6 +42,7 @@ func TestMain(m *testing.M) {
 			Dao = NewDAOManager(d)
 			Dao.InitDB(testFilePath)
 			Dao.InitTables()
+			Dao.InitMetrics()
 			Dao.AddTable("test_entitys", new(TestEntity))
 			Dao.AddTable("test_entity2_s", new(TestEntity2))
 			Dao.AddTable("test_records", new(TestRecord))
@@ -55,5 +56,5 @@ func TestMain(m *testing.M) {
 			return nil
 		},
 	)
-	m.Run()
+	os.Exit(m.Run())
 }

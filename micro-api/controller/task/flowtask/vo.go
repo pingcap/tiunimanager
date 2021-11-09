@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -17,7 +16,10 @@
 
 package flowtask
 
-import "github.com/pingcap-inc/tiem/micro-api/controller"
+import (
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"time"
+)
 
 type FlowWorkDisplayInfo struct {
 	Id           uint   `json:"id"`
@@ -30,13 +32,20 @@ type FlowWorkDisplayInfo struct {
 
 type FlowWorkDetailInfo struct {
 	FlowWorkDisplayInfo
+	FlowWorkDefineInfo
 	Tasks []FlowWorkTaskInfo `json:"tasks"`
 }
 
+type FlowWorkDefineInfo struct {
+	TaskName []string    `json:"taskName"`
+}
+
 type FlowWorkTaskInfo struct {
-	Id       uint   `json:"id"`
-	TaskName string `json:"taskName"`
+	Id         uint   `json:"id"`
+	TaskName   string `json:"taskName"`
 	Parameters string `json:"taskParameters"`
-	Result string `json:"result"`
-	Status int   `json:"taskStatus"`
+	Result     string `json:"result"`
+	Status     int    `json:"taskStatus"`
+	StartTime time.Time `json:"startTime"`
+	EndTime time.Time `json:"endTime"`
 }

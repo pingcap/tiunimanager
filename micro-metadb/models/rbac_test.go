@@ -309,11 +309,11 @@ func TestAddRoleBindings(t *testing.T) {
 func TestFetchAllRolesByAccount(t *testing.T) {
 	accountManager := Dao.AccountManager()
 	accountId := uuid.New().String()
-	role1, err := accountManager.AddRole(context.TODO(), defaultTenantId, "TestFetchAllRolesByAccount1", "TestFetchAllRolesByAccount", 0)
-	role2, err := accountManager.AddRole(context.TODO(), defaultTenantId, "TestFetchAllRolesByAccount2", "TestFetchAllRolesByAccount", 0)
+	role1, err1 := accountManager.AddRole(context.TODO(), defaultTenantId, "TestFetchAllRolesByAccount1", "TestFetchAllRolesByAccount", 0)
+	role2, err2 := accountManager.AddRole(context.TODO(), defaultTenantId, "TestFetchAllRolesByAccount2", "TestFetchAllRolesByAccount", 0)
 
-	if err != nil {
-		t.Errorf("FetchAllRolesByAccount() error = %v", err)
+	if err1 != nil || err2 != nil {
+		t.Errorf("FetchAllRolesByAccount() error = %v, %v", err1, err2)
 		return
 	}
 

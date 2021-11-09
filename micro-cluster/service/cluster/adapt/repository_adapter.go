@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -23,6 +22,7 @@ import (
 	"errors"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
@@ -42,7 +42,7 @@ func InjectionMetaDbRepo() {
 
 type ClusterRepoAdapter struct{}
 
-func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*domain.ClusterAggregation, int, error) {
+func (c ClusterRepoAdapter) Query(ctx context.Context, clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*domain.ClusterAggregation, int, error) {
 	req := &dbpb.DBListClusterRequest{
 		ClusterName:   clusterName,
 		ClusterId:     clusterId,
@@ -55,7 +55,7 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 		},
 	}
 
-	resp, err := client.DBClient.ListCluster(context.TODO(), req)
+	resp, err := client.DBClient.ListCluster(ctx, req)
 
 	if err != nil {
 		return nil, 0, err
@@ -65,7 +65,7 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 		return nil, 0, err
 	}
 
-	clusters := make([]*domain.ClusterAggregation, len(resp.Clusters), len(resp.Clusters))
+	clusters := make([]*domain.ClusterAggregation, len(resp.Clusters))
 	for i, v := range resp.Clusters {
 		cluster := &domain.ClusterAggregation{}
 		cluster.Cluster = ParseFromClusterDTO(v.Cluster)
@@ -79,12 +79,12 @@ func (c ClusterRepoAdapter) Query(clusterId, clusterName, clusterType, clusterSt
 
 }
 
-func (c ClusterRepoAdapter) AddCluster(cluster *domain.Cluster) error {
+func (c ClusterRepoAdapter) AddCluster(ctx context.Context, cluster *domain.Cluster) error {
 	req := &dbpb.DBCreateClusterRequest{
 		Cluster: ConvertClusterToDTO(cluster),
 	}
 
-	resp, err := client.DBClient.CreateCluster(context.TODO(), req)
+	resp, err := client.DBClient.CreateCluster(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -102,11 +102,11 @@ func (c ClusterRepoAdapter) AddCluster(cluster *domain.Cluster) error {
 	return nil
 }
 
-func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) error {
+func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.ClusterAggregation) error {
 	cluster := aggregation.Cluster
 
 	if aggregation.StatusModified || aggregation.FlowModified {
-		resp, err := client.DBClient.UpdateClusterStatus(context.TODO(), &dbpb.DBUpdateClusterStatusRequest{
+		resp, err := client.DBClient.UpdateClusterStatus(ctx, &dbpb.DBUpdateClusterStatusRequest{
 			ClusterId:    cluster.Id,
 			Status:       int32(cluster.Status),
 			UpdateStatus: aggregation.StatusModified,
@@ -124,7 +124,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 	}
 
 	if aggregation.ConfigModified {
-		resp, err := client.DBClient.UpdateClusterTopologyConfig(context.TODO(), &dbpb.DBUpdateTopologyConfigRequest{
+		resp, err := client.DBClient.UpdateClusterTopologyConfig(ctx, &dbpb.DBUpdateTopologyConfigRequest{
 			ClusterId: aggregation.Cluster.Id,
 			Content:   aggregation.CurrentTopologyConfigRecord.Content(),
 			TenantId:  aggregation.Cluster.TenantId,
@@ -177,7 +177,7 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 
 	if aggregation.LastParameterRecord != nil && aggregation.LastParameterRecord.Id == 0 {
 		record := aggregation.LastParameterRecord
-		resp, err := client.DBClient.SaveParametersRecord(context.TODO(), &dbpb.DBSaveParametersRequest{
+		resp, err := client.DBClient.SaveParametersRecord(ctx, &dbpb.DBSaveParametersRequest{
 			Parameters: &dbpb.DBParameterRecordDTO{
 				TenantId:   cluster.TenantId,
 				ClusterId:  record.ClusterId,
@@ -198,12 +198,12 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 		if err != nil {
 			return err
 		}
-		client.DBClient.UpdateClusterInfo(context.TODO(), &dbpb.DBUpdateClusterInfoRequest{
-			ClusterId: aggregation.Cluster.Id,
+		client.DBClient.UpdateClusterInfo(ctx, &dbpb.DBUpdateClusterInfoRequest{
+			ClusterId:   aggregation.Cluster.Id,
 			Name:        cluster.ClusterName,
 			ClusterType: cluster.ClusterType.Code,
 			VersionCode: cluster.ClusterVersion.Code,
-			Tags:  		 string(tagBytes),
+			Tags:        string(tagBytes),
 			Tls:         cluster.Tls,
 		})
 
@@ -215,12 +215,12 @@ func (c ClusterRepoAdapter) Persist(aggregation *domain.ClusterAggregation) erro
 	return nil
 }
 
-func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation, err error) {
+func (c ClusterRepoAdapter) Load(ctx context.Context, id string) (cluster *domain.ClusterAggregation, err error) {
 	req := &dbpb.DBLoadClusterRequest{
 		ClusterId: id,
 	}
 
-	resp, err := client.DBClient.LoadCluster(context.TODO(), req)
+	resp, err := client.DBClient.LoadCluster(ctx, req)
 
 	if err != nil {
 		return
@@ -241,8 +241,8 @@ func (c ClusterRepoAdapter) Load(id string) (cluster *domain.ClusterAggregation,
 
 type RemoteClusterProxy struct{}
 
-func (c RemoteClusterProxy) QueryParameterJson(clusterId string) (content string, err error) {
-	resp, err := client.DBClient.GetCurrentParametersRecord(context.TODO(), &dbpb.DBGetCurrentParametersRequest{
+func (c RemoteClusterProxy) QueryParameterJson(ctx context.Context, clusterId string) (content string, err error) {
+	resp, err := client.DBClient.GetCurrentParametersRecord(ctx, &dbpb.DBGetCurrentParametersRequest{
 		ClusterId: clusterId,
 	})
 
@@ -265,8 +265,8 @@ func (c RemoteClusterProxy) QueryParameterJson(clusterId string) (content string
 
 type TaskRepoAdapter struct{}
 
-func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, pageSize int) ([]*domain.FlowWorkEntity, int, error) {
-	resp, err := client.DBClient.ListFlows(context.TODO(), &dbpb.DBListFlowsRequest{
+func (t TaskRepoAdapter) ListFlows(ctx context.Context, bizId, keyword string, status int, page int, pageSize int) ([]*domain.FlowWorkEntity, int, error) {
+	resp, err := client.DBClient.ListFlows(ctx, &dbpb.DBListFlowsRequest{
 		BizId:   bizId,
 		Keyword: keyword,
 		Status:  int64(status),
@@ -277,10 +277,10 @@ func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, 
 	})
 
 	if err != nil {
-		framework.Log().Errorf("AddFlowWork error = %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("AddFlowWork error = %s", err.Error())
 		return nil, 0, err
 	}
-	flows := make([]*domain.FlowWorkEntity, len(resp.Flows), len(resp.Flows))
+	flows := make([]*domain.FlowWorkEntity, len(resp.Flows))
 	for i, v := range resp.Flows {
 		flows[i] = &domain.FlowWorkEntity{
 			Id:          uint(v.Id),
@@ -288,26 +288,26 @@ func (t TaskRepoAdapter) ListFlows(bizId, keyword string, status int, page int, 
 			StatusAlias: v.StatusAlias,
 			BizId:       v.BizId,
 			Status:      domain.TaskStatus(v.Status),
-			Operator: domain.GetOperatorFromName(v.Operator),
-			CreateTime: time.Unix(v.CreateTime, 0),
-			UpdateTime: time.Unix(v.UpdateTime, 0),
+			Operator:    domain.GetOperatorFromName(v.Operator),
+			CreateTime:  time.Unix(v.CreateTime, 0),
+			UpdateTime:  time.Unix(v.UpdateTime, 0),
 		}
 	}
 
 	return flows, int(resp.Page.Total), err
 }
 
-func (t TaskRepoAdapter) QueryCronTask(bizId string, cronTaskType int) (cronTask *domain.CronTaskEntity, err error) {
+func (t TaskRepoAdapter) QueryCronTask(ctx context.Context, bizId string, cronTaskType int) (cronTask *domain.CronTaskEntity, err error) {
 	cronTask = domain.GetDefaultMaintainTask()
 	return
 }
 
-func (t TaskRepoAdapter) PersistCronTask(cronTask *domain.CronTaskEntity) (err error) {
+func (t TaskRepoAdapter) PersistCronTask(ctx context.Context, cronTask *domain.CronTaskEntity) (err error) {
 	panic("implement me")
 }
 
-func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
-	resp, err := client.DBClient.CreateFlow(context.TODO(), &dbpb.DBCreateFlowRequest{
+func (t TaskRepoAdapter) AddFlowWork(ctx context.Context, flowWork *domain.FlowWorkEntity) error {
+	resp, err := client.DBClient.CreateFlow(ctx, &dbpb.DBCreateFlowRequest{
 		Flow: &dbpb.DBFlowDTO{
 			FlowName:    flowWork.FlowName,
 			StatusAlias: flowWork.StatusAlias,
@@ -317,7 +317,7 @@ func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
 	})
 
 	if err != nil {
-		framework.Log().Errorf("AddFlowWork error = %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("AddFlowWork error = %s", err.Error())
 	}
 
 	if resp.Status.Code != 0 {
@@ -328,8 +328,8 @@ func (t TaskRepoAdapter) AddFlowWork(flowWork *domain.FlowWorkEntity) error {
 	return err
 }
 
-func (t TaskRepoAdapter) AddFlowTask(task *domain.TaskEntity, flowId uint) error {
-	resp, err := client.DBClient.CreateTask(context.TODO(), &dbpb.DBCreateTaskRequest{
+func (t TaskRepoAdapter) AddFlowTask(ctx context.Context, task *domain.TaskEntity, flowId uint) error {
+	resp, err := client.DBClient.CreateTask(ctx, &dbpb.DBCreateTaskRequest{
 		Task: &dbpb.DBTaskDTO{
 			TaskName:       task.TaskName,
 			TaskReturnType: strconv.Itoa(int(task.TaskReturnType)),
@@ -337,11 +337,13 @@ func (t TaskRepoAdapter) AddFlowTask(task *domain.TaskEntity, flowId uint) error
 			Parameters:     task.Parameters,
 			ParentId:       strconv.Itoa(int(flowId)),
 			ParentType:     0,
+			StartTime: task.StartTime,
 		},
 	})
 
 	if err != nil {
 		// todo
+		framework.LogWithContext(ctx).Errorf("addflowtask flowid = %d, errStr: %s", flowId, err.Error())
 	}
 
 	if resp.Status.Code != 0 {
@@ -352,11 +354,11 @@ func (t TaskRepoAdapter) AddFlowTask(task *domain.TaskEntity, flowId uint) error
 	return err
 }
 
-func (t TaskRepoAdapter) AddCronTask(cronTask *domain.CronTaskEntity) error {
+func (t TaskRepoAdapter) AddCronTask(ctx context.Context, cronTask *domain.CronTaskEntity) error {
 	return nil
 }
 
-func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
+func (t TaskRepoAdapter) Persist(ctx context.Context, flowWork *domain.FlowWorkAggregation) error {
 	req := &dbpb.DBUpdateFlowRequest{
 		FlowWithTasks: &dbpb.DBFlowWithTaskDTO{
 			Flow: &dbpb.DBFlowDTO{
@@ -369,7 +371,7 @@ func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
 		},
 	}
 
-	tasks := make([]*dbpb.DBTaskDTO, len(flowWork.Tasks), len(flowWork.Tasks))
+	tasks := make([]*dbpb.DBTaskDTO, len(flowWork.Tasks))
 	req.FlowWithTasks.Tasks = tasks
 
 	for i, v := range flowWork.Tasks {
@@ -383,35 +385,49 @@ func (t TaskRepoAdapter) Persist(flowWork *domain.FlowWorkAggregation) error {
 			Parameters:     v.Parameters,
 			ParentId:       strconv.Itoa(int(flowWork.FlowWork.Id)),
 			ParentType:     0,
+			StartTime:      v.StartTime,
+			EndTime:        v.EndTime,
 		}
 	}
 
-	_, err := client.DBClient.UpdateFlow(context.TODO(), req)
+	_, err := client.DBClient.UpdateFlow(ctx, req)
 	return err
 }
 
-func (t TaskRepoAdapter) LoadFlowWork(id uint) (flow *domain.FlowWorkEntity, err error) {
+func (t TaskRepoAdapter) LoadFlowWork(ctx context.Context, id uint) (flow *domain.FlowWorkEntity, err error) {
 	panic("implement me")
 }
 
-func (t TaskRepoAdapter) Load(id uint) (flowWork *domain.FlowWorkAggregation, err error) {
-	resp, err := client.DBClient.LoadFlow(context.TODO(), &dbpb.DBLoadFlowRequest{
+func (t TaskRepoAdapter) Load(ctx context.Context, id uint) (flowWork *domain.FlowWorkAggregation, err error) {
+	resp, err := client.DBClient.LoadFlow(ctx, &dbpb.DBLoadFlowRequest{
 		Id: int64(id),
 	})
 	if err != nil {
-		framework.Log().Errorf("Load FlowWork error = %s", err.Error())
-		return nil, err
+		framework.LogWithContext(ctx).Errorf("Call metadb rpc method [%s] failed, error: %s", "LoadFlow", err.Error())
+		return nil, framework.WrapError(common.TIEM_METADB_SERVER_CALL_ERROR, common.TiEMErrMsg[common.TIEM_METADB_SERVER_CALL_ERROR], err)
 	}
+	if resp.Status.Code != 0 {
+		framework.LogWithContext(ctx).Errorf("LoadFlowWork failed, error: %s", resp.Status.Message)
+		return nil, framework.CustomizeMessageError(common.TIEM_ERROR_CODE(resp.Status.Code), resp.Status.Message)
+	} else {
+		flowDTO := resp.FlowWithTasks
+		flowEntity := &domain.FlowWorkEntity{
+			Id:          uint(flowDTO.Flow.Id),
+			FlowName:    flowDTO.Flow.FlowName,
+			StatusAlias: flowDTO.Flow.StatusAlias,
+			BizId:       flowDTO.Flow.BizId,
+			Status:      domain.TaskStatus(flowDTO.Flow.Status),
+			Operator:    domain.GetOperatorFromName(flowDTO.Flow.Operator),
+			CreateTime:  time.Unix(flowDTO.Flow.CreateTime, 0),
+			UpdateTime:  time.Unix(flowDTO.Flow.UpdateTime, 0),
+		}
 
-	flowworkName := resp.FlowWithTasks.Flow.FlowName
-	flowDefinition := domain.FlowWorkDefineMap[flowworkName]
-	flowWork = &domain.FlowWorkAggregation{
-		FlowWork: &domain.FlowWorkEntity{},
-		Define: flowDefinition,
-		Tasks: ParseTaskDTOInBatch(resp.FlowWithTasks.Tasks),
+		return &domain.FlowWorkAggregation{
+			FlowWork: flowEntity,
+			Tasks: ParseTaskDTOInBatch(resp.FlowWithTasks.Tasks),
+			Define: domain.FlowWorkDefineMap[flowEntity.FlowName],
+		}, nil
 	}
-
-	return flowWork, nil
 }
 
 func ParseTaskDTOInBatch(dtoList []*dbpb.DBTaskDTO) []*domain.TaskEntity {
@@ -429,12 +445,12 @@ func ParseTaskDTOInBatch(dtoList []*dbpb.DBTaskDTO) []*domain.TaskEntity {
 
 func ParseTaskDTO(dto *dbpb.DBTaskDTO) *domain.TaskEntity {
 	return &domain.TaskEntity{
-		Id: uint(dto.Id),
-		Status: domain.TaskStatusFromValue(int(dto.Status)),
-		TaskName: dto.TaskName,
-		BizId: dto.BizId,
+		Id:         uint(dto.Id),
+		Status:     domain.TaskStatusFromValue(int(dto.Status)),
+		TaskName:   dto.TaskName,
+		BizId:      dto.BizId,
 		Parameters: dto.Parameters,
-		Result: dto.Result,
+		Result:     dto.Result,
 	}
 }
 
@@ -490,8 +506,8 @@ func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 		DeleteTime:     time.Unix(dto.DeleteTime, 0),
 	}
 
-	json.Unmarshal([]byte(dto.Tags), cluster.Tags)
-	json.Unmarshal([]byte(dto.Demands), cluster.Demands)
+	json.Unmarshal([]byte(dto.Tags), &cluster.Tags)
+	json.Unmarshal([]byte(dto.Demands), &cluster.Demands)
 
 	return
 }

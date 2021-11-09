@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -20,9 +19,9 @@ package common
 // micro service default port
 const (
 	DefaultMicroMetaDBPort  int = 4100
-	DefaultMicroClusterPort     = 4110
-	DefaultMicroApiPort         = 4116
-	DefaultMetricsPort          = 4121
+	DefaultMicroClusterPort int = 4110
+	DefaultMicroApiPort     int = 4116
+	DefaultMetricsPort      int = 4121
 )
 
 const (
@@ -40,11 +39,9 @@ const (
 )
 
 const (
-	LogFileSystem  = "system"
-	LogFileTiupMgr = "tiupmgr"
-	LogFileBrMgr   = "tiupmgr"
-	LogFileLibTiup = "libtiup"
-	LogFileLibBr   = "tiupmgr"
+	LogFileSystem      = "system"
+	LogFileSecondParty = "secondparty"
+	LogFileLibTiup     = "libtiup"
 
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"
@@ -59,3 +56,5 @@ var (
 	TemplateFileName = "hostInfo_template.xlsx"
 	TemplateFilePath = "./etc"
 )
+
+const SlowSqlThreshold = 100

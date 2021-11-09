@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -24,9 +23,9 @@ import (
 const SystemOperator = "System"
 
 type Operator struct {
-	Id 			string
-	Name 		string
-	TenantId 	string
+	Id             string
+	Name           string
+	TenantId       string
 	ManualOperator bool
 }
 
@@ -41,7 +40,7 @@ func GetOperatorFromName(name string) *Operator {
 
 	// todo get from repository
 	return &Operator{
-		Name: name,
+		Name:           name,
 		ManualOperator: true,
 	}
 }
@@ -51,17 +50,17 @@ func GetOperatorFromName(name string) *Operator {
 // @return *Operator
 func BuildSystemOperator() *Operator {
 	return &Operator{
-		Id: SystemOperator,
-		Name: SystemOperator,
+		Id:             SystemOperator,
+		Name:           SystemOperator,
 		ManualOperator: false,
 	}
 }
 
 type OperateRecord struct {
-	Id 				uint
-	TraceId	 		string
-	Operator    	Operator
-	OperateTime 	time.Time
-	OperateType 	int
-	FlowWorkId 		string
+	Id          uint
+	TraceId     string
+	Operator    Operator
+	OperateTime time.Time
+	OperateType int
+	FlowWorkId  string
 }

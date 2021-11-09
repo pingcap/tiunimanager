@@ -88,6 +88,7 @@ func Route(g *gin.Engine) {
 			cluster.GET("/", clusterApi.Query)
 			cluster.DELETE("/:clusterId", clusterApi.Delete)
 			cluster.POST("/:clusterId/restart", clusterApi.Restart)
+			cluster.POST("/:clusterId/stop", clusterApi.Stop)
 			cluster.POST("/restore", backuprestore.Restore)
 			cluster.GET("/:clusterId/dashboard", clusterApi.DescribeDashboard)
 			cluster.GET("/:clusterId/monitor", clusterApi.DescribeMonitor)
@@ -143,6 +144,8 @@ func Route(g *gin.Engine) {
 			host.GET("hosts-template", resourceApi.DownloadHostTemplateFile)
 
 			host.GET("failuredomains", warehouseApi.GetFailureDomain)
+			host.GET("hierarchy", warehouseApi.GetHierarchy)
+			host.GET("stocks", warehouseApi.GetStocks)
 
 			host.PUT("hosts", resourceApi.UpdateHost)
 			// Add allochosts API for debugging, not release.

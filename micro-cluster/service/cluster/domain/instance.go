@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -28,26 +27,26 @@ import (
 )
 
 type ComponentGroup struct {
-	ComponentType	*knowledge.ClusterComponent
-	Nodes 			[]ComponentInstance
+	ComponentType *knowledge.ClusterComponent
+	Nodes         []ComponentInstance
 }
 
 type ComponentInstance struct {
-	ID        string
+	ID string
 
 	Code     string
 	TenantId string
 
-	Status   ClusterStatus
-	ClusterId 		string
-	ComponentType	*knowledge.ClusterComponent
+	Status        ClusterStatus
+	ClusterId     string
+	ComponentType *knowledge.ClusterComponent
 
 	Role     string
 	Version  *knowledge.ClusterVersion
 
-	HostId   string
-	DiskId   string
-	PortInfo string
+	HostId         string
+	DiskId         string
+	PortInfo       string
 	AllocRequestId string
 
 	location *resource.Location
@@ -97,7 +96,7 @@ func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int64) {
 	portList := make([]int64, 0)
 
 	for _, v := range servers {
-		addressList = append(addressList, v.Host + ":" + strconv.Itoa(v.Port))
+		addressList = append(addressList, v.Host+":"+strconv.Itoa(v.Port))
 	}
 	return addressList, addressList, portList
 }
@@ -134,16 +133,16 @@ func appendAllComponentInstances(config *spec.Specification, knowledge *knowledg
 }
 
 var ComponentAppender = map[string]func(*spec.Specification, string) []*clusterpb.ComponentNodeDisplayInfoDTO{
-	"TiDB": tiDBComponent,
-	"TiKV": tiKVComponent,
-	"PD":   pDComponent,
+	"TiDB":    tiDBComponent,
+	"TiKV":    tiKVComponent,
+	"PD":      pDComponent,
 	"TiFlash": tiFlashComponent,
 	//"TiCDC": tiCDCComponent,
 }
 
 func tiDBComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	servers := config.TiDBServers
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers))
 	for i, v := range servers {
 		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
 			NodeId:  v.Host,
@@ -171,7 +170,7 @@ func tiDBComponent(config *spec.Specification, version string) []*clusterpb.Comp
 
 func tiKVComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	servers := config.TiKVServers
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers))
 	for i, v := range servers {
 		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
 			NodeId:  v.Host,
@@ -199,7 +198,7 @@ func tiKVComponent(config *spec.Specification, version string) []*clusterpb.Comp
 
 func pDComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	servers := config.PDServers
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers), len(servers))
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers))
 	for i, v := range servers {
 		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
 			NodeId:  v.Host,
@@ -226,7 +225,7 @@ func pDComponent(config *spec.Specification, version string) []*clusterpb.Compon
 }
 
 func tiFlashComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0, 0)
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0)
 	return dto
 }
 

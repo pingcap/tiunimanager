@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+option go_package = "./dbpb/;dbpb";
+
+enum TiupTaskStatus {
+	Init        = 0;
+	Processing  = 1;
+	Finished    = 2;
+	Error       = 3;
+}
+
+enum TiupTaskType {
+	Deploy  = 0;
+	Start   = 1;
+	Destroy = 2;
+	List    = 3;
+	Dumpling = 4;
+	Lightning = 5;
+	Backup = 6;
+	Restore = 7;
+	Restart = 8;
+	Stop = 9;
+}
+
+message TiupTask {
+	uint64 ID  			= 1;
+	string CreatedAt 	= 2;
+	string UpdatedAt 	= 3;
+	string DeletedAt 	= 4;
+	TiupTaskType Type	= 5;   
+	TiupTaskStatus Status = 6;
+	string ErrorStr	= 7;
+	uint64 BizID = 8;
+}
+
+message CreateTiupTaskRequest {
+	TiupTaskType type = 1;
+	// zero means bizID has no effect
+	uint64 bizID = 2;
+}
+
+message CreateTiupTaskResponse {
+	// zero means ok
+	int32 errCode = 1;
+	string errStr = 2;	
+	uint64 id = 3;
+}
+
+message UpdateTiupTaskRequest {
+	uint64 id = 1;
+	TiupTaskStatus status = 2;
+	string errStr = 3;
+}
+
+message UpdateTiupTaskResponse {
+	// zero means ok
+	int32 errCode = 1;
+	string errStr = 2;
+}
+
+message FindTiupTaskByIDRequest {
+	uint64 id = 1;
+}
+
+message FindTiupTaskByIDResponse {
+	// zero means ok
+	int32 errCode = 1;
+	string errStr = 2;
+	TiupTask tiupTask = 3;
+}
+
+message GetTiupTaskStatusByBizIDRequest {
+	uint64 bizID = 1;
+}
+
+message GetTiupTaskStatusByBizIDResponse {
+	// zero means ok
+	int32 errCode = 1;
+	string errStr = 2;
+	TiupTaskStatus stat = 3;
+	string statErrStr = 4;
+}

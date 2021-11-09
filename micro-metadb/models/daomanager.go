@@ -24,10 +24,13 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
+	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
+	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormLog "gorm.io/gorm/logger"
+	"strconv"
 	"time"
 
 	"github.com/pingcap/errors"
@@ -48,7 +51,7 @@ func NewDAOManager(fw *framework.BaseFramework) *DAOManager {
 	m := new(DAOManager)
 	m.daoLogger = &DaoLogger{
 		p: fw,
-		SlowThreshold: 100 * time.Millisecond,
+		SlowThreshold: common.SlowSqlThreshold,
 	}
 	return m
 }
@@ -89,10 +92,68 @@ func (dao *DAOManager) Tables() map[string]interface{} {
 	return dao.tables
 }
 
+const StartTime = "StartTime"
+
+func (dao *DAOManager) InitMetrics() {
+	before := func (db *gorm.DB) {
+		db.InstanceSet(StartTime, time.Now())
+		return
+	}
+
+	after := func(method string, db *gorm.DB) {
+		code := db.Error == nil
+
+		framework.Current.GetMetrics().SqliteRequestsCounterMetric.With(prometheus.Labels{
+			metrics.ServiceLabel: db.Name(),
+			metrics.MethodLabel:  method,
+			metrics.CodeLabel:    strconv.FormatBool(code)}).
+			Inc()
+
+		startTime, ok := db.InstanceGet(StartTime)
+
+		if ok {
+			duration := time.Since(startTime.(time.Time)).Milliseconds()
+			framework.Current.GetMetrics().SqliteDurationHistogramMetric.With(prometheus.Labels{
+				metrics.ServiceLabel: db.Name(),
+				metrics.MethodLabel:  method,
+				metrics.CodeLabel:    strconv.FormatBool(code)}).
+				Observe(float64(duration))
+
+			if duration > common.SlowSqlThreshold {
+				framework.Current.GetMetrics().SqliteRequestsCounterMetric.With(prometheus.Labels{
+					metrics.ServiceLabel: db.Name(),
+					metrics.MethodLabel:  method,
+					metrics.CodeLabel:    "slow"}).
+					Inc()
+			}
+		}
+
+	}
+	dao.db.Callback().Create().Before("gorm:before_create").Register("metricsBefore", before)
+	dao.db.Callback().Create().After("gorm:after_create").Register("metricsAfter", func(db *gorm.DB) {
+		after("Create", db)
+	})
+
+	dao.db.Callback().Query().Before("gorm:before_query").Register("metricsBefore", before)
+	dao.db.Callback().Query().After("gorm:after_query").Register("metricsAfter", func(db *gorm.DB) {
+		after("Query", db)
+	})
+
+	dao.db.Callback().Delete().Before("gorm:before_delete").Register("metricsBefore", before)
+	dao.db.Callback().Delete().After("gorm:after_delete").Register("metricsAfter", func(db *gorm.DB) {
+		after("Delete", db)
+	})
+
+	dao.db.Callback().Update().Before("gorm:before_update").Register("metricsBefore", before)
+	dao.db.Callback().Update().After("gorm:after_update").Register("metricsAfter", func(db *gorm.DB) {
+		after("Update", db)
+	})
+}
+
 func (dao *DAOManager) InitDB(dataDir string) error {
 	var err error
 	dbFile := dataDir + common.DBDirPrefix + common.SqliteFileName
-	logins := framework.Log().WithField("database file path", dbFile)
+	logins := framework.LogForkFile(common.LogFileSystem).WithField("database file path", dbFile)
 	dao.db, err = gorm.Open(sqlite.Open(dbFile), &gorm.Config{
 		Logger: dao.daoLogger,
 	})
@@ -111,7 +172,7 @@ func (dao *DAOManager) InitDB(dataDir string) error {
 }
 
 func (dao *DAOManager) InitTables() error {
-	log := framework.Log()
+	log := framework.LogForkFile(common.LogFileSystem)
 
 	log.Info("start create TiEM system tables.")
 
@@ -147,21 +208,22 @@ func (dao *DAOManager) InitTables() error {
 
 func (dao *DAOManager) InitData() error {
 	err := dao.initSystemDefaultData()
+	innerLog := framework.LogForkFile(common.LogFileSystem)
 	if nil != err {
-		framework.Log().Errorf("initialize TiEM system data failed, error: %v", err)
+		innerLog.Errorf("initialize TiEM system data failed, error: %v", err)
 	}
 
-	framework.Log().Infof(" initialization system default data successful")
+	innerLog.Infof(" initialization system default data successful")
 
 	//err = dao.initResourceDataForDev()
 	if nil != err {
-		framework.Log().Errorf("initialize TiEM system test resource failed, error: %v", err)
+		innerLog.Errorf("initialize TiEM system test resource failed, error: %v", err)
 	}
 	return err
 }
 
 func (dao DAOManager) AddTable(tableName string, tableModel interface{}) error {
-	log := framework.Log()
+	log := framework.LogForkFile(common.LogFileSystem)
 	dao.tables[tableName] = tableModel
 	if !dao.db.Migrator().HasTable(dao.tables[tableName]) {
 		er := dao.db.Migrator().CreateTable(dao.tables[tableName])
@@ -178,7 +240,7 @@ Initial TiEM system default system account and tenant information
 */
 func (dao *DAOManager) initSystemDefaultData() error {
 	accountManager := dao.AccountManager()
-	log := framework.Log()
+	log := framework.LogForkFile(common.LogFileSystem)
 	rt, err := accountManager.AddTenant(context.TODO(), "TiEM system administration", 1, 0)
 	framework.AssertNoErr(err)
 	role1, err := accountManager.AddRole(context.TODO(), rt.ID, "administrators", "administrators", 0)
@@ -221,7 +283,7 @@ func (dao *DAOManager) initSystemDefaultData() error {
 }
 
 func (dao *DAOManager) InitResourceDataForDev() error {
-	log := framework.Log()
+	log := framework.LogForkFile(common.LogFileSystem)
 	id1, err := dao.ResourceManager().CreateHost(context.TODO(), &resource.Host{
 		HostName:     "TEST_HOST1",
 		IP:           "168.168.168.1",
@@ -321,7 +383,7 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 }
 
 func (dao *DAOManager) initUser(tenantId string, name string) (string, error) {
-	log := framework.Log()
+	log := framework.LogForkFile(common.LogFileSystem)
 	accountManager := dao.AccountManager()
 
 	b := make([]byte, 16)

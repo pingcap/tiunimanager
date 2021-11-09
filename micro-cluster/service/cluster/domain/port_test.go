@@ -16,7 +16,10 @@
 
 package domain
 
-import "github.com/pingcap/tiup/pkg/cluster/spec"
+import (
+	"context"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
+)
 
 func setupMockAdapter() {
 	TaskRepo = MockTaskRepo{}
@@ -26,7 +29,7 @@ func setupMockAdapter() {
 
 type MockTaskRepo struct{}
 
-func (m MockTaskRepo) ListFlows(bizId, keyword string, status int, page int, pageSize int) ([]*FlowWorkEntity, int, error) {
+func (m MockTaskRepo) ListFlows(ctx context.Context, bizId, keyword string, status int, page int, pageSize int) ([]*FlowWorkEntity, int, error) {
 	return []*FlowWorkEntity{}, 0, nil
 }
 
@@ -36,52 +39,52 @@ func getId() uint {
 	id = id + 1
 	return id
 }
-func (m MockTaskRepo) AddFlowWork(flowWork *FlowWorkEntity) error {
+func (m MockTaskRepo) AddFlowWork(ctx context.Context, flowWork *FlowWorkEntity) error {
 	flowWork.Id = getId()
 	return nil
 }
 
-func (m MockTaskRepo) AddFlowTask(task *TaskEntity, flowId uint) error {
+func (m MockTaskRepo) AddFlowTask(ctx context.Context, task *TaskEntity, flowId uint) error {
 	task.Id = getId()
 	return nil
 }
 
-func (m MockTaskRepo) AddCronTask(cronTask *CronTaskEntity) error {
+func (m MockTaskRepo) AddCronTask(ctx context.Context, cronTask *CronTaskEntity) error {
 	panic("implement me")
 }
 
-func (m MockTaskRepo) Persist(flowWork *FlowWorkAggregation) error {
+func (m MockTaskRepo) Persist(ctx context.Context, flowWork *FlowWorkAggregation) error {
 	return nil
 }
 
-func (m MockTaskRepo) LoadFlowWork(id uint) (*FlowWorkEntity, error) {
+func (m MockTaskRepo) LoadFlowWork(ctx context.Context, id uint) (*FlowWorkEntity, error) {
 	panic("implement me")
 }
 
-func (m MockTaskRepo) Load(id uint) (flowWork *FlowWorkAggregation, err error) {
+func (m MockTaskRepo) Load(ctx context.Context, id uint) (flowWork *FlowWorkAggregation, err error) {
 	panic("implement me")
 }
 
-func (m MockTaskRepo) QueryCronTask(bizId string, cronTaskType int) (cronTask *CronTaskEntity, err error) {
+func (m MockTaskRepo) QueryCronTask(ctx context.Context, bizId string, cronTaskType int) (cronTask *CronTaskEntity, err error) {
 	panic("implement me")
 }
 
-func (m MockTaskRepo) PersistCronTask(cronTask *CronTaskEntity) (err error) {
+func (m MockTaskRepo) PersistCronTask(ctx context.Context, cronTask *CronTaskEntity) (err error) {
 	panic("implement me")
 }
 
 type MockClusterRepo struct{}
 
-func (m MockClusterRepo) AddCluster(cluster *Cluster) error {
+func (m MockClusterRepo) AddCluster(ctx context.Context, cluster *Cluster) error {
 	cluster.Id = "newCluster"
 	return nil
 }
 
-func (m MockClusterRepo) Persist(aggregation *ClusterAggregation) error {
+func (m MockClusterRepo) Persist(ctx context.Context, aggregation *ClusterAggregation) error {
 	return nil
 }
 
-func (m MockClusterRepo) Load(id string) (cluster *ClusterAggregation, err error) {
+func (m MockClusterRepo) Load(ctx context.Context, id string) (cluster *ClusterAggregation, err error) {
 	return &ClusterAggregation{
 		Cluster: &Cluster{
 			Id:          "testCluster",
@@ -106,12 +109,12 @@ func (m MockClusterRepo) Load(id string) (cluster *ClusterAggregation, err error
 	}, nil
 }
 
-func (m MockClusterRepo) Query(clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error) {
+func (m MockClusterRepo) Query(ctx context.Context, clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error) {
 	panic("implement me")
 }
 
 type MockInstanceRepo struct{}
 
-func (m MockInstanceRepo) QueryParameterJson(clusterId string) (string, error) {
+func (m MockInstanceRepo) QueryParameterJson(ctx context.Context, clusterId string) (string, error) {
 	panic("implement me")
 }

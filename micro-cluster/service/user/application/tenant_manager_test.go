@@ -18,6 +18,7 @@
 package application
 
 import (
+	"context"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/user/domain"
 	"reflect"
 	"testing"
@@ -38,7 +39,7 @@ func TestCreateTenant(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tenantManager.CreateTenant(tt.args.name)
+			got, err := tenantManager.CreateTenant(context.TODO(), tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateTenant() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -65,7 +66,7 @@ func TestFindTenant(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tenantManager.FindTenant(tt.args.name)
+			got, err := tenantManager.FindTenant(context.TODO(), tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindTenant() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -92,7 +93,7 @@ func TestFindTenantById(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tenantManager.FindTenantById(tt.args.id)
+			got, err := tenantManager.FindTenantById(context.TODO(), tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindTenantById() error = %v, wantErr %v", err, tt.wantErr)
 				return

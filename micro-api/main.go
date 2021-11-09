@@ -81,7 +81,7 @@ func initGinEngine(d *framework.BaseFramework) error {
 	g := gin.New()
 
 	// enable cors access
-	g.Use(cors.Default())
+	g.Use(cors.New(corsConfig()))
 
 	g.Use(promMiddleware(d))
 
@@ -111,6 +111,19 @@ func initGinEngine(d *framework.BaseFramework) error {
 	return nil
 }
 
+// corsConfig
+// @Description: build cors config
+// @return cors.Config
+func corsConfig() cors.Config {
+	config := cors.DefaultConfig()
+	config.AllowHeaders = []string{"*"}
+	config.AllowCredentials = true
+	config.AllowOriginFunc = func(origin string) bool {
+		return true
+	}
+	return config
+}
+
 // serviceRegistry registry openapi-server service
 func serviceRegistry(f *framework.BaseFramework) {
 	etcdClient := etcd_clientv2.InitEtcdClient(f.GetServiceMeta().RegistryAddress)
@@ -121,7 +134,7 @@ func serviceRegistry(f *framework.BaseFramework) {
 		for {
 			err := etcdClient.SetWithTtl(key, "{\"weight\":1, \"max_fails\":2, \"fail_timeout\":10}", 5)
 			if err != nil {
-				f.Log().Errorf("regitry openapi-server failed! error: %v", err)
+				framework.LogForkFile(common.LogFileSystem).Errorf("regitry openapi-server failed! error: %v", err)
 			}
 			time.Sleep(time.Second * 3)
 		}

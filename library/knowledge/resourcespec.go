@@ -43,9 +43,9 @@ type ResourceSpecAttribute string
 
 const (
 	CpuCoreCount ResourceSpecAttribute = "CpuCoreCount"
-	MemorySize                         = "MemorySize"
-	DiskSize                           = "DiskSize"
-	DiskType                           = "DiskType"
+	MemorySize 	 ResourceSpecAttribute = "MemorySize"
+	DiskSize     ResourceSpecAttribute = "DiskSize"
+	DiskType     ResourceSpecAttribute = "DiskType"
 )
 
 type ResourceSpecItem struct {

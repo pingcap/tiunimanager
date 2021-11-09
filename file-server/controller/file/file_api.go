@@ -18,12 +18,12 @@ package file
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/file-server/controller"
 	"github.com/pingcap-inc/tiem/file-server/service"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/micro-api/controller"
 	dbService "github.com/pingcap-inc/tiem/micro-metadb/service"
 	"net/http"
 	"path/filepath"

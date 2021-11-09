@@ -425,8 +425,6 @@ definitions:
         type: string
       endpointUrl:
         type: string
-      filePath:
-        type: string
       fileType:
         type: string
       filter:
@@ -445,7 +443,7 @@ definitions:
   importexport.DataExportResp:
     properties:
       recordId:
-        type: string
+        type: integer
     type: object
   importexport.DataImportReq:
     properties:
@@ -456,8 +454,6 @@ definitions:
       clusterId:
         type: string
       endpointUrl:
-        type: string
-      filePath:
         type: string
       password:
         type: string
@@ -471,7 +467,14 @@ definitions:
   importexport.DataImportResp:
     properties:
       recordId:
+        type: integer
+    type: object
+  importexport.DataTransportDeleteReq:
+    properties:
+      clusterId:
         type: string
+      recordId:
+        type: integer
     type: object
   importexport.DataTransportInfo:
     properties:
@@ -482,10 +485,12 @@ definitions:
       filePath:
         type: string
       recordId:
-        type: string
+        type: integer
       startTime:
         type: string
       status:
+        $ref: '#/definitions/controller.StatusInfo'
+      storageType:
         type: string
       transportType:
         type: string
@@ -1718,7 +1723,7 @@ paths:
         type: integer
       - in: query
         name: recordId
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -1916,6 +1921,52 @@ paths:
       summary: takeover a cluster
       tags:
       - cluster
+  /clusters/transport/{recordId}:
+    delete:
+      consumes:
+      - application/json
+      description: delete data transport record
+      parameters:
+      - description: data transport recordId
+        in: path
+        name: recordId
+        required: true
+        type: integer
+      - description: data transport record delete request
+        in: body
+        name: DataTransportDeleteReq
+        required: true
+        schema:
+          $ref: '#/definitions/importexport.DataTransportDeleteReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: integer
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete data transport record
+      tags:
+      - cluster data transport
   /flowworks/:
     get:
       consumes:

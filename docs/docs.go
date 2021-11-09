@@ -706,6 +706,82 @@ var doc = `{
                 }
             }
         },
+        "/clusters/transport/{recordId}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "delete data transport record",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster data transport"
+                ],
+                "summary": "delete data transport record",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "data transport recordId",
+                        "name": "recordId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "data transport record delete request",
+                        "name": "DataTransportDeleteReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/importexport.DataTransportDeleteReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}": {
             "get": {
                 "security": [
@@ -1373,7 +1449,7 @@ var doc = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
+                        "type": "integer",
                         "name": "recordId",
                         "in": "query"
                     }
@@ -3232,9 +3308,6 @@ var doc = `{
                 "endpointUrl": {
                     "type": "string"
                 },
-                "filePath": {
-                    "type": "string"
-                },
                 "fileType": {
                     "type": "string"
                 },
@@ -3262,7 +3335,7 @@ var doc = `{
             "type": "object",
             "properties": {
                 "recordId": {
-                    "type": "string"
+                    "type": "integer"
                 }
             }
         },
@@ -3279,9 +3352,6 @@ var doc = `{
                     "type": "string"
                 },
                 "endpointUrl": {
-                    "type": "string"
-                },
-                "filePath": {
                     "type": "string"
                 },
                 "password": {
@@ -3302,7 +3372,18 @@ var doc = `{
             "type": "object",
             "properties": {
                 "recordId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "importexport.DataTransportDeleteReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
                     "type": "string"
+                },
+                "recordId": {
+                    "type": "integer"
                 }
             }
         },
@@ -3319,12 +3400,15 @@ var doc = `{
                     "type": "string"
                 },
                 "recordId": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "startTime": {
                     "type": "string"
                 },
                 "status": {
+                    "$ref": "#/definitions/controller.StatusInfo"
+                },
+                "storageType": {
                     "type": "string"
                 },
                 "transportType": {

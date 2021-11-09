@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -44,7 +43,7 @@ type ResultMark struct {
 	Message string `json:"message"`
 }
 
-type CommonResult struct {
+type CommonFileResult struct {
 	ResultMark
 	Data interface{} `json:"data"`
 }
@@ -54,22 +53,14 @@ var DefaultTimeout = func(o *client.CallOptions) {
 	o.DialTimeout = time.Second * 30
 }
 
-func Success(data interface{}) *CommonResult {
-	return &CommonResult{ResultMark: ResultMark{0, "OK"}, Data: data}
+func Success(data interface{}) *CommonFileResult {
+	return &CommonFileResult{ResultMark: ResultMark{0, "OK"}, Data: data}
 }
 
-func Fail(code int, message string) *CommonResult {
-	return &CommonResult{ResultMark{code, message}, struct{}{}}
-}
-
-type PageRequest struct {
-	Page     int `json:"page" form:"page"`
-	PageSize int `json:"pageSize" form:"pageSize"`
+func Fail(code int, message string) *CommonFileResult {
+	return &CommonFileResult{ResultMark{code, message}, struct{}{}}
 }
 
 func Hello(c *gin.Context) {
 	c.JSON(http.StatusOK, Success("hello"))
 }
-
-
-

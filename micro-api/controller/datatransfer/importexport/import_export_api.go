@@ -219,7 +219,7 @@ func DescribeDataTransport(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param recordId int true "data transport recordId"
+// @Param recordId path int true "data transport recordId"
 // @Param DataTransportDeleteReq body DataTransportDeleteReq true "data transport record delete request"
 // @Success 200 {object} controller.CommonResult{data=int}
 // @Failure 401 {object} controller.CommonResult

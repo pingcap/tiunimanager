@@ -18,13 +18,13 @@ logging.level: info
 logging.to_files: true
 logging.files:
   path: {{.LogDir}}
-  name: filebeat
+  name: filebeat.log
   keepfiles: 7
   permissions: 0644
 
 filebeat.config.modules:
   enable: true
-  path: ${path.config}/conf/*.yml
+  path: {{.DeployDir}}/conf/*_input.yml
   reload.enabled: true
   reload.period: 5s
 

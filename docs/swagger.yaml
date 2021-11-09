@@ -798,14 +798,20 @@ definitions:
         type: string
       clusterVersion:
         type: string
+      cpuArchitecture:
+        type: string
       dbPassword:
         type: string
+      exclusive:
+        type: boolean
       nodeDemandList:
         items:
           $ref: '#/definitions/management.ClusterNodeDemand'
         type: array
       recoverInfo:
         $ref: '#/definitions/management.RecoverInfo'
+      region:
+        type: string
       tags:
         items:
           type: string

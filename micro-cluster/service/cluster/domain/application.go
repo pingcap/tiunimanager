@@ -70,7 +70,7 @@ type ClusterAggregation struct {
 var contextClusterKey = "clusterAggregation"
 var contextTakeoverReqKey = "takeoverRequest"
 
-func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
+func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	cluster := &Cluster{
@@ -284,20 +284,6 @@ func GetParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string
 	return RemoteClusterProxy.QueryParameterJson(ctx, clusterId)
 }
 
-//func (aggregation *ClusterAggregation) loadWorkFlow() error {
-//	if aggregation.Cluster.WorkFlowId > 0 && aggregation.CurrentWorkFlow == nil {
-//		flowWork, err := TaskRepo.LoadFlowWork(aggregation.Cluster.WorkFlowId)
-//		if err != nil {
-//			return err
-//		} else {
-//			aggregation.CurrentWorkFlow = flowWork
-//			return nil
-//		}
-//	}
-//
-//	return nil
-//}
-
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 
@@ -391,6 +377,15 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 	context.SetData("startTaskId", startTaskId)
 	getLogger().Infof("got startTaskId %s", strconv.Itoa(int(startTaskId)))
+
+	task.Success(nil)
+	return true
+}
+
+func syncTopologyAndStatus(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation.StatusModified = true
+	clusterAggregation.Cluster.Online()
 
 	task.Success(nil)
 	return true

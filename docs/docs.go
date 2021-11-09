@@ -3798,8 +3798,14 @@ var doc = `{
                 "clusterVersion": {
                     "type": "string"
                 },
+                "cpuArchitecture": {
+                    "type": "string"
+                },
                 "dbPassword": {
                     "type": "string"
+                },
+                "exclusive": {
+                    "type": "boolean"
                 },
                 "nodeDemandList": {
                     "type": "array",
@@ -3809,6 +3815,9 @@ var doc = `{
                 },
                 "recoverInfo": {
                     "$ref": "#/definitions/management.RecoverInfo"
+                },
+                "region": {
+                    "type": "string"
                 },
                 "tags": {
                     "type": "array",

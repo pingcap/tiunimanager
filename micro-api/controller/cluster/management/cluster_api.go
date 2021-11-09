@@ -58,11 +58,12 @@ func Create(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	baseInfo, demand := req.ConvertToDTO()
+	baseInfo, commonDemand, demand := req.ConvertToDTO()
 
 	reqDTO := &clusterpb.ClusterCreateReqDTO{
 		Operator: operator.ConvertToDTO(),
 		Cluster:  baseInfo,
+		CommonDemand: commonDemand,
 		Demands:  demand,
 	}
 

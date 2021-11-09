@@ -91,7 +91,7 @@ func handleMetrics(start time.Time, funcName string, code int) {
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb.ClusterCreateReqDTO, resp *clusterpb.ClusterCreateRespDTO) (err error) {
 	framework.LogWithContext(ctx).Info("create cluster")
-	clusterAggregation, err := domain.CreateCluster(ctx, req.GetOperator(), req.GetCluster(), req.GetDemands())
+	clusterAggregation, err := domain.CreateCluster(ctx, req.GetOperator(), req.GetCluster(), req.GetCommonDemand(), req.GetDemands())
 
 	if err != nil {
 		framework.LogWithContext(ctx).Info(err)

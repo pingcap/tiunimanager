@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -22,13 +21,14 @@ import (
 	cryrand "crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"time"
+
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormLog "gorm.io/gorm/logger"
-	"time"
 
 	"github.com/pingcap/errors"
 
@@ -37,7 +37,7 @@ import (
 
 type DAOManager struct {
 	db              *gorm.DB
-	daoLogger 		gormLog.Interface
+	daoLogger       gormLog.Interface
 	tables          map[string]interface{}
 	clusterManager  *DAOClusterManager
 	accountManager  *DAOAccountManager
@@ -47,7 +47,7 @@ type DAOManager struct {
 func NewDAOManager(fw *framework.BaseFramework) *DAOManager {
 	m := new(DAOManager)
 	m.daoLogger = &DaoLogger{
-		p: fw,
+		p:             fw,
 		SlowThreshold: 100 * time.Millisecond,
 	}
 	return m
@@ -294,10 +294,10 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		Arch:         string(resource.X86),
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
-		CpuCores:     16,
-		Memory:       64,
-		FreeCpuCores: 16,
-		FreeMemory:   64,
+		CpuCores:     12,
+		Memory:       24,
+		FreeCpuCores: 12,
+		FreeMemory:   24,
 		Nic:          "1GE",
 		Region:       "Region1",
 		AZ:           "Zone1",

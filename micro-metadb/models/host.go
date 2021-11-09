@@ -189,11 +189,7 @@ func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, c
 		tx.First(&host, "ID = ?", resource.HostId)
 		host.FreeCpuCores -= cpuCores
 		host.FreeMemory -= mem
-		if host.IsExhaust() {
-			host.Stat = int32(rt.HOST_EXHAUST)
-		} else {
-			host.Stat = int32(rt.HOST_INUSED)
-		}
+		host.Stat = int32(rt.HOST_INUSED)
 		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "update host(%s) stat err, %v", resource.HostId, err)
@@ -318,11 +314,7 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []
 		if exclusive {
 			host.Stat = int32(rt.HOST_EXCLUSIVE)
 		} else {
-			if host.IsExhaust() {
-				host.Stat = int32(rt.HOST_EXHAUST)
-			} else {
-				host.Stat = int32(rt.HOST_INUSED)
-			}
+			host.Stat = int32(rt.HOST_INUSED)
 		}
 		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
 		if err != nil {

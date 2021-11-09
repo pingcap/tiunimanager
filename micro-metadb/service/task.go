@@ -70,8 +70,10 @@ func (handler *DBServiceHandler) UpdateFlow(ctx context.Context, req *dbpb.DBUpd
 	} else {
 		tasks, err := models.BatchSaveTasks(db, batchParseTaskDTO(req.FlowWithTasks.Tasks))
 		if err != nil {
-			// todo
-
+			rsp.Status = &dbpb.DBTaskResponseStatus{
+				Code: 500,
+				Message: err.Error(),
+			}
 		} else {
 			rsp.Status = TaskSuccessResponseStatus
 			rsp.FlowWithTasks = &dbpb.DBFlowWithTaskDTO{
@@ -142,7 +144,7 @@ func (handler *DBServiceHandler) ListFlows(ctx context.Context, req *dbpb.DBList
 			flowDTOs[i] = convertFlowToDTO(v)
 		}
 		rsp.Flows = flowDTOs
-		framework.LogWithContext(ctx).Infof("ListFlows successful, total: %d", total)
+		framework.LogWithContext(ctx).Infof("ListFlows succeed, total: %d", total)
 	} else {
 		framework.LogWithContext(ctx).Infof("ListFlows failed, error: %s", err.Error())
 	}

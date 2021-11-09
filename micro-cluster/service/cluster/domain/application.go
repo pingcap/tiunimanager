@@ -307,8 +307,9 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	err := resource.NewResourceManager().AllocHosts(ctx.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
 
 	if err != nil {
-		// todo
 		getLogger().Error(err)
+		task.Fail(err)
+		return false
 	}
 
 	task.Success(nil)

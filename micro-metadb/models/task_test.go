@@ -26,6 +26,12 @@ import (
 )
 
 func TestBatchSaveTasks(t *testing.T) {
+	task0 := &TaskDO{
+		Name: "task2", Data: Data{BizId: "fsafsd", Status: 0},
+	}
+	MetaDB.Create(task0)
+	defer MetaDB.Delete(task0)
+	task0.Status = 1
 	type args struct {
 		tasks []*TaskDO
 	}
@@ -36,12 +42,13 @@ func TestBatchSaveTasks(t *testing.T) {
 		wants   []func(a args, r []*TaskDO) bool
 	}{
 		{"normal", args{[]*TaskDO{
+			task0,
 			{Name: "task1", Data: Data{BizId: "111", Status: 1}},
 			{Name: "task2", Data: Data{BizId: "222", Status: 1}},
 			{Name: "task3", Data: Data{BizId: "333", Status: 1}},
 		}}, false, []func(a args, r []*TaskDO) bool{
 			func(a args, r []*TaskDO) bool { return len(a.tasks) == len(r) },
-			func(a args, r []*TaskDO) bool { return r[2].ID > 0 },
+			func(a args, r []*TaskDO) bool { return r[1].ID > 0 },
 			func(a args, r []*TaskDO) bool { return r[0].Status == a.tasks[0].Status },
 			func(a args, r []*TaskDO) bool { return r[0].Status == 1 },
 		}},

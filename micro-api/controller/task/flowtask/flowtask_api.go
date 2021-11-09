@@ -45,7 +45,7 @@ import (
 func Query(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Query", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "QueryFlowWorks", int(status.GetCode()))
 
 	var queryReq QueryReq
 	if err := c.ShouldBindQuery(&queryReq); err != nil {
@@ -96,7 +96,7 @@ func Query(c *gin.Context) {
 func Detail(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Detail", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "FlowWorkDetail", int(status.GetCode()))
 
 	//operator := controller.GetOperator(c)
 	flowWorkId, err := strconv.Atoi(c.Param("flowWorkId"))

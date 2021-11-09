@@ -318,7 +318,7 @@ func DeleteBackup(c *gin.Context) {
 func Restore(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Restore", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "RestoreCluster", int(status.GetCode()))
 
 	var req RestoreReq
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {

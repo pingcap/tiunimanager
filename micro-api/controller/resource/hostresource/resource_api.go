@@ -578,7 +578,7 @@ func DownloadHostTemplateFile(c *gin.Context) {
 func UpdateHost(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "UpdateHost", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "UpdateHostStatus", int(status.GetCode()))
 
 	hostIds := c.QueryArray("id")
 	if str, dup := detectDuplicateElement(hostIds); dup {

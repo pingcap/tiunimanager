@@ -112,7 +112,7 @@ func Create(c *gin.Context) {
 func Query(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Query", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "QueryCluster", int(status.GetCode()))
 
 	var queryReq QueryReq
 
@@ -170,7 +170,7 @@ func Query(c *gin.Context) {
 func Delete(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Delete", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "DeleteCluster", int(status.GetCode()))
 
 	operator := controller.GetOperator(c)
 
@@ -212,7 +212,7 @@ func Delete(c *gin.Context) {
 func Restart(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Restart", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "RestartCluster", int(status.GetCode()))
 
 	operator := controller.GetOperator(c)
 
@@ -261,7 +261,7 @@ func Restart(c *gin.Context) {
 func Stop(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Stop", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "StopCluster", int(status.GetCode()))
 
 	operator := controller.GetOperator(c)
 
@@ -310,7 +310,7 @@ func Stop(c *gin.Context) {
 func Detail(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Detail", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "ClusterDetails", int(status.GetCode()))
 
 	operator := controller.GetOperator(c)
 
@@ -364,7 +364,7 @@ func Detail(c *gin.Context) {
 func Takeover(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Takeover", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "TakeoverCluster", int(status.GetCode()))
 
 	var req TakeoverReq
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {

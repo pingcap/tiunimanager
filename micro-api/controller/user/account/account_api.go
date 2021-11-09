@@ -40,7 +40,7 @@ import (
 func Profile(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Profile", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "UserProfile", int(status.GetCode()))
 
 	v, _ := c.Get(interceptor.VisitorIdentityKey)
 

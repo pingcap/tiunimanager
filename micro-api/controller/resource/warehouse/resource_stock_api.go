@@ -127,7 +127,7 @@ func copyHierarchyFromRsp(root *clusterpb.Node, dst *Node) {
 func GetHierarchy(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "GetHierarchy", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "GetResourceHierarchy", int(status.GetCode()))
 
 	var filter HostFilter
 	if err := c.ShouldBindQuery(&filter); err != nil {

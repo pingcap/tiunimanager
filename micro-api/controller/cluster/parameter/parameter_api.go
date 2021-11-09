@@ -50,7 +50,7 @@ import (
 func QueryParams(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "QueryParams", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "QueryClusterParams", int(status.GetCode()))
 
 	var req ParamQueryReq
 	if err := c.ShouldBindQuery(&req); err != nil {

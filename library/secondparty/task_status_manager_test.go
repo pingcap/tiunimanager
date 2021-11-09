@@ -18,12 +18,13 @@ package secondparty
 import (
 	"context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	db "github.com/pingcap-inc/tiem/test/mock"
-	"testing"
-	"time"
+	db "github.com/pingcap-inc/tiem/test/mockdb"
 )
 
 var secondMicro *SecondMicro
@@ -32,7 +33,7 @@ func init() {
 	secondMicro = &SecondMicro{
 		TiupBinPath: "mock_tiup",
 	}
-	secondMicro.MicroInit("")
+	secondMicro.MicroInit()
 }
 
 func Test_MicroInit(t *testing.T) {

@@ -3,7 +3,7 @@ syntax = "proto3";
 import "db_cluster.proto";
 import "db_task.proto";
 
-option go_package = "./../dbpb/;dbpb";
+option go_package = "./dbpb/;dbpb";
 
 message TransportRecordDTO {
 	int64 recordId = 1;

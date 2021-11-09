@@ -2336,6 +2336,98 @@ var doc = `{
                 }
             }
         },
+        "/resources/stocks": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get resource stocks in specified conditions",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resource"
+                ],
+                "summary": "Show the resources stocks",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "Arch",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "Capacity",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "DiskStatus",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "DiskType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "HostIp",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "HostStatus",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "LoadStat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "Rack",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "Region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "Zone",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/warehouse.Stocks"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/user/login": {
             "post": {
                 "description": "login",
@@ -3076,6 +3168,9 @@ var doc = `{
                 },
                 "status": {
                     "description": "Host Status, 0 for Online, 1 for offline",
+                    "type": "integer"
+                },
+                "updateTime": {
                     "type": "integer"
                 },
                 "userName": {
@@ -4087,6 +4182,26 @@ var doc = `{
                 },
                 "specName": {
                     "type": "string"
+                }
+            }
+        },
+        "warehouse.Stocks": {
+            "type": "object",
+            "properties": {
+                "freeCpuCores": {
+                    "type": "integer"
+                },
+                "freeDiskCapacity": {
+                    "type": "integer"
+                },
+                "freeDiskCount": {
+                    "type": "integer"
+                },
+                "freeHostCount": {
+                    "type": "integer"
+                },
+                "freeMemory": {
+                    "type": "integer"
                 }
             }
         },

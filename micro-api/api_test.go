@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -22,7 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -31,14 +29,19 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
+
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/asim/go-micro/v3/client"
+	micro "github.com/asim/go-micro/v3/client"
+	rpc_client "github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
-
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
+	mock "github.com/pingcap-inc/tiem/test/mockcluster"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -56,11 +59,26 @@ func performRequest(method, path, contentType string, body io.Reader) *httptest.
 	return w
 }
 
+func mockVerifyIdentity(mock *mock.MockClusterService) {
+	mock.EXPECT().VerifyIdentity(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *clusterpb.VerifyIdentityRequest, opts ...micro.CallOption) (*clusterpb.VerifyIdentityResponse, error) {
+		rsp := new(clusterpb.VerifyIdentityResponse)
+		rsp.Status = new(clusterpb.ManagerResponseStatus)
+		rsp.AccountId = "fake-accountID"
+		rsp.TenantId = "fake-tenantID"
+		rsp.AccountName = "fake-accountName"
+		rsp.Status.Code = 0
+		return rsp, nil
+	})
+}
 func Test_ListHosts_Succeed(t *testing.T) {
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostId2 := "fake-host-uuid-0002"
-	fakeService := InitFakeClusterClient()
-	fakeService.MockListHost(func(ctx context.Context, in *clusterpb.ListHostsRequest, opts ...client.CallOption) (*clusterpb.ListHostsResponse, error) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockClusterService(ctrl)
+	mockVerifyIdentity(mockClient)
+	mockClient.EXPECT().ListHost(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *clusterpb.ListHostsRequest, opts ...client.CallOption) (*clusterpb.ListHostsResponse, error) {
 		if in.Status != -1 {
 			return nil, status.Errorf(codes.InvalidArgument, "file row count wrong")
 		}
@@ -81,6 +99,7 @@ func Test_ListHosts_Succeed(t *testing.T) {
 		rsp.PageReq.Total = 1
 		return rsp, nil
 	})
+	rpc_client.ClusterClient = mockClient
 
 	w := performRequest("GET", "/api/v1/resources/hosts", "application/json", nil)
 
@@ -109,8 +128,11 @@ func Test_ListHosts_Succeed(t *testing.T) {
 func Test_ImportHost_Succeed(t *testing.T) {
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostIp := "l92.168.56.11"
-	fakeService := InitFakeClusterClient()
-	fakeService.MockImportHost(func(ctx context.Context, in *clusterpb.ImportHostRequest, opts ...client.CallOption) (*clusterpb.ImportHostResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockClusterService(ctrl)
+	mockVerifyIdentity(mockClient)
+	mockClient.EXPECT().ImportHost(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *clusterpb.ImportHostRequest, opts ...client.CallOption) (*clusterpb.ImportHostResponse, error) {
 		if in.Host.Ip != fakeHostIp || in.Host.Disks[0].Name != "nvme0p1" || in.Host.Disks[1].Path != "/mnt/disk2" {
 			return nil, status.Errorf(codes.InvalidArgument, "import host info failed")
 		}
@@ -121,6 +143,7 @@ func Test_ImportHost_Succeed(t *testing.T) {
 
 		return rsp, nil
 	})
+	rpc_client.ClusterClient = mockClient
 
 	var hostInfo = []byte(`
 	{
@@ -183,8 +206,11 @@ func createBatchImportBody(filePath string) (string, io.Reader, error) {
 func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostId2 := "fake-host-uuid-0002"
-	fakeService := InitFakeClusterClient()
-	fakeService.MockImportHostsInBatch(func(ctx context.Context, in *clusterpb.ImportHostsInBatchRequest, opts ...client.CallOption) (*clusterpb.ImportHostsInBatchResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockClusterService(ctrl)
+	mockVerifyIdentity(mockClient)
+	mockClient.EXPECT().ImportHostsInBatch(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *clusterpb.ImportHostsInBatchRequest, opts ...client.CallOption) (*clusterpb.ImportHostsInBatchResponse, error) {
 		if len(in.Hosts) != 3 {
 			return nil, status.Errorf(codes.InvalidArgument, "file row count wrong")
 		}
@@ -206,6 +232,7 @@ func Test_ImportHostsInBatch_Succeed(t *testing.T) {
 		rsp.HostIds = append(rsp.HostIds, fakeHostId2)
 		return rsp, nil
 	})
+	rpc_client.ClusterClient = mockClient
 
 	contentType, reader, err := createBatchImportBody("../etc/hostInfo_template.xlsx")
 	if err != nil {
@@ -236,8 +263,11 @@ func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
 	fakeHostId1 := "fake-host-uuid-0001"
 	fakeHostId2 := "fake-host-uuid-0002"
 	fakeHostId3 := "fake-host-uuid-0003"
-	fakeService := InitFakeClusterClient()
-	fakeService.MockRemoveHostsInBatch(func(ctx context.Context, in *clusterpb.RemoveHostsInBatchRequest, opts ...client.CallOption) (*clusterpb.RemoveHostsInBatchResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockClusterService(ctrl)
+	mockVerifyIdentity(mockClient)
+	mockClient.EXPECT().RemoveHostsInBatch(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *clusterpb.RemoveHostsInBatchRequest, opts ...client.CallOption) (*clusterpb.RemoveHostsInBatchResponse, error) {
 		if in.HostIds[0] != fakeHostId1 || in.HostIds[1] != fakeHostId2 || in.HostIds[2] != fakeHostId3 {
 			return nil, status.Errorf(codes.InvalidArgument, "input hostIds wrong")
 		}
@@ -247,6 +277,7 @@ func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
 
 		return rsp, nil
 	})
+	rpc_client.ClusterClient = mockClient
 
 	var hostIds = []byte(`
 	[
@@ -262,8 +293,11 @@ func Test_RemoveHostsInBatch_Succeed(t *testing.T) {
 
 func Test_RemoveHost_Succeed(t *testing.T) {
 	fakeHostId1 := "fake-host-uuid-0001"
-	fakeService := InitFakeClusterClient()
-	fakeService.MockRemoveHost(func(ctx context.Context, in *clusterpb.RemoveHostRequest, opts ...client.CallOption) (*clusterpb.RemoveHostResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockClusterService(ctrl)
+	mockVerifyIdentity(mockClient)
+	mockClient.EXPECT().RemoveHost(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *clusterpb.RemoveHostRequest, opts ...client.CallOption) (*clusterpb.RemoveHostResponse, error) {
 		if in.HostId != fakeHostId1 {
 			return nil, status.Errorf(codes.InvalidArgument, "input hostIds wrong")
 		}
@@ -273,6 +307,7 @@ func Test_RemoveHost_Succeed(t *testing.T) {
 
 		return rsp, nil
 	})
+	rpc_client.ClusterClient = mockClient
 
 	url := fmt.Sprintf("/api/v1/resources/hosts/%s", fakeHostId1)
 	w := performRequest("DELETE", url, "application/json", nil)
@@ -286,8 +321,11 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 	fakeHostIp := "192.168.56.18"
 	fakeDiskName := "sda"
 	fakeDiskPath := "/"
-	fakeService := InitFakeClusterClient()
-	fakeService.MockCheckDetails(func(ctx context.Context, in *clusterpb.CheckDetailsRequest, opts ...client.CallOption) (*clusterpb.CheckDetailsResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockClusterService(ctrl)
+	mockVerifyIdentity(mockClient)
+	mockClient.EXPECT().CheckDetails(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *clusterpb.CheckDetailsRequest, opts ...client.CallOption) (*clusterpb.CheckDetailsResponse, error) {
 		if in.HostId != fakeHostId1 {
 			return nil, status.Errorf(codes.InvalidArgument, "input hostIds wrong")
 		}
@@ -307,6 +345,7 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 		})
 		return rsp, nil
 	})
+	rpc_client.ClusterClient = mockClient
 
 	url := fmt.Sprintf("/api/v1/resources/hosts/%s", fakeHostId1)
 	w := performRequest("GET", url, "application/json", nil)
@@ -328,6 +367,12 @@ func Test_CheckDetails_Succeed(t *testing.T) {
 }
 
 func Test_DownloadTemplate_Succeed(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockClusterService(ctrl)
+	mockVerifyIdentity(mockClient)
+	rpc_client.ClusterClient = mockClient
+
 	common.TemplateFilePath = "../etc"
 	w := performRequest("GET", "/api/v1/resources/hosts-template", "application/json", nil)
 
@@ -341,8 +386,11 @@ func Test_GetFailureDomain_Succeed(t *testing.T) {
 	fakeZone1, fakeSpec1, fakeCount1, fakePurpose1 := "TEST_Zone1", "4u8g", 1, "Compute"
 	fakeZone2, fakeSpec2, fakeCount2, fakePurpose2 := "TEST_Zone2", "8u16g", 2, "Storage"
 	fakeZone3, fakeSpec3, fakeCount3, fakePurpose3 := "TEST_Zone3", "16u64g", 3, "Compute/Storage"
-	fakeService := InitFakeClusterClient()
-	fakeService.MockGetFailureDomain(func(ctx context.Context, in *clusterpb.GetFailureDomainRequest, opts ...client.CallOption) (*clusterpb.GetFailureDomainResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockClusterService(ctrl)
+	mockVerifyIdentity(mockClient)
+	mockClient.EXPECT().GetFailureDomain(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *clusterpb.GetFailureDomainRequest, opts ...client.CallOption) (*clusterpb.GetFailureDomainResponse, error) {
 		if in.FailureDomainType != 2 {
 			return nil, status.Errorf(codes.InvalidArgument, "input failuredomain type wrong")
 		}
@@ -369,6 +417,7 @@ func Test_GetFailureDomain_Succeed(t *testing.T) {
 		})
 		return rsp, nil
 	})
+	rpc_client.ClusterClient = mockClient
 
 	w := performRequest("GET", "/api/v1/resources/failuredomains?failureDomainType=2", "application/json", nil)
 
@@ -392,8 +441,11 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 	fakeHostName2, fakeIp2, fakeDiskName2, fakeDiskPath2 := "TEST_HOST2", "192.168.56.12", "sdb", "/mnt/disk2"
 	fakeHostName3, fakeIp3, fakeDiskName3, fakeDiskPath3 := "TEST_HOST3", "192.168.56.13", "nvmep0", "/mnt/disk3"
 	fakeHostName4, fakeIp4, fakeDiskName4, fakeDiskPath4 := "TEST_HOST4", "192.168.56.14", "sdc", "/mnt/disk4"
-	fakeService := InitFakeClusterClient()
-	fakeService.MockAllocHosts(func(ctx context.Context, in *clusterpb.AllocHostsRequest, opts ...client.CallOption) (*clusterpb.AllocHostResponse, error) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mock.NewMockClusterService(ctrl)
+	mockVerifyIdentity(mockClient)
+	mockClient.EXPECT().AllocHosts(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *clusterpb.AllocHostsRequest, opts ...client.CallOption) (*clusterpb.AllocHostResponse, error) {
 		if in.PdReq[0].FailureDomain != "TEST_Zone1" || in.TidbReq[0].FailureDomain != "TEST_Zone2" || in.TikvReq[0].FailureDomain != "TEST_Zone3" || in.TikvReq[1].Memory != 64 {
 			return nil, status.Errorf(codes.InvalidArgument, "input allocHosts type wrong, %s, %s, %s, %d",
 				in.PdReq[0].FailureDomain, in.TidbReq[0].FailureDomain, in.TikvReq[0].FailureDomain, in.TikvReq[1].Memory)
@@ -443,6 +495,7 @@ func Test_AllocHosts_Succeed(t *testing.T) {
 		}
 		return rsp, nil
 	})
+	rpc_client.ClusterClient = mockClient
 
 	var allocReq = []byte(`
 	{

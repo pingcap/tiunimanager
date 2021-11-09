@@ -75,6 +75,7 @@ type ClusterService interface {
 	UpdateHostStatus(ctx context.Context, in *UpdateHostStatusRequest, opts ...client.CallOption) (*UpdateHostStatusResponse, error)
 	ReserveHost(ctx context.Context, in *ReserveHostRequest, opts ...client.CallOption) (*ReserveHostResponse, error)
 	GetHierarchy(ctx context.Context, in *GetHierarchyRequest, opts ...client.CallOption) (*GetHierarchyResponse, error)
+	GetStocks(ctx context.Context, in *GetStocksRequest, opts ...client.CallOption) (*GetStocksResponse, error)
 	// task manager
 	ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...client.CallOption) (*ListFlowsResponse, error)
 	DetailFlow(ctx context.Context, in *DetailFlowRequest, opts ...client.CallOption) (*DetailFlowsResponse, error)
@@ -452,6 +453,16 @@ func (c *clusterService) GetHierarchy(ctx context.Context, in *GetHierarchyReque
 	return out, nil
 }
 
+func (c *clusterService) GetStocks(ctx context.Context, in *GetStocksRequest, opts ...client.CallOption) (*GetStocksResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.GetStocks", in)
+	out := new(GetStocksResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterService) ListFlows(ctx context.Context, in *ListFlowsRequest, opts ...client.CallOption) (*ListFlowsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterService.ListFlows", in)
 	out := new(ListFlowsResponse)
@@ -514,6 +525,7 @@ type ClusterServiceHandler interface {
 	UpdateHostStatus(context.Context, *UpdateHostStatusRequest, *UpdateHostStatusResponse) error
 	ReserveHost(context.Context, *ReserveHostRequest, *ReserveHostResponse) error
 	GetHierarchy(context.Context, *GetHierarchyRequest, *GetHierarchyResponse) error
+	GetStocks(context.Context, *GetStocksRequest, *GetStocksResponse) error
 	// task manager
 	ListFlows(context.Context, *ListFlowsRequest, *ListFlowsResponse) error
 	DetailFlow(context.Context, *DetailFlowRequest, *DetailFlowsResponse) error
@@ -557,6 +569,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		UpdateHostStatus(ctx context.Context, in *UpdateHostStatusRequest, out *UpdateHostStatusResponse) error
 		ReserveHost(ctx context.Context, in *ReserveHostRequest, out *ReserveHostResponse) error
 		GetHierarchy(ctx context.Context, in *GetHierarchyRequest, out *GetHierarchyResponse) error
+		GetStocks(ctx context.Context, in *GetStocksRequest, out *GetStocksResponse) error
 		ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error
 		DetailFlow(ctx context.Context, in *DetailFlowRequest, out *DetailFlowsResponse) error
 	}
@@ -713,6 +726,10 @@ func (h *clusterServiceHandler) ReserveHost(ctx context.Context, in *ReserveHost
 
 func (h *clusterServiceHandler) GetHierarchy(ctx context.Context, in *GetHierarchyRequest, out *GetHierarchyResponse) error {
 	return h.ClusterServiceHandler.GetHierarchy(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) GetStocks(ctx context.Context, in *GetStocksRequest, out *GetStocksResponse) error {
+	return h.ClusterServiceHandler.GetStocks(ctx, in, out)
 }
 
 func (h *clusterServiceHandler) ListFlows(ctx context.Context, in *ListFlowsRequest, out *ListFlowsResponse) error {

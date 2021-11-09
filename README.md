@@ -10,110 +10,33 @@
 
 ## Build and Run TiEM
 
-### Dependencies
-
-Install the protobuf stuff
-
+TiEM can be compiled and used on Linux, OSX, CentOS, It is as simple as:
 ```
-go get github.com/asim/go-micro/cmd/protoc-gen-micro/v3
-go get google.golang.org/protobuf/cmd/protoc-gen-go
-
-# Install protoc Refer to http://google.github.io/proto-lens/installing-protoc.html
-PROTOC_ZIP=protoc-3.17.3-osx-x86_64.zip
-curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.17.3/$PROTOC_ZIP
-sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
-sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
-rm -f $PROTOC_ZIP
+make
 ```
 
-### Generate Protobuf files
-
+After building TiEM, it is good idea to test it using:
 ```
-cd library/client/metadb/proto
-protoc --proto_path=$GOPATH/src:. --micro_out=. --go_out=. *.proto
-cd library/client/cluster/proto
-protoc --proto_path=$GOPATH/src:. --micro_out=. --go_out=. *.proto
+make test
 ```
-
-### Install And Setup local etcd service
-
-Download the binary from https://github.com/etcd-io/etcd/releases/.
-
-Setup:
-
-```
-etcd --data-dir=data.etcd1 --name machine-1 \
-    --initial-advertise-peer-urls http://127.0.0.1:4102 --listen-peer-urls http://127.0.0.1:4102 \
-    --advertise-client-urls http://127.0.0.1:4101 --listen-client-urls http://127.0.0.1:4101 \
-    --initial-cluster machine-1=http://127.0.0.1:4102 \
-    --initial-cluster-state new --initial-cluster-token token-tiem \
-    &
-```
-
-### Setup Jaeger (for opentracing)
-
-Download binary from https://www.jaegertracing.io/download/.
-
-```shell
-$ jaeger-all-in-one --collector.zipkin.host-port=:9411
-```
-
-And visit the web interface from port 16686.
 
 ### Run Service
+If you want to run the service locally, try the following commands, enjoy it!
 
-start micro-metadb
+start metadb-server
+
 ```shell
-$ go run micro-metadb/main.go
-```
-or run with all args
-```shell
-$ go run micro-metadb/main.go \
-    --host=192.168.1.100 \
-    --port=4100 \
-    --registry-client-port=4101 \
-    --registry-peer-port=4102 \
-    --metrics-port=4121 \
-    --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
-    --tracer-address=192.168.1.100:4133 \
-    --deploy-dir=/tiem-deploy/tiem-metadb-4100 \
-    --data-dir=/tiem-data/tiem-metadb-4100 \
-    --log-level=info
+$ ./bin/metadb-server --host=127.0.0.1 --registry-address=127.0.0.1:4101
 ```
 
-start micro-cluster
+start cluster-server
 ```shell
-$ go run micro-cluster/main.go
-```
-or
-```shell
-$ go run micro-cluster/main.go \
-    --host=192.168.1.100 \
-    --port=4110 \
-    --metrics-port=4122 \
-    --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
-    --tracer-address=192.168.1.100:4133 \
-    --deploy-dir=/tiem-deploy/tiem-cluster-4110 \
-    --data-dir=/tiem-data/tiem-cluster-4110 \
-    --log-level=info
+$ ./bin/cluster-server --host=127.0.0.1 --metrics-port=4122 --registry-address=127.0.0.1:4101
 ```
 
-start micro-api
+start openapi-server
 ```shell
-$ go run micro-api/main.go
-```
-or
-```shell
-$ go run micro-api/main.go \
-    --host=192.168.1.100 \
-    --port=4116 \
-    --metrics-port=4123 \
-    --registry-address=192.168.1.100:4101,192.168.1.101:4101,192.168.1.102:4101 \
-    --tracer-address=192.168.1.100:4133 \
-    --elasticsearch-address=192.168.1.100:4127 \
-    --deploy-dir=/tiem-deploy/tiem-api-4115 \
-    --data-dir=/tiem-data/tiem-api-4115 \
-    --log-level=info
+$ ./bin/openapi-server --host=127.0.0.1 --metrics-port=4123 --registry-address=127.0.0.1:4101 --elasticsearch-address=127.0.0.1:9200
 ```
 
 ### Try it out

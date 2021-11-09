@@ -27,7 +27,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	mock "github.com/pingcap-inc/tiem/test/mockdb"
+	"github.com/pingcap-inc/tiem/test/mockdb"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
 )
@@ -141,7 +141,7 @@ func TestExportData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
 	mockClient.EXPECT().CreateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBCreateTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
@@ -161,7 +161,7 @@ func TestImportData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
 	mockClient.EXPECT().CreateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBCreateTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
@@ -181,7 +181,7 @@ func TestDescribeDataTransportRecord(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
 	mockClient.EXPECT().ListTrasnportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBListTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
@@ -237,7 +237,7 @@ func Test_updateDataImportRecord(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
 	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
@@ -268,7 +268,7 @@ func Test_updateDataExportRecord(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
 	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
@@ -298,7 +298,7 @@ func Test_exportDataFailed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
 	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 
@@ -328,7 +328,7 @@ func Test_importDataFailed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
 	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateTransportRecordResponse{}, nil)
 	client.DBClient = mockClient
 

@@ -19,6 +19,7 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"time"
 )
 
@@ -75,7 +76,7 @@ func (secondMicro *SecondMicro) taskStatusMapSyncer() {
 			}
 		}
 		secondMicro.taskStatusMapMutex.Unlock()
-		logInFunc := logger.WithField("taskStatusMapSyncer", "DbClient.UpdateTiupTask")
+		logInFunc := framework.Log().WithField("taskStatusMapSyncer", "DbClient.UpdateTiupTask")
 		for _, v := range needDbUpdate {
 			rsp, err := client.DBClient.UpdateTiupTask(context.Background(), &dbPb.UpdateTiupTaskRequest{
 				Id:     v.TaskID,

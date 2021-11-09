@@ -117,6 +117,24 @@ func (handler *DBServiceHandler) ListTrasnportRecord(ctx context.Context, in *db
 	return nil
 }
 
+func (handler *DBServiceHandler) DeleteTransportRecord(ctx context.Context, in *dbpb.DBDeleteTransportRequest, out *dbpb.DBDeleteTransportResponse) error {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "DeleteTransportRecord", int(out.GetStatus().GetCode()))
+	log := framework.LogWithContext(ctx)
+	record, err := handler.Dao().ClusterManager().DeleteTransportRecord(ctx, int(in.GetRecordId()))
+	if err != nil {
+		out.Status = BizErrResponseStatus
+		out.Status.Message = err.Error()
+		log.Errorf("DeleteTransportRecord failed, %s", err.Error())
+	} else {
+		out.Status = ClusterSuccessResponseStatus
+		out.Record = convertTransportRecordDTO(record)
+		log.Infof("DeleteTransportRecord success, %v", out)
+	}
+
+	return nil
+}
+
 func convertToTransportRecordDisplayDTO(do *models.TransportRecord, flow *models.FlowDO) (dto *dbpb.DBTransportRecordDisplayDTO) {
 	if do == nil {
 		return nil

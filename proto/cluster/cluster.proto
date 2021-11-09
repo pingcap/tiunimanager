@@ -21,6 +21,7 @@ service ClusterService {
     rpc ImportData(DataImportRequest) returns (DataImportResponse);
     rpc ExportData(DataExportRequest) returns (DataExportResponse);
     rpc DescribeDataTransport(DataTransportQueryRequest) returns (DataTransportQueryResponse);
+    rpc DeleteDataTransportRecord(DataTransportDeleteRequest) returns (DataTransportDeleteResponse);
 
     rpc QueryBackupRecord(QueryBackupRequest) returns (QueryBackupResponse);
     rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);

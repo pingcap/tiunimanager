@@ -30,7 +30,7 @@ var file_db_proto_rawDesc = []byte{
 	0x73, 0x6b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x12, 0x64, 0x62, 0x5f, 0x74, 0x72, 0x61,
 	0x6e, 0x73, 0x70, 0x6f, 0x72, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x13, 0x64, 0x62,
 	0x5f, 0x61, 0x6c, 0x6c, 0x6f, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x32, 0x82, 0x1f, 0x0a, 0x0d, 0x54, 0x69, 0x45, 0x4d, 0x44, 0x42, 0x53, 0x65, 0x72, 0x76,
+	0x6f, 0x32, 0xd2, 0x1f, 0x0a, 0x0d, 0x54, 0x69, 0x45, 0x4d, 0x44, 0x42, 0x53, 0x65, 0x72, 0x76,
 	0x69, 0x63, 0x65, 0x12, 0x39, 0x0a, 0x0a, 0x46, 0x69, 0x6e, 0x64, 0x54, 0x65, 0x6e, 0x61, 0x6e,
 	0x74, 0x12, 0x14, 0x2e, 0x44, 0x42, 0x46, 0x69, 0x6e, 0x64, 0x54, 0x65, 0x6e, 0x61, 0x6e, 0x74,
 	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x15, 0x2e, 0x44, 0x42, 0x46, 0x69, 0x6e, 0x64,
@@ -278,6 +278,11 @@ var file_db_proto_rawDesc = []byte{
 	0x54, 0x72, 0x61, 0x6e, 0x73, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x52,
 	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1e, 0x2e, 0x44, 0x42, 0x4c, 0x69, 0x73, 0x74, 0x54,
 	0x72, 0x61, 0x6e, 0x73, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4e, 0x0a, 0x15, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65,
+	0x54, 0x72, 0x61, 0x6e, 0x73, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x12,
+	0x19, 0x2e, 0x44, 0x42, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x70,
+	0x6f, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1a, 0x2e, 0x44, 0x42, 0x44,
+	0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65,
 	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x0e, 0x5a, 0x0c, 0x2e, 0x2f, 0x64, 0x62, 0x70, 0x62,
 	0x2f, 0x3b, 0x64, 0x62, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
@@ -338,61 +343,63 @@ var file_db_proto_goTypes = []interface{}{
 	(*DBUpdateTransportRecordRequest)(nil),      // 52: DBUpdateTransportRecordRequest
 	(*DBFindTransportRecordByIDRequest)(nil),    // 53: DBFindTransportRecordByIDRequest
 	(*DBListTransportRecordRequest)(nil),        // 54: DBListTransportRecordRequest
-	(*DBFindTenantResponse)(nil),                // 55: DBFindTenantResponse
-	(*DBFindAccountResponse)(nil),               // 56: DBFindAccountResponse
-	(*DBFindAccountByIdResponse)(nil),           // 57: DBFindAccountByIdResponse
-	(*DBSaveTokenResponse)(nil),                 // 58: DBSaveTokenResponse
-	(*DBFindTokenResponse)(nil),                 // 59: DBFindTokenResponse
-	(*DBFindRolesByPermissionResponse)(nil),     // 60: DBFindRolesByPermissionResponse
-	(*DBAddHostResponse)(nil),                   // 61: DBAddHostResponse
-	(*DBAddHostsInBatchResponse)(nil),           // 62: DBAddHostsInBatchResponse
-	(*DBRemoveHostResponse)(nil),                // 63: DBRemoveHostResponse
-	(*DBRemoveHostsInBatchResponse)(nil),        // 64: DBRemoveHostsInBatchResponse
-	(*DBListHostsResponse)(nil),                 // 65: DBListHostsResponse
-	(*DBCheckDetailsResponse)(nil),              // 66: DBCheckDetailsResponse
-	(*DBAllocHostsResponse)(nil),                // 67: DBAllocHostsResponse
-	(*DBGetFailureDomainResponse)(nil),          // 68: DBGetFailureDomainResponse
-	(*DBAllocResponse)(nil),                     // 69: DBAllocResponse
-	(*DBBatchAllocResponse)(nil),                // 70: DBBatchAllocResponse
-	(*DBRecycleResponse)(nil),                   // 71: DBRecycleResponse
-	(*DBUpdateHostStatusResponse)(nil),          // 72: DBUpdateHostStatusResponse
-	(*DBReserveHostResponse)(nil),               // 73: DBReserveHostResponse
-	(*DBGetHierarchyResponse)(nil),              // 74: DBGetHierarchyResponse
-	(*DBGetStocksResponse)(nil),                 // 75: DBGetStocksResponse
-	(*DBCreateClusterResponse)(nil),             // 76: DBCreateClusterResponse
-	(*DBDeleteClusterResponse)(nil),             // 77: DBDeleteClusterResponse
-	(*DBUpdateClusterInfoResponse)(nil),         // 78: DBUpdateClusterInfoResponse
-	(*DBUpdateClusterStatusResponse)(nil),       // 79: DBUpdateClusterStatusResponse
-	(*DBUpdateTopologyConfigResponse)(nil),      // 80: DBUpdateTopologyConfigResponse
-	(*DBCreateInstanceResponse)(nil),            // 81: DBCreateInstanceResponse
-	(*DBLoadClusterResponse)(nil),               // 82: DBLoadClusterResponse
-	(*DBListClusterResponse)(nil),               // 83: DBListClusterResponse
-	(*DBSaveBackupRecordResponse)(nil),          // 84: DBSaveBackupRecordResponse
-	(*DBUpdateBackupRecordResponse)(nil),        // 85: DBUpdateBackupRecordResponse
-	(*DBDeleteBackupRecordResponse)(nil),        // 86: DBDeleteBackupRecordResponse
-	(*DBSaveBackupStrategyResponse)(nil),        // 87: DBSaveBackupStrategyResponse
-	(*DBQueryBackupStrategyResponse)(nil),       // 88: DBQueryBackupStrategyResponse
-	(*DBQueryBackupStrategyByTimeResponse)(nil), // 89: DBQueryBackupStrategyByTimeResponse
-	(*DBQueryBackupRecordResponse)(nil),         // 90: DBQueryBackupRecordResponse
-	(*DBListBackupRecordsResponse)(nil),         // 91: DBListBackupRecordsResponse
-	(*DBSaveRecoverRecordResponse)(nil),         // 92: DBSaveRecoverRecordResponse
-	(*DBSaveParametersResponse)(nil),            // 93: DBSaveParametersResponse
-	(*DBGetCurrentParametersResponse)(nil),      // 94: DBGetCurrentParametersResponse
-	(*CreateTiupTaskResponse)(nil),              // 95: CreateTiupTaskResponse
-	(*UpdateTiupTaskResponse)(nil),              // 96: UpdateTiupTaskResponse
-	(*FindTiupTaskByIDResponse)(nil),            // 97: FindTiupTaskByIDResponse
-	(*GetTiupTaskStatusByBizIDResponse)(nil),    // 98: GetTiupTaskStatusByBizIDResponse
-	(*DBCreateFlowResponse)(nil),                // 99: DBCreateFlowResponse
-	(*DBCreateTaskResponse)(nil),                // 100: DBCreateTaskResponse
-	(*DBUpdateFlowResponse)(nil),                // 101: DBUpdateFlowResponse
-	(*DBUpdateTaskResponse)(nil),                // 102: DBUpdateTaskResponse
-	(*DBLoadFlowResponse)(nil),                  // 103: DBLoadFlowResponse
-	(*DBLoadTaskResponse)(nil),                  // 104: DBLoadTaskResponse
-	(*DBListFlowsResponse)(nil),                 // 105: DBListFlowsResponse
-	(*DBCreateTransportRecordResponse)(nil),     // 106: DBCreateTransportRecordResponse
-	(*DBUpdateTransportRecordResponse)(nil),     // 107: DBUpdateTransportRecordResponse
-	(*DBFindTransportRecordByIDResponse)(nil),   // 108: DBFindTransportRecordByIDResponse
-	(*DBListTransportRecordResponse)(nil),       // 109: DBListTransportRecordResponse
+	(*DBDeleteTransportRequest)(nil),            // 55: DBDeleteTransportRequest
+	(*DBFindTenantResponse)(nil),                // 56: DBFindTenantResponse
+	(*DBFindAccountResponse)(nil),               // 57: DBFindAccountResponse
+	(*DBFindAccountByIdResponse)(nil),           // 58: DBFindAccountByIdResponse
+	(*DBSaveTokenResponse)(nil),                 // 59: DBSaveTokenResponse
+	(*DBFindTokenResponse)(nil),                 // 60: DBFindTokenResponse
+	(*DBFindRolesByPermissionResponse)(nil),     // 61: DBFindRolesByPermissionResponse
+	(*DBAddHostResponse)(nil),                   // 62: DBAddHostResponse
+	(*DBAddHostsInBatchResponse)(nil),           // 63: DBAddHostsInBatchResponse
+	(*DBRemoveHostResponse)(nil),                // 64: DBRemoveHostResponse
+	(*DBRemoveHostsInBatchResponse)(nil),        // 65: DBRemoveHostsInBatchResponse
+	(*DBListHostsResponse)(nil),                 // 66: DBListHostsResponse
+	(*DBCheckDetailsResponse)(nil),              // 67: DBCheckDetailsResponse
+	(*DBAllocHostsResponse)(nil),                // 68: DBAllocHostsResponse
+	(*DBGetFailureDomainResponse)(nil),          // 69: DBGetFailureDomainResponse
+	(*DBAllocResponse)(nil),                     // 70: DBAllocResponse
+	(*DBBatchAllocResponse)(nil),                // 71: DBBatchAllocResponse
+	(*DBRecycleResponse)(nil),                   // 72: DBRecycleResponse
+	(*DBUpdateHostStatusResponse)(nil),          // 73: DBUpdateHostStatusResponse
+	(*DBReserveHostResponse)(nil),               // 74: DBReserveHostResponse
+	(*DBGetHierarchyResponse)(nil),              // 75: DBGetHierarchyResponse
+	(*DBGetStocksResponse)(nil),                 // 76: DBGetStocksResponse
+	(*DBCreateClusterResponse)(nil),             // 77: DBCreateClusterResponse
+	(*DBDeleteClusterResponse)(nil),             // 78: DBDeleteClusterResponse
+	(*DBUpdateClusterInfoResponse)(nil),         // 79: DBUpdateClusterInfoResponse
+	(*DBUpdateClusterStatusResponse)(nil),       // 80: DBUpdateClusterStatusResponse
+	(*DBUpdateTopologyConfigResponse)(nil),      // 81: DBUpdateTopologyConfigResponse
+	(*DBCreateInstanceResponse)(nil),            // 82: DBCreateInstanceResponse
+	(*DBLoadClusterResponse)(nil),               // 83: DBLoadClusterResponse
+	(*DBListClusterResponse)(nil),               // 84: DBListClusterResponse
+	(*DBSaveBackupRecordResponse)(nil),          // 85: DBSaveBackupRecordResponse
+	(*DBUpdateBackupRecordResponse)(nil),        // 86: DBUpdateBackupRecordResponse
+	(*DBDeleteBackupRecordResponse)(nil),        // 87: DBDeleteBackupRecordResponse
+	(*DBSaveBackupStrategyResponse)(nil),        // 88: DBSaveBackupStrategyResponse
+	(*DBQueryBackupStrategyResponse)(nil),       // 89: DBQueryBackupStrategyResponse
+	(*DBQueryBackupStrategyByTimeResponse)(nil), // 90: DBQueryBackupStrategyByTimeResponse
+	(*DBQueryBackupRecordResponse)(nil),         // 91: DBQueryBackupRecordResponse
+	(*DBListBackupRecordsResponse)(nil),         // 92: DBListBackupRecordsResponse
+	(*DBSaveRecoverRecordResponse)(nil),         // 93: DBSaveRecoverRecordResponse
+	(*DBSaveParametersResponse)(nil),            // 94: DBSaveParametersResponse
+	(*DBGetCurrentParametersResponse)(nil),      // 95: DBGetCurrentParametersResponse
+	(*CreateTiupTaskResponse)(nil),              // 96: CreateTiupTaskResponse
+	(*UpdateTiupTaskResponse)(nil),              // 97: UpdateTiupTaskResponse
+	(*FindTiupTaskByIDResponse)(nil),            // 98: FindTiupTaskByIDResponse
+	(*GetTiupTaskStatusByBizIDResponse)(nil),    // 99: GetTiupTaskStatusByBizIDResponse
+	(*DBCreateFlowResponse)(nil),                // 100: DBCreateFlowResponse
+	(*DBCreateTaskResponse)(nil),                // 101: DBCreateTaskResponse
+	(*DBUpdateFlowResponse)(nil),                // 102: DBUpdateFlowResponse
+	(*DBUpdateTaskResponse)(nil),                // 103: DBUpdateTaskResponse
+	(*DBLoadFlowResponse)(nil),                  // 104: DBLoadFlowResponse
+	(*DBLoadTaskResponse)(nil),                  // 105: DBLoadTaskResponse
+	(*DBListFlowsResponse)(nil),                 // 106: DBListFlowsResponse
+	(*DBCreateTransportRecordResponse)(nil),     // 107: DBCreateTransportRecordResponse
+	(*DBUpdateTransportRecordResponse)(nil),     // 108: DBUpdateTransportRecordResponse
+	(*DBFindTransportRecordByIDResponse)(nil),   // 109: DBFindTransportRecordByIDResponse
+	(*DBListTransportRecordResponse)(nil),       // 110: DBListTransportRecordResponse
+	(*DBDeleteTransportResponse)(nil),           // 111: DBDeleteTransportResponse
 }
 var file_db_proto_depIdxs = []int32{
 	0,   // 0: TiEMDBService.FindTenant:input_type -> DBFindTenantRequest
@@ -450,63 +457,65 @@ var file_db_proto_depIdxs = []int32{
 	52,  // 52: TiEMDBService.UpdateTransportRecord:input_type -> DBUpdateTransportRecordRequest
 	53,  // 53: TiEMDBService.FindTrasnportRecordByID:input_type -> DBFindTransportRecordByIDRequest
 	54,  // 54: TiEMDBService.ListTrasnportRecord:input_type -> DBListTransportRecordRequest
-	55,  // 55: TiEMDBService.FindTenant:output_type -> DBFindTenantResponse
-	56,  // 56: TiEMDBService.FindAccount:output_type -> DBFindAccountResponse
-	57,  // 57: TiEMDBService.FindAccountById:output_type -> DBFindAccountByIdResponse
-	58,  // 58: TiEMDBService.SaveToken:output_type -> DBSaveTokenResponse
-	59,  // 59: TiEMDBService.FindToken:output_type -> DBFindTokenResponse
-	60,  // 60: TiEMDBService.FindRolesByPermission:output_type -> DBFindRolesByPermissionResponse
-	61,  // 61: TiEMDBService.AddHost:output_type -> DBAddHostResponse
-	62,  // 62: TiEMDBService.AddHostsInBatch:output_type -> DBAddHostsInBatchResponse
-	63,  // 63: TiEMDBService.RemoveHost:output_type -> DBRemoveHostResponse
-	64,  // 64: TiEMDBService.RemoveHostsInBatch:output_type -> DBRemoveHostsInBatchResponse
-	65,  // 65: TiEMDBService.ListHost:output_type -> DBListHostsResponse
-	66,  // 66: TiEMDBService.CheckDetails:output_type -> DBCheckDetailsResponse
-	67,  // 67: TiEMDBService.AllocHosts:output_type -> DBAllocHostsResponse
-	68,  // 68: TiEMDBService.GetFailureDomain:output_type -> DBGetFailureDomainResponse
-	69,  // 69: TiEMDBService.AllocResources:output_type -> DBAllocResponse
-	70,  // 70: TiEMDBService.AllocResourcesInBatch:output_type -> DBBatchAllocResponse
-	71,  // 71: TiEMDBService.RecycleResources:output_type -> DBRecycleResponse
-	72,  // 72: TiEMDBService.UpdateHostStatus:output_type -> DBUpdateHostStatusResponse
-	73,  // 73: TiEMDBService.ReserveHost:output_type -> DBReserveHostResponse
-	74,  // 74: TiEMDBService.GetHierarchy:output_type -> DBGetHierarchyResponse
-	75,  // 75: TiEMDBService.GetStocks:output_type -> DBGetStocksResponse
-	76,  // 76: TiEMDBService.CreateCluster:output_type -> DBCreateClusterResponse
-	77,  // 77: TiEMDBService.DeleteCluster:output_type -> DBDeleteClusterResponse
-	78,  // 78: TiEMDBService.UpdateClusterInfo:output_type -> DBUpdateClusterInfoResponse
-	79,  // 79: TiEMDBService.UpdateClusterStatus:output_type -> DBUpdateClusterStatusResponse
-	80,  // 80: TiEMDBService.UpdateClusterTopologyConfig:output_type -> DBUpdateTopologyConfigResponse
-	81,  // 81: TiEMDBService.CreateInstance:output_type -> DBCreateInstanceResponse
-	82,  // 82: TiEMDBService.LoadCluster:output_type -> DBLoadClusterResponse
-	83,  // 83: TiEMDBService.ListCluster:output_type -> DBListClusterResponse
-	84,  // 84: TiEMDBService.SaveBackupRecord:output_type -> DBSaveBackupRecordResponse
-	85,  // 85: TiEMDBService.UpdateBackupRecord:output_type -> DBUpdateBackupRecordResponse
-	86,  // 86: TiEMDBService.DeleteBackupRecord:output_type -> DBDeleteBackupRecordResponse
-	87,  // 87: TiEMDBService.SaveBackupStrategy:output_type -> DBSaveBackupStrategyResponse
-	88,  // 88: TiEMDBService.QueryBackupStrategy:output_type -> DBQueryBackupStrategyResponse
-	89,  // 89: TiEMDBService.QueryBackupStrategyByTime:output_type -> DBQueryBackupStrategyByTimeResponse
-	90,  // 90: TiEMDBService.QueryBackupRecords:output_type -> DBQueryBackupRecordResponse
-	91,  // 91: TiEMDBService.ListBackupRecords:output_type -> DBListBackupRecordsResponse
-	92,  // 92: TiEMDBService.SaveRecoverRecord:output_type -> DBSaveRecoverRecordResponse
-	93,  // 93: TiEMDBService.SaveParametersRecord:output_type -> DBSaveParametersResponse
-	94,  // 94: TiEMDBService.GetCurrentParametersRecord:output_type -> DBGetCurrentParametersResponse
-	95,  // 95: TiEMDBService.CreateTiupTask:output_type -> CreateTiupTaskResponse
-	96,  // 96: TiEMDBService.UpdateTiupTask:output_type -> UpdateTiupTaskResponse
-	97,  // 97: TiEMDBService.FindTiupTaskByID:output_type -> FindTiupTaskByIDResponse
-	98,  // 98: TiEMDBService.GetTiupTaskStatusByBizID:output_type -> GetTiupTaskStatusByBizIDResponse
-	99,  // 99: TiEMDBService.CreateFlow:output_type -> DBCreateFlowResponse
-	100, // 100: TiEMDBService.CreateTask:output_type -> DBCreateTaskResponse
-	101, // 101: TiEMDBService.UpdateFlow:output_type -> DBUpdateFlowResponse
-	102, // 102: TiEMDBService.UpdateTask:output_type -> DBUpdateTaskResponse
-	103, // 103: TiEMDBService.LoadFlow:output_type -> DBLoadFlowResponse
-	104, // 104: TiEMDBService.LoadTask:output_type -> DBLoadTaskResponse
-	105, // 105: TiEMDBService.ListFlows:output_type -> DBListFlowsResponse
-	106, // 106: TiEMDBService.CreateTransportRecord:output_type -> DBCreateTransportRecordResponse
-	107, // 107: TiEMDBService.UpdateTransportRecord:output_type -> DBUpdateTransportRecordResponse
-	108, // 108: TiEMDBService.FindTrasnportRecordByID:output_type -> DBFindTransportRecordByIDResponse
-	109, // 109: TiEMDBService.ListTrasnportRecord:output_type -> DBListTransportRecordResponse
-	55,  // [55:110] is the sub-list for method output_type
-	0,   // [0:55] is the sub-list for method input_type
+	55,  // 55: TiEMDBService.DeleteTransportRecord:input_type -> DBDeleteTransportRequest
+	56,  // 56: TiEMDBService.FindTenant:output_type -> DBFindTenantResponse
+	57,  // 57: TiEMDBService.FindAccount:output_type -> DBFindAccountResponse
+	58,  // 58: TiEMDBService.FindAccountById:output_type -> DBFindAccountByIdResponse
+	59,  // 59: TiEMDBService.SaveToken:output_type -> DBSaveTokenResponse
+	60,  // 60: TiEMDBService.FindToken:output_type -> DBFindTokenResponse
+	61,  // 61: TiEMDBService.FindRolesByPermission:output_type -> DBFindRolesByPermissionResponse
+	62,  // 62: TiEMDBService.AddHost:output_type -> DBAddHostResponse
+	63,  // 63: TiEMDBService.AddHostsInBatch:output_type -> DBAddHostsInBatchResponse
+	64,  // 64: TiEMDBService.RemoveHost:output_type -> DBRemoveHostResponse
+	65,  // 65: TiEMDBService.RemoveHostsInBatch:output_type -> DBRemoveHostsInBatchResponse
+	66,  // 66: TiEMDBService.ListHost:output_type -> DBListHostsResponse
+	67,  // 67: TiEMDBService.CheckDetails:output_type -> DBCheckDetailsResponse
+	68,  // 68: TiEMDBService.AllocHosts:output_type -> DBAllocHostsResponse
+	69,  // 69: TiEMDBService.GetFailureDomain:output_type -> DBGetFailureDomainResponse
+	70,  // 70: TiEMDBService.AllocResources:output_type -> DBAllocResponse
+	71,  // 71: TiEMDBService.AllocResourcesInBatch:output_type -> DBBatchAllocResponse
+	72,  // 72: TiEMDBService.RecycleResources:output_type -> DBRecycleResponse
+	73,  // 73: TiEMDBService.UpdateHostStatus:output_type -> DBUpdateHostStatusResponse
+	74,  // 74: TiEMDBService.ReserveHost:output_type -> DBReserveHostResponse
+	75,  // 75: TiEMDBService.GetHierarchy:output_type -> DBGetHierarchyResponse
+	76,  // 76: TiEMDBService.GetStocks:output_type -> DBGetStocksResponse
+	77,  // 77: TiEMDBService.CreateCluster:output_type -> DBCreateClusterResponse
+	78,  // 78: TiEMDBService.DeleteCluster:output_type -> DBDeleteClusterResponse
+	79,  // 79: TiEMDBService.UpdateClusterInfo:output_type -> DBUpdateClusterInfoResponse
+	80,  // 80: TiEMDBService.UpdateClusterStatus:output_type -> DBUpdateClusterStatusResponse
+	81,  // 81: TiEMDBService.UpdateClusterTopologyConfig:output_type -> DBUpdateTopologyConfigResponse
+	82,  // 82: TiEMDBService.CreateInstance:output_type -> DBCreateInstanceResponse
+	83,  // 83: TiEMDBService.LoadCluster:output_type -> DBLoadClusterResponse
+	84,  // 84: TiEMDBService.ListCluster:output_type -> DBListClusterResponse
+	85,  // 85: TiEMDBService.SaveBackupRecord:output_type -> DBSaveBackupRecordResponse
+	86,  // 86: TiEMDBService.UpdateBackupRecord:output_type -> DBUpdateBackupRecordResponse
+	87,  // 87: TiEMDBService.DeleteBackupRecord:output_type -> DBDeleteBackupRecordResponse
+	88,  // 88: TiEMDBService.SaveBackupStrategy:output_type -> DBSaveBackupStrategyResponse
+	89,  // 89: TiEMDBService.QueryBackupStrategy:output_type -> DBQueryBackupStrategyResponse
+	90,  // 90: TiEMDBService.QueryBackupStrategyByTime:output_type -> DBQueryBackupStrategyByTimeResponse
+	91,  // 91: TiEMDBService.QueryBackupRecords:output_type -> DBQueryBackupRecordResponse
+	92,  // 92: TiEMDBService.ListBackupRecords:output_type -> DBListBackupRecordsResponse
+	93,  // 93: TiEMDBService.SaveRecoverRecord:output_type -> DBSaveRecoverRecordResponse
+	94,  // 94: TiEMDBService.SaveParametersRecord:output_type -> DBSaveParametersResponse
+	95,  // 95: TiEMDBService.GetCurrentParametersRecord:output_type -> DBGetCurrentParametersResponse
+	96,  // 96: TiEMDBService.CreateTiupTask:output_type -> CreateTiupTaskResponse
+	97,  // 97: TiEMDBService.UpdateTiupTask:output_type -> UpdateTiupTaskResponse
+	98,  // 98: TiEMDBService.FindTiupTaskByID:output_type -> FindTiupTaskByIDResponse
+	99,  // 99: TiEMDBService.GetTiupTaskStatusByBizID:output_type -> GetTiupTaskStatusByBizIDResponse
+	100, // 100: TiEMDBService.CreateFlow:output_type -> DBCreateFlowResponse
+	101, // 101: TiEMDBService.CreateTask:output_type -> DBCreateTaskResponse
+	102, // 102: TiEMDBService.UpdateFlow:output_type -> DBUpdateFlowResponse
+	103, // 103: TiEMDBService.UpdateTask:output_type -> DBUpdateTaskResponse
+	104, // 104: TiEMDBService.LoadFlow:output_type -> DBLoadFlowResponse
+	105, // 105: TiEMDBService.LoadTask:output_type -> DBLoadTaskResponse
+	106, // 106: TiEMDBService.ListFlows:output_type -> DBListFlowsResponse
+	107, // 107: TiEMDBService.CreateTransportRecord:output_type -> DBCreateTransportRecordResponse
+	108, // 108: TiEMDBService.UpdateTransportRecord:output_type -> DBUpdateTransportRecordResponse
+	109, // 109: TiEMDBService.FindTrasnportRecordByID:output_type -> DBFindTransportRecordByIDResponse
+	110, // 110: TiEMDBService.ListTrasnportRecord:output_type -> DBListTransportRecordResponse
+	111, // 111: TiEMDBService.DeleteTransportRecord:output_type -> DBDeleteTransportResponse
+	56,  // [56:112] is the sub-list for method output_type
+	0,   // [0:56] is the sub-list for method input_type
 	0,   // [0:0] is the sub-list for extension type_name
 	0,   // [0:0] is the sub-list for extension extendee
 	0,   // [0:0] is the sub-list for field type_name

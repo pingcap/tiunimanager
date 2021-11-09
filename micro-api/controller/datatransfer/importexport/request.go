@@ -48,3 +48,8 @@ type DataTransportQueryReq struct {
 	controller.PageRequest
 	RecordId int64 `json:"recordId" form:"recordId"`
 }
+
+type DataTransportDeleteReq struct {
+	ClusterId string `json:"clusterId"`
+	RecordId  int64  `json:"recordId"`
+}

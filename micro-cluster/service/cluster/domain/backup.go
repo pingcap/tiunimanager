@@ -133,7 +133,7 @@ func DeleteBackup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId str
 		getLoggerWithContext(ctx).Errorf("query backup record %d of cluster %s failed, %s", bakId, clusterId, resp.GetStatus().GetMessage())
 		return fmt.Errorf("query backup record %d of cluster %s failed, %s", bakId, clusterId, resp.GetStatus().GetMessage())
 	}
-	getLoggerWithContext(ctx).Infof("query backup record to be deleted, record: %v", resp.GetBackupRecords().GetBackupRecord())
+	getLoggerWithContext(ctx).Infof("query backup record to be deleted, record: %+v", resp.GetBackupRecords().GetBackupRecord())
 	filePath := resp.GetBackupRecords().GetBackupRecord().GetFilePath() //backup dir
 
 	err = os.RemoveAll(filePath)

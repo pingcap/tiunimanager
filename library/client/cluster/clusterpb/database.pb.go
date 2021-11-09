@@ -621,6 +621,116 @@ func (x *DataTransportQueryResponse) GetTransportInfos() []*DataTransportInfo {
 	return nil
 }
 
+type DataTransportDeleteRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Operator  *OperatorDTO `protobuf:"bytes,1,opt,name=operator,proto3" json:"operator,omitempty"`
+	ClusterId string       `protobuf:"bytes,2,opt,name=clusterId,proto3" json:"clusterId,omitempty"`
+	RecordId  int64        `protobuf:"varint,3,opt,name=RecordId,proto3" json:"RecordId,omitempty"`
+}
+
+func (x *DataTransportDeleteRequest) Reset() {
+	*x = DataTransportDeleteRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_database_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DataTransportDeleteRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DataTransportDeleteRequest) ProtoMessage() {}
+
+func (x *DataTransportDeleteRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DataTransportDeleteRequest.ProtoReflect.Descriptor instead.
+func (*DataTransportDeleteRequest) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *DataTransportDeleteRequest) GetOperator() *OperatorDTO {
+	if x != nil {
+		return x.Operator
+	}
+	return nil
+}
+
+func (x *DataTransportDeleteRequest) GetClusterId() string {
+	if x != nil {
+		return x.ClusterId
+	}
+	return ""
+}
+
+func (x *DataTransportDeleteRequest) GetRecordId() int64 {
+	if x != nil {
+		return x.RecordId
+	}
+	return 0
+}
+
+type DataTransportDeleteResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Status *ResponseStatusDTO `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+}
+
+func (x *DataTransportDeleteResponse) Reset() {
+	*x = DataTransportDeleteResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_database_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DataTransportDeleteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DataTransportDeleteResponse) ProtoMessage() {}
+
+func (x *DataTransportDeleteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_database_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DataTransportDeleteResponse.ProtoReflect.Descriptor instead.
+func (*DataTransportDeleteResponse) Descriptor() ([]byte, []int) {
+	return file_database_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *DataTransportDeleteResponse) GetStatus() *ResponseStatusDTO {
+	if x != nil {
+		return x.Status
+	}
+	return nil
+}
+
 var File_database_proto protoreflect.FileDescriptor
 
 var file_database_proto_rawDesc = []byte{
@@ -725,9 +835,22 @@ var file_database_proto_rawDesc = []byte{
 	0x6f, 0x72, 0x74, 0x49, 0x6e, 0x66, 0x6f, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x12,
 	0x2e, 0x44, 0x61, 0x74, 0x61, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x70, 0x6f, 0x72, 0x74, 0x49, 0x6e,
 	0x66, 0x6f, 0x52, 0x0e, 0x74, 0x72, 0x61, 0x6e, 0x73, 0x70, 0x6f, 0x72, 0x74, 0x49, 0x6e, 0x66,
-	0x6f, 0x73, 0x42, 0x18, 0x5a, 0x16, 0x2e, 0x2f, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70,
-	0x62, 0x2f, 0x3b, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x73, 0x22, 0x80, 0x01, 0x0a, 0x1a, 0x44, 0x61, 0x74, 0x61, 0x54, 0x72, 0x61, 0x6e, 0x73,
+	0x70, 0x6f, 0x72, 0x74, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x28, 0x0a, 0x08, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x0c, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x44, 0x54,
+	0x4f, 0x52, 0x08, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1c, 0x0a, 0x09, 0x63,
+	0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09,
+	0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x49, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x49, 0x64, 0x22, 0x49, 0x0a, 0x1b, 0x44, 0x61, 0x74, 0x61, 0x54, 0x72, 0x61,
+	0x6e, 0x73, 0x70, 0x6f, 0x72, 0x74, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2a, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x53,
+	0x74, 0x61, 0x74, 0x75, 0x73, 0x44, 0x54, 0x4f, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73,
+	0x42, 0x18, 0x5a, 0x16, 0x2e, 0x2f, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2f,
+	0x3b, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -742,36 +865,40 @@ func file_database_proto_rawDescGZIP() []byte {
 	return file_database_proto_rawDescData
 }
 
-var file_database_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_database_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_database_proto_goTypes = []interface{}{
-	(*DataImportRequest)(nil),          // 0: DataImportRequest
-	(*DataImportResponse)(nil),         // 1: DataImportResponse
-	(*DataExportRequest)(nil),          // 2: DataExportRequest
-	(*DataExportResponse)(nil),         // 3: DataExportResponse
-	(*DataTransportQueryRequest)(nil),  // 4: DataTransportQueryRequest
-	(*DataTransportInfo)(nil),          // 5: DataTransportInfo
-	(*DataTransportQueryResponse)(nil), // 6: DataTransportQueryResponse
-	(*OperatorDTO)(nil),                // 7: OperatorDTO
-	(*ResponseStatusDTO)(nil),          // 8: ResponseStatusDTO
-	(*PageDTO)(nil),                    // 9: PageDTO
-	(*DisplayStatusDTO)(nil),           // 10: DisplayStatusDTO
+	(*DataImportRequest)(nil),           // 0: DataImportRequest
+	(*DataImportResponse)(nil),          // 1: DataImportResponse
+	(*DataExportRequest)(nil),           // 2: DataExportRequest
+	(*DataExportResponse)(nil),          // 3: DataExportResponse
+	(*DataTransportQueryRequest)(nil),   // 4: DataTransportQueryRequest
+	(*DataTransportInfo)(nil),           // 5: DataTransportInfo
+	(*DataTransportQueryResponse)(nil),  // 6: DataTransportQueryResponse
+	(*DataTransportDeleteRequest)(nil),  // 7: DataTransportDeleteRequest
+	(*DataTransportDeleteResponse)(nil), // 8: DataTransportDeleteResponse
+	(*OperatorDTO)(nil),                 // 9: OperatorDTO
+	(*ResponseStatusDTO)(nil),           // 10: ResponseStatusDTO
+	(*PageDTO)(nil),                     // 11: PageDTO
+	(*DisplayStatusDTO)(nil),            // 12: DisplayStatusDTO
 }
 var file_database_proto_depIdxs = []int32{
-	7,  // 0: DataImportRequest.operator:type_name -> OperatorDTO
-	8,  // 1: DataImportResponse.respStatus:type_name -> ResponseStatusDTO
-	7,  // 2: DataExportRequest.operator:type_name -> OperatorDTO
-	8,  // 3: DataExportResponse.respStatus:type_name -> ResponseStatusDTO
-	9,  // 4: DataTransportQueryRequest.pageReq:type_name -> PageDTO
-	7,  // 5: DataTransportQueryRequest.operator:type_name -> OperatorDTO
-	10, // 6: DataTransportInfo.displayStatus:type_name -> DisplayStatusDTO
-	9,  // 7: DataTransportQueryResponse.pageReq:type_name -> PageDTO
-	8,  // 8: DataTransportQueryResponse.respStatus:type_name -> ResponseStatusDTO
+	9,  // 0: DataImportRequest.operator:type_name -> OperatorDTO
+	10, // 1: DataImportResponse.respStatus:type_name -> ResponseStatusDTO
+	9,  // 2: DataExportRequest.operator:type_name -> OperatorDTO
+	10, // 3: DataExportResponse.respStatus:type_name -> ResponseStatusDTO
+	11, // 4: DataTransportQueryRequest.pageReq:type_name -> PageDTO
+	9,  // 5: DataTransportQueryRequest.operator:type_name -> OperatorDTO
+	12, // 6: DataTransportInfo.displayStatus:type_name -> DisplayStatusDTO
+	11, // 7: DataTransportQueryResponse.pageReq:type_name -> PageDTO
+	10, // 8: DataTransportQueryResponse.respStatus:type_name -> ResponseStatusDTO
 	5,  // 9: DataTransportQueryResponse.transportInfos:type_name -> DataTransportInfo
-	10, // [10:10] is the sub-list for method output_type
-	10, // [10:10] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	9,  // 10: DataTransportDeleteRequest.operator:type_name -> OperatorDTO
+	10, // 11: DataTransportDeleteResponse.status:type_name -> ResponseStatusDTO
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_database_proto_init() }
@@ -865,6 +992,30 @@ func file_database_proto_init() {
 				return nil
 			}
 		}
+		file_database_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DataTransportDeleteRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_database_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DataTransportDeleteResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -872,7 +1023,7 @@ func file_database_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_database_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

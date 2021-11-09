@@ -18,6 +18,7 @@ package models
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -104,4 +105,15 @@ func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId s
 	}
 
 	return
+}
+
+func (m *DAOClusterManager) DeleteTransportRecord(ctx context.Context, recordId int) (record *TransportRecord, err error) {
+	if recordId <= 0 {
+		return nil, errors.New(fmt.Sprintf("DeleteTransportRecord has invalid parameter, Id: %d", recordId))
+	}
+	record = &TransportRecord{}
+	record.ID = uint(recordId)
+	err = m.Db(ctx).Where("id = ?", record.ID).Delete(record).Error
+	m.HandleMetrics(TABLE_NAME_TRANSPORT_RECORD, 0)
+	return record, err
 }

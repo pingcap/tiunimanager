@@ -47,6 +47,7 @@ type ClusterService interface {
 	ImportData(ctx context.Context, in *DataImportRequest, opts ...client.CallOption) (*DataImportResponse, error)
 	ExportData(ctx context.Context, in *DataExportRequest, opts ...client.CallOption) (*DataExportResponse, error)
 	DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, opts ...client.CallOption) (*DataTransportQueryResponse, error)
+	DeleteDataTransportRecord(ctx context.Context, in *DataTransportDeleteRequest, opts ...client.CallOption) (*DataTransportDeleteResponse, error)
 	QueryBackupRecord(ctx context.Context, in *QueryBackupRequest, opts ...client.CallOption) (*QueryBackupResponse, error)
 	CreateBackup(ctx context.Context, in *CreateBackupRequest, opts ...client.CallOption) (*CreateBackupResponse, error)
 	RecoverCluster(ctx context.Context, in *RecoverRequest, opts ...client.CallOption) (*RecoverResponse, error)
@@ -186,6 +187,16 @@ func (c *clusterService) ExportData(ctx context.Context, in *DataExportRequest, 
 func (c *clusterService) DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, opts ...client.CallOption) (*DataTransportQueryResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterService.DescribeDataTransport", in)
 	out := new(DataTransportQueryResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterService) DeleteDataTransportRecord(ctx context.Context, in *DataTransportDeleteRequest, opts ...client.CallOption) (*DataTransportDeleteResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterService.DeleteDataTransportRecord", in)
+	out := new(DataTransportDeleteResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -497,6 +508,7 @@ type ClusterServiceHandler interface {
 	ImportData(context.Context, *DataImportRequest, *DataImportResponse) error
 	ExportData(context.Context, *DataExportRequest, *DataExportResponse) error
 	DescribeDataTransport(context.Context, *DataTransportQueryRequest, *DataTransportQueryResponse) error
+	DeleteDataTransportRecord(context.Context, *DataTransportDeleteRequest, *DataTransportDeleteResponse) error
 	QueryBackupRecord(context.Context, *QueryBackupRequest, *QueryBackupResponse) error
 	CreateBackup(context.Context, *CreateBackupRequest, *CreateBackupResponse) error
 	RecoverCluster(context.Context, *RecoverRequest, *RecoverResponse) error
@@ -543,6 +555,7 @@ func RegisterClusterServiceHandler(s server.Server, hdlr ClusterServiceHandler, 
 		ImportData(ctx context.Context, in *DataImportRequest, out *DataImportResponse) error
 		ExportData(ctx context.Context, in *DataExportRequest, out *DataExportResponse) error
 		DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, out *DataTransportQueryResponse) error
+		DeleteDataTransportRecord(ctx context.Context, in *DataTransportDeleteRequest, out *DataTransportDeleteResponse) error
 		QueryBackupRecord(ctx context.Context, in *QueryBackupRequest, out *QueryBackupResponse) error
 		CreateBackup(ctx context.Context, in *CreateBackupRequest, out *CreateBackupResponse) error
 		RecoverCluster(ctx context.Context, in *RecoverRequest, out *RecoverResponse) error
@@ -622,6 +635,10 @@ func (h *clusterServiceHandler) ExportData(ctx context.Context, in *DataExportRe
 
 func (h *clusterServiceHandler) DescribeDataTransport(ctx context.Context, in *DataTransportQueryRequest, out *DataTransportQueryResponse) error {
 	return h.ClusterServiceHandler.DescribeDataTransport(ctx, in, out)
+}
+
+func (h *clusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, in *DataTransportDeleteRequest, out *DataTransportDeleteResponse) error {
+	return h.ClusterServiceHandler.DeleteDataTransportRecord(ctx, in, out)
 }
 
 func (h *clusterServiceHandler) QueryBackupRecord(ctx context.Context, in *QueryBackupRequest, out *QueryBackupResponse) error {

@@ -376,6 +376,40 @@ func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO
 	return resp.GetRecords(), resp.GetPage(), nil
 }
 
+func DeleteDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, recordId int64) error {
+	getLoggerWithContext(ctx).Infof("begin DeleteDataTransportRecord clusterId: %s, recordId: %d", clusterId, recordId)
+	defer getLoggerWithContext(ctx).Info("end DeleteDataTransportRecord")
+
+	resp, err := client.DBClient.FindTrasnportRecordByID(ctx, &dbpb.DBFindTransportRecordByIDRequest{RecordId: recordId})
+	if err != nil {
+		getLoggerWithContext(ctx).Errorf("query transport record %d of cluster %s failed, %s", recordId, clusterId, err.Error())
+		return fmt.Errorf("query transport record %d of cluster %s failed, %s", recordId, clusterId, err.Error())
+	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("query transport record %d of cluster %s failed, %s", recordId, clusterId, resp.GetStatus().GetMessage())
+		return fmt.Errorf("query backup transport %d of cluster %s failed, %s", recordId, clusterId, resp.GetStatus().GetMessage())
+	}
+	getLoggerWithContext(ctx).Infof("query transport record to be deleted, record: %+v", resp.GetRecord())
+
+	if common.S3StorageType == resp.GetRecord().GetStorageType() {
+		filePath := resp.GetRecord().GetFilePath()
+		_ = os.RemoveAll(filePath)
+	}
+
+	delResp, err := client.DBClient.DeleteTransportRecord(ctx, &dbpb.DBDeleteTransportRequest{RecordId: recordId})
+	if err != nil {
+		getLoggerWithContext(ctx).Errorf("delete metadb transport record failed, %s", err.Error())
+		return fmt.Errorf("delete metadb transport record failed, %s", err.Error())
+	}
+	if delResp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("delete metadb transport record failed, %s", delResp.GetStatus().GetMessage())
+		return fmt.Errorf("delete metadb transport record failed, %s", delResp.GetStatus().GetMessage())
+	}
+	getLoggerWithContext(ctx).Infof("delete transport record to be deleted, record: %+v", delResp.GetRecord())
+
+	return nil
+}
+
 func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo) *DataImportConfig {
 	if clusterAggregation == nil || clusterAggregation.CurrentTopologyConfigRecord == nil {
 		return nil

@@ -294,6 +294,18 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 	return nil
 }
 
+func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, req *clusterpb.DataTransportDeleteRequest, resp *clusterpb.DataTransportDeleteResponse) error {
+	err := domain.DeleteDataTransportRecord(ctx, req.GetOperator(), req.GetClusterId(), req.GetRecordId())
+	if err != nil {
+		getLoggerWithContext(ctx).Error(err)
+		resp.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_TRANSPORT_RECORD_DEL_FAIL, Message: common.TiEMErrMsg[common.TIEM_TRANSPORT_RECORD_DEL_FAIL]}
+	} else {
+		resp.Status = SuccessResponseStatus
+	}
+
+	return nil
+}
+
 func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *clusterpb.CreateBackupRequest, response *clusterpb.CreateBackupResponse) (err error) {
 	start := time.Now()
 	defer handleMetrics(start, "CreateBackup", int(response.GetStatus().GetCode()))
@@ -533,7 +545,7 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	flowwork, err := domain.TaskRepo.Load(ctx, uint(request.FlowId))
 	if e, ok := err.(framework.TiEMError); ok {
 		response.Status = &clusterpb.ResponseStatusDTO{
-			Code: int32(e.GetCode()),
+			Code:    int32(e.GetCode()),
 			Message: e.GetMsg(),
 		}
 	} else {
@@ -556,7 +568,7 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 				},
 			},
 			TaskDef: flowwork.GetAllTaskDef(),
-			Tasks: flowwork.ExtractTaskDTO(),
+			Tasks:   flowwork.ExtractTaskDTO(),
 		}
 	}
 

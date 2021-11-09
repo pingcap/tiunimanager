@@ -59,3 +59,12 @@ message DBListTransportRecordResponse {
     DBPageDTO page = 2;
     repeated DBTransportRecordDisplayDTO records = 3;
 }
+
+message DBDeleteTransportRequest {
+    int64 recordId = 1;
+}
+
+message DBDeleteTransportResponse {
+    DBClusterResponseStatus status = 1;
+    TransportRecordDTO record = 2;
+}

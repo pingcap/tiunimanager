@@ -65,3 +65,13 @@ message DataTransportQueryResponse {
     ResponseStatusDTO respStatus = 2;
     repeated DataTransportInfo transportInfos = 3;
 }
+
+message DataTransportDeleteRequest {
+    OperatorDTO operator = 1;
+    string clusterId = 2;
+    int64 RecordId = 3;
+}
+
+message DataTransportDeleteResponse {
+    ResponseStatusDTO status = 1;
+}

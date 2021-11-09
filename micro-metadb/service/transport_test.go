@@ -20,6 +20,7 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
@@ -63,10 +64,7 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 	createOut := &dbpb.DBCreateTransportRecordResponse{}
 
 	err := handler.CreateTransportRecord(context.TODO(), createIn, createOut)
-	if err != nil {
-		t.Errorf("TestDBServiceHandler_UpdateTransportRecord create record failed: %s", err.Error())
-		return
-	}
+	assert.NoError(t, err)
 
 	record.EndTime = time.Now().Unix()
 
@@ -75,11 +73,7 @@ func TestDBServiceHandler_UpdateTransportRecord(t *testing.T) {
 	}
 	updateOut := &dbpb.DBUpdateTransportRecordResponse{}
 	err = handler.UpdateTransportRecord(context.TODO(), updateIn, updateOut)
-	if err != nil {
-		t.Errorf("TestDBServiceHandler_UpdateTransportRecord failed: %s", err.Error())
-		return
-	}
-	t.Logf("TestDBServiceHandler_CreateTransportRecord success")
+	assert.NoError(t, err)
 }
 
 func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
@@ -98,21 +92,14 @@ func TestDBServiceHandler_FindTrasnportRecordByID(t *testing.T) {
 	createOut := &dbpb.DBCreateTransportRecordResponse{}
 
 	err := handler.CreateTransportRecord(context.TODO(), createIn, createOut)
-	if err != nil {
-		t.Errorf("TestDBServiceHandler_FindTrasnportRecordByID create record failed: %s", err.Error())
-		return
-	}
+	assert.NoError(t, err)
 
 	in := &dbpb.DBFindTransportRecordByIDRequest{
 		RecordId: 3333,
 	}
 	out := &dbpb.DBFindTransportRecordByIDResponse{}
 	err = handler.FindTrasnportRecordByID(context.TODO(), in, out)
-	if err != nil {
-		t.Errorf("TestDBServiceHandler_FindTrasnportRecordByID failed: %s", err.Error())
-		return
-	}
-	t.Logf("TestDBServiceHandler_FindTrasnportRecordByID success, record: %v", out)
+	assert.NoError(t, err)
 }
 
 func TestDBServiceHandler_ListTrasnportRecord(t *testing.T) {
@@ -131,19 +118,38 @@ func TestDBServiceHandler_ListTrasnportRecord(t *testing.T) {
 	createOut := &dbpb.DBCreateTransportRecordResponse{}
 
 	err := handler.CreateTransportRecord(context.TODO(), createIn, createOut)
-	if err != nil {
-		t.Errorf("TestDBServiceHandler_ListTrasnportRecord create record failed: %s", err.Error())
-		return
-	}
+	assert.NoError(t, err)
 
 	in := &dbpb.DBListTransportRecordRequest{
 		ClusterId: "tc-123",
 	}
 	out := &dbpb.DBListTransportRecordResponse{}
 	err = handler.ListTrasnportRecord(context.TODO(), in, out)
-	if err != nil {
-		t.Errorf("TestDBServiceHandler_ListTrasnportRecord failed: %s", err.Error())
-		return
+	assert.NoError(t, err)
+}
+
+func TestDBServiceHandler_DeleteTransportRecord(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
+	record := &dbpb.TransportRecordDTO{
+		RecordId:      3333,
+		ClusterId:     "tc-123",
+		TransportType: "import",
+		FilePath:      "/tmp/tiem/datatransport/tc-123/import",
+		TenantId:      "admin",
+		StartTime:     time.Now().Unix(),
 	}
-	t.Logf("TestDBServiceHandler_ListTrasnportRecord success, record: %v", out)
+	createIn := &dbpb.DBCreateTransportRecordRequest{
+		Record: record,
+	}
+	createOut := &dbpb.DBCreateTransportRecordResponse{}
+
+	err := handler.CreateTransportRecord(context.TODO(), createIn, createOut)
+	assert.NoError(t, err)
+
+	in := &dbpb.DBDeleteTransportRequest{
+		RecordId: 3333,
+	}
+	out := &dbpb.DBDeleteTransportResponse{}
+	err = handler.DeleteTransportRecord(context.TODO(), in, out)
+	assert.NoError(t, err)
 }

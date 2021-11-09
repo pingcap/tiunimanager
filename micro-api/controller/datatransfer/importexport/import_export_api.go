@@ -20,6 +20,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -205,6 +206,56 @@ func DescribeDataTransport(c *gin.Context) {
 			}
 			result := controller.SuccessWithPage(data, *controller.ParsePageFromDTO(respDTO.PageReq))
 			c.JSON(http.StatusOK, result)
+		} else {
+			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
+		}
+	}
+}
+
+// DeleteDataTransportRecord
+// @Summary delete data transport record
+// @Description delete data transport record
+// @Tags cluster data transport
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param recordId int true "data transport recordId"
+// @Param DataTransportDeleteReq body DataTransportDeleteReq true "data transport record delete request"
+// @Success 200 {object} controller.CommonResult{data=int}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/transport/{recordId} [delete]
+func DeleteDataTransportRecord(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "DeleteDataTransportRecord", int(status.GetCode()))
+
+	recordId, err := strconv.Atoi(c.Param("recordId"))
+	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	var req DataTransportDeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		return
+	}
+	operator := controller.GetOperator(c)
+	resp, err := client.ClusterClient.DeleteDataTransportRecord(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataTransportDeleteRequest{
+		Operator:  operator.ConvertToDTO(),
+		ClusterId: req.ClusterId,
+		RecordId:  req.RecordId,
+	}, controller.DefaultTimeout)
+	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+	} else {
+		status = resp.GetStatus()
+		if common.TIEM_SUCCESS == status.GetCode() {
+			c.JSON(http.StatusOK, controller.Success(recordId))
 		} else {
 			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
 		}

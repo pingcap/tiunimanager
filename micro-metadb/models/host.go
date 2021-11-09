@@ -366,6 +366,7 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	reqCores := require.Require.ComputeReq.CpuCores
 	reqMem := require.Require.ComputeReq.Memory
 	exclusive := require.Require.Exclusive
+	isTakeOver := applicant.TakeoverOperation
 
 	needDisk := require.Require.DiskReq.NeedDisk
 	diskSpecify := require.Require.DiskReq.DiskSpecify
@@ -376,13 +377,16 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	var count int64
 
 	if needDisk {
-		// No Limit in Reserved == false in this strategy
 		db := tx.Order("disks.capacity").Limit(int(require.Count)).Model(&rt.Disk{}).Select(
 			"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
 			"left join hosts on disks.host_id = hosts.id").Where("hosts.ip = ?", hostIp).Count(&count)
+		// No Limit in Reserved == false in this strategy for a takeover operation
+		if !isTakeOver {
+			db = db.Where("hosts.reserved = 0").Count(&count)
+		}
 
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "no disk in host (%s)", hostIp)
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "disk is not enough(%d|%d) in host (%s), takeover operation (%v)", count, require.Count, hostIp, isTakeOver)
 		}
 		db = db.Where("hosts.free_cpu_cores >= ? and hosts.free_memory >= ?", reqCores, reqMem).Count(&count)
 		if count < int64(require.Count) {
@@ -413,10 +417,13 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			}
 		}
 	} else {
-		// No Limit in Reserved == false in this strategy
 		db := tx.Model(&rt.Host{}).Select("id as host_id, host_name, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("ip = ?", hostIp).Count(&count)
+		// No Limit in Reserved == false in this strategy for a takeover operation
+		if !isTakeOver {
+			db = db.Where("hosts.reserved = 0").Count(&count)
+		}
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) is not existed", hostIp)
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) is not existed or reserved, takeover operation(%v)", hostIp, isTakeOver)
 		}
 		db = db.Where("free_cpu_cores >= ? and free_memory >= ?", reqCores, reqMem).Count(&count)
 		if count < int64(require.Count) {

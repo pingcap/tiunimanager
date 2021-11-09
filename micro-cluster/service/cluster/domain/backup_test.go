@@ -391,8 +391,8 @@ func Test_backupCluster_case1(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
-	mockTiup.EXPECT().MicroSrvBackUp(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
-	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "success", nil)
+	mockTiup.EXPECT().MicroSrvBackUp(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "success", nil)
 	secondparty.SecondParty = mockTiup
 
 	task := &TaskEntity{
@@ -431,8 +431,8 @@ func Test_backupCluster_case2(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
-	mockTiup.EXPECT().MicroSrvBackUp(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
-	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any()).Return(dbpb.TiupTaskStatus_Error, "ERROR", nil)
+	mockTiup.EXPECT().MicroSrvBackUp(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Error, "ERROR", nil)
 	secondparty.SecondParty = mockTiup
 
 	task := &TaskEntity{
@@ -471,7 +471,7 @@ func Test_backupCluster_case3(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
-	mockTiup.EXPECT().MicroSrvBackUp(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("failed"))
+	mockTiup.EXPECT().MicroSrvBackUp(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("failed"))
 	secondparty.SecondParty = mockTiup
 
 	task := &TaskEntity{
@@ -510,8 +510,8 @@ func Test_recoverFromSrcCluster_case1(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
-	mockTiup.EXPECT().MicroSrvRestore(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
-	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "success", nil)
+	mockTiup.EXPECT().MicroSrvRestore(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "success", nil)
 	secondparty.SecondParty = mockTiup
 
 	mockDB := mockdb.NewMockTiEMDBService(ctrl)
@@ -573,8 +573,8 @@ func Test_recoverFromSrcCluster_case2(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
-	mockTiup.EXPECT().MicroSrvRestore(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
-	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any()).Return(dbpb.TiupTaskStatus_Error, "ERROR", nil)
+	mockTiup.EXPECT().MicroSrvRestore(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Error, "ERROR", nil)
 	secondparty.SecondParty = mockTiup
 
 	mockDB := mockdb.NewMockTiEMDBService(ctrl)
@@ -788,7 +788,7 @@ func Test_recoverFromSrcCluster_case6(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
-	mockTiup.EXPECT().MicroSrvRestore(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("failed"))
+	mockTiup.EXPECT().MicroSrvRestore(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("failed"))
 	secondparty.SecondParty = mockTiup
 
 	mockDB := mockdb.NewMockTiEMDBService(ctrl)

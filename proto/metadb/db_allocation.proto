@@ -10,6 +10,7 @@ message DBAllocResponseStatus {
 message DBApplicant {
 	string holderId = 1;
 	string requestId = 2;
+	bool takeoverOperation = 3;
 }
 
 message DBLocation {

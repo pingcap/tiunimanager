@@ -51,7 +51,7 @@ import (
 func Create(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
-	defer interceptor.HandleMetrics(start, "Create", int(status.GetCode()))
+	defer interceptor.HandleMetrics(start, "CreateCluster", int(status.GetCode()))
 
 	var req CreateReq
 

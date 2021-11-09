@@ -16,14 +16,8 @@
 package secondparty
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"testing"
 )
-
-func init() {
-	logger = framework.LogForkFile(common.LogFileLibTiup)
-}
 
 func Test_assert_false(t *testing.T) {
 	defer func() {

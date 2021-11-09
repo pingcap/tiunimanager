@@ -205,6 +205,12 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbpb.DBHostInfoDTO) {
 	dst.Rack = GetDomainNameFromCode(src.Rack)
 	dst.Status = src.Status
 	dst.Stat = src.Stat
+	if src.Stat == int32(resource.HOST_INUSED) {
+		stat, isExhaust := src.IsExhaust()
+		if isExhaust {
+			dst.Stat = int32(stat)
+		}
+	}
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved

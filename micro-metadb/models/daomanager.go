@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -22,6 +21,8 @@ import (
 	cryrand "crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"time"
+
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
@@ -31,7 +32,6 @@ import (
 	"gorm.io/gorm"
 	gormLog "gorm.io/gorm/logger"
 	"strconv"
-	"time"
 
 	"github.com/pingcap/errors"
 
@@ -40,7 +40,7 @@ import (
 
 type DAOManager struct {
 	db              *gorm.DB
-	daoLogger 		gormLog.Interface
+	daoLogger       gormLog.Interface
 	tables          map[string]interface{}
 	clusterManager  *DAOClusterManager
 	accountManager  *DAOAccountManager
@@ -50,7 +50,7 @@ type DAOManager struct {
 func NewDAOManager(fw *framework.BaseFramework) *DAOManager {
 	m := new(DAOManager)
 	m.daoLogger = &DaoLogger{
-		p: fw,
+		p:             fw,
 		SlowThreshold: common.SlowSqlThreshold,
 	}
 	return m
@@ -129,23 +129,23 @@ func (dao *DAOManager) InitMetrics() {
 		}
 
 	}
-	dao.db.Callback().Create().Before("gorm:before_create").Register("metricsBefore", before)
-	dao.db.Callback().Create().After("gorm:after_create").Register("metricsAfter", func(db *gorm.DB) {
+	dao.db.Callback().Create().Before("gorm:before_create").Register("metrics_before_create", before)
+	dao.db.Callback().Create().After("gorm:after_create").Register("metrics_after_create", func(db *gorm.DB) {
 		after("Create", db)
 	})
 
-	dao.db.Callback().Query().Before("gorm:before_query").Register("metricsBefore", before)
-	dao.db.Callback().Query().After("gorm:after_query").Register("metricsAfter", func(db *gorm.DB) {
+	dao.db.Callback().Query().Before("gorm:before_query").Register("metrics_before_query", before)
+	dao.db.Callback().Query().After("gorm:after_query").Register("metrics_after_query", func(db *gorm.DB) {
 		after("Query", db)
 	})
 
-	dao.db.Callback().Delete().Before("gorm:before_delete").Register("metricsBefore", before)
-	dao.db.Callback().Delete().After("gorm:after_delete").Register("metricsAfter", func(db *gorm.DB) {
+	dao.db.Callback().Delete().Before("gorm:before_delete").Register("metrics_before_delete", before)
+	dao.db.Callback().Delete().After("gorm:after_delete").Register("metrics_after_delete", func(db *gorm.DB) {
 		after("Delete", db)
 	})
 
-	dao.db.Callback().Update().Before("gorm:before_update").Register("metricsBefore", before)
-	dao.db.Callback().Update().After("gorm:after_update").Register("metricsAfter", func(db *gorm.DB) {
+	dao.db.Callback().Update().Before("gorm:before_update").Register("metrics_before_update", before)
+	dao.db.Callback().Update().After("gorm:after_update").Register("metrics_after_update", func(db *gorm.DB) {
 		after("Update", db)
 	})
 }
@@ -355,10 +355,10 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		Arch:         string(resource.X86),
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
-		CpuCores:     16,
-		Memory:       64,
-		FreeCpuCores: 16,
-		FreeMemory:   64,
+		CpuCores:     12,
+		Memory:       24,
+		FreeCpuCores: 12,
+		FreeMemory:   24,
 		Nic:          "1GE",
 		Region:       "Region1",
 		AZ:           "Zone1",

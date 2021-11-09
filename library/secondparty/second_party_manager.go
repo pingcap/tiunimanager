@@ -32,21 +32,21 @@ var logger *logrus.Entry
 
 type MicroSrv interface {
 	MicroInit()
-	MicroSrvTiupDeploy(tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
-	MicroSrvTiupStart(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
-	MicroSrvTiupRestart(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
-	MicroSrvTiupStop(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
-	MicroSrvTiupList(tiupComponent TiUPComponentTypeStr, timeoutS int, flags []string) (resp *CmdListResp, err error)
-	MicroSrvTiupDestroy(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
-	MicroSrvTiupDisplay(tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string) (resp *CmdDisplayResp, err error)
-	MicroSrvDumpling(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
-	MicroSrvLightning(timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
-	MicroSrvBackUp(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error)
-	MicroSrvShowBackUpInfo(cluster ClusterFacade) CmdShowBackUpInfoResp
-	MicroSrvRestore(cluster ClusterFacade, storage BrStorage, bizId uint64) (taskID uint64, err error)
-	MicroSrvShowRestoreInfo(cluster ClusterFacade) CmdShowRestoreInfoResp
-	MicroSrvGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error)
-	MicroSrvGetTaskStatusByBizID(bizID uint64) (stat dbPb.TiupTaskStatus, statErrStr string, err error)
+	MicroSrvTiupDeploy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
+	MicroSrvTiupStart(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
+	MicroSrvTiupRestart(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
+	MicroSrvTiupStop(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
+	MicroSrvTiupList(ctx context.Context, tiupComponent TiUPComponentTypeStr, timeoutS int, flags []string) (resp *CmdListResp, err error)
+	MicroSrvTiupDestroy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
+	MicroSrvTiupDisplay(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string) (resp *CmdDisplayResp, err error)
+	MicroSrvDumpling(ctx context.Context, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
+	MicroSrvLightning(ctx context.Context, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
+	MicroSrvBackUp(ctx context.Context, cluster ClusterFacade, storage BrStorage, bizID uint64) (taskID uint64, err error)
+	MicroSrvShowBackUpInfo(ctx context.Context, cluster ClusterFacade) CmdShowBackUpInfoResp
+	MicroSrvRestore(ctx context.Context, cluster ClusterFacade, storage BrStorage, bizID uint64) (taskID uint64, err error)
+	MicroSrvShowRestoreInfo(ctx context.Context, cluster ClusterFacade) CmdShowRestoreInfoResp
+	MicroSrvGetTaskStatus(ctx context.Context, taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error)
+	MicroSrvGetTaskStatusByBizID(ctx context.Context, bizID uint64) (stat dbPb.TiupTaskStatus, statErrStr string, err error)
 }
 
 type SecondMicro struct {
@@ -59,14 +59,15 @@ type SecondMicro struct {
 
 func (secondMicro *SecondMicro) MicroInit() {
 	logger = framework.LogForkFile(common.LogFileSecondParty)
-	logger.Infof("microinit secondmicro: %+v", secondMicro)
+	framework.Log().Infof("microinit secondmicro: %+v", secondMicro)
 	secondMicro.syncedTaskStatusMap = make(map[uint64]TaskStatusMapValue)
 	secondMicro.taskStatusCh = make(chan TaskStatusMember, 1024)
 	secondMicro.taskStatusMap = make(map[uint64]TaskStatusMapValue)
 	go secondMicro.taskStatusMapSyncer()
 }
 
-func (secondMicro *SecondMicro) MicroSrvGetTaskStatus(taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error) {
+func (secondMicro *SecondMicro) MicroSrvGetTaskStatus(ctx context.Context, taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error) {
+	framework.LogWithContext(ctx).WithField("taskid", taskID).Infof("microsrvgettaskstatus")
 	var req dbPb.FindTiupTaskByIDRequest
 	req.Id = taskID
 	rsp, err := client.DBClient.FindTiupTaskByID(context.Background(), &req)
@@ -81,7 +82,8 @@ func (secondMicro *SecondMicro) MicroSrvGetTaskStatus(taskID uint64) (stat dbPb.
 	}
 }
 
-func (secondMicro *SecondMicro) MicroSrvGetTaskStatusByBizID(bizID uint64) (stat dbPb.TiupTaskStatus, statErrStr string, err error) {
+func (secondMicro *SecondMicro) MicroSrvGetTaskStatusByBizID(ctx context.Context, bizID uint64) (stat dbPb.TiupTaskStatus, statErrStr string, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvgettaskstatusbybizid")
 	var req dbPb.GetTiupTaskStatusByBizIDRequest
 	req.BizID = bizID
 	rsp, err := client.DBClient.GetTiupTaskStatusByBizID(context.Background(), &req)

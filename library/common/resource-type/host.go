@@ -99,6 +99,8 @@ const (
 	HOST_LOADLESS
 	HOST_INUSED
 	HOST_EXHAUST
+	HOST_COMPUTE_EXHAUST
+	HOST_DISK_EXHAUST
 	HOST_EXCLUSIVE
 )
 
@@ -139,7 +141,7 @@ type Host struct {
 	DeletedAt    gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
-func (h Host) IsExhaust() bool {
+func (h Host) IsExhaust() (stat HostStat, isExhaust bool) {
 	diskExaust := true
 	for _, disk := range h.Disks {
 		if disk.Status == int32(DISK_AVAILABLE) {
@@ -147,7 +149,16 @@ func (h Host) IsExhaust() bool {
 			break
 		}
 	}
-	return diskExaust || h.FreeCpuCores == 0 || h.FreeMemory == 0
+	computeExaust := (h.FreeCpuCores == 0 || h.FreeMemory == 0)
+	if diskExaust && computeExaust {
+		return HOST_EXHAUST, true
+	} else if computeExaust {
+		return HOST_COMPUTE_EXHAUST, true
+	} else if diskExaust {
+		return HOST_DISK_EXHAUST, true
+	} else {
+		return HOST_STAT_WHATEVER, false
+	}
 }
 
 func (h Host) IsLoadless() bool {

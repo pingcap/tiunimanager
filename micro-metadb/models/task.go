@@ -78,7 +78,7 @@ func CreateTask(db *gorm.DB, parentType int8, parentId string, taskName, bizId s
 		ReturnType: taskReturnType,
 		StartTime:  sql.NullTime{
 			Time:  time.Unix(unixTime, 0),
-			Valid: unixTime == 0,
+			Valid: unixTime != 0,
 		},
 		Parameters: parameters,
 		Result:     result,

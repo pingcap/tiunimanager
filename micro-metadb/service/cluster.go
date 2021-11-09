@@ -688,6 +688,6 @@ func nullTime2Unix(at sql.NullTime) (unix int64) {
 func unix2NullTime(unix int64) sql.NullTime {
 	return sql.NullTime {
 		Time:  time.Unix(unix, 0),
-		Valid: unix == 0,
+		Valid: unix != 0,
 	}
 }

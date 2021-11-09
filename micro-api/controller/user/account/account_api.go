@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,10 +17,13 @@
 package account
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
-	"net/http"
 )
 
 // Profile user profile
@@ -36,6 +38,10 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /user/profile [get]
 func Profile(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Profile", int(status.GetCode()))
+
 	v, _ := c.Get(interceptor.VisitorIdentityKey)
 
 	visitor, _ := v.(*interceptor.VisitorIdentity)

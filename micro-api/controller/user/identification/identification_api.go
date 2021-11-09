@@ -18,6 +18,7 @@ package identification
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
@@ -26,6 +27,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 )
 
 // Login login
@@ -41,6 +43,10 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /user/login [post]
 func Login(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Login", int(status.GetCode()))
+
 	var req LoginInfo
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -52,13 +58,16 @@ func Login(c *gin.Context) {
 	result, err := client.ClusterClient.Login(framework.NewMicroCtxFromGinCtx(c), &loginReq)
 
 	if err == nil {
+		status = result.GetStatus()
 		if result.Status.Code != 0 {
+			status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 			c.JSON(http.StatusBadRequest, controller.Fail(int(result.GetStatus().GetCode()), result.GetStatus().GetMessage()))
 		} else {
 			c.Header("Token", result.TokenString)
 			c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: req.UserName, Token: result.TokenString}))
 		}
 	} else {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 	}
 }
@@ -75,6 +84,10 @@ func Login(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "Logout", int(status.GetCode()))
+
 	bearerStr := c.GetHeader("Authorization")
 	tokenStr, err := utils.GetTokenFromBearer(bearerStr)
 	if err != nil {
@@ -84,6 +97,7 @@ func Logout(c *gin.Context) {
 	result, err := client.ClusterClient.Logout(c, &logoutReq)
 
 	if err == nil {
+		status = result.GetStatus()
 		c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: result.GetAccountName()}))
 	} else {
 		c.JSON(http.StatusOK, controller.Fail(03, err.Error()))

@@ -19,10 +19,12 @@ package domain
 import (
 	ctx "context"
 	"errors"
-	"github.com/pingcap-inc/tiem/library/framework"
+	"fmt"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client"
@@ -282,6 +284,34 @@ func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId str
 
 func GetParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) (parameterJson string, err error) {
 	return RemoteClusterProxy.QueryParameterJson(ctx, clusterId)
+}
+
+func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation) error {
+	clusters, total, err := ClusterRepo.Query(ctx, "", "", "", "", "", 1, 10000)
+	if err != nil {
+		getLogger().Errorf("invoke ClusterRepo list cluster err： %v", err)
+		return err
+	}
+	getLogger().Infof("list cluster total count: %d", total)
+	hosts := listClusterHosts(aggregation)
+	getLogger().Infof("cluster %s list host: %v", aggregation.Cluster.Id, hosts)
+	for _, host := range hosts {
+		collectorConfigs, err := buildCollectorTiDBLogConfig(ctx, host, clusters)
+		if err != nil {
+			getLogger().Errorf("collectorTiDBLogConfig build collector tiDB log config err： %v", err)
+			return err
+		}
+		bs, err := yaml.Marshal(collectorConfigs)
+		if err != nil {
+			getLogger().Errorf("collectorTiDBLogConfig marshal yaml err： %v", err)
+			return err
+		}
+		collectorYaml := string(bs)
+		// todo: invoke secondparty.SecondParty.MicroSrvTransferFile not implements
+		//secondparty.SecondParty.MicroSrvTransferFile(secondparty.ClusterComponentTypeStr, aggregation.Cluster.ClusterName, collectorYaml, host, "/root/filebeat/conf/tidb.yml")
+		fmt.Println(collectorYaml)
+	}
+	return nil
 }
 
 //func (aggregation *ClusterAggregation) loadWorkFlow() error {

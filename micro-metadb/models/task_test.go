@@ -141,7 +141,7 @@ func TestCreateTask(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotTask, err := CreateTask(MetaDB, tt.args.parentType, tt.args.parentId, tt.args.taskName, tt.args.bizId, tt.args.taskReturnType, tt.args.parameters, tt.args.result)
+			gotTask, err := CreateTask(MetaDB, tt.args.parentType, tt.args.parentId, tt.args.taskName, tt.args.bizId, tt.args.taskReturnType, tt.args.parameters, tt.args.result, 0)
 			defer MetaDB.Delete(gotTask)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateTask() error = %v, wantErr %v", err, tt.wantErr)
@@ -180,10 +180,10 @@ func TestFetchFlowDetail(t *testing.T) {
 		flow, _ := CreateFlow(MetaDB, "name", "创建中", "TestFetchFlowDetail1", "111")
 		defer MetaDB.Delete(flow)
 
-		CreateTask(MetaDB, 0, strconv.Itoa(int(flow.ID)), "task1", "TestFetchFlowDetail1", "trt1", "p1", "r1")
-		CreateTask(MetaDB, 0, strconv.Itoa(int(flow.ID)), "task2", "TestFetchFlowDetail2", "trt2", "p2", "r2")
-		CreateTask(MetaDB, 0, "22", "task3", "TestFetchFlowDetail3", "trt3", "p3", "r3")
-		CreateTask(MetaDB, 1, strconv.Itoa(int(flow.ID)), "task4", "TestFetchFlowDetail4", "trt4", "p4", "r4")
+		CreateTask(MetaDB, 0, strconv.Itoa(int(flow.ID)), "task1", "TestFetchFlowDetail1", "trt1", "p1", "r1", 0)
+		CreateTask(MetaDB, 0, strconv.Itoa(int(flow.ID)), "task2", "TestFetchFlowDetail2", "trt2", "p2", "r2", 0)
+		CreateTask(MetaDB, 0, "22", "task3", "TestFetchFlowDetail3", "trt3", "p3", "r3", 0)
+		CreateTask(MetaDB, 1, strconv.Itoa(int(flow.ID)), "task4", "TestFetchFlowDetail4", "trt4", "p4", "r4", 0)
 
 		gotFlow, gotTasks, err := FetchFlowDetail(MetaDB, flow.ID)
 		if err != nil {
@@ -212,7 +212,7 @@ func TestFetchFlowDetail(t *testing.T) {
 
 func TestFetchTask(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		task, _ := CreateTask(MetaDB, 1, "p1", "tn", "bi", "trt", "p", "r")
+		task, _ := CreateTask(MetaDB, 1, "p1", "tn", "bi", "trt", "p", "r", 0)
 
 		got, err := FetchTask(MetaDB, task.ID)
 		if err != nil {
@@ -290,10 +290,10 @@ func TestFlowDO_TableName(t *testing.T) {
 
 func TestQueryTask(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		CreateTask(MetaDB, 0, "1", "task1", "TestQueryTask1", "trt1", "p1", "r1")
-		CreateTask(MetaDB, 0, "1", "task2", "TestQueryTask2", "trt2", "p2", "r2")
-		CreateTask(MetaDB, 0, "1", "task3", "TestQueryTask3", "trt3", "p3", "r3")
-		CreateTask(MetaDB, 1, "1", "task4", "TestQueryTask4", "trt4", "p4", "r4")
+		CreateTask(MetaDB, 0, "1", "task1", "TestQueryTask1", "trt1", "p1", "r1", 0)
+		CreateTask(MetaDB, 0, "1", "task2", "TestQueryTask2", "trt2", "p2", "r2", 0)
+		CreateTask(MetaDB, 0, "1", "task3", "TestQueryTask3", "trt3", "p3", "r3", 0)
+		CreateTask(MetaDB, 1, "1", "task4", "TestQueryTask4", "trt4", "p4", "r4", 0)
 
 		gotTasks, err := QueryTask(MetaDB, "TestQueryTask1", "whatever")
 
@@ -480,7 +480,7 @@ func TestUpdateFlow(t *testing.T) {
 //}
 
 func TestUpdateTask(t *testing.T) {
-	task, _ := CreateTask(MetaDB, 0, "28282828", "taskName", "bizId", "taskReturnType", "parameters", "result")
+	task, _ := CreateTask(MetaDB, 0, "28282828", "taskName", "bizId", "taskReturnType", "parameters", "result", 0)
 
 	type args struct {
 		task TaskDO

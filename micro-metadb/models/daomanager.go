@@ -129,23 +129,23 @@ func (dao *DAOManager) InitMetrics() {
 		}
 
 	}
-	dao.db.Callback().Create().Before("gorm:before_create").Register("metricsBefore", before)
-	dao.db.Callback().Create().After("gorm:after_create").Register("metricsAfter", func(db *gorm.DB) {
+	dao.db.Callback().Create().Before("gorm:before_create").Register("metrics_before_create", before)
+	dao.db.Callback().Create().After("gorm:after_create").Register("metrics_after_create", func(db *gorm.DB) {
 		after("Create", db)
 	})
 
-	dao.db.Callback().Query().Before("gorm:before_query").Register("metricsBefore", before)
-	dao.db.Callback().Query().After("gorm:after_query").Register("metricsAfter", func(db *gorm.DB) {
+	dao.db.Callback().Query().Before("gorm:before_query").Register("metrics_before_query", before)
+	dao.db.Callback().Query().After("gorm:after_query").Register("metrics_after_query", func(db *gorm.DB) {
 		after("Query", db)
 	})
 
-	dao.db.Callback().Delete().Before("gorm:before_delete").Register("metricsBefore", before)
-	dao.db.Callback().Delete().After("gorm:after_delete").Register("metricsAfter", func(db *gorm.DB) {
+	dao.db.Callback().Delete().Before("gorm:before_delete").Register("metrics_before_delete", before)
+	dao.db.Callback().Delete().After("gorm:after_delete").Register("metrics_after_delete", func(db *gorm.DB) {
 		after("Delete", db)
 	})
 
-	dao.db.Callback().Update().Before("gorm:before_update").Register("metricsBefore", before)
-	dao.db.Callback().Update().After("gorm:after_update").Register("metricsAfter", func(db *gorm.DB) {
+	dao.db.Callback().Update().Before("gorm:before_update").Register("metrics_before_update", before)
+	dao.db.Callback().Update().After("gorm:after_update").Register("metrics_after_update", func(db *gorm.DB) {
 		after("Update", db)
 	})
 }

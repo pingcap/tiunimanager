@@ -77,7 +77,7 @@ func GetFailureDomain(c *gin.Context) {
 		return
 	}
 
-	status = rsp.GetStatus()
+	status.Code = rsp.Rs.GetCode()
 	if rsp.Rs.Code != int32(codes.OK) {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
@@ -176,7 +176,7 @@ func GetHierarchy(c *gin.Context) {
 		return
 	}
 
-	status = rsp.GetStatus()
+	status.Code = rsp.Rs.GetCode()
 	if rsp.Rs.Code != int32(codes.OK) {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))

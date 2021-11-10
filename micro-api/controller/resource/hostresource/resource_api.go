@@ -188,7 +188,7 @@ func ImportHost(c *gin.Context) {
 		return
 	}
 
-	status = rsp.GetStatus()
+	status.Code = rsp.Rs.GetCode()
 	if rsp.Rs.Code != int32(codes.OK) {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
@@ -316,7 +316,7 @@ func ImportHosts(c *gin.Context) {
 		return
 	}
 
-	status = rsp.GetStatus()
+	status.Code = rsp.Rs.GetCode()
 	if rsp.Rs.Code != int32(codes.OK) {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
@@ -377,7 +377,7 @@ func ListHost(c *gin.Context) {
 		return
 	}
 
-	status = rsp.GetStatus()
+	status.Code = rsp.Rs.GetCode()
 	if rsp.Rs.Code != int32(codes.OK) {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
@@ -419,7 +419,7 @@ func HostDetails(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
 	}
-	status = rsp.GetStatus()
+	status.Code = rsp.Rs.GetCode()
 	if rsp.Rs.Code != int32(codes.OK) {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
@@ -458,7 +458,7 @@ func RemoveHost(c *gin.Context) {
 		return
 	}
 
-	status = rsp.GetStatus()
+	status.Code = rsp.Rs.GetCode()
 	if rsp.Rs.Code != int32(codes.OK) {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
@@ -521,7 +521,7 @@ func RemoveHosts(c *gin.Context) {
 		return
 	}
 
-	status = rsp.GetStatus()
+	status.Code = rsp.Rs.GetCode()
 	if rsp.Rs.Code != int32(codes.OK) {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
@@ -615,7 +615,7 @@ func UpdateHost(c *gin.Context) {
 			return
 		}
 
-		status = rsp.GetStatus()
+		status.Code = rsp.Rs.GetCode()
 		if rsp.Rs.Code != int32(codes.OK) {
 			status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 			c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
@@ -713,7 +713,7 @@ func AllocHosts(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 		return
 	}
-	status = rsp.GetStatus()
+	status.Code = rsp.Rs.GetCode()
 	if rsp.Rs.Code != int32(codes.OK) {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))

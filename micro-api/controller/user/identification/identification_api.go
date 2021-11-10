@@ -57,8 +57,8 @@ func Login(c *gin.Context) {
 	loginReq := clusterpb.LoginRequest{AccountName: req.UserName, Password: req.UserPassword}
 	result, err := client.ClusterClient.Login(framework.NewMicroCtxFromGinCtx(c), &loginReq)
 
+	status.Code = result.Status.GetCode()
 	if err == nil {
-		status = result.GetStatus()
 		if result.Status.Code != 0 {
 			status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 			c.JSON(http.StatusBadRequest, controller.Fail(int(result.GetStatus().GetCode()), result.GetStatus().GetMessage()))
@@ -96,8 +96,8 @@ func Logout(c *gin.Context) {
 	logoutReq := clusterpb.LogoutRequest{TokenString: tokenStr}
 	result, err := client.ClusterClient.Logout(c, &logoutReq)
 
+	status.Code = result.Status.GetCode()
 	if err == nil {
-		status = result.GetStatus()
 		c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: result.GetAccountName()}))
 	} else {
 		c.JSON(http.StatusOK, controller.Fail(03, err.Error()))

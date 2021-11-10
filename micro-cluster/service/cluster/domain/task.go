@@ -222,14 +222,14 @@ func (flow *FlowWorkAggregation) GetAllTaskDef() []string {
 func (flow *FlowWorkAggregation) ExtractTaskDTO() []*clusterpb.TaskDTO {
 	var tasks []*clusterpb.TaskDTO
 	for _, task := range flow.Tasks {
-		tasks = append(tasks, &clusterpb.TaskDTO {
-			Id:     int64(task.Id),
-			Status: int32(task.Status),
-			TaskName: task.TaskName,
-			Result: task.Result,
+		tasks = append(tasks, &clusterpb.TaskDTO{
+			Id:         int64(task.Id),
+			Status:     int32(task.Status),
+			TaskName:   task.TaskName,
+			Result:     task.Result,
 			Parameters: task.Parameters,
-			StartTime: task.StartTime,
-			EndTime: task.EndTime,
+			StartTime:  task.StartTime,
+			EndTime:    task.EndTime,
 		})
 	}
 	return tasks

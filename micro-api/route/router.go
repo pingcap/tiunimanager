@@ -84,6 +84,7 @@ func Route(g *gin.Engine) {
 			cluster.GET("/:clusterId", clusterApi.Detail)
 			cluster.POST("/", clusterApi.Create)
 			cluster.POST("/takeover", clusterApi.Takeover)
+			cluster.POST("/preview", clusterApi.Preview)
 
 			cluster.GET("/", clusterApi.Query)
 			cluster.DELETE("/:clusterId", clusterApi.Delete)

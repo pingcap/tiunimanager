@@ -91,6 +91,51 @@ func Create(c *gin.Context) {
 	}
 }
 
+// Preview preview cluster topology and capability
+// @Summary preview cluster topology and capability
+// @Description preview cluster topology and capability
+// @Tags cluster
+// @Accept application/json
+// @Produce application/json
+// @Security ApiKeyAuth
+// @Param createReq body CreateReq true "preview request"
+// @Success 200 {object} controller.CommonResult{data=PreviewClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/preview [post]
+func Preview(c *gin.Context) {
+	var req CreateReq
+
+	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	stockCheckResult := make([]StockCheckItem, 0)
+
+	for _, group := range req.NodeDemandList {
+		for _, node := range group.DistributionItems {
+			stockCheckResult = append(stockCheckResult, StockCheckItem{
+				Region: req.Region,
+				CpuArchitecture: req.CpuArchitecture,
+				ComponentType: group.ComponentType,
+				DistributionItem: node,
+				// todo stock
+				Enough: true,
+			})
+		}
+	}
+
+	c.JSON(http.StatusOK, PreviewClusterRsp {
+		ClusterBaseInfo:	req.ClusterBaseInfo,
+		StockCheckResult: stockCheckResult,
+		CapabilityIndexes: []ServiceCapabilityIndex{
+			// todo capability
+		},
+	})
+}
+
 // Query query clusters
 // @Summary query clusters
 // @Description query clusters

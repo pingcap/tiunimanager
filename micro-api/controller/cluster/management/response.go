@@ -24,6 +24,19 @@ type CreateClusterRsp struct {
 	controller.StatusInfo
 }
 
+type PreviewClusterRsp struct {
+	ClusterBaseInfo
+	StockCheckResult  []StockCheckItem         `json:"stockCheckResult"`
+	CapabilityIndexes []ServiceCapabilityIndex `json:"capabilityIndexes"`
+}
+
+type ServiceCapabilityIndex struct {
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Value       interface{} `json:"value"`
+	Unit        string      `json:"unit"`
+}
+
 type DeleteClusterRsp struct {
 	ClusterId string `json:"clusterId"`
 	controller.StatusInfo

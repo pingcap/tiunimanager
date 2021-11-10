@@ -565,6 +565,75 @@ var doc = `{
                 }
             }
         },
+        "/clusters/preview": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "preview cluster topology and capability",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "preview cluster topology and capability",
+                "parameters": [
+                    {
+                        "description": "preview request",
+                        "name": "createReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/management.CreateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/management.PreviewClusterRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/restore": {
             "post": {
                 "security": [
@@ -3999,6 +4068,47 @@ var doc = `{
                 }
             }
         },
+        "management.PreviewClusterRsp": {
+            "type": "object",
+            "properties": {
+                "capabilityIndexes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/management.ServiceCapabilityIndex"
+                    }
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
+                "dbPassword": {
+                    "type": "string"
+                },
+                "recoverInfo": {
+                    "$ref": "#/definitions/management.RecoverInfo"
+                },
+                "stockCheckResult": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/management.StockCheckItem"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "type": "boolean"
+                }
+            }
+        },
         "management.RecoverInfo": {
             "type": "object",
             "properties": {
@@ -4032,6 +4142,49 @@ var doc = `{
                     "type": "string"
                 },
                 "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "management.ServiceCapabilityIndex": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "object"
+                }
+            }
+        },
+        "management.StockCheckItem": {
+            "type": "object",
+            "properties": {
+                "componentType": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "cpuArchitecture": {
+                    "type": "string"
+                },
+                "enough": {
+                    "type": "boolean"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "specCode": {
+                    "type": "string"
+                },
+                "zoneCode": {
                     "type": "string"
                 }
             }

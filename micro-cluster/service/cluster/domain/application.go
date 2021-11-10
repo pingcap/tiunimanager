@@ -530,10 +530,6 @@ func destroyCluster(task *TaskEntity, context *FlowContext) bool {
 
 func freedResource(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)
-	err := collectorTiDBLogConfig(context, context.GetData(contextClusterKey).(*ClusterAggregation), task.Id)
-	if err != nil {
-		getLogger().Errorf("collector tidb log config err = %s", err.Error())
-	}
 	return true
 }
 

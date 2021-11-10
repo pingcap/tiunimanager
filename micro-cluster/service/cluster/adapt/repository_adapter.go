@@ -451,6 +451,8 @@ func ParseTaskDTO(dto *dbpb.DBTaskDTO) *domain.TaskEntity {
 		BizId:      dto.BizId,
 		Parameters: dto.Parameters,
 		Result:     dto.Result,
+		StartTime:  dto.StartTime,
+		EndTime:    dto.EndTime,
 	}
 }
 

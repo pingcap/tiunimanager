@@ -16,14 +16,8 @@
 package secondparty
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"testing"
 )
-
-func init() {
-	logger = framework.LogForkFile(common.LogFileLibTiup)
-}
 
 func Test_assert_false(t *testing.T) {
 	defer func() {
@@ -49,7 +43,7 @@ func Test_myPanic(t *testing.T) {
 
 func Test_newTmpFileWithContent(t *testing.T) {
 	content := []byte("temp info")
-	_, err := newTmpFileWithContent(content)
+	_, err := newTmpFileWithContent("test-prefix", content)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

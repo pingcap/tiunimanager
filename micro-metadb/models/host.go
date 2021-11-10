@@ -189,11 +189,7 @@ func getHostsFromFailureDomain(tx *gorm.DB, failureDomain string, numReps int, c
 		tx.First(&host, "ID = ?", resource.HostId)
 		host.FreeCpuCores -= cpuCores
 		host.FreeMemory -= mem
-		if host.IsExhaust() {
-			host.Stat = int32(rt.HOST_EXHAUST)
-		} else {
-			host.Stat = int32(rt.HOST_INUSED)
-		}
+		host.Stat = int32(rt.HOST_INUSED)
 		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "update host(%s) stat err, %v", resource.HostId, err)
@@ -318,11 +314,7 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []
 		if exclusive {
 			host.Stat = int32(rt.HOST_EXCLUSIVE)
 		} else {
-			if host.IsExhaust() {
-				host.Stat = int32(rt.HOST_EXHAUST)
-			} else {
-				host.Stat = int32(rt.HOST_INUSED)
-			}
+			host.Stat = int32(rt.HOST_INUSED)
 		}
 		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
 		if err != nil {
@@ -366,6 +358,7 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	reqCores := require.Require.ComputeReq.CpuCores
 	reqMem := require.Require.ComputeReq.Memory
 	exclusive := require.Require.Exclusive
+	isTakeOver := applicant.TakeoverOperation
 
 	needDisk := require.Require.DiskReq.NeedDisk
 	diskSpecify := require.Require.DiskReq.DiskSpecify
@@ -376,13 +369,16 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	var count int64
 
 	if needDisk {
-		// No Limit in Reserved == false in this strategy
 		db := tx.Order("disks.capacity").Limit(int(require.Count)).Model(&rt.Disk{}).Select(
 			"disks.host_id, hosts.host_name, hosts.ip, hosts.user_name, hosts.passwd, ? as cpu_cores, ? as memory, disks.id as disk_id, disks.name as disk_name, disks.path, disks.capacity", reqCores, reqMem).Joins(
 			"left join hosts on disks.host_id = hosts.id").Where("hosts.ip = ?", hostIp).Count(&count)
+		// No Limit in Reserved == false in this strategy for a takeover operation
+		if !isTakeOver {
+			db = db.Where("hosts.reserved = 0").Count(&count)
+		}
 
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "no disk in host (%s)", hostIp)
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "disk is not enough(%d|%d) in host (%s), takeover operation (%v)", count, require.Count, hostIp, isTakeOver)
 		}
 		db = db.Where("hosts.free_cpu_cores >= ? and hosts.free_memory >= ?", reqCores, reqMem).Count(&count)
 		if count < int64(require.Count) {
@@ -413,10 +409,13 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			}
 		}
 	} else {
-		// No Limit in Reserved == false in this strategy
 		db := tx.Model(&rt.Host{}).Select("id as host_id, host_name, ip, user_name, passwd, ? as cpu_cores, ? as memory", reqCores, reqMem).Where("ip = ?", hostIp).Count(&count)
+		// No Limit in Reserved == false in this strategy for a takeover operation
+		if !isTakeOver {
+			db = db.Where("hosts.reserved = 0").Count(&count)
+		}
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) is not existed", hostIp)
+			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) is not existed or reserved, takeover operation(%v)", hostIp, isTakeOver)
 		}
 		db = db.Where("free_cpu_cores >= ? and free_memory >= ?", reqCores, reqMem).Count(&count)
 		if count < int64(require.Count) {
@@ -886,6 +885,77 @@ func (m *DAOResourceManager) GetHostItems(ctx context.Context, filter rt.Filter,
 	if err != nil {
 		tx.Rollback()
 		return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get hierarchy failed, %v", err)
+	}
+	tx.Commit()
+	return
+}
+
+type HostCondition struct {
+	Status *int32
+	Stat   *int32
+	Arch   *string
+}
+type DiskCondition struct {
+	Type     *string
+	Capacity *int32
+	Status   *int32
+}
+type StockCondition struct {
+	Location      rt.Location
+	HostCondition HostCondition
+	DiskCondition DiskCondition
+}
+
+type Stock struct {
+	FreeCpuCores     int
+	FreeMemory       int
+	FreeDiskCount    int
+	FreeDiskCapacity int
+}
+
+func (m *DAOResourceManager) GetStocks(ctx context.Context, stockCondition StockCondition) (stocks []Stock, err error) {
+	tx := m.getDb(ctx).Begin()
+	db := tx.Model(&rt.Host{}).Select(
+		"hosts.free_cpu_cores as free_cpu_cores, hosts.free_memory as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
+		"left join disks on disks.host_id = hosts.id")
+	if stockCondition.DiskCondition.Status != nil {
+		db = db.Where("disks.status = ?", stockCondition.DiskCondition.Status)
+	}
+	if stockCondition.DiskCondition.Type != nil {
+		db = db.Where("disks.type = ?", stockCondition.DiskCondition.Type)
+	}
+	if stockCondition.DiskCondition.Capacity != nil {
+		db = db.Where("disks.capacity >= ?", stockCondition.DiskCondition.Capacity)
+	}
+	db = db.Group("hosts.id")
+	// Filter by Location
+	if stockCondition.Location.Host != "" {
+		db = db.Having("hosts.ip = ?", stockCondition.Location.Host)
+	}
+	if stockCondition.Location.Rack != "" {
+		db = db.Having("hosts.rack = ?", stockCondition.Location.Rack)
+	}
+	if stockCondition.Location.Zone != "" {
+		db = db.Having("hosts.az = ?", stockCondition.Location.Zone)
+	}
+	if stockCondition.Location.Region != "" {
+		db = db.Having("hosts.region = ?", stockCondition.Location.Region)
+	}
+	// Filter by host fields
+	if stockCondition.HostCondition.Arch != nil {
+		db = db.Having("hosts.arch = ?", stockCondition.HostCondition.Arch)
+	}
+	if stockCondition.HostCondition.Status != nil {
+		db = db.Having("hosts.status = ?", stockCondition.HostCondition.Status)
+	}
+	if stockCondition.HostCondition.Stat != nil {
+		db = db.Having("hosts.stat = ?", stockCondition.HostCondition.Stat)
+	}
+
+	err = db.Scan(&stocks).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get stocks failed, %v", err)
 	}
 	tx.Commit()
 	return

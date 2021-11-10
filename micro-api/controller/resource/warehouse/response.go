@@ -43,3 +43,15 @@ type Node struct {
 type GetHierarchyRsp struct {
 	Root Node `json:"Root"`
 }
+
+type Stocks struct {
+	FreeHostCount    int32 `json:"freeHostCount"`
+	FreeCpuCores     int32 `json:"freeCpuCores"`
+	FreeMemory       int32 `json:"freeMemory"`
+	FreeDiskCount    int32 `json:"freeDiskCount"`
+	FreeDiskCapacity int32 `json:"freeDiskCapacity"`
+}
+
+type GetStocksRsp struct {
+	Stocks Stocks `json:"stocks"`
+}

@@ -47,6 +47,7 @@ func TestMain(m *testing.M) {
 			Dao = handler.Dao()
 			Dao.InitDB(testFilePath)
 			Dao.InitTables()
+			Dao.InitMetrics()
 
 			MetaDB = Dao.Db()
 			Dao.SetAccountManager(models.NewDAOAccountManager(Dao.Db()))

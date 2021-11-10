@@ -679,3 +679,7 @@ func (clusterManager *ClusterServiceHandler) ReserveHost(ctx context.Context, in
 func (clusterManager *ClusterServiceHandler) GetHierarchy(ctx context.Context, in *clusterpb.GetHierarchyRequest, out *clusterpb.GetHierarchyResponse) error {
 	return clusterManager.resourceManager.GetHierarchy(ctx, in, out)
 }
+
+func (clusterManager *ClusterServiceHandler) GetStocks(ctx context.Context, in *clusterpb.GetStocksRequest, out *clusterpb.GetStocksResponse) error {
+	return clusterManager.resourceManager.GetStocks(ctx, in, out)
+}

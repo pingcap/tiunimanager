@@ -56,3 +56,5 @@ var (
 	TemplateFileName = "hostInfo_template.xlsx"
 	TemplateFilePath = "./etc"
 )
+
+const SlowSqlThreshold = 100

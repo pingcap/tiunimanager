@@ -51,6 +51,7 @@ func (handler *DBServiceHandler) CreateTask(ctx context.Context, req *dbpb.DBCre
 		req.Task.TaskReturnType,
 		req.Task.Parameters,
 		req.Task.Result,
+		req.Task.StartTime,
 	)
 	if err != nil {
 		// todo
@@ -70,8 +71,10 @@ func (handler *DBServiceHandler) UpdateFlow(ctx context.Context, req *dbpb.DBUpd
 	} else {
 		tasks, err := models.BatchSaveTasks(db, batchParseTaskDTO(req.FlowWithTasks.Tasks))
 		if err != nil {
-			// todo
-
+			rsp.Status = &dbpb.DBTaskResponseStatus{
+				Code: 500,
+				Message: err.Error(),
+			}
 		} else {
 			rsp.Status = TaskSuccessResponseStatus
 			rsp.FlowWithTasks = &dbpb.DBFlowWithTaskDTO{
@@ -142,7 +145,7 @@ func (handler *DBServiceHandler) ListFlows(ctx context.Context, req *dbpb.DBList
 			flowDTOs[i] = convertFlowToDTO(v)
 		}
 		rsp.Flows = flowDTOs
-		framework.LogWithContext(ctx).Infof("ListFlows successful, total: %d", total)
+		framework.LogWithContext(ctx).Infof("ListFlows succeed, total: %d", total)
 	} else {
 		framework.LogWithContext(ctx).Infof("ListFlows failed, error: %s", err.Error())
 	}
@@ -163,7 +166,7 @@ func convertFlowToDTO(do *models.FlowDO) (dto *dbpb.DBFlowDTO) {
 	dto.UpdateTime = do.UpdatedAt.Unix()
 	dto.Operator = do.Operator
 
-	dto.DeleteTime = nullTimeUnix(sql.NullTime(do.DeletedAt))
+	dto.DeleteTime = nullTime2Unix(sql.NullTime(do.DeletedAt))
 	return
 }
 
@@ -193,8 +196,8 @@ func convertTaskToDTO(do *models.TaskDO) (dto *dbpb.DBTaskDTO) {
 	dto.ParentId = do.ParentId
 	dto.ParentType = int32(do.ParentType)
 
-	dto.StartTime = nullTimeUnix(do.StartTime)
-	dto.EndTime = nullTimeUnix(do.EndTime)
+	dto.StartTime = nullTime2Unix(do.StartTime)
+	dto.EndTime = nullTime2Unix(do.EndTime)
 	dto.Parameters = do.Parameters
 	dto.Result = do.Result
 	dto.TaskName = do.Name
@@ -237,5 +240,10 @@ func parseTaskDTO(dto *dbpb.DBTaskDTO) (do *models.TaskDO) {
 
 	do.ParentId = dto.ParentId
 	do.ParentType = int8(dto.ParentType)
+
+	do.StartTime = unix2NullTime(dto.StartTime)
+	do.EndTime = unix2NullTime(dto.EndTime)
+
 	return
 }
+

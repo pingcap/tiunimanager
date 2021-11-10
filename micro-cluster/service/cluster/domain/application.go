@@ -19,7 +19,6 @@ package domain
 import (
 	ctx "context"
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -286,7 +285,7 @@ func GetParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string
 	return RemoteClusterProxy.QueryParameterJson(ctx, clusterId)
 }
 
-func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation) error {
+func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation, taskId uint) error {
 	clusters, total, err := ClusterRepo.Query(ctx, "", "", "", "", "", 1, 10000)
 	if err != nil {
 		getLogger().Errorf("invoke ClusterRepo list cluster err： %v", err)
@@ -295,22 +294,31 @@ func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation) er
 	getLogger().Infof("list cluster total count: %d", total)
 	hosts := listClusterHosts(aggregation)
 	getLogger().Infof("cluster %s list host: %v", aggregation.Cluster.Id, hosts)
-	for _, host := range hosts {
-		collectorConfigs, err := buildCollectorTiDBLogConfig(ctx, host, clusters)
-		if err != nil {
-			getLogger().Errorf("collectorTiDBLogConfig build collector tiDB log config err： %v", err)
-			return err
+	go func() {
+		for _, host := range hosts {
+			collectorConfigs, err := buildCollectorTiDBLogConfig(ctx, host, clusters)
+			if err != nil {
+				getLogger().Errorf("collectorTiDBLogConfig build collector tiDB log config err： %v", err)
+				break
+			}
+			bs, err := yaml.Marshal(collectorConfigs)
+			if err != nil {
+				getLogger().Errorf("collectorTiDBLogConfig marshal yaml err： %v", err)
+				break
+			}
+			collectorYaml := string(bs)
+			// todo: When the tiem scale-out and scale-in is complete, change to take the filebeat deployDir from the tiem topology
+			deployDir := "/tiem-test/filebeat"
+			transferTaskId, err := secondparty.SecondParty.MicroSrvTiupTransfer(ctx, secondparty.ClusterComponentTypeStr,
+				aggregation.Cluster.ClusterName, collectorYaml, deployDir+"/conf/input_tidb.yml",
+				0, []string{"-N", host}, uint64(taskId))
+			getLogger().Infof("got transferTaskId %d", transferTaskId)
+			if err != nil {
+				getLogger().Errorf("collectorTiDBLogConfig invoke tiup transfer err： %v", err)
+				break
+			}
 		}
-		bs, err := yaml.Marshal(collectorConfigs)
-		if err != nil {
-			getLogger().Errorf("collectorTiDBLogConfig marshal yaml err： %v", err)
-			return err
-		}
-		collectorYaml := string(bs)
-		// todo: invoke secondparty.SecondParty.MicroSrvTransferFile not implements
-		//secondparty.SecondParty.MicroSrvTransferFile(secondparty.ClusterComponentTypeStr, aggregation.Cluster.ClusterName, collectorYaml, host, "/root/filebeat/conf/tidb.yml")
-		fmt.Println(collectorYaml)
-	}
+	}()
 	return nil
 }
 
@@ -431,6 +439,11 @@ func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation.StatusModified = true
 	clusterAggregation.Cluster.Online()
 
+	err := collectorTiDBLogConfig(context, clusterAggregation, task.Id)
+	if err != nil {
+		getLogger().Errorf("collector tidb log config err = %s", err.Error())
+	}
+
 	task.Success(nil)
 	return true
 }
@@ -517,6 +530,10 @@ func destroyCluster(task *TaskEntity, context *FlowContext) bool {
 
 func freedResource(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)
+	err := collectorTiDBLogConfig(context, context.GetData(contextClusterKey).(*ClusterAggregation), task.Id)
+	if err != nil {
+		getLogger().Errorf("collector tidb log config err = %s", err.Error())
+	}
 	return true
 }
 

@@ -288,7 +288,7 @@ func GetParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string
 func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation, taskId uint) error {
 	clusters, total, err := ClusterRepo.Query(ctx, "", "", "", "", "", 1, 10000)
 	if err != nil {
-		getLogger().Errorf("invoke ClusterRepo list cluster err： %v", err)
+		getLogger().Errorf("invoke cluster repo list cluster err： %v", err)
 		return err
 	}
 	getLogger().Infof("list cluster total count: %d", total)
@@ -298,12 +298,12 @@ func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation, ta
 		for _, host := range hosts {
 			collectorConfigs, err := buildCollectorTiDBLogConfig(ctx, host, clusters)
 			if err != nil {
-				getLogger().Errorf("collectorTiDBLogConfig build collector tiDB log config err： %v", err)
+				getLogger().Errorf("build collector tidb log config err： %v", err)
 				break
 			}
 			bs, err := yaml.Marshal(collectorConfigs)
 			if err != nil {
-				getLogger().Errorf("collectorTiDBLogConfig marshal yaml err： %v", err)
+				getLogger().Errorf("marshal yaml err： %v", err)
 				break
 			}
 			collectorYaml := string(bs)

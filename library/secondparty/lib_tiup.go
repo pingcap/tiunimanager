@@ -33,6 +33,7 @@ type TiUPComponentTypeStr string
 const (
 	ClusterComponentTypeStr TiUPComponentTypeStr = "cluster"
 	DMComponentTypeStr      TiUPComponentTypeStr = "dm"
+	TiEMComponentTypeStr	TiUPComponentTypeStr = "tiem"
 )
 
 func (secondMicro *SecondMicro) MicroSrvTiupDeploy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
@@ -60,7 +61,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupDeploy(ctx context.Context, tiupComp
 }
 
 func (secondMicro *SecondMicro) startNewTiupDeployTask(ctx context.Context, taskID uint64, req *CmdDeployReq) {
-	topologyTmpFilePath, err := newTmpFileWithContent([]byte(req.ConfigStrYaml))
+	topologyTmpFilePath, err := newTmpFileWithContent("tiem-topology", []byte(req.ConfigStrYaml))
 	if err != nil {
 		secondMicro.taskStatusCh <- TaskStatusMember{
 			TaskID:   taskID,
@@ -352,6 +353,49 @@ func (secondMicro *SecondMicro) startNewTiupDisplayTask(ctx context.Context, req
 	}
 	resp.DisplayRespString = string(data)
 	return
+}
+
+func (secondMicro *SecondMicro) MicroSrvTiupTransfer(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, collectorYaml string, remotePath string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiuptransfer tiupcomponent: %s, instancename: %s, collectoryaml: %s, remotepath: %s, timeouts: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, collectorYaml, remotePath, timeoutS, flags, bizID)
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Transfer
+	req.BizID = bizID
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	if rsp == nil || err != nil || rsp.ErrCode != 0 {
+		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
+		return 0, err
+	} else {
+		var req CmdTransferReq
+		req.TiUPComponent = tiupComponent
+		req.InstanceName = instanceName
+		req.CollectorYaml = collectorYaml
+		req.RemotePath = remotePath
+		req.TimeoutS = timeoutS
+		req.Flags = flags
+		req.TiupPath = secondMicro.TiupBinPath
+		req.TaskID = rsp.Id
+		secondMicro.startNewTiupTransferTask(ctx, req.TaskID, &req)
+		return rsp.Id, nil
+	}
+}
+
+func (secondMicro *SecondMicro) startNewTiupTransferTask(ctx context.Context, taskID uint64, req *CmdTransferReq) {
+	collectorTmpFilePath, err := newTmpFileWithContent("tiem-collector", []byte(req.CollectorYaml))
+	if err != nil {
+		secondMicro.taskStatusCh <- TaskStatusMember{
+			TaskID:   taskID,
+			Status:   TaskStatusError,
+			ErrorStr: fmt.Sprintln(err),
+		}
+		return
+	}
+	go func() {
+		var args []string
+		args = append(args, string(req.TiUPComponent), "push", req.InstanceName, collectorTmpFilePath, req.RemotePath)
+		args = append(args, req.Flags...)
+		args = append(args, "--yes")
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+	}()
 }
 
 func (secondMicro *SecondMicro) startNewTiupTask(ctx context.Context, taskID uint64, tiupPath string, tiupArgs []string, TimeoutS int) (exitCh chan struct{}) {

@@ -38,8 +38,8 @@ func myPanic(v interface{}) {
 	panic("unexpected" + s)
 }
 
-func newTmpFileWithContent(content []byte) (fileName string, err error) {
-	tmpfile, err := ioutil.TempFile("", "tiem-topology-*.yaml")
+func newTmpFileWithContent(filePrefix string, content []byte) (fileName string, err error) {
+	tmpfile, err := ioutil.TempFile("", fmt.Sprintf("%s-*.yaml", filePrefix))
 	if err != nil {
 		err = fmt.Errorf("fail to create temp file err: %s", err)
 		return "", err

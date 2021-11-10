@@ -19,6 +19,7 @@ package models
 import (
 	"database/sql"
 	"gorm.io/gorm"
+	"time"
 )
 
 type FlowDO struct {
@@ -69,13 +70,16 @@ func CreateFlow(db *gorm.DB, flowName string, statusAlias string, bizId string, 
 	return
 }
 
-func CreateTask(db *gorm.DB, parentType int8, parentId string, taskName, bizId string, taskReturnType string, parameters, result string) (task *TaskDO, err error) {
+func CreateTask(db *gorm.DB, parentType int8, parentId string, taskName, bizId string, taskReturnType string, parameters, result string, unixTime int64) (task *TaskDO, err error) {
 	task = &TaskDO{
 		ParentType: parentType,
 		ParentId:   parentId,
 		Name:       taskName,
 		ReturnType: taskReturnType,
-
+		StartTime:  sql.NullTime{
+			Time:  time.Unix(unixTime, 0),
+			Valid: unixTime != 0,
+		},
 		Parameters: parameters,
 		Result:     result,
 		Data: Data{

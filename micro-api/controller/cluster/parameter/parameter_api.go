@@ -142,6 +142,7 @@ func SubmitParams(c *gin.Context) {
 		ParametersJson: jsonContent,
 		Operator:       operator.ConvertToDTO(),
 	}, controller.DefaultTimeout)
+
 	if err != nil {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))

@@ -593,10 +593,12 @@ func UpdateHost(c *gin.Context) {
 		return
 	}
 	if (updateReq.Status == nil && updateReq.Reserved == nil) || (updateReq.Status != nil && updateReq.Reserved != nil) {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
 		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), "status/reserved both set/no-set at the same time"))
 		return
 	}
 
+	status.Code = updateReq.Status
 	if updateReq.Status != nil {
 		if !resource.HostStatus((*updateReq.Status)).IsValidForUpdate() {
 			errmsg := fmt.Sprintf("input status %d is invalid for update, [0:online,1:offline,2:deleted]", *(updateReq.Status))
@@ -636,7 +638,7 @@ func UpdateHost(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
 			return
 		}
-		status = rsp.GetStatus()
+		status.Code = rsp.Rs.GetCode()
 		if rsp.Rs.Code != int32(codes.OK) {
 			status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 			c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))

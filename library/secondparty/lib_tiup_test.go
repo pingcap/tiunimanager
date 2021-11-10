@@ -244,6 +244,46 @@ func TestSecondMicro_MicroSrvTiupDestroy_Success(t *testing.T) {
 	}
 }
 
+func TestSecondMicro_MicroSrvTiupTransfer_Fail(t *testing.T) {
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Transfer
+	req.BizID = 0
+
+	expectedErr := errors.New("Fail Create tiup task")
+
+	mockCtl := gomock.NewController(t)
+	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
+
+	taskID, err := secondMicro1.MicroSrvTiupTransfer(context.TODO(), TiEMComponentTypeStr, "test-tidb", "test-yaml", "/remote/path", 0, []string{"-N", "test-host"}, 0)
+	if taskID != 0 || err == nil {
+		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
+	}
+}
+
+func TestSecondMicro_MicroSrvTiupTransfer_Success(t *testing.T) {
+
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Transfer
+	req.BizID = 0
+
+	var resp dbPb.CreateTiupTaskResponse
+	resp.ErrCode = 0
+	resp.Id = 1
+
+	mockCtl := gomock.NewController(t)
+	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
+
+	taskID, err := secondMicro1.MicroSrvTiupTransfer(context.TODO(), TiEMComponentTypeStr, "test-tidb", "test-yaml", "/remote/path", 0, []string{"-N", "test-host"}, 0)
+	if taskID != 1 || err != nil {
+		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
+	}
+}
+
+
 func TestSecondMicro_MicroSrvTiupDumpling_Fail(t *testing.T) {
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Dumpling

@@ -159,3 +159,14 @@ type CmdShowRestoreInfoResp struct {
 	Connection    string
 	ErrorStr      string
 }
+
+type CmdTransferReq struct {
+	TiUPComponent TiUPComponentTypeStr
+	TaskID        uint64
+	InstanceName  string
+	CollectorYaml string
+	RemotePath    string
+	TimeoutS      int
+	TiupPath      string
+	Flags         []string
+}

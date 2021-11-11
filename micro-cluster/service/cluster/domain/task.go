@@ -120,9 +120,10 @@ type FlowWorkAggregation struct {
 }
 
 func CreateFlowWork(ctx context.Context, bizId string, defineName string, operator *Operator) (*FlowWorkAggregation, error) {
+	framework.LogWithContext(ctx).Infof("create flowwork %s for bizId %s", defineName, bizId)
 	define := FlowWorkDefineMap[defineName]
 	if define == nil {
-		return nil, errors.New("workflow undefined")
+		return nil, framework.SimpleError(common.TIEM_FLOW_NOT_FOUND)
 	}
 	flowData := make(map[string]interface{})
 

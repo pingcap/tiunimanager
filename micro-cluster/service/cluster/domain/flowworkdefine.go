@@ -19,6 +19,7 @@ package domain
 import (
 	"context"
 	copywriting2 "github.com/pingcap-inc/tiem/library/copywriting"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"time"
 )
 
@@ -204,6 +205,7 @@ func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
 
 	if clusterAggregation.ConfigModified {
 		go time.AfterFunc(time.Second * 3, func() {
+			framework.LogWithContext(context).Infof("BuildClusterLogConfig for cluster %s", clusterAggregation.Cluster.Id)
 			BuildClusterLogConfig(context, clusterAggregation.Cluster.Id)
 		})
 	}

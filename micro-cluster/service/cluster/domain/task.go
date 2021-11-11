@@ -192,6 +192,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 		for range ticker.C {
 			if sequence += 1; sequence > 200 {
 				flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
+				task.EndTime = time.Now().Unix()
 				return
 			}
 			framework.LogWithContext(flow.Context).Infof("polling task wait, sequence %d, taskId %d", sequence, task.Id)
@@ -204,6 +205,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 			}
 			if stat == dbpb.TiupTaskStatus_Finished {
 				flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
+				task.Success(nil)
 				return
 			}
 		}

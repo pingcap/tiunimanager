@@ -550,7 +550,7 @@ func (s *Specification) KibanaEndpoints() []string {
 func (s *Specification) TracerEndpoints() []string {
 	result := make([]string, 0)
 	for _, inst := range s.TracerServers {
-		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.ZipkinHostPort))
+		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.CompactThriftPort))
 	}
 	return result
 }

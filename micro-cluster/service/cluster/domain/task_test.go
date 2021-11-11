@@ -20,6 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/test/mocksecondparty"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
@@ -290,6 +294,12 @@ func TestFlowWorkAggregation_Destroy(t *testing.T) {
 }
 
 func TestFlowWorkAggregation_Start(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	mockTiup.EXPECT().MicroSrvGetTaskStatusByBizID(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "success", nil)
+	secondparty.SecondParty = mockTiup
+
 	t.Run("normal", func(t *testing.T) {
 		flow, _ := CreateFlowWork(context.TODO(), "1111", "testFlow", nil)
 		flow.Start()

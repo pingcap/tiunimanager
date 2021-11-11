@@ -23,6 +23,8 @@ import (
 	"errors"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"time"
 )
@@ -172,11 +174,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 		if "" == taskDefine.FailEvent {
 			return
 		}
-		if e, ok := flow.Define.TaskNodes[taskDefine.FailEvent]; ok {
-			flow.handle(e)
-			return
-		}
-		panic("workflow define error")
+		flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
 	}
 
 	switch taskDefine.ReturnType {
@@ -188,22 +186,24 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 	case CallbackTask:
 
 	case PollingTasK:
-		ticker := time.NewTicker(time.Second)
-		c := make(chan int, 30)
+		ticker := time.NewTicker(3 * time.Second)
+		sequence := 0
 		for range ticker.C {
-			c <- 1
+			if sequence += 1; sequence > 200 {
+				flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
+				return
+			}
+			framework.LogWithContext(flow.Context).Infof("polling task wait, sequence %d, taskId %d", sequence, task.Id)
+
 			stat, _, _ := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(flow.Context, uint64(task.Id))
 			if stat == dbpb.TiupTaskStatus_Error {
-				if e, ok := flow.Define.TaskNodes[taskDefine.FailEvent]; ok {
-					flow.handle(e)
-					return
-				}
+				flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
+				task.Fail(framework.SimpleError(common.TIEM_TASK_TIMEOUT))
+				return
 			}
 			if stat == dbpb.TiupTaskStatus_Finished {
-				if e, ok := flow.Define.TaskNodes[taskDefine.SuccessEvent]; ok {
-					flow.handle(e)
-					return
-				}
+				flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
+				return
 			}
 		}
 	}

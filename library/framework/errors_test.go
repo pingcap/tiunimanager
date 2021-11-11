@@ -77,7 +77,7 @@ func TestErrorBuilder(t *testing.T) {
 		Trace("123123").
 		Build()
 
-	assert.Equal(t, common.TIEM_ADD_TOKEN_FAILED, int(err.GetCode()))
+	assert.Equal(t, int(common.TIEM_ADD_TOKEN_FAILED), int(err.GetCode()))
 	assert.Equal(t, "[400]my error sss, cause:cause", err.Error())
 	assert.Equal(t, "my error sss", err.GetMsg())
 	assert.Equal(t, "add token failed", err.GetCodeText())

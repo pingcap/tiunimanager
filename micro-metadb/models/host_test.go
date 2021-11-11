@@ -1950,7 +1950,7 @@ func TestAllocResources_SpecifyHost_Strategy_TakeOver(t *testing.T) {
 	t.Log(err)
 	st, ok := status.FromError(err)
 	assert.Equal(t, true, ok)
-	assert.True(t, common.TIEM_RESOURCE_NOT_ALL_SUCCEED == st.Code())
+	assert.True(t, common.TIEM_RESOURCE_NOT_ALL_SUCCEED.Equal(int32(st.Code())) )
 
 	batchReq.BatchRequests[0].Applicant.TakeoverOperation = true
 	rsp, err2 := Dao.ResourceManager().AllocResourcesInBatch(context.TODO(), &batchReq)

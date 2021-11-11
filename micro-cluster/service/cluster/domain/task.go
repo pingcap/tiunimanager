@@ -23,6 +23,7 @@ import (
 	"errors"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"time"
@@ -185,10 +186,10 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 	case CallbackTask:
 
 	case PollingTasK:
-		ticker := time.NewTicker(time.Second)
+		ticker := time.NewTicker(3 * time.Second)
 		sequence := 0
 		for range ticker.C {
-			if sequence += 1; sequence > 30 {
+			if sequence += 1; sequence > 200 {
 				flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
 				return
 			}
@@ -197,6 +198,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 			stat, _, _ := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(flow.Context, uint64(task.Id))
 			if stat == dbpb.TiupTaskStatus_Error {
 				flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
+				task.Fail(framework.SimpleError(common.TIEM_TASK_TIMEOUT))
 				return
 			}
 			if stat == dbpb.TiupTaskStatus_Finished {

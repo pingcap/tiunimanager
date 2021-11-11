@@ -402,7 +402,7 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	req.Id = context.GetData("deployTaskId").(uint64)
 
 	for i := 0; i < 30; i++ {
-		time.Sleep(10 * time.Second)
+		time.Sleep(time.Second)
 		rsp, err := client.DBClient.FindTiupTaskByID(ctx.TODO(), &req)
 		if err != nil {
 			getLogger().Errorf("get deploy task err = %s", err.Error())

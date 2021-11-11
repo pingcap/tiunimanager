@@ -518,28 +518,6 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		return true
 	}
 
-	//todo: wait start task finished, temporary solution
-	var req dbpb.FindTiupTaskByIDRequest
-	req.Id = flowContext.GetData("startTaskId").(uint64)
-
-	for i := 0; i < 30; i++ {
-		time.Sleep(1 * time.Second)
-		rsp, err := client.DBClient.FindTiupTaskByID(flowContext, &req)
-		if err != nil {
-			getLoggerWithContext(ctx).Errorf("get start task err = %s", err.Error())
-			task.Fail(err)
-			return false
-		}
-		if rsp.TiupTask.Status == dbpb.TiupTaskStatus_Error {
-			getLoggerWithContext(ctx).Errorf("start cluster error, %s", rsp.TiupTask.ErrorStr)
-			task.Fail(errors.New(rsp.TiupTask.ErrorStr))
-			return false
-		}
-		if rsp.TiupTask.Status == dbpb.TiupTaskStatus_Finished {
-			break
-		}
-	}
-
 	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
 

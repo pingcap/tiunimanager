@@ -287,22 +287,22 @@ func GetParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string
 func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation, taskId uint) error {
 	clusters, total, err := ClusterRepo.Query(ctx, "", "", "", "", "", 1, 10000)
 	if err != nil {
-		getLogger().Errorf("invoke cluster repo list cluster err： %v", err)
+		getLoggerWithContext(ctx).Errorf("invoke cluster repo list cluster err： %v", err)
 		return err
 	}
-	getLogger().Infof("list cluster total count: %d", total)
+	getLoggerWithContext(ctx).Infof("list cluster total count: %d", total)
 	hosts := listClusterHosts(aggregation)
-	getLogger().Infof("cluster %s list host: %v", aggregation.Cluster.Id, hosts)
+	getLoggerWithContext(ctx).Infof("cluster %s list host: %v", aggregation.Cluster.Id, hosts)
 	go func() {
 		for _, host := range hosts {
 			collectorConfigs, err := buildCollectorTiDBLogConfig(ctx, host, clusters)
 			if err != nil {
-				getLogger().Errorf("build collector tidb log config err： %v", err)
+				getLoggerWithContext(ctx).Errorf("build collector tidb log config err： %v", err)
 				break
 			}
 			bs, err := yaml.Marshal(collectorConfigs)
 			if err != nil {
-				getLogger().Errorf("marshal yaml err： %v", err)
+				getLoggerWithContext(ctx).Errorf("marshal yaml err： %v", err)
 				break
 			}
 			collectorYaml := string(bs)
@@ -311,9 +311,9 @@ func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation, ta
 			transferTaskId, err := secondparty.SecondParty.MicroSrvTiupTransfer(ctx, secondparty.ClusterComponentTypeStr,
 				aggregation.Cluster.ClusterName, collectorYaml, deployDir+"/conf/input_tidb.yml",
 				0, []string{"-N", host}, uint64(taskId))
-			getLogger().Infof("got transferTaskId %d", transferTaskId)
+			getLoggerWithContext(ctx).Infof("got transferTaskId %d", transferTaskId)
 			if err != nil {
-				getLogger().Errorf("collectorTiDBLogConfig invoke tiup transfer err： %v", err)
+				getLoggerWithContext(ctx).Errorf("collectorTiDBLogConfig invoke tiup transfer err： %v", err)
 				break
 			}
 		}
@@ -341,10 +341,10 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	demands := clusterAggregation.Cluster.Demands
 
 	clusterAggregation.AvailableResources = &clusterpb.AllocHostResponse{}
-	err := resource.NewResourceManager().AllocHosts(ctx.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
+	err := resource.NewResourceManager().AllocHosts(flowContext, convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
 
 	if err != nil {
-		getLogger().Error(err)
+		getLoggerWithContext(flowContext).Error(err)
 		task.Fail(err)
 		return false
 	}
@@ -381,12 +381,11 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 		}
 
 		cfgYamlStr := string(bs)
-		getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
+		getLoggerWithContext(context).Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
 		deployTaskId, _ := secondparty.SecondParty.MicroSrvTiupDeploy(
 			context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, uint64(task.Id),
 		)
-		context.SetData("deployTaskId", deployTaskId)
-		getLogger().Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
+		getLoggerWithContext(context).Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
 	}
 
 	task.Success(nil)
@@ -400,13 +399,14 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	startTaskId, err := secondparty.SecondParty.MicroSrvTiupStart(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id),
 	)
+
 	if err != nil {
-		getLogger().Errorf("call tiup api start cluster err = %s", err.Error())
+		getLoggerWithContext(context).Errorf("call tiup api start cluster err = %s", err.Error())
 		task.Fail(err)
 		return false
 	}
-	context.SetData("startTaskId", startTaskId)
-	getLogger().Infof("got startTaskId %s", strconv.Itoa(int(startTaskId)))
+
+	getLoggerWithContext(context).Infof("got startTaskId %s", strconv.Itoa(int(startTaskId)))
 
 	task.Success(nil)
 	return true

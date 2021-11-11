@@ -494,7 +494,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	}
 	if updateResp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
 		msg := fmt.Sprintf("update backup record for cluster %s failed, %s", clusterAggregation.Cluster.Id, updateResp.Status.Message)
-		tiemError := framework.CustomizeMessageError(common.TIEM_ERROR_CODE(updateResp.GetStatus().GetCode()), msg)
+		tiemError := framework.NewTiEMError(common.TIEM_ERROR_CODE(updateResp.GetStatus().GetCode()), msg)
 
 		getLoggerWithContext(ctx).Error(tiemError)
 		task.Fail(tiemError)

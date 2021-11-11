@@ -547,7 +547,7 @@ func (handler *DBServiceHandler) UpdateHostStatus(ctx context.Context, in *dbpb.
 		// return nil to use rsp
 		return nil
 	}
-	out.Rs.Code = common.TIEM_SUCCESS
+	out.Rs.Code = int32(common.TIEM_SUCCESS)
 	return nil
 }
 
@@ -572,7 +572,7 @@ func (handler *DBServiceHandler) ReserveHost(ctx context.Context, in *dbpb.DBRes
 		// return nil to use rsp
 		return nil
 	}
-	out.Rs.Code = common.TIEM_SUCCESS
+	out.Rs.Code = int32(common.TIEM_SUCCESS)
 	return nil
 }
 
@@ -702,14 +702,14 @@ func (handler *DBServiceHandler) GetHierarchy(ctx context.Context, in *dbpb.DBGe
 	}
 	wholeTree := handler.buildHierarchy(Items)
 	if wholeTree == nil {
-		out.Rs.Code = common.TIEM_RESOURCE_NO_STOCK
+		out.Rs.Code = int32(common.TIEM_RESOURCE_NO_STOCK)
 		out.Rs.Message = fmt.Sprintf("no stocks with filter:%v", filter)
 		return nil
 	}
 	root := handler.trimTree(wholeTree, resource.FailureDomain(in.Level), int(in.Depth))
 	copyHierarchyToRsp(root, &out.Root)
 
-	out.Rs.Code = common.TIEM_SUCCESS
+	out.Rs.Code = int32(common.TIEM_SUCCESS)
 
 	return nil
 }
@@ -776,7 +776,7 @@ func (handler *DBServiceHandler) GetStocks(ctx context.Context, in *dbpb.DBGetSt
 		out.Stocks.FreeDiskCount += int32(stock.FreeDiskCount)
 		out.Stocks.FreeDiskCapacity += int32(stock.FreeDiskCapacity)
 	}
-	out.Rs.Code = common.TIEM_SUCCESS
+	out.Rs.Code = int32(common.TIEM_SUCCESS)
 
 	return nil
 }

@@ -17,6 +17,7 @@
 package identification
 
 import (
+	"github.com/pingcap-inc/tiem/library/common"
 	"net/http"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -51,16 +52,13 @@ func Login(c *gin.Context) {
 	loginReq := clusterpb.LoginRequest{AccountName: req.UserName, Password: req.UserPassword}
 	result, err := client.ClusterClient.Login(framework.NewMicroCtxFromGinCtx(c), &loginReq)
 
-	if err == nil {
-		if result.Status.Code != 0 {
-			c.JSON(http.StatusBadRequest, controller.Fail(int(result.GetStatus().GetCode()), result.GetStatus().GetMessage()))
-		} else {
-			c.Header("Token", result.TokenString)
-			c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: req.UserName, Token: result.TokenString}))
-		}
-	} else {
-		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
-	}
+	controller.HandleHttpResponse(c, err, func() (common.TIEM_ERROR_CODE, string) {
+		return common.TIEM_ERROR_CODE(result.Status.Code), result.Status.Message
+	}, func() interface{} {
+		c.Header("Token", result.TokenString)
+		return UserIdentity{UserName: req.UserName, Token: result.TokenString}
+	}, nil,
+	)
 }
 
 // Logout logout
@@ -83,9 +81,10 @@ func Logout(c *gin.Context) {
 	logoutReq := clusterpb.LogoutRequest{TokenString: tokenStr}
 	result, err := client.ClusterClient.Logout(c, &logoutReq)
 
-	if err == nil {
-		c.JSON(http.StatusOK, controller.Success(UserIdentity{UserName: result.GetAccountName()}))
-	} else {
-		c.JSON(http.StatusOK, controller.Fail(03, err.Error()))
-	}
+	controller.HandleHttpResponse(c, err, func() (common.TIEM_ERROR_CODE, string) {
+		return common.TIEM_ERROR_CODE(result.Status.Code), result.Status.Message
+	}, func() interface{} {
+		return UserIdentity{UserName: result.GetAccountName()}
+	}, nil,
+	)
 }

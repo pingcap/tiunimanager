@@ -26,7 +26,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/labstack/gommon/bytes"
-	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -71,7 +70,7 @@ type ClusterAggregation struct {
 var contextClusterKey = "clusterAggregation"
 var contextTakeoverReqKey = "takeoverRequest"
 
-func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
+func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	cluster := &Cluster{
@@ -398,27 +397,6 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
-	var req dbpb.FindTiupTaskByIDRequest
-	req.Id = context.GetData("deployTaskId").(uint64)
-
-	for i := 0; i < 30; i++ {
-		time.Sleep(10 * time.Second)
-		rsp, err := client.DBClient.FindTiupTaskByID(ctx.TODO(), &req)
-		if err != nil {
-			getLogger().Errorf("get deploy task err = %s", err.Error())
-			task.Fail(err)
-			return false
-		}
-		if rsp.TiupTask.Status == dbpb.TiupTaskStatus_Error {
-			getLogger().Errorf("deploy cluster error, %s", rsp.TiupTask.ErrorStr)
-			task.Fail(errors.New(rsp.TiupTask.ErrorStr))
-			return false
-		}
-		if rsp.TiupTask.Status == dbpb.TiupTaskStatus_Finished {
-			break
-		}
-	}
-	getLogger().Infof("start cluster %s", cluster.ClusterName)
 	startTaskId, err := secondparty.SecondParty.MicroSrvTiupStart(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id),
 	)
@@ -429,6 +407,15 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 	context.SetData("startTaskId", startTaskId)
 	getLogger().Infof("got startTaskId %s", strconv.Itoa(int(startTaskId)))
+
+	task.Success(nil)
+	return true
+}
+
+func syncTopologyAndStatus(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation.StatusModified = true
+	clusterAggregation.Cluster.Online()
 
 	task.Success(nil)
 	return true

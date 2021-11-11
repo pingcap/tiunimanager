@@ -133,9 +133,8 @@ func (t TiDBComponentParser) ParseComponent(spec *spec.Specification) *domain.Co
 	for _, server := range spec.TiDBServers {
 		componentInstance := domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
-			Host:          server.Host,
-			DeployDir:     server.DeployDir,
-			PortList:      []int{server.Port, server.StatusPort},
+			Host: server.Host,
+			PortList: []int{server.Port, server.StatusPort},
 		}
 		group.Nodes = append(group.Nodes, componentInstance)
 	}
@@ -158,9 +157,8 @@ func (t TiKVComponentParser) ParseComponent(spec *spec.Specification) *domain.Co
 	for _, server := range spec.TiKVServers {
 		componentInstance := domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
-			Host:          server.Host,
-			DeployDir:     server.DeployDir,
-			PortList:      []int{server.Port, server.StatusPort},
+			Host: server.Host,
+			PortList: []int{server.Port, server.StatusPort},
 		}
 		group.Nodes = append(group.Nodes, componentInstance)
 	}
@@ -183,9 +181,8 @@ func (t PDComponentParser) ParseComponent(spec *spec.Specification) *domain.Comp
 	for _, server := range spec.PDServers {
 		componentInstance := domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
-			Host:          server.Host,
-			DeployDir:     server.DeployDir,
-			PortList:      []int{server.ClientPort, server.PeerPort},
+			Host: server.Host,
+			PortList: []int{server.ClientPort, server.PeerPort},
 		}
 		group.Nodes = append(group.Nodes, componentInstance)
 	}
@@ -208,9 +205,8 @@ func (t TiFlashComponentParser) ParseComponent(spec *spec.Specification) *domain
 	for _, server := range spec.TiFlashServers {
 		componentInstance := domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
-			Host:          server.Host,
-			DeployDir:     server.DeployDir,
-			PortList:      []int{server.TCPPort, server.HTTPPort, server.StatusPort, server.FlashProxyPort, server.FlashServicePort, server.FlashProxyStatusPort},
+			Host: server.Host,
+			PortList: []int{server.TCPPort, server.HTTPPort, server.StatusPort, server.FlashProxyPort, server.FlashServicePort, server.FlashProxyStatusPort},
 		}
 		group.Nodes = append(group.Nodes, componentInstance)
 	}

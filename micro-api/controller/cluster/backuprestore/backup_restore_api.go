@@ -72,7 +72,7 @@ func Backup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = resp.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if common.TIEM_SUCCESS.Equal(status.GetCode()) {
 			c.JSON(http.StatusOK, controller.Success(BackupRecord{
 				ID:           resp.GetBackupRecord().GetId(),
 				ClusterId:    resp.GetBackupRecord().GetClusterId(),
@@ -121,7 +121,7 @@ func QueryBackupStrategy(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = resp.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if common.TIEM_SUCCESS.Equal(status.GetCode()) {
 			c.JSON(http.StatusOK, controller.Success(BackupStrategy{
 				ClusterId:      resp.GetStrategy().GetClusterId(),
 				BackupDate:     resp.GetStrategy().GetBackupDate(),
@@ -174,7 +174,7 @@ func SaveBackupStrategy(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = resp.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if common.TIEM_SUCCESS.Equal(status.GetCode()) {
 			c.JSON(http.StatusOK, controller.Success(nil))
 		} else {
 			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
@@ -221,7 +221,7 @@ func QueryBackup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = resp.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if common.TIEM_SUCCESS.Equal(status.GetCode()) {
 			records := make([]BackupRecord, len(resp.BackupRecords))
 			for i, v := range resp.BackupRecords {
 				records[i] = BackupRecord{
@@ -292,7 +292,7 @@ func DeleteBackup(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = resp.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if common.TIEM_SUCCESS.Equal(status.GetCode()) {
 			c.JSON(http.StatusOK, controller.Success(backupId))
 		} else {
 			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
@@ -342,7 +342,7 @@ func Restore(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = respDTO.GetRespStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if common.TIEM_SUCCESS.Equal(status.GetCode()) {
 			result := controller.BuildCommonResult(int(status.Code), status.Message, RecoverClusterRsp{
 				ClusterId:       respDTO.GetClusterId(),
 				ClusterBaseInfo: *ParseClusterBaseInfoFromDTO(respDTO.GetBaseInfo()),

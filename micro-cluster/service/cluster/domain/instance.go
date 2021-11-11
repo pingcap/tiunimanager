@@ -18,6 +18,7 @@ package domain
 
 import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"math/rand"
@@ -40,25 +41,34 @@ type ComponentInstance struct {
 	ClusterId     string
 	ComponentType *knowledge.ClusterComponent
 
-	Role    string
-	Spec    string
-	Version *knowledge.ClusterVersion
+	Role     string
+	Version  *knowledge.ClusterVersion
 
 	HostId         string
+	Host           string
+	PortList       []int
 	DiskId         string
 	PortInfo       string
 	AllocRequestId string
 
-	Host      string
-	DeployDir string
-	Cpu       int
-	Memory    int
-	PortList  []int
+	location *resource.Location
+	diskPath string
+	compute *resource.ComputeRequirement
+	portRequirement *resource.PortRequirement
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt time.Time
 }
+
+func (p *ComponentInstance) SetLocation (location *resource.Location) {
+	p.location = location
+}
+
+func (p *ComponentInstance) SetDiskPath (location *resource.Location) {
+	p.location = location
+}
+
 
 func (aggregation *ClusterAggregation) ExtractInstancesDTO() *clusterpb.ClusterInstanceDTO {
 	dto := &clusterpb.ClusterInstanceDTO{
@@ -216,11 +226,6 @@ func pDComponent(config *spec.Specification, version string) []*clusterpb.Compon
 	return dto
 }
 
-//func tiCDCComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
-//	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0, 0)
-//
-//	return dto
-//}
 func tiFlashComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
 	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0)
 	return dto

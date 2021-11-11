@@ -166,6 +166,48 @@ func TestImportDataPreCheck_case2(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestImportDataPreCheck_case3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{
+		Record: &dbpb.TransportRecordDTO{
+			ReImportSupport: true,
+			StorageType:     common.NfsStorageType,
+		},
+	}, nil)
+	client.DBClient = mockClient
+
+	req := &clusterpb.DataImportRequest{
+		ClusterId:   "test-abc",
+		UserName:    "root",
+		Password:    "",
+		StorageType: common.NfsStorageType,
+		RecordId:    123,
+	}
+	err := ImportDataPreCheck(context.TODO(), req)
+	assert.NotNil(t, err)
+}
+
+func TestImportDataPreCheck_case4(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	req := &clusterpb.DataImportRequest{
+		ClusterId:       "test-abc",
+		UserName:        "root",
+		Password:        "",
+		StorageType:     common.S3StorageType,
+		AccessKey:       "test-ak",
+		SecretAccessKey: "test-sk",
+		EndpointUrl:     "test-ep",
+		BucketUrl:       "test-bck",
+	}
+	err := ImportDataPreCheck(context.TODO(), req)
+	assert.NoError(t, err)
+}
+
 func Test_checkExportParamSupportReimport_case1(t *testing.T) {
 	req := &clusterpb.DataExportRequest{
 		FileType: FileTypeCSV,
@@ -467,6 +509,11 @@ func Test_updateDataExportRecord(t *testing.T) {
 
 	ret := updateDataExportRecord(task, ctx)
 	assert.Equal(t, true, ret)
+}
+
+func Test_cleanDataTransportDir(t *testing.T) {
+	err := cleanDataTransportDir(context.TODO(), "/tmp/tiem")
+	assert.NoError(t, err)
 }
 
 func Test_exportDataFailed(t *testing.T) {

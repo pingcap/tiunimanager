@@ -149,7 +149,7 @@ func InitFlowMap() {
 		},
 		FlowBuildLogConfig: {
 			FlowName:    FlowBuildLogConfig,
-			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowTakeoverCluster),
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowBuildLogConfig),
 			TaskNodes: map[string]*TaskDefine{
 				"start":   {"collect", "success", "fail", SyncFuncTask, collectorTiDBLogConfig},
 				"success": {"end", "", "", SyncFuncTask, ClusterEnd},

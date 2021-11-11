@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -26,28 +25,35 @@ type DataExportReq struct {
 	FileType        string `json:"fileType"`
 	Filter          string `json:"filter"`
 	Sql             string `json:"sql"`
-	FilePath        string `json:"filePath"`
 	StorageType     string `json:"storageType"`
+	ZipName         string `json:"zipName"`
 	EndpointUrl     string `json:"endpointUrl"`
 	BucketUrl       string `json:"bucketUrl"`
 	BucketRegion    string `json:"bucketRegion"`
 	AccessKey       string `json:"accessKey"`
 	SecretAccessKey string `json:"secretAccessKey"`
+	Comment         string `json:"comment"`
 }
 
 type DataImportReq struct {
 	ClusterId       string `json:"clusterId"`
 	UserName        string `json:"userName"`
 	Password        string `json:"password"`
-	FilePath        string `json:"filePath"`
+	RecordId        int64  `json:"recordId"`
 	StorageType     string `json:"storageType"`
 	EndpointUrl     string `json:"endpointUrl"`
 	BucketUrl       string `json:"bucketUrl"`
 	AccessKey       string `json:"accessKey"`
 	SecretAccessKey string `json:"secretAccessKey"`
+	Comment         string `json:"comment"`
 }
 
 type DataTransportQueryReq struct {
 	controller.PageRequest
-	RecordId string `json:"recordId" form:"recordId"`
+	RecordId int64 `json:"recordId" form:"recordId"`
+}
+
+type DataTransportDeleteReq struct {
+	ClusterId string `json:"clusterId"`
+	RecordId  int64  `json:"recordId"`
 }

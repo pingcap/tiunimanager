@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,6 +18,7 @@ package models
 
 import (
 	"context"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
@@ -32,17 +32,12 @@ func TestDAOClusterManager_CreateTransportRecord(t *testing.T) {
 		ClusterId:     "tc-123",
 		TransportType: "import",
 		FilePath:      "path1",
-		TenantId:      "tenant-cc",
-		Status:        "Running",
 		StartTime:     time.Now(),
 		EndTime:       time.Now(),
 	}
 	id, err := Dao.ClusterManager().CreateTransportRecord(context.TODO(), record)
-	if err != nil {
-		t.Errorf("TestDAOClusterManager_CreateTransportRecord failed, %s", err.Error())
-		return
-	}
-	t.Logf("TestDAOClusterManager_CreateTransportRecord success, id: %s", id)
+	assert.Equal(t, 11, id)
+	assert.NoError(t, err)
 }
 
 func TestDAOClusterManager_UpdateTransportRecord(t *testing.T) {
@@ -54,23 +49,15 @@ func TestDAOClusterManager_UpdateTransportRecord(t *testing.T) {
 		ClusterId:     "tc-123",
 		TransportType: "import",
 		FilePath:      "path1",
-		TenantId:      "tenant-cc",
-		Status:        "Running",
 		StartTime:     time.Now(),
 		EndTime:       time.Now(),
 	}
 	id, err := Dao.ClusterManager().CreateTransportRecord(context.TODO(), record)
-	if err != nil {
-		t.Errorf("TestDAOClusterManager_UpdateTransportRecord create record failed, %s", err.Error())
-		return
-	}
+	assert.Equal(t, 22, id)
+	assert.NoError(t, err)
 
-	err = Dao.ClusterManager().UpdateTransportRecord(context.TODO(), id, record.ClusterId, "Finish", time.Now())
-	if err != nil {
-		t.Errorf("TestDAOClusterManager_UpdateTransportRecord update record failed, %s", err.Error())
-		return
-	}
-	t.Logf("TestDAOClusterManager_UpdateTransportRecord success")
+	err = Dao.ClusterManager().UpdateTransportRecord(context.TODO(), id, record.ClusterId, time.Now())
+	assert.NoError(t, err)
 }
 
 func TestDAOClusterManager_FindTransportRecordById(t *testing.T) {
@@ -82,23 +69,15 @@ func TestDAOClusterManager_FindTransportRecordById(t *testing.T) {
 		ClusterId:     "tc-123",
 		TransportType: "import",
 		FilePath:      "path1",
-		TenantId:      "tenant-cc",
-		Status:        "Running",
 		StartTime:     time.Now(),
 		EndTime:       time.Now(),
 	}
 	id, err := Dao.ClusterManager().CreateTransportRecord(context.TODO(), record)
-	if err != nil {
-		t.Errorf("TestDAOClusterManager_FindTransportRecordById create record failed, %s", err.Error())
-		return
-	}
+	assert.Equal(t, 33, id)
+	assert.NoError(t, err)
 
-	findRecord, err := Dao.ClusterManager().FindTransportRecordById(context.TODO(), id)
-	if err != nil {
-		t.Errorf("TestDAOClusterManager_FindTransportRecordById find record failed, %s", err.Error())
-		return
-	}
-	t.Logf("TestDAOClusterManager_FindTransportRecordById success, record: %v", findRecord)
+	_, err = Dao.ClusterManager().FindTransportRecordById(context.TODO(), id)
+	assert.NoError(t, err)
 }
 
 func TestDAOClusterManager_ListTransportRecord(t *testing.T) {
@@ -110,21 +89,33 @@ func TestDAOClusterManager_ListTransportRecord(t *testing.T) {
 		ClusterId:     "tc-123",
 		TransportType: "import",
 		FilePath:      "path1",
-		TenantId:      "tenant-cc",
-		Status:        "Running",
 		StartTime:     time.Now(),
 		EndTime:       time.Now(),
 	}
-	_, err := Dao.ClusterManager().CreateTransportRecord(context.TODO(), record)
-	if err != nil {
-		t.Errorf("TestDAOClusterManager_ListTransportRecord create record failed, %s", err.Error())
-		return
-	}
+	id, err := Dao.ClusterManager().CreateTransportRecord(context.TODO(), record)
+	assert.Equal(t, 44, id)
+	assert.NoError(t, err)
 
-	list, total, err := Dao.ClusterManager().ListTransportRecord(context.TODO(), record.ClusterId, "", 0, 10)
-	if err != nil {
-		t.Errorf("TestDAOClusterManager_ListTransportRecord create record failed, %s", err.Error())
-		return
+	_, _, err = Dao.ClusterManager().ListTransportRecord(context.TODO(), record.ClusterId, 44, 0, 10)
+	assert.NoError(t, err)
+}
+
+func TestDAOClusterManager_DeleteTransportRecord(t *testing.T) {
+	record := &TransportRecord{
+		Record: Record{
+			ID:       55,
+			TenantId: "tenant-cc",
+		},
+		ClusterId:     "tc-123",
+		TransportType: "import",
+		FilePath:      "path1",
+		StartTime:     time.Now(),
+		EndTime:       time.Now(),
 	}
-	t.Logf("TestDAOClusterManager_ListTransportRecord success, total: %d, list: %v", total, list)
+	id, err := Dao.ClusterManager().CreateTransportRecord(context.TODO(), record)
+	assert.Equal(t, 55, id)
+	assert.NoError(t, err)
+
+	_, err = Dao.ClusterManager().DeleteTransportRecord(context.TODO(), id)
+	assert.NoError(t, err)
 }

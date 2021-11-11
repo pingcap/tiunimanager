@@ -106,6 +106,7 @@ func Route(g *gin.Engine) {
 			cluster.POST("/import", importexport.ImportData)
 			cluster.POST("/export", importexport.ExportData)
 			cluster.GET("/:clusterId/transport", importexport.DescribeDataTransport)
+			cluster.DELETE("/transport/:recordId", importexport.DeleteDataTransportRecord)
 		}
 
 		knowledge := apiV1.Group("/knowledges")

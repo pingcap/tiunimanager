@@ -24,6 +24,8 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
@@ -484,11 +486,18 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		},
 	})
 	if err != nil {
-		getLoggerWithContext(ctx).Errorf("update backup record for cluster %s failed, %s", clusterAggregation.Cluster.Id, err.Error())
+		msg := fmt.Sprintf("update backup record for cluster %s failed", clusterAggregation.Cluster.Id)
+		tiemError := framework.WrapError(common.TIEM_METADB_SERVER_CALL_ERROR, msg, err)
+		getLoggerWithContext(ctx).Error(tiemError)
+		task.Fail(tiemError)
 		return false
 	}
 	if updateResp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
-		getLoggerWithContext(ctx).Errorf("update backup record for cluster %s failed, %s", clusterAggregation.Cluster.Id, updateResp.GetStatus().GetMessage())
+		msg := fmt.Sprintf("update backup record for cluster %s failed, %s", clusterAggregation.Cluster.Id, updateResp.Status.Message)
+		tiemError := framework.NewTiEMError(common.TIEM_ERROR_CODE(updateResp.GetStatus().GetCode()), msg)
+
+		getLoggerWithContext(ctx).Error(tiemError)
+		task.Fail(tiemError)
 		return false
 	}
 	task.Success(nil)

@@ -30,7 +30,7 @@ func TestSimpleError(t *testing.T) {
 }
 
 func TestCustomizeMessageError(t *testing.T) {
-	te := CustomizeMessageError(common.TIEM_BACKUP_PROCESS_FAILED, "sss")
+	te := NewTiEMError(common.TIEM_BACKUP_PROCESS_FAILED, "sss")
 
 	assert.Equal(t, "sss", te.msg)
 }

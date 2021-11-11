@@ -275,7 +275,7 @@ func getPortsInRange(usedPorts []int32, start int32, end int32, count int) (*rt.
 			}
 		}
 		if !found {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_PORT, common.TiEMErrMsg[common.TIEM_RESOURCE_NO_ENOUGH_PORT])
+			return nil, framework.NewTiEMError(common.TIEM_RESOURCE_NO_ENOUGH_PORT, common.TIEM_RESOURCE_NO_ENOUGH_PORT.Explain())
 		}
 	}
 	return result, nil
@@ -289,10 +289,10 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []
 			if rt.DiskStatus(disk.Status).IsAvailable() {
 				err = tx.Model(&disk).Update("Status", int32(rt.DISK_EXHAUST)).Error
 				if err != nil {
-					return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update disk(%s) status err, %v", resource.DiskId, err)
+					return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "update disk(%s) status err, %v", resource.DiskId, err)
 				}
 			} else {
-				return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "disk %s status not expected(%d)", resource.DiskId, disk.Status)
+				return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "disk %s status not expected(%d)", resource.DiskId, disk.Status)
 			}
 			usedDisk := rt.UsedDisk{
 				DiskId:   resource.DiskId,
@@ -303,7 +303,7 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []
 			usedDisk.RequestId = applicant.RequestId
 			err = tx.Create(&usedDisk).Error
 			if err != nil {
-				return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "insert disk(%s) to used_disks table failed: %v", resource.DiskId, err)
+				return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "insert disk(%s) to used_disks table failed: %v", resource.DiskId, err)
 			}
 		}
 
@@ -318,7 +318,7 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []
 		}
 		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", resource.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
 		if err != nil {
-			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update host(%s) stat err, %v", resource.HostId, err)
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "update host(%s) stat err, %v", resource.HostId, err)
 		}
 		usedCompute := rt.UsedCompute{
 			HostId:   resource.HostId,
@@ -329,7 +329,7 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []
 		usedCompute.RequestId = applicant.RequestId
 		err = tx.Create(&usedCompute).Error
 		if err != nil {
-			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "insert host(%s) to used_disks table failed: %v", resource.HostId, err)
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "insert host(%s) to used_disks table failed: %v", resource.HostId, err)
 		}
 
 		for _, ports := range resource.portRes {
@@ -342,7 +342,7 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []
 				usedPort.RequestId = applicant.RequestId
 				err = tx.Create(&usedPort).Error
 				if err != nil {
-					return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "insert host(%s) for port(%d) table failed: %v", resource.HostId, port, err)
+					return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "insert host(%s) for port(%d) table failed: %v", resource.HostId, port, err)
 				}
 			}
 		}
@@ -353,7 +353,7 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []
 func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, require *dbpb.DBAllocRequirement) (results []rt.HostResource, err error) {
 	hostIp := require.Location.Host
 	if require.Count != 1 {
-		return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "request host count should be 1 for UserSpecifyHost allocation(%d)", require.Count)
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "request host count should be 1 for UserSpecifyHost allocation(%d)", require.Count)
 	}
 	reqCores := require.Require.ComputeReq.CpuCores
 	reqMem := require.Require.ComputeReq.Memory
@@ -378,11 +378,11 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 		}
 
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "disk is not enough(%d|%d) in host (%s), takeover operation (%v)", count, require.Count, hostIp, isTakeOver)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "disk is not enough(%d|%d) in host (%s), takeover operation (%v)", count, require.Count, hostIp, isTakeOver)
 		}
 		db = db.Where("hosts.free_cpu_cores >= ? and hosts.free_memory >= ?", reqCores, reqMem).Count(&count)
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostIp)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostIp)
 		}
 		if !exclusive {
 			db = db.Where("hosts.status = ? and (hosts.stat = ? or hosts.stat = ?)", rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED).Count(&count)
@@ -391,7 +391,7 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			db = db.Where("hosts.status = ? and hosts.stat = ?", rt.HOST_ONLINE, rt.HOST_LOADLESS).Count(&count)
 		}
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostIp, exclusive)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostIp, exclusive)
 		}
 		if diskSpecify == "" {
 			err = db.Where("disks.type = ? and disks.status = ? and disks.capacity >= ?", diskType, rt.DISK_AVAILABLE, capacity).Scan(&resources).Error
@@ -399,13 +399,13 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			err = db.Where("disks.id = ? and disks.status = ?", diskSpecify, rt.DISK_AVAILABLE).Scan(&resources).Error
 		}
 		if err != nil {
-			return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
 		}
 		if len(resources) < int(require.Count) {
 			if diskSpecify == "" {
-				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "no available disk with type(%s) and capacity(%d) in host(%s) after disk filter", diskType, capacity, hostIp)
+				return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "no available disk with type(%s) and capacity(%d) in host(%s) after disk filter", diskType, capacity, hostIp)
 			} else {
-				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "disk (%s) not existed or it is not available in host(%s)", diskSpecify, hostIp)
+				return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "disk (%s) not existed or it is not available in host(%s)", diskSpecify, hostIp)
 			}
 		}
 	} else {
@@ -415,11 +415,11 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			db = db.Where("hosts.reserved = 0").Count(&count)
 		}
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) is not existed or reserved, takeover operation(%v)", hostIp, isTakeOver)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) is not existed or reserved, takeover operation(%v)", hostIp, isTakeOver)
 		}
 		db = db.Where("free_cpu_cores >= ? and free_memory >= ?", reqCores, reqMem).Count(&count)
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostIp)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "cpucores or memory in host (%s) is not enough", hostIp)
 		}
 		if !exclusive {
 			err = db.Where("status = ? and (stat = ? or stat = ?)", rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED).Scan(&resources).Error
@@ -428,10 +428,10 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			err = db.Where("status = ? and stat = ?", rt.HOST_ONLINE, rt.HOST_LOADLESS).Scan(&resources).Error
 		}
 		if err != nil {
-			return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
 		}
 		if len(resources) < int(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostIp, exclusive)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "host(%s) status/stat is not expected for exlusive(%v) condition", hostIp, exclusive)
 		}
 	}
 
@@ -442,7 +442,7 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 		for _, portReq := range require.Require.PortReq {
 			res, err := getPortsInRange(usedPorts, portReq.Start, portReq.End, int(portReq.PortCnt))
 			if err != nil {
-				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_PORT, "host %s(%s) has no enough ports on range [%d, %d]", resource.HostId, resource.Ip, portReq.Start, portReq.End)
+				return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_PORT, "host %s(%s) has no enough ports on range [%d, %d]", resource.HostId, resource.Ip, portReq.Start, portReq.End)
 			}
 			resource.portRes = append(resource.portRes, res)
 		}
@@ -510,12 +510,12 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			db.Not(map[string]interface{}{"hosts.ip": excludedHosts}).Count(&count)
 		}
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_EXCLUDED, "expect disk count %d but only %d after excluded host list", require.Count, count)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_EXCLUDED, "expect disk count %d but only %d after excluded host list", require.Count, count)
 		}
 
 		db = db.Where("disks.type = ? and disks.status = ? and disks.capacity >= ?", diskType, rt.DISK_AVAILABLE, capacity).Count(&count)
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "expect disk count %d but only %d after disk filter", require.Count, count)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "expect disk count %d but only %d after disk filter", require.Count, count)
 		}
 
 		if !exclusive {
@@ -536,7 +536,7 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			db.Not(map[string]interface{}{"hosts.ip": excludedHosts}).Count(&count)
 		}
 		if count < int64(require.Count) {
-			return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "expect host count %d but only %d after excluded host list", require.Count, count)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "expect host count %d but only %d after excluded host list", require.Count, count)
 		}
 		if !exclusive {
 			err = db.Where("region = ? and az = ? and arch = ? and purpose = ? and disk_type = ? and status = ? and (stat = ? or stat = ?) and free_cpu_cores >= ? and free_memory >= ?",
@@ -548,11 +548,11 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 		}
 	}
 	if err != nil {
-		return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
 	}
 
 	if len(resources) < int(require.Count) {
-		return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "hosts in %s,%s is not enough for allocation(%d|%d)", region, zone, len(resources), require.Count)
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "hosts in %s,%s is not enough for allocation(%d|%d)", region, zone, len(resources), require.Count)
 	}
 
 	// 2. Choose Ports in Hosts
@@ -562,7 +562,7 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 		for _, portReq := range require.Require.PortReq {
 			res, err := getPortsInRange(usedPorts, portReq.Start, portReq.End, int(portReq.PortCnt))
 			if err != nil {
-				return nil, status.Errorf(common.TIEM_RESOURCE_NO_ENOUGH_PORT, "host %s(%s) has no enough ports on range [%d, %d]", resource.HostId, resource.Ip, portReq.Start, portReq.End)
+				return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_PORT, "host %s(%s) has no enough ports on range [%d, %d]", resource.HostId, resource.Ip, portReq.Start, portReq.End)
 			}
 			resource.portRes = append(resource.portRes, res)
 		}
@@ -622,7 +622,7 @@ func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbpb.DBAllocRequest) (res
 			}
 			results.Results = append(results.Results, res...)
 		default:
-			return nil, status.Errorf(common.TIEM_RESOURCE_INVALID_STRATEGY, "invalid alloc strategy %d", require.Strategy)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_STRATEGY, "invalid alloc strategy %d", require.Strategy)
 		}
 	}
 	return
@@ -647,7 +647,7 @@ func (m *DAOResourceManager) AllocResourcesInBatch(ctx context.Context, batchReq
 		result, err = m.doAlloc(tx, req)
 		if err != nil {
 			tx.Rollback()
-			return nil, status.Errorf(common.TIEM_RESOURCE_NOT_ALL_SUCCEED, "alloc resources in batch failed on request %d, %v", i, err)
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NOT_ALL_SUCCEED, "alloc resources in batch failed on request %d, %v", i, err)
 		}
 		results.BatchResults = append(results.BatchResults, result)
 	}
@@ -658,17 +658,17 @@ func (m *DAOResourceManager) AllocResourcesInBatch(ctx context.Context, batchReq
 func recycleUsedTablesByClusterId(tx *gorm.DB, clusterId string) (err error) {
 	err = tx.Where("holder_id = ?", clusterId).Delete(&rt.UsedCompute{}).Error
 	if err != nil {
-		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedCompute for cluster %s failed, %v", clusterId, err)
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedCompute for cluster %s failed, %v", clusterId, err)
 	}
 
 	err = tx.Where("holder_id = ?", clusterId).Delete(&rt.UsedDisk{}).Error
 	if err != nil {
-		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedDisk for cluster %s failed, %v", clusterId, err)
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedDisk for cluster %s failed, %v", clusterId, err)
 	}
 
 	err = tx.Where("holder_id = ?", clusterId).Delete(&rt.UsedPort{}).Error
 	if err != nil {
-		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedPort for cluster %s failed, %v", clusterId, err)
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedPort for cluster %s failed, %v", clusterId, err)
 	}
 	return nil
 }
@@ -676,17 +676,17 @@ func recycleUsedTablesByClusterId(tx *gorm.DB, clusterId string) (err error) {
 func recycleUsedTablesByRequestId(tx *gorm.DB, requestId string) (err error) {
 	err = tx.Where("request_id = ?", requestId).Delete(&rt.UsedCompute{}).Error
 	if err != nil {
-		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedCompute for request %s failed, %v", requestId, err)
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedCompute for request %s failed, %v", requestId, err)
 	}
 
 	err = tx.Where("request_id = ?", requestId).Delete(&rt.UsedDisk{}).Error
 	if err != nil {
-		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedDisk for request %s failed, %v", requestId, err)
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedDisk for request %s failed, %v", requestId, err)
 	}
 
 	err = tx.Where("request_id = ?", requestId).Delete(&rt.UsedPort{}).Error
 	if err != nil {
-		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedPort for request %s failed, %v", requestId, err)
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedPort for request %s failed, %v", requestId, err)
 	}
 	return nil
 }
@@ -704,10 +704,10 @@ func recycleResourcesInHosts(tx *gorm.DB, usedCompute []UsedComputeStatistic, us
 		if rt.DiskStatus(disk.Status).IsExhaust() {
 			err = tx.Model(&disk).Update("Status", int32(rt.DISK_AVAILABLE)).Error
 			if err != nil {
-				return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update disk(%s) status while recycle failed, %v", diskId, err)
+				return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "update disk(%s) status while recycle failed, %v", diskId, err)
 			}
 		} else {
-			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "disk %s status not expected(%d) while recycle", diskId, disk.Status)
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "disk %s status not expected(%d) while recycle", diskId, disk.Status)
 		}
 	}
 	for _, usedCompute := range usedCompute {
@@ -724,7 +724,7 @@ func recycleResourcesInHosts(tx *gorm.DB, usedCompute []UsedComputeStatistic, us
 
 		err = tx.Model(&host).Select("FreeCpuCores", "FreeMemory", "Stat").Where("id = ?", usedCompute.HostId).Updates(rt.Host{FreeCpuCores: host.FreeCpuCores, FreeMemory: host.FreeMemory, Stat: host.Stat}).Error
 		if err != nil {
-			return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "update host(%s) stat while recycle failed, %v", usedCompute.HostId, err)
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "update host(%s) stat while recycle failed, %v", usedCompute.HostId, err)
 		}
 	}
 	return nil
@@ -734,13 +734,13 @@ func recycleHolderResource(tx *gorm.DB, clusterId string) (err error) {
 	var usedCompute []UsedComputeStatistic
 	err = tx.Model(&rt.UsedCompute{}).Select("host_id, sum(cpu_cores) as total_cpu_cores, sum(memory) as total_memory").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedCompute).Error
 	if err != nil {
-		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get cluster %s total used compute failed, %v", clusterId, err)
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get cluster %s total used compute failed, %v", clusterId, err)
 	}
 
 	var usedDisks []string
 	err = tx.Model(&rt.UsedDisk{}).Select("disk_id").Where("holder_id = ?", clusterId).Scan(&usedDisks).Error
 	if err != nil {
-		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get cluster %s total used disks failed, %v", clusterId, err)
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get cluster %s total used disks failed, %v", clusterId, err)
 	}
 
 	// update stat for hosts and disks
@@ -762,13 +762,13 @@ func recycleResourceForRequest(tx *gorm.DB, requestId string) (err error) {
 	var usedCompute []UsedComputeStatistic
 	err = tx.Model(&rt.UsedCompute{}).Select("host_id, sum(cpu_cores) as total_cpu_cores, sum(memory) as total_memory").Where("request_id = ?", requestId).Group("host_id").Scan(&usedCompute).Error
 	if err != nil {
-		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get request %s total used compute failed, %v", requestId, err)
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get request %s total used compute failed, %v", requestId, err)
 	}
 
 	var usedDisks []string
 	err = tx.Model(&rt.UsedDisk{}).Select("disk_id").Where("request_id = ?", requestId).Scan(&usedDisks).Error
 	if err != nil {
-		return status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get request %s total used disks failed, %v", requestId, err)
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get request %s total used disks failed, %v", requestId, err)
 	}
 
 	// update stat for hosts and disks
@@ -795,7 +795,7 @@ func (m *DAOResourceManager) doRecycle(tx *gorm.DB, req *dbpb.DBRecycleRequire) 
 	case rt.RecycleCompute:
 	case rt.RecycleDisk:
 	default:
-		return status.Errorf(common.TIEM_RESOURCE_INVAILD_RECYCLE_TYPE, "invalid recycle resource type %d", req.RecycleType)
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVAILD_RECYCLE_TYPE, "invalid recycle resource type %d", req.RecycleType)
 	}
 	return nil
 }
@@ -806,7 +806,7 @@ func (m *DAOResourceManager) RecycleAllocResources(ctx context.Context, request 
 		err = m.doRecycle(tx, req)
 		if err != nil {
 			tx.Rollback()
-			return status.Errorf(common.TIEM_RESOURCE_NOT_ALL_SUCCEED, "recycle resources failed on request %d, %v", i, err)
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_NOT_ALL_SUCCEED, "recycle resources failed on request %d, %v", i, err)
 		}
 	}
 	tx.Commit()
@@ -819,11 +819,11 @@ func (m *DAOResourceManager) UpdateHostStatus(ctx context.Context, request *dbpb
 		result := tx.Model(&rt.Host{}).Where("id = ?", hostId).Update("status", request.Status)
 		if result.Error != nil {
 			tx.Rollback()
-			return status.Errorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update host [%s] status to %d fail", hostId, request.Status)
+			return framework.NewTiEMErrorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update host [%s] status to %d fail", hostId, request.Status)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			return status.Errorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update invaild host [%s] status", hostId)
+			return framework.NewTiEMErrorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update invaild host [%s] status", hostId)
 		}
 	}
 	tx.Commit()
@@ -836,11 +836,11 @@ func (m *DAOResourceManager) ReserveHost(ctx context.Context, request *dbpb.DBRe
 		result := tx.Model(&rt.Host{}).Where("id = ?", hostId).Update("reserved", request.Reserved)
 		if result.Error != nil {
 			tx.Rollback()
-			return status.Errorf(common.TIEM_RESERVE_HOST_FAIL, "set host [%s] reserved status to %v fail", hostId, request.Reserved)
+			return framework.NewTiEMErrorf(common.TIEM_RESERVE_HOST_FAIL, "set host [%s] reserved status to %v fail", hostId, request.Reserved)
 		}
 		if result.RowsAffected == 0 {
 			tx.Rollback()
-			return status.Errorf(common.TIEM_RESERVE_HOST_FAIL, "set reserved status for invaild host [%s]", hostId)
+			return framework.NewTiEMErrorf(common.TIEM_RESERVE_HOST_FAIL, "set reserved status for invaild host [%s]", hostId)
 		}
 	}
 	tx.Commit()
@@ -884,7 +884,7 @@ func (m *DAOResourceManager) GetHostItems(ctx context.Context, filter rt.Filter,
 	}
 	if err != nil {
 		tx.Rollback()
-		return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get hierarchy failed, %v", err)
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get hierarchy failed, %v", err)
 	}
 	tx.Commit()
 	return
@@ -955,7 +955,7 @@ func (m *DAOResourceManager) GetStocks(ctx context.Context, stockCondition Stock
 	err = db.Scan(&stocks).Error
 	if err != nil {
 		tx.Rollback()
-		return nil, status.Errorf(common.TIEM_RESOURCE_SQL_ERROR, "get stocks failed, %v", err)
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get stocks failed, %v", err)
 	}
 	tx.Commit()
 	return

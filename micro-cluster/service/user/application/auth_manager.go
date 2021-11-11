@@ -91,7 +91,7 @@ var SkipAuth = true
 // Accessible
 func (p *AuthManager) Accessible(ctx context.Context, pathType string, path string, tokenString string) (tenantId string, accountId, accountName string, err error) {
 	if path == "" {
-		err = framework.CustomizeMessageError(common.TIEM_PARAMETER_INVALID, "path empty")
+		err = framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "path empty")
 		return
 	}
 

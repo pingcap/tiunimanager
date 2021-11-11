@@ -337,7 +337,7 @@ func (t TaskRepoAdapter) AddFlowTask(ctx context.Context, task *domain.TaskEntit
 			Parameters:     task.Parameters,
 			ParentId:       strconv.Itoa(int(flowId)),
 			ParentType:     0,
-			StartTime: task.StartTime,
+			StartTime:      task.StartTime,
 		},
 	})
 
@@ -404,11 +404,11 @@ func (t TaskRepoAdapter) Load(ctx context.Context, id uint) (flowWork *domain.Fl
 	})
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("Call metadb rpc method [%s] failed, error: %s", "LoadFlow", err.Error())
-		return nil, framework.WrapError(common.TIEM_METADB_SERVER_CALL_ERROR, common.TiEMErrMsg[common.TIEM_METADB_SERVER_CALL_ERROR], err)
+		return nil, framework.WrapError(common.TIEM_METADB_SERVER_CALL_ERROR, common.TIEM_METADB_SERVER_CALL_ERROR.Explain(), err)
 	}
 	if resp.Status.Code != 0 {
 		framework.LogWithContext(ctx).Errorf("LoadFlowWork failed, error: %s", resp.Status.Message)
-		return nil, framework.CustomizeMessageError(common.TIEM_ERROR_CODE(resp.Status.Code), resp.Status.Message)
+		return nil, framework.NewTiEMError(common.TIEM_ERROR_CODE(resp.Status.Code), resp.Status.Message)
 	} else {
 		flowDTO := resp.FlowWithTasks
 		flowEntity := &domain.FlowWorkEntity{
@@ -451,6 +451,8 @@ func ParseTaskDTO(dto *dbpb.DBTaskDTO) *domain.TaskEntity {
 		BizId:      dto.BizId,
 		Parameters: dto.Parameters,
 		Result:     dto.Result,
+		StartTime:  dto.StartTime,
+		EndTime:    dto.EndTime,
 	}
 }
 

@@ -266,3 +266,4 @@ mock:
 	mockgen -destination ./test/mocksecondparty/mock_second_party_manager.go -package mocksecondparty -source ./library/secondparty/second_party_manager.go
 	mockgen -destination ./test/mockdb/mock_db.pb.micro.go -package mockdb -source ./library/client/metadb/dbpb/db.pb.micro.go
 	mockgen -destination ./test/mockcluster/mock_cluster.pb.micro.go -package mockcluster -source ./library/client/cluster/clusterpb/cluster.pb.micro.go
+

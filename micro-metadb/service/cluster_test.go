@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -12,49 +11,35 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package models
+package service
 
 import (
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-	"gorm.io/gorm"
-	"os"
+	"database/sql"
+	"reflect"
 	"testing"
+	"time"
 )
 
-var MetaDB *gorm.DB
-var Dao *DAOManager
-
-func TestMain(m *testing.M) {
-	testFilePath := "testdata/" + uuidutil.ShortId()
-	os.MkdirAll(testFilePath, 0755)
-
-	defer func() {
-		os.RemoveAll(testFilePath)
-		os.Remove(testFilePath)
-	}()
-
-	framework.InitBaseFrameworkForUt(framework.MetaDBService,
-		func(d *framework.BaseFramework) error {
-			Dao = NewDAOManager(d)
-			Dao.InitDB(testFilePath)
-			Dao.InitTables()
-			Dao.InitMetrics()
-			Dao.AddTable("test_entitys", new(TestEntity))
-			Dao.AddTable("test_entity2_s", new(TestEntity2))
-			Dao.AddTable("test_records", new(TestRecord))
-			Dao.AddTable("test_datas", new(TestData))
-
-			MetaDB = Dao.Db()
-
-			Dao.SetAccountManager(NewDAOAccountManager(Dao.Db()))
-			Dao.SetClusterManager(NewDAOClusterManager(Dao.Db()))
-			Dao.SetResourceManager(NewDAOResourceManager(Dao.Db()))
-			return nil
-		},
-	)
-	os.Exit(m.Run())
+func Test_unix2NullTime(t *testing.T) {
+	now := time.Now()
+	type args struct {
+		unix int64
+	}
+	tests := []struct {
+		name string
+		args args
+		want sql.NullTime
+	}{
+		{"normal", args{now.Unix()}, sql.NullTime{time.Unix(now.Unix(), 0), true}},
+		{"normal", args{0}, sql.NullTime{time.Unix(0, 0), false}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := unix2NullTime(tt.args.unix); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("unix2NullTime() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

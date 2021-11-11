@@ -36,3 +36,7 @@ func TestDAOManager_InitData(t *testing.T) {
 		})
 	}
 }
+
+func TestDAOManager_InitMetrics(t *testing.T) {
+	MetaDB.Create(&TestData{name: "data1"})
+}

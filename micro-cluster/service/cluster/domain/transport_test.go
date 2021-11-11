@@ -17,7 +17,7 @@
 package domain
 
 import (
-	ctx "context"
+	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/common"
 	"os"
@@ -41,7 +41,7 @@ func TestExportDataPreCheck_case1(t *testing.T) {
 		StorageType: common.NfsStorageType,
 	}
 	err := ExportDataPreCheck(req)
-	assert.NoError(t, err)
+	assert.NotNil(t, err)
 }
 
 func TestExportDataPreCheck_case2(t *testing.T) {
@@ -133,8 +133,8 @@ func TestImportDataPreCheck(t *testing.T) {
 		Password:    "",
 		StorageType: common.NfsStorageType,
 	}
-	err := ImportDataPreCheck(req)
-	assert.NoError(t, err)
+	err := ImportDataPreCheck(context.TODO(), req)
+	assert.NotNil(t, err)
 }
 
 func Test_checkExportParamSupportReimport_case1(t *testing.T) {
@@ -170,7 +170,7 @@ func TestExportData(t *testing.T) {
 			TenantId: "123",
 		},
 	}
-	_, err := ExportData(ctx.Background(), request)
+	_, err := ExportData(context.Background(), request)
 
 	assert.NoError(t, err)
 }
@@ -190,7 +190,7 @@ func TestImportData(t *testing.T) {
 			TenantId: "123",
 		},
 	}
-	_, err := ImportData(ctx.Background(), request)
+	_, err := ImportData(context.Background(), request)
 
 	assert.NoError(t, err)
 }
@@ -210,15 +210,15 @@ func TestDescribeDataTransportRecord(t *testing.T) {
 			TenantId: "123",
 		},
 	}
-	_, _, err := DescribeDataTransportRecord(ctx.Background(), request.GetOperator(), 123, "123", 1, 10)
+	_, _, err := DescribeDataTransportRecord(context.Background(), request.GetOperator(), 123, "123", 1, 10)
 	assert.NoError(t, err)
 }
 
 func Test_buildDataImportConfig(t *testing.T) {
 	task := &TaskEntity{}
-	context := NewFlowContext(ctx.TODO())
+	ctx := NewFlowContext(context.TODO())
 
-	context.SetData(contextDataTransportKey, &ImportInfo{
+	ctx.SetData(contextDataTransportKey, &ImportInfo{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -227,7 +227,7 @@ func Test_buildDataImportConfig(t *testing.T) {
 		StorageType: common.S3StorageType,
 		ConfigPath:  "/tmp/test-ut",
 	})
-	context.SetData(contextClusterKey, &ClusterAggregation{
+	ctx.SetData(contextClusterKey, &ClusterAggregation{
 		CurrentTopologyConfigRecord: &TopologyConfigRecord{
 			ConfigModel: &spec.Specification{
 				TiDBServers: []*spec.TiDBSpec{
@@ -243,10 +243,9 @@ func Test_buildDataImportConfig(t *testing.T) {
 			},
 		},
 	})
-	info := context.GetData(contextDataTransportKey).(*ImportInfo)
+	info := ctx.GetData(contextDataTransportKey).(*ImportInfo)
 	_ = os.MkdirAll(info.ConfigPath, os.ModePerm)
-	context.SetData(contextCtxKey, ctx.Background())
-	ret := buildDataImportConfig(task, context)
+	ret := buildDataImportConfig(task, ctx)
 	assert.Equal(t, true, ret)
 	_ = os.RemoveAll(info.ConfigPath)
 }
@@ -260,8 +259,8 @@ func Test_updateDataImportRecord(t *testing.T) {
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := NewFlowContext(ctx.TODO())
-	context.SetData(contextDataTransportKey, &ImportInfo{
+	ctx := NewFlowContext(context.TODO())
+	ctx.SetData(contextDataTransportKey, &ImportInfo{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -270,15 +269,13 @@ func Test_updateDataImportRecord(t *testing.T) {
 		StorageType: common.S3StorageType,
 		ConfigPath:  "configPath",
 	})
-	context.SetData(contextClusterKey, &ClusterAggregation{
+	ctx.SetData(contextClusterKey, &ClusterAggregation{
 		Cluster: &Cluster{
 			Id: "test-abc",
 		},
 	})
-	context.SetData(contextCtxKey, ctx.Background())
 
-	ret := updateDataImportRecord(task, context)
-
+	ret := updateDataImportRecord(task, ctx)
 	assert.Equal(t, true, ret)
 }
 
@@ -291,8 +288,8 @@ func Test_updateDataExportRecord(t *testing.T) {
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := NewFlowContext(ctx.TODO())
-	context.SetData(contextDataTransportKey, &ExportInfo{
+	ctx := NewFlowContext(context.TODO())
+	ctx.SetData(contextDataTransportKey, &ExportInfo{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -300,15 +297,13 @@ func Test_updateDataExportRecord(t *testing.T) {
 		RecordId:    123,
 		StorageType: common.S3StorageType,
 	})
-	context.SetData(contextClusterKey, &ClusterAggregation{
+	ctx.SetData(contextClusterKey, &ClusterAggregation{
 		Cluster: &Cluster{
 			Id: "test-abc",
 		},
 	})
-	context.SetData(contextCtxKey, ctx.Background())
 
-	ret := updateDataExportRecord(task, context)
-
+	ret := updateDataExportRecord(task, ctx)
 	assert.Equal(t, true, ret)
 }
 
@@ -321,8 +316,8 @@ func Test_exportDataFailed(t *testing.T) {
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := NewFlowContext(ctx.TODO())
-	context.SetData(contextDataTransportKey, &ExportInfo{
+	ctx := NewFlowContext(context.TODO())
+	ctx.SetData(contextDataTransportKey, &ExportInfo{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -330,15 +325,13 @@ func Test_exportDataFailed(t *testing.T) {
 		RecordId:    123,
 		StorageType: common.S3StorageType,
 	})
-	context.SetData(contextClusterKey, &ClusterAggregation{
+	ctx.SetData(contextClusterKey, &ClusterAggregation{
 		Cluster: &Cluster{
 			Id: "test-abc",
 		},
 	})
-	context.SetData(contextCtxKey, ctx.Background())
 
-	ret := exportDataFailed(task, context)
-
+	ret := exportDataFailed(task, ctx)
 	assert.Equal(t, true, ret)
 }
 
@@ -351,8 +344,8 @@ func Test_importDataFailed(t *testing.T) {
 	client.DBClient = mockClient
 
 	task := &TaskEntity{}
-	context := NewFlowContext(ctx.TODO())
-	context.SetData(contextDataTransportKey, &ImportInfo{
+	ctx := NewFlowContext(context.TODO())
+	ctx.SetData(contextDataTransportKey, &ImportInfo{
 		ClusterId:   "test-abc",
 		UserName:    "root",
 		Password:    "",
@@ -360,15 +353,13 @@ func Test_importDataFailed(t *testing.T) {
 		RecordId:    123,
 		StorageType: common.S3StorageType,
 	})
-	context.SetData(contextClusterKey, &ClusterAggregation{
+	ctx.SetData(contextClusterKey, &ClusterAggregation{
 		Cluster: &Cluster{
 			Id: "test-abc",
 		},
 	})
-	context.SetData(contextCtxKey, ctx.Background())
 
-	ret := importDataFailed(task, context)
-
+	ret := importDataFailed(task, ctx)
 	assert.Equal(t, true, ret)
 }
 

@@ -57,17 +57,6 @@ type ExportInfo struct {
 	BucketRegion string
 }
 
-type TransportInfo struct {
-	ClusterId     string
-	RecordId      int64
-	TransportType string
-	StorageType   string
-	Status        string
-	FilePath      string
-	StartTime     int64
-	EndTime       int64
-}
-
 /*
 	data import toml config for lightning
 	https://docs.pingcap.com/zh/tidb/dev/tidb-lightning-configuration
@@ -127,7 +116,6 @@ type TidbCfg struct {
 }
 
 var contextDataTransportKey = "dataTransportInfo"
-var contextCtxKey = "ctx"
 
 func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 	if req.GetClusterId() == "" {
@@ -303,7 +291,6 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (int6
 	// Start the workflow
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.AddContext(contextDataTransportKey, info)
-	flow.AddContext(contextCtxKey, ctx)
 	flow.Start()
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
@@ -429,7 +416,6 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 	// Start the workflow
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.AddContext(contextDataTransportKey, info)
-	flow.AddContext(contextCtxKey, ctx)
 	flow.Start()
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
@@ -607,7 +593,7 @@ func cleanDataTransportDir(ctx context.Context, filepath string) error {
 }
 
 func buildDataImportConfig(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin buildDataImportConfig")
 	defer getLoggerWithContext(ctx).Info("end buildDataImportConfig")
 
@@ -640,14 +626,14 @@ func buildDataImportConfig(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func importDataToCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin importDataToCluster")
 	defer getLoggerWithContext(ctx).Info("end importDataToCluster")
 
 	info := flowContext.GetData(contextDataTransportKey).(*ImportInfo)
 
 	//tiup tidb-lightning -config tidb-lightning.toml
-	importTaskId, err := secondparty.SecondParty.MicroSrvLightning(0,
+	importTaskId, err := secondparty.SecondParty.MicroSrvLightning(flowContext.Context, 0,
 		[]string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)},
 		uint64(task.Id))
 	if err != nil {
@@ -658,7 +644,7 @@ func importDataToCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	getLoggerWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, importTaskId %d", importTaskId)
 
 	for {
-		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(importTaskId)
+		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(flowContext.Context, importTaskId)
 		if err != nil {
 			getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
 			task.Fail(fmt.Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error()))
@@ -678,7 +664,7 @@ func importDataToCluster(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin updateDataImportRecord")
 	defer getLoggerWithContext(ctx).Info("end updateDataImportRecord")
 
@@ -710,7 +696,7 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin exportDataFromCluster")
 	defer getLoggerWithContext(ctx).Info("end exportDataFromCluster")
 
@@ -752,7 +738,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		cmd = append(cmd, "--s3.region", fmt.Sprintf("\"%s\"", info.BucketRegion))
 	}
 	getLoggerWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v", cmd)
-	exportTaskId, err := secondparty.SecondParty.MicroSrvDumpling(0, cmd, uint64(task.Id))
+	exportTaskId, err := secondparty.SecondParty.MicroSrvDumpling(ctx, 0, cmd, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call tiup dumpling api failed, %s", err.Error())
 		task.Fail(fmt.Errorf("call tiup dumpling api failed, %s", err.Error()))
@@ -762,7 +748,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	getLoggerWithContext(ctx).Infof("call tiupmgr succee, exportTaskId: %d", exportTaskId)
 
 	for {
-		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(exportTaskId)
+		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(ctx, exportTaskId)
 		if err != nil {
 			getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
 			task.Fail(fmt.Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error()))
@@ -782,7 +768,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin updateDataExportRecord")
 	defer getLoggerWithContext(ctx).Info("end updateDataExportRecord")
 
@@ -814,7 +800,7 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func importDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin importDataFailed")
 	defer getLoggerWithContext(ctx).Info("end importDataFailed")
 
@@ -831,7 +817,7 @@ func importDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func exportDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin exportDataFailed")
 	defer getLoggerWithContext(ctx).Info("end exportDataFailed")
 

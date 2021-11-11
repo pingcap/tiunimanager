@@ -337,6 +337,7 @@ func (t TaskRepoAdapter) AddFlowTask(ctx context.Context, task *domain.TaskEntit
 			Parameters:     task.Parameters,
 			ParentId:       strconv.Itoa(int(flowId)),
 			ParentType:     0,
+			StartTime:      task.StartTime,
 		},
 	})
 
@@ -450,6 +451,8 @@ func ParseTaskDTO(dto *dbpb.DBTaskDTO) *domain.TaskEntity {
 		BizId:      dto.BizId,
 		Parameters: dto.Parameters,
 		Result:     dto.Result,
+		StartTime:  dto.StartTime,
+		EndTime:    dto.EndTime,
 	}
 }
 

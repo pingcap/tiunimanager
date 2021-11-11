@@ -69,3 +69,5 @@ const (
 	TransportTypeExport TransportType = "export"
 	TransportTypeImport TransportType = "import"
 )
+
+const SlowSqlThreshold = 100

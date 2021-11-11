@@ -24,6 +24,8 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
@@ -54,7 +56,6 @@ type RecoverRecord struct {
 	BackupRecord BackupRecord
 }
 
-//var defaultPathPrefix string = "/tmp/tiem/backup"
 var defaultPathPrefix string = "nfs/tiem/backup"
 
 func Backup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, backupMethod string, backupType string, backupMode BackupMode, filePath string) (*ClusterAggregation, error) {
@@ -109,7 +110,6 @@ func Backup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, b
 	clusterAggregation.LastBackupRecord = record
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.AddContext(contextCtxKey, ctx)
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
@@ -230,7 +230,6 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 	}
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.AddContext(contextCtxKey, ctx)
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
@@ -375,7 +374,7 @@ func getBackupPath(filePrefix string, clusterId string, time time.Time, backupRa
 }
 
 func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin backupCluster")
 	defer getLoggerWithContext(ctx).Info("end backupCluster")
 
@@ -392,6 +391,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	storageType, err := convertBrStorageType(string(record.StorageType))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("convert storage type failed, %s", err.Error())
+		task.Fail(err)
 		return false
 	}
 
@@ -414,15 +414,16 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	}
 
 	getLoggerWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
-	backupTaskId, err := secondparty.SecondParty.MicroSrvBackUp(clusterFacade, storage, uint64(task.Id))
+	backupTaskId, err := secondparty.SecondParty.MicroSrvBackUp(ctx, clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
+		task.Fail(err)
 		return false
 	}
 	flowContext.SetData("backupTaskId", backupTaskId)
 
 	for {
-		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(backupTaskId)
+		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(ctx, backupTaskId)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
 			task.Fail(err)
@@ -442,7 +443,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin updateBackupRecord")
 	defer getLoggerWithContext(ctx).Info("end updateBackupRecord")
 
@@ -482,18 +483,26 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		},
 	})
 	if err != nil {
-		getLoggerWithContext(ctx).Errorf("update backup record for cluster %s failed, %s", clusterAggregation.Cluster.Id, err.Error())
+		msg := fmt.Sprintf("update backup record for cluster %s failed", clusterAggregation.Cluster.Id)
+		tiemError := framework.WrapError(common.TIEM_METADB_SERVER_CALL_ERROR, msg, err)
+		getLoggerWithContext(ctx).Error(tiemError)
+		task.Fail(tiemError)
 		return false
 	}
 	if updateResp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
-		getLoggerWithContext(ctx).Errorf("update backup record for cluster %s failed, %s", clusterAggregation.Cluster.Id, updateResp.GetStatus().GetMessage())
+		msg := fmt.Sprintf("update backup record for cluster %s failed, %s", clusterAggregation.Cluster.Id, updateResp.Status.Message)
+		tiemError := framework.CustomizeMessageError(common.TIEM_ERROR_CODE(updateResp.GetStatus().GetCode()), msg)
+
+		getLoggerWithContext(ctx).Error(tiemError)
+		task.Fail(tiemError)
 		return false
 	}
+	task.Success(nil)
 	return true
 }
 
 func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin recoverFromSrcCluster")
 	defer getLoggerWithContext(ctx).Info("end recoverFromSrcCluster")
 
@@ -567,7 +576,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		Root:        fmt.Sprintf("%s/%s", record.GetBackupRecords().GetBackupRecord().GetFilePath(), "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
 	getLoggerWithContext(ctx).Infof("begin call brmgr restore api, clusterFacade %v, storage %v", clusterFacade, storage)
-	restoreTaskId, err := secondparty.SecondParty.MicroSrvRestore(clusterFacade, storage, uint64(task.Id))
+	restoreTaskId, err := secondparty.SecondParty.MicroSrvRestore(ctx, clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call restore api failed, %s", err.Error())
 		task.Fail(err)
@@ -575,7 +584,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	}
 
 	for {
-		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(restoreTaskId)
+		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(ctx, restoreTaskId)
 		if err != nil {
 			getLoggerWithContext(ctx).Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
 			task.Fail(err)

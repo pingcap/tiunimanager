@@ -163,13 +163,13 @@ func (l DaoLogger) Trace(ctx context.Context, begin time.Time, fc func() (string
 	sql, rows := fc()
 	logger := l.p.LogWithContext(ctx).WithField("sql", sql).WithField("rows", rows)
 
-	elapsed := time.Since(begin)
+	elapsed := time.Since(begin).Milliseconds()
 
 	switch {
 	case err != nil && (!errors.Is(err, gormLog.ErrRecordNotFound)):
 		logger.Errorf(err.Error())
-	case elapsed > l.SlowThreshold:
-		logger.Warnf("SLOW SQL >= %v", l.SlowThreshold)
+	case elapsed > l.SlowThreshold.Milliseconds():
+		logger.Warnf("SLOW SQL >= %v", l.SlowThreshold.Milliseconds())
 	case l.p.GetRootLogger().LogLevel == framework.LogDebug || l.p.GetRootLogger().LogLevel == framework.LogInfo:
 		logger.Infof("execute sql")
 	}

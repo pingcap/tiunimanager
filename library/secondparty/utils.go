@@ -18,6 +18,7 @@ package secondparty
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"io/ioutil"
 	"os"
 	"runtime/debug"
@@ -26,19 +27,19 @@ import (
 func assert(b bool) {
 	if b {
 	} else {
-		logger.Error("unexpected panic with stack trace:", string(debug.Stack()))
+		framework.Log().Error("unexpected panic with stack trace:", string(debug.Stack()))
 		panic("unexpected")
 	}
 }
 
 func myPanic(v interface{}) {
 	s := fmt.Sprint(v)
-	logger.Errorf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
+	framework.Log().Errorf("panic: %s, with stack trace: %s", s, string(debug.Stack()))
 	panic("unexpected" + s)
 }
 
-func newTmpFileWithContent(content []byte) (fileName string, err error) {
-	tmpfile, err := ioutil.TempFile("", "tiem-topology-*.yaml")
+func newTmpFileWithContent(filePrefix string, content []byte) (fileName string, err error) {
+	tmpfile, err := ioutil.TempFile("", fmt.Sprintf("%s-*.yaml", filePrefix))
 	if err != nil {
 		err = fmt.Errorf("fail to create temp file err: %s", err)
 		return "", err

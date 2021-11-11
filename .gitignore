@@ -17,3 +17,4 @@ library/client/cluster
 library/client/metadb
 library/framework/logs
 test/
+/nohup.out

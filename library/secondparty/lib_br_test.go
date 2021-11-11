@@ -286,14 +286,12 @@ func TestSecondMicro_Restore_Success3_DontCareAsyncResult(t *testing.T) {
 	}
 }
 
-/*
 func TestSecondMicro_ShowRestoreInfo_Fail(t *testing.T) {
 	resp := secondMicro2.MicroSrvShowRestoreInfo(context.TODO(), clusterFacade)
 	if resp.Destination == "" && resp.ErrorStr == "" {
 		t.Errorf("case: show restore info. either Destination(%s) or ErrorStr(%v) should have zero value", resp.Destination, resp.ErrorStr)
 	}
 }
-*/
 
 func Test_execShowRestoreInfoThruSQL_Fail(t *testing.T) {
 

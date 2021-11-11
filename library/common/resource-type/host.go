@@ -18,6 +18,8 @@ package resource
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
@@ -36,6 +38,24 @@ const (
 	HOST
 	DISK
 )
+
+func GenDomainCodeByName(pre string, name string) string {
+	return fmt.Sprintf("%s,%s", pre, name)
+}
+
+func GetDomainNameFromCode(failureDomain string) string {
+	pos := strings.LastIndex(failureDomain, ",")
+	return failureDomain[pos+1:]
+}
+
+func GetDomainPrefixFromCode(failureDomain string) string {
+	pos := strings.LastIndex(failureDomain, ",")
+	if pos == -1 {
+		// No found ","
+		return failureDomain
+	}
+	return failureDomain[:pos]
+}
 
 type ArchType string
 

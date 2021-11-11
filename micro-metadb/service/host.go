@@ -19,7 +19,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
@@ -31,24 +30,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-func genDomainCodeByName(pre string, name string) string {
-	return fmt.Sprintf("%s,%s", pre, name)
-}
-
-func GetDomainNameFromCode(failureDomain string) string {
-	pos := strings.LastIndex(failureDomain, ",")
-	return failureDomain[pos+1:]
-}
-
-func getDomainPrefixFromCode(failureDomain string) string {
-	pos := strings.LastIndex(failureDomain, ",")
-	if pos == -1 {
-		// No found ","
-		return failureDomain
-	}
-	return failureDomain[:pos]
-}
 
 func copyHostInfoFromReq(src *dbpb.DBHostInfoDTO, dst *resource.Host) {
 	dst.HostName = src.HostName
@@ -65,8 +46,8 @@ func copyHostInfoFromReq(src *dbpb.DBHostInfoDTO, dst *resource.Host) {
 	dst.Memory = src.Memory
 	dst.Nic = src.Nic
 	dst.Region = src.Region
-	dst.AZ = genDomainCodeByName(dst.Region, src.Az)
-	dst.Rack = genDomainCodeByName(dst.AZ, src.Rack)
+	dst.AZ = resource.GenDomainCodeByName(dst.Region, src.Az)
+	dst.Rack = resource.GenDomainCodeByName(dst.AZ, src.Rack)
 	dst.Status = src.Status
 	dst.Stat = src.Stat
 	dst.Purpose = src.Purpose
@@ -201,8 +182,8 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbpb.DBHostInfoDTO) {
 	dst.Memory = src.Memory
 	dst.Nic = src.Nic
 	dst.Region = src.Region
-	dst.Az = GetDomainNameFromCode(src.AZ)
-	dst.Rack = GetDomainNameFromCode(src.Rack)
+	dst.Az = resource.GetDomainNameFromCode(src.AZ)
+	dst.Rack = resource.GetDomainNameFromCode(src.Rack)
 	dst.Status = src.Status
 	dst.Stat = src.Stat
 	if src.Stat == int32(resource.HOST_INUSED) {
@@ -609,8 +590,8 @@ func addSubNode(current map[string]*node, code string, subNode *node) (parent *n
 	} else {
 		parent := node{
 			Code:   code,
-			Prefix: getDomainPrefixFromCode(code),
-			Name:   GetDomainNameFromCode(code),
+			Prefix: resource.GetDomainPrefixFromCode(code),
+			Name:   resource.GetDomainNameFromCode(code),
 		}
 		parent.subNodes = append(parent.subNodes, subNode)
 		current[code] = &parent
@@ -630,7 +611,7 @@ func (handler *DBServiceHandler) buildHierarchy(Items []models.Item) *node {
 	var racks map[string]*node = make(map[string]*node)
 	for _, item := range Items {
 		hostItem := node{
-			Code:     genDomainCodeByName(item.Ip, item.Name),
+			Code:     resource.GenDomainCodeByName(item.Ip, item.Name),
 			Prefix:   item.Ip,
 			Name:     item.Name,
 			subNodes: nil,

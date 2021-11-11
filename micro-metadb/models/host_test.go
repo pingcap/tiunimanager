@@ -1140,9 +1140,9 @@ func TestAllocHosts_1Host_NotEnough(t *testing.T) {
 }
 
 func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName1", "474.111.111.108", string(resource.General), string(resource.SSD), 17, 64, 1)
-	id2, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName2", "474.111.111.109", string(resource.General), string(resource.SSD), 16, 64, 2)
-	id3, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName3", "474.111.111.110", string(resource.General), string(resource.SSD), 15, 64, 1)
+	id1, _ := CreateTestHost("Region1", "Region1,Zone1", "Region1,Zone1,3-1", "HostName1", "474.111.111.108", string(resource.General), string(resource.SSD), 17, 64, 1)
+	id2, _ := CreateTestHost("Region1", "Region1,Zone1", "Region1,Zone1,3-1", "HostName2", "474.111.111.109", string(resource.General), string(resource.SSD), 16, 64, 2)
+	id3, _ := CreateTestHost("Region1", "Region1,Zone1", "Region1,Zone1,3-1", "HostName3", "474.111.111.110", string(resource.General), string(resource.SSD), 15, 64, 1)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 
@@ -1234,9 +1234,9 @@ func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
 }
 
 func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Zone2", "3-1", "HostName1", "474.111.111.114", string(resource.General), string(resource.SSD), 17, 64, 1)
-	id2, _ := CreateTestHost("Region1", "Zone2", "3-1", "HostName2", "474.111.111.115", string(resource.General), string(resource.SSD), 16, 64, 2)
-	id3, _ := CreateTestHost("Region1", "Zone2", "3-1", "HostName3", "474.111.111.116", string(resource.Storage), string(resource.SSD), 15, 64, 1)
+	id1, _ := CreateTestHost("Region1", "Region1,Zone2", "Region1,Zone2,3-1", "HostName1", "474.111.111.114", string(resource.General), string(resource.SSD), 17, 64, 1)
+	id2, _ := CreateTestHost("Region1", "Region1,Zone2", "Region1,Zone2,3-1", "HostName2", "474.111.111.115", string(resource.General), string(resource.SSD), 16, 64, 2)
+	id3, _ := CreateTestHost("Region1", "Region1,Zone2", "Region1,Zone2,3-1", "HostName3", "474.111.111.116", string(resource.Storage), string(resource.SSD), 15, 64, 1)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 
@@ -1346,9 +1346,9 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 }
 
 func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Zone3", "3-1", "HostName1", "474.111.111.117", string(resource.General), string(resource.SSD), 17, 64, 3)
-	id2, _ := CreateTestHost("Region1", "Zone3", "3-1", "HostName2", "474.111.111.118", string(resource.General), string(resource.SSD), 16, 64, 3)
-	id3, _ := CreateTestHost("Region1", "Zone3", "3-1", "HostName3", "474.111.111.119", string(resource.General), string(resource.SSD), 15, 64, 3)
+	id1, _ := CreateTestHost("Region1", "Region1,Zone3", "Region1,Zone3,3-1", "HostName1", "474.111.111.117", string(resource.General), string(resource.SSD), 17, 64, 3)
+	id2, _ := CreateTestHost("Region1", "Region1,Zone3", "Region1,Zone3,3-1", "HostName2", "474.111.111.118", string(resource.General), string(resource.SSD), 16, 64, 3)
+	id3, _ := CreateTestHost("Region1", "Region1,Zone3", "Region1,Zone3,3-1", "HostName3", "474.111.111.119", string(resource.General), string(resource.SSD), 15, 64, 3)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 	/*
@@ -1455,9 +1455,9 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 }
 
 func TestAllocResources_3RequestsInBatch_3Hosts_No_Disk(t *testing.T) {
-	id1, _ := CreateTestHost("Region111", "Zone3", "3-1", "HostName1", "474.112.111.117", string(resource.General), string(resource.SSD), 17, 64, 3)
-	id2, _ := CreateTestHost("Region111", "Zone3", "3-1", "HostName2", "474.112.111.118", string(resource.General), string(resource.SSD), 16, 64, 3)
-	id3, _ := CreateTestHost("Region111", "Zone3", "3-1", "HostName3", "474.112.111.119", string(resource.General), string(resource.SSD), 15, 64, 3)
+	id1, _ := CreateTestHost("Region111", "Region111,Zone3", "Region111,Zone3,3-1", "HostName1", "474.112.111.117", string(resource.General), string(resource.SSD), 17, 64, 3)
+	id2, _ := CreateTestHost("Region111", "Region111,Zone3", "Region111,Zone3,3-1", "HostName2", "474.112.111.118", string(resource.General), string(resource.SSD), 16, 64, 3)
+	id3, _ := CreateTestHost("Region111", "Region111,Zone3", "Region111,Zone3,3-1", "HostName3", "474.112.111.119", string(resource.General), string(resource.SSD), 15, 64, 3)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 	/*
@@ -1563,9 +1563,9 @@ func TestAllocResources_3RequestsInBatch_3Hosts_No_Disk(t *testing.T) {
 }
 
 func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Zone4", "3-1", "HostName1", "474.111.111.127", string(resource.General), string(resource.SSD), 17, 64, 3)
-	id2, _ := CreateTestHost("Region1", "Zone4", "3-1", "HostName2", "474.111.111.128", string(resource.General), string(resource.SSD), 16, 64, 3)
-	id3, _ := CreateTestHost("Region1", "Zone4", "3-1", "HostName3", "474.111.111.129", string(resource.General), string(resource.SSD), 15, 64, 3)
+	id1, _ := CreateTestHost("Region1", "Region1,Zone4", "Region1,Zone4,3-1", "HostName1", "474.111.111.127", string(resource.General), string(resource.SSD), 17, 64, 3)
+	id2, _ := CreateTestHost("Region1", "Region1,Zone4", "Region1,Zone4,3-1", "HostName2", "474.111.111.128", string(resource.General), string(resource.SSD), 16, 64, 3)
+	id3, _ := CreateTestHost("Region1", "Region1,Zone4", "Region1,Zone4,3-1", "HostName3", "474.111.111.129", string(resource.General), string(resource.SSD), 15, 64, 3)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 	/*
@@ -1717,9 +1717,9 @@ func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
 }
 
 func TestAllocResources_SpecifyHost_Strategy_No_Disk(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Zone5", "3-1", "HostName1", "474.111.111.137", string(resource.General), string(resource.SSD), 17, 64, 3)
-	id2, _ := CreateTestHost("Region1", "Zone5", "3-1", "HostName2", "474.111.111.138", string(resource.General), string(resource.SSD), 16, 64, 3)
-	id3, _ := CreateTestHost("Region1", "Zone5", "3-1", "HostName3", "474.111.111.139", string(resource.General), string(resource.SSD), 15, 64, 3)
+	id1, _ := CreateTestHost("Region1", "Region1,Zone5", "Region1,Zone5,3-1", "HostName1", "474.111.111.137", string(resource.General), string(resource.SSD), 17, 64, 3)
+	id2, _ := CreateTestHost("Region1", "Region1,Zone5", "Region1,Zone5,3-1", "HostName2", "474.111.111.138", string(resource.General), string(resource.SSD), 16, 64, 3)
+	id3, _ := CreateTestHost("Region1", "Region1,Zone5", "Region1,Zone5,3-1", "HostName3", "474.111.111.139", string(resource.General), string(resource.SSD), 15, 64, 3)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 	/*

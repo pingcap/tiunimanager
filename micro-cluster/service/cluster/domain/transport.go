@@ -250,7 +250,7 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (int6
 
 	exportTime := time.Now()
 	exportPrefix, _ := filepath.Abs(common.DefaultExportDir) //todo: get from config
-	exportDir := filepath.Join(exportPrefix, fmt.Sprintf("%s_%s", exportTime.Format("2006-01-02_15:04:05"), request.GetStorageType()))
+	exportDir := filepath.Join(exportPrefix, request.GetClusterId(), fmt.Sprintf("%s_%s", exportTime.Format("2006-01-02_15:04:05"), request.GetStorageType()))
 
 	req := &dbpb.DBCreateTransportRecordRequest{
 		Record: &dbpb.TransportRecordDTO{

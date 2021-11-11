@@ -19,6 +19,7 @@ package domain
 import (
 	"context"
 	copywriting2 "github.com/pingcap-inc/tiem/library/copywriting"
+	"time"
 )
 
 func defaultContextParser(s string) *FlowContext {
@@ -162,6 +163,16 @@ var FlowWorkDefineMap = map[string]*FlowWorkDefine{
 		},
 		ContextParser: defaultContextParser,
 	},
+	FlowBuildLogConfig: {
+		FlowName:    FlowBuildLogConfig,
+		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowTakeoverCluster),
+		TaskNodes: map[string]*TaskDefine{
+			"start":   {"collect", "success", "fail", SyncFuncTask, collectorTiDBLogConfig},
+			"success": {"end", "", "", SyncFuncTask, ClusterEnd},
+			"fail":    {"fail", "", "", SyncFuncTask, ClusterFail},
+		},
+		ContextParser: defaultContextParser,
+	},
 }
 
 type FlowWorkDefine struct {
@@ -203,6 +214,12 @@ func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.Cluster.WorkFlowId = 0
 	clusterAggregation.FlowModified = true
+
+	if clusterAggregation.ConfigModified {
+		go time.AfterFunc(time.Second * 3, func() {
+			BuildClusterLogConfig(context, clusterAggregation.Cluster.Id)
+		})
+	}
 	return true
 }
 

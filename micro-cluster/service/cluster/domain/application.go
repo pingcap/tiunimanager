@@ -284,11 +284,29 @@ func GetParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string
 	return RemoteClusterProxy.QueryParameterJson(ctx, clusterId)
 }
 
-func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation, taskId uint) error {
+func BuildClusterLogConfig(ctx ctx.Context, clusterId string) error {
+	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
+	if err != nil {
+		return errors.New("cluster not exist")
+	}
+	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowBuildLogConfig, BuildSystemOperator())
+	if err != nil {
+		return err
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.Start()
+	return nil
+}
+
+func collectorTiDBLogConfig(task *TaskEntity, ctx *FlowContext) bool {
+	aggregation := ctx.GetData(contextClusterKey).(*ClusterAggregation)
+
 	clusters, total, err := ClusterRepo.Query(ctx, "", "", "", "", "", 1, 10000)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("invoke cluster repo list cluster err： %v", err)
-		return err
+		task.Fail(err)
+		return false
 	}
 	getLoggerWithContext(ctx).Infof("list cluster total count: %d", total)
 	hosts := listClusterHosts(aggregation)
@@ -310,7 +328,7 @@ func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation, ta
 			deployDir := "/tiem-test/filebeat"
 			transferTaskId, err := secondparty.SecondParty.MicroSrvTiupTransfer(ctx, secondparty.ClusterComponentTypeStr,
 				aggregation.Cluster.ClusterName, collectorYaml, deployDir+"/conf/input_tidb.yml",
-				0, []string{"-N", host}, uint64(taskId))
+				0, []string{"-N", host}, uint64(task.Id))
 			getLoggerWithContext(ctx).Infof("got transferTaskId %d", transferTaskId)
 			if err != nil {
 				getLoggerWithContext(ctx).Errorf("collectorTiDBLogConfig invoke tiup transfer err： %v", err)
@@ -318,7 +336,8 @@ func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation, ta
 			}
 		}
 	}()
-	return nil
+	task.Success(nil)
+	return true
 }
 
 //func (aggregation *ClusterAggregation) loadWorkFlow() error {
@@ -425,11 +444,6 @@ func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.StatusModified = true
 	clusterAggregation.Cluster.Online()
-
-	err := collectorTiDBLogConfig(context, clusterAggregation, task.Id)
-	if err != nil {
-		getLogger().Errorf("collector tidb log config err = %s", err.Error())
-	}
 
 	task.Success(nil)
 	return true

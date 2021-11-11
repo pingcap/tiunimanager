@@ -26,7 +26,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/labstack/gommon/bytes"
-	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -398,27 +397,6 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
-	var req dbpb.FindTiupTaskByIDRequest
-	req.Id = context.GetData("deployTaskId").(uint64)
-
-	for i := 0; i < 30; i++ {
-		time.Sleep(time.Second)
-		rsp, err := client.DBClient.FindTiupTaskByID(ctx.TODO(), &req)
-		if err != nil {
-			getLogger().Errorf("get deploy task err = %s", err.Error())
-			task.Fail(err)
-			return false
-		}
-		if rsp.TiupTask.Status == dbpb.TiupTaskStatus_Error {
-			getLogger().Errorf("deploy cluster error, %s", rsp.TiupTask.ErrorStr)
-			task.Fail(errors.New(rsp.TiupTask.ErrorStr))
-			return false
-		}
-		if rsp.TiupTask.Status == dbpb.TiupTaskStatus_Finished {
-			break
-		}
-	}
-	getLogger().Infof("start cluster %s", cluster.ClusterName)
 	startTaskId, err := secondparty.SecondParty.MicroSrvTiupStart(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id),
 	)

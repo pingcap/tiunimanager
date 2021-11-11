@@ -32,8 +32,8 @@ var oldCreateClusterDefine = &FlowWorkDefine{
 	TaskNodes: map[string]*TaskDefine{
 		"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
 		"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
-		"configDone":   {"deployCluster", "deployDone", "fail", SyncFuncTask, deployCluster},
-		"deployDone":   {"startupCluster", "startupDone", "fail", SyncFuncTask, startupCluster},
+		"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
+		"deployDone":   {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
 		"startupDone":  {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
 		"onlineDone":   {"end", "", "", SyncFuncTask, ClusterEnd},
 		"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
@@ -47,8 +47,8 @@ var newCreateClusterDefine = &FlowWorkDefine{
 	TaskNodes: map[string]*TaskDefine{
 		"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
 		"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
-		"configDone":   {"deployCluster", "deployDone", "fail", SyncFuncTask, deployCluster},
-		"deployDone":   {"startupCluster", "startupDone", "fail", SyncFuncTask, startupCluster},
+		"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
+		"deployDone":   {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
 		"startupDone":  {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
 		"onlineDone":   {"end", "", "", SyncFuncTask, ClusterEnd},
 		"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},

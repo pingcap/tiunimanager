@@ -21,8 +21,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	"time"
 )
 
@@ -187,23 +188,23 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 	case CallbackTask:
 
 	case PollingTasK:
-		// receive the taskId and start ticker
-		ticker := time.NewTicker(1 * time.Second)
-		bizId := task.Id
+		ticker := time.NewTicker(time.Second)
+		c := make(chan int, 30)
 		for range ticker.C {
-			// todo check bizId
-			//status, s, err := Operator.CheckProgress(uint64(f.CurrentTask.id))
-			//			if err != nil {
-			//				getLogger().Error(err)
-			//				continue
-			//			}
-			//
-			//			switch status {
-			//			case dbPb.TiupTaskStatus_Init:
-			//			getLogger().Info(s)
-			fmt.Println(bizId)
-			flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
-			break
+			c <- 1
+			stat, _, _ := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(flow.Context, uint64(task.Id))
+			if stat == dbpb.TiupTaskStatus_Error {
+				if e, ok := flow.Define.TaskNodes[taskDefine.FailEvent]; ok {
+					flow.handle(e)
+					return
+				}
+			}
+			if stat == dbpb.TiupTaskStatus_Finished {
+				if e, ok := flow.Define.TaskNodes[taskDefine.SuccessEvent]; ok {
+					flow.handle(e)
+					return
+				}
+			}
 		}
 	}
 }

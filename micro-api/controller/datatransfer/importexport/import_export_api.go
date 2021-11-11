@@ -258,7 +258,7 @@ func DeleteDataTransportRecord(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 	} else {
 		status = resp.GetStatus()
-		if common.TIEM_SUCCESS == status.GetCode() {
+		if common.TIEM_SUCCESS.Equal(status.GetCode()) {
 			c.JSON(http.StatusOK, controller.Success(recordId))
 		} else {
 			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))

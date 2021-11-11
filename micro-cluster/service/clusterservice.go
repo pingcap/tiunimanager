@@ -298,7 +298,7 @@ func (c ClusterServiceHandler) DeleteDataTransportRecord(ctx context.Context, re
 	err := domain.DeleteDataTransportRecord(ctx, req.GetOperator(), req.GetClusterId(), req.GetRecordId())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		resp.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_TRANSPORT_RECORD_DEL_FAIL, Message: common.TiEMErrMsg[common.TIEM_TRANSPORT_RECORD_DEL_FAIL]}
+		resp.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_TRANSPORT_RECORD_DEL_FAIL), Message: common.TIEM_TRANSPORT_RECORD_DEL_FAIL.Explain()}
 	} else {
 		resp.Status = SuccessResponseStatus
 	}

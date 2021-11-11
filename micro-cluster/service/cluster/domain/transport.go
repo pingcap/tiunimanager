@@ -376,7 +376,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 		}
 
 		record := queryResp.GetRecord()
-		if err := os.MkdirAll(importDir, os.ModePerm); err != nil {
+		if err := os.MkdirAll(importDir, os.ModeDir); err != nil {
 			return 0, fmt.Errorf("make import dir %s failed, %s", importDir, err.Error())
 		}
 
@@ -586,7 +586,7 @@ func cleanDataTransportDir(ctx context.Context, filepath string) error {
 		return err
 	}
 
-	if err := os.MkdirAll(filepath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(filepath, os.ModeDir); err != nil {
 		return err
 	}
 	return nil

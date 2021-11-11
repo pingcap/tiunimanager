@@ -40,8 +40,9 @@ func TestExportDataPreCheck_case1(t *testing.T) {
 		FileType:    FileTypeCSV,
 		StorageType: common.NfsStorageType,
 	}
+	_ = os.MkdirAll(common.DefaultExportDir, os.ModeDir)
 	err := ExportDataPreCheck(req)
-	assert.NotNil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestExportDataPreCheck_case2(t *testing.T) {
@@ -133,8 +134,9 @@ func TestImportDataPreCheck(t *testing.T) {
 		Password:    "",
 		StorageType: common.NfsStorageType,
 	}
+	_ = os.MkdirAll(common.DefaultImportDir, os.ModeDir)
 	err := ImportDataPreCheck(context.TODO(), req)
-	assert.NotNil(t, err)
+	assert.NoError(t, err)
 }
 
 func Test_checkExportParamSupportReimport_case1(t *testing.T) {

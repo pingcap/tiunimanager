@@ -220,7 +220,7 @@ func ImportDataPreCheck(ctx context.Context, req *clusterpb.DataImportRequest) e
 		if !checkFilePathExists(record.GetFilePath()) {
 			return fmt.Errorf("data source path %s not exist", record.GetFilePath())
 		}
-		if record.GetTransportType() != common.NfsStorageType {
+		if record.GetStorageType() != common.NfsStorageType {
 			return fmt.Errorf("storage type %s can not support re-import", record.GetStorageType())
 		}
 		if !record.GetReImportSupport() {

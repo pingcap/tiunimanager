@@ -19,6 +19,7 @@ package models
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"reflect"
 	"testing"
 	"time"
@@ -1948,9 +1949,9 @@ func TestAllocResources_SpecifyHost_Strategy_TakeOver(t *testing.T) {
 	rsp, err := Dao.ResourceManager().AllocResourcesInBatch(context.TODO(), &batchReq)
 	assert.True(t, nil == rsp && err != nil)
 	t.Log(err)
-	st, ok := status.FromError(err)
+	te, ok := err.(framework.TiEMError)
 	assert.Equal(t, true, ok)
-	assert.True(t, common.TIEM_RESOURCE_NOT_ALL_SUCCEED.Equal(int32(st.Code())) )
+	assert.True(t, common.TIEM_RESOURCE_NOT_ALL_SUCCEED.Equal(int32(te.GetCode())))
 
 	batchReq.BatchRequests[0].Applicant.TakeoverOperation = true
 	rsp, err2 := Dao.ResourceManager().AllocResourcesInBatch(context.TODO(), &batchReq)

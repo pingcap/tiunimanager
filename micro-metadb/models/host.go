@@ -480,8 +480,9 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 }
 
 func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, require *dbpb.DBAllocRequirement, choosedHosts []string) (results []rt.HostResource, err error) {
-	region := require.Location.Region
-	zone := require.Location.Zone
+	regionName := require.Location.Region
+	zoneName := require.Location.Zone
+	zoneCode := rt.GenDomainCodeByName(regionName, zoneName)
 	var excludedHosts []string
 	if require.HostExcluded != nil {
 		excludedHosts = require.HostExcluded.Hosts
@@ -519,12 +520,12 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 		}
 
 		if !exclusive {
-			err = db.Where("hosts.region = ? and hosts.az = ? and hosts.arch = ? and hosts.purpose = ? and hosts.disk_type = ? and hosts.status = ? and (hosts.stat = ? or hosts.stat = ?) and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
-				region, zone, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
+			err = db.Where("hosts.az = ? and hosts.arch = ? and hosts.purpose = ? and hosts.disk_type = ? and hosts.status = ? and (hosts.stat = ? or hosts.stat = ?) and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
+				zoneCode, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
 		} else {
 			// If need exclusive resource, only choosing from loadless hosts
-			err = db.Where("hosts.region = ? and hosts.az = ? and hosts.arch = ? and hosts.purpose = ? and hosts.disk_type = ? and hosts.status = ? and hosts.stat = ? and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
-				region, zone, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
+			err = db.Where("hosts.az = ? and hosts.arch = ? and hosts.purpose = ? and hosts.disk_type = ? and hosts.status = ? and hosts.stat = ? and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
+				zoneCode, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
 		}
 	} else {
 		var count int64
@@ -539,12 +540,12 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "expect host count %d but only %d after excluded host list", require.Count, count)
 		}
 		if !exclusive {
-			err = db.Where("region = ? and az = ? and arch = ? and purpose = ? and disk_type = ? and status = ? and (stat = ? or stat = ?) and free_cpu_cores >= ? and free_memory >= ?",
-				region, zone, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Scan(&resources).Error
+			err = db.Where("az = ? and arch = ? and purpose = ? and disk_type = ? and status = ? and (stat = ? or stat = ?) and free_cpu_cores >= ? and free_memory >= ?",
+				zoneCode, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Scan(&resources).Error
 		} else {
 			// If need exclusive resource, only choosing from loadless hosts
-			err = db.Where("region = ? and az = ? and arch = ? and purpose = ? and disk_type = ? and status = ? and stat = ? and free_cpu_cores >= ? and free_memory >= ?",
-				region, zone, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Scan(&resources).Error
+			err = db.Where("az = ? and arch = ? and purpose = ? and disk_type = ? and status = ? and stat = ? and free_cpu_cores >= ? and free_memory >= ?",
+				zoneCode, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Scan(&resources).Error
 		}
 	}
 	if err != nil {
@@ -552,7 +553,7 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	}
 
 	if len(resources) < int(require.Count) {
-		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "hosts in %s,%s is not enough for allocation(%d|%d)", region, zone, len(resources), require.Count)
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "hosts in %s,%s is not enough for allocation(%d|%d)", regionName, zoneName, len(resources), require.Count)
 	}
 
 	// 2. Choose Ports in Hosts

@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pingcap/tiup/pkg/cluster/spec"
+
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/stretchr/testify/assert"
@@ -74,6 +76,52 @@ func defaultCluster() *ClusterAggregation {
 			ID:   222,
 			Cron: "testcron",
 		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			Id:        0,
+			TenantId:  "1",
+			ClusterId: "testCluster",
+			ConfigModel: &spec.Specification{
+				GlobalOptions:    spec.GlobalOptions{},
+				MonitoredOptions: spec.MonitoredOptions{},
+				ServerConfigs:    spec.ServerConfigs{},
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host:      "127.0.0.1",
+						DeployDir: "/mnt/sda/testCluster/tidb-deploy",
+						LogDir:    "testCluster/tidb-log",
+					},
+				},
+				PDServers: []*spec.PDSpec{
+					{
+						Host:      "127.0.0.1",
+						DeployDir: "/mnt/sda/testCluster/pd-deploy",
+						LogDir:    "testCluster/tidb-log",
+					},
+				},
+				TiKVServers: []*spec.TiKVSpec{
+					{
+						Host:      "127.0.0.2",
+						DeployDir: "/mnt/sda/testCluster/tikv-deploy",
+						LogDir:    "testCluster/tidb-log",
+					},
+				},
+				TiFlashServers: []*spec.TiFlashSpec{
+					{
+						Host:      "127.0.0.2",
+						DeployDir: "/mnt/sda/testCluster/tiflash-deploy",
+						LogDir:    "testCluster/tidb-log",
+					},
+				},
+				CDCServers: []*spec.CDCSpec{
+					{
+						Host:      "127.0.0.2",
+						DeployDir: "/mnt/sda/testCluster/ticdc-deploy",
+						LogDir:    "testCluster/tidb-log",
+					},
+				},
+			},
+			CreateTime: time.Time{},
+		},
 	}
 }
 
@@ -94,7 +142,6 @@ func TestClusterAggregation_ExtractDisplayDTO(t *testing.T) {
 	dto := aggregation.ExtractDisplayDTO()
 	assert.Equal(t, strconv.Itoa(int(aggregation.Cluster.Status)), dto.Status.StatusCode)
 	assert.Equal(t, aggregation.Cluster.ClusterName, dto.BaseInfo.ClusterName)
-	assert.Equal(t, int64(4000), dto.Instances.PortList[0])
 }
 
 func TestClusterAggregation_ExtractMaintenanceDTO(t *testing.T) {

@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"time"
 
+	"strconv"
+
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
@@ -31,7 +33,6 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormLog "gorm.io/gorm/logger"
-	"strconv"
 
 	"github.com/pingcap/errors"
 
@@ -95,7 +96,7 @@ func (dao *DAOManager) Tables() map[string]interface{} {
 const StartTime = "StartTime"
 
 func (dao *DAOManager) InitMetrics() {
-	before := func (db *gorm.DB) {
+	before := func(db *gorm.DB) {
 		db.InstanceSet(StartTime, time.Now())
 		return
 	}
@@ -299,8 +300,8 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		FreeMemory:   64,
 		Nic:          "1GE",
 		Region:       "Region1",
-		AZ:           "Zone1",
-		Rack:         "3-1",
+		AZ:           "Region1,Zone1",
+		Rack:         "Region1,Zone1,3-1",
 		Purpose:      string(resource.General),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
@@ -330,8 +331,8 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		FreeMemory:   64,
 		Nic:          "1GE",
 		Region:       "Region1",
-		AZ:           "Zone1",
-		Rack:         "3-1",
+		AZ:           "Region1,Zone1",
+		Rack:         "Region1,Zone1,3-1",
 		Purpose:      string(resource.General),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
@@ -361,8 +362,8 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		FreeMemory:   24,
 		Nic:          "1GE",
 		Region:       "Region1",
-		AZ:           "Zone1",
-		Rack:         "3-1",
+		AZ:           "Region1,Zone1",
+		Rack:         "Region1,Zone1,3-1",
 		Purpose:      string(resource.General),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,

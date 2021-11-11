@@ -39,6 +39,7 @@ type MicroSrv interface {
 	MicroSrvTiupList(ctx context.Context, tiupComponent TiUPComponentTypeStr, timeoutS int, flags []string) (resp *CmdListResp, err error)
 	MicroSrvTiupDestroy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
 	MicroSrvTiupDisplay(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string) (resp *CmdDisplayResp, err error)
+	MicroSrvTiupTransfer(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, collectorYaml string, remotePath string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
 	MicroSrvDumpling(ctx context.Context, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
 	MicroSrvLightning(ctx context.Context, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error)
 	MicroSrvBackUp(ctx context.Context, cluster ClusterFacade, storage BrStorage, bizID uint64) (taskID uint64, err error)

@@ -43,7 +43,7 @@ func Test_myPanic(t *testing.T) {
 
 func Test_newTmpFileWithContent(t *testing.T) {
 	content := []byte("temp info")
-	_, err := newTmpFileWithContent(content)
+	_, err := newTmpFileWithContent("test-prefix", content)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

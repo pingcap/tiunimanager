@@ -18,7 +18,6 @@ package domain
 
 import (
 	"context"
-
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
 

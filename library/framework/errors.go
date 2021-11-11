@@ -24,7 +24,7 @@ import (
 //
 // TiEMError
 // @Description: TiEM business error
-// Always get TiEMError from TiEMErrorBuilder.build(), limited to SimpleError, CustomizeMessageError, WrapError, ErrorBuilder().build()
+// Always get TiEMError from TiEMErrorBuilder.build(), limited to SimpleError, NewTiEMError, NewTiEMErrorf, WrapError, ErrorBuilder().build()
 type TiEMError struct {
 	code  common.TIEM_ERROR_CODE
 	msg   string
@@ -36,8 +36,12 @@ func SimpleError(code common.TIEM_ERROR_CODE) TiEMError {
 	return ErrorBuilder().Code(code).Build()
 }
 
-func CustomizeMessageError(code common.TIEM_ERROR_CODE, msg string) TiEMError {
+func NewTiEMError(code common.TIEM_ERROR_CODE, msg string) TiEMError {
 	return ErrorBuilder().Code(code).Message(msg).Build()
+}
+
+func NewTiEMErrorf(code common.TIEM_ERROR_CODE, format string, a... interface{}) TiEMError {
+	return ErrorBuilder().Code(code).Message(fmt.Sprintf(format, a...)).Build()
 }
 
 func WrapError(code common.TIEM_ERROR_CODE, msg string, err error) TiEMError {
@@ -133,12 +137,7 @@ func (e TiEMError) GetMsg() string {
 }
 
 func (e TiEMError) GetCodeText() string {
-	text, ok := common.TiEMErrMsg[e.code]
-	if ok {
-		return text
-	} else {
-		return ""
-	}
+	return e.code.Explain()
 }
 
 func (e TiEMError) GetCause() error {

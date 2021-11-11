@@ -60,6 +60,15 @@ type ClusterDisplayInfo struct {
 	ClusterInstanceInfo
 }
 
+type StockCheckItem struct {
+	Region          string `json:"region"`
+	CpuArchitecture string `json:"cpuArchitecture"`
+
+	DistributionItem
+	ComponentType string `json:"componentType"`
+	Enough        bool   `json:"enough"`
+}
+
 type ClusterNodeDemand struct {
 	ComponentType     string             `json:"componentType"`
 	TotalNodeCount    int                `json:"totalNodeCount"`

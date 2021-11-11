@@ -811,14 +811,20 @@ definitions:
         type: string
       clusterVersion:
         type: string
+      cpuArchitecture:
+        type: string
       dbPassword:
         type: string
+      exclusive:
+        type: boolean
       nodeDemandList:
         items:
           $ref: '#/definitions/management.ClusterNodeDemand'
         type: array
       recoverInfo:
         $ref: '#/definitions/management.RecoverInfo'
+      region:
+        type: string
       tags:
         items:
           type: string
@@ -938,6 +944,33 @@ definitions:
       zoneCode:
         type: string
     type: object
+  management.PreviewClusterRsp:
+    properties:
+      capabilityIndexes:
+        items:
+          $ref: '#/definitions/management.ServiceCapabilityIndex'
+        type: array
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      dbPassword:
+        type: string
+      recoverInfo:
+        $ref: '#/definitions/management.RecoverInfo'
+      stockCheckResult:
+        items:
+          $ref: '#/definitions/management.StockCheckItem'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+    type: object
   management.RecoverInfo:
     properties:
       backupRecordId:
@@ -960,6 +993,34 @@ definitions:
       statusName:
         type: string
       updateTime:
+        type: string
+    type: object
+  management.ServiceCapabilityIndex:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      unit:
+        type: string
+      value:
+        type: object
+    type: object
+  management.StockCheckItem:
+    properties:
+      componentType:
+        type: string
+      count:
+        type: integer
+      cpuArchitecture:
+        type: string
+      enough:
+        type: boolean
+      region:
+        type: string
+      specCode:
+        type: string
+      zoneCode:
         type: string
     type: object
   management.StopClusterRsp:
@@ -1885,6 +1946,47 @@ paths:
       summary: import data to tidb cluster
       tags:
       - cluster import
+  /clusters/preview:
+    post:
+      consumes:
+      - application/json
+      description: preview cluster topology and capability
+      parameters:
+      - description: preview request
+        in: body
+        name: createReq
+        required: true
+        schema:
+          $ref: '#/definitions/management.CreateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/management.PreviewClusterRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: preview cluster topology and capability
+      tags:
+      - cluster
   /clusters/restore:
     post:
       consumes:

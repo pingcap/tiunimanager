@@ -26,22 +26,38 @@ func defaultContextParser(s string) *FlowContext {
 	return NewFlowContext(context.TODO())
 }
 
-var FlowWorkDefineMap = map[string]*FlowWorkDefine{
-	FlowCreateCluster: {
-		FlowName:    FlowCreateCluster,
-		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
-		TaskNodes: map[string]*TaskDefine{
-			"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
-			"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
-			"configDone":   {"deployCluster", "deployDone", "fail", SyncFuncTask, deployCluster},
-			"deployDone":   {"startupCluster", "startupDone", "fail", SyncFuncTask, startupCluster},
-			"startupDone":  {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
-			"onlineDone":   {"end", "", "", SyncFuncTask, ClusterEnd},
-			"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
-		},
-		ContextParser: defaultContextParser,
+var oldCreateClusterDefine = &FlowWorkDefine{
+	FlowName:    FlowCreateCluster,
+	StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
+	TaskNodes: map[string]*TaskDefine{
+		"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
+		"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
+		"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
+		"deployDone":   {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
+		"startupDone":  {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
+		"onlineDone":   {"end", "", "", SyncFuncTask, ClusterEnd},
+		"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
 	},
+	ContextParser: defaultContextParser,
+}
 
+var newCreateClusterDefine = &FlowWorkDefine{
+	FlowName:    FlowCreateCluster,
+	StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowCreateCluster),
+	TaskNodes: map[string]*TaskDefine{
+		"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, prepareResource},
+		"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
+		"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
+		"deployDone":   {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
+		"startupDone":  {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
+		"onlineDone":   {"end", "", "", SyncFuncTask, ClusterEnd},
+		"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
+	},
+	ContextParser: defaultContextParser,
+}
+
+var FlowWorkDefineMap = map[string]*FlowWorkDefine{
+	FlowCreateCluster: oldCreateClusterDefine,
 	FlowDeleteCluster: {
 		FlowName:    FlowDeleteCluster,
 		StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowDeleteCluster),

@@ -91,7 +91,7 @@ func handleMetrics(start time.Time, funcName string, code int) {
 
 func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb.ClusterCreateReqDTO, resp *clusterpb.ClusterCreateRespDTO) (err error) {
 	framework.LogWithContext(ctx).Info("create cluster")
-	clusterAggregation, err := domain.CreateCluster(ctx, req.GetOperator(), req.GetCluster(), req.GetDemands())
+	clusterAggregation, err := domain.CreateCluster(ctx, req.GetOperator(), req.GetCluster(), req.GetCommonDemand(), req.GetDemands())
 
 	if err != nil {
 		framework.LogWithContext(ctx).Info(err)
@@ -221,14 +221,14 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterpb.Da
 	defer handleMetrics(start, "ExportData", int(resp.GetRespStatus().GetCode()))
 	if err := domain.ExportDataPreCheck(req); err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_EXPORT_PARAM_INVALID, Message: err.Error()}
+		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_EXPORT_PARAM_INVALID), Message: err.Error()}
 		return nil
 	}
 
 	recordId, err := domain.ExportData(ctx, req)
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_EXPORT_PROCESS_FAILED, Message: common.TiEMErrMsg[common.TIEM_EXPORT_PROCESS_FAILED]}
+		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_EXPORT_PROCESS_FAILED), Message: common.TIEM_EXPORT_PROCESS_FAILED.Explain()}
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.RecordId = recordId
@@ -242,14 +242,14 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterpb.Da
 	defer handleMetrics(start, "ImportData", int(resp.GetRespStatus().GetCode()))
 	if err := domain.ImportDataPreCheck(ctx, req); err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_IMPORT_PARAM_INVALID, Message: err.Error()}
+		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_IMPORT_PARAM_INVALID), Message: err.Error()}
 		return nil
 	}
 
 	recordId, err := domain.ImportData(ctx, req)
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_IMPORT_PARAM_INVALID, Message: common.TiEMErrMsg[common.TIEM_IMPORT_PARAM_INVALID]}
+		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_IMPORT_PARAM_INVALID), Message: common.TIEM_IMPORT_PARAM_INVALID.Explain()}
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.RecordId = recordId
@@ -264,7 +264,7 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 	infos, page, err := domain.DescribeDataTransportRecord(ctx, req.GetOperator(), req.GetRecordId(), req.GetClusterId(), req.GetPageReq().GetPage(), req.GetPageReq().GetPageSize())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_TRANSPORT_RECORD_NOT_FOUND, Message: common.TiEMErrMsg[common.TIEM_TRANSPORT_RECORD_NOT_FOUND]}
+		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_TRANSPORT_RECORD_NOT_FOUND), Message: common.TIEM_TRANSPORT_RECORD_NOT_FOUND.Explain()}
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.PageReq = &clusterpb.PageDTO{
@@ -312,7 +312,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	clusterAggregation, err := domain.Backup(ctx, request.Operator, request.ClusterId, request.BackupMethod, request.BackupType, domain.BackupModeManual, request.FilePath)
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_BACKUP_PROCESS_FAILED, Message: common.TiEMErrMsg[common.TIEM_BACKUP_PROCESS_FAILED]}
+		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_BACKUP_PROCESS_FAILED), Message: common.TIEM_BACKUP_PROCESS_FAILED.Explain()}
 	} else {
 		response.Status = SuccessResponseStatus
 		response.BackupRecord = clusterAggregation.ExtractBackupRecordDTO()
@@ -325,14 +325,14 @@ func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterp
 	defer handleMetrics(start, "RecoverCluster", int(resp.GetRespStatus().GetCode()))
 	if err = domain.RecoverPreCheck(ctx, req); err != nil {
 		getLoggerWithContext(ctx).Errorf("recover cluster pre check failed, %s", err.Error())
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_RECOVER_PARAM_INVALID, Message: err.Error()}
+		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_RECOVER_PARAM_INVALID), Message: err.Error()}
 		return nil
 	}
 
 	clusterAggregation, err := domain.Recover(ctx, req.GetOperator(), req.GetCluster(), req.GetDemands())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_RECOVER_PROCESS_FAILED, Message: common.TiEMErrMsg[common.TIEM_RECOVER_PROCESS_FAILED]}
+		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_RECOVER_PROCESS_FAILED), Message: common.TIEM_RECOVER_PROCESS_FAILED.Explain()}
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.ClusterId = clusterAggregation.Cluster.Id
@@ -348,7 +348,7 @@ func (c ClusterServiceHandler) DeleteBackupRecord(ctx context.Context, request *
 	err = domain.DeleteBackup(ctx, request.Operator, request.GetClusterId(), request.GetBackupRecordId())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_BACKUP_RECORD_DELETE_FAILED, Message: common.TiEMErrMsg[common.TIEM_BACKUP_RECORD_DELETE_FAILED]}
+		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_BACKUP_RECORD_DELETE_FAILED), Message: common.TIEM_BACKUP_RECORD_DELETE_FAILED.Explain()}
 	} else {
 		response.Status = SuccessResponseStatus
 	}
@@ -361,14 +361,14 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 	err = domain.SaveBackupStrategyPreCheck(request.GetOperator(), request.GetStrategy())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_BACKUP_STRATEGY_PARAM_INVALID, Message: err.Error()}
+		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_BACKUP_STRATEGY_PARAM_INVALID), Message: err.Error()}
 		return nil
 	}
 
 	err = domain.SaveBackupStrategy(ctx, request.GetOperator(), request.GetStrategy())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_BACKUP_STRATEGY_SAVE_FAILED, Message: common.TiEMErrMsg[common.TIEM_BACKUP_STRATEGY_SAVE_FAILED]}
+		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_BACKUP_STRATEGY_SAVE_FAILED), Message: common.TIEM_BACKUP_STRATEGY_SAVE_FAILED.Explain()}
 	} else {
 		response.Status = SuccessResponseStatus
 	}
@@ -381,7 +381,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 	strategy, err := domain.QueryBackupStrategy(ctx, request.GetOperator(), request.GetClusterId())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_BACKUP_STRATEGY_QUERY_FAILED, Message: common.TiEMErrMsg[common.TIEM_BACKUP_STRATEGY_QUERY_FAILED]}
+		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_BACKUP_STRATEGY_QUERY_FAILED), Message: common.TIEM_BACKUP_STRATEGY_QUERY_FAILED.Explain()}
 	} else {
 		response.Status = SuccessResponseStatus
 		response.Strategy = strategy
@@ -403,7 +403,7 @@ func (c ClusterServiceHandler) QueryBackupRecord(ctx context.Context, request *c
 	})
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_BACKUP_RECORD_QUERY_FAILED, Message: common.TiEMErrMsg[common.TIEM_BACKUP_RECORD_QUERY_FAILED]}
+		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_BACKUP_RECORD_QUERY_FAILED), Message: common.TIEM_BACKUP_RECORD_QUERY_FAILED.Explain()}
 	} else {
 		response.Status = SuccessResponseStatus
 		response.Page = &clusterpb.PageDTO{
@@ -477,7 +477,7 @@ func (c ClusterServiceHandler) DescribeDashboard(ctx context.Context, request *c
 	info, err := domain.DescribeDashboard(ctx, request.Operator, request.ClusterId)
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_DASHBOARD_NOT_FOUND, Message: common.TiEMErrMsg[common.TIEM_DASHBOARD_NOT_FOUND]}
+		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_DASHBOARD_NOT_FOUND), Message: common.TIEM_DASHBOARD_NOT_FOUND.Explain()}
 	} else {
 		response.Status = SuccessResponseStatus
 		response.ClusterId = info.ClusterId
@@ -494,7 +494,7 @@ func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clu
 	monitor, err := domain.DescribeMonitor(ctx, request.Operator, request.ClusterId)
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
-		response.Status = &clusterpb.ResponseStatusDTO{Code: common.TIEM_MONITOR_NOT_FOUND, Message: common.TiEMErrMsg[common.TIEM_MONITOR_NOT_FOUND]}
+		response.Status = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_MONITOR_NOT_FOUND), Message: common.TIEM_MONITOR_NOT_FOUND.Explain()}
 	} else {
 		response.Status = SuccessResponseStatus
 		response.ClusterId = monitor.ClusterId

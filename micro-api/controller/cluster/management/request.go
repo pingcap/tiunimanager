@@ -22,7 +22,14 @@ import (
 
 type CreateReq struct {
 	ClusterBaseInfo
+	ClusterCommonDemand
 	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
+}
+
+type ClusterCommonDemand struct {
+	Exclusive       bool   `json:"exclusive" form:"exclusive"`
+	Region          string `json:"region" form:"region"`
+	CpuArchitecture string `json:"cpuArchitecture" form:"cpuArchitecture"`
 }
 
 type QueryReq struct {

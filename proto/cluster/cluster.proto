@@ -65,7 +65,8 @@ service ClusterService {
 message ClusterCreateReqDTO {
     OperatorDTO operator = 1;
     ClusterBaseInfoDTO cluster = 2;
-    repeated ClusterNodeDemandDTO demands = 3;
+    ClusterCommonDemandDTO commonDemand = 3;
+    repeated ClusterNodeDemandDTO demands = 4;
 }
 
 message ClusterCreateRespDTO {
@@ -74,6 +75,7 @@ message ClusterCreateRespDTO {
     ClusterBaseInfoDTO baseInfo = 3;
     DisplayStatusDTO clusterStatus = 4;
 }
+
 message ClusterTakeoverReqDTO {
     OperatorDTO operator = 1;
     string tiupIp = 2;
@@ -207,6 +209,12 @@ message ComponentBaseInfoDTO {
 message RecoverInfoDTO {
     string sourceClusterId = 1;
     int64 backupRecordId = 2;
+}
+
+message ClusterCommonDemandDTO {
+    bool exclusive = 1;
+    string region = 2;
+    string cpuArchitecture = 3;
 }
 
 message ClusterBaseInfoDTO {

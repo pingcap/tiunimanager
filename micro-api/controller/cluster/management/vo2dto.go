@@ -23,9 +23,9 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
-func (req *CreateReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO, demandsDTO []*clusterpb.ClusterNodeDemandDTO) {
+func (req *CreateReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandsDTO []*clusterpb.ClusterNodeDemandDTO) {
 	baseInfoDTO = req.ClusterBaseInfo.ConvertToDTO()
-
+	commonDemand = req.ClusterCommonDemand.ConvertToDTO()
 	demandsDTO = make([]*clusterpb.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))
 
 	for _, demand := range req.NodeDemandList {
@@ -50,6 +50,14 @@ func (req *CreateReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO,
 		})
 	}
 	return
+}
+
+func (demand ClusterCommonDemand) ConvertToDTO() (dto *clusterpb.ClusterCommonDemandDTO) {
+	return &clusterpb.ClusterCommonDemandDTO{
+		Exclusive: demand.Exclusive,
+		Region: demand.Region,
+		CpuArchitecture: demand.CpuArchitecture,
+	}
 }
 
 func (baseInfo *ClusterBaseInfo) ConvertToDTO() (dto *clusterpb.ClusterBaseInfoDTO) {

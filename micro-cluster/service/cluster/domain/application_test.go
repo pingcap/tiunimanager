@@ -317,6 +317,9 @@ func TestCreateCluster(t *testing.T) {
 				Name: "v5.0.0",
 			},
 		},
+		&clusterpb.ClusterCommonDemandDTO{
+			Exclusive: false,
+		},
 		[]*clusterpb.ClusterNodeDemandDTO{
 			{ComponentType: "TiDB", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
 				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},

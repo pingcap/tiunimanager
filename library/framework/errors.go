@@ -24,7 +24,7 @@ import (
 //
 // TiEMError
 // @Description: TiEM business error
-// Always get TiEMError from TiEMErrorBuilder.build(), limited to SimpleError, NewTiEMError, WrapError, ErrorBuilder().build()
+// Always get TiEMError from TiEMErrorBuilder.build(), limited to SimpleError, NewTiEMError, NewTiEMErrorf, WrapError, ErrorBuilder().build()
 type TiEMError struct {
 	code  common.TIEM_ERROR_CODE
 	msg   string

@@ -76,7 +76,10 @@ type ErrorCodeExplanation struct {
 
 func (t TIEM_ERROR_CODE) GetHttpCode() int {
 	return explanationContainer[t].httpCode
+}
 
+func (t TIEM_ERROR_CODE) Equal(code int32) bool {
+	return code == int32(t)
 }
 
 func (t TIEM_ERROR_CODE) Explain() string {

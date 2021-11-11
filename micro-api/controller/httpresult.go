@@ -50,9 +50,9 @@ func HandleHttpResponse(c *gin.Context, err error,
 
 	if withStatusCode != nil {
 		code, message := withStatusCode()
-		if code > 0 {
+		if code != common.TIEM_SUCCESS {
 			framework.LogWithContext(c).Error(message)
-			c.JSON(mapHttpCode(int(code)), Fail(int(code), message))
+			c.JSON(code.GetHttpCode(), Fail(int(code), message))
 			return
 		}
 	}
@@ -62,11 +62,6 @@ func HandleHttpResponse(c *gin.Context, err error,
 	} else {
 		c.JSON(http.StatusOK, Success(withData()))
 	}
-}
-
-func mapHttpCode(code int) (httpCode int) {
-	// todo map to httpcode
-	return 200
 }
 
 func BuildCommonResult(code int, message string, data interface{}) (result *CommonResult) {

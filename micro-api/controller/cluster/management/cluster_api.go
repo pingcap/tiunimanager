@@ -241,7 +241,7 @@ func Restart(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/{clusterId}/restart [post]
+// @Router /clusters/{clusterId}/stop [post]
 func Stop(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()

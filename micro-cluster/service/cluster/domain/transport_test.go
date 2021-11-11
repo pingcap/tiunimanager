@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/micro-metadb/service"
 	"github.com/pingcap-inc/tiem/test/mocksecondparty"
 	"os"
 	"testing"
@@ -351,6 +352,80 @@ func TestDeleteDataTransportRecord_case1(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestDeleteDataTransportRecord_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{}, errors.New("failed"))
+	client.DBClient = mockClient
+
+	err := DeleteDataTransportRecord(context.Background(), &clusterpb.OperatorDTO{
+		Id:       "123",
+		Name:     "123",
+		TenantId: "123",
+	}, "test-abc", 123)
+
+	assert.NotNil(t, err)
+}
+
+func TestDeleteDataTransportRecord_case3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{
+		Status: service.BizErrResponseStatus,
+	}, nil)
+	client.DBClient = mockClient
+
+	err := DeleteDataTransportRecord(context.Background(), &clusterpb.OperatorDTO{
+		Id:       "123",
+		Name:     "123",
+		TenantId: "123",
+	}, "test-abc", 123)
+
+	assert.NotNil(t, err)
+}
+
+func TestDeleteDataTransportRecord_case4(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{}, nil)
+	mockClient.EXPECT().DeleteTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBDeleteTransportResponse{}, errors.New("failed"))
+	client.DBClient = mockClient
+
+	err := DeleteDataTransportRecord(context.Background(), &clusterpb.OperatorDTO{
+		Id:       "123",
+		Name:     "123",
+		TenantId: "123",
+	}, "test-abc", 123)
+
+	assert.NotNil(t, err)
+}
+
+func TestDeleteDataTransportRecord_case5(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{}, nil)
+	mockClient.EXPECT().DeleteTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBDeleteTransportResponse{
+		Status: service.BizErrResponseStatus,
+	}, nil)
+	client.DBClient = mockClient
+
+	err := DeleteDataTransportRecord(context.Background(), &clusterpb.OperatorDTO{
+		Id:       "123",
+		Name:     "123",
+		TenantId: "123",
+	}, "test-abc", 123)
+
+	assert.NotNil(t, err)
+}
+
 func Test_importDataToCluster_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -452,6 +527,52 @@ func Test_importDataToCluster_case3(t *testing.T) {
 	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
 	mockTiup.EXPECT().MicroSrvLightning(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
 	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Error, "error", nil)
+	secondparty.SecondParty = mockTiup
+
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(context.TODO())
+	flowCtx.SetData(contextDataTransportKey, &ImportInfo{
+		ClusterId:   "test-abc",
+		UserName:    "root",
+		Password:    "",
+		FilePath:    "filePath",
+		RecordId:    123,
+		StorageType: common.S3StorageType,
+		ConfigPath:  "/tmp/test-ut",
+	})
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData("backupTaskId", uint64(123))
+	ret := importDataToCluster(task, flowCtx)
+	assert.Equal(t, false, ret)
+}
+
+func Test_importDataToCluster_case4(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	mockTiup.EXPECT().MicroSrvLightning(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("failed"))
 	secondparty.SecondParty = mockTiup
 
 	task := &TaskEntity{
@@ -630,6 +751,51 @@ func Test_exportDataFromCluster_case3(t *testing.T) {
 	assert.Equal(t, false, ret)
 }
 
+func Test_exportDataFromCluster_case4(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	mockTiup.EXPECT().MicroSrvDumpling(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("failed"))
+	secondparty.SecondParty = mockTiup
+
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(context.TODO())
+	flowCtx.SetData(contextDataTransportKey, &ExportInfo{
+		ClusterId:   "test-abc",
+		UserName:    "root",
+		Password:    "",
+		FilePath:    "filePath",
+		RecordId:    123,
+		StorageType: common.S3StorageType,
+	})
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData("backupTaskId", uint64(123))
+	ret := exportDataFromCluster(task, flowCtx)
+	assert.Equal(t, false, ret)
+}
+
 func Test_buildDataImportConfig(t *testing.T) {
 	task := &TaskEntity{}
 	ctx := NewFlowContext(context.TODO())
@@ -666,7 +832,7 @@ func Test_buildDataImportConfig(t *testing.T) {
 	_ = os.RemoveAll(info.ConfigPath)
 }
 
-func Test_updateDataImportRecord(t *testing.T) {
+func Test_updateDataImportRecord_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -695,7 +861,67 @@ func Test_updateDataImportRecord(t *testing.T) {
 	assert.Equal(t, true, ret)
 }
 
-func Test_updateDataExportRecord(t *testing.T) {
+func Test_updateDataImportRecord_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateTransportRecordResponse{}, errors.New("failed"))
+	client.DBClient = mockClient
+
+	task := &TaskEntity{}
+	ctx := NewFlowContext(context.TODO())
+	ctx.SetData(contextDataTransportKey, &ImportInfo{
+		ClusterId:   "test-abc",
+		UserName:    "root",
+		Password:    "",
+		FilePath:    "filePath",
+		RecordId:    123,
+		StorageType: common.S3StorageType,
+		ConfigPath:  "configPath",
+	})
+	ctx.SetData(contextClusterKey, &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: "test-abc",
+		},
+	})
+
+	ret := updateDataImportRecord(task, ctx)
+	assert.Equal(t, false, ret)
+}
+
+func Test_updateDataImportRecord_case3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateTransportRecordResponse{
+		Status: service.BizErrResponseStatus,
+	}, nil)
+	client.DBClient = mockClient
+
+	task := &TaskEntity{}
+	ctx := NewFlowContext(context.TODO())
+	ctx.SetData(contextDataTransportKey, &ImportInfo{
+		ClusterId:   "test-abc",
+		UserName:    "root",
+		Password:    "",
+		FilePath:    "filePath",
+		RecordId:    123,
+		StorageType: common.S3StorageType,
+		ConfigPath:  "configPath",
+	})
+	ctx.SetData(contextClusterKey, &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: "test-abc",
+		},
+	})
+
+	ret := updateDataImportRecord(task, ctx)
+	assert.Equal(t, false, ret)
+}
+
+func Test_updateDataExportRecord_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -721,6 +947,64 @@ func Test_updateDataExportRecord(t *testing.T) {
 
 	ret := updateDataExportRecord(task, ctx)
 	assert.Equal(t, true, ret)
+}
+
+func Test_updateDataExportRecord_case2(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateTransportRecordResponse{}, errors.New("failed"))
+	client.DBClient = mockClient
+
+	task := &TaskEntity{}
+	ctx := NewFlowContext(context.TODO())
+	ctx.SetData(contextDataTransportKey, &ExportInfo{
+		ClusterId:   "test-abc",
+		UserName:    "root",
+		Password:    "",
+		FilePath:    "filePath",
+		RecordId:    123,
+		StorageType: common.S3StorageType,
+	})
+	ctx.SetData(contextClusterKey, &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: "test-abc",
+		},
+	})
+
+	ret := updateDataExportRecord(task, ctx)
+	assert.Equal(t, false, ret)
+}
+
+func Test_updateDataExportRecord_case3(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().UpdateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBUpdateTransportRecordResponse{
+		Status: service.BizErrResponseStatus,
+	}, nil)
+	client.DBClient = mockClient
+
+	task := &TaskEntity{}
+	ctx := NewFlowContext(context.TODO())
+	ctx.SetData(contextDataTransportKey, &ExportInfo{
+		ClusterId:   "test-abc",
+		UserName:    "root",
+		Password:    "",
+		FilePath:    "filePath",
+		RecordId:    123,
+		StorageType: common.S3StorageType,
+	})
+	ctx.SetData(contextClusterKey, &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: "test-abc",
+		},
+	})
+
+	ret := updateDataExportRecord(task, ctx)
+	assert.Equal(t, false, ret)
 }
 
 func Test_cleanDataTransportDir(t *testing.T) {

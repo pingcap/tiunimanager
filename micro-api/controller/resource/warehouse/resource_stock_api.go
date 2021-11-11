@@ -29,7 +29,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"github.com/pingcap-inc/tiem/micro-metadb/service"
 
 	"google.golang.org/grpc/codes"
 )
@@ -77,7 +76,7 @@ func GetFailureDomain(c *gin.Context) {
 	}
 	for _, v := range rsp.FdList {
 		res.Resources = append(res.Resources, DomainResource{
-			ZoneName: service.GetDomainNameFromCode(v.FailureDomain),
+			ZoneName: resource.GetDomainNameFromCode(v.FailureDomain),
 			ZoneCode: v.FailureDomain,
 			Purpose:  v.Purpose,
 			SpecName: v.Spec,

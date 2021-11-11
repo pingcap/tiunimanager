@@ -1590,6 +1590,46 @@ paths:
     post:
       consumes:
       - application/json
+      description: restart a cluster
+      parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/management.RestartClusterRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: restart a cluster
+      tags:
+      - cluster
+  /clusters/{clusterId}/stop:
+    post:
+      consumes:
+      - application/json
       description: stop a cluster
       parameters:
       - description: cluster id

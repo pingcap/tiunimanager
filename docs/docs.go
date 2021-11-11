@@ -3305,6 +3305,9 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
+                "comment": {
+                    "type": "string"
+                },
                 "endpointUrl": {
                     "type": "string"
                 },
@@ -3327,6 +3330,9 @@ var doc = `{
                     "type": "string"
                 },
                 "userName": {
+                    "type": "string"
+                },
+                "zipName": {
                     "type": "string"
                 }
             }
@@ -3351,11 +3357,17 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
+                "comment": {
+                    "type": "string"
+                },
                 "endpointUrl": {
                     "type": "string"
                 },
                 "password": {
                     "type": "string"
+                },
+                "recordId": {
+                    "type": "integer"
                 },
                 "secretAccessKey": {
                     "type": "string"

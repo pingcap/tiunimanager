@@ -34,12 +34,15 @@ func (handler *DBServiceHandler) CreateTransportRecord(ctx context.Context, in *
 			ID:       uint(in.GetRecord().GetRecordId()),
 			TenantId: in.GetRecord().GetTenantId(),
 		},
-		ClusterId:     in.GetRecord().GetClusterId(),
-		TransportType: in.GetRecord().GetTransportType(),
-		FilePath:      in.GetRecord().GetFilePath(),
-		StorageType:   in.GetRecord().GetStorageType(),
-		FlowId:        in.GetRecord().GetFlowId(),
-		StartTime:     time.Unix(in.GetRecord().GetStartTime(), 0),
+		ClusterId:       in.GetRecord().GetClusterId(),
+		TransportType:   in.GetRecord().GetTransportType(),
+		FilePath:        in.GetRecord().GetFilePath(),
+		ZipName:         in.GetRecord().GetZipName(),
+		Comment:         in.GetRecord().GetComment(),
+		StorageType:     in.GetRecord().GetStorageType(),
+		FlowId:          in.GetRecord().GetFlowId(),
+		ReImportSupport: in.GetRecord().GetReImportSupport(),
+		StartTime:       time.Unix(in.GetRecord().GetStartTime(), 0),
 	}
 	id, err := handler.Dao().ClusterManager().CreateTransportRecord(ctx, record)
 	if err != nil {
@@ -149,15 +152,18 @@ func convertToTransportRecordDisplayDTO(do *models.TransportRecord, flow *models
 
 func convertTransportRecordDTO(record *models.TransportRecord) *dbpb.TransportRecordDTO {
 	recordDTO := &dbpb.TransportRecordDTO{
-		RecordId:      int64(record.ID),
-		ClusterId:     record.ClusterId,
-		TransportType: record.TransportType,
-		TenantId:      record.TenantId,
-		FilePath:      record.FilePath,
-		StorageType:   record.StorageType,
-		FlowId:        record.FlowId,
-		StartTime:     record.StartTime.Unix(),
-		EndTime:       record.EndTime.Unix(),
+		RecordId:        int64(record.ID),
+		ClusterId:       record.ClusterId,
+		TransportType:   record.TransportType,
+		TenantId:        record.TenantId,
+		FilePath:        record.FilePath,
+		ZipName:         record.ZipName,
+		StorageType:     record.StorageType,
+		FlowId:          record.FlowId,
+		Comment:         record.Comment,
+		ReImportSupport: record.ReImportSupport,
+		StartTime:       record.StartTime.Unix(),
+		EndTime:         record.EndTime.Unix(),
 	}
 	return recordDTO
 }

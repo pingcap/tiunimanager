@@ -25,13 +25,16 @@ import (
 
 type TransportRecord struct {
 	Record
-	ClusterId     string
-	TransportType string
-	FilePath      string
-	StorageType   string
-	FlowId        int64
-	StartTime     time.Time
-	EndTime       time.Time
+	ClusterId       string
+	TransportType   string
+	FilePath        string
+	ZipName         string
+	StorageType     string
+	FlowId          int64
+	Comment         string
+	ReImportSupport bool
+	StartTime       time.Time
+	EndTime         time.Time
 }
 
 type TransportRecordFetchResult struct {

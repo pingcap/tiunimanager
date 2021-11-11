@@ -3290,6 +3290,9 @@
                 "clusterId": {
                     "type": "string"
                 },
+                "comment": {
+                    "type": "string"
+                },
                 "endpointUrl": {
                     "type": "string"
                 },
@@ -3312,6 +3315,9 @@
                     "type": "string"
                 },
                 "userName": {
+                    "type": "string"
+                },
+                "zipName": {
                     "type": "string"
                 }
             }
@@ -3336,11 +3342,17 @@
                 "clusterId": {
                     "type": "string"
                 },
+                "comment": {
+                    "type": "string"
+                },
                 "endpointUrl": {
                     "type": "string"
                 },
                 "password": {
                     "type": "string"
+                },
+                "recordId": {
+                    "type": "integer"
                 },
                 "secretAccessKey": {
                     "type": "string"

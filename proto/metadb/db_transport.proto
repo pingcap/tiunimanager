@@ -10,11 +10,14 @@ message TransportRecordDTO {
 	string ClusterId = 2;
 	string TransportType = 3;
 	string FilePath = 4;
-	string TenantId = 5;
-	int64 StartTime = 6;
-	int64 EndTime = 7;
-	string StorageType = 8;
-	int64 FlowId = 9;
+	string ZipName = 5;
+	string TenantId = 6;
+	int64 StartTime = 7;
+	int64 EndTime = 8;
+	string StorageType = 9;
+	int64 FlowId = 10;
+	string Comment = 11;
+	bool reImportSupport = 12;
 }
 
 message DBCreateTransportRecordRequest {

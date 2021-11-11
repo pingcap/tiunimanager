@@ -20,10 +20,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var (
-	DefaultDataFile = "data.zip"
-)
-
 func getLogger() *log.Entry {
 	return framework.Log()
 }

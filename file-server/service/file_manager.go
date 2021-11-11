@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/labstack/gommon/bytes"
+	"github.com/pingcap-inc/tiem/library/common"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -98,7 +99,7 @@ func (mgr *FileManager) UploadFile(r *http.Request, uploadPath string) error {
 		getLogger().Errorf("invalid file type %s, not xxx.zip", detectedFileType)
 		return errors.New("invalid file type, not .zip")
 	}
-	newPath := filepath.Join(uploadPath, "data.zip")
+	newPath := filepath.Join(uploadPath, common.DefaultZipName)
 	getLogger().Infof("FileType: %s, File: %s", detectedFileType, newPath)
 
 	// write file
@@ -150,7 +151,7 @@ func (mgr *FileManager) DownloadFile(c *gin.Context, filePath string) error {
 	}
 
 	c.Header("Content-Type", "application/octet-stream")
-	c.Header("Content-Disposition", "attachment; filename="+DefaultDataFile)
+	c.Header("Content-Disposition", "attachment; filename="+filepath.Base(filePath))
 	c.Header("Content-Transfer-Encoding", "binary")
 	c.Header("Cache-Control", "no-cache")
 

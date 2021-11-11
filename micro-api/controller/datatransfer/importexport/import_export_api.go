@@ -68,11 +68,13 @@ func ExportData(c *gin.Context) {
 		Filter:          req.Filter,
 		Sql:             req.Sql,
 		StorageType:     req.StorageType,
+		ZipName:         req.ZipName,
 		BucketUrl:       req.BucketUrl,
 		BucketRegion:    req.BucketRegion,
 		EndpointUrl:     req.EndpointUrl,
 		AccessKey:       req.AccessKey,
 		SecretAccessKey: req.SecretAccessKey,
+		Comment:         req.Comment,
 	}, controller.DefaultTimeout)
 
 	if err != nil {
@@ -124,11 +126,13 @@ func ImportData(c *gin.Context) {
 		ClusterId:       req.ClusterId,
 		UserName:        req.UserName,
 		Password:        req.Password,
+		RecordId:        req.RecordId,
 		StorageType:     req.StorageType,
 		BucketUrl:       req.BucketUrl,
 		EndpointUrl:     req.EndpointUrl,
 		AccessKey:       req.AccessKey,
 		SecretAccessKey: req.SecretAccessKey,
+		Comment:         req.Comment,
 	}, controller.DefaultTimeout)
 
 	if err != nil {

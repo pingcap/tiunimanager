@@ -14,6 +14,8 @@ message DataImportRequest {
     string  endpointUrl = 7;
     string  accessKey = 8;
     string  secretAccessKey = 9;
+    string  comment = 10;
+    int64  recordId = 11;
 }
 
 message DataImportResponse {
@@ -35,6 +37,8 @@ message DataExportRequest {
     string  endpointUrl = 11;
     string  accessKey = 12;
     string  secretAccessKey = 13;
+    string  zipName = 14;
+    string  comment = 15;
 }
 
 message DataExportResponse {

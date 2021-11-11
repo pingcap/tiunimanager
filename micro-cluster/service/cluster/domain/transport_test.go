@@ -137,6 +137,24 @@ func TestImportDataPreCheck(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func Test_checkExportParamSupportReimport_case1(t *testing.T) {
+	req := &clusterpb.DataExportRequest{
+		FileType: FileTypeCSV,
+		Sql:      "select * from test",
+	}
+	ret := checkExportParamSupportReimport(req)
+	assert.Equal(t, false, ret)
+}
+
+func Test_checkExportParamSupportReimport_case2(t *testing.T) {
+	req := &clusterpb.DataExportRequest{
+		FileType: FileTypeCSV,
+		Filter:   "test.*",
+	}
+	ret := checkExportParamSupportReimport(req)
+	assert.Equal(t, true, ret)
+}
+
 func TestExportData(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

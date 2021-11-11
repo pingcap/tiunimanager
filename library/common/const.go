@@ -63,6 +63,7 @@ type TransportType string
 const (
 	DefaultImportDir    string        = "/tmp/tiem/import"
 	DefaultExportDir    string        = "/tmp/tiem/export"
+	DefaultZipName      string        = "data.zip"
 	NfsStorageType      string        = "nfs"
 	S3StorageType       string        = "s3"
 	TransportTypeExport TransportType = "export"

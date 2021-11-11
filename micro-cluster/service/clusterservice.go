@@ -240,7 +240,7 @@ func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterpb.Da
 func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterpb.DataImportRequest, resp *clusterpb.DataImportResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "ImportData", int(resp.GetRespStatus().GetCode()))
-	if err := domain.ImportDataPreCheck(req); err != nil {
+	if err := domain.ImportDataPreCheck(ctx, req); err != nil {
 		getLoggerWithContext(ctx).Error(err)
 		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: common.TIEM_IMPORT_PARAM_INVALID, Message: err.Error()}
 		return nil

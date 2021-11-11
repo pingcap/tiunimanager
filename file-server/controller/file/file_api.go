@@ -48,7 +48,7 @@ func UploadImportFile(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
-	err = service.FileMgr.UnzipDir(filepath.Join(uploadPath, service.DefaultDataFile), filepath.Join(uploadPath, "data"))
+	err = service.FileMgr.UnzipDir(filepath.Join(uploadPath, common.DefaultZipName), filepath.Join(uploadPath, "data"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
@@ -63,11 +63,13 @@ func DownloadExportFile(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("input record id invalid, %s", err.Error())))
 		return
 	}
-	req := &dbpb.DBFindTransportRecordByIDRequest{
+
+	queryReq := &dbpb.DBFindTransportRecordByIDRequest{
 		RecordId: int64(recordId),
 	}
 
-	resp, err := client.DBClient.FindTrasnportRecordByID(framework.NewMicroCtxFromGinCtx(c), req)
+	ctx := framework.NewMicroCtxFromGinCtx(c)
+	resp, err := client.DBClient.FindTrasnportRecordByID(ctx, queryReq)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", err.Error())))
 		return
@@ -76,7 +78,7 @@ func DownloadExportFile(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("find record from metadb failed, %s", resp.GetStatus().GetMessage())))
 		return
 	}
-	framework.Log().Info(resp.GetRecord())
+	framework.LogWithContext(ctx).Info(resp.GetRecord())
 	record := resp.GetRecord()
 	if record.GetStorageType() != common.NfsStorageType {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("storage type %s can not download", record.GetStorageType())))
@@ -88,7 +90,8 @@ func DownloadExportFile(c *gin.Context) {
 	}
 
 	downloadPath := resp.GetRecord().GetFilePath()
-	filePath := filepath.Join(filepath.Dir(downloadPath), service.DefaultDataFile)
+	zipName := resp.GetRecord().GetZipName()
+	filePath := filepath.Join(filepath.Dir(downloadPath), zipName)
 
 	err = service.FileMgr.ZipDir(downloadPath, filePath)
 	if err != nil {

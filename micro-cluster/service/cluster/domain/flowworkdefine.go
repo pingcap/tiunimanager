@@ -205,8 +205,11 @@ func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
 
 	if clusterAggregation.ConfigModified {
 		go time.AfterFunc(time.Second * 3, func() {
-			framework.LogWithContext(context).Infof("BuildClusterLogConfig for cluster %s", clusterAggregation.Cluster.Id)
-			BuildClusterLogConfig(context, clusterAggregation.Cluster.Id)
+			framework.LogWithContext(context.Context).Infof("BuildClusterLogConfig for cluster %s", clusterAggregation.Cluster.Id)
+			err := BuildClusterLogConfig(context.Context, clusterAggregation.Cluster.Id)
+			if err != nil {
+				framework.LogWithContext(context.Context).Error(err)
+			}
 		})
 	}
 	return true

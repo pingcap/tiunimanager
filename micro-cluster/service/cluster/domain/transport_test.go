@@ -338,7 +338,11 @@ func TestDeleteDataTransportRecord_case1(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mockdb.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{}, nil)
+	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{
+		Record: &dbpb.TransportRecordDTO{
+			RecordId: 1,
+		},
+	}, nil)
 	mockClient.EXPECT().DeleteTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBDeleteTransportResponse{}, nil)
 	client.DBClient = mockClient
 
@@ -392,7 +396,11 @@ func TestDeleteDataTransportRecord_case4(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mockdb.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{}, nil)
+	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{
+		Record: &dbpb.TransportRecordDTO{
+			RecordId: 1,
+		},
+	}, nil)
 	mockClient.EXPECT().DeleteTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBDeleteTransportResponse{}, errors.New("failed"))
 	client.DBClient = mockClient
 
@@ -410,7 +418,11 @@ func TestDeleteDataTransportRecord_case5(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mockdb.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{}, nil)
+	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{
+		Record: &dbpb.TransportRecordDTO{
+			RecordId: 1,
+		},
+	}, nil)
 	mockClient.EXPECT().DeleteTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBDeleteTransportResponse{
 		Status: service.BizErrResponseStatus,
 	}, nil)

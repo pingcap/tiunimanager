@@ -419,13 +419,13 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	getLoggerWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
 	backupTaskId, err := secondparty.SecondParty.MicroSrvBackUp(flowContext.Context, clusterFacade, storage, uint64(task.Id))
 
-	flowContext.SetData("backupTaskId", backupTaskId)
-
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		task.Fail(err)
 		return false
 	}
+
+	flowContext.SetData("backupTaskId", backupTaskId)
 
 	task.Success(nil)
 	return true

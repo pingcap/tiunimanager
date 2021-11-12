@@ -45,7 +45,6 @@ func NewDBServiceHandler(dataDir string, fw *framework.BaseFramework) *DBService
 		dao.InitData()
 	}
 
-	dao.InitMetrics()
 	return handler
 }
 

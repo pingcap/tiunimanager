@@ -161,17 +161,20 @@ func (l DaoLogger) Error(ctx context.Context, msg string, data ...interface{}) {
 // Trace print sql message
 func (l DaoLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	sql, rows := fc()
-	logger := l.p.LogWithContext(ctx).WithField("sql", sql).WithField("rows", rows)
+	logger := l.p.LogWithContext(ctx).WithField("rows", rows)
 
 	elapsed := time.Since(begin).Milliseconds()
 
-	switch {
-	case err != nil && (!errors.Is(err, gormLog.ErrRecordNotFound)):
-		logger.Errorf(err.Error())
-	case elapsed > l.SlowThreshold.Milliseconds():
-		logger.Warnf("SLOW SQL >= %v", l.SlowThreshold.Milliseconds())
-	case l.p.GetRootLogger().LogLevel == framework.LogDebug || l.p.GetRootLogger().LogLevel == framework.LogInfo:
-		logger.Infof("execute sql")
+	if l.p.GetRootLogger().LogLevel == framework.LogDebug || l.p.GetRootLogger().LogLevel == framework.LogInfo {
+		logger.Infof("execute sql : %s", sql)
+	}
+
+	if err != nil && (!errors.Is(err, gormLog.ErrRecordNotFound)) {
+		logger.Errorf("sql error, sql : %s, err : %s", sql, err)
+	}
+
+	if elapsed > l.SlowThreshold.Milliseconds() {
+		logger.Warnf("slow sql, cost %d milliseconds, sql : %s", elapsed, sql)
 	}
 
 }

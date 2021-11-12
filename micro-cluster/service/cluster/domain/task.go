@@ -127,7 +127,7 @@ func CreateFlowWork(ctx context.Context, bizId string, defineName string, operat
 	}
 	flowData := make(map[string]interface{})
 
-	flow := define.getInstance(framework.NewBackgroundCtxFromMicroCtx(ctx) , bizId, flowData, operator)
+	flow := define.getInstance(framework.ForkMicroCtx(ctx) , bizId, flowData, operator)
 	TaskRepo.AddFlowWork(ctx, flow.FlowWork)
 	return flow, nil
 }

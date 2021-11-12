@@ -86,7 +86,7 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
 
-	cluster.Demands = demands
+	cluster.ComponentDemands = demands
 
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
@@ -354,7 +354,7 @@ func collectorTiDBLogConfig(task *TaskEntity, ctx *FlowContext) bool {
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 
-	demands := clusterAggregation.Cluster.Demands
+	demands := clusterAggregation.Cluster.ComponentDemands
 
 	clusterAggregation.AvailableResources = &clusterpb.AllocHostResponse{}
 	err := resource.NewResourceManager().AllocHosts(flowContext, convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
@@ -453,6 +453,14 @@ func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.StatusModified = true
 	clusterAggregation.Cluster.Online()
+
+	task.Success(nil)
+	return true
+}
+
+func syncTopology(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation.StatusModified = true
 
 	task.Success(nil)
 	return true

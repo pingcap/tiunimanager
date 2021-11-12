@@ -479,8 +479,8 @@ func ConvertClusterToDTO(cluster *domain.Cluster) (dto *dbpb.DBClusterDTO) {
 		dto.Tags = string(bytes)
 	}
 
-	if len(cluster.Demands) > 0 {
-		bytes, _ := json.Marshal(cluster.Demands)
+	if len(cluster.ComponentDemands) > 0 {
+		bytes, _ := json.Marshal(cluster.ComponentDemands)
 		dto.Demands = string(bytes)
 	}
 
@@ -509,7 +509,7 @@ func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 	}
 
 	json.Unmarshal([]byte(dto.Tags), &cluster.Tags)
-	json.Unmarshal([]byte(dto.Demands), &cluster.Demands)
+	json.Unmarshal([]byte(dto.Demands), &cluster.ComponentDemands)
 
 	return
 }

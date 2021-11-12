@@ -54,7 +54,6 @@ func NewDAOManager(fw *framework.BaseFramework) *DAOManager {
 		p:             fw,
 		SlowThreshold: common.SlowSqlThreshold,
 	}
-	m.InitMetrics()
 	return m
 }
 

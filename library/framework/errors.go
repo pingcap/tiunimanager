@@ -40,7 +40,7 @@ func NewTiEMError(code common.TIEM_ERROR_CODE, msg string) TiEMError {
 	return ErrorBuilder().Code(code).Message(msg).Build()
 }
 
-func NewTiEMErrorf(code common.TIEM_ERROR_CODE, format string, a... interface{}) TiEMError {
+func NewTiEMErrorf(code common.TIEM_ERROR_CODE, format string, a ...interface{}) TiEMError {
 	return ErrorBuilder().Code(code).Message(fmt.Sprintf(format, a...)).Build()
 }
 

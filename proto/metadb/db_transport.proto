@@ -50,6 +50,7 @@ message DBListTransportRecordRequest {
     DBPageDTO page = 1;
 	string clusterId = 2;
     int64 recordId = 3;
+    bool reImport = 4;
 }
 
 message DBTransportRecordDisplayDTO {

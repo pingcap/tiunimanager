@@ -50,7 +50,9 @@ type DataImportReq struct {
 
 type DataTransportQueryReq struct {
 	controller.PageRequest
-	RecordId int64 `json:"recordId" form:"recordId"`
+	RecordId  int64  `json:"recordId" form:"recordId"`
+	ClusterId string `json:"clusterId" form:"clusterId"`
+	ReImport  bool   `json:"reImport" form:"reImport"`
 }
 
 type DataTransportDeleteReq struct {

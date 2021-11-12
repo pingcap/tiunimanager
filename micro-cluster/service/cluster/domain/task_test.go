@@ -315,7 +315,7 @@ func TestFlowWorkAggregation_Start(t *testing.T) {
 	t.Run("callback", func(t *testing.T) {
 		flow, _ := CreateFlowWork(context.TODO(), "2222", "testFlow2", nil)
 		flow.Start()
-		if flow.FlowWork.Finished() {
+		if !flow.FlowWork.Finished() {
 			t.Errorf("Start() finished")
 		}
 		if flow.CurrentTask.TaskName != "doStart" {
@@ -325,9 +325,6 @@ func TestFlowWorkAggregation_Start(t *testing.T) {
 	t.Run("polling", func(t *testing.T) {
 		flow, _ := CreateFlowWork(context.TODO(), "4444", "testFlow4", nil)
 		flow.Start()
-		if !flow.FlowWork.Finished() {
-			t.Errorf("Start() not finished")
-		}
 
 		value, ok := flow.Context.GetData("testKey").(int)
 		if !ok || 999 != value {

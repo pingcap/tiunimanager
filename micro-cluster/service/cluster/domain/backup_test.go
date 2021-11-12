@@ -380,6 +380,8 @@ func Test_updateBackupRecord(t *testing.T) {
 		},
 	})
 	flowCtx.SetData(contextCtxKey, ctx.Background())
+	flowCtx.SetData("backupTaskId", uint64(123))
+
 	ret := updateBackupRecord(task, flowCtx)
 
 	assert.Equal(t, true, ret)

@@ -439,7 +439,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	var err error
 	req.Id = flowContext.GetData("backupTaskId").(uint64)
 
-	resp, err = client.DBClient.FindTiupTaskByID(flowContext, &req)
+	resp, err = client.DBClient.FindTiupTaskByID(context.Background(), &req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("get backup task err = %s", err.Error())
 		task.Fail(err)
@@ -459,7 +459,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		record.Size = backupInfo.Size
 	}
 
-	updateResp, err := client.DBClient.UpdateBackupRecord(flowContext, &dbpb.DBUpdateBackupRecordRequest{
+	updateResp, err := client.DBClient.UpdateBackupRecord(context.Background(), &dbpb.DBUpdateBackupRecordRequest{
 		BackupRecord: &dbpb.DBBackupRecordDTO{
 			Id:      record.Id,
 			Size:    record.Size,
@@ -502,7 +502,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	configModel := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 	tidbServer := configModel.TiDBServers[0]
 
-	record, err := client.DBClient.QueryBackupRecords(flowContext, &dbpb.DBQueryBackupRecordRequest{ClusterId: recoverInfo.SourceClusterId, RecordId: recoverInfo.BackupRecordId})
+	record, err := client.DBClient.QueryBackupRecords(context.Background(), &dbpb.DBQueryBackupRecordRequest{ClusterId: recoverInfo.SourceClusterId, RecordId: recoverInfo.BackupRecordId})
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("query backup record failed, %s", err.Error())
 		task.Fail(fmt.Errorf("query backup record failed, %s", err.Error()))

@@ -53,6 +53,10 @@ type Cluster struct {
 func (c *Cluster) Online() {
 	c.Status = ClusterStatusOnline
 }
+
+func (c *Cluster) Offline() {
+	c.Status = ClusterStatusOffline
+}
 func (c *Cluster) Delete() {
 	c.Status = ClusterStatusDeleted
 }

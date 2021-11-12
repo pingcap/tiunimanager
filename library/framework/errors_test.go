@@ -94,3 +94,8 @@ func TestUnwrapError(t *testing.T) {
 
 	assert.Equal(t, cause, te.Unwrap())
 }
+
+func TestNewTiEMErrorf(t *testing.T) {
+	got := NewTiEMErrorf(common.TIEM_METADB_SERVER_CALL_ERROR, "1 %s 2", "insert")
+	assert.Equal(t, "[9998]1 insert 2", got.Error())
+}

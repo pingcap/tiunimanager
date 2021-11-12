@@ -426,8 +426,8 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 	return info.RecordId, nil
 }
 
-func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO, recordId int64, clusterId string, page, pageSize int32) ([]*dbpb.DBTransportRecordDisplayDTO, *dbpb.DBPageDTO, error) {
-	getLoggerWithContext(ctx).Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %d, page: %d, pageSize: %d", clusterId, recordId, page, pageSize)
+func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO, recordId int64, clusterId string, reImport bool, page, pageSize int32) ([]*dbpb.DBTransportRecordDisplayDTO, *dbpb.DBPageDTO, error) {
+	getLoggerWithContext(ctx).Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %d, reImport: %v, page: %d, pageSize: %d", clusterId, recordId, reImport, page, pageSize)
 	defer getLoggerWithContext(ctx).Info("end DescribeDataTransportRecord")
 
 	operator := parseOperatorFromDTO(ope)
@@ -440,6 +440,7 @@ func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO
 		},
 		ClusterId: clusterId,
 		RecordId:  recordId,
+		ReImport:  reImport,
 	}
 	resp, err := client.DBClient.ListTrasnportRecord(ctx, req)
 	if err != nil {
@@ -455,6 +456,9 @@ func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO
 func DeleteDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, recordId int64) error {
 	getLoggerWithContext(ctx).Infof("begin DeleteDataTransportRecord clusterId: %s, recordId: %d", clusterId, recordId)
 	defer getLoggerWithContext(ctx).Info("end DeleteDataTransportRecord")
+
+	operator := parseOperatorFromDTO(ope)
+	getLoggerWithContext(ctx).Info(operator)
 
 	resp, err := client.DBClient.FindTrasnportRecordByID(ctx, &dbpb.DBFindTransportRecordByIDRequest{RecordId: recordId})
 	if err != nil {

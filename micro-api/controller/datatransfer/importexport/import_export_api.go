@@ -164,13 +164,12 @@ func ImportData(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/{clusterId}/transport [get]
+// @Router /clusters/transport [get]
 func DescribeDataTransport(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
 	defer interceptor.HandleMetrics(start, "DescribeDataTransport", int(status.GetCode()))
 
-	clusterId := c.Param("clusterId")
 	var req DataTransportQueryReq
 	err := c.ShouldBindQuery(&req)
 	if err != nil {
@@ -182,8 +181,9 @@ func DescribeDataTransport(c *gin.Context) {
 	operator := controller.GetOperator(c)
 	respDTO, err := client.ClusterClient.DescribeDataTransport(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataTransportQueryRequest{
 		Operator:  operator.ConvertToDTO(),
-		ClusterId: clusterId,
+		ClusterId: req.ClusterId,
 		RecordId:  req.RecordId,
+		ReImport:  req.ReImport,
 		PageReq:   req.PageRequest.ConvertToDTO(),
 	})
 

@@ -61,14 +61,14 @@ func (m *DAOClusterManager) UpdateTransportRecord(ctx context.Context, recordId 
 
 func (m *DAOClusterManager) FindTransportRecordById(ctx context.Context, recordId int) (record *TransportRecord, err error) {
 	record = &TransportRecord{}
-	err = m.Db(ctx).Where("id = ?", recordId).First(record).Error
+	err = m.Db(ctx).Where("id = ?", recordId).Where("deleted_at is null").First(record).Error
 	if err != nil {
 		return record, err
 	}
 	return record, nil
 }
 
-func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId string, recordId int, offset int32, length int32) (dos []*TransportRecordFetchResult, total int64, err error) {
+func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId string, recordId int, reImport bool, offset int32, length int32) (dos []*TransportRecordFetchResult, total int64, err error) {
 	records := make([]*TransportRecord, length)
 
 	db := m.Db(ctx).Table(TABLE_NAME_TRANSPORT_RECORD).Where("deleted_at is null")
@@ -77,6 +77,9 @@ func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId s
 	}
 	if recordId > 0 {
 		db.Where("id = ?", recordId)
+	}
+	if reImport {
+		db.Where("re_import_support = ?", reImport)
 	}
 	err = db.Count(&total).Order("id desc").Offset(int(offset)).Limit(int(length)).Find(&records).Error
 	if err == nil {

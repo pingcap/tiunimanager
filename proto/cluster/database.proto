@@ -49,8 +49,9 @@ message DataExportResponse {
 message DataTransportQueryRequest {
     PageDTO pageReq = 1;
     OperatorDTO operator = 2;
-    string  clusterId = 3;
-    int64  recordId = 4;
+    string clusterId = 3;
+    int64 recordId = 4;
+    bool reImport = 5;
 }
 
 message DataTransportInfo {

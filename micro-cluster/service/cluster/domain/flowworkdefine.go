@@ -49,7 +49,7 @@ func InitFlowMap() {
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowDeleteCluster),
 			TaskNodes: map[string]*TaskDefine{
 				"start":              {"destroyTasks", "destroyTasksDone", "fail", SyncFuncTask, destroyTasks},
-				"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", PollingTasK, destroyCluster},
+				"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", SyncFuncTask, destroyCluster},
 				"destroyClusterDone": {"deleteCluster", "deleteClusterDone", "fail", SyncFuncTask, deleteCluster},
 				"deleteClusterDone":  {"freedResource", "freedResourceDone", "fail", SyncFuncTask, freedResource},
 				"freedResourceDone":  {"end", "", "", SyncFuncTask, ClusterEnd},
@@ -76,7 +76,7 @@ func InitFlowMap() {
 				"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, buildConfig},
 				"configDone":   {"deployCluster", "deployDone", "fail", PollingTasK, deployCluster},
 				"deployDone":   {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
-				"startupDone":  {"recoverFromSrcCluster", "recoverDone", "fail", SyncFuncTask, recoverFromSrcCluster},
+				"startupDone":  {"recoverFromSrcCluster", "recoverDone", "fail", PollingTasK, recoverFromSrcCluster},
 				"recoverDone":  {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
 				"onlineDone":   {"end", "", "", SyncFuncTask, ClusterEnd},
 				"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
@@ -121,7 +121,8 @@ func InitFlowMap() {
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowRestartCluster),
 			TaskNodes: map[string]*TaskDefine{
 				"start":       {"clusterRestart", "restartDone", "fail", PollingTasK, clusterRestart},
-				"restartDone": {"end", "", "fail", SyncFuncTask, ClusterEnd},
+				"restartDone":       {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
+				"onlineDone": {"end", "", "fail", SyncFuncTask, ClusterEnd},
 				"fail":        {"fail", "", "", SyncFuncTask, ClusterFail},
 			},
 			ContextParser: defaultContextParser,
@@ -131,7 +132,8 @@ func InitFlowMap() {
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowStopCluster),
 			TaskNodes: map[string]*TaskDefine{
 				"start":    {"clusterStop", "stopDone", "fail", PollingTasK, clusterStop},
-				"stopDone": {"end", "", "fail", SyncFuncTask, ClusterEnd},
+				"stopDone":       {"setClusterOffline", "offlineDone", "fail", SyncFuncTask, setClusterOffline},
+				"offlineDone": {"end", "", "fail", SyncFuncTask, ClusterEnd},
 				"fail":     {"fail", "", "", SyncFuncTask, ClusterFail},
 			},
 			ContextParser: defaultContextParser,

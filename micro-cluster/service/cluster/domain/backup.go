@@ -417,32 +417,14 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	}
 
 	getLoggerWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
-	backupTaskId, err := secondparty.SecondParty.MicroSrvBackUp(flowContext.Context, clusterFacade, storage, uint64(task.Id))
+	_, err = secondparty.SecondParty.MicroSrvBackUp(flowContext.Context, clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
 		task.Fail(err)
 		return false
 	}
-	flowContext.SetData("backupTaskId", backupTaskId)
 
-	for {
-		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(flowContext.Context, backupTaskId)
-		if err != nil {
-			getLoggerWithContext(ctx).Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
-			task.Fail(err)
-			return false
-		}
-		if stat == dbpb.TiupTaskStatus_Finished {
-			getLoggerWithContext(ctx).Infof("cluster %s backup task %d finished", cluster.ClusterName, backupTaskId)
-			task.Success(nil)
-			return true
-		} else if stat == dbpb.TiupTaskStatus_Error {
-			getLoggerWithContext(ctx).Errorf("cluster %s backup task %d failed %s", cluster.ClusterName, backupTaskId, statErrStr)
-			task.Fail(fmt.Errorf("cluster %s backup task %d failed %s", cluster.ClusterName, backupTaskId, statErrStr))
-			return false
-		}
-		time.Sleep(time.Second * 2)
-	}
+	return true
 }
 
 func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
@@ -500,7 +482,6 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		task.Fail(tiemError)
 		return false
 	}
-	task.Success(nil)
 	return true
 }
 
@@ -557,31 +538,13 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		Root:        fmt.Sprintf("%s/%s", record.GetBackupRecords().GetBackupRecord().GetFilePath(), "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
 	}
 	getLoggerWithContext(ctx).Infof("begin call brmgr restore api, clusterFacade %v, storage %v", clusterFacade, storage)
-	restoreTaskId, err := secondparty.SecondParty.MicroSrvRestore(flowContext.Context, clusterFacade, storage, uint64(task.Id))
+	_, err = secondparty.SecondParty.MicroSrvRestore(flowContext.Context, clusterFacade, storage, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call restore api failed, %s", err.Error())
 		task.Fail(err)
 		return false
 	}
-
-	for {
-		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(flowContext.Context, restoreTaskId)
-		if err != nil {
-			getLoggerWithContext(ctx).Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
-			task.Fail(err)
-			return false
-		}
-		if stat == dbpb.TiupTaskStatus_Finished {
-			getLoggerWithContext(ctx).Infof("cluster %s restore task %d finished", cluster.ClusterName, restoreTaskId)
-			task.Success(nil)
-			return true
-		} else if stat == dbpb.TiupTaskStatus_Error {
-			getLoggerWithContext(ctx).Errorf("cluster %s restore task %d failed %s", cluster.ClusterName, restoreTaskId, statErrStr)
-			task.Fail(fmt.Errorf("cluster %s restore task %d failed %s", cluster.ClusterName, restoreTaskId, statErrStr))
-			return false
-		}
-		time.Sleep(time.Second * 2)
-	}
+	return true
 }
 
 func convertBrStorageType(storageType string) (secondparty.StorageType, error) {

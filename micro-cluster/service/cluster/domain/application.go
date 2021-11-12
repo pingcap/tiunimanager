@@ -19,15 +19,12 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"path/filepath"
 	"strconv"
-	"time"
-
-	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
@@ -407,7 +404,6 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 		getLoggerWithContext(context).Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
 	}
 
-	task.Success(nil)
 	return true
 }
 
@@ -427,7 +423,6 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 
 	getLoggerWithContext(context).Infof("got startTaskId %s", strconv.Itoa(int(startTaskId)))
 
-	task.Success(nil)
 	return true
 }
 
@@ -439,6 +434,16 @@ func syncTopologyAndStatus(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)
 	return true
 }
+
+func setClusterOffline(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation.StatusModified = true
+	clusterAggregation.Cluster.Offline()
+
+	task.Success(nil)
+	return true
+}
+
 
 func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
@@ -557,41 +562,7 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 		task.Fail(err)
 		return false
 	}
-	context.SetData("restartTaskId", restartTaskId)
 	getLogger().Infof("got restartTaskId %s", strconv.Itoa(int(restartTaskId)))
-
-	go func() {
-		// get cluster restart status async
-		for {
-			stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(context.Context, restartTaskId)
-			if err != nil {
-				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
-				break
-			}
-			if stat == dbpb.TiupTaskStatus_Finished {
-				getLogger().Infof(" cluster %s restart done.", cluster.ClusterName)
-				clusterAggregation.StatusModified = true
-				clusterAggregation.Cluster.Online()
-				err := ClusterRepo.Persist(context, clusterAggregation)
-				if err != nil {
-					getLogger().Errorf("cluster repo persist err = %v", err)
-					return
-				}
-				break
-			} else if stat == dbpb.TiupTaskStatus_Error {
-				getLogger().Infof(" cluster %s restart fail.", cluster.ClusterName)
-				clusterAggregation.StatusModified = true
-				clusterAggregation.Cluster.Status = ClusterStatusOffline
-				err := ClusterRepo.Persist(context, clusterAggregation)
-				if err != nil {
-					getLogger().Errorf("cluster repo persist err = %v", err)
-					return
-				}
-				break
-			}
-			time.Sleep(time.Second * 2)
-		}
-	}()
 
 	// cluster restart intermediate state
 	clusterAggregation.Cluster.Restart()
@@ -622,29 +593,6 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 	}
 	context.SetData("stopTaskId", stopTaskId)
 	getLogger().Infof("got stopTaskId %s", strconv.Itoa(int(stopTaskId)))
-
-	go func() {
-		// get cluster stop status async
-		for {
-			stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(context.Context, stopTaskId)
-			if err != nil {
-				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
-				break
-			}
-			if stat == dbpb.TiupTaskStatus_Finished || stat == dbpb.TiupTaskStatus_Error {
-				getLogger().Infof(" cluster %s stop done. tiup stat: %v", cluster.ClusterName, stat)
-				clusterAggregation.StatusModified = true
-				clusterAggregation.Cluster.Status = ClusterStatusOffline
-				err := ClusterRepo.Persist(context, clusterAggregation)
-				if err != nil {
-					getLogger().Errorf("cluster repo persist err = %v", err)
-					return
-				}
-				break
-			}
-			time.Sleep(time.Second * 2)
-		}
-	}()
 
 	// cluster stopping intermediate state
 	clusterAggregation.Cluster.Status = ClusterStatusStopping

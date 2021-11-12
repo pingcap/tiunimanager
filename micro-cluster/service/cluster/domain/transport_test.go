@@ -45,11 +45,8 @@ func TestExportDataPreCheck_case1(t *testing.T) {
 		StorageType: common.NfsStorageType,
 	}
 	err := ExportDataPreCheck(req)
-	if checkFilePathExists(common.DefaultExportDir) {
-		assert.NoError(t, err)
-	} else {
-		assert.NotNil(t, err)
-	}
+	assert.NoError(t, err)
+
 }
 
 func TestExportDataPreCheck_case2(t *testing.T) {
@@ -142,11 +139,7 @@ func TestImportDataPreCheck_case1(t *testing.T) {
 		StorageType: common.NfsStorageType,
 	}
 	err := ImportDataPreCheck(context.TODO(), req)
-	if checkFilePathExists(common.DefaultImportDir) {
-		assert.NoError(t, err)
-	} else {
-		assert.NotNil(t, err)
-	}
+	assert.NoError(t, err)
 }
 
 func TestImportDataPreCheck_case2(t *testing.T) {

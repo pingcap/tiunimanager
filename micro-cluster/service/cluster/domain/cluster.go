@@ -55,7 +55,7 @@ func (c *Cluster) Online() {
 }
 
 func (c *Cluster) Offline() {
-	c.Status = ClusterStatusOnline
+	c.Status = ClusterStatusOffline
 }
 func (c *Cluster) Delete() {
 	c.Status = ClusterStatusDeleted

@@ -389,21 +389,25 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 	cluster := clusterAggregation.Cluster
 	spec := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 
-	if true {
-		bs, err := yaml.Marshal(spec)
-		if err != nil {
-			task.Fail(err)
-			return false
-		}
-
-		cfgYamlStr := string(bs)
-		getLoggerWithContext(context).Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
-		deployTaskId, _ := secondparty.SecondParty.MicroSrvTiupDeploy(
-			context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, uint64(task.Id),
-		)
-		getLoggerWithContext(context).Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
+	bs, err := yaml.Marshal(spec)
+	if err != nil {
+		task.Fail(err)
+		return false
 	}
 
+	cfgYamlStr := string(bs)
+	getLoggerWithContext(context).Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
+	deployTaskId, err := secondparty.SecondParty.MicroSrvTiupDeploy(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, uint64(task.Id),
+	)
+
+	if err != nil {
+		getLoggerWithContext(context).Errorf("call tiup api start cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+
+	getLoggerWithContext(context).Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
 	return true
 }
 

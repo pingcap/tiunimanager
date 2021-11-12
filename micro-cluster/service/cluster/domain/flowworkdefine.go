@@ -122,8 +122,8 @@ func InitFlowMap() {
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowRestartCluster),
 			TaskNodes: map[string]*TaskDefine{
 				"start":       {"clusterRestart", "restartDone", "fail", PollingTasK, clusterRestart},
-				"restartDone":       {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
-				"onlineDone": {"end", "", "fail", SyncFuncTask, ClusterEnd},
+				"restartDone": {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
+				"onlineDone":  {"end", "", "fail", SyncFuncTask, ClusterEnd},
 				"fail":        {"fail", "", "", SyncFuncTask, ClusterFail},
 			},
 			ContextParser: defaultContextParser,
@@ -132,10 +132,10 @@ func InitFlowMap() {
 			FlowName:    FlowStopCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowStopCluster),
 			TaskNodes: map[string]*TaskDefine{
-				"start":    {"clusterStop", "stopDone", "fail", PollingTasK, clusterStop},
-				"stopDone":       {"setClusterOffline", "offlineDone", "fail", SyncFuncTask, setClusterOffline},
+				"start":       {"clusterStop", "stopDone", "fail", PollingTasK, clusterStop},
+				"stopDone":    {"setClusterOffline", "offlineDone", "fail", SyncFuncTask, setClusterOffline},
 				"offlineDone": {"end", "", "fail", SyncFuncTask, ClusterEnd},
-				"fail":     {"fail", "", "", SyncFuncTask, ClusterFail},
+				"fail":        {"fail", "", "", SyncFuncTask, ClusterFail},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -207,7 +207,7 @@ func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation.FlowModified = true
 
 	if clusterAggregation.ConfigModified {
-		go time.AfterFunc(time.Second * 3, func() {
+		go time.AfterFunc(time.Second*3, func() {
 			framework.LogWithContext(context.Context).Infof("BuildClusterLogConfig for cluster %s", clusterAggregation.Cluster.Id)
 			err := BuildClusterLogConfig(context.Context, clusterAggregation.Cluster.Id)
 			if err != nil {

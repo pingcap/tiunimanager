@@ -1,3 +1,4 @@
+
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -14,13 +15,41 @@
  *                                                                            *
  ******************************************************************************/
 
-package client
+package interceptor
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	log "github.com/sirupsen/logrus"
 )
 
-var DBClient dbpb.TiEMDBService
+func AuditLog() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		visitor := &VisitorIdentity{
+			"unknown",
+			"unknown",
+			"unknown",
+		}
 
-var ClusterClient clusterpb.ClusterService
+		v, _ := c.Get(VisitorIdentityKey)
+		if v != nil {
+			visitor, _ = v.(*VisitorIdentity)
+		}
+
+		path := c.Request.URL.Path
+
+		entry := framework.LogForkFile(common.LogFileAudit).WithFields(log.Fields{
+			"operatorId":       visitor.AccountId,
+			"operatorName":     visitor.AccountName,
+			"operatorTenantId": visitor.TenantId,
+
+			"clientIP":  c.ClientIP(),
+			"method":    c.Request.Method,
+			"path":      path,
+			"referer":   c.Request.Referer(),
+			"userAgent": c.Request.UserAgent(),
+		})
+		entry.Info("some do something")
+	}
+}

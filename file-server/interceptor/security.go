@@ -1,3 +1,4 @@
+
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -14,13 +15,28 @@
  *                                                                            *
  ******************************************************************************/
 
-package client
+package interceptor
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/unrolled/secure"
 )
 
-var DBClient dbpb.TiEMDBService
+func TlsHandler(addr string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		secureMiddleware := secure.New(secure.Options{
+			SSLRedirect: true,
+			SSLHost:     addr,
+		})
+		err := secureMiddleware.Process(c.Writer, c.Request)
 
-var ClusterClient clusterpb.ClusterService
+		// If there was an error, do not continue.
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, err.Error())
+		}
+
+		c.Next()
+	}
+}

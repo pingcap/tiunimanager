@@ -775,6 +775,177 @@ var doc = `{
                 }
             }
         },
+        "/clusters/transport": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query records of import and export",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster data transport"
+                ],
+                "summary": "query records of import and export",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "name": "clusterId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "reImport",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "recordId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/importexport.DataTransportRecordQueryResp"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/transport/{recordId}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "delete data transport record",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster data transport"
+                ],
+                "summary": "delete data transport record",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "data transport recordId",
+                        "name": "recordId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "data transport record delete request",
+                        "name": "DataTransportDeleteReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/importexport.DataTransportDeleteReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}": {
             "get": {
                 "security": [
@@ -1445,91 +1616,6 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/backuprestore.BackupStrategy"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
-        },
-        "/clusters/{clusterId}/transport": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "query records of import and export",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster data transport"
-                ],
-                "summary": "query records of import and export",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "cluster id",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "pageSize",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "name": "recordId",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/importexport.DataTransportRecordQueryResp"
-                                            }
                                         }
                                     }
                                 }
@@ -3365,10 +3451,10 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
-                "endpointUrl": {
+                "comment": {
                     "type": "string"
                 },
-                "filePath": {
+                "endpointUrl": {
                     "type": "string"
                 },
                 "fileType": {
@@ -3391,6 +3477,9 @@ var doc = `{
                 },
                 "userName": {
                     "type": "string"
+                },
+                "zipName": {
+                    "type": "string"
                 }
             }
         },
@@ -3398,7 +3487,7 @@ var doc = `{
             "type": "object",
             "properties": {
                 "recordId": {
-                    "type": "string"
+                    "type": "integer"
                 }
             }
         },
@@ -3414,14 +3503,17 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
-                "endpointUrl": {
+                "comment": {
                     "type": "string"
                 },
-                "filePath": {
+                "endpointUrl": {
                     "type": "string"
                 },
                 "password": {
                     "type": "string"
+                },
+                "recordId": {
+                    "type": "integer"
                 },
                 "secretAccessKey": {
                     "type": "string"
@@ -3438,6 +3530,14 @@ var doc = `{
             "type": "object",
             "properties": {
                 "recordId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "importexport.DataTransportDeleteReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
                     "type": "string"
                 }
             }
@@ -3455,12 +3555,15 @@ var doc = `{
                     "type": "string"
                 },
                 "recordId": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "startTime": {
                     "type": "string"
                 },
                 "status": {
+                    "$ref": "#/definitions/controller.StatusInfo"
+                },
+                "storageType": {
                     "type": "string"
                 },
                 "transportType": {

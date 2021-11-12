@@ -18,6 +18,7 @@ BRCMD_BINARY = ${TIEM_BINARY_DIR}/brcmd
 OPENAPI_SERVER_BINARY = ${TIEM_BINARY_DIR}/openapi-server
 CLUSTER_SERVER_BINARY = ${TIEM_BINARY_DIR}/cluster-server
 METADB_SERVER_BINARY = ${TIEM_BINARY_DIR}/metadb-server
+FILE_SERVER_BINARY = ${TIEM_BINARY_DIR}/file-server
 TIEM_INSTALL_PREFIX = ${PREFIX}/tiem
 PROTOC_GEN_MICRO = github.com/asim/go-micro/cmd/protoc-gen-micro/v3@v3.7.0
 PROTOC_GEN_GO = google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1
@@ -62,6 +63,7 @@ build:
 	make build_openapi_server
 	make build_cluster_server
 	make build_metadb_server
+	make build_file_server
 	@echo "build TiEM all server successfully."
 
 #Compile all TiEM microservices
@@ -79,6 +81,11 @@ build_metadb_server:
 	@echo "build metadb-server start."
 	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${METADB_SERVER_BINARY} micro-metadb/*.go
 	@echo "build metadb-server successfully."
+
+build_file_server:
+	@echo "build file-server start."
+	$(GOBUILD) $(RACE_FLAG) -ldflags '$(LDFLAGS) $(CHECK_FLAG)' -o ${FILE_SERVER_BINARY} file-server/*.go
+	@echo "build file-server sucessufully."
 
 #2. R&D to test the code themselves for compliance before submitting it
 devselfcheck:
@@ -173,6 +180,7 @@ install:
 	cp ${OPENAPI_SERVER_BINARY} ${TIEM_INSTALL_PREFIX}/bin
 	cp ${METADB_SERVER_BINARY} ${TIEM_INSTALL_PREFIX}/bin
 	cp ${CLUSTER_SERVER_BINARY} ${TIEM_INSTALL_PREFIX}/bin
+	cp ${FILE_SERVER_BINARY} ${TIEM_INSTALL_PREFIX}/bin
 
 uninstall:
 	@echo "uninstall: remove all files in $(TIEM_INSTALL_PREFIX)"
@@ -184,6 +192,7 @@ clean:
 	@if [ -f ${OPENAPI_SERVER_BINARY} ] ; then rm ${OPENAPI_SERVER_BINARY} ; fi
 	@if [ -f ${CLUSTER_SERVER_BINARY} ] ; then rm ${CLUSTER_SERVER_BINARY} ; fi
 	@if [ -f ${METADB_SERVER_BINARY} ] ; then rm ${METADB_SERVER_BINARY} ; fi
+	@if [ -f ${FILE_SERVER_BINARY} ] ; then rm ${FILE_SERVER_BINARY} ; fi
 	@if [ -f ${TIEM_BINARY_DIR}/revive ] ; then rm ${TIEM_BINARY_DIR}/revive ; fi
 	@if [ -f ${TIEM_BINARY_DIR}/goword ] ; then rm ${TIEM_BINARY_DIR}/goword ; fi
 	@if [ -f ${TIEM_BINARY_DIR}/unconvert ] ; then rm ${TIEM_BINARY_DIR}/unconvert ; fi

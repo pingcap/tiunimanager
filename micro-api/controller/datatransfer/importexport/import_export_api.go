@@ -17,8 +17,10 @@
 package importexport
 
 import (
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -65,13 +67,14 @@ func ExportData(c *gin.Context) {
 		FileType:        req.FileType,
 		Filter:          req.Filter,
 		Sql:             req.Sql,
-		FilePath:        req.FilePath,
 		StorageType:     req.StorageType,
+		ZipName:         req.ZipName,
 		BucketUrl:       req.BucketUrl,
 		BucketRegion:    req.BucketRegion,
 		EndpointUrl:     req.EndpointUrl,
 		AccessKey:       req.AccessKey,
 		SecretAccessKey: req.SecretAccessKey,
+		Comment:         req.Comment,
 	}, controller.DefaultTimeout)
 
 	if err != nil {
@@ -123,12 +126,13 @@ func ImportData(c *gin.Context) {
 		ClusterId:       req.ClusterId,
 		UserName:        req.UserName,
 		Password:        req.Password,
-		FilePath:        req.FilePath,
+		RecordId:        req.RecordId,
 		StorageType:     req.StorageType,
 		BucketUrl:       req.BucketUrl,
 		EndpointUrl:     req.EndpointUrl,
 		AccessKey:       req.AccessKey,
 		SecretAccessKey: req.SecretAccessKey,
+		Comment:         req.Comment,
 	}, controller.DefaultTimeout)
 
 	if err != nil {
@@ -160,13 +164,12 @@ func ImportData(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/{clusterId}/transport [get]
+// @Router /clusters/transport [get]
 func DescribeDataTransport(c *gin.Context) {
 	var status *clusterpb.ResponseStatusDTO
 	start := time.Now()
 	defer interceptor.HandleMetrics(start, "DescribeDataTransport", int(status.GetCode()))
 
-	clusterId := c.Param("clusterId")
 	var req DataTransportQueryReq
 	err := c.ShouldBindQuery(&req)
 	if err != nil {
@@ -178,8 +181,9 @@ func DescribeDataTransport(c *gin.Context) {
 	operator := controller.GetOperator(c)
 	respDTO, err := client.ClusterClient.DescribeDataTransport(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataTransportQueryRequest{
 		Operator:  operator.ConvertToDTO(),
-		ClusterId: clusterId,
+		ClusterId: req.ClusterId,
 		RecordId:  req.RecordId,
+		ReImport:  req.ReImport,
 		PageReq:   req.PageRequest.ConvertToDTO(),
 	})
 
@@ -197,14 +201,65 @@ func DescribeDataTransport(c *gin.Context) {
 					RecordId:      value.GetRecordId(),
 					ClusterId:     value.GetClusterId(),
 					TransportType: value.GetTransportType(),
-					Status:        value.GetStatus(),
 					FilePath:      value.GetFilePath(),
+					StorageType:   value.GetStorageType(),
+					Status:        *management.ParseStatusFromDTO(value.DisplayStatus),
 					StartTime:     time.Unix(value.GetStartTime(), 0),
 					EndTime:       time.Unix(value.GetEndTime(), 0),
 				}
 			}
 			result := controller.SuccessWithPage(data, *controller.ParsePageFromDTO(respDTO.PageReq))
 			c.JSON(http.StatusOK, result)
+		} else {
+			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
+		}
+	}
+}
+
+// DeleteDataTransportRecord
+// @Summary delete data transport record
+// @Description delete data transport record
+// @Tags cluster data transport
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param recordId path int true "data transport recordId"
+// @Param DataTransportDeleteReq body DataTransportDeleteReq true "data transport record delete request"
+// @Success 200 {object} controller.CommonResult{data=int}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/transport/{recordId} [delete]
+func DeleteDataTransportRecord(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "DeleteDataTransportRecord", int(status.GetCode()))
+
+	recordId, err := strconv.Atoi(c.Param("recordId"))
+	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		return
+	}
+
+	var req DataTransportDeleteReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		return
+	}
+	operator := controller.GetOperator(c)
+	resp, err := client.ClusterClient.DeleteDataTransportRecord(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataTransportDeleteRequest{
+		Operator:  operator.ConvertToDTO(),
+		ClusterId: req.ClusterId,
+		RecordId:  int64(recordId),
+	}, controller.DefaultTimeout)
+	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+	} else {
+		status = resp.GetStatus()
+		if common.TIEM_SUCCESS.Equal(status.GetCode()) {
+			c.JSON(http.StatusOK, controller.Success(recordId))
 		} else {
 			c.JSON(http.StatusBadRequest, controller.Fail(int(status.GetCode()), status.GetMessage()))
 		}

@@ -287,7 +287,7 @@ func GetParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string
 func BuildClusterLogConfig(ctx ctx.Context, clusterId string) error {
 	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
 	if err != nil {
-		return framework.NewTiEMErrorf(common.TIEM_METADB_SERVER_CALL_ERROR, "load cluster %s failed", err.Error())
+		return framework.NewTiEMErrorf(common.TIEM_METADB_SERVER_CALL_ERROR, "load cluster %s failed", clusterId)
 	}
 	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowBuildLogConfig, BuildSystemOperator())
 	if err != nil {

@@ -197,10 +197,16 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) {
 			}
 			framework.LogWithContext(flow.Context).Infof("polling task wait, sequence %d, taskId %d", sequence, task.Id)
 
-			stat, _, _ := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(flow.Context, uint64(task.Id))
+			stat, statString, err := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(flow.Context, uint64(task.Id))
+			if err != nil {
+				framework.LogWithContext(flow.Context).Error(err)
+				flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
+				task.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))
+				return
+			}
 			if stat == dbpb.TiupTaskStatus_Error {
 				flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
-				task.Fail(framework.SimpleError(common.TIEM_TASK_TIMEOUT))
+				task.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, statString))
 				return
 			}
 			if stat == dbpb.TiupTaskStatus_Finished {

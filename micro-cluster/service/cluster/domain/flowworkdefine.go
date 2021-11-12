@@ -48,7 +48,7 @@ func InitFlowMap() {
 			FlowName:    FlowDeleteCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowDeleteCluster),
 			TaskNodes: map[string]*TaskDefine{
-				"start":              {"destroyTasks", "destroyTasksDone", "fail", PollingTasK, destroyTasks},
+				"start":              {"destroyTasks", "destroyTasksDone", "fail", SyncFuncTask, destroyTasks},
 				"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", PollingTasK, destroyCluster},
 				"destroyClusterDone": {"deleteCluster", "deleteClusterDone", "fail", SyncFuncTask, deleteCluster},
 				"deleteClusterDone":  {"freedResource", "freedResourceDone", "fail", SyncFuncTask, freedResource},
@@ -120,7 +120,7 @@ func InitFlowMap() {
 			FlowName:    FlowRestartCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowRestartCluster),
 			TaskNodes: map[string]*TaskDefine{
-				"start":       {"clusterRestart", "restartDone", "fail", SyncFuncTask, clusterRestart},
+				"start":       {"clusterRestart", "restartDone", "fail", PollingTasK, clusterRestart},
 				"restartDone": {"end", "", "fail", SyncFuncTask, ClusterEnd},
 				"fail":        {"fail", "", "", SyncFuncTask, ClusterFail},
 			},
@@ -130,7 +130,7 @@ func InitFlowMap() {
 			FlowName:    FlowStopCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowStopCluster),
 			TaskNodes: map[string]*TaskDefine{
-				"start":    {"clusterStop", "stopDone", "fail", SyncFuncTask, clusterStop},
+				"start":    {"clusterStop", "stopDone", "fail", PollingTasK, clusterStop},
 				"stopDone": {"end", "", "fail", SyncFuncTask, ClusterEnd},
 				"fail":     {"fail", "", "", SyncFuncTask, ClusterFail},
 			},

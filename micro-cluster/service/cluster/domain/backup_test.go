@@ -515,11 +515,7 @@ func Test_recoverFromSrcCluster_case1(t *testing.T) {
 	secondparty.SecondParty = mockTiup
 
 	mockDB := mockdb.NewMockTiEMDBService(ctrl)
-	mockDB.EXPECT().FindTiupTaskByID(gomock.Any(), gomock.Any()).Return(&dbpb.FindTiupTaskByIDResponse{
-		TiupTask: &dbpb.TiupTask{
-			Status: dbpb.TiupTaskStatus_Finished,
-		},
-	}, nil)
+
 	mockDB.EXPECT().QueryBackupRecords(gomock.Any(), gomock.Any()).Return(&dbpb.DBQueryBackupRecordResponse{
 		Status: &dbpb.DBClusterResponseStatus{
 			Code: service.ClusterSuccessResponseStatus.GetCode(),

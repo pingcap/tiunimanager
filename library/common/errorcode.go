@@ -21,7 +21,7 @@ type TIEM_ERROR_CODE int32
 // all tiem error code
 // todo standardize
 const (
-	TIEM_SUCCESS                   TIEM_ERROR_CODE = 0
+	TIEM_SUCCESS TIEM_ERROR_CODE = 0
 
 	TIEM_METADB_SERVER_CALL_ERROR  TIEM_ERROR_CODE = 9998
 	TIEM_CLUSTER_SERVER_CALL_ERROR TIEM_ERROR_CODE = 9999
@@ -50,6 +50,7 @@ const (
 	TIEM_UPDATE_HOST_STATUS_FAIL                   TIEM_ERROR_CODE = 510
 	TIEM_RESERVE_HOST_FAIL                         TIEM_ERROR_CODE = 511
 	TIEM_RESOURCE_NO_STOCK                         TIEM_ERROR_CODE = 512
+	TIEM_RESOURCE_GET_DISK_ID_FAIL                 TIEM_ERROR_CODE = 513
 
 	TIEM_DASHBOARD_NOT_FOUND           TIEM_ERROR_CODE = 600
 	TIEM_EXPORT_PARAM_INVALID          TIEM_ERROR_CODE = 601
@@ -99,13 +100,13 @@ var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_TAKEOVER_SSH_CONNECT_ERROR: {TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh connect failed", 500},
 	TIEM_TAKEOVER_SFTP_ERROR:        {TIEM_TAKEOVER_SFTP_ERROR, "sftp failed", 500},
 
-	TIEM_DASHBOARD_NOT_FOUND:           {TIEM_DASHBOARD_NOT_FOUND, "dashboard is not found", 500},
+	TIEM_DASHBOARD_NOT_FOUND: {TIEM_DASHBOARD_NOT_FOUND, "dashboard is not found", 500},
 
 	// cluster import export
-	TIEM_EXPORT_PARAM_INVALID:          {TIEM_EXPORT_PARAM_INVALID, "export data param invalid", 500},
-	TIEM_EXPORT_PROCESS_FAILED:         {TIEM_EXPORT_PROCESS_FAILED, "export process failed", 500},
-	TIEM_IMPORT_PARAM_INVALID:          {TIEM_IMPORT_PARAM_INVALID, "import data param invalid", 500},
-	TIEM_IMPORT_PROCESS_FAILED:         {TIEM_IMPORT_PROCESS_FAILED, "import process failed", 500},
+	TIEM_EXPORT_PARAM_INVALID:  {TIEM_EXPORT_PARAM_INVALID, "export data param invalid", 500},
+	TIEM_EXPORT_PROCESS_FAILED: {TIEM_EXPORT_PROCESS_FAILED, "export process failed", 500},
+	TIEM_IMPORT_PARAM_INVALID:  {TIEM_IMPORT_PARAM_INVALID, "import data param invalid", 500},
+	TIEM_IMPORT_PROCESS_FAILED: {TIEM_IMPORT_PROCESS_FAILED, "import process failed", 500},
 
 	// cluster backup
 	TIEM_TRANSPORT_RECORD_NOT_FOUND:    {TIEM_TRANSPORT_RECORD_NOT_FOUND, "transport record is not found", 500},

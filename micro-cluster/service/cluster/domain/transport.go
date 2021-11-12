@@ -472,10 +472,15 @@ func DeleteDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO, 
 		return fmt.Errorf("query backup transport %d of cluster %s failed, %s", recordId, clusterId, resp.GetStatus().GetMessage())
 	}
 	getLoggerWithContext(ctx).Infof("query transport record to be deleted, record: %+v", resp.GetRecord())
+	if resp.GetRecord().GetRecordId() <= 0 {
+		getLoggerWithContext(ctx).Infof("record %d not exist", recordId)
+		return nil
+	}
 
 	if common.S3StorageType != resp.GetRecord().GetStorageType() {
-		filePath := resp.GetRecord().GetFilePath()
+		filePath := filepath.Dir(resp.GetRecord().GetFilePath())
 		_ = os.RemoveAll(filePath)
+		getLoggerWithContext(ctx).Infof("remove file path %s, record: %+v", filePath, resp.GetRecord())
 	}
 
 	delResp, err := client.DBClient.DeleteTransportRecord(ctx, &dbpb.DBDeleteTransportRequest{RecordId: recordId})

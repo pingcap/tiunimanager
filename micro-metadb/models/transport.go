@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -62,7 +63,7 @@ func (m *DAOClusterManager) UpdateTransportRecord(ctx context.Context, recordId 
 func (m *DAOClusterManager) FindTransportRecordById(ctx context.Context, recordId int) (record *TransportRecord, err error) {
 	record = &TransportRecord{}
 	err = m.Db(ctx).Where("id = ?", recordId).Where("deleted_at is null").First(record).Error
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
 		return record, err
 	}
 	return record, nil

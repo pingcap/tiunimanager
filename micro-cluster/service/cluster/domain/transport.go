@@ -156,7 +156,8 @@ func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 			return fmt.Errorf("export dir %s is not vaild", common.DefaultExportDir)
 		}
 		if !checkFilePathExists(absPath) {
-			return fmt.Errorf("export path %s not exist", absPath)
+			//return fmt.Errorf("export path %s not exist", absPath)
+			_ = os.MkdirAll(absPath, os.ModeDir)
 		}
 	default:
 		return fmt.Errorf("invalid param storageType %s", req.GetStorageType())
@@ -198,7 +199,8 @@ func ImportDataPreCheck(ctx context.Context, req *clusterpb.DataImportRequest) e
 				return fmt.Errorf("import dir %s is not vaild", common.DefaultImportDir)
 			}
 			if !checkFilePathExists(absPath) {
-				return fmt.Errorf("import path %s not exist", absPath)
+				//return fmt.Errorf("import path %s not exist", absPath)
+				_ = os.MkdirAll(absPath, os.ModeDir)
 			}
 		default:
 			return fmt.Errorf("invalid param storageType %s", req.GetStorageType())

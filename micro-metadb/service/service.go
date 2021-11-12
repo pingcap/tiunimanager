@@ -39,13 +39,15 @@ func NewDBServiceHandler(dataDir string, fw *framework.BaseFramework) *DBService
 	dao.InitDB(dataDir)
 	if dao.Db().Migrator().HasTable(&models.Tenant{}) {
 		framework.LogForkFile(common.LogFileSystem).Info("data existed, skip initialization")
+		dao.InitMetrics()
+
 		return handler
 	} else {
 		dao.InitTables()
 		dao.InitData()
+		dao.InitMetrics()
 	}
 
-	dao.InitMetrics()
 	return handler
 }
 

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -12,7 +11,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
 package domain
@@ -22,7 +20,38 @@ import (
 	"testing"
 )
 
-func Test_defaultContextParser(t *testing.T) {
-	ctx := defaultContextParser("")
-	assert.NotNil(t, ctx)
+func TestCluster_Delete(t *testing.T) {
+	cluster := Cluster{
+		Status: ClusterStatusOnline,
+	}
+
+	cluster.Delete()
+	assert.Equal(t, ClusterStatusDeleted, cluster.Status)
+}
+
+func TestCluster_Offline(t *testing.T) {
+	cluster := Cluster{
+		Status: ClusterStatusOnline,
+	}
+
+	cluster.Offline()
+	assert.Equal(t, ClusterStatusOffline, cluster.Status)
+}
+
+func TestCluster_Online(t *testing.T) {
+	cluster := Cluster{
+		Status: ClusterStatusOffline,
+	}
+
+	cluster.Online()
+	assert.Equal(t, ClusterStatusOnline, cluster.Status)
+}
+
+func TestCluster_Restart(t *testing.T) {
+	cluster := Cluster{
+		Status: ClusterStatusOnline,
+	}
+
+	cluster.Restart()
+	assert.Equal(t, ClusterStatusRestarting, cluster.Status)
 }

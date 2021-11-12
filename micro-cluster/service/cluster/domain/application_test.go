@@ -18,6 +18,10 @@ package domain
 
 import (
 	"context"
+	"errors"
+	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/test/mocksecondparty"
 	"strconv"
 	"testing"
 	"time"
@@ -400,4 +404,398 @@ func Test_freedResource(t *testing.T) {
 
 func Test_modifyParameters(t *testing.T) {
 	assert.True(t, modifyParameters(&TaskEntity{}, nil))
+}
+
+func Test_clusterRestart(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	secondparty.SecondParty = mockTiup
+
+	t.Run("success", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupRestart(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			CurrentTopologyConfigRecord: &TopologyConfigRecord{
+				ConfigModel: &spec.Specification{
+					TiDBServers: []*spec.TiDBSpec{
+						{
+							Host: "127.0.0.1",
+							Port: 4000,
+						},
+					},
+				},
+			},
+		})
+		flowCtx.SetData(contextCtxKey, context.Background())
+		ret := clusterRestart(task, flowCtx)
+
+		assert.Equal(t, true, ret)
+	})
+
+	t.Run("fail", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupRestart(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("wrong"))
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			CurrentTopologyConfigRecord: &TopologyConfigRecord{
+				ConfigModel: &spec.Specification{
+					TiDBServers: []*spec.TiDBSpec{
+						{
+							Host: "127.0.0.1",
+							Port: 4000,
+						},
+					},
+				},
+			},
+		})
+		flowCtx.SetData(contextCtxKey, context.Background())
+		ret := clusterRestart(task, flowCtx)
+
+		assert.Equal(t, false, ret)
+	})
+
+}
+
+func Test_clusterStop(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	secondparty.SecondParty = mockTiup
+
+	t.Run("success", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupStop(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			CurrentTopologyConfigRecord: &TopologyConfigRecord{
+				ConfigModel: &spec.Specification{
+					TiDBServers: []*spec.TiDBSpec{
+						{
+							Host: "127.0.0.1",
+							Port: 4000,
+						},
+					},
+				},
+			},
+		})
+		flowCtx.SetData(contextCtxKey, context.Background())
+		ret := clusterStop(task, flowCtx)
+
+		assert.Equal(t, true, ret)
+	})
+	t.Run("fail", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupStop(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("wrong"))
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			CurrentTopologyConfigRecord: &TopologyConfigRecord{
+				ConfigModel: &spec.Specification{
+					TiDBServers: []*spec.TiDBSpec{
+						{
+							Host: "127.0.0.1",
+							Port: 4000,
+						},
+					},
+				},
+			},
+		})
+		flowCtx.SetData(contextCtxKey, context.Background())
+		ret := clusterStop(task, flowCtx)
+
+		assert.Equal(t, false, ret)
+	})
+
+}
+
+func Test_deleteCluster(t *testing.T) {
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(context.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData(contextCtxKey, context.Background())
+	ret := deleteCluster(task, flowCtx)
+
+	assert.Equal(t, true, ret)
+}
+
+func Test_setClusterOnline(t *testing.T) {
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(context.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData(contextCtxKey, context.Background())
+	ret := setClusterOnline(task, flowCtx)
+
+	assert.Equal(t, true, ret)
+	assert.Equal(t, ClusterStatusOnline, flowCtx.GetData(contextClusterKey).(*ClusterAggregation).Cluster.Status)
+
+}
+
+func Test_setClusterOffline(t *testing.T) {
+	task := &TaskEntity{
+		Id: 123,
+	}
+	flowCtx := NewFlowContext(context.TODO())
+	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+		LastBackupRecord: &BackupRecord{
+			Id:          123,
+			StorageType: StorageTypeS3,
+		},
+		Cluster: &Cluster{
+			Id:          "test-tidb123",
+			ClusterName: "test-tidb",
+		},
+		CurrentTopologyConfigRecord: &TopologyConfigRecord{
+			ConfigModel: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		},
+	})
+	flowCtx.SetData(contextCtxKey, context.Background())
+	ret := setClusterOffline(task, flowCtx)
+
+	assert.Equal(t, true, ret)
+	assert.Equal(t, ClusterStatusOffline, flowCtx.GetData(contextClusterKey).(*ClusterAggregation).Cluster.Status)
+
+}
+
+func Test_startupCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	secondparty.SecondParty = mockTiup
+
+	t.Run("success", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupStart(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			CurrentTopologyConfigRecord: &TopologyConfigRecord{
+				ConfigModel: &spec.Specification{
+					TiDBServers: []*spec.TiDBSpec{
+						{
+							Host: "127.0.0.1",
+							Port: 4000,
+						},
+					},
+				},
+			},
+		})
+		flowCtx.SetData(contextCtxKey, context.Background())
+		ret := startupCluster(task, flowCtx)
+
+		assert.Equal(t, true, ret)
+	})
+	t.Run("fail", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupStart(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("wrong"))
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			CurrentTopologyConfigRecord: &TopologyConfigRecord{
+				ConfigModel: &spec.Specification{
+					TiDBServers: []*spec.TiDBSpec{
+						{
+							Host: "127.0.0.1",
+							Port: 4000,
+						},
+					},
+				},
+			},
+		})
+		flowCtx.SetData(contextCtxKey, context.Background())
+		ret := startupCluster(task, flowCtx)
+
+		assert.Equal(t, false, ret)
+	})
+
+}
+
+func Test_deployCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	secondparty.SecondParty = mockTiup
+
+	t.Run("success", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupDeploy(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			CurrentTopologyConfigRecord: &TopologyConfigRecord{
+				ConfigModel: &spec.Specification{
+					TiDBServers: []*spec.TiDBSpec{
+						{
+							Host: "127.0.0.1",
+							Port: 4000,
+						},
+					},
+				},
+			},
+		})
+		flowCtx.SetData(contextCtxKey, context.Background())
+		ret := deployCluster(task, flowCtx)
+
+		assert.Equal(t, true, ret)
+	})
+	t.Run("fail", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupDeploy(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("wrong"))
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			CurrentTopologyConfigRecord: &TopologyConfigRecord{
+				ConfigModel: &spec.Specification{
+					TiDBServers: []*spec.TiDBSpec{
+						{
+							Host: "127.0.0.1",
+							Port: 4000,
+						},
+					},
+				},
+			},
+		})
+		flowCtx.SetData(contextCtxKey, context.Background())
+		ret := deployCluster(task, flowCtx)
+
+		assert.Equal(t, false, ret)
+	})
+
 }

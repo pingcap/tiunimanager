@@ -42,6 +42,7 @@ var CopyWritingContainer = map[string]map[string]string{
 		CWFlowModifyParameters: "参数修改中",
 		CWFlowExportData:       "数据导出中",
 		CWFlowImportData:       "数据导出中",
+		CWFlowBuildLogConfig:	"重建日志配置",
 		CWTaskStatusInit:       "未开始",
 		CWTaskStatusProcessing: "进行中",
 		CWTaskStatusFinished:   "完成",
@@ -71,3 +72,5 @@ var CWFlowModifyParameters = "CW_FlowModifyParameters"
 
 var CWFlowExportData = "CW_FlowExportData"
 var CWFlowImportData = "CW_FlowImportData"
+
+var CWFlowBuildLogConfig = "CW_FlowBuildLogConfig"

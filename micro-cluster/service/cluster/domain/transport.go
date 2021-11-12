@@ -480,11 +480,13 @@ func buildDataImportConfig(task *TaskEntity, flowContext *FlowContext) bool {
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0600)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("create import toml config failed, %s", err.Error())
+		task.Fail(err)
 		return false
 	}
 
 	if err = toml.NewEncoder(file).Encode(config); err != nil {
 		getLoggerWithContext(ctx).Errorf("decode data import toml config failed, %s", err.Error())
+		task.Fail(err)
 		return false
 	}
 	getLoggerWithContext(ctx).Infof("build lightning toml file sucess, %v", config)
@@ -507,6 +509,7 @@ func importDataToCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call tiup lightning api failed, %s", err.Error())
+		task.Fail(err)
 		return false
 	}
 	getLoggerWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, %v", resp)
@@ -534,10 +537,12 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	resp, err := client.DBClient.UpdateTransportRecord(flowContext, req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
+		task.Fail(err)
 		return false
 	}
 	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", resp.GetStatus().GetMessage())
+		task.Fail(err)
 		return false
 	}
 	getLoggerWithContext(ctx).Infof("update data transport record success, %v", resp)
@@ -561,6 +566,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	if NfsStorageType == info.StorageType {
 		if err := cleanDataTransportDir(ctx, info.FilePath); err != nil {
 			getLoggerWithContext(ctx).Errorf("clean export directory failed, %s", err.Error())
+			task.Fail(err)
 			return false
 		}
 	}
@@ -590,6 +596,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	resp, err := secondparty.SecondParty.MicroSrvDumpling(flowContext.Context, 0, cmd, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call tiup dumpling api failed, %s", err.Error())
+		task.Fail(err)
 		return false
 	}
 
@@ -618,10 +625,12 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 	resp, err := client.DBClient.UpdateTransportRecord(flowContext, req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
+		task.Fail(err)
 		return false
 	}
 	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", resp.GetStatus().GetMessage())
+		task.Fail(err)
 		return false
 	}
 	getLoggerWithContext(ctx).Infof("update data transport record success, %v", resp)

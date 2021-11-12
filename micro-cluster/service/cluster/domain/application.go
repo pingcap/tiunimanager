@@ -459,9 +459,6 @@ func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 }
 
 func syncTopology(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
-	clusterAggregation.StatusModified = true
-
 	task.Success(nil)
 	return true
 }

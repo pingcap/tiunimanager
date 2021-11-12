@@ -683,7 +683,7 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(flowContext, req)
+	resp, err := client.DBClient.UpdateTransportRecord(context.Background(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		task.Fail(fmt.Errorf("update data transport record failed, %s", err.Error()))
@@ -787,7 +787,7 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 			EndTime:   time.Now().Unix(),
 		},
 	}
-	resp, err := client.DBClient.UpdateTransportRecord(flowContext, req)
+	resp, err := client.DBClient.UpdateTransportRecord(context.Background(), req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
 		task.Fail(fmt.Errorf("update data transport record failed, %s", err.Error()))
@@ -812,7 +812,7 @@ func importDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
 	info := flowContext.GetData(contextDataTransportKey).(*ImportInfo)
 	cluster := clusterAggregation.Cluster
 
-	if err := updateTransportRecordFailed(ctx, info.RecordId, cluster.Id); err != nil {
+	if err := updateTransportRecordFailed(context.Background(), info.RecordId, cluster.Id); err != nil {
 		task.Fail(err)
 		return false
 	}
@@ -829,7 +829,7 @@ func exportDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
 	info := flowContext.GetData(contextDataTransportKey).(*ExportInfo)
 	cluster := clusterAggregation.Cluster
 
-	if err := updateTransportRecordFailed(ctx, info.RecordId, cluster.Id); err != nil {
+	if err := updateTransportRecordFailed(context.Background(), info.RecordId, cluster.Id); err != nil {
 		task.Fail(err)
 		return false
 	}

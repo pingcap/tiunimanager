@@ -298,8 +298,7 @@ func TestImportData_case2(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockClient := mockdb.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().CreateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBCreateTransportRecordResponse{}, nil)
-	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{}, nil)
+	mockClient.EXPECT().FindTrasnportRecordByID(gomock.Any(), gomock.Any()).Return(&dbpb.DBFindTransportRecordByIDResponse{}, errors.New("failed"))
 	client.DBClient = mockClient
 
 	request := &clusterpb.DataImportRequest{
@@ -312,7 +311,7 @@ func TestImportData_case2(t *testing.T) {
 	}
 	_, err := ImportData(context.Background(), request)
 
-	assert.NoError(t, err)
+	assert.NotNil(t, err)
 }
 
 func TestDescribeDataTransportRecord(t *testing.T) {

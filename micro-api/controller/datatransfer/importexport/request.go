@@ -55,5 +55,4 @@ type DataTransportQueryReq struct {
 
 type DataTransportDeleteReq struct {
 	ClusterId string `json:"clusterId"`
-	RecordId  int64  `json:"recordId"`
 }

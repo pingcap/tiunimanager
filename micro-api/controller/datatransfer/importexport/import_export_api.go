@@ -251,7 +251,7 @@ func DeleteDataTransportRecord(c *gin.Context) {
 	resp, err := client.ClusterClient.DeleteDataTransportRecord(framework.NewMicroCtxFromGinCtx(c), &clusterpb.DataTransportDeleteRequest{
 		Operator:  operator.ConvertToDTO(),
 		ClusterId: req.ClusterId,
-		RecordId:  req.RecordId,
+		RecordId:  int64(recordId),
 	}, controller.DefaultTimeout)
 	if err != nil {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusBadRequest, Message: err.Error()}

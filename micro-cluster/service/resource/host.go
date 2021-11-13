@@ -54,9 +54,11 @@ func copyHostToDBReq(src *clusterpb.HostInfo, dst *dbpb.DBHostInfoDTO) {
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Stat = src.Stat
+	dst.ClusterType = src.ClusterType
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved
+	dst.Traits = src.Traits
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &dbpb.DBDiskDTO{
 			Name:     disk.Name,
@@ -86,11 +88,13 @@ func copyHostFromDBRsp(src *dbpb.DBHostInfoDTO, dst *clusterpb.HostInfo) {
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Stat = src.Stat
+	dst.ClusterType = src.ClusterType
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.CreateAt = src.CreateAt
 	dst.UpdateAt = src.UpdateAt
 	dst.Reserved = src.Reserved
+	dst.Traits = src.Traits
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, &clusterpb.Disk{
 			DiskId:   disk.DiskId,

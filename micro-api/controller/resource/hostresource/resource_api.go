@@ -60,11 +60,13 @@ func copyHostFromRsp(src *clusterpb.HostInfo, dst *HostInfo) {
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Stat = src.Stat
+	dst.ClusterType = src.ClusterType
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.CreatedAt = src.CreateAt
 	dst.UpdatedAt = src.UpdateAt
 	dst.Reserved = src.Reserved
+	dst.Traits = src.Traits
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, DiskInfo{
 			ID:       disk.DiskId,
@@ -104,9 +106,11 @@ func copyHostToReq(src *HostInfo, dst *clusterpb.HostInfo) error {
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Stat = src.Stat
+	dst.ClusterType = src.ClusterType
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved
+	dst.Traits = src.Traits
 
 	for _, v := range src.Disks {
 		dst.Disks = append(dst.Disks, &clusterpb.Disk{
@@ -225,6 +229,12 @@ func importExcelFile(r io.Reader, reserved bool) ([]*HostInfo, error) {
 			host.Memory = int32(mem)
 			host.FreeMemory = host.Memory
 			host.Nic = row[NIC_FIELD]
+
+			if err = resource.ValidClusterType(row[CLUSTER_TYPE_FIELD]); err != nil {
+				errMsg := fmt.Sprintf("Row %d get cluster type(%s) failed, %v", irow, row[CLUSTER_TYPE_FIELD], err)
+				return nil, errors.New(errMsg)
+			}
+			host.ClusterType = row[CLUSTER_TYPE_FIELD]
 
 			if err = resource.ValidPurposeType(row[PURPOSE_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, row[PURPOSE_FIELD], err)

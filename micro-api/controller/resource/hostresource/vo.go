@@ -36,9 +36,11 @@ type HostInfo struct {
 	Region       string     `json:"region"`
 	AZ           string     `json:"az"`
 	Rack         string     `json:"rack"`
-	Purpose      string     `json:"purpose"`  // What Purpose is the host used for? [compute/storage/general]
-	DiskType     string     `json:"diskType"` // Disk type of this host [sata/ssd/nvme_ssd]
-	Reserved     bool       `json:"reserved"` // Whether this host is reserved - will not be allocated
+	ClusterType  string     `json:"clusterType"` // What cluster is the host used for? [database/datamigration]
+	Purpose      string     `json:"purpose"`     // What Purpose is the host used for? [compute/storage/general]
+	DiskType     string     `json:"diskType"`    // Disk type of this host [sata/ssd/nvme_ssd]
+	Reserved     bool       `json:"reserved"`    // Whether this host is reserved - will not be allocated
+	Traits       int64      `json:"traits"`      // Traits of labels
 	CreatedAt    int64      `json:"createTime"`
 	UpdatedAt    int64      `json:"updateTime"`
 	Disks        []DiskInfo `json:"disks"`

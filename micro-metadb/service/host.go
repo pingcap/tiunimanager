@@ -50,9 +50,11 @@ func copyHostInfoFromReq(src *dbpb.DBHostInfoDTO, dst *resource.Host) {
 	dst.Rack = resource.GenDomainCodeByName(dst.AZ, src.Rack)
 	dst.Status = src.Status
 	dst.Stat = src.Stat
+	dst.ClusterType = src.ClusterType
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved
+	dst.Traits = src.Traits
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, resource.Disk{
 			Name:     disk.Name,
@@ -192,9 +194,11 @@ func copyHostInfoToRsp(src *resource.Host, dst *dbpb.DBHostInfoDTO) {
 			dst.Stat = int32(stat)
 		}
 	}
+	dst.ClusterType = src.ClusterType
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved
+	dst.Traits = src.Traits
 	dst.CreateAt = src.CreatedAt.Unix()
 	dst.UpdateAt = src.UpdatedAt.Unix()
 	for _, disk := range src.Disks {

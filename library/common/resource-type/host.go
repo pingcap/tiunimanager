@@ -74,16 +74,31 @@ func ValidArch(arch string) error {
 type Purpose string
 
 const (
-	Compute Purpose = "Compute"
-	Storage Purpose = "Storage"
-	General Purpose = "General"
+	Compute  Purpose = "Compute"
+	Storage  Purpose = "Storage"
+	Dispatch Purpose = "Dispatch"
+	General  Purpose = "General"
 )
 
 func ValidPurposeType(p string) error {
-	if p == string(Compute) || p == string(Storage) || p == string(General) {
+	if p == string(Compute) || p == string(Storage) || p == string(Dispatch) || p == string(General) {
 		return nil
 	}
-	return errors.New("valid purpose: [Compute | Storage | General]")
+	return errors.New("valid purpose: [Compute | Storage | Dispatch | General]")
+}
+
+type ClusterType string
+
+const (
+	Database      ClusterType = "Database"
+	DataMigration ClusterType = "DataMigration"
+)
+
+func ValidClusterType(p string) error {
+	if p == string(Database) || p == string(DataMigration) {
+		return nil
+	}
+	return errors.New("valid cluster type: [Database | DataMigration]")
 }
 
 type HostStatus int32
@@ -149,9 +164,11 @@ type Host struct {
 	Region       string         `json:"region" gorm:"size:32"`
 	AZ           string         `json:"az" gorm:"index"`
 	Rack         string         `json:"rack" gorm:"index"`
-	Purpose      string         `json:"purpose" gorm:"index"`  // What Purpose is the host used for? [compute/storage/general]
-	DiskType     string         `json:"diskType" gorm:"index"` // Disk type of this host [sata/ssd/nvme_ssd]
-	Reserved     bool           `json:"reserved" gorm:"index"` // Whether this host is reserved - will not be allocated
+	ClusterType  string         `json:"clusterType" gorm:"index"` // What Cluster is the host used for? [database/datamigration]
+	Purpose      string         `json:"purpose" gorm:"index"`     // What Purpose is the host used for? [compute/storage/general]
+	DiskType     string         `json:"diskType" gorm:"index"`    // Disk type of this host [sata/ssd/nvme_ssd]
+	Reserved     bool           `json:"reserved" gorm:"index"`    // Whether this host is reserved - will not be allocated
+	Traits       int64          `json:"traits" gorm:"index"`      // Traits of labels
 	Disks        []Disk         `json:"disks"`
 	UsedDisks    []UsedDisk     `json:"-"`
 	UsedComputes []UsedCompute  `json:"-"`

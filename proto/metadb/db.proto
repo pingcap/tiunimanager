@@ -81,4 +81,5 @@ service TiEMDBService {
     rpc UpdateTransportRecord(DBUpdateTransportRecordRequest) returns (DBUpdateTransportRecordResponse);
     rpc FindTrasnportRecordByID(DBFindTransportRecordByIDRequest) returns (DBFindTransportRecordByIDResponse);
     rpc ListTrasnportRecord(DBListTransportRecordRequest) returns (DBListTransportRecordResponse);
+    rpc DeleteTransportRecord(DBDeleteTransportRequest) returns (DBDeleteTransportResponse);
 }

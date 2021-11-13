@@ -96,6 +96,8 @@ func (dao *DAOManager) Tables() map[string]interface{} {
 const StartTime = "StartTime"
 
 func (dao *DAOManager) InitMetrics() {
+	framework.LogForkFile(common.LogFileSystem).Infof("init sqlite metrics")
+
 	before := func(db *gorm.DB) {
 		db.InstanceSet(StartTime, time.Now())
 		return

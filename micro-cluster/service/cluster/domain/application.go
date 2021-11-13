@@ -19,15 +19,12 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"path/filepath"
 	"strconv"
-	"time"
-
-	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
@@ -89,7 +86,7 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
 
-	cluster.Demands = demands
+	cluster.ComponentDemands = demands
 
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
@@ -284,25 +281,43 @@ func GetParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string
 	return RemoteClusterProxy.QueryParameterJson(ctx, clusterId)
 }
 
-func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation, taskId uint) error {
-	clusters, total, err := ClusterRepo.Query(ctx, "", "", "", "", "", 1, 10000)
+func BuildClusterLogConfig(ctx ctx.Context, clusterId string) error {
+	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
 	if err != nil {
-		getLogger().Errorf("invoke cluster repo list cluster err： %v", err)
+		return framework.NewTiEMErrorf(common.TIEM_METADB_SERVER_CALL_ERROR, "load cluster %s failed", clusterId)
+	}
+	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowBuildLogConfig, BuildSystemOperator())
+	if err != nil {
 		return err
 	}
-	getLogger().Infof("list cluster total count: %d", total)
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.Start()
+	return nil
+}
+
+func collectorTiDBLogConfig(task *TaskEntity, ctx *FlowContext) bool {
+	aggregation := ctx.GetData(contextClusterKey).(*ClusterAggregation)
+
+	clusters, total, err := ClusterRepo.Query(ctx, "", "", "", "", "", 1, 10000)
+	if err != nil {
+		getLoggerWithContext(ctx).Errorf("invoke cluster repo list cluster err： %v", err)
+		task.Fail(err)
+		return false
+	}
+	getLoggerWithContext(ctx).Infof("list cluster total count: %d", total)
 	hosts := listClusterHosts(aggregation)
-	getLogger().Infof("cluster %s list host: %v", aggregation.Cluster.Id, hosts)
+	getLoggerWithContext(ctx).Infof("cluster %s list host: %v", aggregation.Cluster.Id, hosts)
 	go func() {
 		for _, host := range hosts {
 			collectorConfigs, err := buildCollectorTiDBLogConfig(ctx, host, clusters)
 			if err != nil {
-				getLogger().Errorf("build collector tidb log config err： %v", err)
+				getLoggerWithContext(ctx).Errorf("build collector tidb log config err： %v", err)
 				break
 			}
 			bs, err := yaml.Marshal(collectorConfigs)
 			if err != nil {
-				getLogger().Errorf("marshal yaml err： %v", err)
+				getLoggerWithContext(ctx).Errorf("marshal yaml err： %v", err)
 				break
 			}
 			collectorYaml := string(bs)
@@ -310,15 +325,16 @@ func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation, ta
 			deployDir := "/tiem-test/filebeat"
 			transferTaskId, err := secondparty.SecondParty.MicroSrvTiupTransfer(ctx, secondparty.ClusterComponentTypeStr,
 				aggregation.Cluster.ClusterName, collectorYaml, deployDir+"/conf/input_tidb.yml",
-				0, []string{"-N", host}, uint64(taskId))
-			getLogger().Infof("got transferTaskId %d", transferTaskId)
+				0, []string{"-N", host}, uint64(task.Id))
+			getLoggerWithContext(ctx).Infof("got transferTaskId %d", transferTaskId)
 			if err != nil {
-				getLogger().Errorf("collectorTiDBLogConfig invoke tiup transfer err： %v", err)
+				getLoggerWithContext(ctx).Errorf("collectorTiDBLogConfig invoke tiup transfer err： %v", err)
 				break
 			}
 		}
 	}()
-	return nil
+	task.Success(nil)
+	return true
 }
 
 //func (aggregation *ClusterAggregation) loadWorkFlow() error {
@@ -338,13 +354,13 @@ func collectorTiDBLogConfig(ctx ctx.Context, aggregation *ClusterAggregation, ta
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 
-	demands := clusterAggregation.Cluster.Demands
+	demands := clusterAggregation.Cluster.ComponentDemands
 
 	clusterAggregation.AvailableResources = &clusterpb.AllocHostResponse{}
-	err := resource.NewResourceManager().AllocHosts(ctx.TODO(), convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
+	err := resource.NewResourceManager().AllocHosts(flowContext, convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
 
 	if err != nil {
-		getLogger().Error(err)
+		getLoggerWithContext(flowContext).Error(err)
 		task.Fail(err)
 		return false
 	}
@@ -373,23 +389,25 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 	cluster := clusterAggregation.Cluster
 	spec := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
 
-	if true {
-		bs, err := yaml.Marshal(spec)
-		if err != nil {
-			task.Fail(err)
-			return false
-		}
-
-		cfgYamlStr := string(bs)
-		getLogger().Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
-		deployTaskId, _ := secondparty.SecondParty.MicroSrvTiupDeploy(
-			context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, uint64(task.Id),
-		)
-		context.SetData("deployTaskId", deployTaskId)
-		getLogger().Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
+	bs, err := yaml.Marshal(spec)
+	if err != nil {
+		task.Fail(err)
+		return false
 	}
 
-	task.Success(nil)
+	cfgYamlStr := string(bs)
+	getLoggerWithContext(context).Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
+	deployTaskId, err := secondparty.SecondParty.MicroSrvTiupDeploy(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, uint64(task.Id),
+	)
+
+	if err != nil {
+		getLoggerWithContext(context).Errorf("call tiup api start cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+
+	getLoggerWithContext(context).Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
 	return true
 }
 
@@ -400,15 +418,15 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	startTaskId, err := secondparty.SecondParty.MicroSrvTiupStart(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id),
 	)
+
 	if err != nil {
-		getLogger().Errorf("call tiup api start cluster err = %s", err.Error())
+		getLoggerWithContext(context).Errorf("call tiup api start cluster err = %s", err.Error())
 		task.Fail(err)
 		return false
 	}
-	context.SetData("startTaskId", startTaskId)
-	getLogger().Infof("got startTaskId %s", strconv.Itoa(int(startTaskId)))
 
-	task.Success(nil)
+	getLoggerWithContext(context).Infof("got startTaskId %s", strconv.Itoa(int(startTaskId)))
+
 	return true
 }
 
@@ -421,16 +439,26 @@ func syncTopologyAndStatus(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
+func setClusterOffline(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation.StatusModified = true
+	clusterAggregation.Cluster.Offline()
+
+	task.Success(nil)
+	return true
+}
+
+
 func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.StatusModified = true
 	clusterAggregation.Cluster.Online()
 
-	err := collectorTiDBLogConfig(context, clusterAggregation, task.Id)
-	if err != nil {
-		getLogger().Errorf("collector tidb log config err = %s", err.Error())
-	}
+	task.Success(nil)
+	return true
+}
 
+func syncTopology(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)
 	return true
 }
@@ -543,41 +571,7 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 		task.Fail(err)
 		return false
 	}
-	context.SetData("restartTaskId", restartTaskId)
 	getLogger().Infof("got restartTaskId %s", strconv.Itoa(int(restartTaskId)))
-
-	go func() {
-		// get cluster restart status async
-		for {
-			stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(context.Context, restartTaskId)
-			if err != nil {
-				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
-				break
-			}
-			if stat == dbpb.TiupTaskStatus_Finished {
-				getLogger().Infof(" cluster %s restart done.", cluster.ClusterName)
-				clusterAggregation.StatusModified = true
-				clusterAggregation.Cluster.Online()
-				err := ClusterRepo.Persist(context, clusterAggregation)
-				if err != nil {
-					getLogger().Errorf("cluster repo persist err = %v", err)
-					return
-				}
-				break
-			} else if stat == dbpb.TiupTaskStatus_Error {
-				getLogger().Infof(" cluster %s restart fail.", cluster.ClusterName)
-				clusterAggregation.StatusModified = true
-				clusterAggregation.Cluster.Status = ClusterStatusOffline
-				err := ClusterRepo.Persist(context, clusterAggregation)
-				if err != nil {
-					getLogger().Errorf("cluster repo persist err = %v", err)
-					return
-				}
-				break
-			}
-			time.Sleep(time.Second * 2)
-		}
-	}()
 
 	// cluster restart intermediate state
 	clusterAggregation.Cluster.Restart()
@@ -608,29 +602,6 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 	}
 	context.SetData("stopTaskId", stopTaskId)
 	getLogger().Infof("got stopTaskId %s", strconv.Itoa(int(stopTaskId)))
-
-	go func() {
-		// get cluster stop status async
-		for {
-			stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(context.Context, stopTaskId)
-			if err != nil {
-				getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
-				break
-			}
-			if stat == dbpb.TiupTaskStatus_Finished || stat == dbpb.TiupTaskStatus_Error {
-				getLogger().Infof(" cluster %s stop done. tiup stat: %v", cluster.ClusterName, stat)
-				clusterAggregation.StatusModified = true
-				clusterAggregation.Cluster.Status = ClusterStatusOffline
-				err := ClusterRepo.Persist(context, clusterAggregation)
-				if err != nil {
-					getLogger().Errorf("cluster repo persist err = %v", err)
-					return
-				}
-				break
-			}
-			time.Sleep(time.Second * 2)
-		}
-	}()
 
 	// cluster stopping intermediate state
 	clusterAggregation.Cluster.Status = ClusterStatusStopping

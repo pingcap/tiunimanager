@@ -175,6 +175,10 @@ func NewMicroCtxFromGinCtx(c *gin.Context) context.Context {
 	return newMicroContextWithTraceID(ctx, id)
 }
 
+func ForkMicroCtx(ctx context.Context) context.Context {
+	return newMicroContextWithTraceID(context.Background(), getTraceIDFromMicroContext(ctx))
+}
+
 func newMicroContextWithTraceID(ctx context.Context, traceID string) context.Context {
 	md, ok := metadata.FromContext(ctx)
 	if ok {

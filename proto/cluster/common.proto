@@ -25,3 +25,12 @@ message OperatorDTO {
     string tenantId = 3;
     bool manualOperator = 4;
 }
+
+message DisplayStatusDTO {
+    string statusCode = 1;
+    string statusName = 2;
+    int32 inProcessFlowId = 3;
+    int64 createTime = 4;
+    int64 updateTime = 5;
+    int64 deleteTime = 6;
+}

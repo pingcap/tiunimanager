@@ -39,7 +39,8 @@ type Cluster struct {
 	RecoverInfo    RecoverInfo
 	Status         ClusterStatus
 
-	Demands []*ClusterComponentDemand
+	ClusterDemand    ClusterCommonDemand
+	ComponentDemands []*ClusterComponentDemand
 
 	WorkFlowId uint
 
@@ -53,11 +54,21 @@ type Cluster struct {
 func (c *Cluster) Online() {
 	c.Status = ClusterStatusOnline
 }
+
+func (c *Cluster) Offline() {
+	c.Status = ClusterStatusOffline
+}
 func (c *Cluster) Delete() {
 	c.Status = ClusterStatusDeleted
 }
 func (c *Cluster) Restart() {
 	c.Status = ClusterStatusRestarting
+}
+
+type ClusterCommonDemand struct {
+	Exclusive       bool
+	Region          string
+	CpuArchitecture string
 }
 
 type ClusterComponentDemand struct {

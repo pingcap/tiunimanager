@@ -21,6 +21,7 @@ const (
 	DefaultMicroMetaDBPort  int = 4100
 	DefaultMicroClusterPort int = 4110
 	DefaultMicroApiPort     int = 4116
+	DefaultMicroFilePort    int = 4118
 	DefaultMetricsPort      int = 4121
 )
 
@@ -55,6 +56,18 @@ const (
 var (
 	TemplateFileName = "hostInfo_template.xlsx"
 	TemplateFilePath = "./etc"
+)
+
+type TransportType string
+
+const (
+	DefaultImportDir    string        = "/tmp/tiem/import"
+	DefaultExportDir    string        = "/tmp/tiem/export"
+	DefaultZipName      string        = "data.zip"
+	NfsStorageType      string        = "nfs"
+	S3StorageType       string        = "s3"
+	TransportTypeExport TransportType = "export"
+	TransportTypeImport TransportType = "import"
 )
 
 const SlowSqlThreshold = 100

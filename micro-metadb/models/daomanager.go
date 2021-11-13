@@ -283,11 +283,13 @@ func (dao *DAOManager) initSystemDefaultData() error {
 	return err
 }
 
-func (dao *DAOManager) InitResourceDataForDev() error {
+func (dao *DAOManager) InitResourceDataForDev(region, zone, rack, hostIp1, hostIp2, hostIp3 string) error {
 	log := framework.LogForkFile(common.LogFileSystem)
+	zoneCode := resource.GenDomainCodeByName(region, zone)
+	rackCode := resource.GenDomainCodeByName(zoneCode, rack)
 	id1, err := dao.ResourceManager().CreateHost(context.TODO(), &resource.Host{
 		HostName:     "TEST_HOST1",
-		IP:           "168.168.168.1",
+		IP:           hostIp1,
 		UserName:     "root",
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
@@ -299,9 +301,9 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		FreeCpuCores: 16,
 		FreeMemory:   64,
 		Nic:          "1GE",
-		Region:       "Region1",
-		AZ:           "Region1,Zone1",
-		Rack:         "Region1,Zone1,3-1",
+		Region:       region,
+		AZ:           zoneCode,
+		Rack:         rackCode,
 		Purpose:      string(resource.General),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
@@ -318,7 +320,7 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 	}
 	id2, err := dao.ResourceManager().CreateHost(context.TODO(), &resource.Host{
 		HostName:     "TEST_HOST2",
-		IP:           "168.168.168.2",
+		IP:           hostIp2,
 		UserName:     "root",
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
@@ -330,9 +332,9 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		FreeCpuCores: 16,
 		FreeMemory:   64,
 		Nic:          "1GE",
-		Region:       "Region1",
-		AZ:           "Region1,Zone1",
-		Rack:         "Region1,Zone1,3-1",
+		Region:       region,
+		AZ:           zoneCode,
+		Rack:         rackCode,
 		Purpose:      string(resource.General),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
@@ -349,7 +351,7 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 	}
 	id3, err := dao.ResourceManager().CreateHost(context.TODO(), &resource.Host{
 		HostName:     "TEST_HOST3",
-		IP:           "168.168.168.3",
+		IP:           hostIp3,
 		UserName:     "root",
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
@@ -361,9 +363,9 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		FreeCpuCores: 12,
 		FreeMemory:   24,
 		Nic:          "1GE",
-		Region:       "Region1",
-		AZ:           "Region1,Zone1",
-		Rack:         "Region1,Zone1,3-1",
+		Region:       region,
+		AZ:           zoneCode,
+		Rack:         rackCode,
 		Purpose:      string(resource.General),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,

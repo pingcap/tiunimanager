@@ -718,14 +718,14 @@ func recycleUsedTablesBySpecify(tx *gorm.DB, holderId, requestId, hostId string,
 	}
 
 	for _, diskId := range diskIds {
-		err = tx.Where("host_id = ? and disk_id = ?", hostId, diskId).Delete(&rt.UsedDisk{}).Error
+		err = tx.Where("host_id = ? and holder_id = ? and disk_id = ?", hostId, holderId, diskId).Delete(&rt.UsedDisk{}).Error
 		if err != nil {
 			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedDisk for disk %s in host %s failed, %v", diskId, hostId, err)
 		}
 	}
 
 	for _, port := range ports {
-		err = tx.Where("host_id = ? and port = ?", hostId, port).Delete(&rt.UsedPort{}).Error
+		err = tx.Where("host_id = ? and holder_id = ? and port = ?", hostId, holderId, port).Delete(&rt.UsedPort{}).Error
 		if err != nil {
 			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedPort for %d in host %s failed, %v", port, hostId, err)
 		}

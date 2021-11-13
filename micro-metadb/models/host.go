@@ -711,7 +711,7 @@ func recycleUsedTablesBySpecify(tx *gorm.DB, holderId, requestId, hostId string,
 		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get host %s total used compute for cluster %s failed, %v", hostId, holderId, err)
 	}
 	if usedCompute.TotalCpuCores == 0 && usedCompute.TotalMemory == 0 {
-		err = tx.Where("host_id = ? and holderId = ?", hostId, holderId).Delete(&rt.UsedCompute{}).Error
+		err = tx.Where("host_id = ? and holder_id = ?", hostId, holderId).Delete(&rt.UsedCompute{}).Error
 		if err != nil {
 			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "clean up UsedCompute in host %s for cluster %s failed, %v", hostId, holderId, err)
 		}

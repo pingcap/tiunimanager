@@ -16,6 +16,12 @@
 
 package hostresource
 
+import (
+	"strings"
+
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
+)
+
 type HostInfo struct {
 	ID           string     `json:"hostId"`
 	IP           string     `json:"ip"`
@@ -44,6 +50,21 @@ type HostInfo struct {
 	CreatedAt    int64      `json:"createTime"`
 	UpdatedAt    int64      `json:"updateTime"`
 	Disks        []DiskInfo `json:"disks"`
+}
+
+func (h *HostInfo) getPurposes() []string {
+	return strings.Split(h.Purpose, ",")
+}
+
+func (h *HostInfo) buildDefaultTriats() {
+	clusterTrait := resource.DefaultLabelTypes[h.ClusterType].Trait
+	h.Traits = h.Traits | clusterTrait
+	purposes := h.getPurposes()
+	for _, p := range purposes {
+		h.Traits = h.Traits | resource.DefaultLabelTypes[p].Trait
+	}
+	diskPerfTrait := resource.DefaultLabelTypes[h.DiskType].Trait
+	h.Traits = h.Traits | diskPerfTrait
 }
 
 type DiskInfo struct {

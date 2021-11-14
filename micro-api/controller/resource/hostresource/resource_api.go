@@ -236,11 +236,15 @@ func importExcelFile(r io.Reader, reserved bool) ([]*HostInfo, error) {
 			}
 			host.ClusterType = row[CLUSTER_TYPE_FIELD]
 
-			if err = resource.ValidPurposeType(row[PURPOSE_FIELD]); err != nil {
-				errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, row[PURPOSE_FIELD], err)
-				return nil, errors.New(errMsg)
-			}
 			host.Purpose = row[PURPOSE_FIELD]
+			purposes := host.getPurposes()
+			for _, p := range purposes {
+				if err = resource.ValidPurposeType(p); err != nil {
+					errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, p, err)
+					return nil, errors.New(errMsg)
+				}
+			}
+
 			if err = resource.ValidDiskType(row[DISKTYPE_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get disk type(%s) failed, %v", irow, row[DISKTYPE_FIELD], err)
 				return nil, errors.New(errMsg)

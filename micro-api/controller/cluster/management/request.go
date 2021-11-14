@@ -49,3 +49,8 @@ type TakeoverReq struct {
 	TiupPath         string   `json:"tiupPath" example:".tiup/" form:"tiupPath"`
 	ClusterNames     []string `json:"clusterNames" form:"clusterNames"`
 }
+
+type ScaleOutReq struct {
+	ClusterId      string               `json:"clusterId" form:"clusterId"`
+	NodeDemandList []ClusterNodeDemand  `json:"nodeDemandList"`
+}

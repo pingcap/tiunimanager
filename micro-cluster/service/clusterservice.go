@@ -108,6 +108,22 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 	}
 }
 
+func (c ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *clusterpb.ScaleOutRequest, resp *clusterpb.ScaleOutResponse) (err error) {
+	framework.LogWithContext(ctx).Info("scale out cluster")
+	clusterAggregation, err := domain.ScaleOutCluster(ctx, req.GetOperator(), req.GetClusterId(), req.GetDemands())
+
+	if err != nil {
+		framework.LogWithContext(ctx).Info(err)
+		resp.RespStatus = BizErrorResponseStatus
+		resp.RespStatus.Message = err.Error()
+	} else {
+		resp.RespStatus = SuccessResponseStatus
+		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+	}
+
+	return nil
+}
+
 func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *clusterpb.ClusterTakeoverReqDTO, resp *clusterpb.ClusterTakeoverRespDTO) (err error) {
 	framework.LogWithContext(ctx).Info("takeover clusters")
 	clusters, err := domain.TakeoverClusters(ctx, req.Operator, req)

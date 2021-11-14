@@ -18,6 +18,8 @@ service ClusterService {
     rpc StopCluster(ClusterStopReqDTO) returns (ClusterStopRespDTO);
     rpc TakeoverClusters(ClusterTakeoverReqDTO) returns (ClusterTakeoverRespDTO);
 
+    rpc ScaleOutCluster(ScaleOutRequest) returns (ScaleOutResponse);
+
     rpc ImportData(DataImportRequest) returns (DataImportResponse);
     rpc ExportData(DataExportRequest) returns (DataExportResponse);
     rpc DescribeDataTransport(DataTransportQueryRequest) returns (DataTransportQueryResponse);
@@ -139,6 +141,17 @@ message ClusterRestartRespDTO {
     ResponseStatusDTO respStatus = 1;
     string clusterId = 2;
     DisplayStatusDTO clusterStatus = 3;
+}
+
+message ScaleOutRequest {
+    OperatorDTO operator = 1;
+    string clusterId = 2;
+    repeated ClusterNodeDemandDTO demands = 3;
+}
+
+message ScaleOutResponse {
+    ResponseStatusDTO respStatus = 1;
+    DisplayStatusDTO clusterStatus = 2;
 }
 
 message ClusterStopReqDTO {

@@ -145,6 +145,7 @@ const (
 	FlowStopCluster      = "StopCluster"
 	FlowTakeoverCluster  = "TakeoverCluster"
 	FlowBuildLogConfig   = "BuildLogConfig"
+	FlowScaleOutCluster  = "ScaleOutCluster"
 )
 
 type CronTaskType int8

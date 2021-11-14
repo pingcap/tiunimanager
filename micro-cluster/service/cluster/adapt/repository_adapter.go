@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -210,6 +211,28 @@ func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.Clu
 		if err != nil {
 			// todo
 			return err
+		}
+	}
+
+	if aggregation.DemandsModified {
+		var demands string
+		if len(cluster.Demands) > 0 {
+			bytes, err := json.Marshal(cluster.Demands)
+			if err != nil {
+				return err
+			}
+			demands = string(bytes)
+		}
+		resp, err := client.DBClient.UpdateClusterDemand(ctx, &dbpb.DBUpdateDemandRequest{
+			ClusterId: cluster.Id,
+			Demands: demands,
+			TenantId: cluster.TenantId,
+		})
+		if err != nil {
+			return err
+		}
+		if resp.Status.Code != 0 {
+			return fmt.Errorf(resp.Status.Message)
 		}
 	}
 	return nil

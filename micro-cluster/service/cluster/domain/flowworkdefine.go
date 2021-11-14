@@ -69,6 +69,20 @@ func InitFlowMap() {
 			},
 			ContextParser: defaultContextParser,
 		},
+
+		FlowScaleOutCluster: {
+			FlowName:	FlowScaleOutCluster,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowScaleOutCluster),
+			TaskNodes: map[string]*TaskDefine {
+				"start":        {"prepareResource", "resourceDone", "fail", SyncFuncTask, allocScaleResource},
+				"resourceDone": {"buildConfig", "configDone", "fail", SyncFuncTask, generateConfig},
+				"configDone":   {"scaleOutCluster", "scaleOutDone", "fail", SyncFuncTask, scaleOutCluster},
+				"scaleOutDone": {"end", "", "", SyncFuncTask, ClusterEnd},
+				"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
+			},
+			ContextParser: defaultContextParser,
+		},
+
 		FlowRecoverCluster: {
 			FlowName:    FlowRecoverCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowRecoverCluster),

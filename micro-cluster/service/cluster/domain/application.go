@@ -50,12 +50,14 @@ type ClusterAggregation struct {
 	UsedResources interface{}
 
 	AvailableResources *clusterpb.AllocHostResponse
+	//AllocResources *clusterpb.AllocResource
 
 	BaseInfoModified bool
 	StatusModified   bool
 	FlowModified     bool
 
 	ConfigModified bool
+	DemandsModified bool
 
 	LastBackupRecord *BackupRecord
 
@@ -66,6 +68,7 @@ type ClusterAggregation struct {
 
 var contextClusterKey = "clusterAggregation"
 var contextTakeoverReqKey = "takeoverRequest"
+var contextScaleOutReqKey = "scaleOutRequest"
 
 func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
@@ -111,6 +114,84 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 
 	flow.Start()
 
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
+	ClusterRepo.Persist(ctx, clusterAggregation)
+	return clusterAggregation, nil
+}
+
+func mergeDemands(demandsList ...[]*ClusterComponentDemand) []*ClusterComponentDemand {
+	if len(demandsList) == 0 {
+		return nil
+	}
+	components := make(map[string][]*ClusterComponentDemand)
+	for _, demands := range demandsList {
+		for _, d := range demands {
+			components[d.ComponentType.ComponentType] = append(components[d.ComponentType.ComponentType], d)
+		}
+	}
+	resultDemands := make([]*ClusterComponentDemand, len(components))
+	for _, demands := range components {
+		var demand *ClusterComponentDemand
+		distributionItemsMap := make(map[string]map[string]int)
+		demand.ComponentType = demands[0].ComponentType
+		for _, d := range demands {
+			demand.TotalNodeCount += d.TotalNodeCount
+			for _, item := range d.DistributionItems {
+				distributionItemsMap[item.ZoneCode][item.SpecCode] += item.Count
+			}
+		}
+		for zoneCode, values := range distributionItemsMap {
+			for specCode, count := range values {
+				distributionItem := &ClusterNodeDistributionItem{
+					ZoneCode: zoneCode,
+					SpecCode: specCode,
+					Count: count,
+				}
+				demand.DistributionItems = append(demand.DistributionItems, distributionItem)
+			}
+		}
+		resultDemands = append(resultDemands, demand)
+	}
+
+	return resultDemands
+}
+
+// ScaleOutCluster
+// @Description: scale out a cluster
+// @Parameter ope
+// @Parameter clusterId
+// @Parameter demands
+// @return *ClusterAggregation
+// @return error
+func ScaleOutCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string, demandDTOs []*clusterpb.ClusterNodeDemandDTO)(*ClusterAggregation, error) {
+	// Get cluster info from db based by clusterId
+	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
+	operator := parseOperatorFromDTO(ope)
+	clusterAggregation.CurrentOperator = operator
+
+	// Parse resources for scaling out
+	demands := make([]*ClusterComponentDemand, len(demandDTOs))
+	for i, v := range demandDTOs {
+		demands[i] = parseNodeDemandFromDTO(v)
+	}
+
+	// Merge multi demands
+	clusterAggregation.Cluster.Demands = mergeDemands(clusterAggregation.Cluster.Demands, demands)
+	clusterAggregation.DemandsModified = true
+
+	// Start the workflow to scale out a cluster
+	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowScaleOutCluster, operator)
+	if err != nil {
+		return nil, err
+	}
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.AddContext(contextScaleOutReqKey, demands)
+	flow.Start()
+
+	// Update workflow and persist clusterAggregation
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(ctx, clusterAggregation)
 	return clusterAggregation, nil
@@ -369,6 +450,18 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	return true
 }
 
+func allocScaleResource(task *TaskEntity, flowContext *FlowContext) bool {
+	//clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
+	//demands := flowContext.GetData(contextScaleOutReqKey).([]*ClusterComponentDemand)
+	//err :=
+
+	return true
+}
+
+func generateConfig(task *TaskEntity, flowContext *FlowContext) bool {
+	return true
+}
+
 func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 
@@ -408,6 +501,10 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	getLoggerWithContext(context).Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
+	return true
+}
+
+func scaleOutCluster(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 

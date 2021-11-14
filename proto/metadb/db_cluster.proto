@@ -104,6 +104,17 @@ message DBUpdateClusterStatusResponse {
     DBClusterDTO cluster = 2;
 }
 
+message DBUpdateDemandRequest {
+    string clusterId = 1;
+    string demands = 2;
+    string tenantId = 3;
+}
+
+message DBUpdateDemandResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+}
+
 message DBUpdateClusterInfoRequest {
     string clusterId = 1;
     string name = 2;

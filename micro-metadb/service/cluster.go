@@ -59,6 +59,26 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DB
 	return nil
 }
 
+func (handler *DBServiceHandler) UpdateClusterDemand(ctx context.Context, req *dbpb.DBUpdateDemandRequest, resp *dbpb.DBUpdateDemandResponse) error {
+	if nil == req || nil == resp {
+		return errors.Errorf("UpdateClusterDemand has invalid parameter")
+	}
+	clusterManager := handler.Dao().ClusterManager()
+	log := framework.LogWithContext(ctx)
+	do, demand, err := clusterManager.UpdateClusterDemand(ctx, req.ClusterId, req.Demands, req.TenantId)
+	if err == nil {
+		resp.Status = ClusterSuccessResponseStatus
+		resp.Cluster = convertToClusterDTO(do, demand)
+		log.Infof("UpdateClusterDemand successful, clusterId: %s, tenantId: %s", req.ClusterId, req.TenantId)
+	} else {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
+		log.Errorf("CreateCluster failed, clusterId: %s, tenantId: %s, error: %v", req.ClusterId, req.TenantId, err)
+	}
+
+	return nil
+}
+
 func (handler *DBServiceHandler) DeleteCluster(ctx context.Context, req *dbpb.DBDeleteClusterRequest, resp *dbpb.DBDeleteClusterResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("DeleteCluster has invalid parameter")

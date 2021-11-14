@@ -41,6 +41,10 @@ func Route(g *gin.Engine) {
 	// api
 	apiV1 := g.Group("/api/v1")
 	{
+		apiV1.Use(interceptor.GinOpenTracing())
+		apiV1.Use(interceptor.GinTraceIDHandler())
+		apiV1.Use(interceptor.AccessLog(), gin.Recovery())
+
 		file := apiV1.Group("/file")
 		{
 			file.Use(interceptor.VerifyIdentity)

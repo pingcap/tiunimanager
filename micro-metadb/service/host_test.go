@@ -63,7 +63,7 @@ func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 	filter1 := new(dbpb.DBFilter)
 	filter1.Arch = string(resource.X86)
 	filter1.DiskType = string(resource.Sata)
-	filter1.Purpose = string(resource.General)
+	filter1.Purpose = string(resource.Compute)
 	require := new(dbpb.DBRequirement)
 	require.Exclusive = false
 	require.ComputeReq = new(dbpb.DBComputeRequirement)

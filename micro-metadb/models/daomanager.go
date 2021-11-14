@@ -304,7 +304,7 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		Region:       "Region1",
 		AZ:           "Region1,Zone1",
 		Rack:         "Region1,Zone1,3-1",
-		Purpose:      string(resource.General),
+		Purpose:      string(resource.Compute),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
 		Disks: []resource.Disk{
@@ -335,7 +335,7 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		Region:       "Region1",
 		AZ:           "Region1,Zone1",
 		Rack:         "Region1,Zone1,3-1",
-		Purpose:      string(resource.General),
+		Purpose:      string(resource.Compute),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
 		Disks: []resource.Disk{
@@ -366,7 +366,7 @@ func (dao *DAOManager) InitResourceDataForDev() error {
 		Region:       "Region1",
 		AZ:           "Region1,Zone1",
 		Rack:         "Region1,Zone1,3-1",
-		Purpose:      string(resource.General),
+		Purpose:      string(resource.Compute),
 		DiskType:     string(resource.Sata),
 		Reserved:     false,
 		Disks: []resource.Disk{

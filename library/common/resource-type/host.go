@@ -77,14 +77,13 @@ const (
 	Compute  Purpose = "Compute"
 	Storage  Purpose = "Storage"
 	Dispatch Purpose = "Dispatch"
-	General  Purpose = "General"
 )
 
 func ValidPurposeType(p string) error {
-	if p == string(Compute) || p == string(Storage) || p == string(Dispatch) || p == string(General) {
+	if p == string(Compute) || p == string(Storage) || p == string(Dispatch) {
 		return nil
 	}
-	return errors.New("valid purpose: [Compute | Storage | Dispatch | General]")
+	return errors.New("valid purpose: [Compute | Storage | Dispatch]")
 }
 
 type ClusterType string

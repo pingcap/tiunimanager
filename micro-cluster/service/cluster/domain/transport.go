@@ -328,7 +328,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 		if common.NfsStorageType == request.GetStorageType() {
 			err = os.Rename(filepath.Join(importPrefix, request.GetClusterId(), "temp"), importDir)
 			if err != nil {
-				getLoggerWithContext(ctx).Errorf("move import dir failed, %s", err.Error())
+				getLoggerWithContext(ctx).Errorf("find import dir failed, %s", err.Error())
 				return 0, err
 			}
 		}

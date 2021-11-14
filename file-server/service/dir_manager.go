@@ -16,6 +16,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/common"
 	"path/filepath"
@@ -31,10 +32,10 @@ func InitDirManager() *DirManager {
 	return &DirMgr
 }
 
-func (mgr *DirManager) GetImportPath(clusterId string) (string, error) {
+func (mgr *DirManager) GetImportPath(ctx context.Context, clusterId string) (string, error) {
 	importAbsDir, err := filepath.Abs(common.DefaultImportDir) //todo: get from config center
 	if err != nil {
-		getLogger().Errorf("import dir %s is not vaild", common.DefaultImportDir)
+		getLoggerWithContext(ctx).Errorf("import dir %s is not vaild", common.DefaultImportDir)
 		return "", fmt.Errorf("import dir %s is not vaild", common.DefaultImportDir)
 	}
 	return fmt.Sprintf("%s/%s/temp", importAbsDir, clusterId), nil

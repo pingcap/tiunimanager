@@ -51,6 +51,17 @@ func (m *DAOResourceManager) getDb(ctx context.Context) *gorm.DB {
 	return m.db.WithContext(ctx)
 }
 
+func (m *DAOResourceManager) InitSystemDefaultLabels(ctx context.Context) (err error) {
+	db := m.getDb(ctx)
+	for _, v := range rt.DefaultLabelTypes {
+		err = db.Create(&v).Error
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
+
 func (m *DAOResourceManager) CreateHost(ctx context.Context, host *rt.Host) (id string, err error) {
 	err = m.getDb(ctx).Create(host).Error
 	if err != nil {

@@ -195,6 +195,7 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_USED_COMPUTE, new(resource.UsedCompute))
 	dao.AddTable(TABLE_NAME_USED_PORT, new(resource.UsedPort))
 	dao.AddTable(TABLE_NAME_USED_DISK, new(resource.UsedDisk))
+	dao.AddTable(TABLE_NAME_LABEL, new(resource.Label))
 	dao.AddTable(TABLE_NAME_TIUP_CONFIG, new(TopologyConfig))
 	dao.AddTable(TABLE_NAME_TIUP_TASK, new(TiupTask))
 	dao.AddTable(TABLE_NAME_FLOW, new(FlowDO))
@@ -218,9 +219,9 @@ func (dao *DAOManager) InitData() error {
 
 	innerLog.Infof(" initialization system default data successful")
 
-	//err = dao.initResourceDataForDev()
+	err = dao.initSystemDefaultLabels()
 	if nil != err {
-		innerLog.Errorf("initialize TiEM system test resource failed, error: %v", err)
+		innerLog.Errorf("init system default labels failed, %v\n", err)
 	}
 	return err
 }
@@ -283,6 +284,18 @@ func (dao *DAOManager) initSystemDefaultData() error {
 	})
 	framework.AssertNoErr(err)
 	return err
+}
+
+func (dao *DAOManager) initSystemDefaultLabels() (err error) {
+	resourceManager := dao.ResourceManager()
+	log := framework.LogForkFile(common.LogFileSystem)
+	err = resourceManager.InitSystemDefaultLabels(context.TODO())
+	if err != nil {
+		log.Debugf("init system default labels failed, %v\n", err)
+		return err
+	}
+	log.Debugln("init system default labels succeed")
+	return nil
 }
 
 func (dao *DAOManager) InitResourceDataForDev() error {

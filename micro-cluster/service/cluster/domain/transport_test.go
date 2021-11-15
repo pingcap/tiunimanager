@@ -1080,7 +1080,7 @@ func Test_getDataExportFilePath_case1(t *testing.T) {
 		SecretAccessKey: "admin",
 		EndpointUrl:     "https://minio.pingcap.net:9000",
 	}
-	path := getDataExportFilePath(request, "/tmp/test")
+	path := getDataExportFilePath(request, "/tmp/test", true)
 	assert.Equal(t, path, fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl()))
 }
 
@@ -1088,7 +1088,7 @@ func Test_getDataExportFilePath_case2(t *testing.T) {
 	request := &clusterpb.DataExportRequest{
 		StorageType: common.NfsStorageType,
 	}
-	path := getDataExportFilePath(request, "/tmp/test")
+	path := getDataExportFilePath(request, "/tmp/test", true)
 	assert.Equal(t, path, "/tmp/test/data")
 }
 
@@ -1100,7 +1100,7 @@ func Test_getDataImportFilePath_case1(t *testing.T) {
 		SecretAccessKey: "admin",
 		EndpointUrl:     "https://minio.pingcap.net:9000",
 	}
-	path := getDataImportFilePath(request, "/tmp/test")
+	path := getDataImportFilePath(request, "/tmp/test", true)
 	assert.Equal(t, path, fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl()))
 }
 
@@ -1108,6 +1108,6 @@ func Test_getDataImportFilePath_case2(t *testing.T) {
 	request := &clusterpb.DataImportRequest{
 		StorageType: common.NfsStorageType,
 	}
-	path := getDataImportFilePath(request, "/tmp/test")
+	path := getDataImportFilePath(request, "/tmp/test", true)
 	assert.Equal(t, path, "/tmp/test/data")
 }

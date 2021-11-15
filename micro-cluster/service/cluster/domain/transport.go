@@ -259,7 +259,7 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (int6
 			ClusterId:       request.GetClusterId(),
 			TenantId:        operator.TenantId,
 			TransportType:   string(common.TransportTypeExport),
-			FilePath:        getDataExportFilePath(request, exportDir),
+			FilePath:        getDataExportFilePath(request, exportDir, true),
 			ZipName:         request.GetZipName(),
 			StorageType:     request.GetStorageType(),
 			FlowId:          int64(flow.FlowWork.Id),
@@ -283,7 +283,7 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (int6
 		Password:     request.GetPassword(),
 		FileType:     request.GetFileType(),
 		RecordId:     resp.GetRecordId(),
-		FilePath:     getDataExportFilePath(request, exportDir),
+		FilePath:     getDataExportFilePath(request, exportDir, false),
 		Filter:       request.GetFilter(),
 		Sql:          request.GetSql(),
 		StorageType:  request.GetStorageType(),
@@ -339,7 +339,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 				TenantId:        operator.TenantId,
 				TransportType:   string(common.TransportTypeImport),
 				StorageType:     request.GetStorageType(),
-				FilePath:        getDataImportFilePath(request, importDir),
+				FilePath:        getDataImportFilePath(request, importDir, true),
 				ZipName:         common.DefaultZipName,
 				FlowId:          int64(flow.FlowWork.Id),
 				ReImportSupport: true,
@@ -359,7 +359,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 			ClusterId:   request.GetClusterId(),
 			UserName:    request.GetUserName(),
 			Password:    request.GetPassword(),
-			FilePath:    getDataImportFilePath(request, importDir),
+			FilePath:    getDataImportFilePath(request, importDir, false),
 			RecordId:    resp.GetRecordId(),
 			StorageType: request.GetStorageType(),
 			ConfigPath:  importDir,
@@ -573,20 +573,28 @@ func checkExportParamSupportReimport(request *clusterpb.DataExportRequest) bool 
 	return true
 }
 
-func getDataExportFilePath(request *clusterpb.DataExportRequest, exportDir string) string {
+func getDataExportFilePath(request *clusterpb.DataExportRequest, exportDir string, persist bool) string {
 	var filePath string
 	if common.S3StorageType == request.GetStorageType() {
-		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
+		if persist {
+			filePath = fmt.Sprintf("%s?&endpoint=%s", request.GetBucketUrl(), request.GetEndpointUrl())
+		} else {
+			filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
+		}
 	} else {
 		filePath = filepath.Join(exportDir, "data")
 	}
 	return filePath
 }
 
-func getDataImportFilePath(request *clusterpb.DataImportRequest, importDir string) string {
+func getDataImportFilePath(request *clusterpb.DataImportRequest, importDir string, persist bool) string {
 	var filePath string
 	if common.S3StorageType == request.GetStorageType() {
-		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
+		if persist {
+			filePath = fmt.Sprintf("%s?&endpoint=%s", request.GetBucketUrl(), request.GetEndpointUrl())
+		} else {
+			filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
+		}
 	} else {
 		filePath = filepath.Join(importDir, "data")
 	}

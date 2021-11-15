@@ -19,6 +19,8 @@ package resource
 import (
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"gorm.io/gorm"
 )
 
@@ -40,7 +42,26 @@ type Label struct {
 	DeletedAt gorm.DeletedAt
 }
 
-var DefaultLabelTypes = map[string]Label{
+type Labels map[string]Label
+
+func (labels Labels) getTraitByName(name string) (trait int64, err error) {
+	if label, ok := (labels)[name]; ok {
+		return label.Trait, nil
+	} else {
+		return 0, framework.NewTiEMErrorf(common.TIEM_RESOURCE_TRAIT_NOT_FOUND, "label type %v not found in system default labels", name)
+	}
+}
+
+func (labels Labels) getLabelNamesByTraits(traits int64) (labelNames []string) {
+	for _, v := range labels {
+		if traits&v.Trait == v.Trait {
+			labelNames = append(labelNames, v.Name)
+		}
+	}
+	return
+}
+
+var DefaultLabelTypes = Labels{
 	string(Database):      {Name: string(Database), Category: int8(Cluster), Trait: 0x0000000000000001},
 	string(DataMigration): {Name: string(DataMigration), Category: int8(Cluster), Trait: 0x0000000000000002},
 	string(Compute):       {Name: string(Compute), Category: int8(Componennt), Trait: 0x0000000000000004},
@@ -49,4 +70,12 @@ var DefaultLabelTypes = map[string]Label{
 	string(NvmeSSD):       {Name: string(NvmeSSD), Category: int8(DiskPerf), Trait: 0x0000000000000020},
 	string(SSD):           {Name: string(SSD), Category: int8(DiskPerf), Trait: 0x0000000000000040},
 	string(Sata):          {Name: string(Sata), Category: int8(DiskPerf), Trait: 0x0000000000000080},
+}
+
+func GetTraitByName(name string) (trait int64, err error) {
+	return DefaultLabelTypes.getTraitByName(name)
+}
+
+func GetLabelNamesByTraits(traits int64) (labelNames []string) {
+	return DefaultLabelTypes.getLabelNamesByTraits(traits)
 }

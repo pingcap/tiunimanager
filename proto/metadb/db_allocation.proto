@@ -28,6 +28,7 @@ message DBFilter {
 	string arch = 1;
 	string purpose  = 2;
 	string diskType = 3;
+	int64 hostTraits = 4;
 }
 
 message DBComputeRequirement {

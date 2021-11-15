@@ -849,7 +849,7 @@ func TestHost_SetDiskStatus(t *testing.T) {
 	}
 }
 
-func CreateTestHost(region, zone, rack, hostName, ip, purpose, diskType string, freeCpuCores, freeMemory, availableDiskCount int32) (id string, err error) {
+func CreateTestHost(region, zone, rack, hostName, ip, clusterType, purpose, diskType string, freeCpuCores, freeMemory, availableDiskCount int32) (id string, err error) {
 	h := &resource.Host{
 		HostName:     hostName,
 		IP:           ip,
@@ -866,12 +866,14 @@ func CreateTestHost(region, zone, rack, hostName, ip, purpose, diskType string, 
 		Region:       region,
 		AZ:           zone,
 		Rack:         rack,
+		ClusterType:  clusterType,
 		Purpose:      purpose,
 		DiskType:     diskType,
 		Disks: []resource.Disk{
 			{Name: "sda", Path: "/", Capacity: 256, Status: 1, Type: diskType},
 		},
 	}
+	h.BuildDefaultTraits()
 	for i := 0; i < int(availableDiskCount); i++ {
 		deviceName := fmt.Sprintf("sd%c", 'b'+i)
 		path := fmt.Sprintf("/mnt%d", i+1)
@@ -886,9 +888,9 @@ func CreateTestHost(region, zone, rack, hostName, ip, purpose, diskType string, 
 	return Dao.ResourceManager().CreateHost(context.TODO(), h)
 }
 func TestListHosts(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName1", "111.121.999.132", "TestCompute", string(resource.SSD), 17, 64, 1)
-	id2, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName2", "222.121.999.132", "TestCompute", string(resource.SSD), 16, 64, 0)
-	id3, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName3", "333.121.999.132", "whatever", string(resource.SSD), 15, 64, 0)
+	id1, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName1", "111.121.999.132", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 1)
+	id2, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName2", "222.121.999.132", string(resource.Database), string(resource.Compute), string(resource.SSD), 16, 64, 0)
+	id3, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName3", "333.121.999.132", string(resource.Database), string(resource.Storage), string(resource.SSD), 15, 64, 0)
 	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
 	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id2) }()
 	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id3) }()
@@ -904,16 +906,17 @@ func TestListHosts(t *testing.T) {
 	}{
 		{"normal", args{req: ListHostReq{
 			Status:  0,
-			Purpose: "TestCompute",
+			Purpose: "Compute",
 			Offset:  0,
 			Limit:   2,
 		}}, false, []func(a args, result []resource.Host) bool{
 			func(a args, result []resource.Host) bool { return len(result) == 2 },
-			func(a args, result []resource.Host) bool { return result[1].Purpose == "TestCompute" },
+			func(a args, result []resource.Host) bool { return result[1].Purpose == "Compute" },
+			func(a args, result []resource.Host) bool { return result[0].Traits == 69 },
 		}},
 		{"offset", args{req: ListHostReq{
 			Status:  0,
-			Purpose: "TestCompute",
+			Purpose: "Compute",
 			Offset:  1,
 			Limit:   2,
 		}}, false, []func(a args, result []resource.Host) bool{
@@ -928,7 +931,7 @@ func TestListHosts(t *testing.T) {
 		}},
 		{"without status", args{req: ListHostReq{
 			Status:  resource.HOST_WHATEVER,
-			Purpose: "TestCompute",
+			Purpose: "Compute",
 			Offset:  0,
 			Limit:   5,
 		}}, false, []func(a args, result []resource.Host) bool{
@@ -952,9 +955,9 @@ func TestListHosts(t *testing.T) {
 }
 
 func TestAllocHosts_3Hosts(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName1", "474.111.111.111", string(resource.Compute), string(resource.SSD), 17, 8, 1)
-	id2, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName2", "474.111.111.112", string(resource.Compute), string(resource.SSD), 4, 16, 2)
-	id3, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName3", "474.111.111.113", string(resource.Compute), string(resource.SSD), 4, 8, 1)
+	id1, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName1", "474.111.111.111", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 8, 1)
+	id2, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName2", "474.111.111.112", string(resource.Database), string(resource.Compute), string(resource.SSD), 4, 16, 2)
+	id3, _ := CreateTestHost("Region1", "Zone1", "3-1", "HostName3", "474.111.111.113", string(resource.Database), string(resource.Compute), string(resource.SSD), 4, 8, 1)
 	// Host Status should be inused or exhausted, so delete would failed
 	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
 	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id2) }()
@@ -1031,7 +1034,7 @@ func TestAllocHosts_3Hosts(t *testing.T) {
 }
 
 func TestAllocHosts_1Host(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Zone99", "3-1", "HostName1", "192.168.56.99", string(resource.Compute), string(resource.SSD), 17, 64, 3)
+	id1, _ := CreateTestHost("Region1", "Zone99", "3-1", "HostName1", "192.168.56.99", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 3)
 	// Host Status should be inused or exhausted, so delete would failed
 	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
 
@@ -1094,7 +1097,7 @@ func TestAllocHosts_1Host(t *testing.T) {
 }
 
 func TestAllocHosts_1Host_NotEnough(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Zone100", "3-1", "HostName1", "192.168.56.100", string(resource.Compute), string(resource.SSD), 17, 64, 3)
+	id1, _ := CreateTestHost("Region1", "Zone100", "3-1", "HostName1", "192.168.56.100", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 3)
 	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
 
 	var m AllocReqs = make(map[string][]*HostAllocReq)
@@ -1142,9 +1145,9 @@ func TestAllocHosts_1Host_NotEnough(t *testing.T) {
 }
 
 func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Region1,Zone1", "Region1,Zone1,3-1", "HostName1", "474.111.111.108", string(resource.Compute), string(resource.SSD), 17, 64, 1)
-	id2, _ := CreateTestHost("Region1", "Region1,Zone1", "Region1,Zone1,3-1", "HostName2", "474.111.111.109", string(resource.Compute), string(resource.SSD), 16, 64, 2)
-	id3, _ := CreateTestHost("Region1", "Region1,Zone1", "Region1,Zone1,3-1", "HostName3", "474.111.111.110", string(resource.Compute), string(resource.SSD), 15, 64, 1)
+	id1, _ := CreateTestHost("Region1", "Region1,Zone1", "Region1,Zone1,3-1", "HostName1", "474.111.111.108", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 1)
+	id2, _ := CreateTestHost("Region1", "Region1,Zone1", "Region1,Zone1,3-1", "HostName2", "474.111.111.109", string(resource.Database), string(resource.Compute), string(resource.SSD), 16, 64, 2)
+	id3, _ := CreateTestHost("Region1", "Region1,Zone1", "Region1,Zone1,3-1", "HostName3", "474.111.111.110", string(resource.Database), string(resource.Compute), string(resource.SSD), 15, 64, 1)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 
@@ -1236,9 +1239,9 @@ func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
 }
 
 func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Region1,Zone2", "Region1,Zone2,3-1", "HostName1", "474.111.111.114", string(resource.Compute), string(resource.SSD), 17, 64, 1)
-	id2, _ := CreateTestHost("Region1", "Region1,Zone2", "Region1,Zone2,3-1", "HostName2", "474.111.111.115", string(resource.Compute), string(resource.SSD), 16, 64, 2)
-	id3, _ := CreateTestHost("Region1", "Region1,Zone2", "Region1,Zone2,3-1", "HostName3", "474.111.111.116", string(resource.Storage), string(resource.SSD), 15, 64, 1)
+	id1, _ := CreateTestHost("Region1", "Region1,Zone2", "Region1,Zone2,3-1", "HostName1", "474.111.111.114", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 1)
+	id2, _ := CreateTestHost("Region1", "Region1,Zone2", "Region1,Zone2,3-1", "HostName2", "474.111.111.115", string(resource.Database), string(resource.Compute), string(resource.SSD), 16, 64, 2)
+	id3, _ := CreateTestHost("Region1", "Region1,Zone2", "Region1,Zone2,3-1", "HostName3", "474.111.111.116", string(resource.Database), string(resource.Storage), string(resource.SSD), 15, 64, 1)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 
@@ -1348,9 +1351,9 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 }
 
 func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Region1,Zone3", "Region1,Zone3,3-1", "HostName1", "474.111.111.117", string(resource.Compute), string(resource.SSD), 17, 64, 3)
-	id2, _ := CreateTestHost("Region1", "Region1,Zone3", "Region1,Zone3,3-1", "HostName2", "474.111.111.118", string(resource.Compute), string(resource.SSD), 16, 64, 3)
-	id3, _ := CreateTestHost("Region1", "Region1,Zone3", "Region1,Zone3,3-1", "HostName3", "474.111.111.119", string(resource.Compute), string(resource.SSD), 15, 64, 3)
+	id1, _ := CreateTestHost("Region1", "Region1,Zone3", "Region1,Zone3,3-1", "HostName1", "474.111.111.117", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 3)
+	id2, _ := CreateTestHost("Region1", "Region1,Zone3", "Region1,Zone3,3-1", "HostName2", "474.111.111.118", string(resource.Database), string(resource.Compute), string(resource.SSD), 16, 64, 3)
+	id3, _ := CreateTestHost("Region1", "Region1,Zone3", "Region1,Zone3,3-1", "HostName3", "474.111.111.119", string(resource.Database), string(resource.Compute), string(resource.SSD), 15, 64, 3)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 	/*
@@ -1457,9 +1460,9 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 }
 
 func TestAllocResources_3RequestsInBatch_3Hosts_No_Disk(t *testing.T) {
-	id1, _ := CreateTestHost("Region111", "Region111,Zone3", "Region111,Zone3,3-1", "HostName1", "474.112.111.117", string(resource.Compute), string(resource.SSD), 17, 64, 3)
-	id2, _ := CreateTestHost("Region111", "Region111,Zone3", "Region111,Zone3,3-1", "HostName2", "474.112.111.118", string(resource.Compute), string(resource.SSD), 16, 64, 3)
-	id3, _ := CreateTestHost("Region111", "Region111,Zone3", "Region111,Zone3,3-1", "HostName3", "474.112.111.119", string(resource.Compute), string(resource.SSD), 15, 64, 3)
+	id1, _ := CreateTestHost("Region111", "Region111,Zone3", "Region111,Zone3,3-1", "HostName1", "474.112.111.117", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 3)
+	id2, _ := CreateTestHost("Region111", "Region111,Zone3", "Region111,Zone3,3-1", "HostName2", "474.112.111.118", string(resource.Database), string(resource.Compute), string(resource.SSD), 16, 64, 3)
+	id3, _ := CreateTestHost("Region111", "Region111,Zone3", "Region111,Zone3,3-1", "HostName3", "474.112.111.119", string(resource.Database), string(resource.Compute), string(resource.SSD), 15, 64, 3)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 	/*
@@ -1565,9 +1568,9 @@ func TestAllocResources_3RequestsInBatch_3Hosts_No_Disk(t *testing.T) {
 }
 
 func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Region1,Zone4", "Region1,Zone4,3-1", "HostName1", "474.111.111.127", string(resource.Compute), string(resource.SSD), 17, 64, 3)
-	id2, _ := CreateTestHost("Region1", "Region1,Zone4", "Region1,Zone4,3-1", "HostName2", "474.111.111.128", string(resource.Compute), string(resource.SSD), 16, 64, 3)
-	id3, _ := CreateTestHost("Region1", "Region1,Zone4", "Region1,Zone4,3-1", "HostName3", "474.111.111.129", string(resource.Compute), string(resource.SSD), 15, 64, 3)
+	id1, _ := CreateTestHost("Region1", "Region1,Zone4", "Region1,Zone4,3-1", "HostName1", "474.111.111.127", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 3)
+	id2, _ := CreateTestHost("Region1", "Region1,Zone4", "Region1,Zone4,3-1", "HostName2", "474.111.111.128", string(resource.Database), string(resource.Compute), string(resource.SSD), 16, 64, 3)
+	id3, _ := CreateTestHost("Region1", "Region1,Zone4", "Region1,Zone4,3-1", "HostName3", "474.111.111.129", string(resource.Database), string(resource.Compute), string(resource.SSD), 15, 64, 3)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 	/*
@@ -1719,9 +1722,9 @@ func TestAllocResources_3RequestsInBatch_SpecifyHost_Strategy(t *testing.T) {
 }
 
 func TestAllocResources_SpecifyHost_Strategy_No_Disk(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Region1,Zone5", "Region1,Zone5,3-1", "HostName1", "474.111.111.137", string(resource.Compute), string(resource.SSD), 17, 64, 3)
-	id2, _ := CreateTestHost("Region1", "Region1,Zone5", "Region1,Zone5,3-1", "HostName2", "474.111.111.138", string(resource.Compute), string(resource.SSD), 16, 64, 3)
-	id3, _ := CreateTestHost("Region1", "Region1,Zone5", "Region1,Zone5,3-1", "HostName3", "474.111.111.139", string(resource.Compute), string(resource.SSD), 15, 64, 3)
+	id1, _ := CreateTestHost("Region1", "Region1,Zone5", "Region1,Zone5,3-1", "HostName1", "474.111.111.137", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 3)
+	id2, _ := CreateTestHost("Region1", "Region1,Zone5", "Region1,Zone5,3-1", "HostName2", "474.111.111.138", string(resource.Database), string(resource.Compute), string(resource.SSD), 16, 64, 3)
+	id3, _ := CreateTestHost("Region1", "Region1,Zone5", "Region1,Zone5,3-1", "HostName3", "474.111.111.139", string(resource.Database), string(resource.Compute), string(resource.SSD), 15, 64, 3)
 	t.Log(id1, id2, id3)
 	// Host Status should be inused or exhausted, so delete would failed
 	/*
@@ -1876,7 +1879,7 @@ func TestAllocResources_SpecifyHost_Strategy_No_Disk(t *testing.T) {
 }
 
 func TestUpdateHost(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "TestUpdateZone", "3-1", "HostName1", "474.111.111.140", string(resource.Compute), string(resource.SSD), 17, 64, 3)
+	id1, _ := CreateTestHost("Region1", "TestUpdateZone", "3-1", "HostName1", "474.111.111.140", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 3)
 	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
 	reserved_req := dbpb.DBReserveHostRequest{
 		Reserved: true,
@@ -1897,7 +1900,7 @@ func TestUpdateHost(t *testing.T) {
 }
 
 func TestAllocResources_SpecifyHost_Strategy_TakeOver(t *testing.T) {
-	id1, _ := CreateTestHost("Region1", "Zone4", "3-1", "HostName1", "474.111.111.147", string(resource.Compute), string(resource.SSD), 17, 64, 3)
+	id1, _ := CreateTestHost("Region1", "Zone4", "3-1", "HostName1", "474.111.111.147", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 3)
 	reserved_req := dbpb.DBReserveHostRequest{
 		Reserved: true,
 	}
@@ -1962,9 +1965,9 @@ func TestAllocResources_SpecifyHost_Strategy_TakeOver(t *testing.T) {
 }
 
 func TestGetStocks(t *testing.T) {
-	id1, _ := CreateTestHost("Region47", "Region47,Zone15", "Region47,Zone15,3-1", "HostName1", "474.110.115.137", string(resource.Compute), string(resource.SSD), 17, 64, 3)
-	id2, _ := CreateTestHost("Region47", "Region47,Zone15", "Region47,Zone15,3-1", "HostName2", "474.110.115.138", string(resource.Compute), string(resource.SSD), 16, 64, 3)
-	id3, _ := CreateTestHost("Region47", "Region47,Zone25", "Region47,Zone25,3-1", "HostName3", "474.110.115.139", string(resource.Compute), string(resource.SSD), 15, 64, 3)
+	id1, _ := CreateTestHost("Region47", "Region47,Zone15", "Region47,Zone15,3-1", "HostName1", "474.110.115.137", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 3)
+	id2, _ := CreateTestHost("Region47", "Region47,Zone15", "Region47,Zone15,3-1", "HostName2", "474.110.115.138", string(resource.Database), string(resource.Compute), string(resource.SSD), 16, 64, 3)
+	id3, _ := CreateTestHost("Region47", "Region47,Zone25", "Region47,Zone25,3-1", "HostName3", "474.110.115.139", string(resource.Database), string(resource.Compute), string(resource.SSD), 15, 64, 3)
 
 	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id1) }()
 	defer func() { _ = Dao.ResourceManager().DeleteHost(context.TODO(), id2) }()
@@ -2043,6 +2046,101 @@ func TestGetStocks(t *testing.T) {
 					t.Errorf("ListHosts() assert false, index = %v, stocks %v", i, stocks)
 				}
 			}
+		})
+	}
+}
+
+func TestAllocResources_1Requirement_3Hosts_Filted_by_Label(t *testing.T) {
+	id1, _ := CreateTestHost("Region59", "Region59,Zone59", "Region59,Zone59,3-1", "HostName1", "474.111.111.158", string(resource.Database), string(resource.Compute)+","+string(resource.Storage), string(resource.SSD), 17, 64, 1)
+	id2, _ := CreateTestHost("Region59", "Region59,Zone59", "Region59,Zone59,3-1", "HostName2", "474.111.111.159", string(resource.Database), string(resource.Compute), string(resource.SSD), 16, 64, 2)
+	id3, _ := CreateTestHost("Region59", "Region59,Zone59", "Region59,Zone59,3-1", "HostName3", "474.111.111.150", string(resource.Database), string(resource.Compute), string(resource.SSD), 15, 64, 1)
+	t.Log(id1, id2, id3)
+	// Host Status should be inused or exhausted, so delete would failed
+
+	//	defer Dao.ResourceManager().DeleteHost(id1)
+	//	defer Dao.ResourceManager().DeleteHost(id2)
+	//	defer Dao.ResourceManager().DeleteHost(id3)
+
+	loc := new(dbpb.DBLocation)
+	loc.Region = "Region59"
+	loc.Zone = "Zone59"
+	filter := new(dbpb.DBFilter)
+	filter.Arch = string(resource.X86)
+	//filter.DiskType = string(resource.SSD)
+	//filter.Purpose = string(resource.Compute)
+	filter.HostTraits = 5
+	require := new(dbpb.DBRequirement)
+	require.ComputeReq = new(dbpb.DBComputeRequirement)
+	require.ComputeReq.CpuCores = 4
+	require.ComputeReq.Memory = 8
+	require.DiskReq = new(dbpb.DBDiskRequirement)
+	require.DiskReq.Capacity = 256
+	require.DiskReq.DiskType = string(resource.SSD)
+	require.DiskReq.NeedDisk = true
+	require.PortReq = append(require.PortReq, &dbpb.DBPortRequirement{
+		Start:   10000,
+		End:     10010,
+		PortCnt: 5,
+	})
+
+	var test_req dbpb.DBAllocRequest
+	test_req.Applicant = new(dbpb.DBApplicant)
+	test_req.Applicant.HolderId = "TestCluster59"
+	test_req.Applicant.RequestId = "TestRequestID59"
+	test_req.Requires = append(test_req.Requires, &dbpb.DBAllocRequirement{
+		Location:   loc,
+		HostFilter: filter,
+		Strategy:   int32(resource.RandomRack),
+		Require:    require,
+		Count:      3,
+	})
+
+	type args struct {
+		request *dbpb.DBAllocRequest
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"normal", args{
+			request: &test_req,
+		}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rsp, err := Dao.ResourceManager().AllocResources(context.TODO(), tt.args.request)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			assert.Equal(t, 3, len(rsp.Results))
+			assert.Equal(t, int32(0), rsp.Results[0].Reqseq)
+			assert.Equal(t, int32(0), rsp.Results[1].Reqseq)
+			assert.Equal(t, int32(0), rsp.Results[2].Reqseq)
+			assert.Equal(t, int32(10003), rsp.Results[0].PortRes[0].Ports[3])
+			assert.True(t, rsp.Results[0].HostIp != rsp.Results[1].HostIp)
+			assert.True(t, rsp.Results[0].HostIp != rsp.Results[2].HostIp)
+			assert.True(t, rsp.Results[2].HostIp != rsp.Results[1].HostIp)
+			assert.True(t, rsp.Results[0].HostIp == "474.111.111.158" || rsp.Results[0].HostIp == "474.111.111.159" || rsp.Results[0].HostIp == "474.111.111.150")
+			assert.True(t, rsp.Results[1].HostIp == "474.111.111.158" || rsp.Results[1].HostIp == "474.111.111.159" || rsp.Results[1].HostIp == "474.111.111.150")
+			assert.True(t, rsp.Results[2].HostIp == "474.111.111.158" || rsp.Results[2].HostIp == "474.111.111.159" || rsp.Results[2].HostIp == "474.111.111.150")
+			assert.Equal(t, int32(4), rsp.Results[0].ComputeRes.CpuCores)
+			assert.Equal(t, int32(8), rsp.Results[0].ComputeRes.Memory)
+			var host resource.Host
+			MetaDB.First(&host, "IP = ?", "474.111.111.158")
+			assert.Equal(t, int32(17-4), host.FreeCpuCores)
+			assert.Equal(t, int32(64-8), host.FreeMemory)
+			assert.True(t, host.Stat == int32(resource.HOST_INUSED))
+			var host2 resource.Host
+			MetaDB.First(&host2, "IP = ?", "474.111.111.159")
+			assert.Equal(t, int32(16-4), host2.FreeCpuCores)
+			assert.Equal(t, int32(64-8), host2.FreeMemory)
+			assert.True(t, host2.Stat == int32(resource.HOST_INUSED))
+			var host3 resource.Host
+			MetaDB.First(&host3, "IP = ?", "474.111.111.150")
+			assert.Equal(t, int32(15-4), host3.FreeCpuCores)
+			assert.Equal(t, int32(64-8), host3.FreeMemory)
+			assert.True(t, host3.Stat == int32(resource.HOST_INUSED))
 		})
 	}
 }

@@ -366,6 +366,7 @@ func copyAllocRequirement(src *clusterpb.AllocRequirement, dst *dbpb.DBAllocRequ
 	dst.HostFilter.Arch = src.HostFilter.Arch
 	dst.HostFilter.Purpose = src.HostFilter.Purpose
 	dst.HostFilter.DiskType = src.HostFilter.DiskType
+	dst.HostFilter.HostTraits = src.HostFilter.HostTraits
 
 	// copy requirement
 	dst.Require = new(dbpb.DBRequirement)

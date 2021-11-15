@@ -259,3 +259,32 @@ func (h *Host) AfterFind(tx *gorm.DB) (err error) {
 	err = tx.Find(&(h.Disks), "HOST_ID = ?", h.ID).Error
 	return
 }
+
+func (h *Host) getPurposes() []string {
+	return strings.Split(h.Purpose, ",")
+}
+
+func (h *Host) addTraits(p string) (err error) {
+	if trait, err := GetTraitByName(p); err == nil {
+		h.Traits = h.Traits | trait
+	} else {
+		return err
+	}
+	return nil
+}
+
+func (h *Host) BuildDefaultTraits() (err error) {
+	if err := h.addTraits(h.ClusterType); err != nil {
+		return err
+	}
+	purposes := h.getPurposes()
+	for _, p := range purposes {
+		if err := h.addTraits(p); err != nil {
+			return err
+		}
+	}
+	if err := h.addTraits(h.DiskType); err != nil {
+		return err
+	}
+	return nil
+}

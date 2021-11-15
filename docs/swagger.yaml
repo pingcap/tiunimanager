@@ -2024,11 +2024,6 @@ paths:
       - application/json
       description: query records of import and export
       parameters:
-      - description: cluster id
-        in: path
-        name: clusterId
-        required: true
-        type: string
       - in: query
         name: clusterId
         type: string

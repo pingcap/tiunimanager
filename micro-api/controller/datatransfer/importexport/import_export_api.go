@@ -158,8 +158,7 @@ func ImportData(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param clusterId path string true "cluster id"
-// @Param dataTransportQueryReq query DataTransportQueryReq false "transport records query condition"
+// @Param dataTransportQueryReq query DataTransportQueryReq true "transport records query condition"
 // @Success 200 {object} controller.CommonResult{data=DataTransportRecordQueryResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

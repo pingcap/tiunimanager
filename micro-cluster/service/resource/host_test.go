@@ -786,3 +786,48 @@ func Test_RecycleResources_Succeed(t *testing.T) {
 
 	assert.True(t, out.Rs.Code == int32(codes.OK))
 }
+
+func Test_buildDBRecycleRequire(t *testing.T) {
+	var recycleType int32 = 3
+	holder_id := "TEST_CLUSTER3"
+	request_id := "TEST_REQ3"
+	host_id := "TEST_HOST3"
+	host_ip := "111.111.111.111"
+	diskId1 := "TEST_DISK1"
+	diskId2 := "TEST_DISK2"
+
+	var src clusterpb.RecycleRequire
+	src.RecycleType = recycleType
+	src.HolderId = holder_id
+	src.RequestId = request_id
+	src.HostId = host_id
+	src.HostIp = host_ip
+	src.ComputeReq = new(clusterpb.ComputeRequirement)
+	src.ComputeReq.CpuCores = 32
+	src.ComputeReq.Memory = 64
+	src.DiskReq = append(src.DiskReq, &clusterpb.DiskResource{
+		DiskId: diskId1,
+	})
+	src.DiskReq = append(src.DiskReq, &clusterpb.DiskResource{
+		DiskId: diskId2,
+	})
+	src.PortReq = append(src.PortReq, &clusterpb.PortResource{
+		Ports: []int32{1000, 1001, 1002},
+	})
+	src.PortReq = append(src.PortReq, &clusterpb.PortResource{
+		Ports: []int32{1003, 1004, 1005},
+	})
+
+	var dst dbpb.DBRecycleRequire
+	buildDBRecycleRequire(&src, &dst)
+	assert.Equal(t, holder_id, dst.HolderId)
+	assert.Equal(t, host_id, dst.HostId)
+	assert.Equal(t, int32(32), dst.ComputeReq.CpuCores)
+	assert.Equal(t, int32(64), dst.ComputeReq.Memory)
+	assert.Equal(t, 2, len(dst.DiskReq))
+	assert.Equal(t, 2, len(dst.PortReq))
+	assert.Equal(t, diskId1, dst.DiskReq[0].DiskId)
+	assert.Equal(t, diskId2, dst.DiskReq[1].DiskId)
+	assert.True(t, dst.PortReq[0].Ports[0] == 1000 && dst.PortReq[0].Ports[1] == 1001 && dst.PortReq[0].Ports[2] == 1002)
+	assert.True(t, dst.PortReq[1].Ports[0] == 1003 && dst.PortReq[1].Ports[1] == 1004 && dst.PortReq[1].Ports[2] == 1005)
+}

@@ -117,7 +117,7 @@ message DBRecycleRequire {
 	string hostId = 4;
 	string hostIp = 5;
 	DBComputeRequirement computeReq = 6;
-	DBDiskResource diskReq = 7;
+	repeated DBDiskResource diskReq = 7;
 	repeated DBPortResource portReq = 8;
 }
 

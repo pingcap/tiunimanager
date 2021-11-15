@@ -283,6 +283,7 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 				FilePath:      infos[i].GetRecord().GetFilePath(),
 				StartTime:     infos[i].GetRecord().GetStartTime(),
 				EndTime:       infos[i].GetRecord().GetEndTime(),
+				Comment:       infos[i].GetRecord().GetComment(),
 				DisplayStatus: &clusterpb.DisplayStatusDTO{
 					StatusCode: strconv.Itoa(int(v.Flow.Status)),
 					//StatusName:      v.Flow.StatusAlias,

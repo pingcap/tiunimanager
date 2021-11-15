@@ -3538,6 +3538,9 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
+                "comment": {
+                    "type": "string"
+                },
                 "endTime": {
                     "type": "string"
                 },

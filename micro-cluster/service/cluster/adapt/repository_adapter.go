@@ -101,7 +101,8 @@ func (c ClusterRepoAdapter) AddCluster(ctx context.Context, cluster *domain.Clus
 	}
 	return nil
 }
-
+//ClusterAggregation应该加一个DemandModified的bool变量 在application.go中
+//saveparameter中DBParameterRecordDTO也需要添加commondemand
 func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.ClusterAggregation) error {
 	cluster := aggregation.Cluster
 
@@ -174,7 +175,7 @@ func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.Clu
 			}
 			aggregation.LastRecoverRecord.Id = uint(resp.RecoverRecord.Id)
 		}*/
-
+//这里需要save parameter
 	if aggregation.LastParameterRecord != nil && aggregation.LastParameterRecord.Id == 0 {
 		record := aggregation.LastParameterRecord
 		resp, err := client.DBClient.SaveParametersRecord(ctx, &dbpb.DBSaveParametersRequest{
@@ -455,7 +456,7 @@ func ParseTaskDTO(dto *dbpb.DBTaskDTO) *domain.TaskEntity {
 		EndTime:    dto.EndTime,
 	}
 }
-
+//
 func ConvertClusterToDTO(cluster *domain.Cluster) (dto *dbpb.DBClusterDTO) {
 	if cluster == nil {
 		return
@@ -479,8 +480,8 @@ func ConvertClusterToDTO(cluster *domain.Cluster) (dto *dbpb.DBClusterDTO) {
 		dto.Tags = string(bytes)
 	}
 
-	if len(cluster.Demands) > 0 {
-		bytes, _ := json.Marshal(cluster.Demands)
+	if len(cluster.NodeDemands) > 0 {
+		bytes, _ := json.Marshal(cluster.NodeDemands)
 		dto.Demands = string(bytes)
 	}
 
@@ -509,7 +510,7 @@ func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 	}
 
 	json.Unmarshal([]byte(dto.Tags), &cluster.Tags)
-	json.Unmarshal([]byte(dto.Demands), &cluster.Demands)
+	json.Unmarshal([]byte(dto.Demands), &cluster.NodeDemands)
 
 	return
 }

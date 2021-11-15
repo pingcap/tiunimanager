@@ -29,7 +29,7 @@ import (
 	"github.com/pingcap/errors"
 	"gorm.io/gorm"
 )
-
+//cluster表
 type Cluster struct {
 	Entity
 	Name                    string
@@ -43,11 +43,12 @@ type Cluster struct {
 	CurrentDemandId         uint
 	CurrentFlowId           uint
 }
-
+//demand表
 type DemandRecord struct {
 	Record
 	ClusterId string `gorm:"not null;type:varchar(22);default:null"`
-	Content   string `gorm:"type:text"`
+	NodeDemand   string `gorm:"type:text"`
+	CommonDemand string `gorm:"type:text"`
 }
 
 type TopologyConfig struct {
@@ -146,8 +147,8 @@ func (m *DAOClusterManager) UpdateClusterStatus(ctx context.Context, clusterId s
 	err = m.Db(ctx).Model(cluster).Where("id = ?", clusterId).First(cluster).Update("status", status).Error
 	return cluster, err
 }
-
-func (m *DAOClusterManager) UpdateClusterDemand(ctx context.Context, clusterId string, content string, tenantId string) (cluster *Cluster, demand *DemandRecord, err error) {
+//增加了commondemand
+func (m *DAOClusterManager) UpdateClusterDemand(ctx context.Context, clusterId string, content string, common string, tenantId string) (cluster *Cluster, demand *DemandRecord, err error) {
 	if "" == clusterId || "" == tenantId {
 		return nil, nil, errors.New(fmt.Sprintf("UpdateClusterDemand has invalid parameter, clusterId: %s, content: %s, content: %s", clusterId, tenantId, content))
 	}
@@ -155,7 +156,8 @@ func (m *DAOClusterManager) UpdateClusterDemand(ctx context.Context, clusterId s
 	cluster = &Cluster{}
 	demand = &DemandRecord{
 		ClusterId: clusterId,
-		Content:   content,
+		NodeDemand:   content,
+		CommonDemand: common,
 		Record: Record{
 			TenantId: tenantId,
 		},

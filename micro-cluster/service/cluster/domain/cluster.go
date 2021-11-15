@@ -39,7 +39,8 @@ type Cluster struct {
 	RecoverInfo    RecoverInfo
 	Status         ClusterStatus
 
-	Demands []*ClusterComponentDemand
+	NodeDemands []*ClusterComponentDemand
+	CommonDemand *ClusterCommonDemand
 
 	WorkFlowId uint
 
@@ -70,14 +71,21 @@ type ClusterComponentDemand struct {
 	DistributionItems []*ClusterNodeDistributionItem
 }
 
+type ClusterCommonDemand struct {
+	Exclusive bool
+	Region string
+	CpuArchitecture string
+}
+
 type ClusterDemandRecord struct {
 	Id         uint
 	TenantId   string
 	ClusterId  string
-	Content    []*ClusterComponentDemand
+	CommonDemand *ClusterCommonDemand
+	Content    []*ClusterComponentDemand  //改成node？
 	CreateTime time.Time
 }
-
+//为什么和api那层命名不一样
 type ClusterNodeDistributionItem struct {
 	ZoneCode string
 	SpecCode string

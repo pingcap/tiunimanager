@@ -323,6 +323,8 @@ func TestCreateCluster(t *testing.T) {
 		},
 		&clusterpb.ClusterCommonDemandDTO{
 			Exclusive: false,
+			Region: "rrrr",
+			CpuArchitecture: "aaaaa",
 		},
 		[]*clusterpb.ClusterNodeDemandDTO{
 			{ComponentType: "TiDB", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{

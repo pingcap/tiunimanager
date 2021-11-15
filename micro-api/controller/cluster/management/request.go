@@ -25,7 +25,7 @@ type CreateReq struct {
 	ClusterCommonDemand
 	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
 }
-
+//要不要放到vo.go中去
 type ClusterCommonDemand struct {
 	Exclusive       bool   `json:"exclusive" form:"exclusive"`
 	Region          string `json:"region" form:"region"`

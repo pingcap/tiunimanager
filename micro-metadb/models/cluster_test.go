@@ -134,7 +134,7 @@ func TestUpdateClusterDemand(t *testing.T) {
 
 		demandId := cluster.CurrentDemandId
 
-		cluster, demand, err := clusterTbl.UpdateClusterDemand(context.TODO(), cluster.ID, "aaa", cluster.TenantId)
+		cluster, demand, err := clusterTbl.UpdateClusterDemand(context.TODO(), cluster.ID, "aaa", "bbb", cluster.TenantId)
 		if err != nil {
 			t.Errorf("UpdateClusterDemand() error = %v", err)
 		}
@@ -153,7 +153,7 @@ func TestUpdateClusterDemand(t *testing.T) {
 	})
 
 	t.Run("empty clusterId", func(t *testing.T) {
-		_, _, err := clusterTbl.UpdateClusterDemand(context.TODO(), "", "aaa", "111")
+		_, _, err := clusterTbl.UpdateClusterDemand(context.TODO(), "", "aaa", "bbb", "111")
 		if err == nil {
 			t.Errorf("UpdateClusterDemand() error = %v", err)
 		}
@@ -260,7 +260,7 @@ func TestUpdateTopologyConfig(t *testing.T) {
 	})
 
 	t.Run("empty clusterId", func(t *testing.T) {
-		_, _, err := clusterTbl.UpdateClusterDemand(context.TODO(), "", "aaa", "111")
+		_, _, err := clusterTbl.UpdateClusterDemand(context.TODO(), "", "aaa", "bbb", "111")
 		if err == nil {
 			t.Errorf("UpdateClusterDemand() error = %v", err)
 		}
@@ -541,7 +541,7 @@ func TestListClusterDetails(t *testing.T) {
 	f, _ := CreateFlow(MetaDB, "flow1", "flow1", cluster1.ID, "111")
 	defer MetaDB.Delete(f)
 	clusterTbl := Dao.ClusterManager()
-	cluster1, _, _ = clusterTbl.UpdateClusterDemand(context.TODO(), cluster1.ID, "demand1", "111")
+	cluster1, _, _ = clusterTbl.UpdateClusterDemand(context.TODO(), cluster1.ID, "demand1", "common demand", "111")
 	cluster1, _ = clusterTbl.UpdateClusterFlowId(context.TODO(), cluster1.ID, f.ID)
 	cluster1, _ = clusterTbl.UpdateTopologyConfig(context.TODO(), cluster1.ID, "tiup1", "111")
 
@@ -573,8 +573,8 @@ func TestListClusterDetails(t *testing.T) {
 			t.Errorf("ListClusters() clusters = %v, want = %v", results[0], cluster1)
 		}
 
-		if results[0].DemandRecord.Content != "demand1" {
-			t.Errorf("ListClusters() DemandRecord = %v, want = %v", results[0].DemandRecord.Content, "demand1")
+		if results[0].DemandRecord.NodeDemand != "demand1" {
+			t.Errorf("ListClusters() DemandRecord = %v, want = %v", results[0].DemandRecord.NodeDemand, "demand1")
 		}
 		if results[0].TopologyConfig.Content != "tiup1" {
 			t.Errorf("ListClusters() TopologyConfig = %v, want = %v", results[0].TopologyConfig.Content, "tiup1")
@@ -795,7 +795,7 @@ func TestFetchCluster(t *testing.T) {
 		}
 	})
 	t.Run("with demand", func(t *testing.T) {
-		cluster, demand, _ := clusterTbl.UpdateClusterDemand(context.TODO(), cluster.ID, "demand content", defaultTenantId)
+		cluster, demand, _ := clusterTbl.UpdateClusterDemand(context.TODO(), cluster.ID, "demand content", "common demand", defaultTenantId)
 		gotResult, err := clusterTbl.FetchCluster(context.TODO(), cluster.ID)
 		if err != nil {
 			t.Errorf("FetchCluster() error = %v", err)
@@ -813,20 +813,20 @@ func TestFetchCluster(t *testing.T) {
 			t.Errorf("FetchCluster() want DemandRecord id = %v, got = %v", cluster.CurrentDemandId, gotResult.Cluster.CurrentDemandId)
 			return
 		}
-		if gotResult.DemandRecord.Content != demand.Content {
-			t.Errorf("FetchCluster() want DemandRecord content = %v, got = %v", demand.Content, gotResult.DemandRecord.Content)
+		if gotResult.DemandRecord.NodeDemand != demand.NodeDemand {
+			t.Errorf("FetchCluster() want DemandRecord content = %v, got = %v", demand.NodeDemand, gotResult.DemandRecord.NodeDemand)
 			return
 		}
 	})
 	t.Run("with demand err", func(t *testing.T) {
-		cluster, demand, _ := clusterTbl.UpdateClusterDemand(context.TODO(), cluster.ID, "demand content", defaultTenantId)
+		cluster, demand, _ := clusterTbl.UpdateClusterDemand(context.TODO(), cluster.ID, "demand content", "common demand", defaultTenantId)
 		MetaDB.Delete(demand)
 		_, err := clusterTbl.FetchCluster(context.TODO(), cluster.ID)
 		if err == nil {
 			t.Errorf("FetchCluster() want error")
 			return
 		}
-		clusterTbl.UpdateClusterDemand(context.TODO(), cluster.ID, "demand content", defaultTenantId)
+		clusterTbl.UpdateClusterDemand(context.TODO(), cluster.ID, "demand content", "common demand", defaultTenantId)
 	})
 	t.Run("with config", func(t *testing.T) {
 		cluster, _ := clusterTbl.UpdateTopologyConfig(context.TODO(), cluster.ID, "config content", defaultTenantId)

@@ -31,7 +31,7 @@ import (
 var ClusterSuccessResponseStatus = &dbpb.DBClusterResponseStatus{Code: 0}
 var ClusterNoResultResponseStatus = &dbpb.DBClusterResponseStatus{Code: 1}
 var BizErrResponseStatus = &dbpb.DBClusterResponseStatus{Code: 2}
-
+//这里牵涉到的req.cluster是否需要更新demand
 func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DBCreateClusterRequest, resp *dbpb.DBCreateClusterResponse) (err error) {
 	if nil == req || nil == resp {
 		return errors.Errorf("CreateCluster has invalid parameter")
@@ -41,7 +41,7 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DB
 	clusterManager := handler.Dao().ClusterManager()
 	cluster, err := clusterManager.CreateCluster(ctx, dto.Name, dto.DbPassword, dto.ClusterType, dto.VersionCode, dto.Tls, dto.Tags, dto.OwnerId, dto.TenantId)
 	if nil == err {
-		do, demand, newErr := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
+		do, demand, newErr := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, req.Cluster.Demands, cluster.TenantId)
 		if newErr == nil {
 			resp.Status = ClusterSuccessResponseStatus
 			resp.Cluster = convertToClusterDTO(do, demand)
@@ -660,7 +660,7 @@ func convertToClusterDTO(do *models.Cluster, demand *models.DemandRecord) (dto *
 	}
 
 	if demand != nil {
-		dto.Demands = demand.Content
+		dto.Demands = demand.NodeDemand
 	}
 	return
 }

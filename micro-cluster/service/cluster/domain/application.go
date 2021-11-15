@@ -57,6 +57,8 @@ type ClusterAggregation struct {
 
 	ConfigModified bool
 
+	DemandModified bool
+
 	LastBackupRecord *BackupRecord
 
 	LastRecoverRecord *RecoverRecord
@@ -67,6 +69,9 @@ type ClusterAggregation struct {
 var contextClusterKey = "clusterAggregation"
 var contextTakeoverReqKey = "takeoverRequest"
 
+//commondemand和demandDTOs有何不同呢？它们是如何生成的呢？
+//哦还是一个是commondemand一个是node
+//那么commondemand怎么用呢？用在哪呢
 func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
@@ -86,7 +91,9 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
 
-	cluster.Demands = demands
+	cluster.NodeDemands = demands
+	//这里传递commondemand 需要一个parse函数
+	cluster.CommonDemand = parseCommonDemandFromDTO(commonDemand)
 
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
@@ -354,7 +361,7 @@ func collectorTiDBLogConfig(task *TaskEntity, ctx *FlowContext) bool {
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 
-	demands := clusterAggregation.Cluster.Demands
+	demands := clusterAggregation.Cluster.NodeDemands
 
 	clusterAggregation.AvailableResources = &clusterpb.AllocHostResponse{}
 	err := resource.NewResourceManager().AllocHosts(flowContext, convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
@@ -749,6 +756,15 @@ func parseNodeDemandFromDTO(dto *clusterpb.ClusterNodeDemandDTO) (demand *Cluste
 		DistributionItems: items,
 	}
 
+	return demand
+}
+
+func parseCommonDemandFromDTO(dto *clusterpb.ClusterCommonDemandDTO) (demand *ClusterCommonDemand) {
+	demand = &ClusterCommonDemand{
+		Exclusive: dto.Exclusive,
+		Region: dto.Region,
+		CpuArchitecture: dto.CpuArchitecture,
+	}
 	return demand
 }
 

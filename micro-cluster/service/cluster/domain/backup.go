@@ -210,8 +210,8 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
 
-	cluster.Demands = demands
-
+	cluster.NodeDemands = demands
+	//还需要更新commondemand哦
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
 

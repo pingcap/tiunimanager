@@ -30,6 +30,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net"
+	"os"
 )
 
 type TiUPTiDBMetadataManager struct {
@@ -95,6 +96,30 @@ func (t TiUPTiDBMetadataManager) FetchFromRemoteCluster(ctx context.Context, req
 
 	return metadata, err
 }
+
+func (t TiUPTiDBMetadataManager) FetchFromLocal(ctx context.Context, tiupPath string, clusterName string) (spec.Metadata, error) {
+
+	fileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", tiupPath, clusterName)
+	file, err := os.Open(fileName)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("FetchFromLocal, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "open file error", err)
+	}
+	defer file.Close()
+
+	dataByte, err := ioutil.ReadAll(file)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("FetchFromLocal, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "read file error", err)
+	}
+
+	metadata := &spec.ClusterMeta{}
+	err = yaml.Unmarshal(dataByte, metadata)
+
+	return metadata, err
+}
+
+
 
 func (t TiUPTiDBMetadataManager) RebuildMetadataFromComponents(ctx context.Context, cluster *domain.Cluster, components []*domain.ComponentGroup) (spec.Metadata, error) {
 	panic("implement me")

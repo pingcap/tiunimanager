@@ -572,15 +572,6 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func syncTopologyAndStatus(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
-	clusterAggregation.StatusModified = true
-	clusterAggregation.Cluster.Online()
-
-	task.Success(nil)
-	return true
-}
-
 func setClusterOffline(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.StatusModified = true
@@ -609,7 +600,23 @@ func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 }
 
 func syncTopology(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+
+	metadata, err := MetadataMgr.FetchFromLocal(ctx.TODO(), ".tiup/", clusterAggregation.Cluster.ClusterName)
+
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	clusterAggregation.CurrentTopologyConfigRecord = &TopologyConfigRecord{
+		TenantId:    clusterAggregation.Cluster.TenantId,
+		ClusterId:   clusterAggregation.Cluster.Id,
+		ConfigModel:  metadata.GetTopology().(*spec.Specification),
+	}
+	clusterAggregation.ConfigModified = true
 	task.Success(nil)
+
 	return true
 }
 

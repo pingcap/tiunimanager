@@ -49,6 +49,7 @@ type ClusterAccessProxy interface {
 
 type MetadataManager interface {
 	FetchFromRemoteCluster(ctx context.Context, request *clusterpb.ClusterTakeoverReqDTO) (spec.Metadata, error)
+	FetchFromLocal(ctx context.Context, tiupPath string, clusterName string) (spec.Metadata, error)
 	RebuildMetadataFromComponents(ctx context.Context, cluster *Cluster, components []*ComponentGroup) (spec.Metadata, error)
 	ParseComponentsFromMetaData(ctx context.Context, meta spec.Metadata) ([]*ComponentGroup, error)
 	ParseClusterInfoFromMetaData(ctx context.Context, meta spec.BaseMeta) (clusterType string, user string, group string, version string)

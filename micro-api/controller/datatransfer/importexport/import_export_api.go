@@ -205,6 +205,7 @@ func DescribeDataTransport(c *gin.Context) {
 					Status:        *management.ParseStatusFromDTO(value.DisplayStatus),
 					StartTime:     time.Unix(value.GetStartTime(), 0),
 					EndTime:       time.Unix(value.GetEndTime(), 0),
+					Comment:       value.GetComment(),
 				}
 			}
 			result := controller.SuccessWithPage(data, *controller.ParsePageFromDTO(respDTO.PageReq))

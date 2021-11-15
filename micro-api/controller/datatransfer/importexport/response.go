@@ -38,6 +38,7 @@ type DataTransportInfo struct {
 	Status        controller.StatusInfo `json:"status"`
 	FilePath      string                `json:"filePath"`
 	StorageType   string                `json:"storageType"`
+	Comment       string                `json:"comment"`
 }
 
 type DataTransportRecordQueryResp struct {

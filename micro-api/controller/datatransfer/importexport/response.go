@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,25 +17,28 @@
 package importexport
 
 import (
+	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"time"
 )
 
 type DataExportResp struct {
-	RecordId string `json:"recordId"`
+	RecordId int64 `json:"recordId"`
 }
 
 type DataImportResp struct {
-	RecordId string `json:"recordId"`
+	RecordId int64 `json:"recordId"`
 }
 
 type DataTransportInfo struct {
-	RecordId      string    `json:"recordId"`
-	ClusterId     string    `json:"clusterId"`
-	TransportType string    `json:"transportType"`
-	StartTime     time.Time `json:"startTime"`
-	EndTime       time.Time `json:"endTime"`
-	Status        string    `json:"status"`
-	FilePath      string    `json:"filePath"`
+	RecordId      int64                 `json:"recordId"`
+	ClusterId     string                `json:"clusterId"`
+	TransportType string                `json:"transportType"`
+	StartTime     time.Time             `json:"startTime"`
+	EndTime       time.Time             `json:"endTime"`
+	Status        controller.StatusInfo `json:"status"`
+	FilePath      string                `json:"filePath"`
+	StorageType   string                `json:"storageType"`
+	Comment       string                `json:"comment"`
 }
 
 type DataTransportRecordQueryResp struct {

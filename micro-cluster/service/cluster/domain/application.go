@@ -57,8 +57,6 @@ type ClusterAggregation struct {
 
 	ConfigModified bool
 
-	DemandModified bool
-
 	LastBackupRecord *BackupRecord
 
 	LastRecoverRecord *RecoverRecord
@@ -91,9 +89,9 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
 
-	cluster.NodeDemands = demands
+	cluster.ComponentDemands = demands
 	//这里传递commondemand 需要一个parse函数
-	cluster.CommonDemand = parseCommonDemandFromDTO(commonDemand)
+	cluster.ClusterDemand = parseCommonDemandFromDTO(commonDemand)
 
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
@@ -361,7 +359,7 @@ func collectorTiDBLogConfig(task *TaskEntity, ctx *FlowContext) bool {
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 
-	demands := clusterAggregation.Cluster.NodeDemands
+	demands := clusterAggregation.Cluster.ComponentDemands
 
 	clusterAggregation.AvailableResources = &clusterpb.AllocHostResponse{}
 	err := resource.NewResourceManager().AllocHosts(flowContext, convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
@@ -461,6 +459,11 @@ func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation.StatusModified = true
 	clusterAggregation.Cluster.Online()
 
+	task.Success(nil)
+	return true
+}
+
+func syncTopology(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)
 	return true
 }

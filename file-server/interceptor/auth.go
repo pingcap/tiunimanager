@@ -1,3 +1,4 @@
+
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -14,13 +15,51 @@
  *                                                                            *
  ******************************************************************************/
 
-package client
+package interceptor
 
 import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/client"
+	utils "github.com/pingcap-inc/tiem/library/util/stringutil"
 )
 
-var DBClient dbpb.TiEMDBService
+const VisitorIdentityKey = "VisitorIdentity"
 
-var ClusterClient clusterpb.ClusterService
+type VisitorIdentity struct {
+	AccountId   string
+	AccountName string
+	TenantId    string
+}
+
+func VerifyIdentity(c *gin.Context) {
+
+	bearerTokenStr := c.GetHeader("Authorization")
+
+	tokenString, err := utils.GetTokenFromBearer(bearerTokenStr)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
+	}
+
+	path := c.Request.URL
+	req := clusterpb.VerifyIdentityRequest{TokenString: tokenString, Path: path.String()}
+
+	result, err := client.ClusterClient.VerifyIdentity(c, &req)
+	if err != nil {
+		c.Error(err)
+		c.Status(http.StatusInternalServerError)
+		c.Abort()
+	} else if result.Status.Code != 0 {
+		c.Status(int(result.Status.Code))
+		c.Abort()
+	} else {
+		c.Set(VisitorIdentityKey, &VisitorIdentity{
+			AccountId:   result.AccountId,
+			AccountName: result.AccountName,
+			TenantId:    result.TenantId,
+		})
+		c.Next()
+	}
+}

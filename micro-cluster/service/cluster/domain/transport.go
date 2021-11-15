@@ -20,8 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -32,25 +34,12 @@ import (
 	"github.com/pingcap-inc/tiem/library/secondparty"
 )
 
-type TransportType string
-
-const (
-	TransportTypeExport TransportType = "export"
-	TransportTypeImport TransportType = "import"
-)
-
-const (
-	TransportStatusRunning string = "Running"
-	TransportStatusFailed  string = "Failed"
-	TransportStatusSuccess string = "Success"
-)
-
 type ImportInfo struct {
 	ClusterId   string
 	UserName    string
 	Password    string
 	FilePath    string
-	RecordId    string
+	RecordId    int64
 	StorageType string
 	ConfigPath  string
 }
@@ -60,22 +49,12 @@ type ExportInfo struct {
 	UserName     string
 	Password     string
 	FileType     string
-	RecordId     string
+	RecordId     int64
 	FilePath     string
 	Filter       string
 	Sql          string
 	StorageType  string
 	BucketRegion string
-}
-
-type TransportInfo struct {
-	ClusterId     string
-	RecordId      string
-	TransportType string
-	Status        string
-	FilePath      string
-	StartTime     int64
-	EndTime       int64
 }
 
 /*
@@ -100,14 +79,9 @@ type LightningCfg struct {
 	https://docs.pingcap.com/zh/tidb/stable/tidb-lightning-backends#tidb-lightning-backend
 */
 const (
-	BackendLocal  string = "local"
-	BackendImport string = "importer"
-	BackendTidb   string = "tidb"
-)
-
-const (
-	NfsStorageType string = "nfs"
-	S3StorageType  string = "s3"
+	BackendLocal string = "local"
+	//BackendImport string = "importer"
+	//BackendTidb   string = "tidb"
 )
 
 const (
@@ -142,8 +116,6 @@ type TidbCfg struct {
 }
 
 var contextDataTransportKey = "dataTransportInfo"
-var contextCtxKey = "ctx"
-var defaultTransportDirPrefix = "/tmp/tiem/transport" //todo: move to config
 
 func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 	if req.GetClusterId() == "" {
@@ -161,8 +133,11 @@ func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 	if FileTypeCSV != req.GetFileType() && FileTypeSQL != req.GetFileType() {
 		return fmt.Errorf("invalid param fileType %s", req.GetFileType())
 	}
+	if req.GetZipName() == "" {
+		req.ZipName = common.DefaultZipName
+	}
 	switch req.GetStorageType() {
-	case S3StorageType:
+	case common.S3StorageType:
 		if req.GetEndpointUrl() == "" {
 			return fmt.Errorf("invalid param endpointUrl %s", req.GetEndpointUrl())
 		}
@@ -175,9 +150,14 @@ func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 		if req.GetSecretAccessKey() == "" {
 			return fmt.Errorf("invalid param secretAccessKey %s", req.GetSecretAccessKey())
 		}
-	case NfsStorageType:
-		if req.GetFilePath() == "" {
-			return fmt.Errorf("invalid param filePath %s", req.GetFilePath())
+	case common.NfsStorageType:
+		absPath, err := filepath.Abs(common.DefaultExportDir)
+		if err != nil { //todo: get from config
+			return fmt.Errorf("export dir %s is not vaild", common.DefaultExportDir)
+		}
+		if !checkFilePathExists(absPath) {
+			//return fmt.Errorf("export path %s not exist", absPath)
+			_ = os.MkdirAll(absPath, os.ModeDir)
 		}
 	default:
 		return fmt.Errorf("invalid param storageType %s", req.GetStorageType())
@@ -186,7 +166,7 @@ func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 	return nil
 }
 
-func ImportDataPreCheck(req *clusterpb.DataImportRequest) error {
+func ImportDataPreCheck(ctx context.Context, req *clusterpb.DataImportRequest) error {
 	if req.GetClusterId() == "" {
 		return fmt.Errorf("invalid param clusterId %s", req.GetClusterId())
 	}
@@ -198,69 +178,112 @@ func ImportDataPreCheck(req *clusterpb.DataImportRequest) error {
 			return fmt.Errorf("invalid param password %s", req.GetPassword())
 		}
 	*/
-	switch req.GetStorageType() {
-	case S3StorageType:
-		if req.GetEndpointUrl() == "" {
-			return fmt.Errorf("invalid param endpointUrl %s", req.GetEndpointUrl())
+	if req.GetRecordId() == 0 {
+		switch req.GetStorageType() {
+		case common.S3StorageType:
+			if req.GetEndpointUrl() == "" {
+				return fmt.Errorf("invalid param endpointUrl %s", req.GetEndpointUrl())
+			}
+			if req.GetBucketUrl() == "" {
+				return fmt.Errorf("invalid param bucketUrl %s", req.GetBucketUrl())
+			}
+			if req.GetAccessKey() == "" {
+				return fmt.Errorf("invalid param accessKey %s", req.GetAccessKey())
+			}
+			if req.GetSecretAccessKey() == "" {
+				return fmt.Errorf("invalid param secretAccessKey %s", req.GetSecretAccessKey())
+			}
+		case common.NfsStorageType:
+			absPath, err := filepath.Abs(common.DefaultImportDir)
+			if err != nil { //todo: get from config
+				return fmt.Errorf("import dir %s is not vaild", common.DefaultImportDir)
+			}
+			if !checkFilePathExists(absPath) {
+				//return fmt.Errorf("import path %s not exist", absPath)
+				_ = os.MkdirAll(absPath, os.ModeDir)
+			}
+		default:
+			return fmt.Errorf("invalid param storageType %s", req.GetStorageType())
 		}
-		if req.GetBucketUrl() == "" {
-			return fmt.Errorf("invalid param bucketUrl %s", req.GetBucketUrl())
+	} else {
+		// import from transport record
+		req.StorageType = common.NfsStorageType
+		dbReq := &dbpb.DBFindTransportRecordByIDRequest{
+			RecordId: req.RecordId,
 		}
-		if req.GetAccessKey() == "" {
-			return fmt.Errorf("invalid param accessKey %s", req.GetAccessKey())
+		resp, err := client.DBClient.FindTrasnportRecordByID(ctx, dbReq)
+		if err != nil {
+			return fmt.Errorf("find transport record %d failed, %s", req.GetRecordId(), err.Error())
 		}
-		if req.GetSecretAccessKey() == "" {
-			return fmt.Errorf("invalid param secretAccessKey %s", req.GetSecretAccessKey())
+		if service.ClusterSuccessResponseStatus.GetCode() != resp.GetStatus().GetCode() {
+			return fmt.Errorf("find transport record %d failed, %s", req.GetRecordId(), resp.GetStatus().GetMessage())
 		}
-	case NfsStorageType:
-		if req.GetFilePath() == "" {
-			return fmt.Errorf("invalid param filePath %s", req.GetFilePath())
+		record := resp.GetRecord()
+		if !checkFilePathExists(record.GetFilePath()) {
+			return fmt.Errorf("data source path %s not exist", record.GetFilePath())
 		}
-	default:
-		return fmt.Errorf("invalid param storageType %s", req.GetStorageType())
+		if record.GetStorageType() != common.NfsStorageType {
+			return fmt.Errorf("storage type %s can not support re-import", record.GetStorageType())
+		}
+		if !record.GetReImportSupport() {
+			return fmt.Errorf("transport record not support re-import")
+		}
 	}
 
 	return nil
 }
 
-func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (string, error) {
+func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (int64, error) {
 	getLoggerWithContext(ctx).Infof("begin exportdata request %+v", request)
 	defer getLoggerWithContext(ctx).Infof("end exportdata")
-	//todo: check operator
+
 	operator := parseOperatorFromDTO(request.GetOperator())
 	getLoggerWithContext(ctx).Info(operator)
 	clusterAggregation, err := ClusterRepo.Load(ctx, request.GetClusterId())
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("load cluster %s aggregation from metadb failed", request.GetClusterId())
-		return "", err
+		return 0, err
 	}
+
+	flow, err := CreateFlowWork(ctx, request.GetClusterId(), FlowExportData, operator)
+	if err != nil {
+		return 0, err
+	}
+
+	exportTime := time.Now()
+	exportPrefix, _ := filepath.Abs(common.DefaultExportDir) //todo: get from config
+	exportDir := filepath.Join(exportPrefix, request.GetClusterId(), fmt.Sprintf("%s_%s", exportTime.Format("2006-01-02_15:04:05"), request.GetStorageType()))
 
 	req := &dbpb.DBCreateTransportRecordRequest{
 		Record: &dbpb.TransportRecordDTO{
-			ClusterId:     request.GetClusterId(),
-			TenantId:      operator.TenantId,
-			TransportType: string(TransportTypeExport),
-			FilePath:      getDataExportFilePath(request),
-			Status:        TransportStatusRunning,
-			StartTime:     time.Now().Unix(),
-			EndTime:       time.Now().Unix(),
+			ClusterId:       request.GetClusterId(),
+			TenantId:        operator.TenantId,
+			TransportType:   string(common.TransportTypeExport),
+			FilePath:        getDataExportFilePath(request, exportDir, true),
+			ZipName:         request.GetZipName(),
+			StorageType:     request.GetStorageType(),
+			FlowId:          int64(flow.FlowWork.Id),
+			ReImportSupport: checkExportParamSupportReimport(request),
+			Comment:         request.GetComment(),
+			StartTime:       time.Now().Unix(),
+			EndTime:         time.Now().Unix(),
 		},
 	}
 	resp, err := client.DBClient.CreateTransportRecord(ctx, req)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
-		return "", errors.New(resp.GetStatus().GetMessage())
+		return 0, errors.New(resp.GetStatus().GetMessage())
 	}
 
 	info := &ExportInfo{
 		ClusterId:    request.GetClusterId(),
 		UserName:     request.GetUserName(),
-		Password:     request.GetPassword(), //todo: need encrypt
+		Password:     request.GetPassword(),
 		FileType:     request.GetFileType(),
-		RecordId:     resp.GetId(),
-		FilePath:     getDataExportFilePath(request),
+		RecordId:     resp.GetRecordId(),
+		FilePath:     getDataExportFilePath(request, exportDir, false),
 		Filter:       request.GetFilter(),
 		Sql:          request.GetSql(),
 		StorageType:  request.GetStorageType(),
@@ -268,85 +291,150 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (stri
 	}
 
 	// Start the workflow
-	flow, err := CreateFlowWork(ctx, request.GetClusterId(), FlowExportData, operator)
-	if err != nil {
-		return "", err
-	}
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.AddContext(contextDataTransportKey, info)
-	flow.AddContext(contextCtxKey, ctx)
 	flow.Start()
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
 	err = ClusterRepo.Persist(ctx, clusterAggregation)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 	return info.RecordId, nil
 }
 
-func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (string, error) {
+func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int64, error) {
 	getLoggerWithContext(ctx).Infof("begin importdata request %+v", request)
 	defer getLoggerWithContext(ctx).Infof("end importdata")
-	//todo: check operator
+
 	operator := parseOperatorFromDTO(request.GetOperator())
 	getLoggerWithContext(ctx).Info(operator)
-
 	clusterAggregation, err := ClusterRepo.Load(ctx, request.GetClusterId())
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("load cluster %s aggregation from metadb failed", request.GetClusterId())
-		return "", err
+		return 0, err
 	}
 
-	req := &dbpb.DBCreateTransportRecordRequest{
-		Record: &dbpb.TransportRecordDTO{
-			ClusterId:     request.GetClusterId(),
-			TenantId:      operator.TenantId,
-			TransportType: string(TransportTypeImport),
-			FilePath:      request.GetFilePath(),
-			Status:        TransportStatusRunning,
-			StartTime:     time.Now().Unix(),
-			EndTime:       time.Now().Unix(),
-		},
-	}
-	resp, err := client.DBClient.CreateTransportRecord(ctx, req)
+	flow, err := CreateFlowWork(ctx, request.GetClusterId(), FlowImportData, operator)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
-	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
-		return "", errors.New(resp.GetStatus().GetMessage())
-	}
-	info := &ImportInfo{
-		ClusterId:   request.GetClusterId(),
-		UserName:    request.GetUserName(),
-		Password:    request.GetPassword(), //todo: need encrypt
-		FilePath:    getDataImportFilePath(request),
-		RecordId:    resp.GetId(),
-		StorageType: request.GetStorageType(),
-		ConfigPath:  getDataImportConfigDir(request.GetClusterId(), TransportTypeImport),
+
+	var info *ImportInfo
+	importTime := time.Now()
+	importPrefix, _ := filepath.Abs(common.DefaultImportDir) //todo: get from config
+	importDir := filepath.Join(importPrefix, request.GetClusterId(), fmt.Sprintf("%s_%s", importTime.Format("2006-01-02_15:04:05"), request.GetStorageType()))
+	if request.GetRecordId() == 0 {
+		if common.NfsStorageType == request.GetStorageType() {
+			err = os.Rename(filepath.Join(importPrefix, request.GetClusterId(), "temp"), importDir)
+			if err != nil {
+				getLoggerWithContext(ctx).Errorf("find import dir failed, %s", err.Error())
+				return 0, err
+			}
+		}
+
+		req := &dbpb.DBCreateTransportRecordRequest{
+			Record: &dbpb.TransportRecordDTO{
+				ClusterId:       request.GetClusterId(),
+				TenantId:        operator.TenantId,
+				TransportType:   string(common.TransportTypeImport),
+				StorageType:     request.GetStorageType(),
+				FilePath:        getDataImportFilePath(request, importDir, true),
+				ZipName:         common.DefaultZipName,
+				FlowId:          int64(flow.FlowWork.Id),
+				ReImportSupport: true,
+				Comment:         request.GetComment(),
+				StartTime:       time.Now().Unix(),
+				EndTime:         time.Now().Unix(),
+			},
+		}
+		resp, err := client.DBClient.CreateTransportRecord(ctx, req)
+		if err != nil {
+			return 0, err
+		}
+		if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+			return 0, errors.New(resp.GetStatus().GetMessage())
+		}
+		info = &ImportInfo{
+			ClusterId:   request.GetClusterId(),
+			UserName:    request.GetUserName(),
+			Password:    request.GetPassword(),
+			FilePath:    getDataImportFilePath(request, importDir, false),
+			RecordId:    resp.GetRecordId(),
+			StorageType: request.GetStorageType(),
+			ConfigPath:  importDir,
+		}
+	} else {
+		// import from transport record
+		dbReq := &dbpb.DBFindTransportRecordByIDRequest{
+			RecordId: request.GetRecordId(),
+		}
+		queryResp, err := client.DBClient.FindTrasnportRecordByID(ctx, dbReq)
+		if err != nil {
+			return 0, fmt.Errorf("find transport record %d failed, %s", request.GetRecordId(), err.Error())
+		}
+		if service.ClusterSuccessResponseStatus.GetCode() != queryResp.GetStatus().GetCode() {
+			return 0, fmt.Errorf("find transport record %d failed, %s", request.GetRecordId(), queryResp.GetStatus().GetMessage())
+		}
+
+		record := queryResp.GetRecord()
+		if err := os.MkdirAll(importDir, os.ModeDir); err != nil {
+			return 0, fmt.Errorf("make import dir %s failed, %s", importDir, err.Error())
+		}
+
+		req := &dbpb.DBCreateTransportRecordRequest{
+			Record: &dbpb.TransportRecordDTO{
+				ClusterId:       request.GetClusterId(),
+				TenantId:        operator.TenantId,
+				TransportType:   string(common.TransportTypeImport),
+				StorageType:     request.GetStorageType(),
+				FilePath:        record.GetFilePath(),
+				ZipName:         common.DefaultZipName,
+				FlowId:          int64(flow.FlowWork.Id),
+				ReImportSupport: true,
+				Comment:         request.GetComment(),
+				StartTime:       time.Now().Unix(),
+				EndTime:         time.Now().Unix(),
+			},
+		}
+		resp, createErr := client.DBClient.CreateTransportRecord(ctx, req)
+		if createErr != nil {
+			return 0, createErr
+		}
+		if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+			return 0, errors.New(resp.GetStatus().GetMessage())
+		}
+		info = &ImportInfo{
+			ClusterId:   request.GetClusterId(),
+			UserName:    request.GetUserName(),
+			Password:    request.GetPassword(),
+			FilePath:    record.GetFilePath(),
+			RecordId:    resp.GetRecordId(),
+			StorageType: request.GetStorageType(),
+			ConfigPath:  importDir,
+		}
 	}
 
 	// Start the workflow
-	flow, err := CreateFlowWork(ctx, request.GetClusterId(), FlowImportData, operator)
-	if err != nil {
-		return "", err
-	}
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.AddContext(contextDataTransportKey, info)
-	flow.AddContext(contextCtxKey, ctx)
 	flow.Start()
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
 	err = ClusterRepo.Persist(ctx, clusterAggregation)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 	return info.RecordId, nil
 }
 
-func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO, recordId, clusterId string, page, pageSize int32) ([]*dbpb.TransportRecordDTO, *dbpb.DBPageDTO, error) {
-	getLoggerWithContext(ctx).Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %s, page: %d, pageSize: %d", clusterId, recordId, page, pageSize)
+func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO, recordId int64, clusterId string, reImport bool, startTime, endTime int64, page, pageSize int32) ([]*dbpb.DBTransportRecordDisplayDTO, *dbpb.DBPageDTO, error) {
+	getLoggerWithContext(ctx).Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %d, reImport: %v, page: %d, pageSize: %d", clusterId, recordId, reImport, page, pageSize)
 	defer getLoggerWithContext(ctx).Info("end DescribeDataTransportRecord")
+
+	operator := parseOperatorFromDTO(ope)
+	getLoggerWithContext(ctx).Info(operator)
+
 	req := &dbpb.DBListTransportRecordRequest{
 		Page: &dbpb.DBPageDTO{
 			Page:     page,
@@ -354,6 +442,9 @@ func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO
 		},
 		ClusterId: clusterId,
 		RecordId:  recordId,
+		ReImport:  reImport,
+		StartTime: startTime,
+		EndTime:   endTime,
 	}
 	resp, err := client.DBClient.ListTrasnportRecord(ctx, req)
 	if err != nil {
@@ -364,6 +455,48 @@ func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO
 	}
 
 	return resp.GetRecords(), resp.GetPage(), nil
+}
+
+func DeleteDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, recordId int64) error {
+	getLoggerWithContext(ctx).Infof("begin DeleteDataTransportRecord clusterId: %s, recordId: %d", clusterId, recordId)
+	defer getLoggerWithContext(ctx).Info("end DeleteDataTransportRecord")
+
+	operator := parseOperatorFromDTO(ope)
+	getLoggerWithContext(ctx).Info(operator)
+
+	resp, err := client.DBClient.FindTrasnportRecordByID(ctx, &dbpb.DBFindTransportRecordByIDRequest{RecordId: recordId})
+	if err != nil {
+		getLoggerWithContext(ctx).Errorf("query transport record %d of cluster %s failed, %s", recordId, clusterId, err.Error())
+		return fmt.Errorf("query transport record %d of cluster %s failed, %s", recordId, clusterId, err.Error())
+	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("query transport record %d of cluster %s failed, %s", recordId, clusterId, resp.GetStatus().GetMessage())
+		return fmt.Errorf("query backup transport %d of cluster %s failed, %s", recordId, clusterId, resp.GetStatus().GetMessage())
+	}
+	getLoggerWithContext(ctx).Infof("query transport record to be deleted, record: %+v", resp.GetRecord())
+	if resp.GetRecord().GetRecordId() <= 0 {
+		getLoggerWithContext(ctx).Infof("record %d not exist", recordId)
+		return nil
+	}
+
+	if common.S3StorageType != resp.GetRecord().GetStorageType() {
+		filePath := filepath.Dir(resp.GetRecord().GetFilePath())
+		_ = os.RemoveAll(filePath)
+		getLoggerWithContext(ctx).Infof("remove file path %s, record: %+v", filePath, resp.GetRecord())
+	}
+
+	delResp, err := client.DBClient.DeleteTransportRecord(ctx, &dbpb.DBDeleteTransportRequest{RecordId: recordId})
+	if err != nil {
+		getLoggerWithContext(ctx).Errorf("delete metadb transport record failed, %s", err.Error())
+		return fmt.Errorf("delete metadb transport record failed, %s", err.Error())
+	}
+	if delResp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("delete metadb transport record failed, %s", delResp.GetStatus().GetMessage())
+		return fmt.Errorf("delete metadb transport record failed, %s", delResp.GetStatus().GetMessage())
+	}
+	getLoggerWithContext(ctx).Infof("delete transport record to be deleted, record: %+v", delResp.GetRecord())
+
+	return nil
 }
 
 func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo) *DataImportConfig {
@@ -422,26 +555,48 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 	return config
 }
 
-func getDataImportConfigDir(clusterId string, transportType TransportType) string {
-	return fmt.Sprintf("%s/%s/%s", defaultTransportDirPrefix, clusterId, transportType)
+func checkFilePathExists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		return false
+	}
+	return true
 }
 
-func getDataExportFilePath(request *clusterpb.DataExportRequest) string {
+func checkExportParamSupportReimport(request *clusterpb.DataExportRequest) bool {
+	if request.GetFilter() == "" && request.GetSql() != "" && FileTypeCSV == request.GetFileType() {
+		return false
+	}
+	return true
+}
+
+func getDataExportFilePath(request *clusterpb.DataExportRequest, exportDir string, persist bool) string {
 	var filePath string
-	if S3StorageType == request.GetStorageType() {
-		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
+	if common.S3StorageType == request.GetStorageType() {
+		if persist {
+			filePath = fmt.Sprintf("%s?&endpoint=%s", request.GetBucketUrl(), request.GetEndpointUrl())
+		} else {
+			filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
+		}
 	} else {
-		filePath = request.GetFilePath()
+		filePath = filepath.Join(exportDir, "data")
 	}
 	return filePath
 }
 
-func getDataImportFilePath(request *clusterpb.DataImportRequest) string {
+func getDataImportFilePath(request *clusterpb.DataImportRequest, importDir string, persist bool) string {
 	var filePath string
-	if S3StorageType == request.GetStorageType() {
-		filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
+	if common.S3StorageType == request.GetStorageType() {
+		if persist {
+			filePath = fmt.Sprintf("%s?&endpoint=%s", request.GetBucketUrl(), request.GetEndpointUrl())
+		} else {
+			filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.GetBucketUrl(), request.GetAccessKey(), request.GetSecretAccessKey(), request.GetEndpointUrl())
+		}
 	} else {
-		filePath = request.GetFilePath()
+		filePath = filepath.Join(importDir, "data")
 	}
 	return filePath
 }
@@ -452,70 +607,85 @@ func cleanDataTransportDir(ctx context.Context, filepath string) error {
 		return err
 	}
 
-	if err := os.MkdirAll(filepath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(filepath, os.ModeDir); err != nil {
 		return err
 	}
 	return nil
 }
 
 func buildDataImportConfig(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin buildDataImportConfig")
 	defer getLoggerWithContext(ctx).Info("end buildDataImportConfig")
 
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 	info := flowContext.GetData(contextDataTransportKey).(*ImportInfo)
 
-	if err := cleanDataTransportDir(ctx, info.ConfigPath); err != nil {
-		getLoggerWithContext(ctx).Errorf("clean import directory failed, %s", err.Error())
-		return false
-	}
-
 	config := convertTomlConfig(clusterAggregation, info)
 	if config == nil {
 		getLoggerWithContext(ctx).Errorf("convert toml config failed, cluster: %v", clusterAggregation)
+		task.Fail(fmt.Errorf("convert toml config failed, cluster: %v", clusterAggregation))
 		return false
 	}
+
 	filePath := fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0600)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("create import toml config failed, %s", err.Error())
+		task.Fail(fmt.Errorf("create import toml config failed, %s", err.Error()))
 		return false
 	}
 
 	if err = toml.NewEncoder(file).Encode(config); err != nil {
-		getLoggerWithContext(ctx).Errorf("decode data import toml config failed, %s", err.Error())
+		getLoggerWithContext(ctx).Errorf("encode data import toml config failed, %s", err.Error())
+		task.Fail(fmt.Errorf("encode data import toml config failed, %s", err.Error()))
 		return false
 	}
-	getLoggerWithContext(ctx).Infof("build lightning toml file sucess, %v", config)
+	getLoggerWithContext(ctx).Infof("build lightning toml config sucess, %v", config)
 
 	return true
 }
 
 func importDataToCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin importDataToCluster")
 	defer getLoggerWithContext(ctx).Info("end importDataToCluster")
 
 	info := flowContext.GetData(contextDataTransportKey).(*ImportInfo)
 
 	//tiup tidb-lightning -config tidb-lightning.toml
-	//todo: tiupmgr not return failed err
-	resp, err := secondparty.SecondParty.MicroSrvLightning(flowContext.Context,
-		0,
+	importTaskId, err := secondparty.SecondParty.MicroSrvLightning(flowContext.Context, 0,
 		[]string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)},
 		uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call tiup lightning api failed, %s", err.Error())
+		task.Fail(fmt.Errorf("call tiup lightning api failed, %s", err.Error()))
 		return false
 	}
-	getLoggerWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, %v", resp)
+	getLoggerWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, importTaskId %d", importTaskId)
 
-	return true
+	for {
+		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(flowContext.Context, importTaskId)
+		if err != nil {
+			getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
+			task.Fail(fmt.Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error()))
+			return false
+		}
+		if stat == dbpb.TiupTaskStatus_Finished {
+			getLoggerWithContext(ctx).Infof("task %d cluster %s import data done.", importTaskId, info.ClusterId)
+			task.Success(nil)
+			return true
+		} else if stat == dbpb.TiupTaskStatus_Error {
+			getLoggerWithContext(ctx).Errorf("task %d cluster %s import data error: %s", importTaskId, info.ClusterId, statErrStr)
+			task.Fail(fmt.Errorf("task %d cluster %s import data error: %s", importTaskId, info.ClusterId, statErrStr))
+			return false
+		}
+		time.Sleep(time.Second * 2)
+	}
 }
 
 func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin updateDataImportRecord")
 	defer getLoggerWithContext(ctx).Info("end updateDataImportRecord")
 
@@ -525,27 +695,29 @@ func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 
 	req := &dbpb.DBUpdateTransportRecordRequest{
 		Record: &dbpb.TransportRecordDTO{
-			ID:        info.RecordId,
+			RecordId:  info.RecordId,
 			ClusterId: cluster.Id,
-			Status:    TransportStatusSuccess,
 			EndTime:   time.Now().Unix(),
 		},
 	}
 	resp, err := client.DBClient.UpdateTransportRecord(flowContext, req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
+		task.Fail(fmt.Errorf("update data transport record failed, %s", err.Error()))
 		return false
 	}
 	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", resp.GetStatus().GetMessage())
+		task.Fail(fmt.Errorf("update data transport record failed, %s", resp.GetStatus().GetMessage()))
 		return false
 	}
 	getLoggerWithContext(ctx).Infof("update data transport record success, %v", resp)
+	task.Success(nil)
 	return true
 }
 
 func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin exportDataFromCluster")
 	defer getLoggerWithContext(ctx).Info("end exportDataFromCluster")
 
@@ -558,16 +730,16 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		tidbServerPort = DefaultTidbPort
 	}
 
-	if NfsStorageType == info.StorageType {
+	if common.NfsStorageType == info.StorageType {
 		if err := cleanDataTransportDir(ctx, info.FilePath); err != nil {
 			getLoggerWithContext(ctx).Errorf("clean export directory failed, %s", err.Error())
+			task.Fail(fmt.Errorf("clean export directory failed, %s", err.Error()))
 			return false
 		}
 	}
 
 	//tiup dumpling -u root -P 4000 --host 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB --filter "user*"
-	//todo: admin root password
-	//todo: tiupmgr not return failed err
+	//todo: replace root password
 	cmd := []string{"-u", info.UserName,
 		"-p", info.Password,
 		"-P", strconv.Itoa(tidbServerPort),
@@ -580,26 +752,44 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	if info.Filter != "" {
 		cmd = append(cmd, "--filter", info.Filter)
 	}
-	if FileTypeCSV == info.FileType && info.Sql != "" {
+	if FileTypeCSV == info.FileType && info.Filter == "" && info.Sql != "" {
 		cmd = append(cmd, "--sql", info.Sql)
 	}
-	if S3StorageType == info.StorageType && info.BucketRegion != "" {
+	if common.S3StorageType == info.StorageType && info.BucketRegion != "" {
 		cmd = append(cmd, "--s3.region", fmt.Sprintf("\"%s\"", info.BucketRegion))
 	}
 	getLoggerWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v", cmd)
-	resp, err := secondparty.SecondParty.MicroSrvDumpling(flowContext.Context, 0, cmd, uint64(task.Id))
+	exportTaskId, err := secondparty.SecondParty.MicroSrvDumpling(ctx, 0, cmd, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("call tiup dumpling api failed, %s", err.Error())
+		task.Fail(fmt.Errorf("call tiup dumpling api failed, %s", err.Error()))
 		return false
 	}
 
-	getLoggerWithContext(ctx).Infof("call tiupmgr succee, resp: %v", resp)
+	getLoggerWithContext(ctx).Infof("call tiupmgr succee, exportTaskId: %d", exportTaskId)
 
-	return true
+	for {
+		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(ctx, exportTaskId)
+		if err != nil {
+			getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
+			task.Fail(fmt.Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error()))
+			return false
+		}
+		if stat == dbpb.TiupTaskStatus_Finished {
+			getLoggerWithContext(ctx).Infof("task %d cluster %s export data done.", exportTaskId, info.ClusterId)
+			task.Success(nil)
+			return true
+		} else if stat == dbpb.TiupTaskStatus_Error {
+			getLoggerWithContext(ctx).Errorf("task %d cluster %s export data error: %s", exportTaskId, info.ClusterId, statErrStr)
+			task.Fail(fmt.Errorf("task %d cluster %s export data error: %s", exportTaskId, info.ClusterId, statErrStr))
+			return false
+		}
+		time.Sleep(time.Second * 2)
+	}
 }
 
 func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin updateDataExportRecord")
 	defer getLoggerWithContext(ctx).Info("end updateDataExportRecord")
 
@@ -609,61 +799,29 @@ func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {
 
 	req := &dbpb.DBUpdateTransportRecordRequest{
 		Record: &dbpb.TransportRecordDTO{
-			ID:        info.RecordId,
+			RecordId:  info.RecordId,
 			ClusterId: cluster.Id,
-			Status:    TransportStatusSuccess,
 			EndTime:   time.Now().Unix(),
 		},
 	}
 	resp, err := client.DBClient.UpdateTransportRecord(flowContext, req)
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", err.Error())
+		task.Fail(fmt.Errorf("update data transport record failed, %s", err.Error()))
 		return false
 	}
 	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
 		getLoggerWithContext(ctx).Errorf("update data transport record failed, %s", resp.GetStatus().GetMessage())
+		task.Fail(fmt.Errorf("update data transport record failed, %s", resp.GetStatus().GetMessage()))
 		return false
 	}
 	getLoggerWithContext(ctx).Infof("update data transport record success, %v", resp)
+	task.Success(nil)
 	return true
 }
-
-/*
-func compressExportData(task *TaskEntity, context *FlowContext) bool {
-	getLogger().Info("begin compressExportData")
-	defer getLogger().Info("end compressExportData")
-
-	info := context.GetData(contextDataTransportKey).(*ExportInfo)
-
-	dataDir := fmt.Sprintf("%s/data", info.FilePath)
-	dataZipDir := fmt.Sprintf("%s/data.zip", info.FilePath)
-	if err := zipDir(dataDir, dataZipDir); err != nil {
-		getLogger().Errorf("compress export data failed, %s", err.Error())
-		return false
-	}
-
-	return true
-}
-
-func deCompressImportData(task *TaskEntity, context *FlowContext) bool {
-	getLogger().Info("begin deCompressImportData")
-	defer getLogger().Info("end deCompressImportData")
-
-	info := context.GetData(contextDataTransportKey).(*ImportInfo)
-
-	dataDir := fmt.Sprintf("%s/data", info.ConfigPath)
-	dataZipDir := info.FilePath
-	if err := unzipDir(dataZipDir, dataDir); err != nil {
-		getLogger().Errorf("deCompress import data failed, %s", err.Error())
-		return false
-	}
-
-	return true
-}
-*/
 
 func importDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin importDataFailed")
 	defer getLoggerWithContext(ctx).Info("end importDataFailed")
 
@@ -672,6 +830,7 @@ func importDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
 	cluster := clusterAggregation.Cluster
 
 	if err := updateTransportRecordFailed(ctx, info.RecordId, cluster.Id); err != nil {
+		task.Fail(err)
 		return false
 	}
 
@@ -679,7 +838,7 @@ func importDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
 }
 
 func exportDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
-	ctx := flowContext.GetData(contextCtxKey).(context.Context)
+	ctx := flowContext.Context
 	getLoggerWithContext(ctx).Info("begin exportDataFailed")
 	defer getLoggerWithContext(ctx).Info("end exportDataFailed")
 
@@ -688,18 +847,18 @@ func exportDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
 	cluster := clusterAggregation.Cluster
 
 	if err := updateTransportRecordFailed(ctx, info.RecordId, cluster.Id); err != nil {
+		task.Fail(err)
 		return false
 	}
 
 	return ClusterFail(task, flowContext)
 }
 
-func updateTransportRecordFailed(ctx context.Context, recordId, clusterId string) error {
+func updateTransportRecordFailed(ctx context.Context, recordId int64, clusterId string) error {
 	req := &dbpb.DBUpdateTransportRecordRequest{
 		Record: &dbpb.TransportRecordDTO{
-			ID:        recordId,
+			RecordId:  recordId,
 			ClusterId: clusterId,
-			Status:    TransportStatusFailed,
 			EndTime:   time.Now().Unix(),
 		},
 	}
@@ -715,84 +874,3 @@ func updateTransportRecordFailed(ctx context.Context, recordId, clusterId string
 	getLoggerWithContext(ctx).Infof("update data transport record success, %v", resp)
 	return nil
 }
-
-/*
-func zipDir(dir string, zipFile string) error {
-	getLogger().Infof("begin zipDir: dir[%s] to file[%s]", dir, zipFile)
-	defer getLogger().Info("end zipDir")
-	fz, err := os.Create(zipFile)
-	if err != nil {
-		return fmt.Errorf("Create zip file failed: %s", err.Error())
-	}
-	defer fz.Close()
-
-	w := zip.NewWriter(fz)
-	defer w.Close()
-
-	err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			relPath := strings.TrimPrefix(path, filepath.Dir(path))
-			fDest, err := w.Create(relPath)
-			if err != nil {
-				return fmt.Errorf("zip Create failed: %s", err.Error())
-			}
-			fSrc, err := os.Open(path)
-			if err != nil {
-				return fmt.Errorf("zip Open failed: %s", err.Error())
-			}
-			defer fSrc.Close()
-			_, err = io.Copy(fDest, fSrc)
-			if err != nil {
-				return fmt.Errorf("zip Copy failed: %s", err.Error())
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		getLogger().Errorf("filepath walk failed, %s", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func unzipDir(zipFile string, dir string) error {
-	getLogger().Infof("begin unzipDir: file[%s] to dir[%s]", zipFile, dir)
-	defer getLogger().Info("end unzipDir")
-	r, err := zip.OpenReader(zipFile)
-	if err != nil {
-		return fmt.Errorf("Open zip file failed: %s", err.Error())
-	}
-	defer r.Close()
-
-	for _, f := range r.File {
-		func() {
-			path := dir + string(filepath.Separator) + f.Name
-			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-				getLogger().Errorf("make filepath failed: %s", err.Error())
-				return
-			}
-			fDest, err := os.Create(path)
-			if err != nil {
-				getLogger().Errorf("unzip Create failed: %s", err.Error())
-				return
-			}
-			defer fDest.Close()
-
-			fSrc, err := f.Open()
-			if err != nil {
-				getLogger().Errorf("unzip Open failed: %s", err.Error())
-				return
-			}
-			defer fSrc.Close()
-
-			_, err = io.Copy(fDest, fSrc)
-			if err != nil {
-				getLogger().Errorf("unzip Copy failed: %s", err.Error())
-				return
-			}
-		}()
-	}
-	return nil
-}
-*/

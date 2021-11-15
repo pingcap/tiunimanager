@@ -9,17 +9,18 @@ message DataImportRequest {
     string  clusterId = 2;
     string  userName = 3;
     string  password = 4;
-    string  filePath = 5;
-    string  storageType = 6;
-    string  bucketUrl = 7;
-    string  endpointUrl = 8;
-    string  accessKey = 9;
-    string  secretAccessKey = 10;
+    string  storageType = 5;
+    string  bucketUrl = 6;
+    string  endpointUrl = 7;
+    string  accessKey = 8;
+    string  secretAccessKey = 9;
+    string  comment = 10;
+    int64  recordId = 11;
 }
 
 message DataImportResponse {
     ResponseStatusDTO respStatus = 1;
-    string recordId = 2;
+    int64 recordId = 2;
 }
 
 message DataExportRequest {
@@ -31,38 +32,54 @@ message DataExportRequest {
     string  fileType = 6;
     string  filter = 7;
     string  sql = 8;
-    string  filePath = 9;
-    string  bucketUrl = 10;
-    string  bucketRegion = 11;
-    string  endpointUrl = 12;
-    string  accessKey = 13;
-    string  secretAccessKey = 14;
+    string  bucketUrl = 9;
+    string  bucketRegion = 10;
+    string  endpointUrl = 11;
+    string  accessKey = 12;
+    string  secretAccessKey = 13;
+    string  zipName = 14;
+    string  comment = 15;
 }
 
 message DataExportResponse {
     ResponseStatusDTO respStatus = 1;
-    string recordId = 2;
+    int64 recordId = 2;
 }
 
 message DataTransportQueryRequest {
     PageDTO pageReq = 1;
     OperatorDTO operator = 2;
-    string  clusterId = 3;
-    string  recordId = 4;
+    string clusterId = 3;
+    int64 recordId = 4;
+    bool reImport = 5;
+    int64 startTime = 6;
+    int64 endTime = 7;
 }
 
 message DataTransportInfo {
-    string RecordId = 1;
+    int64 RecordId = 1;
     string clusterId = 2;
     string transportType = 3;
     int64 startTime = 4;
     int64 endTime = 5;
-    string status = 6;
-    string filePath = 7;
+    string filePath = 6;
+    string storageType = 7;
+    DisplayStatusDTO displayStatus = 8;
+    string comment = 9;
 }
 
 message DataTransportQueryResponse {
     PageDTO pageReq = 1;
     ResponseStatusDTO respStatus = 2;
     repeated DataTransportInfo transportInfos = 3;
+}
+
+message DataTransportDeleteRequest {
+    OperatorDTO operator = 1;
+    string clusterId = 2;
+    int64 RecordId = 3;
+}
+
+message DataTransportDeleteResponse {
+    ResponseStatusDTO status = 1;
 }

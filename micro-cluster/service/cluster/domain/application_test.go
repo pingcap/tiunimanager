@@ -442,7 +442,6 @@ func Test_clusterRestart(t *testing.T) {
 				},
 			},
 		})
-		flowCtx.SetData(contextCtxKey, context.Background())
 		ret := clusterRestart(task, flowCtx)
 
 		assert.Equal(t, true, ret)
@@ -475,7 +474,6 @@ func Test_clusterRestart(t *testing.T) {
 				},
 			},
 		})
-		flowCtx.SetData(contextCtxKey, context.Background())
 		ret := clusterRestart(task, flowCtx)
 
 		assert.Equal(t, false, ret)
@@ -517,7 +515,6 @@ func Test_clusterStop(t *testing.T) {
 				},
 			},
 		})
-		flowCtx.SetData(contextCtxKey, context.Background())
 		ret := clusterStop(task, flowCtx)
 
 		assert.Equal(t, true, ret)
@@ -549,7 +546,6 @@ func Test_clusterStop(t *testing.T) {
 				},
 			},
 		})
-		flowCtx.SetData(contextCtxKey, context.Background())
 		ret := clusterStop(task, flowCtx)
 
 		assert.Equal(t, false, ret)
@@ -582,7 +578,6 @@ func Test_deleteCluster(t *testing.T) {
 			},
 		},
 	})
-	flowCtx.SetData(contextCtxKey, context.Background())
 	ret := deleteCluster(task, flowCtx)
 
 	assert.Equal(t, true, ret)
@@ -613,7 +608,6 @@ func Test_setClusterOnline(t *testing.T) {
 			},
 		},
 	})
-	flowCtx.SetData(contextCtxKey, context.Background())
 	ret := setClusterOnline(task, flowCtx)
 
 	assert.Equal(t, true, ret)
@@ -646,7 +640,6 @@ func Test_setClusterOffline(t *testing.T) {
 			},
 		},
 	})
-	flowCtx.SetData(contextCtxKey, context.Background())
 	ret := setClusterOffline(task, flowCtx)
 
 	assert.Equal(t, true, ret)
@@ -688,7 +681,6 @@ func Test_startupCluster(t *testing.T) {
 				},
 			},
 		})
-		flowCtx.SetData(contextCtxKey, context.Background())
 		ret := startupCluster(task, flowCtx)
 
 		assert.Equal(t, true, ret)
@@ -720,7 +712,6 @@ func Test_startupCluster(t *testing.T) {
 				},
 			},
 		})
-		flowCtx.SetData(contextCtxKey, context.Background())
 		ret := startupCluster(task, flowCtx)
 
 		assert.Equal(t, false, ret)
@@ -762,7 +753,6 @@ func Test_deployCluster(t *testing.T) {
 				},
 			},
 		})
-		flowCtx.SetData(contextCtxKey, context.Background())
 		ret := deployCluster(task, flowCtx)
 
 		assert.Equal(t, true, ret)
@@ -794,7 +784,6 @@ func Test_deployCluster(t *testing.T) {
 				},
 			},
 		})
-		flowCtx.SetData(contextCtxKey, context.Background())
 		ret := deployCluster(task, flowCtx)
 
 		assert.Equal(t, false, ret)

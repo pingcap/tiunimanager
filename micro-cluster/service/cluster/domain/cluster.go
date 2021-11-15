@@ -39,8 +39,8 @@ type Cluster struct {
 	RecoverInfo    RecoverInfo
 	Status         ClusterStatus
 
-	NodeDemands []*ClusterComponentDemand
-	CommonDemand *ClusterCommonDemand
+	ClusterDemand    *ClusterCommonDemand
+	ComponentDemands []*ClusterComponentDemand
 
 	WorkFlowId uint
 
@@ -65,16 +65,16 @@ func (c *Cluster) Restart() {
 	c.Status = ClusterStatusRestarting
 }
 
+type ClusterCommonDemand struct {
+	Exclusive       bool
+	Region          string
+	CpuArchitecture string
+}
+
 type ClusterComponentDemand struct {
 	ComponentType     *knowledge.ClusterComponent
 	TotalNodeCount    int
 	DistributionItems []*ClusterNodeDistributionItem
-}
-
-type ClusterCommonDemand struct {
-	Exclusive bool
-	Region string
-	CpuArchitecture string
 }
 
 type ClusterDemandRecord struct {
@@ -85,7 +85,7 @@ type ClusterDemandRecord struct {
 	Content    []*ClusterComponentDemand  //改成node？
 	CreateTime time.Time
 }
-//为什么和api那层命名不一样
+
 type ClusterNodeDistributionItem struct {
 	ZoneCode string
 	SpecCode string

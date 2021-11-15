@@ -17,6 +17,7 @@ package framework
 
 import (
 	"errors"
+	"fmt"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -62,10 +63,10 @@ func TestIsError(t *testing.T) {
 func TestError(t *testing.T) {
 	cause := errors.New("cause")
 	te := WrapError(common.TIEM_BACKUP_PROCESS_FAILED, "backup", cause)
-	assert.Equal(t, "[606]backup, cause:cause", te.Error())
+	assert.Equal(t, fmt.Sprintf("[%d]backup, cause:cause", common.TIEM_BACKUP_PROCESS_FAILED), te.Error())
 
 	t2 := SimpleError(common.TIEM_BACKUP_PROCESS_FAILED)
-	assert.Equal(t, "[606]backup process failed", t2.Error())
+	assert.Equal(t, fmt.Sprintf("[%d]backup process failed", common.TIEM_BACKUP_PROCESS_FAILED), t2.Error())
 }
 
 func TestErrorBuilder(t *testing.T) {
@@ -86,7 +87,6 @@ func TestErrorBuilder(t *testing.T) {
 	assert.Equal(t, cause, err.GetCause())
 
 }
-
 
 func TestUnwrapError(t *testing.T) {
 	cause := errors.New("cause")

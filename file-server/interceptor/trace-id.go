@@ -1,3 +1,4 @@
+
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -14,13 +15,23 @@
  *                                                                            *
  ******************************************************************************/
 
-package client
+package interceptor
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 )
 
-var DBClient dbpb.TiEMDBService
-
-var ClusterClient clusterpb.ClusterService
+// Tiem-X-Trace-ID
+func GinTraceIDHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.GetHeader(framework.TiEM_X_TRACE_ID_NAME)
+		if len(id) <= 0 {
+			id = uuidutil.GenerateID()
+		}
+		c.Set(framework.TiEM_X_TRACE_ID_NAME, id)
+		c.Header(framework.TiEM_X_TRACE_ID_NAME, id)
+		c.Next()
+	}
+}

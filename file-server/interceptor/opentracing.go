@@ -1,3 +1,4 @@
+
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -14,13 +15,35 @@
  *                                                                            *
  ******************************************************************************/
 
-package client
+package interceptor
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 )
 
-var DBClient dbpb.TiEMDBService
+func GinOpenTracing() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var parentSpan opentracing.Span
 
-var ClusterClient clusterpb.ClusterService
+		tracer := opentracing.GlobalTracer()
+
+		spCtx, err := opentracing.GlobalTracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(c.Request.Header))
+		if err != nil {
+			parentSpan = tracer.StartSpan(c.Request.URL.Path)
+			defer parentSpan.Finish()
+		} else {
+			parentSpan = opentracing.StartSpan(
+				c.Request.URL.Path,
+				opentracing.ChildOf(spCtx),
+				opentracing.Tag{Key: string(ext.Component), Value: "HTTP"},
+				ext.SpanKindRPCServer,
+			)
+			defer parentSpan.Finish()
+		}
+		c.Set("Tracer", tracer)
+		c.Set("ParentSpan", parentSpan)
+		c.Next()
+	}
+}

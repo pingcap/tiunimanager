@@ -21,6 +21,7 @@ service ClusterService {
     rpc ImportData(DataImportRequest) returns (DataImportResponse);
     rpc ExportData(DataExportRequest) returns (DataExportResponse);
     rpc DescribeDataTransport(DataTransportQueryRequest) returns (DataTransportQueryResponse);
+    rpc DeleteDataTransportRecord(DataTransportDeleteRequest) returns (DataTransportDeleteResponse);
 
     rpc QueryBackupRecord(QueryBackupRequest) returns (QueryBackupResponse);
     rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
@@ -203,15 +204,6 @@ message ComponentNodeRoleDTO {
 message ComponentBaseInfoDTO {
     string componentType = 1;
     string componentName = 2;
-}
-
-message DisplayStatusDTO {
-    string statusCode = 1;
-    string statusName = 2;
-    int32 inProcessFlowId = 3;
-    int64 createTime = 4;
-    int64 updateTime = 5;
-    int64 deleteTime = 6;
 }
 
 message RecoverInfoDTO {

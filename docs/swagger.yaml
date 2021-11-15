@@ -423,9 +423,9 @@ definitions:
         type: string
       clusterId:
         type: string
-      endpointUrl:
+      comment:
         type: string
-      filePath:
+      endpointUrl:
         type: string
       fileType:
         type: string
@@ -441,11 +441,13 @@ definitions:
         type: string
       userName:
         type: string
+      zipName:
+        type: string
     type: object
   importexport.DataExportResp:
     properties:
       recordId:
-        type: string
+        type: integer
     type: object
   importexport.DataImportReq:
     properties:
@@ -455,12 +457,14 @@ definitions:
         type: string
       clusterId:
         type: string
-      endpointUrl:
+      comment:
         type: string
-      filePath:
+      endpointUrl:
         type: string
       password:
         type: string
+      recordId:
+        type: integer
       secretAccessKey:
         type: string
       storageType:
@@ -471,21 +475,30 @@ definitions:
   importexport.DataImportResp:
     properties:
       recordId:
+        type: integer
+    type: object
+  importexport.DataTransportDeleteReq:
+    properties:
+      clusterId:
         type: string
     type: object
   importexport.DataTransportInfo:
     properties:
       clusterId:
         type: string
+      comment:
+        type: string
       endTime:
         type: string
       filePath:
         type: string
       recordId:
-        type: string
+        type: integer
       startTime:
         type: string
       status:
+        $ref: '#/definitions/controller.StatusInfo'
+      storageType:
         type: string
       transportType:
         type: string
@@ -1800,57 +1813,6 @@ paths:
       summary: show the backup strategy of a cluster
       tags:
       - cluster backup
-  /clusters/{clusterId}/transport:
-    get:
-      consumes:
-      - application/json
-      description: query records of import and export
-      parameters:
-      - description: cluster id
-        in: path
-        name: clusterId
-        required: true
-        type: string
-      - in: query
-        name: page
-        type: integer
-      - in: query
-        name: pageSize
-        type: integer
-      - in: query
-        name: recordId
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/importexport.DataTransportRecordQueryResp'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query records of import and export
-      tags:
-      - cluster data transport
   /clusters/export:
     post:
       consumes:
@@ -2058,6 +2020,108 @@ paths:
       summary: takeover a cluster
       tags:
       - cluster
+  /clusters/transport:
+    get:
+      consumes:
+      - application/json
+      description: query records of import and export
+      parameters:
+      - in: query
+        name: clusterId
+        type: string
+      - in: query
+        name: endTime
+        type: integer
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: reImport
+        type: boolean
+      - in: query
+        name: recordId
+        type: integer
+      - in: query
+        name: startTime
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/importexport.DataTransportRecordQueryResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query records of import and export
+      tags:
+      - cluster data transport
+  /clusters/transport/{recordId}:
+    delete:
+      consumes:
+      - application/json
+      description: delete data transport record
+      parameters:
+      - description: data transport recordId
+        in: path
+        name: recordId
+        required: true
+        type: integer
+      - description: data transport record delete request
+        in: body
+        name: DataTransportDeleteReq
+        required: true
+        schema:
+          $ref: '#/definitions/importexport.DataTransportDeleteReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  type: integer
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete data transport record
+      tags:
+      - cluster data transport
   /flowworks/:
     get:
       consumes:

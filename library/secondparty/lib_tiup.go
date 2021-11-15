@@ -398,6 +398,43 @@ func (secondMicro *SecondMicro) startNewTiupTransferTask(ctx context.Context, ta
 	}()
 }
 
+func (secondMicro *SecondMicro) MicroSrvTiupUpgrade(ctx context.Context, tiupComponent TiUPComponentTypeStr,
+	instanceName string, version string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupupgrade tiupcomponent: %s" +
+		", instancename: %s, version: %s, timeouts: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName,
+		version, timeoutS, flags, bizID)
+	req := dbPb.CreateTiupTaskRequest{
+		Type : dbPb.TiupTaskType_Upgrade,
+		BizID : bizID,
+	}
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	if rsp == nil || err != nil || rsp.ErrCode != 0 {
+		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
+		return 0, err
+	} else {
+		var req CmdUpgradeReq
+		req.TiUPComponent = tiupComponent
+		req.InstanceName = instanceName
+		req.Version = version
+		req.TimeoutS = timeoutS
+		req.Flags = flags
+		req.TiupPath = secondMicro.TiupBinPath
+		req.TaskID = rsp.Id
+		secondMicro.startNewTiupUpgradeTask(ctx, req.TaskID, &req)
+		return rsp.Id, nil
+	}
+}
+
+func (secondMicro *SecondMicro) startNewTiupUpgradeTask(ctx context.Context, taskID uint64, req *CmdUpgradeReq) {
+	go func() {
+		var args []string
+		args = append(args, string(req.TiUPComponent), "upgrade", req.InstanceName, req.Version)
+		args = append(args, req.Flags...)
+		args = append(args, "--yes")
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+	}()
+}
+
 func (secondMicro *SecondMicro) startNewTiupTask(ctx context.Context, taskID uint64, tiupPath string, tiupArgs []string, TimeoutS int) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
 	logInFunc := framework.LogWithContext(ctx).WithField("task", taskID)

@@ -170,3 +170,13 @@ type CmdTransferReq struct {
 	TiupPath      string
 	Flags         []string
 }
+
+type CmdUpgradeReq struct {
+	TiUPComponent TiUPComponentTypeStr
+	TaskID        uint64
+	InstanceName  string
+	Version       string
+	TimeoutS      int
+	TiupPath      string
+	Flags         []string
+}

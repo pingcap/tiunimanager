@@ -330,6 +330,9 @@ definitions:
         type: string
       az:
         type: string
+      clusterType:
+        description: What cluster is the host used for? [database/datamigration]
+        type: string
       cpuCores:
         description: Host cpu cores spec, init while importing
         type: integer
@@ -384,6 +387,13 @@ definitions:
         type: string
       status:
         description: Host Status, 0 for Online, 1 for offline
+        type: integer
+      sysLabels:
+        items:
+          type: string
+        type: array
+      traits:
+        description: Traits of labels
         type: integer
       updateTime:
         type: integer

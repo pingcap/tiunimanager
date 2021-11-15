@@ -2030,6 +2030,9 @@ paths:
         name: clusterId
         type: string
       - in: query
+        name: endTime
+        type: integer
+      - in: query
         name: page
         type: integer
       - in: query
@@ -2040,6 +2043,9 @@ paths:
         type: boolean
       - in: query
         name: recordId
+        type: integer
+      - in: query
+        name: startTime
         type: integer
       produces:
       - application/json

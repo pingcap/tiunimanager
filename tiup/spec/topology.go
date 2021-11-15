@@ -38,6 +38,7 @@ const (
 	ComponentTiEMMetaDBServer    = "metadb-server"  // tiem-metadb
 	ComponentTiEMClusterServer   = "cluster-server" // tiem-cluster
 	ComponentTiEMAPIServer       = "openapi-server" // tiem-api
+	ComponentTiEMFileServer      = "file-server"    // tiem-file
 	ComponentTiEMTracerServer    = "jaeger"         // tiem-tracer
 	ComponentTiEMWebServer       = "nginx"          // tiem-web
 	ComponentElasticSearchServer = "elasticsearch"  // es
@@ -52,6 +53,7 @@ const (
 	RoleTiEMMetaDB  = "metadb"
 	RoleTiEMCluster = "cluster"
 	RoleTiEMAPI     = "api"
+	RoleTiEMFile    = "file"
 	RoleTiEMTracer  = "tracer"
 	RoleTiEMWeb     = "web"
 	RoleLogServer   = "log"
@@ -96,6 +98,7 @@ type Specification struct {
 	MetaDBServers        []*MetaDBServerSpec    `yaml:"tiem_metadb_servers"`
 	ClusterServers       []*ClusterServerSpec   `yaml:"tiem_cluster_servers"`
 	APIServers           []*APIServerSpec       `yaml:"tiem_api_servers"`
+	FileServers          []*FileServerSpec      `yaml:"tiem_file_server"`
 	WebServers           []*WebServerSpec       `yaml:"tiem_web_servers"`
 	TracerServers        []*TracerServerSpec    `yaml:"tracer_servers"`
 	ElasticSearchServers []*ElasticSearchSpec   `yaml:"elasticsearch_servers"`
@@ -510,6 +513,15 @@ func (s *Specification) APIServerEndpoints() []string {
 	return result
 }
 
+// FileServerEndpoints return the list of registry endpoints in the specification
+func (s *Specification) FileServerEndpoints() []string {
+	result := make([]string, 0)
+	for _, inst := range s.FileServers {
+		result = append(result, fmt.Sprintf("%s:%d", inst.Host, inst.Port))
+	}
+	return result
+}
+
 // AlertManagerEndpoints return the list of alert manager endpoints in the specification
 func (s *Specification) AlertManagerEndpoints() []string {
 	result := make([]string, 0)
@@ -618,6 +630,17 @@ func (s *Specification) TiEMLogPaths() map[string]*config.LogPathInfo {
 		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/logs/audit.log", host.DataDir))
 	}
 
+	for _, host := range s.FileServers {
+		if _, ok := result[host.Host]; !ok {
+			result[host.Host] = &config.LogPathInfo{
+				GeneralLogs: set.NewStringSet(),
+				AuditLogs:   set.NewStringSet(),
+			}
+		}
+		result[host.Host].GeneralLogs.Insert(fmt.Sprintf("%s/logs/*-server.log", host.DataDir))
+		result[host.Host].AuditLogs.Insert(fmt.Sprintf("%s/logs/audit.log", host.DataDir))
+	}
+
 	return result
 }
 
@@ -692,6 +715,7 @@ func (s *Specification) Merge(that Topology) Topology {
 		MetaDBServers:        append(s.MetaDBServers, spec.MetaDBServers...),
 		ClusterServers:       append(s.ClusterServers, spec.ClusterServers...),
 		APIServers:           append(s.APIServers, spec.APIServers...),
+		FileServers:          append(s.FileServers, spec.FileServers...),
 		WebServers:           append(s.WebServers, spec.WebServers...),
 		TracerServers:        append(s.TracerServers, spec.TracerServers...),
 		ElasticSearchServers: append(s.ElasticSearchServers, spec.ElasticSearchServers...),

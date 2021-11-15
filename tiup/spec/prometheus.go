@@ -211,6 +211,14 @@ func (i *MonitorInstance) InitConfig(
 		}
 	}
 
+	if servers, found := topoHasField("FileServers"); found {
+		for i := 0; i < servers.Len(); i++ {
+			srv := servers.Index(i).Interface().(*FileServerSpec)
+			uniqueHosts.Insert(srv.Host)
+			cfig.AddFileServer(srv.Host, uint64(srv.MetricsPort))
+		}
+	}
+
 	if servers, found := topoHasField("Alertmanagers"); found {
 		for i := 0; i < servers.Len(); i++ {
 			alertmanager := servers.Index(i).Interface().(*AlertmanagerSpec)

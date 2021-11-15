@@ -262,7 +262,7 @@ func (c ClusterServiceHandler) ImportData(ctx context.Context, req *clusterpb.Da
 func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *clusterpb.DataTransportQueryRequest, resp *clusterpb.DataTransportQueryResponse) error {
 	start := time.Now()
 	defer handleMetrics(start, "DescribeDataTransport", int(resp.GetRespStatus().GetCode()))
-	infos, page, err := domain.DescribeDataTransportRecord(ctx, req.GetOperator(), req.GetRecordId(), req.GetClusterId(), req.GetReImport(), req.GetPageReq().GetPage(), req.GetPageReq().GetPageSize())
+	infos, page, err := domain.DescribeDataTransportRecord(ctx, req.GetOperator(), req.GetRecordId(), req.GetClusterId(), req.GetReImport(), req.GetStartTime(), req.GetEndTime(), req.GetPageReq().GetPage(), req.GetPageReq().GetPageSize())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
 		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_TRANSPORT_RECORD_NOT_FOUND), Message: common.TIEM_TRANSPORT_RECORD_NOT_FOUND.Explain()}

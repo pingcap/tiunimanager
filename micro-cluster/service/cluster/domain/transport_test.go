@@ -322,7 +322,7 @@ func TestDescribeDataTransportRecord(t *testing.T) {
 			TenantId: "123",
 		},
 	}
-	_, _, err := DescribeDataTransportRecord(context.Background(), request.GetOperator(), 123, "123", false, 1, 10)
+	_, _, err := DescribeDataTransportRecord(context.Background(), request.GetOperator(), 123, "123", false, 0, 0, 1, 10)
 	assert.NoError(t, err)
 }
 

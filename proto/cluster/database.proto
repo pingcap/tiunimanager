@@ -52,6 +52,8 @@ message DataTransportQueryRequest {
     string clusterId = 3;
     int64 recordId = 4;
     bool reImport = 5;
+    int64 startTime = 6;
+    int64 endTime = 7;
 }
 
 message DataTransportInfo {

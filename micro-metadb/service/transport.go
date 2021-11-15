@@ -97,7 +97,7 @@ func (handler *DBServiceHandler) ListTrasnportRecord(ctx context.Context, in *db
 	start := time.Now()
 	defer handler.HandleMetrics(start, "ListTrasnportRecord", int(out.GetStatus().GetCode()))
 	log := framework.LogWithContext(ctx)
-	result, total, err := handler.Dao().ClusterManager().ListTransportRecord(ctx, in.GetClusterId(), int(in.GetRecordId()), in.GetReImport(), (in.GetPage().GetPage()-1)*in.GetPage().GetPageSize(), in.GetPage().GetPageSize())
+	result, total, err := handler.Dao().ClusterManager().ListTransportRecord(ctx, in.GetClusterId(), int(in.GetRecordId()), in.GetReImport(), in.GetStartTime(), in.GetEndTime(), (in.GetPage().GetPage()-1)*in.GetPage().GetPageSize(), in.GetPage().GetPageSize())
 	if err != nil {
 		out.Status = BizErrResponseStatus
 		out.Status.Message = err.Error()

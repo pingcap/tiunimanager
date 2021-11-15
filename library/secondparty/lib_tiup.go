@@ -398,11 +398,15 @@ func (secondMicro *SecondMicro) startNewTiupTransferTask(ctx context.Context, ta
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupUpgrade(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, version string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupupgrade tiupcomponent: %s, instancename: %s, version: %s, timeouts: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, version, timeoutS, flags, bizID)
-	var req dbPb.CreateTiupTaskRequest
-	req.Type = dbPb.TiupTaskType_Upgrade
-	req.BizID = bizID
+func (secondMicro *SecondMicro) MicroSrvTiupUpgrade(ctx context.Context, tiupComponent TiUPComponentTypeStr,
+	instanceName string, version string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupupgrade tiupcomponent: %s" +
+		", instancename: %s, version: %s, timeouts: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName,
+		version, timeoutS, flags, bizID)
+	req := dbPb.CreateTiupTaskRequest{
+		Type : dbPb.TiupTaskType_Upgrade,
+		BizID : bizID,
+	}
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)

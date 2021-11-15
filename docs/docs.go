@@ -796,13 +796,6 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "cluster id",
-                        "name": "clusterId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
                         "name": "clusterId",
                         "in": "query"
                     },

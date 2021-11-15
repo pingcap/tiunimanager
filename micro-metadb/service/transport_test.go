@@ -122,6 +122,10 @@ func TestDBServiceHandler_ListTrasnportRecord(t *testing.T) {
 
 	in := &dbpb.DBListTransportRecordRequest{
 		ClusterId: "tc-123",
+		Page: &dbpb.DBPageDTO{
+			Page:     1,
+			PageSize: 10,
+		},
 	}
 	out := &dbpb.DBListTransportRecordResponse{}
 	err = handler.ListTrasnportRecord(context.TODO(), in, out)

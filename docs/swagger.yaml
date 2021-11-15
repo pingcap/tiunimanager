@@ -496,6 +496,8 @@ definitions:
     properties:
       clusterId:
         type: string
+      comment:
+        type: string
       endTime:
         type: string
       filePath:
@@ -2034,14 +2036,12 @@ paths:
       - application/json
       description: query records of import and export
       parameters:
-      - description: cluster id
-        in: path
-        name: clusterId
-        required: true
-        type: string
       - in: query
         name: clusterId
         type: string
+      - in: query
+        name: endTime
+        type: integer
       - in: query
         name: page
         type: integer
@@ -2054,6 +2054,9 @@ paths:
       - in: query
         name: recordId
         type: integer
+      - in: query
+        name: startTime
+        type: integer
       produces:
       - application/json
       responses:
@@ -2064,9 +2067,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/importexport.DataTransportRecordQueryResp'
-                  type: array
+                  $ref: '#/definitions/importexport.DataTransportRecordQueryResp'
               type: object
         "401":
           description: Unauthorized

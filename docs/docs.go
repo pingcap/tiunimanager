@@ -796,14 +796,12 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "cluster id",
                         "name": "clusterId",
-                        "in": "path",
-                        "required": true
+                        "in": "query"
                     },
                     {
-                        "type": "string",
-                        "name": "clusterId",
+                        "type": "integer",
+                        "name": "endTime",
                         "in": "query"
                     },
                     {
@@ -825,6 +823,11 @@ var doc = `{
                         "type": "integer",
                         "name": "recordId",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "startTime",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -839,10 +842,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/importexport.DataTransportRecordQueryResp"
-                                            }
+                                            "$ref": "#/definitions/importexport.DataTransportRecordQueryResp"
                                         }
                                     }
                                 }
@@ -3560,6 +3560,9 @@ var doc = `{
             "type": "object",
             "properties": {
                 "clusterId": {
+                    "type": "string"
+                },
+                "comment": {
                     "type": "string"
                 },
                 "endTime": {

@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/pingcap-inc/tiem/file-server/service"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"time"
 
@@ -42,6 +43,13 @@ func main() {
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.MetaDBService: func(service micro.Service) error {
 			client.DBClient = dbpb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
+			return nil
+		},
+	})
+
+	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
+		framework.ClusterService: func(service micro.Service) error {
+			client.ClusterClient = clusterpb.NewClusterService(string(framework.ClusterService), service.Client())
 			return nil
 		},
 	})

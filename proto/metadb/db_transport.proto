@@ -51,6 +51,8 @@ message DBListTransportRecordRequest {
 	string clusterId = 2;
     int64 recordId = 3;
     bool reImport = 4;
+    int64 startTime = 5;
+    int64 endTime = 6;
 }
 
 message DBTransportRecordDisplayDTO {

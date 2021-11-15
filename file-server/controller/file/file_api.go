@@ -37,24 +37,25 @@ func UploadImportFile(c *gin.Context) {
 		return
 	}
 
-	uploadPath, err := service.DirMgr.GetImportPath(clusterId)
+	ctx := framework.NewMicroCtxFromGinCtx(c)
+	uploadPath, err := service.DirMgr.GetImportPath(ctx, clusterId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 
-	err = service.FileMgr.UploadFile(c.Request, uploadPath)
+	err = service.FileMgr.UploadFile(ctx, c.Request, uploadPath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
-	err = service.FileMgr.UnzipDir(filepath.Join(uploadPath, common.DefaultZipName), filepath.Join(uploadPath, "data"))
+	err = service.FileMgr.UnzipDir(ctx, filepath.Join(uploadPath, common.DefaultZipName), filepath.Join(uploadPath, "data"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 
-	c.JSON(http.StatusOK, controller.Success(nil))
+	c.JSON(http.StatusOK, controller.Success(uploadPath))
 }
 
 func DownloadExportFile(c *gin.Context) {
@@ -80,6 +81,11 @@ func DownloadExportFile(c *gin.Context) {
 	}
 	framework.LogWithContext(ctx).Info(resp.GetRecord())
 	record := resp.GetRecord()
+	if record.GetRecordId() <= 0 {
+
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("data transport recordId %d not exist", recordId)))
+		return
+	}
 	if record.GetStorageType() != common.NfsStorageType {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, fmt.Sprintf("storage type %s can not download", record.GetStorageType())))
 		return
@@ -93,13 +99,13 @@ func DownloadExportFile(c *gin.Context) {
 	zipName := resp.GetRecord().GetZipName()
 	filePath := filepath.Join(filepath.Dir(downloadPath), zipName)
 
-	err = service.FileMgr.ZipDir(downloadPath, filePath)
+	err = service.FileMgr.ZipDir(ctx, downloadPath, filePath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 
-	err = service.FileMgr.DownloadFile(c, filePath)
+	err = service.FileMgr.DownloadFile(ctx, c, filePath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return

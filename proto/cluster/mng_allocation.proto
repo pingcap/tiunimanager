@@ -118,7 +118,7 @@ message RecycleRequire {
 	string hostId = 4;
 	string hostIp = 5;
 	ComputeRequirement computeReq = 6;
-	DiskResource diskReq = 7;
+	repeated DiskResource diskReq = 7;
 	repeated PortResource portReq = 8;
 }
 

@@ -53,6 +53,8 @@ type DataTransportQueryReq struct {
 	RecordId  int64  `json:"recordId" form:"recordId"`
 	ClusterId string `json:"clusterId" form:"clusterId"`
 	ReImport  bool   `json:"reImport" form:"reImport"`
+	StartTime int64  `json:"startTime" form:"startTime"`
+	EndTime   int64  `json:"endTime" form:"endTime"`
 }
 
 type DataTransportDeleteReq struct {

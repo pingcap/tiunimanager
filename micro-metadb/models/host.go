@@ -340,7 +340,7 @@ func markResourcesForUsed(tx *gorm.DB, applicant *dbpb.DBApplicant, resources []
 		usedCompute.RequestId = applicant.RequestId
 		err = tx.Create(&usedCompute).Error
 		if err != nil {
-			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "insert host(%s) to used_disks table failed: %v", resource.HostId, err)
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "insert host(%s) to used_computes table failed: %v", resource.HostId, err)
 		}
 
 		for _, ports := range resource.portRes {
@@ -725,13 +725,54 @@ func recycleUsedTablesByRequestId(tx *gorm.DB, requestId string) (err error) {
 	return nil
 }
 
-type UsedComputeStatistic struct {
+func recycleUsedTablesBySpecify(tx *gorm.DB, holderId, requestId, hostId string, cpuCores int32, memory int32, diskIds []string, ports []int32) (err error) {
+	recycleCompute := rt.UsedCompute{
+		HostId:   hostId,
+		CpuCores: -cpuCores,
+		Memory:   -memory,
+	}
+	recycleCompute.Holder.HolderId = holderId
+	recycleCompute.RequestId = requestId
+	err = tx.Create(&recycleCompute).Error
+	if err != nil {
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle host(%s) to used_computes table failed: %v", hostId, err)
+	}
+	var usedCompute ComputeStatistic
+	err = tx.Model(&rt.UsedCompute{}).Select("host_id, sum(cpu_cores) as total_cpu_cores, sum(memory) as total_memory").Where(
+		"holder_id = ?", holderId).Group("host_id").Having("host_id = ?", hostId).Scan(&usedCompute).Error
+	if err != nil {
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get host %s total used compute for cluster %s failed, %v", hostId, holderId, err)
+	}
+	if usedCompute.TotalCpuCores == 0 && usedCompute.TotalMemory == 0 {
+		err = tx.Where("host_id = ? and holder_id = ?", hostId, holderId).Delete(&rt.UsedCompute{}).Error
+		if err != nil {
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "clean up UsedCompute in host %s for cluster %s failed, %v", hostId, holderId, err)
+		}
+	}
+
+	for _, diskId := range diskIds {
+		err = tx.Where("host_id = ? and holder_id = ? and disk_id = ?", hostId, holderId, diskId).Delete(&rt.UsedDisk{}).Error
+		if err != nil {
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedDisk for disk %s in host %s failed, %v", diskId, hostId, err)
+		}
+	}
+
+	for _, port := range ports {
+		err = tx.Where("host_id = ? and holder_id = ? and port = ?", hostId, holderId, port).Delete(&rt.UsedPort{}).Error
+		if err != nil {
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "recycle UsedPort for %d in host %s failed, %v", port, hostId, err)
+		}
+	}
+	return nil
+}
+
+type ComputeStatistic struct {
 	HostId        string
 	TotalCpuCores int
 	TotalMemory   int
 }
 
-func recycleResourcesInHosts(tx *gorm.DB, usedCompute []UsedComputeStatistic, usedDisks []string) (err error) {
+func recycleResourcesInHosts(tx *gorm.DB, usedCompute []ComputeStatistic, usedDisks []string) (err error) {
 	for _, diskId := range usedDisks {
 		var disk rt.Disk
 		tx.First(&disk, "ID = ?", diskId).First(&disk)
@@ -765,7 +806,7 @@ func recycleResourcesInHosts(tx *gorm.DB, usedCompute []UsedComputeStatistic, us
 }
 
 func recycleHolderResource(tx *gorm.DB, clusterId string) (err error) {
-	var usedCompute []UsedComputeStatistic
+	var usedCompute []ComputeStatistic
 	err = tx.Model(&rt.UsedCompute{}).Select("host_id, sum(cpu_cores) as total_cpu_cores, sum(memory) as total_memory").Where("holder_id = ?", clusterId).Group("host_id").Scan(&usedCompute).Error
 	if err != nil {
 		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get cluster %s total used compute failed, %v", clusterId, err)
@@ -793,7 +834,7 @@ func recycleHolderResource(tx *gorm.DB, clusterId string) (err error) {
 }
 
 func recycleResourceForRequest(tx *gorm.DB, requestId string) (err error) {
-	var usedCompute []UsedComputeStatistic
+	var usedCompute []ComputeStatistic
 	err = tx.Model(&rt.UsedCompute{}).Select("host_id, sum(cpu_cores) as total_cpu_cores, sum(memory) as total_memory").Where("request_id = ?", requestId).Group("host_id").Scan(&usedCompute).Error
 	if err != nil {
 		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get request %s total used compute failed, %v", requestId, err)
@@ -820,18 +861,51 @@ func recycleResourceForRequest(tx *gorm.DB, requestId string) (err error) {
 	return nil
 }
 
+func recycleHostResource(tx *gorm.DB, clusterId string, requestId string, hostId string, computeReq *dbpb.DBComputeRequirement, diskReq []*dbpb.DBDiskResource, portReqs []*dbpb.DBPortResource) (err error) {
+	var usedCompute []ComputeStatistic
+	var usedDisks []string
+	var usedPorts []int32
+	if computeReq != nil {
+		usedCompute = append(usedCompute, ComputeStatistic{
+			HostId:        hostId,
+			TotalCpuCores: int(computeReq.CpuCores),
+			TotalMemory:   int(computeReq.Memory),
+		})
+	}
+
+	for _, diskResouce := range diskReq {
+		usedDisks = append(usedDisks, diskResouce.DiskId)
+	}
+
+	// Update Host Status and Disk Status
+	err = recycleResourcesInHosts(tx, usedCompute, usedDisks)
+	if err != nil {
+		return err
+	}
+
+	for _, portReq := range portReqs {
+		usedPorts = append(usedPorts, portReq.Ports...)
+	}
+
+	err = recycleUsedTablesBySpecify(tx, clusterId, requestId, hostId, computeReq.CpuCores, computeReq.Memory, usedDisks, usedPorts)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (m *DAOResourceManager) doRecycle(tx *gorm.DB, req *dbpb.DBRecycleRequire) (err error) {
 	switch rt.RecycleType(req.RecycleType) {
 	case rt.RecycleHolder:
 		return recycleHolderResource(tx, req.HolderId)
 	case rt.RecycleOperate:
 		return recycleResourceForRequest(tx, req.RequestId)
-	case rt.RecycleCompute:
-	case rt.RecycleDisk:
+	case rt.RecycleHost:
+		return recycleHostResource(tx, req.HolderId, req.RequestId, req.HostId, req.ComputeReq, req.DiskReq, req.PortReq)
 	default:
 		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVAILD_RECYCLE_TYPE, "invalid recycle resource type %d", req.RecycleType)
 	}
-	return nil
 }
 
 func (m *DAOResourceManager) RecycleAllocResources(ctx context.Context, request *dbpb.DBRecycleRequest) (err error) {

@@ -482,13 +482,16 @@ func buildDBRecycleRequire(src *clusterpb.RecycleRequire, dst *dbpb.DBRecycleReq
 		dst.ComputeReq.Memory = src.ComputeReq.Memory
 	}
 
-	dst.DiskReq = new(dbpb.DBDiskResource)
 	if src.DiskReq != nil {
-		dst.DiskReq.DiskId = src.DiskReq.DiskId
-		dst.DiskReq.DiskName = src.DiskReq.DiskName
-		dst.DiskReq.Path = src.DiskReq.Path
-		dst.DiskReq.Type = src.DiskReq.Type
-		dst.DiskReq.Capacity = src.DiskReq.Capacity
+		for _, req := range src.DiskReq {
+			dst.DiskReq = append(dst.DiskReq, &dbpb.DBDiskResource{
+				DiskId:   req.DiskId,
+				DiskName: req.DiskName,
+				Path:     req.Path,
+				Type:     req.Type,
+				Capacity: req.Capacity,
+			})
+		}
 	}
 
 	for _, portReq := range src.PortReq {

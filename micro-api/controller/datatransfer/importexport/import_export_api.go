@@ -158,9 +158,8 @@ func ImportData(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param clusterId path string true "cluster id"
-// @Param dataTransportQueryReq query DataTransportQueryReq false "transport records query condition"
-// @Success 200 {object} controller.CommonResult{data=[]DataTransportRecordQueryResp}
+// @Param dataTransportQueryReq query DataTransportQueryReq true "transport records query condition"
+// @Success 200 {object} controller.CommonResult{data=DataTransportRecordQueryResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -184,6 +183,8 @@ func DescribeDataTransport(c *gin.Context) {
 		ClusterId: req.ClusterId,
 		RecordId:  req.RecordId,
 		ReImport:  req.ReImport,
+		StartTime: req.StartTime,
+		EndTime:   req.EndTime,
 		PageReq:   req.PageRequest.ConvertToDTO(),
 	})
 
@@ -206,6 +207,7 @@ func DescribeDataTransport(c *gin.Context) {
 					Status:        *management.ParseStatusFromDTO(value.DisplayStatus),
 					StartTime:     time.Unix(value.GetStartTime(), 0),
 					EndTime:       time.Unix(value.GetEndTime(), 0),
+					Comment:       value.GetComment(),
 				}
 			}
 			result := controller.SuccessWithPage(data, *controller.ParsePageFromDTO(respDTO.PageReq))

@@ -69,7 +69,7 @@ func (m *DAOClusterManager) FindTransportRecordById(ctx context.Context, recordI
 	return record, nil
 }
 
-func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId string, recordId int, reImport bool, offset int32, length int32) (dos []*TransportRecordFetchResult, total int64, err error) {
+func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId string, recordId int, reImport bool, startTime, endTime int64, offset int32, length int32) (dos []*TransportRecordFetchResult, total int64, err error) {
 	records := make([]*TransportRecord, length)
 
 	db := m.Db(ctx).Table(TABLE_NAME_TRANSPORT_RECORD).Where("deleted_at is null")
@@ -81,6 +81,12 @@ func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId s
 	}
 	if reImport {
 		db.Where("re_import_support = ?", reImport)
+	}
+	if startTime > 0 {
+		db = db.Where("start_time >= ?", time.Unix(startTime, 0))
+	}
+	if endTime > 0 {
+		db = db.Where("end_time <= ?", time.Unix(endTime, 0))
 	}
 	err = db.Count(&total).Order("id desc").Offset(int(offset)).Limit(int(length)).Find(&records).Error
 	if err == nil {

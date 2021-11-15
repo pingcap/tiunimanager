@@ -428,7 +428,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 	return info.RecordId, nil
 }
 
-func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO, recordId int64, clusterId string, reImport bool, page, pageSize int32) ([]*dbpb.DBTransportRecordDisplayDTO, *dbpb.DBPageDTO, error) {
+func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO, recordId int64, clusterId string, reImport bool, startTime, endTime int64, page, pageSize int32) ([]*dbpb.DBTransportRecordDisplayDTO, *dbpb.DBPageDTO, error) {
 	getLoggerWithContext(ctx).Infof("begin DescribeDataTransportRecord clusterId: %s, recordId: %d, reImport: %v, page: %d, pageSize: %d", clusterId, recordId, reImport, page, pageSize)
 	defer getLoggerWithContext(ctx).Info("end DescribeDataTransportRecord")
 
@@ -443,6 +443,8 @@ func DescribeDataTransportRecord(ctx context.Context, ope *clusterpb.OperatorDTO
 		ClusterId: clusterId,
 		RecordId:  recordId,
 		ReImport:  reImport,
+		StartTime: startTime,
+		EndTime:   endTime,
 	}
 	resp, err := client.DBClient.ListTrasnportRecord(ctx, req)
 	if err != nil {

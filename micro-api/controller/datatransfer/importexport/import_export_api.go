@@ -183,6 +183,8 @@ func DescribeDataTransport(c *gin.Context) {
 		ClusterId: req.ClusterId,
 		RecordId:  req.RecordId,
 		ReImport:  req.ReImport,
+		StartTime: req.StartTime,
+		EndTime:   req.EndTime,
 		PageReq:   req.PageRequest.ConvertToDTO(),
 	})
 

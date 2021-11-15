@@ -801,6 +801,11 @@ var doc = `{
                     },
                     {
                         "type": "integer",
+                        "name": "endTime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
@@ -817,6 +822,11 @@ var doc = `{
                     {
                         "type": "integer",
                         "name": "recordId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "startTime",
                         "in": "query"
                     }
                 ],

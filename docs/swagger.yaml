@@ -2054,9 +2054,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/importexport.DataTransportRecordQueryResp'
-                  type: array
+                  $ref: '#/definitions/importexport.DataTransportRecordQueryResp'
               type: object
         "401":
           description: Unauthorized

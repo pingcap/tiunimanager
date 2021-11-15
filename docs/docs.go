@@ -839,10 +839,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/importexport.DataTransportRecordQueryResp"
-                                            }
+                                            "$ref": "#/definitions/importexport.DataTransportRecordQueryResp"
                                         }
                                     }
                                 }

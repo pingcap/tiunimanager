@@ -21,8 +21,8 @@ enum TiupTaskType {
 	Restart = 8;
 	Stop = 9;
 	Transfer = 10;
-	ScaleOut = 11;
-	Upgrade = 12;
+	Upgrade = 11;
+	ScaleOut = 12;
 }
 
 message TiupTask {

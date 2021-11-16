@@ -197,7 +197,7 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 		tiupConfig.GlobalOptions.DeployDir = filepath.Join(cluster.Id, "tidb-deploy")
 		tiupConfig.GlobalOptions.User = "tidb"
 		tiupConfig.GlobalOptions.SSHPort = 22
-		tiupConfig.GlobalOptions.Arch = "amd64"
+		tiupConfig.GlobalOptions.Arch = cluster.CpuArchitecture
 		tiupConfig.GlobalOptions.LogDir = filepath.Join(cluster.Id, "tidb-log")
 	}
 
@@ -210,7 +210,8 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 				tiupConfig.TiDBServers = append(tiupConfig.TiDBServers, &spec.TiDBSpec{
 					Host: instance.Host,
 					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "tidb-deploy"),
-					Port: domain.DefaultTidbPort,
+					Port: instance.PortList[0],
+					StatusPort: instance.PortList[1],
 				})
 
 			} else if component.ComponentType.ComponentType == "TiKV" {
@@ -218,18 +219,28 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 					Host: instance.Host,
 					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "tikv-data"),
 					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "tikv-deploy"),
+					Port: instance.PortList[0],
+					StatusPort: instance.PortList[1],
 				})
 			} else if component.ComponentType.ComponentType == "PD" {
 				tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
 					Host: instance.Host,
 					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "pd-data"),
 					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "pd-deploy"),
+					ClientPort: instance.PortList[0],
+					PeerPort: instance.PortList[1],
 				})
 			} else if component.ComponentType.ComponentType == "TiFlash" {
 				tiupConfig.TiFlashServers = append(tiupConfig.TiFlashServers, &spec.TiFlashSpec{
 					Host: instance.Host,
 					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "tiflash-data"),
 					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "tiflash-deploy"),
+					TCPPort: instance.PortList[0],
+					HTTPPort: instance.PortList[1],
+					FlashServicePort: instance.PortList[2],
+					FlashProxyPort: instance.PortList[3],
+					FlashProxyStatusPort: instance.PortList[4],
+					StatusPort: instance.PortList[5],
 				})
 			} else if component.ComponentType.ComponentType == "TiCDC" {
 				tiupConfig.CDCServers = append(tiupConfig.CDCServers, &spec.CDCSpec{

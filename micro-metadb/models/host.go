@@ -507,7 +507,6 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	exclusive := require.Require.Exclusive
 	reqCores := require.Require.ComputeReq.CpuCores
 	reqMem := require.Require.ComputeReq.Memory
-	diskType := rt.DiskType(require.Require.DiskReq.DiskType)
 	capacity := require.Require.DiskReq.Capacity
 	needDisk := require.Require.DiskReq.NeedDisk
 	// 1. Choose Host/Disk List
@@ -526,7 +525,7 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_EXCLUDED, "expect disk count %d but only %d after excluded host list", require.Count, count)
 		}
 
-		db = db.Where("disks.type = ? and disks.status = ? and disks.capacity >= ?", diskType, rt.DISK_AVAILABLE, capacity).Count(&count)
+		db = db.Where("disks.status = ? and disks.capacity >= ?", rt.DISK_AVAILABLE, capacity).Count(&count)
 		if count < int64(require.Count) {
 			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "expect disk count %d but only %d after disk filter", require.Count, count)
 		}

@@ -178,6 +178,15 @@ func ImportDataPreCheck(ctx context.Context, req *clusterpb.DataImportRequest) e
 			return fmt.Errorf("invalid param password %s", req.GetPassword())
 		}
 	*/
+	absPath, err := filepath.Abs(common.DefaultImportDir)
+	if err != nil { //todo: get from config
+		return fmt.Errorf("import dir %s is not vaild", common.DefaultImportDir)
+	}
+	if !checkFilePathExists(absPath) {
+		//return fmt.Errorf("import path %s not exist", absPath)
+		_ = os.MkdirAll(absPath, os.ModeDir)
+	}
+
 	if req.GetRecordId() == 0 {
 		switch req.GetStorageType() {
 		case common.S3StorageType:
@@ -194,14 +203,7 @@ func ImportDataPreCheck(ctx context.Context, req *clusterpb.DataImportRequest) e
 				return fmt.Errorf("invalid param secretAccessKey %s", req.GetSecretAccessKey())
 			}
 		case common.NfsStorageType:
-			absPath, err := filepath.Abs(common.DefaultImportDir)
-			if err != nil { //todo: get from config
-				return fmt.Errorf("import dir %s is not vaild", common.DefaultImportDir)
-			}
-			if !checkFilePathExists(absPath) {
-				//return fmt.Errorf("import path %s not exist", absPath)
-				_ = os.MkdirAll(absPath, os.ModeDir)
-			}
+			break
 		default:
 			return fmt.Errorf("invalid param storageType %s", req.GetStorageType())
 		}
@@ -329,6 +331,12 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 			err = os.Rename(filepath.Join(importPrefix, request.GetClusterId(), "temp"), importDir)
 			if err != nil {
 				getLoggerWithContext(ctx).Errorf("find import dir failed, %s", err.Error())
+				return 0, err
+			}
+		} else {
+			err = os.MkdirAll(importDir, os.ModeDir)
+			if err != nil {
+				getLoggerWithContext(ctx).Errorf("mkdir import dir failed, %s", err.Error())
 				return 0, err
 			}
 		}

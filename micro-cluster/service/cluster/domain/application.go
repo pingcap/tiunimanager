@@ -177,8 +177,7 @@ func ScaleOutCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId stri
 	}
 
 	// Merge multi demands
-	clusterAggregation.Cluster.ComponentDemands = mergeDemands(clusterAggregation.Cluster.ComponentDemands, demands)
-	clusterAggregation.Cluster.ScaleDemands = demands
+	clusterAggregation.Cluster.ComponentDemands = demands
 	clusterAggregation.DemandsModified = true
 
 	// Start the workflow to scale out a cluster
@@ -432,12 +431,7 @@ func collectorTiDBLogConfig(task *TaskEntity, ctx *FlowContext) bool {
 
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
-	var demands []*ClusterComponentDemand
-	if len(clusterAggregation.Cluster.ScaleDemands) > 0 {
-		demands = clusterAggregation.Cluster.ScaleDemands
-	} else {
-		demands = clusterAggregation.Cluster.ComponentDemands
-	}
+	demands := clusterAggregation.Cluster.ComponentDemands
 
 	err := TopologyPlanner.BuildComponents(flowContext.Context, demands, clusterAggregation.AddedClusterComponents, clusterAggregation.Cluster)
 	if err != nil {

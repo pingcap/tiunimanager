@@ -41,7 +41,6 @@ type Cluster struct {
 
 	ClusterDemand    ClusterCommonDemand
 	ComponentDemands []*ClusterComponentDemand
-	ScaleDemands     []*ClusterComponentDemand
 
 	WorkFlowId uint
 

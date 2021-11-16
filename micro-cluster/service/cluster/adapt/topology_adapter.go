@@ -39,11 +39,11 @@ func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*
 	for _, demand := range demands {
 		var componentGroup domain.ComponentGroup
 		componentGroup.ComponentType = demand.ComponentType
-		nodes := make([]domain.ComponentInstance, 0, demand.TotalNodeCount)
+		nodes := make([]*domain.ComponentInstance, 0, demand.TotalNodeCount)
 		for _, items := range demand.DistributionItems {
 			for i := 0; i < items.Count; i++ {
 				portRange := knowledge.GetComponentPortRange(cluster.ClusterType.Code, cluster.ClusterVersion.Code, demand.ComponentType.ComponentType)
-				node := domain.ComponentInstance{
+				node := &domain.ComponentInstance{
 					TenantId: cluster.TenantId,
 					Status: domain.ClusterStatusUnlined,
 					ClusterId: cluster.Id,

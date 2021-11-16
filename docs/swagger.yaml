@@ -522,9 +522,9 @@ definitions:
     type: object
   knowledge.ClusterComponent:
     properties:
-      componentAlias:
-        type: string
       componentName:
+        type: string
+      componentPurpose:
         type: string
       componentType:
         type: string

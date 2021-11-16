@@ -3602,10 +3602,10 @@ var doc = `{
         "knowledge.ClusterComponent": {
             "type": "object",
             "properties": {
-                "componentAlias": {
+                "componentName": {
                     "type": "string"
                 },
-                "componentName": {
+                "componentPurpose": {
                     "type": "string"
                 },
                 "componentType": {

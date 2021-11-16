@@ -32,9 +32,9 @@ type ClusterVersion struct {
 }
 
 type ClusterComponent struct {
-	ComponentType  string `json:"componentType"`
-	ComponentAlias string `json:"componentAlias"`
-	ComponentName  string `json:"componentName"`
+	ComponentType    string `json:"componentType"`
+	ComponentPurpose string `json:"componentPurpose"`
+	ComponentName    string `json:"componentName"`
 }
 
 type ClusterTypeSpec struct {

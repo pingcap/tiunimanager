@@ -437,12 +437,13 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 	demands := clusterAggregation.AddedComponentDemand
 
-	err := TopologyPlanner.BuildComponents(flowContext.Context, demands, clusterAggregation.AddedClusterComponents, clusterAggregation.Cluster)
+	components, err := TopologyPlanner.BuildComponents(flowContext.Context, demands, clusterAggregation.Cluster)
 	if err != nil {
 		getLoggerWithContext(flowContext).Error(err)
 		task.Fail(err)
 		return false
 	}
+	clusterAggregation.AddedClusterComponents = components
 	//TODO add grafana and prometheus into ClusterComponents for creating cluster
 
 	// build resource request
@@ -570,7 +571,6 @@ func setClusterOffline(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)
 	return true
 }
-
 
 func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)

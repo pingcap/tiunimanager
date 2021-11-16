@@ -56,7 +56,7 @@ type MetadataManager interface {
 }
 
 type ClusterTopologyPlanner interface {
-	BuildComponents(ctx context.Context, demands []*ClusterComponentDemand, components []*ComponentGroup, cluster *Cluster) error
+	BuildComponents(ctx context.Context, demands []*ClusterComponentDemand, cluster *Cluster) ([]*ComponentGroup, error)
 	AnalysisResourceRequest(ctx context.Context, cluster *Cluster, components []*ComponentGroup, takeover bool) (*clusterpb.BatchAllocRequest, error)
 	ApplyResourceToComponents(ctx context.Context, response *clusterpb.BatchAllocResponse, components []*ComponentGroup) error
 	GenerateTopologyConfig(ctx context.Context, components []*ComponentGroup, cluster *Cluster) (*spec.Specification, error)

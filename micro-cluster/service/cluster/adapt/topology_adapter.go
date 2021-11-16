@@ -31,11 +31,12 @@ import (
 type DefaultTopologyPlanner struct {
 }
 
-func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*domain.ClusterComponentDemand, components []*domain.ComponentGroup, cluster *domain.Cluster) error {
+func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*domain.ClusterComponentDemand, cluster *domain.Cluster) ([]*domain.ComponentGroup, error) {
 	if len(demands) <= 0 {
-		return fmt.Errorf("demands: [%v] is empty", demands)
+		return nil, fmt.Errorf("demands: [%v] is empty", demands)
 	}
 
+	components := make([]*domain.ComponentGroup, 0)
 	for _, demand := range demands {
 		var componentGroup domain.ComponentGroup
 		componentGroup.ComponentType = demand.ComponentType
@@ -71,7 +72,7 @@ func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*
 		components = append(components, &componentGroup)
 	}
 
-	return nil
+	return components, nil
 }
 
 func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, cluster *domain.Cluster, components []*domain.ComponentGroup, takeover bool) (*clusterpb.BatchAllocRequest, error) {

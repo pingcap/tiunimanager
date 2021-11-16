@@ -662,7 +662,7 @@ func importDataToCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	info := flowContext.GetData(contextDataTransportKey).(*ImportInfo)
 
 	//tiup tidb-lightning -config tidb-lightning.toml
-	resp, err := secondparty.SecondParty.MicroSrvLightning(flowContext.Context, 0,
+	importTaskId, err := secondparty.SecondParty.MicroSrvLightning(flowContext.Context, 0,
 		[]string{"-config", fmt.Sprintf("%s/tidb-lightning.toml", info.ConfigPath)},
 		uint64(task.Id))
 	if err != nil {

@@ -511,17 +511,20 @@ func convertClusterToDTO(cluster *domain.Cluster) (dto *dbpb.DBClusterDTO) {
 		return
 	}
 	dto = &dbpb.DBClusterDTO{
-		Id:          cluster.Id,
-		Code:        cluster.Code,
-		Name:        cluster.ClusterName,
-		TenantId:    cluster.TenantId,
-		DbPassword:  cluster.DbPassword,
-		ClusterType: cluster.ClusterType.Code,
-		VersionCode: cluster.ClusterVersion.Code,
-		Status:      int32(cluster.Status),
-		Tls:         cluster.Tls,
-		WorkFlowId:  int32(cluster.WorkFlowId),
-		OwnerId:     cluster.OwnerId,
+		Id:              cluster.Id,
+		Code:            cluster.Code,
+		Name:            cluster.ClusterName,
+		TenantId:        cluster.TenantId,
+		DbPassword:      cluster.DbPassword,
+		ClusterType:     cluster.ClusterType.Code,
+		VersionCode:     cluster.ClusterVersion.Code,
+		Status:          int32(cluster.Status),
+		Exclusive:       cluster.Exclusive,
+		Region:          cluster.Region,
+		CpuArchitecture: cluster.CpuArchitecture,
+		Tls:             cluster.Tls,
+		WorkFlowId:      int32(cluster.WorkFlowId),
+		OwnerId:         cluster.OwnerId,
 	}
 
 	if len(cluster.Tags) > 0 {

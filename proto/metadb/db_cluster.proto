@@ -21,11 +21,14 @@ message DBClusterDTO {
     string tags = 9;
     bool tls = 10;
     string demands = 11;
-    int32 workFlowId = 12;
-    string ownerId = 13;
-    int64 createTime = 14;
-    int64 updateTime = 15;
-    int64 deleteTime = 16;
+    bool exclusive = 12;
+    string region = 13;
+    string cpuArchitecture = 14;
+    int32 workFlowId = 15;
+    string ownerId = 16;
+    int64 createTime = 17;
+    int64 updateTime = 18;
+    int64 deleteTime = 19;
 }
 
 message DBTopologyConfigDTO {

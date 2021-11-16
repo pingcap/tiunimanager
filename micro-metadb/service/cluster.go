@@ -39,9 +39,20 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DB
 	dto := req.Cluster
 	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
-	cluster, err := clusterManager.CreateCluster(ctx, dto.Name, dto.DbPassword, dto.ClusterType, dto.VersionCode, dto.Tls, dto.Tags, dto.OwnerId, dto.TenantId)
+	cluster, err := clusterManager.CreateCluster(ctx, models.Cluster{Entity: models.Entity{TenantId: dto.TenantId},
+		Name:            dto.Name,
+		DbPassword:      dto.DbPassword,
+		Type:            dto.ClusterType,
+		Version:         dto.VersionCode,
+		Tls:             dto.Tls,
+		Tags:            dto.Tags,
+		OwnerId:         dto.OwnerId,
+		Region:          dto.Region,
+		Exclusive:       dto.Exclusive,
+		CpuArchitecture: dto.CpuArchitecture,
+	})
 	if nil == err {
-		do, demand, newErr := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
+		do, demand, newErr := clusterManager.UpdateComponentDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
 		if newErr == nil {
 			resp.Status = ClusterSuccessResponseStatus
 			resp.Cluster = convertToClusterDTO(do, demand)
@@ -61,15 +72,15 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DB
 
 func (handler *DBServiceHandler) UpdateClusterDemand(ctx context.Context, req *dbpb.DBUpdateDemandRequest, resp *dbpb.DBUpdateDemandResponse) error {
 	if nil == req || nil == resp {
-		return errors.Errorf("UpdateClusterDemand has invalid parameter")
+		return errors.Errorf("UpdateComponentDemand has invalid parameter")
 	}
 	clusterManager := handler.Dao().ClusterManager()
 	log := framework.LogWithContext(ctx)
-	do, demand, err := clusterManager.UpdateClusterDemand(ctx, req.ClusterId, req.Demands, req.TenantId)
+	do, demand, err := clusterManager.UpdateComponentDemand(ctx, req.ClusterId, req.Demands, req.TenantId)
 	if err == nil {
 		resp.Status = ClusterSuccessResponseStatus
 		resp.Cluster = convertToClusterDTO(do, demand)
-		log.Infof("UpdateClusterDemand successful, clusterId: %s, tenantId: %s", req.ClusterId, req.TenantId)
+		log.Infof("UpdateComponentDemand successful, clusterId: %s, tenantId: %s", req.ClusterId, req.TenantId)
 	} else {
 		resp.Status = BizErrResponseStatus
 		resp.Status.Message = err.Error()

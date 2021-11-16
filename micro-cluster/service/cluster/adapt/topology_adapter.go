@@ -51,8 +51,8 @@ func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*
 					ComponentType: demand.ComponentType,
 					Version: &cluster.ClusterVersion,
 					Location: &resource.Location{
-						Region: cluster.Region,
-						Zone: items.ZoneCode,
+						Region: resource.GetDomainPrefixFromCode(items.ZoneCode),
+						Zone: resource.GetDomainNameFromCode(items.ZoneCode),
 					},
 					Compute: &resource.ComputeRequirement{
 						CpuCores: int32(knowledge.ParseCpu(items.SpecCode)),

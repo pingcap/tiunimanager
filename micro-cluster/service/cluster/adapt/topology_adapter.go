@@ -50,7 +50,7 @@ func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*
 					ComponentType: demand.ComponentType,
 					Version: &cluster.ClusterVersion,
 					Location: &resource.Location{
-						Region: cluster.ClusterDemand.Region,
+						Region: cluster.Region,
 						Zone: items.ZoneCode,
 					},
 					Compute: &resource.ComputeRequirement{

@@ -223,7 +223,7 @@ func RecoverPreCheck(ctx context.Context, req *clusterpb.RecoverRequest) error {
 	return nil
 }
 
-func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
+func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	getLoggerWithContext(ctx).Infof("Begin do Recover, clusterInfo: %+v, demandDTOs: %+v", clusterInfo, demandDTOs)
 	defer getLoggerWithContext(ctx).Infof("End do Recover")
 	operator := parseOperatorFromDTO(ope)
@@ -240,6 +240,9 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 			SourceClusterId: clusterInfo.GetRecoverInfo().GetSourceClusterId(),
 			BackupRecordId:  clusterInfo.GetRecoverInfo().GetBackupRecordId(),
 		},
+		Region: commonDemand.Region,
+		CpuArchitecture: commonDemand.CpuArchitecture,
+		Exclusive: commonDemand.Exclusive,
 	}
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs))

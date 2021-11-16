@@ -81,6 +81,9 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		Tls:            clusterInfo.Tls,
 		TenantId:       operator.TenantId,
 		OwnerId:        operator.Id,
+		Region: commonDemand.Region,
+		CpuArchitecture: commonDemand.CpuArchitecture,
+		Exclusive: commonDemand.Exclusive,
 	}
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs))

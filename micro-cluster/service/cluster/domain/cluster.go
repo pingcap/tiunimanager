@@ -39,7 +39,9 @@ type Cluster struct {
 	RecoverInfo    RecoverInfo
 	Status         ClusterStatus
 
-	ClusterDemand    ClusterCommonDemand
+	Exclusive       bool
+	Region          string
+	CpuArchitecture string
 
 	WorkFlowId uint
 

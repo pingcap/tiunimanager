@@ -315,7 +315,8 @@ message CreateBackupResponse {
 message RecoverRequest {
     OperatorDTO operator = 1;
     ClusterBaseInfoDTO cluster = 2;
-    repeated ClusterNodeDemandDTO demands = 3;
+    ClusterCommonDemandDTO commonDemand = 3;
+    repeated ClusterNodeDemandDTO demands = 4;
 }
 
 message RecoverResponse {

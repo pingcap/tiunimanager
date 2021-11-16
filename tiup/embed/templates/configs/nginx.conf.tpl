@@ -22,6 +22,14 @@ http {
         include {{.DeployDir}}/conf/server_list.conf;
     }
 
+    upstream file-servers {
+        least_conn;
+
+        upsync {{.IP}}:{{.Port}}/etcd/v2/keys/micro/registry/file-server upsync_timeout=6m upsync_interval=500ms upsync_type=etcd strong_dependency=off;
+        upsync_dump_path {{.DeployDir}}/conf/file_server_list.conf;
+        include {{.DeployDir}}/conf/file_server_list.conf;
+    }
+
     upstream etcdcluster {
 {{- range $idx, $addr := .RegistryEndpoints}}
         server {{$addr}} weight=1 fail_timeout=10 max_fails=3;
@@ -47,6 +55,10 @@ http {
 
         location ~ ^/(swagger|system|web)/ {
             proxy_pass http://openapi-servers;
+        }
+
+        location ^~ /fileapi {
+            proxy_pass http://file-servers;
         }
 {{- end}}
 
@@ -83,6 +95,10 @@ http {
 
         location ~ ^/(swagger|system|web)/ {
             proxy_pass https://openapi-servers;
+        }
+
+        location ^~ /fileapi {
+            proxy_pass http://file-servers;
         }
     }
 {{- end}}

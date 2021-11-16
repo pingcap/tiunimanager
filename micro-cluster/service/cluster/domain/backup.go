@@ -248,8 +248,6 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
 
-	cluster.ComponentDemands = demands
-
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
 
@@ -260,6 +258,7 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 		Cluster:          cluster,
 		MaintainCronTask: GetDefaultMaintainTask(),
 		CurrentOperator:  operator,
+		AddedComponentDemand: demands,
 	}
 
 	// Start the workflow to create a cluster instance

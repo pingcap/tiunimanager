@@ -243,8 +243,8 @@ func persistClusterBaseInfo(ctx context.Context, aggregation *domain.ClusterAggr
 
 	if aggregation.DemandsModified {
 		var demands string
-		if len(cluster.ComponentDemands) > 0 {
-			bytes, err := json.Marshal(cluster.ComponentDemands)
+		if len(aggregation.AddedComponentDemand) > 0 {
+			bytes, err := json.Marshal(aggregation.AddedComponentDemand)
 			if err != nil {
 				return err
 			}
@@ -529,11 +529,6 @@ func convertClusterToDTO(cluster *domain.Cluster) (dto *dbpb.DBClusterDTO) {
 		dto.Tags = string(bytes)
 	}
 
-	if len(cluster.ComponentDemands) > 0 {
-		bytes, _ := json.Marshal(cluster.ComponentDemands)
-		dto.Demands = string(bytes)
-	}
-
 	return
 }
 
@@ -559,7 +554,6 @@ func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 	}
 
 	json.Unmarshal([]byte(dto.Tags), &cluster.Tags)
-	json.Unmarshal([]byte(dto.Demands), &cluster.ComponentDemands)
 
 	return
 }

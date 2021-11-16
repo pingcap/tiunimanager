@@ -40,7 +40,6 @@ type Cluster struct {
 	Status         ClusterStatus
 
 	ClusterDemand    ClusterCommonDemand
-	ComponentDemands []*ClusterComponentDemand
 
 	WorkFlowId uint
 

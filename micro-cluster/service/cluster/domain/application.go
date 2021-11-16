@@ -37,6 +37,8 @@ import (
 type ClusterAggregation struct {
 	Cluster                *Cluster
 	ClusterMetadata        spec.Metadata
+
+	AddedComponentDemand 	[]*ClusterComponentDemand
 	AddedClusterComponents []*ComponentGroup
 
 	CurrentWorkFlow *FlowWorkEntity
@@ -87,8 +89,6 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
 
-	cluster.ComponentDemands = demands
-
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
 
@@ -99,6 +99,7 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		Cluster:          cluster,
 		MaintainCronTask: GetDefaultMaintainTask(),
 		CurrentOperator:  operator,
+		AddedComponentDemand: demands,
 	}
 
 	// Start the workflow to create a cluster instance
@@ -177,7 +178,7 @@ func ScaleOutCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId stri
 	}
 
 	// Merge multi demands
-	clusterAggregation.Cluster.ComponentDemands = demands
+	clusterAggregation.AddedComponentDemand = demands
 	clusterAggregation.DemandsModified = true
 
 	// Start the workflow to scale out a cluster
@@ -431,7 +432,7 @@ func collectorTiDBLogConfig(task *TaskEntity, ctx *FlowContext) bool {
 
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
-	demands := clusterAggregation.Cluster.ComponentDemands
+	demands := clusterAggregation.AddedComponentDemand
 
 	err := TopologyPlanner.BuildComponents(flowContext.Context, demands, clusterAggregation.AddedClusterComponents, clusterAggregation.Cluster)
 	if err != nil {

@@ -552,9 +552,13 @@ func convertToComponentInstance(dtos []*dbpb.DBComponentInstanceDTO) []*models.C
 			Role:           v.Role,
 			Version:        v.Version,
 			HostId:         v.HostId,
+			Host:           v.Host,
+			CpuCores:       int8(v.CpuCores),
+			Memory:         int8(v.Memory),
 			DiskId:         v.DiskId,
 			PortInfo:       v.PortInfo,
 			AllocRequestId: v.AllocRequestId,
+			DiskPath:       v.DiskPath,
 		}
 	}
 

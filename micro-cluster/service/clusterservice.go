@@ -347,7 +347,7 @@ func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterp
 		return nil
 	}
 
-	clusterAggregation, err := domain.Recover(ctx, req.GetOperator(), req.GetCluster(), req.CommonDemand, req.GetDemands())
+	clusterAggregation, err := domain.Recover(ctx, req.GetOperator(), req.GetCluster(), req.GetCommonDemand(), req.GetDemands())
 	if err != nil {
 		getLoggerWithContext(ctx).Error(err)
 		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_RECOVER_PROCESS_FAILED), Message: common.TIEM_RECOVER_PROCESS_FAILED.Explain()}

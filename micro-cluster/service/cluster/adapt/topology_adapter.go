@@ -98,7 +98,9 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, clu
 						ComputeReq: &clusterpb.ComputeRequirement{CpuCores: 0, Memory: 0},
 					},
 					Count:      1,
-					HostFilter: &clusterpb.Filter{},
+					HostFilter: &clusterpb.Filter{
+						Arch: cluster.CpuArchitecture,
+					},
 					Strategy:   int32(resource.UserSpecifyHost),
 				})
 			} else {
@@ -126,7 +128,9 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, clu
 						},
 					},
 					Count: 1,
-					HostFilter: &clusterpb.Filter{},
+					HostFilter: &clusterpb.Filter{
+						Arch: cluster.CpuArchitecture,
+					},
 					Strategy: int32(resource.RandomRack),
 				})
 			}

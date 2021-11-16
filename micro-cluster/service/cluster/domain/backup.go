@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
+	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
@@ -244,6 +245,11 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 		CpuArchitecture: commonDemand.CpuArchitecture,
 		Exclusive: commonDemand.Exclusive,
 	}
+
+	if cluster.CpuArchitecture == "" {
+		cluster.CpuArchitecture = string(resourceType.X86)
+	}
+
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs))
 

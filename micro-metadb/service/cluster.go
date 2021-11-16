@@ -111,12 +111,10 @@ func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbpb.D
 
 	clusterManager := handler.Dao().ClusterManager()
 
-	cluster, err := clusterManager.UpdateTopologyConfig(ctx, req.ClusterId, req.TopologyContent, req.TenantId)
 	if err == nil {
 		componentInstances, err := clusterManager.AddClusterComponentInstance(ctx, req.ClusterId, convertToComponentInstance(req.ComponentInstances))
 		if err == nil {
 			resp.Status = ClusterSuccessResponseStatus
-			resp.Cluster = convertToClusterDTO(cluster, nil)
 			resp.ComponentInstances = convertToComponentInstanceDTO(componentInstances)
 			log.Infof("CreateInstance successful, clusterId: %s, tenantId: %s, error: %v",
 				req.GetClusterId(), req.GetTenantId(), err)
@@ -552,7 +550,6 @@ func convertToComponentInstance(dtos []*dbpb.DBComponentInstanceDTO) []*models.C
 			ClusterId:      v.ClusterId,
 			ComponentType:  v.ComponentType,
 			Role:           v.Role,
-			Spec:           v.Spec,
 			Version:        v.Version,
 			HostId:         v.HostId,
 			DiskId:         v.DiskId,
@@ -580,10 +577,13 @@ func convertToComponentInstanceDTO(models []*models.ComponentInstance) []*dbpb.D
 			ClusterId:      v.ClusterId,
 			ComponentType:  v.ComponentType,
 			Role:           v.Role,
-			Spec:           v.Spec,
 			Version:        v.Version,
 			HostId:         v.HostId,
+			Host:           v.Host,
+			CpuCores:       int32(v.CpuCores),
+			Memory: int32(v.Memory),
 			DiskId:         v.DiskId,
+			DiskPath:       v.DiskPath,
 			PortInfo:       v.PortInfo,
 			AllocRequestId: v.AllocRequestId,
 			CreateTime:     v.CreatedAt.Unix(),

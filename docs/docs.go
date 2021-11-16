@@ -3666,6 +3666,12 @@ var doc = `{
         "knowledge.ClusterVersionSpec": {
             "type": "object",
             "properties": {
+                "archTypes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "clusterVersion": {
                     "$ref": "#/definitions/knowledge.ClusterVersion"
                 },

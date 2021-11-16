@@ -16,7 +16,10 @@
 
 package knowledge
 
-import "github.com/pingcap-inc/tiem/library/framework"
+import (
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
+	"github.com/pingcap-inc/tiem/library/framework"
+)
 
 var SpecKnowledge *ClusterSpecKnowledge
 var ParameterKnowledge *ClusterParameterKnowledge
@@ -114,6 +117,10 @@ func loadSpecKnowledge() {
 
 	tidbV4_0_12_Spec := ClusterVersionSpec{
 		ClusterVersion: tidbV4_0_12,
+		ArchTypes: []resource.ArchType{
+			resource.Arm64,
+			resource.X86,
+		},
 		ComponentSpecs: []ClusterComponentSpec{
 			{tidbComponent, ComponentConstraint{true, []int{3}, []string{
 				GenSpecCode(4, 8),
@@ -153,6 +160,10 @@ func loadSpecKnowledge() {
 	}
 	tidbV5_0_0_Spec := ClusterVersionSpec{
 		ClusterVersion: tidbV5_0_0,
+		ArchTypes: []resource.ArchType{
+			resource.Arm64,
+			resource.X86,
+		},
 		ComponentSpecs: []ClusterComponentSpec{
 			{tidbComponent, ComponentConstraint{true, []int{3}, []string{
 				GenSpecCode(4, 8),

@@ -563,6 +563,10 @@ definitions:
     type: object
   knowledge.ClusterVersionSpec:
     properties:
+      archTypes:
+        items:
+          type: string
+        type: array
       clusterVersion:
         $ref: '#/definitions/knowledge.ClusterVersion'
       componentSpecs:

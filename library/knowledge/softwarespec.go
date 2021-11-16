@@ -17,6 +17,10 @@
 
 package knowledge
 
+import (
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
+)
+
 type ClusterType struct {
 	Code string `json:"code"`
 	Name string `json:"name"`
@@ -50,6 +54,7 @@ func (s *ClusterTypeSpec) GetVersionSpec(versionCode string) (versionSpec *Clust
 type ClusterVersionSpec struct {
 	ClusterVersion ClusterVersion         `json:"clusterVersion"`
 	ComponentSpecs []ClusterComponentSpec `json:"componentSpecs"`
+	ArchTypes      []resource.ArchType    `json:"archTypes"`
 }
 
 func (s *ClusterVersionSpec) GetComponentSpec(componentType string) (componentSpec *ClusterComponentSpec) {

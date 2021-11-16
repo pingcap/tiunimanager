@@ -123,7 +123,7 @@ func Backup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, b
 func DeleteBackup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, bakId int64) error {
 	getLoggerWithContext(ctx).Infof("Begin do DeleteBackup, clusterId: %s, bakId: %d", clusterId, bakId)
 	defer getLoggerWithContext(ctx).Infof("End do DeleteBackup")
-	//todo: parma pre check
+
 	resp, err := client.DBClient.QueryBackupRecords(ctx, &dbpb.DBQueryBackupRecordRequest{ClusterId: clusterId, RecordId: bakId})
 	if err != nil {
 		getLoggerWithContext(ctx).Errorf("query backup record %d of cluster %s failed, %s", bakId, clusterId, err.Error())
@@ -150,6 +150,46 @@ func DeleteBackup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId str
 	if delResp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
 		getLoggerWithContext(ctx).Errorf("delete metadb backup record failed, %s", delResp.GetStatus().GetMessage())
 		return fmt.Errorf("delete metadb backup record failed, %s", delResp.GetStatus().GetMessage())
+	}
+
+	return nil
+}
+
+func DeleteBackups(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, backupMode string) error {
+	getLoggerWithContext(ctx).Infof("Begin do DeleteBackups, clusterId: %s, backupMode: %s", clusterId, backupMode)
+	defer getLoggerWithContext(ctx).Infof("End do DeleteBackups")
+
+	resp, err := client.DBClient.ListBackupRecords(ctx, &dbpb.DBListBackupRecordsRequest{ClusterId: clusterId, BackupMode: backupMode})
+	if err != nil {
+		getLoggerWithContext(ctx).Errorf("list backup records of cluster %s, backupMode %s, failed, %s", clusterId, backupMode, err.Error())
+		return fmt.Errorf("list backup record of cluster %s, backupMode %s, failed, %s", clusterId, backupMode, err.Error())
+	}
+	if resp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+		getLoggerWithContext(ctx).Errorf("list backup records of cluster %s, backupMode %s, failed, %s", clusterId, backupMode, resp.GetStatus().GetMessage())
+		return fmt.Errorf("list backup record of cluster %s, backupMode %s, failed, %s", clusterId, backupMode, resp.GetStatus().GetMessage())
+	}
+	getLoggerWithContext(ctx).Infof("list backup records to be deleted, record: %+v", resp.GetBackupRecords())
+
+	records := resp.GetBackupRecords()
+	for index := 0; index < len(records); index++ {
+		curRecord := records[index].GetBackupRecord()
+		filePath := curRecord.GetFilePath()
+
+		err = os.RemoveAll(filePath)
+		if err != nil {
+			getLoggerWithContext(ctx).Errorf("remove backup filePath %s failed, %s", filePath, err.Error())
+			return fmt.Errorf("remove backup filePath %s failed, %s", filePath, err.Error())
+		}
+
+		delResp, err := client.DBClient.DeleteBackupRecord(ctx, &dbpb.DBDeleteBackupRecordRequest{Id: curRecord.GetId()})
+		if err != nil {
+			getLoggerWithContext(ctx).Errorf("delete metadb backup record %d failed, %s", curRecord.GetId(), err.Error())
+			return fmt.Errorf("delete metadb backup record %d failed, %s", curRecord.GetId(), err.Error())
+		}
+		if delResp.GetStatus().GetCode() != service.ClusterSuccessResponseStatus.GetCode() {
+			getLoggerWithContext(ctx).Errorf("delete metadb backup record %d failed, %s", curRecord.GetId(), delResp.GetStatus().GetMessage())
+			return fmt.Errorf("delete metadb backup record %d failed, %s", curRecord.GetId(), delResp.GetStatus().GetMessage())
+		}
 	}
 
 	return nil

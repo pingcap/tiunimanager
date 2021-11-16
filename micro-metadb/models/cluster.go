@@ -443,7 +443,7 @@ func (m *DAOClusterManager) UpdateBackupRecord(ctx context.Context, record *dbpb
 
 func (m *DAOClusterManager) QueryBackupRecord(ctx context.Context, clusterId string, recordId int64) (*BackupRecordFetchResult, error) {
 	record := BackupRecord{}
-	err := m.Db(ctx).Table("backup_records").Where("id = ? and cluster_id = ?", recordId, clusterId).First(&record).Error
+	err := m.Db(ctx).Table(TABLE_NAME_BACKUP_RECORD).Where("id = ? and cluster_id = ?", recordId, clusterId).First(&record).Error
 	m.HandleMetrics(TABLE_NAME_BACKUP_RECORD, 0)
 	if err != nil {
 		return nil, err
@@ -461,7 +461,7 @@ func (m *DAOClusterManager) QueryBackupRecord(ctx context.Context, clusterId str
 		Flow:         &flow,
 	}, nil
 }
-func (m *DAOClusterManager) ListBackupRecords(ctx context.Context, clusterId string, startTime, endTime int64, offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
+func (m *DAOClusterManager) ListBackupRecords(ctx context.Context, clusterId string, startTime, endTime int64, backupMode string, offset, length int) (dos []*BackupRecordFetchResult, total int64, err error) {
 	records := make([]*BackupRecord, length)
 	db := m.Db(ctx).Table(TABLE_NAME_BACKUP_RECORD).Where("cluster_id = ? and deleted_at is null", clusterId)
 	if startTime > 0 {
@@ -469,6 +469,9 @@ func (m *DAOClusterManager) ListBackupRecords(ctx context.Context, clusterId str
 	}
 	if endTime > 0 {
 		db = db.Where("end_time <= ?", time.Unix(endTime, 0))
+	}
+	if backupMode != "" {
+		db = db.Where("backup_mode = ?", backupMode)
 	}
 
 	err = db.Count(&total).Order("id desc").Offset(offset).Limit(length).

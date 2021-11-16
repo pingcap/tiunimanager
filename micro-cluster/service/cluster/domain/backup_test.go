@@ -209,6 +209,32 @@ func TestDeleteBackup_case5(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestDeleteBackups_case1(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().ListBackupRecords(gomock.Any(), gomock.Any()).Return(&dbpb.DBListBackupRecordsResponse{
+		BackupRecords: []*dbpb.DBDBBackupRecordDisplayDTO{
+			{
+				BackupRecord: &dbpb.DBBackupRecordDTO{
+					Id: 111,
+				},
+			},
+		},
+	}, nil)
+	mockClient.EXPECT().DeleteBackupRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBDeleteBackupRecordResponse{}, nil)
+	client.DBClient = mockClient
+
+	err := DeleteBackups(ctx.Background(), &clusterpb.OperatorDTO{
+		Id:       "123",
+		Name:     "123",
+		TenantId: "123",
+	}, "test-abc", string(BackupModeAuto))
+
+	assert.NoError(t, err)
+}
+
 func TestSaveBackupStrategy_case1(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

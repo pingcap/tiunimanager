@@ -597,7 +597,7 @@ func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 func syncTopology(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 
-	metadata, err := MetadataMgr.FetchFromLocal(ctx.TODO(), "~/.tiup/", clusterAggregation.Cluster.ClusterName)
+	metadata, err := MetadataMgr.FetchFromLocal(ctx.TODO(), "/root/.tiup/", clusterAggregation.Cluster.ClusterName)
 
 	if err != nil {
 		task.Fail(err)

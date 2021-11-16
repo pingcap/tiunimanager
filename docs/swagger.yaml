@@ -75,14 +75,20 @@ definitions:
         type: string
       clusterVersion:
         type: string
+      cpuArchitecture:
+        type: string
       dbPassword:
         type: string
+      exclusive:
+        type: boolean
       nodeDemandList:
         items:
           $ref: '#/definitions/management.ClusterNodeDemand'
         type: array
       recoverInfo:
         $ref: '#/definitions/management.RecoverInfo'
+      region:
+        type: string
       tags:
         items:
           type: string
@@ -1011,6 +1017,30 @@ definitions:
       updateTime:
         type: string
     type: object
+  management.ScaleOutClusterRsp:
+    properties:
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      inProcessFlowId:
+        type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  management.ScaleOutReq:
+    properties:
+      clusterId:
+        type: string
+      nodeDemandList:
+        items:
+          $ref: '#/definitions/management.ClusterNodeDemand'
+        type: array
+    type: object
   management.ServiceCapabilityIndex:
     properties:
       description:
@@ -1701,6 +1731,47 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: restart a cluster
+      tags:
+      - cluster
+  /clusters/{clusterId}/scale-out:
+    post:
+      consumes:
+      - application/json
+      description: scale out of a cluster
+      parameters:
+      - description: scale out request
+        in: body
+        name: scaleOutReq
+        required: true
+        schema:
+          $ref: '#/definitions/management.ScaleOutReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/management.ScaleOutClusterRsp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: scale out a cluster
       tags:
       - cluster
   /clusters/{clusterId}/stop:

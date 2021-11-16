@@ -152,11 +152,11 @@ func (t TiDBComponentParser) GetComponent() *knowledge.ClusterComponent {
 func (t TiDBComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
 	group := &domain.ComponentGroup{
 		ComponentType: t.GetComponent(),
-		Nodes:         make([]domain.ComponentInstance, 0),
+		Nodes:         make([]*domain.ComponentInstance, 0),
 	}
 
 	for _, server := range spec.TiDBServers {
-		componentInstance := domain.ComponentInstance{
+		componentInstance := &domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
 			Host: server.Host,
 			PortList: []int{server.Port, server.StatusPort},
@@ -176,11 +176,11 @@ func (t TiKVComponentParser) GetComponent() *knowledge.ClusterComponent {
 func (t TiKVComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
 	group := &domain.ComponentGroup{
 		ComponentType: t.GetComponent(),
-		Nodes:         make([]domain.ComponentInstance, 0),
+		Nodes:         make([]*domain.ComponentInstance, 0),
 	}
 
 	for _, server := range spec.TiKVServers {
-		componentInstance := domain.ComponentInstance{
+		componentInstance := &domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
 			Host: server.Host,
 			PortList: []int{server.Port, server.StatusPort},
@@ -200,11 +200,11 @@ func (t PDComponentParser) GetComponent() *knowledge.ClusterComponent {
 func (t PDComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
 	group := &domain.ComponentGroup{
 		ComponentType: t.GetComponent(),
-		Nodes:         make([]domain.ComponentInstance, 0),
+		Nodes:         make([]*domain.ComponentInstance, 0),
 	}
 
 	for _, server := range spec.PDServers {
-		componentInstance := domain.ComponentInstance{
+		componentInstance := &domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
 			Host: server.Host,
 			PortList: []int{server.ClientPort, server.PeerPort},
@@ -224,11 +224,11 @@ func (t TiFlashComponentParser) GetComponent() *knowledge.ClusterComponent {
 func (t TiFlashComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
 	group := &domain.ComponentGroup{
 		ComponentType: t.GetComponent(),
-		Nodes:         make([]domain.ComponentInstance, 0),
+		Nodes:         make([]*domain.ComponentInstance, 0),
 	}
 
 	for _, server := range spec.TiFlashServers {
-		componentInstance := domain.ComponentInstance{
+		componentInstance := &domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
 			Host: server.Host,
 			PortList: []int{server.TCPPort, server.HTTPPort, server.StatusPort, server.FlashProxyPort, server.FlashServicePort, server.FlashProxyStatusPort},

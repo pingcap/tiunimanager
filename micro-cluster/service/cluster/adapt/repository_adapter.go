@@ -195,10 +195,10 @@ func persisClusterTopologyConfig(ctx context.Context, aggregation *domain.Cluste
 // @Parameter aggregation
 // @return error
 func persistClusterComponents(ctx context.Context, aggregation *domain.ClusterAggregation) error {
-	if len(aggregation.ClusterComponents) > 0  {
+	if len(aggregation.AddedClusterComponents) > 0  {
 		toCreate := make([]*domain.ComponentInstance, 0 )
 
-		for _, g := range aggregation.ClusterComponents {
+		for _, g := range aggregation.AddedClusterComponents {
 			for _, c := range g.Nodes {
 				if c.ID == "" {
 					toCreate = append(toCreate, c)

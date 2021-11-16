@@ -28,7 +28,7 @@ import (
 
 type ComponentGroup struct {
 	ComponentType *knowledge.ClusterComponent
-	Nodes         []ComponentInstance
+	Nodes         []*ComponentInstance
 }
 
 type ComponentInstance struct {

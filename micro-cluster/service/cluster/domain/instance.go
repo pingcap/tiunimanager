@@ -50,11 +50,11 @@ type ComponentInstance struct {
 	DiskId         string
 	PortInfo       string
 	AllocRequestId string
+	DiskPath       string
 
-	location *resource.Location
-	diskPath string
-	compute *resource.ComputeRequirement
-	portRequirement *resource.PortRequirement
+	Location *resource.Location
+	Compute *resource.ComputeRequirement
+	PortRequirement *resource.PortRequirement
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -62,11 +62,11 @@ type ComponentInstance struct {
 }
 
 func (p *ComponentInstance) SetLocation (location *resource.Location) {
-	p.location = location
+	p.Location = location
 }
 
 func (p *ComponentInstance) SetDiskPath (location *resource.Location) {
-	p.location = location
+	p.Location = location
 }
 
 

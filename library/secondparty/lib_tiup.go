@@ -80,6 +80,50 @@ func (secondMicro *SecondMicro) startNewTiupDeployTask(ctx context.Context, task
 	}()
 }
 
+func (secondMicro *SecondMicro) MicroSrvTiupScaleOut(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, configStrYaml string, timeoutS int, flags []string, bizID uint64)(taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupscaleout tiupcomponent: %s, instancename: %s, configstryaml: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, configStrYaml, timeoutS, flags, bizID)
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_ScaleOut
+	req.BizID = bizID
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	if rsp == nil || err != nil || rsp.ErrCode != 0 {
+		err = fmt.Errorf("rsp:%v, err:%s", rsp, err)
+		return 0, err
+	} else {
+		var scaleOutReq CmdScaleOutReq
+		scaleOutReq.TiUPComponent = tiupComponent
+		scaleOutReq.InstanceName = instanceName
+		scaleOutReq.ConfigStrYaml = configStrYaml
+		scaleOutReq.TimeoutS = timeoutS
+		scaleOutReq.Flags = flags
+		scaleOutReq.TiupPath = secondMicro.TiupBinPath
+		scaleOutReq.TaskID = rsp.Id
+		secondMicro.startNewTiupScaleOutTask(ctx, scaleOutReq.TaskID, &scaleOutReq)
+		return rsp.Id, nil
+	}
+	return
+}
+
+func (secondMicro *SecondMicro) startNewTiupScaleOutTask(ctx context.Context, taskID uint64, req *CmdScaleOutReq) {
+	topologyTmpFilePath, err := newTmpFileWithContent("tiem-topology", []byte(req.ConfigStrYaml))
+	if err != nil {
+		secondMicro.taskStatusCh <- TaskStatusMember{
+			TaskID:   taskID,
+			Status:   TaskStatusError,
+			ErrorStr: fmt.Sprintln(err),
+		}
+		return
+	}
+	go func() {
+		//defer os.Remove(topologyTmpFilePath)
+		var args []string
+		args = append(args, string(req.TiUPComponent), "scale-out", req.InstanceName, topologyTmpFilePath)
+		args = append(args, req.Flags...)
+		args = append(args, "--yes")
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+	}()
+}
+
 func (secondMicro *SecondMicro) MicroSrvTiupStart(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupstart tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, timeoutS, flags, bizID)
 	var req dbPb.CreateTiupTaskRequest

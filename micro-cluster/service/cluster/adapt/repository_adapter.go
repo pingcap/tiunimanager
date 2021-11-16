@@ -216,8 +216,8 @@ func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.Clu
 
 	if aggregation.DemandsModified {
 		var demands string
-		if len(cluster.Demands) > 0 {
-			bytes, err := json.Marshal(cluster.Demands)
+		if len(cluster.ComponentDemands) > 0 {
+			bytes, err := json.Marshal(cluster.ComponentDemands)
 			if err != nil {
 				return err
 			}

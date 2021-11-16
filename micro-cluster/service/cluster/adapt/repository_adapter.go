@@ -196,7 +196,7 @@ func persisClusterTopologyConfig(ctx context.Context, aggregation *domain.Cluste
 // @return error
 func persistClusterComponents(ctx context.Context, aggregation *domain.ClusterAggregation) error {
 	if len(aggregation.ClusterComponents) > 0  {
-		toCreate := make([]domain.ComponentInstance, 0 )
+		toCreate := make([]*domain.ComponentInstance, 0 )
 
 		for _, g := range aggregation.ClusterComponents {
 			for _, c := range g.Nodes {
@@ -206,14 +206,20 @@ func persistClusterComponents(ctx context.Context, aggregation *domain.ClusterAg
 			}
 		}
 		if len(toCreate) >= 0 {
-			request := dbpb.DBCreateInstanceRequest{
+			request := &dbpb.DBCreateInstanceRequest{
 				ClusterId: aggregation.Cluster.Id,
 				TenantId: aggregation.Cluster.TenantId,
-				ComponentInstances: batchConvertComponentToDTOs(aggregation.ClusterComponents),
+				ComponentInstances: batchConvertComponentToDTOs(toCreate),
 			}
-			resp, err := client.DBClient.CreateInstance(ctx, request)
+
+			_, err := client.DBClient.CreateInstance(ctx, request)
+
+			if err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 func persistClusterBaseInfo(ctx context.Context, aggregation *domain.ClusterAggregation) error {
@@ -591,17 +597,11 @@ func parseFlowFromDTO(dto *dbpb.DBFlowDTO) (flow *domain.FlowWorkEntity) {
 	return
 }
 
-func batchConvertComponentToDTOs(components []*domain.ComponentGroup) (dtoList []*dbpb.DBComponentInstanceDTO) {
+func batchConvertComponentToDTOs(components []*domain.ComponentInstance) (dtoList []*dbpb.DBComponentInstanceDTO) {
 	dtoList = make([]*dbpb.DBComponentInstanceDTO, 0)
-
-	if len(components) > 0 {
-		for _, g := range components {
-			for _, c := range g.Nodes {
-				dtoList = append(dtoList, convertComponentToDTO(c))
-			}
-		}
+	for _, c := range components {
+		dtoList = append(dtoList, convertComponentToDTO(c))
 	}
-
 	return
 }
 

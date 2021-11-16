@@ -698,7 +698,7 @@ func TestListBackupRecords(t *testing.T) {
 	_, _ = brTbl.SaveBackupRecord(context.TODO(), record)
 
 	t.Run("normal", func(t *testing.T) {
-		dos, total, err := brTbl.ListBackupRecords(context.TODO(), "TestListBackupRecords", 0, 0, 2, 2)
+		dos, total, err := brTbl.ListBackupRecords(context.TODO(), "TestListBackupRecords", 0, 0, "", 2, 2)
 		if err != nil {
 			t.Errorf("ListBackupRecords() error = %v", err)
 			return

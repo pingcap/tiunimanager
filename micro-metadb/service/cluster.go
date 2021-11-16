@@ -336,7 +336,7 @@ func (handler *DBServiceHandler) ListBackupRecords(ctx context.Context, req *dbp
 	}
 	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
-	backupRecords, total, err := clusterManager.ListBackupRecords(ctx, req.ClusterId, req.StartTime, req.EndTime,
+	backupRecords, total, err := clusterManager.ListBackupRecords(ctx, req.ClusterId, req.StartTime, req.EndTime, req.BackupMode,
 		int((req.Page.Page-1)*req.Page.PageSize), int(req.Page.PageSize))
 
 	if nil == err {
@@ -686,7 +686,7 @@ func nullTime2Unix(at sql.NullTime) (unix int64) {
 }
 
 func unix2NullTime(unix int64) sql.NullTime {
-	return sql.NullTime {
+	return sql.NullTime{
 		Time:  time.Unix(unix, 0),
 		Valid: unix != 0,
 	}

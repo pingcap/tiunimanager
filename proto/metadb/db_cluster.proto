@@ -223,7 +223,8 @@ message DBListBackupRecordsRequest {
     string clusterId = 1;
     int64 startTime = 2;
     int64 endTime = 3;
-    DBPageDTO page = 4;
+    string backupMode = 4;
+    DBPageDTO page = 5;
 }
 
 message DBDBBackupRecordDisplayDTO {

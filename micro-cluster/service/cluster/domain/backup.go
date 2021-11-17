@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
+	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
@@ -223,7 +224,7 @@ func RecoverPreCheck(ctx context.Context, req *clusterpb.RecoverRequest) error {
 	return nil
 }
 
-func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
+func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	getLoggerWithContext(ctx).Infof("Begin do Recover, clusterInfo: %+v, demandDTOs: %+v", clusterInfo, demandDTOs)
 	defer getLoggerWithContext(ctx).Infof("End do Recover")
 	operator := parseOperatorFromDTO(ope)
@@ -240,15 +241,21 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 			SourceClusterId: clusterInfo.GetRecoverInfo().GetSourceClusterId(),
 			BackupRecordId:  clusterInfo.GetRecoverInfo().GetBackupRecordId(),
 		},
+		Region: commonDemand.Region,
+		CpuArchitecture: commonDemand.CpuArchitecture,
+		Exclusive: commonDemand.Exclusive,
 	}
+
+	if cluster.CpuArchitecture == "" {
+		cluster.CpuArchitecture = string(resourceType.X86)
+	}
+
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs))
 
 	for i, v := range demandDTOs {
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
-
-	cluster.ComponentDemands = demands
 
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
@@ -260,6 +267,7 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 		Cluster:          cluster,
 		MaintainCronTask: GetDefaultMaintainTask(),
 		CurrentOperator:  operator,
+		AddedComponentDemand: demands,
 	}
 
 	// Start the workflow to create a cluster instance

@@ -30,6 +30,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net"
+	"os"
 )
 
 type TiUPTiDBMetadataManager struct {
@@ -96,6 +97,30 @@ func (t TiUPTiDBMetadataManager) FetchFromRemoteCluster(ctx context.Context, req
 	return metadata, err
 }
 
+func (t TiUPTiDBMetadataManager) FetchFromLocal(ctx context.Context, tiupPath string, clusterName string) (spec.Metadata, error) {
+
+	fileName := fmt.Sprintf("%sstorage/cluster/clusters/%s/meta.yaml", tiupPath, clusterName)
+	file, err := os.Open(fileName)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("FetchFromLocal, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "open file error", err)
+	}
+	defer file.Close()
+
+	dataByte, err := ioutil.ReadAll(file)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("FetchFromLocal, error: %s", err.Error())
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "read file error", err)
+	}
+
+	metadata := &spec.ClusterMeta{}
+	err = yaml.Unmarshal(dataByte, metadata)
+
+	return metadata, err
+}
+
+
+
 func (t TiUPTiDBMetadataManager) RebuildMetadataFromComponents(ctx context.Context, cluster *domain.Cluster, components []*domain.ComponentGroup) (spec.Metadata, error) {
 	panic("implement me")
 }
@@ -127,11 +152,11 @@ func (t TiDBComponentParser) GetComponent() *knowledge.ClusterComponent {
 func (t TiDBComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
 	group := &domain.ComponentGroup{
 		ComponentType: t.GetComponent(),
-		Nodes:         make([]domain.ComponentInstance, 0),
+		Nodes:         make([]*domain.ComponentInstance, 0),
 	}
 
 	for _, server := range spec.TiDBServers {
-		componentInstance := domain.ComponentInstance{
+		componentInstance := &domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
 			Host: server.Host,
 			PortList: []int{server.Port, server.StatusPort},
@@ -151,11 +176,11 @@ func (t TiKVComponentParser) GetComponent() *knowledge.ClusterComponent {
 func (t TiKVComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
 	group := &domain.ComponentGroup{
 		ComponentType: t.GetComponent(),
-		Nodes:         make([]domain.ComponentInstance, 0),
+		Nodes:         make([]*domain.ComponentInstance, 0),
 	}
 
 	for _, server := range spec.TiKVServers {
-		componentInstance := domain.ComponentInstance{
+		componentInstance := &domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
 			Host: server.Host,
 			PortList: []int{server.Port, server.StatusPort},
@@ -175,11 +200,11 @@ func (t PDComponentParser) GetComponent() *knowledge.ClusterComponent {
 func (t PDComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
 	group := &domain.ComponentGroup{
 		ComponentType: t.GetComponent(),
-		Nodes:         make([]domain.ComponentInstance, 0),
+		Nodes:         make([]*domain.ComponentInstance, 0),
 	}
 
 	for _, server := range spec.PDServers {
-		componentInstance := domain.ComponentInstance{
+		componentInstance := &domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
 			Host: server.Host,
 			PortList: []int{server.ClientPort, server.PeerPort},
@@ -199,11 +224,11 @@ func (t TiFlashComponentParser) GetComponent() *knowledge.ClusterComponent {
 func (t TiFlashComponentParser) ParseComponent(spec *spec.Specification) *domain.ComponentGroup {
 	group := &domain.ComponentGroup{
 		ComponentType: t.GetComponent(),
-		Nodes:         make([]domain.ComponentInstance, 0),
+		Nodes:         make([]*domain.ComponentInstance, 0),
 	}
 
 	for _, server := range spec.TiFlashServers {
-		componentInstance := domain.ComponentInstance{
+		componentInstance := &domain.ComponentInstance{
 			ComponentType: t.GetComponent(),
 			Host: server.Host,
 			PortList: []int{server.TCPPort, server.HTTPPort, server.StatusPort, server.FlashProxyPort, server.FlashServicePort, server.FlashProxyStatusPort},

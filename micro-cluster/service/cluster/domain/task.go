@@ -82,6 +82,7 @@ type TaskEntity struct {
 	Result         string
 	StartTime      int64
 	EndTime        int64
+	TaskError      error
 }
 
 func (t *TaskEntity) Processing() {
@@ -103,6 +104,7 @@ func (t *TaskEntity) Success(result interface{}) {
 
 func (t *TaskEntity) Fail(e error) {
 	t.Status = TaskStatusError
+	t.TaskError = e
 	t.EndTime = time.Now().Unix()
 	t.Result = e.Error()
 }
@@ -117,6 +119,7 @@ type FlowWorkAggregation struct {
 	CurrentTask *TaskEntity
 	Tasks       []*TaskEntity
 	Context     FlowContext
+	FlowError 	error
 }
 
 func CreateFlowWork(ctx context.Context, bizId string, defineName string, operator *Operator) (*FlowWorkAggregation, error) {
@@ -165,6 +168,15 @@ func (flow *FlowWorkAggregation) executeTask(task *TaskEntity, taskDefine *TaskD
 	return taskDefine.Executor(task, &flow.Context)
 }
 
+func (flow *FlowWorkAggregation) handleTaskError(task *TaskEntity, taskDefine *TaskDefine) {
+	flow.FlowError = task.TaskError
+	if "" != taskDefine.FailEvent {
+		flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
+	} else {
+		framework.Log().Fatalf("no fail event in flow definition, flowname %s", taskDefine.Name)
+	}
+}
+
 func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) bool {
 	if taskDefine == nil {
 		flow.FlowWork.Status = TaskStatusFinished
@@ -181,53 +193,48 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) bool {
 	handleSuccess := flow.executeTask(task, taskDefine)
 
 	if !handleSuccess {
-		if "" == taskDefine.FailEvent {
-			return false
-		}
-		flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
+		flow.handleTaskError(task, taskDefine)
+		return false
 	}
 
 	switch taskDefine.ReturnType {
 
 	case UserTask:
-
+		return true
 	case SyncFuncTask:
-		flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
+		return flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
 	case CallbackTask:
-
+		return true
 	case PollingTasK:
 		ticker := time.NewTicker(3 * time.Second)
 		sequence := 0
 		for range ticker.C {
 			if sequence += 1; sequence > 200 {
-				flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
-				task.EndTime = time.Now().Unix()
+				task.Fail(framework.SimpleError(common.TIEM_TASK_POLLING_TIME_OUT))
+				flow.handleTaskError(task, taskDefine)
 				return false
 			}
-			framework.LogWithContext(flow.Context).Infof("polling task wait, sequence %d, taskId %d", sequence, task.Id)
+			framework.LogWithContext(flow.Context).Infof("polling task waiting, sequence %d, taskId %d", sequence, task.Id)
 
 			stat, statString, err := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(flow.Context, uint64(task.Id))
 			if err != nil {
 				framework.LogWithContext(flow.Context).Error(err)
-				flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
 				task.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))
+				flow.handleTaskError(task, taskDefine)
 				return false
 			}
 			if stat == dbpb.TiupTaskStatus_Error {
-				flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
 				task.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, statString))
+				flow.handleTaskError(task, taskDefine)
 				return false
 			}
 			if stat == dbpb.TiupTaskStatus_Finished {
-				flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
 				task.Success(nil)
-				return true
+				return flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
 			}
 		}
 	}
-
 	return true
-
 }
 
 func (flow *FlowWorkAggregation) GetAllTaskDef() []string {

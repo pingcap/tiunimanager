@@ -664,7 +664,7 @@ func buildDataImportConfig(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 	getLoggerWithContext(ctx).Infof("build lightning toml config sucess, %v", config)
-
+	task.Success(nil)
 	return true
 }
 
@@ -685,25 +685,8 @@ func importDataToCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 	getLoggerWithContext(ctx).Infof("call tiupmgr tidb-lightning api success, importTaskId %d", importTaskId)
-
-	for {
-		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(flowContext.Context, importTaskId)
-		if err != nil {
-			getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
-			task.Fail(fmt.Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error()))
-			return false
-		}
-		if stat == dbpb.TiupTaskStatus_Finished {
-			getLoggerWithContext(ctx).Infof("task %d cluster %s import data done.", importTaskId, info.ClusterId)
-			task.Success(nil)
-			return true
-		} else if stat == dbpb.TiupTaskStatus_Error {
-			getLoggerWithContext(ctx).Errorf("task %d cluster %s import data error: %s", importTaskId, info.ClusterId, statErrStr)
-			task.Fail(fmt.Errorf("task %d cluster %s import data error: %s", importTaskId, info.ClusterId, statErrStr))
-			return false
-		}
-		time.Sleep(time.Second * 2)
-	}
+	task.Success(nil)
+	return true
 }
 
 func updateDataImportRecord(task *TaskEntity, flowContext *FlowContext) bool {
@@ -789,25 +772,8 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	}
 
 	getLoggerWithContext(ctx).Infof("call tiupmgr succee, exportTaskId: %d", exportTaskId)
-
-	for {
-		stat, statErrStr, err := secondparty.SecondParty.MicroSrvGetTaskStatus(ctx, exportTaskId)
-		if err != nil {
-			getLogger().Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error())
-			task.Fail(fmt.Errorf("call tiup api get task status statErrStr = %s, err = %s", statErrStr, err.Error()))
-			return false
-		}
-		if stat == dbpb.TiupTaskStatus_Finished {
-			getLoggerWithContext(ctx).Infof("task %d cluster %s export data done.", exportTaskId, info.ClusterId)
-			task.Success(nil)
-			return true
-		} else if stat == dbpb.TiupTaskStatus_Error {
-			getLoggerWithContext(ctx).Errorf("task %d cluster %s export data error: %s", exportTaskId, info.ClusterId, statErrStr)
-			task.Fail(fmt.Errorf("task %d cluster %s export data error: %s", exportTaskId, info.ClusterId, statErrStr))
-			return false
-		}
-		time.Sleep(time.Second * 2)
-	}
+	task.Success(nil)
+	return true
 }
 
 func updateDataExportRecord(task *TaskEntity, flowContext *FlowContext) bool {

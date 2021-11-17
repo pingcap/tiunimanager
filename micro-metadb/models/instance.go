@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -24,16 +23,18 @@ import (
 
 type ComponentInstance struct {
 	Entity
-	ClusterId 			string	`gorm:"not null;type:varchar(22);default:null"`
-	ComponentType		string 	`gorm:"not null;"`
-
-	Role     string
-	Spec     string 	`gorm:"not null;"`
-	Version  string 	`gorm:"not null;"`
-	HostId   string		`gorm:"type:varchar(22);default:null"`
-	DiskId   string		`gorm:"type:varchar(22);default:null"`
-	PortInfo string
-	AllocRequestId string	`gorm:"not null;type:varchar(22);default:null"`
+	ClusterId      string `gorm:"not null;type:varchar(22);default:null"`
+	ComponentType  string `gorm:"not null;"`
+	Role           string
+	Version        string `gorm:"not null;"`
+	HostId         string
+	Host           string
+	PortInfo       string
+	DiskId         string
+	DiskPath       string
+	AllocRequestId string
+	CpuCores       int8
+	Memory         int8
 }
 
 func (m *DAOClusterManager) ListComponentInstances(ctx context.Context, clusterId string) (componentInstances []*ComponentInstance, err error) {

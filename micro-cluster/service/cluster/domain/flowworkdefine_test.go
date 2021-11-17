@@ -26,3 +26,12 @@ func Test_defaultContextParser(t *testing.T) {
 	ctx := defaultContextParser("")
 	assert.NotNil(t, ctx)
 }
+
+func TestInitFlowMap(t *testing.T) {
+	current := FlowWorkDefineMap
+	defer func() {
+		FlowWorkDefineMap = current
+	}()
+	InitFlowMap()
+	assert.LessOrEqual(t, 10, len(FlowWorkDefineMap))
+}

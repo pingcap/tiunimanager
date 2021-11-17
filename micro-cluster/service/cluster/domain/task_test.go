@@ -119,6 +119,21 @@ func initFlow() {
 				return nil
 			},
 		},
+		FlowScaleOutCluster: {
+			FlowName:    FlowScaleOutCluster,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowScaleOutCluster),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				// todo parse context
+				return nil
+			},
+		},
 		FlowDeleteCluster: {
 			FlowName:    FlowDeleteCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowDeleteCluster),
@@ -237,6 +252,36 @@ func initFlow() {
 				return nil
 			},
 		},
+		FlowTakeoverCluster: {
+			FlowName:    FlowTakeoverCluster,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowTakeoverCluster),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				// todo parse context
+				return nil
+			},
+		},
+		FlowBuildLogConfig: {
+			FlowName:    FlowBuildLogConfig,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowBuildLogConfig),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				// todo parse context
+				return nil
+			},
+		},
 	}
 }
 
@@ -337,7 +382,7 @@ func TestFlowWorkAggregation_Start(t *testing.T) {
 		if !flow.FlowWork.Finished() {
 			t.Errorf("Start() finished")
 		}
-		if flow.FlowWork.Status != TaskStatusFinished {
+		if flow.FlowWork.Status != TaskStatusError {
 			t.Errorf("Start() FlowWork status wrong, want = %v, got = %v", TaskStatusError, flow.FlowWork.Status)
 		}
 	})

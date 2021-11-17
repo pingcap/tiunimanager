@@ -22,8 +22,9 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 )
 
-func (req *RestoreReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO, demandsDTO []*clusterpb.ClusterNodeDemandDTO) {
+func (req *RestoreReq) ConvertToDTO() (baseInfoDTO *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandsDTO []*clusterpb.ClusterNodeDemandDTO) {
 	baseInfoDTO = req.ClusterBaseInfo.ConvertToDTO()
+	commonDemand = req.ClusterCommonDemand.ConvertToDTO()
 
 	demandsDTO = make([]*clusterpb.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))
 

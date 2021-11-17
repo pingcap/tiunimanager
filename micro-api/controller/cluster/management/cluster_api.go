@@ -513,3 +513,63 @@ func DescribeMonitor(c *gin.Context) {
 	})
 	c.JSON(http.StatusOK, result)
 }
+
+// ScaleOut scale out a cluster
+// @Summary scale out a cluster
+// @Description scale out of a cluster
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param scaleOutReq body ScaleOutReq true "scale out request"
+// @Success 200 {object} controller.CommonResult{data=ScaleOutClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/scale-out [post]
+func ScaleOut(c *gin.Context) {
+	var req ScaleOutReq
+
+	if err := c.ShouldBindWith(&req, binding.JSON); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	operator := controller.GetOperator(c)
+
+	// Get demands
+	demands := make([]*clusterpb.ClusterNodeDemandDTO, 0, len(req.NodeDemandList))
+	for _, demand := range req.NodeDemandList {
+		demands = append(demands, demand.ConvertToDTO())
+	}
+
+	// Create ScaleOutRequest
+	request := &clusterpb.ScaleOutRequest{
+		Operator: operator.ConvertToDTO(),
+		ClusterId: c.Param("clusterId"),
+		Demands:  demands,
+	}
+
+	// Scale out cluster
+	response, err := client.ClusterClient.ScaleOutCluster(framework.NewMicroCtxFromGinCtx(c),
+		request, func(options *cli.CallOptions) {
+		options.DialTimeout = time.Second * 5
+		options.RequestTimeout = time.Second * 5
+	})
+
+	// Handle result and error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := response.GetRespStatus()
+		if status.Code != 0 {
+			c.JSON(http.StatusInternalServerError, controller.Fail(500, status.Message))
+			return
+		}
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, ScaleOutClusterRsp{
+			StatusInfo:      *ParseStatusFromDTO(response.GetClusterStatus()),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
+}

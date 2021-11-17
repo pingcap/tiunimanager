@@ -266,26 +266,6 @@ func TestExportData(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestImportData_case1(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockClient := mockdb.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().CreateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBCreateTransportRecordResponse{}, nil)
-	client.DBClient = mockClient
-
-	request := &clusterpb.DataImportRequest{
-		Operator: &clusterpb.OperatorDTO{
-			Id:       "123",
-			Name:     "123",
-			TenantId: "123",
-		},
-	}
-	_, err := ImportData(context.Background(), request)
-
-	assert.NoError(t, err)
-}
-
 func TestImportData_case2(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -436,7 +416,6 @@ func Test_importDataToCluster_case1(t *testing.T) {
 
 	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
 	mockTiup.EXPECT().MicroSrvLightning(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
-	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "success", nil)
 	secondparty.SecondParty = mockTiup
 
 	task := &TaskEntity{
@@ -475,100 +454,6 @@ func Test_importDataToCluster_case1(t *testing.T) {
 	flowCtx.SetData("backupTaskId", uint64(123))
 	ret := importDataToCluster(task, flowCtx)
 	assert.Equal(t, true, ret)
-}
-
-func Test_importDataToCluster_case2(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
-	mockTiup.EXPECT().MicroSrvLightning(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
-	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "success", errors.New("failed"))
-	secondparty.SecondParty = mockTiup
-
-	task := &TaskEntity{
-		Id: 123,
-	}
-	flowCtx := NewFlowContext(context.TODO())
-	flowCtx.SetData(contextDataTransportKey, &ImportInfo{
-		ClusterId:   "test-abc",
-		UserName:    "root",
-		Password:    "",
-		FilePath:    "filePath",
-		RecordId:    123,
-		StorageType: common.S3StorageType,
-		ConfigPath:  "/tmp/test-ut",
-	})
-	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
-		LastBackupRecord: &BackupRecord{
-			Id:          123,
-			StorageType: StorageTypeS3,
-		},
-		Cluster: &Cluster{
-			Id:          "test-tidb123",
-			ClusterName: "test-tidb",
-		},
-		CurrentTopologyConfigRecord: &TopologyConfigRecord{
-			ConfigModel: &spec.Specification{
-				TiDBServers: []*spec.TiDBSpec{
-					{
-						Host: "127.0.0.1",
-						Port: 4000,
-					},
-				},
-			},
-		},
-	})
-	flowCtx.SetData("backupTaskId", uint64(123))
-	ret := importDataToCluster(task, flowCtx)
-	assert.Equal(t, false, ret)
-}
-
-func Test_importDataToCluster_case3(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
-	mockTiup.EXPECT().MicroSrvLightning(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
-	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Error, "error", nil)
-	secondparty.SecondParty = mockTiup
-
-	task := &TaskEntity{
-		Id: 123,
-	}
-	flowCtx := NewFlowContext(context.TODO())
-	flowCtx.SetData(contextDataTransportKey, &ImportInfo{
-		ClusterId:   "test-abc",
-		UserName:    "root",
-		Password:    "",
-		FilePath:    "filePath",
-		RecordId:    123,
-		StorageType: common.S3StorageType,
-		ConfigPath:  "/tmp/test-ut",
-	})
-	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
-		LastBackupRecord: &BackupRecord{
-			Id:          123,
-			StorageType: StorageTypeS3,
-		},
-		Cluster: &Cluster{
-			Id:          "test-tidb123",
-			ClusterName: "test-tidb",
-		},
-		CurrentTopologyConfigRecord: &TopologyConfigRecord{
-			ConfigModel: &spec.Specification{
-				TiDBServers: []*spec.TiDBSpec{
-					{
-						Host: "127.0.0.1",
-						Port: 4000,
-					},
-				},
-			},
-		},
-	})
-	flowCtx.SetData("backupTaskId", uint64(123))
-	ret := importDataToCluster(task, flowCtx)
-	assert.Equal(t, false, ret)
 }
 
 func Test_importDataToCluster_case4(t *testing.T) {
@@ -623,7 +508,6 @@ func Test_exportDataFromCluster_case1(t *testing.T) {
 
 	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
 	mockTiup.EXPECT().MicroSrvDumpling(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
-	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "success", nil)
 	secondparty.SecondParty = mockTiup
 
 	task := &TaskEntity{
@@ -661,98 +545,6 @@ func Test_exportDataFromCluster_case1(t *testing.T) {
 	flowCtx.SetData("backupTaskId", uint64(123))
 	ret := exportDataFromCluster(task, flowCtx)
 	assert.Equal(t, true, ret)
-}
-
-func Test_exportDataFromCluster_case2(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
-	mockTiup.EXPECT().MicroSrvDumpling(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
-	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "success", errors.New("error"))
-	secondparty.SecondParty = mockTiup
-
-	task := &TaskEntity{
-		Id: 123,
-	}
-	flowCtx := NewFlowContext(context.TODO())
-	flowCtx.SetData(contextDataTransportKey, &ExportInfo{
-		ClusterId:   "test-abc",
-		UserName:    "root",
-		Password:    "",
-		FilePath:    "filePath",
-		RecordId:    123,
-		StorageType: common.S3StorageType,
-	})
-	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
-		LastBackupRecord: &BackupRecord{
-			Id:          123,
-			StorageType: StorageTypeS3,
-		},
-		Cluster: &Cluster{
-			Id:          "test-tidb123",
-			ClusterName: "test-tidb",
-		},
-		CurrentTopologyConfigRecord: &TopologyConfigRecord{
-			ConfigModel: &spec.Specification{
-				TiDBServers: []*spec.TiDBSpec{
-					{
-						Host: "127.0.0.1",
-						Port: 4000,
-					},
-				},
-			},
-		},
-	})
-	flowCtx.SetData("backupTaskId", uint64(123))
-	ret := exportDataFromCluster(task, flowCtx)
-	assert.Equal(t, false, ret)
-}
-
-func Test_exportDataFromCluster_case3(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
-	mockTiup.EXPECT().MicroSrvDumpling(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
-	mockTiup.EXPECT().MicroSrvGetTaskStatus(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Error, "error", nil)
-	secondparty.SecondParty = mockTiup
-
-	task := &TaskEntity{
-		Id: 123,
-	}
-	flowCtx := NewFlowContext(context.TODO())
-	flowCtx.SetData(contextDataTransportKey, &ExportInfo{
-		ClusterId:   "test-abc",
-		UserName:    "root",
-		Password:    "",
-		FilePath:    "filePath",
-		RecordId:    123,
-		StorageType: common.S3StorageType,
-	})
-	flowCtx.SetData(contextClusterKey, &ClusterAggregation{
-		LastBackupRecord: &BackupRecord{
-			Id:          123,
-			StorageType: StorageTypeS3,
-		},
-		Cluster: &Cluster{
-			Id:          "test-tidb123",
-			ClusterName: "test-tidb",
-		},
-		CurrentTopologyConfigRecord: &TopologyConfigRecord{
-			ConfigModel: &spec.Specification{
-				TiDBServers: []*spec.TiDBSpec{
-					{
-						Host: "127.0.0.1",
-						Port: 4000,
-					},
-				},
-			},
-		},
-	})
-	flowCtx.SetData("backupTaskId", uint64(123))
-	ret := exportDataFromCluster(task, flowCtx)
-	assert.Equal(t, false, ret)
 }
 
 func Test_exportDataFromCluster_case4(t *testing.T) {

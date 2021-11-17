@@ -28,6 +28,7 @@ const (
 	TIEM_TASK_TIMEOUT              TIEM_ERROR_CODE = 9997
 	TIEM_FLOW_NOT_FOUND            TIEM_ERROR_CODE = 9996
 	TIEM_TASK_FAILED               TIEM_ERROR_CODE = 9995
+	TIEM_TASK_POLLING_TIME_OUT     TIEM_ERROR_CODE = 9994
 
 	TIEM_PARAMETER_INVALID TIEM_ERROR_CODE = 1
 
@@ -102,6 +103,7 @@ var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_TASK_TIMEOUT:              {TIEM_TASK_TIMEOUT, "task timeout", 500},
 	TIEM_FLOW_NOT_FOUND:            {TIEM_FLOW_NOT_FOUND, "flow not found", 500},
 	TIEM_TASK_FAILED:               {TIEM_TASK_FAILED, "task failed", 500},
+	TIEM_TASK_POLLING_TIME_OUT:     {TIEM_TASK_POLLING_TIME_OUT, "task polling time out", 500},
 
 	// cluster management
 	TIEM_TAKEOVER_SSH_CONNECT_ERROR: {TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh connect failed", 500},

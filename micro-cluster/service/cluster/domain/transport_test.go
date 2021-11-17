@@ -267,13 +267,6 @@ func TestExportData(t *testing.T) {
 }
 
 func TestImportData_case1(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockClient := mockdb.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().CreateTransportRecord(gomock.Any(), gomock.Any()).Return(&dbpb.DBCreateTransportRecordResponse{}, nil)
-	client.DBClient = mockClient
-
 	request := &clusterpb.DataImportRequest{
 		Operator: &clusterpb.OperatorDTO{
 			Id:       "123",

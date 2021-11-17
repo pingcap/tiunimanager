@@ -281,6 +281,7 @@ func (c ClusterServiceHandler) DescribeDataTransport(ctx context.Context, req *c
 				TransportType: infos[i].GetRecord().GetTransportType(),
 				StorageType:   infos[i].GetRecord().GetStorageType(),
 				FilePath:      infos[i].GetRecord().GetFilePath(),
+				ZipName:       infos[i].GetRecord().GetZipName(),
 				StartTime:     infos[i].GetRecord().GetStartTime(),
 				EndTime:       infos[i].GetRecord().GetEndTime(),
 				Comment:       infos[i].GetRecord().GetComment(),

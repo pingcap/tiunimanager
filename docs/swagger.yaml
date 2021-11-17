@@ -512,6 +512,8 @@ definitions:
         type: string
       transportType:
         type: string
+      zipName:
+        type: string
     type: object
   importexport.DataTransportRecordQueryResp:
     properties:

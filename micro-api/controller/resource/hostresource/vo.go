@@ -16,6 +16,12 @@
 
 package hostresource
 
+import (
+	"strings"
+
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
+)
+
 type HostInfo struct {
 	ID           string     `json:"hostId"`
 	IP           string     `json:"ip"`
@@ -36,14 +42,47 @@ type HostInfo struct {
 	Region       string     `json:"region"`
 	AZ           string     `json:"az"`
 	Rack         string     `json:"rack"`
-	Purpose      string     `json:"purpose"`  // What Purpose is the host used for? [compute/storage/general]
-	DiskType     string     `json:"diskType"` // Disk type of this host [sata/ssd/nvme_ssd]
-	Reserved     bool       `json:"reserved"` // Whether this host is reserved - will not be allocated
+	ClusterType  string     `json:"clusterType"` // What cluster is the host used for? [database/datamigration]
+	Purpose      string     `json:"purpose"`     // What Purpose is the host used for? [compute/storage/general]
+	DiskType     string     `json:"diskType"`    // Disk type of this host [sata/ssd/nvme_ssd]
+	Reserved     bool       `json:"reserved"`    // Whether this host is reserved - will not be allocated
+	Traits       int64      `json:"traits"`      // Traits of labels
+	SysLabels    []string   `json:"sysLabels"`
 	CreatedAt    int64      `json:"createTime"`
 	UpdatedAt    int64      `json:"updateTime"`
 	Disks        []DiskInfo `json:"disks"`
 }
 
+func (h *HostInfo) getPurposes() []string {
+	return strings.Split(h.Purpose, ",")
+}
+
+func (h *HostInfo) addTraits(p string) (err error) {
+	if trait, err := resource.GetTraitByName(p); err == nil {
+		h.Traits = h.Traits | trait
+	} else {
+		return err
+	}
+	return nil
+}
+
+/*
+func (h *HostInfo) buildDefaultTraits() (err error) {
+	if err := h.addTraits(h.ClusterType); err != nil {
+		return err
+	}
+	purposes := h.getPurposes()
+	for _, p := range purposes {
+		if err := h.addTraits(p); err != nil {
+			return err
+		}
+	}
+	if err := h.addTraits(h.DiskType); err != nil {
+		return err
+	}
+	return nil
+}
+*/
 type DiskInfo struct {
 	ID       string `json:"diskId"`
 	HostId   string `json:"hostId,omitempty"`

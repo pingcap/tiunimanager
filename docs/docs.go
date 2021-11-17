@@ -3315,6 +3315,10 @@ var doc = `{
                 "az": {
                     "type": "string"
                 },
+                "clusterType": {
+                    "description": "What cluster is the host used for? [database/datamigration]",
+                    "type": "string"
+                },
                 "cpuCores": {
                     "description": "Host cpu cores spec, init while importing",
                     "type": "integer"
@@ -3390,6 +3394,16 @@ var doc = `{
                 },
                 "status": {
                     "description": "Host Status, 0 for Online, 1 for offline",
+                    "type": "integer"
+                },
+                "sysLabels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "traits": {
+                    "description": "Traits of labels",
                     "type": "integer"
                 },
                 "updateTime": {

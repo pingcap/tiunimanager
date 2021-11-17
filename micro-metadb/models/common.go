@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -20,8 +19,9 @@ package models
 import (
 	"context"
 	"errors"
-	gormLog "gorm.io/gorm/logger"
 	"time"
+
+	gormLog "gorm.io/gorm/logger"
 
 	"github.com/mozillazg/go-pinyin"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -46,6 +46,7 @@ const (
 	TABLE_NAME_USED_COMPUTE       = "used_computes"
 	TABLE_NAME_USED_PORT          = "used_ports"
 	TABLE_NAME_USED_DISK          = "used_disks"
+	TABLE_NAME_LABEL              = "labels"
 	TABLE_NAME_TIUP_CONFIG        = "tiup_configs"
 	TABLE_NAME_TIUP_TASK          = "tiup_tasks"
 	TABLE_NAME_FLOW               = "flows"
@@ -134,7 +135,7 @@ func generateEntityCode(name string) string {
 }
 
 type DaoLogger struct {
-	p framework.Framework
+	p             framework.Framework
 	SlowThreshold time.Duration
 }
 

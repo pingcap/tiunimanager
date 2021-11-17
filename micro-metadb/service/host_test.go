@@ -63,7 +63,7 @@ func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 	filter1 := new(dbpb.DBFilter)
 	filter1.Arch = string(resource.X86)
 	filter1.DiskType = string(resource.Sata)
-	filter1.Purpose = string(resource.General)
+	filter1.Purpose = string(resource.Compute)
 	require := new(dbpb.DBRequirement)
 	require.Exclusive = false
 	require.ComputeReq = new(dbpb.DBComputeRequirement)
@@ -198,7 +198,7 @@ func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 
 func TestDBServiceHandler_Recycle_Host_Resources(t *testing.T) {
 
-	err := Dao.InitResourceDataForDev("Region1", "Zone1", "Rack1", "168.168.168.4", "168.168.168.5", "168.168.168.6")
+	err := Dao.InitResourceDataForDev("Region2", "Zone2", "Rack2", "168.168.168.4", "168.168.168.5", "168.168.168.6")
 	if err != nil {
 		t.Errorf("InitResourceDataForDev failed in RecycleResources() error = %v, ", err)
 	}
@@ -210,12 +210,12 @@ func TestDBServiceHandler_Recycle_Host_Resources(t *testing.T) {
 	}
 
 	loc := new(dbpb.DBLocation)
-	loc.Region = "Region1"
-	loc.Zone = "Zone1"
+	loc.Region = "Region2"
+	loc.Zone = "Zone2"
 	filter1 := new(dbpb.DBFilter)
 	filter1.Arch = string(resource.X86)
 	filter1.DiskType = string(resource.Sata)
-	filter1.Purpose = string(resource.General)
+	filter1.Purpose = string(resource.Compute)
 	require := new(dbpb.DBRequirement)
 	require.Exclusive = false
 	require.ComputeReq = new(dbpb.DBComputeRequirement)

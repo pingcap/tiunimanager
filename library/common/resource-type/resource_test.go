@@ -57,10 +57,10 @@ func Test_ValidPurposeType(t *testing.T) {
 		purpose string
 		want    want
 	}{
-		{"valid_General", "General", want{nil}},
+		{"valid_Dispatch", "Dispatch", want{nil}},
 		{"valid_Compute", "Compute", want{nil}},
 		{"valid_Storage", "Storage", want{nil}},
-		{"invalid_UnDefine", "UnDefine", want{errors.New("valid purpose: [Compute | Storage | General]")}},
+		{"invalid_UnDefine", "UnDefine", want{errors.New("valid purpose: [Compute | Storage | Dispatch]")}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

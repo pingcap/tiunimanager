@@ -60,11 +60,14 @@ func copyHostFromRsp(src *clusterpb.HostInfo, dst *HostInfo) {
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Stat = src.Stat
+	dst.ClusterType = src.ClusterType
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.CreatedAt = src.CreateAt
 	dst.UpdatedAt = src.UpdateAt
 	dst.Reserved = src.Reserved
+	dst.Traits = src.Traits
+	dst.SysLabels = resource.GetLabelNamesByTraits(dst.Traits)
 	for _, disk := range src.Disks {
 		dst.Disks = append(dst.Disks, DiskInfo{
 			ID:       disk.DiskId,
@@ -104,9 +107,11 @@ func copyHostToReq(src *HostInfo, dst *clusterpb.HostInfo) error {
 	dst.Rack = src.Rack
 	dst.Status = src.Status
 	dst.Stat = src.Stat
+	dst.ClusterType = src.ClusterType
 	dst.Purpose = src.Purpose
 	dst.DiskType = src.DiskType
 	dst.Reserved = src.Reserved
+	dst.Traits = src.Traits
 
 	for _, v := range src.Disks {
 		dst.Disks = append(dst.Disks, &clusterpb.Disk{
@@ -226,16 +231,35 @@ func importExcelFile(r io.Reader, reserved bool) ([]*HostInfo, error) {
 			host.FreeMemory = host.Memory
 			host.Nic = row[NIC_FIELD]
 
-			if err = resource.ValidPurposeType(row[PURPOSE_FIELD]); err != nil {
-				errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, row[PURPOSE_FIELD], err)
+			if err = resource.ValidClusterType(row[CLUSTER_TYPE_FIELD]); err != nil {
+				errMsg := fmt.Sprintf("Row %d get cluster type(%s) failed, %v", irow, row[CLUSTER_TYPE_FIELD], err)
 				return nil, errors.New(errMsg)
 			}
+			host.ClusterType = row[CLUSTER_TYPE_FIELD]
+			if err = host.addTraits(host.ClusterType); err != nil {
+				return nil, err
+			}
+
 			host.Purpose = row[PURPOSE_FIELD]
+			purposes := host.getPurposes()
+			for _, p := range purposes {
+				if err = resource.ValidPurposeType(p); err != nil {
+					errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, p, err)
+					return nil, errors.New(errMsg)
+				}
+				if err = host.addTraits(p); err != nil {
+					return nil, err
+				}
+			}
+
 			if err = resource.ValidDiskType(row[DISKTYPE_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get disk type(%s) failed, %v", irow, row[DISKTYPE_FIELD], err)
 				return nil, errors.New(errMsg)
 			}
 			host.DiskType = row[DISKTYPE_FIELD]
+			if err = host.addTraits(host.DiskType); err != nil {
+				return nil, err
+			}
 			disksStr := row[DISKS_FIELD]
 			if err = json.Unmarshal([]byte(disksStr), &host.Disks); err != nil {
 				errMsg := fmt.Sprintf("Row %d has a Invalid Disk Json Format, %v", irow, err)

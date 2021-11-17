@@ -382,7 +382,7 @@ func TestFlowWorkAggregation_Start(t *testing.T) {
 		if !flow.FlowWork.Finished() {
 			t.Errorf("Start() finished")
 		}
-		if flow.FlowWork.Status != TaskStatusFinished {
+		if flow.FlowWork.Status != TaskStatusError {
 			t.Errorf("Start() FlowWork status wrong, want = %v, got = %v", TaskStatusError, flow.FlowWork.Status)
 		}
 	})

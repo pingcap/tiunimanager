@@ -199,13 +199,14 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 		// Deal with Global Settings
 		tiupConfig.GlobalOptions.DataDir = filepath.Join(cluster.Id, "tidb-data")
 		tiupConfig.GlobalOptions.DeployDir = filepath.Join(cluster.Id, "tidb-deploy")
+		tiupConfig.GlobalOptions.LogDir = filepath.Join(cluster.Id, "tidb-log")
 		tiupConfig.GlobalOptions.User = "tidb"
 		tiupConfig.GlobalOptions.SSHPort = 22
 		tiupConfig.GlobalOptions.Arch = cluster.CpuArchitecture
 		if tiupConfig.GlobalOptions.Arch == "" {
 			tiupConfig.GlobalOptions.Arch = string(resource.X86)
 		}
-		tiupConfig.GlobalOptions.LogDir = filepath.Join(cluster.Id, "tidb-log")
+		tiupConfig.MonitoredOptions.NodeExporterPort = 9091
 	}
 
 	var monitorHostComponent *domain.ComponentInstance
@@ -254,16 +255,16 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 				})
 			} else if component.ComponentType.ComponentType == "TiCDC" {
 				tiupConfig.CDCServers = append(tiupConfig.CDCServers, &spec.CDCSpec{
-					Host: instance.Host,
+					Host:      instance.Host,
 					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "cdc-data"),
 					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "cdc-deploy"),
-					LogDir: filepath.Join(instance.DiskPath, cluster.Id, "cdc-log"),
+					LogDir:    filepath.Join(instance.DiskPath, cluster.Id, "cdc-log"),
 				})
 			} else if component.ComponentType.ComponentType == "Grafana" {
 				if monitorHostComponent != nil {
 					tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
-						Host:            instance.Host,
-						Port: 			monitorHostComponent.PortList[2],
+						Host:            monitorHostComponent.Host,
+						Port:            monitorHostComponent.PortList[2],
 						DeployDir:       filepath.Join(instance.DiskPath, cluster.Id, "grafana-deploy"),
 						AnonymousEnable: true,
 						DefaultTheme:    "light",
@@ -274,8 +275,8 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 			} else if component.ComponentType.ComponentType == "Prometheus" {
 				if monitorHostComponent != nil {
 					tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
-						Host:      instance.Host,
-						Port: instance.PortList[3],
+						Host:      monitorHostComponent.Host,
+						Port:      monitorHostComponent.PortList[3],
 						DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "prometheus-data"),
 						DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "prometheus-deploy"),
 					})
@@ -283,11 +284,11 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 			} else if component.ComponentType.ComponentType == "AlertManger" {
 				if monitorHostComponent != nil {
 					tiupConfig.Alertmanagers = append(tiupConfig.Alertmanagers, &spec.AlertmanagerSpec{
-						Host:      instance.Host,
-						WebPort: instance.PortList[4],
-						ClusterPort: instance.PortList[5],
-						DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "alertmanagers-data"),
-						DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "alertmanagers-deploy"),
+						Host:        monitorHostComponent.Host,
+						WebPort:     monitorHostComponent.PortList[4],
+						ClusterPort: monitorHostComponent.PortList[5],
+						DataDir:     filepath.Join(instance.DiskPath, cluster.Id, "alertmanagers-data"),
+						DeployDir:   filepath.Join(instance.DiskPath, cluster.Id, "alertmanagers-deploy"),
 					})
 				}
 			}

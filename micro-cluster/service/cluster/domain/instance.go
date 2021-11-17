@@ -117,9 +117,12 @@ func (aggregation *ClusterAggregation) ExtractComponentDTOs() []*clusterpb.Compo
 }
 
 func appendAllComponentInstances(config *spec.Specification, knowledge *knowledge.ClusterVersionSpec) []*clusterpb.ComponentInstanceDTO {
-	components := make([]*clusterpb.ComponentInstanceDTO, 0, len(knowledge.ComponentSpecs))
+	components := make([]*clusterpb.ComponentInstanceDTO, 0)
 
 	for _, v := range knowledge.ComponentSpecs {
+		if v.ComponentConstraint.Parasite {
+			continue
+		}
 		code := v.ClusterComponent.ComponentType
 		componentDTO := &clusterpb.ComponentInstanceDTO{
 			BaseInfo: &clusterpb.ComponentBaseInfoDTO{

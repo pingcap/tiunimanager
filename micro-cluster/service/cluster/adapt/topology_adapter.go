@@ -206,7 +206,6 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 		if tiupConfig.GlobalOptions.Arch == "" {
 			tiupConfig.GlobalOptions.Arch = string(resource.X86)
 		}
-		tiupConfig.MonitoredOptions.NodeExporterPort = 9091
 	}
 
 	var monitorHostComponent *domain.ComponentInstance
@@ -233,6 +232,8 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 			} else if component.ComponentType.ComponentType == "PD" {
 				if monitorHostComponent == nil {
 					monitorHostComponent = instance
+					tiupConfig.MonitoredOptions.NodeExporterPort = instance.PortList[6]
+					tiupConfig.MonitoredOptions.BlackboxExporterPort = instance.PortList[6]
 				}
 				tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
 					Host: instance.Host,
@@ -265,7 +266,7 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 					tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
 						Host:            monitorHostComponent.Host,
 						Port:            monitorHostComponent.PortList[2],
-						DeployDir:       filepath.Join(instance.DiskPath, cluster.Id, "grafana-deploy"),
+						DeployDir:       filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "grafana-deploy"),
 						AnonymousEnable: true,
 						DefaultTheme:    "light",
 						OrgName:         "Main Org.",
@@ -277,8 +278,8 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 					tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
 						Host:      monitorHostComponent.Host,
 						Port:      monitorHostComponent.PortList[3],
-						DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "prometheus-data"),
-						DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "prometheus-deploy"),
+						DataDir:   filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "prometheus-data"),
+						DeployDir: filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "prometheus-deploy"),
 					})
 				}
 			} else if component.ComponentType.ComponentType == "AlertManger" {
@@ -287,8 +288,8 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 						Host:        monitorHostComponent.Host,
 						WebPort:     monitorHostComponent.PortList[4],
 						ClusterPort: monitorHostComponent.PortList[5],
-						DataDir:     filepath.Join(instance.DiskPath, cluster.Id, "alertmanagers-data"),
-						DeployDir:   filepath.Join(instance.DiskPath, cluster.Id, "alertmanagers-deploy"),
+						DataDir:     filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "alertmanagers-data"),
+						DeployDir:   filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "alertmanagers-deploy"),
 					})
 				}
 			}

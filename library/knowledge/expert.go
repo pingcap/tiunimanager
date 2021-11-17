@@ -159,14 +159,14 @@ func loadSpecKnowledge() {
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 			}, 1},
-				ComponentPortConstraint{10040, 10100, 6},
+				ComponentPortConstraint{10040, 10120, 8},
 			},
 			{tiFlashComponent, ComponentConstraint{false, false, []int{3}, []string{
 				GenSpecCode(4, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
 			}, 0},
-				ComponentPortConstraint{10100, 10160, 6},
+				ComponentPortConstraint{10120, 10180, 6},
 			},
 			{grafanaComponent, ComponentConstraint{false, true, []int{1}, []string{
 			}, 0},

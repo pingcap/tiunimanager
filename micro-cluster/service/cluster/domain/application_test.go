@@ -20,7 +20,10 @@ import (
 	"context"
 	"errors"
 	"github.com/golang/mock/gomock"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/secondparty"
+	mock "github.com/pingcap-inc/tiem/test/mockdb"
 	"github.com/pingcap-inc/tiem/test/mocksecondparty"
 	"strconv"
 	"testing"
@@ -344,6 +347,20 @@ func TestCreateCluster(t *testing.T) {
 	assert.Equal(t, "testCluster", got.Cluster.ClusterName)
 }
 
+func TestTakeoverClusters(t *testing.T) {
+	got, err := TakeoverClusters(context.TODO(), &clusterpb.OperatorDTO{
+		Id:       "testoperator",
+		Name:     "testoperator",
+		TenantId: "testoperator",
+	}, &clusterpb.ClusterTakeoverReqDTO{
+		ClusterNames: []string{"takeovercluster"},
+	},
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "takeovercluster", got[0].Cluster.ClusterName)
+}
+
 func TestDeleteCluster(t *testing.T) {
 	got, err := DeleteCluster(context.TODO(), &clusterpb.OperatorDTO{
 		Id:       "testoperator",
@@ -378,6 +395,11 @@ func TestStopCluster(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "testCluster", got.Cluster.ClusterName)
 
+}
+
+func TestBuildClusterLogConfig(t *testing.T) {
+	err := BuildClusterLogConfig(context.TODO(),  "testCluster")
+	assert.NoError(t, err)
 }
 
 func TestModifyParameters(t *testing.T) {
@@ -779,4 +801,25 @@ func Test_deployCluster(t *testing.T) {
 		assert.Equal(t, false, ret)
 	})
 
+}
+
+func Test_freedResource(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().RecycleResources(gomock.Any(), gomock.Any()).Return(&dbpb.DBRecycleResponse{
+		Rs: &dbpb.DBAllocResponseStatus{Code: 0, Message: ""},
+	}, nil)
+	client.DBClient = mockClient
+
+	ctx := NewFlowContext(context.TODO())
+	ctx.SetData(contextClusterKey, &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: "test-abc",
+		},
+	})
+	result := freedResource(&TaskEntity{}, ctx)
+
+	assert.True(t, result)
 }

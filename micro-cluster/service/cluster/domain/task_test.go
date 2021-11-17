@@ -237,6 +237,36 @@ func initFlow() {
 				return nil
 			},
 		},
+		FlowTakeoverCluster: {
+			FlowName:    FlowTakeoverCluster,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowTakeoverCluster),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				// todo parse context
+				return nil
+			},
+		},
+		FlowBuildLogConfig: {
+			FlowName:    FlowBuildLogConfig,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowBuildLogConfig),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				// todo parse context
+				return nil
+			},
+		},
 	}
 }
 

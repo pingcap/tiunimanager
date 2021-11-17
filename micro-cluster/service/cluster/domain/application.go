@@ -126,43 +126,6 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	return clusterAggregation, nil
 }
 
-func mergeDemands(demandsList ...[]*ClusterComponentDemand) []*ClusterComponentDemand {
-	if len(demandsList) == 0 {
-		return nil
-	}
-	components := make(map[string][]*ClusterComponentDemand)
-	for _, demands := range demandsList {
-		for _, d := range demands {
-			components[d.ComponentType.ComponentType] = append(components[d.ComponentType.ComponentType], d)
-		}
-	}
-	resultDemands := make([]*ClusterComponentDemand, 0, len(components))
-	for _, demands := range components {
-		var demand *ClusterComponentDemand
-		distributionItemsMap := make(map[string]map[string]int)
-		demand.ComponentType = demands[0].ComponentType
-		for _, d := range demands {
-			demand.TotalNodeCount += d.TotalNodeCount
-			for _, item := range d.DistributionItems {
-				distributionItemsMap[item.ZoneCode][item.SpecCode] += item.Count
-			}
-		}
-		for zoneCode, values := range distributionItemsMap {
-			for specCode, count := range values {
-				distributionItem := &ClusterNodeDistributionItem{
-					ZoneCode: zoneCode,
-					SpecCode: specCode,
-					Count: count,
-				}
-				demand.DistributionItems = append(demand.DistributionItems, distributionItem)
-			}
-		}
-		resultDemands = append(resultDemands, demand)
-	}
-
-	return resultDemands
-}
-
 // ScaleOutCluster
 // @Description: scale out a cluster
 // @Parameter ope
@@ -423,20 +386,6 @@ func collectorTiDBLogConfig(task *TaskEntity, ctx *FlowContext) bool {
 	task.Success(nil)
 	return true
 }
-
-//func (aggregation *ClusterAggregation) loadWorkFlow() error {
-//	if aggregation.Cluster.WorkFlowId > 0 && aggregation.CurrentWorkFlow == nil {
-//		flowWork, err := TaskRepo.LoadFlowWork(aggregation.Cluster.WorkFlowId)
-//		if err != nil {
-//			return err
-//		} else {
-//			aggregation.CurrentWorkFlow = flowWork
-//			return nil
-//		}
-//	}
-//
-//	return nil
-//}
 
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)

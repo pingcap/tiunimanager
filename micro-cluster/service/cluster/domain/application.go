@@ -99,9 +99,19 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 
 	// add default parasite components
 	demands = append(demands,
-		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("Grafana")},
-		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("Prometheus")},
-		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("AlertManger")},
+		&ClusterComponentDemand{
+			ComponentType: knowledge.ClusterComponentFromCode("Grafana"),
+			TotalNodeCount: 1,
+			DistributionItems: []*ClusterNodeDistributionItem{},
+		},
+		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("Prometheus"),
+			TotalNodeCount: 1,
+			DistributionItems: []*ClusterNodeDistributionItem{},
+		},
+		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("AlertManger"),
+			TotalNodeCount: 1,
+			DistributionItems: []*ClusterNodeDistributionItem{},
+		},
 	)
 
 	// persist the cluster into database

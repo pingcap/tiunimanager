@@ -41,32 +41,47 @@ func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*
 		var componentGroup domain.ComponentGroup
 		componentGroup.ComponentType = demand.ComponentType
 		nodes := make([]*domain.ComponentInstance, 0, demand.TotalNodeCount)
-		for _, items := range demand.DistributionItems {
-			for i := 0; i < items.Count; i++ {
-				portRange := knowledge.GetComponentPortRange(cluster.ClusterType.Code, cluster.ClusterVersion.Code, demand.ComponentType.ComponentType)
-				node := &domain.ComponentInstance{
-					TenantId: cluster.TenantId,
-					Status: domain.ClusterStatusUnlined,
-					ClusterId: cluster.Id,
-					ComponentType: demand.ComponentType,
-					Version: &cluster.ClusterVersion,
-					Location: &resource.Location{
-						Region: resource.GetDomainPrefixFromCode(items.ZoneCode),
-						Zone: resource.GetDomainNameFromCode(items.ZoneCode),
-					},
-					Compute: &resource.ComputeRequirement{
-						CpuCores: int32(knowledge.ParseCpu(items.SpecCode)),
-						Memory: int32(knowledge.ParseMemory(items.SpecCode)),
-					},
-					PortRequirement: &resource.PortRequirement{
-						Start:	int32(portRange.Start),
-						End: int32(portRange.End),
-						PortCnt: int32(portRange.Count),
-					},
+		if len(demand.DistributionItems) > 0 {
+			for _, items := range demand.DistributionItems {
+				for i := 0; i < items.Count; i++ {
+					portRange := knowledge.GetComponentPortRange(cluster.ClusterType.Code, cluster.ClusterVersion.Code, demand.ComponentType.ComponentType)
+					node := &domain.ComponentInstance{
+						TenantId: cluster.TenantId,
+						Status: domain.ClusterStatusUnlined,
+						ClusterId: cluster.Id,
+						ComponentType: demand.ComponentType,
+						Version: &cluster.ClusterVersion,
+						Location: &resource.Location{
+							Region: resource.GetDomainPrefixFromCode(items.ZoneCode),
+							Zone: resource.GetDomainNameFromCode(items.ZoneCode),
+						},
+						Compute: &resource.ComputeRequirement{
+							CpuCores: int32(knowledge.ParseCpu(items.SpecCode)),
+							Memory: int32(knowledge.ParseMemory(items.SpecCode)),
+						},
+						PortRequirement: &resource.PortRequirement{
+							Start:	int32(portRange.Start),
+							End: int32(portRange.End),
+							PortCnt: int32(portRange.Count),
+						},
+					}
+					nodes = append(nodes, node)
 				}
-				nodes = append(nodes, node)
 			}
+		} else {
+			node := &domain.ComponentInstance{
+				TenantId: cluster.TenantId,
+				Status: domain.ClusterStatusUnlined,
+				ClusterId: cluster.Id,
+				ComponentType: demand.ComponentType,
+				Version: &cluster.ClusterVersion,
+				Location: &resource.Location{},
+				Compute: &resource.ComputeRequirement{},
+				PortRequirement: &resource.PortRequirement{},
+			}
+			nodes = append(nodes, node)
 		}
+
 
 		componentGroup.Nodes = nodes
 		components = append(components, &componentGroup)

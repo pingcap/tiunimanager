@@ -98,7 +98,7 @@ type Specification struct {
 	MetaDBServers        []*MetaDBServerSpec    `yaml:"tiem_metadb_servers"`
 	ClusterServers       []*ClusterServerSpec   `yaml:"tiem_cluster_servers"`
 	APIServers           []*APIServerSpec       `yaml:"tiem_api_servers"`
-	FileServers          []*FileServerSpec      `yaml:"tiem_file_server"`
+	FileServers          []*FileServerSpec      `yaml:"tiem_file_servers"`
 	WebServers           []*WebServerSpec       `yaml:"tiem_web_servers"`
 	TracerServers        []*TracerServerSpec    `yaml:"tracer_servers"`
 	ElasticSearchServers []*ElasticSearchSpec   `yaml:"elasticsearch_servers"`

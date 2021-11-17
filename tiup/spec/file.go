@@ -34,8 +34,8 @@ import (
 type FileServerSpec struct {
 	Host            string                 `yaml:"host"`
 	SSHPort         int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
-	Port            int                    `yaml:"port,omitempty" default:"4116"`
-	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4123"`
+	Port            int                    `yaml:"port,omitempty" default:"4118"`
+	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4124"`
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
 	DataDir         string                 `yaml:"data_dir,omitempty"`
 	LogDir          string                 `yaml:"log_dir,omitempty"`
@@ -203,11 +203,6 @@ func (i *FileServerInstance) InitConfig(
 	// TODO: support user specified certificates
 	if _, _, err := e.Execute(ctx,
 		fmt.Sprintf("cp -r %s/bin/cert %s/", paths.Deploy, paths.Deploy),
-		false); err != nil {
-		return err
-	}
-	if _, _, err := e.Execute(ctx,
-		fmt.Sprintf("cp -r %s/bin/etc %s/", paths.Deploy, paths.Deploy),
 		false); err != nil {
 		return err
 	}

@@ -23,7 +23,7 @@ import (
 	"github.com/pingcap-inc/tiem/tiup/embed"
 )
 
-// TiEMAPIServerScript represent the data to generate TiEMAPIServer config
+// TiEMFileServerScript represent the data to generate TiEMFileServer config
 type TiEMFileServerScript struct {
 	Host                 string
 	Port                 int
@@ -39,7 +39,7 @@ type TiEMFileServerScript struct {
 	EnableHttps          string
 }
 
-// NewTiEMAPIServerScript returns a TiEMAPIServerScript with given arguments
+// NewTiEMFileServerScript returns a TiEMFileServerScript with given arguments
 func NewTiEMFileServerScript(ip, deployDir, dataDir, logDir, logLevel string) *TiEMFileServerScript {
 	return &TiEMFileServerScript{
 		Host:        ip,
@@ -52,13 +52,13 @@ func NewTiEMFileServerScript(ip, deployDir, dataDir, logDir, logLevel string) *T
 	}
 }
 
-// WithPort set Port field of TiEMAPIServerScript
+// WithPort set Port field of TiEMFileServerScript
 func (c *TiEMFileServerScript) WithPort(port int) *TiEMFileServerScript {
 	c.Port = port
 	return c
 }
 
-// WithMetricsPort set PeerPort field of TiEMAPIServerScript
+// WithMetricsPort set PeerPort field of TiEMFileServerScript
 func (c *TiEMFileServerScript) WithMetricsPort(port int) *TiEMFileServerScript {
 	c.MetricsPort = port
 	return c
@@ -90,7 +90,7 @@ func (c *TiEMFileServerScript) WithEnableHttps(enableHttps string) *TiEMFileServ
 
 // Script generate the config file data.
 func (c *TiEMFileServerScript) Script() ([]byte, error) {
-	fp := path.Join("templates", "scripts", "run_tiem_api.sh.tpl")
+	fp := path.Join("templates", "scripts", "run_tiem_file.sh.tpl")
 	tpl, err := embed.ReadTemplate(fp)
 	if err != nil {
 		return nil, err
@@ -107,9 +107,9 @@ func (c *TiEMFileServerScript) ScriptToFile(file string) error {
 	return os.WriteFile(file, config, 0755)
 }
 
-// ScriptWithTemplate generate the TiEMAPIServer config content by tpl
+// ScriptWithTemplate generate the TiEMFileServer config content by tpl
 func (c *TiEMFileServerScript) ScriptWithTemplate(tpl string) ([]byte, error) {
-	tmpl, err := template.New("TiEMAPIServer").Parse(tpl)
+	tmpl, err := template.New("TiEMFileServer").Parse(tpl)
 	if err != nil {
 		return nil, err
 	}

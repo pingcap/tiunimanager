@@ -240,7 +240,6 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 					ClientPort: instance.PortList[0],
 					PeerPort: instance.PortList[1],
 				})
-
 			} else if component.ComponentType.ComponentType == "TiFlash" {
 				tiupConfig.TiFlashServers = append(tiupConfig.TiFlashServers, &spec.TiFlashSpec{
 					Host: instance.Host,

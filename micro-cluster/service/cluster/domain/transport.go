@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -135,7 +136,10 @@ func ExportDataPreCheck(req *clusterpb.DataExportRequest) error {
 	}
 	if req.GetZipName() == "" {
 		req.ZipName = common.DefaultZipName
+	} else if !strings.HasSuffix(req.GetZipName(), ".zip") {
+		req.ZipName = fmt.Sprintf("%s.zip", req.GetZipName())
 	}
+
 	switch req.GetStorageType() {
 	case common.S3StorageType:
 		if req.GetEndpointUrl() == "" {
@@ -575,6 +579,9 @@ func checkFilePathExists(path string) bool {
 }
 
 func checkExportParamSupportReimport(request *clusterpb.DataExportRequest) bool {
+	if common.S3StorageType == request.GetStorageType() {
+		return false
+	}
 	if request.GetFilter() == "" && request.GetSql() != "" && FileTypeCSV == request.GetFileType() {
 		return false
 	}

@@ -266,19 +266,6 @@ func TestExportData(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestImportData_case1(t *testing.T) {
-	request := &clusterpb.DataImportRequest{
-		Operator: &clusterpb.OperatorDTO{
-			Id:       "123",
-			Name:     "123",
-			TenantId: "123",
-		},
-	}
-	_, err := ImportData(context.Background(), request)
-
-	assert.NoError(t, err)
-}
-
 func TestImportData_case2(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

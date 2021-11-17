@@ -347,6 +347,35 @@ func TestCreateCluster(t *testing.T) {
 	assert.Equal(t, "testCluster", got.Cluster.ClusterName)
 }
 
+func TestScaleOutCluster(t *testing.T) {
+	got, err := ScaleOutCluster(context.TODO(),
+		&clusterpb.OperatorDTO{
+			Id:       "testoperator",
+			Name:     "testoperator",
+			TenantId: "testoperator",
+		}, "testCluster",
+		[]*clusterpb.ClusterNodeDemandDTO{
+			{ComponentType: "TiDB", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+			}},
+			{ComponentType: "TiKV", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
+				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+			}},
+			{ComponentType: "PD", TotalNodeCount: 3, Items: []*clusterpb.DistributionItemDTO{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
+			}},
+		})
+
+	assert.NoError(t, err)
+	assert.Equal(t, "TiDB", got.AddedComponentDemand[0].ComponentType.ComponentType)
+	assert.Equal(t, "TiKV", got.AddedComponentDemand[1].ComponentType.ComponentType)
+	assert.Equal(t, "PD", got.AddedComponentDemand[2].ComponentType.ComponentType)
+}
+
 func TestTakeoverClusters(t *testing.T) {
 	got, err := TakeoverClusters(context.TODO(), &clusterpb.OperatorDTO{
 		Id:       "testoperator",
@@ -797,6 +826,66 @@ func Test_deployCluster(t *testing.T) {
 			},
 		})
 		ret := deployCluster(task, flowCtx)
+
+		assert.Equal(t, false, ret)
+	})
+
+}
+
+func Test_scaleOutCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	secondparty.SecondParty = mockTiup
+
+	t.Run("success", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupScaleOut(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			AlteredTopology: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		})
+		ret := scaleOutCluster(task, flowCtx)
+
+		assert.Equal(t, true, ret)
+	})
+	t.Run("fail", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupScaleOut(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("wrong"))
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			AlteredTopology: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		})
+		ret := scaleOutCluster(task, flowCtx)
 
 		assert.Equal(t, false, ret)
 	})

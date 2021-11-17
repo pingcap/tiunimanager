@@ -119,6 +119,21 @@ func initFlow() {
 				return nil
 			},
 		},
+		FlowScaleOutCluster: {
+			FlowName:    FlowScaleOutCluster,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowScaleOutCluster),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				// todo parse context
+				return nil
+			},
+		},
 		FlowDeleteCluster: {
 			FlowName:    FlowDeleteCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowDeleteCluster),

@@ -21,11 +21,14 @@ message DBClusterDTO {
     string tags = 9;
     bool tls = 10;
     string demands = 11;
-    int32 workFlowId = 12;
-    string ownerId = 13;
-    int64 createTime = 14;
-    int64 updateTime = 15;
-    int64 deleteTime = 16;
+    bool exclusive = 12;
+    string region = 13;
+    string cpuArchitecture = 14;
+    int32 workFlowId = 15;
+    string ownerId = 16;
+    int64 createTime = 17;
+    int64 updateTime = 18;
+    int64 deleteTime = 19;
 }
 
 message DBTopologyConfigDTO {
@@ -104,6 +107,17 @@ message DBUpdateClusterStatusResponse {
     DBClusterDTO cluster = 2;
 }
 
+message DBUpdateDemandRequest {
+    string clusterId = 1;
+    string demands = 2;
+    string tenantId = 3;
+}
+
+message DBUpdateDemandResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterDTO cluster = 2;
+}
+
 message DBUpdateClusterInfoRequest {
     string clusterId = 1;
     string name = 2;
@@ -117,18 +131,16 @@ message DBUpdateClusterInfoResponse {
     DBClusterResponseStatus status = 1;
     DBClusterDTO cluster = 2;
 }
+
 message DBCreateInstanceRequest {
     string clusterId = 1;
     string tenantId = 2;
-    string topologyContent = 3;
-    repeated DBComponentInstanceDTO componentInstances = 4;
+    repeated DBComponentInstanceDTO componentInstances = 3;
 }
 
 message DBCreateInstanceResponse {
     DBClusterResponseStatus status = 1;
-    DBClusterDTO cluster = 2;
-    DBTopologyConfigDTO topologyConfigRecord = 3;
-    repeated DBComponentInstanceDTO componentInstances = 4;
+    repeated DBComponentInstanceDTO componentInstances = 2;
 }
 
 message DBUpdateTopologyConfigRequest {
@@ -316,15 +328,18 @@ message DBComponentInstanceDTO {
     string clusterId = 5;
     string componentType = 6;
     string role = 7;
-    string spec = 8;
-    string version = 9;
+    string version = 8;
 
-    string hostId = 10;
-    string diskId = 11;
-    string portInfo = 12;
-    string allocRequestId = 13;
+    string hostId = 9;
+    string host = 10;
+    int32 cpuCores = 11;
+    int32 memory = 12;
+    string diskId = 13;
+    string diskPath = 14;
+    string portInfo = 15;
+    string allocRequestId = 16;
 
-    int64 createTime = 14;
-    int64 updateTime = 15;
-    int64 deleteTime = 16;
+    int64 createTime = 17;
+    int64 updateTime = 18;
+    int64 deleteTime = 19;
 }

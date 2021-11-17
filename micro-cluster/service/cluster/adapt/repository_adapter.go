@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -81,7 +82,7 @@ func (c ClusterRepoAdapter) Query(ctx context.Context, clusterId, clusterName, c
 
 func (c ClusterRepoAdapter) AddCluster(ctx context.Context, cluster *domain.Cluster) error {
 	req := &dbpb.DBCreateClusterRequest{
-		Cluster: ConvertClusterToDTO(cluster),
+		Cluster: convertClusterToDTO(cluster),
 	}
 
 	resp, err := client.DBClient.CreateCluster(ctx, req)
@@ -103,26 +104,76 @@ func (c ClusterRepoAdapter) AddCluster(ctx context.Context, cluster *domain.Clus
 }
 
 func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.ClusterAggregation) error {
-	cluster := aggregation.Cluster
 
+	if err := persistClusterStatus(ctx, aggregation); err != nil {
+		framework.LogWithContext(ctx).Errorf("persist cluster error, module %s, error %v", "status", err)
+		return err
+	}
+
+	if err := persisClusterParameter(ctx, aggregation); err != nil {
+		framework.LogWithContext(ctx).Errorf("persist cluster error, module %s, error %v", "parameter", err)
+		return err
+	}
+
+	if err := persisClusterTopologyConfig(ctx, aggregation); err != nil {
+		framework.LogWithContext(ctx).Errorf("persist cluster error, module %s, error %v", "topology", err)
+		return err
+	}
+
+	if err := persistClusterComponents(ctx, aggregation); err != nil {
+		framework.LogWithContext(ctx).Errorf("persist cluster error, module %s, error %v", "components", err)
+		return err
+	}
+
+	if err := persistClusterBaseInfo(ctx, aggregation); err != nil {
+		framework.LogWithContext(ctx).Errorf("persist cluster error, module %s, error %v", "baseinfo", err)
+		return err
+	}
+
+	return nil
+}
+
+func persistClusterStatus(ctx context.Context, aggregation *domain.ClusterAggregation) error {
 	if aggregation.StatusModified || aggregation.FlowModified {
 		resp, err := client.DBClient.UpdateClusterStatus(ctx, &dbpb.DBUpdateClusterStatusRequest{
-			ClusterId:    cluster.Id,
-			Status:       int32(cluster.Status),
+			ClusterId:    aggregation.Cluster.Id,
+			Status:       int32(aggregation.Cluster.Status),
 			UpdateStatus: aggregation.StatusModified,
 			FlowId:       int64(aggregation.Cluster.WorkFlowId),
 			UpdateFlow:   aggregation.FlowModified,
 		})
 
 		if err != nil {
-			// todo
 			return err
 		}
 
-		cluster.Status = domain.ClusterStatusFromValue(int(resp.Cluster.Status))
-		cluster.WorkFlowId = uint(resp.Cluster.WorkFlowId)
+		aggregation.Cluster.Status = domain.ClusterStatusFromValue(int(resp.Cluster.Status))
+		aggregation.Cluster.WorkFlowId = uint(resp.Cluster.WorkFlowId)
 	}
+	return nil
+}
 
+func persisClusterParameter(ctx context.Context, aggregation *domain.ClusterAggregation) error {
+	if aggregation.LastParameterRecord != nil && aggregation.LastParameterRecord.Id == 0 {
+		record := aggregation.LastParameterRecord
+		resp, err := client.DBClient.SaveParametersRecord(ctx, &dbpb.DBSaveParametersRequest{
+			Parameters: &dbpb.DBParameterRecordDTO{
+				TenantId:   aggregation.Cluster.TenantId,
+				ClusterId:  record.ClusterId,
+				OperatorId: record.OperatorId,
+				Content:    record.Content,
+				FlowId:     int64(aggregation.CurrentWorkFlow.Id),
+			},
+		})
+		if err != nil {
+			return err
+		}
+		aggregation.LastParameterRecord.Id = uint(resp.Parameters.Id)
+	}
+	return nil
+}
+
+func persisClusterTopologyConfig(ctx context.Context, aggregation *domain.ClusterAggregation) error {
 	if aggregation.ConfigModified {
 		resp, err := client.DBClient.UpdateClusterTopologyConfig(ctx, &dbpb.DBUpdateTopologyConfigRequest{
 			ClusterId: aggregation.Cluster.Id,
@@ -131,68 +182,48 @@ func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.Clu
 		})
 
 		if err != nil {
-			// todo
 			return err
 		}
 		aggregation.CurrentTopologyConfigRecord = parseConfigRecordDTO(resp.TopologyConfigRecord)
 	}
-	/*
-		if aggregation.LastBackupRecord != nil && aggregation.LastBackupRecord.Id == 0 {
-			record := aggregation.LastBackupRecord
-			resp, err :=  client.DBClient.SaveBackupRecord(context.TODO(), &db.DBSaveBackupRecordRequest{
-				BackupRecord: &db.DBBackupRecordDTO{
-					TenantId:    cluster.TenantId,
-					ClusterId:   record.ClusterId,
-					BackupType: string(record.BackupType),
-					BackupRange: string(record.Range),
-					OperatorId:  record.OperatorId,
-					FilePath:    record.FilePath,
-					FlowId:      int64(aggregation.CurrentWorkFlow.Id),
-				},
-			})
+	return nil
+}
+
+// persistClusterComponents
+// @Description: create
+// @Parameter ctx
+// @Parameter aggregation
+// @return error
+func persistClusterComponents(ctx context.Context, aggregation *domain.ClusterAggregation) error {
+	if len(aggregation.AddedClusterComponents) > 0  {
+		toCreate := make([]*domain.ComponentInstance, 0 )
+
+		for _, g := range aggregation.AddedClusterComponents {
+			for _, c := range g.Nodes {
+				if c.ID == "" {
+					toCreate = append(toCreate, c)
+				}
+			}
+		}
+		if len(toCreate) >= 0 {
+			request := &dbpb.DBCreateInstanceRequest{
+				ClusterId: aggregation.Cluster.Id,
+				TenantId: aggregation.Cluster.TenantId,
+				ComponentInstances: batchConvertComponentToDTOs(toCreate),
+			}
+
+			_, err := client.DBClient.CreateInstance(ctx, request)
+
 			if err != nil {
-				// todo
 				return err
 			}
-			record.Id = resp.BackupRecord.Id
 		}
-
-		if aggregation.LastRecoverRecord != nil && aggregation.LastRecoverRecord.Id == 0 {
-			record := aggregation.LastRecoverRecord
-			resp, err :=  client.DBClient.SaveRecoverRecord(context.TODO(), &db.DBSaveRecoverRecordRequest{
-				RecoverRecord: &db.DBRecoverRecordDTO{
-					TenantId:       cluster.TenantId,
-					ClusterId:      record.ClusterId,
-					OperatorId:     record.OperatorId,
-					BackupRecordId: record.BackupRecord.Id,
-					FlowId:         int64(aggregation.CurrentWorkFlow.Id),
-				},
-			})
-			if err != nil {
-				// todo
-				return err
-			}
-			aggregation.LastRecoverRecord.Id = uint(resp.RecoverRecord.Id)
-		}*/
-
-	if aggregation.LastParameterRecord != nil && aggregation.LastParameterRecord.Id == 0 {
-		record := aggregation.LastParameterRecord
-		resp, err := client.DBClient.SaveParametersRecord(ctx, &dbpb.DBSaveParametersRequest{
-			Parameters: &dbpb.DBParameterRecordDTO{
-				TenantId:   cluster.TenantId,
-				ClusterId:  record.ClusterId,
-				OperatorId: record.OperatorId,
-				Content:    record.Content,
-				FlowId:     int64(aggregation.CurrentWorkFlow.Id),
-			},
-		})
-		if err != nil {
-			// todo
-			return err
-		}
-		aggregation.LastParameterRecord.Id = uint(resp.Parameters.Id)
 	}
+	return nil
+}
 
+func persistClusterBaseInfo(ctx context.Context, aggregation *domain.ClusterAggregation) error {
+	cluster := aggregation.Cluster
 	if aggregation.BaseInfoModified {
 		tagBytes, err := json.Marshal(cluster.Tags)
 		if err != nil {
@@ -207,9 +238,28 @@ func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.Clu
 			Tls:         cluster.Tls,
 		})
 
+		return err
+	}
+
+	if aggregation.DemandsModified {
+		var demands string
+		if len(aggregation.AddedComponentDemand) > 0 {
+			bytes, err := json.Marshal(aggregation.AddedComponentDemand)
+			if err != nil {
+				return err
+			}
+			demands = string(bytes)
+		}
+		resp, err := client.DBClient.UpdateClusterDemand(ctx, &dbpb.DBUpdateDemandRequest{
+			ClusterId: cluster.Id,
+			Demands: demands,
+			TenantId: cluster.TenantId,
+		})
 		if err != nil {
-			// todo
 			return err
+		}
+		if resp.Status.Code != 0 {
+			return fmt.Errorf(resp.Status.Message)
 		}
 	}
 	return nil
@@ -456,32 +506,30 @@ func ParseTaskDTO(dto *dbpb.DBTaskDTO) *domain.TaskEntity {
 	}
 }
 
-func ConvertClusterToDTO(cluster *domain.Cluster) (dto *dbpb.DBClusterDTO) {
+func convertClusterToDTO(cluster *domain.Cluster) (dto *dbpb.DBClusterDTO) {
 	if cluster == nil {
 		return
 	}
 	dto = &dbpb.DBClusterDTO{
-		Id:          cluster.Id,
-		Code:        cluster.Code,
-		Name:        cluster.ClusterName,
-		TenantId:    cluster.TenantId,
-		DbPassword:  cluster.DbPassword,
-		ClusterType: cluster.ClusterType.Code,
-		VersionCode: cluster.ClusterVersion.Code,
-		Status:      int32(cluster.Status),
-		Tls:         cluster.Tls,
-		WorkFlowId:  int32(cluster.WorkFlowId),
-		OwnerId:     cluster.OwnerId,
+		Id:              cluster.Id,
+		Code:            cluster.Code,
+		Name:            cluster.ClusterName,
+		TenantId:        cluster.TenantId,
+		DbPassword:      cluster.DbPassword,
+		ClusterType:     cluster.ClusterType.Code,
+		VersionCode:     cluster.ClusterVersion.Code,
+		Status:          int32(cluster.Status),
+		Exclusive:       cluster.Exclusive,
+		Region:          cluster.Region,
+		CpuArchitecture: cluster.CpuArchitecture,
+		Tls:             cluster.Tls,
+		WorkFlowId:      int32(cluster.WorkFlowId),
+		OwnerId:         cluster.OwnerId,
 	}
 
 	if len(cluster.Tags) > 0 {
 		bytes, _ := json.Marshal(cluster.Tags)
 		dto.Tags = string(bytes)
-	}
-
-	if len(cluster.ComponentDemands) > 0 {
-		bytes, _ := json.Marshal(cluster.ComponentDemands)
-		dto.Demands = string(bytes)
 	}
 
 	return
@@ -509,7 +557,6 @@ func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 	}
 
 	json.Unmarshal([]byte(dto.Tags), &cluster.Tags)
-	json.Unmarshal([]byte(dto.Demands), &cluster.ComponentDemands)
 
 	return
 }
@@ -544,5 +591,37 @@ func parseFlowFromDTO(dto *dbpb.DBFlowDTO) (flow *domain.FlowWorkEntity) {
 		Status:      domain.TaskStatusFromValue(int(dto.Status)),
 	}
 	// todo
+	return
+}
+
+func batchConvertComponentToDTOs(components []*domain.ComponentInstance) (dtoList []*dbpb.DBComponentInstanceDTO) {
+	dtoList = make([]*dbpb.DBComponentInstanceDTO, 0)
+	for _, c := range components {
+		dtoList = append(dtoList, convertComponentToDTO(c))
+	}
+	return
+}
+
+func convertComponentToDTO(component *domain.ComponentInstance) (dto *dbpb.DBComponentInstanceDTO) {
+	dto = &dbpb.DBComponentInstanceDTO {
+		Id:       component.ID,
+		Code:     component.Code,
+		TenantId: component.TenantId,
+		Status: int32(component.Status),
+		ClusterId: component.ClusterId,
+		ComponentType: component.ComponentType.ComponentType,
+		Role: component.Role,
+		Version: component.Version.Code,
+
+		HostId: component.HostId,
+		Host: component.Host,
+		CpuCores: component.Compute.CpuCores,
+		Memory: component.Compute.Memory,
+		DiskId: component.DiskId,
+		DiskPath: component.DiskPath,
+		PortInfo: component.PortInfo,
+		AllocRequestId: component.AllocRequestId,
+	}
+
 	return
 }

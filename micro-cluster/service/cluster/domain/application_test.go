@@ -398,10 +398,6 @@ func Test_destroyTasks(t *testing.T) {
 	assert.True(t, destroyTasks(&TaskEntity{}, nil))
 }
 
-func Test_freedResource(t *testing.T) {
-	assert.True(t, freedResource(&TaskEntity{}, nil))
-}
-
 func Test_modifyParameters(t *testing.T) {
 	assert.True(t, modifyParameters(&TaskEntity{}, nil))
 }
@@ -740,13 +736,11 @@ func Test_deployCluster(t *testing.T) {
 				Id:          "test-tidb123",
 				ClusterName: "test-tidb",
 			},
-			CurrentTopologyConfigRecord: &TopologyConfigRecord{
-				ConfigModel: &spec.Specification{
-					TiDBServers: []*spec.TiDBSpec{
-						{
-							Host: "127.0.0.1",
-							Port: 4000,
-						},
+			AlteredTopology: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
 					},
 				},
 			},
@@ -771,13 +765,11 @@ func Test_deployCluster(t *testing.T) {
 				Id:          "test-tidb123",
 				ClusterName: "test-tidb",
 			},
-			CurrentTopologyConfigRecord: &TopologyConfigRecord{
-				ConfigModel: &spec.Specification{
-					TiDBServers: []*spec.TiDBSpec{
-						{
-							Host: "127.0.0.1",
-							Port: 4000,
-						},
+			AlteredTopology: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
 					},
 				},
 			},

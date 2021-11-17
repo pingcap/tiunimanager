@@ -39,6 +39,9 @@ type Cluster struct {
 	Tls                     bool
 	Tags                    string
 	OwnerId                 string `gorm:"not null;type:varchar(22);default:null"`
+	Exclusive               bool
+	Region                  string
+	CpuArchitecture         string
 	CurrentTopologyConfigId uint
 	CurrentDemandId         uint
 	CurrentFlowId           uint
@@ -147,9 +150,9 @@ func (m *DAOClusterManager) UpdateClusterStatus(ctx context.Context, clusterId s
 	return cluster, err
 }
 
-func (m *DAOClusterManager) UpdateClusterDemand(ctx context.Context, clusterId string, content string, tenantId string) (cluster *Cluster, demand *DemandRecord, err error) {
+func (m *DAOClusterManager) UpdateComponentDemand(ctx context.Context, clusterId string, content string, tenantId string) (cluster *Cluster, demand *DemandRecord, err error) {
 	if "" == clusterId || "" == tenantId {
-		return nil, nil, errors.New(fmt.Sprintf("UpdateClusterDemand has invalid parameter, clusterId: %s, content: %s, content: %s", clusterId, tenantId, content))
+		return nil, nil, errors.New(fmt.Sprintf("UpdateComponentDemand has invalid parameter, clusterId: %s, content: %s, content: %s", clusterId, tenantId, content))
 	}
 
 	cluster = &Cluster{}
@@ -349,18 +352,17 @@ func (m *DAOClusterManager) ListClusters(ctx context.Context, clusterId, cluster
 	return clusters, total, query.Order("updated_at desc").Count(&total).Offset(offset).Limit(length).Find(&clusters).Error
 }
 
-func (m *DAOClusterManager) CreateCluster(ctx context.Context, ClusterName, DbPassword, ClusterType, ClusterVersion string,
-	Tls bool, Tags, OwnerId, tenantId string) (cluster *Cluster, err error) {
-	cluster = &Cluster{Entity: Entity{TenantId: tenantId},
-		Name:       ClusterName,
-		DbPassword: DbPassword,
-		Type:       ClusterType,
-		Version:    ClusterVersion,
-		Tls:        Tls,
-		Tags:       Tags,
-		OwnerId:    OwnerId,
+func (m *DAOClusterManager) CreateCluster(ctx context.Context, clusterReq Cluster) (cluster *Cluster, err error) {
+	cluster = &Cluster{Entity: Entity{TenantId: clusterReq.TenantId},
+		Name:       clusterReq.Name,
+		DbPassword: clusterReq.DbPassword,
+		Type:       clusterReq.Type,
+		Version:    clusterReq.Version,
+		Tls:        clusterReq.Tls,
+		Tags:       clusterReq.Tags,
+		OwnerId:    clusterReq.OwnerId,
 	}
-	cluster.Code = generateEntityCode(ClusterName)
+	cluster.Code = generateEntityCode(clusterReq.Name)
 	err = m.Db(ctx).Create(cluster).Error
 	return
 }

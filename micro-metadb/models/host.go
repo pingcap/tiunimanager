@@ -501,13 +501,10 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	// excluded choosed hosts in one request
 	excludedHosts = append(excludedHosts, choosedHosts...)
 	hostArch := require.HostFilter.Arch
-	hostPurpose := require.HostFilter.Purpose
-	hostDiskType := require.HostFilter.DiskType
 	hostTraits := require.HostFilter.HostTraits
 	exclusive := require.Require.Exclusive
 	reqCores := require.Require.ComputeReq.CpuCores
 	reqMem := require.Require.ComputeReq.Memory
-	diskType := rt.DiskType(require.Require.DiskReq.DiskType)
 	capacity := require.Require.DiskReq.Capacity
 	needDisk := require.Require.DiskReq.NeedDisk
 	// 1. Choose Host/Disk List
@@ -526,29 +523,18 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_EXCLUDED, "expect disk count %d but only %d after excluded host list", require.Count, count)
 		}
 
-		db = db.Where("disks.type = ? and disks.status = ? and disks.capacity >= ?", diskType, rt.DISK_AVAILABLE, capacity).Count(&count)
+		db = db.Where("disks.status = ? and disks.capacity >= ?", rt.DISK_AVAILABLE, capacity).Count(&count)
 		if count < int64(require.Count) {
 			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_DISK_AFTER_DISK_FILTER, "expect disk count %d but only %d after disk filter", require.Count, count)
 		}
 
 		if !exclusive {
-			// filter by host purpose and disk type will be deprecated in next sprint
-			if hostTraits != 0 {
-				err = db.Where("hosts.az = ? and hosts.arch = ? and hosts.traits & ? = ? and hosts.status = ? and (hosts.stat = ? or hosts.stat = ?) and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
-					zoneCode, hostArch, hostTraits, hostTraits, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
-			} else {
-				err = db.Where("hosts.az = ? and hosts.arch = ? and hosts.purpose = ? and hosts.disk_type = ? and hosts.status = ? and (hosts.stat = ? or hosts.stat = ?) and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
-					zoneCode, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
-			}
+			err = db.Where("hosts.az = ? and hosts.arch = ? and hosts.traits & ? = ? and hosts.status = ? and (hosts.stat = ? or hosts.stat = ?) and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
+				zoneCode, hostArch, hostTraits, hostTraits, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
 		} else {
-			if hostTraits != 0 {
-				err = db.Where("hosts.az = ? and hosts.arch = ? and hosts.traits & ? = ? and hosts.status = ? and hosts.stat = ? and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
-					zoneCode, hostArch, hostTraits, hostTraits, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
-			} else {
-				// If need exclusive resource, only choosing from loadless hosts
-				err = db.Where("hosts.az = ? and hosts.arch = ? and hosts.purpose = ? and hosts.disk_type = ? and hosts.status = ? and hosts.stat = ? and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
-					zoneCode, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
-			}
+			// If need exclusive resource, only choosing from loadless hosts
+			err = db.Where("hosts.az = ? and hosts.arch = ? and hosts.traits & ? = ? and hosts.status = ? and hosts.stat = ? and hosts.free_cpu_cores >= ? and hosts.free_memory >= ?",
+				zoneCode, hostArch, hostTraits, hostTraits, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Group("hosts.id").Scan(&resources).Error
 		}
 	} else {
 		var count int64
@@ -563,22 +549,12 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "expect host count %d but only %d after excluded host list", require.Count, count)
 		}
 		if !exclusive {
-			if hostTraits != 0 {
-				err = db.Where("az = ? and arch = ? and traits & ? = ? and status = ? and (stat = ? or stat = ?) and free_cpu_cores >= ? and free_memory >= ?",
-					zoneCode, hostArch, hostTraits, hostTraits, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Scan(&resources).Error
-			} else {
-				err = db.Where("az = ? and arch = ? and purpose = ? and disk_type = ? and status = ? and (stat = ? or stat = ?) and free_cpu_cores >= ? and free_memory >= ?",
-					zoneCode, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Scan(&resources).Error
-			}
+			err = db.Where("az = ? and arch = ? and traits & ? = ? and status = ? and (stat = ? or stat = ?) and free_cpu_cores >= ? and free_memory >= ?",
+				zoneCode, hostArch, hostTraits, hostTraits, rt.HOST_ONLINE, rt.HOST_LOADLESS, rt.HOST_INUSED, reqCores, reqMem).Scan(&resources).Error
 		} else {
-			if hostTraits != 0 {
-				err = db.Where("az = ? and arch = ? and traits & ? = ? and status = ? and stat = ? and free_cpu_cores >= ? and free_memory >= ?",
-					zoneCode, hostArch, hostTraits, hostTraits, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Scan(&resources).Error
-			} else {
-				// If need exclusive resource, only choosing from loadless hosts
-				err = db.Where("az = ? and arch = ? and purpose = ? and disk_type = ? and status = ? and stat = ? and free_cpu_cores >= ? and free_memory >= ?",
-					zoneCode, hostArch, hostPurpose, hostDiskType, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Scan(&resources).Error
-			}
+			// If need exclusive resource, only choosing from loadless hosts
+			err = db.Where("az = ? and arch = ? and traits & ? = ? and status = ? and stat = ? and free_cpu_cores >= ? and free_memory >= ?",
+				zoneCode, hostArch, hostTraits, hostTraits, rt.HOST_ONLINE, rt.HOST_LOADLESS, reqCores, reqMem).Scan(&resources).Error
 		}
 	}
 	if err != nil {

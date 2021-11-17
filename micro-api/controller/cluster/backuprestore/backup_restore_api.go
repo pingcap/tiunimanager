@@ -327,12 +327,13 @@ func Restore(c *gin.Context) {
 
 	operator := controller.GetOperator(c)
 
-	baseInfo, demand := req.ConvertToDTO()
+	baseInfo, commonDemand, demand := req.ConvertToDTO()
 
 	reqDTO := &clusterpb.RecoverRequest{
 		Operator: operator.ConvertToDTO(),
 		Cluster:  baseInfo,
 		Demands:  demand,
+		CommonDemand: commonDemand,
 	}
 
 	respDTO, err := client.ClusterClient.RecoverCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)

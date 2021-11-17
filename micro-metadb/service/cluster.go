@@ -39,9 +39,20 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DB
 	dto := req.Cluster
 	log := framework.LogWithContext(ctx)
 	clusterManager := handler.Dao().ClusterManager()
-	cluster, err := clusterManager.CreateCluster(ctx, dto.Name, dto.DbPassword, dto.ClusterType, dto.VersionCode, dto.Tls, dto.Tags, dto.OwnerId, dto.TenantId)
+	cluster, err := clusterManager.CreateCluster(ctx, models.Cluster{Entity: models.Entity{TenantId: dto.TenantId},
+		Name:            dto.Name,
+		DbPassword:      dto.DbPassword,
+		Type:            dto.ClusterType,
+		Version:         dto.VersionCode,
+		Tls:             dto.Tls,
+		Tags:            dto.Tags,
+		OwnerId:         dto.OwnerId,
+		Region:          dto.Region,
+		Exclusive:       dto.Exclusive,
+		CpuArchitecture: dto.CpuArchitecture,
+	})
 	if nil == err {
-		do, demand, newErr := clusterManager.UpdateClusterDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
+		do, demand, newErr := clusterManager.UpdateComponentDemand(ctx, cluster.ID, req.Cluster.Demands, cluster.TenantId)
 		if newErr == nil {
 			resp.Status = ClusterSuccessResponseStatus
 			resp.Cluster = convertToClusterDTO(do, demand)
@@ -56,6 +67,26 @@ func (handler *DBServiceHandler) CreateCluster(ctx context.Context, req *dbpb.DB
 		resp.Status.Message = "CreateCluster failed"
 		log.Infof("CreateCluster failed, clusterId: %s, tenantId: %s, error: %v", cluster.ID, cluster.TenantId, err)
 	}
+	return nil
+}
+
+func (handler *DBServiceHandler) UpdateClusterDemand(ctx context.Context, req *dbpb.DBUpdateDemandRequest, resp *dbpb.DBUpdateDemandResponse) error {
+	if nil == req || nil == resp {
+		return errors.Errorf("UpdateComponentDemand has invalid parameter")
+	}
+	clusterManager := handler.Dao().ClusterManager()
+	log := framework.LogWithContext(ctx)
+	do, demand, err := clusterManager.UpdateComponentDemand(ctx, req.ClusterId, req.Demands, req.TenantId)
+	if err == nil {
+		resp.Status = ClusterSuccessResponseStatus
+		resp.Cluster = convertToClusterDTO(do, demand)
+		log.Infof("UpdateComponentDemand successful, clusterId: %s, tenantId: %s", req.ClusterId, req.TenantId)
+	} else {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
+		log.Errorf("CreateCluster failed, clusterId: %s, tenantId: %s, error: %v", req.ClusterId, req.TenantId, err)
+	}
+
 	return nil
 }
 
@@ -91,12 +122,10 @@ func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbpb.D
 
 	clusterManager := handler.Dao().ClusterManager()
 
-	cluster, err := clusterManager.UpdateTopologyConfig(ctx, req.ClusterId, req.TopologyContent, req.TenantId)
 	if err == nil {
 		componentInstances, err := clusterManager.AddClusterComponentInstance(ctx, req.ClusterId, convertToComponentInstance(req.ComponentInstances))
 		if err == nil {
 			resp.Status = ClusterSuccessResponseStatus
-			resp.Cluster = convertToClusterDTO(cluster, nil)
 			resp.ComponentInstances = convertToComponentInstanceDTO(componentInstances)
 			log.Infof("CreateInstance successful, clusterId: %s, tenantId: %s, error: %v",
 				req.GetClusterId(), req.GetTenantId(), err)
@@ -532,12 +561,15 @@ func convertToComponentInstance(dtos []*dbpb.DBComponentInstanceDTO) []*models.C
 			ClusterId:      v.ClusterId,
 			ComponentType:  v.ComponentType,
 			Role:           v.Role,
-			Spec:           v.Spec,
 			Version:        v.Version,
 			HostId:         v.HostId,
+			Host:           v.Host,
+			CpuCores:       int8(v.CpuCores),
+			Memory:         int8(v.Memory),
 			DiskId:         v.DiskId,
 			PortInfo:       v.PortInfo,
 			AllocRequestId: v.AllocRequestId,
+			DiskPath:       v.DiskPath,
 		}
 	}
 
@@ -560,10 +592,13 @@ func convertToComponentInstanceDTO(models []*models.ComponentInstance) []*dbpb.D
 			ClusterId:      v.ClusterId,
 			ComponentType:  v.ComponentType,
 			Role:           v.Role,
-			Spec:           v.Spec,
 			Version:        v.Version,
 			HostId:         v.HostId,
+			Host:           v.Host,
+			CpuCores:       int32(v.CpuCores),
+			Memory: int32(v.Memory),
 			DiskId:         v.DiskId,
+			DiskPath:       v.DiskPath,
 			PortInfo:       v.PortInfo,
 			AllocRequestId: v.AllocRequestId,
 			CreateTime:     v.CreatedAt.Unix(),

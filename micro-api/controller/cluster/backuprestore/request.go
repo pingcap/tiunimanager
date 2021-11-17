@@ -58,5 +58,6 @@ type BackupRecoverReq struct {
 
 type RestoreReq struct {
 	management.ClusterBaseInfo
+	management.ClusterCommonDemand
 	NodeDemandList []management.ClusterNodeDemand `json:"nodeDemandList"`
 }

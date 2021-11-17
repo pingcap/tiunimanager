@@ -49,15 +49,17 @@ type ClusterAccessProxy interface {
 
 type MetadataManager interface {
 	FetchFromRemoteCluster(ctx context.Context, request *clusterpb.ClusterTakeoverReqDTO) (spec.Metadata, error)
+	FetchFromLocal(ctx context.Context, tiupPath string, clusterName string) (spec.Metadata, error)
 	RebuildMetadataFromComponents(ctx context.Context, cluster *Cluster, components []*ComponentGroup) (spec.Metadata, error)
 	ParseComponentsFromMetaData(ctx context.Context, meta spec.Metadata) ([]*ComponentGroup, error)
 	ParseClusterInfoFromMetaData(ctx context.Context, meta spec.BaseMeta) (clusterType string, user string, group string, version string)
 }
 
 type ClusterTopologyPlanner interface {
-	BuildComponents(ctx context.Context, cluster *Cluster, demands []*ClusterComponentDemand) ([]*ComponentGroup, error)
-	AnalysisResourceRequest(ctx context.Context, cluster *Cluster, components []*ComponentGroup) (*clusterpb.BatchAllocRequest, error)
-	ApplyResourceToComponents(ctx context.Context, components []*ComponentGroup, response *clusterpb.BatchAllocResponse) error
+	BuildComponents(ctx context.Context, demands []*ClusterComponentDemand, cluster *Cluster) ([]*ComponentGroup, error)
+	AnalysisResourceRequest(ctx context.Context, cluster *Cluster, components []*ComponentGroup, takeover bool) (*clusterpb.BatchAllocRequest, error)
+	ApplyResourceToComponents(ctx context.Context, response *clusterpb.BatchAllocResponse, components []*ComponentGroup) error
+	GenerateTopologyConfig(ctx context.Context, components []*ComponentGroup, cluster *Cluster) (*spec.Specification, error)
 }
 
 type TaskRepository interface {

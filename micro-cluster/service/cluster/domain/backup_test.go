@@ -19,6 +19,7 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/test/mocksecondparty"
 	"testing"
 	"time"
@@ -112,7 +113,7 @@ func TestRecover(t *testing.T) {
 		ClusterName:    "test-tidb",
 		ClusterVersion: &clusterpb.ClusterVersionDTO{Code: "v4.0.12", Name: "v4.0.12"},
 		ClusterType:    &clusterpb.ClusterTypeDTO{Code: "TiDB", Name: "TiDB"},
-	}, nil)
+	}, &clusterpb.ClusterCommonDemandDTO{Region: "111", Exclusive: false, CpuArchitecture: string(resource.X86)}, nil)
 
 	assert.NoError(t, err)
 }

@@ -171,9 +171,9 @@ message GetFailureDomainResponse {
 }
 
 message HostFilter {
-	string arch = 1;
-	string purpose  = 2;
-	string diskType = 3;
+    string arch = 1;
+    string purpose  = 2;
+    string diskType = 3;
 }
 
 message GetHierarchyRequest {
@@ -195,10 +195,10 @@ message GetHierarchyResponse {
 }
 
 message StockLocation {
-	string region = 1;
-	string zone = 2;
-	string rack = 3;
-	string host = 4;
+    string region = 1;
+    string zone = 2;
+    string rack = 3;
+    string host = 4;
 }
 
 message StockHostFilter {

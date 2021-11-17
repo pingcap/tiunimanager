@@ -59,7 +59,15 @@ func TestCreateCluster(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotCluster, err := clusterTbl.CreateCluster(context.TODO(), tt.args.ClusterName, tt.args.DbPassword, tt.args.ClusterType, tt.args.ClusterVersion, tt.args.Tls, tt.args.Tags, tt.args.OwnerId, tt.args.TenantId)
+			gotCluster, err := clusterTbl.CreateCluster(context.TODO(), Cluster{Entity: Entity{TenantId: tt.args.TenantId},
+				Name:       tt.args.ClusterName,
+				DbPassword: tt.args.DbPassword,
+				Type:       tt.args.ClusterType,
+				Version:    tt.args.ClusterVersion,
+				Tls:        tt.args.Tls,
+				Tags:       tt.args.Tags,
+				OwnerId:    tt.args.OwnerId,
+			})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateCluster() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -134,28 +142,28 @@ func TestUpdateClusterDemand(t *testing.T) {
 
 		demandId := cluster.CurrentDemandId
 
-		cluster, demand, err := clusterTbl.UpdateClusterDemand(context.TODO(), cluster.ID, "aaa", cluster.TenantId)
+		cluster, demand, err := clusterTbl.UpdateComponentDemand(context.TODO(), cluster.ID, "aaa", cluster.TenantId)
 		if err != nil {
-			t.Errorf("UpdateClusterDemand() error = %v", err)
+			t.Errorf("UpdateComponentDemand() error = %v", err)
 		}
 
 		if demand == nil || demand.ID == 0 {
-			t.Errorf("UpdateClusterDemand() demand = %v", demand)
+			t.Errorf("UpdateComponentDemand() demand = %v", demand)
 		}
 
 		if cluster.CurrentDemandId == 0 || cluster.CurrentDemandId <= demandId {
-			t.Errorf("UpdateClusterDemand() new demand id = %v", cluster.CurrentDemandId)
+			t.Errorf("UpdateComponentDemand() new demand id = %v", cluster.CurrentDemandId)
 		}
 
 		if cluster.ID == "" {
-			t.Errorf("UpdateClusterDemand() cluster.ID empty")
+			t.Errorf("UpdateComponentDemand() cluster.ID empty")
 		}
 	})
 
 	t.Run("empty clusterId", func(t *testing.T) {
-		_, _, err := clusterTbl.UpdateClusterDemand(context.TODO(), "", "aaa", "111")
+		_, _, err := clusterTbl.UpdateComponentDemand(context.TODO(), "", "aaa", "111")
 		if err == nil {
-			t.Errorf("UpdateClusterDemand() error = %v", err)
+			t.Errorf("UpdateComponentDemand() error = %v", err)
 		}
 
 	})
@@ -260,9 +268,9 @@ func TestUpdateTopologyConfig(t *testing.T) {
 	})
 
 	t.Run("empty clusterId", func(t *testing.T) {
-		_, _, err := clusterTbl.UpdateClusterDemand(context.TODO(), "", "aaa", "111")
+		_, _, err := clusterTbl.UpdateComponentDemand(context.TODO(), "", "aaa", "111")
 		if err == nil {
-			t.Errorf("UpdateClusterDemand() error = %v", err)
+			t.Errorf("UpdateComponentDemand() error = %v", err)
 		}
 
 	})
@@ -541,7 +549,7 @@ func TestListClusterDetails(t *testing.T) {
 	f, _ := CreateFlow(MetaDB, "flow1", "flow1", cluster1.ID, "111")
 	defer MetaDB.Delete(f)
 	clusterTbl := Dao.ClusterManager()
-	cluster1, _, _ = clusterTbl.UpdateClusterDemand(context.TODO(), cluster1.ID, "demand1", "111")
+	cluster1, _, _ = clusterTbl.UpdateComponentDemand(context.TODO(), cluster1.ID, "demand1", "111")
 	cluster1, _ = clusterTbl.UpdateClusterFlowId(context.TODO(), cluster1.ID, f.ID)
 	cluster1, _ = clusterTbl.UpdateTopologyConfig(context.TODO(), cluster1.ID, "tiup1", "111")
 
@@ -775,7 +783,15 @@ var defaultTenantId = "defaultTenantId"
 
 func TestFetchCluster(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
-	cluster, _ := clusterTbl.CreateCluster(context.TODO(), "TestFetchCluster", "tt.args.DbPassword", "TiDB", "v5.0.0", true, "", "TestFetchCluster.ownerId", defaultTenantId)
+	cluster, _ := clusterTbl.CreateCluster(context.TODO(), Cluster{
+		Entity: Entity{TenantId: defaultTenantId},
+		Name: "TestFetchCluster",
+		DbPassword: "tt.args.DbPassword",
+		Type: "TiDB",
+		Version: "v5.0.0",
+		Tls: true,
+		OwnerId: "TestFetchCluster.ownerId",
+	})
 	t.Run("normal", func(t *testing.T) {
 		gotResult, err := clusterTbl.FetchCluster(context.TODO(), cluster.ID)
 		if err != nil {
@@ -795,7 +811,7 @@ func TestFetchCluster(t *testing.T) {
 		}
 	})
 	t.Run("with demand", func(t *testing.T) {
-		cluster, demand, _ := clusterTbl.UpdateClusterDemand(context.TODO(), cluster.ID, "demand content", defaultTenantId)
+		cluster, demand, _ := clusterTbl.UpdateComponentDemand(context.TODO(), cluster.ID, "demand content", defaultTenantId)
 		gotResult, err := clusterTbl.FetchCluster(context.TODO(), cluster.ID)
 		if err != nil {
 			t.Errorf("FetchCluster() error = %v", err)
@@ -819,14 +835,14 @@ func TestFetchCluster(t *testing.T) {
 		}
 	})
 	t.Run("with demand err", func(t *testing.T) {
-		cluster, demand, _ := clusterTbl.UpdateClusterDemand(context.TODO(), cluster.ID, "demand content", defaultTenantId)
+		cluster, demand, _ := clusterTbl.UpdateComponentDemand(context.TODO(), cluster.ID, "demand content", defaultTenantId)
 		MetaDB.Delete(demand)
 		_, err := clusterTbl.FetchCluster(context.TODO(), cluster.ID)
 		if err == nil {
 			t.Errorf("FetchCluster() want error")
 			return
 		}
-		clusterTbl.UpdateClusterDemand(context.TODO(), cluster.ID, "demand content", defaultTenantId)
+		clusterTbl.UpdateComponentDemand(context.TODO(), cluster.ID, "demand content", defaultTenantId)
 	})
 	t.Run("with config", func(t *testing.T) {
 		cluster, _ := clusterTbl.UpdateTopologyConfig(context.TODO(), cluster.ID, "config content", defaultTenantId)

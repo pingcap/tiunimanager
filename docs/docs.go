@@ -1433,6 +1433,75 @@ var doc = `{
                 }
             }
         },
+        "/clusters/{clusterId}/scale-out": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "scale out of a cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "scale out a cluster",
+                "parameters": [
+                    {
+                        "description": "scale out request",
+                        "name": "scaleOutReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/management.ScaleOutReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/management.ScaleOutClusterRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}/stop": {
             "post": {
                 "security": [
@@ -2928,8 +2997,14 @@ var doc = `{
                 "clusterVersion": {
                     "type": "string"
                 },
+                "cpuArchitecture": {
+                    "type": "string"
+                },
                 "dbPassword": {
                     "type": "string"
+                },
+                "exclusive": {
+                    "type": "boolean"
                 },
                 "nodeDemandList": {
                     "type": "array",
@@ -2939,6 +3014,9 @@ var doc = `{
                 },
                 "recoverInfo": {
                     "$ref": "#/definitions/management.RecoverInfo"
+                },
+                "region": {
+                    "type": "string"
                 },
                 "tags": {
                     "type": "array",
@@ -3605,6 +3683,9 @@ var doc = `{
                 "componentName": {
                     "type": "string"
                 },
+                "componentPurpose": {
+                    "type": "string"
+                },
                 "componentType": {
                     "type": "string"
                 }
@@ -3663,6 +3744,12 @@ var doc = `{
         "knowledge.ClusterVersionSpec": {
             "type": "object",
             "properties": {
+                "archTypes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "clusterVersion": {
                     "$ref": "#/definitions/knowledge.ClusterVersion"
                 },
@@ -4330,6 +4417,43 @@ var doc = `{
                 },
                 "updateTime": {
                     "type": "string"
+                }
+            }
+        },
+        "management.ScaleOutClusterRsp": {
+            "type": "object",
+            "properties": {
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "management.ScaleOutReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "nodeDemandList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/management.ClusterNodeDemand"
+                    }
                 }
             }
         },

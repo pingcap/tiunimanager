@@ -19,6 +19,7 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"path/filepath"
 	"strconv"
@@ -35,27 +36,29 @@ import (
 )
 
 type ClusterAggregation struct {
-	Cluster           *Cluster
-	ClusterMetadata   spec.Metadata
-	ClusterComponents []*ComponentGroup
+	Cluster                *Cluster
+	ClusterMetadata        spec.Metadata
+
+	AddedComponentDemand 	[]*ClusterComponentDemand
+	AddedClusterComponents []*ComponentGroup
 
 	CurrentWorkFlow *FlowWorkEntity
 	CurrentOperator *Operator
 
 	CurrentTopologyConfigRecord *TopologyConfigRecord
+	AlteredTopology             *spec.Specification
 
 	MaintainCronTask *CronTaskEntity
 	HistoryWorkFLows []*FlowWorkEntity
 
-	UsedResources interface{}
-
-	AvailableResources *clusterpb.AllocHostResponse
+	AddedAllocResources     *clusterpb.BatchAllocResponse
 
 	BaseInfoModified bool
 	StatusModified   bool
 	FlowModified     bool
 
 	ConfigModified bool
+	DemandsModified bool
 
 	LastBackupRecord *BackupRecord
 
@@ -66,6 +69,7 @@ type ClusterAggregation struct {
 
 var contextClusterKey = "clusterAggregation"
 var contextTakeoverReqKey = "takeoverRequest"
+var contextScaleOutReqKey = "scaleOutRequest"
 
 func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
@@ -78,6 +82,13 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		Tls:            clusterInfo.Tls,
 		TenantId:       operator.TenantId,
 		OwnerId:        operator.Id,
+		Region: commonDemand.Region,
+		CpuArchitecture: commonDemand.CpuArchitecture,
+		Exclusive: commonDemand.Exclusive,
+	}
+
+	if cluster.CpuArchitecture == "" {
+		cluster.CpuArchitecture = string(resourceType.X86)
 	}
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs))
@@ -85,8 +96,6 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	for i, v := range demandDTOs {
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
-
-	cluster.ComponentDemands = demands
 
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
@@ -98,6 +107,7 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		Cluster:          cluster,
 		MaintainCronTask: GetDefaultMaintainTask(),
 		CurrentOperator:  operator,
+		AddedComponentDemand: demands,
 	}
 
 	// Start the workflow to create a cluster instance
@@ -111,6 +121,83 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 
 	flow.Start()
 
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
+	ClusterRepo.Persist(ctx, clusterAggregation)
+	return clusterAggregation, nil
+}
+
+func mergeDemands(demandsList ...[]*ClusterComponentDemand) []*ClusterComponentDemand {
+	if len(demandsList) == 0 {
+		return nil
+	}
+	components := make(map[string][]*ClusterComponentDemand)
+	for _, demands := range demandsList {
+		for _, d := range demands {
+			components[d.ComponentType.ComponentType] = append(components[d.ComponentType.ComponentType], d)
+		}
+	}
+	resultDemands := make([]*ClusterComponentDemand, 0, len(components))
+	for _, demands := range components {
+		var demand *ClusterComponentDemand
+		distributionItemsMap := make(map[string]map[string]int)
+		demand.ComponentType = demands[0].ComponentType
+		for _, d := range demands {
+			demand.TotalNodeCount += d.TotalNodeCount
+			for _, item := range d.DistributionItems {
+				distributionItemsMap[item.ZoneCode][item.SpecCode] += item.Count
+			}
+		}
+		for zoneCode, values := range distributionItemsMap {
+			for specCode, count := range values {
+				distributionItem := &ClusterNodeDistributionItem{
+					ZoneCode: zoneCode,
+					SpecCode: specCode,
+					Count: count,
+				}
+				demand.DistributionItems = append(demand.DistributionItems, distributionItem)
+			}
+		}
+		resultDemands = append(resultDemands, demand)
+	}
+
+	return resultDemands
+}
+
+// ScaleOutCluster
+// @Description: scale out a cluster
+// @Parameter ope
+// @Parameter clusterId
+// @Parameter demands
+// @return *ClusterAggregation
+// @return error
+func ScaleOutCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string, demandDTOs []*clusterpb.ClusterNodeDemandDTO)(*ClusterAggregation, error) {
+	// Get cluster info from db based by clusterId
+	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
+	operator := parseOperatorFromDTO(ope)
+	clusterAggregation.CurrentOperator = operator
+
+	// Parse resources for scaling out
+	demands := make([]*ClusterComponentDemand, len(demandDTOs))
+	for i, v := range demandDTOs {
+		demands[i] = parseNodeDemandFromDTO(v)
+	}
+
+	// Merge multi demands
+	clusterAggregation.AddedComponentDemand = demands
+	clusterAggregation.DemandsModified = true
+
+	// Start the workflow to scale out a cluster
+	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowScaleOutCluster, operator)
+	if err != nil {
+		return nil, err
+	}
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.Start()
+
+	// Update workflow and persist clusterAggregation
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(ctx, clusterAggregation)
 	return clusterAggregation, nil
@@ -353,12 +440,28 @@ func collectorTiDBLogConfig(task *TaskEntity, ctx *FlowContext) bool {
 
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
+	demands := clusterAggregation.AddedComponentDemand
 
-	demands := clusterAggregation.Cluster.ComponentDemands
+	components, err := TopologyPlanner.BuildComponents(flowContext.Context, demands, clusterAggregation.Cluster)
+	if err != nil {
+		getLoggerWithContext(flowContext).Error(err)
+		task.Fail(err)
+		return false
+	}
+	clusterAggregation.AddedClusterComponents = components
+	//TODO add grafana and prometheus into ClusterComponents for creating cluster
 
-	clusterAggregation.AvailableResources = &clusterpb.AllocHostResponse{}
-	err := resource.NewResourceManager().AllocHosts(flowContext, convertAllocHostsRequest(demands), clusterAggregation.AvailableResources)
+	// build resource request
+	req, err:= TopologyPlanner.AnalysisResourceRequest(flowContext.Context, clusterAggregation.Cluster, clusterAggregation.AddedClusterComponents, false)
+	if err != nil {
+		getLoggerWithContext(flowContext).Error(err)
+		task.Fail(err)
+		return false
+	}
 
+	// alloc resource
+	clusterAggregation.AddedAllocResources = &clusterpb.BatchAllocResponse{}
+	err = resource.NewResourceManager().AllocResourcesInBatch(flowContext.Context, req, clusterAggregation.AddedAllocResources)
 	if err != nil {
 		getLoggerWithContext(flowContext).Error(err)
 		task.Fail(err)
@@ -372,22 +475,31 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 
-	config := &TopologyConfigRecord{
-		TenantId:    clusterAggregation.Cluster.TenantId,
-		ClusterId:   clusterAggregation.Cluster.Id,
-		ConfigModel: convertConfig(clusterAggregation.AvailableResources, clusterAggregation.Cluster),
+	// update cluster components
+	err := TopologyPlanner.ApplyResourceToComponents(context.Context, clusterAggregation.AddedAllocResources, clusterAggregation.AddedClusterComponents)
+	if err != nil {
+		getLoggerWithContext(context).Error(err)
+		task.Fail(err)
+		return false
 	}
 
-	clusterAggregation.CurrentTopologyConfigRecord = config
-	clusterAggregation.ConfigModified = true
-	task.Success(config.Id)
+	// build TopologyConfigRecord
+	configModel, err := TopologyPlanner.GenerateTopologyConfig(context.Context, clusterAggregation.AddedClusterComponents, clusterAggregation.Cluster)
+	if err != nil {
+		getLoggerWithContext(context).Error(err)
+		task.Fail(err)
+		return false
+	}
+
+	clusterAggregation.AlteredTopology = configModel
+	task.Success(nil)
 	return true
 }
 
 func deployCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
-	spec := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
+	spec := clusterAggregation.AlteredTopology
 
 	bs, err := yaml.Marshal(spec)
 	if err != nil {
@@ -411,6 +523,32 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
+func scaleOutCluster(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+	spec := clusterAggregation.AlteredTopology
+
+	bs, err := yaml.Marshal(spec)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	cfgYamlStr := string(bs)
+	getLoggerWithContext(context).Infof("scale out cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
+	scaleOutTaskId, err := secondparty.SecondParty.MicroSrvTiupScaleOut(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, cfgYamlStr, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, uint64(task.Id))
+
+	if err != nil {
+		getLoggerWithContext(context).Errorf("call tiup api scale out cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+
+	getLoggerWithContext(context).Infof("get scaleOutTaskId %s", strconv.Itoa(int(scaleOutTaskId)))
+	return true
+}
+
 func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
@@ -430,15 +568,6 @@ func startupCluster(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func syncTopologyAndStatus(task *TaskEntity, context *FlowContext) bool {
-	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
-	clusterAggregation.StatusModified = true
-	clusterAggregation.Cluster.Online()
-
-	task.Success(nil)
-	return true
-}
-
 func setClusterOffline(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.StatusModified = true
@@ -448,18 +577,41 @@ func setClusterOffline(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-
 func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.StatusModified = true
 	clusterAggregation.Cluster.Online()
+	// set instance status into online
+	for _, component := range clusterAggregation.AddedClusterComponents {
+		for _, instance := range component.Nodes {
+			if instance.Status == ClusterStatusUnlined {
+				instance.Status = ClusterStatusOnline
+			}
+		}
+	}
 
 	task.Success(nil)
 	return true
 }
 
 func syncTopology(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+
+	metadata, err := MetadataMgr.FetchFromLocal(ctx.TODO(), "/root/.tiup/", clusterAggregation.Cluster.ClusterName)
+
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	clusterAggregation.CurrentTopologyConfigRecord = &TopologyConfigRecord{
+		TenantId:    clusterAggregation.Cluster.TenantId,
+		ClusterId:   clusterAggregation.Cluster.Id,
+		ConfigModel:  metadata.GetTopology().(*spec.Specification),
+	}
+	clusterAggregation.ConfigModified = true
 	task.Success(nil)
+
 	return true
 }
 
@@ -508,7 +660,7 @@ func buildTopology(task *TaskEntity, context *FlowContext) bool {
 		return false
 	}
 
-	clusterAggregation.ClusterComponents = components
+	clusterAggregation.AddedClusterComponents = components
 	task.Success(nil)
 	return true
 }
@@ -516,14 +668,18 @@ func buildTopology(task *TaskEntity, context *FlowContext) bool {
 func takeoverResource(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 
-	allocReq, err := TopologyPlanner.AnalysisResourceRequest(context, clusterAggregation.Cluster, clusterAggregation.ClusterComponents)
+	allocReq, err := TopologyPlanner.AnalysisResourceRequest(context.Context, clusterAggregation.Cluster, clusterAggregation.AddedClusterComponents, true)
 	if err != nil {
 		task.Fail(err)
 		return false
 	}
 
 	allocResponse := &clusterpb.BatchAllocResponse{}
-	resource.NewResourceManager().AllocResourcesInBatch(ctx.TODO(), allocReq, allocResponse)
+	err = resource.NewResourceManager().AllocResourcesInBatch(ctx.TODO(), allocReq, allocResponse)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
 
 	task.Success(allocReq)
 	return true
@@ -544,6 +700,24 @@ func destroyCluster(task *TaskEntity, context *FlowContext) bool {
 }
 
 func freedResource(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+
+	request := &clusterpb.RecycleRequest{
+		RecycleReqs: []*clusterpb.RecycleRequire{
+			{
+				RecycleType: int32(resourceType.RecycleHolder),
+				HolderId:    clusterAggregation.Cluster.Id,
+			},
+		},
+	}
+	response := &clusterpb.RecycleResponse{}
+	err := resource.NewResourceManager().RecycleResources(context, request, response)
+
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
 	task.Success(nil)
 	return true
 }

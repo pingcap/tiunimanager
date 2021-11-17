@@ -675,7 +675,11 @@ func takeoverResource(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	allocResponse := &clusterpb.BatchAllocResponse{}
-	resource.NewResourceManager().AllocResourcesInBatch(ctx.TODO(), allocReq, allocResponse)
+	err = resource.NewResourceManager().AllocResourcesInBatch(ctx.TODO(), allocReq, allocResponse)
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
 
 	task.Success(allocReq)
 	return true
@@ -696,6 +700,24 @@ func destroyCluster(task *TaskEntity, context *FlowContext) bool {
 }
 
 func freedResource(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+
+	request := &clusterpb.RecycleRequest{
+		RecycleReqs: []*clusterpb.RecycleRequire{
+			{
+				RecycleType: int32(resourceType.RecycleHolder),
+				HolderId:    clusterAggregation.Cluster.Id,
+			},
+		},
+	}
+	response := &clusterpb.RecycleResponse{}
+	err := resource.NewResourceManager().RecycleResources(context, request, response)
+
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
 	task.Success(nil)
 	return true
 }

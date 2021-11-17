@@ -350,7 +350,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 				FilePath:        getDataImportFilePath(request, importDir, true),
 				ZipName:         common.DefaultZipName,
 				FlowId:          int64(flow.FlowWork.Id),
-				ReImportSupport: true,
+				ReImportSupport: checkImportParamSupportReimport(request),
 				Comment:         request.GetComment(),
 				StartTime:       time.Now().Unix(),
 				EndTime:         time.Now().Unix(),
@@ -399,7 +399,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 				FilePath:        record.GetFilePath(),
 				ZipName:         common.DefaultZipName,
 				FlowId:          int64(flow.FlowWork.Id),
-				ReImportSupport: true,
+				ReImportSupport: false, // import from other data source, can not re-import cause it has own data file
 				Comment:         request.GetComment(),
 				StartTime:       time.Now().Unix(),
 				EndTime:         time.Now().Unix(),
@@ -579,6 +579,13 @@ func checkExportParamSupportReimport(request *clusterpb.DataExportRequest) bool 
 		return false
 	}
 	return true
+}
+
+func checkImportParamSupportReimport(request *clusterpb.DataImportRequest) bool {
+	if common.NfsStorageType == request.GetStorageType() {
+		return true
+	}
+	return false
 }
 
 func getDataExportFilePath(request *clusterpb.DataExportRequest, exportDir string, persist bool) string {

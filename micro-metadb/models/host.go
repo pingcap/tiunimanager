@@ -491,6 +491,7 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 }
 
 func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, require *dbpb.DBAllocRequirement, choosedHosts []string) (results []rt.HostResource, err error) {
+	log := framework.Log()
 	regionName := require.Location.Region
 	zoneName := require.Location.Zone
 	zoneCode := rt.GenDomainCodeByName(regionName, zoneName)
@@ -507,6 +508,8 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	reqMem := require.Require.ComputeReq.Memory
 	capacity := require.Require.DiskReq.Capacity
 	needDisk := require.Require.DiskReq.NeedDisk
+	log.Infof("Alloc Resource With RR: zoneCode: %s, excludedHosts: %v, arch: %s, traits: %d, excludsive: %v, cpuCores: %d, memory: %d, needDisk: %v, diskCapacity: %d\n",
+		zoneCode, excludedHosts, hostArch, hostTraits, exclusive, reqCores, reqMem, needDisk, capacity)
 	// 1. Choose Host/Disk List
 	var resources []*Resource
 	if needDisk {
@@ -562,7 +565,7 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	}
 
 	if len(resources) < int(require.Count) {
-		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "hosts in %s,%s is not enough for allocation(%d|%d)", regionName, zoneName, len(resources), require.Count)
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "hosts in %s, %s is not enough for allocation(%d|%d), arch: %s, traits: %d", regionName, zoneName, len(resources), require.Count, hostArch, hostTraits)
 	}
 
 	// 2. Choose Ports in Hosts

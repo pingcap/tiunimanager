@@ -398,10 +398,6 @@ func Test_destroyTasks(t *testing.T) {
 	assert.True(t, destroyTasks(&TaskEntity{}, nil))
 }
 
-func Test_freedResource(t *testing.T) {
-	assert.True(t, freedResource(&TaskEntity{}, nil))
-}
-
 func Test_modifyParameters(t *testing.T) {
 	assert.True(t, modifyParameters(&TaskEntity{}, nil))
 }

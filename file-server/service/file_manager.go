@@ -32,7 +32,7 @@ import (
 	"sync"
 )
 
-const maxFileSize int64 = 1 * bytes.GB
+const maxFileSize int64 = 2 * bytes.GB
 const maxUploadNum int32 = 3
 const maxDownloadNum int32 = 3
 

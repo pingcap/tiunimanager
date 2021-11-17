@@ -448,6 +448,14 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 func deployCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
+
+	clusterAggregation.AlteredTopology.GlobalOptions.DataDir = filepath.Join(cluster.Id, "tidb-data")
+	clusterAggregation.AlteredTopology.GlobalOptions.DeployDir = filepath.Join(cluster.Id, "tidb-deploy")
+	clusterAggregation.AlteredTopology.GlobalOptions.LogDir = filepath.Join(cluster.Id, "tidb-log")
+	clusterAggregation.AlteredTopology.GlobalOptions.User = "tidb"
+	clusterAggregation.AlteredTopology.GlobalOptions.SSHPort = 22
+	clusterAggregation.AlteredTopology.GlobalOptions.Arch = clusterAggregation.Cluster.CpuArchitecture
+
 	spec := clusterAggregation.AlteredTopology
 
 	bs, err := yaml.Marshal(spec)

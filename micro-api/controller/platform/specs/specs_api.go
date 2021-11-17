@@ -17,6 +17,7 @@
 package specs
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
@@ -36,5 +37,26 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /knowledges/ [get]
 func ClusterKnowledge(c *gin.Context) {
-	c.JSON(http.StatusOK, controller.Success(knowledge.SpecKnowledge.Specs))
+	var allSpec = new([]knowledge.ClusterTypeSpec)
+	b, err := json.Marshal(knowledge.SpecKnowledge.Specs)
+
+	if err !=nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, ""))
+	} else {
+		json.Unmarshal(b, allSpec)
+		if allSpec != nil {
+			for _, eachCluster := range *allSpec {
+				for _, eachVersion := range eachCluster.VersionSpecs {
+					for i := 0; i < len(eachVersion.ComponentSpecs); i++ {
+						if eachVersion.ComponentSpecs[i].ComponentConstraint.Parasite == true {
+							eachVersion.ComponentSpecs = append(eachVersion.ComponentSpecs[:i], eachVersion.ComponentSpecs[i+1:]...)
+							i--
+						}
+					}
+				}
+			}
+			c.JSON(http.StatusOK, controller.Success(knowledge.SpecKnowledge.Specs))
+		}
+	}
+
 }

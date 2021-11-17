@@ -201,6 +201,7 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 		tiupConfig.GlobalOptions.LogDir = filepath.Join(cluster.Id, "tidb-log")
 	}
 
+	var monitorHostComponent *domain.ComponentInstance
 	for _, component := range components {
 		for _, instance := range component.Nodes {
 			if instance.Status != domain.ClusterStatusUnlined {
@@ -213,7 +214,6 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 					Port: instance.PortList[0],
 					StatusPort: instance.PortList[1],
 				})
-
 			} else if component.ComponentType.ComponentType == "TiKV" {
 				tiupConfig.TiKVServers = append(tiupConfig.TiKVServers, &spec.TiKVSpec{
 					Host: instance.Host,
@@ -223,6 +223,9 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 					StatusPort: instance.PortList[1],
 				})
 			} else if component.ComponentType.ComponentType == "PD" {
+				if monitorHostComponent == nil {
+					monitorHostComponent = instance
+				}
 				tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
 					Host: instance.Host,
 					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "pd-data"),
@@ -230,6 +233,7 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 					ClientPort: instance.PortList[0],
 					PeerPort: instance.PortList[1],
 				})
+
 			} else if component.ComponentType.ComponentType == "TiFlash" {
 				tiupConfig.TiFlashServers = append(tiupConfig.TiFlashServers, &spec.TiFlashSpec{
 					Host: instance.Host,
@@ -250,26 +254,36 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 					LogDir: filepath.Join(instance.DiskPath, cluster.Id, "cdc-log"),
 				})
 			} else if component.ComponentType.ComponentType == "Grafana" {
-				tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
-					Host:            instance.Host,
-					DeployDir:       filepath.Join(instance.DiskPath, cluster.Id, "grafanas-deploy"),
-					AnonymousEnable: true,
-					DefaultTheme:    "light",
-					OrgName:         "Main Org.",
-					OrgRole:         "Viewer",
-				})
+				if monitorHostComponent != nil {
+					tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
+						Host:            instance.Host,
+						Port: 			monitorHostComponent.PortList[2],
+						DeployDir:       filepath.Join(instance.DiskPath, cluster.Id, "grafana-deploy"),
+						AnonymousEnable: true,
+						DefaultTheme:    "light",
+						OrgName:         "Main Org.",
+						OrgRole:         "Viewer",
+					})
+				}
 			} else if component.ComponentType.ComponentType == "Prometheus" {
-				tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
-					Host:      instance.Host,
-					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "prometheus-data"),
-					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "prometheus-deploy"),
-				})
+				if monitorHostComponent != nil {
+					tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
+						Host:      instance.Host,
+						Port: instance.PortList[3],
+						DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "prometheus-data"),
+						DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "prometheus-deploy"),
+					})
+				}
 			} else if component.ComponentType.ComponentType == "AlertManger" {
-				tiupConfig.Alertmanagers = append(tiupConfig.Alertmanagers, &spec.AlertmanagerSpec{
-					Host:      instance.Host,
-					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "alertmanagers-data"),
-					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "alertmanagers-deploy"),
-				})
+				if monitorHostComponent != nil {
+					tiupConfig.Alertmanagers = append(tiupConfig.Alertmanagers, &spec.AlertmanagerSpec{
+						Host:      instance.Host,
+						WebPort: instance.PortList[4],
+						ClusterPort: instance.PortList[5],
+						DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "alertmanagers-data"),
+						DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "alertmanagers-deploy"),
+					})
+				}
 			}
 		}
 	}

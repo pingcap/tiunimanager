@@ -111,6 +111,16 @@ func loadSpecKnowledge() {
 		"TiFlash", "column-based storage","TiFlash",
 	}
 
+	grafanaComponent := ClusterComponent{
+		"Grafana", "dispatch","Grafana",
+	}
+	monitorComponent := ClusterComponent{
+		"Prometheus", "dispatch","Prometheus",
+	}
+	alertMangerComponent := ClusterComponent{
+		"AlertManger", "dispatch","AlertManger",
+	}
+
 	//tiCdcComponent := ClusterComponent{
 	//	"TiCDC", "TiCDC",
 	//}
@@ -122,7 +132,7 @@ func loadSpecKnowledge() {
 			resource.X86,
 		},
 		ComponentSpecs: []ClusterComponentSpec{
-			{tidbComponent, ComponentConstraint{true, []int{3}, []string{
+			{tidbComponent, ComponentConstraint{true, false, []int{3}, []string{
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 				GenSpecCode(8, 32),
@@ -130,32 +140,38 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10000, 10020, 2},
 			},
-			{tikvComponent, ComponentConstraint{true, []int{3}, []string{
+			{tikvComponent, ComponentConstraint{true, false, []int{3}, []string{
 				GenSpecCode(8, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
 			}, 1},
 				ComponentPortConstraint{10020, 10040, 2},
 			},
-			{pdComponent, ComponentConstraint{true, []int{3}, []string{
+			{pdComponent, ComponentConstraint{true, false, []int{3}, []string{
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 			}, 1},
-				ComponentPortConstraint{10040, 10060, 2},
+				ComponentPortConstraint{10040, 10100, 6},
 			},
-			{tiFlashComponent, ComponentConstraint{false, []int{3}, []string{
+			{tiFlashComponent, ComponentConstraint{false, false, []int{3}, []string{
 				GenSpecCode(4, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
 			}, 0},
-				ComponentPortConstraint{10060, 10120, 6},
+				ComponentPortConstraint{10100, 10160, 6},
 			},
-			//{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
-			//	GenSpecCode(8, 16),
-			//	GenSpecCode(16, 64),
-			//}, 0},
-			//  ComponentPortConstraint{10150, 10160, 1},
-			//},
+			{grafanaComponent, ComponentConstraint{false, true, []int{1}, []string{
+			}, 0},
+				ComponentPortConstraint{0, 0, 0},
+			},
+			{monitorComponent, ComponentConstraint{false, true, []int{1}, []string{
+			}, 0},
+				ComponentPortConstraint{0, 0, 0},
+			},
+			{alertMangerComponent, ComponentConstraint{false, true, []int{1}, []string{
+			}, 0},
+				ComponentPortConstraint{0, 0, 0},
+			},
 		},
 	}
 	tidbV5_0_0_Spec := ClusterVersionSpec{
@@ -165,7 +181,7 @@ func loadSpecKnowledge() {
 			resource.X86,
 		},
 		ComponentSpecs: []ClusterComponentSpec{
-			{tidbComponent, ComponentConstraint{true, []int{3}, []string{
+			{tidbComponent, ComponentConstraint{true, false, []int{3}, []string{
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 				GenSpecCode(8, 32),
@@ -173,32 +189,38 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10000, 10020, 2},
 			},
-			{tikvComponent, ComponentConstraint{true, []int{3}, []string{
+			{tikvComponent, ComponentConstraint{true, false, []int{3}, []string{
 				GenSpecCode(8, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
 			}, 1},
 				ComponentPortConstraint{10020, 10040, 2},
 			},
-			{pdComponent, ComponentConstraint{true, []int{3}, []string{
+			{pdComponent, ComponentConstraint{true, false, []int{3}, []string{
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 			}, 1},
 				ComponentPortConstraint{10040, 10060, 2},
 			},
-			{tiFlashComponent, ComponentConstraint{false, []int{3}, []string{
+			{tiFlashComponent, ComponentConstraint{false, false, []int{3}, []string{
 				GenSpecCode(4, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
 			}, 0},
 				ComponentPortConstraint{10060, 10120, 6},
 			},
-			//{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
-			//	GenSpecCode(8, 16),
-			//	GenSpecCode(16, 64),
-			//}, 0},
-			//  ComponentPortConstraint{10150, 10160, 1},
-			//},
+			{grafanaComponent, ComponentConstraint{false, true, []int{1}, []string{
+			}, 0},
+				ComponentPortConstraint{0, 0, 0},
+			},
+			{monitorComponent, ComponentConstraint{false, true, []int{1}, []string{
+			}, 0},
+				ComponentPortConstraint{0, 0, 0},
+			},
+			{alertMangerComponent, ComponentConstraint{false, true, []int{1}, []string{
+			}, 0},
+				ComponentPortConstraint{0, 0, 0},
+			},
 		},
 	}
 
@@ -210,7 +232,9 @@ func loadSpecKnowledge() {
 			tikvComponent.ComponentType:    &tikvComponent,
 			pdComponent.ComponentType:      &pdComponent,
 			tiFlashComponent.ComponentType: &tiFlashComponent,
-			//tiCdcComponent.ComponentType: &tiCdcComponent,
+			grafanaComponent.ComponentType: &grafanaComponent,
+			monitorComponent.ComponentType: &monitorComponent,
+			alertMangerComponent.ComponentType: &alertMangerComponent,
 		},
 	}
 }

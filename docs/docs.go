@@ -3585,6 +3585,9 @@ var doc = `{
                 },
                 "transportType": {
                     "type": "string"
+                },
+                "zipName": {
+                    "type": "string"
                 }
             }
         },

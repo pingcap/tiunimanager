@@ -37,6 +37,7 @@ type DataTransportInfo struct {
 	EndTime       time.Time             `json:"endTime"`
 	Status        controller.StatusInfo `json:"status"`
 	FilePath      string                `json:"filePath"`
+	ZipName       string                `json:"zipName"`
 	StorageType   string                `json:"storageType"`
 	Comment       string                `json:"comment"`
 }

@@ -203,6 +203,7 @@ func DescribeDataTransport(c *gin.Context) {
 					ClusterId:     value.GetClusterId(),
 					TransportType: value.GetTransportType(),
 					FilePath:      value.GetFilePath(),
+					ZipName:       value.GetZipName(),
 					StorageType:   value.GetStorageType(),
 					Status:        *management.ParseStatusFromDTO(value.DisplayStatus),
 					StartTime:     time.Unix(value.GetStartTime(), 0),

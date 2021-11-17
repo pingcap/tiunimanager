@@ -230,11 +230,15 @@ func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbpb.DBLo
 			Flow:                 convertFlowToDTO(result.Flow),
 			ComponentInstances:   convertToComponentInstanceDTO(result.ComponentInstances),
 		}
-		log.Infof("LoadCluster successful, clusterId: %s, error: %v", req.GetClusterId(), err)
+		log.Infof("LoadCluster successfully, clusterId: %s, error: %v", req.GetClusterId(), err)
 	} else {
-		log.Infof("LoadCluster failed, clusterId: %s, error: %v", req.GetClusterId(), err)
+			resp.Status = &dbpb.DBClusterResponseStatus{
+				Code: 500,
+				Message: err.Error(),
+			}
+		log.Errorf("LoadCluster failed, clusterId: %s, error: %v", req.GetClusterId(), err)
 	}
-	return err
+	return nil
 }
 
 func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbpb.DBListClusterRequest, resp *dbpb.DBListClusterResponse) (err error) {

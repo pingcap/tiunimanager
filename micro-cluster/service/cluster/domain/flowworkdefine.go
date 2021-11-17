@@ -50,7 +50,7 @@ func InitFlowMap() {
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowDeleteCluster),
 			TaskNodes: map[string]*TaskDefine{
 				"start":              {"destroyTasks", "destroyTasksDone", "fail", SyncFuncTask, destroyTasks},
-				"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", SyncFuncTask, destroyCluster},
+				"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", PollingTasK, destroyCluster},
 				"destroyClusterDone": {"deleteCluster", "deleteClusterDone", "fail", SyncFuncTask, deleteCluster},
 				"deleteClusterDone":  {"freedResource", "freedResourceDone", "fail", SyncFuncTask, freedResource},
 				"freedResourceDone":  {"end", "", "", SyncFuncTask, ClusterEnd},

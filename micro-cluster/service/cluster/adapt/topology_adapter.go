@@ -202,6 +202,9 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 		tiupConfig.GlobalOptions.User = "tidb"
 		tiupConfig.GlobalOptions.SSHPort = 22
 		tiupConfig.GlobalOptions.Arch = cluster.CpuArchitecture
+		if tiupConfig.GlobalOptions.Arch == "" {
+			tiupConfig.GlobalOptions.Arch = string(resource.X86)
+		}
 		tiupConfig.GlobalOptions.LogDir = filepath.Join(cluster.Id, "tidb-log")
 	}
 

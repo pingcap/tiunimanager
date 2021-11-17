@@ -75,16 +75,16 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	operator := parseOperatorFromDTO(ope)
 
 	cluster := &Cluster{
-		ClusterName:    clusterInfo.ClusterName,
-		DbPassword:     clusterInfo.DbPassword,
-		ClusterType:    *knowledge.ClusterTypeFromCode(clusterInfo.ClusterType.Code),
-		ClusterVersion: *knowledge.ClusterVersionFromCode(clusterInfo.ClusterVersion.Code),
-		Tls:            clusterInfo.Tls,
-		TenantId:       operator.TenantId,
-		OwnerId:        operator.Id,
-		Region: commonDemand.Region,
+		ClusterName:     clusterInfo.ClusterName,
+		DbPassword:      clusterInfo.DbPassword,
+		ClusterType:     *knowledge.ClusterTypeFromCode(clusterInfo.ClusterType.Code),
+		ClusterVersion:  *knowledge.ClusterVersionFromCode(clusterInfo.ClusterVersion.Code),
+		Tls:             clusterInfo.Tls,
+		TenantId:        operator.TenantId,
+		OwnerId:         operator.Id,
+		Region:          commonDemand.Region,
 		CpuArchitecture: commonDemand.CpuArchitecture,
-		Exclusive: commonDemand.Exclusive,
+		Exclusive:       commonDemand.Exclusive,
 	}
 
 	if cluster.CpuArchitecture == "" {

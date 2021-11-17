@@ -540,20 +540,23 @@ func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 		return nil
 	}
 	cluster = &domain.Cluster{
-		Id:             dto.Id,
-		Code:           dto.Code,
-		TenantId:       dto.TenantId,
-		ClusterName:    dto.Name,
-		DbPassword:     dto.DbPassword,
-		ClusterType:    *knowledge.ClusterTypeFromCode(dto.ClusterType),
-		ClusterVersion: *knowledge.ClusterVersionFromCode(dto.VersionCode),
-		Tls:            dto.Tls,
-		Status:         domain.ClusterStatusFromValue(int(dto.Status)),
-		WorkFlowId:     uint(dto.WorkFlowId),
-		OwnerId:        dto.OwnerId,
-		CreateTime:     time.Unix(dto.CreateTime, 0),
-		UpdateTime:     time.Unix(dto.UpdateTime, 0),
-		DeleteTime:     time.Unix(dto.DeleteTime, 0),
+		Id:              dto.Id,
+		Code:            dto.Code,
+		TenantId:        dto.TenantId,
+		ClusterName:     dto.Name,
+		DbPassword:      dto.DbPassword,
+		ClusterType:     *knowledge.ClusterTypeFromCode(dto.ClusterType),
+		ClusterVersion:  *knowledge.ClusterVersionFromCode(dto.VersionCode),
+		Tls:             dto.Tls,
+		Status:          domain.ClusterStatusFromValue(int(dto.Status)),
+		WorkFlowId:      uint(dto.WorkFlowId),
+		OwnerId:         dto.OwnerId,
+		Exclusive:       dto.Exclusive,
+		CpuArchitecture: dto.CpuArchitecture,
+		Region:          dto.Region,
+		CreateTime:      time.Unix(dto.CreateTime, 0),
+		UpdateTime:      time.Unix(dto.UpdateTime, 0),
+		DeleteTime:      time.Unix(dto.DeleteTime, 0),
 	}
 
 	json.Unmarshal([]byte(dto.Tags), &cluster.Tags)

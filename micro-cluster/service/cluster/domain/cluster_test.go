@@ -16,7 +16,9 @@
 package domain
 
 import (
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 	"testing"
 )
 
@@ -54,4 +56,20 @@ func TestCluster_Restart(t *testing.T) {
 
 	cluster.Restart()
 	assert.Equal(t, ClusterStatusRestarting, cluster.Status)
+}
+
+func TestTopologyConfigRecord_Content(t *testing.T) {
+	r := &TopologyConfigRecord{
+		ConfigModel: &spec.Specification{
+			TiDBServers: []*spec.TiDBSpec{
+				{Host: "127.0.0.1"},
+			},
+		},
+	}
+	str := r.Content()
+	newR := &spec.Specification{}
+	err := yaml.Unmarshal([]byte(str), newR)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "127.0.0.1", newR.TiDBServers[0].Host)
 }

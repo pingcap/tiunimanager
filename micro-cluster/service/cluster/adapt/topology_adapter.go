@@ -247,8 +247,9 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 			} else if component.ComponentType.ComponentType == "PD" {
 				if monitorHostComponent == nil {
 					monitorHostComponent = instance
-					tiupConfig.MonitoredOptions.NodeExporterPort = instance.PortList[6]
-					tiupConfig.MonitoredOptions.BlackboxExporterPort = instance.PortList[7]
+					port := knowledge.GetMonitoredSequence()
+					tiupConfig.MonitoredOptions.NodeExporterPort = port
+					tiupConfig.MonitoredOptions.BlackboxExporterPort = port + 1
 				}
 				tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
 					Host: instance.Host,

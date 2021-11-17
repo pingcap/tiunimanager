@@ -98,6 +98,15 @@ func LoadKnowledge() {
 	loadParameterKnowledge()
 }
 
+var MonitoredSequence = 11000
+
+// GetMonitoredSequence
+// todo get global unique monitor port
+func GetMonitoredSequence() int {
+	MonitoredSequence = MonitoredSequence + 2
+	return MonitoredSequence
+}
+
 func loadSpecKnowledge() {
 	tidbType := ClusterType{"TiDB", "TiDB"}
 	tidbV4_0_12 := ClusterVersion{"v4.0.12", "v4.0.12"}

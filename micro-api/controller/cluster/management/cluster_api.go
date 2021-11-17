@@ -251,10 +251,7 @@ func Restart(c *gin.Context) {
 		ClusterId: c.Param("clusterId"),
 	}
 
-	respDTO, err := client.ClusterClient.RestartCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
-		o.RequestTimeout = time.Minute * 5
-		o.DialTimeout = time.Minute * 5
-	})
+	respDTO, err := client.ClusterClient.RestartCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
@@ -299,10 +296,7 @@ func Stop(c *gin.Context) {
 		ClusterId: c.Param("clusterId"),
 	}
 
-	respDTO, err := client.ClusterClient.StopCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
-		o.RequestTimeout = time.Minute * 5
-		o.DialTimeout = time.Minute * 5
-	})
+	respDTO, err := client.ClusterClient.StopCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}

@@ -50,10 +50,14 @@ func ClusterTypeSpecFromCode(code string) *ClusterTypeSpec {
 	return nil
 }
 
-func GetComponentPortRange(typeCode string, versionCode string, componentType string) *ComponentPortConstraint {
-	clusterTypeSpec := ClusterTypeSpecFromCode(typeCode)
+func IsParasite(typeCode string, versionCode string, componentType string) bool {
+	return GetComponentSpec(typeCode, versionCode, componentType).ComponentConstraint.Parasite
+}
+
+func GetComponentSpec(clusterTypeCode string, versionCode string, componentType string) *ClusterComponentSpec{
+	clusterTypeSpec := ClusterTypeSpecFromCode(clusterTypeCode)
 	if clusterTypeSpec == nil {
-		framework.Log().Errorf("Unexpected code of cluster code: %s", typeCode)
+		framework.Log().Errorf("Unexpected code of cluster code: %s", clusterTypeCode)
 		return nil
 	}
 	versionSpec := clusterTypeSpec.GetVersionSpec(versionCode)
@@ -66,7 +70,11 @@ func GetComponentPortRange(typeCode string, versionCode string, componentType st
 		framework.Log().Errorf("Unexpected code of component type: %s", componentType)
 		return nil
 	}
-	return &componentSpec.PortConstraint
+	return componentSpec
+}
+
+func GetComponentPortRange(typeCode string, versionCode string, componentType string) *ComponentPortConstraint {
+	return &GetComponentSpec(typeCode, versionCode, componentType).PortConstraint
 }
 
 func ClusterTypeFromCode(code string) *ClusterType {

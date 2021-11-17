@@ -104,7 +104,9 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, clu
 					Strategy:   int32(resource.UserSpecifyHost),
 				})
 			} else {
-				if instance.Status != domain.ClusterStatusUnlined {
+				// no need to alloc for existed component or parasite component
+				if instance.Status != domain.ClusterStatusUnlined ||
+					knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType){
 					continue
 				}
 				portRequirementList = append(portRequirementList, &clusterpb.PortRequirement{
@@ -153,7 +155,7 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, clu
 	return allocReq, nil
 }
 
-func (d DefaultTopologyPlanner) ApplyResourceToComponents(ctx context.Context, response *clusterpb.BatchAllocResponse, components []*domain.ComponentGroup) error {
+func (d DefaultTopologyPlanner) ApplyResourceToComponents(ctx context.Context, cluster *domain.Cluster, response *clusterpb.BatchAllocResponse, components []*domain.ComponentGroup) error {
 	// handle response error
 	if response.Rs.Code != 0 {
 		return fmt.Errorf(response.Rs.Message)
@@ -163,9 +165,11 @@ func (d DefaultTopologyPlanner) ApplyResourceToComponents(ctx context.Context, r
 	var count int
 	for _, component := range components {
 		for _, instance := range component.Nodes {
-			if instance.Status != domain.ClusterStatusUnlined {
+			if instance.Status != domain.ClusterStatusUnlined ||
+				knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType){
 				continue
 			}
+
 			if len(response.BatchResults) <= 0 {
 				return fmt.Errorf("alloc resources is empty")
 			}

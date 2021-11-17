@@ -97,6 +97,13 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
 
+	// add default parasite components
+	demands = append(demands,
+		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("Grafana")},
+		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("Prometheus")},
+		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("AlertManger")},
+	)
+
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
 
@@ -425,7 +432,7 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 
 	// update cluster components
-	err := TopologyPlanner.ApplyResourceToComponents(context.Context, clusterAggregation.AddedAllocResources, clusterAggregation.AddedClusterComponents)
+	err := TopologyPlanner.ApplyResourceToComponents(context.Context, clusterAggregation.Cluster, clusterAggregation.AddedAllocResources, clusterAggregation.AddedClusterComponents)
 	if err != nil {
 		getLoggerWithContext(context).Error(err)
 		task.Fail(err)

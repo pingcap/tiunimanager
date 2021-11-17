@@ -662,7 +662,21 @@ func deleteCluster(task *TaskEntity, context *FlowContext) bool {
 }
 
 func destroyCluster(task *TaskEntity, context *FlowContext) bool {
-	task.Success(nil)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	destroyTaskId, err := secondparty.SecondParty.MicroSrvTiupDestroy(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id),
+	)
+
+	if err != nil {
+		getLoggerWithContext(context).Errorf("call tiup api destroy cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+
+	getLoggerWithContext(context).Infof("got destroyTaskId %s", strconv.Itoa(int(destroyTaskId)))
+
 	return true
 }
 

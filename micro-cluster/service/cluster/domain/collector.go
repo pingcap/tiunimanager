@@ -74,7 +74,11 @@ func buildCollectorTiDBLogConfig(ctx ctx.Context, host string, clusters []*Clust
 	// build collector tidb log configs
 	configs := make([]CollectorTiDBLogConfig, 0)
 	for _, aggregation := range clusters {
+		if aggregation == nil || aggregation.CurrentTopologyConfigRecord == nil {
+			continue
+		}
 		cfg := CollectorTiDBLogConfig{Module: "tidb"}
+
 		spec := aggregation.CurrentTopologyConfigRecord.ConfigModel
 
 		// TiDB modules

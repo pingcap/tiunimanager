@@ -442,8 +442,41 @@ func TestModifyParameters(t *testing.T) {
 }
 
 func Test_destroyCluster(t *testing.T) {
-	assert.True(t, destroyCluster(&TaskEntity{}, nil))
-}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	secondparty.SecondParty = mockTiup
+
+	t.Run("success", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupDestroy(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			AlteredTopology: &spec.Specification{
+				TiDBServers: []*spec.TiDBSpec{
+					{
+						Host: "127.0.0.1",
+						Port: 4000,
+					},
+				},
+			},
+		})
+		ret := destroyCluster(task, flowCtx)
+
+		assert.Equal(t, true, ret)
+	})}
 
 func Test_destroyTasks(t *testing.T) {
 	assert.True(t, destroyTasks(&TaskEntity{}, nil))

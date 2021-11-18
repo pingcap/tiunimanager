@@ -146,9 +146,6 @@ func (m *DAOClusterManager) UpdateClusterStatus(ctx context.Context, clusterId s
 		return nil, errors.New(fmt.Sprintf("UpdateClusterStatus has invalid parameter, clusterId: %s, status: %d", clusterId, status))
 	}
 	cluster = &Cluster{}
-	if status == 3 {
-
-	}
 	err = m.Db(ctx).Model(cluster).Where("id = ?", clusterId).First(cluster).Update("status", status).Error
 	return cluster, err
 }

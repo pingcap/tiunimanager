@@ -79,6 +79,8 @@ func (cluster *ClusterAggregation) tryStartFlow(ctx ctx.Context, flow *FlowWorkA
 	}
 
 	cluster.updateWorkFlow(flow.FlowWork)
+	cluster.Cluster.WorkFlowId = flow.FlowWork.Id
+
 	err := ClusterRepo.PersistStatus(ctx, cluster)
 
 	if err != nil {
@@ -253,7 +255,6 @@ func TakeoverClusters(ctx ctx.Context, ope *clusterpb.OperatorDTO, req *clusterp
 
 func (clusterAggregation *ClusterAggregation) updateWorkFlow(flow *FlowWorkEntity) {
 	clusterAggregation.CurrentWorkFlow = flow
-	clusterAggregation.Cluster.WorkFlowId = flow.Id
 	clusterAggregation.FlowModified = true
 }
 

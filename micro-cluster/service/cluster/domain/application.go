@@ -295,6 +295,7 @@ func RestartCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId strin
 	}
 
 	clusterAggregation.Cluster.Restart()
+	clusterAggregation.StatusModified = true
 	flow.AddContext(contextClusterKey, clusterAggregation)
 
 	err = clusterAggregation.tryStartFlow(ctx, flow)
@@ -317,6 +318,7 @@ func StopCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) 
 	}
 
 	clusterAggregation.Cluster.Offline()
+	clusterAggregation.StatusModified = true
 	flow.AddContext(contextClusterKey, clusterAggregation)
 
 	err = clusterAggregation.tryStartFlow(ctx, flow)

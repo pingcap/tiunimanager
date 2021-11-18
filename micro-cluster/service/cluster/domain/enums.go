@@ -100,7 +100,7 @@ func (s TaskStatus) Display() string {
 }
 
 func (s TaskStatus) Finished() bool {
-	return TaskStatusFinished == s || TaskStatusError == s
+	return TaskStatusFinished == s || TaskStatusError == s || TaskStatusCanceled == s
 }
 
 var allTaskStatus = []TaskStatus{

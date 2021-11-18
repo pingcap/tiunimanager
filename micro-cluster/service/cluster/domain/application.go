@@ -449,8 +449,6 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 
-	flowContext.SetData(contextAllocRequestKey, req)
-
 	// alloc resource
 	clusterAggregation.AddedAllocResources = &clusterpb.BatchAllocResponse{}
 	err = resource.NewResourceManager().AllocResourcesInBatch(flowContext.Context, req, clusterAggregation.AddedAllocResources)
@@ -459,6 +457,8 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 		task.Fail(err)
 		return false
 	}
+
+	flowContext.SetData(contextAllocRequestKey, req)
 
 	task.Success(nil)
 	return true

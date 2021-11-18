@@ -317,7 +317,7 @@ func StopCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) 
 		return nil, err
 	}
 
-	clusterAggregation.Cluster.Offline()
+	clusterAggregation.Cluster.Status = ClusterStatusStopping
 	clusterAggregation.StatusModified = true
 	flow.AddContext(contextClusterKey, clusterAggregation)
 

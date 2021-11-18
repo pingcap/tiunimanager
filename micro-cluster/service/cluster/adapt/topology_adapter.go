@@ -245,7 +245,7 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 					StatusPort: instance.PortList[1],
 				})
 			} else if component.ComponentType.ComponentType == "PD" {
-				if monitorHostComponent == nil {
+				if monitorHostComponent == nil && cluster.Status == domain.ClusterStatusUnlined {
 					monitorHostComponent = instance
 					port := knowledge.GetMonitoredSequence(cluster.Id)
 					tiupConfig.MonitoredOptions.NodeExporterPort = port

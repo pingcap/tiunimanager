@@ -108,6 +108,7 @@ var allTaskStatus = []TaskStatus{
 	TaskStatusProcessing,
 	TaskStatusFinished,
 	TaskStatusError,
+	TaskStatusCanceled,
 }
 
 func TaskStatusFromValue(v int) TaskStatus {

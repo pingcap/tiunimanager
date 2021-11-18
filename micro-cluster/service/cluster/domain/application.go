@@ -254,7 +254,6 @@ func DeleteCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	TaskRepo.Persist(ctx, flow)
 	ClusterRepo.Persist(ctx, clusterAggregation)
 	return clusterAggregation, nil
 }
@@ -276,6 +275,10 @@ func RestartCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId strin
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()
 
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
+	ClusterRepo.Persist(ctx, clusterAggregation)
+	return clusterAggregation, nil
+
 	return clusterAggregation, nil
 }
 
@@ -296,6 +299,8 @@ func StopCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) 
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.Start()
 
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
+	ClusterRepo.Persist(ctx, clusterAggregation)
 	return clusterAggregation, nil
 }
 

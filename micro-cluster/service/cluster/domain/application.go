@@ -71,13 +71,20 @@ var contextClusterKey = "clusterAggregation"
 var contextTakeoverReqKey = "takeoverRequest"
 var contextScaleOutReqKey = "scaleOutRequest"
 
-func (cluster *ClusterAggregation) tryFlow(ctx ctx.Context, flow *FlowWorkAggregation) error {
+func (cluster *ClusterAggregation) tryStartFlow(ctx ctx.Context, flow *FlowWorkAggregation) error {
 	if cluster.CurrentWorkFlow != nil {
 		return framework.NewTiEMErrorf(common.TIEM_TASK_CONFLICT, "task conflicts, current task %s, expected task %s", cluster.CurrentWorkFlow.FlowName, flow.Define.FlowName)
 	}
 
 	cluster.updateWorkFlow(flow.FlowWork)
-	return ClusterRepo.PersistStatus(ctx, cluster)
+	err := ClusterRepo.PersistStatus(ctx, cluster)
+
+	if err != nil {
+		return err
+	} else {
+		flow.AsyncStart()
+		return nil
+	}
 }
 
 func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
@@ -244,6 +251,7 @@ func TakeoverClusters(ctx ctx.Context, ope *clusterpb.OperatorDTO, req *clusterp
 
 func (clusterAggregation *ClusterAggregation) updateWorkFlow(flow *FlowWorkEntity) {
 	clusterAggregation.CurrentWorkFlow = flow
+	clusterAggregation.Cluster.WorkFlowId = flow.Id
 	clusterAggregation.FlowModified = true
 }
 
@@ -280,14 +288,14 @@ func RestartCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId strin
 		return nil, err
 	}
 
-	err = clusterAggregation.tryFlow(ctx, flow)
+	clusterAggregation.Cluster.Restart()
+	flow.AddContext(contextClusterKey, clusterAggregation)
+
+	err = clusterAggregation.tryStartFlow(ctx, flow)
 
 	if err != nil {
 		return nil, err
 	}
-
-	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.AsyncStart()
 
 	return clusterAggregation, nil
 }
@@ -732,7 +740,7 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
-	getLogger().Infof("restart cluster %s", cluster.ClusterName)
+	getLoggerWithContext(context).Infof("restart cluster %s", cluster.ClusterName)
 	restartTaskId, err := secondparty.SecondParty.MicroSrvTiupRestart(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id),
 	)
@@ -741,15 +749,8 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 		task.Fail(err)
 		return false
 	}
-	getLogger().Infof("got restartTaskId %s", strconv.Itoa(int(restartTaskId)))
+	getLoggerWithContext(context).Infof("got restartTaskId %s", strconv.Itoa(int(restartTaskId)))
 
-	// cluster restart intermediate state
-	clusterAggregation.Cluster.Restart()
-	clusterAggregation.StatusModified = true
-	err = ClusterRepo.Persist(context, clusterAggregation)
-	if err != nil {
-		return false
-	}
 	task.Success(nil)
 	return true
 }

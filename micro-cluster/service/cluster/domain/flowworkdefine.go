@@ -221,8 +221,13 @@ func ClusterEndWithPersist(task *TaskEntity, context *FlowContext) bool {
 		ClusterRepo.Persist(context, context.GetData(contextClusterKey).(*ClusterAggregation)) == nil
 }
 
+func ClusterFailWithPersist(task *TaskEntity, context *FlowContext) bool {
+	return ClusterFail(task, context) &&
+		ClusterRepo.Persist(context, context.GetData(contextClusterKey).(*ClusterAggregation)) == nil
+}
+
 func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
-	task.Status = TaskStatusFinished
+	task.Success(nil)
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.Cluster.WorkFlowId = 0
 	clusterAggregation.FlowModified = true
@@ -241,6 +246,7 @@ func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
 
 func ClusterFail(task *TaskEntity, context *FlowContext) bool {
 	task.Status = TaskStatusError
+	task.Result = "fail"
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.Cluster.WorkFlowId = 0
 	clusterAggregation.FlowModified = true

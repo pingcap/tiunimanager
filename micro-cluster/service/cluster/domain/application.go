@@ -818,8 +818,8 @@ func (aggregation *ClusterAggregation) ExtractStatusDTO() *clusterpb.DisplayStat
 	cluster := aggregation.Cluster
 
 	dto := &clusterpb.DisplayStatusDTO{
-		StatusCode: 	strconv.Itoa(int(aggregation.Cluster.Status)),
-		StatusName: 	aggregation.Cluster.Status.Display(),
+		StatusCode: 	 strconv.Itoa(int(aggregation.Cluster.Status)),
+		StatusName: 	 aggregation.Cluster.Status.Display(),
 		CreateTime:      cluster.CreateTime.Unix(),
 		UpdateTime:      cluster.UpdateTime.Unix(),
 		DeleteTime:      cluster.DeleteTime.Unix(),

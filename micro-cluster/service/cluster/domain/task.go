@@ -98,6 +98,8 @@ func (t *TaskEntity) Success(result interface{}) {
 		} else {
 			t.Result = string(r)
 		}
+	} else {
+		t.Result = "success"
 	}
 	t.EndTime = time.Now().Unix()
 }
@@ -141,6 +143,10 @@ func (flow *FlowWorkAggregation) Start() {
 	result := flow.handle(start)
 	flow.Complete(result)
 	TaskRepo.Persist(flow.Context, flow)
+}
+
+func (flow *FlowWorkAggregation) AsyncStart() {
+	go flow.Start()
 }
 
 func (flow *FlowWorkAggregation) Destroy() {

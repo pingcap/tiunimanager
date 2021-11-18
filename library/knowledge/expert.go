@@ -51,7 +51,11 @@ func ClusterTypeSpecFromCode(code string) *ClusterTypeSpec {
 }
 
 func IsParasite(typeCode string, versionCode string, componentType string) bool {
-	return GetComponentSpec(typeCode, versionCode, componentType).ComponentConstraint.Parasite
+	componentSpec := GetComponentSpec(typeCode, versionCode, componentType)
+	if componentSpec != nil {
+		return componentSpec.ComponentConstraint.Parasite
+	}
+	return false
 }
 
 func GetComponentSpec(clusterTypeCode string, versionCode string, componentType string) *ClusterComponentSpec{
@@ -74,7 +78,11 @@ func GetComponentSpec(clusterTypeCode string, versionCode string, componentType 
 }
 
 func GetComponentPortRange(typeCode string, versionCode string, componentType string) *ComponentPortConstraint {
-	return &GetComponentSpec(typeCode, versionCode, componentType).PortConstraint
+	componentSpec := GetComponentSpec(typeCode, versionCode, componentType)
+	if componentSpec != nil {
+		return &componentSpec.PortConstraint
+	}
+	return nil
 }
 
 func ClusterTypeFromCode(code string) *ClusterType {
@@ -217,14 +225,14 @@ func loadSpecKnowledge() {
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 			}, 1},
-				ComponentPortConstraint{10040, 10060, 2},
+				ComponentPortConstraint{10040, 10120, 8},
 			},
 			{tiFlashComponent, ComponentConstraint{false, false, []int{3}, []string{
 				GenSpecCode(4, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
 			}, 0},
-				ComponentPortConstraint{10060, 10120, 6},
+				ComponentPortConstraint{10120, 10180, 6},
 			},
 			{grafanaComponent, ComponentConstraint{false, true, []int{1}, []string{
 			}, 0},

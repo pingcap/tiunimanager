@@ -71,6 +71,15 @@ var contextClusterKey = "clusterAggregation"
 var contextTakeoverReqKey = "takeoverRequest"
 var contextScaleOutReqKey = "scaleOutRequest"
 
+func (cluster *ClusterAggregation) tryFlow(ctx ctx.Context, flow *FlowWorkAggregation) error {
+	if cluster.CurrentWorkFlow != nil {
+		return framework.NewTiEMErrorf(common.TIEM_TASK_CONFLICT, "task conflicts, current task %s, expected task %s", cluster.CurrentWorkFlow.FlowName, flow.Define.FlowName)
+	}
+
+	cluster.updateWorkFlow(flow.FlowWork)
+	return ClusterRepo.PersistStatus(ctx, cluster)
+}
+
 func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
@@ -128,7 +137,6 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	}
 
 	// Start the workflow to create a cluster instance
-
 	flow, err := CreateFlowWork(ctx, cluster.Id, FlowCreateCluster, operator)
 	if err != nil {
 		return nil, err
@@ -263,7 +271,7 @@ func RestartCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId strin
 
 	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
 	if err != nil {
-		return clusterAggregation, errors.New("cluster not exist")
+		return clusterAggregation, framework.SimpleError(common.TIEM_CLUSTER_NOT_FOUND)
 	}
 	clusterAggregation.CurrentOperator = operator
 
@@ -272,12 +280,14 @@ func RestartCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId strin
 		return nil, err
 	}
 
-	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.Start()
+	err = clusterAggregation.tryFlow(ctx, flow)
 
-	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	ClusterRepo.Persist(ctx, clusterAggregation)
-	return clusterAggregation, nil
+	if err != nil {
+		return nil, err
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.AsyncStart()
 
 	return clusterAggregation, nil
 }

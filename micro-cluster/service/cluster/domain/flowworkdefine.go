@@ -139,7 +139,7 @@ func InitFlowMap() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":       {"clusterRestart", "restartDone", "fail", PollingTasK, clusterRestart},
 				"restartDone": {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
-				"onlineDone":  {"end", "", "fail", SyncFuncTask, ClusterEnd},
+				"onlineDone":  {"end", "", "fail", SyncFuncTask, ClusterEndWithPersist},
 				"fail":        {"fail", "", "", SyncFuncTask, ClusterFail},
 			},
 			ContextParser: defaultContextParser,
@@ -214,6 +214,11 @@ type TaskDefine struct {
 	FailEvent    string
 	ReturnType   TaskReturnType
 	Executor     func(task *TaskEntity, context *FlowContext) bool
+}
+
+func ClusterEndWithPersist(task *TaskEntity, context *FlowContext) bool {
+	return ClusterEnd(task, context) &&
+		ClusterRepo.Persist(context, context.GetData(contextClusterKey).(*ClusterAggregation)) == nil
 }
 
 func ClusterEnd(task *TaskEntity, context *FlowContext) bool {

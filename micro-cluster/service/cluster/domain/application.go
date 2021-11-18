@@ -747,7 +747,10 @@ func freedResourceAfterFailure(task *TaskEntity, context *FlowContext) bool {
 
 		response := &clusterpb.RecycleResponse{}
 		err := resource.NewResourceManager().RecycleResources(context, request, response)
-		return err != nil
+		if err != nil {
+			framework.LogWithContext(context).Errorf("RecycleResources error, %s", err.Error())
+		}
+		return true
 	}
 
 	return true

@@ -70,6 +70,7 @@ type ClusterAggregation struct {
 var contextClusterKey = "clusterAggregation"
 var contextTakeoverReqKey = "takeoverRequest"
 var contextScaleOutReqKey = "scaleOutRequest"
+var contextAllocRequestKey = "allocResourceRequest"
 
 func (cluster *ClusterAggregation) tryStartFlow(ctx ctx.Context, flow *FlowWorkAggregation) error {
 	if cluster.CurrentWorkFlow != nil {
@@ -438,7 +439,6 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 	clusterAggregation.AddedClusterComponents = components
-	//TODO add grafana and prometheus into ClusterComponents for creating cluster
 
 	// build resource request
 	req, err:= TopologyPlanner.AnalysisResourceRequest(flowContext.Context, clusterAggregation.Cluster, clusterAggregation.AddedClusterComponents, false)
@@ -447,6 +447,8 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 		task.Fail(err)
 		return false
 	}
+
+	flowContext.SetData(contextAllocRequestKey, req)
 
 	// alloc resource
 	clusterAggregation.AddedAllocResources = &clusterpb.BatchAllocResponse{}
@@ -725,6 +727,31 @@ func freedResource(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)
 	return true
 }
+
+func freedResourceAfterFailure(task *TaskEntity, context *FlowContext) bool {
+	allocRequest := context.GetData(contextAllocRequestKey)
+	if allocRequest != nil {
+		request := &clusterpb.RecycleRequest{
+			RecycleReqs: []*clusterpb.RecycleRequire{},
+		}
+
+		for _, req := range allocRequest.(*clusterpb.BatchAllocRequest).BatchRequests {
+			framework.LogWithContext(context).Infof("freed resource after failure, request = %s", req.Applicant.RequestId)
+			require := &clusterpb.RecycleRequire{
+				RecycleType: int32(resourceType.RecycleOperate),
+				RequestId: req.Applicant.RequestId,
+			}
+			request.RecycleReqs = append(request.RecycleReqs, require)
+		}
+
+		response := &clusterpb.RecycleResponse{}
+		err := resource.NewResourceManager().RecycleResources(context, request, response)
+		return err != nil
+	}
+
+	return true
+}
+
 
 func destroyTasks(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)

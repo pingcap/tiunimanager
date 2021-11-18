@@ -75,16 +75,16 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	operator := parseOperatorFromDTO(ope)
 
 	cluster := &Cluster{
-		ClusterName:    clusterInfo.ClusterName,
-		DbPassword:     clusterInfo.DbPassword,
-		ClusterType:    *knowledge.ClusterTypeFromCode(clusterInfo.ClusterType.Code),
-		ClusterVersion: *knowledge.ClusterVersionFromCode(clusterInfo.ClusterVersion.Code),
-		Tls:            clusterInfo.Tls,
-		TenantId:       operator.TenantId,
-		OwnerId:        operator.Id,
-		Region: commonDemand.Region,
+		ClusterName:     clusterInfo.ClusterName,
+		DbPassword:      clusterInfo.DbPassword,
+		ClusterType:     *knowledge.ClusterTypeFromCode(clusterInfo.ClusterType.Code),
+		ClusterVersion:  *knowledge.ClusterVersionFromCode(clusterInfo.ClusterVersion.Code),
+		Tls:             clusterInfo.Tls,
+		TenantId:        operator.TenantId,
+		OwnerId:         operator.Id,
+		Region:          commonDemand.Region,
 		CpuArchitecture: commonDemand.CpuArchitecture,
-		Exclusive: commonDemand.Exclusive,
+		Exclusive:       commonDemand.Exclusive,
 	}
 
 	if cluster.CpuArchitecture == "" {
@@ -96,6 +96,23 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	for i, v := range demandDTOs {
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
+
+	// add default parasite components
+	demands = append(demands,
+		&ClusterComponentDemand{
+			ComponentType: knowledge.ClusterComponentFromCode("Grafana"),
+			TotalNodeCount: 1,
+			DistributionItems: []*ClusterNodeDistributionItem{},
+		},
+		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("Prometheus"),
+			TotalNodeCount: 1,
+			DistributionItems: []*ClusterNodeDistributionItem{},
+		},
+		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("AlertManger"),
+			TotalNodeCount: 1,
+			DistributionItems: []*ClusterNodeDistributionItem{},
+		},
+	)
 
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
@@ -425,7 +442,7 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 
 	// update cluster components
-	err := TopologyPlanner.ApplyResourceToComponents(context.Context, clusterAggregation.AddedAllocResources, clusterAggregation.AddedClusterComponents)
+	err := TopologyPlanner.ApplyResourceToComponents(context.Context, clusterAggregation.Cluster, clusterAggregation.AddedAllocResources, clusterAggregation.AddedClusterComponents)
 	if err != nil {
 		getLoggerWithContext(context).Error(err)
 		task.Fail(err)
@@ -448,6 +465,7 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 func deployCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
+
 	spec := clusterAggregation.AlteredTopology
 
 	bs, err := yaml.Marshal(spec)
@@ -644,7 +662,21 @@ func deleteCluster(task *TaskEntity, context *FlowContext) bool {
 }
 
 func destroyCluster(task *TaskEntity, context *FlowContext) bool {
-	task.Success(nil)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	destroyTaskId, err := secondparty.SecondParty.MicroSrvTiupDestroy(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id),
+	)
+
+	if err != nil {
+		getLoggerWithContext(context).Errorf("call tiup api destroy cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+
+	getLoggerWithContext(context).Infof("got destroyTaskId %s", strconv.Itoa(int(destroyTaskId)))
+
 	return true
 }
 

@@ -75,11 +75,12 @@ type ComponentPortConstraint struct {
 type ClusterComponentSpec struct {
 	ClusterComponent    ClusterComponent        `json:"clusterComponent"`
 	ComponentConstraint ComponentConstraint     `json:"componentConstraint"`
-	PortConstraint      ComponentPortConstraint `json:"compentPortConstraint"`
+	PortConstraint      ComponentPortConstraint `json:"componentPortConstraint"`
 }
 
 type ComponentConstraint struct {
 	ComponentRequired       bool     `json:"componentRequired"`
+	Parasite                bool     `json:"parasite"`
 	SuggestedNodeQuantities []int    `json:"suggestedNodeQuantities"`
 	AvailableSpecCodes      []string `json:"availableSpecCodes"`
 	MinZoneQuantity         int      `json:"minZoneQuantity"`

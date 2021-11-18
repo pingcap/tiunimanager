@@ -50,10 +50,18 @@ func ClusterTypeSpecFromCode(code string) *ClusterTypeSpec {
 	return nil
 }
 
-func GetComponentPortRange(typeCode string, versionCode string, componentType string) *ComponentPortConstraint {
-	clusterTypeSpec := ClusterTypeSpecFromCode(typeCode)
+func IsParasite(typeCode string, versionCode string, componentType string) bool {
+	componentSpec := GetComponentSpec(typeCode, versionCode, componentType)
+	if componentSpec != nil {
+		return componentSpec.ComponentConstraint.Parasite
+	}
+	return false
+}
+
+func GetComponentSpec(clusterTypeCode string, versionCode string, componentType string) *ClusterComponentSpec{
+	clusterTypeSpec := ClusterTypeSpecFromCode(clusterTypeCode)
 	if clusterTypeSpec == nil {
-		framework.Log().Errorf("Unexpected code of cluster code: %s", typeCode)
+		framework.Log().Errorf("Unexpected code of cluster code: %s", clusterTypeCode)
 		return nil
 	}
 	versionSpec := clusterTypeSpec.GetVersionSpec(versionCode)
@@ -66,7 +74,15 @@ func GetComponentPortRange(typeCode string, versionCode string, componentType st
 		framework.Log().Errorf("Unexpected code of component type: %s", componentType)
 		return nil
 	}
-	return &componentSpec.PortConstraint
+	return componentSpec
+}
+
+func GetComponentPortRange(typeCode string, versionCode string, componentType string) *ComponentPortConstraint {
+	componentSpec := GetComponentSpec(typeCode, versionCode, componentType)
+	if componentSpec != nil {
+		return &componentSpec.PortConstraint
+	}
+	return nil
 }
 
 func ClusterTypeFromCode(code string) *ClusterType {
@@ -90,6 +106,21 @@ func LoadKnowledge() {
 	loadParameterKnowledge()
 }
 
+var monitoredSequence = 11000
+var clusterMonitoredPort = map[string]int{}
+
+// GetMonitoredSequence
+// todo get global unique monitor port。to be replaced
+func GetMonitoredSequence(clusterId string) int {
+	if port, ok := clusterMonitoredPort[clusterId]; ok {
+		return port
+	}
+
+	monitoredSequence = monitoredSequence + 2
+	clusterMonitoredPort[clusterId] = monitoredSequence
+	return monitoredSequence
+}
+
 func loadSpecKnowledge() {
 	tidbType := ClusterType{"TiDB", "TiDB"}
 	tidbV4_0_12 := ClusterVersion{"v4.0.12", "v4.0.12"}
@@ -111,6 +142,16 @@ func loadSpecKnowledge() {
 		"TiFlash", "column-based storage","TiFlash",
 	}
 
+	grafanaComponent := ClusterComponent{
+		"Grafana", "dispatch","Grafana",
+	}
+	monitorComponent := ClusterComponent{
+		"Prometheus", "dispatch","Prometheus",
+	}
+	alertMangerComponent := ClusterComponent{
+		"AlertManger", "dispatch","AlertManger",
+	}
+
 	//tiCdcComponent := ClusterComponent{
 	//	"TiCDC", "TiCDC",
 	//}
@@ -122,7 +163,7 @@ func loadSpecKnowledge() {
 			resource.X86,
 		},
 		ComponentSpecs: []ClusterComponentSpec{
-			{tidbComponent, ComponentConstraint{true, []int{3}, []string{
+			{tidbComponent, ComponentConstraint{true, false, []int{3}, []string{
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 				GenSpecCode(8, 32),
@@ -130,32 +171,38 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10000, 10020, 2},
 			},
-			{tikvComponent, ComponentConstraint{true, []int{3}, []string{
+			{tikvComponent, ComponentConstraint{true, false, []int{3}, []string{
 				GenSpecCode(8, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
 			}, 1},
 				ComponentPortConstraint{10020, 10040, 2},
 			},
-			{pdComponent, ComponentConstraint{true, []int{3}, []string{
+			{pdComponent, ComponentConstraint{true, false, []int{3}, []string{
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 			}, 1},
-				ComponentPortConstraint{10040, 10060, 2},
+				ComponentPortConstraint{10040, 10120, 8},
 			},
-			{tiFlashComponent, ComponentConstraint{false, []int{3}, []string{
+			{tiFlashComponent, ComponentConstraint{false, false, []int{3}, []string{
 				GenSpecCode(4, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
 			}, 0},
-				ComponentPortConstraint{10060, 10120, 6},
+				ComponentPortConstraint{10120, 10180, 6},
 			},
-			//{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
-			//	GenSpecCode(8, 16),
-			//	GenSpecCode(16, 64),
-			//}, 0},
-			//  ComponentPortConstraint{10150, 10160, 1},
-			//},
+			{grafanaComponent, ComponentConstraint{false, true, []int{1}, []string{
+			}, 0},
+				ComponentPortConstraint{0, 0, 0},
+			},
+			{monitorComponent, ComponentConstraint{false, true, []int{1}, []string{
+			}, 0},
+				ComponentPortConstraint{0, 0, 0},
+			},
+			{alertMangerComponent, ComponentConstraint{false, true, []int{1}, []string{
+			}, 0},
+				ComponentPortConstraint{0, 0, 0},
+			},
 		},
 	}
 	tidbV5_0_0_Spec := ClusterVersionSpec{
@@ -165,7 +212,7 @@ func loadSpecKnowledge() {
 			resource.X86,
 		},
 		ComponentSpecs: []ClusterComponentSpec{
-			{tidbComponent, ComponentConstraint{true, []int{3}, []string{
+			{tidbComponent, ComponentConstraint{true, false, []int{3}, []string{
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 				GenSpecCode(8, 32),
@@ -173,32 +220,38 @@ func loadSpecKnowledge() {
 			}, 1},
 				ComponentPortConstraint{10000, 10020, 2},
 			},
-			{tikvComponent, ComponentConstraint{true, []int{3}, []string{
+			{tikvComponent, ComponentConstraint{true, false, []int{3}, []string{
 				GenSpecCode(8, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
 			}, 1},
 				ComponentPortConstraint{10020, 10040, 2},
 			},
-			{pdComponent, ComponentConstraint{true, []int{3}, []string{
+			{pdComponent, ComponentConstraint{true, false, []int{3}, []string{
 				GenSpecCode(4, 8),
 				GenSpecCode(8, 16),
 			}, 1},
-				ComponentPortConstraint{10040, 10060, 2},
+				ComponentPortConstraint{10040, 10120, 8},
 			},
-			{tiFlashComponent, ComponentConstraint{false, []int{3}, []string{
+			{tiFlashComponent, ComponentConstraint{false, false, []int{3}, []string{
 				GenSpecCode(4, 32),
 				GenSpecCode(8, 64),
 				GenSpecCode(16, 128),
 			}, 0},
-				ComponentPortConstraint{10060, 10120, 6},
+				ComponentPortConstraint{10120, 10180, 6},
 			},
-			//{tiCdcComponent, ComponentConstraint{false,[]int{3}, []string{
-			//	GenSpecCode(8, 16),
-			//	GenSpecCode(16, 64),
-			//}, 0},
-			//  ComponentPortConstraint{10150, 10160, 1},
-			//},
+			{grafanaComponent, ComponentConstraint{false, true, []int{1}, []string{
+			}, 0},
+				ComponentPortConstraint{0, 0, 0},
+			},
+			{monitorComponent, ComponentConstraint{false, true, []int{1}, []string{
+			}, 0},
+				ComponentPortConstraint{0, 0, 0},
+			},
+			{alertMangerComponent, ComponentConstraint{false, true, []int{1}, []string{
+			}, 0},
+				ComponentPortConstraint{0, 0, 0},
+			},
 		},
 	}
 
@@ -210,7 +263,9 @@ func loadSpecKnowledge() {
 			tikvComponent.ComponentType:    &tikvComponent,
 			pdComponent.ComponentType:      &pdComponent,
 			tiFlashComponent.ComponentType: &tiFlashComponent,
-			//tiCdcComponent.ComponentType: &tiCdcComponent,
+			grafanaComponent.ComponentType: &grafanaComponent,
+			monitorComponent.ComponentType: &monitorComponent,
+			alertMangerComponent.ComponentType: &alertMangerComponent,
 		},
 	}
 }

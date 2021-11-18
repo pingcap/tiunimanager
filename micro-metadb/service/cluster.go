@@ -230,11 +230,15 @@ func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbpb.DBLo
 			Flow:                 convertFlowToDTO(result.Flow),
 			ComponentInstances:   convertToComponentInstanceDTO(result.ComponentInstances),
 		}
-		log.Infof("LoadCluster successful, clusterId: %s, error: %v", req.GetClusterId(), err)
+		log.Infof("LoadCluster successfully, clusterId: %s, error: %v", req.GetClusterId(), err)
 	} else {
-		log.Infof("LoadCluster failed, clusterId: %s, error: %v", req.GetClusterId(), err)
+			resp.Status = &dbpb.DBClusterResponseStatus{
+				Code: 500,
+				Message: err.Error(),
+			}
+		log.Errorf("LoadCluster failed, clusterId: %s, error: %v", req.GetClusterId(), err)
 	}
-	return err
+	return nil
 }
 
 func (handler *DBServiceHandler) ListCluster(ctx context.Context, req *dbpb.DBListClusterRequest, resp *dbpb.DBListClusterResponse) (err error) {
@@ -677,21 +681,24 @@ func convertToClusterDTO(do *models.Cluster, demand *models.DemandRecord) (dto *
 		return nil
 	}
 	dto = &dbpb.DBClusterDTO{
-		Id:          do.ID,
-		Code:        do.Code,
-		Name:        do.Name,
-		TenantId:    do.TenantId,
-		DbPassword:  do.DbPassword,
-		ClusterType: do.Type,
-		VersionCode: do.Version,
-		Status:      int32(do.Status),
-		Tags:        do.Tags,
-		Tls:         do.Tls,
-		WorkFlowId:  int32(do.CurrentFlowId),
-		OwnerId:     do.OwnerId,
-		CreateTime:  do.CreatedAt.Unix(),
-		UpdateTime:  do.UpdatedAt.Unix(),
-		DeleteTime:  nullTime2Unix(sql.NullTime(do.DeletedAt)),
+		Id:              do.ID,
+		Code:            do.Code,
+		Name:            do.Name,
+		TenantId:        do.TenantId,
+		DbPassword:      do.DbPassword,
+		ClusterType:     do.Type,
+		VersionCode:     do.Version,
+		Status:          int32(do.Status),
+		Tags:            do.Tags,
+		Tls:             do.Tls,
+		WorkFlowId:      int32(do.CurrentFlowId),
+		OwnerId:         do.OwnerId,
+		Region:          do.Region,
+		Exclusive:       do.Exclusive,
+		CpuArchitecture: do.CpuArchitecture,
+		CreateTime:      do.CreatedAt.Unix(),
+		UpdateTime:      do.UpdatedAt.Unix(),
+		DeleteTime:      nullTime2Unix(sql.NullTime(do.DeletedAt)),
 	}
 
 	if demand != nil {

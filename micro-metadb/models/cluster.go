@@ -354,13 +354,16 @@ func (m *DAOClusterManager) ListClusters(ctx context.Context, clusterId, cluster
 
 func (m *DAOClusterManager) CreateCluster(ctx context.Context, clusterReq Cluster) (cluster *Cluster, err error) {
 	cluster = &Cluster{Entity: Entity{TenantId: clusterReq.TenantId},
-		Name:       clusterReq.Name,
-		DbPassword: clusterReq.DbPassword,
-		Type:       clusterReq.Type,
-		Version:    clusterReq.Version,
-		Tls:        clusterReq.Tls,
-		Tags:       clusterReq.Tags,
-		OwnerId:    clusterReq.OwnerId,
+		Name:            clusterReq.Name,
+		DbPassword:      clusterReq.DbPassword,
+		Type:            clusterReq.Type,
+		Version:         clusterReq.Version,
+		Tls:             clusterReq.Tls,
+		Tags:            clusterReq.Tags,
+		OwnerId:         clusterReq.OwnerId,
+		CpuArchitecture: clusterReq.CpuArchitecture,
+		Region:          clusterReq.Region,
+		Exclusive:       clusterReq.Exclusive,
 	}
 	cluster.Code = generateEntityCode(clusterReq.Name)
 	err = m.Db(ctx).Create(cluster).Error

@@ -117,9 +117,12 @@ func (aggregation *ClusterAggregation) ExtractComponentDTOs() []*clusterpb.Compo
 }
 
 func appendAllComponentInstances(config *spec.Specification, knowledge *knowledge.ClusterVersionSpec) []*clusterpb.ComponentInstanceDTO {
-	components := make([]*clusterpb.ComponentInstanceDTO, 0, len(knowledge.ComponentSpecs))
+	components := make([]*clusterpb.ComponentInstanceDTO, 0)
 
 	for _, v := range knowledge.ComponentSpecs {
+		if v.ComponentConstraint.Parasite {
+			continue
+		}
 		code := v.ClusterComponent.ComponentType
 		componentDTO := &clusterpb.ComponentInstanceDTO{
 			BaseInfo: &clusterpb.ComponentBaseInfoDTO{
@@ -180,7 +183,7 @@ func tiKVComponent(config *spec.Specification, version string) []*clusterpb.Comp
 			Status:  "运行中",   // todo
 			Instance: &clusterpb.ComponentNodeInstanceDTO{
 				HostId: v.Host,
-				Port:   20160,
+				Port:   int32(v.Port),
 				Role:   mockRole(),
 				Spec:   mockSpec(),
 				Zone:   mockZone(),
@@ -208,7 +211,7 @@ func pDComponent(config *spec.Specification, version string) []*clusterpb.Compon
 			Status:  "运行中",   // todo
 			Instance: &clusterpb.ComponentNodeInstanceDTO{
 				HostId: v.Host,
-				Port:   2379,
+				Port:   int32(v.ClientPort),
 				Role:   mockRole(),
 				Spec:   mockSpec(),
 				Zone:   mockZone(),
@@ -227,7 +230,30 @@ func pDComponent(config *spec.Specification, version string) []*clusterpb.Compon
 }
 
 func tiFlashComponent(config *spec.Specification, version string) []*clusterpb.ComponentNodeDisplayInfoDTO {
-	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, 0)
+	servers := config.TiFlashServers
+	dto := make([]*clusterpb.ComponentNodeDisplayInfoDTO, len(servers))
+	for i, v := range servers {
+		dto[i] = &clusterpb.ComponentNodeDisplayInfoDTO{
+			NodeId:  v.Host,
+			Version: version,
+			Status:  "运行中",
+			Instance: &clusterpb.ComponentNodeInstanceDTO{
+				HostId: v.Host,
+				Port:   int32(v.FlashServicePort),
+				Role:   mockRole(),
+				Spec:   mockSpec(),
+				Zone:   mockZone(),
+			},
+
+			Usages: &clusterpb.ComponentNodeUsageDTO{
+				IoUtil:       mockIoUtil(),
+				Iops:         mockIops(),
+				CpuUsage:     MockUsage(),
+				MemoryUsage:  MockUsage(),
+				StoregeUsage: MockUsage(),
+			},
+		}
+	}
 	return dto
 }
 

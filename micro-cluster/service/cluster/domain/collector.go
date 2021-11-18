@@ -74,7 +74,11 @@ func buildCollectorTiDBLogConfig(ctx ctx.Context, host string, clusters []*Clust
 	// build collector tidb log configs
 	configs := make([]CollectorTiDBLogConfig, 0)
 	for _, aggregation := range clusters {
+		if aggregation == nil || aggregation.CurrentTopologyConfigRecord == nil {
+			continue
+		}
 		cfg := CollectorTiDBLogConfig{Module: "tidb"}
+
 		spec := aggregation.CurrentTopologyConfigRecord.ConfigModel
 
 		// TiDB modules
@@ -83,7 +87,7 @@ func buildCollectorTiDBLogConfig(ctx ctx.Context, host string, clusters []*Clust
 				if len(server.LogDir) == 0 {
 					continue
 				}
-				logPath := server.DeployDir + "/" + server.LogDir + "/tidb.log"
+				logPath := server.LogDir + "/tidb.log"
 				// multiple instances of the same cluster
 				if len(cfg.TiDB.Var.Paths) > 0 {
 					cfg.TiDB.Var.Paths = append(cfg.TiDB.Var.Paths, logPath)
@@ -99,7 +103,7 @@ func buildCollectorTiDBLogConfig(ctx ctx.Context, host string, clusters []*Clust
 				if len(server.LogDir) == 0 {
 					continue
 				}
-				logPath := server.DeployDir + "/" + server.LogDir + "/pd.log"
+				logPath := server.LogDir + "/pd.log"
 				// multiple instances of the same cluster
 				if len(cfg.PD.Var.Paths) > 0 {
 					cfg.PD.Var.Paths = append(cfg.PD.Var.Paths, logPath)
@@ -115,7 +119,7 @@ func buildCollectorTiDBLogConfig(ctx ctx.Context, host string, clusters []*Clust
 				if len(server.LogDir) == 0 {
 					continue
 				}
-				logPath := server.DeployDir + "/" + server.LogDir + "/tikv.log"
+				logPath := server.LogDir + "/tikv.log"
 				// multiple instances of the same cluster
 				if len(cfg.TiKV.Var.Paths) > 0 {
 					cfg.TiKV.Var.Paths = append(cfg.TiKV.Var.Paths, logPath)
@@ -131,7 +135,7 @@ func buildCollectorTiDBLogConfig(ctx ctx.Context, host string, clusters []*Clust
 				if len(server.LogDir) == 0 {
 					continue
 				}
-				logPath := server.DeployDir + "/" + server.LogDir + "/tiflash.log"
+				logPath := server.LogDir + "/tiflash.log"
 				// multiple instances of the same cluster
 				if len(cfg.TiFlash.Var.Paths) > 0 {
 					cfg.TiFlash.Var.Paths = append(cfg.TiFlash.Var.Paths, logPath)
@@ -147,7 +151,7 @@ func buildCollectorTiDBLogConfig(ctx ctx.Context, host string, clusters []*Clust
 				if len(server.LogDir) == 0 {
 					continue
 				}
-				logPath := server.DeployDir + "/" + server.LogDir + "/ticdc.log"
+				logPath := server.LogDir + "/ticdc.log"
 				// multiple instances of the same cluster
 				if len(cfg.TiCDC.Var.Paths) > 0 {
 					cfg.TiCDC.Var.Paths = append(cfg.TiCDC.Var.Paths, logPath)

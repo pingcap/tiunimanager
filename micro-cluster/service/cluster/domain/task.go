@@ -214,7 +214,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) bool {
 				flow.handleTaskError(task, taskDefine)
 				return false
 			}
-			framework.LogWithContext(flow.Context).Infof("polling task waiting, sequence %d, taskId %d", sequence, task.Id)
+			framework.LogWithContext(flow.Context).Infof("polling task waiting, sequence %d, taskId %d, taskName %s", sequence, task.Id, task.TaskName)
 
 			stat, statString, err := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(flow.Context, uint64(task.Id))
 			if err != nil {

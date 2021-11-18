@@ -135,20 +135,27 @@ func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.Clu
 
 func persistClusterStatus(ctx context.Context, aggregation *domain.ClusterAggregation) error {
 	if aggregation.StatusModified || aggregation.FlowModified {
-		resp, err := client.DBClient.UpdateClusterStatus(ctx, &dbpb.DBUpdateClusterStatusRequest{
-			ClusterId:    aggregation.Cluster.Id,
-			Status:       int32(aggregation.Cluster.Status),
-			UpdateStatus: aggregation.StatusModified,
-			FlowId:       int64(aggregation.Cluster.WorkFlowId),
-			UpdateFlow:   aggregation.FlowModified,
-		})
-
-		if err != nil {
+		if aggregation.Cluster.Status == domain.ClusterStatusDeleted {
+			_, err := client.DBClient.DeleteCluster(ctx,  &dbpb.DBDeleteClusterRequest{
+				ClusterId: aggregation.Cluster.Id,
+			})
 			return err
-		}
+		} else {
+			resp, err := client.DBClient.UpdateClusterStatus(ctx, &dbpb.DBUpdateClusterStatusRequest{
+				ClusterId:    aggregation.Cluster.Id,
+				Status:       int32(aggregation.Cluster.Status),
+				UpdateStatus: aggregation.StatusModified,
+				FlowId:       int64(aggregation.Cluster.WorkFlowId),
+				UpdateFlow:   aggregation.FlowModified,
+			})
 
-		aggregation.Cluster.Status = domain.ClusterStatusFromValue(int(resp.Cluster.Status))
-		aggregation.Cluster.WorkFlowId = uint(resp.Cluster.WorkFlowId)
+			if err != nil {
+				return err
+			}
+
+			aggregation.Cluster.Status = domain.ClusterStatusFromValue(int(resp.Cluster.Status))
+			aggregation.Cluster.WorkFlowId = uint(resp.Cluster.WorkFlowId)
+		}
 	}
 	return nil
 }
@@ -540,20 +547,23 @@ func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 		return nil
 	}
 	cluster = &domain.Cluster{
-		Id:             dto.Id,
-		Code:           dto.Code,
-		TenantId:       dto.TenantId,
-		ClusterName:    dto.Name,
-		DbPassword:     dto.DbPassword,
-		ClusterType:    *knowledge.ClusterTypeFromCode(dto.ClusterType),
-		ClusterVersion: *knowledge.ClusterVersionFromCode(dto.VersionCode),
-		Tls:            dto.Tls,
-		Status:         domain.ClusterStatusFromValue(int(dto.Status)),
-		WorkFlowId:     uint(dto.WorkFlowId),
-		OwnerId:        dto.OwnerId,
-		CreateTime:     time.Unix(dto.CreateTime, 0),
-		UpdateTime:     time.Unix(dto.UpdateTime, 0),
-		DeleteTime:     time.Unix(dto.DeleteTime, 0),
+		Id:              dto.Id,
+		Code:            dto.Code,
+		TenantId:        dto.TenantId,
+		ClusterName:     dto.Name,
+		DbPassword:      dto.DbPassword,
+		ClusterType:     *knowledge.ClusterTypeFromCode(dto.ClusterType),
+		ClusterVersion:  *knowledge.ClusterVersionFromCode(dto.VersionCode),
+		Tls:             dto.Tls,
+		Status:          domain.ClusterStatusFromValue(int(dto.Status)),
+		WorkFlowId:      uint(dto.WorkFlowId),
+		OwnerId:         dto.OwnerId,
+		Exclusive:       dto.Exclusive,
+		CpuArchitecture: dto.CpuArchitecture,
+		Region:          dto.Region,
+		CreateTime:      time.Unix(dto.CreateTime, 0),
+		UpdateTime:      time.Unix(dto.UpdateTime, 0),
+		DeleteTime:      time.Unix(dto.DeleteTime, 0),
 	}
 
 	json.Unmarshal([]byte(dto.Tags), &cluster.Tags)

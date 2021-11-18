@@ -3700,11 +3700,11 @@ var doc = `{
                 "clusterComponent": {
                     "$ref": "#/definitions/knowledge.ClusterComponent"
                 },
-                "compentPortConstraint": {
-                    "$ref": "#/definitions/knowledge.ComponentPortConstraint"
-                },
                 "componentConstraint": {
                     "$ref": "#/definitions/knowledge.ComponentConstraint"
+                },
+                "componentPortConstraint": {
+                    "$ref": "#/definitions/knowledge.ComponentPortConstraint"
                 }
             }
         },
@@ -3778,6 +3778,9 @@ var doc = `{
                 },
                 "minZoneQuantity": {
                     "type": "integer"
+                },
+                "parasite": {
+                    "type": "boolean"
                 },
                 "suggestedNodeQuantities": {
                     "type": "array",

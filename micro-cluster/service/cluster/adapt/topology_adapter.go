@@ -41,32 +41,47 @@ func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*
 		var componentGroup domain.ComponentGroup
 		componentGroup.ComponentType = demand.ComponentType
 		nodes := make([]*domain.ComponentInstance, 0, demand.TotalNodeCount)
-		for _, items := range demand.DistributionItems {
-			for i := 0; i < items.Count; i++ {
-				portRange := knowledge.GetComponentPortRange(cluster.ClusterType.Code, cluster.ClusterVersion.Code, demand.ComponentType.ComponentType)
-				node := &domain.ComponentInstance{
-					TenantId: cluster.TenantId,
-					Status: domain.ClusterStatusUnlined,
-					ClusterId: cluster.Id,
-					ComponentType: demand.ComponentType,
-					Version: &cluster.ClusterVersion,
-					Location: &resource.Location{
-						Region: resource.GetDomainPrefixFromCode(items.ZoneCode),
-						Zone: resource.GetDomainNameFromCode(items.ZoneCode),
-					},
-					Compute: &resource.ComputeRequirement{
-						CpuCores: int32(knowledge.ParseCpu(items.SpecCode)),
-						Memory: int32(knowledge.ParseMemory(items.SpecCode)),
-					},
-					PortRequirement: &resource.PortRequirement{
-						Start:	int32(portRange.Start),
-						End: int32(portRange.End),
-						PortCnt: int32(portRange.Count),
-					},
+		if len(demand.DistributionItems) > 0 {
+			for _, items := range demand.DistributionItems {
+				for i := 0; i < items.Count; i++ {
+					portRange := knowledge.GetComponentPortRange(cluster.ClusterType.Code, cluster.ClusterVersion.Code, demand.ComponentType.ComponentType)
+					node := &domain.ComponentInstance{
+						TenantId: cluster.TenantId,
+						Status: domain.ClusterStatusUnlined,
+						ClusterId: cluster.Id,
+						ComponentType: demand.ComponentType,
+						Version: &cluster.ClusterVersion,
+						Location: &resource.Location{
+							Region: resource.GetDomainPrefixFromCode(items.ZoneCode),
+							Zone: resource.GetDomainNameFromCode(items.ZoneCode),
+						},
+						Compute: &resource.ComputeRequirement{
+							CpuCores: int32(knowledge.ParseCpu(items.SpecCode)),
+							Memory: int32(knowledge.ParseMemory(items.SpecCode)),
+						},
+						PortRequirement: &resource.PortRequirement{
+							Start:	int32(portRange.Start),
+							End: int32(portRange.End),
+							PortCnt: int32(portRange.Count),
+						},
+					}
+					nodes = append(nodes, node)
 				}
-				nodes = append(nodes, node)
 			}
+		} else {
+			node := &domain.ComponentInstance{
+				TenantId: cluster.TenantId,
+				Status: domain.ClusterStatusUnlined,
+				ClusterId: cluster.Id,
+				ComponentType: demand.ComponentType,
+				Version: &cluster.ClusterVersion,
+				Location: &resource.Location{},
+				Compute: &resource.ComputeRequirement{},
+				PortRequirement: &resource.PortRequirement{},
+			}
+			nodes = append(nodes, node)
 		}
+
 
 		componentGroup.Nodes = nodes
 		components = append(components, &componentGroup)
@@ -104,7 +119,9 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, clu
 					Strategy:   int32(resource.UserSpecifyHost),
 				})
 			} else {
-				if instance.Status != domain.ClusterStatusUnlined {
+				// no need to alloc for existed component or parasite component
+				if instance.Status != domain.ClusterStatusUnlined ||
+					knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType){
 					continue
 				}
 				portRequirementList = append(portRequirementList, &clusterpb.PortRequirement{
@@ -153,7 +170,7 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, clu
 	return allocReq, nil
 }
 
-func (d DefaultTopologyPlanner) ApplyResourceToComponents(ctx context.Context, response *clusterpb.BatchAllocResponse, components []*domain.ComponentGroup) error {
+func (d DefaultTopologyPlanner) ApplyResourceToComponents(ctx context.Context, cluster *domain.Cluster, response *clusterpb.BatchAllocResponse, components []*domain.ComponentGroup) error {
 	// handle response error
 	if response.Rs.Code != 0 {
 		return fmt.Errorf(response.Rs.Message)
@@ -163,9 +180,11 @@ func (d DefaultTopologyPlanner) ApplyResourceToComponents(ctx context.Context, r
 	var count int
 	for _, component := range components {
 		for _, instance := range component.Nodes {
-			if instance.Status != domain.ClusterStatusUnlined {
+			if instance.Status != domain.ClusterStatusUnlined ||
+				knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType){
 				continue
 			}
+
 			if len(response.BatchResults) <= 0 {
 				return fmt.Errorf("alloc resources is empty")
 			}
@@ -195,12 +214,16 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 		// Deal with Global Settings
 		tiupConfig.GlobalOptions.DataDir = filepath.Join(cluster.Id, "tidb-data")
 		tiupConfig.GlobalOptions.DeployDir = filepath.Join(cluster.Id, "tidb-deploy")
+		tiupConfig.GlobalOptions.LogDir = filepath.Join(cluster.Id, "tidb-log")
 		tiupConfig.GlobalOptions.User = "tidb"
 		tiupConfig.GlobalOptions.SSHPort = 22
 		tiupConfig.GlobalOptions.Arch = cluster.CpuArchitecture
-		tiupConfig.GlobalOptions.LogDir = filepath.Join(cluster.Id, "tidb-log")
+		if tiupConfig.GlobalOptions.Arch == "" {
+			tiupConfig.GlobalOptions.Arch = string(resource.X86)
+		}
 	}
 
+	var monitorHostComponent *domain.ComponentInstance
 	for _, component := range components {
 		for _, instance := range component.Nodes {
 			if instance.Status != domain.ClusterStatusUnlined {
@@ -213,7 +236,6 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 					Port: instance.PortList[0],
 					StatusPort: instance.PortList[1],
 				})
-
 			} else if component.ComponentType.ComponentType == "TiKV" {
 				tiupConfig.TiKVServers = append(tiupConfig.TiKVServers, &spec.TiKVSpec{
 					Host: instance.Host,
@@ -223,6 +245,12 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 					StatusPort: instance.PortList[1],
 				})
 			} else if component.ComponentType.ComponentType == "PD" {
+				if monitorHostComponent == nil && cluster.Status == domain.ClusterStatusUnlined {
+					monitorHostComponent = instance
+					port := knowledge.GetMonitoredSequence(cluster.Id)
+					tiupConfig.MonitoredOptions.NodeExporterPort = port
+					tiupConfig.MonitoredOptions.BlackboxExporterPort = port + 1
+				}
 				tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
 					Host: instance.Host,
 					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "pd-data"),
@@ -244,32 +272,42 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 				})
 			} else if component.ComponentType.ComponentType == "TiCDC" {
 				tiupConfig.CDCServers = append(tiupConfig.CDCServers, &spec.CDCSpec{
-					Host: instance.Host,
+					Host:      instance.Host,
 					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "cdc-data"),
 					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "cdc-deploy"),
-					LogDir: filepath.Join(instance.DiskPath, cluster.Id, "cdc-log"),
+					LogDir:    filepath.Join(instance.DiskPath, cluster.Id, "cdc-log"),
 				})
 			} else if component.ComponentType.ComponentType == "Grafana" {
-				tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
-					Host:            instance.Host,
-					DeployDir:       filepath.Join(instance.DiskPath, cluster.Id, "grafanas-deploy"),
-					AnonymousEnable: true,
-					DefaultTheme:    "light",
-					OrgName:         "Main Org.",
-					OrgRole:         "Viewer",
-				})
+				if monitorHostComponent != nil {
+					tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
+						Host:            monitorHostComponent.Host,
+						Port:            monitorHostComponent.PortList[2],
+						DeployDir:       filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "grafana-deploy"),
+						AnonymousEnable: true,
+						DefaultTheme:    "light",
+						OrgName:         "Main Org.",
+						OrgRole:         "Viewer",
+					})
+				}
 			} else if component.ComponentType.ComponentType == "Prometheus" {
-				tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
-					Host:      instance.Host,
-					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "prometheus-data"),
-					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "prometheus-deploy"),
-				})
+				if monitorHostComponent != nil {
+					tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
+						Host:      monitorHostComponent.Host,
+						Port:      monitorHostComponent.PortList[3],
+						DataDir:   filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "prometheus-data"),
+						DeployDir: filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "prometheus-deploy"),
+					})
+				}
 			} else if component.ComponentType.ComponentType == "AlertManger" {
-				tiupConfig.Alertmanagers = append(tiupConfig.Alertmanagers, &spec.AlertmanagerSpec{
-					Host:      instance.Host,
-					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "alertmanagers-data"),
-					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "alertmanagers-deploy"),
-				})
+				if monitorHostComponent != nil {
+					tiupConfig.Alertmanagers = append(tiupConfig.Alertmanagers, &spec.AlertmanagerSpec{
+						Host:        monitorHostComponent.Host,
+						WebPort:     monitorHostComponent.PortList[4],
+						ClusterPort: monitorHostComponent.PortList[5],
+						DataDir:     filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "alertmanagers-data"),
+						DeployDir:   filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "alertmanagers-deploy"),
+					})
+				}
 			}
 		}
 	}

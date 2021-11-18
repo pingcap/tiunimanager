@@ -150,7 +150,10 @@ func (flow *FlowWorkAggregation) AsyncStart() {
 
 func (flow *FlowWorkAggregation) Destroy(reason string) {
 	flow.FlowWork.Status = TaskStatusCanceled
-	flow.CurrentTask.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
+
+	if flow.CurrentTask != nil {
+		flow.CurrentTask.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
+	}
 
 	TaskRepo.Persist(flow.Context, flow)
 }

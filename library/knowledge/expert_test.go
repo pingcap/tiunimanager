@@ -18,6 +18,7 @@
 package knowledge
 
 import (
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
 )
@@ -131,4 +132,13 @@ func Test_GetComponentPortRange(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetMonitoredSequence(t *testing.T) {
+	port1 := GetMonitoredSequence("aaa")
+	port2 := GetMonitoredSequence("aaa")
+	assert.Equal(t, port1, port2)
+	port3 := GetMonitoredSequence("bbb")
+	assert.NotEqual(t, port3, port2)
+
 }

@@ -266,12 +266,15 @@ func DeleteCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string
 	}
 
 	flow, _ := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowDeleteCluster, operator)
-	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.Start()
+	if err != nil {
+		return nil, err
+	}
 
-	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	ClusterRepo.Persist(ctx, clusterAggregation)
-	return clusterAggregation, nil
+	flow.AddContext(contextClusterKey, clusterAggregation)
+
+	err = clusterAggregation.tryStartFlow(ctx, flow)
+
+	return clusterAggregation, err
 }
 
 func RestartCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
@@ -293,11 +296,7 @@ func RestartCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId strin
 
 	err = clusterAggregation.tryStartFlow(ctx, flow)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return clusterAggregation, nil
+	return clusterAggregation, err
 }
 
 func StopCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
@@ -314,12 +313,12 @@ func StopCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) 
 		return nil, err
 	}
 
+	clusterAggregation.Cluster.Offline()
 	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.Start()
 
-	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	ClusterRepo.Persist(ctx, clusterAggregation)
-	return clusterAggregation, nil
+	err = clusterAggregation.tryStartFlow(ctx, flow)
+
+	return clusterAggregation, err
 }
 
 func ListCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, req *clusterpb.ClusterQueryReqDTO) ([]*ClusterAggregation, int, error) {
@@ -745,7 +744,7 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id),
 	)
 	if err != nil {
-		getLogger().Errorf("call tiup api restart cluster err = %s", err.Error())
+		framework.LogWithContext(context).Errorf("call tiup api restart cluster err = %s", err.Error())
 		task.Fail(err)
 		return false
 	}
@@ -764,20 +763,21 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
-	getLogger().Infof("stop cluster %s", cluster.ClusterName)
+	framework.LogWithContext(context).Infof("stop cluster %s", cluster.ClusterName)
 	stopTaskId, err := secondparty.SecondParty.MicroSrvTiupStop(context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call tiup api stop cluster err = %s", err.Error())
 		task.Fail(err)
 		return false
 	}
-	context.SetData("stopTaskId", stopTaskId)
-	getLogger().Infof("got stopTaskId %s", strconv.Itoa(int(stopTaskId)))
 
-	// cluster stopping intermediate state
-	clusterAggregation.Cluster.Status = ClusterStatusStopping
-	clusterAggregation.StatusModified = true
-	ClusterRepo.Persist(context, clusterAggregation)
+	if err != nil {
+		framework.LogWithContext(context).Errorf("call tiup api stop cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+	framework.LogWithContext(context).Infof("got stopTaskId %s", strconv.Itoa(int(stopTaskId)))
+
 	task.Success(nil)
 	return true
 }
@@ -793,7 +793,6 @@ func (aggregation *ClusterAggregation) ExtractStatusDTO() *clusterpb.DisplayStat
 		DeleteTime:      cluster.DeleteTime.Unix(),
 		InProcessFlowId: int32(cluster.WorkFlowId),
 	}
-
 
 	return dto
 }

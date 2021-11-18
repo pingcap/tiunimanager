@@ -78,6 +78,7 @@ const (
 	TaskStatusProcessing TaskStatus = 1
 	TaskStatusFinished   TaskStatus = 2
 	TaskStatusError      TaskStatus = 3
+	TaskStatusCanceled   TaskStatus = 4
 )
 
 func (s TaskStatus) Display() string {
@@ -90,6 +91,8 @@ func (s TaskStatus) Display() string {
 	case TaskStatusFinished:
 		return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusFinished)
 	case TaskStatusError:
+		return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusError)
+	case TaskStatusCanceled:
 		return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusError)
 	}
 

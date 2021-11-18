@@ -73,6 +73,7 @@ var contextScaleOutReqKey = "scaleOutRequest"
 
 func (cluster *ClusterAggregation) tryStartFlow(ctx ctx.Context, flow *FlowWorkAggregation) error {
 	if cluster.CurrentWorkFlow != nil {
+		flow.Destroy("task conflicts")
 		return framework.NewTiEMErrorf(common.TIEM_TASK_CONFLICT, "task conflicts, current task %s, expected task %s", cluster.CurrentWorkFlow.FlowName, flow.Define.FlowName)
 	}
 

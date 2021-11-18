@@ -20,7 +20,6 @@ package domain
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -149,9 +148,10 @@ func (flow *FlowWorkAggregation) AsyncStart() {
 	go flow.Start()
 }
 
-func (flow *FlowWorkAggregation) Destroy() {
-	flow.FlowWork.Status = TaskStatusError
-	flow.CurrentTask.Fail(errors.New("workflow destroy"))
+func (flow *FlowWorkAggregation) Destroy(reason string) {
+	flow.FlowWork.Status = TaskStatusCanceled
+	flow.CurrentTask.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
+
 	TaskRepo.Persist(flow.Context, flow)
 }
 

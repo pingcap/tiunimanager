@@ -47,6 +47,7 @@ var CopyWritingContainer = map[string]map[string]string{
 		CWTaskStatusProcessing: "进行中",
 		CWTaskStatusFinished:   "完成",
 		CWTaskStatusError:      "失败",
+		CWTaskStatusCanceled:   "已取消",
 		CWFlowScaleOutCluster:  "扩容中",
 	},
 }
@@ -60,6 +61,7 @@ var CWTaskStatusInit = "CW_TaskStatusInit"
 var CWTaskStatusProcessing = "CW_TaskStatusProcessing"
 var CWTaskStatusFinished = "CW_TaskStatusFinished"
 var CWTaskStatusError = "CW_TaskStatusError"
+var CWTaskStatusCanceled = "CW_TaskStatusCanceled"
 
 var CWFlowCreateCluster = "CW_FlowCreateCluster"
 var CWFlowTakeoverCluster = "CW_FlowTakeoverCluster"

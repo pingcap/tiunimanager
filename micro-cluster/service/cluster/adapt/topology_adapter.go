@@ -247,7 +247,7 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 			} else if component.ComponentType.ComponentType == "PD" {
 				if monitorHostComponent == nil {
 					monitorHostComponent = instance
-					port := knowledge.GetMonitoredSequence()
+					port := knowledge.GetMonitoredSequence(cluster.Id)
 					tiupConfig.MonitoredOptions.NodeExporterPort = port
 					tiupConfig.MonitoredOptions.BlackboxExporterPort = port + 1
 				}

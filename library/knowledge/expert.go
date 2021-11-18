@@ -106,13 +106,19 @@ func LoadKnowledge() {
 	loadParameterKnowledge()
 }
 
-var MonitoredSequence = 11000
+var monitoredSequence = 11000
+var clusterMonitoredPort = map[string]int{}
 
 // GetMonitoredSequence
-// todo get global unique monitor port
-func GetMonitoredSequence() int {
-	MonitoredSequence = MonitoredSequence + 2
-	return MonitoredSequence
+// todo get global unique monitor port。to be replaced
+func GetMonitoredSequence(clusterId string) int {
+	if port, ok := clusterMonitoredPort[clusterId]; ok {
+		return port
+	}
+
+	monitoredSequence = monitoredSequence + 2
+	clusterMonitoredPort[clusterId] = monitoredSequence
+	return monitoredSequence
 }
 
 func loadSpecKnowledge() {

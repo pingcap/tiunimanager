@@ -19,6 +19,8 @@ package knowledge
 import (
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"math/rand"
+	"time"
 )
 
 var SpecKnowledge *ClusterSpecKnowledge
@@ -106,7 +108,6 @@ func LoadKnowledge() {
 	loadParameterKnowledge()
 }
 
-var monitoredSequence = 11000
 var clusterMonitoredPort = map[string]int{}
 
 // GetMonitoredSequence
@@ -116,9 +117,26 @@ func GetMonitoredSequence(clusterId string) int {
 		return port
 	}
 
-	monitoredSequence = monitoredSequence + 2
-	clusterMonitoredPort[clusterId] = monitoredSequence
-	return monitoredSequence
+	rand.Seed(time.Now().Unix())
+	start := rand.Intn(50) * 100  + 11000
+	for i := 0; i < 50; i++ {
+		existed := false
+		port := start + i * 2
+		for _, p := range clusterMonitoredPort {
+			if p == port {
+				existed = true
+				break
+			}
+		}
+
+		if !existed {
+			clusterMonitoredPort[clusterId] = port
+			return port
+		}
+	}
+
+	return 0
+
 }
 
 func loadSpecKnowledge() {

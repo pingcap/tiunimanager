@@ -38,6 +38,8 @@ type ClusterRepository interface {
 
 	Persist(ctx context.Context, aggregation *ClusterAggregation) error
 
+	PersistStatus(ctx context.Context, aggregation *ClusterAggregation) error
+
 	Load(ctx context.Context, id string) (cluster *ClusterAggregation, err error)
 
 	Query(ctx context.Context, clusterId, clusterName, clusterType, clusterStatus, clusterTag string, page, pageSize int) ([]*ClusterAggregation, int, error)

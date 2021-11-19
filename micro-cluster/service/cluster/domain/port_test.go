@@ -84,6 +84,10 @@ func (m MockClusterRepo) Persist(ctx context.Context, aggregation *ClusterAggreg
 	return nil
 }
 
+func (c MockClusterRepo) PersistStatus(ctx context.Context, aggregation *ClusterAggregation) error {
+	return nil
+}
+
 func (m MockClusterRepo) Load(ctx context.Context, id string) (cluster *ClusterAggregation, err error) {
 	return &ClusterAggregation{
 		Cluster: &Cluster{

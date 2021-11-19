@@ -27,7 +27,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 
-	cli "github.com/asim/go-micro/v3/client"
 	"github.com/pingcap-inc/tiem/library/client"
 
 	"github.com/gin-gonic/gin"
@@ -67,10 +66,7 @@ func Create(c *gin.Context) {
 		Demands:  demand,
 	}
 
-	respDTO, err := client.ClusterClient.CreateCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
-		o.RequestTimeout = time.Minute * 5
-		o.DialTimeout = time.Minute * 5
-	})
+	respDTO, err := client.ClusterClient.CreateCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -398,10 +394,7 @@ func Takeover(c *gin.Context) {
 		ClusterNames:     req.ClusterNames,
 	}
 
-	respDTO, err := client.ClusterClient.TakeoverClusters(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
-		o.RequestTimeout = time.Minute * 5
-		o.DialTimeout = time.Minute * 5
-	})
+	respDTO, err := client.ClusterClient.TakeoverClusters(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -544,11 +537,7 @@ func ScaleOut(c *gin.Context) {
 	}
 
 	// Scale out cluster
-	response, err := client.ClusterClient.ScaleOutCluster(framework.NewMicroCtxFromGinCtx(c),
-		request, func(options *cli.CallOptions) {
-		options.DialTimeout = time.Second * 5
-		options.RequestTimeout = time.Second * 5
-	})
+	response, err := client.ClusterClient.ScaleOutCluster(framework.NewMicroCtxFromGinCtx(c), request, controller.DefaultTimeout)
 
 	// Handle result and error
 	if err != nil {

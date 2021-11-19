@@ -39,8 +39,8 @@ type TaskDO struct {
 	ParentId   string `gorm:"default:null;index"`
 	Name       string `gorm:"default:null"`
 	ReturnType string `gorm:"default:null"`
-	Parameters string `gorm:"default:null"`
-	Result     string `gorm:"default:null"`
+	Parameters string `gorm:"type:text"`
+	Result     string `gorm:"type:text"`
 	StartTime  sql.NullTime
 	EndTime    sql.NullTime
 }

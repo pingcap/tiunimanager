@@ -19,7 +19,7 @@ package domain
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -88,19 +88,16 @@ func (t *TaskEntity) Processing() {
 	t.Status = TaskStatusProcessing
 }
 
+var defaultSuccessInfo = "success"
+
 func (t *TaskEntity) Success(result interface{}) {
 	t.Status = TaskStatusFinished
-	if result != nil {
-		r, err := json.Marshal(result)
-		if err != nil {
-			getLogger().Error(err)
-		} else {
-			t.Result = string(r)
-		}
-	} else {
-		t.Result = "success"
-	}
 	t.EndTime = time.Now().Unix()
+
+	if result == nil {
+		result = defaultSuccessInfo
+	}
+	t.Result = fmt.Sprintln(t.Result, result)
 }
 
 func (t *TaskEntity) Fail(e error) {

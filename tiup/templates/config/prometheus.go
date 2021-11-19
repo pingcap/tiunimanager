@@ -34,6 +34,7 @@ type PrometheusConfig struct {
 	TiEMAPIServers        []string
 	TiEMMetaDBServers     []string
 	TiEMClusterServers    []string
+	TiEMFileServers       []string
 }
 
 // NewPrometheusConfig returns a PrometheusConfig
@@ -52,6 +53,12 @@ func (c *PrometheusConfig) AddMetaDB(ip string, port uint64) *PrometheusConfig {
 // AddAPIServer add an alertmanager address
 func (c *PrometheusConfig) AddAPIServer(ip string, port uint64) *PrometheusConfig {
 	c.TiEMAPIServers = append(c.TiEMAPIServers, fmt.Sprintf("%s:%d", ip, port))
+	return c
+}
+
+// AddFileServer add an alertmanager address
+func (c *PrometheusConfig) AddFileServer(ip string, port uint64) *PrometheusConfig {
+	c.TiEMFileServers = append(c.TiEMFileServers, fmt.Sprintf("%s:%d", ip, port))
 	return c
 }
 

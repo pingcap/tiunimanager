@@ -30,12 +30,12 @@ import (
 	"github.com/pingcap/tiup/pkg/utils"
 )
 
-// APIServerSpec represents the Master topology specification in topology.yaml
-type APIServerSpec struct {
+// FileServerSpec represents the Master topology specification in topology.yaml
+type FileServerSpec struct {
 	Host            string                 `yaml:"host"`
 	SSHPort         int                    `yaml:"ssh_port,omitempty" validate:"ssh_port:editable"`
-	Port            int                    `yaml:"port,omitempty" default:"4116"`
-	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4123"`
+	Port            int                    `yaml:"port,omitempty" default:"4118"`
+	MetricsPort     int                    `yaml:"metrics_port,omitempty" default:"4124"`
 	DeployDir       string                 `yaml:"deploy_dir,omitempty"`
 	DataDir         string                 `yaml:"data_dir,omitempty"`
 	LogDir          string                 `yaml:"log_dir,omitempty"`
@@ -48,7 +48,7 @@ type APIServerSpec struct {
 }
 
 // Status queries current status of the instance
-func (s *APIServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
+func (s *FileServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 	client := utils.NewHTTPClient(statusQueryTimeout, tlsCfg)
 
 	path := "/system/check"
@@ -67,49 +67,49 @@ func (s *APIServerSpec) Status(tlsCfg *tls.Config, _ ...string) string {
 }
 
 // Role returns the component role of the instance
-func (s *APIServerSpec) Role() string {
-	return ComponentTiEMAPIServer
+func (s *FileServerSpec) Role() string {
+	return ComponentTiEMFileServer
 }
 
 // SSH returns the host and SSH port of the instance
-func (s *APIServerSpec) SSH() (string, int) {
+func (s *FileServerSpec) SSH() (string, int) {
 	return s.Host, s.SSHPort
 }
 
 // GetMainPort returns the main port of the instance
-func (s *APIServerSpec) GetMainPort() int {
+func (s *FileServerSpec) GetMainPort() int {
 	return s.Port
 }
 
 // IsImported implements the instance interface, not needed for tiem
-func (s *APIServerSpec) IsImported() bool {
+func (s *FileServerSpec) IsImported() bool {
 	return false
 }
 
 // IgnoreMonitorAgent returns if the node does not have monitor agents available
-func (s *APIServerSpec) IgnoreMonitorAgent() bool {
+func (s *FileServerSpec) IgnoreMonitorAgent() bool {
 	return false
 }
 
-// APIServerComponent represents TiEM component.
-type APIServerComponent struct{ Topology *Specification }
+// FileServerComponent represents TiEM component.
+type FileServerComponent struct{ Topology *Specification }
 
 // Name implements Component interface.
-func (c *APIServerComponent) Name() string {
-	return ComponentTiEMAPIServer
+func (c *FileServerComponent) Name() string {
+	return ComponentTiEMFileServer
 }
 
 // Role implements Component interface.
-func (c *APIServerComponent) Role() string {
-	return RoleTiEMAPI
+func (c *FileServerComponent) Role() string {
+	return RoleTiEMFile
 }
 
 // Instances implements Component interface.
-func (c *APIServerComponent) Instances() []Instance {
+func (c *FileServerComponent) Instances() []Instance {
 	ins := make([]Instance, 0)
-	for _, s := range c.Topology.APIServers {
+	for _, s := range c.Topology.FileServers {
 		s := s
-		ins = append(ins, &APIServerInstance{
+		ins = append(ins, &FileServerInstance{
 			BaseInstance: BaseInstance{
 				InstanceSpec: s,
 				Name:         c.Name(),
@@ -137,14 +137,14 @@ func (c *APIServerComponent) Instances() []Instance {
 	return ins
 }
 
-// APIServerInstance represent the TiEM instance
-type APIServerInstance struct {
+// FileServerInstance represent the TiEM instance
+type FileServerInstance struct {
 	BaseInstance
 	topo *Specification
 }
 
 // InitConfig implement Instance interface
-func (i *APIServerInstance) InitConfig(
+func (i *FileServerInstance) InitConfig(
 	ctx context.Context,
 	e ctxt.Executor,
 	clusterName,
@@ -156,25 +156,25 @@ func (i *APIServerInstance) InitConfig(
 		return err
 	}
 
-	spec := i.InstanceSpec.(*APIServerSpec)
+	spec := i.InstanceSpec.(*FileServerSpec)
 
-	cfg := config.NewAPIServerConfig().
+	cfg := config.NewFileServerConfig().
 		WithPrometheusAddress(i.topo.MonitorEndpoints()).
 		WithGrafanaAddress(i.topo.GrafanaEndpoints()).
 		WithAlertManagerAddress(i.topo.AlertManagerEndpoints()).
 		WithKibanaAddress(i.topo.KibanaEndpoints()).
 		WithJaegerAddress(i.topo.TracerEndpoints()).
 		WithElasticsearchAddress(i.topo.ElasticSearchEndpoints())
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("openapi_%s_%d.yml", i.GetHost(), i.GetPort()))
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("file_%s_%d.yml", i.GetHost(), i.GetPort()))
 	if err := cfg.ConfigToFile(fp); err != nil {
 		return err
 	}
-	dst := filepath.Join(paths.Deploy, "conf", "env.yml")
+	dst := filepath.Join(paths.Deploy, "conf", "file.yml")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}
 
-	scpt := scripts.NewTiEMAPIServerScript(
+	scpt := scripts.NewTiEMFileServerScript(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Data[0],
@@ -188,11 +188,11 @@ func (i *APIServerInstance) InitConfig(
 		WithElasticsearch(i.topo.ElasticSearchEndpoints()).
 		WithEnableHttps(spec.EnableHttps)
 
-	fp = filepath.Join(paths.Cache, fmt.Sprintf("run_openapi-server_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp = filepath.Join(paths.Cache, fmt.Sprintf("run_file-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
-	dst = filepath.Join(paths.Deploy, "scripts", "run_openapi-server.sh")
+	dst = filepath.Join(paths.Deploy, "scripts", "run_file-server.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}
@@ -206,18 +206,13 @@ func (i *APIServerInstance) InitConfig(
 		false); err != nil {
 		return err
 	}
-	if _, _, err := e.Execute(ctx,
-		fmt.Sprintf("cp -r %s/bin/etc %s/", paths.Deploy, paths.Deploy),
-		false); err != nil {
-		return err
-	}
 
 	// no config file needed
 	return nil
 }
 
 // ScaleConfig deploy temporary config on scaling
-func (i *APIServerInstance) ScaleConfig(
+func (i *FileServerInstance) ScaleConfig(
 	ctx context.Context,
 	e ctxt.Executor,
 	topo Topology,
@@ -230,24 +225,24 @@ func (i *APIServerInstance) ScaleConfig(
 		return err
 	}
 
-	spec := i.InstanceSpec.(*APIServerSpec)
-	cfg := config.NewAPIServerConfig().
+	spec := i.InstanceSpec.(*FileServerSpec)
+	cfg := config.NewFileServerConfig().
 		WithPrometheusAddress(i.topo.MonitorEndpoints()).
 		WithGrafanaAddress(i.topo.GrafanaEndpoints()).
 		WithAlertManagerAddress(i.topo.AlertManagerEndpoints()).
 		WithKibanaAddress(i.topo.KibanaEndpoints()).
 		WithJaegerAddress(i.topo.TracerEndpoints()).
 		WithElasticsearchAddress(i.topo.ElasticSearchEndpoints())
-	fp := filepath.Join(paths.Cache, fmt.Sprintf("openapi_%s_%d.yml", i.GetHost(), i.GetPort()))
+	fp := filepath.Join(paths.Cache, fmt.Sprintf("file_%s_%d.yml", i.GetHost(), i.GetPort()))
 	if err := cfg.ConfigToFile(fp); err != nil {
 		return err
 	}
-	dst := filepath.Join(paths.Deploy, "conf", "env.yml")
+	dst := filepath.Join(paths.Deploy, "conf", "file.yml")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}
 
-	scpt := scripts.NewTiEMAPIServerScript(
+	scpt := scripts.NewTiEMFileServerScript(
 		i.GetHost(),
 		paths.Deploy,
 		paths.Data[0],
@@ -261,13 +256,13 @@ func (i *APIServerInstance) ScaleConfig(
 		WithElasticsearch(i.topo.ElasticSearchEndpoints()).
 		WithEnableHttps(spec.EnableHttps)
 
-	fp = filepath.Join(paths.Cache, fmt.Sprintf("run_openapi-server_%s_%d.sh", i.GetHost(), i.GetPort()))
+	fp = filepath.Join(paths.Cache, fmt.Sprintf("run_file-server_%s_%d.sh", i.GetHost(), i.GetPort()))
 	log.Infof("script path: %s", fp)
 	if err := scpt.ScriptToFile(fp); err != nil {
 		return err
 	}
 
-	dst = filepath.Join(paths.Deploy, "scripts", "run_openapi-server.sh")
+	dst = filepath.Join(paths.Deploy, "scripts", "run_file-server.sh")
 	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
 		return err
 	}

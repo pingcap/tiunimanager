@@ -64,6 +64,15 @@ func (u *UpdateMeta) Execute(ctx context.Context) error {
 	}
 	topo.APIServers = apiServers
 
+	fileServers := make([]*spec.FileServerSpec, 0)
+	for i, instance := range (&spec.FileServerComponent{Topology: topo}).Instances() {
+		if deleted.Exist(instance.ID()) {
+			continue
+		}
+		fileServers = append(fileServers, topo.FileServers[i])
+	}
+	topo.FileServers = fileServers
+
 	webServers := make([]*spec.WebServerSpec, 0)
 	for i, instance := range (&spec.WebServerComponent{Topology: topo}).Instances() {
 		if deleted.Exist(instance.ID()) {

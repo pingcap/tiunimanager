@@ -249,12 +249,25 @@ func (i *WebServerInstance) InitConfig(
 		return err
 	}
 
-	srvList := config.NewNginxServerList(i.topo.APIServerEndpoints())
+	openApiSrvList := config.NewNginxServerList(i.topo.APIServerEndpoints())
 	fp = filepath.Join(paths.Cache, fmt.Sprintf("nginx_server_config_%s_%d.conf", i.GetHost(), i.GetPort()))
-	if err := srvList.ConfigToFile(fp); err != nil {
+	if err := openApiSrvList.ConfigToFile(fp); err != nil {
 		return err
 	}
 	dst = filepath.Join(paths.Deploy, "conf", "server_list.conf")
+	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
+		return err
+	}
+
+	fileSrvList := config.NewNginxServerList(i.topo.FileServerEndpoints())
+	fp = filepath.Join(paths.Cache, fmt.Sprintf("nginx_server_config_%s_%d.conf", i.GetHost(), i.GetPort()))
+	if err := fileSrvList.ConfigToFile(fp); err != nil {
+		return err
+	}
+	dst = filepath.Join(paths.Deploy, "conf", "file_server_list.conf")
+	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
+		return err
+	}
 	return e.Transfer(ctx, fp, dst, false, 0)
 }
 
@@ -318,11 +331,24 @@ func (i *WebServerInstance) ScaleConfig(
 		return err
 	}
 
-	srvList := config.NewNginxServerList(i.topo.APIServerEndpoints())
+	openApiSrvList := config.NewNginxServerList(i.topo.APIServerEndpoints())
 	fp = filepath.Join(paths.Cache, fmt.Sprintf("nginx_server_config_%s_%d.conf", i.GetHost(), i.GetPort()))
-	if err := srvList.ConfigToFile(fp); err != nil {
+	if err := openApiSrvList.ConfigToFile(fp); err != nil {
 		return err
 	}
 	dst = filepath.Join(paths.Deploy, "conf", "server_list.conf")
+	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
+		return err
+	}
+
+	fileSrvList := config.NewNginxServerList(i.topo.FileServerEndpoints())
+	fp = filepath.Join(paths.Cache, fmt.Sprintf("nginx_server_config_%s_%d.conf", i.GetHost(), i.GetPort()))
+	if err := fileSrvList.ConfigToFile(fp); err != nil {
+		return err
+	}
+	dst = filepath.Join(paths.Deploy, "conf", "file_server_list.conf")
+	if err := e.Transfer(ctx, fp, dst, false, 0); err != nil {
+		return err
+	}
 	return e.Transfer(ctx, fp, dst, false, 0)
 }

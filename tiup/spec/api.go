@@ -43,7 +43,7 @@ type APIServerSpec struct {
 	Arch            string                 `yaml:"arch,omitempty"`
 	OS              string                 `yaml:"os,omitempty"`
 	LogLevel        string                 `yaml:"log_level,omitempty" default:"info" validate:"log_level:editable"`
-	EnableHttps     string                 `yaml:"enable_https,omitempty" default:"true"`
+	EnableHttps     string                 `yaml:"enable_https,omitempty" default:"false"`
 	ResourceControl meta.ResourceControl   `yaml:"resource_control,omitempty" validate:"resource_control:editable"`
 }
 

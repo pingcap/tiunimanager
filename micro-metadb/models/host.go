@@ -692,7 +692,7 @@ func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbpb.DBAllocRequest) (res
 				return nil, status.Errorf(codes.Internal, "alloc resources in host %s with %dth require failed, %v", require.Location.Host, i, err)
 			}
 			results.Results = append(results.Results, res...)
-		case rt.PortsInAllHosts:
+		case rt.ClusterPorts:
 			res, err := allocPortsInRegion(tx, req.Applicant, i, require)
 			if err != nil {
 				return nil, status.Errorf(codes.Internal, "alloc region port range in region %s with %dth require failed, %v", require.Location.Region, i, err)

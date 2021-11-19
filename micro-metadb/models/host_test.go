@@ -861,7 +861,7 @@ func CreateTestHost(region, zone, rack, hostName, ip, clusterType, purpose, disk
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		CpuCores:     freeCpuCores,
-		Memory:       freeCpuCores,
+		Memory:       freeMemory,
 		FreeCpuCores: freeCpuCores,
 		FreeMemory:   freeMemory,
 		Nic:          "1GE",
@@ -2419,17 +2419,11 @@ func TestAllocResources_Host_Recycle_Strategy(t *testing.T) {
 	}
 }
 
-func TestAllocResources_PortsInAllHosts_Strategy(t *testing.T) {
+func Test_AllocResources_ClusterPorts_Strategy(t *testing.T) {
 	var ids [3]string
 	ids[0], _ = CreateTestHost("Region29", "Region29,Zone5", "Region29,Zone5,3-1", "HostName1", "429.111.111.137", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 3)
 	ids[1], _ = CreateTestHost("Region29", "Region29,Zone5", "Region29,Zone5,3-1", "HostName2", "429.111.111.138", string(resource.Database), string(resource.Compute), string(resource.SSD), 16, 64, 3)
 	ids[2], _ = CreateTestHost("Region29", "Region29,Zone5", "Region29,Zone5,3-1", "HostName3", "429.111.111.139", string(resource.Database), string(resource.Compute), string(resource.SSD), 15, 64, 3)
-	// Host Status should be inused or exhausted, so delete would failed
-	/*
-		defer Dao.ResourceManager().DeleteHost(id1)
-		defer Dao.ResourceManager().DeleteHost(id2)
-		defer Dao.ResourceManager().DeleteHost(id3)
-	*/
 
 	loc1 := new(dbpb.DBLocation)
 	loc1.Region = "Region29"
@@ -2451,8 +2445,8 @@ func TestAllocResources_PortsInAllHosts_Strategy(t *testing.T) {
 
 	var test_req dbpb.DBAllocRequest
 	test_req.Applicant = new(dbpb.DBApplicant)
-	test_req.Applicant.HolderId = "TestCluster1"
-	test_req.Applicant.RequestId = "TestRequestID1"
+	test_req.Applicant.HolderId = "TestCluster29"
+	test_req.Applicant.RequestId = "TestRequestID29"
 	test_req.Requires = append(test_req.Requires, &dbpb.DBAllocRequirement{
 		Location:   loc1,
 		HostFilter: filter1,
@@ -2474,7 +2468,7 @@ func TestAllocResources_PortsInAllHosts_Strategy(t *testing.T) {
 	test_req.Requires = append(test_req.Requires, &dbpb.DBAllocRequirement{
 		Location:   loc2,
 		HostFilter: filter1,
-		Strategy:   int32(resource.PortsInAllHosts),
+		Strategy:   int32(resource.ClusterPorts),
 		Require:    require2,
 		Count:      1,
 	})
@@ -2534,6 +2528,215 @@ func TestAllocResources_PortsInAllHosts_Strategy(t *testing.T) {
 					assert.Equal(t, test_req.Applicant.HolderId, usedPorts[i+5].HolderId)
 					assert.Equal(t, test_req.Applicant.RequestId, usedPorts[i+5].RequestId)
 				}
+			}
+			var request dbpb.DBRecycleRequest
+			var recycleRequire dbpb.DBRecycleRequire
+			recycleRequire.HolderId = "TestCluster29"
+
+			recycleRequire.RecycleType = int32(resource.RecycleHolder)
+			request.RecycleReqs = append(request.RecycleReqs, &recycleRequire)
+			err = Dao.resourceManager.RecycleAllocResources(context.TODO(), &request)
+			assert.Nil(t, err)
+			var host2 resource.Host
+			MetaDB.First(&host2, "IP = ?", "429.111.111.138")
+			assert.Equal(t, int32(16), host2.FreeCpuCores)
+			assert.Equal(t, int32(64), host2.FreeMemory)
+			assert.True(t, host2.Stat == int32(resource.HOST_LOADLESS))
+			var usedPorts2 []resource.UsedPort
+			MetaDB.Order("port").Model(&resource.UsedPort{}).Where("holder_id = ?", "TestCluster29").Scan(&usedPorts2)
+			assert.Equal(t, 0, len(usedPorts2))
+
+			for _, id := range ids {
+				err = Dao.ResourceManager().DeleteHost(context.TODO(), id)
+				assert.Nil(t, err)
+			}
+		})
+	}
+}
+
+func Test_AllocResources_ClusterPorts_With_Diff_Hosts_Strategy(t *testing.T) {
+	var ids [3]string
+	ids[0], _ = CreateTestHost("Region31", "Region31,Zone35", "Region31,Zone35,3-1", "HostName1", "431.111.111.137", string(resource.Database), string(resource.Compute), string(resource.SSD), 17, 64, 3)
+	ids[1], _ = CreateTestHost("Region31", "Region31,Zone35", "Region31,Zone35,3-1", "HostName2", "431.111.111.138", string(resource.Database), string(resource.Compute), string(resource.SSD), 16, 64, 3)
+	ids[2], _ = CreateTestHost("Region31", "Region31,Zone35", "Region31,Zone35,3-1", "HostName3", "431.111.111.139", string(resource.Database), string(resource.Compute), string(resource.SSD), 15, 64, 3)
+
+	loc1 := new(dbpb.DBLocation)
+	loc1.Region = "Region31"
+	loc1.Zone = "Zone35"
+	loc1.Host = "431.111.111.137"
+
+	require1 := new(dbpb.DBRequirement)
+	require1.ComputeReq = new(dbpb.DBComputeRequirement)
+	require1.ComputeReq.CpuCores = 4
+	require1.ComputeReq.Memory = 8
+	require1.DiskReq = new(dbpb.DBDiskRequirement)
+	require1.DiskReq.NeedDisk = false
+	require1.PortReq = append(require1.PortReq, &dbpb.DBPortRequirement{
+		Start:   10000,
+		End:     10005,
+		PortCnt: 5,
+	})
+
+	var test_req dbpb.DBAllocRequest
+	test_req.Applicant = new(dbpb.DBApplicant)
+	test_req.Applicant.HolderId = "TestCluster31"
+	test_req.Applicant.RequestId = "TestRequestID31"
+	test_req.Requires = append(test_req.Requires, &dbpb.DBAllocRequirement{
+		Location: loc1,
+		Strategy: int32(resource.UserSpecifyHost),
+		Require:  require1,
+		Count:    1,
+	})
+
+	loc2 := new(dbpb.DBLocation)
+	loc2.Region = "Region31"
+	loc2.Zone = "Zone35"
+	loc2.Host = "431.111.111.138"
+
+	require2 := new(dbpb.DBRequirement)
+	require2.ComputeReq = new(dbpb.DBComputeRequirement)
+	require2.ComputeReq.CpuCores = 4
+	require2.ComputeReq.Memory = 8
+	require2.DiskReq = new(dbpb.DBDiskRequirement)
+	require2.DiskReq.Capacity = 256
+	require2.DiskReq.DiskType = string(resource.SSD)
+	require2.DiskReq.NeedDisk = true
+	require2.PortReq = append(require2.PortReq, &dbpb.DBPortRequirement{
+		Start:   10008,
+		End:     10011,
+		PortCnt: 3,
+	})
+
+	test_req.Requires = append(test_req.Requires, &dbpb.DBAllocRequirement{
+		Location: loc2,
+		Strategy: int32(resource.UserSpecifyHost),
+		Require:  require2,
+		Count:    1,
+	})
+
+	loc3 := new(dbpb.DBLocation)
+	loc3.Region = "Region31"
+	loc3.Zone = "Zone35"
+	loc3.Host = "431.111.111.139"
+
+	require3 := new(dbpb.DBRequirement)
+	require3.ComputeReq = new(dbpb.DBComputeRequirement)
+	require3.ComputeReq.CpuCores = 4
+	require3.ComputeReq.Memory = 8
+	require3.DiskReq = new(dbpb.DBDiskRequirement)
+	require3.DiskReq.NeedDisk = false
+	require3.PortReq = append(require3.PortReq, &dbpb.DBPortRequirement{
+		Start:   10011,
+		End:     10015,
+		PortCnt: 2,
+	})
+
+	test_req.Requires = append(test_req.Requires, &dbpb.DBAllocRequirement{
+		Location: loc3,
+		Strategy: int32(resource.UserSpecifyHost),
+		Require:  require3,
+		Count:    1,
+	})
+
+	// 431.111.111.137 used 10000-10004, 431.111.111.138 used 10008-10010, 431.111.111.137 used 10011-10012
+	// Cluster Ports can use 10005,10006,10007, 100013, 100014
+	var batchReq dbpb.DBBatchAllocRequest
+	batchReq.BatchRequests = append(batchReq.BatchRequests, &test_req)
+	assert.Equal(t, 1, len(batchReq.BatchRequests))
+
+	type args struct {
+		request *dbpb.DBBatchAllocRequest
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"normal", args{
+			request: &batchReq,
+		}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rsp, err := Dao.ResourceManager().AllocResourcesInBatch(context.TODO(), tt.args.request)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			assert.Equal(t, 1, len(rsp.BatchResults))
+			assert.Equal(t, 3, len(rsp.BatchResults[0].Results))
+			assert.Equal(t, int32(2), rsp.BatchResults[0].Results[2].Reqseq)
+			assert.Equal(t, int32(10003), rsp.BatchResults[0].Results[0].PortRes[0].Ports[3])
+			assert.Equal(t, int32(10010), rsp.BatchResults[0].Results[1].PortRes[0].Ports[2])
+			assert.Equal(t, int32(10012), rsp.BatchResults[0].Results[2].PortRes[0].Ports[1])
+
+			loc := new(dbpb.DBLocation)
+			loc.Region = "Region31"
+			filter := new(dbpb.DBFilter)
+			filter.Arch = string(resource.X86)
+
+			require := new(dbpb.DBRequirement)
+			require.PortReq = append(require.PortReq, &dbpb.DBPortRequirement{
+				Start:   10000,
+				End:     10015,
+				PortCnt: 5,
+			})
+
+			var test_req2 dbpb.DBAllocRequest
+			test_req2.Applicant = new(dbpb.DBApplicant)
+			test_req2.Applicant.HolderId = "TestCluster31"
+			test_req2.Applicant.RequestId = "TestRequestID32"
+			test_req2.Requires = append(test_req2.Requires, &dbpb.DBAllocRequirement{
+				Location:   loc,
+				HostFilter: filter,
+				Strategy:   int32(resource.ClusterPorts),
+				Require:    require,
+				Count:      1,
+			})
+
+			var batchReq dbpb.DBBatchAllocRequest
+			batchReq.BatchRequests = append(batchReq.BatchRequests, &test_req2)
+			assert.Equal(t, 1, len(batchReq.BatchRequests))
+			rsp, err = Dao.ResourceManager().AllocResourcesInBatch(context.TODO(), &batchReq)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AllocHosts() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			assert.Equal(t, int32(10005), rsp.BatchResults[0].Results[0].PortRes[0].Ports[0])
+			assert.Equal(t, int32(10006), rsp.BatchResults[0].Results[0].PortRes[0].Ports[1])
+			assert.Equal(t, int32(10007), rsp.BatchResults[0].Results[0].PortRes[0].Ports[2])
+			assert.Equal(t, int32(10013), rsp.BatchResults[0].Results[0].PortRes[0].Ports[3])
+			assert.Equal(t, int32(10014), rsp.BatchResults[0].Results[0].PortRes[0].Ports[4])
+
+			for _, id := range ids {
+				var usedPorts []resource.UsedPort
+				MetaDB.Order("port").Model(&resource.UsedPort{}).Where("request_id = ? and host_id = ?", "TestRequestID32", id).Scan(&usedPorts)
+				assert.Equal(t, 5, len(usedPorts))
+				assert.Equal(t, int32(10005), usedPorts[0].Port)
+				assert.Equal(t, int32(10006), usedPorts[1].Port)
+				assert.Equal(t, int32(10007), usedPorts[2].Port)
+				assert.Equal(t, int32(10013), usedPorts[3].Port)
+				assert.Equal(t, int32(10014), usedPorts[4].Port)
+			}
+
+			var request dbpb.DBRecycleRequest
+			var recycleRequire dbpb.DBRecycleRequire
+			recycleRequire.HolderId = "TestCluster31"
+
+			recycleRequire.RecycleType = int32(resource.RecycleHolder)
+			request.RecycleReqs = append(request.RecycleReqs, &recycleRequire)
+			err = Dao.resourceManager.RecycleAllocResources(context.TODO(), &request)
+			assert.Nil(t, err)
+			var host2 resource.Host
+			MetaDB.First(&host2, "IP = ?", "431.111.111.138")
+			assert.Equal(t, int32(16), host2.FreeCpuCores)
+			assert.Equal(t, int32(64), host2.FreeMemory)
+			assert.True(t, host2.Stat == int32(resource.HOST_LOADLESS))
+			var usedPorts2 []resource.UsedPort
+			MetaDB.Order("port").Model(&resource.UsedPort{}).Where("holder_id = ?", "TestCluster31").Scan(&usedPorts2)
+			assert.Equal(t, 0, len(usedPorts2))
+
+			for _, id := range ids {
+				err = Dao.ResourceManager().DeleteHost(context.TODO(), id)
+				assert.Nil(t, err)
 			}
 		})
 	}

@@ -68,7 +68,7 @@ const (
 	DiffRackBestEffort                      // Require 'Region' and 'Zone', try best effort to alloc host in diff rack
 	UserSpecifyRack                         // Require 'Region' 'Zone' and 'Rack', return diff hosts in Rack
 	UserSpecifyHost                         // Return Resource in the Host Specified
-	PortsInAllHosts                         // Returns port range in every host within a region
+	ClusterPorts                            // Returns port range in every host within a region for cluster
 )
 
 type AllocRequirement struct {

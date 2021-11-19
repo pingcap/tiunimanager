@@ -982,7 +982,7 @@ func Test_prepareResourceSucceed(t *testing.T) {
 			},
 		})
 
-		assert.Equal(t, fmt.Sprintln("", "alloc succeed with hosts: [127.0.0.1 127.0.0.2 127.0.0.3]"), task1.Result)
+		assert.Equal(t, fmt.Sprintln("", fmt.Sprintf("alloc succeed with hosts: [127.0.0.1 127.0.0.2 127.0.0.3]")), task1.Result)
 
 	})
 
@@ -1019,8 +1019,7 @@ func Test_prepareResourceSucceed(t *testing.T) {
 				},
 			},
 		})
-
-		assert.Equal(t, fmt.Sprintln("", "alloc succeed with hosts: [127.0.0.3]"), task2.Result)
+		assert.Equal(t, fmt.Sprintln("", fmt.Sprintf("alloc succeed with hosts: [127.0.0.3]")), task2.Result)
 
 	})
 

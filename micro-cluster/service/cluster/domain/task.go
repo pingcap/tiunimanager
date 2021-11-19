@@ -98,7 +98,9 @@ func (t *TaskEntity) Success(result ...interface{}) {
 		result = []interface{}{defaultSuccessInfo}
 	}
 
-	t.Result = fmt.Sprintln(t.Result, result)
+	for _, r := range result {
+		t.Result = fmt.Sprintln(t.Result, r)
+	}
 }
 
 func (t *TaskEntity) Fail(e error) {

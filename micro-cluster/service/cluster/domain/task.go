@@ -20,7 +20,6 @@ package domain
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -98,6 +97,8 @@ func (t *TaskEntity) Success(result interface{}) {
 		} else {
 			t.Result = string(r)
 		}
+	} else {
+		t.Result = "success"
 	}
 	t.EndTime = time.Now().Unix()
 }
@@ -143,9 +144,17 @@ func (flow *FlowWorkAggregation) Start() {
 	TaskRepo.Persist(flow.Context, flow)
 }
 
-func (flow *FlowWorkAggregation) Destroy() {
-	flow.FlowWork.Status = TaskStatusError
-	flow.CurrentTask.Fail(errors.New("workflow destroy"))
+func (flow *FlowWorkAggregation) AsyncStart() {
+	go flow.Start()
+}
+
+func (flow *FlowWorkAggregation) Destroy(reason string) {
+	flow.FlowWork.Status = TaskStatusCanceled
+
+	if flow.CurrentTask != nil {
+		flow.CurrentTask.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
+	}
+
 	TaskRepo.Persist(flow.Context, flow)
 }
 

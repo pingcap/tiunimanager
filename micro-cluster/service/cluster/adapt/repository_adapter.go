@@ -105,7 +105,7 @@ func (c ClusterRepoAdapter) AddCluster(ctx context.Context, cluster *domain.Clus
 
 func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.ClusterAggregation) error {
 
-	if err := persistClusterStatus(ctx, aggregation); err != nil {
+	if err := c.PersistStatus(ctx, aggregation); err != nil {
 		framework.LogWithContext(ctx).Errorf("persist cluster error, module %s, error %v", "status", err)
 		return err
 	}
@@ -133,7 +133,7 @@ func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.Clu
 	return nil
 }
 
-func persistClusterStatus(ctx context.Context, aggregation *domain.ClusterAggregation) error {
+func (c ClusterRepoAdapter) PersistStatus(ctx context.Context, aggregation *domain.ClusterAggregation) error {
 	if aggregation.StatusModified || aggregation.FlowModified {
 		if aggregation.Cluster.Status == domain.ClusterStatusDeleted {
 			_, err := client.DBClient.DeleteCluster(ctx,  &dbpb.DBDeleteClusterRequest{

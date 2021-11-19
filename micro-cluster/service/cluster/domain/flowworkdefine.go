@@ -41,7 +41,7 @@ func InitFlowMap() {
 				"startupDone":  {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
 				"syncTopologyDone":  {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
 				"onlineDone":   {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
+				"fail":         {"fail", "", "", SyncFuncTask, CompositeExecutor(ClusterFail, freedResourceAfterFailure)},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -53,8 +53,8 @@ func InitFlowMap() {
 				"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", PollingTasK, destroyCluster},
 				"destroyClusterDone": {"deleteCluster", "deleteClusterDone", "fail", SyncFuncTask, deleteCluster},
 				"deleteClusterDone":  {"freedResource", "freedResourceDone", "fail", SyncFuncTask, freedResource},
-				"freedResourceDone":  {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":               {"fail", "", "", SyncFuncTask, ClusterFail},
+				"freedResourceDone":  {"end", "", "", SyncFuncTask, CompositeExecutor(ClusterEnd, ClusterPersist)},
+				"fail":               {"fail", "", "", SyncFuncTask, CompositeExecutor(ClusterFail, ClusterPersist)},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -139,8 +139,8 @@ func InitFlowMap() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":       {"clusterRestart", "restartDone", "fail", PollingTasK, clusterRestart},
 				"restartDone": {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
-				"onlineDone":  {"end", "", "fail", SyncFuncTask, ClusterEnd},
-				"fail":        {"fail", "", "", SyncFuncTask, ClusterFail},
+				"onlineDone":  {"end", "", "fail", SyncFuncTask, CompositeExecutor(ClusterEnd, ClusterPersist)},
+				"fail":               {"fail", "", "", SyncFuncTask, CompositeExecutor(ClusterFail, ClusterPersist)},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -150,8 +150,8 @@ func InitFlowMap() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":       {"clusterStop", "stopDone", "fail", PollingTasK, clusterStop},
 				"stopDone":    {"setClusterOffline", "offlineDone", "fail", SyncFuncTask, setClusterOffline},
-				"offlineDone": {"end", "", "fail", SyncFuncTask, ClusterEnd},
-				"fail":        {"fail", "", "", SyncFuncTask, ClusterFail},
+				"offlineDone": {"end", "", "fail", SyncFuncTask, CompositeExecutor(ClusterEnd, ClusterPersist)},
+				"fail":        {"fail", "", "", SyncFuncTask, CompositeExecutor(ClusterFail, ClusterPersist)},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -208,16 +208,35 @@ func (define *FlowWorkDefine) getInstance(ctx context.Context, bizId string, dat
 	}
 }
 
+type TaskExecutor func(task *TaskEntity, context *FlowContext) bool
+
 type TaskDefine struct {
 	Name         string
 	SuccessEvent string
 	FailEvent    string
 	ReturnType   TaskReturnType
-	Executor     func(task *TaskEntity, context *FlowContext) bool
+	Executor     TaskExecutor
+}
+
+func CompositeExecutor(executors ...TaskExecutor) TaskExecutor {
+	return func(task *TaskEntity, context *FlowContext) bool {
+		for _, executor := range executors {
+			if executor(task, context) {
+				continue
+			} else {
+				return false
+			}
+		}
+		return true
+	}
+}
+
+func ClusterPersist(task *TaskEntity, context *FlowContext) bool {
+	return ClusterRepo.Persist(context, context.GetData(contextClusterKey).(*ClusterAggregation)) == nil
 }
 
 func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
-	task.Status = TaskStatusFinished
+	task.Success(nil)
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.Cluster.WorkFlowId = 0
 	clusterAggregation.FlowModified = true
@@ -236,6 +255,7 @@ func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
 
 func ClusterFail(task *TaskEntity, context *FlowContext) bool {
 	task.Status = TaskStatusError
+	task.Result = "fail"
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	clusterAggregation.Cluster.WorkFlowId = 0
 	clusterAggregation.FlowModified = true

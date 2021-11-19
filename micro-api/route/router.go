@@ -96,6 +96,7 @@ func Route(g *gin.Engine) {
 
 			// Scale cluster
 			cluster.POST("/:clusterId/scale-out", clusterApi.ScaleOut)
+			cluster.POST("/:clusterId/scale-in", clusterApi.ScaleIn)
 
 			// Params
 			cluster.GET("/:clusterId/params", parameterApi.QueryParams)

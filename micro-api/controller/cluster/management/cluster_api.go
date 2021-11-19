@@ -567,3 +567,20 @@ func ScaleOut(c *gin.Context) {
 		c.JSON(http.StatusOK, result)
 	}
 }
+
+// ScaleIn scale in a cluster
+// @Summary scale in a cluster
+// @Description scale in a cluster
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param scaleInReq body ScaleInReq true "scale in request"
+// @Success 200 {object} controller.CommonResult{data=ScaleInClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/scale-in [post]
+func ScaleIn(c *gin.Context) {
+
+}

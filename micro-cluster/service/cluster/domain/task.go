@@ -237,7 +237,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) bool {
 				return false
 			}
 			if stat == dbpb.TiupTaskStatus_Finished {
-				task.Success(nil)
+				task.Success(statString)
 				return flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
 			}
 		}

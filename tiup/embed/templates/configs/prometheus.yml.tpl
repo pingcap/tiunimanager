@@ -63,6 +63,9 @@ scrape_configs:
 {{- range .TiEMClusterServers}}
         - '{{.}}'
 {{- end}}
+{{- range .TiEMFileServers}}
+        - '{{.}}'
+{{- end}}
 
 #  - job_name: 'tidb_cluster'
 #    scrape_interval: 15s

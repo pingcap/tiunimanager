@@ -174,6 +174,8 @@ func (flow *FlowWorkAggregation) executeTask(task *TaskEntity, taskDefine *TaskD
 	flow.CurrentTask = task
 	flow.Tasks = append(flow.Tasks, task)
 	task.Processing()
+	TaskRepo.Persist(flow.Context, flow)
+
 	return taskDefine.Executor(task, &flow.Context)
 }
 

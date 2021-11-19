@@ -90,13 +90,14 @@ func (t *TaskEntity) Processing() {
 
 var defaultSuccessInfo = "success"
 
-func (t *TaskEntity) Success(result interface{}) {
+func (t *TaskEntity) Success(result ...interface{}) {
 	t.Status = TaskStatusFinished
 	t.EndTime = time.Now().Unix()
 
 	if result == nil {
-		result = defaultSuccessInfo
+		result = []interface{}{defaultSuccessInfo}
 	}
+
 	t.Result = fmt.Sprintln(t.Result, result)
 }
 

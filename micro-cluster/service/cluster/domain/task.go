@@ -99,6 +99,9 @@ func (t *TaskEntity) Success(result ...interface{}) {
 	}
 
 	for _, r := range result {
+		if r == nil {
+			r = defaultSuccessInfo
+		}
 		t.Result = fmt.Sprintln(t.Result, r)
 	}
 }

@@ -227,6 +227,7 @@ func RecoverPreCheck(ctx context.Context, req *clusterpb.RecoverRequest) error {
 func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	getLoggerWithContext(ctx).Infof("Begin do Recover, clusterInfo: %+v, demandDTOs: %+v", clusterInfo, demandDTOs)
 	defer getLoggerWithContext(ctx).Infof("End do Recover")
+
 	operator := parseOperatorFromDTO(ope)
 
 	cluster := &Cluster{
@@ -241,21 +242,37 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 			SourceClusterId: clusterInfo.GetRecoverInfo().GetSourceClusterId(),
 			BackupRecordId:  clusterInfo.GetRecoverInfo().GetBackupRecordId(),
 		},
-		Region: commonDemand.Region,
+		Region:          commonDemand.Region,
 		CpuArchitecture: commonDemand.CpuArchitecture,
-		Exclusive: commonDemand.Exclusive,
+		Exclusive:       commonDemand.Exclusive,
 	}
 
 	if cluster.CpuArchitecture == "" {
 		cluster.CpuArchitecture = string(resourceType.X86)
 	}
 
-
 	demands := make([]*ClusterComponentDemand, len(demandDTOs))
 
 	for i, v := range demandDTOs {
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
+
+	// add default parasite components
+	demands = append(demands,
+		&ClusterComponentDemand{
+			ComponentType:     knowledge.ClusterComponentFromCode("Grafana"),
+			TotalNodeCount:    1,
+			DistributionItems: []*ClusterNodeDistributionItem{},
+		},
+		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("Prometheus"),
+			TotalNodeCount:    1,
+			DistributionItems: []*ClusterNodeDistributionItem{},
+		},
+		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("AlertManger"),
+			TotalNodeCount:    1,
+			DistributionItems: []*ClusterNodeDistributionItem{},
+		},
+	)
 
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
@@ -264,27 +281,24 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 		return nil, err
 	}
 	clusterAggregation := &ClusterAggregation{
-		Cluster:          cluster,
-		MaintainCronTask: GetDefaultMaintainTask(),
-		CurrentOperator:  operator,
+		Cluster:              cluster,
+		MaintainCronTask:     GetDefaultMaintainTask(),
+		CurrentOperator:      operator,
 		AddedComponentDemand: demands,
 	}
 
 	// Start the workflow to create a cluster instance
-
-	flow, err := CreateFlowWork(ctx, cluster.Id, FlowRecoverCluster, operator)
+	flow, err := CreateFlowWork(ctx, cluster.Id, FlowCreateCluster, operator)
 	if err != nil {
 		return nil, err
 	}
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
+
 	flow.Start()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	err = ClusterRepo.Persist(ctx, clusterAggregation)
-	if err != nil {
-		return nil, err
-	}
+	ClusterRepo.Persist(ctx, clusterAggregation)
 	return clusterAggregation, nil
 }
 

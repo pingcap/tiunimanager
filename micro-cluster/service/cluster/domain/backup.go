@@ -288,7 +288,7 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 	}
 
 	// Start the workflow to create a cluster instance
-	flow, err := CreateFlowWork(ctx, cluster.Id, FlowCreateCluster, operator)
+	flow, err := CreateFlowWork(ctx, cluster.Id, FlowRecoverCluster, operator)
 	if err != nil {
 		return nil, err
 	}

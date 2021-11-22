@@ -538,7 +538,7 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation.AlteredTopology = configModel
 	bytes, err := yaml.Marshal(configModel)
 	if err != nil {
-		task.Success(nil)
+		task.Fail(err)
 	} else {
 		task.Success(string(bytes))
 	}

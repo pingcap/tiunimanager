@@ -503,7 +503,7 @@ func DescribeMonitor(c *gin.Context) {
 
 // ScaleOut scale out a cluster
 // @Summary scale out a cluster
-// @Description scale out of a cluster
+// @Description scale out a cluster
 // @Tags cluster
 // @Accept json
 // @Produce json

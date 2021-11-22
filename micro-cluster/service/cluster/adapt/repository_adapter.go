@@ -605,7 +605,6 @@ func parseInstancesFromDTO(dto []*dbpb.DBComponentInstanceDTO) []*domain.Compone
 			Version: &knowledge.ClusterVersion{Code: item.Version},
 			HostId: item.HostId,
 			Host: item.Host,
-			PortInfo: item.PortInfo,
 			DiskId: item.DiskId,
 			AllocRequestId: item.AllocRequestId,
 			DiskPath: item.DiskPath,
@@ -614,6 +613,7 @@ func parseInstancesFromDTO(dto []*dbpb.DBComponentInstanceDTO) []*domain.Compone
 				Memory: item.Memory,
 			},
 		}
+		instance.DeserializePortInfo(item.PortInfo)
 		componentInstances = append(componentInstances, instance)
 	}
 

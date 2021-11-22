@@ -220,6 +220,7 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_PARAM_GROUP_MAP, new(ParamGroupMapDO))
 	dao.AddTable(TABLE_NAME_CLUSTER_PARAM_MAP, new(ClusterParamMapDO))
 	dao.AddTable(TABLE_NAME_CLUSTER_RELATION, new(ClusterRelation))
+
 	log.Info("create TiEM all tables successful.")
 	return nil
 }

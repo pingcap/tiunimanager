@@ -678,7 +678,7 @@ func convertComponentToDTO(component *domain.ComponentInstance) (dto *dbpb.DBCom
 		Memory: component.Compute.Memory,
 		DiskId: component.DiskId,
 		DiskPath: component.DiskPath,
-		PortInfo: component.PortInfo,
+		PortInfo: component.SerializePortInfo(),
 		AllocRequestId: component.AllocRequestId,
 	}
 

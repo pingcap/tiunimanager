@@ -79,3 +79,54 @@ func TestClusterAggregation_ExtractComponentDTOs(t *testing.T) {
 	assert.Equal(t, "127.0.0.2", components[2].Nodes[1].NodeId)
 
 }
+
+func TestComponentInstance_AcceptPortInfo(t *testing.T) {
+	type args struct {
+		portInfo string
+	}
+	tests := []struct {
+		name   string
+		args   args
+		want   []int
+	}{
+		{"normal", args{"[1,2,3]"}, []int{1,2,3}},
+		{"empty", args{"[]"}, []int{}},
+		{"empty", args{""}, []int{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &ComponentInstance{}
+			c.DeserializePortInfo(tt.args.portInfo)
+			if tt.args.portInfo == "[]" || tt.args.portInfo == ""{
+				assert.NotNil(t, c.PortList)
+				assert.Equal(t, 0, len(c.PortList))
+			} else {
+				assert.Equal(t, c.PortList[0], tt.want[0])
+			}
+		})
+	}
+}
+
+func TestComponentInstance_ExtractPortInfo(t *testing.T) {
+	type args struct {
+		portList []int
+	}
+	tests := []struct {
+		name   string
+		args   args
+		want   string
+	}{
+		{"normal", args{[]int{1,2,3}}, "[1,2,3]"},
+		{"normal", args{[]int{}}, "[]"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			c := &ComponentInstance{
+				PortList: tt.args.portList,
+			}
+			wants := c.SerializePortInfo()
+			assert.Equal(t, wants, tt.want)
+		})
+	}
+}

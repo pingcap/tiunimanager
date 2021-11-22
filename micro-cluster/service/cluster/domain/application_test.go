@@ -19,6 +19,7 @@ package domain
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -944,4 +945,82 @@ func Test_freedResource(t *testing.T) {
 	result := freedResource(&TaskEntity{}, ctx)
 
 	assert.True(t, result)
+}
+
+func Test_prepareResourceSucceed(t *testing.T) {
+	t.Run("normal", func(t *testing.T) {
+		task1 := &TaskEntity{
+		}
+		prepareResourceSucceed(task1, &clusterpb.BatchAllocResponse{
+			Rs: &clusterpb.AllocResponseStatus{
+				Code: 0,
+			},
+			BatchResults: []*clusterpb.AllocResponse{
+				{
+					Rs: &clusterpb.AllocResponseStatus{
+						Code: 0,
+					},
+					Results: []*clusterpb.HostResource{
+						{
+							HostIp: "127.0.0.1",
+						},
+						{
+							HostIp: "127.0.0.2",
+						},
+					},
+				},
+				{
+					Rs: &clusterpb.AllocResponseStatus{
+						Code: 0,
+					},
+					Results: []*clusterpb.HostResource{
+						{
+							HostIp: "127.0.0.3",
+						},
+					},
+				},
+			},
+		})
+
+		assert.Equal(t, fmt.Sprintln("", fmt.Sprintf("alloc succeed with hosts: [127.0.0.1 127.0.0.2 127.0.0.3]")), task1.Result)
+
+	})
+
+	t.Run("skip", func(t *testing.T) {
+		task2 := &TaskEntity{
+		}
+		prepareResourceSucceed(task2, &clusterpb.BatchAllocResponse{
+			Rs: &clusterpb.AllocResponseStatus{
+				Code: 0,
+			},
+			BatchResults: []*clusterpb.AllocResponse{
+				{
+					Rs: &clusterpb.AllocResponseStatus{
+						Code: -1,
+					},
+					Results: []*clusterpb.HostResource{
+						{
+							HostIp: "127.0.0.1",
+						},
+						{
+							HostIp: "127.0.0.2",
+						},
+					},
+				},
+				{
+					Rs: &clusterpb.AllocResponseStatus{
+						Code: 0,
+					},
+					Results: []*clusterpb.HostResource{
+						{
+							HostIp: "127.0.0.3",
+						},
+					},
+				},
+			},
+		})
+		assert.Equal(t, fmt.Sprintln("", fmt.Sprintf("alloc succeed with hosts: [127.0.0.3]")), task2.Result)
+
+	})
+
 }

@@ -1763,6 +1763,11 @@ paths:
       - application/json
       description: scale in a cluster
       parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
       - description: scale in request
         in: body
         name: scaleInReq
@@ -1804,6 +1809,11 @@ paths:
       - application/json
       description: scale out a cluster
       parameters:
+      - description: cluster id
+        in: path
+        name: clusterId
+        required: true
+        type: string
       - description: scale out request
         in: body
         name: scaleOutReq

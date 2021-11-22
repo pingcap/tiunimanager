@@ -1452,6 +1452,13 @@ var doc = `{
                 "summary": "scale in a cluster",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "scale in request",
                         "name": "scaleInReq",
                         "in": "body",
@@ -1520,6 +1527,13 @@ var doc = `{
                 ],
                 "summary": "scale out a cluster",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "description": "scale out request",
                         "name": "scaleOutReq",

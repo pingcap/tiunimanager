@@ -75,6 +75,6 @@ func (m *DAOClusterManager) DeleteClusterComponentInstance(ctx context.Context, 
 		return fmt.Errorf("DeleteInstance has invalid parameter, instanceId: %s", instanceId)
 	}
 	instance := &ComponentInstance{}
-	return m.Db(ctx).First(instance, "id = ?", instance).Delete(instance).Error
+	return m.Db(ctx).First(instance, "id = ?", instanceId).Delete(instance).Error
 }
 

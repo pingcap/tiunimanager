@@ -20,6 +20,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -268,6 +269,7 @@ func (b *BaseFramework) Shutdown() error {
 }
 
 func (b *BaseFramework) GetClientArgs() *ClientArgs {
+	fmt.Println("in func getclientarg ")
 	return b.args
 }
 

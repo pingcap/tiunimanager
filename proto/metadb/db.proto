@@ -51,6 +51,11 @@ service TiEMDBService {
 	rpc LoadCluster(DBLoadClusterRequest) returns (DBLoadClusterResponse);
 	rpc ListCluster(DBListClusterRequest) returns (DBListClusterResponse);
 
+	//Cluster Relation
+//	rpc AddClusterRelation(DBAddClusterRelationRequest) returns ();
+//	rpc SwapClusterRelation(DBSwapClusterRelationRequest) return ();
+//	rpc FindClusterRelation(DBFindClusterRelationRequest)
+
 	// backup & recover & parameters
 	rpc SaveBackupRecord(DBSaveBackupRecordRequest) returns (DBSaveBackupRecordResponse);
 	rpc UpdateBackupRecord(DBUpdateBackupRecordRequest) returns (DBUpdateBackupRecordResponse);

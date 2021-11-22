@@ -957,3 +957,57 @@ func TestDAOClusterManager_UpdateClusterInfo(t *testing.T) {
 
 	})
 }
+
+func TestDAOClusterManager_AddClusterRelation(t *testing.T) {
+	type args struct {
+		request ClusterRelation
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantErr    bool
+		wantResult []func(args args, relation *ClusterRelation) bool
+	}{
+		// TODO: Add test cases.
+		{ "normal", args{request: ClusterRelation{MasterClusterId: "1", SlaveClusterId: "2", Type: 1}},
+			false,
+			[]func(args args, relation *ClusterRelation) bool {
+				func(args args, relation *ClusterRelation) bool { return args.request.MasterClusterId == relation.MasterClusterId},
+				func(args args, relation *ClusterRelation) bool { return args.request.SlaveClusterId == relation.SlaveClusterId},
+				func(args args, relation *ClusterRelation) bool { return args.request.Type == relation.Type},
+			},
+		},
+		{ "without MasterClusterId", args{request: ClusterRelation{SlaveClusterId: "3", Type: 1}},
+			true,
+			[]func(args args, relation *ClusterRelation) bool {},
+		},
+		{ "without SlaveClusterId", args{request: ClusterRelation{MasterClusterId: "4", Type: 1}},
+			true,
+			[]func(args args, relation *ClusterRelation) bool {},
+		},
+		{ "without Type", args{request: ClusterRelation{MasterClusterId: "5", SlaveClusterId: "6"}},
+			true,
+			[]func(args args, relation *ClusterRelation) bool {},
+		},
+
+	}
+	clusterTbl := Dao.ClusterManager()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResult, err := clusterTbl.AddClusterRelation(context.TODO(), ClusterRelation{
+				MasterClusterId: tt.args.request.MasterClusterId,
+				SlaveClusterId: tt.args.request.SlaveClusterId,
+				Type: tt.args.request.Type,
+			})
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AddClusterRelation() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, assert := range tt.wantResult{
+				if !assert(tt.args, gotResult) {
+					t.Errorf("AddClusterRelation() test error, assert %v, args = %v, gotResult = %v, want %v", i, tt.args, gotResult, tt.wantResult)
+				}
+			}
+		})
+	}
+}

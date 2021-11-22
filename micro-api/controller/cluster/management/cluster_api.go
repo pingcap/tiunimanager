@@ -193,6 +193,7 @@ func Query(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "cluster id"
+// @Param deleteReq body DeleteReq false "delete request"
 // @Success 200 {object} controller.CommonResult{data=DeleteClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

@@ -282,6 +282,12 @@ var doc = `{
                 "summary": "query change feed tasks of a cluster",
                 "parameters": [
                     {
+                        "type": "string",
+                        "example": "CLUSTER_ID_IN_TIEM__22",
+                        "name": "clusterId",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "name": "page",
                         "in": "query"
@@ -289,12 +295,6 @@ var doc = `{
                     {
                         "type": "integer",
                         "name": "pageSize",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "example": "CLUSTER_ID_IN_TIEM__22",
-                        "name": "targetClusterId",
                         "in": "query"
                     },
                     {
@@ -1464,6 +1464,14 @@ var doc = `{
                         "name": "clusterId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "delete request",
+                        "name": "deleteReq",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/management.DeleteReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -3460,6 +3468,10 @@ var doc = `{
         "changefeed.ChangeFeedTask": {
             "type": "object",
             "properties": {
+                "clusterId": {
+                    "type": "string",
+                    "example": "CLUSTER_ID_IN_TIEM__22"
+                },
                 "createTime": {
                     "type": "string"
                 },
@@ -3495,10 +3507,6 @@ var doc = `{
                     "type": "integer",
                     "example": 1
                 },
-                "targetClusterId": {
-                    "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
-                },
                 "updateTime": {
                     "type": "string"
                 }
@@ -3507,6 +3515,10 @@ var doc = `{
         "changefeed.ChangeFeedTaskDetail": {
             "type": "object",
             "properties": {
+                "clusterId": {
+                    "type": "string",
+                    "example": "CLUSTER_ID_IN_TIEM__22"
+                },
                 "createTime": {
                     "type": "string"
                 },
@@ -3549,10 +3561,6 @@ var doc = `{
                 "status": {
                     "type": "integer",
                     "example": 1
-                },
-                "targetClusterId": {
-                    "type": "string",
-                    "example": "CLUSTER_ID_IN_TIEM__22"
                 },
                 "unsteady": {
                     "type": "boolean",
@@ -4740,6 +4748,17 @@ var doc = `{
                 },
                 "updateTime": {
                     "type": "string"
+                }
+            }
+        },
+        "management.DeleteReq": {
+            "type": "object",
+            "properties": {
+                "autoBackup": {
+                    "type": "boolean"
+                },
+                "clearBackupData": {
+                    "type": "boolean"
                 }
             }
         },

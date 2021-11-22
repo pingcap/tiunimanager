@@ -20,7 +20,7 @@ import "time"
 type ChangeFeedTask struct {
 	Id             string      `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
 	Name           string      `json:"name" form:"name" example:"my_sync_name"`
-	ClusterId      string      `json:"targetClusterId" form:"targetClusterId" example:"CLUSTER_ID_IN_TIEM__22"`
+	ClusterId      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
 	StartTS        uint        `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
 	Status         int         `json:"status" form:"status" example:"1"`

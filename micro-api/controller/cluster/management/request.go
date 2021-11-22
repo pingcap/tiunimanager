@@ -26,6 +26,11 @@ type CreateReq struct {
 	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
 }
 
+type DeleteReq struct {
+	AutoBackup bool `json:"autoBackup" form:"autoBackup"`
+	ClearBackupData bool `json:"clearBackupData" form:"clearBackupData"`
+}
+
 type QueryReq struct {
 	controller.PageRequest
 	ClusterId     string `json:"clusterId" form:"clusterId"`

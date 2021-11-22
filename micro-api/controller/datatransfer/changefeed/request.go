@@ -18,6 +18,6 @@ package changefeed
 import "github.com/pingcap-inc/tiem/micro-api/controller"
 
 type QueryReq struct {
-	ClusterId string `json:"targetClusterId" form:"targetClusterId" example:"CLUSTER_ID_IN_TIEM__22"`
+	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
 	controller.Page
 }

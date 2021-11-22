@@ -508,6 +508,7 @@ func DescribeMonitor(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
 // @Param scaleOutReq body ScaleOutReq true "scale out request"
 // @Success 200 {object} controller.CommonResult{data=ScaleOutClusterRsp}
 // @Failure 401 {object} controller.CommonResult
@@ -564,6 +565,7 @@ func ScaleOut(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
 // @Param scaleInReq body ScaleInReq true "scale in request"
 // @Success 200 {object} controller.CommonResult{data=ScaleInClusterRsp}
 // @Failure 401 {object} controller.CommonResult

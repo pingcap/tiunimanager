@@ -643,14 +643,17 @@ func allocPortsInRegion(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requi
 	var regionHosts []string
 	err = tx.Model(&rt.Host{}).Select("id").Where("region = ? and arch = ?", regionCode, hostArch).Where("reserved = 0").Scan(&regionHosts).Error
 	if err != nil {
-		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "select resources failed, %v", err)
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "select %s hosts in region %s failed, %v", hostArch, regionCode, err)
 	}
 	if len(regionHosts) == 0 {
 		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "no %s host in region %s", hostArch, regionCode)
 	}
 
 	var usedPorts []int32
-	tx.Order("port").Model(&rt.UsedPort{}).Select("port").Where("host_id in ?", regionHosts).Group("port").Having("port >= ? and port < ?", portReq.Start, portReq.End).Scan(&usedPorts)
+	err = tx.Order("port").Model(&rt.UsedPort{}).Select("port").Where("host_id in ?", regionHosts).Group("port").Having("port >= ? and port < ?", portReq.Start, portReq.End).Scan(&usedPorts).Error
+	if err != nil {
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "select used port range %d - %d in region %s failed, %v", portReq.Start, portReq.End, regionCode, err)
+	}
 
 	res, err := getPortsInRange(usedPorts, portReq.Start, portReq.End, int(portReq.PortCnt))
 	if err != nil {

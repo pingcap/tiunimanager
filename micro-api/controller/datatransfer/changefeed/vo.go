@@ -24,7 +24,7 @@ type ChangeFeedTask struct {
 	StartTS        uint        `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
 	Status         int         `json:"status" form:"status" example:"1"`
-	DownstreamType int         `json:"downstreamType"  form:"downstreamType" example:"tidb"`
+	DownstreamType string         `json:"downstreamType"  form:"downstreamType" example:"tidb"`
 	Downstream     interface{} `json:"downstreamConfig" form:"downstreamConfig"`
 	CreateTime     time.Time   `json:"createTime" form:"createTime"`
 	UpdateTime     time.Time   `json:"updateTime" form:"updateTime"`

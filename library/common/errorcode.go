@@ -60,6 +60,8 @@ const (
 	TIEM_RESOURCE_NO_STOCK                         TIEM_ERROR_CODE = 512
 	TIEM_RESOURCE_GET_DISK_ID_FAIL                 TIEM_ERROR_CODE = 513
 	TIEM_RESOURCE_TRAIT_NOT_FOUND                  TIEM_ERROR_CODE = 514
+	TIEM_RESOURCE_INVALID_LOCATION                 TIEM_ERROR_CODE = 515
+	TIEM_RESOURCE_INVALID_ARCH                     TIEM_ERROR_CODE = 516
 
 	TIEM_DASHBOARD_NOT_FOUND           TIEM_ERROR_CODE = 600
 	TIEM_EXPORT_PARAM_INVALID          TIEM_ERROR_CODE = 601
@@ -148,6 +150,8 @@ var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_RESOURCE_NOT_ALL_SUCCEED:                  {TIEM_RESOURCE_NOT_ALL_SUCCEED, "not all request succeed", 500},
 	TIEM_RESOURCE_INVALID_STRATEGY:                 {TIEM_RESOURCE_INVALID_STRATEGY, "invalid alloc strategy", 500},
 	TIEM_RESOURCE_TRAIT_NOT_FOUND:                  {TIEM_RESOURCE_TRAIT_NOT_FOUND, "trait not found by label name", 500},
+	TIEM_RESOURCE_INVALID_LOCATION:                 {TIEM_RESOURCE_INVALID_LOCATION, "invalid location", 500},
+	TIEM_RESOURCE_INVALID_ARCH:                     {TIEM_RESOURCE_INVALID_ARCH, "invalid arch", 500},
 
 	// tenant
 	TIEM_ACCOUNT_NOT_FOUND:       {TIEM_ACCOUNT_NOT_FOUND, "account not found", 500},

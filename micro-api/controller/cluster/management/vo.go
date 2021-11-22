@@ -119,3 +119,9 @@ type ComponentBaseInfo struct {
 	ComponentType string `json:"componentType"`
 	ComponentName string `json:"componentName"`
 }
+
+type ClusterCommonDemand struct {
+	Exclusive       bool   `json:"exclusive" form:"exclusive"`
+	Region          string `json:"region" form:"region"`
+	CpuArchitecture string `json:"cpuArchitecture" form:"cpuArchitecture"`
+}

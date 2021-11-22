@@ -15,18 +15,9 @@
 
 package changefeed
 
-type ChangeFeedTask struct {
-	Id string
-	StartTSO uint
-	Rules []string
-	Status int
-	DownstreamType int
-	DownstreamConfig interface{}
-}
+import "github.com/pingcap-inc/tiem/micro-api/controller"
 
-type ChangeFeedTaskCreateReq struct {
-	ChangeFeedTask
-	Id string
-	Url string
-	Port string
+type QueryReq struct {
+	ClusterId string `json:"targetClusterId" form:"targetClusterId" example:"CLUSTER_ID_IN_TIEM__22"`
+	controller.Page
 }

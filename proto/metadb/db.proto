@@ -7,12 +7,13 @@ import "db_tiup.proto";
 import "db_task.proto";
 import "db_transport.proto";
 import "db_allocation.proto";
+import "db_param.proto";
 
 option go_package = "./dbpb/;dbpb";
 
 // TiDB Cloud Platform database service
 service TiEMDBService {
-    // Auth Module
+	// Auth Module
 	rpc FindTenant(DBFindTenantRequest) returns (DBFindTenantResponse);
 	rpc FindAccount(DBFindAccountRequest) returns (DBFindAccountResponse);
 	rpc FindAccountById(DBFindAccountByIdRequest) returns (DBFindAccountByIdResponse);
@@ -20,7 +21,7 @@ service TiEMDBService {
 	rpc FindToken(DBFindTokenRequest) returns (DBFindTokenResponse);
 	rpc FindRolesByPermission(DBFindRolesByPermissionRequest) returns (DBFindRolesByPermissionResponse);
 
-    // Host Module
+	// Host Module
 	rpc AddHost(DBAddHostRequest) returns (DBAddHostResponse);
 	rpc AddHostsInBatch(DBAddHostsInBatchRequest) returns (DBAddHostsInBatchResponse);
 	rpc RemoveHost(DBRemoveHostRequest) returns (DBRemoveHostResponse);
@@ -53,10 +54,10 @@ service TiEMDBService {
 	rpc SaveBackupRecord(DBSaveBackupRecordRequest) returns (DBSaveBackupRecordResponse);
 	rpc UpdateBackupRecord(DBUpdateBackupRecordRequest) returns (DBUpdateBackupRecordResponse);
 	rpc DeleteBackupRecord(DBDeleteBackupRecordRequest) returns (DBDeleteBackupRecordResponse);
-    rpc SaveBackupStrategy(DBSaveBackupStrategyRequest) returns (DBSaveBackupStrategyResponse);
-    rpc QueryBackupStrategy(DBQueryBackupStrategyRequest) returns (DBQueryBackupStrategyResponse);
-    rpc QueryBackupStrategyByTime(DBQueryBackupStrategyByTimeRequest) returns (DBQueryBackupStrategyByTimeResponse);
-    rpc QueryBackupRecords(DBQueryBackupRecordRequest) returns (DBQueryBackupRecordResponse);
+	rpc SaveBackupStrategy(DBSaveBackupStrategyRequest) returns (DBSaveBackupStrategyResponse);
+	rpc QueryBackupStrategy(DBQueryBackupStrategyRequest) returns (DBQueryBackupStrategyResponse);
+	rpc QueryBackupStrategyByTime(DBQueryBackupStrategyByTimeRequest) returns (DBQueryBackupStrategyByTimeResponse);
+	rpc QueryBackupRecords(DBQueryBackupRecordRequest) returns (DBQueryBackupRecordResponse);
 	rpc ListBackupRecords(DBListBackupRecordsRequest) returns (DBListBackupRecordsResponse);
 	rpc SaveRecoverRecord(DBSaveRecoverRecordRequest) returns (DBSaveRecoverRecordResponse);
 	rpc SaveParametersRecord(DBSaveParametersRequest) returns (DBSaveParametersResponse);
@@ -79,8 +80,18 @@ service TiEMDBService {
 
 	// DataTransport
 	rpc CreateTransportRecord(DBCreateTransportRecordRequest) returns (DBCreateTransportRecordResponse);
-    rpc UpdateTransportRecord(DBUpdateTransportRecordRequest) returns (DBUpdateTransportRecordResponse);
-    rpc FindTrasnportRecordByID(DBFindTransportRecordByIDRequest) returns (DBFindTransportRecordByIDResponse);
-    rpc ListTrasnportRecord(DBListTransportRecordRequest) returns (DBListTransportRecordResponse);
-    rpc DeleteTransportRecord(DBDeleteTransportRequest) returns (DBDeleteTransportResponse);
+	rpc UpdateTransportRecord(DBUpdateTransportRecordRequest) returns (DBUpdateTransportRecordResponse);
+	rpc FindTrasnportRecordByID(DBFindTransportRecordByIDRequest) returns (DBFindTransportRecordByIDResponse);
+	rpc ListTrasnportRecord(DBListTransportRecordRequest) returns (DBListTransportRecordResponse);
+	rpc DeleteTransportRecord(DBDeleteTransportRequest) returns (DBDeleteTransportResponse);
+
+	// Param Group & Cluster Params
+	rpc CreateParamGroup(DBCreateParamGroupRequest) returns (DBCreateParamGroupResponse);
+	rpc UpdateParamGroup(DBUpdateParamGroupRequest) returns (DBUpdateParamGroupResponse);
+	rpc DeleteParamGroup(DBDeleteParamGroupRequest) returns (DBDeleteParamGroupResponse);
+	rpc ListParamGroup(DBListParamGroupRequest) returns (DBListParamGroupResponse);
+	rpc FindParamGroupByID(DBFindParamGroupByIDRequest) returns (DBFindParamGroupByIDResponse);
+	rpc ApplyParamGroup(DBApplyParamGroupRequest) returns (DBApplyParamGroupResponse);
+	rpc FindParamsByClusterId(DBFindParamsByClusterIdRequest) returns (DBFindParamsByClusterIdResponse);
+	rpc UpdateClusterParams(DBUpdateClusterParamsRequest) returns (DBUpdateClusterParamsResponse);
 }

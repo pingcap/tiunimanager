@@ -23,6 +23,7 @@ enum TiupTaskType {
 	Transfer = 10;
 	Upgrade = 11;
 	ScaleOut = 12;
+	ScaleIn = 13;
 }
 
 message TiupTask {

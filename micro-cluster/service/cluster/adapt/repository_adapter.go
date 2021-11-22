@@ -24,6 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
@@ -226,6 +227,20 @@ func persistClusterComponents(ctx context.Context, aggregation *domain.ClusterAg
 			}
 		}
 	}
+
+	// Delete instance which status is ClusterStatusDeleted
+	for _, instance := range aggregation.CurrentComponentInstances {
+		if instance.Status == domain.ClusterStatusDeleted {
+			request := &dbpb.DBDeleteInstanceRequest {
+				Id: instance.ID,
+			}
+			_, err := client.DBClient.DeleteInstance(ctx, request)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -291,6 +306,7 @@ func (c ClusterRepoAdapter) Load(ctx context.Context, id string) (cluster *domai
 		cluster.Cluster = ParseFromClusterDTO(resp.ClusterDetail.Cluster)
 		cluster.CurrentTopologyConfigRecord = parseConfigRecordDTO(resp.ClusterDetail.TopologyConfigRecord)
 		cluster.CurrentWorkFlow = parseFlowFromDTO(resp.ClusterDetail.Flow)
+		cluster.CurrentComponentInstances = parseInstancesFromDTO(resp.ClusterDetail.ComponentInstances)
 		cluster.MaintainCronTask = domain.GetDefaultMaintainTask() // next_version get from db
 		return
 	}
@@ -569,6 +585,39 @@ func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 	json.Unmarshal([]byte(dto.Tags), &cluster.Tags)
 
 	return
+}
+
+func parseInstancesFromDTO(dto []*dbpb.DBComponentInstanceDTO) []*domain.ComponentInstance {
+	if len(dto) == 0 {
+		return nil
+	}
+
+	componentInstances := make([]*domain.ComponentInstance, 0, len(dto))
+	for _, item := range dto {
+		instance := &domain.ComponentInstance{
+			ID: item.Id,
+			Code: item.Code,
+			TenantId: item.TenantId,
+			Status: domain.ClusterStatus(item.Status),
+			ClusterId: item.ClusterId,
+			ComponentType: &knowledge.ClusterComponent{ComponentType: item.ComponentType},
+			Role: item.Role,
+			Version: &knowledge.ClusterVersion{Code: item.Version},
+			HostId: item.HostId,
+			Host: item.Host,
+			PortInfo: item.PortInfo,
+			DiskId: item.DiskId,
+			AllocRequestId: item.AllocRequestId,
+			DiskPath: item.DiskPath,
+			Compute: &resource.ComputeRequirement{
+				CpuCores: item.CpuCores,
+				Memory: item.Memory,
+			},
+		}
+		componentInstances = append(componentInstances, instance)
+	}
+
+	return componentInstances
 }
 
 func parseConfigRecordDTO(dto *dbpb.DBTopologyConfigDTO) (record *domain.TopologyConfigRecord) {

@@ -19,10 +19,12 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"fmt"
 	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -41,6 +43,8 @@ type ClusterAggregation struct {
 
 	AddedComponentDemand 	[]*ClusterComponentDemand
 	AddedClusterComponents []*ComponentGroup
+
+	CurrentComponentInstances []*ComponentInstance
 
 	CurrentWorkFlow *FlowWorkEntity
 	CurrentOperator *Operator
@@ -69,7 +73,7 @@ type ClusterAggregation struct {
 
 var contextClusterKey = "clusterAggregation"
 var contextTakeoverReqKey = "takeoverRequest"
-var contextScaleOutReqKey = "scaleOutRequest"
+var contextDeleteNodeKey = "deleteNode"
 var contextAllocRequestKey = "allocResourceRequest"
 
 func (cluster *ClusterAggregation) tryStartFlow(ctx ctx.Context, flow *FlowWorkAggregation) error {
@@ -194,6 +198,37 @@ func ScaleOutCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId stri
 		return nil, err
 	}
 	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.Start()
+
+	// Update workflow and persist clusterAggregation
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
+	ClusterRepo.Persist(ctx, clusterAggregation)
+	return clusterAggregation, nil
+}
+
+// ScaleInCluster
+// @Description: scale in a cluster
+// @Parameter ope
+// @Parameter clusterId
+// @Parameter nodeId
+// @return *ClusterAggregation
+// @return error
+func ScaleInCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId, nodeId string)(*ClusterAggregation, error) {
+	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
+	operator := parseOperatorFromDTO(ope)
+	clusterAggregation.CurrentOperator = operator
+
+	// Start the workflow to scale in a cluster
+	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowScaleInCluster, operator)
+	if err != nil {
+		return nil, err
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.AddContext(contextDeleteNodeKey, nodeId)
 	flow.Start()
 
 	// Update workflow and persist clusterAggregation
@@ -541,6 +576,98 @@ func scaleOutCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	getLoggerWithContext(context).Infof("get scaleOutTaskId %s", strconv.Itoa(int(scaleOutTaskId)))
+	return true
+}
+
+func getInstance(instances []*ComponentInstance, nodeId string) *ComponentInstance  {
+	results := strings.Split(nodeId, ":")
+	if len(results) != 2 {
+		return nil
+	}
+	for _, instance := range instances {
+		if instance.Host == results[0] {
+			for _, port := range instance.PortList {
+				if strconv.Itoa(port) == results[1] {
+					return instance
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func scaleInCluster(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+	nodeId := context.GetData(contextDeleteNodeKey).(string)
+
+	componentInstance := getInstance(clusterAggregation.CurrentComponentInstances, nodeId)
+	if componentInstance == nil {
+		getLoggerWithContext(context).Errorf("node: %s is not exist in %s", nodeId, cluster.ClusterName)
+		task.Fail(fmt.Errorf("node: %s is not exist", nodeId))
+		return false
+	}
+	getLoggerWithContext(context).Infof("scale in cluster %s, delete node: %s", cluster.ClusterName, nodeId)
+	scaleInTaskId, err := secondparty.SecondParty.MicroSrvTiupScaleIn(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, nodeId,0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, uint64(task.Id))
+
+	if err != nil {
+		getLoggerWithContext(context).Errorf("call tiup api scale in cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+
+	getLoggerWithContext(context).Infof("get scaleInTaskId %s", strconv.Itoa(int(scaleInTaskId)))
+	return true
+}
+
+func freeNodeResource(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+	nodeId := context.GetData(contextDeleteNodeKey).(string)
+
+	componentInstance := getInstance(clusterAggregation.CurrentComponentInstances, nodeId)
+	if componentInstance == nil {
+		getLoggerWithContext(context).Errorf("node: %s is not exist in %s", nodeId, cluster.ClusterName)
+		task.Fail(fmt.Errorf("node: %s is not exist", nodeId))
+		return false
+	}
+
+	componentInstance.Status = ClusterStatusDeleted
+
+	ports := make([]int32, 0)
+	for _, port := range componentInstance.PortList {
+		ports = append(ports, int32(port))
+	}
+	request := &clusterpb.RecycleRequest{
+		RecycleReqs: []*clusterpb.RecycleRequire{
+			{
+				RecycleType: int32(resourceType.RecycleHost),
+				HolderId: componentInstance.ClusterId,
+				RequestId: componentInstance.AllocRequestId,
+				HostId:  componentInstance.HostId,
+				ComputeReq: &clusterpb.ComputeRequirement {
+					CpuCores: componentInstance.Compute.CpuCores,
+					Memory: componentInstance.Compute.Memory,
+				},
+				DiskReq: []*clusterpb.DiskResource {
+					{ DiskId: componentInstance.DiskId },
+				},
+				PortReq: []*clusterpb.PortResource {
+					{ Ports: ports },
+				},
+			},
+		},
+	}
+	response := &clusterpb.RecycleResponse{}
+	err := resource.NewResourceManager().RecycleResources(context, request, response)
+
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	task.Success(nil)
 	return true
 }
 

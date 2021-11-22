@@ -124,6 +124,40 @@ func (secondMicro *SecondMicro) startNewTiupScaleOutTask(ctx context.Context, ta
 	}()
 }
 
+func (secondMicro *SecondMicro) MicroSrvTiupScaleIn(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, nodeId string, timeoutS int, flags []string, bizID uint64) (taskId uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupscalein tiupcomponent: %s, instancename: %s, nodeId: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, nodeId, timeoutS, flags, bizID)
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_ScaleIn
+	req.BizID = bizID
+	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	if rsp == nil || err != nil || rsp.ErrCode != 0 {
+		err = fmt.Errorf("rsp:%v, err:%s", rsp, err)
+		return 0, err
+	} else {
+		var scaleInReq CmdScaleInReq
+		scaleInReq.TiUPComponent = tiupComponent
+		scaleInReq.InstanceName = instanceName
+		scaleInReq.NodeId = nodeId
+		scaleInReq.TimeoutS = timeoutS
+		scaleInReq.Flags = flags
+		scaleInReq.TiupPath = secondMicro.TiupBinPath
+		scaleInReq.TaskID = rsp.Id
+		secondMicro.startNewTiupScaleInTask(ctx, scaleInReq.TaskID, &scaleInReq)
+		return rsp.Id, nil
+	}
+	return
+}
+
+func (secondMicro *SecondMicro) startNewTiupScaleInTask(ctx context.Context, taskID uint64, req *CmdScaleInReq) {
+	go func() {
+		var args []string
+		args = append(args, string(req.TiUPComponent), "scale-in", req.InstanceName, "--node", req.NodeId)
+		args = append(args, req.Flags...)
+		args = append(args, "--yes")
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+	}()
+}
+
 func (secondMicro *SecondMicro) MicroSrvTiupStart(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupstart tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, timeoutS, flags, bizID)
 	var req dbPb.CreateTiupTaskRequest

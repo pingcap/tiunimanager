@@ -143,6 +143,14 @@ message DBCreateInstanceResponse {
     repeated DBComponentInstanceDTO componentInstances = 2;
 }
 
+message DBDeleteInstanceRequest {
+    string id = 1;
+}
+
+message DBDeleteInstanceResponse {
+    DBClusterResponseStatus status = 1;
+}
+
 message DBUpdateTopologyConfigRequest {
     string clusterId = 1;
     string content = 2;

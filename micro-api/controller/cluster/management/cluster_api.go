@@ -571,5 +571,38 @@ func ScaleOut(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/scale-in [post]
 func ScaleIn(c *gin.Context) {
+	var req ScaleInReq
 
+	if err := c.ShouldBindWith(&req, binding.JSON); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	operator := controller.GetOperator(c)
+
+	// Create ScaleInRequest
+	request := &clusterpb.ScaleInRequest{
+		Operator: operator.ConvertToDTO(),
+		ClusterId: c.Param("clusterId"),
+		NodeId:  req.NodeId,
+	}
+
+	// Scale in cluster
+	response, err := client.ClusterClient.ScaleInCluster(framework.NewMicroCtxFromGinCtx(c), request, controller.DefaultTimeout)
+
+	// Handle result and error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := response.GetRespStatus()
+		if status.Code != 0 {
+			c.JSON(http.StatusInternalServerError, controller.Fail(500, status.Message))
+			return
+		}
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, ScaleInClusterRsp{
+			StatusInfo:      *ParseStatusFromDTO(response.GetClusterStatus()),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
 }

@@ -56,5 +56,5 @@ type ScaleOutReq struct {
 
 type ScaleInReq struct {
 	ComponentType string  `json:"componentType"`
-	NodeID        string  `json:"nodeId"`
+	NodeId        string  `json:"nodeId"`
 }

@@ -959,11 +959,19 @@ func Test_scaleInCluster(t *testing.T) {
 			Cluster: &Cluster{
 				Id:          "test-tidb123",
 				ClusterName: "test-tidb",
+				ClusterVersion: knowledge.ClusterVersion{Code: "v5.0.0", Name: "v5.0.0"},
+				ClusterType: knowledge.ClusterType{Code: "TiDB", Name: "TiDB"},
 			},
 			CurrentComponentInstances: []*ComponentInstance{
 				{
 					Host: "127.0.0.1",
 					PortList: []int{4000},
+					ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB"},
+				},
+				{
+					Host: "127.0.0.1",
+					PortList: []int{4001},
+					ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB"},
 				},
 			},
 		})
@@ -983,11 +991,19 @@ func Test_scaleInCluster(t *testing.T) {
 			Cluster: &Cluster{
 				Id:          "test-tidb123",
 				ClusterName: "test-tidb",
+				ClusterVersion: knowledge.ClusterVersion{Code: "v5.0.0", Name: "v5.0.0"},
+				ClusterType: knowledge.ClusterType{Code: "TiDB", Name: "TiDB"},
 			},
 			CurrentComponentInstances: []*ComponentInstance{
 				{
 					Host: "127.0.0.1",
 					PortList: []int{4000},
+					ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB"},
+				},
+				{
+					Host: "127.0.0.1",
+					PortList: []int{4001},
+					ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB"},
 				},
 			},
 		})

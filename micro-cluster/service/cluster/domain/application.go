@@ -628,9 +628,25 @@ func scaleInCluster(task *TaskEntity, context *FlowContext) bool {
 		task.Fail(fmt.Errorf("node: %s is not exist", nodeId))
 		return false
 	}
+
+	if knowledge.GetComponentSpec(cluster.ClusterType.Code,
+		cluster.ClusterVersion.Code, componentInstance.ComponentType.ComponentType).ComponentConstraint.ComponentRequired {
+		nodeCount := 0
+		for _, instance := range clusterAggregation.CurrentComponentInstances {
+			if instance.ComponentType.ComponentType == componentInstance.ComponentType.ComponentType {
+				nodeCount += 1
+			}
+		}
+		if nodeCount <= 1 {
+			getLoggerWithContext(context).Errorf("node: %s is unique in %s, can not delete it", nodeId, cluster.ClusterName)
+			task.Fail(fmt.Errorf("node: %s can not be deleted", nodeId))
+			return false
+		}
+	}
+
 	getLoggerWithContext(context).Infof("scale in cluster %s, delete node: %s", cluster.ClusterName, nodeId)
 	scaleInTaskId, err := secondparty.SecondParty.MicroSrvTiupScaleIn(
-		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, nodeId,0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, uint64(task.Id))
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, nodeId,0, []string{"--yes"}, uint64(task.Id))
 
 	if err != nil {
 		getLoggerWithContext(context).Errorf("call tiup api scale in cluster err = %s", err.Error())

@@ -153,7 +153,6 @@ func (secondMicro *SecondMicro) startNewTiupScaleInTask(ctx context.Context, tas
 		var args []string
 		args = append(args, string(req.TiUPComponent), "scale-in", req.InstanceName, "--node", req.NodeId)
 		args = append(args, req.Flags...)
-		args = append(args, "--yes")
 		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }

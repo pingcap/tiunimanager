@@ -56,6 +56,7 @@ const (
 	TABLE_NAME_TRANSPORT_RECORD   = "transport_records"
 	TABLE_NAME_RECOVER_RECORD     = "recover_records"
 	TABLE_NAME_COMPONENT_INSTANCE = "component_instances"
+	TABLE_NAME_CLUSTER_RELATION = "cluster_relations"
 	TABLE_NAME_PARAM              = "params"
 	TABLE_NAME_PARAM_GROUP        = "param_groups"
 	TABLE_NAME_PARAM_GROUP_MAP    = "param_group_map"

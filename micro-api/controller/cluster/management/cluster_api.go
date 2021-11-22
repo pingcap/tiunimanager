@@ -503,11 +503,12 @@ func DescribeMonitor(c *gin.Context) {
 
 // ScaleOut scale out a cluster
 // @Summary scale out a cluster
-// @Description scale out of a cluster
+// @Description scale out a cluster
 // @Tags cluster
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
 // @Param scaleOutReq body ScaleOutReq true "scale out request"
 // @Success 200 {object} controller.CommonResult{data=ScaleOutClusterRsp}
 // @Failure 401 {object} controller.CommonResult
@@ -550,6 +551,57 @@ func ScaleOut(c *gin.Context) {
 		}
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, ScaleOutClusterRsp{
+			StatusInfo:      *ParseStatusFromDTO(response.GetClusterStatus()),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
+}
+
+// ScaleIn scale in a cluster
+// @Summary scale in a cluster
+// @Description scale in a cluster
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
+// @Param scaleInReq body ScaleInReq true "scale in request"
+// @Success 200 {object} controller.CommonResult{data=ScaleInClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/scale-in [post]
+func ScaleIn(c *gin.Context) {
+	var req ScaleInReq
+
+	if err := c.ShouldBindWith(&req, binding.JSON); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	operator := controller.GetOperator(c)
+
+	// Create ScaleInRequest
+	request := &clusterpb.ScaleInRequest{
+		Operator: operator.ConvertToDTO(),
+		ClusterId: c.Param("clusterId"),
+		NodeId:  req.NodeId,
+	}
+
+	// Scale in cluster
+	response, err := client.ClusterClient.ScaleInCluster(framework.NewMicroCtxFromGinCtx(c), request, controller.DefaultTimeout)
+
+	// Handle result and error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := response.GetRespStatus()
+		if status.Code != 0 {
+			c.JSON(http.StatusInternalServerError, controller.Fail(500, status.Message))
+			return
+		}
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, ScaleInClusterRsp{
 			StatusInfo:      *ParseStatusFromDTO(response.GetClusterStatus()),
 		})
 

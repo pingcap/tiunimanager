@@ -23,6 +23,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	mock "github.com/pingcap-inc/tiem/test/mockdb"
 	"github.com/pingcap-inc/tiem/test/mocksecondparty"
@@ -375,6 +376,20 @@ func TestScaleOutCluster(t *testing.T) {
 	assert.Equal(t, "TiDB", got.AddedComponentDemand[0].ComponentType.ComponentType)
 	assert.Equal(t, "TiKV", got.AddedComponentDemand[1].ComponentType.ComponentType)
 	assert.Equal(t, "PD", got.AddedComponentDemand[2].ComponentType.ComponentType)
+}
+
+func TestScaleInCluster(t *testing.T) {
+	got, err := ScaleInCluster(context.TODO(),
+		&clusterpb.OperatorDTO{
+			Id:       "testoperator",
+			Name:     "testoperator",
+			TenantId: "testoperator",
+		},
+		"testCluster",
+		"127.0.0.1:4000")
+
+	assert.NoError(t, err)
+	assert.Equal(t, "testoperator", got.CurrentOperator.TenantId)
 }
 
 func TestTakeoverClusters(t *testing.T) {
@@ -926,6 +941,64 @@ func Test_scaleOutCluster(t *testing.T) {
 
 }
 
+func Test_scaleInCluster(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	secondparty.SecondParty = mockTiup
+
+	t.Run("success", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupScaleIn(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			CurrentComponentInstances: []*ComponentInstance{
+				{
+					Host: "127.0.0.1",
+					PortList: []int{4000},
+				},
+			},
+		})
+		flowCtx.SetData(contextDeleteNodeKey, "127.0.0.1:4000")
+		ret := scaleInCluster(task, flowCtx)
+
+		assert.Equal(t, true, ret)
+	})
+	t.Run("fail", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupScaleIn(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), errors.New("wrong"))
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		flowCtx := NewFlowContext(context.TODO())
+		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+			CurrentComponentInstances: []*ComponentInstance{
+				{
+					Host: "127.0.0.1",
+					PortList: []int{4000},
+				},
+			},
+		})
+		flowCtx.SetData(contextDeleteNodeKey, "127.0.0.1:4000")
+		ret := scaleInCluster(task, flowCtx)
+
+		assert.Equal(t, false, ret)
+	})
+
+}
+
 func Test_freedResource(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -944,6 +1017,37 @@ func Test_freedResource(t *testing.T) {
 	})
 	result := freedResource(&TaskEntity{}, ctx)
 
+	assert.True(t, result)
+}
+
+func Test_freedNodeResource(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockClient := mock.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().RecycleResources(gomock.Any(), gomock.Any()).Return(&dbpb.DBRecycleResponse{
+		Rs: &dbpb.DBAllocResponseStatus{Code: 0, Message: ""},
+	}, nil)
+	client.DBClient = mockClient
+
+	ctx := NewFlowContext(context.TODO())
+	ctx.SetData(contextClusterKey, &ClusterAggregation{
+		Cluster: &Cluster{
+			Id: "test-abc",
+		},
+		CurrentComponentInstances: []*ComponentInstance{
+			{
+				Host: "127.0.0.1",
+				PortList: []int{4000},
+				Compute: &resource.ComputeRequirement{CpuCores: 4, Memory: 8},
+			},
+		},
+	})
+	ctx.SetData(contextDeleteNodeKey, "127.0.0.1:4000")
+	result := freeNodeResource(&TaskEntity{}, ctx)
+	got := ctx.GetData(contextClusterKey).(*ClusterAggregation)
+
+	assert.Equal(t, got.CurrentComponentInstances[0].Status, ClusterStatusDeleted)
 	assert.True(t, result)
 }
 

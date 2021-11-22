@@ -69,3 +69,12 @@ func (m *DAOClusterManager) AddClusterComponentInstance(ctx context.Context, clu
 	err := m.db.CreateInBatches(componentInstances, len(componentInstances)).Error
 	return componentInstances, err
 }
+
+func (m *DAOClusterManager) DeleteClusterComponentInstance(ctx context.Context, instanceId string) error {
+	if "" == instanceId {
+		return fmt.Errorf("DeleteInstance has invalid parameter, instanceId: %s", instanceId)
+	}
+	instance := &ComponentInstance{}
+	return m.Db(ctx).First(instance, "id = ?", instanceId).Delete(instance).Error
+}
+

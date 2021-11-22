@@ -237,3 +237,53 @@ func TestDAOClusterManager_ListComponentInstancesByHost(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestDAOClusterManager_DeleteClusterComponentInstance(t *testing.T) {
+	dao := Dao.ClusterManager()
+	data1 := []*ComponentInstance{
+		{
+			Entity: Entity {
+				TenantId: "1111",
+			},
+			ClusterId: "cluster31",
+			ComponentType: "TiKV",
+			Role: "Leader",
+			PortInfo: "{}",
+			DiskId: "1111",
+			Version: "v5.1.1",
+			HostId: "HostId31",
+			AllocRequestId: "121212",
+		},
+		{
+			Entity: Entity {
+				TenantId: "1111",
+			},
+			ClusterId: "cluster31",
+			ComponentType: "TiKV",
+			Role: "Flower",
+			PortInfo: "{}",
+			DiskId: "2222",
+			Version: "v5.1.1",
+			HostId: "HostId32",
+			AllocRequestId: "121212",
+		},
+	}
+	_ , err := dao.AddClusterComponentInstance(context.TODO(), "cluster31", data1)
+	assert.NoError(t, err)
+	t.Run("normal", func(t *testing.T) {
+		got, err := dao.ListComponentInstances(context.TODO(), "cluster31")
+		assert.NoError(t, err)
+		assert.Equal(t, 2, len(got))
+		err = dao.DeleteClusterComponentInstance(context.TODO(), got[0].ID)
+		assert.NoError(t, err)
+
+		got, err = dao.ListComponentInstances(context.TODO(), "cluster31")
+		assert.Equal(t, 1, len(got))
+
+		err = dao.DeleteClusterComponentInstance(context.TODO(), got[0].ID)
+		assert.NoError(t, err)
+
+		got, err = dao.ListComponentInstances(context.TODO(), "cluster31")
+		assert.Equal(t, 0, len(got))
+	})
+}

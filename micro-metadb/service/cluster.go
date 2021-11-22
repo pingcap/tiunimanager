@@ -111,6 +111,25 @@ func (handler *DBServiceHandler) DeleteCluster(ctx context.Context, req *dbpb.DB
 	return err
 }
 
+func (handler *DBServiceHandler) DeleteInstance(ctx context.Context, req *dbpb.DBDeleteInstanceRequest, resp *dbpb.DBDeleteInstanceResponse) (err error) {
+	if nil == req || nil == resp {
+		return errors.Errorf("DeleteInstance has invalid parameter")
+	}
+	log := framework.LogWithContext(ctx)
+	clusterManager := handler.Dao().ClusterManager()
+	err = clusterManager.DeleteClusterComponentInstance(ctx, req.Id)
+
+	if err != nil {
+		resp.Status = BizErrResponseStatus
+		log.Infof("DeleteInstance failed, instanceId: %s， error: %v", req.Id, err)
+	} else {
+		resp.Status = ClusterSuccessResponseStatus
+		log.Infof("DeleteInstance successfully, instanceId: %s", req.Id)
+	}
+
+	return nil
+}
+
 func (handler *DBServiceHandler) CreateInstance(ctx context.Context, req *dbpb.DBCreateInstanceRequest, resp *dbpb.DBCreateInstanceResponse) (err error) {
 	log := framework.LogWithContext(ctx)
 

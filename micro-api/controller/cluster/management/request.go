@@ -51,6 +51,10 @@ type TakeoverReq struct {
 }
 
 type ScaleOutReq struct {
-	ClusterId      string               `json:"clusterId" form:"clusterId"`
 	NodeDemandList []ClusterNodeDemand  `json:"nodeDemandList"`
+}
+
+type ScaleInReq struct {
+	ComponentType string  `json:"componentType"`
+	NodeId        string  `json:"nodeId"`
 }

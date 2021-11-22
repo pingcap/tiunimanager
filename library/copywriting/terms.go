@@ -49,6 +49,7 @@ var CopyWritingContainer = map[string]map[string]string{
 		CWTaskStatusError:      "失败",
 		CWTaskStatusCanceled:   "已取消",
 		CWFlowScaleOutCluster:  "扩容中",
+		CWFlowScaleInCluster:   "缩容中",
 	},
 }
 
@@ -69,6 +70,7 @@ var CWFlowDeleteCluster = "CW_FlowDeleteCluster"
 var CWFlowRestartCluster = "CW_FlowRestartCluster"
 var CWFlowStopCluster = "CW_FlowStopCluster"
 var CWFlowScaleOutCluster = "CW_FlowScaleOutCluster"
+var CWFlowScaleInCluster = "CW_FlowScaleInCluster"
 
 var CWFlowBackupCluster = "CW_FlowBackupCluster"
 var CWFlowRecoverCluster = "CW_FlowRecoverCluster"

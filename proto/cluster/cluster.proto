@@ -19,6 +19,7 @@ service ClusterService {
     rpc TakeoverClusters(ClusterTakeoverReqDTO) returns (ClusterTakeoverRespDTO);
 
     rpc ScaleOutCluster(ScaleOutRequest) returns (ScaleOutResponse);
+    rpc ScaleInCluster(ScaleInRequest) returns (ScaleInResponse);
 
     rpc ImportData(DataImportRequest) returns (DataImportResponse);
     rpc ExportData(DataExportRequest) returns (DataExportResponse);
@@ -150,6 +151,17 @@ message ScaleOutRequest {
 }
 
 message ScaleOutResponse {
+    ResponseStatusDTO respStatus = 1;
+    DisplayStatusDTO clusterStatus = 2;
+}
+
+message ScaleInRequest {
+    OperatorDTO operator = 1;
+    string clusterId = 2;
+    string nodeId = 3;
+}
+
+message ScaleInResponse {
     ResponseStatusDTO respStatus = 1;
     DisplayStatusDTO clusterStatus = 2;
 }

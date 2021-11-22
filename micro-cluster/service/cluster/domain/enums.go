@@ -150,6 +150,7 @@ const (
 	FlowTakeoverCluster  = "TakeoverCluster"
 	FlowBuildLogConfig   = "BuildLogConfig"
 	FlowScaleOutCluster  = "ScaleOutCluster"
+	FlowScaleInCluster   = "ScaleInCluster"
 )
 
 type CronTaskType int8

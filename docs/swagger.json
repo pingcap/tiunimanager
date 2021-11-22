@@ -1418,6 +1418,82 @@
                 }
             }
         },
+        "/clusters/{clusterId}/scale-in": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "scale in a cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster"
+                ],
+                "summary": "scale in a cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "scale in request",
+                        "name": "scaleInReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/management.ScaleInReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/management.ScaleInClusterRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/{clusterId}/scale-out": {
             "post": {
                 "security": [
@@ -1425,7 +1501,7 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "scale out of a cluster",
+                "description": "scale out a cluster",
                 "consumes": [
                     "application/json"
                 ],
@@ -1437,6 +1513,13 @@
                 ],
                 "summary": "scale out a cluster",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "cluster id",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "description": "scale out request",
                         "name": "scaleOutReq",
@@ -4411,6 +4494,40 @@
                 }
             }
         },
+        "management.ScaleInClusterRsp": {
+            "type": "object",
+            "properties": {
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "management.ScaleInReq": {
+            "type": "object",
+            "properties": {
+                "componentType": {
+                    "type": "string"
+                },
+                "nodeId": {
+                    "type": "string"
+                }
+            }
+        },
         "management.ScaleOutClusterRsp": {
             "type": "object",
             "properties": {
@@ -4437,9 +4554,6 @@
         "management.ScaleOutReq": {
             "type": "object",
             "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
                 "nodeDemandList": {
                     "type": "array",
                     "items": {

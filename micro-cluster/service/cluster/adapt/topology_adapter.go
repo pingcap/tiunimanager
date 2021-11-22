@@ -93,6 +93,8 @@ func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*
 func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, cluster *domain.Cluster, components []*domain.ComponentGroup, takeover bool) (*clusterpb.BatchAllocRequest, error) {
 	requirementList := make([]*clusterpb.AllocRequirement, 0)
 
+	requestId := uuidutil.GenerateID()
+
 	for _, component := range components {
 		for _, instance := range component.Nodes {
 			portRequirementList := make([]*clusterpb.PortRequirement, 0)
@@ -124,6 +126,9 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, clu
 					knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType){
 					continue
 				}
+
+				instance.AllocRequestId = requestId
+
 				portRequirementList = append(portRequirementList, &clusterpb.PortRequirement{
 					Start: instance.PortRequirement.Start,
 					End: instance.PortRequirement.End,
@@ -159,7 +164,7 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, clu
 			{
 				Applicant: &clusterpb.Applicant{
 					HolderId:  cluster.Id,
-					RequestId: uuidutil.GenerateID(),
+					RequestId: requestId,
 				},
 
 				Requires: requirementList,

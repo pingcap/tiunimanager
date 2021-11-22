@@ -19,6 +19,7 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"fmt"
 	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"path/filepath"
@@ -462,8 +463,23 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 
 	flowContext.SetData(contextAllocRequestKey, req)
 
-	task.Success(nil)
+	prepareResourceSucceed(task, clusterAggregation.AddedAllocResources)
 	return true
+}
+
+func prepareResourceSucceed(task *TaskEntity, resource *clusterpb.BatchAllocResponse) {
+	allHost := make([]string, 0)
+	if resource != nil && resource.Rs.Code == 0 {
+		for _, r := range resource.BatchResults {
+			if r != nil && r.Rs.Code != 0 {
+				continue
+			}
+			for _, k := range r.Results {
+				allHost = append(allHost, k.HostIp)
+			}
+		}
+	}
+	task.Success(fmt.Sprintf("alloc succeed with hosts: %s", allHost))
 }
 
 func buildConfig(task *TaskEntity, context *FlowContext) bool {
@@ -486,7 +502,12 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	clusterAggregation.AlteredTopology = configModel
-	task.Success(nil)
+	bytes, err := yaml.Marshal(configModel)
+	if err != nil {
+		task.Success(nil)
+	} else {
+		task.Success(string(bytes))
+	}
 	return true
 }
 
@@ -515,6 +536,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	getLoggerWithContext(context).Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
+
 	return true
 }
 

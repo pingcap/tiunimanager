@@ -103,9 +103,13 @@ definitions:
         type: string
       createTime:
         type: string
-      downstreamConfig:
+      downstream:
         type: object
       downstreamType:
+        enum:
+        - tidb
+        - kafka
+        - mysql
         example: tidb
         type: string
       id:
@@ -124,6 +128,13 @@ definitions:
         example: 415241823337054209
         type: integer
       status:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
         example: 1
         type: integer
       updateTime:
@@ -136,7 +147,7 @@ definitions:
         type: string
       createTime:
         type: string
-      downstreamConfig:
+      downstream:
         type: object
       downstreamFetchTs:
         example: 415241823337054209
@@ -145,6 +156,10 @@ definitions:
         example: 415241823337054209
         type: integer
       downstreamType:
+        enum:
+        - tidb
+        - kafka
+        - mysql
         example: tidb
         type: string
       id:
@@ -163,6 +178,13 @@ definitions:
         example: 415241823337054209
         type: integer
       status:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
         example: 1
         type: integer
       unsteady:
@@ -172,6 +194,108 @@ definitions:
         type: string
       upstreamUpdateTs:
         example: 415241823337054209
+        type: integer
+    type: object
+  changefeed.KafkaDownstream:
+    properties:
+      clientId:
+        example: "213"
+        type: string
+      dispatchers:
+        items:
+          type: string
+        type: array
+      ip:
+        example: 127.0.0.1
+        type: string
+      maxBatchSize:
+        example: 5
+        type: integer
+      maxMessageBytes:
+        example: 16
+        type: integer
+      partitions:
+        example: 1
+        type: integer
+      port:
+        example: 9001
+        type: integer
+      protocol:
+        enum:
+        - default
+        - canal
+        - avro
+        - maxwell
+        example: default
+        type: string
+      replicationFactor:
+        example: 1
+        type: integer
+      tls:
+        example: false
+        type: boolean
+      topicName:
+        example: my_topic
+        type: string
+      version:
+        example: 2.4.0
+        type: string
+    type: object
+  changefeed.MysqlDownstream:
+    properties:
+      concurrentThreads:
+        example: 7
+        type: integer
+      ip:
+        example: 127.0.0.1
+        type: string
+      maxTxnRow:
+        example: 5
+        type: integer
+      password:
+        example: my_password
+        type: string
+      port:
+        example: 8001
+        type: integer
+      tls:
+        example: false
+        type: boolean
+      username:
+        example: root
+        type: string
+      workerCount:
+        example: 2
+        type: integer
+    type: object
+  changefeed.TiDBDownstream:
+    properties:
+      concurrentThreads:
+        example: 5
+        type: integer
+      ip:
+        example: 127.0.0.1
+        type: string
+      maxTxnRow:
+        example: 4
+        type: integer
+      password:
+        example: my_password
+        type: string
+      port:
+        example: 4534
+        type: integer
+      targetClusterId:
+        example: CLUSTER_ID_IN_TIEM__22
+        type: string
+      tls:
+        example: false
+        type: boolean
+      username:
+        example: tidb
+        type: string
+      workerCount:
+        example: 2
         type: integer
     type: object
   controller.CommonResult:
@@ -1489,7 +1613,7 @@ paths:
       parameters:
       - description: change feed task request
         in: body
-        name: task
+        name: changeFeedTask
         required: true
         schema:
           $ref: '#/definitions/changefeed.ChangeFeedTask'
@@ -1503,7 +1627,12 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/changefeed.ChangeFeedTask'
+                  allOf:
+                  - $ref: '#/definitions/changefeed.ChangeFeedTask'
+                  - properties:
+                      downstream:
+                        $ref: '#/definitions/changefeed.MysqlDownstream'
+                    type: object
               type: object
         "401":
           description: Unauthorized
@@ -1606,7 +1735,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: resume a change feed task
+      description: pause a change feed task
       parameters:
       - description: changeFeedTaskId
         in: path
@@ -1624,6 +1753,51 @@ paths:
             - properties:
                 data:
                   $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: pause a change feed task
+      tags:
+      - change feed
+  /changefeeds/{changeFeedTaskId}/resume:
+    post:
+      consumes:
+      - application/json
+      description: resume a change feed task
+      parameters:
+      - description: changeFeedTaskId
+        in: path
+        name: changeFeedTaskId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
+                  - properties:
+                      downstream:
+                        $ref: '#/definitions/changefeed.TiDBDownstream'
+                    type: object
               type: object
         "401":
           description: Unauthorized
@@ -1669,7 +1843,12 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
+                  allOf:
+                  - $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
+                  - properties:
+                      downstream:
+                        $ref: '#/definitions/changefeed.KafkaDownstream'
+                    type: object
               type: object
         "401":
           description: Unauthorized

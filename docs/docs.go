@@ -365,7 +365,7 @@ var doc = `{
                 "parameters": [
                     {
                         "description": "change feed task request",
-                        "name": "task",
+                        "name": "changeFeedTask",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -385,7 +385,19 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/changefeed.ChangeFeedTask"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/changefeed.ChangeFeedTask"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "downstream": {
+                                                            "$ref": "#/definitions/changefeed.MysqlDownstream"
+                                                        }
+                                                    }
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -554,6 +566,73 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "pause a change feed task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "change feed"
+                ],
+                "summary": "pause a change feed task",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "changeFeedTaskId",
+                        "name": "changeFeedTaskId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/changefeeds/{changeFeedTaskId}/resume": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "resume a change feed task",
                 "consumes": [
                     "application/json"
@@ -586,7 +665,19 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "downstream": {
+                                                            "$ref": "#/definitions/changefeed.TiDBDownstream"
+                                                        }
+                                                    }
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -662,7 +753,19 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "downstream": {
+                                                            "$ref": "#/definitions/changefeed.KafkaDownstream"
+                                                        }
+                                                    }
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -3475,11 +3578,16 @@ var doc = `{
                 "createTime": {
                     "type": "string"
                 },
-                "downstreamConfig": {
+                "downstream": {
                     "type": "object"
                 },
                 "downstreamType": {
                     "type": "string",
+                    "enum": [
+                        "tidb",
+                        "kafka",
+                        "mysql"
+                    ],
                     "example": "tidb"
                 },
                 "id": {
@@ -3505,6 +3613,14 @@ var doc = `{
                 },
                 "status": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4,
+                        5
+                    ],
                     "example": 1
                 },
                 "updateTime": {
@@ -3522,7 +3638,7 @@ var doc = `{
                 "createTime": {
                     "type": "string"
                 },
-                "downstreamConfig": {
+                "downstream": {
                     "type": "object"
                 },
                 "downstreamFetchTs": {
@@ -3535,6 +3651,11 @@ var doc = `{
                 },
                 "downstreamType": {
                     "type": "string",
+                    "enum": [
+                        "tidb",
+                        "kafka",
+                        "mysql"
+                    ],
                     "example": "tidb"
                 },
                 "id": {
@@ -3560,6 +3681,14 @@ var doc = `{
                 },
                 "status": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4,
+                        5
+                    ],
                     "example": 1
                 },
                 "unsteady": {
@@ -3572,6 +3701,145 @@ var doc = `{
                 "upstreamUpdateTs": {
                     "type": "integer",
                     "example": 415241823337054209
+                }
+            }
+        },
+        "changefeed.KafkaDownstream": {
+            "type": "object",
+            "properties": {
+                "clientId": {
+                    "type": "string",
+                    "example": "213"
+                },
+                "dispatchers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "127.0.0.1"
+                },
+                "maxBatchSize": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "maxMessageBytes": {
+                    "type": "integer",
+                    "example": 16
+                },
+                "partitions": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 9001
+                },
+                "protocol": {
+                    "type": "string",
+                    "enum": [
+                        "default",
+                        "canal",
+                        "avro",
+                        "maxwell"
+                    ],
+                    "example": "default"
+                },
+                "replicationFactor": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tls": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "topicName": {
+                    "type": "string",
+                    "example": "my_topic"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "2.4.0"
+                }
+            }
+        },
+        "changefeed.MysqlDownstream": {
+            "type": "object",
+            "properties": {
+                "concurrentThreads": {
+                    "type": "integer",
+                    "example": 7
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "127.0.0.1"
+                },
+                "maxTxnRow": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "password": {
+                    "type": "string",
+                    "example": "my_password"
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 8001
+                },
+                "tls": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "username": {
+                    "type": "string",
+                    "example": "root"
+                },
+                "workerCount": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "changefeed.TiDBDownstream": {
+            "type": "object",
+            "properties": {
+                "concurrentThreads": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "127.0.0.1"
+                },
+                "maxTxnRow": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "password": {
+                    "type": "string",
+                    "example": "my_password"
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 4534
+                },
+                "targetClusterId": {
+                    "type": "string",
+                    "example": "CLUSTER_ID_IN_TIEM__22"
+                },
+                "tls": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "username": {
+                    "type": "string",
+                    "example": "tidb"
+                },
+                "workerCount": {
+                    "type": "integer",
+                    "example": 2
                 }
             }
         },

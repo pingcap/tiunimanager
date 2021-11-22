@@ -23,9 +23,9 @@ type ChangeFeedTask struct {
 	ClusterId      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
 	StartTS        uint        `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
-	Status         int         `json:"status" form:"status" example:"1"`
-	DownstreamType string         `json:"downstreamType"  form:"downstreamType" example:"tidb"`
-	Downstream     interface{} `json:"downstreamConfig" form:"downstreamConfig"`
+	Status         int         `json:"status" form:"status" example:"1" enums:"0,1,2,3,4,5"`
+	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
+	Downstream     interface{} `json:"downstream" form:"downstream"`
 	CreateTime     time.Time   `json:"createTime" form:"createTime"`
 	UpdateTime     time.Time   `json:"updateTime" form:"updateTime"`
 }
@@ -47,7 +47,7 @@ type KafkaDownstream struct {
 	Version           string   `json:"version" form:"version" example:"2.4.0"`
 	ClientId          string   `json:"clientId" form:"clientId" example:"213"`
 	TopicName         string   `json:"topicName" form:"topicName" example:"my_topic"`
-	Protocol          string   `json:"protocol" form:"protocol" example:"default"`
+	Protocol          string   `json:"protocol" form:"protocol" example:"default" enums:"default,canal,avro,maxwell"`
 	Partitions        int      `json:"partitions" form:"partitions" example:"1"`
 	ReplicationFactor int      `json:"replicationFactor" form:"replicationFactor" example:"1"`
 	MaxMessageBytes   int      `json:"maxMessageBytes" form:"maxMessageBytes" example:"16"`

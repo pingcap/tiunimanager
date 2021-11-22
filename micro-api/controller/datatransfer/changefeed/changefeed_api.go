@@ -26,8 +26,8 @@ import (
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param task body ChangeFeedTask true "change feed task request"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTask}
+// @Param changeFeedTask body ChangeFeedTask true "change feed task request"
+// @Success 200 {object} controller.CommonResult{data=ChangeFeedTask{downstream=MysqlDownstream}}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -95,11 +95,11 @@ func Pause(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail}
+// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail{downstream=TiDBDownstream}}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /changefeeds/{changeFeedTaskId}/pause [post]
+// @Router /changefeeds/{changeFeedTaskId}/resume [post]
 func Resume(c *gin.Context) {
 
 }
@@ -113,7 +113,7 @@ func Resume(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
 // @Param task body ChangeFeedTask true "change feed task"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail}
+// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail{downstream=KafkaDownstream}}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult

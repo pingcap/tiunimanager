@@ -40,7 +40,7 @@ func InitFlowMap() {
 				"deployDone":       {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
 				"startupDone":      {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
 				"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
-				"onlineDone":       {"end", "", "", SyncFuncTask, ClusterEnd},
+				"onlineDone":       {"end", "", "", SyncFuncTask, CompositeExecutor(ClusterEnd, rebuildClusterLogConfig)},
 				"fail":             {"fail", "", "", SyncFuncTask, CompositeExecutor(ClusterFail, freedResourceAfterFailure)},
 			},
 			ContextParser: defaultContextParser,
@@ -79,8 +79,8 @@ func InitFlowMap() {
 				"configDone":       {"scaleOutCluster", "scaleOutDone", "fail", PollingTasK, scaleOutCluster},
 				"scaleOutDone":     {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
 				"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
-				"onlineDone":       {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":             {"fail", "", "", SyncFuncTask, ClusterFail},
+				"onlineDone":       {"end", "", "", SyncFuncTask, CompositeExecutor(ClusterEnd, rebuildClusterLogConfig)},
+				"fail":             {"fail", "", "", SyncFuncTask, CompositeExecutor(ClusterFail, freedResourceAfterFailure)},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -109,7 +109,7 @@ func InitFlowMap() {
 				"startupDone":      {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
 				"syncTopologyDone": {"recoverFromSrcCluster", "recoverDone", "fail", PollingTasK, recoverFromSrcCluster},
 				"recoverDone":      {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
-				"onlineDone":       {"end", "", "", SyncFuncTask, ClusterEnd},
+				"onlineDone":       {"end", "", "", SyncFuncTask, CompositeExecutor(ClusterEnd, rebuildClusterLogConfig)},
 				"fail":             {"fail", "", "", SyncFuncTask, CompositeExecutor(ClusterFail, freedResourceAfterFailure)},
 			},
 			ContextParser: defaultContextParser,
@@ -249,12 +249,8 @@ func ClusterPersist(task *TaskEntity, context *FlowContext) bool {
 	return ClusterRepo.Persist(context, context.GetData(contextClusterKey).(*ClusterAggregation)) == nil
 }
 
-func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
-	task.Success(nil)
+func rebuildClusterLogConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
-	clusterAggregation.Cluster.WorkFlowId = 0
-	clusterAggregation.FlowModified = true
-
 	if clusterAggregation.ConfigModified {
 		go time.AfterFunc(time.Second*3, func() {
 			framework.LogWithContext(context.Context).Infof("BuildClusterLogConfig for cluster %s", clusterAggregation.Cluster.Id)
@@ -264,6 +260,15 @@ func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
 			}
 		})
 	}
+	return true
+}
+
+func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
+	task.Success(nil)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation.Cluster.WorkFlowId = 0
+	clusterAggregation.FlowModified = true
+
 	return true
 }
 

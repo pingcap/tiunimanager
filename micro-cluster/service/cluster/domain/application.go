@@ -496,7 +496,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 		task.Fail(err)
 		return false
 	} else 	if clusterAggregation.AddedAllocResources.Rs.Code != 0 {
-		err = framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, clusterAggregation.AddedAllocResources.Rs.Message)
+		err = framework.NewTiEMErrorf(common.TIEM_CLUSTER_RESOURCE_NOT_ENOUGH, clusterAggregation.AddedAllocResources.Rs.Message)
 		getLoggerWithContext(flowContext).Error(err)
 		task.Fail(err)
 		return false

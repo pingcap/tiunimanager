@@ -50,10 +50,10 @@ type Cluster struct {
 }
 
 type ClusterRelation struct {
-	gorm.Model
-	MasterClusterId string
-	SlaveClusterId  string
-	Type            int //1-master&slave 2-source&target 3-TiDB&DM
+	Record
+	SubjectClusterId string
+	ObjectClusterId  string
+	RelationType     int
 }
 
 type DemandRecord struct {
@@ -604,48 +604,50 @@ func (m *DAOClusterManager) QueryBackupStartegyByTime(ctx context.Context, weekd
 }
 
 func (m *DAOClusterManager) AddClusterRelation(ctx context.Context, request ClusterRelation) (result *ClusterRelation, err error) {
-	if "" == request.MasterClusterId || "" == request.SlaveClusterId || request.Type <= 0{
-		return nil, errors.New(fmt.Sprintf("AddClusterRelation failed, has invalid parameter, masterId: %s, slaveId: %s, type: %d", request.MasterClusterId, request.SlaveClusterId, request.Type))
+	if "" == request.TenantId || "" == request.SubjectClusterId || "" == request.ObjectClusterId || request.RelationType <= 0{
+		return nil, errors.New(fmt.Sprintf("AddClusterRelation failed, has invalid parameter, tenantId: %s, subjectClusterId: %s, objectClusterId: %s, relationType: %d", request.TenantId, request.SubjectClusterId, request.ObjectClusterId, request.RelationType))
 	}
 	result = &ClusterRelation{
-		MasterClusterId: request.MasterClusterId,
-		SlaveClusterId:  request.SlaveClusterId,
-		Type:            request.Type,
+		Record:           Record{TenantId: request.TenantId},
+		SubjectClusterId: request.SubjectClusterId,
+		ObjectClusterId:  request.ObjectClusterId,
+		RelationType:     request.RelationType,
 	}
-	fmt.Println("create")
 	return result, m.Db(ctx).Create(result).Error
 }
-
-func (m *DAOClusterManager) ListClusterRelationByMasterId(ctx context.Context, masterId string) (result []*ClusterRelation, err error) {
-	if "" == masterId {
-		return nil, errors.New(fmt.Sprintf("ListClusterRelationByMasterId failed, has invalid parameter, masterId: %s", masterId))
+//list的结果为空时需要报错吗？
+func (m *DAOClusterManager) ListClusterRelationBySubjectId(ctx context.Context, subjectId string) (result []*ClusterRelation, err error) {
+	if "" == subjectId {
+		return nil, errors.New(fmt.Sprintf("ListClusterRelationBySubjectId failed, has invalid parameter, subjectId: %s", subjectId))
 	}
 	result = make([]*ClusterRelation, 0)
-	return result, m.Db(ctx).Table(TABLE_NAME_CLUSTER_RELATION).Where("master_id = ?", masterId).Find(&result).Error
+	return result, m.Db(ctx).Table(TABLE_NAME_CLUSTER_RELATION).Where("subject_cluster_id = ?", subjectId).Find(&result).Error
 }
 
-func (m *DAOClusterManager) ListClusterRelationBySlaveId(ctx context.Context, slaveId string) (result []*ClusterRelation, err error) {
-	if "" == slaveId {
-		return nil, errors.New(fmt.Sprintf("ListClusterRelationBySlaveId failed, has invalid parameter, slaveId: %s", slaveId))
+func (m *DAOClusterManager) ListClusterRelationByObjectId(ctx context.Context, objectId string) (result []*ClusterRelation, err error) {
+	if "" == objectId {
+		return nil, errors.New(fmt.Sprintf("ListClusterRelationByObjectId failed, has invalid parameter, objectId: %s", objectId))
 	}
 	result = make([]*ClusterRelation, 0)
-	return result, m.Db(ctx).Table(TABLE_NAME_CLUSTER_RELATION).Where("slave_id = ?", slaveId).Find(&result).Error
+	return result, m.Db(ctx).Table(TABLE_NAME_CLUSTER_RELATION).Where("object_cluster_id = ?", objectId).Find(&result).Error
 }
 
-func (m *DAOClusterManager) UpdateClusterRelation(ctx context.Context, relationId int64, masterId, slaveId string, relationType int) (result *ClusterRelation, err error) {
-	if relationId < 0 {
-		return nil, errors.New(fmt.Sprintf("UpdateClusterRelation has invalid parameter, relationId: %d", relationId))
+//update是否需要验证更新的字段不为空
+//更新时是否需要更新tenantId
+func (m *DAOClusterManager) UpdateClusterRelation(ctx context.Context, relationId uint, subjectId, objectId string, relationType int) (result *ClusterRelation, err error) {
+	if relationId <= 0 || "" == subjectId || "" == objectId || relationType <= 0 {
+		return nil, errors.New(fmt.Sprintf("UpdateClusterRelation has invalid parameter, relationId: %d, subjectId: %s, objectId: %s, relationType: %d", relationId, subjectId, objectId, relationType))
 	}
 	result = &ClusterRelation{}
 	return result, m.Db(ctx).Model(result).Where("id = ?", relationId).First(result).
-		Update("master_id", masterId).
-		Update("slave_id", slaveId).
+		Update("subject_cluster_id", subjectId).
+		Update("object_cluster_id", objectId).
 		Update("relation_type", relationType).
 		Error
 }
 
 func (m *DAOClusterManager) DeleteClusterRelation(ctx context.Context, relationId uint) (result *ClusterRelation, err error) {
-	if relationId < 0 {
+	if relationId <= 0 {
 		return nil, errors.New(fmt.Sprintf("DeleteClusterRelation has invalid parameter, relationId: %d", relationId))
 	}
 	result = &ClusterRelation{}

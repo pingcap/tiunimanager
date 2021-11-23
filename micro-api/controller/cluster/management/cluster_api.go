@@ -123,13 +123,14 @@ func Preview(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, PreviewClusterRsp {
+	c.JSON(http.StatusOK, controller.Success(PreviewClusterRsp {
 		ClusterBaseInfo:	req.ClusterBaseInfo,
 		StockCheckResult: stockCheckResult,
 		CapabilityIndexes: []ServiceCapabilityIndex{
-			// todo capability
+			{"StorageCapability", "database storage capability", 800, "GB"},
+			{"TPCC", "TPCC tmpC ", 523456, ""},
 		},
-	})
+	}))
 }
 
 // Query query clusters

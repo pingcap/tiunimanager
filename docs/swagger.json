@@ -247,6 +247,537 @@
                 }
             }
         },
+        "/changefeeds/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query change feed tasks of a cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "change feed"
+                ],
+                "summary": "query change feed tasks of a cluster",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "CLUSTER_ID_IN_TIEM__22",
+                        "name": "clusterId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "total",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "create a change feed task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "change feed"
+                ],
+                "summary": "create a change feed task",
+                "parameters": [
+                    {
+                        "description": "change feed task request",
+                        "name": "changeFeedTask",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/changefeed.ChangeFeedTask"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/changefeed.ChangeFeedTask"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "downstream": {
+                                                            "$ref": "#/definitions/changefeed.MysqlDownstream"
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/changefeeds/{changeFeedTaskId}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "delete a change feed task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "change feed"
+                ],
+                "summary": "delete a change feed task",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "changeFeedTaskId",
+                        "name": "changeFeedTaskId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/changefeeds/{changeFeedTaskId}/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "get change feed detail",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "change feed"
+                ],
+                "summary": "get change feed detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "changeFeedTaskId",
+                        "name": "changeFeedTaskId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/changefeeds/{changeFeedTaskId}/pause": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "pause a change feed task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "change feed"
+                ],
+                "summary": "pause a change feed task",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "changeFeedTaskId",
+                        "name": "changeFeedTaskId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/changefeeds/{changeFeedTaskId}/resume": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "resume a change feed task",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "change feed"
+                ],
+                "summary": "resume a change feed task",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "changeFeedTaskId",
+                        "name": "changeFeedTaskId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "downstream": {
+                                                            "$ref": "#/definitions/changefeed.TiDBDownstream"
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/changefeeds/{changeFeedTaskId}/update": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "resume a change feed",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "change feed"
+                ],
+                "summary": "resume a change feed",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "changeFeedTaskId",
+                        "name": "changeFeedTaskId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "change feed task",
+                        "name": "task",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/changefeed.ChangeFeedTask"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "downstream": {
+                                                            "$ref": "#/definitions/changefeed.KafkaDownstream"
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/clusters/": {
             "get": {
                 "security": [
@@ -1021,6 +1552,14 @@
                         "name": "clusterId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "delete request",
+                        "name": "deleteReq",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/management.DeleteReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -3097,6 +3636,281 @@
                 }
             }
         },
+        "changefeed.ChangeFeedTask": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string",
+                    "example": "CLUSTER_ID_IN_TIEM__22"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "downstream": {
+                    "type": "object"
+                },
+                "downstreamType": {
+                    "type": "string",
+                    "enum": [
+                        "tidb",
+                        "kafka",
+                        "mysql"
+                    ],
+                    "example": "tidb"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "CLUSTER_ID_IN_TIEM__22"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "my_sync_name"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "*.*"
+                    ]
+                },
+                "startTS": {
+                    "type": "integer",
+                    "example": 415241823337054209
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4,
+                        5
+                    ],
+                    "example": 1
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "changefeed.ChangeFeedTaskDetail": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string",
+                    "example": "CLUSTER_ID_IN_TIEM__22"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "downstream": {
+                    "type": "object"
+                },
+                "downstreamFetchTs": {
+                    "type": "integer",
+                    "example": 415241823337054209
+                },
+                "downstreamSyncTs": {
+                    "type": "integer",
+                    "example": 415241823337054209
+                },
+                "downstreamType": {
+                    "type": "string",
+                    "enum": [
+                        "tidb",
+                        "kafka",
+                        "mysql"
+                    ],
+                    "example": "tidb"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "CLUSTER_ID_IN_TIEM__22"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "my_sync_name"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "*.*"
+                    ]
+                },
+                "startTS": {
+                    "type": "integer",
+                    "example": 415241823337054209
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4,
+                        5
+                    ],
+                    "example": 1
+                },
+                "unsteady": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "updateTime": {
+                    "type": "string"
+                },
+                "upstreamUpdateTs": {
+                    "type": "integer",
+                    "example": 415241823337054209
+                }
+            }
+        },
+        "changefeed.KafkaDownstream": {
+            "type": "object",
+            "properties": {
+                "clientId": {
+                    "type": "string",
+                    "example": "213"
+                },
+                "dispatchers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "127.0.0.1"
+                },
+                "maxBatchSize": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "maxMessageBytes": {
+                    "type": "integer",
+                    "example": 16
+                },
+                "partitions": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 9001
+                },
+                "protocol": {
+                    "type": "string",
+                    "enum": [
+                        "default",
+                        "canal",
+                        "avro",
+                        "maxwell"
+                    ],
+                    "example": "default"
+                },
+                "replicationFactor": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "tls": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "topicName": {
+                    "type": "string",
+                    "example": "my_topic"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "2.4.0"
+                }
+            }
+        },
+        "changefeed.MysqlDownstream": {
+            "type": "object",
+            "properties": {
+                "concurrentThreads": {
+                    "type": "integer",
+                    "example": 7
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "127.0.0.1"
+                },
+                "maxTxnRow": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "password": {
+                    "type": "string",
+                    "example": "my_password"
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 8001
+                },
+                "tls": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "username": {
+                    "type": "string",
+                    "example": "root"
+                },
+                "workerCount": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
+        "changefeed.TiDBDownstream": {
+            "type": "object",
+            "properties": {
+                "concurrentThreads": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "127.0.0.1"
+                },
+                "maxTxnRow": {
+                    "type": "integer",
+                    "example": 4
+                },
+                "password": {
+                    "type": "string",
+                    "example": "my_password"
+                },
+                "port": {
+                    "type": "integer",
+                    "example": 4534
+                },
+                "targetClusterId": {
+                    "type": "string",
+                    "example": "CLUSTER_ID_IN_TIEM__22"
+                },
+                "tls": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "username": {
+                    "type": "string",
+                    "example": "tidb"
+                },
+                "workerCount": {
+                    "type": "integer",
+                    "example": 2
+                }
+            }
+        },
         "controller.CommonResult": {
             "type": "object",
             "properties": {
@@ -4273,6 +5087,17 @@
                 }
             }
         },
+        "management.DeleteReq": {
+            "type": "object",
+            "properties": {
+                "autoBackup": {
+                    "type": "boolean"
+                },
+                "clearBackupData": {
+                    "type": "boolean"
+                }
+            }
+        },
         "management.DescribeDashboardRsp": {
             "type": "object",
             "properties": {
@@ -4434,11 +5259,20 @@
                 "clusterVersion": {
                     "type": "string"
                 },
+                "cpuArchitecture": {
+                    "type": "string"
+                },
                 "dbPassword": {
                     "type": "string"
                 },
+                "exclusive": {
+                    "type": "boolean"
+                },
                 "recoverInfo": {
                     "$ref": "#/definitions/management.RecoverInfo"
+                },
+                "region": {
+                    "type": "string"
                 },
                 "stockCheckResult": {
                     "type": "array",
@@ -4582,8 +5416,8 @@
         "management.StockCheckItem": {
             "type": "object",
             "properties": {
-                "componentType": {
-                    "type": "string"
+                "component": {
+                    "$ref": "#/definitions/knowledge.ClusterComponent"
                 },
                 "count": {
                     "type": "integer"

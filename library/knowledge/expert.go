@@ -157,7 +157,7 @@ func loadSpecKnowledge() {
 	}
 
 	tiFlashComponent := ClusterComponent{
-		"TiFlash", "column-based storage","TiFlash",
+		"TiFlash", "column-based-storage","TiFlash",
 	}
 
 	grafanaComponent := ClusterComponent{

@@ -26,6 +26,7 @@ type CreateClusterRsp struct {
 
 type PreviewClusterRsp struct {
 	ClusterBaseInfo
+	ClusterCommonDemand
 	StockCheckResult  []StockCheckItem         `json:"stockCheckResult"`
 	CapabilityIndexes []ServiceCapabilityIndex `json:"capabilityIndexes"`
 }

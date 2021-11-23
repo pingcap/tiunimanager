@@ -23,6 +23,7 @@ import (
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
+	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/changefeed"
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/specs"
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
@@ -127,6 +128,22 @@ func Route(g *gin.Engine) {
 			backup.GET("/", backuprestore.QueryBackup)
 			backup.DELETE("/:backupId", backuprestore.DeleteBackup)
 			//backup.GET("/:backupId", instanceapi.DetailsBackup)
+		}
+
+		changeFeeds := apiV1.Group("/changefeeds")
+		{
+			changeFeeds.Use(interceptor.VerifyIdentity)
+			changeFeeds.Use(interceptor.AuditLog())
+
+			changeFeeds.POST("/", changefeed.Create)
+			changeFeeds.POST("/:changeFeedTaskId/pause", changefeed.Pause)
+			changeFeeds.POST("/:changeFeedTaskId/resume", changefeed.Resume)
+			changeFeeds.POST("/:changeFeedTaskId/update", changefeed.Update)
+
+			changeFeeds.DELETE("/:changeFeedTaskId", changefeed.Delete)
+
+			changeFeeds.GET("/:changeFeedTaskId", changefeed.Detail)
+			changeFeeds.GET("/", changefeed.Query)
 		}
 
 		flowworks := apiV1.Group("/flowworks")

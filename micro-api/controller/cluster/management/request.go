@@ -26,10 +26,9 @@ type CreateReq struct {
 	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
 }
 
-type ClusterCommonDemand struct {
-	Exclusive       bool   `json:"exclusive" form:"exclusive"`
-	Region          string `json:"region" form:"region"`
-	CpuArchitecture string `json:"cpuArchitecture" form:"cpuArchitecture"`
+type DeleteReq struct {
+	AutoBackup bool `json:"autoBackup" form:"autoBackup"`
+	ClearBackupData bool `json:"clearBackupData" form:"clearBackupData"`
 }
 
 type QueryReq struct {

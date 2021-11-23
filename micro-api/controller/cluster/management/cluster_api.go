@@ -60,10 +60,10 @@ func Create(c *gin.Context) {
 	baseInfo, commonDemand, demand := req.ConvertToDTO()
 
 	reqDTO := &clusterpb.ClusterCreateReqDTO{
-		Operator: operator.ConvertToDTO(),
-		Cluster:  baseInfo,
+		Operator:     operator.ConvertToDTO(),
+		Cluster:      baseInfo,
 		CommonDemand: commonDemand,
-		Demands:  demand,
+		Demands:      demand,
 	}
 
 	respDTO, err := client.ClusterClient.CreateCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
@@ -113,9 +113,9 @@ func Preview(c *gin.Context) {
 	for _, group := range req.NodeDemandList {
 		for _, node := range group.DistributionItems {
 			stockCheckResult = append(stockCheckResult, StockCheckItem{
-				Region: req.Region,
-				CpuArchitecture: req.CpuArchitecture,
-				ComponentType: group.ComponentType,
+				Region:           req.Region,
+				CpuArchitecture:  req.CpuArchitecture,
+				ComponentType:    group.ComponentType,
 				DistributionItem: node,
 				// todo stock
 				Enough: true,
@@ -123,9 +123,10 @@ func Preview(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, controller.Success(PreviewClusterRsp {
-		ClusterBaseInfo:	req.ClusterBaseInfo,
-		StockCheckResult: stockCheckResult,
+	c.JSON(http.StatusOK, controller.Success(PreviewClusterRsp{
+		ClusterBaseInfo:     req.ClusterBaseInfo,
+		StockCheckResult:    stockCheckResult,
+		ClusterCommonDemand: req.ClusterCommonDemand,
 		CapabilityIndexes: []ServiceCapabilityIndex{
 			//{"StorageCapability", "database storage capability", 800, "GB"},
 			//{"TPCC", "TPCC tmpC ", 523456, ""},
@@ -533,9 +534,9 @@ func ScaleOut(c *gin.Context) {
 
 	// Create ScaleOutRequest
 	request := &clusterpb.ScaleOutRequest{
-		Operator: operator.ConvertToDTO(),
+		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
-		Demands:  demands,
+		Demands:   demands,
 	}
 
 	// Scale out cluster
@@ -552,7 +553,7 @@ func ScaleOut(c *gin.Context) {
 		}
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, ScaleOutClusterRsp{
-			StatusInfo:      *ParseStatusFromDTO(response.GetClusterStatus()),
+			StatusInfo: *ParseStatusFromDTO(response.GetClusterStatus()),
 		})
 
 		c.JSON(http.StatusOK, result)

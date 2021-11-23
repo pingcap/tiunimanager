@@ -5191,11 +5191,20 @@ var doc = `{
                 "clusterVersion": {
                     "type": "string"
                 },
+                "cpuArchitecture": {
+                    "type": "string"
+                },
                 "dbPassword": {
                     "type": "string"
                 },
+                "exclusive": {
+                    "type": "boolean"
+                },
                 "recoverInfo": {
                     "$ref": "#/definitions/management.RecoverInfo"
+                },
+                "region": {
+                    "type": "string"
                 },
                 "stockCheckResult": {
                     "type": "array",

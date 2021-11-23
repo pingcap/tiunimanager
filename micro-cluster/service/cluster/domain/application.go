@@ -432,6 +432,8 @@ func collectorTiDBLogConfig(task *TaskEntity, ctx *FlowContext) bool {
 	return true
 }
 
+var resourceManager = resource.NewResourceManager()
+
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 	demands := clusterAggregation.AddedComponentDemand
@@ -454,7 +456,7 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 
 	// alloc resource
 	clusterAggregation.AddedAllocResources = &clusterpb.BatchAllocResponse{}
-	err = resource.NewResourceManager().AllocResourcesInBatch(flowContext.Context, req, clusterAggregation.AddedAllocResources)
+	err = resourceManager.AllocResourcesInBatch(flowContext.Context, req, clusterAggregation.AddedAllocResources)
 	if err != nil {
 		getLoggerWithContext(flowContext).Error(err)
 		task.Fail(err)
@@ -697,7 +699,7 @@ func takeoverResource(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	allocResponse := &clusterpb.BatchAllocResponse{}
-	err = resource.NewResourceManager().AllocResourcesInBatch(ctx.TODO(), allocReq, allocResponse)
+	err = resourceManager.AllocResourcesInBatch(ctx.TODO(), allocReq, allocResponse)
 	if err != nil {
 		task.Fail(err)
 		return false
@@ -747,7 +749,7 @@ func freedResource(task *TaskEntity, context *FlowContext) bool {
 		},
 	}
 	response := &clusterpb.RecycleResponse{}
-	err := resource.NewResourceManager().RecycleResources(context, request, response)
+	err := resourceManager.RecycleResources(context, request, response)
 
 	if err != nil {
 		task.Fail(err)
@@ -775,7 +777,7 @@ func freedResourceAfterFailure(task *TaskEntity, context *FlowContext) bool {
 		}
 
 		response := &clusterpb.RecycleResponse{}
-		err := resource.NewResourceManager().RecycleResources(context, request, response)
+		err := resourceManager.RecycleResources(context, request, response)
 		if err != nil {
 			framework.LogWithContext(context).Errorf("RecycleResources error, %s", err.Error())
 		}

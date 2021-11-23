@@ -17,6 +17,7 @@
 package management
 
 import (
+	"github.com/pingcap-inc/tiem/library/knowledge"
 	"net/http"
 	"strconv"
 	"time"
@@ -115,7 +116,7 @@ func Preview(c *gin.Context) {
 			stockCheckResult = append(stockCheckResult, StockCheckItem{
 				Region:           req.Region,
 				CpuArchitecture:  req.CpuArchitecture,
-				ComponentType:    group.ComponentType,
+				Component:        *knowledge.ClusterComponentFromCode(group.ComponentType),
 				DistributionItem: node,
 				// todo stock
 				Enough: true,

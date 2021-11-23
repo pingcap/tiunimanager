@@ -1273,8 +1273,8 @@ definitions:
     type: object
   management.StockCheckItem:
     properties:
-      componentType:
-        type: string
+      component:
+        $ref: '#/definitions/knowledge.ClusterComponent'
       count:
         type: integer
       cpuArchitecture:

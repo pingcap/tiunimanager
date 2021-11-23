@@ -5317,8 +5317,8 @@ var doc = `{
         "management.StockCheckItem": {
             "type": "object",
             "properties": {
-                "componentType": {
-                    "type": "string"
+                "component": {
+                    "$ref": "#/definitions/knowledge.ClusterComponent"
                 },
                 "count": {
                     "type": "integer"

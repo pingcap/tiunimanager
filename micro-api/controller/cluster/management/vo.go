@@ -18,6 +18,7 @@
 package management
 
 import (
+	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 )
@@ -65,8 +66,8 @@ type StockCheckItem struct {
 	CpuArchitecture string `json:"cpuArchitecture"`
 
 	DistributionItem
-	ComponentType string `json:"componentType"`
-	Enough        bool   `json:"enough"`
+	Component knowledge.ClusterComponent `json:"component"`
+	Enough    bool                       `json:"enough"`
 }
 
 type ClusterNodeDemand struct {

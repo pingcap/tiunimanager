@@ -459,6 +459,11 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 		getLoggerWithContext(flowContext).Error(err)
 		task.Fail(err)
 		return false
+	} else 	if clusterAggregation.AddedAllocResources.Rs.Code != 0 {
+		err = framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, clusterAggregation.AddedAllocResources.Rs.Message)
+		getLoggerWithContext(flowContext).Error(err)
+		task.Fail(err)
+		return false
 	}
 
 	flowContext.SetData(contextAllocRequestKey, req)

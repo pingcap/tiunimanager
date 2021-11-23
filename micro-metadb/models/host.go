@@ -1036,7 +1036,7 @@ func (m *DAOResourceManager) GetHostItems(ctx context.Context, filter rt.Filter,
 		// Build whole tree with hosts
 		err = db.Order("region").Order("az").Order("rack").Order("ip").Scan(&Items).Error
 	default:
-		errMsg := fmt.Sprintf("invaild leaf level %d, level = %d, depth = %d", leafLevel, level, depth)
+		errMsg := fmt.Sprintf("invalid leaf level %d, level = %d, depth = %d", leafLevel, level, depth)
 		err = errors.New(errMsg)
 	}
 	if err != nil {

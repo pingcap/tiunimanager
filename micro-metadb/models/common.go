@@ -56,6 +56,7 @@ const (
 	TABLE_NAME_TRANSPORT_RECORD   = "transport_records"
 	TABLE_NAME_RECOVER_RECORD     = "recover_records"
 	TABLE_NAME_COMPONENT_INSTANCE = "component_instances"
+	TABLE_NAME_CHANGE_FEED_TASKS  = "change_feed_tasks"
 )
 
 func getLogger() *log.Entry {

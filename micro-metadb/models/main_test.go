@@ -52,6 +52,7 @@ func TestMain(m *testing.M) {
 			Dao.SetAccountManager(NewDAOAccountManager(Dao.Db()))
 			Dao.SetClusterManager(NewDAOClusterManager(Dao.Db()))
 			Dao.SetResourceManager(NewDAOResourceManager(Dao.Db()))
+			Dao.SetChangeFeedTaskManager(NewDAOChangeFeedManager(Dao.Db()))
 			return nil
 		},
 	)

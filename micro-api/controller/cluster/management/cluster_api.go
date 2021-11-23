@@ -127,8 +127,8 @@ func Preview(c *gin.Context) {
 		ClusterBaseInfo:	req.ClusterBaseInfo,
 		StockCheckResult: stockCheckResult,
 		CapabilityIndexes: []ServiceCapabilityIndex{
-			{"StorageCapability", "database storage capability", 800, "GB"},
-			{"TPCC", "TPCC tmpC ", 523456, ""},
+			//{"StorageCapability", "database storage capability", 800, "GB"},
+			//{"TPCC", "TPCC tmpC ", 523456, ""},
 		},
 	}))
 }

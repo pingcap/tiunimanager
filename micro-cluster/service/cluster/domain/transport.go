@@ -822,7 +822,7 @@ func importDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 
-	return ClusterFail(task, flowContext)
+	return clusterFail(task, flowContext)
 }
 
 func exportDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
@@ -839,7 +839,7 @@ func exportDataFailed(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 
-	return ClusterFail(task, flowContext)
+	return clusterFail(task, flowContext)
 }
 
 func updateTransportRecordFailed(ctx context.Context, recordId int64, clusterId string) error {

@@ -49,7 +49,7 @@ func TestClusterEndWithPersist(t *testing.T) {
 			FlowModified: false,
 		}
 		flowCtx.SetData(contextClusterKey, agg)
-		ret := CompositeExecutor(ClusterEnd, ClusterPersist)(task, flowCtx)
+		ret := CompositeExecutor(clusterEnd, clusterPersist)(task, flowCtx)
 
 		assert.Equal(t, true, ret)
 		assert.Equal(t, 0, int(agg.Cluster.WorkFlowId))
@@ -70,7 +70,7 @@ func TestClusterEnd(t *testing.T) {
 			FlowModified: false,
 		}
 		flowCtx.SetData(contextClusterKey, agg)
-		ret := ClusterEnd(task, flowCtx)
+		ret := clusterEnd(task, flowCtx)
 
 		assert.Equal(t, true, ret)
 		assert.Equal(t, 0, int(agg.Cluster.WorkFlowId))
@@ -93,7 +93,7 @@ func TestClusterFailWithPersist(t *testing.T) {
 			FlowModified: false,
 		}
 		flowCtx.SetData(contextClusterKey, agg)
-		ret := CompositeExecutor(ClusterFail, ClusterPersist)(task, flowCtx)
+		ret := CompositeExecutor(clusterFail, clusterPersist)(task, flowCtx)
 
 		assert.Equal(t, true, ret)
 		assert.Equal(t, 0, int(agg.Cluster.WorkFlowId))
@@ -114,7 +114,7 @@ func TestClusterFail(t *testing.T) {
 			FlowModified: false,
 		}
 		flowCtx.SetData(contextClusterKey, agg)
-		ret := ClusterFail(task, flowCtx)
+		ret := clusterFail(task, flowCtx)
 
 		assert.Equal(t, true, ret)
 		assert.Equal(t, 0, int(agg.Cluster.WorkFlowId))

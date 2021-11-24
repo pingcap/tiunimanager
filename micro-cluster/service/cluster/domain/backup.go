@@ -45,6 +45,7 @@ type BackupRecord struct {
 	StorageType  StorageType
 	OperatorId   string
 	Size         uint64
+	BackupTso    uint64
 	FilePath     string
 	StartTime    int64
 	EndTime      int64
@@ -484,7 +485,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 	flowContext.SetData("backupTaskId", backupTaskId)
-	task.Success(nil)
+	task.Success("success")
 	return true
 }
 
@@ -519,13 +520,15 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		getLoggerWithContext(ctx).Errorf("json unmarshal backup info resp: %+v, failed, %s", resp, err.Error())
 	} else {
 		record.Size = backupInfo.Size
+		record.BackupTso = backupInfo.BackupTS
 	}
 
 	updateResp, err := client.DBClient.UpdateBackupRecord(flowContext, &dbpb.DBUpdateBackupRecordRequest{
 		BackupRecord: &dbpb.DBBackupRecordDTO{
-			Id:      record.Id,
-			Size:    record.Size,
-			EndTime: time.Now().Unix(),
+			Id:        record.Id,
+			Size:      record.Size,
+			BackupTso: record.BackupTso,
+			EndTime:   time.Now().Unix(),
 		},
 	})
 	if err != nil {
@@ -543,7 +546,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		task.Fail(tiemError)
 		return false
 	}
-	task.Success(nil)
+	task.Success("success")
 	return true
 }
 
@@ -557,7 +560,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	recoverInfo := cluster.RecoverInfo
 	if recoverInfo.SourceClusterId == "" || recoverInfo.BackupRecordId <= 0 {
 		getLoggerWithContext(ctx).Infof("cluster %s no need recover", cluster.Id)
-		task.Success(nil)
+		task.Success("success, cluster no need recover")
 		return true
 	}
 
@@ -607,7 +610,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		task.Fail(err)
 		return false
 	}
-
+	task.Success("success")
 	return true
 }
 

@@ -19,8 +19,7 @@ package domain
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
+	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -89,17 +88,22 @@ func (t *TaskEntity) Processing() {
 	t.Status = TaskStatusProcessing
 }
 
-func (t *TaskEntity) Success(result interface{}) {
+var defaultSuccessInfo = "success"
+
+func (t *TaskEntity) Success(result ...interface{}) {
 	t.Status = TaskStatusFinished
-	if result != nil {
-		r, err := json.Marshal(result)
-		if err != nil {
-			getLogger().Error(err)
-		} else {
-			t.Result = string(r)
-		}
-	}
 	t.EndTime = time.Now().Unix()
+
+	if result == nil {
+		result = []interface{}{defaultSuccessInfo}
+	}
+
+	for _, r := range result {
+		if r == nil {
+			r = defaultSuccessInfo
+		}
+		t.Result = fmt.Sprintln(t.Result, r)
+	}
 }
 
 func (t *TaskEntity) Fail(e error) {
@@ -143,9 +147,17 @@ func (flow *FlowWorkAggregation) Start() {
 	TaskRepo.Persist(flow.Context, flow)
 }
 
-func (flow *FlowWorkAggregation) Destroy() {
-	flow.FlowWork.Status = TaskStatusError
-	flow.CurrentTask.Fail(errors.New("workflow destroy"))
+func (flow *FlowWorkAggregation) AsyncStart() {
+	go flow.Start()
+}
+
+func (flow *FlowWorkAggregation) Destroy(reason string) {
+	flow.FlowWork.Status = TaskStatusCanceled
+
+	if flow.CurrentTask != nil {
+		flow.CurrentTask.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
+	}
+
 	TaskRepo.Persist(flow.Context, flow)
 }
 
@@ -165,6 +177,8 @@ func (flow *FlowWorkAggregation) executeTask(task *TaskEntity, taskDefine *TaskD
 	flow.CurrentTask = task
 	flow.Tasks = append(flow.Tasks, task)
 	task.Processing()
+	TaskRepo.Persist(flow.Context, flow)
+
 	return taskDefine.Executor(task, &flow.Context)
 }
 
@@ -229,7 +243,7 @@ func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) bool {
 				return false
 			}
 			if stat == dbpb.TiupTaskStatus_Finished {
-				task.Success(nil)
+				task.Success(statString)
 				return flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
 			}
 		}

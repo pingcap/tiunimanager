@@ -19,10 +19,12 @@ package domain
 import (
 	ctx "context"
 	"errors"
+	"fmt"
 	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -41,6 +43,8 @@ type ClusterAggregation struct {
 
 	AddedComponentDemand 	[]*ClusterComponentDemand
 	AddedClusterComponents []*ComponentGroup
+
+	CurrentComponentInstances []*ComponentInstance
 
 	CurrentWorkFlow *FlowWorkEntity
 	CurrentOperator *Operator
@@ -69,7 +73,27 @@ type ClusterAggregation struct {
 
 var contextClusterKey = "clusterAggregation"
 var contextTakeoverReqKey = "takeoverRequest"
-var contextScaleOutReqKey = "scaleOutRequest"
+var contextDeleteNodeKey = "deleteNode"
+var contextAllocRequestKey = "allocResourceRequest"
+
+func (cluster *ClusterAggregation) tryStartFlow(ctx ctx.Context, flow *FlowWorkAggregation) error {
+	if cluster.CurrentWorkFlow != nil {
+		flow.Destroy("task conflicts")
+		return framework.NewTiEMErrorf(common.TIEM_TASK_CONFLICT, "task conflicts, current task %s, expected task %s", cluster.CurrentWorkFlow.FlowName, flow.Define.FlowName)
+	}
+
+	cluster.updateWorkFlow(flow.FlowWork)
+	cluster.Cluster.WorkFlowId = flow.FlowWork.Id
+
+	err := ClusterRepo.PersistStatus(ctx, cluster)
+
+	if err != nil {
+		return err
+	} else {
+		flow.AsyncStart()
+		return nil
+	}
+}
 
 func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
@@ -128,7 +152,6 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	}
 
 	// Start the workflow to create a cluster instance
-
 	flow, err := CreateFlowWork(ctx, cluster.Id, FlowCreateCluster, operator)
 	if err != nil {
 		return nil, err
@@ -175,6 +198,37 @@ func ScaleOutCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId stri
 		return nil, err
 	}
 	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.Start()
+
+	// Update workflow and persist clusterAggregation
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
+	ClusterRepo.Persist(ctx, clusterAggregation)
+	return clusterAggregation, nil
+}
+
+// ScaleInCluster
+// @Description: scale in a cluster
+// @Parameter ope
+// @Parameter clusterId
+// @Parameter nodeId
+// @return *ClusterAggregation
+// @return error
+func ScaleInCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId, nodeId string)(*ClusterAggregation, error) {
+	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
+	if err != nil {
+		return clusterAggregation, errors.New("cluster not exist")
+	}
+	operator := parseOperatorFromDTO(ope)
+	clusterAggregation.CurrentOperator = operator
+
+	// Start the workflow to scale in a cluster
+	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowScaleInCluster, operator)
+	if err != nil {
+		return nil, err
+	}
+
+	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.AddContext(contextDeleteNodeKey, nodeId)
 	flow.Start()
 
 	// Update workflow and persist clusterAggregation
@@ -250,13 +304,15 @@ func DeleteCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string
 	}
 
 	flow, _ := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowDeleteCluster, operator)
-	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.Start()
+	if err != nil {
+		return nil, err
+	}
 
-	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	TaskRepo.Persist(ctx, flow)
-	ClusterRepo.Persist(ctx, clusterAggregation)
-	return clusterAggregation, nil
+	flow.AddContext(contextClusterKey, clusterAggregation)
+
+	err = clusterAggregation.tryStartFlow(ctx, flow)
+
+	return clusterAggregation, err
 }
 
 func RestartCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
@@ -264,7 +320,7 @@ func RestartCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId strin
 
 	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
 	if err != nil {
-		return clusterAggregation, errors.New("cluster not exist")
+		return clusterAggregation, framework.SimpleError(common.TIEM_CLUSTER_NOT_FOUND)
 	}
 	clusterAggregation.CurrentOperator = operator
 
@@ -273,10 +329,13 @@ func RestartCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId strin
 		return nil, err
 	}
 
+	clusterAggregation.Cluster.Restart()
+	clusterAggregation.StatusModified = true
 	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.Start()
 
-	return clusterAggregation, nil
+	err = clusterAggregation.tryStartFlow(ctx, flow)
+
+	return clusterAggregation, err
 }
 
 func StopCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
@@ -293,10 +352,13 @@ func StopCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) 
 		return nil, err
 	}
 
+	clusterAggregation.Cluster.Status = ClusterStatusStopping
+	clusterAggregation.StatusModified = true
 	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.Start()
 
-	return clusterAggregation, nil
+	err = clusterAggregation.tryStartFlow(ctx, flow)
+
+	return clusterAggregation, err
 }
 
 func ListCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, req *clusterpb.ClusterQueryReqDTO) ([]*ClusterAggregation, int, error) {
@@ -404,6 +466,8 @@ func collectorTiDBLogConfig(task *TaskEntity, ctx *FlowContext) bool {
 	return true
 }
 
+var resourceManager = resource.NewResourceManager()
+
 func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 	demands := clusterAggregation.AddedComponentDemand
@@ -415,7 +479,6 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 	clusterAggregation.AddedClusterComponents = components
-	//TODO add grafana and prometheus into ClusterComponents for creating cluster
 
 	// build resource request
 	req, err:= TopologyPlanner.AnalysisResourceRequest(flowContext.Context, clusterAggregation.Cluster, clusterAggregation.AddedClusterComponents, false)
@@ -427,15 +490,37 @@ func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
 
 	// alloc resource
 	clusterAggregation.AddedAllocResources = &clusterpb.BatchAllocResponse{}
-	err = resource.NewResourceManager().AllocResourcesInBatch(flowContext.Context, req, clusterAggregation.AddedAllocResources)
+	err = resourceManager.AllocResourcesInBatch(flowContext.Context, req, clusterAggregation.AddedAllocResources)
 	if err != nil {
+		getLoggerWithContext(flowContext).Error(err)
+		task.Fail(err)
+		return false
+	} else 	if clusterAggregation.AddedAllocResources.Rs.Code != 0 {
+		err = framework.NewTiEMErrorf(common.TIEM_PARAMETER_INVALID, clusterAggregation.AddedAllocResources.Rs.Message)
 		getLoggerWithContext(flowContext).Error(err)
 		task.Fail(err)
 		return false
 	}
 
-	task.Success(nil)
+	flowContext.SetData(contextAllocRequestKey, req)
+
+	prepareResourceSucceed(task, clusterAggregation.AddedAllocResources)
 	return true
+}
+
+func prepareResourceSucceed(task *TaskEntity, resource *clusterpb.BatchAllocResponse) {
+	allHost := make([]string, 0)
+	if resource != nil && resource.Rs.Code == 0 {
+		for _, r := range resource.BatchResults {
+			if r != nil && r.Rs.Code != 0 {
+				continue
+			}
+			for _, k := range r.Results {
+				allHost = append(allHost, k.HostIp)
+			}
+		}
+	}
+	task.Success(fmt.Sprintf("alloc succeed with hosts: %s", allHost))
 }
 
 func buildConfig(task *TaskEntity, context *FlowContext) bool {
@@ -458,7 +543,12 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	clusterAggregation.AlteredTopology = configModel
-	task.Success(nil)
+	bytes, err := yaml.Marshal(configModel)
+	if err != nil {
+		task.Fail(err)
+	} else {
+		task.Success(string(bytes))
+	}
 	return true
 }
 
@@ -487,6 +577,7 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	getLoggerWithContext(context).Infof("got deployTaskId %s", strconv.Itoa(int(deployTaskId)))
+
 	return true
 }
 
@@ -513,6 +604,114 @@ func scaleOutCluster(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	getLoggerWithContext(context).Infof("get scaleOutTaskId %s", strconv.Itoa(int(scaleOutTaskId)))
+	return true
+}
+
+func getInstance(instances []*ComponentInstance, nodeId string) *ComponentInstance  {
+	results := strings.Split(nodeId, ":")
+	if len(results) != 2 {
+		return nil
+	}
+	for _, instance := range instances {
+		if instance.Host == results[0] {
+			for _, port := range instance.PortList {
+				if strconv.Itoa(port) == results[1] {
+					return instance
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func scaleInCluster(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+	nodeId := context.GetData(contextDeleteNodeKey).(string)
+
+	componentInstance := getInstance(clusterAggregation.CurrentComponentInstances, nodeId)
+	if componentInstance == nil {
+		getLoggerWithContext(context).Errorf("node: %s is not exist in %s", nodeId, cluster.ClusterName)
+		task.Fail(fmt.Errorf("node: %s is not exist", nodeId))
+		return false
+	}
+
+	if knowledge.GetComponentSpec(cluster.ClusterType.Code,
+		cluster.ClusterVersion.Code, componentInstance.ComponentType.ComponentType).ComponentConstraint.ComponentRequired {
+		nodeCount := 0
+		for _, instance := range clusterAggregation.CurrentComponentInstances {
+			if instance.ComponentType.ComponentType == componentInstance.ComponentType.ComponentType {
+				nodeCount += 1
+			}
+		}
+		if nodeCount <= 1 {
+			getLoggerWithContext(context).Errorf("node: %s is unique in %s, can not delete it", nodeId, cluster.ClusterName)
+			task.Fail(fmt.Errorf("node: %s can not be deleted", nodeId))
+			return false
+		}
+	}
+
+	getLoggerWithContext(context).Infof("scale in cluster %s, delete node: %s", cluster.ClusterName, nodeId)
+	scaleInTaskId, err := secondparty.SecondParty.MicroSrvTiupScaleIn(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, nodeId,0, []string{"--yes"}, uint64(task.Id))
+
+	if err != nil {
+		getLoggerWithContext(context).Errorf("call tiup api scale in cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+
+	getLoggerWithContext(context).Infof("get scaleInTaskId %s", strconv.Itoa(int(scaleInTaskId)))
+	return true
+}
+
+func freeNodeResource(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+	nodeId := context.GetData(contextDeleteNodeKey).(string)
+
+	componentInstance := getInstance(clusterAggregation.CurrentComponentInstances, nodeId)
+	if componentInstance == nil {
+		getLoggerWithContext(context).Errorf("node: %s is not exist in %s", nodeId, cluster.ClusterName)
+		task.Fail(fmt.Errorf("node: %s is not exist", nodeId))
+		return false
+	}
+
+	componentInstance.Status = ClusterStatusDeleted
+
+	ports := make([]int32, 0)
+	for _, port := range componentInstance.PortList {
+		ports = append(ports, int32(port))
+	}
+	request := &clusterpb.RecycleRequest{
+		RecycleReqs: []*clusterpb.RecycleRequire{
+			{
+				RecycleType: int32(resourceType.RecycleHost),
+				HolderId: componentInstance.ClusterId,
+				RequestId: componentInstance.AllocRequestId,
+				HostId:  componentInstance.HostId,
+				ComputeReq: &clusterpb.ComputeRequirement {
+					CpuCores: componentInstance.Compute.CpuCores,
+					Memory: componentInstance.Compute.Memory,
+				},
+				DiskReq: []*clusterpb.DiskResource {
+					{ DiskId: componentInstance.DiskId },
+				},
+				PortReq: []*clusterpb.PortResource {
+					{ Ports: ports },
+				},
+			},
+		},
+	}
+	response := &clusterpb.RecycleResponse{}
+	err := resource.NewResourceManager().RecycleResources(context, request, response)
+
+	if err != nil {
+		task.Fail(err)
+		return false
+	}
+
+	task.Success(nil)
 	return true
 }
 
@@ -642,7 +841,7 @@ func takeoverResource(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	allocResponse := &clusterpb.BatchAllocResponse{}
-	err = resource.NewResourceManager().AllocResourcesInBatch(ctx.TODO(), allocReq, allocResponse)
+	err = resourceManager.AllocResourcesInBatch(ctx.TODO(), allocReq, allocResponse)
 	if err != nil {
 		task.Fail(err)
 		return false
@@ -692,7 +891,7 @@ func freedResource(task *TaskEntity, context *FlowContext) bool {
 		},
 	}
 	response := &clusterpb.RecycleResponse{}
-	err := resource.NewResourceManager().RecycleResources(context, request, response)
+	err := resourceManager.RecycleResources(context, request, response)
 
 	if err != nil {
 		task.Fail(err)
@@ -702,6 +901,34 @@ func freedResource(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)
 	return true
 }
+
+func freedResourceAfterFailure(task *TaskEntity, context *FlowContext) bool {
+	allocRequest := context.GetData(contextAllocRequestKey)
+	if allocRequest != nil {
+		request := &clusterpb.RecycleRequest{
+			RecycleReqs: []*clusterpb.RecycleRequire{},
+		}
+
+		for _, req := range allocRequest.(*clusterpb.BatchAllocRequest).BatchRequests {
+			framework.LogWithContext(context).Infof("freed resource after failure, request = %s", req.Applicant.RequestId)
+			require := &clusterpb.RecycleRequire{
+				RecycleType: int32(resourceType.RecycleOperate),
+				RequestId: req.Applicant.RequestId,
+			}
+			request.RecycleReqs = append(request.RecycleReqs, require)
+		}
+
+		response := &clusterpb.RecycleResponse{}
+		err := resourceManager.RecycleResources(context, request, response)
+		if err != nil {
+			framework.LogWithContext(context).Errorf("RecycleResources error, %s", err.Error())
+		}
+		return true
+	}
+
+	return true
+}
+
 
 func destroyTasks(task *TaskEntity, context *FlowContext) bool {
 	task.Success(nil)
@@ -717,24 +944,17 @@ func clusterRestart(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
-	getLogger().Infof("restart cluster %s", cluster.ClusterName)
+	getLoggerWithContext(context).Infof("restart cluster %s", cluster.ClusterName)
 	restartTaskId, err := secondparty.SecondParty.MicroSrvTiupRestart(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id),
 	)
 	if err != nil {
-		getLogger().Errorf("call tiup api restart cluster err = %s", err.Error())
+		framework.LogWithContext(context).Errorf("call tiup api restart cluster err = %s", err.Error())
 		task.Fail(err)
 		return false
 	}
-	getLogger().Infof("got restartTaskId %s", strconv.Itoa(int(restartTaskId)))
+	getLoggerWithContext(context).Infof("got restartTaskId %s", strconv.Itoa(int(restartTaskId)))
 
-	// cluster restart intermediate state
-	clusterAggregation.Cluster.Restart()
-	clusterAggregation.StatusModified = true
-	err = ClusterRepo.Persist(context, clusterAggregation)
-	if err != nil {
-		return false
-	}
 	task.Success(nil)
 	return true
 }
@@ -748,20 +968,21 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
-	getLogger().Infof("stop cluster %s", cluster.ClusterName)
+	framework.LogWithContext(context).Infof("stop cluster %s", cluster.ClusterName)
 	stopTaskId, err := secondparty.SecondParty.MicroSrvTiupStop(context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, 0, []string{}, uint64(task.Id))
 	if err != nil {
 		getLogger().Errorf("call tiup api stop cluster err = %s", err.Error())
 		task.Fail(err)
 		return false
 	}
-	context.SetData("stopTaskId", stopTaskId)
-	getLogger().Infof("got stopTaskId %s", strconv.Itoa(int(stopTaskId)))
 
-	// cluster stopping intermediate state
-	clusterAggregation.Cluster.Status = ClusterStatusStopping
-	clusterAggregation.StatusModified = true
-	ClusterRepo.Persist(context, clusterAggregation)
+	if err != nil {
+		framework.LogWithContext(context).Errorf("call tiup api stop cluster err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+	framework.LogWithContext(context).Infof("got stopTaskId %s", strconv.Itoa(int(stopTaskId)))
+
 	task.Success(nil)
 	return true
 }
@@ -770,18 +991,12 @@ func (aggregation *ClusterAggregation) ExtractStatusDTO() *clusterpb.DisplayStat
 	cluster := aggregation.Cluster
 
 	dto := &clusterpb.DisplayStatusDTO{
+		StatusCode: 	 strconv.Itoa(int(aggregation.Cluster.Status)),
+		StatusName: 	 aggregation.Cluster.Status.Display(),
 		CreateTime:      cluster.CreateTime.Unix(),
 		UpdateTime:      cluster.UpdateTime.Unix(),
 		DeleteTime:      cluster.DeleteTime.Unix(),
 		InProcessFlowId: int32(cluster.WorkFlowId),
-	}
-
-	if cluster.WorkFlowId > 0 {
-		dto.StatusCode = aggregation.CurrentWorkFlow.FlowName
-		dto.StatusName = aggregation.CurrentWorkFlow.StatusAlias
-	} else {
-		dto.StatusCode = strconv.Itoa(int(aggregation.Cluster.Status))
-		dto.StatusName = aggregation.Cluster.Status.Display()
 	}
 
 	return dto

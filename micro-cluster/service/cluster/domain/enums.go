@@ -78,6 +78,7 @@ const (
 	TaskStatusProcessing TaskStatus = 1
 	TaskStatusFinished   TaskStatus = 2
 	TaskStatusError      TaskStatus = 3
+	TaskStatusCanceled   TaskStatus = 4
 )
 
 func (s TaskStatus) Display() string {
@@ -91,13 +92,15 @@ func (s TaskStatus) Display() string {
 		return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusFinished)
 	case TaskStatusError:
 		return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusError)
+	case TaskStatusCanceled:
+		return copywriting2.DisplayByDefault(copywriting2.CWTaskStatusError)
 	}
 
 	panic("Unknown task status")
 }
 
 func (s TaskStatus) Finished() bool {
-	return TaskStatusFinished == s || TaskStatusError == s
+	return TaskStatusFinished == s || TaskStatusError == s || TaskStatusCanceled == s
 }
 
 var allTaskStatus = []TaskStatus{
@@ -105,6 +108,7 @@ var allTaskStatus = []TaskStatus{
 	TaskStatusProcessing,
 	TaskStatusFinished,
 	TaskStatusError,
+	TaskStatusCanceled,
 }
 
 func TaskStatusFromValue(v int) TaskStatus {
@@ -146,6 +150,7 @@ const (
 	FlowTakeoverCluster  = "TakeoverCluster"
 	FlowBuildLogConfig   = "BuildLogConfig"
 	FlowScaleOutCluster  = "ScaleOutCluster"
+	FlowScaleInCluster   = "ScaleInCluster"
 )
 
 type CronTaskType int8

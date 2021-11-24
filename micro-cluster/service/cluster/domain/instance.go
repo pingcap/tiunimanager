@@ -17,8 +17,10 @@
 package domain
 
 import (
+	"encoding/json"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"math/rand"
@@ -48,7 +50,6 @@ type ComponentInstance struct {
 	Host           string
 	PortList       []int
 	DiskId         string
-	PortInfo       string
 	AllocRequestId string
 	DiskPath       string
 
@@ -59,6 +60,30 @@ type ComponentInstance struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt time.Time
+}
+
+func (c *ComponentInstance) SerializePortInfo() string {
+	if c.PortList == nil || len(c.PortList) == 0 {
+		return "[]"
+	}
+	portInfoBytes, err := json.Marshal(c.PortList)
+	if err != nil {
+		framework.Log().Errorf("serialize PortInfo error, %v", c.PortList)
+		return "[]"
+	}
+
+	return string(portInfoBytes)
+}
+
+func (c *ComponentInstance) DeserializePortInfo(portInfo string) {
+	c.PortList = make([]int, 0)
+	if portInfo == "" {
+		return
+	}
+	err := json.Unmarshal([]byte(portInfo), &c.PortList)
+	if err != nil {
+		framework.Log().Errorf("deserialize PortInfo error, %s, %s", portInfo, err.Error())
+	}
 }
 
 func (p *ComponentInstance) SetLocation (location *resource.Location) {

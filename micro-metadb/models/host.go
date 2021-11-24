@@ -491,6 +491,7 @@ func allocResourceInHost(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 }
 
 func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, require *dbpb.DBAllocRequirement, choosedHosts []string) (results []rt.HostResource, err error) {
+	log := framework.Log()
 	regionName := require.Location.Region
 	zoneName := require.Location.Zone
 	zoneCode := rt.GenDomainCodeByName(regionName, zoneName)
@@ -507,6 +508,8 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	reqMem := require.Require.ComputeReq.Memory
 	capacity := require.Require.DiskReq.Capacity
 	needDisk := require.Require.DiskReq.NeedDisk
+	log.Infof("Alloc Resource With RR: zoneCode: %s, excludedHosts: %v, arch: %s, traits: %d, excludsive: %v, cpuCores: %d, memory: %d, needDisk: %v, diskCapacity: %d\n",
+		zoneCode, excludedHosts, hostArch, hostTraits, exclusive, reqCores, reqMem, needDisk, capacity)
 	// 1. Choose Host/Disk List
 	var resources []*Resource
 	if needDisk {
@@ -562,7 +565,7 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	}
 
 	if len(resources) < int(require.Count) {
-		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "hosts in %s,%s is not enough for allocation(%d|%d)", regionName, zoneName, len(resources), require.Count)
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "hosts in %s, %s is not enough for allocation(%d|%d), arch: %s, traits: %d", regionName, zoneName, len(resources), require.Count, hostArch, hostTraits)
 	}
 
 	// 2. Choose Ports in Hosts
@@ -609,6 +612,70 @@ func allocResourceWithRR(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, requ
 	return
 }
 
+func markPortsInRegion(tx *gorm.DB, applicant *dbpb.DBApplicant, regionHosts []string, portResources *rt.PortResource) (err error) {
+	for _, host := range regionHosts {
+		for _, port := range portResources.Ports {
+			usedPort := rt.UsedPort{
+				HostId: host,
+				Port:   port,
+			}
+			usedPort.HolderId = applicant.HolderId
+			usedPort.RequestId = applicant.RequestId
+			err = tx.Create(&usedPort).Error
+			if err != nil {
+				return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "insert host(%s) for port(%d) table failed: %v", host, port, err)
+			}
+		}
+	}
+	return
+}
+
+func allocPortsInRegion(tx *gorm.DB, applicant *dbpb.DBApplicant, seq int, require *dbpb.DBAllocRequirement) (results []rt.HostResource, err error) {
+	regionCode := require.Location.Region
+	hostArch := require.HostFilter.Arch
+	if regionCode == "" {
+		return nil, framework.NewTiEMError(common.TIEM_RESOURCE_INVALID_LOCATION, "no valid region")
+	}
+	if hostArch == "" {
+		return nil, framework.NewTiEMError(common.TIEM_RESOURCE_INVALID_ARCH, "no valid arch")
+	}
+	if len(require.Require.PortReq) != 1 {
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_PORT, "require portReq len should be 1 for RegionUniformPorts allocation(%d)", len(require.Require.PortReq))
+	}
+	portReq := require.Require.PortReq[0]
+	var regionHosts []string
+	err = tx.Model(&rt.Host{}).Select("id").Where("region = ? and arch = ?", regionCode, hostArch).Where("reserved = 0").Scan(&regionHosts).Error
+	if err != nil {
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "select %s hosts in region %s failed, %v", hostArch, regionCode, err)
+	}
+	if len(regionHosts) == 0 {
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_HOST, "no %s host in region %s", hostArch, regionCode)
+	}
+
+	var usedPorts []int32
+	err = tx.Order("port").Model(&rt.UsedPort{}).Select("port").Where("host_id in ?", regionHosts).Group("port").Having("port >= ? and port < ?", portReq.Start, portReq.End).Scan(&usedPorts).Error
+	if err != nil {
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "select used port range %d - %d in region %s failed, %v", portReq.Start, portReq.End, regionCode, err)
+	}
+
+	res, err := getPortsInRange(usedPorts, portReq.Start, portReq.End, int(portReq.PortCnt))
+	if err != nil {
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_NO_ENOUGH_PORT, "Region %s has no enough %d ports on range [%d, %d]", regionCode, portReq.PortCnt, portReq.Start, portReq.End)
+	}
+
+	err = markPortsInRegion(tx, applicant, regionHosts, res)
+	if err != nil {
+		return nil, err
+	}
+
+	var result rt.HostResource
+	result.Reqseq = int32(seq)
+	result.PortRes = append(result.PortRes, *res)
+
+	results = append(results, result)
+	return
+}
+
 func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbpb.DBAllocRequest) (results *rt.AllocRsp, err error) {
 	var choosedHosts []string
 	results = new(rt.AllocRsp)
@@ -629,6 +696,12 @@ func (m *DAOResourceManager) doAlloc(tx *gorm.DB, req *dbpb.DBAllocRequest) (res
 			res, err := allocResourceInHost(tx, req.Applicant, i, require)
 			if err != nil {
 				return nil, status.Errorf(codes.Internal, "alloc resources in host %s with %dth require failed, %v", require.Location.Host, i, err)
+			}
+			results.Results = append(results.Results, res...)
+		case rt.ClusterPorts:
+			res, err := allocPortsInRegion(tx, req.Applicant, i, require)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "alloc region port range in region %s with %dth require failed, %v", require.Location.Region, i, err)
 			}
 			results.Results = append(results.Results, res...)
 		default:
@@ -963,7 +1036,7 @@ func (m *DAOResourceManager) GetHostItems(ctx context.Context, filter rt.Filter,
 		// Build whole tree with hosts
 		err = db.Order("region").Order("az").Order("rack").Order("ip").Scan(&Items).Error
 	default:
-		errMsg := fmt.Sprintf("invaild leaf level %d, level = %d, depth = %d", leafLevel, level, depth)
+		errMsg := fmt.Sprintf("invalid leaf level %d, level = %d, depth = %d", leafLevel, level, depth)
 		err = errors.New(errMsg)
 	}
 	if err != nil {

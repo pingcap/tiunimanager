@@ -604,11 +604,11 @@ func addSubNode(current map[string]*node, code string, subNode *node) (parent *n
 }
 
 func (handler *DBServiceHandler) buildHierarchy(Items []models.Item) *node {
-	if len(Items) == 0 {
-		return nil
-	}
 	root := node{
 		Code: "root",
+	}
+	if len(Items) == 0 {
+		return &root
 	}
 	var regions map[string]*node = make(map[string]*node)
 	var zones map[string]*node = make(map[string]*node)
@@ -705,12 +705,13 @@ func (handler *DBServiceHandler) GetHierarchy(ctx context.Context, in *dbpb.DBGe
 		return nil
 	}
 	wholeTree := handler.buildHierarchy(Items)
-	if wholeTree == nil {
-		out.Rs.Code = int32(common.TIEM_RESOURCE_NO_STOCK)
-		out.Rs.Message = fmt.Sprintf("no stocks with filter:%v", filter)
-		return nil
+	var root *node
+	if wholeTree.subNodes != nil {
+		root = handler.trimTree(wholeTree, resource.FailureDomain(in.Level), int(in.Depth))
+	} else {
+		root = wholeTree
+		log.Warnf("no stocks with filter:%v", filter)
 	}
-	root := handler.trimTree(wholeTree, resource.FailureDomain(in.Level), int(in.Depth))
 	copyHierarchyToRsp(root, &out.Root)
 
 	out.Rs.Code = int32(common.TIEM_SUCCESS)

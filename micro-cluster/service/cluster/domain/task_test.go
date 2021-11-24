@@ -134,6 +134,21 @@ func initFlow() {
 				return nil
 			},
 		},
+		FlowScaleInCluster: {
+			FlowName:    FlowScaleInCluster,
+			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowScaleInCluster),
+			TaskNodes: map[string]*TaskDefine{
+				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
+					return true
+				}},
+				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+			},
+			ContextParser: func(s string) *FlowContext {
+				// todo parse context
+				return nil
+			},
+		},
 		FlowDeleteCluster: {
 			FlowName:    FlowDeleteCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowDeleteCluster),
@@ -322,12 +337,12 @@ func TestFlowWorkAggregation_Destroy(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		flow, _ := CreateFlowWork(context.TODO(), "111", "testFlow2", nil)
 		flow.Start()
-		flow.Destroy()
+		flow.Destroy("no why")
 		if !flow.FlowWork.Finished() {
 			t.Errorf("Start() finished")
 		}
 
-		if flow.FlowWork.Status != TaskStatusError {
+		if flow.FlowWork.Status != TaskStatusCanceled {
 			t.Errorf("Start() FlowWork status wrong, want = %v, got = %v", TaskStatusError, flow.FlowWork.Status)
 		}
 

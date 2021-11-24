@@ -36,6 +36,16 @@ type CmdScaleOutReq struct {
 	Flags         []string
 }
 
+type CmdScaleInReq struct {
+	TiUPComponent TiUPComponentTypeStr
+	TaskID        uint64
+	InstanceName  string
+	NodeId        string
+	TimeoutS      int
+	TiupPath      string
+	Flags         []string
+}
+
 type CmdStartReq struct {
 	TiUPComponent TiUPComponentTypeStr
 	TaskID        uint64

@@ -138,7 +138,18 @@ func TestGetMonitoredSequence(t *testing.T) {
 	port1 := GetMonitoredSequence("aaa")
 	port2 := GetMonitoredSequence("aaa")
 	assert.Equal(t, port1, port2)
+
 	port3 := GetMonitoredSequence("bbb")
-	assert.NotEqual(t, port3, port2)
+
+	port4 := GetMonitoredSequence("ccc")
+
+	port5 := GetMonitoredSequence("ddd")
+
+	assert.NotEqual(t, port1, port3)
+	assert.NotEqual(t, port1, port4)
+	assert.NotEqual(t, port1, port5)
+	assert.NotEqual(t, port3, port4)
+	assert.NotEqual(t, port3, port5)
+	assert.NotEqual(t, port4, port5)
 
 }

@@ -26,6 +26,7 @@ type CreateClusterRsp struct {
 
 type PreviewClusterRsp struct {
 	ClusterBaseInfo
+	ClusterCommonDemand
 	StockCheckResult  []StockCheckItem         `json:"stockCheckResult"`
 	CapabilityIndexes []ServiceCapabilityIndex `json:"capabilityIndexes"`
 }
@@ -38,6 +39,10 @@ type ServiceCapabilityIndex struct {
 }
 
 type ScaleOutClusterRsp struct {
+	controller.StatusInfo
+}
+
+type ScaleInClusterRsp struct {
 	controller.StatusInfo
 }
 

@@ -24,6 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
@@ -105,7 +106,7 @@ func (c ClusterRepoAdapter) AddCluster(ctx context.Context, cluster *domain.Clus
 
 func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.ClusterAggregation) error {
 
-	if err := persistClusterStatus(ctx, aggregation); err != nil {
+	if err := c.PersistStatus(ctx, aggregation); err != nil {
 		framework.LogWithContext(ctx).Errorf("persist cluster error, module %s, error %v", "status", err)
 		return err
 	}
@@ -133,7 +134,7 @@ func (c ClusterRepoAdapter) Persist(ctx context.Context, aggregation *domain.Clu
 	return nil
 }
 
-func persistClusterStatus(ctx context.Context, aggregation *domain.ClusterAggregation) error {
+func (c ClusterRepoAdapter) PersistStatus(ctx context.Context, aggregation *domain.ClusterAggregation) error {
 	if aggregation.StatusModified || aggregation.FlowModified {
 		if aggregation.Cluster.Status == domain.ClusterStatusDeleted {
 			_, err := client.DBClient.DeleteCluster(ctx,  &dbpb.DBDeleteClusterRequest{
@@ -226,6 +227,20 @@ func persistClusterComponents(ctx context.Context, aggregation *domain.ClusterAg
 			}
 		}
 	}
+
+	// Delete instance which status is ClusterStatusDeleted
+	for _, instance := range aggregation.CurrentComponentInstances {
+		if instance.Status == domain.ClusterStatusDeleted {
+			request := &dbpb.DBDeleteInstanceRequest {
+				Id: instance.ID,
+			}
+			_, err := client.DBClient.DeleteInstance(ctx, request)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -291,6 +306,7 @@ func (c ClusterRepoAdapter) Load(ctx context.Context, id string) (cluster *domai
 		cluster.Cluster = ParseFromClusterDTO(resp.ClusterDetail.Cluster)
 		cluster.CurrentTopologyConfigRecord = parseConfigRecordDTO(resp.ClusterDetail.TopologyConfigRecord)
 		cluster.CurrentWorkFlow = parseFlowFromDTO(resp.ClusterDetail.Flow)
+		cluster.CurrentComponentInstances = parseInstancesFromDTO(resp.ClusterDetail.ComponentInstances)
 		cluster.MaintainCronTask = domain.GetDefaultMaintainTask() // next_version get from db
 		return
 	}
@@ -571,6 +587,39 @@ func ParseFromClusterDTO(dto *dbpb.DBClusterDTO) (cluster *domain.Cluster) {
 	return
 }
 
+func parseInstancesFromDTO(dto []*dbpb.DBComponentInstanceDTO) []*domain.ComponentInstance {
+	if len(dto) == 0 {
+		return nil
+	}
+
+	componentInstances := make([]*domain.ComponentInstance, 0, len(dto))
+	for _, item := range dto {
+		instance := &domain.ComponentInstance{
+			ID: item.Id,
+			Code: item.Code,
+			TenantId: item.TenantId,
+			Status: domain.ClusterStatus(item.Status),
+			ClusterId: item.ClusterId,
+			ComponentType: &knowledge.ClusterComponent{ComponentType: item.ComponentType},
+			Role: item.Role,
+			Version: &knowledge.ClusterVersion{Code: item.Version},
+			HostId: item.HostId,
+			Host: item.Host,
+			DiskId: item.DiskId,
+			AllocRequestId: item.AllocRequestId,
+			DiskPath: item.DiskPath,
+			Compute: &resource.ComputeRequirement{
+				CpuCores: item.CpuCores,
+				Memory: item.Memory,
+			},
+		}
+		instance.DeserializePortInfo(item.PortInfo)
+		componentInstances = append(componentInstances, instance)
+	}
+
+	return componentInstances
+}
+
 func parseConfigRecordDTO(dto *dbpb.DBTopologyConfigDTO) (record *domain.TopologyConfigRecord) {
 	if dto == nil {
 		return nil
@@ -629,7 +678,7 @@ func convertComponentToDTO(component *domain.ComponentInstance) (dto *dbpb.DBCom
 		Memory: component.Compute.Memory,
 		DiskId: component.DiskId,
 		DiskPath: component.DiskPath,
-		PortInfo: component.PortInfo,
+		PortInfo: component.SerializePortInfo(),
 		AllocRequestId: component.AllocRequestId,
 	}
 

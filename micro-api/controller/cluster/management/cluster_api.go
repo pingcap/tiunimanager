@@ -17,6 +17,7 @@
 package management
 
 import (
+	"github.com/pingcap-inc/tiem/library/knowledge"
 	"net/http"
 	"strconv"
 	"time"
@@ -27,7 +28,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 
-	cli "github.com/asim/go-micro/v3/client"
 	"github.com/pingcap-inc/tiem/library/client"
 
 	"github.com/gin-gonic/gin"
@@ -61,16 +61,13 @@ func Create(c *gin.Context) {
 	baseInfo, commonDemand, demand := req.ConvertToDTO()
 
 	reqDTO := &clusterpb.ClusterCreateReqDTO{
-		Operator: operator.ConvertToDTO(),
-		Cluster:  baseInfo,
+		Operator:     operator.ConvertToDTO(),
+		Cluster:      baseInfo,
 		CommonDemand: commonDemand,
-		Demands:  demand,
+		Demands:      demand,
 	}
 
-	respDTO, err := client.ClusterClient.CreateCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
-		o.RequestTimeout = time.Minute * 5
-		o.DialTimeout = time.Minute * 5
-	})
+	respDTO, err := client.ClusterClient.CreateCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -117,9 +114,9 @@ func Preview(c *gin.Context) {
 	for _, group := range req.NodeDemandList {
 		for _, node := range group.DistributionItems {
 			stockCheckResult = append(stockCheckResult, StockCheckItem{
-				Region: req.Region,
-				CpuArchitecture: req.CpuArchitecture,
-				ComponentType: group.ComponentType,
+				Region:           req.Region,
+				CpuArchitecture:  req.CpuArchitecture,
+				Component:        *knowledge.ClusterComponentFromCode(group.ComponentType),
 				DistributionItem: node,
 				// todo stock
 				Enough: true,
@@ -127,13 +124,15 @@ func Preview(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, PreviewClusterRsp {
-		ClusterBaseInfo:	req.ClusterBaseInfo,
-		StockCheckResult: stockCheckResult,
+	c.JSON(http.StatusOK, controller.Success(PreviewClusterRsp{
+		ClusterBaseInfo:     req.ClusterBaseInfo,
+		StockCheckResult:    stockCheckResult,
+		ClusterCommonDemand: req.ClusterCommonDemand,
 		CapabilityIndexes: []ServiceCapabilityIndex{
-			// todo capability
+			//{"StorageCapability", "database storage capability", 800, "GB"},
+			//{"TPCC", "TPCC tmpC ", 523456, ""},
 		},
-	})
+	}))
 }
 
 // Query query clusters
@@ -197,6 +196,7 @@ func Query(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "cluster id"
+// @Param deleteReq body DeleteReq false "delete request"
 // @Success 200 {object} controller.CommonResult{data=DeleteClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
@@ -398,10 +398,7 @@ func Takeover(c *gin.Context) {
 		ClusterNames:     req.ClusterNames,
 	}
 
-	respDTO, err := client.ClusterClient.TakeoverClusters(framework.NewMicroCtxFromGinCtx(c), reqDTO, func(o *cli.CallOptions) {
-		o.RequestTimeout = time.Minute * 5
-		o.DialTimeout = time.Minute * 5
-	})
+	respDTO, err := client.ClusterClient.TakeoverClusters(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
@@ -510,11 +507,12 @@ func DescribeMonitor(c *gin.Context) {
 
 // ScaleOut scale out a cluster
 // @Summary scale out a cluster
-// @Description scale out of a cluster
+// @Description scale out a cluster
 // @Tags cluster
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
 // @Param scaleOutReq body ScaleOutReq true "scale out request"
 // @Success 200 {object} controller.CommonResult{data=ScaleOutClusterRsp}
 // @Failure 401 {object} controller.CommonResult
@@ -538,17 +536,13 @@ func ScaleOut(c *gin.Context) {
 
 	// Create ScaleOutRequest
 	request := &clusterpb.ScaleOutRequest{
-		Operator: operator.ConvertToDTO(),
+		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
-		Demands:  demands,
+		Demands:   demands,
 	}
 
 	// Scale out cluster
-	response, err := client.ClusterClient.ScaleOutCluster(framework.NewMicroCtxFromGinCtx(c),
-		request, func(options *cli.CallOptions) {
-		options.DialTimeout = time.Second * 5
-		options.RequestTimeout = time.Second * 5
-	})
+	response, err := client.ClusterClient.ScaleOutCluster(framework.NewMicroCtxFromGinCtx(c), request, controller.DefaultTimeout)
 
 	// Handle result and error
 	if err != nil {
@@ -561,6 +555,57 @@ func ScaleOut(c *gin.Context) {
 		}
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, ScaleOutClusterRsp{
+			StatusInfo: *ParseStatusFromDTO(response.GetClusterStatus()),
+		})
+
+		c.JSON(http.StatusOK, result)
+	}
+}
+
+// ScaleIn scale in a cluster
+// @Summary scale in a cluster
+// @Description scale in a cluster
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
+// @Param scaleInReq body ScaleInReq true "scale in request"
+// @Success 200 {object} controller.CommonResult{data=ScaleInClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/scale-in [post]
+func ScaleIn(c *gin.Context) {
+	var req ScaleInReq
+
+	if err := c.ShouldBindWith(&req, binding.JSON); err != nil {
+		_ = c.Error(err)
+		return
+	}
+	operator := controller.GetOperator(c)
+
+	// Create ScaleInRequest
+	request := &clusterpb.ScaleInRequest{
+		Operator: operator.ConvertToDTO(),
+		ClusterId: c.Param("clusterId"),
+		NodeId:  req.NodeId,
+	}
+
+	// Scale in cluster
+	response, err := client.ClusterClient.ScaleInCluster(framework.NewMicroCtxFromGinCtx(c), request, controller.DefaultTimeout)
+
+	// Handle result and error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+	} else {
+		status := response.GetRespStatus()
+		if status.Code != 0 {
+			c.JSON(http.StatusInternalServerError, controller.Fail(500, status.Message))
+			return
+		}
+
+		result := controller.BuildCommonResult(int(status.Code), status.Message, ScaleInClusterRsp{
 			StatusInfo:      *ParseStatusFromDTO(response.GetClusterStatus()),
 		})
 

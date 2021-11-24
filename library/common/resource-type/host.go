@@ -60,12 +60,12 @@ func GetDomainPrefixFromCode(failureDomain string) string {
 type ArchType string
 
 const (
-	Arm64 ArchType = "ARM64"
-	X86   ArchType = "X86"
+	Arm64  ArchType = "ARM64"
+	X86_64 ArchType = "X86_64"
 )
 
 func ValidArch(arch string) error {
-	if arch == string(X86) || arch == string(Arm64) {
+	if arch == string(X86_64) || arch == string(Arm64) {
 		return nil
 	}
 	return errors.New("valid arch type: [ARM64 | X86]")

@@ -19,13 +19,14 @@ package adapt
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
-	"path/filepath"
 )
 
 type DefaultTopologyPlanner struct {
@@ -46,22 +47,22 @@ func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*
 				for i := 0; i < items.Count; i++ {
 					portRange := knowledge.GetComponentPortRange(cluster.ClusterType.Code, cluster.ClusterVersion.Code, demand.ComponentType.ComponentType)
 					node := &domain.ComponentInstance{
-						TenantId: cluster.TenantId,
-						Status: domain.ClusterStatusUnlined,
-						ClusterId: cluster.Id,
+						TenantId:      cluster.TenantId,
+						Status:        domain.ClusterStatusUnlined,
+						ClusterId:     cluster.Id,
 						ComponentType: demand.ComponentType,
-						Version: &cluster.ClusterVersion,
+						Version:       &cluster.ClusterVersion,
 						Location: &resource.Location{
 							Region: resource.GetDomainPrefixFromCode(items.ZoneCode),
-							Zone: resource.GetDomainNameFromCode(items.ZoneCode),
+							Zone:   resource.GetDomainNameFromCode(items.ZoneCode),
 						},
 						Compute: &resource.ComputeRequirement{
 							CpuCores: int32(knowledge.ParseCpu(items.SpecCode)),
-							Memory: int32(knowledge.ParseMemory(items.SpecCode)),
+							Memory:   int32(knowledge.ParseMemory(items.SpecCode)),
 						},
 						PortRequirement: &resource.PortRequirement{
-							Start:	int32(portRange.Start),
-							End: int32(portRange.End),
+							Start:   int32(portRange.Start),
+							End:     int32(portRange.End),
 							PortCnt: int32(portRange.Count),
 						},
 					}
@@ -70,18 +71,17 @@ func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*
 			}
 		} else {
 			node := &domain.ComponentInstance{
-				TenantId: cluster.TenantId,
-				Status: domain.ClusterStatusUnlined,
-				ClusterId: cluster.Id,
-				ComponentType: demand.ComponentType,
-				Version: &cluster.ClusterVersion,
-				Location: &resource.Location{},
-				Compute: &resource.ComputeRequirement{},
+				TenantId:        cluster.TenantId,
+				Status:          domain.ClusterStatusUnlined,
+				ClusterId:       cluster.Id,
+				ComponentType:   demand.ComponentType,
+				Version:         &cluster.ClusterVersion,
+				Location:        &resource.Location{},
+				Compute:         &resource.ComputeRequirement{},
 				PortRequirement: &resource.PortRequirement{},
 			}
 			nodes = append(nodes, node)
 		}
-
 
 		componentGroup.Nodes = nodes
 		components = append(components, &componentGroup)
@@ -114,39 +114,39 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, clu
 						DiskReq:    &clusterpb.DiskRequirement{NeedDisk: false},
 						ComputeReq: &clusterpb.ComputeRequirement{CpuCores: 0, Memory: 0},
 					},
-					Count:      1,
+					Count: 1,
 					HostFilter: &clusterpb.Filter{
 						Arch: cluster.CpuArchitecture,
 					},
-					Strategy:   int32(resource.UserSpecifyHost),
+					Strategy: int32(resource.UserSpecifyHost),
 				})
 			} else {
 				// no need to alloc for existed component or parasite component
 				if instance.Status != domain.ClusterStatusUnlined ||
-					knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType){
+					knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType) {
 					continue
 				}
 
 				instance.AllocRequestId = requestId
 
 				portRequirementList = append(portRequirementList, &clusterpb.PortRequirement{
-					Start: instance.PortRequirement.Start,
-					End: instance.PortRequirement.End,
+					Start:   instance.PortRequirement.Start,
+					End:     instance.PortRequirement.End,
 					PortCnt: instance.PortRequirement.PortCnt,
 				})
 
 				requirementList = append(requirementList, &clusterpb.AllocRequirement{
 					Location: &clusterpb.Location{
 						Region: instance.Location.Region,
-						Zone: instance.Location.Zone,
+						Zone:   instance.Location.Zone,
 					},
 					Require: &clusterpb.Requirement{
-						Exclusive: 	false,
-						PortReq: portRequirementList,
-						DiskReq: &clusterpb.DiskRequirement{NeedDisk: true},
+						Exclusive: false,
+						PortReq:   portRequirementList,
+						DiskReq:   &clusterpb.DiskRequirement{NeedDisk: true},
 						ComputeReq: &clusterpb.ComputeRequirement{
 							CpuCores: instance.Compute.CpuCores,
-							Memory: instance.Compute.Memory,
+							Memory:   instance.Compute.Memory,
 						},
 					},
 					Count: 1,
@@ -186,7 +186,7 @@ func (d DefaultTopologyPlanner) ApplyResourceToComponents(ctx context.Context, c
 	for _, component := range components {
 		for _, instance := range component.Nodes {
 			if instance.Status != domain.ClusterStatusUnlined ||
-				knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType){
+				knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType) {
 				continue
 			}
 
@@ -224,7 +224,7 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 		tiupConfig.GlobalOptions.SSHPort = 22
 		tiupConfig.GlobalOptions.Arch = cluster.CpuArchitecture
 		if tiupConfig.GlobalOptions.Arch == "" {
-			tiupConfig.GlobalOptions.Arch = string(resource.X86)
+			tiupConfig.GlobalOptions.Arch = string(resource.X86_64)
 		}
 	}
 
@@ -236,17 +236,17 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 			}
 			if component.ComponentType.ComponentType == "TiDB" {
 				tiupConfig.TiDBServers = append(tiupConfig.TiDBServers, &spec.TiDBSpec{
-					Host: instance.Host,
-					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "tidb-deploy"),
-					Port: instance.PortList[0],
+					Host:       instance.Host,
+					DeployDir:  filepath.Join(instance.DiskPath, cluster.Id, "tidb-deploy"),
+					Port:       instance.PortList[0],
 					StatusPort: instance.PortList[1],
 				})
 			} else if component.ComponentType.ComponentType == "TiKV" {
 				tiupConfig.TiKVServers = append(tiupConfig.TiKVServers, &spec.TiKVSpec{
-					Host: instance.Host,
-					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "tikv-data"),
-					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "tikv-deploy"),
-					Port: instance.PortList[0],
+					Host:       instance.Host,
+					DataDir:    filepath.Join(instance.DiskPath, cluster.Id, "tikv-data"),
+					DeployDir:  filepath.Join(instance.DiskPath, cluster.Id, "tikv-deploy"),
+					Port:       instance.PortList[0],
 					StatusPort: instance.PortList[1],
 				})
 			} else if component.ComponentType.ComponentType == "PD" {
@@ -257,23 +257,23 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 					tiupConfig.MonitoredOptions.BlackboxExporterPort = port + 1
 				}
 				tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
-					Host: instance.Host,
-					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "pd-data"),
-					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "pd-deploy"),
+					Host:       instance.Host,
+					DataDir:    filepath.Join(instance.DiskPath, cluster.Id, "pd-data"),
+					DeployDir:  filepath.Join(instance.DiskPath, cluster.Id, "pd-deploy"),
 					ClientPort: instance.PortList[0],
-					PeerPort: instance.PortList[1],
+					PeerPort:   instance.PortList[1],
 				})
 			} else if component.ComponentType.ComponentType == "TiFlash" {
 				tiupConfig.TiFlashServers = append(tiupConfig.TiFlashServers, &spec.TiFlashSpec{
-					Host: instance.Host,
-					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "tiflash-data"),
-					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "tiflash-deploy"),
-					TCPPort: instance.PortList[0],
-					HTTPPort: instance.PortList[1],
-					FlashServicePort: instance.PortList[2],
-					FlashProxyPort: instance.PortList[3],
+					Host:                 instance.Host,
+					DataDir:              filepath.Join(instance.DiskPath, cluster.Id, "tiflash-data"),
+					DeployDir:            filepath.Join(instance.DiskPath, cluster.Id, "tiflash-deploy"),
+					TCPPort:              instance.PortList[0],
+					HTTPPort:             instance.PortList[1],
+					FlashServicePort:     instance.PortList[2],
+					FlashProxyPort:       instance.PortList[3],
 					FlashProxyStatusPort: instance.PortList[4],
-					StatusPort: instance.PortList[5],
+					StatusPort:           instance.PortList[5],
 				})
 			} else if component.ComponentType.ComponentType == "TiCDC" {
 				tiupConfig.CDCServers = append(tiupConfig.CDCServers, &spec.CDCSpec{

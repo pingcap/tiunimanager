@@ -82,8 +82,8 @@ const (
 const SlowSqlThreshold = 100
 
 const (
-	SlaveTo     int = 1
-	StandBy     int = 2
-	CloneFrom   int = 3
-	RecoverFrom int = 4
+	SlaveTo     uint32 = 1
+	StandBy     uint32 = 2
+	CloneFrom   uint32 = 3
+	RecoverFrom uint32 = 4
 )

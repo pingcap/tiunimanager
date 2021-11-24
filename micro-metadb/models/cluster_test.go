@@ -960,7 +960,7 @@ func TestDAOClusterManager_UpdateClusterInfo(t *testing.T) {
 	})
 }
 
-func TestDAOClusterManager_AddClusterRelation(t *testing.T) {
+func TestDAOClusterManager_CreateClusterRelation(t *testing.T) {
 	type args struct {
 		request ClusterRelation
 	}
@@ -1000,18 +1000,18 @@ func TestDAOClusterManager_AddClusterRelation(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotResult, err := clusterTbl.AddClusterRelation(context.TODO(), ClusterRelation{Record: Record{TenantId: tt.args.request.TenantId},
+			gotResult, err := clusterTbl.CreateClusterRelation(context.TODO(), ClusterRelation{Record: Record{TenantId: tt.args.request.TenantId},
 				SubjectClusterId: tt.args.request.SubjectClusterId,
 				ObjectClusterId: tt.args.request.ObjectClusterId,
 				RelationType: tt.args.request.RelationType,
 			})
 			if (err != nil) != tt.wantErr {
-				t.Errorf("AddClusterRelation() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("CreateClusterRelation() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			for i, assert := range tt.wantResult{
 				if !assert(tt.args, gotResult) {
-					t.Errorf("AddClusterRelation() test error, assert %v, args = %v, gotResult = %v, want %v", i, tt.args, gotResult, tt.wantResult)
+					t.Errorf("CreateClusterRelation() test error, assert %v, args = %v, gotResult = %v, want %v", i, tt.args, gotResult, tt.wantResult)
 				}
 			}
 		})
@@ -1220,7 +1220,7 @@ func TestDAOClusterManager_DeleteClusterRelation(t *testing.T) {
 		ObjectClusterId: "2",
 		RelationType: common.SlaveTo,
 	}
-	relation, _ := clusterTbl.AddClusterRelation(context.TODO(), r)
+	relation, _ := clusterTbl.CreateClusterRelation(context.TODO(), r)
 
 	t.Run("normal", func(t *testing.T){
 		newRelation, err := clusterTbl.DeleteClusterRelation(context.TODO(), relation.ID)

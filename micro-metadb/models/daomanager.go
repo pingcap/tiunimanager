@@ -86,8 +86,8 @@ func (dao *DAOManager) ParamManager() *DAOParamManager {
 	return dao.paramManager
 }
 
-func (dao *DAOManager) SetParamGroupManager(paramGroupManager *DAOParamManager) {
-	dao.paramManager = paramGroupManager
+func (dao *DAOManager) SetParamManager(paramManager *DAOParamManager) {
+	dao.paramManager = paramManager
 }
 
 func (dao *DAOManager) Db() *gorm.DB {
@@ -179,7 +179,7 @@ func (dao *DAOManager) InitDB(dataDir string) error {
 	dao.SetAccountManager(NewDAOAccountManager(dao.Db()))
 	dao.SetClusterManager(NewDAOClusterManager(dao.Db()))
 	dao.SetResourceManager(NewDAOResourceManager(dao.Db()))
-	dao.SetParamGroupManager(NewDAOParamManager(dao.Db()))
+	dao.SetParamManager(NewDAOParamManager(dao.Db()))
 
 	return err
 }

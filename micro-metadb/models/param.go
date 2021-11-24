@@ -26,6 +26,7 @@ package models
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -115,6 +116,11 @@ func (do ClusterParamMapDO) TableName() string {
 
 func (m *DAOParamManager) AddParamGroup(ctx context.Context, pg *ParamGroupDO, pgm []*ParamGroupMapDO) (id uint, err error) {
 	log := framework.LogWithContext(ctx)
+	if pg.Name == "" || pg.Spec == "" || pg.Version == "" {
+		err = errors.New(fmt.Sprintf("param valid err! require param name: %s, spec: %s, version: %s", pg.Name, pg.Spec, pg.Version))
+		return
+	}
+
 	tx := m.Db(ctx).Begin()
 
 	// insert param_groups table
@@ -165,7 +171,7 @@ func (m *DAOParamManager) UpdateParamGroup(ctx context.Context, id uint, name, s
 	// range update param_group_map table
 	for i := range pgm {
 		pgm[i].UpdatedAt = time.Now()
-		err = m.Db(ctx).Where("group_param_id = ? and param_id = ?", id, pgm[i].ParamId).Updates(pgm[i]).Error
+		err = m.Db(ctx).Where("param_group_id = ? and param_id = ?", id, pgm[i].ParamId).Updates(pgm[i]).Error
 		if err != nil {
 			log.Errorf("update param group map err: %v, request param map: %v", err.Error(), pgm)
 			tx.Rollback()
@@ -181,7 +187,7 @@ func (m *DAOParamManager) DeleteParamGroup(ctx context.Context, id uint) (err er
 	tx := m.Db(ctx).Begin()
 
 	// delete param_group_map table
-	err = m.Db(ctx).Where("group_param_id = ?", id).Delete(&ParamGroupMapDO{}).Error
+	err = m.Db(ctx).Where("param_group_id = ?", id).Delete(&ParamGroupMapDO{}).Error
 	if err != nil {
 		log.Errorf("delete param group map err: %v, request param id: %v", err.Error(), id)
 		tx.Rollback()
@@ -215,7 +221,7 @@ func (m *DAOParamManager) ListParamGroup(ctx context.Context, name, spec, versio
 		query = query.Where("version = ?", version)
 	}
 	if dbType > 0 {
-		query = query.Where("dbType = ?", dbType)
+		query = query.Where("db_type = ?", dbType)
 	}
 	if hasDefault > 0 {
 		query = query.Where("has_default = ?", hasDefault)
@@ -268,9 +274,9 @@ func (m *DAOParamManager) LoadParamsByGroupId(ctx context.Context, id uint) (par
 	err = m.Db(ctx).Model(&ParamDO{}).
 		Select("params.id, params.name, params.component_type, params.type, params.unit, params.range, "+
 			"params.has_reboot, params.source, params.description, param_group_map.default_value, param_group_map.note, "+
-			"param_group_map.create_at, param_group_map.update_at").
+			"param_group_map.created_at, param_group_map.updated_at").
 		Joins("left join param_group_map on params.id = param_group_map.param_id").
-		Where("param_group_map.group_param_id = ?", id).Scan(&params).Error
+		Where("param_group_map.param_group_id = ?", id).Scan(&params).Error
 	if err != nil {
 		log.Errorf("load params err: %v", err.Error())
 		return
@@ -345,10 +351,10 @@ func (m *DAOParamManager) FindParamsByClusterId(ctx context.Context, clusterId s
 	err = m.Db(ctx).Model(&ClusterParamMapDO{}).
 		Select("params.id, params.name, params.component_type, params.type, params.unit, params.range, "+
 			"params.has_reboot, params.source, params.description, param_group_map.default_value, param_group_map.note, "+
-			"cluster_param_map.real_value, param_group_map.create_at, param_group_map.update_at").
+			"cluster_param_map.real_value, cluster_param_map.created_at, cluster_param_map.updated_at").
 		Joins("left join params on params.id = cluster_param_map.param_id").
 		Joins("left join param_group_map on params.id = param_group_map.param_id").
-		Where("cluster_param_map.cluster_id = ? and param_group_map.group_param_id = ?", cluster, paramGroupId).
+		Where("cluster_param_map.cluster_id = ? and param_group_map.param_group_id = ?", cluster.ID, paramGroupId).
 		Count(&total).Offset(offset).Limit(size).
 		Scan(&params).Error
 	if err != nil {
@@ -385,7 +391,6 @@ func (m *DAOParamManager) AddParam(ctx context.Context, p *ParamDO) (id uint, er
 	if err != nil {
 		log.Errorf("add param err: %v, request param: %v", err.Error(), p)
 	}
-	fmt.Println(p.ID)
 	return p.ID, err
 }
 
@@ -408,7 +413,7 @@ func (m *DAOParamManager) UpdateParam(ctx context.Context, paramId uint, p *Para
 	return err
 }
 
-func (m *DAOParamManager) FindParamById(ctx context.Context, paramId uint) (p ParamDO, err error) {
+func (m *DAOParamManager) LoadParamById(ctx context.Context, paramId uint) (p ParamDO, err error) {
 	log := framework.LogWithContext(ctx)
 	p = ParamDO{}
 	err = m.Db(ctx).Where("id = ?", paramId).First(&p).Error

@@ -47,6 +47,7 @@ func (handler *DBServiceHandler) CreateParamGroup(ctx context.Context, req *dbpb
 	log.Debugln("start create param group dao service.")
 	groupId, err := handler.Dao().ParamManager().AddParamGroup(ctx, parseParamGroup(req), parseSubmitParams(req.Params))
 	if err != nil {
+		rsp.Status = new(dbpb.DBParamResponseStatus)
 		log.Errorf("create param group err: %v", err.Error())
 		st, ok := status.FromError(err)
 		if ok {
@@ -69,6 +70,7 @@ func (handler *DBServiceHandler) UpdateParamGroup(ctx context.Context, req *dbpb
 	err := handler.Dao().ParamManager().UpdateParamGroup(ctx, uint(req.ParamGroupId),
 		req.Name, req.Spec, req.Version, req.Note, parseSubmitParams(req.Params))
 	if err != nil {
+		rsp.Status = new(dbpb.DBParamResponseStatus)
 		log.Errorf("update param group err: %v", err.Error())
 		st, ok := status.FromError(err)
 		if ok {
@@ -90,6 +92,7 @@ func (handler *DBServiceHandler) DeleteParamGroup(ctx context.Context, req *dbpb
 	log.Debugln("start delete param group dao service.")
 	err := handler.Dao().ParamManager().DeleteParamGroup(ctx, uint(req.GetParamGroupId()))
 	if err != nil {
+		rsp.Status = new(dbpb.DBParamResponseStatus)
 		log.Errorf("delete param group err: %v", err.Error())
 		st, ok := status.FromError(err)
 		if ok {
@@ -112,6 +115,7 @@ func (handler *DBServiceHandler) ListParamGroup(ctx context.Context, req *dbpb.D
 	groups, total, err := handler.Dao().ParamManager().ListParamGroup(ctx, req.Name, req.Spec, req.Version, req.DbType, req.HasDefault,
 		int(req.Page.Page-1)*int(req.Page.PageSize), int(req.Page.PageSize))
 	if err != nil {
+		rsp.Status = new(dbpb.DBParamResponseStatus)
 		log.Errorf("list param group err: %v", err.Error())
 		st, ok := status.FromError(err)
 		if ok {
@@ -153,6 +157,7 @@ func (handler *DBServiceHandler) FindParamGroupByID(ctx context.Context, req *db
 	log.Debugln("start find param group by id dao service.")
 	group, params, err := handler.Dao().ParamManager().LoadParamGroup(ctx, uint(req.ParamGroupId))
 	if err != nil {
+		rsp.Status = new(dbpb.DBParamResponseStatus)
 		log.Errorf("find param group by id err: %v", err.Error())
 		st, ok := status.FromError(err)
 		if ok {
@@ -174,6 +179,7 @@ func (handler *DBServiceHandler) ApplyParamGroup(ctx context.Context, req *dbpb.
 	log.Debugln("start apply param group dao service.")
 	params, err := convertClusterParam(req.Params)
 	if err != nil {
+		rsp.Status = new(dbpb.DBParamResponseStatus)
 		log.Errorf("apply param group err: %v", err.Error())
 		rsp.Status.Code = int32(codes.Internal)
 		rsp.Status.Message = fmt.Sprintf("apply failure param group failed, err: %v", err)
@@ -202,6 +208,7 @@ func (handler *DBServiceHandler) FindParamsByClusterId(ctx context.Context, req 
 	log.Debugln("start find params by cluster id dao service.")
 	paramGroupId, total, params, err := handler.Dao().ParamManager().FindParamsByClusterId(ctx, req.ClusterId, int(req.Page.Page-1)*int(req.Page.PageSize), int(req.Page.PageSize))
 	if err != nil {
+		rsp.Status = new(dbpb.DBParamResponseStatus)
 		log.Errorf("find params by cluster err: %v", err.Error())
 		st, ok := status.FromError(err)
 		if ok {
@@ -233,6 +240,7 @@ func (handler *DBServiceHandler) UpdateClusterParams(ctx context.Context, req *d
 	log.Debugln("start update cluster params dao service.")
 	params, err := convertClusterParam(req.Params)
 	if err != nil {
+		rsp.Status = new(dbpb.DBParamResponseStatus)
 		log.Errorf("update cluster params err: %v", err.Error())
 		rsp.Status.Code = int32(codes.Internal)
 		rsp.Status.Message = fmt.Sprintf("update failure cluster params failed, err: %v", err)

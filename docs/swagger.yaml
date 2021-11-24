@@ -1377,6 +1377,175 @@ definitions:
       taskId:
         type: integer
     type: object
+  paramgroup.ApplyParamGroupReq:
+    properties:
+      clusterId:
+        example: "123"
+        type: string
+    type: object
+  paramgroup.ApplyParamGroupResp:
+    properties:
+      clusterId:
+        example: "123"
+        type: string
+      id:
+        example: abc
+        type: string
+    type: object
+  paramgroup.CommonParamGroupResp:
+    properties:
+      id:
+        example: abc
+        type: string
+    type: object
+  paramgroup.CopyParamGroupReq:
+    properties:
+      name:
+        example: 8C16GV4_default
+        type: string
+      note:
+        example: default param group
+        type: string
+    type: object
+  paramgroup.CreateAndUpdateParam:
+    properties:
+      defaultValue:
+        example: "1"
+        type: string
+      description:
+        example: binlog cache size
+        type: string
+      id:
+        example: "123"
+        type: string
+    type: object
+  paramgroup.CreateParamGroupReq:
+    properties:
+      dbType:
+        example: 0
+        type: integer
+      groupType:
+        example: 0
+        type: integer
+      hasDefault:
+        example: true
+        type: boolean
+      name:
+        example: 8C16GV4_default
+        type: string
+      note:
+        example: default param group
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/paramgroup.CreateAndUpdateParam'
+        type: array
+      spec:
+        example: 8C16G
+        type: string
+      version:
+        example: v5.0
+        type: string
+    type: object
+  paramgroup.ParamDetail:
+    properties:
+      componentType:
+        example: tidb
+        type: string
+      createTime:
+        example: 1636698675
+        type: integer
+      defaultValue:
+        example: "1"
+        type: string
+      description:
+        example: binlog cache size
+        type: string
+      hasReboot:
+        example: 0
+        type: integer
+      id:
+        example: "123"
+        type: string
+      name:
+        example: binlog_size
+        type: string
+      note:
+        example: binlog cache size
+        type: string
+      range:
+        example:
+        - "1"
+        - ' 1000'
+        items:
+          type: string
+        type: array
+      type:
+        example: 0
+        type: integer
+      unit:
+        example: mb
+        type: string
+      updateTime:
+        example: 1636698675
+        type: integer
+    type: object
+  paramgroup.QueryParamGroupResp:
+    properties:
+      createTime:
+        example: 1636698675
+        type: integer
+      dbType:
+        example: 0
+        type: integer
+      groupType:
+        example: 0
+        type: integer
+      hasDefault:
+        example: true
+        type: boolean
+      id:
+        example: abc
+        type: string
+      name:
+        example: default
+        type: string
+      note:
+        example: default param group
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/paramgroup.ParamDetail'
+        type: array
+      spec:
+        example: 8C16G
+        type: string
+      updateTime:
+        example: 1636698675
+        type: integer
+      version:
+        example: v5.0
+        type: string
+    type: object
+  paramgroup.UpdateParamGroupReq:
+    properties:
+      name:
+        example: 8C16GV4_default
+        type: string
+      note:
+        example: default param group
+        type: string
+      params:
+        items:
+          $ref: '#/definitions/paramgroup.CreateAndUpdateParam'
+        type: array
+      spec:
+        example: 8C16G
+        type: string
+      version:
+        example: v5.0
+        type: string
+    type: object
   warehouse.DomainResource:
     properties:
       count:
@@ -3011,6 +3180,314 @@ paths:
       summary: search tidb log
       tags:
       - logs
+  /param-groups/:
+    get:
+      consumes:
+      - application/json
+      description: query param group
+      parameters:
+      - example: 0
+        in: query
+        name: dbType
+        type: integer
+      - example: 0
+        in: query
+        name: hasDefault
+        type: integer
+      - example: false
+        in: query
+        name: hasDetail
+        type: boolean
+      - example: default
+        in: query
+        name: name
+        type: string
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: pageSize
+        type: integer
+      - example: 8C16G
+        in: query
+        name: spec
+        type: string
+      - example: v5.0
+        in: query
+        name: version
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/paramgroup.QueryParamGroupResp'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query param group
+      tags:
+      - param group
+    post:
+      consumes:
+      - application/json
+      description: create a param group
+      parameters:
+      - description: create request
+        in: body
+        name: createReq
+        required: true
+        schema:
+          $ref: '#/definitions/paramgroup.CreateParamGroupReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/paramgroup.CommonParamGroupResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: create a param group
+      tags:
+      - param group
+  /param-groups/{paramGroupId}:
+    delete:
+      consumes:
+      - application/json
+      description: delete a param group
+      parameters:
+      - description: param group id
+        in: path
+        name: paramGroupId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/paramgroup.CommonParamGroupResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: delete a param group
+      tags:
+      - param group
+    get:
+      consumes:
+      - application/json
+      description: show details of a param group
+      parameters:
+      - description: param group id
+        in: path
+        name: paramGroupId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/paramgroup.QueryParamGroupResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: show details of a param group
+      tags:
+      - param group
+    put:
+      consumes:
+      - application/json
+      description: update a param group
+      parameters:
+      - description: update param group request
+        in: body
+        name: updateReq
+        required: true
+        schema:
+          $ref: '#/definitions/paramgroup.UpdateParamGroupReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/paramgroup.CommonParamGroupResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: update a param group
+      tags:
+      - param group
+  /param-groups/{paramGroupId}/apply:
+    post:
+      consumes:
+      - application/json
+      description: apply a param group
+      parameters:
+      - description: apply param group request
+        in: body
+        name: applyReq
+        required: true
+        schema:
+          $ref: '#/definitions/paramgroup.ApplyParamGroupReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/paramgroup.ApplyParamGroupResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: apply a param group
+      tags:
+      - param group
+  /param-groups/{paramGroupId}/copy:
+    post:
+      consumes:
+      - application/json
+      description: copy a param group
+      parameters:
+      - description: copy param group request
+        in: body
+        name: copyReq
+        required: true
+        schema:
+          $ref: '#/definitions/paramgroup.CopyParamGroupReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/paramgroup.CommonParamGroupResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: copy a param group
+      tags:
+      - param group
   /resources/allochosts:
     post:
       consumes:

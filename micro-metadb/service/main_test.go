@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -52,6 +51,7 @@ func TestMain(m *testing.M) {
 			Dao.SetAccountManager(models.NewDAOAccountManager(Dao.Db()))
 			Dao.SetClusterManager(models.NewDAOClusterManager(Dao.Db()))
 			Dao.SetResourceManager(models.NewDAOResourceManager(Dao.Db()))
+			Dao.SetParamManager(models.NewDAOParamManager(Dao.Db()))
 			return nil
 		},
 	)

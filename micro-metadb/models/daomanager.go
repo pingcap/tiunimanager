@@ -46,6 +46,7 @@ type DAOManager struct {
 	clusterManager  *DAOClusterManager
 	accountManager  *DAOAccountManager
 	resourceManager *DAOResourceManager
+	paramManager    *DAOParamManager
 }
 
 func NewDAOManager(fw *framework.BaseFramework) *DAOManager {
@@ -79,6 +80,14 @@ func (dao *DAOManager) ResourceManager() *DAOResourceManager {
 
 func (dao *DAOManager) SetResourceManager(resourceManager *DAOResourceManager) {
 	dao.resourceManager = resourceManager
+}
+
+func (dao *DAOManager) ParamManager() *DAOParamManager {
+	return dao.paramManager
+}
+
+func (dao *DAOManager) SetParamManager(paramManager *DAOParamManager) {
+	dao.paramManager = paramManager
 }
 
 func (dao *DAOManager) Db() *gorm.DB {
@@ -170,6 +179,7 @@ func (dao *DAOManager) InitDB(dataDir string) error {
 	dao.SetAccountManager(NewDAOAccountManager(dao.Db()))
 	dao.SetClusterManager(NewDAOClusterManager(dao.Db()))
 	dao.SetResourceManager(NewDAOResourceManager(dao.Db()))
+	dao.SetParamManager(NewDAOParamManager(dao.Db()))
 
 	return err
 }
@@ -205,6 +215,10 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_TRANSPORT_RECORD, new(TransportRecord))
 	dao.AddTable(TABLE_NAME_RECOVER_RECORD, new(RecoverRecord))
 	dao.AddTable(TABLE_NAME_COMPONENT_INSTANCE, new(ComponentInstance))
+	dao.AddTable(TABLE_NAME_PARAM, new(ParamDO))
+	dao.AddTable(TABLE_NAME_PARAM_GROUP, new(ParamGroupDO))
+	dao.AddTable(TABLE_NAME_PARAM_GROUP_MAP, new(ParamGroupMapDO))
+	dao.AddTable(TABLE_NAME_CLUSTER_PARAM_MAP, new(ClusterParamMapDO))
 
 	log.Info("create TiEM all tables successful.")
 	return nil

@@ -19,12 +19,13 @@ package models
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	"github.com/prometheus/client_golang/prometheus"
-	"strconv"
-	"time"
 
 	"github.com/pingcap/errors"
 	"gorm.io/gorm"
@@ -45,6 +46,7 @@ type Cluster struct {
 	CurrentTopologyConfigId uint
 	CurrentDemandId         uint
 	CurrentFlowId           uint
+	ParamGroupId            uint
 }
 
 type DemandRecord struct {

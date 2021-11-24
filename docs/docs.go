@@ -2658,6 +2658,519 @@ var doc = `{
                 }
             }
         },
+        "/param-groups/": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "query param group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "param group"
+                ],
+                "summary": "query param group",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 0,
+                        "name": "dbType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 0,
+                        "name": "hasDefault",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "example": false,
+                        "name": "hasDetail",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "default",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "8C16G",
+                        "name": "spec",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "v5.0",
+                        "name": "version",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.ResultWithPage"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/paramgroup.QueryParamGroupResp"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "create a param group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "param group"
+                ],
+                "summary": "create a param group",
+                "parameters": [
+                    {
+                        "description": "create request",
+                        "name": "createReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/paramgroup.CreateParamGroupReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/paramgroup.CommonParamGroupResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/param-groups/{paramGroupId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "show details of a param group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "param group"
+                ],
+                "summary": "show details of a param group",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "param group id",
+                        "name": "paramGroupId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/paramgroup.QueryParamGroupResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "update a param group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "param group"
+                ],
+                "summary": "update a param group",
+                "parameters": [
+                    {
+                        "description": "update param group request",
+                        "name": "updateReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/paramgroup.UpdateParamGroupReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/paramgroup.CommonParamGroupResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "delete a param group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "param group"
+                ],
+                "summary": "delete a param group",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "param group id",
+                        "name": "paramGroupId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/paramgroup.CommonParamGroupResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/param-groups/{paramGroupId}/apply": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "apply a param group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "param group"
+                ],
+                "summary": "apply a param group",
+                "parameters": [
+                    {
+                        "description": "apply param group request",
+                        "name": "applyReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/paramgroup.ApplyParamGroupReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/paramgroup.ApplyParamGroupResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/param-groups/{paramGroupId}/copy": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "copy a param group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "param group"
+                ],
+                "summary": "copy a param group",
+                "parameters": [
+                    {
+                        "description": "copy param group request",
+                        "name": "copyReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/paramgroup.CopyParamGroupReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/paramgroup.CommonParamGroupResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
         "/resources/allochosts": {
             "post": {
                 "security": [
@@ -5554,6 +6067,243 @@ var doc = `{
                 },
                 "taskId": {
                     "type": "integer"
+                }
+            }
+        },
+        "paramgroup.ApplyParamGroupReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string",
+                    "example": "123"
+                }
+            }
+        },
+        "paramgroup.ApplyParamGroupResp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string",
+                    "example": "123"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "abc"
+                }
+            }
+        },
+        "paramgroup.CommonParamGroupResp": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "abc"
+                }
+            }
+        },
+        "paramgroup.CopyParamGroupReq": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "8C16GV4_default"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "default param group"
+                }
+            }
+        },
+        "paramgroup.CreateAndUpdateParam": {
+            "type": "object",
+            "properties": {
+                "defaultValue": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "123"
+                }
+            }
+        },
+        "paramgroup.CreateParamGroupReq": {
+            "type": "object",
+            "properties": {
+                "dbType": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "groupType": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "hasDefault": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "8C16GV4_default"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "default param group"
+                },
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/paramgroup.CreateAndUpdateParam"
+                    }
+                },
+                "spec": {
+                    "type": "string",
+                    "example": "8C16G"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "v5.0"
+                }
+            }
+        },
+        "paramgroup.ParamDetail": {
+            "type": "object",
+            "properties": {
+                "componentType": {
+                    "type": "string",
+                    "example": "tidb"
+                },
+                "createTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "hasReboot": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "id": {
+                    "type": "string",
+                    "example": "123"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "binlog_size"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "1",
+                        " 1000"
+                    ]
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "mb"
+                },
+                "updateTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                }
+            }
+        },
+        "paramgroup.QueryParamGroupResp": {
+            "type": "object",
+            "properties": {
+                "createTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                },
+                "dbType": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "groupType": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "hasDefault": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "id": {
+                    "type": "string",
+                    "example": "abc"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "default"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "default param group"
+                },
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/paramgroup.ParamDetail"
+                    }
+                },
+                "spec": {
+                    "type": "string",
+                    "example": "8C16G"
+                },
+                "updateTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                },
+                "version": {
+                    "type": "string",
+                    "example": "v5.0"
+                }
+            }
+        },
+        "paramgroup.UpdateParamGroupReq": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "8C16GV4_default"
+                },
+                "note": {
+                    "type": "string",
+                    "example": "default param group"
+                },
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/paramgroup.CreateAndUpdateParam"
+                    }
+                },
+                "spec": {
+                    "type": "string",
+                    "example": "8C16G"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "v5.0"
                 }
             }
         },

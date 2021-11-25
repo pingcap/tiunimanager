@@ -251,10 +251,10 @@ func (handler *DBServiceHandler) LoadCluster(ctx context.Context, req *dbpb.DBLo
 		}
 		log.Infof("LoadCluster successfully, clusterId: %s, error: %v", req.GetClusterId(), err)
 	} else {
-			resp.Status = &dbpb.DBClusterResponseStatus{
-				Code: 500,
-				Message: err.Error(),
-			}
+		resp.Status = &dbpb.DBClusterResponseStatus{
+			Code:    500,
+			Message: err.Error(),
+		}
 		log.Errorf("LoadCluster failed, clusterId: %s, error: %v", req.GetClusterId(), err)
 	}
 	return nil
@@ -561,6 +561,7 @@ func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbpb.DBBackupRecord
 		OperatorId:   do.OperatorId,
 		FilePath:     do.FilePath,
 		Size:         do.Size,
+		BackupTso:    do.BackupTso,
 		FlowId:       int64(do.FlowId),
 	}
 	return
@@ -619,7 +620,7 @@ func convertToComponentInstanceDTO(models []*models.ComponentInstance) []*dbpb.D
 			HostId:         v.HostId,
 			Host:           v.Host,
 			CpuCores:       int32(v.CpuCores),
-			Memory: int32(v.Memory),
+			Memory:         int32(v.Memory),
 			DiskId:         v.DiskId,
 			DiskPath:       v.DiskPath,
 			PortInfo:       v.PortInfo,

@@ -21,6 +21,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -30,10 +35,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
-	"os"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type BackupRecord struct {
@@ -249,7 +250,7 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 	}
 
 	if cluster.CpuArchitecture == "" {
-		cluster.CpuArchitecture = string(resourceType.X86)
+		cluster.CpuArchitecture = string(resourceType.X86_64)
 	}
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs))

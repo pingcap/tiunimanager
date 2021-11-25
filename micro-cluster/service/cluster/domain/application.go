@@ -20,11 +20,12 @@ import (
 	ctx "context"
 	"errors"
 	"fmt"
-	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
+	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -112,7 +113,7 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	}
 
 	if cluster.CpuArchitecture == "" {
-		cluster.CpuArchitecture = string(resourceType.X86)
+		cluster.CpuArchitecture = string(resourceType.X86_64)
 	}
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs))

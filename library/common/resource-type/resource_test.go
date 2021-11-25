@@ -38,10 +38,10 @@ func Test_ValidArchType(t *testing.T) {
 		arch string
 		want want
 	}{
-		{"valid_X86", "X86", want{nil}},
-		{"valid_ARM64", "ARM64", want{nil}},
-		{"invalid_x86", "x86", want{errors.New("valid arch type: [ARM64 | X86]")}},
-		{"invalid_arm64", "arm64", want{errors.New("valid arch type: [ARM64 | X86]")}},
+		{"valid_X86", string(X86_64), want{nil}},
+		{"valid_ARM64", string(Arm64), want{nil}},
+		{"invalid_x86", "x86", want{errors.New("valid arch type: [ARM64 | X86_64]")}},
+		{"invalid_arm64", "arm64", want{errors.New("valid arch type: [ARM64 | X86_64]")}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

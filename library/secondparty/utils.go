@@ -21,7 +21,9 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"runtime/debug"
+	"strings"
 )
 
 func assert(b bool) {
@@ -63,4 +65,33 @@ func jsonMustMarshal(v interface{}) []byte {
 	bs, err := json.Marshal(v)
 	assert(err == nil)
 	return bs
+}
+
+func SetField(item interface{}, fieldName string, value interface{}) error {
+	v := reflect.ValueOf(item).Elem()
+	if !v.CanAddr() {
+		return fmt.Errorf("cannot assign to the item passed, item must be a pointer in order to assign")
+	}
+	// It's possible we can cache this, which is why precompute all these ahead of time.
+	findYamlName := func(t reflect.StructTag) (string, error) {
+		if yt, ok := t.Lookup("yaml"); ok {
+			return strings.Split(yt, ",")[0], nil
+		}
+		return "", fmt.Errorf("tag provided does not define a yaml tag %s", fieldName)
+	}
+	fieldNames := map[string]int{}
+	for i := 0; i < v.NumField(); i++ {
+		typeField := v.Type().Field(i)
+		tag := typeField.Tag
+		yname, _ := findYamlName(tag)
+		fieldNames[yname] = i
+	}
+
+	fieldNum, ok := fieldNames[fieldName]
+	if !ok {
+		return fmt.Errorf("field %s does not exist within the provided item", fieldName)
+	}
+	fieldVal := v.Field(fieldNum)
+	fieldVal.Set(reflect.ValueOf(value))
+	return nil
 }

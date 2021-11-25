@@ -463,7 +463,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		DbConnParameter: secondparty.DbConnParam{
 			Username: "root", //todo: replace admin account
 			Password: "",
-			Ip:       tidbServer.Host,
+			IP:       tidbServer.Host,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
 		DbName:      "", //todo: support db table backup
@@ -591,7 +591,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		DbConnParameter: secondparty.DbConnParam{
 			Username: "root", //todo: replace admin account
 			Password: "",
-			Ip:       tidbServer.Host,
+			IP:       tidbServer.Host,
 			Port:     strconv.Itoa(tidbServer.Port),
 		},
 		DbName:      "", //todo: support db table restore

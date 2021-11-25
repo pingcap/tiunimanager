@@ -26,6 +26,12 @@ package paramgroup
 
 import (
 	"net/http"
+	"strconv"
+
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/gin-gonic/gin/binding"
 
@@ -54,13 +60,40 @@ func Query(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-	//operator := controller.GetOperator(c)
 
-	// todo: invoke micro-cluster service
+	if queryReq.Page <= 0 {
+		queryReq.Page = 1
+	}
+	if queryReq.PageSize <= 0 {
+		queryReq.PageSize = 10
+	}
+	reqDTO := &clusterpb.ListParamGroupRequest{
+		Name:       queryReq.Name,
+		Version:    queryReq.Version,
+		Spec:       queryReq.Spec,
+		HasDetail:  queryReq.HasDetail,
+		DbType:     queryReq.DbType,
+		HasDefault: queryReq.HasDefault,
+		Page:       &clusterpb.PageDTO{Page: int32(queryReq.Page), PageSize: int32(queryReq.PageSize)},
+	}
+	resp, err := client.ClusterClient.ListParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	status := resp.RespStatus
+	page := &controller.Page{Page: int(resp.Page.Page), PageSize: int(resp.Page.PageSize), Total: int(resp.Page.Total)}
 
-	groups := make([]QueryParamGroupResp, 1)
-	groups[0] = QueryParamGroupResp{}
-	result := controller.BuildResultWithPage(0, "OK", &controller.Page{Page: 1, PageSize: 1, Total: 1}, groups)
+	pgs := make([]QueryParamGroupResp, 0)
+	if len(resp.ParamGroups) > 0 {
+		pgs = make([]QueryParamGroupResp, len(resp.ParamGroups))
+		err = convertObj(resp.ParamGroups, &pgs)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+			return
+		}
+	}
+	result := controller.BuildResultWithPage(int(status.Code), status.Message, page, pgs)
 	c.JSON(http.StatusOK, result)
 }
 
@@ -78,12 +111,28 @@ func Query(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /param-groups/{paramGroupId} [get]
 func Detail(c *gin.Context) {
-	//param := c.Param("paramGroupId")
-	//operator := controller.GetOperator(c)
+	paramGroupId, err := strconv.Atoi(c.Param("paramGroupId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		return
+	}
+	reqDTO := &clusterpb.DetailParamGroupRequest{
+		ParamGroupId: int64(paramGroupId),
+	}
+	resp, err := client.ClusterClient.DetailParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	status := resp.RespStatus
 
-	// todo: invoke micro-cluster service
-
-	result := controller.BuildCommonResult(0, "OK", QueryParamGroupResp{})
+	pg := QueryParamGroupResp{}
+	err = convertObj(resp.ParamGroup, &pg)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	result := controller.BuildCommonResult(int(status.Code), status.Message, pg)
 	c.JSON(http.StatusOK, result)
 }
 
@@ -102,16 +151,26 @@ func Detail(c *gin.Context) {
 // @Router /param-groups/ [post]
 func Create(c *gin.Context) {
 	var req CreateParamGroupReq
-
 	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
-		_ = c.Error(err)
+		err = c.Error(err)
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return
 	}
-	//operator := controller.GetOperator(c)
 
-	// todo: invoke micro-cluster service
+	reqDTO := &clusterpb.CreateParamGroupRequest{}
+	err := convertObj(req, reqDTO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	resp, err := client.ClusterClient.CreateParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	status := resp.RespStatus
 
-	result := controller.BuildCommonResult(0, "OK", CommonParamGroupResp{})
+	result := controller.BuildCommonResult(int(status.Code), status.Message, CommonParamGroupResp{ParamGroupId: resp.ParamGroupId})
 	c.JSON(http.StatusOK, result)
 }
 
@@ -129,12 +188,23 @@ func Create(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /param-groups/{paramGroupId} [delete]
 func Delete(c *gin.Context) {
-	//param := c.Param("paramGroupId")
-	//operator := controller.GetOperator(c)
+	paramGroupId, err := strconv.Atoi(c.Param("paramGroupId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		return
+	}
 
-	// todo: invoke micro-cluster service
+	reqDTO := &clusterpb.DeleteParamGroupRequest{
+		ParamGroupId: int64(paramGroupId),
+	}
+	resp, err := client.ClusterClient.DeleteParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	status := resp.RespStatus
 
-	result := controller.BuildCommonResult(0, "OK", CommonParamGroupResp{})
+	result := controller.BuildCommonResult(int(status.Code), status.Message, CommonParamGroupResp{ParamGroupId: resp.ParamGroupId})
 	c.JSON(http.StatusOK, result)
 }
 
@@ -152,17 +222,32 @@ func Delete(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /param-groups/{paramGroupId} [put]
 func Update(c *gin.Context) {
-	var req UpdateParamGroupReq
-
-	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
-		_ = c.Error(err)
+	paramGroupId, err := strconv.Atoi(c.Param("paramGroupId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
-	//operator := controller.GetOperator(c)
+	var req UpdateParamGroupReq
+	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
 
-	// todo: invoke micro-cluster service
-
-	result := controller.BuildCommonResult(0, "OK", CommonParamGroupResp{})
+	reqDTO := &clusterpb.UpdateParamGroupRequest{}
+	err = convertObj(req, reqDTO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	// set param group id
+	reqDTO.ParamGroupId = int64(paramGroupId)
+	resp, err := client.ClusterClient.UpdateParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	status := resp.RespStatus
+	result := controller.BuildCommonResult(int(status.Code), status.Message, CommonParamGroupResp{ParamGroupId: resp.GetParamGroupId()})
 	c.JSON(http.StatusOK, result)
 }
 
@@ -180,17 +265,31 @@ func Update(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /param-groups/{paramGroupId}/copy [post]
 func Copy(c *gin.Context) {
-	var req CopyParamGroupReq
-
-	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
-		_ = c.Error(err)
+	paramGroupId, err := strconv.Atoi(c.Param("paramGroupId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
-	//operator := controller.GetOperator(c)
-
-	// todo: invoke micro-cluster service
-
-	result := controller.BuildCommonResult(0, "OK", CommonParamGroupResp{})
+	var req CopyParamGroupReq
+	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	reqDTO := &clusterpb.CopyParamGroupRequest{}
+	err = convertObj(req, reqDTO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	// set param group id
+	reqDTO.ParamGroupId = int64(paramGroupId)
+	resp, err := client.ClusterClient.CopyParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	status := resp.RespStatus
+	result := controller.BuildCommonResult(int(status.Code), status.Message, CommonParamGroupResp{ParamGroupId: resp.GetParamGroupId()})
 	c.JSON(http.StatusOK, result)
 }
 
@@ -208,16 +307,27 @@ func Copy(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /param-groups/{paramGroupId}/apply [post]
 func Apply(c *gin.Context) {
-	var req ApplyParamGroupReq
-
-	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
-		_ = c.Error(err)
+	paramGroupId, err := strconv.Atoi(c.Param("paramGroupId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
-	//operator := controller.GetOperator(c)
+	var req ApplyParamGroupReq
+	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
 
-	// todo: invoke micro-cluster service
-
-	result := controller.BuildCommonResult(0, "OK", ApplyParamGroupResp{})
+	reqDTO := &clusterpb.ApplyParamGroupRequest{
+		ParamGroupId: int64(paramGroupId),
+		ClusterId:    req.ClusterId,
+	}
+	resp, err := client.ClusterClient.ApplyParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
+		return
+	}
+	status := resp.RespStatus
+	result := controller.BuildCommonResult(int(status.Code), status.Message, CommonParamGroupResp{ParamGroupId: resp.GetParamGroupId()})
 	c.JSON(http.StatusOK, result)
 }

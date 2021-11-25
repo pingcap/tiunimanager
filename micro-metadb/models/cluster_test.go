@@ -18,7 +18,6 @@ package models
 
 import (
 	"context"
-	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -1020,6 +1019,7 @@ func TestDAOClusterManager_CreateClusterRelation(t *testing.T) {
 
 func TestDAOClusterManager_ListClusterRelationBySubjectId(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
+	clusterTbl.DeleteClusterRelation(context.TODO(), 1)
 	data := []*ClusterRelation{
 		{
 			Record: Record{TenantId: "111"},
@@ -1033,12 +1033,6 @@ func TestDAOClusterManager_ListClusterRelationBySubjectId(t *testing.T) {
 			ObjectClusterId: "4",
 			RelationType: common.StandBy,
 		},
-		{
-			Record: Record{TenantId: "111"},
-			SubjectClusterId: "1",
-			ObjectClusterId: "6",
-			RelationType: common.CloneFrom,
-		},
 	}
 	MetaDB.Create(data)
 	defer MetaDB.Delete(data)
@@ -1050,7 +1044,7 @@ func TestDAOClusterManager_ListClusterRelationBySubjectId(t *testing.T) {
 			t.Errorf("ListClusterRelationBySubjectId() err = %v", err)
 		}
 
-		if len(result) != 3 {
+		if len(result) != 2 {
 			t.Errorf("ListClusterRelationBySubjectId() result len = %v, want = %v", len(result), 3)
 		}
 	})
@@ -1069,7 +1063,6 @@ func TestDAOClusterManager_ListClusterRelationBySubjectId(t *testing.T) {
 
 	t.Run("empty SubjectId", func(t *testing.T) {
 		result, err := clusterTbl.ListClusterRelationBySubjectId(context.TODO(), "")
-		fmt.Println(err)
 		if err == nil {
 			t.Errorf("ListClusterRelationBySubjectId() err = %v", err)
 		}
@@ -1086,21 +1079,9 @@ func TestDAOClusterManager_ListClusterRelationByObjectId(t *testing.T) {
 	data := []*ClusterRelation{
 		{
 			Record: Record{TenantId: "222"},
-			SubjectClusterId: "1",
-			ObjectClusterId: "2",
-			RelationType: common.SlaveTo,
-		},
-		{
-			Record: Record{TenantId: "222"},
 			SubjectClusterId: "3",
 			ObjectClusterId: "2",
 			RelationType: common.StandBy,
-		},
-		{
-			Record: Record{TenantId: "222"},
-			SubjectClusterId: "5",
-			ObjectClusterId: "2",
-			RelationType: common.CloneFrom,
 		},
 	}
 	MetaDB.Create(data)
@@ -1113,7 +1094,7 @@ func TestDAOClusterManager_ListClusterRelationByObjectId(t *testing.T) {
 			t.Errorf("ListClusterRelationByObjectId() err = %v", err)
 		}
 
-		if len(result) != 3 {
+		if len(result) != 1 {
 			t.Errorf("ListClusterRelationByObjectId() result len = %v, want = %v", len(result), 3)
 		}
 	})
@@ -1132,7 +1113,6 @@ func TestDAOClusterManager_ListClusterRelationByObjectId(t *testing.T) {
 
 	t.Run("empty objectClusterId", func(t *testing.T) {
 		result, err := clusterTbl.ListClusterRelationByObjectId(context.TODO(), "")
-		fmt.Println(err)
 		if err == nil {
 			t.Errorf("ListClusterRelationByObjectId() err = %v", err)
 		}
@@ -1147,6 +1127,12 @@ func TestDAOClusterManager_ListClusterRelationByObjectId(t *testing.T) {
 func TestDAOClusterManager_UpdateClusterRelation(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
 	data := []*ClusterRelation{
+		{
+			Record: Record{TenantId: "111"},
+			SubjectClusterId: "1",
+			ObjectClusterId: "6",
+			RelationType: common.CloneFrom,
+		},
 		{
 			Record: Record{TenantId: "333"},
 			SubjectClusterId: "1",
@@ -1165,12 +1151,18 @@ func TestDAOClusterManager_UpdateClusterRelation(t *testing.T) {
 			ObjectClusterId: "6",
 			RelationType: common.CloneFrom,
 		},
+		{
+			Record: Record{TenantId: "444"},
+			SubjectClusterId: "7",
+			ObjectClusterId: "8",
+			RelationType: common.RecoverFrom,
+		},
 	}
 	MetaDB.Create(data)
 	defer MetaDB.Delete(data)
 
 	t.Run("normal", func(t *testing.T) {
-		result, err := clusterTbl.UpdateClusterRelation(context.TODO(), 1, "4", "3", common.CloneFrom)
+		result, err := clusterTbl.UpdateClusterRelation(context.TODO(), 5, "4", "3", common.CloneFrom)
 
 		if err != nil {
 			t.Errorf("UpdateClusterRelation() err = %v", err)
@@ -1190,12 +1182,11 @@ func TestDAOClusterManager_UpdateClusterRelation(t *testing.T) {
 	})
 
 	t.Run("no record", func(t *testing.T) {
-		result, err := clusterTbl.UpdateClusterRelation(context.TODO(), 4, "1", "2", common.StandBy)
+		result, err := clusterTbl.UpdateClusterRelation(context.TODO(), 99, "1", "2", common.StandBy)
 
 		if result.ID == 4 {
 			t.Errorf("UpdateClusterRelation() want no record where ID = %d, got ID = %d", 4, result.ID)
 		}
-		fmt.Println(result.ID, err)
 		if err == nil {
 			t.Errorf("UpdateClusterRelation() err = %v", err)
 		}
@@ -1203,7 +1194,6 @@ func TestDAOClusterManager_UpdateClusterRelation(t *testing.T) {
 
 	t.Run("empty", func(t *testing.T) {
 		_, err := clusterTbl.UpdateClusterRelation(context.TODO(), 0, "", "", 0)
-		fmt.Println(err)
 		if err == nil {
 			t.Errorf("UpdateClusterRelation() err = %v", err)
 		}
@@ -1224,7 +1214,6 @@ func TestDAOClusterManager_DeleteClusterRelation(t *testing.T) {
 
 	t.Run("normal", func(t *testing.T){
 		newRelation, err := clusterTbl.DeleteClusterRelation(context.TODO(), relation.ID)
-		fmt.Println(newRelation.ID)
 		if err != nil {
 			t.Errorf("DeleteClusterRelation() error = %v", err)
 		}
@@ -1245,9 +1234,7 @@ func TestDAOClusterManager_DeleteClusterRelation(t *testing.T) {
 	})
 
 	t.Run("no record", func(t *testing.T) {
-		nr, err := clusterTbl.DeleteClusterRelation(context.TODO(), 222)
-		fmt.Println(err)
-		fmt.Println(nr.ID)
+		_, err := clusterTbl.DeleteClusterRelation(context.TODO(), 222)
 		if err == nil {
 			//t.Errorf("DeleteClusterRelation() error = %v", err)
 			return

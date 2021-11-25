@@ -634,7 +634,7 @@ func (m *DAOClusterManager) ListClusterRelationByObjectId(ctx context.Context, o
 
 func (m *DAOClusterManager) ListClusterRelationById(ctx context.Context, id uint) (result *ClusterRelation, err error) {
 	if id <= 0 {
-		return nil, errors.New(fmt.Sprintf("ListClusterRelationById failed, has invalid parameter, id: %s", id))
+		return nil, errors.New(fmt.Sprintf("ListClusterRelationById failed, has invalid parameter, id: %d", id))
 	}
 	result = &ClusterRelation{}
 	return result, m.Db(ctx).Model(result).Where("id = ?", id).First(&result).Error

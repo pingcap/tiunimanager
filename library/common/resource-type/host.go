@@ -71,6 +71,17 @@ func ValidArch(arch string) error {
 	return errors.New("valid arch type: [ARM64 | X86_64]")
 }
 
+func GetArchAlias(arch ArchType) string {
+	switch arch {
+	case Arm64:
+		return "arm64"
+	case X86_64:
+		return "amd64"
+	default:
+		return ""
+	}
+}
+
 type Purpose string
 
 const (

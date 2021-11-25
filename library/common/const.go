@@ -25,6 +25,15 @@ const (
 	DefaultMetricsPort      int = 4121
 )
 
+// tidb component default port
+const (
+	DefaultTidbPort       int = 4000
+	DefaultTidbStatusPort int = 10080
+	DefaultPDClientPort   int = 2379
+	DefaultAlertPort      int = 9093
+	DefaultGrafanaPort    int = 3000
+)
+
 const (
 	TiEM          string = "tiem"
 	LogDirPrefix  string = "/logs/"
@@ -68,14 +77,6 @@ const (
 	S3StorageType       string        = "s3"
 	TransportTypeExport TransportType = "export"
 	TransportTypeImport TransportType = "import"
-)
-
-const (
-	DefaultTidbPort       int = 4000
-	DefaultTidbStatusPort int = 10080
-	DefaultPDClientPort   int = 2379
-	DefaultAlertPort      int = 9093
-	DefaultGrafanaPort    int = 3000
 )
 
 const SlowSqlThreshold = 100

@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/tiup/pkg/crypto/rand"
 	"io/ioutil"
@@ -76,7 +77,7 @@ func getDashboardUrlFromCluser(clusterAggregation *ClusterAggregation) string {
 	pdServer := configModel.PDServers[rand.Intn(pdNum)]
 	pdClientPort := pdServer.ClientPort
 	if pdClientPort == 0 {
-		pdClientPort = DefaultPDClientPort
+		pdClientPort = common.DefaultPDClientPort
 	}
 	return fmt.Sprintf("http://%s:%d/dashboard/", pdServer.Host, pdClientPort)
 }

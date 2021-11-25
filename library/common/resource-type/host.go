@@ -68,7 +68,7 @@ func ValidArch(arch string) error {
 	if arch == string(X86_64) || arch == string(Arm64) {
 		return nil
 	}
-	return errors.New("valid arch type: [ARM64 | X86]")
+	return errors.New("valid arch type: [ARM64 | X86_64]")
 }
 
 type Purpose string

@@ -1164,7 +1164,7 @@ func convertAllocationReq(item *ClusterNodeDistributionItem) *clusterpb.Allocati
 }
 
 func tidbPort() int {
-	return DefaultTidbPort
+	return common.DefaultTidbPort
 }
 
 func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spec.Specification {

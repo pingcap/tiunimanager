@@ -70,4 +70,12 @@ const (
 	TransportTypeImport TransportType = "import"
 )
 
+const (
+	DefaultTidbPort       int = 4000
+	DefaultTidbStatusPort int = 10080
+	DefaultPDClientPort   int = 2379
+	DefaultAlertPort      int = 9093
+	DefaultGrafanaPort    int = 3000
+)
+
 const SlowSqlThreshold = 100

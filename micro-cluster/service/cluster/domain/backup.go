@@ -112,7 +112,7 @@ func Backup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, b
 	clusterAggregation.LastBackupRecord = record
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.Start()
+	flow.AsyncStart()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	err = ClusterRepo.Persist(ctx, clusterAggregation)
@@ -296,7 +296,7 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
 
-	flow.Start()
+	flow.AsyncStart()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(ctx, clusterAggregation)
@@ -448,7 +448,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	tidbServer := configModel.TiDBServers[0]
 	tidbServerPort := tidbServer.Port
 	if tidbServerPort == 0 {
-		tidbServerPort = DefaultTidbPort
+		tidbServerPort = common.DefaultTidbPort
 	}
 
 	storageType, err := convertBrStorageType(string(record.StorageType))

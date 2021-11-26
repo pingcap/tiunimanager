@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/util/convert"
+
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 
 	"github.com/pingcap-inc/tiem/library/client"
@@ -81,7 +83,7 @@ func QueryParams(c *gin.Context) {
 	parameters := make([]ListParamsResp, 0)
 	if resp.Params != nil {
 		parameters = make([]ListParamsResp, len(resp.Params))
-		err := controller.ConvertObj(resp.Params, &parameters)
+		err := convert.ConvertObj(resp.Params, &parameters)
 		if err != nil {
 			status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 			c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
@@ -122,7 +124,7 @@ func UpdateParams(c *gin.Context) {
 	clusterId := c.Param("clusterId")
 
 	params := make([]*clusterpb.UpdateClusterParamDTO, len(req.Params))
-	err := controller.ConvertObj(req.Params, &params)
+	err := convert.ConvertObj(req.Params, &params)
 	if err != nil {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
@@ -179,7 +181,7 @@ func InspectParams(c *gin.Context) {
 	params := make([]InspectParamsResp, 0)
 	if len(resp.Params) > 0 {
 		params = make([]InspectParamsResp, len(resp.Params))
-		err := controller.ConvertObj(resp.Params, &params)
+		err := convert.ConvertObj(resp.Params, &params)
 		if err != nil {
 			status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 			c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))

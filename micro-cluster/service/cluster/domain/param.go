@@ -26,7 +26,8 @@ package domain
 
 import (
 	"context"
-	"encoding/json"
+
+	"github.com/pingcap-inc/tiem/library/util/convert"
 
 	"github.com/pingcap-inc/tiem/library/common"
 
@@ -46,7 +47,7 @@ const (
 
 func CreateParamGroup(ctx context.Context, req *clusterpb.CreateParamGroupRequest, resp *clusterpb.CreateParamGroupResponse) error {
 	dbReq := dbpb.DBCreateParamGroupRequest{}
-	err := convertObj(req, &dbReq)
+	err := convert.ConvertObj(req, &dbReq)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create param group req: %v, err: %v", req, err)
 		return err
@@ -64,7 +65,7 @@ func CreateParamGroup(ctx context.Context, req *clusterpb.CreateParamGroupReques
 
 func UpdateParamGroup(ctx context.Context, req *clusterpb.UpdateParamGroupRequest, resp *clusterpb.UpdateParamGroupResponse) error {
 	dbReq := dbpb.DBUpdateParamGroupRequest{}
-	err := convertObj(req, &dbReq)
+	err := convert.ConvertObj(req, &dbReq)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update param group req: %v, err: %v", req, err)
 		return err
@@ -101,7 +102,7 @@ func DeleteParamGroup(ctx context.Context, req *clusterpb.DeleteParamGroupReques
 
 func ListParamGroup(ctx context.Context, req *clusterpb.ListParamGroupRequest, resp *clusterpb.ListParamGroupResponse) error {
 	var dbReq dbpb.DBListParamGroupRequest
-	err := convertObj(req, &dbReq)
+	err := convert.ConvertObj(req, &dbReq)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("list param group req: %v, err: %v", req, err)
 		return err
@@ -117,7 +118,7 @@ func ListParamGroup(ctx context.Context, req *clusterpb.ListParamGroupRequest, r
 	resp.RespStatus = convertRespStatus(dbRsp.Status)
 	if dbRsp.ParamGroups != nil {
 		pgs := make([]*clusterpb.ParamGroupDTO, len(dbRsp.ParamGroups))
-		err = convertObj(dbRsp.ParamGroups, &pgs)
+		err = convert.ConvertObj(dbRsp.ParamGroups, &pgs)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("list param group convert resp err: %v", err)
 			return err
@@ -136,7 +137,7 @@ func DetailParamGroup(ctx context.Context, req *clusterpb.DetailParamGroupReques
 	resp.RespStatus = convertRespStatus(dbRsp.Status)
 	if dbRsp.ParamGroup != nil {
 		pg := clusterpb.ParamGroupDTO{}
-		err = convertObj(dbRsp.ParamGroup, &pg)
+		err = convert.ConvertObj(dbRsp.ParamGroup, &pg)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("detail param group convert resp err: %v", err)
 			return err
@@ -215,7 +216,7 @@ func CopyParamGroup(ctx context.Context, req *clusterpb.CopyParamGroupRequest, r
 
 func ListClusterParams(ctx context.Context, req *clusterpb.ListClusterParamsRequest, resp *clusterpb.ListClusterParamsResponse) error {
 	var dbReq *dbpb.DBFindParamsByClusterIdRequest
-	err := convertObj(req, &dbReq)
+	err := convert.ConvertObj(req, &dbReq)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("list cluster params req: %v, err: %v", req, err)
 		return err
@@ -232,7 +233,7 @@ func ListClusterParams(ctx context.Context, req *clusterpb.ListClusterParamsRequ
 	resp.ParamGroupId = dbRsp.ParamGroupId
 	if dbRsp.Params != nil {
 		ps := make([]*clusterpb.ClusterParamDTO, len(dbRsp.Params))
-		err = convertObj(dbRsp.Params, &ps)
+		err = convert.ConvertObj(dbRsp.Params, &ps)
 		if err != nil {
 			framework.LogWithContext(ctx).Errorf("list cluster params convert resp err: %v", err)
 			return err
@@ -244,7 +245,7 @@ func ListClusterParams(ctx context.Context, req *clusterpb.ListClusterParamsRequ
 
 func UpdateClusterParams(ctx context.Context, req *clusterpb.UpdateClusterParamsRequest, resp *clusterpb.UpdateClusterParamsResponse) error {
 	var dbReq *dbpb.DBUpdateClusterParamsRequest
-	err := convertObj(req, &dbReq)
+	err := convert.ConvertObj(req, &dbReq)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update cluster params req: %v, err: %v", req, err)
 		return err
@@ -271,16 +272,4 @@ func convertRespStatus(status *dbpb.DBParamResponseStatus) *clusterpb.ResponseSt
 
 func convertPage(page *dbpb.DBParamsPageDTO) *clusterpb.PageDTO {
 	return &clusterpb.PageDTO{Page: page.Page, PageSize: page.PageSize, Total: page.Total}
-}
-
-func convertObj(src interface{}, dst interface{}) error {
-	b, err := json.Marshal(src)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(b, dst)
-	if err != nil {
-		return err
-	}
-	return nil
 }

@@ -29,6 +29,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/util/convert"
+
 	"github.com/pingcap-inc/tiem/micro-api/interceptor"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -97,7 +99,7 @@ func Query(c *gin.Context) {
 	pgs := make([]QueryParamGroupResp, 0)
 	if len(resp.ParamGroups) > 0 {
 		pgs = make([]QueryParamGroupResp, len(resp.ParamGroups))
-		err = controller.ConvertObj(resp.ParamGroups, &pgs)
+		err = convert.ConvertObj(resp.ParamGroups, &pgs)
 		if err != nil {
 			status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 			c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
@@ -144,7 +146,7 @@ func Detail(c *gin.Context) {
 	status = resp.RespStatus
 
 	pg := QueryParamGroupResp{}
-	err = controller.ConvertObj(resp.ParamGroup, &pg)
+	err = convert.ConvertObj(resp.ParamGroup, &pg)
 	if err != nil {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
@@ -181,7 +183,7 @@ func Create(c *gin.Context) {
 	}
 
 	reqDTO := &clusterpb.CreateParamGroupRequest{}
-	err := controller.ConvertObj(req, reqDTO)
+	err := convert.ConvertObj(req, reqDTO)
 	if err != nil {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
@@ -271,7 +273,7 @@ func Update(c *gin.Context) {
 	}
 
 	reqDTO := &clusterpb.UpdateParamGroupRequest{}
-	err = controller.ConvertObj(req, reqDTO)
+	err = convert.ConvertObj(req, reqDTO)
 	if err != nil {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
@@ -321,7 +323,7 @@ func Copy(c *gin.Context) {
 		return
 	}
 	reqDTO := &clusterpb.CopyParamGroupRequest{}
-	err = controller.ConvertObj(req, reqDTO)
+	err = convert.ConvertObj(req, reqDTO)
 	if err != nil {
 		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
 		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))

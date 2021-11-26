@@ -31,7 +31,6 @@
 package controller
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
 
@@ -167,16 +166,4 @@ func ConvertRecoverInfoDTO(sourceClusterId string, backupRecordId int64) (dto *c
 		SourceClusterId: sourceClusterId,
 		BackupRecordId:  backupRecordId,
 	}
-}
-
-func ConvertObj(src interface{}, dst interface{}) error {
-	b, err := json.Marshal(src)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(b, dst)
-	if err != nil {
-		return err
-	}
-	return nil
 }

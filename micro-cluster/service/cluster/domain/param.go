@@ -28,6 +28,10 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/pingcap-inc/tiem/library/common"
+
+	"github.com/pingcap-inc/tiem/library/framework"
+
 	"github.com/pingcap-inc/tiem/library/client"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -44,11 +48,13 @@ func CreateParamGroup(ctx context.Context, req *clusterpb.CreateParamGroupReques
 	dbReq := dbpb.DBCreateParamGroupRequest{}
 	err := convertObj(req, &dbReq)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("create param group req: %v, err: %v", req, err)
 		return err
 	}
 
 	dbRsp, err := client.DBClient.CreateParamGroup(ctx, &dbReq)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("create param group req: %v, err: %v", req, err)
 		return err
 	}
 	resp.RespStatus = convertRespStatus(dbRsp.Status)
@@ -60,11 +66,12 @@ func UpdateParamGroup(ctx context.Context, req *clusterpb.UpdateParamGroupReques
 	dbReq := dbpb.DBUpdateParamGroupRequest{}
 	err := convertObj(req, &dbReq)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("update param group req: %v, err: %v", req, err)
 		return err
 	}
-
 	dbRsp, err := client.DBClient.UpdateParamGroup(ctx, &dbReq)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("update param group invoke metadb err: %v", err)
 		return err
 	}
 	resp.RespStatus = convertRespStatus(dbRsp.Status)
@@ -75,14 +82,16 @@ func UpdateParamGroup(ctx context.Context, req *clusterpb.UpdateParamGroupReques
 func DeleteParamGroup(ctx context.Context, req *clusterpb.DeleteParamGroupRequest, resp *clusterpb.DeleteParamGroupResponse) error {
 	group, err := client.DBClient.FindParamGroupByID(ctx, &dbpb.DBFindParamGroupByIDRequest{ParamGroupId: req.ParamGroupId})
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("delete param group req: %v, err: %v", req, err)
 		return err
 	}
 	if group.ParamGroup.HasDefault == defaultParamGroup {
-		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: 533, Message: "The default param group cannot be deleted."}
+		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL), Message: common.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL.Explain()}
 		return nil
 	}
 	dbRsp, err := client.DBClient.DeleteParamGroup(ctx, &dbpb.DBDeleteParamGroupRequest{ParamGroupId: req.ParamGroupId})
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("delete param group invoke metadb err: %v", err)
 		return err
 	}
 	resp.RespStatus = convertRespStatus(dbRsp.Status)
@@ -94,11 +103,13 @@ func ListParamGroup(ctx context.Context, req *clusterpb.ListParamGroupRequest, r
 	var dbReq dbpb.DBListParamGroupRequest
 	err := convertObj(req, &dbReq)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("list param group req: %v, err: %v", req, err)
 		return err
 	}
 
 	dbRsp, err := client.DBClient.ListParamGroup(ctx, &dbReq)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("list param group invoke metadb err: %v", err)
 		return err
 	}
 
@@ -106,8 +117,9 @@ func ListParamGroup(ctx context.Context, req *clusterpb.ListParamGroupRequest, r
 	resp.RespStatus = convertRespStatus(dbRsp.Status)
 	if dbRsp.ParamGroups != nil {
 		pgs := make([]*clusterpb.ParamGroupDTO, len(dbRsp.ParamGroups))
-		err := convertObj(dbRsp.ParamGroups, &pgs)
+		err = convertObj(dbRsp.ParamGroups, &pgs)
 		if err != nil {
+			framework.LogWithContext(ctx).Errorf("list param group convert resp err: %v", err)
 			return err
 		}
 		resp.ParamGroups = pgs
@@ -118,6 +130,7 @@ func ListParamGroup(ctx context.Context, req *clusterpb.ListParamGroupRequest, r
 func DetailParamGroup(ctx context.Context, req *clusterpb.DetailParamGroupRequest, resp *clusterpb.DetailParamGroupResponse) error {
 	dbRsp, err := client.DBClient.FindParamGroupByID(ctx, &dbpb.DBFindParamGroupByIDRequest{ParamGroupId: req.ParamGroupId})
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("detail param group invoke metadb err: %v", err)
 		return err
 	}
 	resp.RespStatus = convertRespStatus(dbRsp.Status)
@@ -125,6 +138,7 @@ func DetailParamGroup(ctx context.Context, req *clusterpb.DetailParamGroupReques
 		pg := clusterpb.ParamGroupDTO{}
 		err = convertObj(dbRsp.ParamGroup, &pg)
 		if err != nil {
+			framework.LogWithContext(ctx).Errorf("detail param group convert resp err: %v", err)
 			return err
 		}
 		resp.ParamGroup = &pg
@@ -136,6 +150,7 @@ func ApplyParamGroup(ctx context.Context, req *clusterpb.ApplyParamGroupRequest,
 	// query param group by id
 	group, err := client.DBClient.FindParamGroupByID(ctx, &dbpb.DBFindParamGroupByIDRequest{ParamGroupId: req.ParamGroupId})
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("apply param group invoke metadb err: %v", err)
 		return err
 	}
 	params := make([]*dbpb.DBApplyParamDTO, len(group.ParamGroup.Params))
@@ -152,6 +167,7 @@ func ApplyParamGroup(ctx context.Context, req *clusterpb.ApplyParamGroupRequest,
 		Params:       params,
 	})
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("apply param group convert resp err: %v", err)
 		return err
 	}
 	resp.RespStatus = convertRespStatus(dbRsp.Status)
@@ -165,6 +181,7 @@ func CopyParamGroup(ctx context.Context, req *clusterpb.CopyParamGroupRequest, r
 	// query param group by id
 	group, err := client.DBClient.FindParamGroupByID(ctx, &dbpb.DBFindParamGroupByIDRequest{ParamGroupId: req.ParamGroupId})
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("copy param group invoke metadb err: %v", err)
 		return err
 	}
 	params := make([]*dbpb.DBSubmitParamDTO, len(group.ParamGroup.Params))
@@ -188,6 +205,7 @@ func CopyParamGroup(ctx context.Context, req *clusterpb.CopyParamGroupRequest, r
 		Params:     params,
 	})
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("copy param group convert resp err: %v", err)
 		return err
 	}
 	resp.RespStatus = convertRespStatus(dbRsp.Status)
@@ -199,20 +217,24 @@ func ListClusterParams(ctx context.Context, req *clusterpb.ListClusterParamsRequ
 	var dbReq *dbpb.DBFindParamsByClusterIdRequest
 	err := convertObj(req, &dbReq)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("list cluster params req: %v, err: %v", req, err)
 		return err
 	}
 
 	dbRsp, err := client.DBClient.FindParamsByClusterId(ctx, dbReq)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("list cluster param invoke metadb err: %v", err)
 		return err
 	}
 
 	resp.Page = convertPage(dbRsp.Page)
 	resp.RespStatus = convertRespStatus(dbRsp.Status)
+	resp.ParamGroupId = dbRsp.ParamGroupId
 	if dbRsp.Params != nil {
 		ps := make([]*clusterpb.ClusterParamDTO, len(dbRsp.Params))
-		err := convertObj(dbRsp.Params, &ps)
+		err = convertObj(dbRsp.Params, &ps)
 		if err != nil {
+			framework.LogWithContext(ctx).Errorf("list cluster params convert resp err: %v", err)
 			return err
 		}
 		resp.Params = ps
@@ -224,11 +246,13 @@ func UpdateClusterParams(ctx context.Context, req *clusterpb.UpdateClusterParams
 	var dbReq *dbpb.DBUpdateClusterParamsRequest
 	err := convertObj(req, &dbReq)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("update cluster params req: %v, err: %v", req, err)
 		return err
 	}
 
 	dbRsp, err := client.DBClient.UpdateClusterParams(ctx, dbReq)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf("update cluster param invoke metadb err: %v", err)
 		return err
 	}
 	resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: dbRsp.Status.Code, Message: dbRsp.Status.Message}

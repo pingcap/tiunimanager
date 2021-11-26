@@ -26,6 +26,13 @@ import (
 	"strings"
 )
 
+type FieldKey string
+
+const (
+	FieldKey_Yaml FieldKey = "yaml"
+	FieldKey_Json FieldKey = "json"
+)
+
 func assert(b bool) {
 	if b {
 	} else {
@@ -67,24 +74,16 @@ func jsonMustMarshal(v interface{}) []byte {
 	return bs
 }
 
-func SetField(item interface{}, fieldName string, value interface{}) error {
+func SetField(item interface{}, fieldKey FieldKey, fieldName string, value interface{}) error {
 	v := reflect.ValueOf(item).Elem()
-	if !v.CanAddr() {
-		return fmt.Errorf("cannot assign to the item passed, item must be a pointer in order to assign")
-	}
-	// It's possible we can cache this, which is why precompute all these ahead of time.
-	findYamlName := func(t reflect.StructTag) (string, error) {
-		if yt, ok := t.Lookup("yaml"); ok {
-			return strings.Split(yt, ",")[0], nil
-		}
-		return "", fmt.Errorf("tag provided does not define a yaml tag %s", fieldName)
-	}
+
+	// key: fieldName, value: index of fieldName in struct
 	fieldNames := map[string]int{}
 	for i := 0; i < v.NumField(); i++ {
 		typeField := v.Type().Field(i)
 		tag := typeField.Tag
-		yname, _ := findYamlName(tag)
-		fieldNames[yname] = i
+		fname, _ := findName(tag, fieldKey)
+		fieldNames[fname] = i
 	}
 
 	fieldNum, ok := fieldNames[fieldName]
@@ -94,4 +93,12 @@ func SetField(item interface{}, fieldName string, value interface{}) error {
 	fieldVal := v.Field(fieldNum)
 	fieldVal.Set(reflect.ValueOf(value))
 	return nil
+}
+
+// It's possible we can cache this, which is why precompute all these ahead of time.
+func findName(t reflect.StructTag, fieldKey FieldKey) (string, error) {
+	if yt, ok := t.Lookup(string(fieldKey)); ok {
+		return strings.Split(yt, ",")[0], nil
+	}
+	return "", fmt.Errorf("tag provided does not define a tag %s", string(fieldKey))
 }

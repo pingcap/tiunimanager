@@ -44,6 +44,7 @@ prepare:
 	@if [ -f "$(CURDIR)/$(PROTOC_PKG)" ]; then unzip -o $(PROTOC_PKG) -d $(GOPATH) bin/protoc; fi
 	@if [ -f "$(CURDIR)/$(PROTOC_PKG)" ]; then unzip -o $(PROTOC_PKG) -d $(GOPATH) 'include/*'; fi
 	@if [ -f "$(CURDIR)/$(PROTOC_PKG)" ]; then rm -rf $(PROTOC_PKG); fi
+	@cp -r micro-cluster/service/cluster/adapt/template ./
 
 # generate protobuf files
 proto:

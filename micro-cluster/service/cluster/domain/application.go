@@ -50,7 +50,6 @@ type ClusterAggregation struct {
 	CurrentOperator *Operator
 
 	CurrentTopologyConfigRecord *TopologyConfigRecord
-	AlteredTopology             *spec.Specification
 
 	MaintainCronTask *CronTaskEntity
 	HistoryWorkFLows []*FlowWorkEntity
@@ -72,6 +71,7 @@ type ClusterAggregation struct {
 }
 
 var contextClusterKey = "clusterAggregation"
+var contextTopologyKey = "TopologyKey"
 var contextTakeoverReqKey = "takeoverRequest"
 var contextDeleteNodeKey = "deleteNode"
 var contextAllocRequestKey = "allocResourceRequest"
@@ -120,23 +120,6 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	for i, v := range demandDTOs {
 		demands[i] = parseNodeDemandFromDTO(v)
 	}
-
-	// add default parasite components
-	demands = append(demands,
-		&ClusterComponentDemand{
-			ComponentType: knowledge.ClusterComponentFromCode("Grafana"),
-			TotalNodeCount: 1,
-			DistributionItems: []*ClusterNodeDistributionItem{},
-		},
-		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("Prometheus"),
-			TotalNodeCount: 1,
-			DistributionItems: []*ClusterNodeDistributionItem{},
-		},
-		&ClusterComponentDemand{ComponentType: knowledge.ClusterComponentFromCode("AlertManger"),
-			TotalNodeCount: 1,
-			DistributionItems: []*ClusterNodeDistributionItem{},
-		},
-	)
 
 	// persist the cluster into database
 	err := ClusterRepo.AddCluster(ctx, cluster)
@@ -535,20 +518,14 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	// build TopologyConfigRecord
-	configModel, err := TopologyPlanner.GenerateTopologyConfig(context.Context, clusterAggregation.AddedClusterComponents, clusterAggregation.Cluster)
+	topology, err := TopologyPlanner.GenerateTopologyConfig(context.Context, clusterAggregation.AddedClusterComponents, clusterAggregation.Cluster)
 	if err != nil {
 		getLoggerWithContext(context).Error(err)
 		task.Fail(err)
 		return false
 	}
 
-	clusterAggregation.AlteredTopology = configModel
-	bytes, err := yaml.Marshal(configModel)
-	if err != nil {
-		task.Fail(err)
-	} else {
-		task.Success(string(bytes))
-	}
+	context.SetData(contextTopologyKey, topology)
 	return true
 }
 
@@ -556,15 +533,8 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
 
-	spec := clusterAggregation.AlteredTopology
+	cfgYamlStr := context.GetData(contextTopologyKey).(string)
 
-	bs, err := yaml.Marshal(spec)
-	if err != nil {
-		task.Fail(err)
-		return false
-	}
-
-	cfgYamlStr := string(bs)
 	getLoggerWithContext(context).Infof("deploy cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
 	deployTaskId, err := secondparty.SecondParty.MicroSrvTiupDeploy(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, uint64(task.Id),
@@ -584,15 +554,8 @@ func deployCluster(task *TaskEntity, context *FlowContext) bool {
 func scaleOutCluster(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
 	cluster := clusterAggregation.Cluster
-	spec := clusterAggregation.AlteredTopology
+	cfgYamlStr := context.GetData(contextTopologyKey).(string)
 
-	bs, err := yaml.Marshal(spec)
-	if err != nil {
-		task.Fail(err)
-		return false
-	}
-
-	cfgYamlStr := string(bs)
 	getLoggerWithContext(context).Infof("scale out cluster %s, version = %s, cfgYamlStr = %s", cluster.ClusterName, cluster.ClusterVersion.Code, cfgYamlStr)
 	scaleOutTaskId, err := secondparty.SecondParty.MicroSrvTiupScaleOut(
 		context.Context, secondparty.ClusterComponentTypeStr, cluster.ClusterName, cfgYamlStr, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, uint64(task.Id))

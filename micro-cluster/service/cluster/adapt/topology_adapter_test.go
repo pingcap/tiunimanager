@@ -27,7 +27,9 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 	"testing"
 )
 
@@ -127,6 +129,59 @@ func TestAnalysisResourceRequest(t *testing.T)  {
 	assert.Equal(t, "testCluster", got.BatchRequests[0].Applicant.HolderId)
 	assert.Equal(t, "zone1", got.BatchRequests[0].Requires[0].Location.Zone)
 	assert.Equal(t, "zone2", got.BatchRequests[0].Requires[1].Location.Zone)
+}
+
+func TestDefaultTopologyPlanner_GenerateTopologyConfig(t *testing.T) {
+	var planner DefaultTopologyPlanner
+	knowledge.LoadKnowledge()
+
+	topology, err := planner.GenerateTopologyConfig(
+		context.TODO(),
+		[]*domain.ComponentGroup {
+			{
+				&knowledge.ClusterComponent {
+					ComponentType: "TiDB",
+					ComponentName: "TiDB",
+				},
+				[]*domain.ComponentInstance {
+					{
+						Host: "127.0.0.1",
+						DiskPath: "/test",
+						PortList: []int{ 4000, 10000 },
+					},
+					{
+						Host: "127.0.0.3",
+						DiskPath: "/test",
+						PortList: []int{ 4001, 10002 },
+					},
+				},
+			},
+
+			{
+				&knowledge.ClusterComponent {
+					ComponentType: "PD",
+					ComponentName: "PD",
+				},
+				[]*domain.ComponentInstance {
+					{
+						Host: "127.0.0.2",
+						DiskPath: "/test",
+						PortList: []int{ 4000, 10000, 10001, 10002, 10003, 10004 },
+					},
+				},
+			},
+		},
+		&domain.Cluster{
+			Id: "testCluster",
+			CpuArchitecture: "arm64",
+			Status: domain.ClusterStatusUnlined,
+		},
+	)
+
+	assert.NoError(t, err)
+	config := spec.Specification{}
+	err = yaml.Unmarshal([]byte(topology), &config)
+	assert.NoError(t, err)
 }
 
 

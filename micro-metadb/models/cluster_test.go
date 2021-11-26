@@ -979,15 +979,15 @@ func TestDAOClusterManager_CreateClusterRelation(t *testing.T) {
 				func(args args, relation *ClusterRelation) bool { return args.request.RelationType == relation.RelationType},
 			},
 		},
-		{ "without TenantId", args{request: ClusterRelation{SubjectClusterId: "3", ObjectClusterId: "4", RelationType: common.SlaveTo}},
+		{ "without TenantId", args{request: ClusterRelation{SubjectClusterId: "3", ObjectClusterId: "4", RelationType: uint32(common.SlaveTo)}},
 			true,
 			[]func(args args, relation *ClusterRelation) bool {},
 		},
-		{ "without SubjectClusterId", args{request: ClusterRelation{Record: Record{TenantId: "pingcap"}, ObjectClusterId: "3", RelationType: common.StandBy}},
+		{ "without SubjectClusterId", args{request: ClusterRelation{Record: Record{TenantId: "pingcap"}, ObjectClusterId: "3", RelationType: uint32(common.StandBy)}},
 			true,
 			[]func(args args, relation *ClusterRelation) bool {},
 		},
-		{ "without ObjectClusterId", args{request: ClusterRelation{Record: Record{TenantId: "pingcap"}, SubjectClusterId: "2", RelationType: common.CloneFrom}},
+		{ "without ObjectClusterId", args{request: ClusterRelation{Record: Record{TenantId: "pingcap"}, SubjectClusterId: "2", RelationType: uint32(common.CloneFrom)}},
 			true,
 			[]func(args args, relation *ClusterRelation) bool {},
 		},
@@ -1026,13 +1026,13 @@ func TestDAOClusterManager_ListClusterRelationBySubjectId(t *testing.T) {
 			Record: Record{TenantId: "111"},
 			SubjectClusterId: "1",
 			ObjectClusterId: "2",
-			RelationType: common.SlaveTo,
+			RelationType: uint32(common.SlaveTo),
 		},
 		{
 			Record: Record{TenantId: "111"},
 			SubjectClusterId: "1",
 			ObjectClusterId: "4",
-			RelationType: common.StandBy,
+			RelationType: uint32(common.StandBy),
 		},
 	}
 	MetaDB.Create(data)
@@ -1082,7 +1082,7 @@ func TestDAOClusterManager_ListClusterRelationByObjectId(t *testing.T) {
 			Record: Record{TenantId: "222"},
 			SubjectClusterId: "3",
 			ObjectClusterId: "2",
-			RelationType: common.StandBy,
+			RelationType: uint32(common.StandBy),
 		},
 	}
 	MetaDB.Create(data)
@@ -1132,38 +1132,38 @@ func TestDAOClusterManager_UpdateClusterRelation(t *testing.T) {
 			Record: Record{TenantId: "111"},
 			SubjectClusterId: "1",
 			ObjectClusterId: "6",
-			RelationType: common.CloneFrom,
+			RelationType: uint32(common.CloneFrom),
 		},
 		{
 			Record: Record{TenantId: "333"},
 			SubjectClusterId: "1",
 			ObjectClusterId: "2",
-			RelationType: common.SlaveTo,
+			RelationType: uint32(common.SlaveTo),
 		},
 		{
 			Record: Record{TenantId: "333"},
 			SubjectClusterId: "3",
 			ObjectClusterId: "4",
-			RelationType: common.StandBy,
+			RelationType: uint32(common.StandBy),
 		},
 		{
 			Record: Record{TenantId: "333"},
 			SubjectClusterId: "5",
 			ObjectClusterId: "6",
-			RelationType: common.CloneFrom,
+			RelationType: uint32(common.CloneFrom),
 		},
 		{
 			Record: Record{TenantId: "444"},
 			SubjectClusterId: "7",
 			ObjectClusterId: "8",
-			RelationType: common.RecoverFrom,
+			RelationType: uint32(common.RecoverFrom),
 		},
 	}
 	MetaDB.Create(data)
 	defer MetaDB.Delete(data)
 
 	t.Run("normal", func(t *testing.T) {
-		result, err := clusterTbl.UpdateClusterRelation(context.TODO(), 5, "4", "3", common.CloneFrom)
+		result, err := clusterTbl.UpdateClusterRelation(context.TODO(), 5, "4", "3", uint32(common.CloneFrom))
 
 		if err != nil {
 			t.Errorf("UpdateClusterRelation() err = %v", err)
@@ -1177,13 +1177,13 @@ func TestDAOClusterManager_UpdateClusterRelation(t *testing.T) {
 			t.Errorf("UpdateClusterRelation() want new objectClusterId = %s, got = %s", "3", result.ObjectClusterId)
 		}
 
-		if result.RelationType != common.CloneFrom {
+		if result.RelationType != uint32(common.CloneFrom) {
 			t.Errorf("UpdateClusterRelation() want new relationType = %d, got = %d", common.CloneFrom, result.RelationType)
 		}
 	})
 
 	t.Run("no record", func(t *testing.T) {
-		result, err := clusterTbl.UpdateClusterRelation(context.TODO(), 99, "1", "2", common.StandBy)
+		result, err := clusterTbl.UpdateClusterRelation(context.TODO(), 99, "1", "2", uint32(common.StandBy))
 
 		if result.ID == 4 {
 			t.Errorf("UpdateClusterRelation() want no record where ID = %d, got ID = %d", 4, result.ID)
@@ -1209,7 +1209,7 @@ func TestDAOClusterManager_DeleteClusterRelation(t *testing.T) {
 		Record: Record{TenantId: "333"},
 		SubjectClusterId: "1",
 		ObjectClusterId: "2",
-		RelationType: common.SlaveTo,
+		RelationType: uint32(common.SlaveTo),
 	}
 	relation, _ := clusterTbl.CreateClusterRelation(context.TODO(), r)
 

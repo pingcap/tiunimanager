@@ -61,7 +61,7 @@ type ClusterTopologyPlanner interface {
 	BuildComponents(ctx context.Context, demands []*ClusterComponentDemand, cluster *Cluster) ([]*ComponentGroup, error)
 	AnalysisResourceRequest(ctx context.Context, cluster *Cluster, components []*ComponentGroup, takeover bool) (*clusterpb.BatchAllocRequest, error)
 	ApplyResourceToComponents(ctx context.Context, cluster *Cluster, response *clusterpb.BatchAllocResponse, components []*ComponentGroup) error
-	GenerateTopologyConfig(ctx context.Context, components []*ComponentGroup, cluster *Cluster) (*spec.Specification, error)
+	GenerateTopologyConfig(ctx context.Context, components []*ComponentGroup, cluster *Cluster) (string, error)
 }
 
 type TaskRepository interface {

@@ -1,0 +1,93 @@
+{{ if eq .Cluster.Status 0 }}
+global:
+  user: tidb
+  group: tidb
+  ssh_port: 22
+  enable_tls: false
+  deploy_dir: {{ .Cluster.Id }}/tidb-deploy
+  data_dir: {{ .Cluster.Id }}/tidb-data
+  log_dir: {{ .Cluster.Id }}/tidb-log
+  os: linux
+  {{ if eq .Cluster.CpuArchitecture "X86_64" }}
+  arch: amd64
+  {{ else if eq .Cluster.CpuArchitecture "ARM64" }}
+  arch: arm64
+  {{ else }}
+  arch: amd64
+  {{ end }}
+monitored:
+  node_exporter_port: {{ .NodeExporterPort }}
+  blackbox_exporter_port: {{ .BlackboxExporterPort }}
+{{ end }}
+{{ range .Components }}
+{{ if and (eq .ComponentType.ComponentType "TiDB") (len .Nodes) }}
+tidb_servers:
+  {{ range $key, $node := .Nodes }}
+  - host: {{ $node.Host }}
+    port: {{ index $node.PortList 0 }}
+    status_port: {{ index $node.PortList 1 }}
+    deploy_dir: {{ $node.DiskPath }}/{{ $.Cluster.Id }}/tidb-deploy
+  {{ end }}
+{{ else if and (eq .ComponentType.ComponentType "TiKV") (len .Nodes) }}
+tikv_servers:
+  {{ range $key, $node := .Nodes }}
+  - host: {{ $node.Host }}
+    port: {{ index $node.PortList 0 }}
+    status_port: {{ index $node.PortList 1 }}
+    deploy_dir: {{ $node.DiskPath }}/{{ $.Cluster.Id }}/tikv-deploy
+    data_dir: {{ $node.DiskPath }}/{{ $.Cluster.Id }}/tikv-data
+  {{ end }}
+{{ else if and (eq .ComponentType.ComponentType "TiFlash") (len .Nodes) }}
+tiflash_servers:
+  {{ range $key, $node := .Nodes }}
+  - host: {{ $node.Host }}
+    tcp_port: {{ index $node.PortList 0 }}
+    http_port: {{ index $node.PortList 1 }}
+    flash_service_port: {{ index $node.PortList 2 }}
+    flash_proxy_port: {{ index $node.PortList 3 }}
+    flash_proxy_status_port: {{ index $node.PortList 4 }}
+    metrics_port: {{ index $node.PortList 5 }}
+    deploy_dir: { { $node.DiskPath } }/{{ $.Cluster.Id }}/tiflash-deploy
+    data_dir: { { $node.DiskPath } }/{{ $.Cluster.Id }}/tiflash-data
+  {{ end }}
+{{ else if and (eq .ComponentType.ComponentType "TiCDC") (len .Nodes) }}
+cdc_servers:
+  {{ range $key, $node := .Nodes }}
+  - host: {{ $node.Host }}
+    port: {{ index $node.PortList 0 }}
+    deploy_dir: {{ $node.DiskPath }}/{{ $.Cluster.Id }}/cdc-deploy
+    data_dir: {{ $node.DiskPath }}/{{ $.Cluster.Id }}/cdc-data
+  {{ end }}
+{{ else if and (eq .ComponentType.ComponentType "PD") (len .Nodes) }}
+pd_servers:
+  {{ range $key, $node := .Nodes }}
+  - host: {{ $node.Host }}
+    client_port: {{ index $node.PortList 0 }}
+    peer_port: {{ index $node.PortList 1 }}
+    deploy_dir: {{ $node.DiskPath }}/{{ $.Cluster.Id }}/pd-deploy
+    data_dir: {{ $node.DiskPath }}/{{ $.Cluster.Id }}/pd-data
+  {{ end }}
+{{ if eq $.Cluster.Status 0 }}
+{{ $instance := index .Nodes 0 }}
+monitoring_servers:
+  - host: {{ $instance.Host }}
+    port: {{ index $instance.PortList 2}}
+    deploy_dir: {{ $instance.DiskPath }}/{{ $.Cluster.Id }}/prometheus-deploy
+    data_dir: {{ $instance.DiskPath }}/{{ $.Cluster.Id }}/prometheus-data
+grafana_servers:
+  - host: {{ $instance.Host }}
+    port: {{ index $instance.PortList 3}}
+    deploy_dir: {{ $instance.DiskPath }}/{{ $.Cluster.Id }}/grafana-deploy
+    anonymous_enable: true
+    default_theme: light
+    org_name: Main Org.
+    org_role: Viewer
+alertmanager_servers:
+  - host: {{ $instance.Host }}
+    web_port: {{ index $instance.PortList 4}}
+    cluster_port: {{ index $instance.PortList 5}}
+    deploy_dir: {{ $instance.DiskPath }}/{{ $.Cluster.Id }}/alertmanagers-deploy
+    data_dir: {{ $instance.DiskPath }}/{{ $.Cluster.Id }}/alertmanagers-data
+{{ end }}
+{{ end }}
+{{ end }}

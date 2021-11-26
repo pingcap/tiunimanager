@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -32,9 +31,11 @@
 package controller
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
@@ -166,4 +167,16 @@ func ConvertRecoverInfoDTO(sourceClusterId string, backupRecordId int64) (dto *c
 		SourceClusterId: sourceClusterId,
 		BackupRecordId:  backupRecordId,
 	}
+}
+
+func ConvertObj(src interface{}, dst interface{}) error {
+	b, err := json.Marshal(src)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(b, dst)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -57,7 +57,8 @@ func Query(c *gin.Context) {
 	var queryReq ListParamGroupReq
 
 	if err := c.ShouldBindQuery(&queryReq); err != nil {
-		_ = c.Error(err)
+		err = c.Error(err)
+		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return
 	}
 
@@ -76,7 +77,7 @@ func Query(c *gin.Context) {
 		HasDefault: queryReq.HasDefault,
 		Page:       &clusterpb.PageDTO{Page: int32(queryReq.Page), PageSize: int32(queryReq.PageSize)},
 	}
-	resp, err := client.ClusterClient.ListParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	resp, err := client.ClusterClient.ListParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return
@@ -87,7 +88,7 @@ func Query(c *gin.Context) {
 	pgs := make([]QueryParamGroupResp, 0)
 	if len(resp.ParamGroups) > 0 {
 		pgs = make([]QueryParamGroupResp, len(resp.ParamGroups))
-		err = convertObj(resp.ParamGroups, &pgs)
+		err = controller.ConvertObj(resp.ParamGroups, &pgs)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 			return
@@ -119,7 +120,7 @@ func Detail(c *gin.Context) {
 	reqDTO := &clusterpb.DetailParamGroupRequest{
 		ParamGroupId: int64(paramGroupId),
 	}
-	resp, err := client.ClusterClient.DetailParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	resp, err := client.ClusterClient.DetailParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return
@@ -127,7 +128,7 @@ func Detail(c *gin.Context) {
 	status := resp.RespStatus
 
 	pg := QueryParamGroupResp{}
-	err = convertObj(resp.ParamGroup, &pg)
+	err = controller.ConvertObj(resp.ParamGroup, &pg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return
@@ -158,12 +159,12 @@ func Create(c *gin.Context) {
 	}
 
 	reqDTO := &clusterpb.CreateParamGroupRequest{}
-	err := convertObj(req, reqDTO)
+	err := controller.ConvertObj(req, reqDTO)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return
 	}
-	resp, err := client.ClusterClient.CreateParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	resp, err := client.ClusterClient.CreateParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return
@@ -197,7 +198,7 @@ func Delete(c *gin.Context) {
 	reqDTO := &clusterpb.DeleteParamGroupRequest{
 		ParamGroupId: int64(paramGroupId),
 	}
-	resp, err := client.ClusterClient.DeleteParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	resp, err := client.ClusterClient.DeleteParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return
@@ -234,14 +235,14 @@ func Update(c *gin.Context) {
 	}
 
 	reqDTO := &clusterpb.UpdateParamGroupRequest{}
-	err = convertObj(req, reqDTO)
+	err = controller.ConvertObj(req, reqDTO)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return
 	}
 	// set param group id
 	reqDTO.ParamGroupId = int64(paramGroupId)
-	resp, err := client.ClusterClient.UpdateParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	resp, err := client.ClusterClient.UpdateParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return
@@ -276,14 +277,14 @@ func Copy(c *gin.Context) {
 		return
 	}
 	reqDTO := &clusterpb.CopyParamGroupRequest{}
-	err = convertObj(req, reqDTO)
+	err = controller.ConvertObj(req, reqDTO)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return
 	}
 	// set param group id
 	reqDTO.ParamGroupId = int64(paramGroupId)
-	resp, err := client.ClusterClient.CopyParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	resp, err := client.ClusterClient.CopyParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return
@@ -322,7 +323,7 @@ func Apply(c *gin.Context) {
 		ParamGroupId: int64(paramGroupId),
 		ClusterId:    req.ClusterId,
 	}
-	resp, err := client.ClusterClient.ApplyParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO)
+	resp, err := client.ClusterClient.ApplyParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, err.Error()))
 		return

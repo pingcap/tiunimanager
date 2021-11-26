@@ -92,6 +92,7 @@ message CopyParamGroupResponse {
 message ListClusterParamsRequest {
   string clusterId = 1;
   PageDTO page = 2;
+  OperatorDTO operator = 3;
 }
 
 message ListClusterParamsResponse {
@@ -104,6 +105,7 @@ message ListClusterParamsResponse {
 message UpdateClusterParamsRequest {
   string clusterId = 1;
   repeated UpdateClusterParamDTO params = 2;
+  OperatorDTO operator = 3;
 }
 
 message UpdateClusterParamsResponse {
@@ -113,6 +115,7 @@ message UpdateClusterParamsResponse {
 
 message InspectClusterParamsRequest {
   string clusterId = 1;
+  OperatorDTO operator = 2;
 }
 
 message InspectClusterParamsResponse {
@@ -165,7 +168,7 @@ message ClusterParamDTO {
   string componentType = 3;
   int32 type = 4;
   string unit = 5;
-  string range = 6;
+  repeated string range = 6;
   int32 hasReboot = 7;
   int32 source = 8;
   string defaultValue = 9;

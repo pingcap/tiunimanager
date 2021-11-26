@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -16,6 +15,30 @@
  ******************************************************************************/
 
 package parameter
+
+type ListParamsResp struct {
+	ParamId       int64          `json:"paramId" example:"1"`
+	Name          string         `json:"name" example:"binlog_size"`
+	ComponentType string         `json:"componentType" example:"tidb"`
+	Type          int32          `json:"type" example:"0"`
+	Unit          string         `json:"unit" example:"mb"`
+	Range         []string       `json:"range" example:"1, 1000"`
+	HasReboot     int32          `json:"hasReboot" example:"0"`
+	DefaultValue  string         `json:"defaultValue" example:"1"`
+	RealValue     ParamRealValue `json:"realValue"`
+	Description   string         `json:"description" example:"binlog cache size"`
+	CreatedAt     int64          `json:"createTime" example:"1636698675"`
+	UpdatedAt     int64          `json:"updateTime" example:"1636698675"`
+}
+
+type InspectParamsResp struct {
+	ParamId       int64          `json:"id" example:"1"`
+	Name          string         `json:"name" example:"binlog_cache"`
+	ComponentType string         `json:"componentType" example:"tidb"`
+	Instance      string         `json:"instance" example:"172.16.5.23"`
+	RealValue     ParamRealValue `json:"realValue"`
+	InspectValue  string         `json:"inspectValue" example:"1"`
+}
 
 type ParamUpdateRsp struct {
 	Status    string `json:"status"`

@@ -180,7 +180,7 @@ func CopyParamGroup(ctx context.Context, req *clusterpb.CopyParamGroupRequest, r
 		Name:       req.Name,
 		Note:       req.Note,
 		DbType:     group.ParamGroup.DbType,
-		HasDefault: defaultParamGroup,
+		HasDefault: customParamGroup,
 		Version:    group.ParamGroup.Version,
 		Spec:       group.ParamGroup.Spec,
 		GroupType:  group.ParamGroup.GroupType,
@@ -196,10 +196,8 @@ func CopyParamGroup(ctx context.Context, req *clusterpb.CopyParamGroupRequest, r
 }
 
 func ListClusterParams(ctx context.Context, req *clusterpb.ListClusterParamsRequest, resp *clusterpb.ListClusterParamsResponse) error {
-	resp = new(clusterpb.ListClusterParamsResponse)
-
 	var dbReq *dbpb.DBFindParamsByClusterIdRequest
-	err := convertObj(req, dbReq)
+	err := convertObj(req, &dbReq)
 	if err != nil {
 		return err
 	}
@@ -209,18 +207,22 @@ func ListClusterParams(ctx context.Context, req *clusterpb.ListClusterParamsRequ
 		return err
 	}
 
-	err = convertObj(dbRsp, resp)
-	if err != nil {
-		return err
+	resp.Page = convertPage(dbRsp.Page)
+	resp.RespStatus = convertRespStatus(dbRsp.Status)
+	if dbRsp.Params != nil {
+		ps := make([]*clusterpb.ClusterParamDTO, len(dbRsp.Params))
+		err := convertObj(dbRsp.Params, &ps)
+		if err != nil {
+			return err
+		}
+		resp.Params = ps
 	}
 	return nil
 }
 
 func UpdateClusterParams(ctx context.Context, req *clusterpb.UpdateClusterParamsRequest, resp *clusterpb.UpdateClusterParamsResponse) error {
-	resp = new(clusterpb.UpdateClusterParamsResponse)
-
 	var dbReq *dbpb.DBUpdateClusterParamsRequest
-	err := convertObj(req, dbReq)
+	err := convertObj(req, &dbReq)
 	if err != nil {
 		return err
 	}
@@ -235,6 +237,7 @@ func UpdateClusterParams(ctx context.Context, req *clusterpb.UpdateClusterParams
 }
 
 func InspectClusterParams(ctx context.Context, req *clusterpb.InspectClusterParamsRequest, resp *clusterpb.InspectClusterParamsResponse) error {
+	// todo: Reliance on parameter source update implementation
 	return nil
 }
 

@@ -81,9 +81,11 @@ const (
 
 const SlowSqlThreshold = 100
 
+type ClusterRelation uint32
+
 const (
-	SlaveTo     uint32 = 1
-	StandBy     uint32 = 2
-	CloneFrom   uint32 = 3
-	RecoverFrom uint32 = 4
+	SlaveTo     ClusterRelation = iota + 1
+	StandBy
+	CloneFrom
+	RecoverFrom 
 )

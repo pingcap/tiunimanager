@@ -46,22 +46,22 @@ func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*
 				for i := 0; i < items.Count; i++ {
 					portRange := knowledge.GetComponentPortRange(cluster.ClusterType.Code, cluster.ClusterVersion.Code, demand.ComponentType.ComponentType)
 					node := &domain.ComponentInstance{
-						TenantId: cluster.TenantId,
-						Status: domain.ClusterStatusUnlined,
-						ClusterId: cluster.Id,
+						TenantId:      cluster.TenantId,
+						Status:        domain.ClusterStatusUnlined,
+						ClusterId:     cluster.Id,
 						ComponentType: demand.ComponentType,
-						Version: &cluster.ClusterVersion,
+						Version:       &cluster.ClusterVersion,
 						Location: &resource.Location{
 							Region: resource.GetDomainPrefixFromCode(items.ZoneCode),
-							Zone: resource.GetDomainNameFromCode(items.ZoneCode),
+							Zone:   resource.GetDomainNameFromCode(items.ZoneCode),
 						},
 						Compute: &resource.ComputeRequirement{
 							CpuCores: int32(knowledge.ParseCpu(items.SpecCode)),
-							Memory: int32(knowledge.ParseMemory(items.SpecCode)),
+							Memory:   int32(knowledge.ParseMemory(items.SpecCode)),
 						},
 						PortRequirement: &resource.PortRequirement{
-							Start:	int32(portRange.Start),
-							End: int32(portRange.End),
+							Start:   int32(portRange.Start),
+							End:     int32(portRange.End),
 							PortCnt: int32(portRange.Count),
 						},
 					}
@@ -70,18 +70,17 @@ func (d DefaultTopologyPlanner) BuildComponents(ctx context.Context, demands []*
 			}
 		} else {
 			node := &domain.ComponentInstance{
-				TenantId: cluster.TenantId,
-				Status: domain.ClusterStatusUnlined,
-				ClusterId: cluster.Id,
-				ComponentType: demand.ComponentType,
-				Version: &cluster.ClusterVersion,
-				Location: &resource.Location{},
-				Compute: &resource.ComputeRequirement{},
+				TenantId:        cluster.TenantId,
+				Status:          domain.ClusterStatusUnlined,
+				ClusterId:       cluster.Id,
+				ComponentType:   demand.ComponentType,
+				Version:         &cluster.ClusterVersion,
+				Location:        &resource.Location{},
+				Compute:         &resource.ComputeRequirement{},
 				PortRequirement: &resource.PortRequirement{},
 			}
 			nodes = append(nodes, node)
 		}
-
 
 		componentGroup.Nodes = nodes
 		components = append(components, &componentGroup)
@@ -114,39 +113,39 @@ func (d DefaultTopologyPlanner) AnalysisResourceRequest(ctx context.Context, clu
 						DiskReq:    &clusterpb.DiskRequirement{NeedDisk: false},
 						ComputeReq: &clusterpb.ComputeRequirement{CpuCores: 0, Memory: 0},
 					},
-					Count:      1,
+					Count: 1,
 					HostFilter: &clusterpb.Filter{
 						Arch: cluster.CpuArchitecture,
 					},
-					Strategy:   int32(resource.UserSpecifyHost),
+					Strategy: int32(resource.UserSpecifyHost),
 				})
 			} else {
 				// no need to alloc for existed component or parasite component
 				if instance.Status != domain.ClusterStatusUnlined ||
-					knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType){
+					knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType) {
 					continue
 				}
 
 				instance.AllocRequestId = requestId
 
 				portRequirementList = append(portRequirementList, &clusterpb.PortRequirement{
-					Start: instance.PortRequirement.Start,
-					End: instance.PortRequirement.End,
+					Start:   instance.PortRequirement.Start,
+					End:     instance.PortRequirement.End,
 					PortCnt: instance.PortRequirement.PortCnt,
 				})
 
 				requirementList = append(requirementList, &clusterpb.AllocRequirement{
 					Location: &clusterpb.Location{
 						Region: instance.Location.Region,
-						Zone: instance.Location.Zone,
+						Zone:   instance.Location.Zone,
 					},
 					Require: &clusterpb.Requirement{
-						Exclusive: 	false,
-						PortReq: portRequirementList,
-						DiskReq: &clusterpb.DiskRequirement{NeedDisk: true},
+						Exclusive: false,
+						PortReq:   portRequirementList,
+						DiskReq:   &clusterpb.DiskRequirement{NeedDisk: true},
 						ComputeReq: &clusterpb.ComputeRequirement{
 							CpuCores: instance.Compute.CpuCores,
-							Memory: instance.Compute.Memory,
+							Memory:   instance.Compute.Memory,
 						},
 					},
 					Count: 1,
@@ -186,7 +185,7 @@ func (d DefaultTopologyPlanner) ApplyResourceToComponents(ctx context.Context, c
 	for _, component := range components {
 		for _, instance := range component.Nodes {
 			if instance.Status != domain.ClusterStatusUnlined ||
-				knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType){
+				knowledge.IsParasite(cluster.ClusterType.Code, cluster.ClusterVersion.Code, instance.ComponentType.ComponentType) {
 				continue
 			}
 
@@ -213,6 +212,7 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 	if len(components) <= 0 {
 		return "", fmt.Errorf("components is empty")
 	}
+
 	t, err := template.New("cluster_topology.yaml").ParseFiles("template/cluster_topology.yaml")
 	if err != nil {
 		return "", err

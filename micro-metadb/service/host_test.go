@@ -61,7 +61,7 @@ func TestDBServiceHandler_Alloc_Recycle_Resources(t *testing.T) {
 	loc.Region = "Region1"
 	loc.Zone = "Zone1"
 	filter1 := new(dbpb.DBFilter)
-	filter1.Arch = string(resource.X86)
+	filter1.Arch = string(resource.X86_64)
 	filter1.DiskType = string(resource.Sata)
 	filter1.Purpose = string(resource.Compute)
 	require := new(dbpb.DBRequirement)
@@ -213,7 +213,7 @@ func TestDBServiceHandler_Recycle_Host_Resources(t *testing.T) {
 	loc.Region = "Region2"
 	loc.Zone = "Zone2"
 	filter1 := new(dbpb.DBFilter)
-	filter1.Arch = string(resource.X86)
+	filter1.Arch = string(resource.X86_64)
 	filter1.DiskType = string(resource.Sata)
 	filter1.Purpose = string(resource.Compute)
 	require := new(dbpb.DBRequirement)

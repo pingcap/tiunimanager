@@ -88,6 +88,20 @@ func GetComponentPortRange(typeCode string, versionCode string, componentType st
 	return nil
 }
 
+func GetClusterPortRange(typeCode string, versionCode string) *ComponentPortConstraint {
+	clusterTypeSpec := ClusterTypeSpecFromCode(typeCode)
+	if clusterTypeSpec == nil {
+		framework.Log().Errorf("Unexpected code of cluster code: %s", typeCode)
+		return nil
+	}
+	versionSpec := clusterTypeSpec.GetVersionSpec(versionCode)
+	if versionSpec == nil {
+		framework.Log().Errorf("Unexpected code of version code: %s", versionCode)
+		return nil
+	}
+	return &versionSpec.ClusterPortConstraint
+}
+
 func ClusterTypeFromCode(code string) *ClusterType {
 	return SpecKnowledge.Types[code]
 }
@@ -176,7 +190,8 @@ func loadSpecKnowledge() {
 	//}
 
 	tidbV4_0_12_Spec := ClusterVersionSpec{
-		ClusterVersion: tidbV4_0_12,
+		ClusterVersion:        tidbV4_0_12,
+		ClusterPortConstraint: ComponentPortConstraint{11000, 12000, 2},
 		ArchTypes: []resource.ArchType{
 			resource.Arm64,
 			resource.X86_64,
@@ -222,7 +237,8 @@ func loadSpecKnowledge() {
 		},
 	}
 	tidbV5_0_0_Spec := ClusterVersionSpec{
-		ClusterVersion: tidbV5_0_0,
+		ClusterVersion:        tidbV5_0_0,
+		ClusterPortConstraint: ComponentPortConstraint{11000, 12000, 2},
 		ArchTypes: []resource.ArchType{
 			resource.Arm64,
 			resource.X86_64,

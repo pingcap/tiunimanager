@@ -22,10 +22,13 @@ import (
 	"path/filepath"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
+	resourceService "github.com/pingcap-inc/tiem/micro-cluster/service/resource"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
@@ -209,6 +212,59 @@ func (d DefaultTopologyPlanner) ApplyResourceToComponents(ctx context.Context, c
 	return nil
 }
 
+func (d DefaultTopologyPlanner) getClusterPorts(ctx context.Context, cluster *domain.Cluster, requestId string) (ports []int, err error) {
+	clusterPortRange := knowledge.GetClusterPortRange(cluster.ClusterType.Code, cluster.ClusterVersion.Code)
+	portRequirementList := make([]*clusterpb.PortRequirement, 0)
+	portRequirementList = append(portRequirementList, &clusterpb.PortRequirement{
+		Start:   int32(clusterPortRange.Start),
+		End:     int32(clusterPortRange.End),
+		PortCnt: int32(clusterPortRange.Count),
+	})
+	var requirementList []*clusterpb.AllocRequirement
+	requirementList = append(requirementList, &clusterpb.AllocRequirement{
+		Location: &clusterpb.Location{Region: cluster.Region},
+		Require: &clusterpb.Requirement{
+			PortReq:    portRequirementList,
+			DiskReq:    &clusterpb.DiskRequirement{NeedDisk: false},
+			ComputeReq: &clusterpb.ComputeRequirement{CpuCores: 0, Memory: 0},
+		},
+		Count: 1,
+		HostFilter: &clusterpb.Filter{
+			Arch: cluster.CpuArchitecture,
+		},
+		Strategy: int32(resource.ClusterPorts),
+	})
+
+	allocReq := &clusterpb.BatchAllocRequest{
+		BatchRequests: []*clusterpb.AllocRequest{
+			{
+				Applicant: &clusterpb.Applicant{
+					HolderId:  cluster.Id,
+					RequestId: requestId,
+				},
+
+				Requires: requirementList,
+			},
+		},
+	}
+
+	var rsp clusterpb.BatchAllocResponse
+	resourceManager := resourceService.NewResourceManager()
+	err = resourceManager.AllocResourcesInBatch(ctx, allocReq, &rsp)
+	if err != nil {
+		return nil, err
+	} else if rsp.Rs.Code != 0 {
+		err = framework.NewTiEMErrorf(common.TIEM_CLUSTER_GET_CLUSTER_PORT_ERROR, rsp.Rs.Message)
+		return nil, err
+	}
+
+	portRes := rsp.BatchResults[0].Results[0].PortRes[0]
+	for _, port := range portRes.Ports {
+		ports = append(ports, int(port))
+	}
+	return ports, nil
+}
+
 func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, components []*domain.ComponentGroup, cluster *domain.Cluster) (*spec.Specification, error) {
 	if len(components) <= 0 {
 		return nil, fmt.Errorf("components is empty")
@@ -252,9 +308,12 @@ func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, comp
 			} else if component.ComponentType.ComponentType == "PD" {
 				if monitorHostComponent == nil && cluster.Status == domain.ClusterStatusUnlined {
 					monitorHostComponent = instance
-					port := knowledge.GetMonitoredSequence(cluster.Id)
-					tiupConfig.MonitoredOptions.NodeExporterPort = port
-					tiupConfig.MonitoredOptions.BlackboxExporterPort = port + 1
+					ports, err := d.getClusterPorts(ctx, cluster, instance.AllocRequestId)
+					if err != nil {
+						return nil, err
+					}
+					tiupConfig.MonitoredOptions.NodeExporterPort = ports[0]
+					tiupConfig.MonitoredOptions.BlackboxExporterPort = ports[1]
 				}
 				tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
 					Host:       instance.Host,

@@ -113,7 +113,7 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	}
 
 	if cluster.CpuArchitecture == "" {
-		cluster.CpuArchitecture = string(resourceType.X86)
+		cluster.CpuArchitecture = string(resourceType.X86_64)
 	}
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs))
@@ -1053,6 +1053,7 @@ func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *clusterpb.Backu
 		BackupType:   string(record.BackupType),
 		BackupMode:   string(record.BackupMode),
 		Size:         float32(record.Size) / bytes.MB, //Byte to MByte
+		BackupTso:    record.BackupTso,
 		StartTime:    record.StartTime,
 		EndTime:      record.EndTime,
 		FilePath:     record.FilePath,
@@ -1164,7 +1165,7 @@ func convertAllocationReq(item *ClusterNodeDistributionItem) *clusterpb.Allocati
 }
 
 func tidbPort() int {
-	return DefaultTidbPort
+	return common.DefaultTidbPort
 }
 
 func convertConfig(resource *clusterpb.AllocHostResponse, cluster *Cluster) *spec.Specification {

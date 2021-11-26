@@ -306,8 +306,9 @@ message BackupRecordDTO {
     string backupMode = 7;
     OperatorDTO operator = 8;
     float size = 9;
-    DisplayStatusDTO displayStatus = 10;
-    string filePath = 11;
+    uint64 backupTso = 10;
+    DisplayStatusDTO displayStatus = 11;
+    string filePath = 12;
 }
 
 message QueryBackupRequest {

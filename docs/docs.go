@@ -4040,15 +4040,15 @@ var doc = `{
             "type": "object",
             "properties": {
                 "backupMethod": {
-                    "description": "物理/逻辑",
                     "type": "string"
                 },
                 "backupMode": {
-                    "description": "手动/自动",
                     "type": "string"
                 },
+                "backupTso": {
+                    "type": "integer"
+                },
                 "backupType": {
-                    "description": "全量/增量",
                     "type": "string"
                 },
                 "clusterId": {

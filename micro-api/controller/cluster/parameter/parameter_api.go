@@ -97,7 +97,7 @@ func QueryParams(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/{clusterId}/params [post]
+// @Router /clusters/{clusterId}/params [put]
 func UpdateParams(c *gin.Context) {
 	var req UpdateParamsReq
 	if err := c.ShouldBindJSON(&req); err != nil {

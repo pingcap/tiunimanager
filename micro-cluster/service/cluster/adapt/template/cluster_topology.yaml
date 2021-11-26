@@ -8,12 +8,12 @@ global:
   data_dir: {{ .Cluster.Id }}/tidb-data
   log_dir: {{ .Cluster.Id }}/tidb-log
   os: linux
-  {{ if eq .Cluster.CpuArchitecture "" }}
+  {{ if eq .Cluster.CpuArchitecture "X86_64" }}
   arch: amd64
-  {{ else if eq .Cluster.CpuArchitecture "X86_64" }}
-  arch: amd64
+  {{ else if eq .Cluster.CpuArchitecture "ARM64" }}
+  arch: arm64
   {{ else }}
-  arch: {{ .Cluster.CpuArchitecture }}
+  arch: amd64
   {{ end }}
 monitored:
   node_exporter_port: {{ .NodeExporterPort }}

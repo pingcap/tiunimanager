@@ -36,7 +36,9 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap-inc/tiem/test/mockdb"
+	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 )
 
 func TestBuildComponents(t *testing.T) {
@@ -137,43 +139,43 @@ func TestAnalysisResourceRequest(t *testing.T) {
 	assert.Equal(t, "zone2", got.BatchRequests[0].Requires[1].Location.Zone)
 }
 
+func mockAllocResourcesInBatch(ctx context.Context, in *dbpb.DBBatchAllocRequest, opts ...client.CallOption) (*dbpb.DBBatchAllocResponse, error) {
+	if len(in.BatchRequests) == 1 && len(in.BatchRequests[0].Requires) == 1 && in.BatchRequests[0].Requires[0].Strategy == int32(resource.ClusterPorts) {
+
+		rsp := new(dbpb.DBBatchAllocResponse)
+		rsp.Rs = new(dbpb.DBAllocResponseStatus)
+		rsp.Rs.Code = int32(0)
+
+		portResource := dbpb.DBPortResource{
+			Start: in.BatchRequests[0].Requires[0].Require.PortReq[0].Start,
+			End:   in.BatchRequests[0].Requires[0].Require.PortReq[0].End,
+			Ports: []int32{in.BatchRequests[0].Requires[0].Require.PortReq[0].Start, in.BatchRequests[0].Requires[0].Require.PortReq[0].Start + 1},
+		}
+
+		hostResource := dbpb.DBHostResource{
+			PortRes: []*dbpb.DBPortResource{
+				&portResource,
+			},
+			ComputeRes: &dbpb.DBComputeRequirement{},
+			DiskRes:    &dbpb.DBDiskResource{},
+			Location:   &dbpb.DBLocation{},
+		}
+
+		response := dbpb.DBAllocResponse{
+			Rs: &dbpb.DBAllocResponseStatus{Code: 0},
+		}
+		response.Results = append(response.Results, &hostResource)
+		rsp.BatchResults = append(rsp.BatchResults, &response)
+
+		return rsp, nil
+	}
+	return nil, errors.New("Bad Request")
+}
 func Test_GetClusterPort(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockClient := mockdb.NewMockTiEMDBService(ctrl)
-	mockClient.EXPECT().AllocResourcesInBatch(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, in *dbpb.DBBatchAllocRequest, opts ...client.CallOption) (*dbpb.DBBatchAllocResponse, error) {
-			if len(in.BatchRequests) == 1 && len(in.BatchRequests[0].Requires) == 1 && in.BatchRequests[0].Requires[0].Strategy == int32(resource.ClusterPorts) {
-
-				rsp := new(dbpb.DBBatchAllocResponse)
-				rsp.Rs = new(dbpb.DBAllocResponseStatus)
-				rsp.Rs.Code = int32(0)
-
-				portResource := dbpb.DBPortResource{
-					Start: in.BatchRequests[0].Requires[0].Require.PortReq[0].Start,
-					End:   in.BatchRequests[0].Requires[0].Require.PortReq[0].End,
-					Ports: []int32{in.BatchRequests[0].Requires[0].Require.PortReq[0].Start, in.BatchRequests[0].Requires[0].Require.PortReq[0].Start + 1},
-				}
-
-				hostResource := dbpb.DBHostResource{
-					PortRes: []*dbpb.DBPortResource{
-						&portResource,
-					},
-					ComputeRes: &dbpb.DBComputeRequirement{},
-					DiskRes:    &dbpb.DBDiskResource{},
-					Location:   &dbpb.DBLocation{},
-				}
-
-				response := dbpb.DBAllocResponse{
-					Rs: &dbpb.DBAllocResponseStatus{Code: 0},
-				}
-				response.Results = append(response.Results, &hostResource)
-				rsp.BatchResults = append(rsp.BatchResults, &response)
-
-				return rsp, nil
-			}
-			return nil, errors.New("Bad Request")
-		})
+	mockClient.EXPECT().AllocResourcesInBatch(gomock.Any(), gomock.Any()).DoAndReturn(mockAllocResourcesInBatch)
 	rpc_client.DBClient = mockClient
 
 	var planner DefaultTopologyPlanner
@@ -190,4 +192,65 @@ func Test_GetClusterPort(t *testing.T) {
 	assert.Equal(t, clusterPortRange.Count, len(ports))
 	assert.Equal(t, clusterPortRange.Start, ports[0])
 	assert.Equal(t, clusterPortRange.Start+1, ports[1])
+}
+
+func TestDefaultTopologyPlanner_GenerateTopologyConfig(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockClient := mockdb.NewMockTiEMDBService(ctrl)
+	mockClient.EXPECT().AllocResourcesInBatch(gomock.Any(), gomock.Any()).DoAndReturn(mockAllocResourcesInBatch)
+	rpc_client.DBClient = mockClient
+
+	var planner DefaultTopologyPlanner
+	knowledge.LoadKnowledge()
+
+	topology, err := planner.GenerateTopologyConfig(
+		context.TODO(),
+		[]*domain.ComponentGroup{
+			{
+				&knowledge.ClusterComponent{
+					ComponentType: "TiDB",
+					ComponentName: "TiDB",
+				},
+				[]*domain.ComponentInstance{
+					{
+						Host:     "127.0.0.1",
+						DiskPath: "/test",
+						PortList: []int{4000, 10000},
+					},
+					{
+						Host:     "127.0.0.3",
+						DiskPath: "/test",
+						PortList: []int{4001, 10002},
+					},
+				},
+			},
+
+			{
+				&knowledge.ClusterComponent{
+					ComponentType: "PD",
+					ComponentName: "PD",
+				},
+				[]*domain.ComponentInstance{
+					{
+						Host:     "127.0.0.2",
+						DiskPath: "/test",
+						PortList: []int{4000, 10000, 10001, 10002, 10003, 10004},
+					},
+				},
+			},
+		},
+		&domain.Cluster{
+			Id:              "testCluster",
+			CpuArchitecture: "arm64",
+			Status:          domain.ClusterStatusUnlined,
+			ClusterVersion:  knowledge.ClusterVersion{Code: "v5.0.0", Name: "v5.0.0"},
+			ClusterType:     knowledge.ClusterType{Code: "TiDB", Name: "TiDB"},
+		},
+	)
+
+	assert.NoError(t, err)
+	config := spec.Specification{}
+	err = yaml.Unmarshal([]byte(topology), &config)
+	assert.NoError(t, err)
 }

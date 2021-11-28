@@ -17,9 +17,9 @@
 package adapt
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"path/filepath"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common"
@@ -29,7 +29,8 @@ import (
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	resourceService "github.com/pingcap-inc/tiem/micro-cluster/service/resource"
-	"github.com/pingcap/tiup/pkg/cluster/spec"
+
+	"text/template"
 )
 
 type DefaultTopologyPlanner struct {
@@ -265,116 +266,35 @@ func (d DefaultTopologyPlanner) getClusterPorts(ctx context.Context, cluster *do
 	return ports, nil
 }
 
-func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, components []*domain.ComponentGroup, cluster *domain.Cluster) (*spec.Specification, error) {
+func (d DefaultTopologyPlanner) GenerateTopologyConfig(ctx context.Context, components []*domain.ComponentGroup, cluster *domain.Cluster) (string, error) {
 	if len(components) <= 0 {
-		return nil, fmt.Errorf("components is empty")
-	}
-	tiupConfig := new(spec.Specification)
-
-	if cluster.Status == domain.ClusterStatusUnlined { // create cluster
-		// Deal with Global Settings
-		tiupConfig.GlobalOptions.DataDir = filepath.Join(cluster.Id, "tidb-data")
-		tiupConfig.GlobalOptions.DeployDir = filepath.Join(cluster.Id, "tidb-deploy")
-		tiupConfig.GlobalOptions.LogDir = filepath.Join(cluster.Id, "tidb-log")
-		tiupConfig.GlobalOptions.User = "tidb"
-		tiupConfig.GlobalOptions.SSHPort = 22
-		tiupConfig.GlobalOptions.Arch = resource.GetArchAlias(resource.ArchType(cluster.CpuArchitecture))
-		if tiupConfig.GlobalOptions.Arch == "" {
-			tiupConfig.GlobalOptions.Arch = resource.GetArchAlias(resource.X86_64)
-		}
+		return "", fmt.Errorf("components is empty")
 	}
 
-	var monitorHostComponent *domain.ComponentInstance
-	for _, component := range components {
-		for _, instance := range component.Nodes {
-			if instance.Status != domain.ClusterStatusUnlined {
-				continue
-			}
-			if component.ComponentType.ComponentType == "TiDB" {
-				tiupConfig.TiDBServers = append(tiupConfig.TiDBServers, &spec.TiDBSpec{
-					Host:       instance.Host,
-					DeployDir:  filepath.Join(instance.DiskPath, cluster.Id, "tidb-deploy"),
-					Port:       instance.PortList[0],
-					StatusPort: instance.PortList[1],
-				})
-			} else if component.ComponentType.ComponentType == "TiKV" {
-				tiupConfig.TiKVServers = append(tiupConfig.TiKVServers, &spec.TiKVSpec{
-					Host:       instance.Host,
-					DataDir:    filepath.Join(instance.DiskPath, cluster.Id, "tikv-data"),
-					DeployDir:  filepath.Join(instance.DiskPath, cluster.Id, "tikv-deploy"),
-					Port:       instance.PortList[0],
-					StatusPort: instance.PortList[1],
-				})
-			} else if component.ComponentType.ComponentType == "PD" {
-				if monitorHostComponent == nil && cluster.Status == domain.ClusterStatusUnlined {
-					monitorHostComponent = instance
-					ports, err := d.getClusterPorts(ctx, cluster, instance.AllocRequestId)
-					if err != nil {
-						return nil, err
-					}
-					tiupConfig.MonitoredOptions.NodeExporterPort = ports[0]
-					tiupConfig.MonitoredOptions.BlackboxExporterPort = ports[1]
-				}
-				tiupConfig.PDServers = append(tiupConfig.PDServers, &spec.PDSpec{
-					Host:       instance.Host,
-					DataDir:    filepath.Join(instance.DiskPath, cluster.Id, "pd-data"),
-					DeployDir:  filepath.Join(instance.DiskPath, cluster.Id, "pd-deploy"),
-					ClientPort: instance.PortList[0],
-					PeerPort:   instance.PortList[1],
-				})
-			} else if component.ComponentType.ComponentType == "TiFlash" {
-				tiupConfig.TiFlashServers = append(tiupConfig.TiFlashServers, &spec.TiFlashSpec{
-					Host:                 instance.Host,
-					DataDir:              filepath.Join(instance.DiskPath, cluster.Id, "tiflash-data"),
-					DeployDir:            filepath.Join(instance.DiskPath, cluster.Id, "tiflash-deploy"),
-					TCPPort:              instance.PortList[0],
-					HTTPPort:             instance.PortList[1],
-					FlashServicePort:     instance.PortList[2],
-					FlashProxyPort:       instance.PortList[3],
-					FlashProxyStatusPort: instance.PortList[4],
-					StatusPort:           instance.PortList[5],
-				})
-			} else if component.ComponentType.ComponentType == "TiCDC" {
-				tiupConfig.CDCServers = append(tiupConfig.CDCServers, &spec.CDCSpec{
-					Host:      instance.Host,
-					DataDir:   filepath.Join(instance.DiskPath, cluster.Id, "cdc-data"),
-					DeployDir: filepath.Join(instance.DiskPath, cluster.Id, "cdc-deploy"),
-					LogDir:    filepath.Join(instance.DiskPath, cluster.Id, "cdc-log"),
-				})
-			} else if component.ComponentType.ComponentType == "Grafana" {
-				if monitorHostComponent != nil {
-					tiupConfig.Grafanas = append(tiupConfig.Grafanas, &spec.GrafanaSpec{
-						Host:            monitorHostComponent.Host,
-						Port:            monitorHostComponent.PortList[2],
-						DeployDir:       filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "grafana-deploy"),
-						AnonymousEnable: true,
-						DefaultTheme:    "light",
-						OrgName:         "Main Org.",
-						OrgRole:         "Viewer",
-					})
-				}
-			} else if component.ComponentType.ComponentType == "Prometheus" {
-				if monitorHostComponent != nil {
-					tiupConfig.Monitors = append(tiupConfig.Monitors, &spec.PrometheusSpec{
-						Host:      monitorHostComponent.Host,
-						Port:      monitorHostComponent.PortList[3],
-						DataDir:   filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "prometheus-data"),
-						DeployDir: filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "prometheus-deploy"),
-					})
-				}
-			} else if component.ComponentType.ComponentType == "AlertManger" {
-				if monitorHostComponent != nil {
-					tiupConfig.Alertmanagers = append(tiupConfig.Alertmanagers, &spec.AlertmanagerSpec{
-						Host:        monitorHostComponent.Host,
-						WebPort:     monitorHostComponent.PortList[4],
-						ClusterPort: monitorHostComponent.PortList[5],
-						DataDir:     filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "alertmanagers-data"),
-						DeployDir:   filepath.Join(monitorHostComponent.DiskPath, cluster.Id, "alertmanagers-deploy"),
-					})
-				}
-			}
-		}
+	t, err := template.New("cluster_topology.yaml").ParseFiles("template/cluster_topology.yaml")
+	if err != nil {
+		return "", err
+	}
+	requestId := components[0].Nodes[0].AllocRequestId
+	ports, err := d.getClusterPorts(ctx, cluster, requestId)
+	if err != nil {
+		return "", err
+	}
+	topology := new(bytes.Buffer)
+	data := struct {
+		Cluster              *domain.Cluster
+		Components           []*domain.ComponentGroup
+		NodeExporterPort     int
+		BlackboxExporterPort int
+	}{
+		cluster,
+		components,
+		ports[0],
+		ports[1],
+	}
+	if err = t.Execute(topology, data); err != nil {
+		return "", err
 	}
 
-	return tiupConfig, nil
+	return topology.String(), nil
 }

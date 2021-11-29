@@ -92,6 +92,7 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 	result := handler.changeFeedManager.Create(task.Name)
 
 	handleResponse(response, err, func() ([]byte, error) {
+		// todo build api response data
 		task.Id = result
 		return json.Marshal(task)
 	})
@@ -125,6 +126,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.userManager = user.NewUserManager(adapt.MicroMetaDbRepo{})
 	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
 	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
+	handler.changeFeedManager = changeFeedManager.NewChangeFeedManager()
 
 	domain.InitFlowMap()
 	return handler

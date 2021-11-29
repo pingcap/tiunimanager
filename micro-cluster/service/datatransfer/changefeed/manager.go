@@ -16,10 +16,13 @@
 package changefeed
 
 type ChangeFeedManager struct {
+}
 
+func NewChangeFeedManager() *ChangeFeedManager {
+	return &ChangeFeedManager{}
 }
 
 func (p *ChangeFeedManager) Create(name string) string {
-	// todo call db interface
+	// todo access db or do something else
 	return "MockId"
 }

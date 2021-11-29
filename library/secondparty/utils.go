@@ -16,6 +16,7 @@
 package secondparty
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -74,7 +75,7 @@ func jsonMustMarshal(v interface{}) []byte {
 	return bs
 }
 
-func SetField(item interface{}, fieldKey FieldKey, fieldName string, value interface{}) error {
+func SetField(ctx context.Context, item interface{}, fieldKey FieldKey, fieldName string, value interface{}) {
 	v := reflect.ValueOf(item).Elem()
 
 	// key: fieldName, value: index of fieldName in struct
@@ -88,11 +89,11 @@ func SetField(item interface{}, fieldKey FieldKey, fieldName string, value inter
 
 	fieldNum, ok := fieldNames[fieldName]
 	if !ok {
-		return fmt.Errorf("field %s does not exist within the provided item", fieldName)
+		framework.LogWithContext(ctx).Infof("field %s does not exist within the provided item", fieldName)
+		return
 	}
 	fieldVal := v.Field(fieldNum)
 	fieldVal.Set(reflect.ValueOf(value))
-	return nil
 }
 
 // It's possible we can cache this, which is why precompute all these ahead of time.

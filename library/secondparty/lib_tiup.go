@@ -684,7 +684,7 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 		for idx, tiDBServer := range topo.TiDBServers {
 			if tiDBServer.Host == req.Host && tiDBServer.Port == req.Port {
 				for k, v := range req.ConfigMap {
-					SetField(tiDBServer, FieldKey_Yaml, k, v)
+					SetField(ctx, tiDBServer, FieldKey_Yaml, k, v)
 				}
 				topo.TiDBServers[idx] = tiDBServer
 				break
@@ -694,7 +694,7 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 		for idx, tiKVServer := range topo.TiKVServers {
 			if tiKVServer.Host == req.Host && tiKVServer.Port == req.Port {
 				for k, v := range req.ConfigMap {
-					SetField(tiKVServer, FieldKey_Yaml, k, v)
+					SetField(ctx, tiKVServer, FieldKey_Yaml, k, v)
 				}
 				topo.TiKVServers[idx] = tiKVServer
 				break
@@ -704,7 +704,7 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 		for idx, tiFlashServer := range topo.TiFlashServers {
 			if tiFlashServer.Host == req.Host && tiFlashServer.FlashServicePort == req.Port {
 				for k, v := range req.ConfigMap {
-					SetField(tiFlashServer, FieldKey_Yaml, k, v)
+					SetField(ctx, tiFlashServer, FieldKey_Yaml, k, v)
 				}
 				topo.TiFlashServers[idx] = tiFlashServer
 				break
@@ -714,7 +714,7 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 		for idx, pdServer := range topo.PDServers {
 			if pdServer.Host == req.Host && pdServer.ClientPort == req.Port {
 				for k, v := range req.ConfigMap {
-					SetField(pdServer, FieldKey_Yaml, k, v)
+					SetField(ctx, pdServer, FieldKey_Yaml, k, v)
 				}
 				topo.PDServers[idx] = pdServer
 				break
@@ -724,7 +724,7 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 		for idx, pumpServer := range topo.PumpServers {
 			if pumpServer.Host == req.Host && pumpServer.Port == req.Port {
 				for k, v := range req.ConfigMap {
-					SetField(pumpServer, FieldKey_Yaml, k, v)
+					SetField(ctx, pumpServer, FieldKey_Yaml, k, v)
 				}
 				topo.PumpServers[idx] = pumpServer
 				break
@@ -734,7 +734,7 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 		for idx, drainer := range topo.Drainers {
 			if drainer.Host == req.Host && drainer.Port == req.Port {
 				for k, v := range req.ConfigMap {
-					SetField(drainer, FieldKey_Yaml, k, v)
+					SetField(ctx, drainer, FieldKey_Yaml, k, v)
 				}
 				topo.Drainers[idx] = drainer
 				break
@@ -744,7 +744,7 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 		for idx, cdcServer := range topo.CDCServers {
 			if cdcServer.Host == req.Host && cdcServer.Port == req.Port {
 				for k, v := range req.ConfigMap {
-					SetField(cdcServer, FieldKey_Yaml, k, v)
+					SetField(ctx, cdcServer, FieldKey_Yaml, k, v)
 				}
 				topo.CDCServers[idx] = cdcServer
 				break
@@ -754,7 +754,7 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 		for idx, tiSparkMaster := range topo.TiSparkMasters {
 			if tiSparkMaster.Host == req.Host && tiSparkMaster.Port == req.Port {
 				for k, v := range req.ConfigMap {
-					SetField(tiSparkMaster, FieldKey_Yaml, k, v)
+					SetField(ctx, tiSparkMaster, FieldKey_Yaml, k, v)
 				}
 				topo.TiSparkMasters[idx] = tiSparkMaster
 				break
@@ -764,7 +764,7 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 		for idx, tiSparkWorker := range topo.TiSparkWorkers {
 			if tiSparkWorker.Host == req.Host && tiSparkWorker.Port == req.Port {
 				for k, v := range req.ConfigMap {
-					SetField(tiSparkWorker, FieldKey_Yaml, k, v)
+					SetField(ctx, tiSparkWorker, FieldKey_Yaml, k, v)
 				}
 				topo.TiSparkWorkers[idx] = tiSparkWorker
 				break
@@ -774,7 +774,7 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 		for idx, monitor := range topo.Monitors {
 			if monitor.Host == req.Host && monitor.Port == req.Port {
 				for k, v := range req.ConfigMap {
-					SetField(monitor, FieldKey_Yaml, k, v)
+					SetField(ctx, monitor, FieldKey_Yaml, k, v)
 				}
 				topo.Monitors[idx] = monitor
 				break
@@ -784,7 +784,7 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 		for idx, grafana := range topo.Grafanas {
 			if grafana.Host == req.Host && grafana.Port == req.Port {
 				for k, v := range req.ConfigMap {
-					SetField(grafana, FieldKey_Yaml, k, v)
+					SetField(ctx, grafana, FieldKey_Yaml, k, v)
 				}
 				topo.Grafanas[idx] = grafana
 				break
@@ -794,7 +794,7 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 		for idx, alertManager := range topo.Alertmanagers {
 			if alertManager.Host == req.Host && alertManager.WebPort == req.Port {
 				for k, v := range req.ConfigMap {
-					SetField(alertManager, FieldKey_Yaml, k, v)
+					SetField(ctx, alertManager, FieldKey_Yaml, k, v)
 				}
 				topo.Alertmanagers[idx] = alertManager
 				break

@@ -16,6 +16,7 @@
 package secondparty
 
 import (
+	ctx "context"
 	"reflect"
 	"strings"
 	"testing"
@@ -81,16 +82,16 @@ func Test_SetField_NonPointer(t *testing.T) {
 	foo1 := Foo1 {
 		"bar",
 	}
-	SetField(foo1, FieldKey_Yaml, "bar", "baz")
+	SetField(ctx.TODO(), foo1, FieldKey_Yaml, "bar", "baz")
 }
 
 func Test_SetField_FieldNotExist(t *testing.T) {
 	foo2 := Foo2 {
 		"bar",
 	}
-	err := SetField(&foo2, FieldKey_Yaml, "nobar", "baz")
-	if err == nil || !strings.Contains(err.Error(), "does not exist within the provided item") {
-		t.Errorf("nil error for incorrectfieldkey or not tag exist: %s", err.Error())
+	SetField(ctx.TODO(), &foo2, FieldKey_Yaml, "nobar", "baz")
+	if foo2.Bar != "bar" {
+		t.Errorf("bar value should not change, expect: bar, actual: %s", foo2.Bar)
 	}
 }
 
@@ -98,10 +99,7 @@ func Test_SetField_Success(t *testing.T) {
 	foo2 := Foo2 {
 		"bar",
 	}
-	err := SetField(&foo2, FieldKey_Yaml, "bar", "newbar")
-	if err != nil{
-		t.Errorf(err.Error())
-	}
+	SetField(ctx.TODO(), &foo2, FieldKey_Yaml, "bar", "newbar")
 	if foo2.Bar != "newbar" {
 		t.Errorf("fail set, it is %s now", foo2.Bar)
 	}

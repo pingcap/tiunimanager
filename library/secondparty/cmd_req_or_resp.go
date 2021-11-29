@@ -240,7 +240,7 @@ type CmdEditInstanceConfigReq struct {
 type CmdEditConfigReq struct {
 	TiUPComponent 			TiUPComponentTypeStr
 	InstanceName  			string
-	ConfigStrYaml 			string
+	NewTopo 			    *spec2.Specification
 	TimeoutS      			int
 	Flags         			[]string
 }

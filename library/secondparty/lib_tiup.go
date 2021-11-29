@@ -515,19 +515,8 @@ func (secondMicro *SecondMicro) startNewTiupUpgradeTask(ctx context.Context, tas
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupShowConfig(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string) (resp *CmdShowConfigResp, err error) {
-	framework.LogWithContext(ctx).Infof("microsrvtiupshowconfig tiupcomponent: %s,  instanceName: %s, timeouts: %d, flags: %v", string(tiupComponent), instanceName, timeoutS, flags)
-	req := CmdShowConfigReq{
-		TiUPComponent: ClusterComponentTypeStr,
-		InstanceName: instanceName,
-		TimeoutS: timeoutS,
-		Flags: flags,
-	}
-	cmdShowConfigResp, err := secondMicro.startTiupShowConfigTask(ctx, &req)
-	return &cmdShowConfigResp, err
-}
-
-func (secondMicro *SecondMicro) startTiupShowConfigTask(ctx context.Context, req *CmdShowConfigReq) (resp CmdShowConfigResp, err error) {
+func (secondMicro *SecondMicro) MicroSrvTiupShowConfig(ctx context.Context, req *CmdShowConfigReq) (resp *CmdShowConfigResp, err error) {
+	framework.LogWithContext(ctx).Infof("microsrvtiupshowconfig cmdshowconfigreq: %v", req)
 	var args []string
 	args = append(args, string(req.TiUPComponent), "show-config")
 	args = append(args, req.InstanceName)
@@ -569,7 +558,7 @@ func (secondMicro *SecondMicro) startTiupShowConfigTask(ctx context.Context, req
 }
 
 func (secondMicro *SecondMicro) MicroSrvTiupEditGlobalConfig(ctx context.Context,
-	cmdEditGlobalConfigReq CmdEditGlobalConfigReq, bizID uint64) (taskID uint64, err error) {
+	cmdEditGlobalConfigReq CmdEditGlobalConfigReq, bizID uint64) (uint64, error) {
 	framework.LogWithContext(ctx).Infof("microsrvtiupeditglobalconfig cmdeditglobalconfigreq: %v, bizid: %d", cmdEditGlobalConfigReq, bizID)
 	req := dbPb.CreateTiupTaskRequest{
 		Type : dbPb.TiupTaskType_EditGlobalConfig,
@@ -580,93 +569,84 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditGlobalConfig(ctx context.Context
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
 	}
-	secondMicro.startTiupEditGlobalConfigTask(ctx, rsp.Id, &cmdEditGlobalConfigReq)
-	return rsp.Id, nil
-}
 
-func (secondMicro *SecondMicro) startTiupEditGlobalConfigTask(ctx context.Context, taskID uint64, req *CmdEditGlobalConfigReq) {
-	// 1. get the original config
 	cmdShowConfigReq := CmdShowConfigReq{
 		TiUPComponent: ClusterComponentTypeStr,
-		InstanceName: req.InstanceName,
+		InstanceName: cmdEditGlobalConfigReq.InstanceName,
 	}
-	cmdShowConfigResp, err := secondMicro.startTiupShowConfigTask(ctx, &cmdShowConfigReq)
-	newTopo := cmdShowConfigResp.TiDBClusterTopo
+	cmdShowConfigResp, err := secondMicro.MicroSrvTiupShowConfig(ctx, &cmdShowConfigReq)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("check orignal config error: %+v", err)
 		secondMicro.taskStatusCh <- TaskStatusMember{
-			TaskID:   taskID,
+			TaskID:   rsp.Id,
 			Status:   TaskStatusError,
 			ErrorStr: fmt.Sprintln(err),
 		}
-		return
+		return rsp.Id, err
 	}
+	topo := cmdShowConfigResp.TiDBClusterTopo
 
-	// 2. change the config
+	secondMicro.startTiupEditGlobalConfigTask(ctx, rsp.Id, &cmdEditGlobalConfigReq, &topo)
+	return rsp.Id, nil
+}
+
+func (secondMicro *SecondMicro) startTiupEditGlobalConfigTask(ctx context.Context, taskID uint64, req *CmdEditGlobalConfigReq, topo *spec2.Specification) {
 	var componentServerConfigs map[string]interface{}
 	switch req.TiDBClusterComponent {
 	case spec.TiDBClusterComponent_TiDB:
-		componentServerConfigs = newTopo.ServerConfigs.TiDB
+		componentServerConfigs = topo.ServerConfigs.TiDB
 	case spec.TiDBClusterComponent_TiKV:
-		componentServerConfigs = newTopo.ServerConfigs.TiKV
+		componentServerConfigs = topo.ServerConfigs.TiKV
 	case spec.TiDBClusterComponent_PD:
-		componentServerConfigs = newTopo.ServerConfigs.PD
+		componentServerConfigs = topo.ServerConfigs.PD
 	case spec.TiDBClusterComponent_TiFlash:
-		componentServerConfigs = newTopo.ServerConfigs.TiFlash
+		componentServerConfigs = topo.ServerConfigs.TiFlash
 	case spec.TiDBClusterComponent_TiFlashLearner:
-		componentServerConfigs = newTopo.ServerConfigs.TiFlashLearner
+		componentServerConfigs = topo.ServerConfigs.TiFlashLearner
 	case spec.TiDBClusterComponent_Pump:
-		componentServerConfigs = newTopo.ServerConfigs.Pump
+		componentServerConfigs = topo.ServerConfigs.Pump
 	case spec.TiDBClusterComponent_Drainer:
-		componentServerConfigs = newTopo.ServerConfigs.Drainer
+		componentServerConfigs = topo.ServerConfigs.Drainer
 	case spec.TiDBClusterComponent_CDC:
-		componentServerConfigs = newTopo.ServerConfigs.CDC
+		componentServerConfigs = topo.ServerConfigs.CDC
+	}
+	if componentServerConfigs == nil {
+		componentServerConfigs = make(map[string]interface{})
 	}
 	for k, v := range req.ConfigMap {
 		componentServerConfigs[k] = v
 	}
 	switch req.TiDBClusterComponent {
 	case spec.TiDBClusterComponent_TiDB:
-		newTopo.ServerConfigs.TiDB = componentServerConfigs
+		topo.ServerConfigs.TiDB = componentServerConfigs
 	case spec.TiDBClusterComponent_TiKV:
-		newTopo.ServerConfigs.TiKV = componentServerConfigs
+		topo.ServerConfigs.TiKV = componentServerConfigs
 	case spec.TiDBClusterComponent_PD:
-		newTopo.ServerConfigs.PD = componentServerConfigs
+		topo.ServerConfigs.PD = componentServerConfigs
 	case spec.TiDBClusterComponent_TiFlash:
-		newTopo.ServerConfigs.TiFlash = componentServerConfigs
+		topo.ServerConfigs.TiFlash = componentServerConfigs
 	case spec.TiDBClusterComponent_TiFlashLearner:
-		newTopo.ServerConfigs.TiFlashLearner = componentServerConfigs
+		topo.ServerConfigs.TiFlashLearner = componentServerConfigs
 	case spec.TiDBClusterComponent_Pump:
-		newTopo.ServerConfigs.Pump = componentServerConfigs
+		topo.ServerConfigs.Pump = componentServerConfigs
 	case spec.TiDBClusterComponent_Drainer:
-		newTopo.ServerConfigs.Drainer = componentServerConfigs
+		topo.ServerConfigs.Drainer = componentServerConfigs
 	case spec.TiDBClusterComponent_CDC:
-		newTopo.ServerConfigs.CDC = componentServerConfigs
+		topo.ServerConfigs.CDC = componentServerConfigs
 	}
 
-	// 3. call the general tiup edit-config method
-	newData, err := yaml.Marshal(newTopo)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("starttiupeditglobalconfigtask marshal new config(%+v) error: %+v", newTopo, err)
-		secondMicro.taskStatusCh <- TaskStatusMember{
-			TaskID:   taskID,
-			Status:   TaskStatusError,
-			ErrorStr: fmt.Sprintf("starttiupeditglobalconfigtask marshal new config(%+v) error: %+v", newTopo, err),
-		}
-		return
-	}
 	cmdEditConfigReq := CmdEditConfigReq{
 		TiUPComponent: req.TiUPComponent,
 		InstanceName: req.InstanceName,
-		ConfigStrYaml: string(newData),
+		NewTopo: topo,
 		TimeoutS: req.TimeoutS,
 		Flags: req.Flags,
 	}
-	secondMicro.startNewTiupEditConfigTask(ctx, taskID, &cmdEditConfigReq)
+	secondMicro.startNewTiupEditConfigTask(ctx, cmdEditConfigReq, taskID)
 }
 
 func (secondMicro *SecondMicro) MicroSrvTiupEditInstanceConfig(ctx context.Context,
-	cmdEditInstanceConfigReq CmdEditInstanceConfigReq, bizID uint64) (taskID uint64, err error) {
+	cmdEditInstanceConfigReq CmdEditInstanceConfigReq, bizID uint64) (uint64, error) {
 	framework.LogWithContext(ctx).Infof("microsrvtiupeditinstanceconfig cmdeditinstanceconfigreq: %v, bizid: %d", cmdEditInstanceConfigReq, bizID)
 	req := dbPb.CreateTiupTaskRequest{
 		Type : dbPb.TiupTaskType_EditInstanceConfig,
@@ -677,175 +657,175 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditInstanceConfig(ctx context.Conte
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
 	}
-	secondMicro.startTiupEditInstanceConfigTask(ctx, rsp.Id, &cmdEditInstanceConfigReq)
-	return rsp.Id, nil
-}
 
-func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Context, taskID uint64, req *CmdEditInstanceConfigReq) {
-	// 1. get the original config
 	cmdShowConfigReq := CmdShowConfigReq{
 		TiUPComponent: ClusterComponentTypeStr,
-		InstanceName: req.InstanceName,
+		InstanceName: cmdEditInstanceConfigReq.InstanceName,
 	}
-	cmdShowConfigResp, err := secondMicro.startTiupShowConfigTask(ctx, &cmdShowConfigReq)
-	newTopo := cmdShowConfigResp.TiDBClusterTopo
+	cmdShowConfigResp, err := secondMicro.MicroSrvTiupShowConfig(ctx, &cmdShowConfigReq)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("check orignal config error: %+v", err)
 		secondMicro.taskStatusCh <- TaskStatusMember{
-			TaskID:   taskID,
+			TaskID:   rsp.Id,
 			Status:   TaskStatusError,
 			ErrorStr: fmt.Sprintln(err),
 		}
-		return
+		return rsp.Id, err
 	}
+	topo := cmdShowConfigResp.TiDBClusterTopo
 
-	// 2. change the config
+	secondMicro.startTiupEditInstanceConfigTask(ctx, rsp.Id, &cmdEditInstanceConfigReq, &topo)
+	return rsp.Id, nil
+}
+
+func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Context, taskID uint64, req *CmdEditInstanceConfigReq, topo *spec2.Specification) {
 	switch req.TiDBClusterComponent {
 	case spec.TiDBClusterComponent_TiDB:
-		for idx, tiDBServer := range newTopo.TiDBServers {
+		for idx, tiDBServer := range topo.TiDBServers {
 			if tiDBServer.Host == req.Host && tiDBServer.Port == req.Port {
 				for k, v := range req.ConfigMap {
 					SetField(tiDBServer, FieldKey_Yaml, k, v)
 				}
-				newTopo.TiDBServers[idx] = tiDBServer
+				topo.TiDBServers[idx] = tiDBServer
 				break
 			}
 		}
 	case spec.TiDBClusterComponent_TiKV:
-		for idx, tiKVServer := range newTopo.TiKVServers {
+		for idx, tiKVServer := range topo.TiKVServers {
 			if tiKVServer.Host == req.Host && tiKVServer.Port == req.Port {
 				for k, v := range req.ConfigMap {
 					SetField(tiKVServer, FieldKey_Yaml, k, v)
 				}
-				newTopo.TiKVServers[idx] = tiKVServer
+				topo.TiKVServers[idx] = tiKVServer
 				break
 			}
 		}
 	case spec.TiDBClusterComponent_TiFlash:
-		for idx, tiFlashServer := range newTopo.TiFlashServers {
+		for idx, tiFlashServer := range topo.TiFlashServers {
 			if tiFlashServer.Host == req.Host && tiFlashServer.FlashServicePort == req.Port {
 				for k, v := range req.ConfigMap {
 					SetField(tiFlashServer, FieldKey_Yaml, k, v)
 				}
-				newTopo.TiFlashServers[idx] = tiFlashServer
+				topo.TiFlashServers[idx] = tiFlashServer
 				break
 			}
 		}
 	case spec.TiDBClusterComponent_PD:
-		for idx, pdServer := range newTopo.PDServers {
+		for idx, pdServer := range topo.PDServers {
 			if pdServer.Host == req.Host && pdServer.ClientPort == req.Port {
 				for k, v := range req.ConfigMap {
 					SetField(pdServer, FieldKey_Yaml, k, v)
 				}
-				newTopo.PDServers[idx] = pdServer
+				topo.PDServers[idx] = pdServer
 				break
 			}
 		}
 	case spec.TiDBClusterComponent_Pump:
-		for idx, pumpServer := range newTopo.PumpServers {
+		for idx, pumpServer := range topo.PumpServers {
 			if pumpServer.Host == req.Host && pumpServer.Port == req.Port {
 				for k, v := range req.ConfigMap {
 					SetField(pumpServer, FieldKey_Yaml, k, v)
 				}
-				newTopo.PumpServers[idx] = pumpServer
+				topo.PumpServers[idx] = pumpServer
 				break
 			}
 		}
 	case spec.TiDBClusterComponent_Drainer:
-		for idx, drainer := range newTopo.Drainers {
+		for idx, drainer := range topo.Drainers {
 			if drainer.Host == req.Host && drainer.Port == req.Port {
 				for k, v := range req.ConfigMap {
 					SetField(drainer, FieldKey_Yaml, k, v)
 				}
-				newTopo.Drainers[idx] = drainer
+				topo.Drainers[idx] = drainer
 				break
 			}
 		}
 	case spec.TiDBClusterComponent_CDC:
-		for idx, cdcServer := range newTopo.CDCServers {
+		for idx, cdcServer := range topo.CDCServers {
 			if cdcServer.Host == req.Host && cdcServer.Port == req.Port {
 				for k, v := range req.ConfigMap {
 					SetField(cdcServer, FieldKey_Yaml, k, v)
 				}
-				newTopo.CDCServers[idx] = cdcServer
+				topo.CDCServers[idx] = cdcServer
 				break
 			}
 		}
 	case spec.TiDBClusterComponent_TiSparkMasters:
-		for idx, tiSparkMaster := range newTopo.TiSparkMasters {
+		for idx, tiSparkMaster := range topo.TiSparkMasters {
 			if tiSparkMaster.Host == req.Host && tiSparkMaster.Port == req.Port {
 				for k, v := range req.ConfigMap {
 					SetField(tiSparkMaster, FieldKey_Yaml, k, v)
 				}
-				newTopo.TiSparkMasters[idx] = tiSparkMaster
+				topo.TiSparkMasters[idx] = tiSparkMaster
 				break
 			}
 		}
 	case spec.TiDBClusterComponent_TiSparkWorkers:
-		for idx, tiSparkWorker := range newTopo.TiSparkWorkers {
+		for idx, tiSparkWorker := range topo.TiSparkWorkers {
 			if tiSparkWorker.Host == req.Host && tiSparkWorker.Port == req.Port {
 				for k, v := range req.ConfigMap {
 					SetField(tiSparkWorker, FieldKey_Yaml, k, v)
 				}
-				newTopo.TiSparkWorkers[idx] = tiSparkWorker
+				topo.TiSparkWorkers[idx] = tiSparkWorker
 				break
 			}
 		}
 	case spec.TiDBClusterComponent_Prometheus:
-		for idx, monitor := range newTopo.Monitors {
+		for idx, monitor := range topo.Monitors {
 			if monitor.Host == req.Host && monitor.Port == req.Port {
 				for k, v := range req.ConfigMap {
 					SetField(monitor, FieldKey_Yaml, k, v)
 				}
-				newTopo.Monitors[idx] = monitor
+				topo.Monitors[idx] = monitor
 				break
 			}
 		}
 	case spec.TiDBClusterComponent_Grafana:
-		for idx, grafana := range newTopo.Grafanas {
+		for idx, grafana := range topo.Grafanas {
 			if grafana.Host == req.Host && grafana.Port == req.Port {
 				for k, v := range req.ConfigMap {
 					SetField(grafana, FieldKey_Yaml, k, v)
 				}
-				newTopo.Grafanas[idx] = grafana
+				topo.Grafanas[idx] = grafana
 				break
 			}
 		}
 	case spec.TiDBClusterComponent_Alertmanager:
-		for idx, alertManager := range newTopo.Alertmanagers {
+		for idx, alertManager := range topo.Alertmanagers {
 			if alertManager.Host == req.Host && alertManager.WebPort == req.Port {
 				for k, v := range req.ConfigMap {
 					SetField(alertManager, FieldKey_Yaml, k, v)
 				}
-				newTopo.Alertmanagers[idx] = alertManager
+				topo.Alertmanagers[idx] = alertManager
 				break
 			}
 		}
 	}
 
-	// 3. call the general tiup edit-config method
-	newData, err := yaml.Marshal(newTopo)
-	if err != nil {
-		framework.LogWithContext(ctx).Errorf("starttiupeditglobalconfigtask marshal new config(%+v) error: %+v", newTopo, err)
-		secondMicro.taskStatusCh <- TaskStatusMember{
-			TaskID:   taskID,
-			Status:   TaskStatusError,
-			ErrorStr: fmt.Sprintf("starttiupeditglobalconfigtask marshal new config(%+v) error: %+v", newTopo, err),
-		}
-		return
-	}
 	cmdEditConfigReq := CmdEditConfigReq{
 		TiUPComponent: req.TiUPComponent,
 		InstanceName: req.InstanceName,
-		ConfigStrYaml: string(newData),
+		NewTopo: topo,
 		TimeoutS: req.TimeoutS,
 		Flags: req.Flags,
 	}
-	secondMicro.startNewTiupEditConfigTask(ctx, taskID, &cmdEditConfigReq)
+	secondMicro.startNewTiupEditConfigTask(ctx, cmdEditConfigReq, taskID)
 }
 
-func (secondMicro *SecondMicro) startNewTiupEditConfigTask(ctx context.Context, taskID uint64, req *CmdEditConfigReq) {
-	topologyTmpFilePath, err := newTmpFileWithContent("tidb-cluster-topology", []byte(req.ConfigStrYaml))
+func (secondMicro *SecondMicro) startNewTiupEditConfigTask(ctx context.Context, req CmdEditConfigReq,
+	taskID uint64) {
+	newData, err := yaml.Marshal(req.NewTopo)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("startnewtiupeditconfigtask marshal new config(%+v) error: %+v", req.NewTopo, err)
+		secondMicro.taskStatusCh <- TaskStatusMember{
+			TaskID:   taskID,
+			Status:   TaskStatusError,
+			ErrorStr: fmt.Sprintf("startnewtiupeditconfigtask marshal new config(%+v) error: %+v", req.NewTopo, err),
+		}
+		return
+	}
+
+	topologyTmpFilePath, err := newTmpFileWithContent("tidb-cluster-topology", newData)
 	if err != nil {
 		secondMicro.taskStatusCh <- TaskStatusMember{
 			TaskID:   taskID,

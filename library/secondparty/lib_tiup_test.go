@@ -18,6 +18,9 @@ package secondparty
 import (
 	"context"
 	"errors"
+	"github.com/pingcap-inc/tiem/library/spec"
+	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
+	"strings"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
@@ -322,6 +325,349 @@ func TestSecondMicro_MicroSrvTiupUpgrade_Success(t *testing.T) {
 	}
 }
 
+func TestSecondMicro_MicroSrvTiupShowConfig(t *testing.T) {
+	req := CmdShowConfigReq{
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName: "test-tidb",
+		TimeoutS: 0,
+		Flags: []string{},
+	}
+	_, err := secondMicro1.MicroSrvTiupShowConfig(context.TODO(), &req)
+	if err == nil {
+		t.Errorf("case: cluster show-config. err(expected: not nil, actual: nil)")
+	}
+}
+
+func TestSecondMicro_MicroSrvTiupShowConfig_WithTimeout(t *testing.T) {
+	req := CmdShowConfigReq{
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName: "test-tidb",
+		TimeoutS: 1,
+		Flags: []string{},
+	}
+	_, err := secondMicro1.MicroSrvTiupShowConfig(context.TODO(), &req)
+	if err == nil {
+		t.Errorf("case: cluster show-config. err(expected: not nil, actual: nil)")
+	}
+}
+
+func TestSecondMicro_MicroSrvTiupEditGlobalConfig_Fail(t *testing.T) {
+	configMap := make(map[string]interface{})
+	configMap["foo"] = "bar"
+	cmdEditGlobalConfigReq := CmdEditGlobalConfigReq {
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName: "test-tidb",
+		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		ConfigMap: configMap,
+		TimeoutS: 0,
+		Flags: []string{},
+	}
+
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_EditGlobalConfig
+	req.BizID = 0
+
+	expectedErr := errors.New("Fail Create tiup task")
+	mockCtl := gomock.NewController(t)
+	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
+
+	taskID, err := secondMicro1.MicroSrvTiupEditGlobalConfig(context.TODO(), cmdEditGlobalConfigReq, 0)
+	if taskID != 0 || err == nil || !strings.Contains(err.Error(), "rsp") {
+		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
+	}
+}
+
+func TestSecondMicro_MicroSrvTiupEditGlobalConfig_Success(t *testing.T) {
+	configMap := make(map[string]interface{})
+	configMap["foo"] = "bar"
+	cmdEditGlobalConfigReq := CmdEditGlobalConfigReq {
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName: "test-tidb",
+		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		ConfigMap: configMap,
+		TimeoutS: 0,
+		Flags: []string{},
+	}
+
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_EditGlobalConfig
+	req.BizID = 0
+
+	var resp dbPb.CreateTiupTaskResponse
+	resp.ErrCode = 0
+	resp.Id = 1
+
+	mockCtl := gomock.NewController(t)
+	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
+
+	taskID, err := secondMicro1.MicroSrvTiupEditGlobalConfig(context.TODO(), cmdEditGlobalConfigReq, 0)
+	if taskID != 1 || err == nil || !strings.Contains(err.Error(), "cmd start err") {
+		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
+	}
+}
+
+func TestSecondMicro_startTiupEditGlobalConfigTask(t *testing.T) {
+	configMap := make(map[string]interface{})
+	configMap["foo"] = "bar"
+	topo := spec2.Specification{}
+	req := CmdEditGlobalConfigReq{
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName: "test-tidb",
+		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		ConfigMap: configMap,
+	}
+	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiKV
+	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_PD
+	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiFlash
+	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiFlashLearner
+	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_Pump
+	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_Drainer
+	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_CDC
+	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
+}
+
+func TestSecondMicro_MicroSrvTiupEditInstanceConfig_Fail(t *testing.T) {
+	configMap := make(map[string]interface{})
+	configMap["host"] = "1.2.3.4"
+	cmdEditInstanceConfigReq := CmdEditInstanceConfigReq {
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName: "test-tidb",
+		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		Host: "1.2.3.4",
+		Port: 1234,
+		ConfigMap: configMap,
+		TimeoutS: 0,
+		Flags: []string{},
+	}
+
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_EditInstanceConfig
+	req.BizID = 0
+
+	expectedErr := errors.New("Fail Create tiup task")
+	mockCtl := gomock.NewController(t)
+	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
+
+	taskID, err := secondMicro1.MicroSrvTiupEditInstanceConfig(context.TODO(), cmdEditInstanceConfigReq, 0)
+	if taskID != 0 || err == nil || !strings.Contains(err.Error(), "rsp") {
+		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
+	}
+}
+
+func TestSecondMicro_MicroSrvTiupEditInstanceConfig_Success(t *testing.T) {
+	configMap := make(map[string]interface{})
+	configMap["host"] = "1.2.3.4"
+	cmdEditInstanceConfigReq := CmdEditInstanceConfigReq {
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName: "test-tidb",
+		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		Host: "1.2.3.4",
+		Port: 1234,
+		ConfigMap: configMap,
+		TimeoutS: 0,
+		Flags: []string{},
+	}
+
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_EditInstanceConfig
+	req.BizID = 0
+
+	var resp dbPb.CreateTiupTaskResponse
+	resp.ErrCode = 0
+	resp.Id = 1
+
+	mockCtl := gomock.NewController(t)
+	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
+
+	taskID, err := secondMicro1.MicroSrvTiupEditInstanceConfig(context.TODO(), cmdEditInstanceConfigReq, 0)
+	if taskID != 1 || err == nil || !strings.Contains(err.Error(), "cmd start err") {
+		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
+	}
+}
+
+func TestSecondMicro_startTiupEditInstanceConfigTask(t *testing.T) {
+	configMap := make(map[string]interface{})
+	configMap["host"] = "1.2.3.5"
+	tiDBSpec := spec2.TiDBSpec{
+		Host: "1.2.3.4",
+		Port: 1234,
+	}
+	tiKVSpec := spec2.TiKVSpec{
+		Host: "1.2.3.4",
+		Port: 1234,
+	}
+	tiFlashSpec := spec2.TiFlashSpec{
+		Host: "1.2.3.4",
+		FlashServicePort: 1234,
+	}
+	pdSpec := spec2.PDSpec{
+		Host: "1.2.3.4",
+		ClientPort: 1234,
+	}
+	pumpSpec := spec2.PumpSpec{
+		Host: "1.2.3.4",
+		Port: 1234,
+	}
+	drainerSpec := spec2.DrainerSpec{
+		Host: "1.2.3.4",
+		Port: 1234,
+	}
+	cdcSpec := spec2.CDCSpec{
+		Host: "1.2.3.4",
+		Port: 1234,
+	}
+	tiSparkMasterSpec := spec2.TiSparkMasterSpec{
+		Host: "1.2.3.4",
+		Port: 1234,
+	}
+	tiSparkWorkerSpec := spec2.TiSparkWorkerSpec{
+		Host: "1.2.3.4",
+		Port: 1234,
+	}
+	prometheusSpec := spec2.PrometheusSpec{
+		Host: "1.2.3.4",
+		Port: 1234,
+	}
+	grafanaSpec := spec2.GrafanaSpec{
+		Host: "1.2.3.4",
+		Port: 1234,
+	}
+	alertmanagerSpec := spec2.AlertmanagerSpec{
+		Host: "1.2.3.4",
+		WebPort: 1234,
+	}
+	topo := spec2.Specification{
+		TiDBServers: []*spec2.TiDBSpec{&tiDBSpec},
+		TiKVServers: []*spec2.TiKVSpec{&tiKVSpec},
+		TiFlashServers: []*spec2.TiFlashSpec{&tiFlashSpec},
+		PDServers: []*spec2.PDSpec{&pdSpec},
+		PumpServers: []*spec2.PumpSpec{&pumpSpec},
+		Drainers: []*spec2.DrainerSpec{&drainerSpec},
+		CDCServers: []*spec2.CDCSpec{&cdcSpec},
+		TiSparkMasters: []*spec2.TiSparkMasterSpec{&tiSparkMasterSpec},
+		TiSparkWorkers: []*spec2.TiSparkWorkerSpec{&tiSparkWorkerSpec},
+		Monitors: []*spec2.PrometheusSpec{&prometheusSpec},
+		Grafanas: []*spec2.GrafanaSpec{&grafanaSpec},
+		Alertmanagers: []*spec2.AlertmanagerSpec{&alertmanagerSpec},
+	}
+	req := CmdEditInstanceConfigReq {
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName: "test-tidb",
+		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		Host: "1.2.3.4",
+		Port: 1234,
+		ConfigMap: configMap,
+		TimeoutS: 0,
+		Flags: []string{},
+	}
+	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiKV
+	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiFlash
+	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_PD
+	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_Pump
+	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_Drainer
+	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_CDC
+	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiSparkMasters
+	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiSparkWorkers
+	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_Prometheus
+	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_Grafana
+	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
+
+	req.TiDBClusterComponent = spec.TiDBClusterComponent_Alertmanager
+	secondMicro1.startTiupEditInstanceConfigTask(context.TODO(), 1, &req, &topo)
+}
+
+func TestSecondMicro_MicroSrvTiupReload_Fail(t *testing.T) {
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Reload
+	req.BizID = 0
+
+	expectedErr := errors.New("Fail Create tiup task")
+
+	mockCtl := gomock.NewController(t)
+	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(nil, expectedErr)
+
+	cmdReloadConfigReq := CmdReloadConfigReq{
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName: "test-tidb",
+		TimeoutS: 0,
+		Flags: []string{},
+	}
+	taskID, err := secondMicro1.MicroSrvTiupReload(context.TODO(), cmdReloadConfigReq, 0)
+	if taskID != 0 || err == nil {
+		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
+	}
+}
+
+func TestSecondMicro_MicroSrvTiupReload_Success(t *testing.T) {
+
+	var req dbPb.CreateTiupTaskRequest
+	req.Type = dbPb.TiupTaskType_Reload
+	req.BizID = 0
+
+	var resp dbPb.CreateTiupTaskResponse
+	resp.ErrCode = 0
+	resp.Id = 1
+
+	mockCtl := gomock.NewController(t)
+	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
+	client.DBClient = mockDBClient
+	mockDBClient.EXPECT().CreateTiupTask(context.Background(), gomock.Eq(&req)).Return(&resp, nil)
+
+	cmdReloadConfigReq := CmdReloadConfigReq{
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName: "test-tidb",
+		TimeoutS: 0,
+		Flags: []string{},
+	}
+	taskID, err := secondMicro1.MicroSrvTiupReload(context.TODO(), cmdReloadConfigReq, 0)
+	if taskID != 1 || err != nil {
+		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
+	}
+}
 
 func TestSecondMicro_MicroSrvTiupDumpling_Fail(t *testing.T) {
 	var req dbPb.CreateTiupTaskRequest

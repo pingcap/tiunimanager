@@ -18,7 +18,6 @@ package models
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"gorm.io/gorm"
 	"time"
@@ -122,7 +121,7 @@ func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId s
 
 func (m *DAOClusterManager) DeleteTransportRecord(ctx context.Context, recordId int) (record *TransportRecord, err error) {
 	if recordId <= 0 {
-		return nil, errors.New(fmt.Sprintf("DeleteTransportRecord has invalid parameter, Id: %d", recordId))
+		return nil, fmt.Errorf(fmt.Sprintf("DeleteTransportRecord has invalid parameter, Id: %d", recordId))
 	}
 	record = &TransportRecord{}
 	record.ID = uint(recordId)

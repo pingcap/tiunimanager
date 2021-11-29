@@ -277,13 +277,13 @@ func TestDAOClusterManager_DeleteClusterComponentInstance(t *testing.T) {
 		err = dao.DeleteClusterComponentInstance(context.TODO(), got[0].ID)
 		assert.NoError(t, err)
 
-		got, err = dao.ListComponentInstances(context.TODO(), "cluster31")
+		got, _ = dao.ListComponentInstances(context.TODO(), "cluster31")
 		assert.Equal(t, 1, len(got))
 
 		err = dao.DeleteClusterComponentInstance(context.TODO(), got[0].ID)
 		assert.NoError(t, err)
 
-		got, err = dao.ListComponentInstances(context.TODO(), "cluster31")
+		got, _ = dao.ListComponentInstances(context.TODO(), "cluster31")
 		assert.Equal(t, 0, len(got))
 	})
 }

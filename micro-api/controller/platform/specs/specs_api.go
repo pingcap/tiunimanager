@@ -45,13 +45,13 @@ func ClusterKnowledge(c *gin.Context) {
 	} else {
 		json.Unmarshal(b, allSpec)
 		if allSpec != nil {
-			for i, _ := range *allSpec {
+			for i := range *allSpec {
 				eachSpec := &((*allSpec)[i])
-				for j, _ := range eachSpec.VersionSpecs {
+				for j := range eachSpec.VersionSpecs {
 					eachVersion := &(eachSpec.VersionSpecs[j])
 
 					for k := 0; k < len(eachVersion.ComponentSpecs); k++ {
-						if eachVersion.ComponentSpecs[k].ComponentConstraint.Parasite == true {
+						if eachVersion.ComponentSpecs[k].ComponentConstraint.Parasite {
 							eachVersion.ComponentSpecs = append(eachVersion.ComponentSpecs[:k], eachVersion.ComponentSpecs[k+1:]...)
 							k--
 						}

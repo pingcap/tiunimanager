@@ -143,9 +143,21 @@ func (handler *DBServiceHandler) ListParamGroup(ctx context.Context, req *dbpb.D
 					rsp.Status.Message = fmt.Sprintf("list failure param group failed, err: %v", err)
 					break
 				}
-				rsp.ParamGroups[i] = parseParamDetail(group, params)
+				rsp.ParamGroups[i], err = parseParamDetail(group, params)
+				if err != nil {
+					log.Errorf("list param group by id err: %v", err.Error())
+					rsp.Status.Code = int32(codes.Internal)
+					rsp.Status.Message = fmt.Sprintf("list failure param group failed, err: %v", err)
+					break
+				}
 			} else {
-				rsp.ParamGroups[i] = parseParamDetail(group, nil)
+				rsp.ParamGroups[i], err = parseParamDetail(group, nil)
+				if err != nil {
+					log.Errorf("list param group by id err: %v", err.Error())
+					rsp.Status.Code = int32(codes.Internal)
+					rsp.Status.Message = fmt.Sprintf("list failure param group failed, err: %v", err)
+					break
+				}
 			}
 		}
 	}
@@ -168,8 +180,13 @@ func (handler *DBServiceHandler) FindParamGroupByID(ctx context.Context, req *db
 			rsp.Status.Message = fmt.Sprintf("find failure param group failed, err: %v", err)
 		}
 	} else {
-		rsp.ParamGroup = parseParamDetail(group, params)
-		rsp.Status = ParamSuccessResponseStatus
+		rsp.ParamGroup, err = parseParamDetail(group, params)
+		if err != nil {
+			rsp.Status.Code = int32(codes.Internal)
+			rsp.Status.Message = fmt.Sprintf("find failure param group failed, err: %v", err)
+		} else {
+			rsp.Status = ParamSuccessResponseStatus
+		}
 	}
 	return nil
 }
@@ -271,13 +288,17 @@ func parseClusterParam(params []*models.ClusterParamDetail) (dtos []*dbpb.DBClus
 		if err != nil {
 			return nil, err
 		}
+		ranges, err := parseRange(param.Range)
+		if err != nil {
+			return nil, err
+		}
 		dtos[i] = &dbpb.DBClusterParamDTO{
 			ParamId:       int64(param.Id),
 			Name:          param.Name,
 			ComponentType: param.ComponentType,
 			Type:          int32(param.Type),
 			Unit:          param.Unit,
-			Range:         param.Range,
+			Range:         ranges,
 			HasReboot:     int32(param.HasReboot),
 			Source:        int32(param.Source),
 			DefaultValue:  param.DefaultValue,
@@ -306,7 +327,7 @@ func convertClusterParam(params []*dbpb.DBApplyParamDTO) (dtos []*models.Cluster
 	return dtos, nil
 }
 
-func parseParamDetail(group *models.ParamGroupDO, params []*models.ParamDetail) (dto *dbpb.DBParamGroupDTO) {
+func parseParamDetail(group *models.ParamGroupDO, params []*models.ParamDetail) (dto *dbpb.DBParamGroupDTO, err error) {
 	dto = &dbpb.DBParamGroupDTO{
 		ParamGroupId: int64(group.ID),
 		Name:         group.Name,
@@ -324,13 +345,17 @@ func parseParamDetail(group *models.ParamGroupDO, params []*models.ParamDetail) 
 	}
 	dto.Params = make([]*dbpb.DBParamDTO, len(params))
 	for i, param := range params {
+		ranges, err := parseRange(param.Range)
+		if err != nil {
+			return nil, err
+		}
 		dto.Params[i] = &dbpb.DBParamDTO{
 			ParamId:       int64(param.Id),
 			Name:          param.Name,
 			ComponentType: param.ComponentType,
 			Type:          int32(param.Type),
 			Unit:          param.Unit,
-			Range:         param.Range,
+			Range:         ranges,
 			HasReboot:     int32(param.HasReboot),
 			Source:        int32(param.Source),
 			DefaultValue:  param.DefaultValue,
@@ -340,7 +365,18 @@ func parseParamDetail(group *models.ParamGroupDO, params []*models.ParamDetail) 
 			UpdateTime:    param.UpdatedAt.Unix(),
 		}
 	}
-	return dto
+	return dto, nil
+}
+
+func parseRange(rangeValue string) (ranges []string, err error) {
+	ranges = make([]string, 0)
+	if len(rangeValue) > 0 {
+		err = json.Unmarshal([]byte(rangeValue), &ranges)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return ranges, nil
 }
 
 func parseParamGroup(req *dbpb.DBCreateParamGroupRequest) (p *models.ParamGroupDO) {

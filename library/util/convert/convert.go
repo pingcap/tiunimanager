@@ -14,28 +14,26 @@
  *                                                                            *
  ******************************************************************************/
 
-package parameter
+/*******************************************************************************
+ * @File: convert.go
+ * @Description: struct convert
+ * @Author: jiangxunyu@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/11/26 17:59
+*******************************************************************************/
 
-import (
-	"github.com/pingcap-inc/tiem/library/knowledge"
-)
+package convert
 
-type ParamRealValue struct {
-	Cluster   string                    `json:"cluster"`
-	Instances []*ParamInstanceRealValue `json:"instances"`
-}
+import "encoding/json"
 
-type ParamInstanceRealValue struct {
-	Instance string `json:"instance"`
-	Value    string `json:"value"`
-}
-
-type ParamItem struct {
-	Definition   knowledge.Parameter `json:"definition"`
-	CurrentValue ParamInstance       `json:"currentValue"`
-}
-
-type ParamInstance struct {
-	Name  string      `json:"name"`
-	Value interface{} `json:"value"`
+func ConvertObj(src interface{}, dst interface{}) error {
+	b, err := json.Marshal(src)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(b, dst)
+	if err != nil {
+		return err
+	}
+	return nil
 }

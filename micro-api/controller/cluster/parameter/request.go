@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -25,6 +24,11 @@ type ParamQueryReq struct {
 	controller.PageRequest
 }
 
-type ParamUpdateReq struct {
-	Values []ParamInstance `json:"values"`
+type UpdateParamsReq struct {
+	Params []UpdateParam `json:"params"`
+}
+
+type UpdateParam struct {
+	ParamId   int64          `json:"paramId" example:"1"`
+	RealValue ParamRealValue `json:"realValue"`
 }

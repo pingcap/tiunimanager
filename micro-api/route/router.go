@@ -103,7 +103,8 @@ func Route(g *gin.Engine) {
 
 			// Params
 			cluster.GET("/:clusterId/params", parameterApi.QueryParams)
-			cluster.POST("/:clusterId/params", parameterApi.SubmitParams)
+			cluster.PUT("/:clusterId/params", parameterApi.UpdateParams)
+			cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParams)
 
 			// Backup Strategy
 			cluster.GET("/:clusterId/strategy", backuprestore.QueryBackupStrategy)

@@ -196,7 +196,7 @@ func buildParams(count uint) (params []*ParamDO, err error) {
 			ComponentType: "TiKV",
 			Type:          0,
 			Unit:          "kb",
-			Range:         "[0,10]",
+			Range:         "[\"0\", \"10\"]",
 			HasReboot:     1,
 			Source:        1,
 			Description:   "test param name order " + strconv.Itoa(i),

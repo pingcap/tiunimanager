@@ -19,12 +19,13 @@ package models
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	"github.com/prometheus/client_golang/prometheus"
-	"strconv"
-	"time"
 
 	"github.com/pingcap/errors"
 	"gorm.io/gorm"
@@ -45,6 +46,7 @@ type Cluster struct {
 	CurrentTopologyConfigId uint
 	CurrentDemandId         uint
 	CurrentFlowId           uint
+	ParamGroupId            uint
 }
 
 type DemandRecord struct {
@@ -76,9 +78,10 @@ type BackupRecord struct {
 	BackupMode   string
 	OperatorId   string `gorm:"not null;type:varchar(22);default:null"`
 
-	FilePath string
-	FlowId   int64
-	Size     uint64
+	FilePath  string
+	FlowId    int64
+	Size      uint64
+	BackupTso uint64
 
 	StartTime time.Time
 	EndTime   time.Time
@@ -433,8 +436,9 @@ func (m *DAOClusterManager) SaveBackupRecord(ctx context.Context, record *dbpb.D
 
 func (m *DAOClusterManager) UpdateBackupRecord(ctx context.Context, record *dbpb.DBBackupRecordDTO) error {
 	err := m.Db(ctx).Model(&BackupRecord{}).Where("id = ?", record.Id).Updates(BackupRecord{
-		Size:    record.GetSize(),
-		EndTime: time.Unix(record.GetEndTime(), 0),
+		Size:      record.GetSize(),
+		BackupTso: record.GetBackupTso(),
+		EndTime:   time.Unix(record.GetEndTime(), 0),
 		Record: Record{
 			TenantId:  record.GetTenantId(),
 			UpdatedAt: time.Now(),

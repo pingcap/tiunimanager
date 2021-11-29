@@ -90,14 +90,6 @@ const (
 	FileTypeSQL string = "sql"
 )
 
-const (
-	DefaultTidbPort       int = 4000
-	DefaultTidbStatusPort int = 10080
-	DefaultPDClientPort   int = 2379
-	DefaultAlertPort      int = 9093
-	DefaultGrafanaPort    int = 3000
-)
-
 type TikvImporterCfg struct {
 	Backend     string `toml:"backend"`       //backend mode: local/normal
 	SortedKvDir string `toml:"sorted-kv-dir"` //temp store path
@@ -299,7 +291,7 @@ func ExportData(ctx context.Context, request *clusterpb.DataExportRequest) (int6
 	// Start the workflow
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.AddContext(contextDataTransportKey, info)
-	flow.Start()
+	flow.AsyncStart()
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
 	err = ClusterRepo.Persist(ctx, clusterAggregation)
@@ -430,7 +422,7 @@ func ImportData(ctx context.Context, request *clusterpb.DataImportRequest) (int6
 	// Start the workflow
 	flow.AddContext(contextClusterKey, clusterAggregation)
 	flow.AddContext(contextDataTransportKey, info)
-	flow.Start()
+	flow.AsyncStart()
 
 	clusterAggregation.CurrentWorkFlow = flow.FlowWork
 	err = ClusterRepo.Persist(ctx, clusterAggregation)
@@ -524,17 +516,17 @@ func convertTomlConfig(clusterAggregation *ClusterAggregation, info *ImportInfo)
 
 	tidbServerPort := tidbServer.Port
 	if tidbServerPort == 0 {
-		tidbServerPort = DefaultTidbPort
+		tidbServerPort = common.DefaultTidbPort
 	}
 
 	tidbStatusPort := tidbServer.StatusPort
 	if tidbStatusPort == 0 {
-		tidbStatusPort = DefaultTidbStatusPort
+		tidbStatusPort = common.DefaultTidbStatusPort
 	}
 
 	pdClientPort := pdServer.ClientPort
 	if pdClientPort == 0 {
-		pdClientPort = DefaultPDClientPort
+		pdClientPort = common.DefaultPDClientPort
 	}
 
 	/*
@@ -732,7 +724,7 @@ func exportDataFromCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	tidbServer := configModel.TiDBServers[0]
 	tidbServerPort := tidbServer.Port
 	if tidbServerPort == 0 {
-		tidbServerPort = DefaultTidbPort
+		tidbServerPort = common.DefaultTidbPort
 	}
 
 	if common.NfsStorageType == info.StorageType {

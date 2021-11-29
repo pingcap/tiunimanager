@@ -857,7 +857,7 @@ func CreateTestHost(region, zone, rack, hostName, ip, clusterType, purpose, disk
 		Passwd:       "4bc5947d63aab7ad23cda5ca33df952e9678d7920428",
 		Status:       0,
 		Stat:         0,
-		Arch:         "X86",
+		Arch:         string(resource.X86_64),
 		OS:           "CentOS",
 		Kernel:       "5.0.0",
 		CpuCores:     freeCpuCores,
@@ -1161,7 +1161,7 @@ func TestAllocResources_1Requirement_3Hosts(t *testing.T) {
 	loc.Region = "Region1"
 	loc.Zone = "Zone1"
 	filter := new(dbpb.DBFilter)
-	filter.Arch = string(resource.X86)
+	filter.Arch = string(resource.X86_64)
 	filter.DiskType = string(resource.SSD)
 	filter.Purpose = string(resource.Compute)
 	require := new(dbpb.DBRequirement)
@@ -1255,11 +1255,11 @@ func TestAllocResources_3Requirement_3Hosts(t *testing.T) {
 	loc.Region = "Region1"
 	loc.Zone = "Zone2"
 	filter1 := new(dbpb.DBFilter)
-	filter1.Arch = string(resource.X86)
+	filter1.Arch = string(resource.X86_64)
 	filter1.DiskType = string(resource.SSD)
 	filter1.Purpose = string(resource.Compute)
 	filter2 := new(dbpb.DBFilter)
-	filter2.Arch = string(resource.X86)
+	filter2.Arch = string(resource.X86_64)
 	filter2.DiskType = string(resource.SSD)
 	filter2.Purpose = string(resource.Storage)
 	require := new(dbpb.DBRequirement)
@@ -1370,7 +1370,7 @@ func TestAllocResources_3RequestsInBatch_3Hosts(t *testing.T) {
 	filter1 := new(dbpb.DBFilter)
 	filter1.DiskType = string(resource.SSD)
 	filter1.Purpose = string(resource.Compute)
-	filter1.Arch = string(resource.X86)
+	filter1.Arch = string(resource.X86_64)
 	require := new(dbpb.DBRequirement)
 	require.ComputeReq = new(dbpb.DBComputeRequirement)
 	require.ComputeReq.CpuCores = 4
@@ -1479,7 +1479,7 @@ func TestAllocResources_3RequestsInBatch_3Hosts_No_Disk(t *testing.T) {
 	filter1 := new(dbpb.DBFilter)
 	filter1.DiskType = string(resource.SSD)
 	filter1.Purpose = string(resource.Compute)
-	filter1.Arch = string(resource.X86)
+	filter1.Arch = string(resource.X86_64)
 	require := new(dbpb.DBRequirement)
 	require.ComputeReq = new(dbpb.DBComputeRequirement)
 	require.ComputeReq.CpuCores = 4
@@ -1978,7 +1978,7 @@ func TestGetStocks(t *testing.T) {
 		req StockCondition
 	}
 	ssdType := resource.SSD
-	archX86 := resource.X86
+	archX86 := resource.X86_64
 	diskStatusAvailable := resource.DISK_AVAILABLE
 	tests := []struct {
 		name    string
@@ -2067,7 +2067,7 @@ func TestAllocResources_1Requirement_3Hosts_Filted_by_Label(t *testing.T) {
 	loc.Region = "Region59"
 	loc.Zone = "Zone59"
 	filter := new(dbpb.DBFilter)
-	filter.Arch = string(resource.X86)
+	filter.Arch = string(resource.X86_64)
 	//filter.DiskType = string(resource.SSD)
 	//filter.Purpose = string(resource.Compute)
 	filter.HostTraits = 5
@@ -2430,7 +2430,7 @@ func Test_AllocResources_ClusterPorts_Strategy(t *testing.T) {
 	loc1.Zone = "Zone5"
 
 	filter1 := new(dbpb.DBFilter)
-	filter1.Arch = string(resource.X86)
+	filter1.Arch = string(resource.X86_64)
 	require1 := new(dbpb.DBRequirement)
 	require1.ComputeReq = new(dbpb.DBComputeRequirement)
 	require1.ComputeReq.CpuCores = 4
@@ -2672,7 +2672,7 @@ func Test_AllocResources_ClusterPorts_With_Diff_Hosts_Strategy(t *testing.T) {
 			loc := new(dbpb.DBLocation)
 			loc.Region = "Region31"
 			filter := new(dbpb.DBFilter)
-			filter.Arch = string(resource.X86)
+			filter.Arch = string(resource.X86_64)
 
 			require := new(dbpb.DBRequirement)
 			require.PortReq = append(require.PortReq, &dbpb.DBPortRequirement{

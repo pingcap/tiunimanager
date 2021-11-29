@@ -211,6 +211,7 @@ message DBBackupRecordDTO {
     string filePath = 11;
     int64 flowId = 12;
     uint64 size = 13;
+    uint64 backupTso = 14;
 }
 
 message DBSaveBackupRecordRequest {

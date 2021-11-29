@@ -17,10 +17,11 @@
 package knowledge
 
 import (
-	"github.com/pingcap-inc/tiem/library/common/resource-type"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"math/rand"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/common/resource-type"
+	"github.com/pingcap-inc/tiem/library/framework"
 )
 
 var SpecKnowledge *ClusterSpecKnowledge
@@ -60,7 +61,7 @@ func IsParasite(typeCode string, versionCode string, componentType string) bool 
 	return false
 }
 
-func GetComponentSpec(clusterTypeCode string, versionCode string, componentType string) *ClusterComponentSpec{
+func GetComponentSpec(clusterTypeCode string, versionCode string, componentType string) *ClusterComponentSpec {
 	clusterTypeSpec := ClusterTypeSpecFromCode(clusterTypeCode)
 	if clusterTypeSpec == nil {
 		framework.Log().Errorf("Unexpected code of cluster code: %s", clusterTypeCode)
@@ -85,6 +86,20 @@ func GetComponentPortRange(typeCode string, versionCode string, componentType st
 		return &componentSpec.PortConstraint
 	}
 	return nil
+}
+
+func GetClusterPortRange(typeCode string, versionCode string) *ComponentPortConstraint {
+	clusterTypeSpec := ClusterTypeSpecFromCode(typeCode)
+	if clusterTypeSpec == nil {
+		framework.Log().Errorf("Unexpected code of cluster code: %s", typeCode)
+		return nil
+	}
+	versionSpec := clusterTypeSpec.GetVersionSpec(versionCode)
+	if versionSpec == nil {
+		framework.Log().Errorf("Unexpected code of version code: %s", versionCode)
+		return nil
+	}
+	return &versionSpec.ClusterPortConstraint
 }
 
 func ClusterTypeFromCode(code string) *ClusterType {
@@ -118,10 +133,10 @@ func GetMonitoredSequence(clusterId string) int {
 	}
 
 	rand.Seed(time.Now().Unix())
-	start := rand.Intn(50) * 100  + 11000
+	start := rand.Intn(50)*100 + 11000
 	for i := 0; i < 50; i++ {
 		existed := false
-		port := start + i * 2
+		port := start + i*2
 		for _, p := range clusterMonitoredPort {
 			if p == port {
 				existed = true
@@ -157,17 +172,17 @@ func loadSpecKnowledge() {
 	}
 
 	tiFlashComponent := ClusterComponent{
-		"TiFlash", "column-based-storage","TiFlash",
+		"TiFlash", "column-based-storage", "TiFlash",
 	}
 
 	grafanaComponent := ClusterComponent{
-		"Grafana", "dispatch","Grafana",
+		"Grafana", "dispatch", "Grafana",
 	}
 	monitorComponent := ClusterComponent{
-		"Prometheus", "dispatch","Prometheus",
+		"Prometheus", "dispatch", "Prometheus",
 	}
 	alertMangerComponent := ClusterComponent{
-		"AlertManger", "dispatch","AlertManger",
+		"AlertManger", "dispatch", "AlertManger",
 	}
 
 	//tiCdcComponent := ClusterComponent{
@@ -175,10 +190,11 @@ func loadSpecKnowledge() {
 	//}
 
 	tidbV4_0_12_Spec := ClusterVersionSpec{
-		ClusterVersion: tidbV4_0_12,
+		ClusterVersion:        tidbV4_0_12,
+		ClusterPortConstraint: ComponentPortConstraint{11000, 12000, 2},
 		ArchTypes: []resource.ArchType{
 			resource.Arm64,
-			resource.X86,
+			resource.X86_64,
 		},
 		ComponentSpecs: []ClusterComponentSpec{
 			{tidbComponent, ComponentConstraint{true, false, []int{3}, []string{
@@ -209,25 +225,23 @@ func loadSpecKnowledge() {
 			}, 0},
 				ComponentPortConstraint{10120, 10180, 6},
 			},
-			{grafanaComponent, ComponentConstraint{false, true, []int{1}, []string{
-			}, 0},
+			{grafanaComponent, ComponentConstraint{false, true, []int{1}, []string{}, 0},
 				ComponentPortConstraint{0, 0, 0},
 			},
-			{monitorComponent, ComponentConstraint{false, true, []int{1}, []string{
-			}, 0},
+			{monitorComponent, ComponentConstraint{false, true, []int{1}, []string{}, 0},
 				ComponentPortConstraint{0, 0, 0},
 			},
-			{alertMangerComponent, ComponentConstraint{false, true, []int{1}, []string{
-			}, 0},
+			{alertMangerComponent, ComponentConstraint{false, true, []int{1}, []string{}, 0},
 				ComponentPortConstraint{0, 0, 0},
 			},
 		},
 	}
 	tidbV5_0_0_Spec := ClusterVersionSpec{
-		ClusterVersion: tidbV5_0_0,
+		ClusterVersion:        tidbV5_0_0,
+		ClusterPortConstraint: ComponentPortConstraint{11000, 12000, 2},
 		ArchTypes: []resource.ArchType{
 			resource.Arm64,
-			resource.X86,
+			resource.X86_64,
 		},
 		ComponentSpecs: []ClusterComponentSpec{
 			{tidbComponent, ComponentConstraint{true, false, []int{3}, []string{
@@ -258,16 +272,13 @@ func loadSpecKnowledge() {
 			}, 0},
 				ComponentPortConstraint{10120, 10180, 6},
 			},
-			{grafanaComponent, ComponentConstraint{false, true, []int{1}, []string{
-			}, 0},
+			{grafanaComponent, ComponentConstraint{false, true, []int{1}, []string{}, 0},
 				ComponentPortConstraint{0, 0, 0},
 			},
-			{monitorComponent, ComponentConstraint{false, true, []int{1}, []string{
-			}, 0},
+			{monitorComponent, ComponentConstraint{false, true, []int{1}, []string{}, 0},
 				ComponentPortConstraint{0, 0, 0},
 			},
-			{alertMangerComponent, ComponentConstraint{false, true, []int{1}, []string{
-			}, 0},
+			{alertMangerComponent, ComponentConstraint{false, true, []int{1}, []string{}, 0},
 				ComponentPortConstraint{0, 0, 0},
 			},
 		},
@@ -278,11 +289,11 @@ func loadSpecKnowledge() {
 		Types:    map[string]*ClusterType{tidbType.Code: &tidbType},
 		Versions: map[string]*ClusterVersion{tidbV4_0_12.Code: &tidbV4_0_12, tidbV5_0_0.Code: &tidbV5_0_0},
 		Components: map[string]*ClusterComponent{tidbComponent.ComponentType: &tidbComponent,
-			tikvComponent.ComponentType:    &tikvComponent,
-			pdComponent.ComponentType:      &pdComponent,
-			tiFlashComponent.ComponentType: &tiFlashComponent,
-			grafanaComponent.ComponentType: &grafanaComponent,
-			monitorComponent.ComponentType: &monitorComponent,
+			tikvComponent.ComponentType:        &tikvComponent,
+			pdComponent.ComponentType:          &pdComponent,
+			tiFlashComponent.ComponentType:     &tiFlashComponent,
+			grafanaComponent.ComponentType:     &grafanaComponent,
+			monitorComponent.ComponentType:     &monitorComponent,
 			alertMangerComponent.ComponentType: &alertMangerComponent,
 		},
 	}

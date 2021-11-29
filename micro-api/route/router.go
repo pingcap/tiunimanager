@@ -23,6 +23,8 @@ import (
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
+	paramGroupApi "github.com/pingcap-inc/tiem/micro-api/controller/param/paramgroup"
+
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/changefeed"
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/specs"
@@ -101,7 +103,8 @@ func Route(g *gin.Engine) {
 
 			// Params
 			cluster.GET("/:clusterId/params", parameterApi.QueryParams)
-			cluster.POST("/:clusterId/params", parameterApi.SubmitParams)
+			cluster.PUT("/:clusterId/params", parameterApi.UpdateParams)
+			cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParams)
 
 			// Backup Strategy
 			cluster.GET("/:clusterId/strategy", backuprestore.QueryBackupStrategy)
@@ -180,6 +183,19 @@ func Route(g *gin.Engine) {
 		{
 			log.Use(interceptor.VerifyIdentity)
 			log.GET("/tidb/:clusterId", logApi.SearchTiDBLog)
+		}
+
+		paramGroups := apiV1.Group("/param-groups")
+		{
+			paramGroups.Use(interceptor.VerifyIdentity)
+			paramGroups.Use(interceptor.AuditLog())
+			paramGroups.GET("/", paramGroupApi.Query)
+			paramGroups.GET("/:paramGroupId", paramGroupApi.Detail)
+			paramGroups.POST("/", paramGroupApi.Create)
+			paramGroups.PUT("/:paramGroupId", paramGroupApi.Update)
+			paramGroups.DELETE("/:paramGroupId", paramGroupApi.Delete)
+			paramGroups.POST("/:paramGroupId/copy", paramGroupApi.Copy)
+			paramGroups.POST("/:paramGroupId/apply", paramGroupApi.Apply)
 		}
 	}
 

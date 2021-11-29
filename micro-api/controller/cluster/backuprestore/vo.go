@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -28,11 +27,12 @@ type BackupRecord struct {
 	ClusterId    string                `json:"clusterId"`
 	StartTime    time.Time             `json:"startTime"`
 	EndTime      time.Time             `json:"endTime"`
-	BackupType   string                `json:"backupType"`   // 全量/增量
-	BackupMethod string                `json:"backupMethod"` // 物理/逻辑
-	BackupMode   string                `json:"backupMode"`   // 手动/自动
+	BackupType   string                `json:"backupType"`
+	BackupMethod string                `json:"backupMethod"`
+	BackupMode   string                `json:"backupMode"`
 	Operator     controller.Operator   `json:"operator"`
 	Size         float32               `json:"size"`
+	BackupTso    uint64                `json:"backupTso"`
 	Status       controller.StatusInfo `json:"status"`
 	FilePath     string                `json:"filePath"`
 }

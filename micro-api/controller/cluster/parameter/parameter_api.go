@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,16 +17,19 @@
 package parameter
 
 import (
-	"encoding/json"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
+	"time"
+
+	"github.com/pingcap-inc/tiem/library/util/convert"
+
+	"github.com/pingcap-inc/tiem/micro-api/interceptor"
+
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
-	"github.com/pingcap-inc/tiem/library/client"
-
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
@@ -40,100 +42,153 @@ import (
 // @Security ApiKeyAuth
 // @Param queryReq query ParamQueryReq false "page" default(1)
 // @Param clusterId path string true "clusterId"
-// @Success 200 {object} controller.ResultWithPage{data=[]ParamItem}
+// @Success 200 {object} controller.ResultWithPage{data=[]ListParamsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/params [get]
 func QueryParams(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "QueryParams", int(status.GetCode()))
+
 	var req ParamQueryReq
 	if err := c.ShouldBindQuery(&req); err != nil {
-		_ = c.Error(err)
+		err = c.Error(err)
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
 		return
 	}
 	clusterId := c.Param("clusterId")
+
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.PageSize <= 0 {
+		req.PageSize = 10
+	}
 	operator := controller.GetOperator(c)
-	resp, err := client.ClusterClient.QueryParameters(framework.NewMicroCtxFromGinCtx(c), &clusterpb.QueryClusterParametersRequest{
+	reqDTO := &clusterpb.ListClusterParamsRequest{
 		ClusterId: clusterId,
 		Operator:  operator.ConvertToDTO(),
-	}, controller.DefaultTimeout)
-
+		Page:      &clusterpb.PageDTO{Page: int32(req.Page), PageSize: int32(req.PageSize)},
+	}
+	resp, err := client.ClusterClient.ListClusterParams(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
-	} else {
-		instances := make([]ParamInstance, 0)
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
+		return
+	}
 
-		err = json.Unmarshal([]byte(resp.GetParametersJson()), &instances)
-
-		instanceMap := make(map[string]interface{})
-		if len(instances) > 0 {
-			for _, v := range instances {
-				instanceMap[v.Name] = v.Value
-			}
-		}
-
+	parameters := make([]ListParamsResp, 0)
+	if resp.Params != nil {
+		parameters = make([]ListParamsResp, len(resp.Params))
+		err := convert.ConvertObj(resp.Params, &parameters)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+			status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+			c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
 			return
 		}
-
-		parameters := make([]ParamItem, len(knowledge.ParameterKnowledge.Parameters))
-
-		for i, v := range knowledge.ParameterKnowledge.Parameters {
-			parameters[i] = ParamItem{
-				Definition: *v,
-				CurrentValue: ParamInstance{
-					Name:  v.Name,
-					Value: instanceMap[v.Name],
-				},
-			}
-		}
-
-		c.JSON(http.StatusOK, controller.SuccessWithPage(parameters, controller.Page{Page: req.Page, PageSize: req.PageSize, Total: len(parameters)}))
 	}
+	status = resp.RespStatus
+	page := &controller.Page{Page: int(resp.Page.Page), PageSize: int(resp.Page.PageSize), Total: int(resp.Page.Total)}
+
+	c.JSON(http.StatusOK, controller.BuildResultWithPage(int(status.Code), status.Message, page, parameters))
 }
 
-// SubmitParams submit params
+// UpdateParams update params
 // @Summary submit params
 // @Description submit params
 // @Tags cluster params
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param updateReq body ParamUpdateReq true "update params request"
+// @Param updateReq body UpdateParamsReq true "update params request"
 // @Param clusterId path string true "clusterId"
 // @Success 200 {object} controller.CommonResult{data=ParamUpdateRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/{clusterId}/params [post]
-func SubmitParams(c *gin.Context) {
-	var req ParamUpdateReq
+// @Router /clusters/{clusterId}/params [put]
+func UpdateParams(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "UpdateParams", int(status.GetCode()))
 
+	var req UpdateParamsReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(err)
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
 		return
 	}
+	clusterId := c.Param("clusterId")
+
+	params := make([]*clusterpb.UpdateClusterParamDTO, len(req.Params))
+	err := convert.ConvertObj(req.Params, &params)
+	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
+		return
+	}
+	operator := controller.GetOperator(c)
+	reqDTO := &clusterpb.UpdateClusterParamsRequest{
+		ClusterId: clusterId,
+		Operator:  operator.ConvertToDTO(),
+		Params:    params,
+	}
+	resp, err := client.ClusterClient.UpdateClusterParams(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
+	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
+		return
+	}
+	status = resp.RespStatus
+	c.JSON(http.StatusOK, controller.BuildCommonResult(int(status.Code), status.Message,
+		ParamUpdateRsp{ClusterId: clusterId}))
+}
+
+// InspectParams inspect params
+// @Summary inspect params
+// @Description inspect params
+// @Tags cluster params
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "clusterId"
+// @Success 200 {object} controller.CommonResult{data=InspectParamsResp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/params/inspect [post]
+func InspectParams(c *gin.Context) {
+	var status *clusterpb.ResponseStatusDTO
+	start := time.Now()
+	defer interceptor.HandleMetrics(start, "InspectParams", int(status.GetCode()))
 
 	clusterId := c.Param("clusterId")
 	operator := controller.GetOperator(c)
-	values := req.Values
 
-	jsonByte, _ := json.Marshal(values)
-
-	jsonContent := string(jsonByte)
-
-	resp, err := client.ClusterClient.SaveParameters(framework.NewMicroCtxFromGinCtx(c), &clusterpb.SaveClusterParametersRequest{
-		ClusterId:      clusterId,
-		ParametersJson: jsonContent,
-		Operator:       operator.ConvertToDTO(),
-	}, controller.DefaultTimeout)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
-	} else {
-		c.JSON(http.StatusOK, controller.Success(ParamUpdateRsp{
-			ClusterId: clusterId,
-			TaskId:    uint(resp.DisplayInfo.InProcessFlowId),
-		}))
+	reqDTO := &clusterpb.InspectClusterParamsRequest{
+		ClusterId: clusterId,
+		Operator:  operator.ConvertToDTO(),
 	}
+	resp, err := client.ClusterClient.InspectClusterParams(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
+	if err != nil {
+		status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+		c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
+		return
+	}
+	params := make([]InspectParamsResp, 0)
+	if len(resp.Params) > 0 {
+		params = make([]InspectParamsResp, len(resp.Params))
+		err := convert.ConvertObj(resp.Params, &params)
+		if err != nil {
+			status = &clusterpb.ResponseStatusDTO{Code: http.StatusInternalServerError, Message: err.Error()}
+			c.JSON(http.StatusInternalServerError, controller.Fail(int(status.Code), status.Message))
+			return
+		}
+	}
+	status = resp.RespStatus
+	result := controller.BuildCommonResult(int(status.Code), status.Message, params)
+	c.JSON(http.StatusOK, result)
 }

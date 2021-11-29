@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,9 +17,10 @@
 package knowledge
 
 import (
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestClusterComponentFromCode(t *testing.T) {
@@ -152,4 +152,28 @@ func TestGetMonitoredSequence(t *testing.T) {
 	assert.NotEqual(t, port3, port5)
 	assert.NotEqual(t, port4, port5)
 
+}
+
+func Test_GetClusterPortRange(t *testing.T) {
+	type args struct {
+		typeCode    string
+		versionCode string
+	}
+	tests := []struct {
+		name string
+		args args
+		want *ComponentPortConstraint
+	}{
+		{"Get4_0_12_Cluster_PortRange", args{"TiDB", "v4.0.12"}, &ComponentPortConstraint{11000, 12000, 2}},
+		{"Get5_0_0_Cluster_PortRange", args{"TiDB", "v5.0.0"}, &ComponentPortConstraint{11000, 12000, 2}},
+		{"Get_Cluster_PortRange_WrongClusterCode", args{"XXXTiDB", "v5.0.0"}, nil},
+		{"Get_Cluster_PortRange_WrongVersionCode", args{"TiDB", "v2.9.99"}, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetClusterPortRange(tt.args.typeCode, tt.args.versionCode); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetClusterPortRange() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -18,11 +17,12 @@
 package models
 
 import (
+	"os"
+	"testing"
+
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
-	"os"
-	"testing"
 )
 
 var MetaDB *gorm.DB
@@ -52,6 +52,7 @@ func TestMain(m *testing.M) {
 			Dao.SetAccountManager(NewDAOAccountManager(Dao.Db()))
 			Dao.SetClusterManager(NewDAOClusterManager(Dao.Db()))
 			Dao.SetResourceManager(NewDAOResourceManager(Dao.Db()))
+			Dao.SetParamManager(NewDAOParamManager(Dao.Db()))
 			return nil
 		},
 	)

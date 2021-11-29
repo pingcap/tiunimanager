@@ -21,6 +21,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -30,10 +35,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-metadb/service"
-	"os"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type BackupRecord struct {
@@ -45,6 +46,7 @@ type BackupRecord struct {
 	StorageType  StorageType
 	OperatorId   string
 	Size         uint64
+	BackupTso    uint64
 	FilePath     string
 	StartTime    int64
 	EndTime      int64
@@ -111,7 +113,7 @@ func Backup(ctx context.Context, ope *clusterpb.OperatorDTO, clusterId string, b
 	clusterAggregation.LastBackupRecord = record
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
-	flow.Start()
+	flow.AsyncStart()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	err = ClusterRepo.Persist(ctx, clusterAggregation)
@@ -248,7 +250,7 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 	}
 
 	if cluster.CpuArchitecture == "" {
-		cluster.CpuArchitecture = string(resourceType.X86)
+		cluster.CpuArchitecture = string(resourceType.X86_64)
 	}
 
 	demands := make([]*ClusterComponentDemand, len(demandDTOs))
@@ -295,7 +297,7 @@ func Recover(ctx context.Context, ope *clusterpb.OperatorDTO, clusterInfo *clust
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
 
-	flow.Start()
+	flow.AsyncStart()
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(ctx, clusterAggregation)
@@ -447,7 +449,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	tidbServer := configModel.TiDBServers[0]
 	tidbServerPort := tidbServer.Port
 	if tidbServerPort == 0 {
-		tidbServerPort = DefaultTidbPort
+		tidbServerPort = common.DefaultTidbPort
 	}
 
 	storageType, err := convertBrStorageType(string(record.StorageType))
@@ -461,7 +463,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		DbConnParameter: secondparty.DbConnParam{
 			Username: "root", //todo: replace admin account
 			Password: "",
-			Ip:       tidbServer.Host,
+			IP:       tidbServer.Host,
 			Port:     strconv.Itoa(tidbServerPort),
 		},
 		DbName:      "", //todo: support db table backup
@@ -484,7 +486,7 @@ func backupCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		return false
 	}
 	flowContext.SetData("backupTaskId", backupTaskId)
-	task.Success(nil)
+	task.Success("success")
 	return true
 }
 
@@ -519,13 +521,15 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		getLoggerWithContext(ctx).Errorf("json unmarshal backup info resp: %+v, failed, %s", resp, err.Error())
 	} else {
 		record.Size = backupInfo.Size
+		record.BackupTso = backupInfo.BackupTS
 	}
 
 	updateResp, err := client.DBClient.UpdateBackupRecord(flowContext, &dbpb.DBUpdateBackupRecordRequest{
 		BackupRecord: &dbpb.DBBackupRecordDTO{
-			Id:      record.Id,
-			Size:    record.Size,
-			EndTime: time.Now().Unix(),
+			Id:        record.Id,
+			Size:      record.Size,
+			BackupTso: record.BackupTso,
+			EndTime:   time.Now().Unix(),
 		},
 	})
 	if err != nil {
@@ -543,7 +547,7 @@ func updateBackupRecord(task *TaskEntity, flowContext *FlowContext) bool {
 		task.Fail(tiemError)
 		return false
 	}
-	task.Success(nil)
+	task.Success("success")
 	return true
 }
 
@@ -557,7 +561,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 	recoverInfo := cluster.RecoverInfo
 	if recoverInfo.SourceClusterId == "" || recoverInfo.BackupRecordId <= 0 {
 		getLoggerWithContext(ctx).Infof("cluster %s no need recover", cluster.Id)
-		task.Success(nil)
+		task.Success("success, cluster no need recover")
 		return true
 	}
 
@@ -587,7 +591,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		DbConnParameter: secondparty.DbConnParam{
 			Username: "root", //todo: replace admin account
 			Password: "",
-			Ip:       tidbServer.Host,
+			IP:       tidbServer.Host,
 			Port:     strconv.Itoa(tidbServer.Port),
 		},
 		DbName:      "", //todo: support db table restore
@@ -607,7 +611,7 @@ func recoverFromSrcCluster(task *TaskEntity, flowContext *FlowContext) bool {
 		task.Fail(err)
 		return false
 	}
-
+	task.Success("success")
 	return true
 }
 

@@ -83,6 +83,7 @@ func Backup(c *gin.Context) {
 				BackupMode:   resp.GetBackupRecord().GetBackupMode(),
 				FilePath:     resp.GetBackupRecord().GetFilePath(),
 				Size:         resp.GetBackupRecord().GetSize(),
+				BackupTso:    resp.GetBackupRecord().GetBackupTso(),
 				Status:       *management.ParseStatusFromDTO(resp.GetBackupRecord().DisplayStatus),
 			}))
 		} else {
@@ -238,9 +239,10 @@ func QueryBackup(c *gin.Context) {
 						//OperatorName: v.Operator.Name,
 						//TenantId: v.Operator.TenantId,
 					},
-					Size:     v.Size,
-					Status:   *management.ParseStatusFromDTO(v.DisplayStatus),
-					FilePath: v.FilePath,
+					Size:      v.Size,
+					BackupTso: v.BackupTso,
+					Status:    *management.ParseStatusFromDTO(v.DisplayStatus),
+					FilePath:  v.FilePath,
 				}
 			}
 			c.JSON(http.StatusOK, controller.SuccessWithPage(records, *controller.ParsePageFromDTO(resp.Page)))
@@ -330,9 +332,9 @@ func Restore(c *gin.Context) {
 	baseInfo, commonDemand, demand := req.ConvertToDTO()
 
 	reqDTO := &clusterpb.RecoverRequest{
-		Operator: operator.ConvertToDTO(),
-		Cluster:  baseInfo,
-		Demands:  demand,
+		Operator:     operator.ConvertToDTO(),
+		Cluster:      baseInfo,
+		Demands:      demand,
 		CommonDemand: commonDemand,
 	}
 

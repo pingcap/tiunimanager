@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -52,9 +51,10 @@ func (s *ClusterTypeSpec) GetVersionSpec(versionCode string) (versionSpec *Clust
 }
 
 type ClusterVersionSpec struct {
-	ClusterVersion ClusterVersion         `json:"clusterVersion"`
-	ComponentSpecs []ClusterComponentSpec `json:"componentSpecs"`
-	ArchTypes      []resource.ArchType    `json:"archTypes"`
+	ClusterVersion        ClusterVersion          `json:"clusterVersion"`
+	ClusterPortConstraint ComponentPortConstraint `json:"clusterPortConstraint"`
+	ComponentSpecs        []ClusterComponentSpec  `json:"componentSpecs"`
+	ArchTypes             []resource.ArchType     `json:"archTypes"`
 }
 
 func (s *ClusterVersionSpec) GetComponentSpec(componentType string) (componentSpec *ClusterComponentSpec) {

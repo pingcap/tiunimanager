@@ -866,7 +866,7 @@ func freedResource(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func freedResourceAfterFailure(task *TaskEntity, context *FlowContext) bool {
+func revertResourceAfterFailure(task *TaskEntity, context *FlowContext) bool {
 	allocRequest := context.GetData(contextAllocRequestKey)
 	if allocRequest != nil {
 		request := &clusterpb.RecycleRequest{

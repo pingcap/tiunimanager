@@ -15,8 +15,3 @@
 
 package database
 
-import "testing"
-
-func Test_open(t *testing.T) {
-
-}

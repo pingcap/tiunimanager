@@ -15,26 +15,33 @@
 
 package database
 
-import "gorm.io/gorm"
+import (
+	"context"
+	"gorm.io/gorm"
+)
 
-var db database
+var defaultDb database
 
 type database struct {
 	base *gorm.DB
 }
 
 func open() {
-
+	// todo
 }
 
 func initReaderWriter() {
-
+	// todo
 }
 
 func addTable() {
 	// todo
 }
 
-func GetDB() *gorm.DB {
-	return db.base
+func DB(ctx context.Context) *gorm.DB {
+	return defaultDb.base.WithContext(ctx)
+}
+
+func InitForTest(db *gorm.DB) {
+	defaultDb = database{db}
 }

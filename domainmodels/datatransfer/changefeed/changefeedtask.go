@@ -18,9 +18,9 @@ package changefeed
 import (
 	"database/sql"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/domainmodels"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
 	"gorm.io/gorm"
 	"time"
 )

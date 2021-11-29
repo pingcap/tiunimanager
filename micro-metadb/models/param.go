@@ -26,7 +26,6 @@ package models
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -117,7 +116,7 @@ func (do ClusterParamMapDO) TableName() string {
 func (m *DAOParamManager) AddParamGroup(ctx context.Context, pg *ParamGroupDO, pgm []*ParamGroupMapDO) (id uint, err error) {
 	log := framework.LogWithContext(ctx)
 	if pg.Name == "" || pg.Spec == "" || pg.Version == "" {
-		err = errors.New(fmt.Sprintf("param valid err! require param name: %s, spec: %s, version: %s", pg.Name, pg.Spec, pg.Version))
+		err = fmt.Errorf(fmt.Sprintf("param valid err! require param name: %s, spec: %s, version: %s", pg.Name, pg.Spec, pg.Version))
 		return
 	}
 

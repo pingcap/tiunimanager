@@ -109,7 +109,6 @@ func (dao *DAOManager) InitMetrics() {
 
 	before := func(db *gorm.DB) {
 		db.InstanceSet(StartTime, time.Now())
-		return
 	}
 
 	after := func(method string, db *gorm.DB) {

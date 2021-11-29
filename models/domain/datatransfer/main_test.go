@@ -15,43 +15,45 @@
  *                                                                            *
  ******************************************************************************/
 
-package models
+package datatransfer
 
 import (
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
 	"testing"
 )
 
-var MetaDB *gorm.DB
-var Dao *DAOManager
+var baseDB *gorm.DB
+var testRW *GormChangeFeedReadWrite
 
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
 	os.MkdirAll(testFilePath, 0755)
+	logins := framework.LogForkFile(common.LogFileSystem)
 
 	defer func() {
 		os.RemoveAll(testFilePath)
 		os.Remove(testFilePath)
 	}()
 
-	framework.InitBaseFrameworkForUt(framework.MetaDBService,
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
-			Dao = NewDAOManager(d)
-			Dao.InitDB(testFilePath)
-			Dao.InitTables()
-			Dao.AddTable("test_entitys", new(TestEntity))
-			Dao.AddTable("test_entity2_s", new(TestEntity2))
-			Dao.AddTable("test_records", new(TestRecord))
-			Dao.AddTable("test_datas", new(TestData))
+			dbFile := testFilePath + common.DBDirPrefix + common.SqliteFileName
+			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
-			MetaDB = Dao.Db()
+			if err != nil || db.Error != nil {
+				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
+			} else {
+				logins.Infof("open database successful, filepath: %s", dbFile)
+			}
 
-			Dao.SetAccountManager(NewDAOAccountManager(Dao.Db()))
-			Dao.SetClusterManager(NewDAOClusterManager(Dao.Db()))
-			Dao.SetResourceManager(NewDAOResourceManager(Dao.Db()))
+			db.Migrator().CreateTable(ChangeFeedTask{})
+
+			testRW = NewGormChangeFeedReadWrite(db)
 			return nil
 		},
 	)

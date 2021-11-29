@@ -18,22 +18,23 @@ package domain
 
 import (
 	ctx "context"
-	"errors"
 	"fmt"
-	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"path/filepath"
-	"strconv"
-	"strings"
-
 	"github.com/labstack/gommon/bytes"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/common"
+	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/resource"
-
-	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap/tiup/pkg/cluster/spec"
+	"path/filepath"
+	"strconv"
+	"strings"
+)
+
+import (
+	"errors"
 	"gopkg.in/yaml.v2"
 )
 

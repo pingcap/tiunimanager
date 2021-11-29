@@ -13,11 +13,12 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package models
+package datatransfer
 
 import (
 	"context"
 	"database/sql"
+	"github.com/pingcap-inc/tiem/metadb/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -25,10 +26,10 @@ import (
 
 func TestChangeFeedTask_Locked(t1 *testing.T) {
 	type fields struct {
-		Entity            Entity
+		Entity            models.Entity
 		Name              string
 		ClusterId         string
-		DownstreamType    string
+		DownstreamType    DownstreamType
 		StartTS           int64
 		FilterRulesConfig string
 		DownstreamConfig  string
@@ -49,7 +50,7 @@ func TestChangeFeedTask_Locked(t1 *testing.T) {
 				Entity:            tt.fields.Entity,
 				Name:              tt.fields.Name,
 				ClusterId:         tt.fields.ClusterId,
-				DownstreamType:    tt.fields.DownstreamType,
+				Type:              tt.fields.DownstreamType,
 				StartTS:           tt.fields.StartTS,
 				FilterRulesConfig: tt.fields.FilterRulesConfig,
 				DownstreamConfig:  tt.fields.DownstreamConfig,
@@ -62,9 +63,9 @@ func TestChangeFeedTask_Locked(t1 *testing.T) {
 	}
 }
 
-func TestDAOChangeFeedManager_Create(t *testing.T) {
-	existed, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{Entity: Entity{TenantId: "111"}})
-	defer Dao.ChangeFeedTaskManager().Delete(context.TODO(), existed.ID)
+func TestGormChangeFeedReadWrite_Create(t *testing.T) {
+	existed, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}})
+	defer testRW.Delete(context.TODO(), existed.ID)
 
 	type args struct {
 		ctx  context.Context
@@ -75,14 +76,14 @@ func TestDAOChangeFeedManager_Create(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"normal", args{context.TODO(), &ChangeFeedTask{Entity: Entity{TenantId: "111"}, ClusterId: "dafadsfefesdf"}}, false},
-		{"without tenant", args{context.TODO(), &ChangeFeedTask{Entity: Entity{ID: existed.ID}}}, true},
+		{"normal", args{context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "dafadsfefesdf"}}, false},
+		{"without tenant", args{context.TODO(), &ChangeFeedTask{Entity: models.Entity{ID: existed.ID}}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := Dao.ChangeFeedTaskManager()
-			got, err := m.Create(tt.args.ctx, tt.args.task)
-			defer Dao.ChangeFeedTaskManager().Delete(context.TODO(), got.ID)
+			
+			got, err := testRW.Create(tt.args.ctx, tt.args.task)
+			defer testRW.Delete(context.TODO(), got.ID)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Create() error = %v, wantErr %v", err, tt.wantErr)
@@ -96,10 +97,10 @@ func TestDAOChangeFeedManager_Create(t *testing.T) {
 	}
 }
 
-func TestDAOChangeFeedManager_Delete(t *testing.T) {
-	existed, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{Entity: Entity{TenantId: "111"}})
-	deleted, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{Entity: Entity{TenantId: "111"}, ClusterId: "111"})
-	Dao.Db().Delete(deleted)
+func TestGormChangeFeedReadWrite_Delete(t *testing.T) {
+	existed, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}})
+	deleted, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "111"})
+	testRW.Db(context.TODO()).Delete(deleted)
 
 	type args struct {
 		ctx    context.Context
@@ -116,7 +117,7 @@ func TestDAOChangeFeedManager_Delete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := Dao.ChangeFeedTaskManager()
+			m := testRW
 
 			if err := m.Delete(tt.args.ctx, tt.args.taskId); (err != nil) != tt.wantErr {
 				t.Errorf("Delete() error = %v, wantErr %v", err, tt.wantErr)
@@ -131,26 +132,26 @@ func TestDAOChangeFeedManager_Delete(t *testing.T) {
 	}
 }
 
-func TestDAOChangeFeedManager_LockStatus(t *testing.T) {
-	locked, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{
-		Entity: Entity{TenantId: "111"},
+func TestGormChangeFeedReadWrite_LockStatus(t *testing.T) {
+	locked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
+		Entity: models.Entity{TenantId: "111"},
 		StatusLock: sql.NullTime{
 			Time:  time.Now(),
 			Valid: true,
 		},
 	})
 
-	unlocked, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{
-		Entity: Entity{TenantId: "111"},
+	unlocked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
+		Entity: models.Entity{TenantId: "111"},
 	})
 
-	Dao.Db().Table(TABLE_NAME_CHANGE_FEED_TASKS).Where("id", unlocked.ID).Update("status_lock", sql.NullTime{
+	testRW.Db(context.TODO()).Table(models.TABLE_NAME_CHANGE_FEED_TASKS).Where("id", unlocked.ID).Update("status_lock", sql.NullTime{
 		Time:  time.Now(),
 		Valid: false,
 	})
 	notExisted := "111"
-	defer Dao.ChangeFeedTaskManager().Delete(context.TODO(), locked.ID)
-	defer Dao.ChangeFeedTaskManager().Delete(context.TODO(), unlocked.ID)
+	defer testRW.Delete(context.TODO(), locked.ID)
+	defer testRW.Delete(context.TODO(), unlocked.ID)
 
 	type args struct {
 		ctx    context.Context
@@ -167,7 +168,7 @@ func TestDAOChangeFeedManager_LockStatus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := Dao.ChangeFeedTaskManager()
+			m := testRW
 			if err := m.LockStatus(tt.args.ctx, tt.args.taskId); (err != nil) != tt.wantErr {
 				t.Errorf("LockStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -181,44 +182,44 @@ func TestDAOChangeFeedManager_LockStatus(t *testing.T) {
 	}
 }
 
-func TestDAOChangeFeedManager_QueryByClusterId(t *testing.T) {
-	t1, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{Entity: Entity{TenantId: "111"}, ClusterId: "6666"})
-	anotherCluster, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{Entity: Entity{TenantId: "111"}, ClusterId: "3121"})
-	deleted, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{Entity: Entity{TenantId: "111"}, ClusterId: "6666"})
-	t4, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{Entity: Entity{TenantId: "111"}, ClusterId: "6666", StartTS: int64(9999)})
-	t5, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{Entity: Entity{TenantId: "111"}, ClusterId: "6666"})
-	defer Dao.ChangeFeedTaskManager().Delete(context.TODO(), t1.ID)
-	defer Dao.ChangeFeedTaskManager().Delete(context.TODO(), anotherCluster.ID)
-	Dao.Db().Delete(deleted)
-	defer Dao.ChangeFeedTaskManager().Delete(context.TODO(), t4.ID)
-	defer Dao.ChangeFeedTaskManager().Delete(context.TODO(), t5.ID)
+func TestGormChangeFeedReadWrite_QueryByClusterId(t *testing.T) {
+	t1, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "6666"})
+	anotherCluster, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "3121"})
+	deleted, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "6666"})
+	t4, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "6666", StartTS: int64(9999)})
+	t5, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "6666"})
+	defer testRW.Delete(context.TODO(), t1.ID)
+	defer testRW.Delete(context.TODO(), anotherCluster.ID)
+	testRW.Db(context.TODO()).Delete(deleted)
+	defer testRW.Delete(context.TODO(), t4.ID)
+	defer testRW.Delete(context.TODO(), t5.ID)
 
-	tasks, total, err := Dao.ChangeFeedTaskManager().QueryByClusterId(context.TODO(), "6666", 0, 2)
+	tasks, total, err := testRW.QueryByClusterId(context.TODO(), "6666", 0, 2)
 	assert.NoError(t, err)
 	assert.Equal(t, 3, int(total))
 	assert.Equal(t, 9999, int(tasks[1].StartTS))
 }
 
-func TestDAOChangeFeedManager_UnlockStatus(t *testing.T) {
+func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
 	newStatus := int8(2)
-	locked, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{
-		Entity: Entity{TenantId: "111"},
+	locked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
+		Entity: models.Entity{TenantId: "111"},
 		StatusLock: sql.NullTime{
 			Time:  time.Now(),
 			Valid: true,
 		},
 	})
-	unlocked, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{
-		Entity: Entity{TenantId: "111"},
+	unlocked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
+		Entity: models.Entity{TenantId: "111"},
 	})
-	Dao.Db().Table(TABLE_NAME_CHANGE_FEED_TASKS).Where("id", unlocked.ID).Update("status_lock", sql.NullTime{
+	testRW.Db(context.TODO()).Table(models.TABLE_NAME_CHANGE_FEED_TASKS).Where("id", unlocked.ID).Update("status_lock", sql.NullTime{
 		Time:  time.Now().Add(time.Minute * -3),
 		Valid: true,
 	})
 
 	notExisted := "111"
-	defer Dao.ChangeFeedTaskManager().Delete(context.TODO(), locked.ID)
-	defer Dao.ChangeFeedTaskManager().Delete(context.TODO(), unlocked.ID)
+	defer testRW.Delete(context.TODO(), locked.ID)
+	defer testRW.Delete(context.TODO(), unlocked.ID)
 
 	type args struct {
 		ctx          context.Context
@@ -237,7 +238,7 @@ func TestDAOChangeFeedManager_UnlockStatus(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := Dao.ChangeFeedTaskManager()
+			m := testRW
 			if err := m.UnlockStatus(tt.args.ctx, tt.args.taskId, tt.args.targetStatus); (err != nil) != tt.wantErr {
 				t.Errorf("UnlockStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -251,14 +252,16 @@ func TestDAOChangeFeedManager_UnlockStatus(t *testing.T) {
 	}
 }
 
-func TestDAOChangeFeedManager_UpdateConfig(t *testing.T) {
-	existed, _ := Dao.ChangeFeedTaskManager().Create(context.TODO(), &ChangeFeedTask{Entity: Entity{TenantId: "111"}})
-	defer Dao.ChangeFeedTaskManager().Delete(context.TODO(), existed.ID)
+func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
+	existed, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}})
+	defer testRW.Delete(context.TODO(), existed.ID)
 
 	newString := "new"
 	newInt := 99
-	existed.DownstreamConfig = newString
-	existed.DownstreamType = newString
+	existed.Downstream = &TiDBDownstream {
+		Password: "updated",
+	}
+	existed.Type = DownstreamTypeTiDB
 	existed.FilterRulesConfig = newString
 	existed.ClusterId = newString
 	existed.StartTS = int64(newInt)
@@ -266,29 +269,30 @@ func TestDAOChangeFeedManager_UpdateConfig(t *testing.T) {
 
 	type args struct {
 		ctx            context.Context
-		updateTemplate ChangeFeedTask
+		updateTemplate *ChangeFeedTask
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{"normal", args{context.TODO(), *existed}, false},
-		{"not existed", args{context.TODO(), ChangeFeedTask{
-			Entity:Entity{ID: "111"},
+		{"normal", args{context.TODO(), existed}, false},
+		{"not existed", args{context.TODO(), &ChangeFeedTask{
+			Entity: models.Entity{ID: "111"},
 		}}, true},
-		{"without id", args{context.TODO(), ChangeFeedTask{}}, true},
+		{"without id", args{context.TODO(), &ChangeFeedTask{}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := Dao.ChangeFeedTaskManager()
+			m := testRW
 			if err := m.UpdateConfig(tt.args.ctx, tt.args.updateTemplate); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateConfig() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr {
 				updated, _ := m.Get(tt.args.ctx, tt.args.updateTemplate.ID)
-				assert.Equal(t, newString, updated.DownstreamConfig)
-				assert.Equal(t, newString, updated.DownstreamType)
+				assert.Equal(t, "updated", updated.Downstream.(*TiDBDownstream).Password)
+
+				assert.Equal(t, "tidb", string(updated.Type))
 				assert.Equal(t, newString, updated.FilterRulesConfig)
 				assert.NotEqual(t, newString, updated.ClusterId)
 				assert.Equal(t, int64(newInt), updated.StartTS)

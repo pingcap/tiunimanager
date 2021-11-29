@@ -42,18 +42,18 @@ type MysqlDownstream struct {
 }
 
 type KafkaDownstream struct {
-	Ip                string   `json:"ip" form:"ip" example:"127.0.0.1"`
-	Port              int      `json:"port" form:"port" example:"9001"`
-	Version           string   `json:"version" form:"version" example:"2.4.0"`
-	ClientId          string   `json:"clientId" form:"clientId" example:"213"`
-	TopicName         string   `json:"topicName" form:"topicName" example:"my_topic"`
-	Protocol          string   `json:"protocol" form:"protocol" example:"default" enums:"default,canal,avro,maxwell"`
-	Partitions        int      `json:"partitions" form:"partitions" example:"1"`
-	ReplicationFactor int      `json:"replicationFactor" form:"replicationFactor" example:"1"`
-	MaxMessageBytes   int      `json:"maxMessageBytes" form:"maxMessageBytes" example:"16"`
-	MaxBatchSize      int      `json:"maxBatchSize" form:"maxBatchSize" example:"5"`
-	Dispatchers       []string `json:"dispatchers" form:"dispatchers"`
-	Tls               bool     `json:"tls" form:"tls" example:"false"`
+	Ip                string       `json:"ip" form:"ip" example:"127.0.0.1"`
+	Port              int          `json:"port" form:"port" example:"9001"`
+	Version           string       `json:"version" form:"version" example:"2.4.0"`
+	ClientId          string       `json:"clientId" form:"clientId" example:"213"`
+	TopicName         string       `json:"topicName" form:"topicName" example:"my_topic"`
+	Protocol          string       `json:"protocol" form:"protocol" example:"default" enums:"default,canal,avro,maxwell"`
+	Partitions        int          `json:"partitions" form:"partitions" example:"1"`
+	ReplicationFactor int          `json:"replicationFactor" form:"replicationFactor" example:"1"`
+	MaxMessageBytes   int          `json:"maxMessageBytes" form:"maxMessageBytes" example:"16"`
+	MaxBatchSize      int          `json:"maxBatchSize" form:"maxBatchSize" example:"5"`
+	Dispatchers       []Dispatcher `json:"dispatchers" form:"dispatchers"`
+	Tls               bool         `json:"tls" form:"tls" example:"false"`
 }
 
 type Dispatcher struct {

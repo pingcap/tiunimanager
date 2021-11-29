@@ -18,6 +18,8 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/pingcap-inc/tiem/models/vo/datatransfer/changefeed"
 	"net/http"
 	"strconv"
 	"time"
@@ -51,6 +53,61 @@ type ClusterServiceHandler struct {
 	authManager     *user.AuthManager
 	tenantManager   *user.TenantManager
 	userManager     *user.UserManager
+}
+
+func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() string) {
+
+	if err == nil {
+		resp.Response = getData()
+
+	}
+
+	if _, ok := err.(framework.TiEMError); !ok {
+		err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, "", err)
+	}
+
+	resp.Code = int32(err.(framework.TiEMError).GetCode())
+	resp.Message = err.(framework.TiEMError).GetMsg()
+}
+
+func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	request.GetOperator()
+	reqData := request.GetRequest()
+
+	task := &changefeed.ChangeFeedTask{}
+	err := json.Unmarshal([]byte(reqData), task)
+
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+	}
+
+	// call service
+
+	handleResponse(response, err, func() string {
+		// wrap response data
+		return "data"
+	})
+	return nil
+}
+
+func (handler *ClusterServiceHandler) PauseChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) ResumeChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) DeleteChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) UpdateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) QueryChangeFeedTasks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
 }
 
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {

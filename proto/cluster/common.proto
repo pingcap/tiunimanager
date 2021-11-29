@@ -34,3 +34,29 @@ message DisplayStatusDTO {
     int64 updateTime = 5;
     int64 deleteTime = 6;
 }
+
+message RpcRequest {
+    RpcOperator operator = 1;
+    string request = 2;
+    RpcPage page = 3;
+}
+
+message RpcResponse {
+    int32 code = 1;
+    string message = 2;
+    string response = 3;
+    RpcPage page = 4;
+}
+
+message RpcPage {
+    int32 page = 1;
+    int32 pageSize = 2;
+    int32 total = 3;
+}
+
+message RpcOperator {
+    string id = 1;
+    string name = 2;
+    string tenantId = 3;
+    bool isManual = 4;
+}

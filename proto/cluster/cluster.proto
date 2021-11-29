@@ -63,6 +63,15 @@ service ClusterService {
     // task manager
     rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);
     rpc DetailFlow(DetailFlowRequest) returns (DetailFlowsResponse);
+
+    // change feed task
+    rpc CreateChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc PauseChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc ResumeChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc DeleteChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc UpdateChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
+
 }
 
 message ClusterCreateReqDTO {

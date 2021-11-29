@@ -21,6 +21,7 @@ import (
 	cryrand "crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"github.com/pingcap-inc/tiem/metadb/models/datatransfer"
 	"time"
 
 	"strconv"
@@ -46,7 +47,7 @@ type DAOManager struct {
 	clusterManager  *DAOClusterManager
 	accountManager  *DAOAccountManager
 	resourceManager *DAOResourceManager
-	changeFeedTaskManager *DAOChangeFeedManager
+	changeFeedTaskManager *datatransfer.GormChangeFeedReadWrite
 }
 
 func NewDAOManager(fw *framework.BaseFramework) *DAOManager {
@@ -82,11 +83,11 @@ func (dao *DAOManager) SetResourceManager(resourceManager *DAOResourceManager) {
 	dao.resourceManager = resourceManager
 }
 
-func (dao *DAOManager) ChangeFeedTaskManager() *DAOChangeFeedManager {
+func (dao *DAOManager) ChangeFeedTaskManager() *datatransfer.GormChangeFeedReadWrite {
 	return dao.changeFeedTaskManager
 }
 
-func (dao *DAOManager) SetChangeFeedTaskManager(changeFeedTaskManager *DAOChangeFeedManager) {
+func (dao *DAOManager) SetChangeFeedTaskManager(changeFeedTaskManager *datatransfer.GormChangeFeedReadWrite) {
 	dao.changeFeedTaskManager = changeFeedTaskManager
 }
 
@@ -179,7 +180,6 @@ func (dao *DAOManager) InitDB(dataDir string) error {
 	dao.SetAccountManager(NewDAOAccountManager(dao.Db()))
 	dao.SetClusterManager(NewDAOClusterManager(dao.Db()))
 	dao.SetResourceManager(NewDAOResourceManager(dao.Db()))
-	dao.SetChangeFeedTaskManager(NewDAOChangeFeedManager(dao.Db()))
 
 	return err
 }
@@ -215,7 +215,6 @@ func (dao *DAOManager) InitTables() error {
 	dao.AddTable(TABLE_NAME_TRANSPORT_RECORD, new(TransportRecord))
 	dao.AddTable(TABLE_NAME_RECOVER_RECORD, new(RecoverRecord))
 	dao.AddTable(TABLE_NAME_COMPONENT_INSTANCE, new(ComponentInstance))
-	dao.AddTable(TABLE_NAME_CHANGE_FEED_TASKS, new(ChangeFeedTask))
 
 	log.Info("create TiEM all tables successful.")
 	return nil

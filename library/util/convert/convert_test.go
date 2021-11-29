@@ -14,28 +14,43 @@
  *                                                                            *
  ******************************************************************************/
 
-package parameter
+/*******************************************************************************
+ * @File: convert_test.go
+ * @Description:
+ * @Author: jiangxunyu@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/11/26 18:06
+*******************************************************************************/
+
+package convert
 
 import (
-	"github.com/pingcap-inc/tiem/library/knowledge"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-type ParamRealValue struct {
-	Cluster   string                    `json:"cluster"`
-	Instances []*ParamInstanceRealValue `json:"instances"`
+type src struct {
+	Id      int64    `json:"id"`
+	Name    string   `json:"name"`
+	Hobbies []string `json:"hobbies"`
+	Gender  bool     `json:"gender"`
 }
 
-type ParamInstanceRealValue struct {
-	Instance string `json:"instance"`
-	Value    string `json:"value"`
-}
+type dst src
 
-type ParamItem struct {
-	Definition   knowledge.Parameter `json:"definition"`
-	CurrentValue ParamInstance       `json:"currentValue"`
-}
-
-type ParamInstance struct {
-	Name  string      `json:"name"`
-	Value interface{} `json:"value"`
+func TestConvertObj(t *testing.T) {
+	s := src{
+		Id:      1,
+		Name:    "zhangsan",
+		Hobbies: []string{"movie", "running", "swimming"},
+		Gender:  true,
+	}
+	d := new(dst)
+	err := ConvertObj(s, &d)
+	assert.Nil(t, err)
+	assert.Equal(t, "zhangsan", d.Name)
+	assert.Equal(t, 1, int(d.Id))
+	assert.Equal(t, 3, len(d.Hobbies))
+	assert.True(t, d.Gender)
 }

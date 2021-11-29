@@ -29,21 +29,21 @@ import "github.com/pingcap-inc/tiem/micro-api/controller"
 type ListParamGroupReq struct {
 	controller.PageRequest
 
-	Name       string `json:"name" example:"default"`
-	DbType     int    `json:"dbType" example:"0"`
-	HasDefault int    `json:"hasDefault" example:"0"`
-	Version    string `json:"version" example:"v5.0"`
-	Spec       string `json:"spec" example:"8C16G"`
-	HasDetail  bool   `json:"hasDetail" example:"false"`
+	Name       string `json:"name" form:"name" example:"default"`
+	DbType     int32  `json:"dbType" form:"dbType" example:"0"`
+	HasDefault int32  `json:"hasDefault" form:"hasDefault" example:"0"`
+	Version    string `json:"version" form:"version" example:"v5.0"`
+	Spec       string `json:"spec" form:"spec" example:"8C16G"`
+	HasDetail  bool   `json:"hasDetail" form:"hasDetail" example:"false"`
 }
 
 type CreateParamGroupReq struct {
 	Name       string                 `json:"name" example:"8C16GV4_default"`
-	DbType     int                    `json:"dbType" example:"0"`
-	HasDefault bool                   `json:"hasDefault" example:"true"`
+	DbType     int32                  `json:"dbType" example:"1"`
+	HasDefault int32                  `json:"hasDefault" example:"1"`
 	Version    string                 `json:"version" example:"v5.0"`
 	Spec       string                 `json:"spec" example:"8C16G"`
-	GroupType  int                    `json:"groupType" example:"0"`
+	GroupType  int32                  `json:"groupType" example:"1"`
 	Note       string                 `json:"note" example:"default param group"`
 	Params     []CreateAndUpdateParam `json:"params"`
 }
@@ -57,8 +57,8 @@ type UpdateParamGroupReq struct {
 }
 
 type CopyParamGroupReq struct {
-	Name string `json:"name" example:"8C16GV4_default"`
-	Note string `json:"note" example:"default param group"`
+	Name string `json:"name" example:"8C16GV4_copy"`
+	Note string `json:"note" example:"copy param group"`
 }
 
 type ApplyParamGroupReq struct {
@@ -66,7 +66,7 @@ type ApplyParamGroupReq struct {
 }
 
 type CreateAndUpdateParam struct {
-	ID           string `json:"id" example:"123"`
+	ParamId      int64  `json:"paramId" example:"123"`
 	DefaultValue string `json:"defaultValue" example:"1"`
 	Note         string `json:"description" example:"binlog cache size"`
 }

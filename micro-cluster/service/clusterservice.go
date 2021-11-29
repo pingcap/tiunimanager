@@ -682,6 +682,66 @@ func (p *ClusterServiceHandler) VerifyIdentity(ctx context.Context, req *cluster
 	return nil
 }
 
+func (c *ClusterServiceHandler) CreateParamGroup(ctx context.Context, req *clusterpb.CreateParamGroupRequest, resp *clusterpb.CreateParamGroupResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "CreateParamGroup", int(resp.GetRespStatus().GetCode()))
+	return domain.CreateParamGroup(ctx, req, resp)
+}
+
+func (c *ClusterServiceHandler) UpdateParamGroup(ctx context.Context, req *clusterpb.UpdateParamGroupRequest, resp *clusterpb.UpdateParamGroupResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "UpdateParamGroup", int(resp.GetRespStatus().GetCode()))
+	return domain.UpdateParamGroup(ctx, req, resp)
+}
+
+func (c *ClusterServiceHandler) DeleteParamGroup(ctx context.Context, req *clusterpb.DeleteParamGroupRequest, resp *clusterpb.DeleteParamGroupResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "DeleteParamGroup", int(resp.GetRespStatus().GetCode()))
+	return domain.DeleteParamGroup(ctx, req, resp)
+}
+
+func (c *ClusterServiceHandler) ListParamGroup(ctx context.Context, req *clusterpb.ListParamGroupRequest, resp *clusterpb.ListParamGroupResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "ListParamGroup", int(resp.GetRespStatus().GetCode()))
+	return domain.ListParamGroup(ctx, req, resp)
+}
+
+func (c *ClusterServiceHandler) DetailParamGroup(ctx context.Context, req *clusterpb.DetailParamGroupRequest, resp *clusterpb.DetailParamGroupResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "DetailParamGroup", int(resp.GetRespStatus().GetCode()))
+	return domain.DetailParamGroup(ctx, req, resp)
+}
+
+func (c *ClusterServiceHandler) ApplyParamGroup(ctx context.Context, req *clusterpb.ApplyParamGroupRequest, resp *clusterpb.ApplyParamGroupResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "ApplyParamGroup", int(resp.GetRespStatus().GetCode()))
+	return domain.ApplyParamGroup(ctx, req, resp)
+}
+
+func (c *ClusterServiceHandler) CopyParamGroup(ctx context.Context, req *clusterpb.CopyParamGroupRequest, resp *clusterpb.CopyParamGroupResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "CopyParamGroup", int(resp.GetRespStatus().GetCode()))
+	return domain.CopyParamGroup(ctx, req, resp)
+}
+
+func (c *ClusterServiceHandler) ListClusterParams(ctx context.Context, req *clusterpb.ListClusterParamsRequest, resp *clusterpb.ListClusterParamsResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "ListClusterParams", int(resp.GetRespStatus().GetCode()))
+	return domain.ListClusterParams(ctx, req, resp)
+}
+
+func (c *ClusterServiceHandler) UpdateClusterParams(ctx context.Context, req *clusterpb.UpdateClusterParamsRequest, resp *clusterpb.UpdateClusterParamsResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "UpdateClusterParams", int(resp.GetRespStatus().GetCode()))
+	return domain.UpdateClusterParams(ctx, req, resp)
+}
+
+func (c *ClusterServiceHandler) InspectClusterParams(ctx context.Context, req *clusterpb.InspectClusterParamsRequest, resp *clusterpb.InspectClusterParamsResponse) error {
+	start := time.Now()
+	defer handleMetrics(start, "InspectClusterParams", int(resp.GetRespStatus().GetCode()))
+	return domain.InspectClusterParams(ctx, req, resp)
+}
+
 func (clusterManager *ClusterServiceHandler) ImportHost(ctx context.Context, in *clusterpb.ImportHostRequest, out *clusterpb.ImportHostResponse) error {
 	return clusterManager.resourceManager.ImportHost(ctx, in, out)
 }

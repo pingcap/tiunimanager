@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -32,9 +31,10 @@
 package controller
 
 import (
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"net/http"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"

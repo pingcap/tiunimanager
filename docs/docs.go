@@ -1801,7 +1801,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/parameter.ParamItem"
+                                                "$ref": "#/definitions/parameter.ListParamsResp"
                                             }
                                         }
                                     }
@@ -1829,7 +1829,7 @@ var doc = `{
                     }
                 }
             },
-            "post": {
+            "put": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -1853,7 +1853,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/parameter.ParamUpdateReq"
+                            "$ref": "#/definitions/parameter.UpdateParamsReq"
                         }
                     },
                     {
@@ -1877,6 +1877,73 @@ var doc = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/parameter.ParamUpdateRsp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.CommonResult"
+                        }
+                    }
+                }
+            }
+        },
+        "/clusters/{clusterId}/params/inspect": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "inspect params",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cluster params"
+                ],
+                "summary": "inspect params",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "clusterId",
+                        "name": "clusterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/controller.CommonResult"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/parameter.InspectParamsResp"
                                         }
                                     }
                                 }
@@ -5213,46 +5280,6 @@ var doc = `{
                 }
             }
         },
-        "knowledge.ParamValueConstraint": {
-            "type": "object",
-            "properties": {
-                "contrastValue": {
-                    "type": "object"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "knowledge.Parameter": {
-            "type": "object",
-            "properties": {
-                "constraints": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/knowledge.ParamValueConstraint"
-                    }
-                },
-                "defaultValue": {
-                    "type": "object"
-                },
-                "desc": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "needRestart": {
-                    "type": "boolean"
-                },
-                "type": {
-                    "type": "integer"
-                },
-                "unit": {
-                    "type": "string"
-                }
-            }
-        },
         "log.SearchTiDBLogDetail": {
             "type": "object",
             "properties": {
@@ -6023,35 +6050,113 @@ var doc = `{
                 }
             }
         },
-        "parameter.ParamInstance": {
+        "parameter.InspectParamsResp": {
             "type": "object",
             "properties": {
+                "componentType": {
+                    "type": "string",
+                    "example": "tidb"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "inspectValue": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "instance": {
+                    "type": "string",
+                    "example": "172.16.5.23"
+                },
                 "name": {
+                    "type": "string",
+                    "example": "binlog_cache"
+                },
+                "realValue": {
+                    "$ref": "#/definitions/parameter.ParamRealValue"
+                }
+            }
+        },
+        "parameter.ListParamsResp": {
+            "type": "object",
+            "properties": {
+                "componentType": {
+                    "type": "string",
+                    "example": "tidb"
+                },
+                "createTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                },
+                "defaultValue": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "binlog cache size"
+                },
+                "hasReboot": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "name": {
+                    "type": "string",
+                    "example": "binlog_size"
+                },
+                "paramId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "range": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "1",
+                        " 1000"
+                    ]
+                },
+                "realValue": {
+                    "$ref": "#/definitions/parameter.ParamRealValue"
+                },
+                "type": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "mb"
+                },
+                "updateTime": {
+                    "type": "integer",
+                    "example": 1636698675
+                }
+            }
+        },
+        "parameter.ParamInstanceRealValue": {
+            "type": "object",
+            "properties": {
+                "instance": {
                     "type": "string"
                 },
                 "value": {
-                    "type": "object"
+                    "type": "string"
                 }
             }
         },
-        "parameter.ParamItem": {
+        "parameter.ParamRealValue": {
             "type": "object",
             "properties": {
-                "currentValue": {
-                    "$ref": "#/definitions/parameter.ParamInstance"
+                "cluster": {
+                    "type": "string"
                 },
-                "definition": {
-                    "$ref": "#/definitions/knowledge.Parameter"
-                }
-            }
-        },
-        "parameter.ParamUpdateReq": {
-            "type": "object",
-            "properties": {
-                "values": {
+                "instances": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/parameter.ParamInstance"
+                        "$ref": "#/definitions/parameter.ParamInstanceRealValue"
                     }
                 }
             }
@@ -6067,6 +6172,29 @@ var doc = `{
                 },
                 "taskId": {
                     "type": "integer"
+                }
+            }
+        },
+        "parameter.UpdateParam": {
+            "type": "object",
+            "properties": {
+                "paramId": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "realValue": {
+                    "$ref": "#/definitions/parameter.ParamRealValue"
+                }
+            }
+        },
+        "parameter.UpdateParamsReq": {
+            "type": "object",
+            "properties": {
+                "params": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/parameter.UpdateParam"
+                    }
                 }
             }
         },
@@ -6086,18 +6214,18 @@ var doc = `{
                     "type": "string",
                     "example": "123"
                 },
-                "id": {
-                    "type": "string",
-                    "example": "abc"
+                "paramGroupId": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
         "paramgroup.CommonParamGroupResp": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "string",
-                    "example": "abc"
+                "paramGroupId": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -6106,11 +6234,11 @@ var doc = `{
             "properties": {
                 "name": {
                     "type": "string",
-                    "example": "8C16GV4_default"
+                    "example": "8C16GV4_copy"
                 },
                 "note": {
                     "type": "string",
-                    "example": "default param group"
+                    "example": "copy param group"
                 }
             }
         },
@@ -6125,9 +6253,9 @@ var doc = `{
                     "type": "string",
                     "example": "binlog cache size"
                 },
-                "id": {
-                    "type": "string",
-                    "example": "123"
+                "paramId": {
+                    "type": "integer",
+                    "example": 123
                 }
             }
         },
@@ -6136,15 +6264,15 @@ var doc = `{
             "properties": {
                 "dbType": {
                     "type": "integer",
-                    "example": 0
+                    "example": 1
                 },
                 "groupType": {
                     "type": "integer",
-                    "example": 0
+                    "example": 1
                 },
                 "hasDefault": {
-                    "type": "boolean",
-                    "example": true
+                    "type": "integer",
+                    "example": 1
                 },
                 "name": {
                     "type": "string",
@@ -6193,10 +6321,6 @@ var doc = `{
                     "type": "integer",
                     "example": 0
                 },
-                "id": {
-                    "type": "string",
-                    "example": "123"
-                },
                 "name": {
                     "type": "string",
                     "example": "binlog_size"
@@ -6204,6 +6328,10 @@ var doc = `{
                 "note": {
                     "type": "string",
                     "example": "binlog cache size"
+                },
+                "paramId": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "range": {
                     "type": "array",
@@ -6245,12 +6373,8 @@ var doc = `{
                     "example": 0
                 },
                 "hasDefault": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "id": {
-                    "type": "string",
-                    "example": "abc"
+                    "type": "integer",
+                    "example": 1
                 },
                 "name": {
                     "type": "string",
@@ -6259,6 +6383,10 @@ var doc = `{
                 "note": {
                     "type": "string",
                     "example": "default param group"
+                },
+                "paramGroupId": {
+                    "type": "integer",
+                    "example": 1
                 },
                 "params": {
                     "type": "array",

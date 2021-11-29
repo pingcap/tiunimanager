@@ -126,7 +126,7 @@ message DBParamDTO {
   string componentType = 3;
   int32 type = 4;
   string unit = 5;
-  string range = 6;
+  repeated string range = 6;
   int32 hasReboot = 7;
   int32 source = 8;
   string defaultValue = 9;
@@ -142,7 +142,7 @@ message DBClusterParamDTO {
   string componentType = 3;
   int32 type = 4;
   string unit = 5;
-  string range = 6;
+  repeated string range = 6;
   int32 hasReboot = 7;
   int32 source = 8;
   string defaultValue = 9;

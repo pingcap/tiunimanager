@@ -80,6 +80,8 @@ const (
 	TIEM_BACKUP_STRATEGY_QUERY_FAILED  TIEM_ERROR_CODE = 613
 	TIEM_MONITOR_NOT_FOUND             TIEM_ERROR_CODE = 614
 	TIEM_TRANSPORT_RECORD_DEL_FAIL     TIEM_ERROR_CODE = 615
+
+	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL TIEM_ERROR_CODE = 20500
 )
 
 type ErrorCodeExplanation struct {
@@ -161,4 +163,7 @@ var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_QUERY_PERMISSION_FAILED: {TIEM_QUERY_PERMISSION_FAILED, "query permission failed", 500},
 	TIEM_ADD_TOKEN_FAILED:        {TIEM_ADD_TOKEN_FAILED, "add token failed", 500},
 	TIEM_TOKEN_NOT_FOUND:         {TIEM_TOKEN_NOT_FOUND, "token not found", 500},
+
+	// param group & cluster param
+	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL: {TIEM_DEFAULT_PARAM_GROUP_NOT_DEL, "The default param group cannot be deleted", 500},
 }

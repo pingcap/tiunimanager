@@ -809,32 +809,6 @@ definitions:
       portRangeStart:
         type: integer
     type: object
-  knowledge.ParamValueConstraint:
-    properties:
-      contrastValue:
-        type: object
-      type:
-        type: string
-    type: object
-  knowledge.Parameter:
-    properties:
-      constraints:
-        items:
-          $ref: '#/definitions/knowledge.ParamValueConstraint'
-        type: array
-      defaultValue:
-        type: object
-      desc:
-        type: string
-      name:
-        type: string
-      needRestart:
-        type: boolean
-      type:
-        type: integer
-      unit:
-        type: string
-    type: object
   log.SearchTiDBLogDetail:
     properties:
       clusterId:
@@ -1346,25 +1320,82 @@ definitions:
         example: password
         type: string
     type: object
-  parameter.ParamInstance:
+  parameter.InspectParamsResp:
     properties:
+      componentType:
+        example: tidb
+        type: string
+      id:
+        example: 1
+        type: integer
+      inspectValue:
+        example: "1"
+        type: string
+      instance:
+        example: 172.16.5.23
+        type: string
       name:
+        example: binlog_cache
+        type: string
+      realValue:
+        $ref: '#/definitions/parameter.ParamRealValue'
+    type: object
+  parameter.ListParamsResp:
+    properties:
+      componentType:
+        example: tidb
+        type: string
+      createTime:
+        example: 1636698675
+        type: integer
+      defaultValue:
+        example: "1"
+        type: string
+      description:
+        example: binlog cache size
+        type: string
+      hasReboot:
+        example: 0
+        type: integer
+      name:
+        example: binlog_size
+        type: string
+      paramId:
+        example: 1
+        type: integer
+      range:
+        example:
+        - "1"
+        - ' 1000'
+        items:
+          type: string
+        type: array
+      realValue:
+        $ref: '#/definitions/parameter.ParamRealValue'
+      type:
+        example: 0
+        type: integer
+      unit:
+        example: mb
+        type: string
+      updateTime:
+        example: 1636698675
+        type: integer
+    type: object
+  parameter.ParamInstanceRealValue:
+    properties:
+      instance:
         type: string
       value:
-        type: object
+        type: string
     type: object
-  parameter.ParamItem:
+  parameter.ParamRealValue:
     properties:
-      currentValue:
-        $ref: '#/definitions/parameter.ParamInstance'
-      definition:
-        $ref: '#/definitions/knowledge.Parameter'
-    type: object
-  parameter.ParamUpdateReq:
-    properties:
-      values:
+      cluster:
+        type: string
+      instances:
         items:
-          $ref: '#/definitions/parameter.ParamInstance'
+          $ref: '#/definitions/parameter.ParamInstanceRealValue'
         type: array
     type: object
   parameter.ParamUpdateRsp:
@@ -1375,6 +1406,21 @@ definitions:
         type: string
       taskId:
         type: integer
+    type: object
+  parameter.UpdateParam:
+    properties:
+      paramId:
+        example: 1
+        type: integer
+      realValue:
+        $ref: '#/definitions/parameter.ParamRealValue'
+    type: object
+  parameter.UpdateParamsReq:
+    properties:
+      params:
+        items:
+          $ref: '#/definitions/parameter.UpdateParam'
+        type: array
     type: object
   paramgroup.ApplyParamGroupReq:
     properties:
@@ -1387,23 +1433,23 @@ definitions:
       clusterId:
         example: "123"
         type: string
-      id:
-        example: abc
-        type: string
+      paramGroupId:
+        example: 1
+        type: integer
     type: object
   paramgroup.CommonParamGroupResp:
     properties:
-      id:
-        example: abc
-        type: string
+      paramGroupId:
+        example: 1
+        type: integer
     type: object
   paramgroup.CopyParamGroupReq:
     properties:
       name:
-        example: 8C16GV4_default
+        example: 8C16GV4_copy
         type: string
       note:
-        example: default param group
+        example: copy param group
         type: string
     type: object
   paramgroup.CreateAndUpdateParam:
@@ -1414,21 +1460,21 @@ definitions:
       description:
         example: binlog cache size
         type: string
-      id:
-        example: "123"
-        type: string
+      paramId:
+        example: 123
+        type: integer
     type: object
   paramgroup.CreateParamGroupReq:
     properties:
       dbType:
-        example: 0
+        example: 1
         type: integer
       groupType:
-        example: 0
+        example: 1
         type: integer
       hasDefault:
-        example: true
-        type: boolean
+        example: 1
+        type: integer
       name:
         example: 8C16GV4_default
         type: string
@@ -1463,15 +1509,15 @@ definitions:
       hasReboot:
         example: 0
         type: integer
-      id:
-        example: "123"
-        type: string
       name:
         example: binlog_size
         type: string
       note:
         example: binlog cache size
         type: string
+      paramId:
+        example: 1
+        type: integer
       range:
         example:
         - "1"
@@ -1501,17 +1547,17 @@ definitions:
         example: 0
         type: integer
       hasDefault:
-        example: true
-        type: boolean
-      id:
-        example: abc
-        type: string
+        example: 1
+        type: integer
       name:
         example: default
         type: string
       note:
         example: default param group
         type: string
+      paramGroupId:
+        example: 1
+        type: integer
       params:
         items:
           $ref: '#/definitions/paramgroup.ParamDetail'
@@ -2351,7 +2397,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/parameter.ParamItem'
+                    $ref: '#/definitions/parameter.ListParamsResp'
                   type: array
               type: object
         "401":
@@ -2371,7 +2417,7 @@ paths:
       summary: query params of a cluster
       tags:
       - cluster params
-    post:
+    put:
       consumes:
       - application/json
       description: submit params
@@ -2381,7 +2427,7 @@ paths:
         name: updateReq
         required: true
         schema:
-          $ref: '#/definitions/parameter.ParamUpdateReq'
+          $ref: '#/definitions/parameter.UpdateParamsReq'
       - description: clusterId
         in: path
         name: clusterId
@@ -2414,6 +2460,46 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: submit params
+      tags:
+      - cluster params
+  /clusters/{clusterId}/params/inspect:
+    post:
+      consumes:
+      - application/json
+      description: inspect params
+      parameters:
+      - description: clusterId
+        in: path
+        name: clusterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/parameter.InspectParamsResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: inspect params
       tags:
       - cluster params
   /clusters/{clusterId}/restart:

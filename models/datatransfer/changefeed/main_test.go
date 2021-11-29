@@ -17,10 +17,10 @@
 package changefeed
 
 import (
-	"github.com/pingcap-inc/tiem/domainmodels/database"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"github.com/pingcap-inc/tiem/models/database"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"

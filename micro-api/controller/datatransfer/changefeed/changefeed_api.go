@@ -17,7 +17,7 @@ package changefeed
 
 import (
 	"github.com/gin-gonic/gin"
-	changefeed2 "github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
+	apiModels "github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
@@ -29,14 +29,14 @@ import (
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param changeFeedTask body domain.ChangeFeedTask true "change feed task request"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTask{downstream=MysqlDownstream}}
+// @Param changeFeedTask body apiModels.ChangeFeedTask true "change feed task request"
+// @Success 200 {object} controller.CommonResult{data=apiModels.ChangeFeedTask{downstream=apiModels.MysqlDownstream}}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/ [post]
 func Create(c *gin.Context) {
-	var req changefeed2.ChangeFeedTask
+	var req apiModels.ChangeFeedTask
 
 	err, requestBody := controller.HandleJsonRequestFromBody(c, &req)
 
@@ -54,14 +54,14 @@ func Create(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param queryReq query QueryReq true "change feed tasks query condition"
-// @Success 200 {object} controller.ResultWithPage{data=[]ChangeFeedTaskDetail}
+// @Param queryReq query apiModels.QueryReq true "change feed tasks query condition"
+// @Success 200 {object} controller.ResultWithPage{data=[]apiModels.ChangeFeedTaskDetail}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/ [get]
 func Query(c *gin.Context) {
-	var req changefeed2.QueryReq
+	var req apiModels.QueryReq
 
 	err, requestBody := controller.HandleJsonRequestFromBody(c, &req)
 
@@ -82,13 +82,13 @@ const paramNameOfChangeFeedTaskId = "changeFeedTaskId"
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail}
+// @Success 200 {object} controller.CommonResult{data=apiModels.ChangeFeedTaskDetail}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/ [get]
 func Detail(c *gin.Context) {
-	err, requestBody := controller.HandleJsonRequestWithBuiltReq(c, &changefeed2.DetailReq{
+	err, requestBody := controller.HandleJsonRequestWithBuiltReq(c, &apiModels.DetailReq{
 		Id: c.Param(paramNameOfChangeFeedTaskId),
 	})
 
@@ -107,13 +107,13 @@ func Detail(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail}
+// @Success 200 {object} controller.CommonResult{data=apiModels.ChangeFeedTaskDetail}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/pause [post]
 func Pause(c *gin.Context) {
-	err, requestBody := controller.HandleJsonRequestWithBuiltReq(c, &changefeed2.PauseReq{
+	err, requestBody := controller.HandleJsonRequestWithBuiltReq(c, &apiModels.PauseReq{
 		Id: c.Param(paramNameOfChangeFeedTaskId),
 	})
 
@@ -132,13 +132,13 @@ func Pause(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail{downstream=TiDBDownstream}}
+// @Success 200 {object} controller.CommonResult{data=apiModels.ChangeFeedTaskDetail{downstream=apiModels.TiDBDownstream}}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/resume [post]
 func Resume(c *gin.Context) {
-	err, requestBody := controller.HandleJsonRequestWithBuiltReq(c, &changefeed2.ResumeReq{
+	err, requestBody := controller.HandleJsonRequestWithBuiltReq(c, &apiModels.ResumeReq{
 		Id: c.Param(paramNameOfChangeFeedTaskId),
 	})
 
@@ -157,20 +157,20 @@ func Resume(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Param task body ChangeFeedTask true "change feed task"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail{downstream=KafkaDownstream}}
+// @Param task body apiModels.ChangeFeedTask true "change feed task"
+// @Success 200 {object} controller.CommonResult{data=apiModels.ChangeFeedTaskDetail{downstream=apiModels.KafkaDownstream}}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/update [post]
 func Update(c *gin.Context) {
-	var req changefeed2.UpdateReq
+	var req apiModels.UpdateReq
 
 	err, requestBody := controller.HandleJsonRequestFromBody(c,
 		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
-			req.(*changefeed2.UpdateReq).Id = c.Param(paramNameOfChangeFeedTaskId)
+			req.(*apiModels.UpdateReq).Id = c.Param(paramNameOfChangeFeedTaskId)
 			return nil
 		})
 
@@ -189,13 +189,13 @@ func Update(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail}
+// @Success 200 {object} controller.CommonResult{data=apiModels.ChangeFeedTaskDetail}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId} [delete]
 func Delete(c *gin.Context) {
-	err, requestBody := controller.HandleJsonRequestWithBuiltReq(c, &changefeed2.DeleteReq{
+	err, requestBody := controller.HandleJsonRequestWithBuiltReq(c, &apiModels.DeleteReq{
 		Id: c.Param(paramNameOfChangeFeedTaskId),
 	})
 

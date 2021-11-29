@@ -13,8 +13,13 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package domainmodels
+package changefeed
 
+type ChangeFeedManager struct {
 
+}
 
-
+func (p *ChangeFeedManager) Create(name string) string {
+	// todo call db interface
+	return "MockId"
+}

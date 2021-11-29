@@ -19,7 +19,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
+	changeFeedApi "github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
+	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/service/datatransfer/changefeed"
 	"net/http"
 	"strconv"
 	"time"
@@ -49,17 +50,22 @@ var SuccessResponseStatus = &clusterpb.ResponseStatusDTO{Code: 0}
 var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
-	resourceManager *resource.ResourceManager
-	authManager     *user.AuthManager
-	tenantManager   *user.TenantManager
-	userManager     *user.UserManager
+	resourceManager  *resource.ResourceManager
+	authManager      *user.AuthManager
+	tenantManager    *user.TenantManager
+	userManager      *user.UserManager
+	changeFeedManager *changeFeedManager.ChangeFeedManager
 }
 
-func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() string) {
-
+func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]byte, error) ) {
 	if err == nil {
-		resp.Response = getData()
-
+		respData, getDataError := getData()
+		if getDataError != nil {
+			err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, "", getDataError)
+		} else {
+			resp.Code = int32(common.TIEM_SUCCESS)
+			resp.Response = string(respData)
+		}
 	}
 
 	if _, ok := err.(framework.TiEMError); !ok {
@@ -74,19 +80,22 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 	request.GetOperator()
 	reqData := request.GetRequest()
 
-	task := &changefeed.ChangeFeedTask{}
+	task := &changeFeedApi.ChangeFeedTask{}
+
 	err := json.Unmarshal([]byte(reqData), task)
 
 	if err != nil {
 		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
 	}
 
-	// call service
+	result := handler.changeFeedManager.Create(task.Name)
 
-	handleResponse(response, err, func() string {
-		// wrap response data
-		return "data"
+	handleResponse(response, err, func() ([]byte, error) {
+		task.Id = result
+		return json.Marshal(task)
 	})
+
 	return nil
 }
 

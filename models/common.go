@@ -13,7 +13,7 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package domainmodels
+package models
 
 import (
 	"time"

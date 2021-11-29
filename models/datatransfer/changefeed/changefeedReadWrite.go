@@ -18,10 +18,10 @@ package changefeed
 import (
 	"context"
 	"database/sql"
-	"github.com/pingcap-inc/tiem/domainmodels"
-	"github.com/pingcap-inc/tiem/domainmodels/database"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/database"
 	"time"
 )
 
@@ -129,7 +129,7 @@ func (m *GormChangeFeedReadWrite) QueryByClusterId(ctx context.Context, clusterI
 
 	tasks = make([]*ChangeFeedTask, length)
 
-	return tasks, total, database.DB(ctx).Table(domainmodels.TABLE_NAME_CHANGE_FEED_TASKS).
+	return tasks, total, database.DB(ctx).Table(models.TABLE_NAME_CHANGE_FEED_TASKS).
 		Where("cluster_id = ?", clusterId).
 		Order("created_at").Offset(offset).Limit(length).Find(&tasks).Count(&total).Error
 }

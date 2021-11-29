@@ -18,15 +18,15 @@ package changefeed
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/domainmodels"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
 	"gorm.io/gorm"
 	"time"
 )
 
 type ChangeFeedTask struct {
-	domainmodels.Entity
+	models.Entity
 	Name              string         `gorm:"type:varchar(32)"`
 	ClusterId         string         `gorm:"not null;type:varchar(22);index"`
 	Type              DownstreamType `gorm:"not null;type:varchar(16)"`

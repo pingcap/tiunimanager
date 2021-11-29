@@ -373,9 +373,12 @@ func Apply(c *gin.Context) {
 		return
 	}
 
+	operator := controller.GetOperator(c)
 	reqDTO := &clusterpb.ApplyParamGroupRequest{
 		ParamGroupId: int64(paramGroupId),
 		ClusterId:    req.ClusterId,
+		Operator:     operator.ConvertToDTO(),
+		NeedReboot:   req.NeedReboot,
 	}
 	resp, err := client.ClusterClient.ApplyParamGroup(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 	if err != nil {

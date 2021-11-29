@@ -81,6 +81,8 @@ const (
 	TIEM_TRANSPORT_RECORD_DEL_FAIL     TIEM_ERROR_CODE = 615
 
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL TIEM_ERROR_CODE = 20500
+	TIEM_MODIFY_PARAM_FAILED         TIEM_ERROR_CODE = 20501
+	TIEM_CONVERT_OBJ_FAILED          TIEM_ERROR_CODE = 20502
 )
 
 type ErrorCodeExplanation struct {
@@ -165,4 +167,6 @@ var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
 
 	// param group & cluster param
 	TIEM_DEFAULT_PARAM_GROUP_NOT_DEL: {TIEM_DEFAULT_PARAM_GROUP_NOT_DEL, "The default param group cannot be deleted", 500},
+	TIEM_MODIFY_PARAM_FAILED:         {TIEM_MODIFY_PARAM_FAILED, "apply or modify parameters failed!", 500},
+	TIEM_CONVERT_OBJ_FAILED:          {TIEM_CONVERT_OBJ_FAILED, "convert obj failed!", 500},
 }

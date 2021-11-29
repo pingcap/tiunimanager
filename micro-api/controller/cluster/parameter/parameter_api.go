@@ -132,9 +132,10 @@ func UpdateParams(c *gin.Context) {
 	}
 	operator := controller.GetOperator(c)
 	reqDTO := &clusterpb.UpdateClusterParamsRequest{
-		ClusterId: clusterId,
-		Operator:  operator.ConvertToDTO(),
-		Params:    params,
+		ClusterId:  clusterId,
+		Operator:   operator.ConvertToDTO(),
+		Params:     params,
+		NeedReboot: req.NeedReboot,
 	}
 	resp, err := client.ClusterClient.UpdateClusterParams(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 	if err != nil {

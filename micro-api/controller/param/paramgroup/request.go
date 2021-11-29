@@ -62,7 +62,8 @@ type CopyParamGroupReq struct {
 }
 
 type ApplyParamGroupReq struct {
-	ClusterId string `json:"clusterId" example:"123"`
+	ClusterId  string `json:"clusterId" example:"123"`
+	NeedReboot bool   `json:"needReboot" example:"false"`
 }
 
 type CreateAndUpdateParam struct {

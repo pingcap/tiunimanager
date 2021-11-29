@@ -18,6 +18,7 @@ package domain
 
 import (
 	ctx "context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -76,6 +77,7 @@ var contextClusterKey = "clusterAggregation"
 var contextTakeoverReqKey = "takeoverRequest"
 var contextDeleteNodeKey = "deleteNode"
 var contextAllocRequestKey = "allocResourceRequest"
+var contextModifyParamsKey = "modifyParams"
 
 func (cluster *ClusterAggregation) tryStartFlow(ctx ctx.Context, flow *FlowWorkAggregation) error {
 	if cluster.CurrentWorkFlow != nil {
@@ -373,9 +375,15 @@ func GetClusterDetail(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId str
 	return cluster, err
 }
 
-func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
+func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string, modifyParam *ModifyParam) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
+	b, err := json.Marshal(modifyParam.Params)
+	if err != nil {
+		getLogger().Errorf("modify parameters clusterid = %s, json marshal errStr: %s", clusterId, err.Error())
+		return nil, err
+	}
+	content := string(b)
 	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
 	clusterAggregation.CurrentOperator = operator
 	clusterAggregation.LastParameterRecord = &ParameterRecord{
@@ -387,18 +395,14 @@ func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId str
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	//currentFlow := clusterAggregation.CurrentWorkFlow
-	//if currentFlow != nil && !currentFlow.Finished(){
-	//	return clusterAggregation, errors.New("incomplete processing flow")
-	//}
-
 	flow, err := CreateFlowWork(ctx, clusterId, FlowModifyParameters, operator)
 	if err != nil {
-		// todo
 		getLogger().Errorf("modify parameters clusterid = %s, content = %s, errStr: %s", clusterId, content, err.Error())
+		return nil, err
 	}
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.AddContext(contextModifyParamsKey, modifyParam)
 
 	flow.Start()
 
@@ -418,6 +422,7 @@ func BuildClusterLogConfig(ctx ctx.Context, clusterId string) error {
 	}
 	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowBuildLogConfig, BuildSystemOperator())
 	if err != nil {
+		getLogger().Errorf("build cluster log config clusterid = %s, errStr: %s", clusterId, err.Error())
 		return err
 	}
 
@@ -783,8 +788,49 @@ func syncTopology(task *TaskEntity, context *FlowContext) bool {
 }
 
 func modifyParameters(task *TaskEntity, context *FlowContext) bool {
+	modifyParam := context.GetData(contextModifyParamsKey).(*ModifyParam)
+	getLoggerWithContext(context).Debugf("got modify need reboot: %v, params size: %d", modifyParam.NeedReboot, len(modifyParam.Params))
+
+	// grouping by parameter source
+	paramContainer := make(map[int32][]*ApplyParam, 0)
+	for i, param := range modifyParam.Params {
+		// if source is 2, then insert tiup and sql respectively
+		if param.Source == int32(TiupAndSql) {
+			putParamContainer(paramContainer, int32(TiUP), modifyParam, i)
+			putParamContainer(paramContainer, int32(SQL), modifyParam, i)
+		} else {
+			putParamContainer(paramContainer, param.Source, modifyParam, i)
+		}
+	}
+
+	for source, params := range paramContainer {
+		getLoggerWithContext(context).Debugf("loop current param container source: %v, params size: %d", source, len(params))
+		switch source {
+		case int32(TiUP):
+			// todo: invoke secondparty.SecondParty.MicroSrvTiupEditGlobalConfig()
+		case int32(SQL):
+			// invoke
+		case int32(API):
+			// invoke
+		}
+	}
+
+	if modifyParam.NeedReboot {
+		// todo: invoke secondparty.SecondParty.MicroSrvTiupReload()
+	}
+
 	task.Success(nil)
 	return true
+}
+
+func putParamContainer(paramContainer map[int32][]*ApplyParam, source int32, modifyParam *ModifyParam, i int) {
+	params := paramContainer[source]
+	if params == nil {
+		paramContainer[source] = []*ApplyParam{modifyParam.Params[i]}
+	} else {
+		params = append(params, modifyParam.Params[i])
+		paramContainer[source] = params
+	}
 }
 
 func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {

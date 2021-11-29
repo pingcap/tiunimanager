@@ -19,7 +19,7 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/models/vo/datatransfer/changefeed"
+	"github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
 	"net/http"
 	"strconv"
 	"time"

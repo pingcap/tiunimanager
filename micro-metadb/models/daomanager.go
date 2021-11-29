@@ -21,7 +21,6 @@ import (
 	cryrand "crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"github.com/pingcap-inc/tiem/metadb/models/datatransfer"
 	"time"
 
 	"strconv"
@@ -47,7 +46,6 @@ type DAOManager struct {
 	clusterManager  *DAOClusterManager
 	accountManager  *DAOAccountManager
 	resourceManager *DAOResourceManager
-	changeFeedTaskManager *datatransfer.GormChangeFeedReadWrite
 }
 
 func NewDAOManager(fw *framework.BaseFramework) *DAOManager {
@@ -81,14 +79,6 @@ func (dao *DAOManager) ResourceManager() *DAOResourceManager {
 
 func (dao *DAOManager) SetResourceManager(resourceManager *DAOResourceManager) {
 	dao.resourceManager = resourceManager
-}
-
-func (dao *DAOManager) ChangeFeedTaskManager() *datatransfer.GormChangeFeedReadWrite {
-	return dao.changeFeedTaskManager
-}
-
-func (dao *DAOManager) SetChangeFeedTaskManager(changeFeedTaskManager *datatransfer.GormChangeFeedReadWrite) {
-	dao.changeFeedTaskManager = changeFeedTaskManager
 }
 
 func (dao *DAOManager) Db() *gorm.DB {

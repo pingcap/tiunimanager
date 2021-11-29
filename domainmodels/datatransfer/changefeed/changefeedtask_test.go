@@ -13,12 +13,13 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package datatransfer
+package changefeed
 
 import (
 	"context"
 	"database/sql"
-	"github.com/pingcap-inc/tiem/metadb/models"
+	"github.com/pingcap-inc/tiem/micro-metadb/models"
+	models2 "github.com/pingcap-inc/tiem/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -26,7 +27,7 @@ import (
 
 func TestChangeFeedTask_Locked(t1 *testing.T) {
 	type fields struct {
-		Entity            models.Entity
+		Entity            models2.Entity
 		Name              string
 		ClusterId         string
 		DownstreamType    DownstreamType
@@ -64,7 +65,7 @@ func TestChangeFeedTask_Locked(t1 *testing.T) {
 }
 
 func TestGormChangeFeedReadWrite_Create(t *testing.T) {
-	existed, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}})
+	existed, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models2.Entity{TenantId: "111"}})
 	defer testRW.Delete(context.TODO(), existed.ID)
 
 	type args struct {
@@ -76,8 +77,8 @@ func TestGormChangeFeedReadWrite_Create(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"normal", args{context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "dafadsfefesdf"}}, false},
-		{"without tenant", args{context.TODO(), &ChangeFeedTask{Entity: models.Entity{ID: existed.ID}}}, true},
+		{"normal", args{context.TODO(), &ChangeFeedTask{Entity: models2.Entity{TenantId: "111"}, ClusterId: "dafadsfefesdf"}}, false},
+		{"without tenant", args{context.TODO(), &ChangeFeedTask{Entity: models2.Entity{ID: existed.ID}}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -98,8 +99,8 @@ func TestGormChangeFeedReadWrite_Create(t *testing.T) {
 }
 
 func TestGormChangeFeedReadWrite_Delete(t *testing.T) {
-	existed, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}})
-	deleted, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "111"})
+	existed, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models2.Entity{TenantId: "111"}})
+	deleted, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models2.Entity{TenantId: "111"}, ClusterId: "111"})
 	testRW.Db(context.TODO()).Delete(deleted)
 
 	type args struct {
@@ -134,7 +135,7 @@ func TestGormChangeFeedReadWrite_Delete(t *testing.T) {
 
 func TestGormChangeFeedReadWrite_LockStatus(t *testing.T) {
 	locked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
-		Entity: models.Entity{TenantId: "111"},
+		Entity: models2.Entity{TenantId: "111"},
 		StatusLock: sql.NullTime{
 			Time:  time.Now(),
 			Valid: true,
@@ -142,7 +143,7 @@ func TestGormChangeFeedReadWrite_LockStatus(t *testing.T) {
 	})
 
 	unlocked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
-		Entity: models.Entity{TenantId: "111"},
+		Entity: models2.Entity{TenantId: "111"},
 	})
 
 	testRW.Db(context.TODO()).Table(models.TABLE_NAME_CHANGE_FEED_TASKS).Where("id", unlocked.ID).Update("status_lock", sql.NullTime{
@@ -183,11 +184,11 @@ func TestGormChangeFeedReadWrite_LockStatus(t *testing.T) {
 }
 
 func TestGormChangeFeedReadWrite_QueryByClusterId(t *testing.T) {
-	t1, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "6666"})
-	anotherCluster, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "3121"})
-	deleted, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "6666"})
-	t4, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "6666", StartTS: int64(9999)})
-	t5, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}, ClusterId: "6666"})
+	t1, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models2.Entity{TenantId: "111"}, ClusterId: "6666"})
+	anotherCluster, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models2.Entity{TenantId: "111"}, ClusterId: "3121"})
+	deleted, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models2.Entity{TenantId: "111"}, ClusterId: "6666"})
+	t4, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models2.Entity{TenantId: "111"}, ClusterId: "6666", StartTS: int64(9999)})
+	t5, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models2.Entity{TenantId: "111"}, ClusterId: "6666"})
 	defer testRW.Delete(context.TODO(), t1.ID)
 	defer testRW.Delete(context.TODO(), anotherCluster.ID)
 	testRW.Db(context.TODO()).Delete(deleted)
@@ -203,14 +204,14 @@ func TestGormChangeFeedReadWrite_QueryByClusterId(t *testing.T) {
 func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
 	newStatus := int8(2)
 	locked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
-		Entity: models.Entity{TenantId: "111"},
+		Entity: models2.Entity{TenantId: "111"},
 		StatusLock: sql.NullTime{
 			Time:  time.Now(),
 			Valid: true,
 		},
 	})
 	unlocked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
-		Entity: models.Entity{TenantId: "111"},
+		Entity: models2.Entity{TenantId: "111"},
 	})
 	testRW.Db(context.TODO()).Table(models.TABLE_NAME_CHANGE_FEED_TASKS).Where("id", unlocked.ID).Update("status_lock", sql.NullTime{
 		Time:  time.Now().Add(time.Minute * -3),
@@ -253,12 +254,12 @@ func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
 }
 
 func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
-	existed, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models.Entity{TenantId: "111"}})
+	existed, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: models2.Entity{TenantId: "111"}})
 	defer testRW.Delete(context.TODO(), existed.ID)
 
 	newString := "new"
 	newInt := 99
-	existed.Downstream = &TiDBDownstream {
+	existed.Downstream = &TiDBDownstream{
 		Password: "updated",
 	}
 	existed.Type = DownstreamTypeTiDB
@@ -278,7 +279,7 @@ func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
 	}{
 		{"normal", args{context.TODO(), existed}, false},
 		{"not existed", args{context.TODO(), &ChangeFeedTask{
-			Entity: models.Entity{ID: "111"},
+			Entity: models2.Entity{ID: "111"},
 		}}, true},
 		{"without id", args{context.TODO(), &ChangeFeedTask{}}, true},
 	}

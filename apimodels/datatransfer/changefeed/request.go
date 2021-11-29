@@ -13,4 +13,35 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package datatransfer
+package changefeed
+
+import "github.com/pingcap-inc/tiem/micro-api/controller"
+
+type CreateReq struct {
+	ChangeFeedTask
+}
+
+type QueryReq struct {
+	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
+	controller.Page
+}
+
+type DetailReq struct {
+	Id string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
+}
+
+type PauseReq struct {
+	Id string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
+}
+
+type ResumeReq struct {
+	Id string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
+}
+
+type UpdateReq struct {
+	ChangeFeedTask
+}
+
+type DeleteReq struct {
+	Id string `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
+}

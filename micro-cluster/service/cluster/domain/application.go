@@ -469,7 +469,7 @@ func collectorTiDBLogConfig(task *TaskEntity, ctx *FlowContext) bool {
 
 var resourceManager = resource.NewResourceManager()
 
-func prepareResource(task *TaskEntity, flowContext *FlowContext) bool {
+var prepareResource TaskExecutor = func (task *TaskEntity, flowContext *FlowContext) bool {
 	clusterAggregation := flowContext.GetData(contextClusterKey).(*ClusterAggregation)
 	demands := clusterAggregation.AddedComponentDemand
 

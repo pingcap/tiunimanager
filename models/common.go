@@ -16,6 +16,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"github.com/mozillazg/go-pinyin"
@@ -69,6 +70,10 @@ func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
 		e.Code = e.ID
 	}
 	e.Status = 0
+
+	if len(e.Code) > 128 {
+		return errors.New("entity code is too long, code = " + e.Code)
+	}
 
 	return nil
 }

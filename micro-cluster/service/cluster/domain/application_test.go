@@ -20,6 +20,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -27,9 +31,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	mock "github.com/pingcap-inc/tiem/test/mockdb"
 	"github.com/pingcap-inc/tiem/test/mocksecondparty"
-	"strconv"
-	"testing"
-	"time"
 
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 
@@ -443,7 +444,7 @@ func TestStopCluster(t *testing.T) {
 }
 
 func TestBuildClusterLogConfig(t *testing.T) {
-	err := BuildClusterLogConfig(context.TODO(),  "testCluster")
+	err := BuildClusterLogConfig(context.TODO(), "testCluster")
 	assert.NoError(t, err)
 }
 
@@ -452,7 +453,24 @@ func TestModifyParameters(t *testing.T) {
 		Id:       "testoperator",
 		Name:     "testoperator",
 		TenantId: "testoperator",
-	}, "testCluster", "content")
+	}, "testCluster", &ModifyParam{NeedReboot: false, Params: []*ApplyParam{
+		{
+			ParamId:       1,
+			Name:          "test_param_1",
+			ComponentType: "TiDB",
+			HasReboot:     1,
+			Source:        0,
+			RealValue:     clusterpb.ParamRealValueDTO{Cluster: "1"},
+		},
+		{
+			ParamId:       2,
+			Name:          "test_param_2",
+			ComponentType: "TiKV",
+			HasReboot:     1,
+			Source:        0,
+			RealValue:     clusterpb.ParamRealValueDTO{Cluster: "2"},
+		},
+	}})
 	assert.NoError(t, err)
 	assert.Equal(t, "testCluster", got.Cluster.ClusterName)
 }
@@ -484,14 +502,103 @@ func Test_destroyCluster(t *testing.T) {
 		ret := destroyCluster(task, flowCtx)
 
 		assert.Equal(t, true, ret)
-	})}
+	})
+}
 
 func Test_destroyTasks(t *testing.T) {
 	assert.True(t, destroyTasks(&TaskEntity{}, nil))
 }
 
 func Test_modifyParameters(t *testing.T) {
-	assert.True(t, modifyParameters(&TaskEntity{}, nil))
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	secondparty.SecondParty = mockTiup
+
+	t.Run("success", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupEditGlobalConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		modifyCtx := NewFlowContext(context.TODO())
+		modifyCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+		})
+		modifyCtx.SetData(contextModifyParamsKey, &ModifyParam{
+			NeedReboot: false,
+			Params: []*ApplyParam{
+				{
+					ParamId:       1,
+					Name:          "test_param_1",
+					ComponentType: "TiDB",
+					HasReboot:     1,
+					Source:        0,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "1"},
+				},
+				{
+					ParamId:       2,
+					Name:          "test_param_2",
+					ComponentType: "TiKV",
+					HasReboot:     1,
+					Source:        0,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "2"},
+				},
+			},
+		})
+		ret := modifyParameters(task, modifyCtx)
+		assert.Equal(t, true, ret)
+	})
+}
+
+func Test_refreshParameter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	secondparty.SecondParty = mockTiup
+
+	t.Run("success", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupReload(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		refreshCtx := NewFlowContext(context.TODO())
+		refreshCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+		})
+		refreshCtx.SetData(contextModifyParamsKey, &ModifyParam{
+			NeedReboot: true,
+			Params: []*ApplyParam{
+				{
+					ParamId:       1,
+					Name:          "test_param_1",
+					ComponentType: "TiDB",
+					HasReboot:     1,
+					Source:        0,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "1"},
+				},
+			},
+		})
+		ret := refreshParameter(task, refreshCtx)
+		assert.Equal(t, true, ret)
+	})
 }
 
 func Test_clusterRestart(t *testing.T) {
@@ -921,20 +1028,20 @@ func Test_scaleInCluster(t *testing.T) {
 		flowCtx := NewFlowContext(context.TODO())
 		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
 			Cluster: &Cluster{
-				Id:          "test-tidb123",
-				ClusterName: "test-tidb",
+				Id:             "test-tidb123",
+				ClusterName:    "test-tidb",
 				ClusterVersion: knowledge.ClusterVersion{Code: "v5.0.0", Name: "v5.0.0"},
-				ClusterType: knowledge.ClusterType{Code: "TiDB", Name: "TiDB"},
+				ClusterType:    knowledge.ClusterType{Code: "TiDB", Name: "TiDB"},
 			},
 			CurrentComponentInstances: []*ComponentInstance{
 				{
-					Host: "127.0.0.1",
-					PortList: []int{4000},
+					Host:          "127.0.0.1",
+					PortList:      []int{4000},
 					ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB"},
 				},
 				{
-					Host: "127.0.0.1",
-					PortList: []int{4001},
+					Host:          "127.0.0.1",
+					PortList:      []int{4001},
 					ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB"},
 				},
 			},
@@ -953,20 +1060,20 @@ func Test_scaleInCluster(t *testing.T) {
 		flowCtx := NewFlowContext(context.TODO())
 		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
 			Cluster: &Cluster{
-				Id:          "test-tidb123",
-				ClusterName: "test-tidb",
+				Id:             "test-tidb123",
+				ClusterName:    "test-tidb",
 				ClusterVersion: knowledge.ClusterVersion{Code: "v5.0.0", Name: "v5.0.0"},
-				ClusterType: knowledge.ClusterType{Code: "TiDB", Name: "TiDB"},
+				ClusterType:    knowledge.ClusterType{Code: "TiDB", Name: "TiDB"},
 			},
 			CurrentComponentInstances: []*ComponentInstance{
 				{
-					Host: "127.0.0.1",
-					PortList: []int{4000},
+					Host:          "127.0.0.1",
+					PortList:      []int{4000},
 					ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB"},
 				},
 				{
-					Host: "127.0.0.1",
-					PortList: []int{4001},
+					Host:          "127.0.0.1",
+					PortList:      []int{4001},
 					ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB"},
 				},
 			},
@@ -1017,9 +1124,9 @@ func Test_freedNodeResource(t *testing.T) {
 		},
 		CurrentComponentInstances: []*ComponentInstance{
 			{
-				Host: "127.0.0.1",
+				Host:     "127.0.0.1",
 				PortList: []int{4000},
-				Compute: &resource.ComputeRequirement{CpuCores: 4, Memory: 8},
+				Compute:  &resource.ComputeRequirement{CpuCores: 4, Memory: 8},
 			},
 		},
 	})
@@ -1033,8 +1140,7 @@ func Test_freedNodeResource(t *testing.T) {
 
 func Test_prepareResourceSucceed(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		task1 := &TaskEntity{
-		}
+		task1 := &TaskEntity{}
 		prepareResourceSucceed(task1, &clusterpb.BatchAllocResponse{
 			Rs: &clusterpb.AllocResponseStatus{
 				Code: 0,
@@ -1071,8 +1177,7 @@ func Test_prepareResourceSucceed(t *testing.T) {
 	})
 
 	t.Run("skip", func(t *testing.T) {
-		task2 := &TaskEntity{
-		}
+		task2 := &TaskEntity{}
 		prepareResourceSucceed(task2, &clusterpb.BatchAllocResponse{
 			Rs: &clusterpb.AllocResponseStatus{
 				Code: 0,

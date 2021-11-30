@@ -25,6 +25,8 @@ import (
 	"strconv"
 	"strings"
 
+	spec2 "github.com/pingcap-inc/tiem/library/spec"
+
 	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 
@@ -751,6 +753,9 @@ func syncTopology(task *TaskEntity, context *FlowContext) bool {
 }
 
 func modifyParameters(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
 	modifyParam := context.GetData(contextModifyParamsKey).(*ModifyParam)
 	getLoggerWithContext(context).Debugf("got modify need reboot: %v, params size: %d", modifyParam.NeedReboot, len(modifyParam.Params))
 
@@ -770,18 +775,35 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 		getLoggerWithContext(context).Debugf("loop current param container source: %v, params size: %d", source, len(params))
 		switch source {
 		case int32(TiUP):
-			// todo: invoke secondparty.SecondParty.MicroSrvTiupEditGlobalConfig()
+			configs := make([]secondparty.GlobalComponentConfig, len(params))
+			for i, param := range params {
+				cm := map[string]interface{}{}
+				cm[param.Name] = param.RealValue.Cluster
+				configs[i] = secondparty.GlobalComponentConfig{
+					TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
+					ConfigMap:            cm,
+				}
+			}
+			req := secondparty.CmdEditGlobalConfigReq{
+				TiUPComponent:          secondparty.ClusterComponentTypeStr,
+				InstanceName:           cluster.ClusterName,
+				GlobalComponentConfigs: configs,
+				TimeoutS:               0,
+				Flags:                  []string{},
+			}
+			editConfigId, err := secondparty.SecondParty.MicroSrvTiupEditGlobalConfig(context, req, uint64(task.Id))
+			if err != nil {
+				getLoggerWithContext(context).Errorf("call tiup api edit global config err = %s", err.Error())
+				task.Fail(err)
+				return false
+			}
+			getLoggerWithContext(context).Infof("got editConfigId: %v", editConfigId)
 		case int32(SQL):
-			// invoke
+			// todo: invoke secondparty
 		case int32(API):
-			// invoke
+			// todo: invoke secondparty
 		}
 	}
-
-	if modifyParam.NeedReboot {
-		// todo: invoke secondparty.SecondParty.MicroSrvTiupReload()
-	}
-
 	task.Success(nil)
 	return true
 }
@@ -794,6 +816,34 @@ func putParamContainer(paramContainer map[int32][]*ApplyParam, source int32, mod
 		params = append(params, modifyParam.Params[i])
 		paramContainer[source] = params
 	}
+}
+
+func refreshParameter(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	modifyParam := context.GetData(contextModifyParamsKey).(*ModifyParam)
+	getLoggerWithContext(context).Debugf("got modify need reboot: %v, params size: %d", modifyParam.NeedReboot, len(modifyParam.Params))
+
+	// need tiup reload config
+	if modifyParam.NeedReboot {
+		req := secondparty.CmdReloadConfigReq{
+			TiUPComponent: secondparty.ClusterComponentTypeStr,
+			InstanceName:  cluster.ClusterName,
+			TimeoutS:      0,
+			Flags:         []string{},
+		}
+		reloadId, err := secondparty.SecondParty.MicroSrvTiupReload(context, req, uint64(task.Id))
+		if err != nil {
+			getLoggerWithContext(context).Errorf("call tiup api edit global config err = %s", err.Error())
+			task.Fail(err)
+			return false
+		}
+		getLoggerWithContext(context).Infof("got reloadId: %v", reloadId)
+
+	}
+	task.Success(nil)
+	return true
 }
 
 func fetchTopologyFile(task *TaskEntity, context *FlowContext) bool {

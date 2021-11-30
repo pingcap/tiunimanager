@@ -24,6 +24,8 @@
 
 package paramgroup
 
+import "github.com/pingcap-inc/tiem/micro-api/controller"
+
 // QueryParamGroupResp
 // @Description: query param group
 type QueryParamGroupResp struct {
@@ -47,6 +49,7 @@ type CommonParamGroupResp struct {
 type ApplyParamGroupResp struct {
 	ParamGroupId int64  `json:"paramGroupId" example:"1"`
 	ClusterId    string `json:"clusterId" example:"123"`
+	*controller.StatusInfo
 }
 
 // ParamDetail

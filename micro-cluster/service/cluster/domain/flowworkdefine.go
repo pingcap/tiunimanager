@@ -18,9 +18,10 @@ package domain
 
 import (
 	"context"
+	"time"
+
 	copywriting2 "github.com/pingcap-inc/tiem/library/copywriting"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"time"
 )
 
 func defaultContextParser(s string) *FlowContext {
@@ -86,14 +87,14 @@ func InitFlowMap() {
 		},
 
 		FlowScaleInCluster: {
-			FlowName: FlowScaleInCluster,
+			FlowName:    FlowScaleInCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowScaleInCluster),
-			TaskNodes: map[string]*TaskDefine {
-				"start": {"scaleInCluster", "scaleInDone", "fail", PollingTasK, scaleInCluster},
-				"scaleInDone": {"freeNodeResource", "freeDone", "fail", SyncFuncTask, freeNodeResource},
-				"freeDone": {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
+			TaskNodes: map[string]*TaskDefine{
+				"start":            {"scaleInCluster", "scaleInDone", "fail", PollingTasK, scaleInCluster},
+				"scaleInDone":      {"freeNodeResource", "freeDone", "fail", SyncFuncTask, freeNodeResource},
+				"freeDone":         {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
 				"syncTopologyDone": {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":         {"fail", "", "", SyncFuncTask, ClusterFail},
+				"fail":             {"fail", "", "", SyncFuncTask, ClusterFail},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -118,9 +119,10 @@ func InitFlowMap() {
 			FlowName:    FlowModifyParameters,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowModifyParameters),
 			TaskNodes: map[string]*TaskDefine{
-				"start":      {"modifyParameter", "modifyDone", "fail", PollingTasK, modifyParameters},
-				"modifyDone": {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":       {"fail", "", "", SyncFuncTask, ClusterFail},
+				"start":       {"modifyParameter", "modifyDone", "fail", PollingTasK, modifyParameters},
+				"modifyDone":  {"refreshParameter", "refreshDone", "fail", PollingTasK, refreshParameter},
+				"refreshDone": {"end", "", "", SyncFuncTask, ClusterEnd},
+				"fail":        {"fail", "", "", SyncFuncTask, ClusterFail},
 			},
 			ContextParser: defaultContextParser,
 		},

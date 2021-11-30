@@ -480,14 +480,6 @@ func Test_destroyCluster(t *testing.T) {
 				Id:          "test-tidb123",
 				ClusterName: "test-tidb",
 			},
-			AlteredTopology: &spec.Specification{
-				TiDBServers: []*spec.TiDBSpec{
-					{
-						Host: "127.0.0.1",
-						Port: 4000,
-					},
-				},
-			},
 		})
 		ret := destroyCluster(task, flowCtx)
 
@@ -836,15 +828,8 @@ func Test_deployCluster(t *testing.T) {
 				Id:          "test-tidb123",
 				ClusterName: "test-tidb",
 			},
-			AlteredTopology: &spec.Specification{
-				TiDBServers: []*spec.TiDBSpec{
-					{
-						Host: "127.0.0.1",
-						Port: 4000,
-					},
-				},
-			},
 		})
+		flowCtx.SetData(contextTopologyKey, "topology")
 		ret := deployCluster(task, flowCtx)
 
 		assert.Equal(t, true, ret)
@@ -865,15 +850,8 @@ func Test_deployCluster(t *testing.T) {
 				Id:          "test-tidb123",
 				ClusterName: "test-tidb",
 			},
-			AlteredTopology: &spec.Specification{
-				TiDBServers: []*spec.TiDBSpec{
-					{
-						Host: "127.0.0.1",
-						Port: 4000,
-					},
-				},
-			},
 		})
+		flowCtx.SetData(contextTopologyKey, "topology")
 		ret := deployCluster(task, flowCtx)
 
 		assert.Equal(t, false, ret)
@@ -900,15 +878,8 @@ func Test_scaleOutCluster(t *testing.T) {
 				Id:          "test-tidb123",
 				ClusterName: "test-tidb",
 			},
-			AlteredTopology: &spec.Specification{
-				TiDBServers: []*spec.TiDBSpec{
-					{
-						Host: "127.0.0.1",
-						Port: 4000,
-					},
-				},
-			},
 		})
+		flowCtx.SetData(contextTopologyKey, "topology")
 		ret := scaleOutCluster(task, flowCtx)
 
 		assert.Equal(t, true, ret)
@@ -925,15 +896,8 @@ func Test_scaleOutCluster(t *testing.T) {
 				Id:          "test-tidb123",
 				ClusterName: "test-tidb",
 			},
-			AlteredTopology: &spec.Specification{
-				TiDBServers: []*spec.TiDBSpec{
-					{
-						Host: "127.0.0.1",
-						Port: 4000,
-					},
-				},
-			},
 		})
+		flowCtx.SetData(contextTopologyKey, "topology")
 		ret := scaleOutCluster(task, flowCtx)
 
 		assert.Equal(t, false, ret)

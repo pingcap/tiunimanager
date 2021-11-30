@@ -39,7 +39,7 @@ func init() {
 	secondMicro2 = &SecondMicro{}
 	dbConnParam = DbConnParam{
 		Username: "root",
-		Ip:       "127.0.0.1",
+		IP:       "127.0.0.1",
 		Port:     "4000",
 	}
 	storage = BrStorage{

@@ -31,7 +31,7 @@ import (
 type DbConnParam struct {
 	Username string
 	Password string
-	Ip       string
+	IP       string
 	Port     string
 }
 
@@ -67,7 +67,7 @@ func (secondMicro *SecondMicro) MicroSrvBackUp(ctx context.Context, cluster Clus
 	req.BizID = bizID
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
-		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
+		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
 	} else {
 		var backupReq CmdBackUpReq
@@ -125,7 +125,7 @@ func (secondMicro *SecondMicro) startNewBrShowBackUpInfoThruSQL(ctx context.Cont
 	brSQLCmd := "SHOW BACKUPS"
 	dbConnParam := req.DbConnParameter
 	framework.LogWithContext(ctx).Info("task start processing:", fmt.Sprintf("brSQLCmd:%s", brSQLCmd))
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.IP, dbConnParam.Port))
 	if err != nil {
 		resp.ErrorStr = err.Error()
 		return
@@ -167,7 +167,7 @@ func (secondMicro *SecondMicro) MicroSrvRestore(ctx context.Context, cluster Clu
 	req.BizID = bizID
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
-		err = fmt.Errorf("rsp:%v, err:%s", err, rsp)
+		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
 	} else {
 		var restoreReq CmdRestoreReq
@@ -225,7 +225,7 @@ func (secondMicro *SecondMicro) startNewBrShowRestoreInfoThruSQL(ctx context.Con
 	brSQLCmd := "SHOW RESTORES"
 	dbConnParam := req.DbConnParameter
 	framework.LogWithContext(ctx).Infof("task start processing: brSQLCmd:%s", brSQLCmd)
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.IP, dbConnParam.Port))
 	if err != nil {
 		resp.ErrorStr = err.Error()
 		return
@@ -272,7 +272,7 @@ func (secondMicro *SecondMicro) startNewBrTaskThruSQL(ctx context.Context, taskI
 	go func() {
 		defer close(exitCh)
 
-		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.Ip, dbConnParam.Port))
+		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.IP, dbConnParam.Port))
 		if err != nil {
 			secondMicro.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,

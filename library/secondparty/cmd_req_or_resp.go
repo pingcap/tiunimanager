@@ -15,6 +15,11 @@
 
 package secondparty
 
+import (
+	"github.com/pingcap-inc/tiem/library/spec"
+	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
+)
+
 type CmdDeployReq struct {
 	TiUPComponent TiUPComponentTypeStr
 	TaskID        uint64
@@ -199,4 +204,54 @@ type CmdUpgradeReq struct {
 	TimeoutS      int
 	TiupPath      string
 	Flags         []string
+}
+
+type CmdShowConfigReq struct {
+	TiUPComponent TiUPComponentTypeStr
+	InstanceName  string
+	TimeoutS      int
+	Flags         []string
+}
+
+type CmdShowConfigResp struct {
+	TiDBClusterTopo spec2.Specification
+}
+
+type GlobalComponentConfig struct {
+	TiDBClusterComponent    spec.TiDBClusterComponent
+	ConfigMap 				map[string]interface{}
+}
+
+type CmdEditGlobalConfigReq struct {
+	TiUPComponent 			TiUPComponentTypeStr
+	InstanceName  			string
+	GlobalComponentConfigs  []GlobalComponentConfig
+	TimeoutS      			int
+	Flags         			[]string
+}
+
+type CmdEditInstanceConfigReq struct {
+	TiUPComponent 			TiUPComponentTypeStr
+	InstanceName  			string
+	TiDBClusterComponent    spec.TiDBClusterComponent
+	Host				 	string
+	Port 					int
+	ConfigMap 				map[string]interface{}
+	TimeoutS      			int
+	Flags         			[]string
+}
+
+type CmdEditConfigReq struct {
+	TiUPComponent 			TiUPComponentTypeStr
+	InstanceName  			string
+	NewTopo 			    *spec2.Specification
+	TimeoutS      			int
+	Flags         			[]string
+}
+
+type CmdReloadConfigReq struct {
+	TiUPComponent 			TiUPComponentTypeStr
+	InstanceName  			string
+	TimeoutS      			int
+	Flags         			[]string
 }

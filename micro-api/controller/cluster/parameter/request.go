@@ -33,7 +33,7 @@ type UpdateParam struct {
 	ParamId       int64          `json:"paramId" example:"1"`
 	Name          string         `json:"name" example:"binlog_cache"`
 	ComponentType string         `json:"componentType" example:"TiDB"`
-	HasReboot     int32          `json:"hasReboot" example:"0"`
-	Source        int32          `json:"source" example:"0"`
+	HasReboot     int32          `json:"hasReboot" example:"0" enums:"0,1"`
+	Source        int32          `json:"source" example:"0" enums:"0,1,2,3"`
 	RealValue     ParamRealValue `json:"realValue"`
 }

@@ -840,7 +840,7 @@ func (secondMicro *SecondMicro) startNewTiupEditConfigTask(ctx context.Context, 
 	go func() {
 		//defer os.Remove(topologyTmpFilePath)
 		var args []string
-		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "-f", topologyTmpFilePath)
+		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "--topology-file", topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
 		<-secondMicro.startNewTiupTask(ctx, taskID, secondMicro.TiupBinPath, args, req.TimeoutS)

@@ -217,11 +217,15 @@ type CmdShowConfigResp struct {
 	TiDBClusterTopo spec2.Specification
 }
 
+type GlobalComponentConfig struct {
+	TiDBClusterComponent    spec.TiDBClusterComponent
+	ConfigMap 				map[string]interface{}
+}
+
 type CmdEditGlobalConfigReq struct {
 	TiUPComponent 			TiUPComponentTypeStr
 	InstanceName  			string
-	TiDBClusterComponent    spec.TiDBClusterComponent
-	ConfigMap 				map[string]interface{}
+	GlobalComponentConfigs  []GlobalComponentConfig
 	TimeoutS      			int
 	Flags         			[]string
 }

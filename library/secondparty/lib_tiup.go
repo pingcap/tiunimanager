@@ -592,47 +592,50 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditGlobalConfig(ctx context.Context
 
 func (secondMicro *SecondMicro) startTiupEditGlobalConfigTask(ctx context.Context, taskID uint64, req *CmdEditGlobalConfigReq, topo *spec2.Specification) {
 	var componentServerConfigs map[string]interface{}
-	switch req.TiDBClusterComponent {
-	case spec.TiDBClusterComponent_TiDB:
-		componentServerConfigs = topo.ServerConfigs.TiDB
-	case spec.TiDBClusterComponent_TiKV:
-		componentServerConfigs = topo.ServerConfigs.TiKV
-	case spec.TiDBClusterComponent_PD:
-		componentServerConfigs = topo.ServerConfigs.PD
-	case spec.TiDBClusterComponent_TiFlash:
-		componentServerConfigs = topo.ServerConfigs.TiFlash
-	case spec.TiDBClusterComponent_TiFlashLearner:
-		componentServerConfigs = topo.ServerConfigs.TiFlashLearner
-	case spec.TiDBClusterComponent_Pump:
-		componentServerConfigs = topo.ServerConfigs.Pump
-	case spec.TiDBClusterComponent_Drainer:
-		componentServerConfigs = topo.ServerConfigs.Drainer
-	case spec.TiDBClusterComponent_CDC:
-		componentServerConfigs = topo.ServerConfigs.CDC
-	}
-	if componentServerConfigs == nil {
-		componentServerConfigs = make(map[string]interface{})
-	}
-	for k, v := range req.ConfigMap {
-		componentServerConfigs[k] = v
-	}
-	switch req.TiDBClusterComponent {
-	case spec.TiDBClusterComponent_TiDB:
-		topo.ServerConfigs.TiDB = componentServerConfigs
-	case spec.TiDBClusterComponent_TiKV:
-		topo.ServerConfigs.TiKV = componentServerConfigs
-	case spec.TiDBClusterComponent_PD:
-		topo.ServerConfigs.PD = componentServerConfigs
-	case spec.TiDBClusterComponent_TiFlash:
-		topo.ServerConfigs.TiFlash = componentServerConfigs
-	case spec.TiDBClusterComponent_TiFlashLearner:
-		topo.ServerConfigs.TiFlashLearner = componentServerConfigs
-	case spec.TiDBClusterComponent_Pump:
-		topo.ServerConfigs.Pump = componentServerConfigs
-	case spec.TiDBClusterComponent_Drainer:
-		topo.ServerConfigs.Drainer = componentServerConfigs
-	case spec.TiDBClusterComponent_CDC:
-		topo.ServerConfigs.CDC = componentServerConfigs
+
+	for _, globalComponentConfig := range req.GlobalComponentConfigs {
+		switch globalComponentConfig.TiDBClusterComponent {
+		case spec.TiDBClusterComponent_TiDB:
+			componentServerConfigs = topo.ServerConfigs.TiDB
+		case spec.TiDBClusterComponent_TiKV:
+			componentServerConfigs = topo.ServerConfigs.TiKV
+		case spec.TiDBClusterComponent_PD:
+			componentServerConfigs = topo.ServerConfigs.PD
+		case spec.TiDBClusterComponent_TiFlash:
+			componentServerConfigs = topo.ServerConfigs.TiFlash
+		case spec.TiDBClusterComponent_TiFlashLearner:
+			componentServerConfigs = topo.ServerConfigs.TiFlashLearner
+		case spec.TiDBClusterComponent_Pump:
+			componentServerConfigs = topo.ServerConfigs.Pump
+		case spec.TiDBClusterComponent_Drainer:
+			componentServerConfigs = topo.ServerConfigs.Drainer
+		case spec.TiDBClusterComponent_CDC:
+			componentServerConfigs = topo.ServerConfigs.CDC
+		}
+		if componentServerConfigs == nil {
+			componentServerConfigs = make(map[string]interface{})
+		}
+		for k, v := range globalComponentConfig.ConfigMap {
+			componentServerConfigs[k] = v
+		}
+		switch globalComponentConfig.TiDBClusterComponent {
+		case spec.TiDBClusterComponent_TiDB:
+			topo.ServerConfigs.TiDB = componentServerConfigs
+		case spec.TiDBClusterComponent_TiKV:
+			topo.ServerConfigs.TiKV = componentServerConfigs
+		case spec.TiDBClusterComponent_PD:
+			topo.ServerConfigs.PD = componentServerConfigs
+		case spec.TiDBClusterComponent_TiFlash:
+			topo.ServerConfigs.TiFlash = componentServerConfigs
+		case spec.TiDBClusterComponent_TiFlashLearner:
+			topo.ServerConfigs.TiFlashLearner = componentServerConfigs
+		case spec.TiDBClusterComponent_Pump:
+			topo.ServerConfigs.Pump = componentServerConfigs
+		case spec.TiDBClusterComponent_Drainer:
+			topo.ServerConfigs.Drainer = componentServerConfigs
+		case spec.TiDBClusterComponent_CDC:
+			topo.ServerConfigs.CDC = componentServerConfigs
+		}
 	}
 
 	cmdEditConfigReq := CmdEditConfigReq{

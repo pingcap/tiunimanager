@@ -536,8 +536,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupShowConfig(ctx context.Context, req 
 	}
 	defer cancelFp()
 	cmd.SysProcAttr = genSysProcAttr()
-	var out, stderr bytes.Buffer
-	cmd.Stdout = &out
+	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	var data []byte
 	if data, err = cmd.Output(); err != nil {
@@ -547,12 +546,13 @@ func (secondMicro *SecondMicro) MicroSrvTiupShowConfig(ctx context.Context, req 
 	}
 
 	topoStr := string(data)
-	topo := spec2.Specification{}
+	topo := &spec2.Specification{}
 	if err = yaml.UnmarshalStrict([]byte(topoStr), topo); err != nil {
 		logInFunc.Errorf("parse original config(%s) error: %+v", topoStr, err)
 		return
 	}
 
+	resp = &CmdShowConfigResp{topo}
 	resp.TiDBClusterTopo = topo
 	return
 }
@@ -586,7 +586,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditGlobalConfig(ctx context.Context
 	}
 	topo := cmdShowConfigResp.TiDBClusterTopo
 
-	secondMicro.startTiupEditGlobalConfigTask(ctx, rsp.Id, &cmdEditGlobalConfigReq, &topo)
+	secondMicro.startTiupEditGlobalConfigTask(ctx, rsp.Id, &cmdEditGlobalConfigReq, topo)
 	return rsp.Id, nil
 }
 
@@ -677,7 +677,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditInstanceConfig(ctx context.Conte
 	}
 	topo := cmdShowConfigResp.TiDBClusterTopo
 
-	secondMicro.startTiupEditInstanceConfigTask(ctx, rsp.Id, &cmdEditInstanceConfigReq, &topo)
+	secondMicro.startTiupEditInstanceConfigTask(ctx, rsp.Id, &cmdEditInstanceConfigReq, topo)
 	return rsp.Id, nil
 }
 

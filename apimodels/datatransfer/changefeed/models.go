@@ -21,7 +21,7 @@ type ChangeFeedTask struct {
 	Id             string      `json:"id" form:"id" example:"CLUSTER_ID_IN_TIEM__22"`
 	Name           string      `json:"name" form:"name" example:"my_sync_name"`
 	ClusterId      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
-	StartTS        uint        `json:"startTS" form:"startTS" example:"415241823337054209"`
+	StartTS        int64       `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
 	Status         int         `json:"status" form:"status" example:"1" enums:"0,1,2,3,4,5"`
 	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
@@ -42,18 +42,18 @@ type MysqlDownstream struct {
 }
 
 type KafkaDownstream struct {
-	Ip                string   `json:"ip" form:"ip" example:"127.0.0.1"`
-	Port              int      `json:"port" form:"port" example:"9001"`
-	Version           string   `json:"version" form:"version" example:"2.4.0"`
-	ClientId          string   `json:"clientId" form:"clientId" example:"213"`
-	TopicName         string   `json:"topicName" form:"topicName" example:"my_topic"`
-	Protocol          string   `json:"protocol" form:"protocol" example:"default" enums:"default,canal,avro,maxwell"`
-	Partitions        int      `json:"partitions" form:"partitions" example:"1"`
-	ReplicationFactor int      `json:"replicationFactor" form:"replicationFactor" example:"1"`
-	MaxMessageBytes   int      `json:"maxMessageBytes" form:"maxMessageBytes" example:"16"`
-	MaxBatchSize      int      `json:"maxBatchSize" form:"maxBatchSize" example:"5"`
-	Dispatchers       []string `json:"dispatchers" form:"dispatchers"`
-	Tls               bool     `json:"tls" form:"tls" example:"false"`
+	Ip                string       `json:"ip" form:"ip" example:"127.0.0.1"`
+	Port              int          `json:"port" form:"port" example:"9001"`
+	Version           string       `json:"version" form:"version" example:"2.4.0"`
+	ClientId          string       `json:"clientId" form:"clientId" example:"213"`
+	TopicName         string       `json:"topicName" form:"topicName" example:"my_topic"`
+	Protocol          string       `json:"protocol" form:"protocol" example:"default" enums:"default,canal,avro,maxwell"`
+	Partitions        int          `json:"partitions" form:"partitions" example:"1"`
+	ReplicationFactor int          `json:"replicationFactor" form:"replicationFactor" example:"1"`
+	MaxMessageBytes   int          `json:"maxMessageBytes" form:"maxMessageBytes" example:"16"`
+	MaxBatchSize      int          `json:"maxBatchSize" form:"maxBatchSize" example:"5"`
+	Dispatchers       []Dispatcher `json:"dispatchers" form:"dispatchers"`
+	Tls               bool         `json:"tls" form:"tls" example:"false"`
 }
 
 type Dispatcher struct {

@@ -17,6 +17,9 @@ package changefeed
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
 // Create create a change feed task
@@ -26,14 +29,22 @@ import (
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param changeFeedTask body ChangeFeedTask true "change feed task request"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTask{downstream=MysqlDownstream}}
+// @Param changeFeedTask body changefeed.ChangeFeedTask true "change feed task request"
+// @Success 200 {object} controller.CommonResult{data=changefeed.ChangeFeedTask{downstream=changefeed.MysqlDownstream}}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/ [post]
 func Create(c *gin.Context) {
+	var req changefeed.ChangeFeedTask
 
+	err, requestBody := controller.HandleJsonRequestFromBody(c, &req)
+
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask,
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 // Query
@@ -43,15 +54,25 @@ func Create(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param queryReq query QueryReq true "change feed tasks query condition"
-// @Success 200 {object} controller.ResultWithPage{data=[]ChangeFeedTaskDetail}
+// @Param queryReq query changefeed.QueryReq true "change feed tasks query condition"
+// @Success 200 {object} controller.ResultWithPage{data=[]changefeed.ChangeFeedTaskDetail}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/ [get]
 func Query(c *gin.Context) {
+	var req changefeed.QueryReq
 
+	err, requestBody := controller.HandleJsonRequestFromBody(c, &req)
+
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryChangeFeedTasks,
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
+
+const paramNameOfChangeFeedTaskId = "changeFeedTaskId"
 
 // Detail get change feed detail
 // @Summary  get change feed detail
@@ -61,13 +82,21 @@ func Query(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail}
+// @Success 200 {object} controller.CommonResult{data=changefeed.ChangeFeedTaskDetail}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/ [get]
 func Detail(c *gin.Context) {
+	err, requestBody := controller.HandleJsonRequestWithBuiltReq(c, &changefeed.DetailReq{
+		Id: c.Param(paramNameOfChangeFeedTaskId),
+	})
 
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask,
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 // Pause pause a change feed task
@@ -78,13 +107,21 @@ func Detail(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail}
+// @Success 200 {object} controller.CommonResult{data=changefeed.ChangeFeedTaskDetail}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/pause [post]
 func Pause(c *gin.Context) {
+	err, requestBody := controller.HandleJsonRequestWithBuiltReq(c, &changefeed.PauseReq{
+		Id: c.Param(paramNameOfChangeFeedTaskId),
+	})
 
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask,
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 // Resume resume a change feed task
@@ -95,16 +132,24 @@ func Pause(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail{downstream=TiDBDownstream}}
+// @Success 200 {object} controller.CommonResult{data=changefeed.ChangeFeedTaskDetail{downstream=changefeed.TiDBDownstream}}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/resume [post]
 func Resume(c *gin.Context) {
+	err, requestBody := controller.HandleJsonRequestWithBuiltReq(c, &changefeed.ResumeReq{
+		Id: c.Param(paramNameOfChangeFeedTaskId),
+	})
 
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask,
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
-// Update Resume a change feed
+// Update update a change feed
 // @Summary  resume a change feed
 // @Description resume a change feed
 // @Tags change feed
@@ -112,14 +157,28 @@ func Resume(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Param task body ChangeFeedTask true "change feed task"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail{downstream=KafkaDownstream}}
+// @Param task body changefeed.ChangeFeedTask true "change feed task"
+// @Success 200 {object} controller.CommonResult{data=changefeed.ChangeFeedTaskDetail{downstream=changefeed.KafkaDownstream}}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/update [post]
 func Update(c *gin.Context) {
+	var req changefeed.UpdateReq
 
+	err, requestBody := controller.HandleJsonRequestFromBody(c,
+		&req,
+		// append id in path to request
+		func(c *gin.Context, req interface{}) error {
+			req.(*changefeed.UpdateReq).Id = c.Param(paramNameOfChangeFeedTaskId)
+			return nil
+		})
+
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask,
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 // Delete delete a change feed task
@@ -130,11 +189,20 @@ func Update(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=ChangeFeedTaskDetail}
+// @Success 200 {object} controller.CommonResult{data=changefeed.ChangeFeedTaskDetail}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId} [delete]
 func Delete(c *gin.Context) {
+	err, requestBody := controller.HandleJsonRequestWithBuiltReq(c, &changefeed.DeleteReq{
+		Id: c.Param(paramNameOfChangeFeedTaskId),
+	})
+
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask,
+			requestBody,
+			controller.DefaultTimeout)
+	}
 
 }

@@ -457,6 +457,7 @@ func TestListClusters(t *testing.T) {
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
 		}
+
 		if total != 3 {
 			t.Errorf("ListClusters() total = %v, want = %v", total, 3)
 		}

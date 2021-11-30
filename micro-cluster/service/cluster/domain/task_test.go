@@ -55,8 +55,8 @@ func initFlow() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":     {"doStart", "startDone", "fail", SyncFuncTask, testStart},
 				"startDone": {"doSomething", "done", "fail", SyncFuncTask, testDoing},
-				"done":      {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":      {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done":      {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail":      {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -69,8 +69,8 @@ func initFlow() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":     {"doStart", "startDone", "fail", CallbackTask, testStart},
 				"startDone": {"doSomething", "done", "fail", SyncFuncTask, testDoing},
-				"done":      {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":      {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done":      {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail":      {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -83,7 +83,7 @@ func initFlow() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":     {"doStart", "startDone", "fail", SyncFuncTask, testError},
 				"startDone": {"doSomething", "done", "fail", SyncFuncTask, testDoing},
-				"fail":      {"fail", "", "", SyncFuncTask, DefaultFail},
+				"fail":      {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -96,8 +96,8 @@ func initFlow() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":     {"doStart", "startDone", "fail", PollingTasK, testStart},
 				"startDone": {"doSomething", "done", "fail", SyncFuncTask, testDoing},
-				"done":      {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail":      {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done":      {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail":      {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -111,8 +111,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -126,8 +126,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -141,8 +141,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -156,8 +156,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -171,8 +171,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -186,8 +186,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -201,8 +201,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -216,8 +216,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -231,8 +231,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -246,8 +246,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				return nil
@@ -260,8 +260,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				return nil
@@ -274,8 +274,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context
@@ -289,8 +289,8 @@ func initFlow() {
 				"start": {"doing", "done", "fail", SyncFuncTask, func(task *TaskEntity, context *FlowContext) bool {
 					return true
 				}},
-				"done": {"end", "", "", SyncFuncTask, DefaultEnd},
-				"fail": {"fail", "", "", SyncFuncTask, DefaultFail},
+				"done": {"end", "", "", SyncFuncTask, defaultEnd},
+				"fail": {"fail", "", "", SyncFuncTask, defaultFail},
 			},
 			ContextParser: func(s string) *FlowContext {
 				// todo parse context

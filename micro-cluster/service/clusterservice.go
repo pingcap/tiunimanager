@@ -18,6 +18,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	changeFeedApi "github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
+	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/service/datatransfer/changefeed"
 	"net/http"
 	"strconv"
 	"time"
@@ -47,10 +50,74 @@ var SuccessResponseStatus = &clusterpb.ResponseStatusDTO{Code: 0}
 var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
-	resourceManager *resource.ResourceManager
-	authManager     *user.AuthManager
-	tenantManager   *user.TenantManager
-	userManager     *user.UserManager
+	resourceManager  *resource.ResourceManager
+	authManager      *user.AuthManager
+	tenantManager    *user.TenantManager
+	userManager      *user.UserManager
+	changeFeedManager *changeFeedManager.ChangeFeedManager
+}
+
+func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]byte, error) ) {
+	if err == nil {
+		respData, getDataError := getData()
+		if getDataError != nil {
+			err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, "", getDataError)
+		} else {
+			resp.Code = int32(common.TIEM_SUCCESS)
+			resp.Response = string(respData)
+		}
+	}
+
+	if _, ok := err.(framework.TiEMError); !ok {
+		err = framework.WrapError(common.TIEM_UNRECOGNIZED_ERROR, "", err)
+	}
+
+	resp.Code = int32(err.(framework.TiEMError).GetCode())
+	resp.Message = err.(framework.TiEMError).GetMsg()
+}
+
+func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	request.GetOperator()
+	reqData := request.GetRequest()
+
+	task := &changeFeedApi.ChangeFeedTask{}
+
+	err := json.Unmarshal([]byte(reqData), task)
+
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	result := handler.changeFeedManager.Create(task.Name)
+
+	handleResponse(response, err, func() ([]byte, error) {
+		// todo build api response data
+		task.Id = result
+		return json.Marshal(task)
+	})
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) PauseChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) ResumeChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) DeleteChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) UpdateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) QueryChangeFeedTasks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
 }
 
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {
@@ -59,6 +126,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.userManager = user.NewUserManager(adapt.MicroMetaDbRepo{})
 	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
 	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
+	handler.changeFeedManager = changeFeedManager.NewChangeFeedManager()
 
 	domain.InitFlowMap()
 	return handler

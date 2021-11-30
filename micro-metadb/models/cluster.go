@@ -49,6 +49,13 @@ type Cluster struct {
 	ParamGroupId            uint
 }
 
+type ClusterRelation struct {
+	Record
+	SubjectClusterId string
+	ObjectClusterId  string
+	RelationType     uint32
+}
+
 type DemandRecord struct {
 	Record
 	ClusterId string `gorm:"not null;type:varchar(22);default:null"`
@@ -594,4 +601,63 @@ func (m *DAOClusterManager) QueryBackupStartegyByTime(ctx context.Context, weekd
 	}
 
 	return strategyListDO, nil
+}
+
+func (m *DAOClusterManager) CreateClusterRelation(ctx context.Context, request ClusterRelation) (result *ClusterRelation, err error) {
+	if "" == request.TenantId || "" == request.SubjectClusterId || "" == request.ObjectClusterId || request.RelationType <= 0{
+		return nil, errors.New(fmt.Sprintf("CreateClusterRelation failed, has invalid parameter, tenantId: %s, subjectClusterId: %s, objectClusterId: %s, relationType: %d", request.TenantId, request.SubjectClusterId, request.ObjectClusterId, request.RelationType))
+	}
+	result = &ClusterRelation{
+		Record:           Record{TenantId: request.TenantId},
+		SubjectClusterId: request.SubjectClusterId,
+		ObjectClusterId:  request.ObjectClusterId,
+		RelationType:     request.RelationType,
+	}
+	return result, m.Db(ctx).Create(result).Error
+}
+
+func (m *DAOClusterManager) ListClusterRelationBySubjectId(ctx context.Context, subjectId string) (result []*ClusterRelation, err error) {
+	if "" == subjectId {
+		return nil, errors.New(fmt.Sprintf("ListClusterRelationBySubjectId failed, has invalid parameter, subjectId: %s", subjectId))
+	}
+	result = make([]*ClusterRelation, 0)
+	return result, m.Db(ctx).Table(TABLE_NAME_CLUSTER_RELATION).Where("subject_cluster_id = ?", subjectId).Find(&result).Error
+}
+
+func (m *DAOClusterManager) ListClusterRelationByObjectId(ctx context.Context, objectId string) (result []*ClusterRelation, err error) {
+	if "" == objectId {
+		return nil, errors.New(fmt.Sprintf("ListClusterRelationByObjectId failed, has invalid parameter, objectId: %s", objectId))
+	}
+	result = make([]*ClusterRelation, 0)
+	return result, m.Db(ctx).Table(TABLE_NAME_CLUSTER_RELATION).Where("object_cluster_id = ?", objectId).Find(&result).Error
+}
+
+func (m *DAOClusterManager) ListClusterRelationById(ctx context.Context, id uint) (result *ClusterRelation, err error) {
+	if id <= 0 {
+		return nil, errors.New(fmt.Sprintf("ListClusterRelationById failed, has invalid parameter, id: %d", id))
+	}
+	result = &ClusterRelation{}
+	return result, m.Db(ctx).Model(result).Where("id = ?", id).First(&result).Error
+}
+
+func (m *DAOClusterManager) UpdateClusterRelation(ctx context.Context, relationId uint, subjectId, objectId string, relationType uint32) (result *ClusterRelation, err error) {
+	if relationId <= 0 || "" == subjectId || "" == objectId || relationType <= 0 {
+		return nil, errors.New(fmt.Sprintf("UpdateClusterRelation has invalid parameter, relationId: %d, subjectId: %s, objectId: %s, relationType: %d", relationId, subjectId, objectId, relationType))
+	}
+	result = &ClusterRelation{}
+	return result, m.Db(ctx).Model(result).Where("id = ?", relationId).First(result).
+		Update("subject_cluster_id", subjectId).
+		Update("object_cluster_id", objectId).
+		Update("relation_type", relationType).
+		Error
+}
+
+func (m *DAOClusterManager) DeleteClusterRelation(ctx context.Context, relationId uint) (result *ClusterRelation, err error) {
+	if relationId <= 0 {
+		return nil, errors.New(fmt.Sprintf("DeleteClusterRelation has invalid parameter, relationId: %d", relationId))
+	}
+	result = &ClusterRelation{}
+	result.ID = relationId
+	err = m.Db(ctx).Where("id = ?", result.ID).Delete(result).Error
+	return result, err
 }

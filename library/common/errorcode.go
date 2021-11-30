@@ -112,7 +112,7 @@ func (t TIEM_ERROR_CODE) Explain() string {
 }
 
 var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
-	TIEM_SUCCESS: {TIEM_SUCCESS, "succeed", 200},
+	TIEM_SUCCESS: {code: TIEM_SUCCESS, explanation: "succeed", httpCode: 200},
 
 	// system error
 	TIEM_METADB_SERVER_CALL_ERROR:  {TIEM_METADB_SERVER_CALL_ERROR, "call metadb-Server failed", 500},

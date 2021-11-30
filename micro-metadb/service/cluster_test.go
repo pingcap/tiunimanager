@@ -54,19 +54,19 @@ func TestDBServiceHandler_CreateClusterRelation(t *testing.T) {
 			Record: models.Record{TenantId: "111"},
 			SubjectClusterId: "1",
 			ObjectClusterId: "2",
-			RelationType: common.SlaveTo,
+			RelationType: uint32(common.SlaveTo),
 		},
 		{
 			Record: models.Record{TenantId: ""},
 			SubjectClusterId: "",
 			ObjectClusterId: "",
-			RelationType: common.StandBy,
+			RelationType: uint32(common.StandBy),
 		},
 		{
 			Record: models.Record{TenantId: "111"},
 			SubjectClusterId: "1",
 			ObjectClusterId: "6",
-			RelationType: common.CloneFrom,
+			RelationType: uint32(common.CloneFrom),
 		},
 	}
 	dataDTOs := make([]*dbpb.DBClusterRelationDTO, len(data))
@@ -96,13 +96,13 @@ func TestDBServiceHandler_SwapClusterRelation(t *testing.T) {
 		Record:           models.Record{TenantId: "111"},
 		SubjectClusterId: "1",
 		ObjectClusterId:  "2",
-		RelationType:     common.SlaveTo,
+		RelationType:     uint32(common.SlaveTo),
 	}
 	data2 := models.ClusterRelation{
 		Record: models.Record{TenantId: "111"},
 		SubjectClusterId: "1",
 		ObjectClusterId: "6",
-		RelationType: common.CloneFrom,
+		RelationType: uint32(common.CloneFrom),
 	}
 	clusterManager := handler.Dao().ClusterManager()
 	clusterManager.CreateClusterRelation(context.TODO(), data1)
@@ -140,13 +140,13 @@ func TestDBServiceHandler_ListClusterRelation(t *testing.T) {
 		Record:           models.Record{TenantId: "111"},
 		SubjectClusterId: "1",
 		ObjectClusterId:  "2",
-		RelationType:     common.SlaveTo,
+		RelationType:     uint32(common.SlaveTo),
 	}
 	data2 := models.ClusterRelation{
 		Record: models.Record{TenantId: "111"},
 		SubjectClusterId: "1",
 		ObjectClusterId: "6",
-		RelationType: common.CloneFrom,
+		RelationType: uint32(common.CloneFrom),
 	}
 	clusterManager := handler.Dao().ClusterManager()
 	clusterManager.CreateClusterRelation(context.TODO(), data1)

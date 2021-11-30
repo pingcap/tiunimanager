@@ -354,11 +354,14 @@ func TestSecondMicro_MicroSrvTiupShowConfig_WithTimeout(t *testing.T) {
 func TestSecondMicro_MicroSrvTiupEditGlobalConfig_Fail(t *testing.T) {
 	configMap := make(map[string]interface{})
 	configMap["foo"] = "bar"
+	globalComponentConfigTiDB := GlobalComponentConfig{
+		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		ConfigMap: configMap,
+	}
 	cmdEditGlobalConfigReq := CmdEditGlobalConfigReq {
 		TiUPComponent: ClusterComponentTypeStr,
 		InstanceName: "test-tidb",
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
-		ConfigMap: configMap,
+		GlobalComponentConfigs: []GlobalComponentConfig{globalComponentConfigTiDB},
 		TimeoutS: 0,
 		Flags: []string{},
 	}
@@ -382,11 +385,14 @@ func TestSecondMicro_MicroSrvTiupEditGlobalConfig_Fail(t *testing.T) {
 func TestSecondMicro_MicroSrvTiupEditGlobalConfig_Success(t *testing.T) {
 	configMap := make(map[string]interface{})
 	configMap["foo"] = "bar"
+	globalComponentConfigTiDB := GlobalComponentConfig{
+		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
+		ConfigMap: configMap,
+	}
 	cmdEditGlobalConfigReq := CmdEditGlobalConfigReq {
 		TiUPComponent: ClusterComponentTypeStr,
 		InstanceName: "test-tidb",
-		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
-		ConfigMap: configMap,
+		GlobalComponentConfigs: []GlobalComponentConfig{globalComponentConfigTiDB},
 		TimeoutS: 0,
 		Flags: []string{},
 	}
@@ -414,33 +420,52 @@ func TestSecondMicro_startTiupEditGlobalConfigTask(t *testing.T) {
 	configMap := make(map[string]interface{})
 	configMap["foo"] = "bar"
 	topo := spec2.Specification{}
-	req := CmdEditGlobalConfigReq{
-		TiUPComponent: ClusterComponentTypeStr,
-		InstanceName: "test-tidb",
+	globalComponentConfigTiDB := GlobalComponentConfig{
 		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
 		ConfigMap: configMap,
 	}
-	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiKV
-	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_PD
-	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiFlash
-	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_TiFlashLearner
-	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_Pump
-	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_Drainer
-	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
-
-	req.TiDBClusterComponent = spec.TiDBClusterComponent_CDC
+	globalComponentConfigTiKV := GlobalComponentConfig{
+		TiDBClusterComponent: spec.TiDBClusterComponent_TiKV,
+		ConfigMap: configMap,
+	}
+	globalComponentConfigPD := GlobalComponentConfig{
+		TiDBClusterComponent: spec.TiDBClusterComponent_PD,
+		ConfigMap: configMap,
+	}
+	globalComponentConfigTiFlash := GlobalComponentConfig{
+		TiDBClusterComponent: spec.TiDBClusterComponent_TiFlash,
+		ConfigMap: configMap,
+	}
+	globalComponentConfigTiFlashLearner := GlobalComponentConfig{
+		TiDBClusterComponent: spec.TiDBClusterComponent_TiFlashLearner,
+		ConfigMap: configMap,
+	}
+	globalComponentConfigPump := GlobalComponentConfig{
+		TiDBClusterComponent: spec.TiDBClusterComponent_Pump,
+		ConfigMap: configMap,
+	}
+	globalComponentConfigDrainer := GlobalComponentConfig{
+		TiDBClusterComponent: spec.TiDBClusterComponent_Drainer,
+		ConfigMap: configMap,
+	}
+	globalComponentConfigCDC := GlobalComponentConfig{
+		TiDBClusterComponent: spec.TiDBClusterComponent_CDC,
+		ConfigMap: configMap,
+	}
+	req := CmdEditGlobalConfigReq{
+		TiUPComponent: ClusterComponentTypeStr,
+		InstanceName: "test-tidb",
+		GlobalComponentConfigs: []GlobalComponentConfig{
+			globalComponentConfigTiDB,
+			globalComponentConfigTiKV,
+			globalComponentConfigPD,
+			globalComponentConfigTiFlash,
+			globalComponentConfigTiFlashLearner,
+			globalComponentConfigPump,
+			globalComponentConfigDrainer,
+			globalComponentConfigCDC,
+		},
+	}
 	secondMicro1.startTiupEditGlobalConfigTask(context.TODO(), 1, &req, &topo)
 }
 

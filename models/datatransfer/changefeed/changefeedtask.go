@@ -69,7 +69,7 @@ func (dt DownstreamType) unmarshal(cc string) (interface{}, error) {
 
 func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
 	if t.Downstream != nil {
-		b , jsonErr := json.Marshal(t.Downstream)
+		b, jsonErr := json.Marshal(t.Downstream)
 		if jsonErr == nil {
 			t.DownstreamConfig = string(b)
 		} else {

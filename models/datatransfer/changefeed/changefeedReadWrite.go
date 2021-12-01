@@ -133,4 +133,3 @@ func (m *GormChangeFeedReadWrite) QueryByClusterId(ctx context.Context, clusterI
 		Where("cluster_id = ?", clusterId).
 		Order("created_at").Offset(offset).Limit(length).Find(&tasks).Count(&total).Error
 }
-

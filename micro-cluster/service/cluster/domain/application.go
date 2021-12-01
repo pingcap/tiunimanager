@@ -18,11 +18,17 @@ package domain
 
 import (
 	ctx "context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+
+	spec2 "github.com/pingcap-inc/tiem/library/spec"
 
 	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -76,6 +82,7 @@ var contextTopologyKey = "TopologyKey"
 var contextTakeoverReqKey = "takeoverRequest"
 var contextDeleteNodeKey = "deleteNode"
 var contextAllocRequestKey = "allocResourceRequest"
+var contextModifyParamsKey = "modifyParams"
 
 func (cluster *ClusterAggregation) tryStartFlow(ctx ctx.Context, flow *FlowWorkAggregation) error {
 	if cluster.CurrentWorkFlow != nil {
@@ -356,9 +363,15 @@ func GetClusterDetail(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId str
 	return cluster, err
 }
 
-func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
+func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string, modifyParam *ModifyParam) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
+	b, err := json.Marshal(modifyParam.Params)
+	if err != nil {
+		getLogger().Errorf("modify parameters clusterid = %s, json marshal errStr: %s", clusterId, err.Error())
+		return nil, err
+	}
+	content := string(b)
 	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
 	clusterAggregation.CurrentOperator = operator
 	clusterAggregation.LastParameterRecord = &ParameterRecord{
@@ -370,18 +383,14 @@ func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId str
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	//currentFlow := clusterAggregation.CurrentWorkFlow
-	//if currentFlow != nil && !currentFlow.Finished(){
-	//	return clusterAggregation, errors.New("incomplete processing flow")
-	//}
-
 	flow, err := CreateFlowWork(ctx, clusterId, FlowModifyParameters, operator)
 	if err != nil {
-		// todo
 		getLogger().Errorf("modify parameters clusterid = %s, content = %s, errStr: %s", clusterId, content, err.Error())
+		return nil, err
 	}
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.AddContext(contextModifyParamsKey, modifyParam)
 
 	flow.Start()
 
@@ -401,6 +410,7 @@ func BuildClusterLogConfig(ctx ctx.Context, clusterId string) error {
 	}
 	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowBuildLogConfig, BuildSystemOperator())
 	if err != nil {
+		getLogger().Errorf("build cluster log config clusterid = %s, errStr: %s", clusterId, err.Error())
 		return err
 	}
 
@@ -746,7 +756,147 @@ func syncTopology(task *TaskEntity, context *FlowContext) bool {
 }
 
 func modifyParameters(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	modifyParam := context.GetData(contextModifyParamsKey).(*ModifyParam)
+	getLoggerWithContext(context).Debugf("got modify need reboot: %v, params size: %d", modifyParam.NeedReboot, len(modifyParam.Params))
+
+	// grouping by parameter source
+	paramContainer := make(map[int32][]*ApplyParam, 0)
+	for i, param := range modifyParam.Params {
+		// if source is 2, then insert tiup and sql respectively
+		getLoggerWithContext(context).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.Cluster)
+		if param.Source == int32(TiupAndSql) {
+			putParamContainer(paramContainer, int32(TiUP), modifyParam, i)
+			putParamContainer(paramContainer, int32(SQL), modifyParam, i)
+		} else {
+			putParamContainer(paramContainer, param.Source, modifyParam, i)
+		}
+	}
+
+	for source, params := range paramContainer {
+		getLoggerWithContext(context).Debugf("loop current param container source: %v, params size: %d", source, len(params))
+		switch source {
+		case int32(TiUP):
+			configs := make([]secondparty.GlobalComponentConfig, len(params))
+			for i, param := range params {
+				cm := map[string]interface{}{}
+				switch param.Type {
+				case int32(Integer):
+					c, err := strconv.Atoi(param.RealValue.Cluster)
+					if err != nil {
+						getLoggerWithContext(context).Errorf("strconv realvalue type int fail, err = %s", err.Error())
+						task.Fail(err)
+						return false
+					}
+					cm[param.Name] = c
+				case int32(Boolean):
+					c, err := strconv.ParseBool(param.RealValue.Cluster)
+					if err != nil {
+						getLoggerWithContext(context).Errorf("strconv realvalue type bool fail, err = %s", err.Error())
+						task.Fail(err)
+						return false
+					}
+					cm[param.Name] = c
+				default:
+					cm[param.Name] = param.RealValue.Cluster
+				}
+				configs[i] = secondparty.GlobalComponentConfig{
+					TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
+					ConfigMap:            cm,
+				}
+			}
+			getLoggerWithContext(context).Debugf("modify global component configs: %v", configs)
+			req := secondparty.CmdEditGlobalConfigReq{
+				TiUPComponent:          secondparty.ClusterComponentTypeStr,
+				InstanceName:           cluster.ClusterName,
+				GlobalComponentConfigs: configs,
+				TimeoutS:               0,
+				Flags:                  []string{},
+			}
+			editConfigId, err := secondparty.SecondParty.MicroSrvTiupEditGlobalConfig(context, req, uint64(task.Id))
+			if err != nil {
+				getLoggerWithContext(context).Errorf("call tiup api edit global config err = %s", err.Error())
+				task.Fail(err)
+				return false
+			}
+			getLoggerWithContext(context).Infof("got editConfigId: %v", editConfigId)
+		case int32(SQL):
+			// todo: invoke secondparty
+		case int32(API):
+			// todo: invoke secondparty
+		}
+	}
 	task.Success(nil)
+	return true
+}
+
+func putParamContainer(paramContainer map[int32][]*ApplyParam, source int32, modifyParam *ModifyParam, i int) {
+	params := paramContainer[source]
+	if params == nil {
+		paramContainer[source] = []*ApplyParam{modifyParam.Params[i]}
+	} else {
+		params = append(params, modifyParam.Params[i])
+		paramContainer[source] = params
+	}
+}
+
+func refreshParameter(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	modifyParam := context.GetData(contextModifyParamsKey).(*ModifyParam)
+	getLoggerWithContext(context).Debugf("got modify need reboot: %v, params size: %d", modifyParam.NeedReboot, len(modifyParam.Params))
+
+	// need tiup reload config
+	if modifyParam.NeedReboot {
+		req := secondparty.CmdReloadConfigReq{
+			TiUPComponent: secondparty.ClusterComponentTypeStr,
+			InstanceName:  cluster.ClusterName,
+			TimeoutS:      0,
+			Flags:         []string{},
+		}
+		reloadId, err := secondparty.SecondParty.MicroSrvTiupReload(context, req, uint64(task.Id))
+		if err != nil {
+			getLoggerWithContext(context).Errorf("call tiup api edit global config err = %s", err.Error())
+			task.Fail(err)
+			return false
+		}
+		getLoggerWithContext(context).Infof("got reloadId: %v", reloadId)
+
+		// loop get tiup exec status
+		return getTaskStatusByTaskId(context, task)
+	}
+	task.Success(nil)
+	return true
+}
+
+func getTaskStatusByTaskId(context *FlowContext, task *TaskEntity) bool {
+	ticker := time.NewTicker(3 * time.Second)
+	sequence := 0
+	for range ticker.C {
+		if sequence += 1; sequence > 200 {
+			task.Fail(framework.SimpleError(common.TIEM_TASK_POLLING_TIME_OUT))
+			return false
+		}
+		framework.LogWithContext(context).Infof("polling task waiting, sequence %d, taskId %d, taskName %s", sequence, task.Id, task.TaskName)
+
+		stat, statString, err := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(context, uint64(task.Id))
+		if err != nil {
+			framework.LogWithContext(context).Error(err)
+			task.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))
+			return false
+		}
+		if stat == dbpb.TiupTaskStatus_Error {
+			task.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, statString))
+			return false
+		}
+		if stat == dbpb.TiupTaskStatus_Finished {
+			task.Success(statString)
+			break
+		}
+	}
 	return true
 }
 

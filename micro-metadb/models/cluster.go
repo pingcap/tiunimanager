@@ -604,7 +604,7 @@ func (m *DAOClusterManager) QueryBackupStartegyByTime(ctx context.Context, weekd
 }
 
 func (m *DAOClusterManager) CreateClusterRelation(ctx context.Context, request ClusterRelation) (result *ClusterRelation, err error) {
-	if "" == request.TenantId || "" == request.SubjectClusterId || "" == request.ObjectClusterId || request.RelationType <= 0{
+	if "" == request.TenantId || "" == request.SubjectClusterId || "" == request.ObjectClusterId || request.RelationType <= 0 {
 		return nil, errors.New(fmt.Sprintf("CreateClusterRelation failed, has invalid parameter, tenantId: %s, subjectClusterId: %s, objectClusterId: %s, relationType: %d", request.TenantId, request.SubjectClusterId, request.ObjectClusterId, request.RelationType))
 	}
 	result = &ClusterRelation{

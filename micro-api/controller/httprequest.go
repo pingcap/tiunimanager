@@ -34,7 +34,7 @@ import (
 // @Parameter appenders append request data out of http body, such as id in path
 // @return err
 // @return requestBody
-func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (err error, requestBody string) {
+func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (requestBody string, err error) {
 	return HandleRequest(c,
 		&req,
 		func(c *gin.Context, req interface{}) error {
@@ -62,7 +62,7 @@ func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (err error, 
 func HandleJsonRequestFromBody(c *gin.Context,
 	req interface{},
 	appenders... func(c *gin.Context, req interface{}) error,
-	) (err error, requestBody string) {
+	) (requestBody string, err error) {
 	return HandleRequest(c,
 		&req,
 		func(c *gin.Context, req interface{}) error {
@@ -100,7 +100,7 @@ func HandleRequest(c *gin.Context,
 	req interface{},
 	builder func(c *gin.Context, req interface{}) error,
 	validator func(req interface{}) error,
-	serializer func(req interface{}) ([]byte, error)) (err error, requestBody string){
+	serializer func(req interface{}) ([]byte, error)) (requestBody string, err error){
 
 	err = builder(c, req)
 	if err != nil {

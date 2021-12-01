@@ -57,7 +57,11 @@ func InvokeRpcMethod(
 			return rpcResponse.Response
 		},
 		func() Page {
-			return Page{}
+			return Page{
+				Page:     int(rpcResponse.Page.Page),
+				PageSize: int(rpcResponse.Page.PageSize),
+				Total: int(rpcResponse.Page.Total),
+			}
 		},
 	)
 }

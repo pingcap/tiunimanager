@@ -14,7 +14,7 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package models
+package common
 
 import (
 	"github.com/pingcap-inc/tiem/library/common"

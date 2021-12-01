@@ -20,7 +20,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-	"github.com/pingcap-inc/tiem/models/database"
+	"github.com/pingcap-inc/tiem/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
@@ -49,7 +49,7 @@ func TestMain(m *testing.M) {
 			if err != nil || db.Error != nil {
 				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
 			} else {
-				database.InitForTest(db)
+				models.InitForTest(db)
 				logins.Infof("open database successful, filepath: %s", dbFile)
 			}
 			db.Migrator().CreateTable(ChangeFeedTask{})

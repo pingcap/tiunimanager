@@ -13,35 +13,5 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package database
+package models
 
-import (
-	"context"
-	"gorm.io/gorm"
-)
-
-var defaultDb database
-
-type database struct {
-	base *gorm.DB
-}
-
-func open() {
-	// todo
-}
-
-func initReaderWriter() {
-	// todo
-}
-
-func addTable() {
-	// todo
-}
-
-func DB(ctx context.Context) *gorm.DB {
-	return defaultDb.base.WithContext(ctx)
-}
-
-func InitForTest(db *gorm.DB) {
-	defaultDb = database{db}
-}

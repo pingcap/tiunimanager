@@ -35,5 +35,6 @@ type UpdateParam struct {
 	ComponentType string         `json:"componentType" example:"TiDB"`
 	HasReboot     int32          `json:"hasReboot" example:"0" enums:"0,1"`
 	Source        int32          `json:"source" example:"0" enums:"0,1,2,3"`
+	Type          int32          `json:"type" example:"0" enums:"0,1,2"`
 	RealValue     ParamRealValue `json:"realValue"`
 }

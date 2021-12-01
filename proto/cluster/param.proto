@@ -190,7 +190,8 @@ message UpdateClusterParamDTO {
   string componentType = 3;
   int32 hasReboot = 4;
   int32 source = 5;
-  ParamRealValueDTO realValue = 6;
+  int32 type = 6;
+  ParamRealValueDTO realValue = 7;
 }
 
 message ParamRealValueDTO {

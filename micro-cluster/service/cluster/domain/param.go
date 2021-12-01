@@ -56,6 +56,14 @@ const (
 	API
 )
 
+type ParamValueType int32
+
+const (
+	Integer ParamValueType = iota
+	Boolean
+	String
+)
+
 type ModifyParam struct {
 	NeedReboot bool
 	Params     []*ApplyParam
@@ -67,6 +75,7 @@ type ApplyParam struct {
 	ComponentType string
 	HasReboot     int32
 	Source        int32
+	Type          int32
 	RealValue     clusterpb.ParamRealValueDTO
 }
 

@@ -568,6 +568,7 @@ func Test_refreshParameter(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		mockTiup.EXPECT().MicroSrvTiupReload(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+		mockTiup.EXPECT().MicroSrvGetTaskStatusByBizID(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "", nil)
 
 		task := &TaskEntity{
 			Id: 123,

@@ -24,6 +24,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
 	spec2 "github.com/pingcap-inc/tiem/library/spec"
 
@@ -763,6 +766,7 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 	paramContainer := make(map[int32][]*ApplyParam, 0)
 	for i, param := range modifyParam.Params {
 		// if source is 2, then insert tiup and sql respectively
+		getLoggerWithContext(context).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.Cluster)
 		if param.Source == int32(TiupAndSql) {
 			putParamContainer(paramContainer, int32(TiUP), modifyParam, i)
 			putParamContainer(paramContainer, int32(SQL), modifyParam, i)
@@ -778,12 +782,32 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 			configs := make([]secondparty.GlobalComponentConfig, len(params))
 			for i, param := range params {
 				cm := map[string]interface{}{}
-				cm[param.Name] = param.RealValue.Cluster
+				switch param.Type {
+				case int32(Integer):
+					c, err := strconv.Atoi(param.RealValue.Cluster)
+					if err != nil {
+						getLoggerWithContext(context).Errorf("strconv realvalue type int fail, err = %s", err.Error())
+						task.Fail(err)
+						return false
+					}
+					cm[param.Name] = c
+				case int32(Boolean):
+					c, err := strconv.ParseBool(param.RealValue.Cluster)
+					if err != nil {
+						getLoggerWithContext(context).Errorf("strconv realvalue type bool fail, err = %s", err.Error())
+						task.Fail(err)
+						return false
+					}
+					cm[param.Name] = c
+				default:
+					cm[param.Name] = param.RealValue.Cluster
+				}
 				configs[i] = secondparty.GlobalComponentConfig{
 					TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
 					ConfigMap:            cm,
 				}
 			}
+			getLoggerWithContext(context).Debugf("modify global component configs: %v", configs)
 			req := secondparty.CmdEditGlobalConfigReq{
 				TiUPComponent:          secondparty.ClusterComponentTypeStr,
 				InstanceName:           cluster.ClusterName,
@@ -841,8 +865,38 @@ func refreshParameter(task *TaskEntity, context *FlowContext) bool {
 		}
 		getLoggerWithContext(context).Infof("got reloadId: %v", reloadId)
 
+		// loop get tiup exec status
+		return getTaskStatusByTaskId(context, task)
 	}
 	task.Success(nil)
+	return true
+}
+
+func getTaskStatusByTaskId(context *FlowContext, task *TaskEntity) bool {
+	ticker := time.NewTicker(3 * time.Second)
+	sequence := 0
+	for range ticker.C {
+		if sequence += 1; sequence > 200 {
+			task.Fail(framework.SimpleError(common.TIEM_TASK_POLLING_TIME_OUT))
+			return false
+		}
+		framework.LogWithContext(context).Infof("polling task waiting, sequence %d, taskId %d, taskName %s", sequence, task.Id, task.TaskName)
+
+		stat, statString, err := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(context, uint64(task.Id))
+		if err != nil {
+			framework.LogWithContext(context).Error(err)
+			task.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))
+			return false
+		}
+		if stat == dbpb.TiupTaskStatus_Error {
+			task.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, statString))
+			return false
+		}
+		if stat == dbpb.TiupTaskStatus_Finished {
+			task.Success(statString)
+			break
+		}
+	}
 	return true
 }
 

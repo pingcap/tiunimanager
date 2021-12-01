@@ -733,7 +733,10 @@ func (c *ClusterServiceHandler) ApplyParamGroup(ctx context.Context, req *cluste
 		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_CONVERT_OBJ_FAILED), Message: common.TIEM_CONVERT_OBJ_FAILED.Explain() + err.Error()}
 		return err
 	}
-
+	// Convert the default value of the parameter group to the real value of the modified parameter
+	for i, param := range pgDetail.ParamGroup.Params {
+		params[i].RealValue.Cluster = param.DefaultValue
+	}
 	modifyParam := &domain.ModifyParam{NeedReboot: req.NeedReboot, Params: params}
 	clusterAggregation, err := domain.ModifyParameters(ctx, req.Operator, req.ClusterId, modifyParam)
 	if err != nil {
@@ -742,7 +745,11 @@ func (c *ClusterServiceHandler) ApplyParamGroup(ctx context.Context, req *cluste
 		return nil
 	} else {
 		resp.DisplayInfo = &clusterpb.DisplayStatusDTO{
+			StatusCode:      strconv.Itoa(int(clusterAggregation.CurrentWorkFlow.Status)),
+			StatusName:      clusterAggregation.CurrentWorkFlow.Status.Display(),
 			InProcessFlowId: int32(clusterAggregation.CurrentWorkFlow.Id),
+			CreateTime:      clusterAggregation.CurrentWorkFlow.CreateTime.Unix(),
+			UpdateTime:      clusterAggregation.CurrentWorkFlow.UpdateTime.Unix(),
 		}
 		return domain.ApplyParamGroup(ctx, req, resp)
 	}
@@ -780,7 +787,11 @@ func (c *ClusterServiceHandler) UpdateClusterParams(ctx context.Context, req *cl
 		return nil
 	} else {
 		resp.DisplayInfo = &clusterpb.DisplayStatusDTO{
+			StatusCode:      strconv.Itoa(int(clusterAggregation.CurrentWorkFlow.Status)),
+			StatusName:      clusterAggregation.CurrentWorkFlow.Status.Display(),
 			InProcessFlowId: int32(clusterAggregation.CurrentWorkFlow.Id),
+			CreateTime:      clusterAggregation.CurrentWorkFlow.CreateTime.Unix(),
+			UpdateTime:      clusterAggregation.CurrentWorkFlow.UpdateTime.Unix(),
 		}
 		return domain.UpdateClusterParams(ctx, req, resp)
 	}

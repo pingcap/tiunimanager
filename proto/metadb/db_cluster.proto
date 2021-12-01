@@ -352,3 +352,41 @@ message DBComponentInstanceDTO {
     int64 updateTime = 18;
     int64 deleteTime = 19;
 }
+
+message DBClusterRelationDTO {
+    int64 id = 1;
+    string tenantId = 2;
+    string subjectClusterId = 3;
+    string objectClusterId = 4;
+    uint32 relationType = 5;
+    int64 createTime = 6;
+    int64 updateTime = 7;
+    int64 deleteTime = 8;
+}
+
+message DBCreateClusterRelationRequest {
+    DBClusterRelationDTO relation = 1;
+}
+
+message DBCreateClusterRelationResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterRelationDTO relation = 2;
+}
+
+message DBSwapClusterRelationRequest {
+    int32 id = 1;
+}
+
+message DBSwapClusterRelationResponse {
+    DBClusterResponseStatus status = 1;
+    DBClusterRelationDTO relation = 2;
+}
+
+message DBListClusterRelationRequest {
+    string subjectClusterId = 1;
+}
+
+message DBListClusterRelationResponse {
+    DBClusterResponseStatus status = 1;
+    repeated DBClusterRelationDTO relation = 2;
+}

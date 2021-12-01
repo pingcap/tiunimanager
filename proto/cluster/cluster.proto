@@ -76,6 +76,15 @@ service ClusterService {
     rpc ListClusterParams(ListClusterParamsRequest) returns (ListClusterParamsResponse);
     rpc UpdateClusterParams(UpdateClusterParamsRequest) returns (UpdateClusterParamsResponse);
     rpc InspectClusterParams(InspectClusterParamsRequest) returns (InspectClusterParamsResponse);
+
+    // change feed task
+    rpc CreateChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc PauseChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc ResumeChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc DeleteChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc UpdateChangeFeedTask(RpcRequest) returns (RpcResponse);
+    rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
+
 }
 
 message ClusterCreateReqDTO {

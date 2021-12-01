@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -44,12 +43,12 @@ func TestClusterEndWithPersist(t *testing.T) {
 		}
 		flowCtx := NewFlowContext(ctx.TODO())
 		agg := &ClusterAggregation{
-			Cluster: &Cluster{WorkFlowId: 999},
+			Cluster:        &Cluster{WorkFlowId: 999},
 			ConfigModified: false,
-			FlowModified: false,
+			FlowModified:   false,
 		}
 		flowCtx.SetData(contextClusterKey, agg)
-		ret := CompositeExecutor(ClusterEnd, ClusterPersist)(task, flowCtx)
+		ret := CompositeExecutor(clusterEnd, clusterPersist)(task, flowCtx)
 
 		assert.Equal(t, true, ret)
 		assert.Equal(t, 0, int(agg.Cluster.WorkFlowId))
@@ -65,12 +64,12 @@ func TestClusterEnd(t *testing.T) {
 		}
 		flowCtx := NewFlowContext(ctx.TODO())
 		agg := &ClusterAggregation{
-			Cluster: &Cluster{WorkFlowId: 999},
+			Cluster:        &Cluster{WorkFlowId: 999},
 			ConfigModified: false,
-			FlowModified: false,
+			FlowModified:   false,
 		}
 		flowCtx.SetData(contextClusterKey, agg)
-		ret := ClusterEnd(task, flowCtx)
+		ret := clusterEnd(task, flowCtx)
 
 		assert.Equal(t, true, ret)
 		assert.Equal(t, 0, int(agg.Cluster.WorkFlowId))
@@ -80,7 +79,6 @@ func TestClusterEnd(t *testing.T) {
 	})
 }
 
-
 func TestClusterFailWithPersist(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		task := &TaskEntity{
@@ -88,12 +86,12 @@ func TestClusterFailWithPersist(t *testing.T) {
 		}
 		flowCtx := NewFlowContext(ctx.TODO())
 		agg := &ClusterAggregation{
-			Cluster: &Cluster{WorkFlowId: 999},
+			Cluster:        &Cluster{WorkFlowId: 999},
 			ConfigModified: false,
-			FlowModified: false,
+			FlowModified:   false,
 		}
 		flowCtx.SetData(contextClusterKey, agg)
-		ret := CompositeExecutor(ClusterFail, ClusterPersist)(task, flowCtx)
+		ret := CompositeExecutor(clusterFail, clusterPersist)(task, flowCtx)
 
 		assert.Equal(t, true, ret)
 		assert.Equal(t, 0, int(agg.Cluster.WorkFlowId))
@@ -109,12 +107,12 @@ func TestClusterFail(t *testing.T) {
 		}
 		flowCtx := NewFlowContext(ctx.TODO())
 		agg := &ClusterAggregation{
-			Cluster: &Cluster{WorkFlowId: 999},
+			Cluster:        &Cluster{WorkFlowId: 999},
 			ConfigModified: false,
-			FlowModified: false,
+			FlowModified:   false,
 		}
 		flowCtx.SetData(contextClusterKey, agg)
-		ret := ClusterFail(task, flowCtx)
+		ret := clusterFail(task, flowCtx)
 
 		assert.Equal(t, true, ret)
 		assert.Equal(t, 0, int(agg.Cluster.WorkFlowId))

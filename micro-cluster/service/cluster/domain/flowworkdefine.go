@@ -41,8 +41,8 @@ func InitFlowMap() {
 				"deployDone":       {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
 				"startupDone":      {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
 				"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
-				"onlineDone":       {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":             {"fail", "", "", SyncFuncTask, CompositeExecutor(ClusterFail, freedResourceAfterFailure)},
+				"onlineDone":       {"end", "", "", SyncFuncTask, CompositeExecutor(clusterEnd, rebuildClusterLogConfig)},
+				"fail":             {"fail", "", "", SyncFuncTask, CompositeExecutor(clusterFail, revertResourceAfterFailure)},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -54,8 +54,8 @@ func InitFlowMap() {
 				"destroyTasksDone":   {"destroyCluster", "destroyClusterDone", "fail", PollingTasK, destroyCluster},
 				"destroyClusterDone": {"deleteCluster", "deleteClusterDone", "fail", SyncFuncTask, deleteCluster},
 				"deleteClusterDone":  {"freedResource", "freedResourceDone", "fail", SyncFuncTask, freedResource},
-				"freedResourceDone":  {"end", "", "", SyncFuncTask, CompositeExecutor(ClusterEnd, ClusterPersist)},
-				"fail":               {"fail", "", "", SyncFuncTask, CompositeExecutor(ClusterFail, ClusterPersist)},
+				"freedResourceDone":  {"end", "", "", SyncFuncTask, CompositeExecutor(clusterEnd, clusterPersist)},
+				"fail":               {"fail", "", "", SyncFuncTask, CompositeExecutor(clusterFail, clusterPersist)},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -65,8 +65,8 @@ func InitFlowMap() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":            {"backup", "backupDone", "fail", PollingTasK, backupCluster},
 				"backupDone":       {"updateBackupRecord", "updateRecordDone", "fail", SyncFuncTask, updateBackupRecord},
-				"updateRecordDone": {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":             {"fail", "", "", SyncFuncTask, ClusterFail},
+				"updateRecordDone": {"end", "", "", SyncFuncTask, clusterEnd},
+				"fail":             {"fail", "", "", SyncFuncTask, clusterFail},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -80,8 +80,8 @@ func InitFlowMap() {
 				"configDone":       {"scaleOutCluster", "scaleOutDone", "fail", PollingTasK, scaleOutCluster},
 				"scaleOutDone":     {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
 				"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
-				"onlineDone":       {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":             {"fail", "", "", SyncFuncTask, ClusterFail},
+				"onlineDone":       {"end", "", "", SyncFuncTask, CompositeExecutor(clusterEnd, rebuildClusterLogConfig)},
+				"fail":             {"fail", "", "", SyncFuncTask, CompositeExecutor(clusterFail, revertResourceAfterFailure)},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -93,8 +93,8 @@ func InitFlowMap() {
 				"start":            {"scaleInCluster", "scaleInDone", "fail", PollingTasK, scaleInCluster},
 				"scaleInDone":      {"freeNodeResource", "freeDone", "fail", SyncFuncTask, freeNodeResource},
 				"freeDone":         {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
-				"syncTopologyDone": {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":             {"fail", "", "", SyncFuncTask, ClusterFail},
+				"syncTopologyDone": {"end", "", "", SyncFuncTask, CompositeExecutor(clusterEnd, rebuildClusterLogConfig)},
+				"fail":             {"fail", "", "", SyncFuncTask, clusterFail},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -110,8 +110,8 @@ func InitFlowMap() {
 				"startupDone":      {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
 				"syncTopologyDone": {"recoverFromSrcCluster", "recoverDone", "fail", PollingTasK, recoverFromSrcCluster},
 				"recoverDone":      {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
-				"onlineDone":       {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":             {"fail", "", "", SyncFuncTask, CompositeExecutor(ClusterFail, freedResourceAfterFailure)},
+				"onlineDone":       {"end", "", "", SyncFuncTask, CompositeExecutor(clusterEnd, rebuildClusterLogConfig)},
+				"fail":             {"fail", "", "", SyncFuncTask, CompositeExecutor(clusterFail, revertResourceAfterFailure)},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -121,8 +121,8 @@ func InitFlowMap() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":       {"modifyParameter", "modifyDone", "fail", PollingTasK, modifyParameters},
 				"modifyDone":  {"refreshParameter", "refreshDone", "fail", SyncFuncTask, refreshParameter},
-				"refreshDone": {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":        {"fail", "", "", SyncFuncTask, ClusterFail},
+				"refreshDone": {"end", "", "", SyncFuncTask, clusterEnd},
+				"fail":        {"fail", "", "", SyncFuncTask, clusterFail},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -132,7 +132,7 @@ func InitFlowMap() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":            {"exportDataFromCluster", "exportDataDone", "fail", PollingTasK, exportDataFromCluster},
 				"exportDataDone":   {"updateDataExportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataExportRecord},
-				"updateRecordDone": {"end", "", "", SyncFuncTask, ClusterEnd},
+				"updateRecordDone": {"end", "", "", SyncFuncTask, clusterEnd},
 				"fail":             {"fail", "", "", SyncFuncTask, exportDataFailed},
 			},
 			ContextParser: defaultContextParser,
@@ -144,7 +144,7 @@ func InitFlowMap() {
 				"start":            {"buildDataImportConfig", "buildConfigDone", "fail", SyncFuncTask, buildDataImportConfig},
 				"buildConfigDone":  {"importDataToCluster", "importDataDone", "fail", PollingTasK, importDataToCluster},
 				"importDataDone":   {"updateDataImportRecord", "updateRecordDone", "fail", SyncFuncTask, updateDataImportRecord},
-				"updateRecordDone": {"end", "", "", SyncFuncTask, ClusterEnd},
+				"updateRecordDone": {"end", "", "", SyncFuncTask, clusterEnd},
 				"fail":             {"fail", "", "", SyncFuncTask, importDataFailed},
 			},
 			ContextParser: defaultContextParser,
@@ -155,8 +155,8 @@ func InitFlowMap() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":       {"clusterRestart", "restartDone", "fail", PollingTasK, clusterRestart},
 				"restartDone": {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
-				"onlineDone":  {"end", "", "fail", SyncFuncTask, CompositeExecutor(ClusterEnd, ClusterPersist)},
-				"fail":        {"fail", "", "", SyncFuncTask, CompositeExecutor(ClusterFail, ClusterPersist)},
+				"onlineDone":  {"end", "", "fail", SyncFuncTask, CompositeExecutor(clusterEnd, clusterPersist)},
+				"fail":        {"fail", "", "", SyncFuncTask, CompositeExecutor(clusterFail, clusterPersist)},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -166,8 +166,8 @@ func InitFlowMap() {
 			TaskNodes: map[string]*TaskDefine{
 				"start":       {"clusterStop", "stopDone", "fail", PollingTasK, clusterStop},
 				"stopDone":    {"setClusterOffline", "offlineDone", "fail", SyncFuncTask, setClusterOffline},
-				"offlineDone": {"end", "", "fail", SyncFuncTask, CompositeExecutor(ClusterEnd, ClusterPersist)},
-				"fail":        {"fail", "", "", SyncFuncTask, CompositeExecutor(ClusterFail, ClusterPersist)},
+				"offlineDone": {"end", "", "fail", SyncFuncTask, CompositeExecutor(clusterEnd, clusterPersist)},
+				"fail":        {"fail", "", "", SyncFuncTask, CompositeExecutor(clusterFail, clusterPersist)},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -178,8 +178,8 @@ func InitFlowMap() {
 				"start":   {"fetchTopologyFile", "fetched", "fail", SyncFuncTask, fetchTopologyFile},
 				"fetched": {"buildTopology", "built", "fail", SyncFuncTask, buildTopology},
 				"built":   {"takeoverResource", "success", "", SyncFuncTask, takeoverResource},
-				"success": {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":    {"fail", "", "", SyncFuncTask, ClusterFail},
+				"success": {"end", "", "", SyncFuncTask, clusterEnd},
+				"fail":    {"fail", "", "", SyncFuncTask, clusterFail},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -188,8 +188,8 @@ func InitFlowMap() {
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowBuildLogConfig),
 			TaskNodes: map[string]*TaskDefine{
 				"start":   {"collect", "success", "fail", SyncFuncTask, collectorTiDBLogConfig},
-				"success": {"end", "", "", SyncFuncTask, ClusterEnd},
-				"fail":    {"fail", "", "", SyncFuncTask, ClusterFail},
+				"success": {"end", "", "", SyncFuncTask, clusterEnd},
+				"fail":    {"fail", "", "", SyncFuncTask, clusterFail},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -247,16 +247,12 @@ func CompositeExecutor(executors ...TaskExecutor) TaskExecutor {
 	}
 }
 
-func ClusterPersist(task *TaskEntity, context *FlowContext) bool {
+func clusterPersist(task *TaskEntity, context *FlowContext) bool {
 	return ClusterRepo.Persist(context, context.GetData(contextClusterKey).(*ClusterAggregation)) == nil
 }
 
-func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
-	task.Success(nil)
+func rebuildClusterLogConfig(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
-	clusterAggregation.Cluster.WorkFlowId = 0
-	clusterAggregation.FlowModified = true
-
 	if clusterAggregation.ConfigModified {
 		go time.AfterFunc(time.Second*3, func() {
 			framework.LogWithContext(context.Context).Infof("BuildClusterLogConfig for cluster %s", clusterAggregation.Cluster.Id)
@@ -269,7 +265,16 @@ func ClusterEnd(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func ClusterFail(task *TaskEntity, context *FlowContext) bool {
+func clusterEnd(task *TaskEntity, context *FlowContext) bool {
+	task.Success(nil)
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	clusterAggregation.Cluster.WorkFlowId = 0
+	clusterAggregation.FlowModified = true
+
+	return true
+}
+
+func clusterFail(task *TaskEntity, context *FlowContext) bool {
 	task.Status = TaskStatusError
 	task.Result = "fail"
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
@@ -278,12 +283,12 @@ func ClusterFail(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func DefaultEnd(task *TaskEntity, context *FlowContext) bool {
+func defaultEnd(task *TaskEntity, context *FlowContext) bool {
 	task.Status = TaskStatusFinished
 	return true
 }
 
-func DefaultFail(task *TaskEntity, context *FlowContext) bool {
+func defaultFail(task *TaskEntity, context *FlowContext) bool {
 	task.Status = TaskStatusError
 	return true
 }

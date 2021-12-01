@@ -19,6 +19,7 @@ package models
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"strings"
 	"testing"
@@ -456,6 +457,7 @@ func TestListClusters(t *testing.T) {
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
 		}
+
 		if total != 3 {
 			t.Errorf("ListClusters() total = %v, want = %v", total, 3)
 		}
@@ -672,6 +674,7 @@ func TestDeleteBackupRecord(t *testing.T) {
 	})
 	t.Run("no record", func(t *testing.T) {
 		_, err := clusterTbl.DeleteBackupRecord(context.TODO(), 999999)
+
 		if err == nil {
 			// TODO: Delete a non-existed record return no error by now
 			//t.Errorf("DeleteBackupRecord() want error")
@@ -784,13 +787,13 @@ var defaultTenantId = "defaultTenantId"
 func TestFetchCluster(t *testing.T) {
 	clusterTbl := Dao.ClusterManager()
 	cluster, _ := clusterTbl.CreateCluster(context.TODO(), Cluster{
-		Entity: Entity{TenantId: defaultTenantId},
-		Name: "TestFetchCluster",
+		Entity:     Entity{TenantId: defaultTenantId},
+		Name:       "TestFetchCluster",
 		DbPassword: "tt.args.DbPassword",
-		Type: "TiDB",
-		Version: "v5.0.0",
-		Tls: true,
-		OwnerId: "TestFetchCluster.ownerId",
+		Type:       "TiDB",
+		Version:    "v5.0.0",
+		Tls:        true,
+		OwnerId:    "TestFetchCluster.ownerId",
 	})
 	t.Run("normal", func(t *testing.T) {
 		gotResult, err := clusterTbl.FetchCluster(context.TODO(), cluster.ID)
@@ -954,5 +957,301 @@ func TestDAOClusterManager_UpdateClusterInfo(t *testing.T) {
 			t.Errorf("UpdateClusterInfo() want error, got nil")
 		}
 
+	})
+}
+
+func TestDAOClusterManager_CreateClusterRelation(t *testing.T) {
+	type args struct {
+		request ClusterRelation
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantErr    bool
+		wantResult []func(args args, relation *ClusterRelation) bool
+	}{
+		{"normal", args{request: ClusterRelation{Record: Record{TenantId: "pingcap"}, SubjectClusterId: "1", ObjectClusterId: "2", RelationType: 1}},
+			false,
+			[]func(args args, relation *ClusterRelation) bool{
+				func(args args, relation *ClusterRelation) bool { return args.request.TenantId == relation.TenantId },
+				func(args args, relation *ClusterRelation) bool {
+					return args.request.SubjectClusterId == relation.SubjectClusterId
+				},
+				func(args args, relation *ClusterRelation) bool {
+					return args.request.ObjectClusterId == relation.ObjectClusterId
+				},
+				func(args args, relation *ClusterRelation) bool {
+					return args.request.RelationType == relation.RelationType
+				},
+			},
+		},
+		{"without TenantId", args{request: ClusterRelation{SubjectClusterId: "3", ObjectClusterId: "4", RelationType: uint32(common.SlaveTo)}},
+			true,
+			[]func(args args, relation *ClusterRelation) bool{},
+		},
+		{"without SubjectClusterId", args{request: ClusterRelation{Record: Record{TenantId: "pingcap"}, ObjectClusterId: "3", RelationType: uint32(common.StandBy)}},
+			true,
+			[]func(args args, relation *ClusterRelation) bool{},
+		},
+		{"without ObjectClusterId", args{request: ClusterRelation{Record: Record{TenantId: "pingcap"}, SubjectClusterId: "2", RelationType: uint32(common.CloneFrom)}},
+			true,
+			[]func(args args, relation *ClusterRelation) bool{},
+		},
+		{"without RelationType", args{request: ClusterRelation{Record: Record{TenantId: "pingcap"}, SubjectClusterId: "3", ObjectClusterId: "4"}},
+			true,
+			[]func(args args, relation *ClusterRelation) bool{},
+		},
+	}
+	clusterTbl := Dao.ClusterManager()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResult, err := clusterTbl.CreateClusterRelation(context.TODO(), ClusterRelation{Record: Record{TenantId: tt.args.request.TenantId},
+				SubjectClusterId: tt.args.request.SubjectClusterId,
+				ObjectClusterId:  tt.args.request.ObjectClusterId,
+				RelationType:     tt.args.request.RelationType,
+			})
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateClusterRelation() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			for i, assert := range tt.wantResult {
+				if !assert(tt.args, gotResult) {
+					t.Errorf("CreateClusterRelation() test error, assert %v, args = %v, gotResult = %v, want %v", i, tt.args, gotResult, tt.wantResult)
+				}
+			}
+		})
+	}
+}
+
+func TestDAOClusterManager_ListClusterRelationBySubjectId(t *testing.T) {
+	clusterTbl := Dao.ClusterManager()
+	clusterTbl.DeleteClusterRelation(context.TODO(), 1)
+	data := []*ClusterRelation{
+		{
+			Record:           Record{TenantId: "111"},
+			SubjectClusterId: "1",
+			ObjectClusterId:  "2",
+			RelationType:     uint32(common.SlaveTo),
+		},
+		{
+			Record:           Record{TenantId: "111"},
+			SubjectClusterId: "1",
+			ObjectClusterId:  "4",
+			RelationType:     uint32(common.StandBy),
+		},
+	}
+	MetaDB.Create(data)
+	defer MetaDB.Delete(data)
+
+	t.Run("normal", func(t *testing.T) {
+		result, err := clusterTbl.ListClusterRelationBySubjectId(context.TODO(), "1")
+
+		if err != nil {
+			t.Errorf("ListClusterRelationBySubjectId() err = %v", err)
+		}
+
+		if len(result) != 2 {
+			t.Errorf("ListClusterRelationBySubjectId() result len = %v, want = %v", len(result), 3)
+		}
+	})
+
+	t.Run("no record", func(t *testing.T) {
+		result, err := clusterTbl.ListClusterRelationBySubjectId(context.TODO(), "2")
+
+		if err != nil {
+			t.Errorf("ListClusterRelationBySubjectId() err = %v", err)
+		}
+
+		if len(result) != 0 {
+			t.Errorf("ListClusterRelationBySubjectId() result len = %v, want = %v", len(result), 0)
+		}
+	})
+
+	t.Run("empty SubjectId", func(t *testing.T) {
+		result, err := clusterTbl.ListClusterRelationBySubjectId(context.TODO(), "")
+		if err == nil {
+			t.Errorf("ListClusterRelationBySubjectId() err = %v", err)
+		}
+
+		if len(result) != 0 {
+			t.Errorf("ListClusterRelationBySubjectId() result len = %v, want = %v", len(result), 0)
+		}
+	})
+
+}
+
+func TestDAOClusterManager_ListClusterRelationByObjectId(t *testing.T) {
+	clusterTbl := Dao.ClusterManager()
+	data := []*ClusterRelation{
+		{
+			Record:           Record{TenantId: "222"},
+			SubjectClusterId: "3",
+			ObjectClusterId:  "2",
+			RelationType:     uint32(common.StandBy),
+		},
+	}
+	MetaDB.Create(data)
+	defer MetaDB.Delete(data)
+
+	t.Run("normal", func(t *testing.T) {
+		result, err := clusterTbl.ListClusterRelationByObjectId(context.TODO(), "2")
+
+		if err != nil {
+			t.Errorf("ListClusterRelationByObjectId() err = %v", err)
+		}
+
+		if len(result) != 1 {
+			t.Errorf("ListClusterRelationByObjectId() result len = %v, want = %v", len(result), 3)
+		}
+	})
+
+	t.Run("no record", func(t *testing.T) {
+		result, err := clusterTbl.ListClusterRelationByObjectId(context.TODO(), "4")
+
+		if err != nil {
+			t.Errorf("ListClusterRelationByObjectId() err = %v", err)
+		}
+
+		if len(result) != 0 {
+			t.Errorf("ListClusterRelationByObjectId() result len = %v, want = %v", len(result), 0)
+		}
+	})
+
+	t.Run("empty objectClusterId", func(t *testing.T) {
+		result, err := clusterTbl.ListClusterRelationByObjectId(context.TODO(), "")
+		if err == nil {
+			t.Errorf("ListClusterRelationByObjectId() err = %v", err)
+		}
+
+		if len(result) != 0 {
+			t.Errorf("ListClusterRelationByObjectId() result len = %v, want = %v", len(result), 0)
+		}
+	})
+
+}
+
+func TestDAOClusterManager_UpdateClusterRelation(t *testing.T) {
+	clusterTbl := Dao.ClusterManager()
+	data := []*ClusterRelation{
+		{
+			Record:           Record{TenantId: "111"},
+			SubjectClusterId: "1",
+			ObjectClusterId:  "6",
+			RelationType:     uint32(common.CloneFrom),
+		},
+		{
+			Record:           Record{TenantId: "333"},
+			SubjectClusterId: "1",
+			ObjectClusterId:  "2",
+			RelationType:     uint32(common.SlaveTo),
+		},
+		{
+			Record:           Record{TenantId: "333"},
+			SubjectClusterId: "3",
+			ObjectClusterId:  "4",
+			RelationType:     uint32(common.StandBy),
+		},
+		{
+			Record:           Record{TenantId: "333"},
+			SubjectClusterId: "5",
+			ObjectClusterId:  "6",
+			RelationType:     uint32(common.CloneFrom),
+		},
+		{
+			Record:           Record{TenantId: "444"},
+			SubjectClusterId: "7",
+			ObjectClusterId:  "8",
+			RelationType:     uint32(common.RecoverFrom),
+		},
+	}
+	MetaDB.Create(data)
+	defer MetaDB.Delete(data)
+
+	t.Run("normal", func(t *testing.T) {
+		result, err := clusterTbl.UpdateClusterRelation(context.TODO(), 5, "4", "3", uint32(common.CloneFrom))
+
+		if err != nil {
+			t.Errorf("UpdateClusterRelation() err = %v", err)
+		}
+
+		if result.SubjectClusterId != "4" {
+			t.Errorf("UpdateClusterRelation() want new subjectClusterId = %s, got = %s", "4", result.SubjectClusterId)
+		}
+
+		if result.ObjectClusterId != "3" {
+			t.Errorf("UpdateClusterRelation() want new objectClusterId = %s, got = %s", "3", result.ObjectClusterId)
+		}
+
+		if result.RelationType != uint32(common.CloneFrom) {
+			t.Errorf("UpdateClusterRelation() want new relationType = %d, got = %d", common.CloneFrom, result.RelationType)
+		}
+	})
+
+	t.Run("no record", func(t *testing.T) {
+		result, err := clusterTbl.UpdateClusterRelation(context.TODO(), 99, "1", "2", uint32(common.StandBy))
+
+		if result.ID == 4 {
+			t.Errorf("UpdateClusterRelation() want no record where ID = %d, got ID = %d", 4, result.ID)
+		}
+		if err == nil {
+			t.Errorf("UpdateClusterRelation() err = %v", err)
+		}
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		_, err := clusterTbl.UpdateClusterRelation(context.TODO(), 0, "", "", 0)
+		if err == nil {
+			t.Errorf("UpdateClusterRelation() err = %v", err)
+		}
+	})
+
+}
+
+func TestDAOClusterManager_DeleteClusterRelation(t *testing.T) {
+	framework.InitBaseFrameworkForUt(framework.MetaDBService)
+	clusterTbl := Dao.ClusterManager()
+	r := ClusterRelation{
+		Record:           Record{TenantId: "333"},
+		SubjectClusterId: "1",
+		ObjectClusterId:  "2",
+		RelationType:     uint32(common.SlaveTo),
+	}
+	relation, _ := clusterTbl.CreateClusterRelation(context.TODO(), r)
+
+	t.Run("normal", func(t *testing.T) {
+		newRelation, err := clusterTbl.DeleteClusterRelation(context.TODO(), relation.ID)
+		if err != nil {
+			t.Errorf("DeleteClusterRelation() error = %v", err)
+		}
+
+		if !newRelation.DeletedAt.Valid {
+			t.Errorf("DeleteClusterRelation() DeleteAt = %v", newRelation.DeletedAt)
+		}
+
+		err = MetaDB.Find(newRelation).Where("id = ?", newRelation.ID).Error
+
+		if err != nil {
+			t.Errorf("DeleteClusterRelation() err = %v", err)
+		}
+
+		if !newRelation.DeletedAt.Valid {
+			t.Errorf("DeleteClusterRelation() DeleteAt = %v", newRelation.DeletedAt)
+		}
+	})
+
+	t.Run("no record", func(t *testing.T) {
+		_, err := clusterTbl.DeleteClusterRelation(context.TODO(), 222)
+		if err == nil {
+			//t.Errorf("DeleteClusterRelation() error = %v", err)
+			return
+		}
+	})
+
+	t.Run("empty clusterRelationId", func(t *testing.T) {
+		_, err := clusterTbl.DeleteClusterRelation(context.TODO(), 0)
+
+		if err == nil {
+			t.Errorf("DeleteClusterRelation() err = %v", err)
+		}
 	})
 }

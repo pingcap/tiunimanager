@@ -11,22 +11,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
 package models
 
 import (
-	"context"
 	"errors"
 	"time"
 
-	gormLog "gorm.io/gorm/logger"
-
 	"github.com/mozillazg/go-pinyin"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -56,16 +50,8 @@ const (
 	TABLE_NAME_TRANSPORT_RECORD   = "transport_records"
 	TABLE_NAME_RECOVER_RECORD     = "recover_records"
 	TABLE_NAME_COMPONENT_INSTANCE = "component_instances"
-	TABLE_NAME_CLUSTER_RELATION   = "cluster_relations"
-	TABLE_NAME_PARAM              = "params"
-	TABLE_NAME_PARAM_GROUP        = "param_groups"
-	TABLE_NAME_PARAM_GROUP_MAP    = "param_group_map"
-	TABLE_NAME_CLUSTER_PARAM_MAP  = "cluster_param_map"
+	TABLE_NAME_CHANGE_FEED_TASKS  = "change_feed_tasks"
 )
-
-func getLogger() *log.Entry {
-	return framework.Log()
-}
 
 type Entity struct {
 	ID        string    `gorm:"primaryKey;"`
@@ -137,50 +123,4 @@ func generateEntityCode(name string) string {
 		previousSplitFlag = len(currentWord) > 1
 	}
 	return string(bytes)
-}
-
-type DaoLogger struct {
-	p             framework.Framework
-	SlowThreshold time.Duration
-}
-
-// LogMode log mode
-func (l *DaoLogger) LogMode(level gormLog.LogLevel) gormLog.Interface {
-	return l
-}
-
-// Info print info
-func (l DaoLogger) Info(ctx context.Context, msg string, data ...interface{}) {
-	l.p.LogWithContext(ctx).Infof(msg)
-}
-
-// Warn print warn messages
-func (l DaoLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
-	l.p.LogWithContext(ctx).Warn(msg)
-}
-
-// Error print error messages
-func (l DaoLogger) Error(ctx context.Context, msg string, data ...interface{}) {
-	l.p.LogWithContext(ctx).Error(msg)
-}
-
-// Trace print sql message
-func (l DaoLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
-	sql, rows := fc()
-	logger := l.p.LogWithContext(ctx).WithField("rows", rows)
-
-	elapsed := time.Since(begin).Milliseconds()
-
-	if l.p.GetRootLogger().LogLevel == framework.LogDebug || l.p.GetRootLogger().LogLevel == framework.LogInfo {
-		logger.Infof("execute sql : %s", sql)
-	}
-
-	if err != nil && (!errors.Is(err, gormLog.ErrRecordNotFound)) {
-		logger.Errorf("sql error, sql : %s, err : %s", sql, err)
-	}
-
-	if elapsed > l.SlowThreshold.Milliseconds() {
-		logger.Warnf("slow sql, cost %d milliseconds, sql : %s", elapsed, sql)
-	}
-
 }

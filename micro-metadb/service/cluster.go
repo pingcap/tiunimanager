@@ -545,6 +545,100 @@ func (handler *DBServiceHandler) GetCurrentParametersRecord(ctx context.Context,
 	}
 }
 
+func (handler *DBServiceHandler) CreateClusterRelation(ctx context.Context, req *dbpb.DBCreateClusterRelationRequest, resp *dbpb.DBCreateClusterRelationResponse) error {
+	log := framework.LogWithContext(ctx)
+	if nil == req || nil == resp {
+		log.Error("CreateClusterRelation has invalid parameters")
+		return errors.Errorf("CreateClusterRelation has invalid parameters")
+	}
+	dto := req.Relation
+	clusterManager := handler.Dao().ClusterManager()
+	relation, err := clusterManager.CreateClusterRelation(ctx, models.ClusterRelation{Record: models.Record{TenantId: dto.TenantId},
+		SubjectClusterId: dto.SubjectClusterId,
+		ObjectClusterId:  dto.ObjectClusterId,
+		RelationType:     dto.RelationType,
+	})
+
+	if nil == err {
+		resp.Status = ClusterSuccessResponseStatus
+		resp.Relation = convertToClusterRelationDTO(relation)
+		log.Infof("CreateClusterRelation successful, clusterRelationId: %d, tenantId: %s", req.Relation.GetId(), req.Relation.GetTenantId())
+		return nil
+	} else {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
+		errMsg := fmt.Sprintf("CreateClusterRelation falied, clusterRelationId: %d, tenantId: %s, error: %s", req.Relation.GetId(), req.Relation.GetTenantId(), err)
+		log.Error(errMsg)
+		return err
+	}
+}
+
+func (handler *DBServiceHandler) SwapClusterRelation(ctx context.Context, req *dbpb.DBSwapClusterRelationRequest, resp *dbpb.DBSwapClusterRelationResponse) error {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "SwapClusterRelation", int(resp.GetStatus().GetCode()))
+	log := framework.LogWithContext(ctx)
+	if nil == req || nil == resp {
+		log.Error("SwapClusterRelation has invalid parameters")
+		return errors.Errorf("SwapClusterRelation has invalid parameters")
+	}
+	clusterManager := handler.Dao().ClusterManager()
+	relation, err := clusterManager.ListClusterRelationById(ctx, uint(req.Id))
+	if err != nil {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
+		log.Error("ListClusterRelationById has no result")
+		return errors.Errorf("ListClusterRelationById has no result")
+	} else {
+		newRelation, err := clusterManager.UpdateClusterRelation(ctx, uint(req.Id), relation.ObjectClusterId, relation.SubjectClusterId, relation.RelationType)
+		if nil == err {
+			resp.Status = ClusterSuccessResponseStatus
+			resp.Relation = convertToClusterRelationDTO(newRelation)
+			log.Infof("SwapClusterRelationById successful, clusterrelationId: %d", req.GetId())
+			return nil
+		} else {
+			resp.Status = BizErrResponseStatus
+			resp.Status.Message = err.Error()
+			errMsg := fmt.Sprintf("SwapClusterRelation falied, clusterRelationId: %d, error: %s", req.GetId(), err)
+			log.Error(errMsg)
+			return errors.Errorf(errMsg)
+		}
+	}
+}
+
+func (handler *DBServiceHandler) ListClusterRelation(ctx context.Context, req *dbpb.DBListClusterRelationRequest, resp *dbpb.DBListClusterRelationResponse) error {
+	start := time.Now()
+	defer handler.HandleMetrics(start, "ListClusterRelation", int(resp.GetStatus().GetCode()))
+	log := framework.LogWithContext(ctx)
+	if nil == req || nil == resp {
+		log.Error("ListClusterRelation has invalid parameters")
+		return errors.Errorf("ListClusterRelation has invalid parameters")
+	}
+	clusterManager := handler.Dao().ClusterManager()
+	relation, err := clusterManager.ListClusterRelationBySubjectId(ctx, req.SubjectClusterId)
+	if nil == err {
+		resp.Status = ClusterSuccessResponseStatus
+		clusterRelationDTOs := make([]*dbpb.DBClusterRelationDTO, len(relation))
+		for i, v := range relation {
+			clusterRelationDTOs[i] = convertToClusterRelationDTO(v)
+		}
+		resp.Relation = clusterRelationDTOs
+		log.Infof("ListClusterRelation successful, subjectClusterId: %s", req.GetSubjectClusterId())
+		return nil
+	} else if len(relation) == 0 {
+		resp.Status = ClusterNoResultResponseStatus
+		resp.Status.Message = err.Error()
+		errMsg := fmt.Sprintf("ListClusterRelation has no result, subjectClusterId: %s", req.GetSubjectClusterId())
+		log.Error(errMsg)
+		return errors.Errorf(errMsg)
+	} else {
+		resp.Status = BizErrResponseStatus
+		resp.Status.Message = err.Error()
+		errMsg := fmt.Sprintf("ListClusterRelation falied, subjectClusterId: %s, error: %s", req.GetSubjectClusterId(), err)
+		log.Error(errMsg)
+		return errors.Errorf(errMsg)
+	}
+}
+
 func convertToBackupRecordDTO(do *models.BackupRecord) (dto *dbpb.DBBackupRecordDTO) {
 	if do == nil {
 		return nil
@@ -752,4 +846,21 @@ func unix2NullTime(unix int64) sql.NullTime {
 		Time:  time.Unix(unix, 0),
 		Valid: unix != 0,
 	}
+}
+
+func convertToClusterRelationDTO(do *models.ClusterRelation) (dto *dbpb.DBClusterRelationDTO) {
+	if do == nil {
+		return nil
+	}
+	dto = &dbpb.DBClusterRelationDTO{
+		Id:               int64(do.ID),
+		TenantId:         do.TenantId,
+		SubjectClusterId: do.SubjectClusterId,
+		ObjectClusterId:  do.ObjectClusterId,
+		RelationType:     do.RelationType,
+		CreateTime:       do.CreatedAt.Unix(),
+		UpdateTime:       do.UpdatedAt.Unix(),
+		DeleteTime:       nullTime2Unix(sql.NullTime(do.DeletedAt)),
+	}
+	return
 }

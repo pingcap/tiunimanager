@@ -15,9 +15,21 @@
 
 package changefeed
 
-import "github.com/pingcap-inc/tiem/micro-api/controller"
+import (
+	"context"
+	"gorm.io/gorm"
+)
 
-type QueryReq struct {
-	ClusterId string `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
-	controller.Page
+type ChangeFeedReaderWriter interface {
+	SetDb(db *gorm.DB)
+	Db(ctx context.Context) *gorm.DB
+
+	Create(ctx context.Context, task *ChangeFeedTask) (*ChangeFeedTask, error)
+	Delete(ctx context.Context, taskId string) (err error)
+	Get(ctx context.Context, taskId string) (*ChangeFeedTask, error)
+	QueryByClusterId(ctx context.Context, clusterId string, offset int, length int) (tasks []*ChangeFeedTask, total int64, err error)
+
+	LockStatus(ctx context.Context, taskId string) error
+	UnlockStatus(ctx context.Context, taskId string, targetStatus int8) error
+	UpdateConfig(ctx context.Context, updateTemplate *ChangeFeedTask) error
 }

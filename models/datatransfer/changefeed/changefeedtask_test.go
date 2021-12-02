@@ -18,7 +18,6 @@ package changefeed
 import (
 	"context"
 	"database/sql"
-	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -101,7 +100,7 @@ func TestGormChangeFeedReadWrite_Create(t *testing.T) {
 func TestGormChangeFeedReadWrite_Delete(t *testing.T) {
 	existed, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111"}})
 	deleted, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111"}, ClusterId: "111"})
-	models.DB(context.TODO()).Delete(deleted)
+	testRW.Db(context.TODO()).Delete(deleted)
 
 	type args struct {
 		ctx    context.Context
@@ -145,7 +144,7 @@ func TestGormChangeFeedReadWrite_LockStatus(t *testing.T) {
 	unlocked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
 		Entity: common.Entity{TenantId: "111"},
 	})
-	models.DB(context.TODO()).First(&ChangeFeedTask{}, "id = ?", unlocked.ID).Update("status_lock", sql.NullTime{
+	testRW.Db(context.TODO()).First(&ChangeFeedTask{}, "id = ?", unlocked.ID).Update("status_lock", sql.NullTime{
 		Time:  time.Now(),
 		Valid: false,
 	})
@@ -190,7 +189,7 @@ func TestGormChangeFeedReadWrite_QueryByClusterId(t *testing.T) {
 	t5, _ := testRW.Create(context.TODO(), &ChangeFeedTask{Entity: common.Entity{TenantId: "111"}, ClusterId: "6666"})
 	defer testRW.Delete(context.TODO(), t1.ID)
 	defer testRW.Delete(context.TODO(), anotherCluster.ID)
-	models.DB(context.TODO()).Delete(deleted)
+	testRW.Db(context.TODO()).Delete(deleted)
 	defer testRW.Delete(context.TODO(), t4.ID)
 	defer testRW.Delete(context.TODO(), t5.ID)
 
@@ -212,7 +211,7 @@ func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
 	unlocked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
 		Entity: common.Entity{TenantId: "111"},
 	})
-	models.DB(context.TODO()).First(&ChangeFeedTask{}, "id = ?", unlocked.ID).Update("status_lock", sql.NullTime{
+	testRW.Db(context.TODO()).First(&ChangeFeedTask{}, "id = ?", unlocked.ID).Update("status_lock", sql.NullTime{
 		Time:  time.Now().Add(time.Minute * -3),
 		Valid: true,
 	})

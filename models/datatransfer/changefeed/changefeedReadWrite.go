@@ -20,11 +20,20 @@ import (
 	"database/sql"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
+	"gorm.io/gorm"
 	"time"
 )
 
 type GormChangeFeedReadWrite struct {
+	db *gorm.DB
+}
+
+func (m *GormChangeFeedReadWrite) SetDb(db *gorm.DB) {
+	m.db = db
+}
+
+func (m *GormChangeFeedReadWrite) Db(ctx context.Context) *gorm.DB {
+	return m.Db(ctx)
 }
 
 func NewGormChangeFeedReadWrite() *GormChangeFeedReadWrite {
@@ -38,7 +47,7 @@ func (m *GormChangeFeedReadWrite) Create(ctx context.Context, task *ChangeFeedTa
 		Valid: true,
 	}
 
-	return task, models.DB(ctx).Create(task).Error
+	return task, m.Db(ctx).Create(task).Error
 }
 
 func (m *GormChangeFeedReadWrite) Delete(ctx context.Context, taskId string) (err error) {
@@ -47,7 +56,7 @@ func (m *GormChangeFeedReadWrite) Delete(ctx context.Context, taskId string) (er
 	}
 	task := &ChangeFeedTask{}
 
-	return models.DB(ctx).First(task, "id = ?", taskId).Delete(task).Error
+	return m.Db(ctx).First(task, "id = ?", taskId).Delete(task).Error
 }
 
 func (m *GormChangeFeedReadWrite) LockStatus(ctx context.Context, taskId string) error {
@@ -56,7 +65,7 @@ func (m *GormChangeFeedReadWrite) LockStatus(ctx context.Context, taskId string)
 	}
 
 	task := &ChangeFeedTask{}
-	err := models.DB(ctx).First(task, "id = ?", taskId).Error
+	err := m.Db(ctx).First(task, "id = ?", taskId).Error
 
 	if err != nil {
 		return framework.SimpleError(common.TIEM_CHANGE_FEED_NOT_FOUND)
@@ -66,7 +75,7 @@ func (m *GormChangeFeedReadWrite) LockStatus(ctx context.Context, taskId string)
 		return framework.SimpleError(common.TIEM_CHANGE_FEED_STATUS_CONFLICT)
 	}
 
-	return models.DB(ctx).Model(task).
+	return m.Db(ctx).Model(task).
 		Update("status_lock", sql.NullTime{
 			Time:  time.Now(),
 			Valid: true,
@@ -79,7 +88,7 @@ func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId strin
 	}
 
 	task := &ChangeFeedTask{}
-	err := models.DB(ctx).First(task, "id = ?", taskId).Error
+	err :=m.Db(ctx).First(task, "id = ?", taskId).Error
 
 	if err != nil {
 		return framework.SimpleError(common.TIEM_CHANGE_FEED_NOT_FOUND)
@@ -89,7 +98,7 @@ func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId strin
 		return framework.SimpleError(common.TIEM_CHANGE_FEED_LOCK_EXPIRED)
 	}
 
-	return models.DB(ctx).Model(task).
+	return m.Db(ctx).Model(task).
 		Update("status", targetStatus).
 		Update("status_lock", sql.NullTime{
 			Time:  time.Now(),
@@ -102,7 +111,7 @@ func (m *GormChangeFeedReadWrite) UpdateConfig(ctx context.Context, updateTempla
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 
-	return models.DB(ctx).Omit("status_lock", "status", "cluster_id").
+	return m.Db(ctx).Omit("status_lock", "status", "cluster_id").
 		Save(updateTemplate).Error
 }
 
@@ -112,7 +121,7 @@ func (m *GormChangeFeedReadWrite) Get(ctx context.Context, taskId string) (*Chan
 	}
 
 	task := &ChangeFeedTask{}
-	err := models.DB(ctx).First(task, "id = ?", taskId).Error
+	err := m.Db(ctx).First(task, "id = ?", taskId).Error
 
 	if err != nil {
 		return nil, framework.SimpleError(common.TIEM_CHANGE_FEED_NOT_FOUND)
@@ -128,7 +137,7 @@ func (m *GormChangeFeedReadWrite) QueryByClusterId(ctx context.Context, clusterI
 
 	tasks = make([]*ChangeFeedTask, length)
 
-	return tasks, total, models.DB(ctx).Model(&ChangeFeedTask{}).
+	return tasks, total, m.Db(ctx).Model(&ChangeFeedTask{}).
 		Where("cluster_id = ?", clusterId).
 		Order("created_at").Offset(offset).Limit(length).Find(&tasks).Count(&total).Error
 }

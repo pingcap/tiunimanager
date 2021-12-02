@@ -16,6 +16,7 @@
 package common
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -94,4 +95,9 @@ func generateEntityCode(name string) string {
 		previousSplitFlag = len(currentWord) > 1
 	}
 	return string(bytes)
+}
+
+type GormDB interface {
+	SetDB(db *gorm.DB)
+	DB(ctx context.Context) *gorm.DB
 }

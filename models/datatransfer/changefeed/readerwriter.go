@@ -17,12 +17,11 @@ package changefeed
 
 import (
 	"context"
-	"gorm.io/gorm"
+	"github.com/pingcap-inc/tiem/models/common"
 )
 
 type ChangeFeedReaderWriter interface {
-	SetDb(db *gorm.DB)
-	Db(ctx context.Context) *gorm.DB
+	common.GormDB
 
 	Create(ctx context.Context, task *ChangeFeedTask) (*ChangeFeedTask, error)
 	Delete(ctx context.Context, taskId string) (err error)

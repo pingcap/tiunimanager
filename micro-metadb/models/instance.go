@@ -43,7 +43,7 @@ func (m *DAOClusterManager) ListComponentInstances(ctx context.Context, clusterI
 	}
 	componentInstances = make([]*ComponentInstance, 0, 10)
 
-	err = m.Db(ctx).Table(TABLE_NAME_COMPONENT_INSTANCE).Where("cluster_id = ?", clusterId).Find(&componentInstances).Error
+	err = m.DB(ctx).Table(TABLE_NAME_COMPONENT_INSTANCE).Where("cluster_id = ?", clusterId).Find(&componentInstances).Error
 
 	return componentInstances, err
 }
@@ -54,7 +54,7 @@ func (m *DAOClusterManager) ListComponentInstancesByHost(ctx context.Context, ho
 	}
 	componentInstances = make([]*ComponentInstance, 0)
 
-	err = m.Db(ctx).Table(TABLE_NAME_COMPONENT_INSTANCE).Where("host_id = ?", hostId).Find(&componentInstances).Error
+	err = m.DB(ctx).Table(TABLE_NAME_COMPONENT_INSTANCE).Where("host_id = ?", hostId).Find(&componentInstances).Error
 
 	return componentInstances, err
 }
@@ -75,6 +75,6 @@ func (m *DAOClusterManager) DeleteClusterComponentInstance(ctx context.Context, 
 		return fmt.Errorf("DeleteInstance has invalid parameter, instanceId: %s", instanceId)
 	}
 	instance := &ComponentInstance{}
-	return m.Db(ctx).First(instance, "id = ?", instanceId).Delete(instance).Error
+	return m.DB(ctx).First(instance, "id = ?", instanceId).Delete(instance).Error
 }
 

@@ -43,7 +43,7 @@ type TransportRecordFetchResult struct {
 }
 
 func (m *DAOClusterManager) CreateTransportRecord(ctx context.Context, record *TransportRecord) (recordId int, err error) {
-	err = m.Db(ctx).Create(record).Error
+	err = m.DB(ctx).Create(record).Error
 	if err != nil {
 		return 0, err
 	}
@@ -55,13 +55,13 @@ func (m *DAOClusterManager) UpdateTransportRecord(ctx context.Context, recordId 
 		ClusterId: clusterId,
 	}
 	record.ID = uint(recordId)
-	err = m.Db(ctx).Model(&record).Updates(map[string]interface{}{"EndTime": endTime}).Error
+	err = m.DB(ctx).Model(&record).Updates(map[string]interface{}{"EndTime": endTime}).Error
 	return err
 }
 
 func (m *DAOClusterManager) FindTransportRecordById(ctx context.Context, recordId int) (record *TransportRecord, err error) {
 	record = &TransportRecord{}
-	err = m.Db(ctx).Where("id = ?", recordId).Where("deleted_at is null").First(record).Error
+	err = m.DB(ctx).Where("id = ?", recordId).Where("deleted_at is null").First(record).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return record, err
 	}
@@ -71,7 +71,7 @@ func (m *DAOClusterManager) FindTransportRecordById(ctx context.Context, recordI
 func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId string, recordId int, reImport bool, startTime, endTime int64, offset int32, length int32) (dos []*TransportRecordFetchResult, total int64, err error) {
 	records := make([]*TransportRecord, length)
 
-	db := m.Db(ctx).Table(TABLE_NAME_TRANSPORT_RECORD).Where("deleted_at is null")
+	db := m.DB(ctx).Table(TABLE_NAME_TRANSPORT_RECORD).Where("deleted_at is null")
 	if clusterId != "" {
 		db.Where("cluster_id = ?", clusterId)
 	}
@@ -100,7 +100,7 @@ func (m *DAOClusterManager) ListTransportRecord(ctx context.Context, clusterId s
 		}
 
 		flows := make([]*FlowDO, len(records))
-		err = m.Db(ctx).Find(&flows, flowIds).Error
+		err = m.DB(ctx).Find(&flows, flowIds).Error
 		m.HandleMetrics(TABLE_NAME_FLOW, 0)
 		if err != nil {
 			return nil, 0, fmt.Errorf("ListTransportRecord, query record failed, clusterId: %s, error: %s", clusterId, err.Error())
@@ -125,7 +125,7 @@ func (m *DAOClusterManager) DeleteTransportRecord(ctx context.Context, recordId 
 	}
 	record = &TransportRecord{}
 	record.ID = uint(recordId)
-	err = m.Db(ctx).Where("id = ?", record.ID).Delete(record).Error
+	err = m.DB(ctx).Where("id = ?", record.ID).Delete(record).Error
 	m.HandleMetrics(TABLE_NAME_TRANSPORT_RECORD, 0)
 	return record, err
 }

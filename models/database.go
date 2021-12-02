@@ -33,7 +33,7 @@ func open() {
 
 func initReaderWriter() {
 	defaultDb.changeFeedReaderWriter = &changefeed.GormChangeFeedReadWrite{}
-	defaultDb.changeFeedReaderWriter.SetDb(defaultDb.base)
+	defaultDb.changeFeedReaderWriter.SetDB(defaultDb.base)
 
 
 }
@@ -44,10 +44,4 @@ func addTable() {
 
 func GetChangeFeedReaderWriter() changefeed.ChangeFeedReaderWriter {
 	return defaultDb.changeFeedReaderWriter
-}
-
-func InitForTest(db *gorm.DB) {
-	defaultDb = database{
-		base: db,
-	}
 }

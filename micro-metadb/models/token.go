@@ -42,7 +42,7 @@ func (m *DAOAccountManager) AddToken(ctx context.Context, tokenString, accountNa
 	token, err = m.FindToken(ctx, tokenString)
 	if err == nil && token.TokenString == tokenString {
 		token.ExpirationTime = expirationTime
-		err = m.Db(ctx).Save(&token).Error
+		err = m.DB(ctx).Save(&token).Error
 	} else {
 		token.TokenString = tokenString
 		token.AccountId = accountId
@@ -50,12 +50,12 @@ func (m *DAOAccountManager) AddToken(ctx context.Context, tokenString, accountNa
 		token.ExpirationTime = expirationTime
 		token.AccountName = accountName
 		token.Status = 0
-		err = m.Db(ctx).Create(&token).Error
+		err = m.DB(ctx).Create(&token).Error
 	}
 	return token, err
 }
 
 func (m *DAOAccountManager) FindToken(ctx context.Context, tokenString string) (token *Token, err error) {
 	token = &Token{}
-	return token, m.Db(ctx).Where("token_string = ?", tokenString).First(token).Error
+	return token, m.DB(ctx).Where("token_string = ?", tokenString).First(token).Error
 }

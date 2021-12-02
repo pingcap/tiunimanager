@@ -77,6 +77,7 @@ func (m *GormChangeFeedReadWrite) LockStatus(ctx context.Context, taskId string)
 		}).Error
 }
 
+
 func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId string, targetStatus int8) error {
 	if "" == taskId {
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
@@ -106,7 +107,7 @@ func (m *GormChangeFeedReadWrite) UpdateConfig(ctx context.Context, updateTempla
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 
-	return m.DB(ctx).Omit("status_lock", "status", "cluster_id").
+	return m.DB(ctx).Omit("status_lock", "status", "cluster_id", "start_ts").
 		Save(updateTemplate).Error
 }
 

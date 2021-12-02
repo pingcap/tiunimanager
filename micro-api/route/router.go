@@ -106,9 +106,6 @@ func Route(g *gin.Engine) {
 			cluster.PUT("/:clusterId/params", parameterApi.UpdateParams)
 			cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParams)
 
-			// Topology
-			cluster.GET("/:clusterId/topology", clusterApi.GetTopology)
-
 			// Backup Strategy
 			cluster.GET("/:clusterId/strategy", backuprestore.QueryBackupStrategy)
 			cluster.PUT("/:clusterId/strategy", backuprestore.SaveBackupStrategy)

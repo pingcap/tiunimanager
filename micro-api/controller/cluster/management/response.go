@@ -53,10 +53,36 @@ type DeleteClusterRsp struct {
 	controller.StatusInfo
 }
 
+type ResourceSpec struct {
+	Zone struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	} `json:"zone"`
+	Spec struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	} `json:"spec"`
+	Count int `json:"count"`
+}
+
+type ClusterTopologyInfo struct {
+	CpuArchitecture string `json:"cpuArchitecture" form:"cpuArchitecture"`
+	Region          struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	} `json:"region"`
+	ComponentTopology []struct {
+		ComponentType string `json:"componentType"`
+		ResourceSpec  []ResourceSpec
+	} `json:"componentTopology"`
+}
+
 type DetailClusterRsp struct {
 	ClusterDisplayInfo
+	ClusterTopologyInfo
 	ClusterMaintenanceInfo
 	Components []ComponentInstance `json:"components"`
+
 }
 
 type DescribeDashboardRsp struct {

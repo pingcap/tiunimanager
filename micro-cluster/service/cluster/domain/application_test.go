@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"testing"
 	"time"
 
@@ -69,9 +68,11 @@ func defaultCluster() *ClusterAggregation {
 	}
 	return &ClusterAggregation{
 		Cluster: &Cluster{
-			Id:          "testCluster",
-			ClusterName: "testCluster",
-			Status:      ClusterStatusOnline,
+			Id:              "testCluster",
+			ClusterName:     "testCluster",
+			Status:          ClusterStatusOnline,
+			CpuArchitecture: "X86_64",
+			Region:          "region01",
 		},
 		LastBackupRecord: br,
 		LastRecoverRecord: &RecoverRecord{
@@ -132,6 +133,58 @@ func defaultCluster() *ClusterAggregation {
 			},
 			CreateTime: time.Time{},
 		},
+		CurrentComponentInstances: []*ComponentInstance{
+			{
+				Host:          "127.0.0.1",
+				ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentName: "TiDB"},
+				HostId:        "host01",
+				Version:       &knowledge.ClusterVersion{Code: "v5.0.0"},
+				Status:        ClusterStatusOnline,
+				PortList:      []int{4000, 4002},
+			},
+			{
+				Host:          "127.0.0.1",
+				ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentName: "PD"},
+				HostId:        "host01",
+				Version:       &knowledge.ClusterVersion{Code: "v5.0.0"},
+				Status:        ClusterStatusOnline,
+				PortList:      []int{4003, 4004},
+			},
+			{
+				Host:          "127.0.0.1",
+				ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentName: "TiKV"},
+				HostId:        "host01",
+				Version:       &knowledge.ClusterVersion{Code: "v5.0.0"},
+				Status:        ClusterStatusOnline,
+				PortList:      []int{4005, 4006},
+			},
+			{
+				Host:          "127.0.0.1",
+				ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentName: "PD"},
+				HostId:        "host01",
+				Version:       &knowledge.ClusterVersion{Code: "v5.0.0"},
+				Status:        ClusterStatusOnline,
+				PortList:      []int{4015, 4016},
+			},
+		},
+		CurrentComponentDemand: []*ClusterComponentDemand{
+			{
+				ComponentType:  &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentPurpose: "compute", ComponentName: "TiDB"},
+				TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+					{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+					{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
+					{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+				}},
+			{ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentPurpose: "storage", ComponentName: "TiKV"},
+				TotalNodeCount: 4, DistributionItems: []*ClusterNodeDistributionItem{
+					{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+					{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
+					{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+				}},
+			{ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
+				TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+					{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
+				}}},
 	}
 }
 
@@ -141,22 +194,29 @@ func TestClusterAggregation_ExtractBackupRecordDTO(t *testing.T) {
 	assert.Equal(t, aggregation.LastBackupRecord.Id, dto.Id)
 }
 
-func TestClusterAggregation_ExtractBaseInfoDTO(t *testing.T) {
+func TestClusterAggregation_ExtractDisplayInfo(t *testing.T) {
 	aggregation := defaultCluster()
-	dto := aggregation.ExtractBaseInfoDTO()
+	dto := aggregation.ExtractDisplayInfo()
 	assert.Equal(t, aggregation.Cluster.ClusterName, dto.ClusterName)
 }
 
-func TestClusterAggregation_ExtractDisplayDTO(t *testing.T) {
+func TestClusterAggregation_ExtractComponentInstances(t *testing.T) {
 	aggregation := defaultCluster()
-	dto := aggregation.ExtractDisplayDTO()
-	assert.Equal(t, strconv.Itoa(int(aggregation.Cluster.Status)), dto.Status.StatusCode)
-	assert.Equal(t, aggregation.Cluster.ClusterName, dto.BaseInfo.ClusterName)
+	dto := aggregation.ExtractComponentInstances()
+	assert.Equal(t, 3, len(dto))
 }
 
-func TestClusterAggregation_ExtractMaintenanceDTO(t *testing.T) {
+func TestClusterAggregation_ExtractTopologyInfo(t *testing.T) {
 	aggregation := defaultCluster()
-	dto := aggregation.ExtractMaintenanceDTO()
+	dto := aggregation.ExtractTopologyInfo()
+	assert.Equal(t, aggregation.Cluster.CpuArchitecture, dto.CpuArchitecture)
+	assert.Equal(t, dto.Region.Code, aggregation.Cluster.Region)
+	assert.Equal(t, 3, len(dto.ComponentTopology))
+}
+
+func TestClusterAggregation_ExtractMaintenanceInfo(t *testing.T) {
+	aggregation := defaultCluster()
+	dto := aggregation.ExtractMaintenanceInfo()
 	assert.Equal(t, aggregation.MaintainCronTask.Cron, dto.MaintainTaskCron)
 }
 
@@ -419,12 +479,6 @@ func TestDeleteCluster(t *testing.T) {
 
 }
 
-func TestGetTopology(t *testing.T) {
-	got, err := GetTopology(context.TODO(), "testCluster")
-	assert.NoError(t, err)
-	assert.Equal(t, "testCluster", got.Cluster.ClusterName)
-}
-
 func TestRestartCluster(t *testing.T) {
 	got, err := RestartCluster(context.TODO(), &clusterpb.OperatorDTO{
 		Id:       "testoperator",
@@ -477,18 +531,18 @@ func TestMergeDemands(t *testing.T) {
 		{
 			ComponentType:  &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentPurpose: "compute", ComponentName: "TiDB"},
 			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
-			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
-			{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
-			{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
-		}},
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+			}},
 		{ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentPurpose: "storage", ComponentName: "TiKV"},
 			TotalNodeCount: 1, DistributionItems: []*ClusterNodeDistributionItem{
-			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
-		}},
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+			}},
 		{ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
 			TotalNodeCount: 1, DistributionItems: []*ClusterNodeDistributionItem{
-			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
-		}}}
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+			}}}
 	got := mergeDemands(demand1, demand2)
 	assert.Equal(t, 3, len(got))
 }
@@ -498,26 +552,26 @@ func TestDeleteDemands(t *testing.T) {
 		{
 			ComponentType:  &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentPurpose: "compute", ComponentName: "TiDB"},
 			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
-			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
-			{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
-			{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
-		}},
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+			}},
 		{ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentPurpose: "storage", ComponentName: "TiKV"},
 			TotalNodeCount: 4, DistributionItems: []*ClusterNodeDistributionItem{
-			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
-			{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
-			{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
-		}},
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
+				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+			}},
 		{ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
 			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
-			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
-		}}}
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
+			}}}
 	instance := &ComponentInstance{
 		ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
-		Location: &resource.Location{Region: "region", Zone: "zone1"},
+		Location:      &resource.Location{Region: "region", Zone: "zone1"},
 		Compute: &resource.ComputeRequirement{
 			CpuCores: 4,
-			Memory: 8,
+			Memory:   8,
 		},
 	}
 	got := deleteDemands(demand, instance)

@@ -20,8 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	changeFeedApi "github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
-	resource2 "github.com/pingcap-inc/tiem/library/common/resource-type"
-	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/service/datatransfer/changefeed"
 	"net/http"
 	"strconv"
@@ -78,43 +76,6 @@ func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]by
 
 	resp.Code = int32(err.(framework.TiEMError).GetCode())
 	resp.Message = err.(framework.TiEMError).GetMsg()
-}
-
-func HandleTopologyResponse(clusterAggregation *domain.ClusterAggregation) string {
-	cluster := clusterAggregation.Cluster
-	demands := clusterAggregation.CurrentComponentDemand
-	response := &management.GetTopologyResponse{
-		ClusterType:     cluster.ClusterType.Code,
-		CpuArchitecture: cluster.CpuArchitecture,
-	}
-	response.Region.Code = cluster.Region
-	response.Region.Name = cluster.Region
-
-	for _, demand := range demands {
-		resourceSpec := make([]management.ResourceSpec, len(demand.DistributionItems))
-		for key, item := range demand.DistributionItems {
-			resourceSpec[key].Spec.Code = item.SpecCode
-			resourceSpec[key].Spec.Name = item.SpecCode
-			resourceSpec[key].Zone.Code = item.ZoneCode
-			resourceSpec[key].Zone.Name = resource2.GetDomainNameFromCode(item.ZoneCode)
-			resourceSpec[key].Count = item.Count
-		}
-
-		data := struct {
-			ComponentType string `json:"componentType"`
-			ResourceSpec  []management.ResourceSpec
-		} {
-			demand.ComponentType.ComponentType,
-			resourceSpec,
-		}
-		response.ComponentTopology = append(response.ComponentTopology, data)
-	}
-
-	body, err := json.Marshal(response)
-	if err != nil {
-		return ""
-	}
-	return string(body)
 }
 
 func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
@@ -211,15 +172,13 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.ClusterId = clusterAggregation.Cluster.Id
-		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 		return nil
 	}
 }
 
 func (c ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *clusterpb.ScaleOutRequest, resp *clusterpb.ScaleOutResponse) (err error) {
 	framework.LogWithContext(ctx).Info("scale out cluster")
-	clusterAggregation, err := domain.ScaleOutCluster(ctx, req.GetOperator(), req.GetClusterId(), req.GetDemands())
+	_, err = domain.ScaleOutCluster(ctx, req.GetOperator(), req.GetClusterId(), req.GetDemands())
 
 	if err != nil {
 		framework.LogWithContext(ctx).Info(err)
@@ -227,7 +186,6 @@ func (c ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *cluster
 		resp.RespStatus.Message = err.Error()
 	} else {
 		resp.RespStatus = SuccessResponseStatus
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 	}
 
 	return nil
@@ -235,7 +193,7 @@ func (c ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *cluster
 
 func (c ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *clusterpb.ScaleInRequest, resp *clusterpb.ScaleInResponse) (err error) {
 	framework.LogWithContext(ctx).Info("scale in cluster")
-	clusterAggregation, err := domain.ScaleInCluster(ctx, req.GetOperator(), req.GetClusterId(), req.GetNodeId())
+	_, err = domain.ScaleInCluster(ctx, req.GetOperator(), req.GetClusterId(), req.GetNodeId())
 
 	if err != nil {
 		framework.LogWithContext(ctx).Info(err)
@@ -243,32 +201,8 @@ func (c ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *clusterp
 		resp.RespStatus.Message = err.Error()
 	} else {
 		resp.RespStatus = SuccessResponseStatus
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 	}
 
-	return nil
-}
-
-func (c ClusterServiceHandler) GetTopology(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	framework.LogWithContext(ctx).Info("get topology")
-	request := &management.GetTopologyRequest{}
-	err := json.Unmarshal([]byte(req.Request), request)
-
-	if err != nil {
-		resp.Code = http.StatusBadRequest
-		resp.Message = err.Error()
-		return nil
-	}
-
-	clusterAggregation, err := domain.GetTopology(ctx, request.ClusterID)
-
-	if err != nil {
-		resp.Code = int32(err.(framework.TiEMError).GetCode())
-		resp.Message = err.(framework.TiEMError).GetMsg()
-	} else {
-		resp.Code = http.StatusOK
-		resp.Response = HandleTopologyResponse(clusterAggregation)
-	}
 	return nil
 }
 
@@ -281,9 +215,6 @@ func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *cluste
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters))
-		for i, v := range clusters {
-			resp.Clusters[i] = v.ExtractDisplayDTO()
-		}
 
 		return nil
 	}
@@ -298,9 +229,6 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters))
-		for i, v := range clusters {
-			resp.Clusters[i] = v.ExtractDisplayDTO()
-		}
 		resp.Page = &clusterpb.PageDTO{
 			Page:     req.PageReq.Page,
 			PageSize: req.PageReq.PageSize,
@@ -321,7 +249,6 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.ClusterId = clusterAggregation.Cluster.Id
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 		return nil
 	}
 }
@@ -340,7 +267,6 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 	}
 	resp.RespStatus = SuccessResponseStatus
 	resp.ClusterId = clusterAggregation.Cluster.Id
-	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 	return nil
 }
 
@@ -358,27 +284,32 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.C
 	}
 	resp.RespStatus = SuccessResponseStatus
 	resp.ClusterId = clusterAggregation.Cluster.Id
-	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 	return nil
 }
 
-func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.ClusterDetailReqDTO, resp *clusterpb.ClusterDetailRespDTO) (err error) {
+func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	framework.LogWithContext(ctx).Info("detail cluster")
+	type DetailRequest struct {
+		clusterID string `json:"clusterId"`
+	}
+	request := &DetailRequest{}
+	err = json.Unmarshal([]byte(req.Request), request)
+	if err != nil {
+		resp.Code = http.StatusBadRequest
+		resp.Message = err.Error()
+		return
+	}
 
-	cluster, err := domain.GetClusterDetail(ctx, req.Operator, req.ClusterId)
+	cluster, err := domain.GetClusterDetail(ctx, request.clusterID)
 
 	if err != nil {
-		// todo
-		framework.LogWithContext(ctx).Info(err)
-		return nil
+		resp.Code = int32(err.(framework.TiEMError).GetCode())
+		resp.Message = err.(framework.TiEMError).GetMsg()
 	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.DisplayInfo = cluster.ExtractDisplayDTO()
-		resp.Components = cluster.ExtractComponentDTOs()
-		resp.MaintenanceInfo = cluster.ExtractMaintenanceDTO()
-
-		return nil
+		resp.Code = http.StatusOK
+		resp.Response = domain.ExtractClusterInfo(cluster)
 	}
+	return
 }
 
 func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterpb.DataExportRequest, resp *clusterpb.DataExportResponse) error {
@@ -503,8 +434,6 @@ func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterp
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.ClusterId = clusterAggregation.Cluster.Id
-		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 	}
 	return nil
 }

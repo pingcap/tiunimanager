@@ -57,32 +57,3 @@ type ScaleInReq struct {
 	ComponentType string `json:"componentType"`
 	NodeId        string `json:"nodeId"`
 }
-
-type GetTopologyRequest struct {
-	ClusterID string `json:"clusterID"`
-}
-
-type ResourceSpec struct {
-	Zone struct {
-		Code string `json:"code"`
-		Name string `json:"name"`
-	} `json:"zone"`
-	Spec struct {
-		Code string `json:"code"`
-		Name string `json:"name"`
-	} `json:"spec"`
-	Count int `json:"count"`
-}
-
-type GetTopologyResponse struct {
-	ClusterType     string `json:"clusterType"`
-	CpuArchitecture string `json:"cpuArchitecture" form:"cpuArchitecture"`
-	Region          struct {
-		Code string `json:"code"`
-		Name string `json:"name"`
-	} `json:"region"`
-	ComponentTopology []struct {
-		ComponentType string `json:"componentType"`
-		ResourceSpec  []ResourceSpec
-	} `json:"componentTopology"`
-}

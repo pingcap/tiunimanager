@@ -332,39 +332,22 @@ func Stop(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId} [get]
 func Detail(c *gin.Context) {
-	operator := controller.GetOperator(c)
-
-	reqDTO := &clusterpb.ClusterDetailReqDTO{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: c.Param("clusterId"),
+	// Create request
+	request := struct {
+		clusterID string `json:"clusterId"`
+	}{
+		c.Param("clusterId"),
 	}
 
-	respDTO, err := client.ClusterClient.DetailCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
-
+	body, err := json.Marshal(request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
-	} else {
-		status := respDTO.GetRespStatus()
-
-		display := respDTO.GetDisplayInfo()
-		maintenance := respDTO.GetMaintenanceInfo()
-		components := respDTO.GetComponents()
-
-		componentInstances := make([]ComponentInstance, 0)
-		for _, v := range components {
-			if len(v.Nodes) > 0 {
-				componentInstances = append(componentInstances, *ParseComponentInfoFromDTO(v))
-			}
-		}
-
-		result := controller.BuildCommonResult(int(status.Code), status.Message, DetailClusterRsp{
-			ClusterDisplayInfo:     *ParseDisplayInfoFromDTO(display),
-			ClusterMaintenanceInfo: *ParseMaintenanceInfoFromDTO(maintenance),
-			Components:             componentInstances,
-		})
-
-		c.JSON(http.StatusOK, result)
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
+
+	// Call rpc method
+	controller.InvokeRpcMethod(c, client.ClusterClient.DetailCluster, string(body), controller.DefaultTimeout)
 }
 
 // Takeover takeover a cluster
@@ -612,32 +595,4 @@ func ScaleIn(c *gin.Context) {
 
 		c.JSON(http.StatusOK, result)
 	}
-}
-
-// GetTopology get cluster topology
-// @Summary get cluster topology
-// @Description get cluster topology
-// @Tags cluster
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param clusterId path string true "cluster id"
-// @Success 200 {object} controller.CommonResult{data=TopologyClusterRsp}
-// @Failure 401 {object} controller.CommonResult
-// @Failure 403 {object} controller.CommonResult
-// @Failure 500 {object} controller.CommonResult
-// @Router /clusters/{clusterId}/topology [post]
-func GetTopology(c *gin.Context) {
-	// Create TopologyRequest
-	request := &GetTopologyRequest{ ClusterID: c.Param("clusterId") }
-
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Call rpc method
-	controller.InvokeRpcMethod(c, client.ClusterClient.GetTopology, string(body), controller.DefaultTimeout)
 }

@@ -294,7 +294,6 @@ func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
 				assert.Equal(t, "tidb", string(updated.Type))
 				assert.Equal(t, newString, updated.FilterRulesConfig)
 				assert.NotEqual(t, newString, updated.ClusterId)
-				assert.Equal(t, int64(newInt), updated.StartTS)
 				assert.NotEqual(t, int8(newInt), updated.Status)
 			}
 		})

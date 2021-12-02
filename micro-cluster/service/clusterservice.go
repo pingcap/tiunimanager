@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	changeFeedApi "github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
+	resource2 "github.com/pingcap-inc/tiem/library/common/resource-type"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/service/datatransfer/changefeed"
 	"net/http"
 	"strconv"
@@ -76,6 +78,43 @@ func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]by
 
 	resp.Code = int32(err.(framework.TiEMError).GetCode())
 	resp.Message = err.(framework.TiEMError).GetMsg()
+}
+
+func HandleTopologyResponse(clusterAggregation *domain.ClusterAggregation) string {
+	cluster := clusterAggregation.Cluster
+	demands := clusterAggregation.CurrentComponentDemand
+	response := &management.GetTopologyResponse{
+		ClusterType:     cluster.ClusterType.Code,
+		CpuArchitecture: cluster.CpuArchitecture,
+	}
+	response.Region.Code = cluster.Region
+	response.Region.Name = cluster.Region
+
+	for _, demand := range demands {
+		resourceSpec := make([]management.ResourceSpec, len(demand.DistributionItems))
+		for key, item := range demand.DistributionItems {
+			resourceSpec[key].Spec.Code = item.SpecCode
+			resourceSpec[key].Spec.Name = item.SpecCode
+			resourceSpec[key].Zone.Code = item.ZoneCode
+			resourceSpec[key].Zone.Name = resource2.GetDomainNameFromCode(item.ZoneCode)
+			resourceSpec[key].Count = item.Count
+		}
+
+		data := struct {
+			ComponentType string `json:"componentType"`
+			ResourceSpec  []management.ResourceSpec
+		} {
+			demand.ComponentType.ComponentType,
+			resourceSpec,
+		}
+		response.ComponentTopology = append(response.ComponentTopology, data)
+	}
+
+	body, err := json.Marshal(response)
+	if err != nil {
+		return ""
+	}
+	return string(body)
 }
 
 func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
@@ -207,6 +246,29 @@ func (c ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *clusterp
 		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 	}
 
+	return nil
+}
+
+func (c ClusterServiceHandler) GetTopology(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	framework.LogWithContext(ctx).Info("get topology")
+	request := &management.GetTopologyRequest{}
+	err := json.Unmarshal([]byte(req.Request), request)
+
+	if err != nil {
+		resp.Code = http.StatusBadRequest
+		resp.Message = err.Error()
+		return nil
+	}
+
+	clusterAggregation, err := domain.GetTopology(ctx, request.ClusterID)
+
+	if err != nil {
+		resp.Code = int32(err.(framework.TiEMError).GetCode())
+		resp.Message = err.(framework.TiEMError).GetMsg()
+	} else {
+		resp.Code = http.StatusOK
+		resp.Response = HandleTopologyResponse(clusterAggregation)
+	}
 	return nil
 }
 

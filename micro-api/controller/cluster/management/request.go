@@ -27,7 +27,7 @@ type CreateReq struct {
 }
 
 type DeleteReq struct {
-	AutoBackup bool `json:"autoBackup" form:"autoBackup"`
+	AutoBackup      bool `json:"autoBackup" form:"autoBackup"`
 	ClearBackupData bool `json:"clearBackupData" form:"clearBackupData"`
 }
 
@@ -42,7 +42,7 @@ type QueryReq struct {
 
 type TakeoverReq struct {
 	TiupIp           string   `json:"tiupIp" example:"172.16.4.147" form:"tiupIp"`
-	TiupPort         int   `json:"tiupPort" example:"22" form:"tiupPort"`
+	TiupPort         int      `json:"tiupPort" example:"22" form:"tiupPort"`
 	TiupUserName     string   `json:"tiupUserName" example:"root" form:"tiupUserName"`
 	TiupUserPassword string   `json:"tiupUserPassword" example:"password" form:"tiupUserPassword"`
 	TiupPath         string   `json:"tiupPath" example:".tiup/" form:"tiupPath"`
@@ -50,10 +50,39 @@ type TakeoverReq struct {
 }
 
 type ScaleOutReq struct {
-	NodeDemandList []ClusterNodeDemand  `json:"nodeDemandList"`
+	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
 }
 
 type ScaleInReq struct {
-	ComponentType string  `json:"componentType"`
-	NodeId        string  `json:"nodeId"`
+	ComponentType string `json:"componentType"`
+	NodeId        string `json:"nodeId"`
+}
+
+type GetTopologyRequest struct {
+	ClusterID string `json:"clusterID"`
+}
+
+type ResourceSpec struct {
+	Zone struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	} `json:"zone"`
+	Spec struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	} `json:"spec"`
+	Count int `json:"count"`
+}
+
+type GetTopologyResponse struct {
+	ClusterType     string `json:"clusterType"`
+	CpuArchitecture string `json:"cpuArchitecture" form:"cpuArchitecture"`
+	Region          struct {
+		Code string `json:"code"`
+		Name string `json:"name"`
+	} `json:"region"`
+	ComponentTopology []struct {
+		ComponentType string `json:"componentType"`
+		ResourceSpec  []ResourceSpec
+	} `json:"componentTopology"`
 }

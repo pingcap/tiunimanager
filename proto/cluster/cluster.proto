@@ -85,6 +85,8 @@ service ClusterService {
     rpc UpdateChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
 
+    rpc GetTopology(RpcRequest) returns (RpcResponse);
+
 }
 
 message ClusterCreateReqDTO {

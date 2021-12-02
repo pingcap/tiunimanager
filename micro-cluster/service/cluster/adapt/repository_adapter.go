@@ -265,8 +265,8 @@ func persistClusterBaseInfo(ctx context.Context, aggregation *domain.ClusterAggr
 
 	if aggregation.DemandsModified {
 		var demands string
-		if len(aggregation.AddedComponentDemand) > 0 {
-			bytes, err := json.Marshal(aggregation.AddedComponentDemand)
+		if len(aggregation.CurrentComponentDemand) > 0 {
+			bytes, err := json.Marshal(aggregation.CurrentComponentDemand)
 			if err != nil {
 				return err
 			}

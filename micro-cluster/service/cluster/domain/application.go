@@ -49,6 +49,7 @@ type ClusterAggregation struct {
 	ClusterMetadata spec.Metadata
 
 	AddedComponentDemand   []*ClusterComponentDemand
+	CurrentComponentDemand []*ClusterComponentDemand
 	AddedClusterComponents []*ComponentGroup
 
 	CurrentComponentInstances []*ComponentInstance
@@ -136,10 +137,11 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		return nil, err
 	}
 	clusterAggregation := &ClusterAggregation{
-		Cluster:              cluster,
-		MaintainCronTask:     GetDefaultMaintainTask(),
-		CurrentOperator:      operator,
-		AddedComponentDemand: demands,
+		Cluster:                cluster,
+		MaintainCronTask:       GetDefaultMaintainTask(),
+		CurrentOperator:        operator,
+		AddedComponentDemand:   demands,
+		CurrentComponentDemand: demands,
 	}
 
 	// Start the workflow to create a cluster instance
@@ -155,6 +157,48 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(ctx, clusterAggregation)
 	return clusterAggregation, nil
+}
+
+func mergeDemands(demandsList ...[]*ClusterComponentDemand) []*ClusterComponentDemand {
+	if len(demandsList) == 0 {
+		return nil
+	}
+	components := make(map[string][]*ClusterComponentDemand)
+	for _, demands := range demandsList {
+		if len(demands) > 0 {
+			for _, d := range demands {
+				components[d.ComponentType.ComponentType] = append(components[d.ComponentType.ComponentType], d)
+			}
+		}
+	}
+	resultDemands := make([]*ClusterComponentDemand, 0, len(components))
+	for _, demands := range components {
+		demand := &ClusterComponentDemand{}
+		distributionItemsMap := make(map[string]map[string]int, 0)
+		demand.ComponentType = demands[0].ComponentType
+		for _, d := range demands {
+			demand.TotalNodeCount += d.TotalNodeCount
+			for _, item := range d.DistributionItems {
+				if distributionItemsMap[item.ZoneCode][item.SpecCode] == 0 {
+					distributionItemsMap[item.ZoneCode] = map[string]int{ item.SpecCode: 0}
+				}
+				distributionItemsMap[item.ZoneCode][item.SpecCode] += item.Count
+			}
+		}
+		for zoneCode, values := range distributionItemsMap {
+			for specCode, count := range values {
+				distributionItem := &ClusterNodeDistributionItem{
+					ZoneCode: zoneCode,
+					SpecCode: specCode,
+					Count:    count,
+				}
+				demand.DistributionItems = append(demand.DistributionItems, distributionItem)
+			}
+		}
+		resultDemands = append(resultDemands, demand)
+	}
+
+	return resultDemands
 }
 
 // ScaleOutCluster
@@ -181,6 +225,7 @@ func ScaleOutCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId stri
 
 	// Merge multi demands
 	clusterAggregation.AddedComponentDemand = demands
+	clusterAggregation.CurrentComponentDemand = mergeDemands(clusterAggregation.CurrentComponentDemand, demands)
 	clusterAggregation.DemandsModified = true
 
 	// Start the workflow to scale out a cluster
@@ -195,6 +240,37 @@ func ScaleOutCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId stri
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(ctx, clusterAggregation)
 	return clusterAggregation, nil
+}
+
+func deleteDemands(demands []*ClusterComponentDemand, instance *ComponentInstance) []*ClusterComponentDemand {
+	if len(demands) == 0 || instance == nil {
+		return nil
+	}
+	resultDemands := make([]*ClusterComponentDemand, 0)
+	for _, demand := range demands {
+		if demand.ComponentType.ComponentType == instance.ComponentType.ComponentType {
+			nodeItems := make([]*ClusterNodeDistributionItem, 0)
+			for _, item := range demand.DistributionItems {
+				if item.ZoneCode == resourceType.GenDomainCodeByName(instance.Location.Region, instance.Location.Zone) ||
+					item.SpecCode == knowledge.GenSpecCode(instance.Compute.CpuCores, instance.Compute.Memory) {
+					if item.Count > 1 {
+						newItem := &ClusterNodeDistributionItem{
+							ZoneCode: item.ZoneCode,
+							SpecCode: item.SpecCode,
+							Count:    item.Count - 1,
+						}
+						nodeItems = append(nodeItems, newItem)
+					}
+					demand.TotalNodeCount = demand.TotalNodeCount - 1
+				} else {
+					nodeItems = append(nodeItems, item)
+				}
+			}
+			demand.DistributionItems = nodeItems
+		}
+		resultDemands = append(resultDemands, demand)
+	}
+	return resultDemands
 }
 
 // ScaleInCluster
@@ -212,6 +288,16 @@ func ScaleInCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId, node
 	operator := parseOperatorFromDTO(ope)
 	clusterAggregation.CurrentOperator = operator
 
+	// get component instance
+	componentInstance := getInstance(clusterAggregation.CurrentComponentInstances, nodeId)
+	if componentInstance == nil {
+		return clusterAggregation, errors.New("instance not exist")
+	}
+
+	// delete cluster demands
+	clusterAggregation.CurrentComponentDemand = deleteDemands(clusterAggregation.CurrentComponentDemand, componentInstance)
+	clusterAggregation.DemandsModified = true
+
 	// Start the workflow to scale in a cluster
 	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowScaleInCluster, operator)
 	if err != nil {
@@ -226,6 +312,15 @@ func ScaleInCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId, node
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(ctx, clusterAggregation)
 	return clusterAggregation, nil
+}
+
+// GetTopology
+// @Description: get cluster topology
+// @Parameter clusterId
+// @return *ClusterAggregation
+// @return error
+func GetTopology(ctx ctx.Context, clusterID string) (*ClusterAggregation, error) {
+	return ClusterRepo.Load(ctx, clusterID)
 }
 
 // TakeoverClusters
@@ -604,12 +699,6 @@ func scaleInCluster(task *TaskEntity, context *FlowContext) bool {
 	nodeId := context.GetData(contextDeleteNodeKey).(string)
 
 	componentInstance := getInstance(clusterAggregation.CurrentComponentInstances, nodeId)
-	if componentInstance == nil {
-		getLoggerWithContext(context).Errorf("node: %s is not exist in %s", nodeId, cluster.ClusterName)
-		task.Fail(fmt.Errorf("node: %s is not exist", nodeId))
-		return false
-	}
-
 	if knowledge.GetComponentSpec(cluster.ClusterType.Code,
 		cluster.ClusterVersion.Code, componentInstance.ComponentType.ComponentType).ComponentConstraint.ComponentRequired {
 		nodeCount := 0

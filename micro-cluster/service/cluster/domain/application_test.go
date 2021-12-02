@@ -389,7 +389,7 @@ func TestScaleInCluster(t *testing.T) {
 		"testCluster",
 		"127.0.0.1:4000")
 
-	assert.NoError(t, err)
+	assert.Error(t, err)
 	assert.Equal(t, "testoperator", got.CurrentOperator.TenantId)
 }
 
@@ -419,6 +419,12 @@ func TestDeleteCluster(t *testing.T) {
 
 }
 
+func TestGetTopology(t *testing.T) {
+	got, err := GetTopology(context.TODO(), "testCluster")
+	assert.NoError(t, err)
+	assert.Equal(t, "testCluster", got.Cluster.ClusterName)
+}
+
 func TestRestartCluster(t *testing.T) {
 	got, err := RestartCluster(context.TODO(), &clusterpb.OperatorDTO{
 		Id:       "testoperator",
@@ -446,6 +452,77 @@ func TestStopCluster(t *testing.T) {
 func TestBuildClusterLogConfig(t *testing.T) {
 	err := BuildClusterLogConfig(context.TODO(), "testCluster")
 	assert.NoError(t, err)
+}
+
+func TestMergeDemands(t *testing.T) {
+	demand1 := []*ClusterComponentDemand{
+		{
+			ComponentType:  &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentPurpose: "compute", ComponentName: "TiDB"},
+			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+			}},
+		{ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentPurpose: "storage", ComponentName: "TiKV"},
+			TotalNodeCount: 4, DistributionItems: []*ClusterNodeDistributionItem{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
+				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+			}},
+		{ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
+			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
+			}}}
+	demand2 := []*ClusterComponentDemand{
+		{
+			ComponentType:  &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentPurpose: "compute", ComponentName: "TiDB"},
+			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+			{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
+			{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+		}},
+		{ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentPurpose: "storage", ComponentName: "TiKV"},
+			TotalNodeCount: 1, DistributionItems: []*ClusterNodeDistributionItem{
+			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+		}},
+		{ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
+			TotalNodeCount: 1, DistributionItems: []*ClusterNodeDistributionItem{
+			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+		}}}
+	got := mergeDemands(demand1, demand2)
+	assert.Equal(t, 3, len(got))
+}
+
+func TestDeleteDemands(t *testing.T) {
+	demand := []*ClusterComponentDemand{
+		{
+			ComponentType:  &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentPurpose: "compute", ComponentName: "TiDB"},
+			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+			{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
+			{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+		}},
+		{ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentPurpose: "storage", ComponentName: "TiKV"},
+			TotalNodeCount: 4, DistributionItems: []*ClusterNodeDistributionItem{
+			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+			{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
+			{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+		}},
+		{ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
+			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+			{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
+		}}}
+	instance := &ComponentInstance{
+		ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
+		Location: &resource.Location{Region: "region", Zone: "zone1"},
+		Compute: &resource.ComputeRequirement{
+			CpuCores: 4,
+			Memory: 8,
+		},
+	}
+	got := deleteDemands(demand, instance)
+	assert.Equal(t, 2, got[2].TotalNodeCount)
+	assert.Equal(t, 2, got[2].DistributionItems[0].Count)
 }
 
 func TestModifyParameters(t *testing.T) {

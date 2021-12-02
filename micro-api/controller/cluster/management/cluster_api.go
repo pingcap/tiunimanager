@@ -17,6 +17,7 @@
 package management
 
 import (
+	"encoding/json"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"net/http"
 	"strconv"
@@ -128,7 +129,7 @@ func Preview(c *gin.Context) {
 		ClusterBaseInfo:     req.ClusterBaseInfo,
 		StockCheckResult:    stockCheckResult,
 		ClusterCommonDemand: req.ClusterCommonDemand,
-		CapabilityIndexes: []ServiceCapabilityIndex{
+		CapabilityIndexes:   []ServiceCapabilityIndex{
 			//{"StorageCapability", "database storage capability", 800, "GB"},
 			//{"TPCC", "TPCC tmpC ", 523456, ""},
 		},
@@ -587,9 +588,9 @@ func ScaleIn(c *gin.Context) {
 
 	// Create ScaleInRequest
 	request := &clusterpb.ScaleInRequest{
-		Operator: operator.ConvertToDTO(),
+		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
-		NodeId:  req.NodeId,
+		NodeId:    req.NodeId,
 	}
 
 	// Scale in cluster
@@ -606,9 +607,37 @@ func ScaleIn(c *gin.Context) {
 		}
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, ScaleInClusterRsp{
-			StatusInfo:      *ParseStatusFromDTO(response.GetClusterStatus()),
+			StatusInfo: *ParseStatusFromDTO(response.GetClusterStatus()),
 		})
 
 		c.JSON(http.StatusOK, result)
 	}
+}
+
+// GetTopology get cluster topology
+// @Summary get cluster topology
+// @Description get cluster topology
+// @Tags cluster
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "cluster id"
+// @Success 200 {object} controller.CommonResult{data=TopologyClusterRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/{clusterId}/topology [post]
+func GetTopology(c *gin.Context) {
+	// Create TopologyRequest
+	request := &GetTopologyRequest{ ClusterID: c.Param("clusterId") }
+
+	body, err := json.Marshal(request)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Call rpc method
+	controller.InvokeRpcMethod(c, client.ClusterClient.GetTopology, string(body), controller.DefaultTimeout)
 }

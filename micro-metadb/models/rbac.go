@@ -62,15 +62,15 @@ type DAOAccountManager struct {
 
 func NewDAOAccountManager(d *gorm.DB) *DAOAccountManager {
 	m := new(DAOAccountManager)
-	m.SetDb(d)
+	m.SetDB(d)
 	return m
 }
 
-func (m *DAOAccountManager) Db(ctx context.Context, ) *gorm.DB {
+func (m *DAOAccountManager) DB(ctx context.Context, ) *gorm.DB {
 	return m.db.WithContext(ctx)
 }
 
-func (m *DAOAccountManager) SetDb(db *gorm.DB) {
+func (m *DAOAccountManager) SetDB(db *gorm.DB) {
 	m.db = db
 }
 
@@ -84,7 +84,7 @@ func (m *DAOAccountManager) Add(ctx context.Context, tenantId string, name strin
 		Salt:      salt,
 		FinalHash: finalHash,
 	}
-	return rt, m.Db(ctx).Create(rt).Error
+	return rt, m.DB(ctx).Create(rt).Error
 }
 
 func (m *DAOAccountManager) Find(ctx context.Context, name string) (result *Account, err error) {
@@ -92,7 +92,7 @@ func (m *DAOAccountManager) Find(ctx context.Context, name string) (result *Acco
 		return nil, fmt.Errorf("find account failed, has invalid parameter, name: %s", name)
 	}
 	result = &Account{Name: name}
-	return result, m.Db(ctx).Where(&Account{Name: name}).First(result).Error
+	return result, m.DB(ctx).Where(&Account{Name: name}).First(result).Error
 }
 
 func (m *DAOAccountManager) FindById(ctx context.Context, id string) (result *Account, err error) {
@@ -100,7 +100,7 @@ func (m *DAOAccountManager) FindById(ctx context.Context, id string) (result *Ac
 		return nil, fmt.Errorf("find account failed, has invalid parameter, id: %s", id)
 	}
 	result = &Account{Entity: Entity{ID: id}}
-	return result, m.Db(ctx).Where(&Account{Entity: Entity{ID: id}}).First(result).Error
+	return result, m.DB(ctx).Where(&Account{Entity: Entity{ID: id}}).First(result).Error
 }
 
 func (m *DAOAccountManager) AddRole(ctx context.Context, tenantId string, name string, desc string, status int8) (result *Role, err error) {
@@ -112,7 +112,7 @@ func (m *DAOAccountManager) AddRole(ctx context.Context, tenantId string, name s
 		Name: name,
 		Desc: desc,
 	}
-	return result, m.Db(ctx).Create(result).Error
+	return result, m.DB(ctx).Create(result).Error
 }
 
 func (m *DAOAccountManager) FetchRole(ctx context.Context, tenantId string, name string) (result *Role, err error) {
@@ -120,7 +120,7 @@ func (m *DAOAccountManager) FetchRole(ctx context.Context, tenantId string, name
 		return nil, fmt.Errorf("fetch role failed, has invalid parameter, tenantID: %s, name: %s", tenantId, name)
 	}
 	result = &Role{}
-	return result, m.Db(ctx).Where(&Role{Entity: Entity{TenantId: tenantId}, Name: name}).First(result).Error
+	return result, m.DB(ctx).Where(&Role{Entity: Entity{TenantId: tenantId}, Name: name}).First(result).Error
 }
 
 func (m *DAOAccountManager) AddPermission(ctx context.Context, tenantId, code, name, desc string, permissionType, status int8) (result *Permission, err error) {
@@ -134,7 +134,7 @@ func (m *DAOAccountManager) AddPermission(ctx context.Context, tenantId, code, n
 		Desc:   desc,
 		Type:   permissionType,
 	}
-	return result, m.Db(ctx).Create(result).Error
+	return result, m.DB(ctx).Create(result).Error
 }
 
 func (m *DAOAccountManager) FetchPermission(ctx context.Context, tenantId, code string) (result *Permission, err error) {
@@ -142,7 +142,7 @@ func (m *DAOAccountManager) FetchPermission(ctx context.Context, tenantId, code 
 		return nil, fmt.Errorf("FetchPermission failed, has invalid parameter, tenantID: %s, name: %s", tenantId, code)
 	}
 	result = &Permission{}
-	return result, m.Db(ctx).Where(&Permission{Entity: Entity{TenantId: tenantId, Code: code}}).First(result).Error
+	return result, m.DB(ctx).Where(&Permission{Entity: Entity{TenantId: tenantId, Code: code}}).First(result).Error
 }
 
 func (m *DAOAccountManager) FetchAllRolesByAccount(ctx context.Context, tenantId string, accountId string) (result []Role, err error) {
@@ -151,7 +151,7 @@ func (m *DAOAccountManager) FetchAllRolesByAccount(ctx context.Context, tenantId
 	}
 
 	var roleBinds []RoleBinding
-	err = m.Db(ctx).Where("tenant_id = ? and account_id = ? and status = 0", tenantId, accountId).Limit(1024).Find(&roleBinds).Error
+	err = m.DB(ctx).Where("tenant_id = ? and account_id = ? and status = 0", tenantId, accountId).Limit(1024).Find(&roleBinds).Error
 	if nil != err {
 		return nil, fmt.Errorf("FetchAllRolesByAccount, query database failed, tenantID: %s, accountID: %s", tenantId, accountId)
 	}
@@ -171,7 +171,7 @@ func (m *DAOAccountManager) FetchRolesByIds(ctx context.Context, roleIds []strin
 	if len(roleIds) <= 0 {
 		return nil, fmt.Errorf("FetchRolesByIds failed, roleIds: %v", roleIds)
 	}
-	return result, m.Db(ctx).Where("id in ?", roleIds).Find(&result).Error
+	return result, m.DB(ctx).Where("id in ?", roleIds).Find(&result).Error
 }
 
 func (m *DAOAccountManager) FetchAllRolesByPermission(ctx context.Context, tenantId string, permissionId string) (result []Role, err error) {
@@ -179,7 +179,7 @@ func (m *DAOAccountManager) FetchAllRolesByPermission(ctx context.Context, tenan
 		return nil, fmt.Errorf("FetchAllRolesByPermission failed, has invalid parameter, tenantID: %s, permissionId: %s", tenantId, permissionId)
 	}
 	var permissionBindings []PermissionBinding
-	err = m.Db(ctx).Where("tenant_id = ? and permission_id = ? and status = 0", tenantId, permissionId).Limit(1024).Find(&permissionBindings).Error
+	err = m.DB(ctx).Where("tenant_id = ? and permission_id = ? and status = 0", tenantId, permissionId).Limit(1024).Find(&permissionBindings).Error
 
 	if nil != err {
 		return nil, fmt.Errorf("FetchAllRolesByPermission, query database failed, tenantID: %s, permissionId: %s", tenantId, permissionId)
@@ -196,12 +196,12 @@ func (m *DAOAccountManager) AddPermissionBindings(ctx context.Context, bindings 
 	for i, v := range bindings {
 		bindings[i].Code = v.RoleId + "_" + v.PermissionId
 	}
-	return m.Db(ctx).Create(&bindings).Error
+	return m.DB(ctx).Create(&bindings).Error
 }
 
 func (m *DAOAccountManager) AddRoleBindings(ctx context.Context, bindings []RoleBinding) error {
 	for i, v := range bindings {
 		bindings[i].Code = v.AccountId + "_" + v.RoleId
 	}
-	return m.Db(ctx).Create(&bindings).Error
+	return m.DB(ctx).Create(&bindings).Error
 }

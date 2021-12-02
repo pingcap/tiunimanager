@@ -16,6 +16,7 @@
 package common
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -109,4 +110,16 @@ func generateEntityCode(name string) string {
 		previousSplitFlag = len(currentWord) > 1
 	}
 	return string(bytes)
+}
+
+type GormDB struct {
+	db *gorm.DB
+}
+
+func WrapDB(db *gorm.DB) GormDB {
+	return GormDB{db: db}
+}
+
+func (m *GormDB) DB(ctx context.Context) *gorm.DB {
+	return m.db.WithContext(ctx)
 }

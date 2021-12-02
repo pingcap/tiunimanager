@@ -40,15 +40,15 @@ type DAOParamManager struct {
 
 func NewDAOParamManager(d *gorm.DB) *DAOParamManager {
 	m := new(DAOParamManager)
-	m.SetDb(d)
+	m.SetDB(d)
 	return m
 }
 
-func (m *DAOParamManager) SetDb(d *gorm.DB) {
+func (m *DAOParamManager) SetDB(d *gorm.DB) {
 	m.db = d
 }
 
-func (m *DAOParamManager) Db(ctx context.Context) *gorm.DB {
+func (m *DAOParamManager) DB(ctx context.Context) *gorm.DB {
 	return m.db.WithContext(ctx)
 }
 
@@ -120,12 +120,12 @@ func (m *DAOParamManager) AddParamGroup(ctx context.Context, pg *ParamGroupDO, p
 		return
 	}
 
-	tx := m.Db(ctx).Begin()
+	tx := m.DB(ctx).Begin()
 
 	// insert param_groups table
 	pg.CreatedAt = time.Now()
 	pg.UpdatedAt = time.Now()
-	err = m.Db(ctx).Create(pg).Error
+	err = m.DB(ctx).Create(pg).Error
 	if err != nil {
 		log.Errorf("add param group err: %v, request param: %v", err.Error(), pg)
 		tx.Rollback()
@@ -138,7 +138,7 @@ func (m *DAOParamManager) AddParamGroup(ctx context.Context, pg *ParamGroupDO, p
 		pgm[i].CreatedAt = time.Now()
 		pgm[i].UpdatedAt = time.Now()
 	}
-	err = m.Db(ctx).CreateInBatches(pgm, len(pgm)).Error
+	err = m.DB(ctx).CreateInBatches(pgm, len(pgm)).Error
 	if err != nil {
 		log.Errorf("add param group map err: %v, request param map: %v", err.Error(), pgm)
 		tx.Rollback()
@@ -150,7 +150,7 @@ func (m *DAOParamManager) AddParamGroup(ctx context.Context, pg *ParamGroupDO, p
 
 func (m *DAOParamManager) UpdateParamGroup(ctx context.Context, id uint, name, spec, version, note string, pgm []*ParamGroupMapDO) (err error) {
 	log := framework.LogWithContext(ctx)
-	tx := m.Db(ctx).Begin()
+	tx := m.DB(ctx).Begin()
 
 	// update param_groups table
 	pg := &ParamGroupDO{
@@ -160,7 +160,7 @@ func (m *DAOParamManager) UpdateParamGroup(ctx context.Context, id uint, name, s
 		Note:      note,
 		UpdatedAt: time.Now(),
 	}
-	err = m.Db(ctx).Where("id = ?", id).Updates(pg).Error
+	err = m.DB(ctx).Where("id = ?", id).Updates(pg).Error
 	if err != nil {
 		log.Errorf("update param group err: %v, request param: %v", err.Error(), pg)
 		tx.Rollback()
@@ -170,7 +170,7 @@ func (m *DAOParamManager) UpdateParamGroup(ctx context.Context, id uint, name, s
 	// range update param_group_map table
 	for i := range pgm {
 		pgm[i].UpdatedAt = time.Now()
-		err = m.Db(ctx).Where("param_group_id = ? and param_id = ?", id, pgm[i].ParamId).Updates(pgm[i]).Error
+		err = m.DB(ctx).Where("param_group_id = ? and param_id = ?", id, pgm[i].ParamId).Updates(pgm[i]).Error
 		if err != nil {
 			log.Errorf("update param group map err: %v, request param map: %v", err.Error(), pgm)
 			tx.Rollback()
@@ -183,10 +183,10 @@ func (m *DAOParamManager) UpdateParamGroup(ctx context.Context, id uint, name, s
 
 func (m *DAOParamManager) DeleteParamGroup(ctx context.Context, id uint) (err error) {
 	log := framework.LogWithContext(ctx)
-	tx := m.Db(ctx).Begin()
+	tx := m.DB(ctx).Begin()
 
 	// delete param_group_map table
-	err = m.Db(ctx).Where("param_group_id = ?", id).Delete(&ParamGroupMapDO{}).Error
+	err = m.DB(ctx).Where("param_group_id = ?", id).Delete(&ParamGroupMapDO{}).Error
 	if err != nil {
 		log.Errorf("delete param group map err: %v, request param id: %v", err.Error(), id)
 		tx.Rollback()
@@ -194,7 +194,7 @@ func (m *DAOParamManager) DeleteParamGroup(ctx context.Context, id uint) (err er
 	}
 
 	// delete param_groups table
-	err = m.Db(ctx).Where("id = ?", id).Delete(&ParamGroupDO{}).Error
+	err = m.DB(ctx).Where("id = ?", id).Delete(&ParamGroupDO{}).Error
 	if err != nil {
 		log.Errorf("delete param group err: %v, request param id: %v", err.Error(), id)
 		tx.Rollback()
@@ -209,7 +209,7 @@ func (m *DAOParamManager) ListParamGroup(ctx context.Context, name, spec, versio
 	log := framework.LogWithContext(ctx)
 
 	groups = make([]*ParamGroupDO, size)
-	query := m.Db(ctx).Table(TABLE_NAME_PARAM_GROUP)
+	query := m.DB(ctx).Table(TABLE_NAME_PARAM_GROUP)
 	if name != "" {
 		query = query.Where("name like '%" + name + "%'")
 	}
@@ -252,7 +252,7 @@ type ParamDetail struct {
 func (m *DAOParamManager) LoadParamGroup(ctx context.Context, id uint) (group *ParamGroupDO, params []*ParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 	group = &ParamGroupDO{}
-	err = m.Db(ctx).Find(group, id).Error
+	err = m.DB(ctx).Find(group, id).Error
 
 	if err != nil {
 		log.Errorf("load param group err: %v", err.Error())
@@ -270,7 +270,7 @@ func (m *DAOParamManager) LoadParamGroup(ctx context.Context, id uint) (group *P
 func (m *DAOParamManager) LoadParamsByGroupId(ctx context.Context, id uint) (params []*ParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 
-	err = m.Db(ctx).Model(&ParamDO{}).
+	err = m.DB(ctx).Model(&ParamDO{}).
 		Select("params.id, params.name, params.component_type, params.type, params.unit, params.range, "+
 			"params.has_reboot, params.source, params.description, param_group_map.default_value, param_group_map.note, "+
 			"param_group_map.created_at, param_group_map.updated_at").
@@ -285,10 +285,10 @@ func (m *DAOParamManager) LoadParamsByGroupId(ctx context.Context, id uint) (par
 
 func (m *DAOParamManager) ApplyParamGroup(ctx context.Context, id uint, clusterId string, params []*ClusterParamMapDO) (err error) {
 	log := framework.LogWithContext(ctx)
-	tx := m.Db(ctx).Begin()
+	tx := m.DB(ctx).Begin()
 
 	// delete cluster_param_map table
-	err = m.Db(ctx).Where("cluster_id = ?", clusterId).Delete(&ClusterParamMapDO{}).Error
+	err = m.DB(ctx).Where("cluster_id = ?", clusterId).Delete(&ClusterParamMapDO{}).Error
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()
@@ -296,7 +296,7 @@ func (m *DAOParamManager) ApplyParamGroup(ctx context.Context, id uint, clusterI
 	}
 
 	// update clusters table
-	err = m.Db(ctx).Model(&Cluster{}).Where("id = ?", clusterId).Update("param_group_id", id).Error
+	err = m.DB(ctx).Model(&Cluster{}).Where("id = ?", clusterId).Update("param_group_id", id).Error
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()
@@ -309,7 +309,7 @@ func (m *DAOParamManager) ApplyParamGroup(ctx context.Context, id uint, clusterI
 		params[i].CreatedAt = time.Now()
 		params[i].UpdatedAt = time.Now()
 	}
-	err = m.Db(ctx).CreateInBatches(params, len(params)).Error
+	err = m.DB(ctx).CreateInBatches(params, len(params)).Error
 	if err != nil {
 		log.Errorf("apply param group map err: %v, request param map: %v", err.Error(), params)
 		tx.Rollback()
@@ -340,14 +340,14 @@ type ClusterParamDetail struct {
 func (m *DAOParamManager) FindParamsByClusterId(ctx context.Context, clusterId string, offset int, size int) (paramGroupId uint, total int64, params []*ClusterParamDetail, err error) {
 	log := framework.LogWithContext(ctx)
 	cluster := Cluster{}
-	err = m.Db(ctx).Where("id = ?", clusterId).First(&cluster).Error
+	err = m.DB(ctx).Where("id = ?", clusterId).First(&cluster).Error
 	if err != nil {
 		log.Errorf("find params by cluster id err: %v, request cluster id: %v", err.Error(), clusterId)
 		return
 	}
 	paramGroupId = cluster.ParamGroupId
 
-	err = m.Db(ctx).Model(&ClusterParamMapDO{}).
+	err = m.DB(ctx).Model(&ClusterParamMapDO{}).
 		Select("params.id, params.name, params.component_type, params.type, params.unit, params.range, "+
 			"params.has_reboot, params.source, params.description, param_group_map.default_value, param_group_map.note, "+
 			"cluster_param_map.real_value, cluster_param_map.created_at, cluster_param_map.updated_at").
@@ -365,12 +365,12 @@ func (m *DAOParamManager) FindParamsByClusterId(ctx context.Context, clusterId s
 
 func (m *DAOParamManager) UpdateClusterParams(ctx context.Context, clusterId string, params []*ClusterParamMapDO) (err error) {
 	log := framework.LogWithContext(ctx)
-	tx := m.Db(ctx).Begin()
+	tx := m.DB(ctx).Begin()
 
 	// batch update cluster_param_map table
 	for i, param := range params {
 		params[i].UpdatedAt = time.Now()
-		err = m.Db(ctx).Model(&ClusterParamMapDO{}).
+		err = m.DB(ctx).Model(&ClusterParamMapDO{}).
 			Where("cluster_id = ? and param_id = ?", clusterId, param.ParamId).
 			Update("real_value", param.RealValue).Error
 		if err != nil {
@@ -386,7 +386,7 @@ func (m *DAOParamManager) UpdateClusterParams(ctx context.Context, clusterId str
 
 func (m *DAOParamManager) AddParam(ctx context.Context, p *ParamDO) (id uint, err error) {
 	log := framework.LogWithContext(ctx)
-	err = m.Db(ctx).Create(p).Error
+	err = m.DB(ctx).Create(p).Error
 	if err != nil {
 		log.Errorf("add param err: %v, request param: %v", err.Error(), p)
 	}
@@ -395,7 +395,7 @@ func (m *DAOParamManager) AddParam(ctx context.Context, p *ParamDO) (id uint, er
 
 func (m *DAOParamManager) DeleteParam(ctx context.Context, paramId uint) (err error) {
 	log := framework.LogWithContext(ctx)
-	err = m.Db(ctx).Where("id = ?", paramId).Delete(&ParamDO{}).Error
+	err = m.DB(ctx).Where("id = ?", paramId).Delete(&ParamDO{}).Error
 	if err != nil {
 		log.Errorf("delete param err: %v, request param id: %v", err.Error(), paramId)
 		return err
@@ -405,7 +405,7 @@ func (m *DAOParamManager) DeleteParam(ctx context.Context, paramId uint) (err er
 
 func (m *DAOParamManager) UpdateParam(ctx context.Context, paramId uint, p *ParamDO) (err error) {
 	log := framework.LogWithContext(ctx)
-	err = m.Db(ctx).Where("id = ?", paramId).Updates(p).Error
+	err = m.DB(ctx).Where("id = ?", paramId).Updates(p).Error
 	if err != nil {
 		log.Errorf("update param err: %v, request param id: %v, param object: %v", err.Error(), paramId, p)
 	}
@@ -415,7 +415,7 @@ func (m *DAOParamManager) UpdateParam(ctx context.Context, paramId uint, p *Para
 func (m *DAOParamManager) LoadParamById(ctx context.Context, paramId uint) (p ParamDO, err error) {
 	log := framework.LogWithContext(ctx)
 	p = ParamDO{}
-	err = m.Db(ctx).Where("id = ?", paramId).First(&p).Error
+	err = m.DB(ctx).Where("id = ?", paramId).First(&p).Error
 	if err != nil {
 		log.Errorf("find param err: %v, request param id: %v", err.Error(), paramId)
 	}

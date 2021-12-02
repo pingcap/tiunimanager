@@ -16,14 +16,15 @@
 package models
 
 import (
-	"context"
+	changefeed2 "github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	"gorm.io/gorm"
 )
 
 var defaultDb database
 
 type database struct {
-	base *gorm.DB
+	base                   *gorm.DB
+	changeFeedReaderWriter changefeed2.ReaderWriter
 }
 
 func open() {
@@ -31,17 +32,13 @@ func open() {
 }
 
 func initReaderWriter() {
-	// todo
+	defaultDb.changeFeedReaderWriter = changefeed2.NewGormChangeFeedReadWrite(defaultDb.base)
 }
 
 func addTable() {
 	// todo
 }
 
-func DB(ctx context.Context) *gorm.DB {
-	return defaultDb.base.WithContext(ctx)
-}
-
-func InitForTest(db *gorm.DB) {
-	defaultDb = database{db}
+func GetChangeFeedReaderWriter() changefeed2.ReaderWriter {
+	return defaultDb.changeFeedReaderWriter
 }

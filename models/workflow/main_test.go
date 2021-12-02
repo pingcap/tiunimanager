@@ -13,27 +13,47 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package backuprestore
+package workflow
 
 import (
-	"context"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"github.com/pingcap-inc/tiem/models"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"time"
+	"os"
+	"testing"
 )
 
-type DataTransportReaderWriter interface {
-	SetDb(db *gorm.DB)
-	Db(ctx context.Context) *gorm.DB
+func TestMain(m *testing.M) {
+	testFilePath := "testdata/" + uuidutil.ShortId()
+	os.MkdirAll(testFilePath, 0755)
 
-	CreateBackupRecord(ctx context.Context, record *BackupRecord) (err error)
-	UpdateBackupRecord(ctx context.Context, recordId string, status string, size uint64, backupTso int64, endTime time.Time) (err error)
-	GetBackupRecord(ctx context.Context, backupId string) (record *BackupRecord, err error)
-	QueryBackupRecords(ctx context.Context, backupId string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error)
-	DeleteBackupRecord(ctx context.Context, backupId string) (err error)
+	logins := framework.LogForkFile(common.LogFileSystem)
 
-	CreateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (err error)
-	UpdateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (err error)
-	GetBackupStrategy(ctx context.Context, clusterId string) (strategy *BackupStrategy, err error)
-	QueryBackupStrategy(ctx context.Context, weekDay string, startHour uint32) (strategies []*BackupStrategy, err error)
-	DeleteBackupStrategy(ctx context.Context, clusterId string) (err error)
+	defer func() {
+		os.RemoveAll(testFilePath)
+		os.Remove(testFilePath)
+	}()
+
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			dbFile := testFilePath + common.DBDirPrefix + common.SqliteFileName
+			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+
+			if err != nil || db.Error != nil {
+				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
+			} else {
+				models.InitForTest(db)
+				logins.Infof("open database successful, filepath: %s", dbFile)
+			}
+			db.Migrator().CreateTable(WorkFlow{})
+			db.Migrator().CreateTable(WorkFlowNode{})
+
+			return nil
+		},
+	)
+
+	os.Exit(m.Run())
 }

@@ -14,3 +14,20 @@
  ******************************************************************************/
 
 package importexport
+
+import (
+	"context"
+	"gorm.io/gorm"
+	"time"
+)
+
+type DataTransportReaderWriter interface {
+	SetDb(db *gorm.DB)
+	Db(ctx context.Context) *gorm.DB
+
+	CreateDataTransportRecord(ctx context.Context, record *DataTransportRecord) (err error)
+	UpdateDataTransportRecord(ctx context.Context, recordId string, status string, endTime time.Time) (err error)
+	GetDataTransportRecord(ctx context.Context, recorId string) (record *DataTransportRecord, err error)
+	QueryDataTransportRecords(ctx context.Context, recordId, clusterId string, reImport bool, startTime, endTime time.Time, page int, pageSize int) (records []*DataTransportRecord, total int64, err error)
+	DeleteDataTransportRecord(ctx context.Context, recordId string) (err error)
+}

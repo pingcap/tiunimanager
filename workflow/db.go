@@ -11,29 +11,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
+ *                                                                            *
  ******************************************************************************/
 
-package backuprestore
+package workflow
 
 import (
 	"context"
-	"gorm.io/gorm"
-	"time"
 )
 
-type DataTransportReaderWriter interface {
-	SetDb(db *gorm.DB)
-	Db(ctx context.Context) *gorm.DB
+// TaskRepo todo: replace db interface
+var TaskRepo TaskRepository
 
-	CreateBackupRecord(ctx context.Context, record *BackupRecord) (err error)
-	UpdateBackupRecord(ctx context.Context, recordId string, status string, size uint64, backupTso int64, endTime time.Time) (err error)
-	GetBackupRecord(ctx context.Context, backupId string) (record *BackupRecord, err error)
-	QueryBackupRecords(ctx context.Context, backupId string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error)
-	DeleteBackupRecord(ctx context.Context, backupId string) (err error)
-
-	CreateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (err error)
-	UpdateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (err error)
-	GetBackupStrategy(ctx context.Context, clusterId string) (strategy *BackupStrategy, err error)
-	QueryBackupStrategy(ctx context.Context, weekDay string, startHour uint32) (strategies []*BackupStrategy, err error)
-	DeleteBackupStrategy(ctx context.Context, clusterId string) (err error)
+type TaskRepository interface {
+	AddFlowWork(ctx context.Context, flowWork *FlowWorkEntity) error
+	AddFlowTask(ctx context.Context, task *TaskEntity, flowId string) error
+	Persist(ctx context.Context, flowWork *FlowWorkAggregation) error
+	LoadFlowWork(ctx context.Context, id uint) (*FlowWorkEntity, error)
+	Load(ctx context.Context, id uint) (flowWork *FlowWorkAggregation, err error)
+	ListFlows(ctx context.Context, bizId, keyword string, status int, page int, pageSize int) ([]*FlowWorkEntity, int, error)
 }

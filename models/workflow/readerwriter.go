@@ -14,3 +14,24 @@
  ******************************************************************************/
 
 package workflow
+
+import (
+	"context"
+	"gorm.io/gorm"
+)
+
+type FlowReaderWriter interface {
+	SetDb(db *gorm.DB)
+	Db(ctx context.Context) *gorm.DB
+
+	CreateWorkFlow(ctx context.Context, flow *WorkFlow) (*WorkFlow, error)
+	UpdateWorkFlowStatus(ctx context.Context, flowId string, status string) (err error)
+	GetWorkFlows(ctx context.Context, flowId string) (flow *WorkFlow, err error)
+	QueryWorkFlow(ctx context.Context, bizId, fuzzyName, status string, page int, pageSize int) (flows []*WorkFlow, total int64, err error)
+
+	CreateWorkFlowNode(ctx context.Context, node *WorkFlowNode) (*WorkFlowNode, error)
+	UpdateWorkFlowNode(ctx context.Context, node *WorkFlowNode) (err error)
+	GetWorkFlowNode(ctx context.Context, nodeId string) (node *WorkFlowNode, err error)
+
+	DetailWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, nodes []*WorkFlowNode, err error)
+}

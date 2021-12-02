@@ -19,7 +19,7 @@ package service
 import (
 	"context"
 	"encoding/json"
-	changeFeedApi "github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
+	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/service/datatransfer/changefeed"
 	"net/http"
 	"strconv"
@@ -80,7 +80,7 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 	request.GetOperator()
 	reqData := request.GetRequest()
 
-	task := &changeFeedApi.ChangeFeedTask{}
+	task := &changefeed.ChangeFeedTask{}
 
 	err := json.Unmarshal([]byte(reqData), task)
 

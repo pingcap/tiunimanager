@@ -97,7 +97,14 @@ func generateEntityCode(name string) string {
 	return string(bytes)
 }
 
-type GormDB interface {
-	SetDB(db *gorm.DB)
-	DB(ctx context.Context) *gorm.DB
+type GormDB struct {
+	db *gorm.DB
+}
+
+func WrapDB(db *gorm.DB) GormDB {
+	return GormDB{db: db}
+}
+
+func (m *GormDB) DB(ctx context.Context) *gorm.DB {
+	return m.db.WithContext(ctx)
 }

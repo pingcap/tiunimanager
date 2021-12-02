@@ -24,7 +24,7 @@ var defaultDb database
 
 type database struct {
 	base *gorm.DB
-	changeFeedReaderWriter changefeed.ChangeFeedReaderWriter
+	changeFeedReaderWriter changefeed.ReaderWriter
 }
 
 func open() {
@@ -32,16 +32,13 @@ func open() {
 }
 
 func initReaderWriter() {
-	defaultDb.changeFeedReaderWriter = &changefeed.GormChangeFeedReadWrite{}
-	defaultDb.changeFeedReaderWriter.SetDB(defaultDb.base)
-
-
+	defaultDb.changeFeedReaderWriter = changefeed.NewGormChangeFeedReadWrite(defaultDb.base)
 }
 
 func addTable() {
 	// todo
 }
 
-func GetChangeFeedReaderWriter() changefeed.ChangeFeedReaderWriter {
+func GetChangeFeedReaderWriter() changefeed.ReaderWriter {
 	return defaultDb.changeFeedReaderWriter
 }

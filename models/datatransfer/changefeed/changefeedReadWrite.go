@@ -20,24 +20,19 @@ import (
 	"database/sql"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 	"time"
 )
 
 type GormChangeFeedReadWrite struct {
-	db *gorm.DB
+	dbCommon.GormDB
 }
 
-func (m *GormChangeFeedReadWrite) SetDB(db *gorm.DB) {
-	m.db = db
-}
-
-func (m *GormChangeFeedReadWrite) DB(ctx context.Context) *gorm.DB {
-	return m.db.WithContext(ctx)
-}
-
-func NewGormChangeFeedReadWrite() *GormChangeFeedReadWrite {
-	m := new(GormChangeFeedReadWrite)
+func NewGormChangeFeedReadWrite(db *gorm.DB) *GormChangeFeedReadWrite {
+	m := &GormChangeFeedReadWrite{
+		dbCommon.WrapDB(db),
+	}
 	return m
 }
 

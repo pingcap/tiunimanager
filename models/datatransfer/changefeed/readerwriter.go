@@ -17,12 +17,9 @@ package changefeed
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/models/common"
 )
 
-type ChangeFeedReaderWriter interface {
-	common.GormDB
-
+type ReaderWriter interface {
 	Create(ctx context.Context, task *ChangeFeedTask) (*ChangeFeedTask, error)
 	Delete(ctx context.Context, taskId string) (err error)
 	Get(ctx context.Context, taskId string) (*ChangeFeedTask, error)

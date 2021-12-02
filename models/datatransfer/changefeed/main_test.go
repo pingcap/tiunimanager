@@ -52,8 +52,7 @@ func TestMain(m *testing.M) {
 			}
 			db.Migrator().CreateTable(ChangeFeedTask{})
 
-			testRW = NewGormChangeFeedReadWrite()
-			testRW.SetDB(db)
+			testRW = NewGormChangeFeedReadWrite(db)
 			return nil
 		},
 	)

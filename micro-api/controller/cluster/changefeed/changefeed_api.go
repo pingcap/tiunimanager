@@ -17,7 +17,7 @@ package changefeed
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
+	changefeed2 "github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
@@ -36,7 +36,7 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/ [post]
 func Create(c *gin.Context) {
-	var req changefeed.ChangeFeedTask
+	var req changefeed2.ChangeFeedTask
 
 	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
 
@@ -61,7 +61,7 @@ func Create(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/ [get]
 func Query(c *gin.Context) {
-	var req changefeed.QueryReq
+	var req changefeed2.QueryReq
 
 	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
 
@@ -88,7 +88,7 @@ const paramNameOfChangeFeedTaskId = "changeFeedTaskId"
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/ [get]
 func Detail(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &changefeed.DetailReq{
+	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &changefeed2.DetailReq{
 		Id: c.Param(paramNameOfChangeFeedTaskId),
 	})
 
@@ -113,7 +113,7 @@ func Detail(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/pause [post]
 func Pause(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &changefeed.PauseReq{
+	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &changefeed2.PauseReq{
 		Id: c.Param(paramNameOfChangeFeedTaskId),
 	})
 
@@ -138,7 +138,7 @@ func Pause(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/resume [post]
 func Resume(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &changefeed.ResumeReq{
+	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &changefeed2.ResumeReq{
 		Id: c.Param(paramNameOfChangeFeedTaskId),
 	})
 
@@ -164,13 +164,13 @@ func Resume(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/update [post]
 func Update(c *gin.Context) {
-	var req changefeed.UpdateReq
+	var req changefeed2.UpdateReq
 
 	requestBody, err := controller.HandleJsonRequestFromBody(c,
 		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
-			req.(*changefeed.UpdateReq).Id = c.Param(paramNameOfChangeFeedTaskId)
+			req.(*changefeed2.UpdateReq).Id = c.Param(paramNameOfChangeFeedTaskId)
 			return nil
 		})
 
@@ -195,7 +195,7 @@ func Update(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId} [delete]
 func Delete(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &changefeed.DeleteReq{
+	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &changefeed2.DeleteReq{
 		Id: c.Param(paramNameOfChangeFeedTaskId),
 	})
 

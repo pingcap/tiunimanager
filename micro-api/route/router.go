@@ -20,12 +20,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/backuprestore"
+	changefeed2 "github.com/pingcap-inc/tiem/micro-api/controller/cluster/changefeed"
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
 	paramGroupApi "github.com/pingcap-inc/tiem/micro-api/controller/param/paramgroup"
 
-	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/changefeed"
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/specs"
 	resourceApi "github.com/pingcap-inc/tiem/micro-api/controller/resource/hostresource"
@@ -138,15 +138,15 @@ func Route(g *gin.Engine) {
 			changeFeeds.Use(interceptor.VerifyIdentity)
 			changeFeeds.Use(interceptor.AuditLog())
 
-			changeFeeds.POST("/", changefeed.Create)
-			changeFeeds.POST("/:changeFeedTaskId/pause", changefeed.Pause)
-			changeFeeds.POST("/:changeFeedTaskId/resume", changefeed.Resume)
-			changeFeeds.POST("/:changeFeedTaskId/update", changefeed.Update)
+			changeFeeds.POST("/", changefeed2.Create)
+			changeFeeds.POST("/:changeFeedTaskId/pause", changefeed2.Pause)
+			changeFeeds.POST("/:changeFeedTaskId/resume", changefeed2.Resume)
+			changeFeeds.POST("/:changeFeedTaskId/update", changefeed2.Update)
 
-			changeFeeds.DELETE("/:changeFeedTaskId", changefeed.Delete)
+			changeFeeds.DELETE("/:changeFeedTaskId", changefeed2.Delete)
 
-			changeFeeds.GET("/:changeFeedTaskId", changefeed.Detail)
-			changeFeeds.GET("/", changefeed.Query)
+			changeFeeds.GET("/:changeFeedTaskId", changefeed2.Detail)
+			changeFeeds.GET("/", changefeed2.Query)
 		}
 
 		flowworks := apiV1.Group("/flowworks")

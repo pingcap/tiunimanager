@@ -16,15 +16,15 @@
 package models
 
 import (
-	"github.com/pingcap-inc/tiem/models/datatransfer/changefeed"
+	changefeed2 "github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	"gorm.io/gorm"
 )
 
 var defaultDb database
 
 type database struct {
-	base *gorm.DB
-	changeFeedReaderWriter changefeed.ReaderWriter
+	base                   *gorm.DB
+	changeFeedReaderWriter changefeed2.ReaderWriter
 }
 
 func open() {
@@ -32,13 +32,13 @@ func open() {
 }
 
 func initReaderWriter() {
-	defaultDb.changeFeedReaderWriter = changefeed.NewGormChangeFeedReadWrite(defaultDb.base)
+	defaultDb.changeFeedReaderWriter = changefeed2.NewGormChangeFeedReadWrite(defaultDb.base)
 }
 
 func addTable() {
 	// todo
 }
 
-func GetChangeFeedReaderWriter() changefeed.ReaderWriter {
+func GetChangeFeedReaderWriter() changefeed2.ReaderWriter {
 	return defaultDb.changeFeedReaderWriter
 }

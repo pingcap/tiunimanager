@@ -13,4 +13,23 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package management
+package resourcepool
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+type Disk struct {
+	ID        string         `json:"diskId" gorm:"primaryKey"`
+	HostID    string         `json:"omitempty" gorm:"not null"`
+	Name      string         `json:"name" gorm:"not null;size:255"` // [sda/sdb/nvmep0...]
+	Capacity  int32          `json:"capacity"`                      // Disk size, Unit: GB
+	Path      string         `json:"path" gorm:"size:255;not null"` // Disk mount path: [/data1]
+	Type      string         `json:"type" gorm:"not null"`          // Disk type: [nvme-ssd/ssd/sata]
+	Status    int32          `json:"status" gorm:"index"`           // Disk Status, 0 for available, 1 for reserved
+	CreatedAt time.Time      `json:"-" gorm:"autoCreateTime;<-:create;->;"`
+	UpdatedAt time.Time      `json:"-" gorm:"autoUpdateTime"`
+	DeletedAt gorm.DeletedAt `json:"-"`
+}

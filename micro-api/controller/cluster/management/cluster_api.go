@@ -144,49 +144,30 @@ func Preview(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param queryReq query QueryReq false "query request"
-// @Success 200 {object} controller.ResultWithPage{data=[]ClusterDisplayInfo}
+// @Success 200 {object} controller.ResultWithPage{data=QueryClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/ [get]
 func Query(c *gin.Context) {
 
-	var queryReq QueryReq
-
-	if err := c.ShouldBindQuery(&queryReq); err != nil {
-		_ = c.Error(err)
+	// Create request
+	var request QueryReq
+	if err := c.ShouldBindQuery(&request); err != nil {
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	operator := controller.GetOperator(c)
-
-	reqDTO := &clusterpb.ClusterQueryReqDTO{
-		Operator:      operator.ConvertToDTO(),
-		PageReq:       queryReq.PageRequest.ConvertToDTO(),
-		ClusterId:     queryReq.ClusterId,
-		ClusterType:   queryReq.ClusterType,
-		ClusterName:   queryReq.ClusterName,
-		ClusterTag:    queryReq.ClusterTag,
-		ClusterStatus: queryReq.ClusterStatus,
-	}
-
-	respDTO, err := client.ClusterClient.QueryCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
-
+	body, err := json.Marshal(request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
-	} else {
-		status := respDTO.GetRespStatus()
-
-		clusters := make([]ClusterDisplayInfo, len(respDTO.Clusters))
-
-		for i, v := range respDTO.Clusters {
-			clusters[i] = *ParseDisplayInfoFromDTO(v)
-		}
-
-		result := controller.BuildResultWithPage(int(status.Code), status.Message, controller.ParsePageFromDTO(respDTO.Page), clusters)
-
-		c.JSON(http.StatusOK, result)
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
+
+	// Call rpc method
+	controller.InvokeRpcMethod(c, client.ClusterClient.QueryCluster, string(body), controller.DefaultTimeout)
 }
 
 // Delete delete cluster

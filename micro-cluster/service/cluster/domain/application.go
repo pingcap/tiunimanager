@@ -438,20 +438,26 @@ func StopCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) 
 	return clusterAggregation, err
 }
 
-func ListCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, req *clusterpb.ClusterQueryReqDTO) ([]*ClusterAggregation, int, error) {
-	return ClusterRepo.Query(ctx, req.ClusterId, req.ClusterName, req.ClusterType, req.ClusterStatus, req.ClusterTag,
-		int(req.PageReq.Page), int(req.PageReq.PageSize))
+func ListCluster(ctx ctx.Context, req *management.QueryReq) ([]*ClusterAggregation, int, error) {
+	return ClusterRepo.Query(ctx, req.ClusterId, req.ClusterName, req.ClusterType,
+		req.ClusterStatus, req.ClusterTag, req.Page, req.PageSize)
 }
 
 func ExtractClusterInfo(clusterAggregation *ClusterAggregation) string {
-	response := &management.DetailClusterRsp{
+	response := management.DetailClusterRsp{
 		ClusterDisplayInfo:     clusterAggregation.ExtractDisplayInfo(),
 		ClusterTopologyInfo:    clusterAggregation.ExtractTopologyInfo(),
 		Components:             clusterAggregation.ExtractComponentInstances(),
 		ClusterMaintenanceInfo: clusterAggregation.ExtractMaintenanceInfo(),
 	}
 
-	body, err := json.Marshal(response)
+	data := struct {
+		Data management.DetailClusterRsp `json:"data"`
+	}{
+		response,
+	}
+
+	body, err := json.Marshal(&data)
 	if err != nil {
 		return ""
 	}

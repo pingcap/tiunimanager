@@ -82,7 +82,10 @@ type DetailClusterRsp struct {
 	ClusterTopologyInfo
 	ClusterMaintenanceInfo
 	Components []ComponentInstance `json:"components"`
+}
 
+type QueryClusterRsp struct {
+	Data []ClusterDisplayInfo `json:"data"`
 }
 
 type DescribeDashboardRsp struct {

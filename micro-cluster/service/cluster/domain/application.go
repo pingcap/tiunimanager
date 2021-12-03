@@ -438,9 +438,9 @@ func StopCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) 
 	return clusterAggregation, err
 }
 
-func ListCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, req *clusterpb.ClusterQueryReqDTO) ([]*ClusterAggregation, int, error) {
-	return ClusterRepo.Query(ctx, req.ClusterId, req.ClusterName, req.ClusterType, req.ClusterStatus, req.ClusterTag,
-		int(req.PageReq.Page), int(req.PageReq.PageSize))
+func ListCluster(ctx ctx.Context, req *management.QueryReq) ([]*ClusterAggregation, int, error) {
+	return ClusterRepo.Query(ctx, req.ClusterId, req.ClusterName, req.ClusterType,
+		req.ClusterStatus, req.ClusterTag, req.Page, req.PageSize)
 }
 
 func ExtractClusterInfo(clusterAggregation *ClusterAggregation) string {

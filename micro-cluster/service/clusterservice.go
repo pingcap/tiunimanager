@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	changeFeedApi "github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/service/datatransfer/changefeed"
 	"net/http"
 	"strconv"
@@ -220,22 +221,34 @@ func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *cluste
 	}
 }
 
-func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.ClusterQueryReqDTO, resp *clusterpb.ClusterQueryRespDTO) (err error) {
+func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	framework.LogWithContext(ctx).Info("query cluster")
-	clusters, total, err := domain.ListCluster(ctx, req.Operator, req)
+	request := &management.QueryReq{}
+	err = json.Unmarshal([]byte(req.Request), request)
 	if err != nil {
-		framework.LogWithContext(ctx).Info(err)
-		return nil
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters))
-		resp.Page = &clusterpb.PageDTO{
-			Page:     req.PageReq.Page,
-			PageSize: req.PageReq.PageSize,
-			Total:    int32(total),
-		}
-		return nil
+		resp.Code = http.StatusBadRequest
+		resp.Message = err.Error()
+		return
 	}
+	clusters, _, err := domain.ListCluster(ctx, request)
+	if err != nil {
+		resp.Code = int32(err.(framework.TiEMError).GetCode())
+		resp.Message = err.(framework.TiEMError).GetMsg()
+	} else {
+		response := &management.QueryClusterRsp{}
+		for _, cluster := range clusters {
+			response.Data = append(response.Data, cluster.ExtractDisplayInfo())
+		}
+		body, err := json.Marshal(response)
+		if err != nil {
+			resp.Code = http.StatusInternalServerError
+			resp.Message = err.Error()
+		} else {
+			resp.Code = http.StatusOK
+			resp.Response = string(body)
+		}
+	}
+	return
 }
 
 func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.ClusterDeleteReqDTO, resp *clusterpb.ClusterDeleteRespDTO) (err error) {

@@ -71,6 +71,40 @@ func TestBRReadWrite_GetBackupRecord(t *testing.T) {
 	assert.Equal(t, recordCreate.BackupMode, recordGet.BackupMode)
 }
 
+func TestBRReadWrite_UpdateBackupRecord(t *testing.T) {
+	record := &BackupRecord{
+		Entities: common.Entities{
+			TenantId: "tenantId",
+			Status:   "BackupInitStatus",
+		},
+		ClusterID:    "clusterId",
+		FilePath:     "/tmp/test",
+		StorageType:  "s3",
+		BackupType:   "full",
+		BackupMethod: "logic",
+		BackupMode:   "auto",
+		Size:         23346546456,
+		BackupTso:    42353454343234,
+		StartTime:    time.Now(),
+	}
+	recordCreate, errCreate := rw.CreateBackupRecord(context.TODO(), record)
+	assert.NoError(t, errCreate)
+
+	recordCreate.Size = 123
+	recordCreate.BackupTso = 354365767866
+	recordCreate.Status = "BackupEndStatus"
+	recordCreate.EndTime = time.Now()
+	errUpdate := rw.UpdateBackupRecord(context.TODO(), recordCreate.ID, recordCreate.Status, recordCreate.Size, recordCreate.BackupTso, recordCreate.EndTime)
+	assert.NoError(t, errUpdate)
+
+	recordGet, errGet := rw.GetBackupRecord(context.TODO(), recordCreate.ID)
+	assert.NoError(t, errGet)
+	assert.Equal(t, recordCreate.Size, recordGet.Size)
+	assert.Equal(t, recordCreate.Status, recordGet.Status)
+	assert.Equal(t, recordCreate.BackupTso, recordGet.BackupTso)
+	assert.Equal(t, true, recordGet.EndTime.Equal(recordCreate.EndTime))
+}
+
 func TestBRReadWrite_QueryBackupRecords(t *testing.T) {
 	record := &BackupRecord{
 		Entities: common.Entities{
@@ -146,7 +180,7 @@ func TestBRReadWrite_GetBackupStrategy(t *testing.T) {
 			TenantId: "tenantId",
 			Status:   "BackupInitStatus",
 		},
-		ClusterID:  "clusterId",
+		ClusterID:  "clusterIdGet",
 		BackupDate: "Monday,Friday",
 		StartHour:  11,
 		EndHour:    12,

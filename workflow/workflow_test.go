@@ -217,3 +217,40 @@ func TestFlowManager_Complete(t *testing.T) {
 	manager.Complete(flow, true)
 	assert.Equal(t, string(wfModel.TaskStatusFinished), flow.FlowWork.Status)
 }
+
+func TestFlowManager_ListWorkFlows(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
+	mockFlowRW.EXPECT().QueryWorkFlows(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, int64(0), nil).AnyTimes()
+	models.DefaultDb.WorkFlowReaderWriter = mockFlowRW
+
+	_, _, err := manager.ListWorkFlows(context.TODO(), "", "", "", 1, 10)
+	assert.NoError(t, err)
+}
+
+func TestFlowManager_DetailWorkFlow(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
+	mockFlowRW.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(&wfModel.WorkFlow{
+		Name: "flowName",
+	}, nil, nil).AnyTimes()
+	models.DefaultDb.WorkFlowReaderWriter = mockFlowRW
+
+	manager := GetFlowManager()
+	manager.RegisterWorkFlow(context.TODO(), "flowName",
+		&FlowWorkDefine{
+			FlowName: "flowName",
+			TaskNodes: map[string]*TaskDefine{
+				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncTask, doNodeName1},
+				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncTask, doNodeName2},
+				"nodeName2Done": {"end", "", "", wfModel.SyncFuncTask, doSuccess},
+				"fail":          {"fail", "", "", wfModel.SyncFuncTask, doFail},
+			},
+		})
+	_, err := manager.DetailWorkFlow(context.TODO(), "")
+	assert.NoError(t, err)
+}

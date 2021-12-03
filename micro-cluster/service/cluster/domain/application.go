@@ -1199,6 +1199,7 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 
 func (aggregation *ClusterAggregation) ExtractDisplayInfo() management.ClusterDisplayInfo {
 	cluster := aggregation.Cluster
+	instances := aggregation.CurrentComponentInstances
 	displayInfo := management.ClusterDisplayInfo{
 		ClusterId: aggregation.Cluster.Id,
 		ClusterBaseInfo: management.ClusterBaseInfo{
@@ -1227,13 +1228,20 @@ func (aggregation *ClusterAggregation) ExtractDisplayInfo() management.ClusterDi
 		},
 	}
 
-	if record := aggregation.CurrentTopologyConfigRecord; aggregation.CurrentTopologyConfigRecord != nil && record.ConfigModel != nil {
-		displayInfo.IntranetConnectAddresses, displayInfo.ExtranetConnectAddresses, displayInfo.PortList = ConnectAddresses(record.ConfigModel)
-	} else {
+	for _, instance := range instances {
+		if instance.ComponentType.ComponentType == "TiDB" && instance.Status == ClusterStatusOnline {
+			address := instance.Host + ":" + strconv.Itoa(instance.PortList[0])
+			displayInfo.IntranetConnectAddresses = append(displayInfo.IntranetConnectAddresses, address)
+			displayInfo.ExtranetConnectAddresses = append(displayInfo.ExtranetConnectAddresses, address)
+			displayInfo.PortList = instance.PortList
+		}
+	}
+	if len(displayInfo.IntranetConnectAddresses) == 0 {
 		displayInfo.PortList = []int{4000}
 		displayInfo.IntranetConnectAddresses = []string{"127.0.0.1:4000"}
 		displayInfo.ExtranetConnectAddresses = []string{"127.0.0.1:4000"}
 	}
+
 	return displayInfo
 }
 

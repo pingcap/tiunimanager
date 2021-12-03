@@ -279,6 +279,12 @@ func Test_convertAllocHostsRequest(t *testing.T) {
 
 }
 
+func TestExtractClusterInfo(t *testing.T) {
+	aggregation := defaultCluster()
+	got := ExtractClusterInfo(aggregation)
+	assert.Greater(t, len(got), 0)
+}
+
 func Test_convertAllocationReq(t *testing.T) {
 	item := &ClusterNodeDistributionItem{
 		SpecCode: "111C8G",

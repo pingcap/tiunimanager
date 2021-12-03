@@ -24,9 +24,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	"github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
-	"github.com/pingcap/tiup/pkg/cluster/spec"
 	"math/rand"
-	"strconv"
 	"time"
 )
 
@@ -94,18 +92,6 @@ func (p *ComponentInstance) SetLocation(location *resource.Location) {
 
 func (p *ComponentInstance) SetDiskPath(location *resource.Location) {
 	p.Location = location
-}
-
-func ConnectAddresses(spec *spec.Specification) ([]string, []string, []int) {
-	servers := spec.TiDBServers
-
-	addressList := make([]string, 0)
-	portList := make([]int, 0)
-
-	for _, v := range servers {
-		addressList = append(addressList, v.Host+":"+strconv.Itoa(v.Port))
-	}
-	return addressList, addressList, portList
 }
 
 // MockUsage TODO will be replaced with monitor implement

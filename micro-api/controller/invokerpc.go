@@ -17,6 +17,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -34,6 +35,7 @@ func InvokeRpcMethod(
 	ctx *gin.Context,
 	rpcMethod func(ctx context.Context, in *clusterpb.RpcRequest, opts ...client.CallOption) (*clusterpb.RpcResponse, error),
 	requestBody string,
+	response interface{},
 	opts ...client.CallOption) {
 
 	operator := GetOperator(ctx)
@@ -53,11 +55,18 @@ func InvokeRpcMethod(
 		func() (common.TIEM_ERROR_CODE, string) {
 			return common.TIEM_ERROR_CODE(rpcResponse.GetCode()), rpcResponse.GetMessage()
 		},
-		func() interface{} {
-			return rpcResponse.Response
+		func() (interface{}, error) {
+			err := json.Unmarshal([]byte(rpcResponse.Response), response)
+			if err != nil {
+				return nil, err
+			} else {
+				return response, nil
+			}
 		},
 		func() Page {
-			return Page{}
+			return Page{int(rpcResponse.Page.Page),
+				int(rpcResponse.Page.PageSize),
+				int(rpcResponse.Page.Total)}
 		},
 	)
 }

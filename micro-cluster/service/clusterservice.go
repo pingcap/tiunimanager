@@ -230,14 +230,14 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 		resp.Message = err.Error()
 		return
 	}
-	clusters, _, err := domain.ListCluster(ctx, request)
+	clusters, total, err := domain.ListCluster(ctx, request)
 	if err != nil {
 		resp.Code = int32(err.(framework.TiEMError).GetCode())
 		resp.Message = err.(framework.TiEMError).GetMsg()
 	} else {
-		response := &management.QueryClusterRsp{}
+		response := make([]management.ClusterDisplayInfo, 0)
 		for _, cluster := range clusters {
-			response.Data = append(response.Data, cluster.ExtractDisplayInfo())
+			response = append(response, cluster.ExtractDisplayInfo())
 		}
 		body, err := json.Marshal(response)
 		if err != nil {
@@ -246,6 +246,9 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 		} else {
 			resp.Code = int32(common.TIEM_SUCCESS)
 			resp.Response = string(body)
+			resp.Page.PageSize = req.Page.PageSize
+			resp.Page.Page = req.Page.Page
+			resp.Page.Total = int32(total)
 		}
 	}
 	return
@@ -319,8 +322,14 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb
 		resp.Code = int32(err.(framework.TiEMError).GetCode())
 		resp.Message = err.(framework.TiEMError).GetMsg()
 	} else {
-		resp.Code = int32(common.TIEM_SUCCESS)
-		resp.Response = domain.ExtractClusterInfo(cluster)
+		response, err := domain.ExtractClusterInfo(cluster)
+		if err != nil {
+			resp.Code = int32(common.TIEM_PARAMETER_INVALID)
+			resp.Message = err.Error()
+		} else {
+			resp.Code = int32(common.TIEM_SUCCESS)
+			resp.Response = response
+		}
 	}
 	return
 }

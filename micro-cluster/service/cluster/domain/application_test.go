@@ -281,7 +281,8 @@ func Test_convertAllocHostsRequest(t *testing.T) {
 
 func TestExtractClusterInfo(t *testing.T) {
 	aggregation := defaultCluster()
-	got := ExtractClusterInfo(aggregation)
+	got, err := ExtractClusterInfo(aggregation)
+	assert.NoError(t, err)
 	assert.Greater(t, len(got), 0)
 }
 

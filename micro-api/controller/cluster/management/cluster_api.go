@@ -17,6 +17,7 @@
 package management
 
 import (
+	"encoding/json"
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"net/http"
 	"strconv"
@@ -128,7 +129,7 @@ func Preview(c *gin.Context) {
 		ClusterBaseInfo:     req.ClusterBaseInfo,
 		StockCheckResult:    stockCheckResult,
 		ClusterCommonDemand: req.ClusterCommonDemand,
-		CapabilityIndexes: []ServiceCapabilityIndex{
+		CapabilityIndexes:   []ServiceCapabilityIndex{
 			//{"StorageCapability", "database storage capability", 800, "GB"},
 			//{"TPCC", "TPCC tmpC ", 523456, ""},
 		},
@@ -331,39 +332,22 @@ func Stop(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId} [get]
 func Detail(c *gin.Context) {
-	operator := controller.GetOperator(c)
-
-	reqDTO := &clusterpb.ClusterDetailReqDTO{
-		Operator:  operator.ConvertToDTO(),
-		ClusterId: c.Param("clusterId"),
+	// Create request
+	request := struct {
+		clusterID string `json:"clusterId"`
+	}{
+		c.Param("clusterId"),
 	}
 
-	respDTO, err := client.ClusterClient.DetailCluster(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
-
+	body, err := json.Marshal(request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
-	} else {
-		status := respDTO.GetRespStatus()
-
-		display := respDTO.GetDisplayInfo()
-		maintenance := respDTO.GetMaintenanceInfo()
-		components := respDTO.GetComponents()
-
-		componentInstances := make([]ComponentInstance, 0)
-		for _, v := range components {
-			if len(v.Nodes) > 0 {
-				componentInstances = append(componentInstances, *ParseComponentInfoFromDTO(v))
-			}
-		}
-
-		result := controller.BuildCommonResult(int(status.Code), status.Message, DetailClusterRsp{
-			ClusterDisplayInfo:     *ParseDisplayInfoFromDTO(display),
-			ClusterMaintenanceInfo: *ParseMaintenanceInfoFromDTO(maintenance),
-			Components:             componentInstances,
-		})
-
-		c.JSON(http.StatusOK, result)
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
+
+	// Call rpc method
+	controller.InvokeRpcMethod(c, client.ClusterClient.DetailCluster, string(body), controller.DefaultTimeout)
 }
 
 // Takeover takeover a cluster
@@ -587,9 +571,9 @@ func ScaleIn(c *gin.Context) {
 
 	// Create ScaleInRequest
 	request := &clusterpb.ScaleInRequest{
-		Operator: operator.ConvertToDTO(),
+		Operator:  operator.ConvertToDTO(),
 		ClusterId: c.Param("clusterId"),
-		NodeId:  req.NodeId,
+		NodeId:    req.NodeId,
 	}
 
 	// Scale in cluster
@@ -606,7 +590,7 @@ func ScaleIn(c *gin.Context) {
 		}
 
 		result := controller.BuildCommonResult(int(status.Code), status.Message, ScaleInClusterRsp{
-			StatusInfo:      *ParseStatusFromDTO(response.GetClusterStatus()),
+			StatusInfo: *ParseStatusFromDTO(response.GetClusterStatus()),
 		})
 
 		c.JSON(http.StatusOK, result)

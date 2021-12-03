@@ -14,7 +14,7 @@ service ClusterService {
     rpc CreateCluster(ClusterCreateReqDTO) returns (ClusterCreateRespDTO);
     rpc QueryCluster(ClusterQueryReqDTO) returns (ClusterQueryRespDTO);
     rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
-    rpc DetailCluster(ClusterDetailReqDTO) returns (ClusterDetailRespDTO);
+    rpc DetailCluster(RpcRequest) returns (RpcResponse);
     rpc RestartCluster(ClusterRestartReqDTO) returns (ClusterRestartRespDTO);
     rpc StopCluster(ClusterStopReqDTO) returns (ClusterStopRespDTO);
     rpc TakeoverClusters(ClusterTakeoverReqDTO) returns (ClusterTakeoverRespDTO);
@@ -84,7 +84,6 @@ service ClusterService {
     rpc DeleteChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc UpdateChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
-
 }
 
 message ClusterCreateReqDTO {
@@ -143,18 +142,6 @@ message ClusterDeleteRespDTO {
     DisplayStatusDTO clusterStatus = 3;
 }
 
-message ClusterDetailReqDTO {
-    OperatorDTO operator = 1;
-    string clusterId = 2;
-}
-
-message ClusterDetailRespDTO {
-    ResponseStatusDTO respStatus = 1;
-    ClusterDisplayDTO displayInfo = 2;
-    ClusterMaintenanceDTO maintenanceInfo = 3;
-    repeated ComponentInstanceDTO components = 4;
-}
-
 message ClusterRestartReqDTO {
     OperatorDTO operator = 1;
     string clusterId = 2;
@@ -197,15 +184,6 @@ message ClusterStopRespDTO {
     ResponseStatusDTO respStatus = 1;
     string clusterId = 2;
     DisplayStatusDTO clusterStatus = 3;
-}
-
-message ClusterMaintenanceDTO {
-    string maintainTaskCron = 1;
-}
-
-message ComponentInstanceDTO {
-    ComponentBaseInfoDTO baseInfo = 1;
-    repeated ComponentNodeDisplayInfoDTO nodes = 2;
 }
 
 message ComponentNodeDisplayInfoDTO {
@@ -285,7 +263,6 @@ message DistributionItemDTO {
     string specCode = 2;
     int32  count = 3;
 }
-
 message ClusterDisplayDTO {
     string clusterId = 1;
     ClusterBaseInfoDTO baseInfo = 2;

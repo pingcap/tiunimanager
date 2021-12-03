@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -49,6 +51,7 @@ type ClusterAggregation struct {
 	ClusterMetadata spec.Metadata
 
 	AddedComponentDemand   []*ClusterComponentDemand
+	CurrentComponentDemand []*ClusterComponentDemand
 	AddedClusterComponents []*ComponentGroup
 
 	CurrentComponentInstances []*ComponentInstance
@@ -136,10 +139,11 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		return nil, err
 	}
 	clusterAggregation := &ClusterAggregation{
-		Cluster:              cluster,
-		MaintainCronTask:     GetDefaultMaintainTask(),
-		CurrentOperator:      operator,
-		AddedComponentDemand: demands,
+		Cluster:                cluster,
+		MaintainCronTask:       GetDefaultMaintainTask(),
+		CurrentOperator:        operator,
+		AddedComponentDemand:   demands,
+		CurrentComponentDemand: demands,
 	}
 
 	// Start the workflow to create a cluster instance
@@ -155,6 +159,46 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(ctx, clusterAggregation)
 	return clusterAggregation, nil
+}
+
+func mergeDemands(demandsList ...[]*ClusterComponentDemand) []*ClusterComponentDemand {
+	if len(demandsList) == 0 {
+		return nil
+	}
+	components := make(map[string][]*ClusterComponentDemand)
+	for _, demands := range demandsList {
+		for _, d := range demands {
+			components[d.ComponentType.ComponentType] = append(components[d.ComponentType.ComponentType], d)
+		}
+	}
+	resultDemands := make([]*ClusterComponentDemand, 0, len(components))
+	for _, demands := range components {
+		demand := &ClusterComponentDemand{}
+		distributionItemsMap := make(map[string]map[string]int, 0)
+		demand.ComponentType = demands[0].ComponentType
+		for _, d := range demands {
+			demand.TotalNodeCount += d.TotalNodeCount
+			for _, item := range d.DistributionItems {
+				if distributionItemsMap[item.ZoneCode][item.SpecCode] == 0 {
+					distributionItemsMap[item.ZoneCode] = map[string]int{item.SpecCode: 0}
+				}
+				distributionItemsMap[item.ZoneCode][item.SpecCode] += item.Count
+			}
+		}
+		for zoneCode, values := range distributionItemsMap {
+			for specCode, count := range values {
+				distributionItem := &ClusterNodeDistributionItem{
+					ZoneCode: zoneCode,
+					SpecCode: specCode,
+					Count:    count,
+				}
+				demand.DistributionItems = append(demand.DistributionItems, distributionItem)
+			}
+		}
+		resultDemands = append(resultDemands, demand)
+	}
+
+	return resultDemands
 }
 
 // ScaleOutCluster
@@ -181,6 +225,7 @@ func ScaleOutCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId stri
 
 	// Merge multi demands
 	clusterAggregation.AddedComponentDemand = demands
+	clusterAggregation.CurrentComponentDemand = mergeDemands(clusterAggregation.CurrentComponentDemand, demands)
 	clusterAggregation.DemandsModified = true
 
 	// Start the workflow to scale out a cluster
@@ -197,6 +242,37 @@ func ScaleOutCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId stri
 	return clusterAggregation, nil
 }
 
+func deleteDemands(demands []*ClusterComponentDemand, instance *ComponentInstance) []*ClusterComponentDemand {
+	if len(demands) == 0 || instance == nil {
+		return nil
+	}
+	resultDemands := make([]*ClusterComponentDemand, 0)
+	for _, demand := range demands {
+		if demand.ComponentType.ComponentType == instance.ComponentType.ComponentType {
+			nodeItems := make([]*ClusterNodeDistributionItem, 0)
+			for _, item := range demand.DistributionItems {
+				if item.ZoneCode == resourceType.GenDomainCodeByName(instance.Location.Region, instance.Location.Zone) &&
+					item.SpecCode == knowledge.GenSpecCode(instance.Compute.CpuCores, instance.Compute.Memory) {
+					if item.Count > 1 {
+						newItem := &ClusterNodeDistributionItem{
+							ZoneCode: item.ZoneCode,
+							SpecCode: item.SpecCode,
+							Count:    item.Count - 1,
+						}
+						nodeItems = append(nodeItems, newItem)
+					}
+					demand.TotalNodeCount = demand.TotalNodeCount - 1
+				} else {
+					nodeItems = append(nodeItems, item)
+				}
+			}
+			demand.DistributionItems = nodeItems
+		}
+		resultDemands = append(resultDemands, demand)
+	}
+	return resultDemands
+}
+
 // ScaleInCluster
 // @Description: scale in a cluster
 // @Parameter ope
@@ -211,6 +287,16 @@ func ScaleInCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId, node
 	}
 	operator := parseOperatorFromDTO(ope)
 	clusterAggregation.CurrentOperator = operator
+
+	// get component instance
+	componentInstance := getInstance(clusterAggregation.CurrentComponentInstances, nodeId)
+	if componentInstance == nil {
+		return clusterAggregation, errors.New("instance not exist")
+	}
+
+	// delete cluster demands
+	clusterAggregation.CurrentComponentDemand = deleteDemands(clusterAggregation.CurrentComponentDemand, componentInstance)
+	clusterAggregation.DemandsModified = true
 
 	// Start the workflow to scale in a cluster
 	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowScaleInCluster, operator)
@@ -357,7 +443,22 @@ func ListCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, req *clusterpb.Clu
 		int(req.PageReq.Page), int(req.PageReq.PageSize))
 }
 
-func GetClusterDetail(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
+func ExtractClusterInfo(clusterAggregation *ClusterAggregation) string {
+	response := &management.DetailClusterRsp{
+		ClusterDisplayInfo:     clusterAggregation.ExtractDisplayInfo(),
+		ClusterTopologyInfo:    clusterAggregation.ExtractTopologyInfo(),
+		Components:             clusterAggregation.ExtractComponentInstances(),
+		ClusterMaintenanceInfo: clusterAggregation.ExtractMaintenanceInfo(),
+	}
+
+	body, err := json.Marshal(response)
+	if err != nil {
+		return ""
+	}
+	return string(body)
+}
+
+func GetClusterDetail(ctx ctx.Context, clusterId string) (*ClusterAggregation, error) {
 	cluster, err := ClusterRepo.Load(ctx, clusterId)
 
 	return cluster, err
@@ -604,12 +705,6 @@ func scaleInCluster(task *TaskEntity, context *FlowContext) bool {
 	nodeId := context.GetData(contextDeleteNodeKey).(string)
 
 	componentInstance := getInstance(clusterAggregation.CurrentComponentInstances, nodeId)
-	if componentInstance == nil {
-		getLoggerWithContext(context).Errorf("node: %s is not exist in %s", nodeId, cluster.ClusterName)
-		task.Fail(fmt.Errorf("node: %s is not exist", nodeId))
-		return false
-	}
-
 	if knowledge.GetComponentSpec(cluster.ClusterType.Code,
 		cluster.ClusterVersion.Code, componentInstance.ComponentType.ComponentType).ComponentConstraint.ComponentRequired {
 		nodeCount := 0
@@ -1100,59 +1195,133 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
-func (aggregation *ClusterAggregation) ExtractStatusDTO() *clusterpb.DisplayStatusDTO {
+func (aggregation *ClusterAggregation) ExtractDisplayInfo() management.ClusterDisplayInfo {
 	cluster := aggregation.Cluster
-
-	dto := &clusterpb.DisplayStatusDTO{
-		StatusCode:      strconv.Itoa(int(aggregation.Cluster.Status)),
-		StatusName:      aggregation.Cluster.Status.Display(),
-		CreateTime:      cluster.CreateTime.Unix(),
-		UpdateTime:      cluster.UpdateTime.Unix(),
-		DeleteTime:      cluster.DeleteTime.Unix(),
-		InProcessFlowId: int32(cluster.WorkFlowId),
-	}
-
-	return dto
-}
-
-func (aggregation *ClusterAggregation) ExtractDisplayDTO() *clusterpb.ClusterDisplayDTO {
-	dto := &clusterpb.ClusterDisplayDTO{
+	instances := aggregation.CurrentComponentInstances
+	displayInfo := management.ClusterDisplayInfo{
 		ClusterId: aggregation.Cluster.Id,
-		BaseInfo:  aggregation.ExtractBaseInfoDTO(),
-		Status:    aggregation.ExtractStatusDTO(),
-		Instances: aggregation.ExtractInstancesDTO(),
+		ClusterBaseInfo: management.ClusterBaseInfo{
+			ClusterName:    cluster.ClusterName,
+			DbPassword:     cluster.DbPassword,
+			ClusterType:    cluster.ClusterType.Code,
+			ClusterVersion: cluster.ClusterVersion.Code,
+			Tags:           cluster.Tags,
+			Tls:            cluster.Tls,
+		},
+		StatusInfo: controller.StatusInfo{
+			StatusCode:      strconv.Itoa(int(aggregation.Cluster.Status)),
+			StatusName:      aggregation.Cluster.Status.Display(),
+			CreateTime:      cluster.CreateTime,
+			UpdateTime:      cluster.UpdateTime,
+			DeleteTime:      cluster.DeleteTime,
+			InProcessFlowId: int(cluster.WorkFlowId),
+		},
+		ClusterInstanceInfo: management.ClusterInstanceInfo{
+			Whitelist:       []string{},
+			DiskUsage:       MockUsage(),
+			CpuUsage:        MockUsage(),
+			MemoryUsage:     MockUsage(),
+			StorageUsage:    MockUsage(),
+			BackupFileUsage: MockUsage(),
+		},
 	}
-	return dto
+
+	for _, instance := range instances {
+		if instance.ComponentType.ComponentType == "TiDB" && instance.Status == ClusterStatusOnline {
+			address := instance.Host + ":" + strconv.Itoa(instance.PortList[0])
+			displayInfo.IntranetConnectAddresses = append(displayInfo.IntranetConnectAddresses, address)
+			displayInfo.ExtranetConnectAddresses = append(displayInfo.ExtranetConnectAddresses, address)
+			displayInfo.PortList = instance.PortList
+		}
+	}
+	if len(displayInfo.IntranetConnectAddresses) == 0 {
+		displayInfo.PortList = []int{4000}
+		displayInfo.IntranetConnectAddresses = []string{"127.0.0.1:4000"}
+		displayInfo.ExtranetConnectAddresses = []string{"127.0.0.1:4000"}
+	}
+
+	return displayInfo
 }
 
-func (aggregation *ClusterAggregation) ExtractMaintenanceDTO() *clusterpb.ClusterMaintenanceDTO {
-	dto := &clusterpb.ClusterMaintenanceDTO{}
+func (aggregation *ClusterAggregation) ExtractMaintenanceInfo() management.ClusterMaintenanceInfo {
+	dto := management.ClusterMaintenanceInfo{}
 	if aggregation.MaintainCronTask != nil {
 		dto.MaintainTaskCron = aggregation.MaintainCronTask.Cron
 	}
-	//else {
-	//	// default maintain ?
-	//}
-
 	return dto
 }
 
-func (aggregation *ClusterAggregation) ExtractBaseInfoDTO() *clusterpb.ClusterBaseInfoDTO {
+func (aggregation *ClusterAggregation) ExtractTopologyInfo() management.ClusterTopologyInfo {
 	cluster := aggregation.Cluster
-	return &clusterpb.ClusterBaseInfoDTO{
-		ClusterName: cluster.ClusterName,
-		DbPassword:  cluster.DbPassword,
-		ClusterType: &clusterpb.ClusterTypeDTO{
-			Code: cluster.ClusterType.Code,
-			Name: cluster.ClusterType.Name,
-		},
-		ClusterVersion: &clusterpb.ClusterVersionDTO{
-			Code: cluster.ClusterVersion.Code,
-			Name: cluster.ClusterVersion.Name,
-		},
-		Tags: cluster.Tags,
-		Tls:  cluster.Tls,
+	demands := aggregation.CurrentComponentDemand
+	topology := management.ClusterTopologyInfo{
+		CpuArchitecture: cluster.CpuArchitecture,
 	}
+	topology.Region.Code = cluster.Region
+	topology.Region.Name = cluster.Region
+
+	for _, demand := range demands {
+		resourceSpec := make([]management.ResourceSpec, len(demand.DistributionItems))
+		for key, item := range demand.DistributionItems {
+			resourceSpec[key].Spec.Code = item.SpecCode
+			resourceSpec[key].Spec.Name = item.SpecCode
+			resourceSpec[key].Zone.Code = item.ZoneCode
+			resourceSpec[key].Zone.Name = resourceType.GetDomainNameFromCode(item.ZoneCode)
+			resourceSpec[key].Count = item.Count
+		}
+
+		data := struct {
+			ComponentType string `json:"componentType"`
+			ResourceSpec  []management.ResourceSpec
+		}{
+			demand.ComponentType.ComponentType,
+			resourceSpec,
+		}
+		topology.ComponentTopology = append(topology.ComponentTopology, data)
+	}
+	return topology
+}
+
+func (aggregation *ClusterAggregation) ExtractComponentInstances() []management.ComponentInstance {
+	instances := aggregation.CurrentComponentInstances
+
+	instanceMap := make(map[string][]management.ComponentNodeDisplayInfo)
+	result := make([]management.ComponentInstance, 0)
+
+	for _, instance := range instances {
+		info := management.ComponentNodeDisplayInfo{
+			NodeId:  instance.Host,
+			Version: instance.Version.Code,
+			Status:  instance.Status.Display(),
+			ComponentNodeInstanceInfo: management.ComponentNodeInstanceInfo{
+				HostId: instance.HostId,
+				HostIp: instance.Host,
+				Ports:  instance.PortList,
+				Role:   mockRole(),
+				Spec:   mockSpec(),
+				Zone:   mockZone(),
+			},
+
+			ComponentNodeUsageInfo: management.ComponentNodeUsageInfo{
+				IoUtil:       mockIoUtil(),
+				Iops:         mockIops(),
+				CpuUsage:     MockUsage(),
+				MemoryUsage:  MockUsage(),
+				StorageUsage: MockUsage(),
+			},
+		}
+		instanceMap[instance.ComponentType.ComponentType] = append(instanceMap[instance.ComponentType.ComponentType], info)
+	}
+
+	for key, values := range instanceMap {
+		item := management.ComponentInstance{}
+		componentType := knowledge.ClusterComponentFromCode(key)
+		item.ComponentType = componentType.ComponentType
+		item.ComponentName = componentType.ComponentName
+		item.Nodes = values
+		result = append(result, item)
+	}
+	return result
 }
 
 func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *clusterpb.BackupRecordDTO {

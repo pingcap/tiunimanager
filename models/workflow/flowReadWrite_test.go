@@ -18,14 +18,14 @@ package workflow
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/models/common"
-	"github.com/pingcap-inc/tiem/workflow"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
+var rw *FlowReadWrite
+
 func TestFlowReadWrite_CreateWorkFlow(t *testing.T) {
-	rw := NewFlowReadWrite()
 	flow := &WorkFlow{
 		Entities: common.Entities{
 			TenantId: "tenantId",
@@ -39,7 +39,6 @@ func TestFlowReadWrite_CreateWorkFlow(t *testing.T) {
 }
 
 func TestFlowReadWrite_GetWorkFlow(t *testing.T) {
-	rw := NewFlowReadWrite()
 	flow := &WorkFlow{
 		Entities: common.Entities{
 			TenantId: "tenantId",
@@ -57,7 +56,6 @@ func TestFlowReadWrite_GetWorkFlow(t *testing.T) {
 }
 
 func TestFlowReadWrite_QueryWorkFlows(t *testing.T) {
-	rw := NewFlowReadWrite()
 	flow := &WorkFlow{
 		Entities: common.Entities{
 			TenantId: "tenantId",
@@ -69,14 +67,13 @@ func TestFlowReadWrite_QueryWorkFlows(t *testing.T) {
 	flowCreate, errCreate := rw.CreateWorkFlow(context.TODO(), flow)
 	assert.NoError(t, errCreate)
 
-	flowQuery, total, errQuery := rw.QueryWorkFlows(context.TODO(), "", "", "", 0, 10)
+	flowQuery, total, errQuery := rw.QueryWorkFlows(context.TODO(), "", "flowNa", "", 0, 10)
 	assert.Equal(t, int64(1), total)
 	assert.Equal(t, flowCreate.ID, flowQuery[0].ID)
 	assert.NoError(t, errQuery)
 }
 
 func TestFlowReadWrite_UpdateWorkFlowStatus(t *testing.T) {
-	rw := NewFlowReadWrite()
 	flow := &WorkFlow{
 		Entities: common.Entities{
 			TenantId: "tenantId",
@@ -98,7 +95,6 @@ func TestFlowReadWrite_UpdateWorkFlowStatus(t *testing.T) {
 }
 
 func TestFlowReadWrite_DetailWorkFlow(t *testing.T) {
-	rw := NewFlowReadWrite()
 	flow := &WorkFlow{
 		Entities: common.Entities{
 			TenantId: "tenantId",
@@ -118,7 +114,7 @@ func TestFlowReadWrite_DetailWorkFlow(t *testing.T) {
 		Parameters: "nodeParam",
 		ParentID:   flowCreate.ID,
 		Name:       "nodeName",
-		ReturnType: string(workflow.SyncFuncTask),
+		ReturnType: string(SyncFuncTask),
 		Result:     "success",
 		StartTime:  time.Now(),
 		EndTime:    time.Now(),
@@ -133,7 +129,6 @@ func TestFlowReadWrite_DetailWorkFlow(t *testing.T) {
 }
 
 func TestFlowReadWrite_CreateWorkFlowNode(t *testing.T) {
-	rw := NewFlowReadWrite()
 	node := &WorkFlowNode{
 		Entities: common.Entities{
 			TenantId: "tenantId",
@@ -142,7 +137,7 @@ func TestFlowReadWrite_CreateWorkFlowNode(t *testing.T) {
 		Parameters: "nodeParam",
 		ParentID:   "flowId",
 		Name:       "nodeName",
-		ReturnType: string(workflow.SyncFuncTask),
+		ReturnType: string(SyncFuncTask),
 		Result:     "success",
 		StartTime:  time.Now(),
 		EndTime:    time.Now(),
@@ -152,7 +147,6 @@ func TestFlowReadWrite_CreateWorkFlowNode(t *testing.T) {
 }
 
 func TestFlowReadWrite_UpdateWorkFlowNode(t *testing.T) {
-	rw := NewFlowReadWrite()
 	node := &WorkFlowNode{
 		Entities: common.Entities{
 			TenantId: "tenantId",
@@ -161,7 +155,7 @@ func TestFlowReadWrite_UpdateWorkFlowNode(t *testing.T) {
 		Parameters: "nodeParam",
 		ParentID:   "flowId",
 		Name:       "nodeName",
-		ReturnType: string(workflow.SyncFuncTask),
+		ReturnType: string(SyncFuncTask),
 		Result:     "init",
 		StartTime:  time.Now(),
 		EndTime:    time.Now(),
@@ -178,7 +172,7 @@ func TestFlowReadWrite_UpdateWorkFlowNode(t *testing.T) {
 		Parameters: "nodeParam",
 		ParentID:   "flowId",
 		Name:       "nodeName",
-		ReturnType: string(workflow.SyncFuncTask),
+		ReturnType: string(SyncFuncTask),
 		Result:     "success",
 		StartTime:  time.Now(),
 		EndTime:    time.Now(),
@@ -189,6 +183,49 @@ func TestFlowReadWrite_UpdateWorkFlowNode(t *testing.T) {
 	nodeQuery, errQuery := rw.GetWorkFlowNode(context.TODO(), nodeCreate.ID)
 	assert.NoError(t, errQuery)
 	assert.Equal(t, nodeQuery.ID, nodeCreate.ID)
-	assert.Equal(t, nodeQuery.Status, "NodeEndStatus")
-	assert.Equal(t, nodeQuery.Result, "success")
+	assert.Equal(t, "NodeEndStatus", nodeQuery.Status)
+	assert.Equal(t, "success", nodeQuery.Result)
+}
+
+func TestFlowReadWrite_UpdateWorkFlowDetail(t *testing.T) {
+	flow := &WorkFlow{
+		Entities: common.Entities{
+			TenantId: "tenantId",
+			Status:   "FlowInitStatus",
+		},
+		Name:  "flowName",
+		BizID: "clusterId",
+	}
+	flowCreate, errFlowCreate := rw.CreateWorkFlow(context.TODO(), flow)
+	assert.NoError(t, errFlowCreate)
+
+	node := &WorkFlowNode{
+		Entities: common.Entities{
+			TenantId: "tenantId",
+			Status:   "NodeInitStatus",
+		},
+		Parameters: "nodeParam",
+		ParentID:   flowCreate.ID,
+		Name:       "nodeName",
+		ReturnType: string(SyncFuncTask),
+		Result:     "init",
+		StartTime:  time.Now(),
+		EndTime:    time.Now(),
+	}
+	nodeCreate, errNodeCreate := rw.CreateWorkFlowNode(context.TODO(), node)
+	assert.NoError(t, errNodeCreate)
+
+	nodes := make([]*WorkFlowNode, 1)
+	nodeCreate.Result = "success"
+	nodeCreate.Status = "NodeEndStatus"
+	nodes[0] = nodeCreate
+	flowCreate.Status = "FlowEndStatus"
+	errUpdate := rw.UpdateWorkFlowDetail(context.TODO(), flowCreate, nodes)
+	assert.NoError(t, errUpdate)
+
+	flowQuery, nodeQuery, errQuery := rw.DetailWorkFlow(context.TODO(), flowCreate.ID)
+	assert.NoError(t, errQuery)
+	assert.Equal(t, "FlowEndStatus", flowQuery.Status)
+	assert.Equal(t, "NodeEndStatus", nodeQuery[0].Status)
+	assert.Equal(t, "success", nodeQuery[0].Result)
 }

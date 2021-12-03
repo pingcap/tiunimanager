@@ -17,21 +17,17 @@ package backuprestore
 
 import (
 	"context"
-	"gorm.io/gorm"
 	"time"
 )
 
-type DataTransportReaderWriter interface {
-	SetDb(db *gorm.DB)
-	Db(ctx context.Context) *gorm.DB
-
-	CreateBackupRecord(ctx context.Context, record *BackupRecord) (err error)
-	UpdateBackupRecord(ctx context.Context, recordId string, status string, size uint64, backupTso int64, endTime time.Time) (err error)
+type ReaderWriter interface {
+	CreateBackupRecord(ctx context.Context, record *BackupRecord) (*BackupRecord, error)
+	UpdateBackupRecord(ctx context.Context, backupId string, status string, size uint64, backupTso int64, endTime time.Time) (err error)
 	GetBackupRecord(ctx context.Context, backupId string) (record *BackupRecord, err error)
-	QueryBackupRecords(ctx context.Context, backupId string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error)
+	QueryBackupRecords(ctx context.Context, clusterId, backupId string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error)
 	DeleteBackupRecord(ctx context.Context, backupId string) (err error)
 
-	CreateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (err error)
+	CreateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error)
 	UpdateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (err error)
 	GetBackupStrategy(ctx context.Context, clusterId string) (strategy *BackupStrategy, err error)
 	QueryBackupStrategy(ctx context.Context, weekDay string, startHour uint32) (strategies []*BackupStrategy, err error)

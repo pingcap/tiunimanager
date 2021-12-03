@@ -19,20 +19,24 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
+	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"gorm.io/gorm"
 	"time"
 )
 
 type ImportExportReadWrite struct {
+	dbCommon.GormDB
 }
 
-func NewImportExportReadWrite() *ImportExportReadWrite {
-	m := new(ImportExportReadWrite)
+func NewImportExportReadWrite(db *gorm.DB) *ImportExportReadWrite {
+	m := &ImportExportReadWrite{
+		dbCommon.WrapDB(db),
+	}
 	return m
 }
 
-func (m *ImportExportReadWrite) CreateDataTransportRecord(ctx context.Context, record *DataTransportRecord) (err error) {
-	return models.DB(ctx).Create(record).Error
+func (m *ImportExportReadWrite) CreateDataTransportRecord(ctx context.Context, record *DataTransportRecord) (*DataTransportRecord, error) {
+	return record, m.DB(ctx).Create(record).Error
 }
 
 func (m *ImportExportReadWrite) UpdateDataTransportRecord(ctx context.Context, recordId string, status string, endTime time.Time) (err error) {
@@ -41,12 +45,12 @@ func (m *ImportExportReadWrite) UpdateDataTransportRecord(ctx context.Context, r
 	}
 
 	record := &DataTransportRecord{}
-	err = models.DB(ctx).First(record, "id = ?", recordId).Error
+	err = m.DB(ctx).First(record, "id = ?", recordId).Error
 	if err != nil {
 		return framework.SimpleError(common.TIEM_TRANSPORT_RECORD_NOT_FOUND)
 	}
 
-	return models.DB(ctx).Model(record).
+	return m.DB(ctx).Model(record).
 		Update("status", status).
 		Update("end_time", endTime).Error
 }
@@ -56,7 +60,7 @@ func (m *ImportExportReadWrite) GetDataTransportRecord(ctx context.Context, reco
 		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 	record = &DataTransportRecord{}
-	err = models.DB(ctx).First(record, "id = ?", recorId).Error
+	err = m.DB(ctx).First(record, "id = ?", recorId).Error
 	if err != nil {
 		return nil, framework.SimpleError(common.TIEM_TRANSPORT_RECORD_NOT_FOUND)
 	}
@@ -65,9 +69,9 @@ func (m *ImportExportReadWrite) GetDataTransportRecord(ctx context.Context, reco
 
 func (m *ImportExportReadWrite) QueryDataTransportRecords(ctx context.Context, recordId, clusterId string, reImport bool, startTime, endTime time.Time, page int, pageSize int) (records []*DataTransportRecord, total int64, err error) {
 	records = make([]*DataTransportRecord, pageSize)
-	query := models.DB(ctx).Model(DataTransportRecord{})
+	query := m.DB(ctx).Model(DataTransportRecord{})
 	if recordId != "" {
-		query = query.Where("record_id = ?", recordId)
+		query = query.Where("id = ?", recordId)
 	}
 	if clusterId != "" {
 		query = query.Where("cluster_id = ?", clusterId)
@@ -90,5 +94,5 @@ func (m *ImportExportReadWrite) DeleteDataTransportRecord(ctx context.Context, r
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 	record := &DataTransportRecord{}
-	return models.DB(ctx).First(record, "id = ?", recordId).Delete(record).Error
+	return m.DB(ctx).First(record, "id = ?", recordId).Delete(record).Error
 }

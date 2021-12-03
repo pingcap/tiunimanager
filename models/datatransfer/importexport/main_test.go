@@ -11,23 +11,47 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package workflow
+package importexport
 
 import (
-	"context"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"os"
+	"testing"
 )
 
-// TaskRepo todo: replace db interface
-var TaskRepo TaskRepository
+func TestMain(m *testing.M) {
+	testFilePath := "testdata/" + uuidutil.ShortId()
+	os.MkdirAll(testFilePath, 0755)
 
-type TaskRepository interface {
-	AddFlowWork(ctx context.Context, flowWork *FlowWorkEntity) error
-	AddFlowTask(ctx context.Context, task *TaskEntity, flowId string) error
-	Persist(ctx context.Context, flowWork *FlowWorkAggregation) error
-	LoadFlowWork(ctx context.Context, id uint) (*FlowWorkEntity, error)
-	Load(ctx context.Context, id uint) (flowWork *FlowWorkAggregation, err error)
-	ListFlows(ctx context.Context, bizId, keyword string, status int, page int, pageSize int) ([]*FlowWorkEntity, int, error)
+	logins := framework.LogForkFile(common.LogFileSystem)
+
+	defer func() {
+		os.RemoveAll(testFilePath)
+		os.Remove(testFilePath)
+	}()
+
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			dbFile := testFilePath + common.DBDirPrefix + common.SqliteFileName
+			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+
+			if err != nil || db.Error != nil {
+				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
+			} else {
+				logins.Infof("open database successful, filepath: %s", dbFile)
+			}
+			db.Migrator().CreateTable(DataTransportRecord{})
+
+			rw = NewImportExportReadWrite(db)
+			return nil
+		},
+	)
+
+	os.Exit(m.Run())
 }

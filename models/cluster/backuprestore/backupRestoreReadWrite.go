@@ -19,21 +19,24 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/models"
+	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"gorm.io/gorm"
 	"time"
 )
 
 type BRReadWrite struct {
+	dbCommon.GormDB
 }
 
-func NewBRReadWrite() *BRReadWrite {
-	m := new(BRReadWrite)
+func NewBRReadWrite(db *gorm.DB) *BRReadWrite {
+	m := &BRReadWrite{
+		dbCommon.WrapDB(db),
+	}
 	return m
 }
 
-func (m *BRReadWrite) CreateBackupRecord(ctx context.Context, record *BackupRecord) (err error) {
-	return models.DB(ctx).Create(record).Error
+func (m *BRReadWrite) CreateBackupRecord(ctx context.Context, record *BackupRecord) (*BackupRecord, error) {
+	return record, m.DB(ctx).Create(record).Error
 }
 
 func (m *BRReadWrite) UpdateBackupRecord(ctx context.Context, backupId string, status string, size uint64, backupTso int64, endTime time.Time) (err error) {
@@ -42,12 +45,12 @@ func (m *BRReadWrite) UpdateBackupRecord(ctx context.Context, backupId string, s
 	}
 
 	record := &BackupRecord{}
-	err = models.DB(ctx).First(record, "id = ?", backupId).Error
+	err = m.DB(ctx).First(record, "id = ?", backupId).Error
 	if err != nil {
 		return framework.SimpleError(common.TIEM_BACKUP_RECORD_NOT_FOUND)
 	}
 
-	return models.DB(ctx).Model(record).
+	return m.DB(ctx).Model(record).
 		Update("status", status).
 		Update("size", size).
 		Update("backup_tso", backupTso).
@@ -59,7 +62,7 @@ func (m *BRReadWrite) GetBackupRecord(ctx context.Context, backupId string) (rec
 		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 	record = &BackupRecord{}
-	err = models.DB(ctx).First(record, "id = ?", backupId).Error
+	err = m.DB(ctx).First(record, "id = ?", backupId).Error
 	if err != nil {
 		return nil, framework.SimpleError(common.TIEM_BACKUP_RECORD_NOT_FOUND)
 	}
@@ -68,7 +71,7 @@ func (m *BRReadWrite) GetBackupRecord(ctx context.Context, backupId string) (rec
 
 func (m *BRReadWrite) QueryBackupRecords(ctx context.Context, clusterId, backupId string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error) {
 	records = make([]*BackupRecord, pageSize)
-	query := models.DB(ctx).Model(BackupRecord{})
+	query := m.DB(ctx).Model(BackupRecord{})
 	if backupId != "" {
 		query = query.Where("id = ?", backupId)
 	}
@@ -90,15 +93,15 @@ func (m *BRReadWrite) DeleteBackupRecord(ctx context.Context, backupId string) (
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 	record := &BackupRecord{}
-	return models.DB(ctx).First(record, "id = ?", backupId).Delete(record).Error
+	return m.DB(ctx).First(record, "id = ?", backupId).Delete(record).Error
 }
 
-func (m *BRReadWrite) CreateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (err error) {
-	return models.DB(ctx).Create(strategy).Error
+func (m *BRReadWrite) CreateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error) {
+	return strategy, m.DB(ctx).Create(strategy).Error
 }
 
 func (m *BRReadWrite) UpdateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (err error) {
-	return models.DB(ctx).Model(strategy).Updates(strategy).Error
+	return m.DB(ctx).Model(strategy).Updates(strategy).Error
 }
 
 func (m *BRReadWrite) GetBackupStrategy(ctx context.Context, clusterId string) (strategy *BackupStrategy, err error) {
@@ -106,7 +109,8 @@ func (m *BRReadWrite) GetBackupStrategy(ctx context.Context, clusterId string) (
 		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 
-	err = models.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Error
+	strategy = &BackupStrategy{}
+	err = m.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Error
 	if err != nil {
 		return nil, framework.SimpleError(common.TIEM_BACKUP_STRATEGY_NOT_FOUND)
 	}
@@ -114,9 +118,9 @@ func (m *BRReadWrite) GetBackupStrategy(ctx context.Context, clusterId string) (
 }
 
 func (m *BRReadWrite) QueryBackupStrategy(ctx context.Context, weekDay string, startHour uint32) (strategies []*BackupStrategy, err error) {
-	query := models.DB(ctx).Model(BackupStrategy{})
+	query := m.DB(ctx).Model(BackupStrategy{})
 	if weekDay != "" {
-		query = query.Where("backup_date like '%\" + weekday + \"%'", weekDay)
+		query = query.Where("backup_date like '%" + weekDay + "%'")
 	}
 	if startHour != 0 {
 		query = query.Where("start_hour = ?", startHour)
@@ -134,5 +138,5 @@ func (m *BRReadWrite) DeleteBackupStrategy(ctx context.Context, clusterId string
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 	strategy := &BackupStrategy{}
-	return models.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Delete(strategy).Error
+	return m.DB(ctx).First(strategy, "cluster_id = ?", clusterId).Delete(strategy).Error
 }

@@ -24,3 +24,7 @@ type WorkFlow struct {
 	Name  string `gorm:"default:null;comment:'name of the workflow'"`
 	BizID string `gorm:"default:null;<-:create"`
 }
+
+func (flow *WorkFlow) Finished() bool {
+	return string(TaskStatusFinished) == flow.Status || string(TaskStatusError) == flow.Status || string(TaskStatusCanceled) == flow.Status
+}

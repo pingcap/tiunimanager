@@ -18,14 +18,16 @@ package workflow
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/workflow"
 	"sync"
 )
 
 type FlowInterface interface {
-	RegisterWorkFlow(ctx context.Context, defineName string, flowDefine *FlowWorkDefine)
-	GetWorkFlowDefine(ctx context.Context, defineName string) (*FlowWorkDefine, error)
-	CreateWorkFlow(ctx context.Context, bizId string, defineName string) (*FlowWorkAggregation, error)
-	ListWorkFlows(ctx context.Context, bizId string, status string) ([]*FlowWorkEntity, error)
+	RegisterWorkFlow(ctx context.Context, flowName string, flowDefine *FlowWorkDefine)
+	GetWorkFlowDefine(ctx context.Context, flowName string) (*FlowWorkDefine, error)
+	CreateWorkFlow(ctx context.Context, bizId string, flowName string) (*FlowWorkAggregation, error)
+	ListWorkFlows(ctx context.Context, bizId string, fuzzyName string, status string, page, pageSize int) ([]*workflow.WorkFlow, int64, error)
 	DetailWorkFlow(ctx context.Context, flowId string) (*FlowWorkAggregation, error)
 	AddContext(flow *FlowWorkAggregation, key string, value interface{})
 	AsyncStart(flow *FlowWorkAggregation) error
@@ -36,7 +38,6 @@ type FlowInterface interface {
 
 type FlowManager struct {
 	flowDefineMap sync.Map
-	//todo db interface
 }
 
 var manager *FlowManager
@@ -48,37 +49,49 @@ func GetFlowManager() *FlowManager {
 	return manager
 }
 
-func (mgr *FlowManager) RegisterWorkFlow(ctx context.Context, defineName string, flowDefine *FlowWorkDefine) {
-	mgr.flowDefineMap.Store(defineName, flowDefine)
+func (mgr *FlowManager) RegisterWorkFlow(ctx context.Context, flowName string, flowDefine *FlowWorkDefine) {
+	mgr.flowDefineMap.Store(flowName, flowDefine)
 	return
 }
 
-func (mgr *FlowManager) GetWorkFlowDefine(ctx context.Context, defineName string) (*FlowWorkDefine, error) {
-	flowDefine, exist := mgr.flowDefineMap.Load(defineName)
+func (mgr *FlowManager) GetWorkFlowDefine(ctx context.Context, flowName string) (*FlowWorkDefine, error) {
+	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
-		return nil, fmt.Errorf("%s workflow definion not exist", defineName)
+		return nil, fmt.Errorf("%s workflow definion not exist", flowName)
 	}
 	return flowDefine.(*FlowWorkDefine), nil
 }
 
-func (mgr *FlowManager) CreateWorkFlow(ctx context.Context, bizId string, defineName string) (*FlowWorkAggregation, error) {
-	flowDefine, exist := mgr.flowDefineMap.Load(defineName)
+func (mgr *FlowManager) CreateWorkFlow(ctx context.Context, bizId string, flowName string) (*FlowWorkAggregation, error) {
+	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
-		return nil, fmt.Errorf("%s workflow definion not exist", defineName)
+		return nil, fmt.Errorf("%s workflow definion not exist", flowName)
 	}
 
 	flow, err := createFlowWork(ctx, bizId, flowDefine.(*FlowWorkDefine))
 	return flow, err
 }
 
-func (mgr *FlowManager) ListWorkFlows(ctx context.Context, bizId string, status string) ([]*FlowWorkEntity, error) {
-	// todo: call db interface load FlowWorkEntity
-	return nil, nil
+func (mgr *FlowManager) ListWorkFlows(ctx context.Context, bizId string, fuzzyName string, status string, page, pageSize int) ([]*workflow.WorkFlow, int64, error) {
+	return models.GetWorkFlowReaderWriter().QueryWorkFlows(ctx, bizId, fuzzyName, status, page, pageSize)
 }
 
 func (mgr *FlowManager) DetailWorkFlow(ctx context.Context, flowId string) (*FlowWorkAggregation, error) {
-	// todo: call db interface load FlowWorkAggregation
-	return nil, nil
+	flow, nodes, err := models.GetWorkFlowReaderWriter().DetailWorkFlow(ctx, flowId)
+	if err != nil {
+		return nil, err
+	}
+
+	define, err := mgr.GetWorkFlowDefine(ctx, flow.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FlowWorkAggregation{
+		FlowWork: flow,
+		Define:   define,
+		Tasks:    nodes,
+	}, nil
 }
 
 func (mgr *FlowManager) AddContext(flow *FlowWorkAggregation, key string, value interface{}) {

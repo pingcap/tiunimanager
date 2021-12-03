@@ -18,6 +18,8 @@ package workflow
 
 import (
 	"context"
+	common2 "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/models/workflow"
 )
 
 type FlowWorkDefine struct {
@@ -26,13 +28,13 @@ type FlowWorkDefine struct {
 	ContextParser func(string) *FlowContext
 }
 
-type TaskExecutor func(task *TaskEntity, context *FlowContext) bool
+type TaskExecutor func(task *workflow.WorkFlowNode, context *FlowContext) bool
 
 type TaskDefine struct {
 	Name         string
 	SuccessEvent string
 	FailEvent    string
-	ReturnType   TaskReturnType
+	ReturnType   workflow.TaskReturnType
 	Executor     TaskExecutor
 }
 
@@ -42,24 +44,22 @@ func DefaultContextParser(s string) *FlowContext {
 }
 
 func (define *FlowWorkDefine) getInstance(ctx context.Context, bizId string, data map[string]interface{}) *FlowWorkAggregation {
-	if data == nil {
-		data = make(map[string]interface{})
-	}
-
 	return &FlowWorkAggregation{
-		FlowWork: &FlowWorkEntity{
-			FlowName: define.FlowName,
-			BizId:    bizId,
-			Status:   TaskStatusInit,
+		FlowWork: &workflow.WorkFlow{
+			Name:  define.FlowName,
+			BizID: bizId,
+			Entities: common2.Entities{
+				Status: string(workflow.TaskStatusInit),
+			},
 		},
-		Tasks:   make([]*TaskEntity, 0, 4),
+		Tasks:   make([]*workflow.WorkFlowNode, 0, 4),
 		Context: FlowContext{ctx, data},
 		Define:  define,
 	}
 }
 
 func CompositeExecutor(executors ...TaskExecutor) TaskExecutor {
-	return func(task *TaskEntity, context *FlowContext) bool {
+	return func(task *workflow.WorkFlowNode, context *FlowContext) bool {
 		for _, executor := range executors {
 			if executor(task, context) {
 				continue
@@ -71,12 +71,12 @@ func CompositeExecutor(executors ...TaskExecutor) TaskExecutor {
 	}
 }
 
-func defaultEnd(task *TaskEntity, context *FlowContext) bool {
-	task.Status = TaskStatusFinished
+func defaultEnd(task *workflow.WorkFlowNode, context *FlowContext) bool {
+	task.Status = string(workflow.TaskStatusFinished)
 	return true
 }
 
-func defaultFail(task *TaskEntity, context *FlowContext) bool {
-	task.Status = TaskStatusError
+func defaultFail(task *workflow.WorkFlowNode, context *FlowContext) bool {
+	task.Status = string(workflow.TaskStatusError)
 	return true
 }

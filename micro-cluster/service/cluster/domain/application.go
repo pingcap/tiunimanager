@@ -167,10 +167,8 @@ func mergeDemands(demandsList ...[]*ClusterComponentDemand) []*ClusterComponentD
 	}
 	components := make(map[string][]*ClusterComponentDemand)
 	for _, demands := range demandsList {
-		if len(demands) > 0 {
-			for _, d := range demands {
-				components[d.ComponentType.ComponentType] = append(components[d.ComponentType.ComponentType], d)
-			}
+		for _, d := range demands {
+			components[d.ComponentType.ComponentType] = append(components[d.ComponentType.ComponentType], d)
 		}
 	}
 	resultDemands := make([]*ClusterComponentDemand, 0, len(components))
@@ -253,7 +251,7 @@ func deleteDemands(demands []*ClusterComponentDemand, instance *ComponentInstanc
 		if demand.ComponentType.ComponentType == instance.ComponentType.ComponentType {
 			nodeItems := make([]*ClusterNodeDistributionItem, 0)
 			for _, item := range demand.DistributionItems {
-				if item.ZoneCode == resourceType.GenDomainCodeByName(instance.Location.Region, instance.Location.Zone) ||
+				if item.ZoneCode == resourceType.GenDomainCodeByName(instance.Location.Region, instance.Location.Zone) &&
 					item.SpecCode == knowledge.GenSpecCode(instance.Compute.CpuCores, instance.Compute.Memory) {
 					if item.Count > 1 {
 						newItem := &ClusterNodeDistributionItem{

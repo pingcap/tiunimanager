@@ -558,19 +558,19 @@ func TestDeleteDemands(t *testing.T) {
 		{
 			ComponentType:  &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentPurpose: "compute", ComponentName: "TiDB"},
 			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
-				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
-				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
-				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "region,zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "region,zone2", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "region,zone3", Count: 1},
 			}},
 		{ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentPurpose: "storage", ComponentName: "TiKV"},
 			TotalNodeCount: 4, DistributionItems: []*ClusterNodeDistributionItem{
-				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
-				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
-				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "region,zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "region,zone2", Count: 2},
+				{SpecCode: "4C8G", ZoneCode: "region,zone3", Count: 1},
 			}},
 		{ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
 			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
-				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
+				{SpecCode: "4C8G", ZoneCode: "region,zone1", Count: 3},
 			}}}
 	instance := &ComponentInstance{
 		ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},

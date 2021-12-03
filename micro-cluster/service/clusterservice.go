@@ -226,7 +226,7 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 	request := &management.QueryReq{}
 	err = json.Unmarshal([]byte(req.Request), request)
 	if err != nil {
-		resp.Code = http.StatusBadRequest
+		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
 		resp.Message = err.Error()
 		return
 	}
@@ -241,10 +241,10 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 		}
 		body, err := json.Marshal(response)
 		if err != nil {
-			resp.Code = http.StatusInternalServerError
+			resp.Code = int32(common.TIEM_PARAMETER_INVALID)
 			resp.Message = err.Error()
 		} else {
-			resp.Code = http.StatusOK
+			resp.Code = int32(common.TIEM_SUCCESS)
 			resp.Response = string(body)
 		}
 	}
@@ -308,7 +308,7 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb
 	request := &DetailRequest{}
 	err = json.Unmarshal([]byte(req.Request), request)
 	if err != nil {
-		resp.Code = http.StatusBadRequest
+		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
 		resp.Message = err.Error()
 		return
 	}
@@ -319,7 +319,7 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb
 		resp.Code = int32(err.(framework.TiEMError).GetCode())
 		resp.Message = err.(framework.TiEMError).GetMsg()
 	} else {
-		resp.Code = http.StatusOK
+		resp.Code = int32(common.TIEM_SUCCESS)
 		resp.Response = domain.ExtractClusterInfo(cluster)
 	}
 	return

@@ -18,8 +18,8 @@ package resource
 import (
 	"context"
 
+	"github.com/pingcap-inc/tiem/common/resource"
 	"github.com/pingcap-inc/tiem/library/common"
-	rt "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/resource/management"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
@@ -28,6 +28,11 @@ import (
 
 type GormResourceReadWrite struct {
 	db *gorm.DB
+}
+
+func NewGormChangeFeedReadWrite() *GormResourceReadWrite {
+	m := new(GormResourceReadWrite)
+	return m
 }
 
 func (rw *GormResourceReadWrite) SetDB(db *gorm.DB) {
@@ -83,22 +88,60 @@ func (rw *GormResourceReadWrite) InitTables(ctx context.Context) error {
 		return err
 	}
 	if newTable {
-
+		if err = rw.initSystemDefaultLabels(ctx); err != nil {
+			log.Errorf("init table Label failed, error: %v", err)
+			return err
+		}
 	}
 	return nil
 }
 
 func (rw *GormResourceReadWrite) initSystemDefaultLabels(ctx context.Context) (err error) {
-	for _, v := range rt.DefaultLabelTypes {
+	for _, v := range management.DefaultLabelTypes {
 		err = rw.db.Create(&v).Error
 		if err != nil {
-			return err
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INIT_LABELS_ERROR, "init default label table failed, error: %v", err)
 		}
 	}
-	return err
+	return nil
 }
 
-func NewGormChangeFeedReadWrite() *GormResourceReadWrite {
-	m := new(GormResourceReadWrite)
-	return m
+func (rw *GormResourceReadWrite) Create(ctx context.Context, hosts []rp.Host) (hostIds []string, err error) {
+	tx := rw.DB().Begin()
+	for _, host := range hosts {
+		err = tx.Create(host).Error
+		if err != nil {
+			tx.Rollback()
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_CREATE_HOST_ERROR, "create %s(%s) error, %v", host.HostName, host.IP, err)
+		}
+		hostIds = append(hostIds, host.ID)
+	}
+	err = tx.Commit().Error
+	return
 }
+
+func (rw *GormResourceReadWrite) Delete(ctx context.Context, hostIds []string) (err error) {
+	tx := rw.DB().Begin()
+	for _, hostId := range hostIds {
+		var host rp.Host
+		if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
+			tx.Rollback()
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_LOCK_TABLE_ERROR, "lock host %s(%s) error, %v", hostId, host.IP, err)
+		}
+		err = tx.Delete(&host).Error
+		if err != nil {
+			tx.Rollback()
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_DELETE_HOST_ERROR, "delete host %s(%s) error, %v", hostId, host.IP, err)
+		}
+	}
+	err = tx.Commit().Error
+	return
+}
+
+func (rw *GormResourceReadWrite) Get(ctx context.Context, hostId string) (rp.Host, error)
+func (rw *GormResourceReadWrite) Query(ctx context.Context, cond QueryCond) (hosts []rp.Host, total int64, err error)
+
+func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, status string) (err error)
+func (rw *GormResourceReadWrite) ReserveHost(ctx context.Context, reserved bool) (err error)
+func (rw *GormResourceReadWrite) GetHierarchy(ctx context.Context, filter resource.HostFilter, level int32, depth int32) (root resource.HierarchyTreeNode, err error)
+func (rw *GormResourceReadWrite) GetStocks(ctx context.Context, filter StockFilter) (stock Stock, err error)

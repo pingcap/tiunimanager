@@ -17,35 +17,13 @@
 package management
 
 import (
-	"errors"
 	"time"
 
+	common2 "github.com/pingcap-inc/tiem/common"
+	"github.com/pingcap-inc/tiem/common/resource"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"gorm.io/gorm"
-)
-
-type ClusterType string
-
-const (
-	Database      ClusterType = "Database"
-	DataMigration ClusterType = "DataMigration"
-)
-
-func ValidClusterType(p string) error {
-	if p == string(Database) || p == string(DataMigration) {
-		return nil
-	}
-	return errors.New("valid cluster type: [Database | DataMigration]")
-}
-
-type LabelCategory int8
-
-const (
-	UserSpecify LabelCategory = 0
-	Cluster     LabelCategory = 1
-	Componennt  LabelCategory = 2
-	DiskPerf    LabelCategory = 3
 )
 
 type Label struct {
@@ -77,14 +55,14 @@ func (labels Labels) getLabelNamesByTraits(traits int64) (labelNames []string) {
 }
 
 var DefaultLabelTypes = Labels{
-	string(Database):      {Name: string(Database), Category: int8(Cluster), Trait: 0x0000000000000001},
-	string(DataMigration): {Name: string(DataMigration), Category: int8(Cluster), Trait: 0x0000000000000002},
-	string(Compute):       {Name: string(Compute), Category: int8(Componennt), Trait: 0x0000000000000004},
-	string(Storage):       {Name: string(Storage), Category: int8(Componennt), Trait: 0x0000000000000008},
-	string(Dispatch):      {Name: string(Dispatch), Category: int8(Componennt), Trait: 0x0000000000000010},
-	string(NvmeSSD):       {Name: string(NvmeSSD), Category: int8(DiskPerf), Trait: 0x0000000000000020},
-	string(SSD):           {Name: string(SSD), Category: int8(DiskPerf), Trait: 0x0000000000000040},
-	string(Sata):          {Name: string(Sata), Category: int8(DiskPerf), Trait: 0x0000000000000080},
+	string(common2.EMProductNameTiDB):          {Name: string(common2.EMProductNameTiDB), Category: int8(resource.Cluster), Trait: 0x0000000000000001},
+	string(common2.EMProductNameDataMigration): {Name: string(common2.EMProductNameDataMigration), Category: int8(resource.Cluster), Trait: 0x0000000000000002},
+	string(resource.PurposeCompute):            {Name: string(resource.PurposeCompute), Category: int8(resource.Component), Trait: 0x0000000000000004},
+	string(resource.PurposeStorage):            {Name: string(resource.PurposeStorage), Category: int8(resource.Component), Trait: 0x0000000000000008},
+	string(resource.PurposeSchedule):           {Name: string(resource.PurposeSchedule), Category: int8(resource.Component), Trait: 0x0000000000000010},
+	string(resource.NVMeSSD):                   {Name: string(resource.NVMeSSD), Category: int8(resource.DiskPerf), Trait: 0x0000000000000020},
+	string(resource.SSD):                       {Name: string(resource.SSD), Category: int8(resource.DiskPerf), Trait: 0x0000000000000040},
+	string(resource.SATA):                      {Name: string(resource.SATA), Category: int8(resource.DiskPerf), Trait: 0x0000000000000080},
 }
 
 func GetTraitByName(name string) (trait int64, err error) {

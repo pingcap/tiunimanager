@@ -14,3 +14,56 @@
  ******************************************************************************/
 
 package hostresource
+
+import (
+	"github.com/pingcap-inc/tiem/common"
+	"github.com/pingcap-inc/tiem/common/resource"
+)
+
+type ImportHostsReq struct {
+}
+
+type ImportHostsRsp struct {
+}
+
+type DeleteHostsReq struct {
+	HostID []string `json:"hostIds"`
+}
+
+type DeleteHostsRsp struct {
+	Hosts struct {
+		HostID string `json:"hostId"`
+		Status string `json:"status"`
+	} `json:"hosts"`
+}
+
+type UpdateHostReservedReq struct {
+	HostIDs  []string `json:"hostIds"`
+	Reserved *bool    `json:"reserved"`
+}
+
+type UpdateHostReservedRsp struct {
+}
+
+type UpdateHostStatusReq struct {
+	HostIDs []string `json:"hostIds"`
+	Status  *int32   `json:"status"`
+}
+
+type UpdateHostStatusRsp struct {
+}
+
+type QueryHostsReq struct {
+	common.PageRequest
+	Filter resource.HostFilter `json:"Filter"`
+}
+
+type QueryHostsRsp struct {
+	Hosts []resource.HostInfo `json:"hosts"`
+}
+
+type DownloadHostTemplateFileReq struct {
+}
+
+type DownloadHostTemplateFileRsp struct {
+}

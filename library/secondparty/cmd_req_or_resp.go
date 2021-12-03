@@ -218,40 +218,48 @@ type CmdShowConfigResp struct {
 }
 
 type GlobalComponentConfig struct {
-	TiDBClusterComponent    spec.TiDBClusterComponent
-	ConfigMap 				map[string]interface{}
+	TiDBClusterComponent spec.TiDBClusterComponent
+	ConfigMap            map[string]interface{}
 }
 
 type CmdEditGlobalConfigReq struct {
-	TiUPComponent 			TiUPComponentTypeStr
-	InstanceName  			string
-	GlobalComponentConfigs  []GlobalComponentConfig
-	TimeoutS      			int
-	Flags         			[]string
+	TiUPComponent          TiUPComponentTypeStr
+	InstanceName           string
+	GlobalComponentConfigs []GlobalComponentConfig
+	TimeoutS               int
+	Flags                  []string
 }
 
 type CmdEditInstanceConfigReq struct {
-	TiUPComponent 			TiUPComponentTypeStr
-	InstanceName  			string
-	TiDBClusterComponent    spec.TiDBClusterComponent
-	Host				 	string
-	Port 					int
-	ConfigMap 				map[string]interface{}
-	TimeoutS      			int
-	Flags         			[]string
+	TiUPComponent        TiUPComponentTypeStr
+	InstanceName         string
+	TiDBClusterComponent spec.TiDBClusterComponent
+	Host                 string
+	Port                 int
+	ConfigMap            map[string]interface{}
+	TimeoutS             int
+	Flags                []string
 }
 
 type CmdEditConfigReq struct {
-	TiUPComponent 			TiUPComponentTypeStr
-	InstanceName  			string
-	NewTopo 			    *spec2.Specification
-	TimeoutS      			int
-	Flags         			[]string
+	TiUPComponent TiUPComponentTypeStr
+	InstanceName  string
+	NewTopo       *spec2.Specification
+	TimeoutS      int
+	Flags         []string
 }
 
 type CmdReloadConfigReq struct {
-	TiUPComponent 			TiUPComponentTypeStr
-	InstanceName  			string
-	TimeoutS      			int
-	Flags         			[]string
+	TiUPComponent TiUPComponentTypeStr
+	InstanceName  string
+	TimeoutS      int
+	Flags         []string
+}
+
+type ApiEditConfigReq struct {
+	TiDBClusterComponent spec.TiDBClusterComponent
+	InstanceHost         string
+	InstancePort         uint
+	Headers              map[string]string
+	ConfigMap            map[string]interface{}
 }

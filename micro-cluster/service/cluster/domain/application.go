@@ -444,14 +444,20 @@ func ListCluster(ctx ctx.Context, req *management.QueryReq) ([]*ClusterAggregati
 }
 
 func ExtractClusterInfo(clusterAggregation *ClusterAggregation) string {
-	response := &management.DetailClusterRsp{
+	response := management.DetailClusterRsp{
 		ClusterDisplayInfo:     clusterAggregation.ExtractDisplayInfo(),
 		ClusterTopologyInfo:    clusterAggregation.ExtractTopologyInfo(),
 		Components:             clusterAggregation.ExtractComponentInstances(),
 		ClusterMaintenanceInfo: clusterAggregation.ExtractMaintenanceInfo(),
 	}
 
-	body, err := json.Marshal(response)
+	data := struct {
+		Data management.DetailClusterRsp `json:"data"`
+	}{
+		response,
+	}
+
+	body, err := json.Marshal(&data)
 	if err != nil {
 		return ""
 	}

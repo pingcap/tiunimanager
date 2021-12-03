@@ -443,25 +443,19 @@ func ListCluster(ctx ctx.Context, req *management.QueryReq) ([]*ClusterAggregati
 		req.ClusterStatus, req.ClusterTag, req.Page, req.PageSize)
 }
 
-func ExtractClusterInfo(clusterAggregation *ClusterAggregation) string {
-	response := management.DetailClusterRsp{
+func ExtractClusterInfo(clusterAggregation *ClusterAggregation) (string, error) {
+	response := &management.DetailClusterRsp{
 		ClusterDisplayInfo:     clusterAggregation.ExtractDisplayInfo(),
 		ClusterTopologyInfo:    clusterAggregation.ExtractTopologyInfo(),
 		Components:             clusterAggregation.ExtractComponentInstances(),
 		ClusterMaintenanceInfo: clusterAggregation.ExtractMaintenanceInfo(),
 	}
 
-	data := struct {
-		Data management.DetailClusterRsp `json:"data"`
-	}{
-		response,
-	}
-
-	body, err := json.Marshal(&data)
+	body, err := json.Marshal(response)
 	if err != nil {
-		return ""
+		return "", err
 	}
-	return string(body)
+	return string(body), nil
 }
 
 func GetClusterDetail(ctx ctx.Context, clusterId string) (*ClusterAggregation, error) {

@@ -84,10 +84,6 @@ type DetailClusterRsp struct {
 	Components []ComponentInstance `json:"components"`
 }
 
-type QueryClusterRsp struct {
-	Data []ClusterDisplayInfo `json:"data"`
-}
-
 type DescribeDashboardRsp struct {
 	ClusterId string `json:"clusterId"`
 	Url       string `json:"url"`

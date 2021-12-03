@@ -144,7 +144,7 @@ func Preview(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param queryReq query QueryReq false "query request"
-// @Success 200 {object} controller.ResultWithPage{data=QueryClusterRsp}
+// @Success 200 {object} controller.ResultWithPage{data=[]ClusterDisplayInfo}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -167,7 +167,8 @@ func Query(c *gin.Context) {
 	}
 
 	// Call rpc method
-	controller.InvokeRpcMethod(c, client.ClusterClient.QueryCluster, string(body), controller.DefaultTimeout)
+	response := &[]ClusterDisplayInfo{}
+	controller.InvokeRpcMethod(c, client.ClusterClient.QueryCluster, string(body), response, controller.DefaultTimeout)
 }
 
 // Delete delete cluster
@@ -328,7 +329,8 @@ func Detail(c *gin.Context) {
 	}
 
 	// Call rpc method
-	controller.InvokeRpcMethod(c, client.ClusterClient.DetailCluster, string(body), controller.DefaultTimeout)
+	response := &DetailClusterRsp{}
+	controller.InvokeRpcMethod(c, client.ClusterClient.DetailCluster, string(body), response, controller.DefaultTimeout)
 }
 
 // Takeover takeover a cluster

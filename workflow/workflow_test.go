@@ -128,6 +128,8 @@ func TestFlowManager_AddContext(t *testing.T) {
 
 	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
 	mockFlowRW.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	mockFlowRW.EXPECT().CreateWorkFlowNode(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.DefaultDb.WorkFlowReaderWriter = mockFlowRW
 
 	manager := GetFlowManager()

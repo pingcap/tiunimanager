@@ -101,7 +101,7 @@ func (m *BRReadWrite) CreateBackupStrategy(ctx context.Context, strategy *Backup
 }
 
 func (m *BRReadWrite) UpdateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (err error) {
-	return m.DB(ctx).Model(strategy).Updates(strategy).Error
+	return m.DB(ctx).Model(strategy).Save(strategy).Error
 }
 
 func (m *BRReadWrite) GetBackupStrategy(ctx context.Context, clusterId string) (strategy *BackupStrategy, err error) {

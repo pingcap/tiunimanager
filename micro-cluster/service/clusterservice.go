@@ -173,6 +173,9 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.ClusterId = clusterAggregation.Cluster.Id
+		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
+		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+
 		return nil
 	}
 }

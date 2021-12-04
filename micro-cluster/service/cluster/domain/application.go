@@ -821,6 +821,7 @@ func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 		for _, instance := range component.Nodes {
 			if instance.Status == ClusterStatusUnlined {
 				instance.Status = ClusterStatusOnline
+				framework.Log().Debugf("set instance status online")
 			}
 		}
 	}
@@ -1241,14 +1242,16 @@ func (aggregation *ClusterAggregation) ExtractDisplayInfo() management.ClusterDi
 	if instances == nil || len(instances) == 0{
 		topologyConfig := aggregation.CurrentTopologyConfigRecord
 		displayInfo.IntranetConnectAddresses, displayInfo.ExtranetConnectAddresses, displayInfo.PortList = ConnectAddresses(topologyConfig.ConfigModel)
-
 	} else {
+		displayInfo.IntranetConnectAddresses = make([]string, 0)
+		displayInfo.ExtranetConnectAddresses = make([]string, 0)
+		displayInfo.PortList = make([]int, 0)
+
 		for _, instance := range instances {
 			if instance.ComponentType.ComponentType == "TiDB" && instance.Status == ClusterStatusOnline {
 				address := instance.Host + ":" + strconv.Itoa(instance.PortList[0])
 				displayInfo.IntranetConnectAddresses = append(displayInfo.IntranetConnectAddresses, address)
 				displayInfo.ExtranetConnectAddresses = append(displayInfo.ExtranetConnectAddresses, address)
-				displayInfo.PortList = instance.PortList
 			}
 		}
 	}
@@ -1312,6 +1315,13 @@ func (aggregation *ClusterAggregation) ExtractTopologyInfo() management.ClusterT
 	return topology
 }
 
+func getComponentDisplayPort(list []int) (port int) {
+	if list != nil && len(list) >0  {
+		port = list[0]
+	}
+	return
+}
+
 func (aggregation *ClusterAggregation) ExtractComponentInstances() []management.ComponentInstance {
 	instances := aggregation.CurrentComponentInstances
 
@@ -1327,6 +1337,7 @@ func (aggregation *ClusterAggregation) ExtractComponentInstances() []management.
 				HostId: instance.HostId,
 				HostIp: instance.Host,
 				Ports:  instance.PortList,
+				Port:   getComponentDisplayPort(instance.PortList),
 				Role:   mockRole(),
 				Spec:   mockSpec(),
 				Zone:   mockZone(),

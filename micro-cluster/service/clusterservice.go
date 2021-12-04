@@ -270,6 +270,7 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.ClusterId = clusterAggregation.Cluster.Id
+		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 		return nil
 	}
 }
@@ -288,6 +289,7 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 	}
 	resp.RespStatus = SuccessResponseStatus
 	resp.ClusterId = clusterAggregation.Cluster.Id
+	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 	return nil
 }
 
@@ -305,6 +307,8 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.C
 	}
 	resp.RespStatus = SuccessResponseStatus
 	resp.ClusterId = clusterAggregation.Cluster.Id
+	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+
 	return nil
 }
 

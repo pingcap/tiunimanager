@@ -820,8 +820,8 @@ func setClusterOnline(task *TaskEntity, context *FlowContext) bool {
 	for _, component := range clusterAggregation.AddedClusterComponents {
 		for _, instance := range component.Nodes {
 			if instance.Status == ClusterStatusUnlined {
+				framework.Log().Infof("setinstanceonline")
 				instance.Status = ClusterStatusOnline
-				framework.Log().Debugf("set instance status online")
 			}
 		}
 	}

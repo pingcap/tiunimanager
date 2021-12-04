@@ -13,4 +13,52 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package management
+package changefeed
+
+import (
+	"context"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
+)
+
+type Manager struct {}
+
+func NewManager() *Manager {
+	return &Manager{}
+}
+
+// Create
+// @Description:
+// @Receiver p
+// @Parameter ctx
+// @Parameter name
+// @return string ID of ChangeFeedTask
+// @return error
+func (p *Manager) Create(ctx context.Context, name string) (string, error) {
+	task := &changefeed.ChangeFeedTask{
+		Name: name,
+	}
+
+	task, err := models.GetChangeFeedReaderWriter().Create(ctx, task)
+
+	if err != nil {
+		framework.LogWithContext(ctx).Error("failed to create change feed task, %s", err.Error())
+		return "", framework.SimpleError(common.TIEM_CHANGE_FEED_CREATE_ERROR)
+	}
+
+	return task.ID, nil
+}
+
+func (p *Manager) Delete(ctx context.Context, id string) error {
+
+	err := models.GetChangeFeedReaderWriter().Delete(ctx, id)
+
+	if err != nil {
+		framework.LogWithContext(ctx).Error("failed to create change feed task, %s", err.Error())
+		return framework.SimpleError(common.TIEM_CHANGE_FEED_CREATE_ERROR)
+	}
+
+	return nil
+}

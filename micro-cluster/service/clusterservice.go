@@ -20,7 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
-	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/service/datatransfer/changefeed"
+	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	"net/http"
 	"strconv"
 	"time"
@@ -54,7 +54,7 @@ type ClusterServiceHandler struct {
 	authManager      *user.AuthManager
 	tenantManager    *user.TenantManager
 	userManager      *user.UserManager
-	changeFeedManager *changeFeedManager.ChangeFeedManager
+	changeFeedManager *changeFeedManager.Manager
 }
 
 func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]byte, error) ) {
@@ -80,7 +80,7 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 	request.GetOperator()
 	reqData := request.GetRequest()
 
-	task := &changefeed.ChangeFeedTask{}
+	task := &changefeed.CreateReq{}
 
 	err := json.Unmarshal([]byte(reqData), task)
 
@@ -89,12 +89,12 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 		return nil
 	}
 
-	result := handler.changeFeedManager.Create(task.Name)
+	result, err := handler.changeFeedManager.Create(ctx, task.Name)
 
 	handleResponse(response, err, func() ([]byte, error) {
-		// todo build api response data
-		task.Id = result
-		return json.Marshal(task)
+		return json.Marshal(changefeed.CreateResp{
+			ID: result,
+		})
 	})
 
 	return nil
@@ -126,7 +126,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.userManager = user.NewUserManager(adapt.MicroMetaDbRepo{})
 	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
 	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
-	handler.changeFeedManager = changeFeedManager.NewChangeFeedManager()
+	handler.changeFeedManager = changeFeedManager.NewManager()
 
 	domain.InitFlowMap()
 	return handler

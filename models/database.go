@@ -16,29 +16,75 @@
 package models
 
 import (
-	changefeed2 "github.com/pingcap-inc/tiem/models/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-var defaultDb database
+var defaultDb *database
 
 type database struct {
 	base                   *gorm.DB
-	changeFeedReaderWriter changefeed2.ReaderWriter
+	changeFeedReaderWriter changefeed.ReaderWriter
 }
 
-func open() {
+func Open(fw *framework.BaseFramework, reentry bool) error {
+	fw.GetDataDir()
+	dbFile := fw.GetDataDir() + common.DBDirPrefix + common.SqliteFileName
+	logins := framework.LogForkFile(common.LogFileSystem)
+	// todo how to
+	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+
+	if err != nil || db.Error != nil {
+		logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
+		return err
+	} else {
+		logins.Infof("open database succeed, filepath: %s", dbFile)
+	}
+
+	defaultDb = &database{
+		base: db,
+	}
+
+	if !reentry {
+		defaultDb.initTables()
+		defaultDb.initSystemData()
+	}
+
+	defaultDb.initReaderWriters()
+
+	return nil
+}
+
+func (p *database) initTables() {
+	p.addTable(new(changefeed.ChangeFeedTask))
+
+	// other tables
+}
+
+func (p *database) initReaderWriters() {
+	defaultDb.changeFeedReaderWriter = changefeed.NewGormChangeFeedReadWrite(defaultDb.base)
+}
+
+func (p *database) initSystemData() {
 	// todo
 }
 
-func initReaderWriter() {
-	defaultDb.changeFeedReaderWriter = changefeed2.NewGormChangeFeedReadWrite(defaultDb.base)
+func (p *database) addTable(gormModel interface{}) error {
+	log := framework.LogForkFile(common.LogFileSystem)
+	if !p.base.Migrator().HasTable(gormModel) {
+		err := p.base.Migrator().CreateTable(gormModel)
+		if err != nil {
+			log.Errorf("create table failed, error : %v.", err)
+			return err
+		}
+	}
+
+	return nil
 }
 
-func addTable() {
-	// todo
-}
-
-func GetChangeFeedReaderWriter() changefeed2.ReaderWriter {
+func GetChangeFeedReaderWriter() changefeed.ReaderWriter {
 	return defaultDb.changeFeedReaderWriter
 }

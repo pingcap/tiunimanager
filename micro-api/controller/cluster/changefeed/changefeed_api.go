@@ -29,8 +29,8 @@ import (
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param changeFeedTask body changefeed.ChangeFeedTask true "change feed task request"
-// @Success 200 {object} controller.CommonResult{data=changefeed.ChangeFeedTask{downstream=changefeed.MysqlDownstream}}
+// @Param changeFeedTask body changefeed.CreateReq true "change feed task request"
+// @Success 200 {object} controller.CommonResult{data=changefeed.CreateResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -55,7 +55,7 @@ func Create(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param queryReq query changefeed.QueryReq true "change feed tasks query condition"
-// @Success 200 {object} controller.ResultWithPage{data=[]changefeed.ChangeFeedTaskDetail}
+// @Success 200 {object} controller.ResultWithPage{data=[]changefeed.QueryResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -82,14 +82,14 @@ const paramNameOfChangeFeedTaskId = "changeFeedTaskId"
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=changefeed.ChangeFeedTaskDetail}
+// @Success 200 {object} controller.CommonResult{data=changefeed.DetailResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/ [get]
 func Detail(c *gin.Context) {
 	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &changefeed2.DetailReq{
-		Id: c.Param(paramNameOfChangeFeedTaskId),
+		ID: c.Param(paramNameOfChangeFeedTaskId),
 	})
 
 	if err == nil {
@@ -107,14 +107,14 @@ func Detail(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=changefeed.ChangeFeedTaskDetail}
+// @Success 200 {object} controller.CommonResult{data=changefeed.PauseResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId}/pause [post]
 func Pause(c *gin.Context) {
 	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &changefeed2.PauseReq{
-		Id: c.Param(paramNameOfChangeFeedTaskId),
+		ID: c.Param(paramNameOfChangeFeedTaskId),
 	})
 
 	if err == nil {
@@ -132,7 +132,7 @@ func Pause(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=changefeed.ChangeFeedTaskDetail{downstream=changefeed.TiDBDownstream}}
+// @Success 200 {object} controller.CommonResult{data=changefeed.ResumeResp}}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -157,8 +157,8 @@ func Resume(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Param task body changefeed.ChangeFeedTask true "change feed task"
-// @Success 200 {object} controller.CommonResult{data=changefeed.ChangeFeedTaskDetail{downstream=changefeed.KafkaDownstream}}
+// @Param task body changefeed.UpdateReq true "change feed task"
+// @Success 200 {object} controller.CommonResult{data=changefeed.UpdateResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -189,14 +189,14 @@ func Update(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=changefeed.ChangeFeedTaskDetail}
+// @Success 200 {object} controller.CommonResult{data=changefeed.DeleteResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /changefeeds/{changeFeedTaskId} [delete]
 func Delete(c *gin.Context) {
 	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &changefeed2.DeleteReq{
-		Id: c.Param(paramNameOfChangeFeedTaskId),
+		ID: c.Param(paramNameOfChangeFeedTaskId),
 	})
 
 	if err == nil {

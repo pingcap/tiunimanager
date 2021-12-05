@@ -27,6 +27,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
 
@@ -39,6 +40,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 
+	"github.com/pingcap-inc/tiem/message"
 	"google.golang.org/grpc/codes"
 )
 
@@ -185,16 +187,16 @@ func ImportHost(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(ImportHostRsp{HostId: rsp.HostId}))
 }
 
-func importExcelFile(r io.Reader, reserved bool) ([]*HostInfo, error) {
+func importExcelFile(r io.Reader, reserved bool) ([]*structs.HostInfo, error) {
 	xlsx, err := excelize.OpenReader(r)
 	if err != nil {
 		return nil, err
 	}
 	rows := xlsx.GetRows("Host Information")
-	var hosts []*HostInfo
+	var hosts []*structs.HostInfo
 	for irow, row := range rows {
 		if irow > 0 {
-			var host HostInfo
+			var host structs.HostInfo
 			host.Reserved = reserved
 			host.HostName = row[HOSTNAME_FIELD]
 			addr := net.ParseIP(row[IP_FILED])
@@ -236,18 +238,18 @@ func importExcelFile(r io.Reader, reserved bool) ([]*HostInfo, error) {
 				return nil, errors.New(errMsg)
 			}
 			host.ClusterType = row[CLUSTER_TYPE_FIELD]
-			if err = host.addTraits(host.ClusterType); err != nil {
+			if err = host.AddTraits(host.ClusterType); err != nil {
 				return nil, err
 			}
 
 			host.Purpose = row[PURPOSE_FIELD]
-			purposes := host.getPurposes()
+			purposes := host.GetPurposes()
 			for _, p := range purposes {
 				if err = resource.ValidPurposeType(p); err != nil {
 					errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, p, err)
 					return nil, errors.New(errMsg)
 				}
-				if err = host.addTraits(p); err != nil {
+				if err = host.AddTraits(p); err != nil {
 					return nil, err
 				}
 			}
@@ -257,7 +259,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]*HostInfo, error) {
 				return nil, errors.New(errMsg)
 			}
 			host.DiskType = row[DISKTYPE_FIELD]
-			if err = host.addTraits(host.DiskType); err != nil {
+			if err = host.AddTraits(host.DiskType); err != nil {
 				return nil, err
 			}
 			disksStr := row[DISKS_FIELD]
@@ -308,17 +310,29 @@ func ImportHosts(c *gin.Context) {
 		return
 	}
 
-	rsp, err := doImportBatch(c, hosts)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
-		return
-	}
-	if rsp.Rs.Code != int32(codes.OK) {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
-		return
-	}
+	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &message.ImportHostsReq{
+		HostReserved: reserved,
+		Hosts:        hosts,
+	})
 
-	c.JSON(http.StatusOK, controller.Success(ImportHostsRsp{HostIds: rsp.HostIds}))
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ImportHosts,
+			requestBody,
+			controller.DefaultTimeout)
+	}
+	/*
+		rsp, err := doImportBatch(c, hosts)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
+			return
+		}
+		if rsp.Rs.Code != int32(codes.OK) {
+			c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
+			return
+		}
+
+		c.JSON(http.StatusOK, controller.Success(ImportHostsRsp{HostIds: rsp.HostIds}))
+	*/
 }
 
 // ListHost godoc

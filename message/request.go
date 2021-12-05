@@ -37,9 +37,12 @@ type QueryHostsResp struct {
 }
 
 type ImportHostsReq struct {
+	HostReserved bool                `json:"hostReserved"`
+	Hosts        []*structs.HostInfo `json:"hosts"`
 }
 
 type ImportHostsResp struct {
+	HostIDS []string `json:"hostIds"`
 }
 
 type DeleteHostsReq struct {

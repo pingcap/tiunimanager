@@ -23,6 +23,8 @@
 
 package structs
 
+import "strings"
+
 type DiskInfo struct {
 	ID       string `json:"diskId"`
 	HostId   string `json:"hostId,omitempty"`
@@ -63,6 +65,19 @@ type HostInfo struct {
 	CreatedAt    int64      `json:"createTime"`
 	UpdatedAt    int64      `json:"updateTime"`
 	Disks        []DiskInfo `json:"disks"`
+}
+
+func (h *HostInfo) GetPurposes() []string {
+	return strings.Split(h.Purpose, ",")
+}
+
+func (h *HostInfo) AddTraits(p string) (err error) {
+	if trait, err := GetTraitByName(p); err == nil {
+		h.Traits = h.Traits | trait
+	} else {
+		return err
+	}
+	return nil
 }
 
 type Location struct {

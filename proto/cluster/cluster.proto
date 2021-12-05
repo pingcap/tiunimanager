@@ -61,6 +61,11 @@ service ClusterService {
     rpc GetHierarchy(GetHierarchyRequest) returns (GetHierarchyResponse);
     rpc GetStocks(GetStocksRequest) returns (GetStocksResponse);
 
+    rpc ImportHosts(RpcRequest) returns (RpcResponse);
+    rpc DeleteHosts(RpcRequest) returns (RpcResponse);
+    rpc QueryHosts(RpcRequest) returns (RpcResponse);
+    rpc UpdateHostReserved(RpcRequest) returns (RpcResponse);
+
     // task manager
     rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);
     rpc DetailFlow(DetailFlowRequest) returns (DetailFlowsResponse);

@@ -18,7 +18,7 @@ package resource
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/common/resource"
+	"github.com/pingcap-inc/tiem/common/structs"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 
 	"gorm.io/gorm"
@@ -68,10 +68,10 @@ type ResourceReaderWriter interface {
 	Create(ctx context.Context, hosts []rp.Host) ([]string, error)
 	Delete(ctx context.Context, hostIds []string) (err error)
 	Get(ctx context.Context, hostId string) (rp.Host, error)
-	Query(ctx context.Context, filter resource.HostFilter) (hosts []rp.Host, total int64, err error)
+	Query(ctx context.Context, filter structs.HostFilter) (hosts []rp.Host, total int64, err error)
 
 	UpdateHostStatus(ctx context.Context, status string) (err error)
 	ReserveHost(ctx context.Context, reserved bool) (err error)
-	GetHierarchy(ctx context.Context, filter resource.HostFilter, level int32, depth int32) (root resource.HierarchyTreeNode, err error)
+	GetHierarchy(ctx context.Context, filter structs.HostFilter, level int32, depth int32) (root structs.HierarchyTreeNode, err error)
 	GetStocks(ctx context.Context, filter StockFilter) (stock Stock, err error)
 }

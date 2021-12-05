@@ -83,33 +83,14 @@ type GetHierarchyResp struct {
 
 type GetStocksReq struct {
 	StockCondition struct {
-		StockLocation struct {
-			Region string `json:"Region"`
-			Zone   string `json:"Zone"`
-			Rack   string `json:"Rack"`
-			HostIp string `json:"HostIp"`
-		}
-		StockHostCondition struct {
-			Arch       string `json:"Arch"`
-			HostStatus int32  `json:"HostStatus"`
-			LoadStat   int32  `json:"LoadStat"`
-		}
-		StockDiskCondition struct {
-			DiskType   string `json:"DiskType"`
-			DiskStatus int32  `json:"DiskStatus"`
-			Capacity   int32  `json:"Capacity"`
-		}
+		StockLocation      structs.Location
+		StockHostCondition structs.HostFilter
+		StockDiskCondition structs.DiskFilter
 	} `json:"stockCondition"`
 }
 
 type GetStocksResp struct {
-	Stocks struct {
-		FreeHostCount    int32 `json:"freeHostCount"`
-		FreeCpuCores     int32 `json:"freeCpuCores"`
-		FreeMemory       int32 `json:"freeMemory"`
-		FreeDiskCount    int32 `json:"freeDiskCount"`
-		FreeDiskCapacity int32 `json:"freeDiskCapacity"`
-	} `json:"stocks"`
+	Stocks structs.Stocks `json:"stocks"`
 }
 
 type DownloadHostTemplateFileReq struct {

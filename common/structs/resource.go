@@ -65,6 +65,13 @@ type HostInfo struct {
 	Disks        []DiskInfo `json:"disks"`
 }
 
+type Location struct {
+	Region string `json:"Region"`
+	Zone   string `json:"Zone"`
+	Rack   string `json:"Rack"`
+	HostIp string `json:"HostIp"`
+}
+
 type HostFilter struct {
 	HostID  string `json:"hostId"`
 	Purpose string `json:"purpose" form:"purpose"`
@@ -73,9 +80,23 @@ type HostFilter struct {
 	Arch    string `json:"arch"`
 }
 
+type DiskFilter struct {
+	DiskType   string `json:"DiskType"`
+	DiskStatus int32  `json:"DiskStatus"`
+	Capacity   int32  `json:"Capacity"`
+}
+
 type HierarchyTreeNode struct {
 	Code     string              `json:"Code"`
 	Name     string              `json:"Name"`
 	Prefix   string              `json:"Prefix"`
 	SubNodes []HierarchyTreeNode `json:"SubNodes"`
+}
+
+type Stocks struct {
+	FreeHostCount    int32 `json:"freeHostCount"`
+	FreeCpuCores     int32 `json:"freeCpuCores"`
+	FreeMemory       int32 `json:"freeMemory"`
+	FreeDiskCount    int32 `json:"freeDiskCount"`
+	FreeDiskCapacity int32 `json:"freeDiskCapacity"`
 }

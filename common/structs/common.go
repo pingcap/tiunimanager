@@ -11,7 +11,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
 /*******************************************************************************
@@ -19,10 +18,10 @@
  * @Description:
  * @Author: duanbing@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/11/30
+ * @Date: 2021/12/4
 *******************************************************************************/
 
-package common
+package structs
 
 type Usage struct {
 	Total     float32 `json:"total"`
@@ -73,4 +72,9 @@ type ResultWithPage struct {
 type PageRequest struct {
 	Page     int `json:"page" form:"page"`         //Current page location
 	PageSize int `json:"pageSize" form:"pageSize"` //Number of this request
+}
+
+// AsyncTaskWorkFlowInfo Public information returned by asynchronous tasks
+type AsyncTaskWorkFlowInfo struct {
+	WorkFlowID string `json:"workFlowId"` // Asynchronous task workflow ID
 }

@@ -18,7 +18,7 @@ package resource
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/common/resource"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/resource/management"
@@ -143,5 +143,5 @@ func (rw *GormResourceReadWrite) Query(ctx context.Context, cond QueryCond) (hos
 
 func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, status string) (err error)
 func (rw *GormResourceReadWrite) ReserveHost(ctx context.Context, reserved bool) (err error)
-func (rw *GormResourceReadWrite) GetHierarchy(ctx context.Context, filter resource.HostFilter, level int32, depth int32) (root resource.HierarchyTreeNode, err error)
+func (rw *GormResourceReadWrite) GetHierarchy(ctx context.Context, filter structs.HostFilter, level int32, depth int32) (root structs.HierarchyTreeNode, err error)
 func (rw *GormResourceReadWrite) GetStocks(ctx context.Context, filter StockFilter) (stock Stock, err error)

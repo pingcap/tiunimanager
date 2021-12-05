@@ -13,9 +13,61 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package warehouse
+/*******************************************************************************
+ * @File: resource.go
+ * @Description:
+ * @Author: duanbing@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/4
+*******************************************************************************/
 
-import "github.com/pingcap-inc/tiem/common/resource"
+package message
+
+import (
+	"github.com/pingcap-inc/tiem/common/structs"
+)
+
+type QueryHostsReq struct {
+	structs.PageRequest
+	Filter structs.HostFilter `json:"Filter"`
+}
+
+type QueryHostsResp struct {
+	Hosts []structs.HostInfo `json:"hosts"`
+}
+
+type ImportHostsReq struct {
+}
+
+type ImportHostsResp struct {
+}
+
+type DeleteHostsReq struct {
+	HostID []string `json:"hostIds"`
+}
+
+type DeleteHostsResp struct {
+	Hosts struct {
+		HostID string `json:"hostId"`
+		Status string `json:"status"`
+	} `json:"hosts"`
+}
+
+type UpdateHostReservedReq struct {
+	HostIDs  []string `json:"hostIds"`
+	Reserved *bool    `json:"reserved"`
+}
+
+type UpdateHostReservedResp struct {
+}
+
+type UpdateHostStatusReq struct {
+	HostIDs []string `json:"hostIds"`
+	Status  *int32   `json:"status"`
+}
+
+type UpdateHostStatusResp struct {
+}
 
 type GetHierarchyReq struct {
 	Filter struct {
@@ -25,8 +77,8 @@ type GetHierarchyReq struct {
 	Depth int32 `json:"Depth"`
 }
 
-type GetHierarchyRsp struct {
-	Root resource.HierarchyTreeNode `json:"root"`
+type GetHierarchyResp struct {
+	Root structs.HierarchyTreeNode `json:"root"`
 }
 
 type GetStocksReq struct {
@@ -50,7 +102,7 @@ type GetStocksReq struct {
 	} `json:"stockCondition"`
 }
 
-type GetStocksRsp struct {
+type GetStocksResp struct {
 	Stocks struct {
 		FreeHostCount    int32 `json:"freeHostCount"`
 		FreeCpuCores     int32 `json:"freeCpuCores"`
@@ -58,4 +110,10 @@ type GetStocksRsp struct {
 		FreeDiskCount    int32 `json:"freeDiskCount"`
 		FreeDiskCapacity int32 `json:"freeDiskCapacity"`
 	} `json:"stocks"`
+}
+
+type DownloadHostTemplateFileReq struct {
+}
+
+type DownloadHostTemplateFileResp struct {
 }

@@ -19,8 +19,7 @@ package management
 import (
 	"time"
 
-	common2 "github.com/pingcap-inc/tiem/common"
-	"github.com/pingcap-inc/tiem/common/resource"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"gorm.io/gorm"
@@ -55,14 +54,14 @@ func (labels Labels) getLabelNamesByTraits(traits int64) (labelNames []string) {
 }
 
 var DefaultLabelTypes = Labels{
-	string(common2.EMProductNameTiDB):          {Name: string(common2.EMProductNameTiDB), Category: int8(resource.Cluster), Trait: 0x0000000000000001},
-	string(common2.EMProductNameDataMigration): {Name: string(common2.EMProductNameDataMigration), Category: int8(resource.Cluster), Trait: 0x0000000000000002},
-	string(resource.PurposeCompute):            {Name: string(resource.PurposeCompute), Category: int8(resource.Component), Trait: 0x0000000000000004},
-	string(resource.PurposeStorage):            {Name: string(resource.PurposeStorage), Category: int8(resource.Component), Trait: 0x0000000000000008},
-	string(resource.PurposeSchedule):           {Name: string(resource.PurposeSchedule), Category: int8(resource.Component), Trait: 0x0000000000000010},
-	string(resource.NVMeSSD):                   {Name: string(resource.NVMeSSD), Category: int8(resource.DiskPerf), Trait: 0x0000000000000020},
-	string(resource.SSD):                       {Name: string(resource.SSD), Category: int8(resource.DiskPerf), Trait: 0x0000000000000040},
-	string(resource.SATA):                      {Name: string(resource.SATA), Category: int8(resource.DiskPerf), Trait: 0x0000000000000080},
+	string(constants.EMProductNameTiDB):          {Name: string(constants.EMProductNameTiDB), Category: int8(constants.Cluster), Trait: 0x0000000000000001},
+	string(constants.EMProductNameDataMigration): {Name: string(constants.EMProductNameDataMigration), Category: int8(constants.Cluster), Trait: 0x0000000000000002},
+	string(constants.PurposeCompute):             {Name: string(constants.PurposeCompute), Category: int8(constants.Component), Trait: 0x0000000000000004},
+	string(constants.PurposeStorage):             {Name: string(constants.PurposeStorage), Category: int8(constants.Component), Trait: 0x0000000000000008},
+	string(constants.PurposeSchedule):            {Name: string(constants.PurposeSchedule), Category: int8(constants.Component), Trait: 0x0000000000000010},
+	string(constants.NVMeSSD):                    {Name: string(constants.NVMeSSD), Category: int8(constants.DiskPerf), Trait: 0x0000000000000020},
+	string(constants.SSD):                        {Name: string(constants.SSD), Category: int8(constants.DiskPerf), Trait: 0x0000000000000040},
+	string(constants.SATA):                       {Name: string(constants.SATA), Category: int8(constants.DiskPerf), Trait: 0x0000000000000080},
 }
 
 func GetTraitByName(name string) (trait int64, err error) {

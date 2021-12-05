@@ -11,10 +11,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package resource
+/*******************************************************************************
+ * @File: resource.go
+ * @Description:
+ * @Author: duanbing@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/4
+*******************************************************************************/
+
+package constants
 
 type ArchType string
 
@@ -27,6 +34,7 @@ const (
 )
 
 //Constants for importing host information
+//TODO It is recommended to move to the resource module in api-server
 const (
 	ImportHostTemplateFileName string = "hostInfo_template.xlsx"
 	ImportHostTemplateFilePath string = "./etc"
@@ -87,6 +95,7 @@ const (
 
 type ResourceLabelCategory int8
 
+//TODO It is recommended to move to the resource module in cluster-server
 //Definition of Resource label category
 const (
 	UserSpecify ResourceLabelCategory = 0
@@ -96,6 +105,8 @@ const (
 )
 
 type HierarchyTreeNodeLevel int32
+
+//TODO It is recommended to move to the resource module in cluster-server
 
 const (
 	ROOT HierarchyTreeNodeLevel = iota

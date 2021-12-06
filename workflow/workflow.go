@@ -158,7 +158,7 @@ func (mgr *FlowManager) ListWorkFlows(ctx context.Context, bizId string, fuzzyNa
 }
 
 func (mgr *FlowManager) DetailWorkFlow(ctx context.Context, flowId string) (*FlowWorkAggregation, error) {
-	flow, nodes, err := models.GetWorkFlowReaderWriter().DetailWorkFlow(ctx, flowId)
+	flow, nodes, err := models.GetWorkFlowReaderWriter().QueryDetailWorkFlow(ctx, flowId)
 	if err != nil {
 		return nil, err
 	}

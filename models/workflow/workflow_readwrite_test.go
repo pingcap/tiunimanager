@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-var rw *FlowReadWrite
+var rw *WorkFlowReadWrite
 
 func TestFlowReadWrite_CreateWorkFlow(t *testing.T) {
 	flow := &WorkFlow{
@@ -122,7 +122,7 @@ func TestFlowReadWrite_DetailWorkFlow(t *testing.T) {
 	nodeCreate, errNodeCreate := rw.CreateWorkFlowNode(context.TODO(), node)
 	assert.NoError(t, errNodeCreate)
 
-	flowDetail, nodeDetail, errDetail := rw.DetailWorkFlow(context.TODO(), flowCreate.ID)
+	flowDetail, nodeDetail, errDetail := rw.QueryDetailWorkFlow(context.TODO(), flowCreate.ID)
 	assert.NoError(t, errDetail)
 	assert.Equal(t, flowCreate.ID, flowDetail.ID)
 	assert.Equal(t, nodeCreate.ID, nodeDetail[0].ID)
@@ -223,7 +223,7 @@ func TestFlowReadWrite_UpdateWorkFlowDetail(t *testing.T) {
 	errUpdate := rw.UpdateWorkFlowDetail(context.TODO(), flowCreate, nodes)
 	assert.NoError(t, errUpdate)
 
-	flowQuery, nodeQuery, errQuery := rw.DetailWorkFlow(context.TODO(), flowCreate.ID)
+	flowQuery, nodeQuery, errQuery := rw.QueryDetailWorkFlow(context.TODO(), flowCreate.ID)
 	assert.NoError(t, errQuery)
 	assert.Equal(t, "FlowEndStatus", flowQuery.Status)
 	assert.Equal(t, "NodeEndStatus", nodeQuery[0].Status)

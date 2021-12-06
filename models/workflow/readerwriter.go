@@ -103,5 +103,5 @@ type ReaderWriter interface {
 	// @Return *WorkFlow
 	// @Return []*WorkFlowNode
 	// @Return error
-	DetailWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, nodes []*WorkFlowNode, err error)
+	QueryDetailWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, nodes []*WorkFlowNode, err error)
 }

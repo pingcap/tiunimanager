@@ -23,22 +23,22 @@ import (
 	"gorm.io/gorm"
 )
 
-type FlowReadWrite struct {
+type WorkFlowReadWrite struct {
 	dbCommon.GormDB
 }
 
-func NewFlowReadWrite(db *gorm.DB) *FlowReadWrite {
-	m := &FlowReadWrite{
+func NewFlowReadWrite(db *gorm.DB) *WorkFlowReadWrite {
+	m := &WorkFlowReadWrite{
 		dbCommon.WrapDB(db),
 	}
 	return m
 }
 
-func (m *FlowReadWrite) CreateWorkFlow(ctx context.Context, flow *WorkFlow) (*WorkFlow, error) {
+func (m *WorkFlowReadWrite) CreateWorkFlow(ctx context.Context, flow *WorkFlow) (*WorkFlow, error) {
 	return flow, m.DB(ctx).Create(flow).Error
 }
 
-func (m *FlowReadWrite) UpdateWorkFlowStatus(ctx context.Context, flowId string, status string) (err error) {
+func (m *WorkFlowReadWrite) UpdateWorkFlowStatus(ctx context.Context, flowId string, status string) (err error) {
 	if "" == flowId || "" == status {
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
@@ -53,7 +53,7 @@ func (m *FlowReadWrite) UpdateWorkFlowStatus(ctx context.Context, flowId string,
 		Update("status", status).Error
 }
 
-func (m *FlowReadWrite) GetWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, err error) {
+func (m *WorkFlowReadWrite) GetWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, err error) {
 	if "" == flowId {
 		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
@@ -66,7 +66,7 @@ func (m *FlowReadWrite) GetWorkFlow(ctx context.Context, flowId string) (flow *W
 	return flow, nil
 }
 
-func (m *FlowReadWrite) QueryWorkFlows(ctx context.Context, bizId, fuzzyName, status string, page int, pageSize int) (flows []*WorkFlow, total int64, err error) {
+func (m *WorkFlowReadWrite) QueryWorkFlows(ctx context.Context, bizId, fuzzyName, status string, page int, pageSize int) (flows []*WorkFlow, total int64, err error) {
 	flows = make([]*WorkFlow, pageSize)
 	query := m.DB(ctx).Model(&WorkFlow{})
 	if bizId != "" {
@@ -82,20 +82,20 @@ func (m *FlowReadWrite) QueryWorkFlows(ctx context.Context, bizId, fuzzyName, st
 	return flows, total, err
 }
 
-func (m *FlowReadWrite) CreateWorkFlowNode(ctx context.Context, node *WorkFlowNode) (*WorkFlowNode, error) {
+func (m *WorkFlowReadWrite) CreateWorkFlowNode(ctx context.Context, node *WorkFlowNode) (*WorkFlowNode, error) {
 	return node, m.DB(ctx).Create(node).Error
 }
 
-func (m *FlowReadWrite) UpdateWorkFlowNode(ctx context.Context, node *WorkFlowNode) (err error) {
+func (m *WorkFlowReadWrite) UpdateWorkFlowNode(ctx context.Context, node *WorkFlowNode) (err error) {
 	return m.DB(ctx).Model(node).Where("id = ?", node.ID).Updates(node).Error
 }
 
-func (m *FlowReadWrite) GetWorkFlowNode(ctx context.Context, nodeId string) (node *WorkFlowNode, err error) {
+func (m *WorkFlowReadWrite) GetWorkFlowNode(ctx context.Context, nodeId string) (node *WorkFlowNode, err error) {
 	node = &WorkFlowNode{}
 	return node, m.DB(ctx).Model(node).Where("id = ?", nodeId).First(node).Error
 }
 
-func (m *FlowReadWrite) UpdateWorkFlowDetail(ctx context.Context, flow *WorkFlow, nodes []*WorkFlowNode) (err error) {
+func (m *WorkFlowReadWrite) UpdateWorkFlowDetail(ctx context.Context, flow *WorkFlow, nodes []*WorkFlowNode) (err error) {
 	err = m.UpdateWorkFlowStatus(ctx, flow.ID, flow.Status)
 	if err != nil {
 		return err
@@ -111,7 +111,7 @@ func (m *FlowReadWrite) UpdateWorkFlowDetail(ctx context.Context, flow *WorkFlow
 	return nil
 }
 
-func (m *FlowReadWrite) DetailWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, nodes []*WorkFlowNode, err error) {
+func (m *WorkFlowReadWrite) QueryDetailWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, nodes []*WorkFlowNode, err error) {
 	if "" == flowId {
 		return nil, nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}

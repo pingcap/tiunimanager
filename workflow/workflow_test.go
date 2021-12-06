@@ -239,7 +239,7 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
-	mockFlowRW.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(&wfModel.WorkFlow{
+	mockFlowRW.EXPECT().QueryDetailWorkFlow(gomock.Any(), gomock.Any()).Return(&wfModel.WorkFlow{
 		Name: "flowName",
 	}, nil, nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)

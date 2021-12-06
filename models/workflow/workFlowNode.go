@@ -21,6 +21,7 @@ import (
 	"time"
 )
 
+// WorkFlowNode work flow node infomation
 type WorkFlowNode struct {
 	common.Entities
 	BizID      string `gorm:"default:null;<-:create"`

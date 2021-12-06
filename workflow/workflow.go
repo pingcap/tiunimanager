@@ -90,7 +90,7 @@ type FlowInterface interface {
 	// @Parameter ctx
 	// @Parameter flow
 	// @Return error
-	AsyncStart(flow *WorkFlowAggregation) error
+	AsyncStart(ctx context.Context, flow *WorkFlowAggregation) error
 
 	// Start
 	// @Description: sync start workflow
@@ -98,7 +98,7 @@ type FlowInterface interface {
 	// @Parameter ctx
 	// @Parameter flow
 	// @Return error
-	Start(flow *WorkFlowAggregation) error
+	Start(ctx context.Context, flow *WorkFlowAggregation) error
 
 	// Destroy
 	// @Description: destroy workflow
@@ -107,7 +107,7 @@ type FlowInterface interface {
 	// @Parameter flow
 	// @Parameter reason
 	// @Return error
-	Destroy(flow *WorkFlowAggregation, reason string) error
+	Destroy(ctx context.Context, flow *WorkFlowAggregation, reason string) error
 
 	// Complete
 	// @Description: complete workflow with result
@@ -115,29 +115,29 @@ type FlowInterface interface {
 	// @Parameter ctx
 	// @Parameter flow
 	// @Parameter success
-	Complete(flow *WorkFlowAggregation, success bool)
+	Complete(ctx context.Context, flow *WorkFlowAggregation, success bool)
 }
 
-type FlowManager struct {
+type WorkFlowManager struct {
 	flowDefineMap sync.Map
 }
 
-var manager *FlowManager
+var manager *WorkFlowManager
 
-func GetFlowManager() *FlowManager {
+func GetWorkFlowManager() *WorkFlowManager {
 	if manager == nil {
-		manager = &FlowManager{}
+		manager = &WorkFlowManager{}
 	}
 	return manager
 }
 
-func (mgr *FlowManager) RegisterWorkFlow(ctx context.Context, flowName string, flowDefine *WorkFlowDefine) {
+func (mgr *WorkFlowManager) RegisterWorkFlow(ctx context.Context, flowName string, flowDefine *WorkFlowDefine) {
 	mgr.flowDefineMap.Store(flowName, flowDefine)
 	framework.LogWithContext(ctx).Infof("Register WorkFlow %s success, definition: %+v", flowName, flowDefine)
 	return
 }
 
-func (mgr *FlowManager) GetWorkFlowDefine(ctx context.Context, flowName string) (*WorkFlowDefine, error) {
+func (mgr *WorkFlowManager) GetWorkFlowDefine(ctx context.Context, flowName string) (*WorkFlowDefine, error) {
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
 		framework.LogWithContext(ctx).Errorf("WorkFlow %s not exist", flowName)
@@ -146,7 +146,7 @@ func (mgr *FlowManager) GetWorkFlowDefine(ctx context.Context, flowName string) 
 	return flowDefine.(*WorkFlowDefine), nil
 }
 
-func (mgr *FlowManager) CreateWorkFlow(ctx context.Context, bizId string, flowName string) (*WorkFlowAggregation, error) {
+func (mgr *WorkFlowManager) CreateWorkFlow(ctx context.Context, bizId string, flowName string) (*WorkFlowAggregation, error) {
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
 		return nil, fmt.Errorf("%s workflow definion not exist", flowName)
@@ -156,11 +156,11 @@ func (mgr *FlowManager) CreateWorkFlow(ctx context.Context, bizId string, flowNa
 	return flow, err
 }
 
-func (mgr *FlowManager) ListWorkFlows(ctx context.Context, bizId string, fuzzyName string, status string, page, pageSize int) ([]*workflow.WorkFlow, int64, error) {
+func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, bizId string, fuzzyName string, status string, page, pageSize int) ([]*workflow.WorkFlow, int64, error) {
 	return models.GetWorkFlowReaderWriter().QueryWorkFlows(ctx, bizId, fuzzyName, status, page, pageSize)
 }
 
-func (mgr *FlowManager) DetailWorkFlow(ctx context.Context, flowId string) (*WorkFlowAggregation, error) {
+func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, flowId string) (*WorkFlowAggregation, error) {
 	flow, nodes, err := models.GetWorkFlowReaderWriter().QueryDetailWorkFlow(ctx, flowId)
 	if err != nil {
 		return nil, err
@@ -178,27 +178,31 @@ func (mgr *FlowManager) DetailWorkFlow(ctx context.Context, flowId string) (*Wor
 	}, nil
 }
 
-func (mgr *FlowManager) AddContext(flow *WorkFlowAggregation, key string, value interface{}) {
+func (mgr *WorkFlowManager) AddContext(flow *WorkFlowAggregation, key string, value interface{}) {
 	flow.addContext(key, value)
 	return
 }
 
-func (mgr *FlowManager) AsyncStart(flow *WorkFlowAggregation) error {
+func (mgr *WorkFlowManager) AsyncStart(ctx context.Context, flow *WorkFlowAggregation) error {
+	framework.LogWithContext(ctx).Infof("Begin async start workflow name %s, workflowId %s", flow.Flow.Name, flow.Flow.ID)
 	flow.asyncStart()
 	return nil
 }
 
-func (mgr *FlowManager) Start(flow *WorkFlowAggregation) error {
+func (mgr *WorkFlowManager) Start(ctx context.Context, flow *WorkFlowAggregation) error {
+	framework.LogWithContext(ctx).Infof("Begin sync start workflow name %s, workflowId %s", flow.Flow.Name, flow.Flow.ID)
 	flow.start()
 	return nil
 }
 
-func (mgr *FlowManager) Destroy(flow *WorkFlowAggregation, reason string) error {
+func (mgr *WorkFlowManager) Destroy(ctx context.Context, flow *WorkFlowAggregation, reason string) error {
+	framework.LogWithContext(ctx).Infof("Begin destroy workflow name %s, workflowId %s", flow.Flow.Name, flow.Flow.ID)
 	flow.destroy(reason)
 	return nil
 }
 
-func (mgr *FlowManager) Complete(flow *WorkFlowAggregation, success bool) {
+func (mgr *WorkFlowManager) Complete(ctx context.Context, flow *WorkFlowAggregation, success bool) {
+	framework.LogWithContext(ctx).Infof("Begin complete workflow name %s, workflowId %s", flow.Flow.Name, flow.Flow.ID)
 	flow.complete(success)
 	return
 }

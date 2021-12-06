@@ -51,7 +51,7 @@ func InvokeRpcMethod(
 		opts...,
 	)
 	var withPage func() Page = nil
-	if rpcResponse.Page != nil {
+	if err == nil && rpcResponse.Page != nil {
 		withPage = func() Page {
 			return Page{int(rpcResponse.Page.Page),
 				int(rpcResponse.Page.PageSize),

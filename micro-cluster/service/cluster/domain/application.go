@@ -1239,14 +1239,18 @@ func (aggregation *ClusterAggregation) ExtractDisplayInfo() management.ClusterDi
 		},
 	}
 
+	displayInfo.IntranetConnectAddresses = make([]string, 0)
+	displayInfo.ExtranetConnectAddresses = make([]string, 0)
+	displayInfo.PortList = make([]int, 0)
+
+	if cluster.Status == ClusterStatusUnlined {
+		return displayInfo
+	}
+
 	if instances == nil || len(instances) == 0{
 		topologyConfig := aggregation.CurrentTopologyConfigRecord
 		displayInfo.IntranetConnectAddresses, displayInfo.ExtranetConnectAddresses, displayInfo.PortList = ConnectAddresses(topologyConfig.ConfigModel)
 	} else {
-		displayInfo.IntranetConnectAddresses = make([]string, 0)
-		displayInfo.ExtranetConnectAddresses = make([]string, 0)
-		displayInfo.PortList = make([]int, 0)
-
 		for _, instance := range instances {
 			if instance.ComponentType.ComponentType == "TiDB" && instance.Status == ClusterStatusOnline {
 				address := instance.Host + ":" + strconv.Itoa(instance.PortList[0])

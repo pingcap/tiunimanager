@@ -47,8 +47,8 @@ tiflash_servers:
     flash_proxy_port: {{ index $node.PortList 3 }}
     flash_proxy_status_port: {{ index $node.PortList 4 }}
     metrics_port: {{ index $node.PortList 5 }}
-    deploy_dir: { { $node.DiskPath } }/{{ $.Cluster.Id }}/tiflash-deploy
-    data_dir: { { $node.DiskPath } }/{{ $.Cluster.Id }}/tiflash-data
+    deploy_dir: {{ $node.DiskPath }}/{{ $.Cluster.Id }}/tiflash-deploy
+    data_dir: {{ $node.DiskPath }}/{{ $.Cluster.Id }}/tiflash-data
   {{ end }}
 {{ else if and (eq .ComponentType.ComponentType "TiCDC") (len .Nodes) }}
 cdc_servers:

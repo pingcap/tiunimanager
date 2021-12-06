@@ -84,6 +84,13 @@ service ClusterService {
     rpc DeleteChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc UpdateChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
+
+    // product upgrade path
+    rpc CreateProductUpgradePath(RpcRequest) returns(RpcResponse);
+    rpc DeleteProductUpgradePath(RpcRequest) returns (RpcResponse);
+    rpc UpdateProductUpgradePath(RpcRequest) returns (RpcResponse);
+    rpc QueryProductUpgradePath(RpcRequest) returns (RpcResponse);
+
 }
 
 message ClusterCreateReqDTO {

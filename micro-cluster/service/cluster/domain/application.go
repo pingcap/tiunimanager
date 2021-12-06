@@ -106,13 +106,6 @@ func (cluster *ClusterAggregation) tryStartFlow(ctx ctx.Context, flow *FlowWorkA
 	}
 }
 
-//		StatusCode:      strconv.Itoa(int(aggregation.Cluster.Status)),
-//		StatusName:      aggregation.Cluster.Status.Display(),
-//		CreateTime:      cluster.CreateTime.Unix(),
-//		UpdateTime:      cluster.UpdateTime.Unix(),
-//		DeleteTime:      cluster.DeleteTime.Unix(),
-//		InProcessFlowId: int32(cluster.WorkFlowId),
-
 func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 

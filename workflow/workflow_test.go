@@ -26,15 +26,19 @@ import (
 )
 
 var doNodeName1 = func(task *wfModel.WorkFlowNode, context *FlowContext) bool {
+	task.Success("success")
 	return true
 }
 var doNodeName2 = func(task *wfModel.WorkFlowNode, context *FlowContext) bool {
+	task.Success("success")
 	return true
 }
 var doSuccess = func(task *wfModel.WorkFlowNode, context *FlowContext) bool {
+	task.Success("success")
 	return true
 }
 var doFail = func(task *wfModel.WorkFlowNode, context *FlowContext) bool {
+	task.Success("success")
 	return true
 }
 

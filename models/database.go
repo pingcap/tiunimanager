@@ -27,7 +27,7 @@ var DefaultDb database
 
 type database struct {
 	base                     *gorm.DB
-	changeFeedReaderWriter   changefeed2.ReaderWriter
+	ChangeFeedReaderWriter   changefeed2.ReaderWriter
 	WorkFlowReaderWriter     workflow.ReaderWriter
 	ImportExportReaderWriter importexport.ReaderWriter
 	BrReaderWriter           backuprestore.ReaderWriter
@@ -38,7 +38,7 @@ func open() {
 }
 
 func initReaderWriter() {
-	DefaultDb.changeFeedReaderWriter = changefeed2.NewGormChangeFeedReadWrite(DefaultDb.base)
+	DefaultDb.ChangeFeedReaderWriter = changefeed2.NewGormChangeFeedReadWrite(DefaultDb.base)
 	DefaultDb.WorkFlowReaderWriter = workflow.NewFlowReadWrite(DefaultDb.base)
 	DefaultDb.ImportExportReaderWriter = importexport.NewImportExportReadWrite(DefaultDb.base)
 	DefaultDb.BrReaderWriter = backuprestore.NewBRReadWrite(DefaultDb.base)
@@ -49,7 +49,7 @@ func addTable() {
 }
 
 func GetChangeFeedReaderWriter() changefeed2.ReaderWriter {
-	return DefaultDb.changeFeedReaderWriter
+	return DefaultDb.ChangeFeedReaderWriter
 }
 
 func GetWorkFlowReaderWriter() workflow.ReaderWriter {

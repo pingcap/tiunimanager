@@ -95,7 +95,7 @@ type ReaderWriter interface {
 	// @Return error
 	UpdateWorkFlowDetail(ctx context.Context, flow *WorkFlow, nodes []*WorkFlowNode) (err error)
 
-	// DetailWorkFlow
+	// QueryDetailWorkFlow
 	// @Description: detail workflow with nodes
 	// @Receiver m
 	// @Parameter ctx

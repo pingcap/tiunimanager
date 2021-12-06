@@ -894,3 +894,14 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *
 
 	return nil
 }
+
+func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	return nil
+}
+func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	return nil
+}

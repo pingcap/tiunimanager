@@ -21,15 +21,100 @@ import (
 )
 
 type ReaderWriter interface {
+	// CreateBackupRecord
+	// @Description: create new backup record
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter record
+	// @Return *BackupRecord
+	// @Return error
 	CreateBackupRecord(ctx context.Context, record *BackupRecord) (*BackupRecord, error)
+
+	// UpdateBackupRecord
+	// @Description: update backup record
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter backupId
+	// @Parameter status
+	// @Parameter size
+	// @Parameter backupTso
+	// @Parameter endTime
+	// @Return error
 	UpdateBackupRecord(ctx context.Context, backupId string, status string, size uint64, backupTso int64, endTime time.Time) (err error)
+
+	// GetBackupRecord
+	// @Description: get backup record by Id
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter backupId
+	// @Return *BackupRecord
+	// @Return error
 	GetBackupRecord(ctx context.Context, backupId string) (record *BackupRecord, err error)
+
+	// QueryBackupRecords
+	// @Description: query backup records by condition
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter backupId
+	// @Parameter clusterId
+	// @Parameter startTime
+	// @Parameter endTime
+	// @Parameter page
+	// @Parameter pageSize
+	// @Return []*BackupRecord
+	// @Return total
+	// @Return error
 	QueryBackupRecords(ctx context.Context, clusterId, backupId string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error)
+
+	// DeleteBackupRecord
+	// @Description: delete backup record by Id
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter backupId
+	// @Return error
 	DeleteBackupRecord(ctx context.Context, backupId string) (err error)
 
+	// CreateBackupStrategy
+	// @Description: create new backup record
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter strategy
+	// @Return *BackupStrategy
+	// @Return error
 	CreateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (*BackupStrategy, error)
+
+	// UpdateBackupStrategy
+	// @Description: update backup strategy
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter strategy
+	// @Return error
 	UpdateBackupStrategy(ctx context.Context, strategy *BackupStrategy) (err error)
+
+	// GetBackupStrategy
+	// @Description: get backup strategy by clusterId
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter clusterId
+	// @Return *BackupStrategy
+	// @Return error
 	GetBackupStrategy(ctx context.Context, clusterId string) (strategy *BackupStrategy, err error)
+
+	// QueryBackupStrategy
+	// @Description: query backup strategies by time
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter weekDay
+	// @Parameter startHour
+	// @Return []*BackupStrategy
+	// @Return error
 	QueryBackupStrategy(ctx context.Context, weekDay string, startHour uint32) (strategies []*BackupStrategy, err error)
+
+	// DeleteBackupStrategy
+	// @Description: delete backup strategy by clusterId
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter clusterId
+	// @Return error
 	DeleteBackupStrategy(ctx context.Context, clusterId string) (err error)
 }

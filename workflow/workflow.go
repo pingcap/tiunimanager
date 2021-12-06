@@ -24,15 +24,96 @@ import (
 )
 
 type FlowInterface interface {
+	// RegisterWorkFlow
+	// @Description: register workflow define
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter flowName
+	// @Parameter flowDefine
 	RegisterWorkFlow(ctx context.Context, flowName string, flowDefine *FlowWorkDefine)
+
+	// GetWorkFlowDefine
+	// @Description: get workflow define by flowName
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter flowName
+	// @Return *FlowWorkDefine
+	// @Return error
 	GetWorkFlowDefine(ctx context.Context, flowName string) (*FlowWorkDefine, error)
+
+	// CreateWorkFlow
+	// @Description: create new workflow
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter bizId
+	// @Parameter flowName
+	// @Return *FlowWorkAggregation
+	// @Return error
 	CreateWorkFlow(ctx context.Context, bizId string, flowName string) (*FlowWorkAggregation, error)
+
+	// ListWorkFlows
+	// @Description: list workflows by condition
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter bizId
+	// @Parameter fuzzyName
+	// @Parameter status
+	// @Parameter page
+	// @Parameter pageSize
+	// @Return []*workflow.WorkFlow
+	// @Return total
+	// @Return error
 	ListWorkFlows(ctx context.Context, bizId string, fuzzyName string, status string, page, pageSize int) ([]*workflow.WorkFlow, int64, error)
+
+	// DetailWorkFlow
+	// @Description: create new workflow
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter flowId
+	// @Return *FlowWorkAggregation
+	// @Return error
 	DetailWorkFlow(ctx context.Context, flowId string) (*FlowWorkAggregation, error)
+
+	// AddContext
+	// @Description: add flow context for workflow
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter flow
+	// @Parameter key
+	// @Parameter value
 	AddContext(flow *FlowWorkAggregation, key string, value interface{})
+
+	// AsyncStart
+	// @Description: async start workflow
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter flow
+	// @Return error
 	AsyncStart(flow *FlowWorkAggregation) error
+
+	// Start
+	// @Description: sync start workflow
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter flow
+	// @Return error
 	Start(flow *FlowWorkAggregation) error
+
+	// Destroy
+	// @Description: destroy workflow
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter flow
+	// @Parameter reason
+	// @Return error
 	Destroy(flow *FlowWorkAggregation, reason string) error
+
+	// Complete
+	// @Description: complete workflow with result
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter flow
+	// @Parameter success
 	Complete(flow *FlowWorkAggregation, success bool)
 }
 

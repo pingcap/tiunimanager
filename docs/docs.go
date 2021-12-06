@@ -2745,12 +2745,22 @@ var doc = `{
                 "summary": "query param group",
                 "parameters": [
                     {
+                        "enum": [
+                            0,
+                            1,
+                            2
+                        ],
                         "type": "integer",
                         "example": 0,
                         "name": "dbType",
                         "in": "query"
                     },
                     {
+                        "enum": [
+                            0,
+                            1,
+                            2
+                        ],
                         "type": "integer",
                         "example": 0,
                         "name": "hasDefault",
@@ -2786,7 +2796,7 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "example": "v5.0",
+                        "example": "5.0",
                         "name": "version",
                         "in": "query"
                     }
@@ -5229,6 +5239,9 @@ var doc = `{
                         "type": "string"
                     }
                 },
+                "clusterPortConstraint": {
+                    "$ref": "#/definitions/knowledge.ComponentPortConstraint"
+                },
                 "clusterVersion": {
                     "$ref": "#/definitions/knowledge.ClusterVersion"
                 },
@@ -6099,6 +6112,10 @@ var doc = `{
                 },
                 "hasReboot": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
                     "example": 0
                 },
                 "name": {
@@ -6124,6 +6141,11 @@ var doc = `{
                 },
                 "type": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
                     "example": 0
                 },
                 "unit": {
@@ -6140,10 +6162,12 @@ var doc = `{
             "type": "object",
             "properties": {
                 "instance": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "172.16.10.2"
                 },
                 "value": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2"
                 }
             }
         },
@@ -6151,7 +6175,8 @@ var doc = `{
             "type": "object",
             "properties": {
                 "cluster": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "1"
                 },
                 "instances": {
                     "type": "array",
@@ -6167,29 +6192,71 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
-                "status": {
+                "createTime": {
                     "type": "string"
                 },
-                "taskId": {
+                "deleteTime": {
+                    "type": "string"
+                },
+                "inProcessFlowId": {
                     "type": "integer"
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
                 }
             }
         },
         "parameter.UpdateParam": {
             "type": "object",
             "properties": {
+                "componentType": {
+                    "type": "string",
+                    "example": "TiDB"
+                },
+                "hasReboot": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
+                    "example": 0
+                },
+                "name": {
+                    "type": "string",
+                    "example": "binlog_cache"
+                },
                 "paramId": {
                     "type": "integer",
                     "example": 1
                 },
                 "realValue": {
                     "$ref": "#/definitions/parameter.ParamRealValue"
+                },
+                "source": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3
+                    ],
+                    "example": 0
                 }
             }
         },
         "parameter.UpdateParamsReq": {
             "type": "object",
             "properties": {
+                "needReboot": {
+                    "type": "boolean",
+                    "example": false
+                },
                 "params": {
                     "type": "array",
                     "items": {
@@ -6204,6 +6271,10 @@ var doc = `{
                 "clusterId": {
                     "type": "string",
                     "example": "123"
+                },
+                "needReboot": {
+                    "type": "boolean",
+                    "example": false
                 }
             }
         },
@@ -6214,9 +6285,27 @@ var doc = `{
                     "type": "string",
                     "example": "123"
                 },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "inProcessFlowId": {
+                    "type": "integer"
+                },
                 "paramGroupId": {
                     "type": "integer",
                     "example": 1
+                },
+                "statusCode": {
+                    "type": "string"
+                },
+                "statusName": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
                 }
             }
         },
@@ -6264,14 +6353,26 @@ var doc = `{
             "properties": {
                 "dbType": {
                     "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 1
                 },
                 "groupType": {
                     "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 1
                 },
                 "hasDefault": {
                     "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 1
                 },
                 "name": {
@@ -6294,7 +6395,7 @@ var doc = `{
                 },
                 "version": {
                     "type": "string",
-                    "example": "v5.0"
+                    "example": "5.0"
                 }
             }
         },
@@ -6319,6 +6420,10 @@ var doc = `{
                 },
                 "hasReboot": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ],
                     "example": 0
                 },
                 "name": {
@@ -6343,8 +6448,23 @@ var doc = `{
                         " 1000"
                     ]
                 },
+                "source": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3
+                    ],
+                    "example": 0
+                },
                 "type": {
                     "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
+                    ],
                     "example": 0
                 },
                 "unit": {
@@ -6366,14 +6486,26 @@ var doc = `{
                 },
                 "dbType": {
                     "type": "integer",
-                    "example": 0
+                    "enum": [
+                        1,
+                        2
+                    ],
+                    "example": 1
                 },
                 "groupType": {
                     "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 0
                 },
                 "hasDefault": {
                     "type": "integer",
+                    "enum": [
+                        1,
+                        2
+                    ],
                     "example": 1
                 },
                 "name": {
@@ -6404,7 +6536,7 @@ var doc = `{
                 },
                 "version": {
                     "type": "string",
-                    "example": "v5.0"
+                    "example": "5.0"
                 }
             }
         },

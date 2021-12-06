@@ -21,6 +21,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
+	dbCommon "github.com/pingcap-inc/tiem/models/common"
 )
 
 type Manager struct {}
@@ -38,14 +39,20 @@ func NewManager() *Manager {
 // @return error
 func (p *Manager) Create(ctx context.Context, name string) (string, error) {
 	task := &changefeed.ChangeFeedTask{
+		Entity: dbCommon.Entity{
+			TenantId: "1111",
+		},
 		Name: name,
+		Downstream: changefeed.MysqlDownstream{
+			WorkerCount: 3,
+		},
 	}
 
 	task, err := models.GetChangeFeedReaderWriter().Create(ctx, task)
 
 	if err != nil {
 		framework.LogWithContext(ctx).Error("failed to create change feed task, %s", err.Error())
-		return "", framework.SimpleError(common.TIEM_CHANGE_FEED_CREATE_ERROR)
+		return "", framework.WrapError(common.TIEM_CHANGE_FEED_CREATE_ERROR, "failed to create change feed task", err)
 	}
 
 	return task.ID, nil

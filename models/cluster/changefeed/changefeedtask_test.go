@@ -81,7 +81,7 @@ func TestGormChangeFeedReadWrite_Create(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			
+
 			got, err := testRW.Create(tt.args.ctx, tt.args.task)
 			defer testRW.Delete(context.TODO(), got.ID)
 
@@ -226,14 +226,14 @@ func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
 		targetStatus int8
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name        string
+		args        args
+		wantErr     bool
 		finalStatus int8
 	}{
 		{"locked", args{context.TODO(), locked.ID, newStatus}, false, newStatus},
-		{"unlocked", args{context.TODO(), unlocked.ID, newStatus},true, 0},
-		{"notExisted", args{context.TODO(), notExisted, newStatus},true, 0},
+		{"unlocked", args{context.TODO(), unlocked.ID, newStatus}, true, 0},
+		{"notExisted", args{context.TODO(), notExisted, newStatus}, true, 0},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

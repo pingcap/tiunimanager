@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -97,6 +96,8 @@ type ComponentNodeDisplayInfo struct {
 
 type ComponentNodeInstanceInfo struct {
 	HostId string                 `json:"hostId"`
+	HostIp string                 `json:"HostIp"`
+	Ports  []int                  `json:"ports"`
 	Port   int                    `json:"port"`
 	Role   ComponentNodeRole      `json:"role"`
 	Spec   warehouse.SpecBaseInfo `json:"spec"`

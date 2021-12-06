@@ -577,7 +577,7 @@ func TestFlowWorkAggregation_AddContext(t *testing.T) {
 }
 
 func TestFlowWorkAggregation_GetAllTaskDef(t *testing.T) {
-	flow , err := CreateFlowWork(context.TODO(), "testFlow", "testFlow", &Operator{})
+	flow, err := CreateFlowWork(context.TODO(), "testFlow", "testFlow", &Operator{})
 	if err == nil {
 		def := flow.GetAllTaskDef()
 		assert.True(t, len(def) > 0)
@@ -585,7 +585,7 @@ func TestFlowWorkAggregation_GetAllTaskDef(t *testing.T) {
 }
 
 func TestFlowWorkAggregation_ExtractTaskDTO(t *testing.T) {
-	flow := FlowWorkAggregation {
+	flow := FlowWorkAggregation{
 		Tasks: []*TaskEntity{
 			{Id: 1, Status: 1, TaskName: "name1"},
 			{Id: 2, Status: 0, TaskName: "name1"},

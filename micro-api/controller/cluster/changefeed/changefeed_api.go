@@ -41,7 +41,7 @@ func Create(c *gin.Context) {
 	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask,
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &changefeed2.ChangeFeedTask{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -66,7 +66,7 @@ func Query(c *gin.Context) {
 	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryChangeFeedTasks,
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryChangeFeedTasks, make([][]changefeed2.ChangeFeedTaskDetail, 0),
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -93,7 +93,7 @@ func Detail(c *gin.Context) {
 	})
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask,
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &changefeed2.ChangeFeedTaskDetail{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -118,7 +118,7 @@ func Pause(c *gin.Context) {
 	})
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask,
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &changefeed2.ChangeFeedTaskDetail{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -143,7 +143,7 @@ func Resume(c *gin.Context) {
 	})
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask,
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &changefeed2.ChangeFeedTaskDetail{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -175,7 +175,7 @@ func Update(c *gin.Context) {
 		})
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask,
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &changefeed2.ChangeFeedTaskDetail{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -200,7 +200,7 @@ func Delete(c *gin.Context) {
 	})
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask,
+		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &changefeed2.ChangeFeedTaskDetail{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

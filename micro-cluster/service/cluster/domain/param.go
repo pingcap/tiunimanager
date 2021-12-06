@@ -40,10 +40,44 @@ import (
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 )
 
+type ParamGroupType int32
+
 const (
-	defaultParamGroup = 1
-	customParamGroup  = 2
+	DEFAULT ParamGroupType = 1
+	CUSTOM  ParamGroupType = 2
 )
+
+type ParamSource int32
+
+const (
+	TiUP ParamSource = iota
+	SQL
+	TiupAndSql
+	API
+)
+
+type ParamValueType int32
+
+const (
+	Integer ParamValueType = iota
+	Boolean
+	String
+)
+
+type ModifyParam struct {
+	NeedReboot bool
+	Params     []*ApplyParam
+}
+
+type ApplyParam struct {
+	ParamId       int64
+	Name          string
+	ComponentType string
+	HasReboot     int32
+	Source        int32
+	Type          int32
+	RealValue     clusterpb.ParamRealValueDTO
+}
 
 func CreateParamGroup(ctx context.Context, req *clusterpb.CreateParamGroupRequest, resp *clusterpb.CreateParamGroupResponse) error {
 	dbReq := dbpb.DBCreateParamGroupRequest{}
@@ -86,7 +120,7 @@ func DeleteParamGroup(ctx context.Context, req *clusterpb.DeleteParamGroupReques
 		framework.LogWithContext(ctx).Errorf("delete param group req: %v, err: %v", req, err)
 		return err
 	}
-	if group.ParamGroup.HasDefault == defaultParamGroup {
+	if group.ParamGroup.HasDefault == int32(DEFAULT) {
 		resp.RespStatus = &clusterpb.ResponseStatusDTO{Code: int32(common.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL), Message: common.TIEM_DEFAULT_PARAM_GROUP_NOT_DEL.Explain()}
 		return nil
 	}
@@ -198,7 +232,7 @@ func CopyParamGroup(ctx context.Context, req *clusterpb.CopyParamGroupRequest, r
 		Name:       req.Name,
 		Note:       req.Note,
 		DbType:     group.ParamGroup.DbType,
-		HasDefault: customParamGroup,
+		HasDefault: int32(CUSTOM),
 		Version:    group.ParamGroup.Version,
 		Spec:       group.ParamGroup.Spec,
 		GroupType:  group.ParamGroup.GroupType,

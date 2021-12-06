@@ -92,7 +92,7 @@ func TestFlowManager_Start(t *testing.T) {
 
 	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
 	assert.NoError(t, errCreate)
-	errStart := manager.Start(flow)
+	errStart := manager.Start(context.TODO(), flow)
 	assert.NoError(t, errStart)
 }
 
@@ -123,7 +123,7 @@ func TestFlowManager_AsyncStart(t *testing.T) {
 
 	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
 	assert.NoError(t, errCreate)
-	errStart := manager.AsyncStart(flow)
+	errStart := manager.AsyncStart(context.TODO(), flow)
 	assert.NoError(t, errStart)
 }
 
@@ -187,7 +187,7 @@ func TestFlowManager_Destroy(t *testing.T) {
 	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
 	assert.NoError(t, errCreate)
 
-	errDestroy := manager.Destroy(flow, "reason")
+	errDestroy := manager.Destroy(context.TODO(), flow, "reason")
 	assert.NoError(t, errDestroy)
 }
 
@@ -219,7 +219,7 @@ func TestFlowManager_Complete(t *testing.T) {
 	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
 	assert.NoError(t, errCreate)
 
-	manager.Complete(flow, true)
+	manager.Complete(context.TODO(), flow, true)
 	assert.Equal(t, string(constants.WorkFlowStatusFinished), flow.Flow.Status)
 }
 

@@ -49,10 +49,10 @@ func TestFlowManager_RegisterWorkFlow(t *testing.T) {
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
-				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
-				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncNode, doNodeName2},
-				"nodeName2Done": {"end", "", "", wfModel.SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", wfModel.SyncFuncNode, doFail},
+				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
+				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
+				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
+				"fail":          {"fail", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -80,10 +80,10 @@ func TestFlowManager_Start(t *testing.T) {
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
-				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
-				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncNode, doNodeName2},
-				"nodeName2Done": {"end", "", "", wfModel.SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", wfModel.SyncFuncNode, doFail},
+				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
+				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
+				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
+				"fail":          {"fail", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -111,10 +111,10 @@ func TestFlowManager_AsyncStart(t *testing.T) {
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
-				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
-				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncNode, doNodeName2},
-				"nodeName2Done": {"end", "", "", wfModel.SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", wfModel.SyncFuncNode, doFail},
+				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
+				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
+				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
+				"fail":          {"fail", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -142,10 +142,10 @@ func TestFlowManager_AddContext(t *testing.T) {
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
-				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
-				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncNode, doNodeName2},
-				"nodeName2Done": {"end", "", "", wfModel.SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", wfModel.SyncFuncNode, doFail},
+				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
+				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
+				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
+				"fail":          {"fail", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -174,10 +174,10 @@ func TestFlowManager_Destroy(t *testing.T) {
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
-				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
-				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncNode, doNodeName2},
-				"nodeName2Done": {"end", "", "", wfModel.SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", wfModel.SyncFuncNode, doFail},
+				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
+				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
+				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
+				"fail":          {"fail", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -206,10 +206,10 @@ func TestFlowManager_Complete(t *testing.T) {
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
-				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
-				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncNode, doNodeName2},
-				"nodeName2Done": {"end", "", "", wfModel.SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", wfModel.SyncFuncNode, doFail},
+				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
+				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
+				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
+				"fail":          {"fail", "", "", SyncFuncNode, doFail},
 			},
 		})
 
@@ -250,10 +250,10 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
-				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
-				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncNode, doNodeName2},
-				"nodeName2Done": {"end", "", "", wfModel.SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", wfModel.SyncFuncNode, doFail},
+				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
+				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
+				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
+				"fail":          {"fail", "", "", SyncFuncNode, doFail},
 			},
 		})
 	_, err := manager.DetailWorkFlow(context.TODO(), "")

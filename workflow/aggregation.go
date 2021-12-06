@@ -169,9 +169,9 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 	}
 
 	switch nodeDefine.ReturnType {
-	case workflow.SyncFuncNode:
+	case SyncFuncNode:
 		return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
-	case workflow.PollingNode:
+	case PollingNode:
 		//todo: wait tiup bizid become string
 		/*
 			ticker := time.NewTicker(3 * time.Second)

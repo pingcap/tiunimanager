@@ -35,13 +35,6 @@ type WorkFlowNode struct {
 	EndTime    time.Time
 }
 
-type NodeReturnType string
-
-const (
-	SyncFuncNode NodeReturnType = "SyncFuncNode"
-	PollingNode  NodeReturnType = "PollingNode"
-)
-
 func (node *WorkFlowNode) Processing() {
 	node.Status = string(constants.WorkFlowStatusProcessing)
 }

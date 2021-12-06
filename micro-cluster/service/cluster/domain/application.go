@@ -155,9 +155,11 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
 
-	err = clusterAggregation.tryStartFlow(ctx, flow)
+	clusterAggregation.updateWorkFlow(flow.FlowWork)
 
-	return clusterAggregation, err
+	flow.AsyncStart()
+	ClusterRepo.Persist(ctx, clusterAggregation)
+	return clusterAggregation, nil
 }
 
 func mergeDemands(demandsList ...[]*ClusterComponentDemand) []*ClusterComponentDemand {

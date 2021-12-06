@@ -355,10 +355,13 @@ func (m *DAOClusterManager) ListClusters(ctx context.Context, clusterId, cluster
 	}
 	if clusterStatus != "" {
 		query = query.Where("status = ?", clusterStatus)
+	} else {
+		query = query.Where("status not in (0, 3)")
 	}
 	if clusterTag != "" {
 		query = query.Where("tags like '%," + clusterTag + ",%'")
 	}
+
 	return clusters, total, query.Count(&total).Order("updated_at desc").Offset(offset).Limit(length).Find(&clusters).Error
 }
 

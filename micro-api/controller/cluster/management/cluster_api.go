@@ -168,7 +168,7 @@ func Query(c *gin.Context) {
 
 	// Call rpc method
 	response := &[]ClusterDisplayInfo{}
-	controller.InvokeRpcMethod(c, client.ClusterClient.QueryCluster, string(body), response, controller.DefaultTimeout)
+	controller.InvokeRpcMethod(c, client.ClusterClient.QueryCluster, response, string(body), controller.DefaultTimeout)
 }
 
 // Delete delete cluster
@@ -328,7 +328,7 @@ func Detail(c *gin.Context) {
 
 	// Call rpc method
 	response := &DetailClusterRsp{}
-	controller.InvokeRpcMethod(c, client.ClusterClient.DetailCluster, string(body), response, controller.DefaultTimeout)
+	controller.InvokeRpcMethod(c, client.ClusterClient.DetailCluster, response, string(body), controller.DefaultTimeout)
 }
 
 // Takeover takeover a cluster

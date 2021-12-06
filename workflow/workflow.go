@@ -18,6 +18,7 @@ package workflow
 import (
 	"context"
 	"fmt"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/workflow"
 	"sync"
@@ -132,12 +133,14 @@ func GetFlowManager() *FlowManager {
 
 func (mgr *FlowManager) RegisterWorkFlow(ctx context.Context, flowName string, flowDefine *FlowWorkDefine) {
 	mgr.flowDefineMap.Store(flowName, flowDefine)
+	framework.LogWithContext(ctx).Infof("Register WorkFlow %s success, definition: %+v", flowName, flowDefine)
 	return
 }
 
 func (mgr *FlowManager) GetWorkFlowDefine(ctx context.Context, flowName string) (*FlowWorkDefine, error) {
 	flowDefine, exist := mgr.flowDefineMap.Load(flowName)
 	if !exist {
+		framework.LogWithContext(ctx).Errorf("WorkFlow %s not exist", flowName)
 		return nil, fmt.Errorf("%s workflow definion not exist", flowName)
 	}
 	return flowDefine.(*FlowWorkDefine), nil

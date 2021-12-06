@@ -16,6 +16,7 @@
 package workflow
 
 import (
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/models/common"
 )
 
@@ -27,5 +28,5 @@ type WorkFlow struct {
 }
 
 func (flow *WorkFlow) Finished() bool {
-	return string(TaskStatusFinished) == flow.Status || string(TaskStatusError) == flow.Status || string(TaskStatusCanceled) == flow.Status
+	return string(constants.WorkFlowStatusFinished) == flow.Status || string(constants.WorkFlowStatusError) == flow.Status || string(constants.WorkFlowStatusCanceled) == flow.Status
 }

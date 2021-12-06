@@ -17,6 +17,7 @@ package workflow
 
 import (
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/models/common"
 	"time"
 )
@@ -34,43 +35,21 @@ type WorkFlowNode struct {
 	EndTime    time.Time
 }
 
-type TaskStatus string
+type NodeReturnType string
 
 const (
-	TaskStatusInit       TaskStatus = "FlowNodeStatusInit"
-	TaskStatusProcessing TaskStatus = "FlowNodeStatusProcessing"
-	TaskStatusFinished   TaskStatus = "FlowNodeStatusFinished"
-	TaskStatusError      TaskStatus = "FlowNodeStatusError"
-	TaskStatusCanceled   TaskStatus = "FlowNodeStatusCanceled"
-)
-
-func (s TaskStatus) Finished() bool {
-	return TaskStatusFinished == s || TaskStatusError == s || TaskStatusCanceled == s
-}
-
-var allTaskStatus = []TaskStatus{
-	TaskStatusInit,
-	TaskStatusProcessing,
-	TaskStatusFinished,
-	TaskStatusError,
-	TaskStatusCanceled,
-}
-
-type TaskReturnType string
-
-const (
-	SyncFuncTask TaskReturnType = "SyncFuncTask"
-	PollingTask  TaskReturnType = "PollingTasK"
+	SyncFuncNode NodeReturnType = "SyncFuncNode"
+	PollingNode  NodeReturnType = "PollingNode"
 )
 
 func (node *WorkFlowNode) Processing() {
-	node.Status = string(TaskStatusProcessing)
+	node.Status = string(constants.WorkFlowStatusProcessing)
 }
 
 var defaultSuccessInfo = "success"
 
 func (node *WorkFlowNode) Success(result ...interface{}) {
-	node.Status = string(TaskStatusFinished)
+	node.Status = string(constants.WorkFlowStatusFinished)
 	node.EndTime = time.Now()
 
 	if result == nil {
@@ -86,7 +65,7 @@ func (node *WorkFlowNode) Success(result ...interface{}) {
 }
 
 func (node *WorkFlowNode) Fail(e error) {
-	node.Status = string(TaskStatusError)
+	node.Status = string(constants.WorkFlowStatusError)
 	node.EndTime = time.Now()
 	node.Result = e.Error()
 }

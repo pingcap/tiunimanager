@@ -18,6 +18,7 @@ package workflow
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	common2 "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
 )
@@ -34,7 +35,7 @@ type NodeDefine struct {
 	Name         string
 	SuccessEvent string
 	FailEvent    string
-	ReturnType   workflow.TaskReturnType
+	ReturnType   workflow.NodeReturnType
 	Executor     NodeExecutor
 }
 
@@ -49,7 +50,7 @@ func (define *FlowWorkDefine) getInstance(ctx context.Context, bizId string, dat
 			Name:  define.FlowName,
 			BizID: bizId,
 			Entities: common2.Entities{
-				Status: string(workflow.TaskStatusInit),
+				Status: constants.WorkFlowStatusInitializing,
 			},
 		},
 		Nodes:   make([]*workflow.WorkFlowNode, 0, 4),
@@ -72,11 +73,11 @@ func CompositeExecutor(executors ...NodeExecutor) NodeExecutor {
 }
 
 func defaultEnd(node *workflow.WorkFlowNode, context *FlowContext) bool {
-	node.Status = string(workflow.TaskStatusFinished)
+	node.Status = constants.WorkFlowStatusFinished
 	return true
 }
 
 func defaultFail(node *workflow.WorkFlowNode, context *FlowContext) bool {
-	node.Status = string(workflow.TaskStatusError)
+	node.Status = constants.WorkFlowStatusError
 	return true
 }

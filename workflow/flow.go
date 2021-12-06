@@ -17,6 +17,7 @@ package workflow
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap/errors"
 	//"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -89,7 +90,7 @@ func (flow *FlowWorkAggregation) GetFlowNodeNameList() []string {
 }
 
 func (flow *FlowWorkAggregation) start() {
-	flow.FlowWork.Status = string(workflow.TaskStatusProcessing)
+	flow.FlowWork.Status = constants.WorkFlowStatusProcessing
 	start := flow.Define.TaskNodes["start"]
 	result := flow.handle(start)
 	flow.complete(result)
@@ -102,7 +103,7 @@ func (flow *FlowWorkAggregation) asyncStart() {
 }
 
 func (flow *FlowWorkAggregation) destroy(reason string) {
-	flow.FlowWork.Status = string(workflow.TaskStatusCanceled)
+	flow.FlowWork.Status = constants.WorkFlowStatusCanceled
 
 	if flow.CurrentNode != nil {
 		flow.CurrentNode.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
@@ -113,9 +114,9 @@ func (flow *FlowWorkAggregation) destroy(reason string) {
 
 func (flow FlowWorkAggregation) complete(success bool) {
 	if success {
-		flow.FlowWork.Status = string(workflow.TaskStatusFinished)
+		flow.FlowWork.Status = constants.WorkFlowStatusFinished
 	} else {
-		flow.FlowWork.Status = string(workflow.TaskStatusError)
+		flow.FlowWork.Status = constants.WorkFlowStatusError
 	}
 }
 
@@ -144,12 +145,12 @@ func (flow *FlowWorkAggregation) handleTaskError(node *workflow.WorkFlowNode, no
 
 func (flow *FlowWorkAggregation) handle(nodeDefine *NodeDefine) bool {
 	if nodeDefine == nil {
-		flow.FlowWork.Status = string(workflow.TaskStatusFinished)
+		flow.FlowWork.Status = constants.WorkFlowStatusFinished
 		return true
 	}
 	node := &workflow.WorkFlowNode{
 		Entities: common2.Entities{
-			Status: string(workflow.TaskStatusInit),
+			Status: constants.WorkFlowStatusInitializing,
 		},
 		Name:       nodeDefine.Name,
 		BizID:      flow.FlowWork.BizID,
@@ -168,9 +169,9 @@ func (flow *FlowWorkAggregation) handle(nodeDefine *NodeDefine) bool {
 	}
 
 	switch nodeDefine.ReturnType {
-	case workflow.SyncFuncTask:
+	case workflow.SyncFuncNode:
 		return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
-	case workflow.PollingTask:
+	case workflow.PollingNode:
 		//todo: wait tiup bizid become string
 		/*
 			ticker := time.NewTicker(3 * time.Second)

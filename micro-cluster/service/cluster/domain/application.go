@@ -106,12 +106,20 @@ func (cluster *ClusterAggregation) tryStartFlow(ctx ctx.Context, flow *FlowWorkA
 	}
 }
 
+//		StatusCode:      strconv.Itoa(int(aggregation.Cluster.Status)),
+//		StatusName:      aggregation.Cluster.Status.Display(),
+//		CreateTime:      cluster.CreateTime.Unix(),
+//		UpdateTime:      cluster.UpdateTime.Unix(),
+//		DeleteTime:      cluster.DeleteTime.Unix(),
+//		InProcessFlowId: int32(cluster.WorkFlowId),
+
 func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clusterpb.ClusterBaseInfoDTO, commonDemand *clusterpb.ClusterCommonDemandDTO, demandDTOs []*clusterpb.ClusterNodeDemandDTO) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
 	cluster := &Cluster{
 		ClusterName:     clusterInfo.ClusterName,
 		DbPassword:      clusterInfo.DbPassword,
+		Status: 		 ClusterStatusUnlined,
 		ClusterType:     *knowledge.ClusterTypeFromCode(clusterInfo.ClusterType.Code),
 		ClusterVersion:  *knowledge.ClusterVersionFromCode(clusterInfo.ClusterVersion.Code),
 		Tls:             clusterInfo.Tls,
@@ -154,9 +162,9 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
 
-	flow.Start()
-
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
+
+	flow.AsyncStart()
 	ClusterRepo.Persist(ctx, clusterAggregation)
 	return clusterAggregation, nil
 }

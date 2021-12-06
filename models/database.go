@@ -34,7 +34,7 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 	fw.GetDataDir()
 	dbFile := fw.GetDataDir() + common.DBDirPrefix + common.SqliteFileName
 	logins := framework.LogForkFile(common.LogFileSystem)
-	// todo how to
+	// todo tidb?
 	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 	if err != nil || db.Error != nil {

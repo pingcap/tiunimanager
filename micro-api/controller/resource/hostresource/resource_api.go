@@ -187,13 +187,13 @@ func ImportHost(c *gin.Context) {
 	c.JSON(http.StatusOK, controller.Success(ImportHostRsp{HostId: rsp.HostId}))
 }
 
-func importExcelFile(r io.Reader, reserved bool) ([]*structs.HostInfo, error) {
+func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 	xlsx, err := excelize.OpenReader(r)
 	if err != nil {
 		return nil, err
 	}
 	rows := xlsx.GetRows("Host Information")
-	var hosts []*structs.HostInfo
+	var hosts []structs.HostInfo
 	for irow, row := range rows {
 		if irow > 0 {
 			var host structs.HostInfo
@@ -272,7 +272,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]*structs.HostInfo, error) {
 					host.Disks[i].Type = string(resource.DiskType(host.DiskType))
 				}
 			}
-			hosts = append(hosts, &host)
+			hosts = append(hosts, host)
 		}
 	}
 	return hosts, nil
@@ -311,8 +311,7 @@ func ImportHosts(c *gin.Context) {
 	}
 
 	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &message.ImportHostsReq{
-		HostReserved: reserved,
-		Hosts:        hosts,
+		Hosts: hosts,
 	})
 
 	if err == nil {

@@ -72,7 +72,7 @@ func TestFlowManager_Start(t *testing.T) {
 	mockFlowRW.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockFlowRW.EXPECT().CreateWorkFlowNode(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	models.DefaultDb.WorkFlowReaderWriter = mockFlowRW
+	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
@@ -103,7 +103,7 @@ func TestFlowManager_AsyncStart(t *testing.T) {
 	mockFlowRW.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockFlowRW.EXPECT().CreateWorkFlowNode(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	models.DefaultDb.WorkFlowReaderWriter = mockFlowRW
+	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
@@ -134,7 +134,7 @@ func TestFlowManager_AddContext(t *testing.T) {
 	mockFlowRW.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockFlowRW.EXPECT().CreateWorkFlowNode(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	models.DefaultDb.WorkFlowReaderWriter = mockFlowRW
+	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
@@ -166,7 +166,7 @@ func TestFlowManager_Destroy(t *testing.T) {
 	mockFlowRW.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockFlowRW.EXPECT().CreateWorkFlowNode(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	models.DefaultDb.WorkFlowReaderWriter = mockFlowRW
+	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
@@ -198,7 +198,7 @@ func TestFlowManager_Complete(t *testing.T) {
 	mockFlowRW.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockFlowRW.EXPECT().CreateWorkFlowNode(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	models.DefaultDb.WorkFlowReaderWriter = mockFlowRW
+	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
@@ -228,7 +228,7 @@ func TestFlowManager_ListWorkFlows(t *testing.T) {
 
 	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
 	mockFlowRW.EXPECT().QueryWorkFlows(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, int64(0), nil).AnyTimes()
-	models.DefaultDb.WorkFlowReaderWriter = mockFlowRW
+	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	_, _, err := manager.ListWorkFlows(context.TODO(), "", "", "", 1, 10)
 	assert.NoError(t, err)
@@ -242,7 +242,7 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 	mockFlowRW.EXPECT().DetailWorkFlow(gomock.Any(), gomock.Any()).Return(&wfModel.WorkFlow{
 		Name: "flowName",
 	}, nil, nil).AnyTimes()
-	models.DefaultDb.WorkFlowReaderWriter = mockFlowRW
+	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",

@@ -20,6 +20,7 @@ import (
 	"time"
 )
 
+// BackupRecord backup record information
 type BackupRecord struct {
 	common.Entities
 	StorageType  string `gorm:"not null"`

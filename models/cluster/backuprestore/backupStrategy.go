@@ -17,6 +17,7 @@ package backuprestore
 
 import "github.com/pingcap-inc/tiem/models/common"
 
+// BackupStrategy backup strategy information
 type BackupStrategy struct {
 	common.Entities
 	ClusterID  string `gorm:"not null;"`

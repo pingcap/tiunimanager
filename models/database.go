@@ -23,14 +23,14 @@ import (
 	"gorm.io/gorm"
 )
 
-var DefaultDb database
+var defaultDb database
 
 type database struct {
 	base                     *gorm.DB
 	ChangeFeedReaderWriter   changefeed2.ReaderWriter
 	WorkFlowReaderWriter     workflow.ReaderWriter
 	ImportExportReaderWriter importexport.ReaderWriter
-	BrReaderWriter           backuprestore.ReaderWriter
+	BRReaderWriter           backuprestore.ReaderWriter
 }
 
 func open() {
@@ -38,10 +38,10 @@ func open() {
 }
 
 func initReaderWriter() {
-	DefaultDb.ChangeFeedReaderWriter = changefeed2.NewGormChangeFeedReadWrite(DefaultDb.base)
-	DefaultDb.WorkFlowReaderWriter = workflow.NewFlowReadWrite(DefaultDb.base)
-	DefaultDb.ImportExportReaderWriter = importexport.NewImportExportReadWrite(DefaultDb.base)
-	DefaultDb.BrReaderWriter = backuprestore.NewBRReadWrite(DefaultDb.base)
+	defaultDb.ChangeFeedReaderWriter = changefeed2.NewGormChangeFeedReadWrite(defaultDb.base)
+	defaultDb.WorkFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
+	defaultDb.ImportExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
+	defaultDb.BRReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
 }
 
 func addTable() {
@@ -49,17 +49,33 @@ func addTable() {
 }
 
 func GetChangeFeedReaderWriter() changefeed2.ReaderWriter {
-	return DefaultDb.ChangeFeedReaderWriter
+	return defaultDb.ChangeFeedReaderWriter
+}
+
+func SetChangeFeedReaderWriter(rw changefeed2.ReaderWriter) {
+	defaultDb.ChangeFeedReaderWriter = rw
 }
 
 func GetWorkFlowReaderWriter() workflow.ReaderWriter {
-	return DefaultDb.WorkFlowReaderWriter
+	return defaultDb.WorkFlowReaderWriter
+}
+
+func SetWorkFlowReaderWriter(rw workflow.ReaderWriter) {
+	defaultDb.WorkFlowReaderWriter = rw
 }
 
 func GetImportExportReaderWriter() importexport.ReaderWriter {
-	return DefaultDb.ImportExportReaderWriter
+	return defaultDb.ImportExportReaderWriter
 }
 
-func GetBrReaderWriter() backuprestore.ReaderWriter {
-	return DefaultDb.BrReaderWriter
+func SetImportExportReaderWriter(rw importexport.ReaderWriter) {
+	defaultDb.ImportExportReaderWriter = rw
+}
+
+func GetBRReaderWriter() backuprestore.ReaderWriter {
+	return defaultDb.BRReaderWriter
+}
+
+func SetBRReaderWriter(rw backuprestore.ReaderWriter) {
+	defaultDb.BRReaderWriter = rw
 }

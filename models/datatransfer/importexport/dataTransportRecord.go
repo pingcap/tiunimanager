@@ -20,6 +20,7 @@ import (
 	"time"
 )
 
+// DataTransportRecord import and export record information
 type DataTransportRecord struct {
 	common.Entities
 	ClusterID       string `gorm:"index;"`

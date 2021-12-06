@@ -293,11 +293,16 @@ func (m *DAOClusterManager) ListClusterDetails(ctx context.Context, clusterId, c
 		return nil, 0, errors.New(fmt.Sprintf("ListClusterDetails, query cluster lists failed, error: %v", err))
 	}
 
+	result = make([]*ClusterFetchResult, len(clusters))
+
+	if total == 0 {
+		return result, 0,nil
+	}
+
 	flowIds := make([]uint, len(clusters))
 	demandIds := make([]uint, len(clusters))
 	topologyConfigIds := make([]uint, len(clusters))
 
-	result = make([]*ClusterFetchResult, len(clusters))
 	clusterMap := make(map[string]*ClusterFetchResult)
 
 	for i, c := range clusters {

@@ -157,7 +157,7 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 
-	flow.AsyncStart()
+	flow.Start()
 	ClusterRepo.Persist(ctx, clusterAggregation)
 	return clusterAggregation, nil
 }

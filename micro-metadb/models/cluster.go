@@ -355,10 +355,10 @@ func (m *DAOClusterManager) ListClusters(ctx context.Context, clusterId, cluster
 	if clusterName != "" {
 		query = query.Where("name like '%" + clusterName + "%'")
 	}
+
 	if clusterType != "" {
 		query = query.Where("type = ?", clusterType)
 	}
-	query = query.Where("status not in (0, 3)")
 
 	if clusterStatus != "" {
 		query = query.Where("status = ?", clusterStatus)
@@ -368,6 +368,7 @@ func (m *DAOClusterManager) ListClusters(ctx context.Context, clusterId, cluster
 		query = query.Where("tags like '%," + clusterTag + ",%'")
 	}
 
+	query = query.Where("deleted_at is NULL")
 	return clusters, total, query.Count(&total).Order("updated_at desc").Offset(offset).Limit(length).Find(&clusters).Error
 }
 

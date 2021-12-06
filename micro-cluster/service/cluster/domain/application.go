@@ -646,6 +646,8 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	context.SetData(contextTopologyKey, topology)
+
+	task.Success(topology)
 	return true
 }
 

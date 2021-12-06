@@ -326,7 +326,7 @@ func TestListClusters(t *testing.T) {
 	defer MetaDB.Delete(c5)
 
 	c6 := &Cluster{
-		Entity:  Entity{TenantId: "111", Status: 3},
+		Entity:  Entity{TenantId: "111", Status: 1},
 		Type:    "test_type_1",
 		Name:    "whatever",
 		Tags:    "1,tag,2",

@@ -35,7 +35,7 @@ type NodeDefine struct {
 	Name         string
 	SuccessEvent string
 	FailEvent    string
-	ReturnType   workflow.NodeReturnType
+	ReturnType   NodeReturnType
 	Executor     NodeExecutor
 }
 

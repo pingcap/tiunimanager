@@ -45,9 +45,15 @@ type HostStatus string
 //Definition of host status
 const (
 	HostWhatever HostStatus = "Whatever"
+<<<<<<< HEAD
 	HostOnline   HostStatus = "Online"
 	HostOffline  HostStatus = "Offline"
 	HostDeleted  HostStatus = "Deleted"
+=======
+	HostOnline              = "Online"
+	HostOffline             = "Offline"
+	HostDeleted             = "Deleted"
+>>>>>>> origin/sprint/20211231/sprint6
 )
 
 type HostLoadStatus string

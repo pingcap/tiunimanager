@@ -279,7 +279,7 @@ func TestUpdateTopologyConfig(t *testing.T) {
 
 func TestListClusters(t *testing.T) {
 	c1 := &Cluster{
-		Entity:  Entity{TenantId: "111"},
+		Entity:  Entity{TenantId: "111", Status: 1},
 		Type:    "test_type_1",
 		Name:    "test_cluster_name",
 		Tags:    ",tag,",
@@ -289,7 +289,7 @@ func TestListClusters(t *testing.T) {
 	defer MetaDB.Delete(c1)
 
 	c2 := &Cluster{
-		Entity:  Entity{TenantId: "111"},
+		Entity:  Entity{TenantId: "111", Status: 1},
 		Type:    "test_type_1",
 		Name:    "1111test",
 		Tags:    "tag,",
@@ -299,7 +299,7 @@ func TestListClusters(t *testing.T) {
 	defer MetaDB.Delete(c2)
 
 	c3 := &Cluster{
-		Entity:  Entity{TenantId: "111"},
+		Entity:  Entity{TenantId: "111", Status: 1},
 		Type:    "whatever",
 		Name:    "test_cluster_name",
 		Tags:    ",tag",
@@ -309,7 +309,7 @@ func TestListClusters(t *testing.T) {
 	defer MetaDB.Delete(c3)
 
 	c4 := &Cluster{
-		Entity:  Entity{TenantId: "111"},
+		Entity:  Entity{TenantId: "111", Status: 1},
 		Type:    "test_type_1",
 		Name:    "whatever",
 		Tags:    "1,tag,2",
@@ -319,11 +319,21 @@ func TestListClusters(t *testing.T) {
 	defer MetaDB.Delete(c4)
 
 	c5 := &Cluster{
-		Entity:  Entity{TenantId: "111"},
+		Entity:  Entity{TenantId: "111", Status: 1},
 		OwnerId: "ttt",
 	}
 	MetaDB.Create(c5)
 	defer MetaDB.Delete(c5)
+
+	c6 := &Cluster{
+		Entity:  Entity{TenantId: "111", Status: 1},
+		Type:    "test_type_1",
+		Name:    "whatever",
+		Tags:    "1,tag,2",
+		OwnerId: "ttt",
+	}
+	MetaDB.Create(c6)
+	MetaDB.Delete(c6)
 
 	clusterTbl := Dao.ClusterManager()
 	t.Run("cluster id", func(t *testing.T) {
@@ -389,12 +399,12 @@ func TestListClusters(t *testing.T) {
 
 	t.Run("cluster status", func(t *testing.T) {
 		clusterTbl.UpdateClusterStatus(context.TODO(), c4.ID, 9)
-		clusters, total, err := clusterTbl.ListClusters(context.TODO(), "", "", "", "0", "", 0, 10)
+		clusters, total, err := clusterTbl.ListClusters(context.TODO(), "", "", "", "1", "", 0, 10)
 
 		if err != nil {
 			t.Errorf("ListClusters() error = %v", err)
 		}
-		if total < 4 {
+		if total < 3 {
 			t.Errorf("ListClusters() total = %v, want %v at least", total, 4)
 		}
 
@@ -403,8 +413,8 @@ func TestListClusters(t *testing.T) {
 		}
 
 		for _, v := range clusters {
-			if v.Status != 0 {
-				t.Errorf("ListClusters() clusters = %v, wantClusterType = %v", v, 0)
+			if v.Status != 1 {
+				t.Errorf("ListClusters() clusters = %v, wantClusterType = %v", v, 1)
 			}
 		}
 	})

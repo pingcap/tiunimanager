@@ -239,6 +239,7 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 		resp.Message = err.(framework.TiEMError).GetMsg()
 	} else {
 		response := make([]management.ClusterDisplayInfo, 0)
+
 		for _, cluster := range clusters {
 			response = append(response, cluster.ExtractDisplayInfo())
 		}

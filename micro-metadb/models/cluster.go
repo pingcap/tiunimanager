@@ -353,11 +353,12 @@ func (m *DAOClusterManager) ListClusters(ctx context.Context, clusterId, cluster
 	if clusterType != "" {
 		query = query.Where("type = ?", clusterType)
 	}
+	query = query.Where("status not in (0, 3)")
+
 	if clusterStatus != "" {
 		query = query.Where("status = ?", clusterStatus)
-	} else {
-		query = query.Where("status not in (0, 3)")
 	}
+
 	if clusterTag != "" {
 		query = query.Where("tags like '%," + clusterTag + ",%'")
 	}

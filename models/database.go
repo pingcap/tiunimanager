@@ -32,7 +32,7 @@ func open() {
 }
 
 func InitDatabase() {
-	defaultDb =
+
 }
 
 func initReaderWriter() {

@@ -26,6 +26,10 @@ type CreateReq struct {
 	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
 }
 
+type DetailReq struct {
+	ClusterID string `json:"clusterId"`
+}
+
 type DeleteReq struct {
 	AutoBackup      bool `json:"autoBackup" form:"autoBackup"`
 	ClearBackupData bool `json:"clearBackupData" form:"clearBackupData"`

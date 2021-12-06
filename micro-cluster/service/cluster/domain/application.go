@@ -1195,6 +1195,18 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 	return true
 }
 
+func (aggregation *ClusterAggregation) ExtractStatusDTO() *clusterpb.DisplayStatusDTO {
+	cluster := aggregation.Cluster
+	return &clusterpb.DisplayStatusDTO{
+		StatusCode:      strconv.Itoa(int(aggregation.Cluster.Status)),
+		StatusName:      aggregation.Cluster.Status.Display(),
+		CreateTime:      cluster.CreateTime.Unix(),
+		UpdateTime:      cluster.UpdateTime.Unix(),
+		DeleteTime:      cluster.DeleteTime.Unix(),
+		InProcessFlowId: int32(cluster.WorkFlowId),
+	}
+}
+
 func (aggregation *ClusterAggregation) ExtractDisplayInfo() management.ClusterDisplayInfo {
 	cluster := aggregation.Cluster
 	instances := aggregation.CurrentComponentInstances
@@ -1226,18 +1238,21 @@ func (aggregation *ClusterAggregation) ExtractDisplayInfo() management.ClusterDi
 		},
 	}
 
-	for _, instance := range instances {
-		if instance.ComponentType.ComponentType == "TiDB" && instance.Status == ClusterStatusOnline {
-			address := instance.Host + ":" + strconv.Itoa(instance.PortList[0])
-			displayInfo.IntranetConnectAddresses = append(displayInfo.IntranetConnectAddresses, address)
-			displayInfo.ExtranetConnectAddresses = append(displayInfo.ExtranetConnectAddresses, address)
-			displayInfo.PortList = instance.PortList
+	if instances == nil || len(instances) == 0{
+		topologyConfig := aggregation.CurrentTopologyConfigRecord
+		displayInfo.IntranetConnectAddresses, displayInfo.ExtranetConnectAddresses, displayInfo.PortList = ConnectAddresses(topologyConfig.ConfigModel)
+	} else {
+		displayInfo.IntranetConnectAddresses = make([]string, 0)
+		displayInfo.ExtranetConnectAddresses = make([]string, 0)
+		displayInfo.PortList = make([]int, 0)
+
+		for _, instance := range instances {
+			if instance.ComponentType.ComponentType == "TiDB" && instance.Status == ClusterStatusOnline {
+				address := instance.Host + ":" + strconv.Itoa(instance.PortList[0])
+				displayInfo.IntranetConnectAddresses = append(displayInfo.IntranetConnectAddresses, address)
+				displayInfo.ExtranetConnectAddresses = append(displayInfo.ExtranetConnectAddresses, address)
+			}
 		}
-	}
-	if len(displayInfo.IntranetConnectAddresses) == 0 {
-		displayInfo.PortList = []int{4000}
-		displayInfo.IntranetConnectAddresses = []string{"127.0.0.1:4000"}
-		displayInfo.ExtranetConnectAddresses = []string{"127.0.0.1:4000"}
 	}
 
 	return displayInfo
@@ -1251,6 +1266,23 @@ func (aggregation *ClusterAggregation) ExtractMaintenanceInfo() management.Clust
 	return dto
 }
 
+func (aggregation *ClusterAggregation) ExtractBaseInfoDTO() *clusterpb.ClusterBaseInfoDTO {
+	cluster := aggregation.Cluster
+	return &clusterpb.ClusterBaseInfoDTO{
+		ClusterName: cluster.ClusterName,
+		DbPassword:  cluster.DbPassword,
+		ClusterType: &clusterpb.ClusterTypeDTO{
+			Code: cluster.ClusterType.Code,
+			Name: cluster.ClusterType.Name,
+		},
+		ClusterVersion: &clusterpb.ClusterVersionDTO{
+			Code: cluster.ClusterVersion.Code,
+			Name: cluster.ClusterVersion.Name,
+		},
+		Tags: cluster.Tags,
+		Tls:  cluster.Tls,
+	}
+}
 func (aggregation *ClusterAggregation) ExtractTopologyInfo() management.ClusterTopologyInfo {
 	cluster := aggregation.Cluster
 	demands := aggregation.CurrentComponentDemand
@@ -1282,6 +1314,13 @@ func (aggregation *ClusterAggregation) ExtractTopologyInfo() management.ClusterT
 	return topology
 }
 
+func getComponentDisplayPort(list []int) (port int) {
+	if list != nil && len(list) >0  {
+		port = list[0]
+	}
+	return
+}
+
 func (aggregation *ClusterAggregation) ExtractComponentInstances() []management.ComponentInstance {
 	instances := aggregation.CurrentComponentInstances
 
@@ -1297,6 +1336,7 @@ func (aggregation *ClusterAggregation) ExtractComponentInstances() []management.
 				HostId: instance.HostId,
 				HostIp: instance.Host,
 				Ports:  instance.PortList,
+				Port:   getComponentDisplayPort(instance.PortList),
 				Role:   mockRole(),
 				Spec:   mockSpec(),
 				Zone:   mockZone(),

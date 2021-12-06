@@ -50,6 +50,14 @@ func InvokeRpcMethod(
 		},
 		opts...,
 	)
+	var withPage func() Page = nil
+	if rpcResponse.Page != nil {
+		withPage = func() Page {
+			return Page{int(rpcResponse.Page.Page),
+				int(rpcResponse.Page.PageSize),
+				int(rpcResponse.Page.Total)}
+		}
+	}
 	HandleHttpResponse(ctx,
 		err,
 		func() (common.TIEM_ERROR_CODE, string) {
@@ -63,10 +71,6 @@ func InvokeRpcMethod(
 				return response, nil
 			}
 		},
-		func() Page {
-			return Page{int(rpcResponse.Page.Page),
-				int(rpcResponse.Page.PageSize),
-				int(rpcResponse.Page.Total)}
-		},
+		withPage,
 	)
 }

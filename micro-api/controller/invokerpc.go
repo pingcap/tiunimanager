@@ -34,8 +34,8 @@ import (
 func InvokeRpcMethod(
 	ctx *gin.Context,
 	rpcMethod func(ctx context.Context, in *clusterpb.RpcRequest, opts ...client.CallOption) (*clusterpb.RpcResponse, error),
-	requestBody string,
 	response interface{},
+	requestBody string,
 	opts ...client.CallOption) {
 
 	operator := GetOperator(ctx)

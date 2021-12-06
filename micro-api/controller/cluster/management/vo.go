@@ -98,6 +98,7 @@ type ComponentNodeInstanceInfo struct {
 	HostId string                 `json:"hostId"`
 	HostIp string                 `json:"HostIp"`
 	Ports  []int                  `json:"ports"`
+	Port   int                    `json:"port"`
 	Role   ComponentNodeRole      `json:"role"`
 	Spec   warehouse.SpecBaseInfo `json:"spec"`
 	Zone   warehouse.ZoneBaseInfo `json:"zone"`

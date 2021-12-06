@@ -315,10 +315,8 @@ func Stop(c *gin.Context) {
 // @Router /clusters/{clusterId} [get]
 func Detail(c *gin.Context) {
 	// Create request
-	request := struct {
-		clusterID string `json:"clusterId"`
-	}{
-		c.Param("clusterId"),
+	request := &DetailReq{
+		ClusterID: c.Param("clusterId"),
 	}
 
 	body, err := json.Marshal(request)

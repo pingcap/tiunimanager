@@ -173,6 +173,9 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.ClusterId = clusterAggregation.Cluster.Id
+		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
+		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+
 		return nil
 	}
 }
@@ -246,9 +249,11 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 		} else {
 			resp.Code = int32(common.TIEM_SUCCESS)
 			resp.Response = string(body)
-			resp.Page.PageSize = req.Page.PageSize
-			resp.Page.Page = req.Page.Page
-			resp.Page.Total = int32(total)
+			resp.Page = &clusterpb.RpcPage{
+				Page:     int32(request.Page),
+				PageSize: int32(request.PageSize),
+				Total:    int32(total),
+			}
 		}
 	}
 	return
@@ -265,6 +270,7 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.ClusterId = clusterAggregation.Cluster.Id
+		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 		return nil
 	}
 }
@@ -283,6 +289,7 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 	}
 	resp.RespStatus = SuccessResponseStatus
 	resp.ClusterId = clusterAggregation.Cluster.Id
+	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 	return nil
 }
 
@@ -300,15 +307,15 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.C
 	}
 	resp.RespStatus = SuccessResponseStatus
 	resp.ClusterId = clusterAggregation.Cluster.Id
+	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+
 	return nil
 }
 
 func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	framework.LogWithContext(ctx).Info("detail cluster")
-	type DetailRequest struct {
-		clusterID string `json:"clusterId"`
-	}
-	request := &DetailRequest{}
+
+	request := &management.DetailReq{}
 	err = json.Unmarshal([]byte(req.Request), request)
 	if err != nil {
 		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
@@ -316,7 +323,7 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb
 		return
 	}
 
-	cluster, err := domain.GetClusterDetail(ctx, request.clusterID)
+	cluster, err := domain.GetClusterDetail(ctx, request.ClusterID)
 
 	if err != nil {
 		resp.Code = int32(err.(framework.TiEMError).GetCode())
@@ -456,6 +463,8 @@ func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterp
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.ClusterId = clusterAggregation.Cluster.Id
+		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
+		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 	}
 	return nil
 }

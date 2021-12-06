@@ -30,13 +30,13 @@ import (
 
 //
 // FlowWorkAggregation
-// @Description: flowwork aggregation with flowwork definition and tasks
+// @Description: flowwork aggregation with flowwork definition and nodes
 //
 type FlowWorkAggregation struct {
 	FlowWork    *workflow.WorkFlow
 	Define      *FlowWorkDefine
-	CurrentTask *workflow.WorkFlowNode
-	Tasks       []*workflow.WorkFlowNode
+	CurrentNode *workflow.WorkFlowNode
+	Nodes       []*workflow.WorkFlowNode
 	Context     FlowContext
 	FlowError   error
 }
@@ -93,7 +93,7 @@ func (flow *FlowWorkAggregation) start() {
 	start := flow.Define.TaskNodes["start"]
 	result := flow.handle(start)
 	flow.complete(result)
-	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.FlowWork, flow.Tasks)
+	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.FlowWork, flow.Nodes)
 	//TaskRepo.Persist(flow.Context, flow)
 }
 
@@ -104,10 +104,10 @@ func (flow *FlowWorkAggregation) asyncStart() {
 func (flow *FlowWorkAggregation) destroy(reason string) {
 	flow.FlowWork.Status = string(workflow.TaskStatusCanceled)
 
-	if flow.CurrentTask != nil {
-		flow.CurrentTask.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
+	if flow.CurrentNode != nil {
+		flow.CurrentNode.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
 	}
-	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.FlowWork, flow.Tasks)
+	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.FlowWork, flow.Nodes)
 	//TaskRepo.Persist(flow.Context, flow)
 }
 
@@ -123,53 +123,53 @@ func (flow *FlowWorkAggregation) addContext(key string, value interface{}) {
 	flow.Context.SetData(key, value)
 }
 
-func (flow *FlowWorkAggregation) executeTask(task *workflow.WorkFlowNode, taskDefine *TaskDefine) bool {
-	flow.CurrentTask = task
-	flow.Tasks = append(flow.Tasks, task)
-	task.Processing()
-	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.FlowWork, flow.Tasks)
+func (flow *FlowWorkAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) bool {
+	flow.CurrentNode = node
+	flow.Nodes = append(flow.Nodes, node)
+	node.Processing()
+	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.FlowWork, flow.Nodes)
 	//TaskRepo.Persist(flow.Context, flow)
 
-	return taskDefine.Executor(task, &flow.Context)
+	return nodeDefine.Executor(node, &flow.Context)
 }
 
-func (flow *FlowWorkAggregation) handleTaskError(task *workflow.WorkFlowNode, taskDefine *TaskDefine) {
-	flow.FlowError = errors.New(task.Result)
-	if "" != taskDefine.FailEvent {
-		flow.handle(flow.Define.TaskNodes[taskDefine.FailEvent])
+func (flow *FlowWorkAggregation) handleTaskError(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) {
+	flow.FlowError = errors.New(node.Result)
+	if "" != nodeDefine.FailEvent {
+		flow.handle(flow.Define.TaskNodes[nodeDefine.FailEvent])
 	} else {
-		framework.Log().Warnf("no fail event in flow definition, flowname %s", taskDefine.Name)
+		framework.Log().Warnf("no fail event in flow definition, flowname %s", nodeDefine.Name)
 	}
 }
 
-func (flow *FlowWorkAggregation) handle(taskDefine *TaskDefine) bool {
-	if taskDefine == nil {
+func (flow *FlowWorkAggregation) handle(nodeDefine *NodeDefine) bool {
+	if nodeDefine == nil {
 		flow.FlowWork.Status = string(workflow.TaskStatusFinished)
 		return true
 	}
-	task := &workflow.WorkFlowNode{
+	node := &workflow.WorkFlowNode{
 		Entities: common2.Entities{
 			Status: string(workflow.TaskStatusInit),
 		},
-		Name:       taskDefine.Name,
+		Name:       nodeDefine.Name,
 		BizID:      flow.FlowWork.BizID,
 		ParentID:   flow.FlowWork.ID,
-		ReturnType: string(taskDefine.ReturnType),
+		ReturnType: string(nodeDefine.ReturnType),
 		StartTime:  time.Now(),
 	}
 
-	_, _ = models.GetWorkFlowReaderWriter().CreateWorkFlowNode(flow.Context, task)
+	_, _ = models.GetWorkFlowReaderWriter().CreateWorkFlowNode(flow.Context, node)
 	//TaskRepo.AddFlowTask(flow.Context, task, flow.FlowWork.ID)
-	handleSuccess := flow.executeTask(task, taskDefine)
+	handleSuccess := flow.executeTask(node, nodeDefine)
 
 	if !handleSuccess {
-		flow.handleTaskError(task, taskDefine)
+		flow.handleTaskError(node, nodeDefine)
 		return false
 	}
 
-	switch taskDefine.ReturnType {
+	switch nodeDefine.ReturnType {
 	case workflow.SyncFuncTask:
-		return flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
+		return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 	case workflow.PollingTask:
 		//todo: wait tiup bizid become string
 		/*

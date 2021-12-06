@@ -171,7 +171,7 @@ func (mgr *FlowManager) DetailWorkFlow(ctx context.Context, flowId string) (*Flo
 	return &FlowWorkAggregation{
 		FlowWork: flow,
 		Define:   define,
-		Tasks:    nodes,
+		Nodes:    nodes,
 	}, nil
 }
 

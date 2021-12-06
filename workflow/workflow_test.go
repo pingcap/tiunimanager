@@ -25,20 +25,20 @@ import (
 	"testing"
 )
 
-var doNodeName1 = func(task *wfModel.WorkFlowNode, context *FlowContext) bool {
-	task.Success("success")
+var doNodeName1 = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
+	node.Success("success")
 	return true
 }
-var doNodeName2 = func(task *wfModel.WorkFlowNode, context *FlowContext) bool {
-	task.Success("success")
+var doNodeName2 = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
+	node.Success("success")
 	return true
 }
-var doSuccess = func(task *wfModel.WorkFlowNode, context *FlowContext) bool {
-	task.Success("success")
+var doSuccess = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
+	node.Success("success")
 	return true
 }
-var doFail = func(task *wfModel.WorkFlowNode, context *FlowContext) bool {
-	task.Success("success")
+var doFail = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
+	node.Success("success")
 	return true
 }
 
@@ -47,7 +47,7 @@ func TestFlowManager_RegisterWorkFlow(t *testing.T) {
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&FlowWorkDefine{
 			FlowName: "flowName",
-			TaskNodes: map[string]*TaskDefine{
+			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncTask, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncTask, doNodeName2},
 				"nodeName2Done": {"end", "", "", wfModel.SyncFuncTask, doSuccess},
@@ -78,7 +78,7 @@ func TestFlowManager_Start(t *testing.T) {
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&FlowWorkDefine{
 			FlowName: "flowName",
-			TaskNodes: map[string]*TaskDefine{
+			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncTask, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncTask, doNodeName2},
 				"nodeName2Done": {"end", "", "", wfModel.SyncFuncTask, doSuccess},
@@ -109,7 +109,7 @@ func TestFlowManager_AsyncStart(t *testing.T) {
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&FlowWorkDefine{
 			FlowName: "flowName",
-			TaskNodes: map[string]*TaskDefine{
+			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncTask, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncTask, doNodeName2},
 				"nodeName2Done": {"end", "", "", wfModel.SyncFuncTask, doSuccess},
@@ -140,7 +140,7 @@ func TestFlowManager_AddContext(t *testing.T) {
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&FlowWorkDefine{
 			FlowName: "flowName",
-			TaskNodes: map[string]*TaskDefine{
+			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncTask, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncTask, doNodeName2},
 				"nodeName2Done": {"end", "", "", wfModel.SyncFuncTask, doSuccess},
@@ -172,7 +172,7 @@ func TestFlowManager_Destroy(t *testing.T) {
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&FlowWorkDefine{
 			FlowName: "flowName",
-			TaskNodes: map[string]*TaskDefine{
+			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncTask, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncTask, doNodeName2},
 				"nodeName2Done": {"end", "", "", wfModel.SyncFuncTask, doSuccess},
@@ -204,7 +204,7 @@ func TestFlowManager_Complete(t *testing.T) {
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&FlowWorkDefine{
 			FlowName: "flowName",
-			TaskNodes: map[string]*TaskDefine{
+			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncTask, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncTask, doNodeName2},
 				"nodeName2Done": {"end", "", "", wfModel.SyncFuncTask, doSuccess},
@@ -248,7 +248,7 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&FlowWorkDefine{
 			FlowName: "flowName",
-			TaskNodes: map[string]*TaskDefine{
+			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncTask, doNodeName1},
 				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", wfModel.SyncFuncTask, doNodeName2},
 				"nodeName2Done": {"end", "", "", wfModel.SyncFuncTask, doSuccess},

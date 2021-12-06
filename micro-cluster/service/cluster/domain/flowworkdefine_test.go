@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -44,9 +43,9 @@ func TestClusterEndWithPersist(t *testing.T) {
 		}
 		flowCtx := NewFlowContext(ctx.TODO())
 		agg := &ClusterAggregation{
-			Cluster: &Cluster{WorkFlowId: 999},
+			Cluster:        &Cluster{WorkFlowId: 999},
 			ConfigModified: false,
-			FlowModified: false,
+			FlowModified:   false,
 		}
 		flowCtx.SetData(contextClusterKey, agg)
 		ret := CompositeExecutor(clusterEnd, clusterPersist)(task, flowCtx)
@@ -65,9 +64,9 @@ func TestClusterEnd(t *testing.T) {
 		}
 		flowCtx := NewFlowContext(ctx.TODO())
 		agg := &ClusterAggregation{
-			Cluster: &Cluster{WorkFlowId: 999},
+			Cluster:        &Cluster{WorkFlowId: 999},
 			ConfigModified: false,
-			FlowModified: false,
+			FlowModified:   false,
 		}
 		flowCtx.SetData(contextClusterKey, agg)
 		ret := clusterEnd(task, flowCtx)
@@ -80,7 +79,6 @@ func TestClusterEnd(t *testing.T) {
 	})
 }
 
-
 func TestClusterFailWithPersist(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		task := &TaskEntity{
@@ -88,9 +86,9 @@ func TestClusterFailWithPersist(t *testing.T) {
 		}
 		flowCtx := NewFlowContext(ctx.TODO())
 		agg := &ClusterAggregation{
-			Cluster: &Cluster{WorkFlowId: 999},
+			Cluster:        &Cluster{WorkFlowId: 999},
 			ConfigModified: false,
-			FlowModified: false,
+			FlowModified:   false,
 		}
 		flowCtx.SetData(contextClusterKey, agg)
 		ret := CompositeExecutor(clusterFail, clusterPersist)(task, flowCtx)
@@ -109,9 +107,9 @@ func TestClusterFail(t *testing.T) {
 		}
 		flowCtx := NewFlowContext(ctx.TODO())
 		agg := &ClusterAggregation{
-			Cluster: &Cluster{WorkFlowId: 999},
+			Cluster:        &Cluster{WorkFlowId: 999},
 			ConfigModified: false,
-			FlowModified: false,
+			FlowModified:   false,
 		}
 		flowCtx.SetData(contextClusterKey, agg)
 		ret := clusterFail(task, flowCtx)

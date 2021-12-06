@@ -555,8 +555,8 @@ func (handler *DBServiceHandler) CreateClusterRelation(ctx context.Context, req 
 	clusterManager := handler.Dao().ClusterManager()
 	relation, err := clusterManager.CreateClusterRelation(ctx, models.ClusterRelation{Record: models.Record{TenantId: dto.TenantId},
 		SubjectClusterId: dto.SubjectClusterId,
-		ObjectClusterId: dto.ObjectClusterId,
-		RelationType: dto.RelationType,
+		ObjectClusterId:  dto.ObjectClusterId,
+		RelationType:     dto.RelationType,
 	})
 
 	if nil == err {
@@ -853,14 +853,14 @@ func convertToClusterRelationDTO(do *models.ClusterRelation) (dto *dbpb.DBCluste
 		return nil
 	}
 	dto = &dbpb.DBClusterRelationDTO{
-		Id: int64(do.ID),
-		TenantId: do.TenantId,
+		Id:               int64(do.ID),
+		TenantId:         do.TenantId,
 		SubjectClusterId: do.SubjectClusterId,
-		ObjectClusterId: do.ObjectClusterId,
-		RelationType: do.RelationType,
-		CreateTime: do.CreatedAt.Unix(),
-		UpdateTime: do.UpdatedAt.Unix(),
-		DeleteTime: nullTime2Unix(sql.NullTime(do.DeletedAt)),
+		ObjectClusterId:  do.ObjectClusterId,
+		RelationType:     do.RelationType,
+		CreateTime:       do.CreatedAt.Unix(),
+		UpdateTime:       do.UpdatedAt.Unix(),
+		DeleteTime:       nullTime2Unix(sql.NullTime(do.DeletedAt)),
 	}
 	return
 }

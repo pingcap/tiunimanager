@@ -18,11 +18,19 @@ package domain
 
 import (
 	ctx "context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+
+	spec2 "github.com/pingcap-inc/tiem/library/spec"
 
 	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -43,6 +51,7 @@ type ClusterAggregation struct {
 	ClusterMetadata spec.Metadata
 
 	AddedComponentDemand   []*ClusterComponentDemand
+	CurrentComponentDemand []*ClusterComponentDemand
 	AddedClusterComponents []*ComponentGroup
 
 	CurrentComponentInstances []*ComponentInstance
@@ -76,6 +85,7 @@ var contextTopologyKey = "TopologyKey"
 var contextTakeoverReqKey = "takeoverRequest"
 var contextDeleteNodeKey = "deleteNode"
 var contextAllocRequestKey = "allocResourceRequest"
+var contextModifyParamsKey = "modifyParams"
 
 func (cluster *ClusterAggregation) tryStartFlow(ctx ctx.Context, flow *FlowWorkAggregation) error {
 	if cluster.CurrentWorkFlow != nil {
@@ -129,10 +139,11 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 		return nil, err
 	}
 	clusterAggregation := &ClusterAggregation{
-		Cluster:              cluster,
-		MaintainCronTask:     GetDefaultMaintainTask(),
-		CurrentOperator:      operator,
-		AddedComponentDemand: demands,
+		Cluster:                cluster,
+		MaintainCronTask:       GetDefaultMaintainTask(),
+		CurrentOperator:        operator,
+		AddedComponentDemand:   demands,
+		CurrentComponentDemand: demands,
 	}
 
 	// Start the workflow to create a cluster instance
@@ -148,6 +159,46 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	clusterAggregation.updateWorkFlow(flow.FlowWork)
 	ClusterRepo.Persist(ctx, clusterAggregation)
 	return clusterAggregation, nil
+}
+
+func mergeDemands(demandsList ...[]*ClusterComponentDemand) []*ClusterComponentDemand {
+	if len(demandsList) == 0 {
+		return nil
+	}
+	components := make(map[string][]*ClusterComponentDemand)
+	for _, demands := range demandsList {
+		for _, d := range demands {
+			components[d.ComponentType.ComponentType] = append(components[d.ComponentType.ComponentType], d)
+		}
+	}
+	resultDemands := make([]*ClusterComponentDemand, 0, len(components))
+	for _, demands := range components {
+		demand := &ClusterComponentDemand{}
+		distributionItemsMap := make(map[string]map[string]int, 0)
+		demand.ComponentType = demands[0].ComponentType
+		for _, d := range demands {
+			demand.TotalNodeCount += d.TotalNodeCount
+			for _, item := range d.DistributionItems {
+				if distributionItemsMap[item.ZoneCode][item.SpecCode] == 0 {
+					distributionItemsMap[item.ZoneCode] = map[string]int{item.SpecCode: 0}
+				}
+				distributionItemsMap[item.ZoneCode][item.SpecCode] += item.Count
+			}
+		}
+		for zoneCode, values := range distributionItemsMap {
+			for specCode, count := range values {
+				distributionItem := &ClusterNodeDistributionItem{
+					ZoneCode: zoneCode,
+					SpecCode: specCode,
+					Count:    count,
+				}
+				demand.DistributionItems = append(demand.DistributionItems, distributionItem)
+			}
+		}
+		resultDemands = append(resultDemands, demand)
+	}
+
+	return resultDemands
 }
 
 // ScaleOutCluster
@@ -174,6 +225,7 @@ func ScaleOutCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId stri
 
 	// Merge multi demands
 	clusterAggregation.AddedComponentDemand = demands
+	clusterAggregation.CurrentComponentDemand = mergeDemands(clusterAggregation.CurrentComponentDemand, demands)
 	clusterAggregation.DemandsModified = true
 
 	// Start the workflow to scale out a cluster
@@ -190,6 +242,37 @@ func ScaleOutCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId stri
 	return clusterAggregation, nil
 }
 
+func deleteDemands(demands []*ClusterComponentDemand, instance *ComponentInstance) []*ClusterComponentDemand {
+	if len(demands) == 0 || instance == nil {
+		return nil
+	}
+	resultDemands := make([]*ClusterComponentDemand, 0)
+	for _, demand := range demands {
+		if demand.ComponentType.ComponentType == instance.ComponentType.ComponentType {
+			nodeItems := make([]*ClusterNodeDistributionItem, 0)
+			for _, item := range demand.DistributionItems {
+				if item.ZoneCode == resourceType.GenDomainCodeByName(instance.Location.Region, instance.Location.Zone) &&
+					item.SpecCode == knowledge.GenSpecCode(instance.Compute.CpuCores, instance.Compute.Memory) {
+					if item.Count > 1 {
+						newItem := &ClusterNodeDistributionItem{
+							ZoneCode: item.ZoneCode,
+							SpecCode: item.SpecCode,
+							Count:    item.Count - 1,
+						}
+						nodeItems = append(nodeItems, newItem)
+					}
+					demand.TotalNodeCount = demand.TotalNodeCount - 1
+				} else {
+					nodeItems = append(nodeItems, item)
+				}
+			}
+			demand.DistributionItems = nodeItems
+		}
+		resultDemands = append(resultDemands, demand)
+	}
+	return resultDemands
+}
+
 // ScaleInCluster
 // @Description: scale in a cluster
 // @Parameter ope
@@ -204,6 +287,16 @@ func ScaleInCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId, node
 	}
 	operator := parseOperatorFromDTO(ope)
 	clusterAggregation.CurrentOperator = operator
+
+	// get component instance
+	componentInstance := getInstance(clusterAggregation.CurrentComponentInstances, nodeId)
+	if componentInstance == nil {
+		return clusterAggregation, errors.New("instance not exist")
+	}
+
+	// delete cluster demands
+	clusterAggregation.CurrentComponentDemand = deleteDemands(clusterAggregation.CurrentComponentDemand, componentInstance)
+	clusterAggregation.DemandsModified = true
 
 	// Start the workflow to scale in a cluster
 	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowScaleInCluster, operator)
@@ -345,20 +438,41 @@ func StopCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) 
 	return clusterAggregation, err
 }
 
-func ListCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, req *clusterpb.ClusterQueryReqDTO) ([]*ClusterAggregation, int, error) {
-	return ClusterRepo.Query(ctx, req.ClusterId, req.ClusterName, req.ClusterType, req.ClusterStatus, req.ClusterTag,
-		int(req.PageReq.Page), int(req.PageReq.PageSize))
+func ListCluster(ctx ctx.Context, req *management.QueryReq) ([]*ClusterAggregation, int, error) {
+	return ClusterRepo.Query(ctx, req.ClusterId, req.ClusterName, req.ClusterType,
+		req.ClusterStatus, req.ClusterTag, req.Page, req.PageSize)
 }
 
-func GetClusterDetail(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string) (*ClusterAggregation, error) {
+func ExtractClusterInfo(clusterAggregation *ClusterAggregation) (string, error) {
+	response := &management.DetailClusterRsp{
+		ClusterDisplayInfo:     clusterAggregation.ExtractDisplayInfo(),
+		ClusterTopologyInfo:    clusterAggregation.ExtractTopologyInfo(),
+		Components:             clusterAggregation.ExtractComponentInstances(),
+		ClusterMaintenanceInfo: clusterAggregation.ExtractMaintenanceInfo(),
+	}
+
+	body, err := json.Marshal(response)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
+}
+
+func GetClusterDetail(ctx ctx.Context, clusterId string) (*ClusterAggregation, error) {
 	cluster, err := ClusterRepo.Load(ctx, clusterId)
 
 	return cluster, err
 }
 
-func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string, content string) (*ClusterAggregation, error) {
+func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId string, modifyParam *ModifyParam) (*ClusterAggregation, error) {
 	operator := parseOperatorFromDTO(ope)
 
+	b, err := json.Marshal(modifyParam.Params)
+	if err != nil {
+		getLogger().Errorf("modify parameters clusterid = %s, json marshal errStr: %s", clusterId, err.Error())
+		return nil, err
+	}
+	content := string(b)
 	clusterAggregation, err := ClusterRepo.Load(ctx, clusterId)
 	clusterAggregation.CurrentOperator = operator
 	clusterAggregation.LastParameterRecord = &ParameterRecord{
@@ -370,18 +484,14 @@ func ModifyParameters(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterId str
 		return clusterAggregation, errors.New("cluster not exist")
 	}
 
-	//currentFlow := clusterAggregation.CurrentWorkFlow
-	//if currentFlow != nil && !currentFlow.Finished(){
-	//	return clusterAggregation, errors.New("incomplete processing flow")
-	//}
-
 	flow, err := CreateFlowWork(ctx, clusterId, FlowModifyParameters, operator)
 	if err != nil {
-		// todo
 		getLogger().Errorf("modify parameters clusterid = %s, content = %s, errStr: %s", clusterId, content, err.Error())
+		return nil, err
 	}
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
+	flow.AddContext(contextModifyParamsKey, modifyParam)
 
 	flow.Start()
 
@@ -401,6 +511,7 @@ func BuildClusterLogConfig(ctx ctx.Context, clusterId string) error {
 	}
 	flow, err := CreateFlowWork(ctx, clusterAggregation.Cluster.Id, FlowBuildLogConfig, BuildSystemOperator())
 	if err != nil {
+		getLogger().Errorf("build cluster log config clusterid = %s, errStr: %s", clusterId, err.Error())
 		return err
 	}
 
@@ -594,12 +705,6 @@ func scaleInCluster(task *TaskEntity, context *FlowContext) bool {
 	nodeId := context.GetData(contextDeleteNodeKey).(string)
 
 	componentInstance := getInstance(clusterAggregation.CurrentComponentInstances, nodeId)
-	if componentInstance == nil {
-		getLoggerWithContext(context).Errorf("node: %s is not exist in %s", nodeId, cluster.ClusterName)
-		task.Fail(fmt.Errorf("node: %s is not exist", nodeId))
-		return false
-	}
-
 	if knowledge.GetComponentSpec(cluster.ClusterType.Code,
 		cluster.ClusterVersion.Code, componentInstance.ComponentType.ComponentType).ComponentConstraint.ComponentRequired {
 		nodeCount := 0
@@ -746,7 +851,147 @@ func syncTopology(task *TaskEntity, context *FlowContext) bool {
 }
 
 func modifyParameters(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	modifyParam := context.GetData(contextModifyParamsKey).(*ModifyParam)
+	getLoggerWithContext(context).Debugf("got modify need reboot: %v, params size: %d", modifyParam.NeedReboot, len(modifyParam.Params))
+
+	// grouping by parameter source
+	paramContainer := make(map[int32][]*ApplyParam, 0)
+	for i, param := range modifyParam.Params {
+		// if source is 2, then insert tiup and sql respectively
+		getLoggerWithContext(context).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.Cluster)
+		if param.Source == int32(TiupAndSql) {
+			putParamContainer(paramContainer, int32(TiUP), modifyParam, i)
+			putParamContainer(paramContainer, int32(SQL), modifyParam, i)
+		} else {
+			putParamContainer(paramContainer, param.Source, modifyParam, i)
+		}
+	}
+
+	for source, params := range paramContainer {
+		getLoggerWithContext(context).Debugf("loop current param container source: %v, params size: %d", source, len(params))
+		switch source {
+		case int32(TiUP):
+			configs := make([]secondparty.GlobalComponentConfig, len(params))
+			for i, param := range params {
+				cm := map[string]interface{}{}
+				switch param.Type {
+				case int32(Integer):
+					c, err := strconv.Atoi(param.RealValue.Cluster)
+					if err != nil {
+						getLoggerWithContext(context).Errorf("strconv realvalue type int fail, err = %s", err.Error())
+						task.Fail(err)
+						return false
+					}
+					cm[param.Name] = c
+				case int32(Boolean):
+					c, err := strconv.ParseBool(param.RealValue.Cluster)
+					if err != nil {
+						getLoggerWithContext(context).Errorf("strconv realvalue type bool fail, err = %s", err.Error())
+						task.Fail(err)
+						return false
+					}
+					cm[param.Name] = c
+				default:
+					cm[param.Name] = param.RealValue.Cluster
+				}
+				configs[i] = secondparty.GlobalComponentConfig{
+					TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
+					ConfigMap:            cm,
+				}
+			}
+			getLoggerWithContext(context).Debugf("modify global component configs: %v", configs)
+			req := secondparty.CmdEditGlobalConfigReq{
+				TiUPComponent:          secondparty.ClusterComponentTypeStr,
+				InstanceName:           cluster.ClusterName,
+				GlobalComponentConfigs: configs,
+				TimeoutS:               0,
+				Flags:                  []string{},
+			}
+			editConfigId, err := secondparty.SecondParty.MicroSrvTiupEditGlobalConfig(context, req, uint64(task.Id))
+			if err != nil {
+				getLoggerWithContext(context).Errorf("call tiup api edit global config err = %s", err.Error())
+				task.Fail(err)
+				return false
+			}
+			getLoggerWithContext(context).Infof("got editConfigId: %v", editConfigId)
+		case int32(SQL):
+			// todo: invoke secondparty
+		case int32(API):
+			// todo: invoke secondparty
+		}
+	}
 	task.Success(nil)
+	return true
+}
+
+func putParamContainer(paramContainer map[int32][]*ApplyParam, source int32, modifyParam *ModifyParam, i int) {
+	params := paramContainer[source]
+	if params == nil {
+		paramContainer[source] = []*ApplyParam{modifyParam.Params[i]}
+	} else {
+		params = append(params, modifyParam.Params[i])
+		paramContainer[source] = params
+	}
+}
+
+func refreshParameter(task *TaskEntity, context *FlowContext) bool {
+	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
+	cluster := clusterAggregation.Cluster
+
+	modifyParam := context.GetData(contextModifyParamsKey).(*ModifyParam)
+	getLoggerWithContext(context).Debugf("got modify need reboot: %v, params size: %d", modifyParam.NeedReboot, len(modifyParam.Params))
+
+	// need tiup reload config
+	if modifyParam.NeedReboot {
+		req := secondparty.CmdReloadConfigReq{
+			TiUPComponent: secondparty.ClusterComponentTypeStr,
+			InstanceName:  cluster.ClusterName,
+			TimeoutS:      0,
+			Flags:         []string{},
+		}
+		reloadId, err := secondparty.SecondParty.MicroSrvTiupReload(context, req, uint64(task.Id))
+		if err != nil {
+			getLoggerWithContext(context).Errorf("call tiup api edit global config err = %s", err.Error())
+			task.Fail(err)
+			return false
+		}
+		getLoggerWithContext(context).Infof("got reloadId: %v", reloadId)
+
+		// loop get tiup exec status
+		return getTaskStatusByTaskId(context, task)
+	}
+	task.Success(nil)
+	return true
+}
+
+func getTaskStatusByTaskId(context *FlowContext, task *TaskEntity) bool {
+	ticker := time.NewTicker(3 * time.Second)
+	sequence := 0
+	for range ticker.C {
+		if sequence += 1; sequence > 200 {
+			task.Fail(framework.SimpleError(common.TIEM_TASK_POLLING_TIME_OUT))
+			return false
+		}
+		framework.LogWithContext(context).Infof("polling task waiting, sequence %d, taskId %d, taskName %s", sequence, task.Id, task.TaskName)
+
+		stat, statString, err := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(context, uint64(task.Id))
+		if err != nil {
+			framework.LogWithContext(context).Error(err)
+			task.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))
+			return false
+		}
+		if stat == dbpb.TiupTaskStatus_Error {
+			task.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, statString))
+			return false
+		}
+		if stat == dbpb.TiupTaskStatus_Finished {
+			task.Success(statString)
+			break
+		}
+	}
 	return true
 }
 
@@ -952,8 +1197,7 @@ func clusterStop(task *TaskEntity, context *FlowContext) bool {
 
 func (aggregation *ClusterAggregation) ExtractStatusDTO() *clusterpb.DisplayStatusDTO {
 	cluster := aggregation.Cluster
-
-	dto := &clusterpb.DisplayStatusDTO{
+	return &clusterpb.DisplayStatusDTO{
 		StatusCode:      strconv.Itoa(int(aggregation.Cluster.Status)),
 		StatusName:      aggregation.Cluster.Status.Display(),
 		CreateTime:      cluster.CreateTime.Unix(),
@@ -961,29 +1205,64 @@ func (aggregation *ClusterAggregation) ExtractStatusDTO() *clusterpb.DisplayStat
 		DeleteTime:      cluster.DeleteTime.Unix(),
 		InProcessFlowId: int32(cluster.WorkFlowId),
 	}
-
-	return dto
 }
 
-func (aggregation *ClusterAggregation) ExtractDisplayDTO() *clusterpb.ClusterDisplayDTO {
-	dto := &clusterpb.ClusterDisplayDTO{
+func (aggregation *ClusterAggregation) ExtractDisplayInfo() management.ClusterDisplayInfo {
+	cluster := aggregation.Cluster
+	instances := aggregation.CurrentComponentInstances
+	displayInfo := management.ClusterDisplayInfo{
 		ClusterId: aggregation.Cluster.Id,
-		BaseInfo:  aggregation.ExtractBaseInfoDTO(),
-		Status:    aggregation.ExtractStatusDTO(),
-		Instances: aggregation.ExtractInstancesDTO(),
+		ClusterBaseInfo: management.ClusterBaseInfo{
+			ClusterName:    cluster.ClusterName,
+			DbPassword:     cluster.DbPassword,
+			ClusterType:    cluster.ClusterType.Code,
+			ClusterVersion: cluster.ClusterVersion.Code,
+			Tags:           cluster.Tags,
+			Tls:            cluster.Tls,
+		},
+		StatusInfo: controller.StatusInfo{
+			StatusCode:      strconv.Itoa(int(aggregation.Cluster.Status)),
+			StatusName:      aggregation.Cluster.Status.Display(),
+			CreateTime:      cluster.CreateTime,
+			UpdateTime:      cluster.UpdateTime,
+			DeleteTime:      cluster.DeleteTime,
+			InProcessFlowId: int(cluster.WorkFlowId),
+		},
+		ClusterInstanceInfo: management.ClusterInstanceInfo{
+			Whitelist:       []string{},
+			DiskUsage:       MockUsage(),
+			CpuUsage:        MockUsage(),
+			MemoryUsage:     MockUsage(),
+			StorageUsage:    MockUsage(),
+			BackupFileUsage: MockUsage(),
+		},
 	}
-	return dto
+
+	if instances == nil || len(instances) == 0{
+		topologyConfig := aggregation.CurrentTopologyConfigRecord
+		displayInfo.IntranetConnectAddresses, displayInfo.ExtranetConnectAddresses, displayInfo.PortList = ConnectAddresses(topologyConfig.ConfigModel)
+	} else {
+		displayInfo.IntranetConnectAddresses = make([]string, 0)
+		displayInfo.ExtranetConnectAddresses = make([]string, 0)
+		displayInfo.PortList = make([]int, 0)
+
+		for _, instance := range instances {
+			if instance.ComponentType.ComponentType == "TiDB" && instance.Status == ClusterStatusOnline {
+				address := instance.Host + ":" + strconv.Itoa(instance.PortList[0])
+				displayInfo.IntranetConnectAddresses = append(displayInfo.IntranetConnectAddresses, address)
+				displayInfo.ExtranetConnectAddresses = append(displayInfo.ExtranetConnectAddresses, address)
+			}
+		}
+	}
+
+	return displayInfo
 }
 
-func (aggregation *ClusterAggregation) ExtractMaintenanceDTO() *clusterpb.ClusterMaintenanceDTO {
-	dto := &clusterpb.ClusterMaintenanceDTO{}
+func (aggregation *ClusterAggregation) ExtractMaintenanceInfo() management.ClusterMaintenanceInfo {
+	dto := management.ClusterMaintenanceInfo{}
 	if aggregation.MaintainCronTask != nil {
 		dto.MaintainTaskCron = aggregation.MaintainCronTask.Cron
 	}
-	//else {
-	//	// default maintain ?
-	//}
-
 	return dto
 }
 
@@ -1003,6 +1282,86 @@ func (aggregation *ClusterAggregation) ExtractBaseInfoDTO() *clusterpb.ClusterBa
 		Tags: cluster.Tags,
 		Tls:  cluster.Tls,
 	}
+}
+func (aggregation *ClusterAggregation) ExtractTopologyInfo() management.ClusterTopologyInfo {
+	cluster := aggregation.Cluster
+	demands := aggregation.CurrentComponentDemand
+	topology := management.ClusterTopologyInfo{
+		CpuArchitecture: cluster.CpuArchitecture,
+	}
+	topology.Region.Code = cluster.Region
+	topology.Region.Name = cluster.Region
+
+	for _, demand := range demands {
+		resourceSpec := make([]management.ResourceSpec, len(demand.DistributionItems))
+		for key, item := range demand.DistributionItems {
+			resourceSpec[key].Spec.Code = item.SpecCode
+			resourceSpec[key].Spec.Name = item.SpecCode
+			resourceSpec[key].Zone.Code = item.ZoneCode
+			resourceSpec[key].Zone.Name = resourceType.GetDomainNameFromCode(item.ZoneCode)
+			resourceSpec[key].Count = item.Count
+		}
+
+		data := struct {
+			ComponentType string `json:"componentType"`
+			ResourceSpec  []management.ResourceSpec
+		}{
+			demand.ComponentType.ComponentType,
+			resourceSpec,
+		}
+		topology.ComponentTopology = append(topology.ComponentTopology, data)
+	}
+	return topology
+}
+
+func getComponentDisplayPort(list []int) (port int) {
+	if list != nil && len(list) >0  {
+		port = list[0]
+	}
+	return
+}
+
+func (aggregation *ClusterAggregation) ExtractComponentInstances() []management.ComponentInstance {
+	instances := aggregation.CurrentComponentInstances
+
+	instanceMap := make(map[string][]management.ComponentNodeDisplayInfo)
+	result := make([]management.ComponentInstance, 0)
+
+	for _, instance := range instances {
+		info := management.ComponentNodeDisplayInfo{
+			NodeId:  instance.Host,
+			Version: instance.Version.Code,
+			Status:  instance.Status.Display(),
+			ComponentNodeInstanceInfo: management.ComponentNodeInstanceInfo{
+				HostId: instance.HostId,
+				HostIp: instance.Host,
+				Ports:  instance.PortList,
+				Port:   getComponentDisplayPort(instance.PortList),
+				Role:   mockRole(),
+				Spec:   mockSpec(),
+				Zone:   mockZone(),
+			},
+
+			ComponentNodeUsageInfo: management.ComponentNodeUsageInfo{
+				IoUtil:       mockIoUtil(),
+				Iops:         mockIops(),
+				CpuUsage:     MockUsage(),
+				MemoryUsage:  MockUsage(),
+				StorageUsage: MockUsage(),
+			},
+		}
+		instanceMap[instance.ComponentType.ComponentType] = append(instanceMap[instance.ComponentType.ComponentType], info)
+	}
+
+	for key, values := range instanceMap {
+		item := management.ComponentInstance{}
+		componentType := knowledge.ClusterComponentFromCode(key)
+		item.ComponentType = componentType.ComponentType
+		item.ComponentName = componentType.ComponentName
+		item.Nodes = values
+		result = append(result, item)
+	}
+	return result
 }
 
 func (aggregation *ClusterAggregation) ExtractBackupRecordDTO() *clusterpb.BackupRecordDTO {

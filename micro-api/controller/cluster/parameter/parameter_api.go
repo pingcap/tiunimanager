@@ -132,9 +132,10 @@ func UpdateParams(c *gin.Context) {
 	}
 	operator := controller.GetOperator(c)
 	reqDTO := &clusterpb.UpdateClusterParamsRequest{
-		ClusterId: clusterId,
-		Operator:  operator.ConvertToDTO(),
-		Params:    params,
+		ClusterId:  clusterId,
+		Operator:   operator.ConvertToDTO(),
+		Params:     params,
+		NeedReboot: req.NeedReboot,
 	}
 	resp, err := client.ClusterClient.UpdateClusterParams(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
 	if err != nil {
@@ -143,8 +144,17 @@ func UpdateParams(c *gin.Context) {
 		return
 	}
 	status = resp.RespStatus
-	c.JSON(http.StatusOK, controller.BuildCommonResult(int(status.Code), status.Message,
-		ParamUpdateRsp{ClusterId: clusterId}))
+	c.JSON(http.StatusOK, controller.BuildCommonResult(int(status.Code), status.Message, ParamUpdateRsp{
+		ClusterId: resp.ClusterId,
+		StatusInfo: &controller.StatusInfo{
+			StatusCode:      resp.DisplayInfo.StatusCode,
+			StatusName:      resp.DisplayInfo.StatusName,
+			InProcessFlowId: int(resp.DisplayInfo.InProcessFlowId),
+			CreateTime:      time.Unix(resp.DisplayInfo.CreateTime, 0),
+			UpdateTime:      time.Unix(resp.DisplayInfo.UpdateTime, 0),
+			DeleteTime:      time.Unix(resp.DisplayInfo.DeleteTime, 0),
+		},
+	}))
 }
 
 // InspectParams inspect params

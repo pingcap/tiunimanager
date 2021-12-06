@@ -281,7 +281,7 @@ func TestEntity_BeforeCreate(t *testing.T) {
 		if err == nil {
 			t.Errorf("TestEntity_BeforeCreate() want error")
 		}
-		if do.Status != 0 {
+		if do.Status != 4 {
 			t.Errorf("TestEntity_BeforeCreate() entity status want = %v, got = %v", 0, do.Status)
 		}
 	})

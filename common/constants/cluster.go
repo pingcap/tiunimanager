@@ -81,6 +81,15 @@ const (
 	ClusterRelationRecoverFrom ClusterRelationType = "RecoverFrom"
 )
 
+type ClusterCloneStrategy string
+
+// Definition cluster clone strategy
+const (
+	EmptyDataClone ClusterCloneStrategy = "Empty"
+	SnapShotClone  ClusterCloneStrategy = "Snapshot"
+	SyncDataClone  ClusterCloneStrategy = "Sync"
+)
+
 type BackupType string
 type BackupMethod string
 

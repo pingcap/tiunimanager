@@ -38,14 +38,6 @@ type ServiceCapabilityIndex struct {
 	Unit        string      `json:"unit"`
 }
 
-type ScaleOutClusterRsp struct {
-	controller.StatusInfo
-}
-
-type ScaleInClusterRsp struct {
-	controller.StatusInfo
-}
-
 type DeleteClusterRsp struct {
 	ClusterId string `json:"clusterId"`
 	controller.StatusInfo

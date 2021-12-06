@@ -14,37 +14,42 @@
  *                                                                            *
  ******************************************************************************/
 
-package management
+package cluster
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"context"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/message/cluster"
 )
 
-type CreateReq struct {
-	ClusterBaseInfo
-	ClusterCommonDemand
-	NodeDemandList []ClusterNodeDemand `json:"nodeDemandList"`
+type ClusterManager struct {
+
 }
 
-type DeleteReq struct {
-	AutoBackup bool `json:"autoBackup" form:"autoBackup"`
-	ClearBackupData bool `json:"clearBackupData" form:"clearBackupData"`
+func NewClusterManager() *ClusterManager {
+	return &ClusterManager{}
 }
 
-type QueryReq struct {
-	controller.PageRequest
-	ClusterId     string `json:"clusterId" form:"clusterId"`
-	ClusterName   string `json:"clusterName" form:"clusterName"`
-	ClusterType   string `json:"clusterType" form:"clusterType"`
-	ClusterStatus string `json:"clusterStatus" form:"clusterStatus"`
-	ClusterTag    string `json:"clusterTag" form:"clusterTag"`
+// ScaleOut
+// @Description scale out a cluster
+// @Parameter	operator
+// @Parameter	request
+// @Return		*cluster.ScaleOutClusterResp
+// @Return		error
+func (manager *ClusterManager) ScaleOut(ctx context.Context, operator *clusterpb.RpcOperator, request *cluster.ScaleOutClusterReq) (*cluster.ScaleOutClusterResp, error) {
+	// get cluster info from db based by clusterId
+
+	return nil, nil
 }
 
-type TakeoverReq struct {
-	TiupIp           string   `json:"tiupIp" example:"172.16.4.147" form:"tiupIp"`
-	TiupPort         int   `json:"tiupPort" example:"22" form:"tiupPort"`
-	TiupUserName     string   `json:"tiupUserName" example:"root" form:"tiupUserName"`
-	TiupUserPassword string   `json:"tiupUserPassword" example:"password" form:"tiupUserPassword"`
-	TiupPath         string   `json:"tiupPath" example:".tiup/" form:"tiupPath"`
-	ClusterNames     []string `json:"clusterNames" form:"clusterNames"`
+func (manager *ClusterManager) ScaleIn(ctx context.Context, operator *clusterpb.RpcOperator, request *cluster.ScaleInClusterReq) (*cluster.ScaleInClusterResp, error) {
+	return nil, nil
 }
+
+func (manager *ClusterManager) Clone(ctx context.Context, operator *clusterpb.RpcOperator, request *cluster.CloneClusterReq) (*cluster.CloneClusterResp, error) {
+	return nil, nil
+}
+
+
+
+

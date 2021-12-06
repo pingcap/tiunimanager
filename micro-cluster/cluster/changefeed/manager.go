@@ -13,4 +13,36 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package management
+package changefeed
+
+import (
+	"context"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
+)
+
+type ChangeFeedManager struct {
+}
+
+func NewChangeFeedManager() *ChangeFeedManager {
+	return &ChangeFeedManager{}
+}
+
+func (p *ChangeFeedManager) Create(ctx context.Context, name string) (string, error) {
+	result, err := models.GetChangeFeedReaderWriter().Create(ctx, &changefeed.ChangeFeedTask{
+		Name: name,
+		ClusterId: "111",
+		Type: changefeed.DownstreamTypeMysql,
+		StartTS: 0,
+		Downstream: changefeed.MysqlDownstream{
+			WorkerCount: 3,
+		},
+	})
+	if err != nil {
+		return "", framework.WrapError(common.TIEM_PARAMETER_INVALID, "create change feed task error", err)
+	}
+
+	return result.ID, nil
+}

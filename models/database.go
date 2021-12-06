@@ -31,6 +31,10 @@ func open() {
 	// todo
 }
 
+func InitDatabase() {
+	defaultDb =
+}
+
 func initReaderWriter() {
 	defaultDb.changeFeedReaderWriter = changefeed2.NewGormChangeFeedReadWrite(defaultDb.base)
 }

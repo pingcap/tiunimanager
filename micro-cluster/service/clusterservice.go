@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
-	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/service/datatransfer/changefeed"
+	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	"net/http"
 	"strconv"
 	"time"
@@ -92,7 +92,7 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 		return nil
 	}
 
-	result := handler.changeFeedManager.Create(task.Name)
+	result, err := handler.changeFeedManager.Create(ctx, task.Name)
 
 	handleResponse(response, err, func() ([]byte, error) {
 		// todo build api response data

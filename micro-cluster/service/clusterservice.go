@@ -463,6 +463,8 @@ func (c ClusterServiceHandler) RecoverCluster(ctx context.Context, req *clusterp
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.ClusterId = clusterAggregation.Cluster.Id
+		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
+		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 	}
 	return nil
 }

@@ -50,6 +50,21 @@ func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
 	return nil
 }
 
+type Entities struct {
+	ID        string    `gorm:"primaryKey;"`
+	CreatedAt time.Time `gorm:"<-:create"`
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+
+	TenantId string `gorm:"default:null;not null;<-:create"`
+	Status   string `gorm:"default:null;not null"`
+}
+
+func (e *Entities) BeforeCreate(tx *gorm.DB) (err error) {
+	e.ID = uuidutil.GenerateID()
+	return nil
+}
+
 type Record struct {
 	ID        uint      `gorm:"primaryKey"`
 	CreatedAt time.Time `gorm:"<-:create"`

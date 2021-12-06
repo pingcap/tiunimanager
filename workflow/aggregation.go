@@ -30,12 +30,12 @@ import (
 )
 
 //
-// FlowWorkAggregation
-// @Description: flowwork aggregation with flowwork definition and nodes
+// WorkFlowAggregation
+// @Description: workflow aggregation with flowwork definition and nodes
 //
-type FlowWorkAggregation struct {
-	FlowWork    *workflow.WorkFlow
-	Define      *FlowWorkDefine
+type WorkFlowAggregation struct {
+	Flow        *workflow.WorkFlow
+	Define      *WorkFlowDefine
 	CurrentNode *workflow.WorkFlowNode
 	Nodes       []*workflow.WorkFlowNode
 	Context     FlowContext
@@ -62,7 +62,7 @@ func (c FlowContext) SetData(key string, value interface{}) {
 	c.FlowData[key] = value
 }
 
-func createFlowWork(ctx context.Context, bizId string, define *FlowWorkDefine) (*FlowWorkAggregation, error) {
+func createFlowWork(ctx context.Context, bizId string, define *WorkFlowDefine) (*WorkFlowAggregation, error) {
 	framework.LogWithContext(ctx).Infof("create flowwork %v for bizId %s", define, bizId)
 	if define == nil {
 		return nil, framework.SimpleError(common.TIEM_FLOW_NOT_FOUND)
@@ -70,7 +70,7 @@ func createFlowWork(ctx context.Context, bizId string, define *FlowWorkDefine) (
 	flowData := make(map[string]interface{})
 
 	flow := define.getInstance(framework.ForkMicroCtx(ctx), bizId, flowData)
-	_, err := models.GetWorkFlowReaderWriter().CreateWorkFlow(ctx, flow.FlowWork)
+	_, err := models.GetWorkFlowReaderWriter().CreateWorkFlow(ctx, flow.Flow)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func createFlowWork(ctx context.Context, bizId string, define *FlowWorkDefine) (
 	return flow, nil
 }
 
-func (flow *FlowWorkAggregation) GetFlowNodeNameList() []string {
+func (flow *WorkFlowAggregation) GetFlowNodeNameList() []string {
 	var nodeNames []string
 	node := flow.Define.TaskNodes["start"]
 
@@ -89,52 +89,52 @@ func (flow *FlowWorkAggregation) GetFlowNodeNameList() []string {
 	return nodeNames
 }
 
-func (flow *FlowWorkAggregation) start() {
-	flow.FlowWork.Status = constants.WorkFlowStatusProcessing
+func (flow *WorkFlowAggregation) start() {
+	flow.Flow.Status = constants.WorkFlowStatusProcessing
 	start := flow.Define.TaskNodes["start"]
 	result := flow.handle(start)
 	flow.complete(result)
-	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.FlowWork, flow.Nodes)
+	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	//TaskRepo.Persist(flow.Context, flow)
 }
 
-func (flow *FlowWorkAggregation) asyncStart() {
+func (flow *WorkFlowAggregation) asyncStart() {
 	go flow.start()
 }
 
-func (flow *FlowWorkAggregation) destroy(reason string) {
-	flow.FlowWork.Status = constants.WorkFlowStatusCanceled
+func (flow *WorkFlowAggregation) destroy(reason string) {
+	flow.Flow.Status = constants.WorkFlowStatusCanceled
 
 	if flow.CurrentNode != nil {
 		flow.CurrentNode.Fail(framework.NewTiEMError(common.TIEM_TASK_CANCELED, reason))
 	}
-	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.FlowWork, flow.Nodes)
+	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	//TaskRepo.Persist(flow.Context, flow)
 }
 
-func (flow FlowWorkAggregation) complete(success bool) {
+func (flow WorkFlowAggregation) complete(success bool) {
 	if success {
-		flow.FlowWork.Status = constants.WorkFlowStatusFinished
+		flow.Flow.Status = constants.WorkFlowStatusFinished
 	} else {
-		flow.FlowWork.Status = constants.WorkFlowStatusError
+		flow.Flow.Status = constants.WorkFlowStatusError
 	}
 }
 
-func (flow *FlowWorkAggregation) addContext(key string, value interface{}) {
+func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 	flow.Context.SetData(key, value)
 }
 
-func (flow *FlowWorkAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) bool {
+func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) bool {
 	flow.CurrentNode = node
 	flow.Nodes = append(flow.Nodes, node)
 	node.Processing()
-	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.FlowWork, flow.Nodes)
+	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	//TaskRepo.Persist(flow.Context, flow)
 
 	return nodeDefine.Executor(node, &flow.Context)
 }
 
-func (flow *FlowWorkAggregation) handleTaskError(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) {
+func (flow *WorkFlowAggregation) handleTaskError(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) {
 	flow.FlowError = errors.New(node.Result)
 	if "" != nodeDefine.FailEvent {
 		flow.handle(flow.Define.TaskNodes[nodeDefine.FailEvent])
@@ -143,9 +143,9 @@ func (flow *FlowWorkAggregation) handleTaskError(node *workflow.WorkFlowNode, no
 	}
 }
 
-func (flow *FlowWorkAggregation) handle(nodeDefine *NodeDefine) bool {
+func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 	if nodeDefine == nil {
-		flow.FlowWork.Status = constants.WorkFlowStatusFinished
+		flow.Flow.Status = constants.WorkFlowStatusFinished
 		return true
 	}
 	node := &workflow.WorkFlowNode{
@@ -153,8 +153,8 @@ func (flow *FlowWorkAggregation) handle(nodeDefine *NodeDefine) bool {
 			Status: constants.WorkFlowStatusInitializing,
 		},
 		Name:       nodeDefine.Name,
-		BizID:      flow.FlowWork.BizID,
-		ParentID:   flow.FlowWork.ID,
+		BizID:      flow.Flow.BizID,
+		ParentID:   flow.Flow.ID,
 		ReturnType: string(nodeDefine.ReturnType),
 		StartTime:  time.Now(),
 	}

@@ -19,11 +19,11 @@ package workflow
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/common/constants"
-	common2 "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
 )
 
-type FlowWorkDefine struct {
+type WorkFlowDefine struct {
 	FlowName      string
 	TaskNodes     map[string]*NodeDefine
 	ContextParser func(string) *FlowContext
@@ -44,12 +44,12 @@ func DefaultContextParser(s string) *FlowContext {
 	return NewFlowContext(context.TODO())
 }
 
-func (define *FlowWorkDefine) getInstance(ctx context.Context, bizId string, data map[string]interface{}) *FlowWorkAggregation {
-	return &FlowWorkAggregation{
-		FlowWork: &workflow.WorkFlow{
+func (define *WorkFlowDefine) getInstance(ctx context.Context, bizId string, data map[string]interface{}) *WorkFlowAggregation {
+	return &WorkFlowAggregation{
+		Flow: &workflow.WorkFlow{
 			Name:  define.FlowName,
 			BizID: bizId,
-			Entities: common2.Entities{
+			Entities: common.Entities{
 				Status: constants.WorkFlowStatusInitializing,
 			},
 		},

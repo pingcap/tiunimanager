@@ -46,7 +46,7 @@ var doFail = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
 func TestFlowManager_RegisterWorkFlow(t *testing.T) {
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
-		&FlowWorkDefine{
+		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
@@ -77,7 +77,7 @@ func TestFlowManager_Start(t *testing.T) {
 
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
-		&FlowWorkDefine{
+		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
@@ -108,7 +108,7 @@ func TestFlowManager_AsyncStart(t *testing.T) {
 
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
-		&FlowWorkDefine{
+		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
@@ -139,7 +139,7 @@ func TestFlowManager_AddContext(t *testing.T) {
 
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
-		&FlowWorkDefine{
+		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
@@ -171,7 +171,7 @@ func TestFlowManager_Destroy(t *testing.T) {
 
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
-		&FlowWorkDefine{
+		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
@@ -203,7 +203,7 @@ func TestFlowManager_Complete(t *testing.T) {
 
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
-		&FlowWorkDefine{
+		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},
@@ -220,7 +220,7 @@ func TestFlowManager_Complete(t *testing.T) {
 	assert.NoError(t, errCreate)
 
 	manager.Complete(flow, true)
-	assert.Equal(t, string(constants.WorkFlowStatusFinished), flow.FlowWork.Status)
+	assert.Equal(t, string(constants.WorkFlowStatusFinished), flow.Flow.Status)
 }
 
 func TestFlowManager_ListWorkFlows(t *testing.T) {
@@ -247,7 +247,7 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 
 	manager := GetFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",
-		&FlowWorkDefine{
+		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
 				"start":         {"nodeName1", "nodeName1Done", "fail", wfModel.SyncFuncNode, doNodeName1},

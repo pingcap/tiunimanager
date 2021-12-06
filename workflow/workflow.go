@@ -78,7 +78,6 @@ type FlowInterface interface {
 	// AddContext
 	// @Description: add flow context for workflow
 	// @Receiver m
-	// @Parameter ctx
 	// @Parameter flow
 	// @Parameter key
 	// @Parameter value

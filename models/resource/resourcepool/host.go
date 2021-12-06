@@ -16,10 +16,30 @@
 package resourcepool
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
 )
+
+func GenDomainCodeByName(pre string, name string) string {
+	return fmt.Sprintf("%s,%s", pre, name)
+}
+
+func GetDomainNameFromCode(failureDomain string) string {
+	pos := strings.LastIndex(failureDomain, ",")
+	return failureDomain[pos+1:]
+}
+
+func GetDomainPrefixFromCode(failureDomain string) string {
+	pos := strings.LastIndex(failureDomain, ",")
+	if pos == -1 {
+		// No found ","
+		return failureDomain
+	}
+	return failureDomain[:pos]
+}
 
 type Host struct {
 	ID           string `json:"hostId" gorm:"primaryKey"`
@@ -27,8 +47,8 @@ type Host struct {
 	UserName     string `json:"userName,omitempty" gorm:"size:32"`
 	Passwd       string `json:"passwd,omitempty" gorm:"size:32"`
 	HostName     string `json:"hostName" gorm:"size:255"`
-	Status       int32  `json:"status" gorm:"index"`         // Host Status, 0 for Online, 1 for offline
-	Stat         int32  `json:"stat" gorm:"index;default:0"` // Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
+	Status       string `json:"status" gorm:"index"`         // Host Status, 0 for Online, 1 for offline
+	Stat         string `json:"stat" gorm:"index;default:0"` // Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
 	Arch         string `json:"arch" gorm:"index"`           // x86 or arm64
 	OS           string `json:"os" gorm:"size:32"`
 	Kernel       string `json:"kernel" gorm:"size:32"`
@@ -41,9 +61,11 @@ type Host struct {
 	Region       string `json:"region" gorm:"size:32"`
 	AZ           string `json:"az" gorm:"index"`
 	Rack         string `json:"rack" gorm:"index"`
-	Purpose      string `json:"purpose" gorm:"index"`  // What Purpose is the host used for? [compute/storage/dispatch]
-	DiskType     string `json:"diskType" gorm:"index"` // Disk type of this host [sata/ssd/nvme_ssd]
-	Reserved     bool   `json:"reserved" gorm:"index"` // Whether this host is reserved - will not be allocated
+	ClusterType  string `json:"clusterType" gorm:"index"` // What Cluster is the host used for? [database/datamigration]
+	Purpose      string `json:"purpose" gorm:"index"`     // What Purpose is the host used for? [compute/storage/schedule]
+	DiskType     string `json:"diskType" gorm:"index"`    // Disk type of this host [sata/ssd/nvme_ssd]
+	Reserved     bool   `json:"reserved" gorm:"index"`    // Whether this host is reserved - will not be allocated
+	Traits       int64  `json:"traits" gorm:"index"`      // Traits of labels
 	Disks        []Disk `json:"disks" gorm:"-"`
 	//UsedDisks    []UsedDisk     `json:"-" gorm:"-"`
 	//UsedComputes []UsedCompute  `json:"-" gorm:"-"`

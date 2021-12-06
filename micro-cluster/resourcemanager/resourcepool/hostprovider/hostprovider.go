@@ -13,23 +13,21 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package resourcepool
+package hostprovider
 
 import (
-	"time"
+	"context"
 
-	"gorm.io/gorm"
+	"github.com/pingcap-inc/tiem/common/structs"
 )
 
-type Disk struct {
-	ID        string         `json:"diskId" gorm:"primaryKey"`
-	HostID    string         `json:"omitempty" gorm:"not null"`
-	Name      string         `json:"name" gorm:"not null;size:255"` // [sda/sdb/nvmep0...]
-	Capacity  int32          `json:"capacity"`                      // Disk size, Unit: GB
-	Path      string         `json:"path" gorm:"size:255;not null"` // Disk mount path: [/data1]
-	Type      string         `json:"type" gorm:"not null"`          // Disk type: [nvme-ssd/ssd/sata]
-	Status    string         `json:"status" gorm:"index"`           // Disk Status, 0 for available, 1 for reserved
-	CreatedAt time.Time      `json:"-" gorm:"autoCreateTime;<-:create;->;"`
-	UpdatedAt time.Time      `json:"-" gorm:"autoUpdateTime"`
-	DeletedAt gorm.DeletedAt `json:"-"`
+type HostProvider interface {
+	ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error)
+	DeleteHosts(ctx context.Context, hostIds []string) (err error)
+	Query(ctx context.Context, filter structs.HostFilter) (hosts []*structs.HostInfo, err error)
+	UpdateHostStatus(ctx context.Context, hostId []string, status string) (err error)
+	UpdateHostReserved(ctx context.Context, hostId []string, reserved bool) (err error)
+
+	GetHierarchy(ctx context.Context, filter structs.HostFilter, level int32, depth int32) (root *structs.HierarchyTreeNode, err error)
+	GetStocks(ctx context.Context, location structs.Location, hostFilter structs.HostFilter, diskFilter structs.DiskFilter) (*structs.Stocks, error)
 }

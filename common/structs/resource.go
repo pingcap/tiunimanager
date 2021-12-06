@@ -23,7 +23,11 @@
 
 package structs
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/pingcap-inc/tiem/common/constants"
+)
 
 type DiskInfo struct {
 	ID       string `json:"diskId"`
@@ -33,7 +37,6 @@ type DiskInfo struct {
 	Path     string `json:"path"`     // Disk mount path: [/data1]
 	Type     string `json:"type"`     // Disk type: [nvme-ssd/ssd/sata]
 	Status   string `json:"status"`   // Disk Status, 0 for available, 1 for inused
-	UsedBy   string `json:"usedBy,omitempty"`
 }
 
 type HostInfo struct {
@@ -78,6 +81,37 @@ func (h *HostInfo) AddTraits(p string) (err error) {
 		return err
 	}
 	return nil
+}
+
+func (h HostInfo) IsExhaust() (stat constants.HostLoadStatus, isExhaust bool) {
+	diskExaust := true
+	for _, disk := range h.Disks {
+		if disk.Status == string(constants.DiskAvailable) {
+			diskExaust = false
+			break
+		}
+	}
+	computeExaust := (h.FreeCpuCores == 0 || h.FreeMemory == 0)
+	if diskExaust && computeExaust {
+		return constants.HostLoadExhaust, true
+	} else if computeExaust {
+		return constants.HostLoadComputeExhaust, true
+	} else if diskExaust {
+		return constants.HostLoadDiskExhaust, true
+	} else {
+		return constants.HostLoadStatusWhatever, false
+	}
+}
+
+func (h HostInfo) IsLoadless() bool {
+	diskLoadless := true
+	for _, disk := range h.Disks {
+		if disk.Status == string(constants.DiskExhaust) || disk.Status == string(constants.DiskInUsed) {
+			diskLoadless = false
+			break
+		}
+	}
+	return diskLoadless && h.FreeCpuCores == h.CpuCores && h.FreeMemory == h.Memory
 }
 
 type Location struct {

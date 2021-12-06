@@ -138,10 +138,19 @@ func (rw *GormResourceReadWrite) Delete(ctx context.Context, hostIds []string) (
 	return
 }
 
-func (rw *GormResourceReadWrite) Get(ctx context.Context, hostId string) (rp.Host, error)
-func (rw *GormResourceReadWrite) Query(ctx context.Context, cond QueryCond) (hosts []rp.Host, total int64, err error)
+func (rw *GormResourceReadWrite) Query(ctx context.Context, filter structs.HostFilter) (hosts []rp.Host, err error) {
+	return nil, nil
+}
 
-func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, status string) (err error)
-func (rw *GormResourceReadWrite) ReserveHost(ctx context.Context, reserved bool) (err error)
-func (rw *GormResourceReadWrite) GetHierarchy(ctx context.Context, filter structs.HostFilter, level int32, depth int32) (root structs.HierarchyTreeNode, err error)
-func (rw *GormResourceReadWrite) GetStocks(ctx context.Context, filter StockFilter) (stock Stock, err error)
+func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error) {
+	return nil
+}
+func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error) {
+	return nil
+}
+func (rw *GormResourceReadWrite) GetHierarchy(ctx context.Context, filter structs.HostFilter, level int32, depth int32) (root *structs.HierarchyTreeNode, err error) {
+	return nil, nil
+}
+func (rw *GormResourceReadWrite) GetStocks(ctx context.Context, location structs.Location, hostFilter structs.HostFilter, diskFilter structs.DiskFilter) (stocks *structs.Stocks, err error) {
+	return nil, nil
+}

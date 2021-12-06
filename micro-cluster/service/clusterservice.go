@@ -19,11 +19,14 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
-	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/service/datatransfer/changefeed"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager"
+	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/service/datatransfer/changefeed"
 
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -50,14 +53,15 @@ var SuccessResponseStatus = &clusterpb.ResponseStatusDTO{Code: 0}
 var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
-	resourceManager  *resource.ResourceManager
-	authManager      *user.AuthManager
-	tenantManager    *user.TenantManager
-	userManager      *user.UserManager
+	resourceManager   *resource.ResourceManager
+	resourceManager2  *resourcemanager.ResourceManager
+	authManager       *user.AuthManager
+	tenantManager     *user.TenantManager
+	userManager       *user.UserManager
 	changeFeedManager *changeFeedManager.ChangeFeedManager
 }
 
-func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]byte, error) ) {
+func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]byte, error)) {
 	if err == nil {
 		respData, getDataError := getData()
 		if getDataError != nil {
@@ -864,4 +868,29 @@ func (clusterManager *ClusterServiceHandler) GetHierarchy(ctx context.Context, i
 
 func (clusterManager *ClusterServiceHandler) GetStocks(ctx context.Context, in *clusterpb.GetStocksRequest, out *clusterpb.GetStocksResponse) error {
 	return clusterManager.resourceManager.GetStocks(ctx, in, out)
+}
+
+func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	request.GetOperator()
+	reqString := request.GetRequest()
+
+	reqStruct := &message.ImportHostsReq{}
+
+	err := json.Unmarshal([]byte(reqString), reqStruct)
+
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	hostIds, err := handler.resourceManager2.ImportHosts(ctx, reqStruct.Hosts)
+
+	handleResponse(response, err, func() ([]byte, error) {
+		// todo build api response data
+		var rsp message.ImportHostsResp
+		rsp.HostIDS = hostIds
+		return json.Marshal(rsp)
+	})
+
+	return nil
 }

@@ -13,23 +13,32 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package resourcepool
+package resourcemanager
 
 import (
-	"time"
+	"context"
 
-	"gorm.io/gorm"
+	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
 )
 
-type Disk struct {
-	ID        string         `json:"diskId" gorm:"primaryKey"`
-	HostID    string         `json:"omitempty" gorm:"not null"`
-	Name      string         `json:"name" gorm:"not null;size:255"` // [sda/sdb/nvmep0...]
-	Capacity  int32          `json:"capacity"`                      // Disk size, Unit: GB
-	Path      string         `json:"path" gorm:"size:255;not null"` // Disk mount path: [/data1]
-	Type      string         `json:"type" gorm:"not null"`          // Disk type: [nvme-ssd/ssd/sata]
-	Status    string         `json:"status" gorm:"index"`           // Disk Status, 0 for available, 1 for reserved
-	CreatedAt time.Time      `json:"-" gorm:"autoCreateTime;<-:create;->;"`
-	UpdatedAt time.Time      `json:"-" gorm:"autoUpdateTime"`
-	DeletedAt gorm.DeletedAt `json:"-"`
+type ResourceManager struct {
+	resourcePool *resourcepool.ResourcePool
+}
+
+func NewResourceManager() *ResourceManager {
+	m := new(ResourceManager)
+	return m
+}
+
+func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {
+	hostIds, err = m.resourcePool.ImportHosts(ctx, hosts)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("import hosts in batch failed from db service: %v", err)
+	} else {
+		framework.LogWithContext(ctx).Infof("import %d hosts in batch succeed from db service.", len(hosts))
+	}
+
+	return
 }

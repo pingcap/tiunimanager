@@ -24,54 +24,16 @@ import (
 	"gorm.io/gorm"
 )
 
-type QueryCond struct {
-	Status  string
-	Stat    string
-	Purpose string
-	Offset  int
-	Limit   int
-}
-
-type Location struct {
-	Region string
-	Zone   string
-	Rack   string
-	Host   string
-}
-type HostCondition struct {
-	Status *int32
-	Stat   *int32
-	Arch   *string
-}
-type DiskCondition struct {
-	Type     *string
-	Capacity *int32
-	Status   *int32
-}
-type StockFilter struct {
-	Location      Location
-	HostCondition HostCondition
-	DiskCondition DiskCondition
-}
-
-type Stock struct {
-	FreeCpuCores     int
-	FreeMemory       int
-	FreeDiskCount    int
-	FreeDiskCapacity int
-}
-
 type ResourceReaderWriter interface {
-	SetDb(db *gorm.DB)
-	Db(ctx context.Context) *gorm.DB
+	SetDB(db *gorm.DB)
+	DB() *gorm.DB
 
 	Create(ctx context.Context, hosts []rp.Host) ([]string, error)
 	Delete(ctx context.Context, hostIds []string) (err error)
-	Get(ctx context.Context, hostId string) (rp.Host, error)
-	Query(ctx context.Context, filter structs.HostFilter) (hosts []rp.Host, total int64, err error)
+	Query(ctx context.Context, filter structs.HostFilter) (hosts []rp.Host, err error)
 
-	UpdateHostStatus(ctx context.Context, status string) (err error)
-	ReserveHost(ctx context.Context, reserved bool) (err error)
-	GetHierarchy(ctx context.Context, filter structs.HostFilter, level int32, depth int32) (root structs.HierarchyTreeNode, err error)
-	GetStocks(ctx context.Context, filter StockFilter) (stock Stock, err error)
+	UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error)
+	UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error)
+	GetHierarchy(ctx context.Context, filter structs.HostFilter, level int32, depth int32) (root *structs.HierarchyTreeNode, err error)
+	GetStocks(ctx context.Context, location structs.Location, hostFilter structs.HostFilter, diskFilter structs.DiskFilter) (stocks *structs.Stocks, err error)
 }

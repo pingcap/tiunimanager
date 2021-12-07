@@ -13,34 +13,48 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package models
+package changefeed
 
 import (
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/stretchr/testify/assert"
-	"os"
+	"context"
+	"reflect"
 	"testing"
 )
 
-func TestGetReaderWriter(t *testing.T) {
-	assert.NotEmpty(t, GetBRReaderWriter())
-	assert.NotEmpty(t, GetChangeFeedReaderWriter())
-	assert.NotEmpty(t, GetWorkFlowReaderWriter())
-	assert.NotEmpty(t, GetImportExportReaderWriter())
+func TestManager_Delete(t *testing.T) {
+	type args struct {
+		ctx context.Context
+		id  string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &Manager{}
+			if err := p.Delete(tt.args.ctx, tt.args.id); (err != nil) != tt.wantErr {
+				t.Errorf("Delete() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }
 
-func TestMain(m *testing.M) {
-	var testFilePath string
-	framework.InitBaseFrameworkForUt(framework.ClusterService,
-		func(d *framework.BaseFramework) error {
-			testFilePath = d.GetDataDir()
-			os.MkdirAll(testFilePath, 0755)
-
-			return Open(d, false)
-		},
-	)
-	code := m.Run()
-	os.RemoveAll(testFilePath)
-
-	os.Exit(code)
+func TestNewManager(t *testing.T) {
+	tests := []struct {
+		name string
+		want *Manager
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewManager(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewManager() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

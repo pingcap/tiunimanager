@@ -38,7 +38,6 @@ type database struct {
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
-	fw.GetDataDir()
 	dbFile := fw.GetDataDir() + common.DBDirPrefix + common.SqliteFileName
 	logins := framework.LogForkFile(common.LogFileSystem)
 	// todo tidb?
@@ -67,6 +66,8 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 
 func (p *database) initTables() {
 	p.addTable(new(changefeed.ChangeFeedTask))
+	p.addTable(new(workflow.WorkFlow))
+	p.addTable(new(workflow.WorkFlowNode))
 
 	// other tables
 }

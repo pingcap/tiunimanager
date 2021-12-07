@@ -73,6 +73,9 @@ func (p *database) initTables() {
 
 func (p *database) initReaderWriters() {
 	defaultDb.changeFeedReaderWriter = changefeed.NewGormChangeFeedReadWrite(defaultDb.base)
+	defaultDb.workFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
+	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
+	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
@@ -90,13 +93,6 @@ func (p *database) addTable(gormModel interface{}) error {
 	}
 
 	return nil
-}
-
-func initReaderWriter() {
-	defaultDb.changeFeedReaderWriter = changefeed.NewGormChangeFeedReadWrite(defaultDb.base)
-	defaultDb.workFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
-	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
-	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
 }
 
 func GetChangeFeedReaderWriter() changefeed.ReaderWriter {

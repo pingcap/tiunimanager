@@ -17,6 +17,7 @@ package workflow
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap/errors"
@@ -29,10 +30,7 @@ import (
 	"time"
 )
 
-//
-// WorkFlowAggregation
-// @Description: workflow aggregation with flowwork definition and nodes
-//
+// WorkFlowAggregation workflow aggregation with workflow definition and nodes
 type WorkFlowAggregation struct {
 	Flow        *workflow.WorkFlow
 	Define      *WorkFlowDefine
@@ -122,6 +120,12 @@ func (flow WorkFlowAggregation) complete(success bool) {
 
 func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 	flow.Context.SetData(key, value)
+	data, err := json.Marshal(flow.Context.FlowData)
+	if err != nil {
+		framework.Log().Warnf("json marshal flow context data failed %s", err.Error())
+		return
+	}
+	flow.Flow.Context = string(data)
 }
 
 func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) bool {

@@ -29,14 +29,15 @@ type ReaderWriter interface {
 	// @Return error
 	CreateWorkFlow(ctx context.Context, flow *WorkFlow) (*WorkFlow, error)
 
-	// UpdateWorkFlowStatus
+	// UpdateWorkFlow
 	// @Description: update workflow
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter flowId
 	// @Parameter status
+	// @Parameter flowContext
 	// @Return error
-	UpdateWorkFlowStatus(ctx context.Context, flowId string, status string) (err error)
+	UpdateWorkFlow(ctx context.Context, flowId string, status string, flowContext string) (err error)
 
 	// GetWorkFlow
 	// @Description: get workflow by flowID

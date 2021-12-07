@@ -30,7 +30,7 @@ import (
 
 type ProductUpgradePath struct {
 	ID         string         `gorm:"primaryKey;"`
-	Type       string         `gorm:"not null;"`
+	Type       string         `gorm:"not null;comment:'in-place/migration'"`
 	ProductID  string         `gorm:"not null;size:64;comment:'TiDB/DM/TiEM'"`
 	SrcVersion string         `gorm:"index:path_index,unique;not null;size:64;comment:'original version of the cluster'"`
 	DstVersion string         `gorm:"index:path_index,unique;not null;size:64;comment:'available upgrade version of the cluster'"`

@@ -14,54 +14,45 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: request
+ * @File: upgrade_api
  * @Description:
  * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/3
+ * @Date: 2021/12/7
 *******************************************************************************/
 
 package upgrade
 
-type QueryUpgradePathReq struct {
-	ClusterID string `json:"ClusterId"`
-}
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/apimodels/cluster/upgrade"
+	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/micro-api/controller"
+)
 
-type Path struct {
-	Type     string   `json:"type"`
-	Versions []string `json:"versions"`
-}
+const paramNameOfClusterID = "clusterId"
 
-type QueryUpgradePathRsp struct {
-	Paths []Path
-}
+// QueryUpgradePaths query upgrade path for given cluster
+// @Summary query upgrade path for given cluster
+// @Description query upgrade path for given cluster
+// @Tags upgrade
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "clusterId"
+// @Success 200 {object} controller.CommonResult{data=upgrade.QueryUpgradePathRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/:clusterId/upgrade/path [get]
+func QueryUpgradePaths(c *gin.Context) {
+	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &upgrade.QueryUpgradePathReq{
+		ClusterID: c.Param(paramNameOfClusterID),
+	})
 
-type QueryUpgradeVersionDiffInfoReq struct {
-	ClusterID string `json:"ClusterId"`
-	Version   string `json:"version"`
-}
-
-type QueryUpgradeVersionDiffInfoRsp struct {
-	ConfigDiffInfo []struct {
-		Name         string `json:"name"`
-		InstanceType string `json:"instanceType"`
-		CurrentVal   string `json:"currentVal"`
-		SuggestVal   string `json:"suggestVal"`
-		Range        string `json:"range"`
-		Description  string `json:"description"`
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProductUpgradePath,
+			requestBody,
+			controller.DefaultTimeout)
 	}
-}
-
-type ClusterUpgradeReq struct {
-	ClusterID     string `json:"ClusterId"`
-	TargetVersion string `json:"targetVersion"`
-	Parameters    []struct {
-		Name         string `json:"name"`
-		InstanceType string `json:"instanceType"`
-		Value        string `json:"value"`
-	}
-}
-
-type ClusterUpgradeRsp struct {
-	AsyncTaskWorkFlowInfo
 }

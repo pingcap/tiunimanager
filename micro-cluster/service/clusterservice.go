@@ -19,12 +19,15 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
-	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
-	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/apimodels/cluster/upgrade"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
+	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
+	upgradeManager "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/upgrade"
 
 	"github.com/pingcap-inc/tiem/library/util/convert"
 
@@ -53,11 +56,12 @@ var SuccessResponseStatus = &clusterpb.ResponseStatusDTO{Code: 0}
 var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
-	resourceManager  *resource.ResourceManager
-	authManager      *user.AuthManager
-	tenantManager    *user.TenantManager
-	userManager      *user.UserManager
+	resourceManager   *resource.ResourceManager
+	authManager       *user.AuthManager
+	tenantManager     *user.TenantManager
+	userManager       *user.UserManager
 	changeFeedManager *changeFeedManager.Manager
+	upgradeManager    *upgradeManager.UpgradeManager
 }
 
 func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]byte, error)) {
@@ -340,6 +344,63 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb
 		}
 	}
 	return
+}
+
+//func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+//	request.GetOperator()
+//	reqData := request.GetRequest()
+//
+//	task := &changefeed.ChangeFeedTask{}
+//
+//	err := json.Unmarshal([]byte(reqData), task)
+//
+//	if err != nil {
+//		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+//		return nil
+//	}
+//
+//	result := handler.changeFeedManager.Create(task.Name)
+//
+//	handleResponse(response, err, func() ([]byte, error) {
+//		// todo build api response data
+//		task.Id = result
+//		return json.Marshal(task)
+//	})
+//
+//	return nil
+//}
+
+func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	request.GetOperator()
+	reqData := request.GetRequest()
+
+	path := &upgrade.QueryUpgradePathReq{}
+
+	err := json.Unmarshal([]byte(reqData), path)
+
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	result := handler.upgradeManager.QueryUpdatePath(path.ClusterID)
+
+	handleResponse(response, err, func() ([]byte, error) {
+		var paths []upgrade.Path
+		for k, v := range result {
+			path := upgrade.Path{
+				Type:     k,
+				Versions: v,
+			}
+			paths = append(paths, path)
+		}
+		rsp := upgrade.QueryUpgradePathRsp{
+			Paths: paths,
+		}
+		return json.Marshal(rsp)
+	})
+
+	return nil
 }
 
 func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterpb.DataExportRequest, resp *clusterpb.DataExportResponse) error {

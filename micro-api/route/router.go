@@ -24,6 +24,7 @@ import (
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/upgrade"
 	paramGroupApi "github.com/pingcap-inc/tiem/micro-api/controller/param/paramgroup"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
@@ -116,6 +117,9 @@ func Route(g *gin.Engine) {
 			cluster.POST("/export", importexport.ExportData)
 			cluster.GET("/transport", importexport.DescribeDataTransport)
 			cluster.DELETE("/transport/:recordId", importexport.DeleteDataTransportRecord)
+
+			//Upgrade
+			cluster.GET("/:clusterId/upgrade/path", upgrade.QueryUpgradePaths)
 		}
 
 		knowledge := apiV1.Group("/knowledges")

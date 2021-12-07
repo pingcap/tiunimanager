@@ -14,54 +14,23 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: request
+ * @File: manager
  * @Description:
  * @Author: shenhaibo@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/3
+ * @Date: 2021/12/7
 *******************************************************************************/
 
 package upgrade
 
-type QueryUpgradePathReq struct {
-	ClusterID string `json:"ClusterId"`
+type UpgradeManager struct {
 }
 
-type Path struct {
-	Type     string   `json:"type"`
-	Versions []string `json:"versions"`
+func NewUpgradeManager() *UpgradeManager {
+	return &UpgradeManager{}
 }
 
-type QueryUpgradePathRsp struct {
-	Paths []Path
-}
-
-type QueryUpgradeVersionDiffInfoReq struct {
-	ClusterID string `json:"ClusterId"`
-	Version   string `json:"version"`
-}
-
-type QueryUpgradeVersionDiffInfoRsp struct {
-	ConfigDiffInfo []struct {
-		Name         string `json:"name"`
-		InstanceType string `json:"instanceType"`
-		CurrentVal   string `json:"currentVal"`
-		SuggestVal   string `json:"suggestVal"`
-		Range        string `json:"range"`
-		Description  string `json:"description"`
-	}
-}
-
-type ClusterUpgradeReq struct {
-	ClusterID     string `json:"ClusterId"`
-	TargetVersion string `json:"targetVersion"`
-	Parameters    []struct {
-		Name         string `json:"name"`
-		InstanceType string `json:"instanceType"`
-		Value        string `json:"value"`
-	}
-}
-
-type ClusterUpgradeRsp struct {
-	AsyncTaskWorkFlowInfo
+func (p *UpgradeManager) QueryUpdatePath(clusterID string) map[string][]string {
+	path := make(map[string][]string)
+	return path
 }

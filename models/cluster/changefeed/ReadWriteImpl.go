@@ -49,7 +49,9 @@ func (m *GormChangeFeedReadWrite) Delete(ctx context.Context, taskId string) (er
 	if "" == taskId {
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
-	task := &ChangeFeedTask{}
+	task := &ChangeFeedTask{
+		Type: DownstreamTypeMysql,
+	}
 
 	return m.DB(ctx).First(task, "id = ?", taskId).Delete(task).Error
 }

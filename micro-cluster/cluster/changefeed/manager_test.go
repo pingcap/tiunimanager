@@ -17,44 +17,41 @@ package changefeed
 
 import (
 	"context"
-	"reflect"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
-func TestManager_Delete(t *testing.T) {
-	type args struct {
-		ctx context.Context
-		id  string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p := &Manager{}
-			if err := p.Delete(tt.args.ctx, tt.args.id); (err != nil) != tt.wantErr {
-				t.Errorf("Delete() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+var manager = &Manager{}
+
+func TestMain(m *testing.M) {
+	var testFilePath string
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			testFilePath = d.GetDataDir()
+			os.MkdirAll(testFilePath, 0755)
+
+			return models.Open(d, false)
+		},
+	)
+	code := m.Run()
+	os.RemoveAll(testFilePath)
+
+	os.Exit(code)
 }
 
-func TestNewManager(t *testing.T) {
-	tests := []struct {
-		name string
-		want *Manager
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewManager(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewManager() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func TestManager_Delete(t *testing.T) {
+	id, err := manager.Create(context.TODO(), "name")
+	assert.NotEmpty(t, id)
+	assert.NoError(t, err)
+	err = manager.Delete(context.TODO(), id)
+	assert.NoError(t, err)
+}
+
+func TestManager_Create(t *testing.T) {
+	id, err := manager.Create(context.TODO(), "name")
+	assert.NotEmpty(t, id)
+	assert.NoError(t, err)
 }

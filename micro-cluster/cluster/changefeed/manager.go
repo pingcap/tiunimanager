@@ -30,6 +30,7 @@ func NewManager() *Manager {
 	return &Manager{}
 }
 
+
 // Create
 // @Description:
 // @Receiver p
@@ -46,12 +47,13 @@ func (p *Manager) Create(ctx context.Context, name string) (string, error) {
 		Downstream: changefeed.MysqlDownstream{
 			WorkerCount: 3,
 		},
+		Type: changefeed.DownstreamTypeMysql,
 	}
 
 	task, err := models.GetChangeFeedReaderWriter().Create(ctx, task)
 
 	if err != nil {
-		framework.LogWithContext(ctx).Error("failed to create change feed task, %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("failed to create change feed task, %s", err.Error())
 		return "", framework.WrapError(common.TIEM_CHANGE_FEED_CREATE_ERROR, "failed to create change feed task", err)
 	}
 
@@ -63,7 +65,7 @@ func (p *Manager) Delete(ctx context.Context, id string) error {
 	err := models.GetChangeFeedReaderWriter().Delete(ctx, id)
 
 	if err != nil {
-		framework.LogWithContext(ctx).Error("failed to create change feed task, %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("failed to create change feed task, %s", err.Error())
 		return framework.SimpleError(common.TIEM_CHANGE_FEED_CREATE_ERROR)
 	}
 

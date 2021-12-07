@@ -34,16 +34,6 @@ const (
 	WorkFlowStatusCanceled     = "Canceled"
 )
 
-type WorkFlowReturnType string
-
-//Definition workflow return type information
-const (
-	WorkFlowReturnTypeUserTask     WorkFlowReturnType = "UserTask"
-	WorkFlowReturnTypeSyncFuncTask WorkFlowReturnType = "SyncFuncTask"
-	WorkFlowReturnTypeCallbackTask WorkFlowReturnType = "CallbackTask"
-	WorkFlowReturnTypePollingTasK  WorkFlowReturnType = "PollingTasK"
-)
-
 // Definition workflow name
 const (
 	WorkFlowCreateCluster    = "CreateCluster"

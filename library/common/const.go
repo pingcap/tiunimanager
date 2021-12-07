@@ -50,8 +50,8 @@ const (
 
 const (
 	LogFileSystem      = "system"
-	LogFileSecondParty = "secondparty"
-	LogFileLibTiup     = "libtiup"
+	LogFileSecondParty = "2nd"
+	LogFileLibTiUP     = "libTiUP"
 
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"
@@ -84,7 +84,7 @@ const SlowSqlThreshold = 100
 type ClusterRelationType uint32
 
 const (
-	SlaveTo     ClusterRelationType = iota + 1
+	SlaveTo ClusterRelationType = iota + 1
 	StandBy
 	CloneFrom
 	RecoverFrom

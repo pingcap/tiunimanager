@@ -16,15 +16,21 @@
 package models
 
 import (
+	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	changefeed2 "github.com/pingcap-inc/tiem/models/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
+	"github.com/pingcap-inc/tiem/models/workflow"
 	"gorm.io/gorm"
 )
 
 var defaultDb database
 
 type database struct {
-	base                   *gorm.DB
-	changeFeedReaderWriter changefeed2.ReaderWriter
+	base                     *gorm.DB
+	ChangeFeedReaderWriter   changefeed2.ReaderWriter
+	WorkFlowReaderWriter     workflow.ReaderWriter
+	ImportExportReaderWriter importexport.ReaderWriter
+	BRReaderWriter           backuprestore.ReaderWriter
 }
 
 func open() {
@@ -32,7 +38,10 @@ func open() {
 }
 
 func initReaderWriter() {
-	defaultDb.changeFeedReaderWriter = changefeed2.NewGormChangeFeedReadWrite(defaultDb.base)
+	defaultDb.ChangeFeedReaderWriter = changefeed2.NewGormChangeFeedReadWrite(defaultDb.base)
+	defaultDb.WorkFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
+	defaultDb.ImportExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
+	defaultDb.BRReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
 }
 
 func addTable() {
@@ -40,5 +49,33 @@ func addTable() {
 }
 
 func GetChangeFeedReaderWriter() changefeed2.ReaderWriter {
-	return defaultDb.changeFeedReaderWriter
+	return defaultDb.ChangeFeedReaderWriter
+}
+
+func SetChangeFeedReaderWriter(rw changefeed2.ReaderWriter) {
+	defaultDb.ChangeFeedReaderWriter = rw
+}
+
+func GetWorkFlowReaderWriter() workflow.ReaderWriter {
+	return defaultDb.WorkFlowReaderWriter
+}
+
+func SetWorkFlowReaderWriter(rw workflow.ReaderWriter) {
+	defaultDb.WorkFlowReaderWriter = rw
+}
+
+func GetImportExportReaderWriter() importexport.ReaderWriter {
+	return defaultDb.ImportExportReaderWriter
+}
+
+func SetImportExportReaderWriter(rw importexport.ReaderWriter) {
+	defaultDb.ImportExportReaderWriter = rw
+}
+
+func GetBRReaderWriter() backuprestore.ReaderWriter {
+	return defaultDb.BRReaderWriter
+}
+
+func SetBRReaderWriter(rw backuprestore.ReaderWriter) {
+	defaultDb.BRReaderWriter = rw
 }

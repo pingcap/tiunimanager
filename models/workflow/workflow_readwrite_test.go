@@ -85,12 +85,15 @@ func TestFlowReadWrite_UpdateWorkFlowStatus(t *testing.T) {
 	flowCreate, errCreate := rw.CreateWorkFlow(context.TODO(), flow)
 	assert.NoError(t, errCreate)
 
-	errUpdate := rw.UpdateWorkFlowStatus(context.TODO(), flowCreate.ID, "FlowEndStatus")
+	flowCreate.Status = "FlowEndStatus"
+	flowCreate.Context = "FlowContext"
+	errUpdate := rw.UpdateWorkFlow(context.TODO(), flowCreate.ID, flowCreate.Status, flowCreate.Context)
 	assert.NoError(t, errUpdate)
 
 	flowGet, errGet := rw.GetWorkFlow(context.TODO(), flowCreate.ID)
 	assert.Equal(t, flowCreate.ID, flowGet.ID)
-	assert.Equal(t, flowGet.Status, "FlowEndStatus")
+	assert.Equal(t, flowCreate.Status, flowGet.Status)
+	assert.Equal(t, flowCreate.Context, flowGet.Context)
 	assert.NoError(t, errGet)
 }
 
@@ -182,9 +185,9 @@ func TestFlowReadWrite_UpdateWorkFlowNode(t *testing.T) {
 
 	nodeQuery, errQuery := rw.GetWorkFlowNode(context.TODO(), nodeCreate.ID)
 	assert.NoError(t, errQuery)
-	assert.Equal(t, nodeQuery.ID, nodeCreate.ID)
-	assert.Equal(t, "NodeEndStatus", nodeQuery.Status)
-	assert.Equal(t, "success", nodeQuery.Result)
+	assert.Equal(t, nodeCreate.ID, nodeQuery.ID)
+	assert.Equal(t, nodeCreate.Status, nodeQuery.Status)
+	assert.Equal(t, nodeCreate.Result, nodeQuery.Result)
 }
 
 func TestFlowReadWrite_UpdateWorkFlowDetail(t *testing.T) {
@@ -193,8 +196,9 @@ func TestFlowReadWrite_UpdateWorkFlowDetail(t *testing.T) {
 			TenantId: "tenantId",
 			Status:   "FlowInitStatus",
 		},
-		Name:  "flowName",
-		BizID: "clusterId",
+		Name:    "flowName",
+		BizID:   "clusterId",
+		Context: "flowContext",
 	}
 	flowCreate, errFlowCreate := rw.CreateWorkFlow(context.TODO(), flow)
 	assert.NoError(t, errFlowCreate)
@@ -225,7 +229,8 @@ func TestFlowReadWrite_UpdateWorkFlowDetail(t *testing.T) {
 
 	flowQuery, nodeQuery, errQuery := rw.QueryDetailWorkFlow(context.TODO(), flowCreate.ID)
 	assert.NoError(t, errQuery)
-	assert.Equal(t, "FlowEndStatus", flowQuery.Status)
-	assert.Equal(t, "NodeEndStatus", nodeQuery[0].Status)
-	assert.Equal(t, "success", nodeQuery[0].Result)
+	assert.Equal(t, flowCreate.Status, flowQuery.Status)
+	assert.Equal(t, flowCreate.Context, flowQuery.Status)
+	assert.Equal(t, nodeCreate.Status, nodeQuery[0].Status)
+	assert.Equal(t, nodeCreate.Result, nodeQuery[0].Result)
 }

@@ -38,7 +38,7 @@ func (m *WorkFlowReadWrite) CreateWorkFlow(ctx context.Context, flow *WorkFlow) 
 	return flow, m.DB(ctx).Create(flow).Error
 }
 
-func (m *WorkFlowReadWrite) UpdateWorkFlowStatus(ctx context.Context, flowId string, status string) (err error) {
+func (m *WorkFlowReadWrite) UpdateWorkFlow(ctx context.Context, flowId string, status string, flowContext string) (err error) {
 	if "" == flowId || "" == status {
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
@@ -50,7 +50,8 @@ func (m *WorkFlowReadWrite) UpdateWorkFlowStatus(ctx context.Context, flowId str
 	}
 
 	return m.DB(ctx).Model(flow).
-		Update("status", status).Error
+		Update("status", status).
+		Update("context", flowContext).Error
 }
 
 func (m *WorkFlowReadWrite) GetWorkFlow(ctx context.Context, flowId string) (flow *WorkFlow, err error) {
@@ -96,7 +97,7 @@ func (m *WorkFlowReadWrite) GetWorkFlowNode(ctx context.Context, nodeId string) 
 }
 
 func (m *WorkFlowReadWrite) UpdateWorkFlowDetail(ctx context.Context, flow *WorkFlow, nodes []*WorkFlowNode) (err error) {
-	err = m.UpdateWorkFlowStatus(ctx, flow.ID, flow.Status)
+	err = m.UpdateWorkFlow(ctx, flow.ID, flow.Status, flow.Context)
 	if err != nil {
 		return err
 	}

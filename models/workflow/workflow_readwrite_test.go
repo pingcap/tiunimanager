@@ -219,7 +219,7 @@ func TestFlowReadWrite_UpdateWorkFlowDetail(t *testing.T) {
 	flowQuery, nodeQuery, errQuery := rw.QueryDetailWorkFlow(context.TODO(), flowCreate.ID)
 	assert.NoError(t, errQuery)
 	assert.Equal(t, flowCreate.Status, flowQuery.Status)
-	assert.Equal(t, flowCreate.Context, flowQuery.Status)
+	assert.Equal(t, flowCreate.Context, flowQuery.Context)
 	assert.Equal(t, nodeCreate.Status, nodeQuery[0].Status)
 	assert.Equal(t, nodeCreate.Result, nodeQuery[0].Result)
 }

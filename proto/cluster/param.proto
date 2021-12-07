@@ -70,12 +70,15 @@ message DetailParamGroupResponse {
 message ApplyParamGroupRequest {
   int64 paramGroupId = 1;
   string clusterId = 2;
+  OperatorDTO operator = 3;
+  bool needReboot = 4;
 }
 
 message ApplyParamGroupResponse {
   ResponseStatusDTO respStatus = 1;
   int64 paramGroupId = 2;
   string clusterId = 3;
+  DisplayStatusDTO displayInfo = 4;
 }
 
 message CopyParamGroupRequest {
@@ -106,11 +109,13 @@ message UpdateClusterParamsRequest {
   string clusterId = 1;
   repeated UpdateClusterParamDTO params = 2;
   OperatorDTO operator = 3;
+  bool needReboot = 4;
 }
 
 message UpdateClusterParamsResponse {
   ResponseStatusDTO respStatus = 1;
   string clusterId = 2;
+  DisplayStatusDTO displayInfo = 3;
 }
 
 message InspectClusterParamsRequest {
@@ -181,7 +186,12 @@ message ClusterParamDTO {
 
 message UpdateClusterParamDTO {
   int64 paramId = 1;
-  ParamRealValueDTO realValue = 2;
+  string name = 2;
+  string componentType = 3;
+  int32 hasReboot = 4;
+  int32 source = 5;
+  int32 type = 6;
+  ParamRealValueDTO realValue = 7;
 }
 
 message ParamRealValueDTO {

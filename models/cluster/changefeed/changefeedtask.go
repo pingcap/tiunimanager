@@ -25,12 +25,51 @@ import (
 	"time"
 )
 
+type Status string
+
+const (
+	Initial  Status = "Initial"
+	Normal   Status = "Normal"
+	Stopped  Status = "Stopped"
+	Finished Status = "Finished"
+	Error    Status = "Error"
+	Failed   Status = "Failed"
+	Unknown  Status = "Unknown"
+)
+
+func (s Status) IsFinal() bool {
+	return Finished == s || Failed == s
+}
+
+func (s Status) ToString() string {
+	return string(s)
+}
+
+func invalidStatus(s string) bool {
+	return Initial.ToString() == s ||
+		Normal.ToString() == s ||
+		Stopped.ToString() == s ||
+		Finished.ToString() == s ||
+		Error.ToString() == s ||
+		Failed.ToString() == s
+}
+
+func ConvertStatus(s string) (status Status, err error) {
+	if invalidStatus(s) {
+		return Status(s), nil
+	} else {
+		return Unknown, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+	}
+}
+
 type ChangeFeedTask struct {
 	dbCommon.Entity
+	TaskStatus        Status         `gorm:"-"`
 	Name              string         `gorm:"type:varchar(32)"`
 	ClusterId         string         `gorm:"not null;type:varchar(22);index"`
 	Type              DownstreamType `gorm:"not null;type:varchar(16)"`
 	StartTS           int64          `gorm:"column:start_ts"`
+	TargetTS          int64          `gorm:"column:target_ts"`
 	FilterRulesConfig string         `gorm:"type:text"`
 	Downstream        interface{}    `gorm:"-"`
 	DownstreamConfig  string         `gorm:"type:text"`
@@ -69,7 +108,7 @@ func (dt DownstreamType) unmarshal(cc string) (interface{}, error) {
 
 func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
 	if t.Downstream != nil {
-		b , jsonErr := json.Marshal(t.Downstream)
+		b, jsonErr := json.Marshal(t.Downstream)
 		if jsonErr == nil {
 			t.DownstreamConfig = string(b)
 		} else {

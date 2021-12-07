@@ -212,7 +212,7 @@ func (handler *DBServiceHandler) FindToken(ctx context.Context, req *dbpb.DBFind
 	} else {
 		log.Infof("FindToKen failed, token: %s, error: %v", req.GetTokenString(), err)
 	}
-	return err
+	return nil
 }
 
 func (handler *DBServiceHandler) FindRolesByPermission(ctx context.Context, req *dbpb.DBFindRolesByPermissionRequest, resp *dbpb.DBFindRolesByPermissionResponse) error {

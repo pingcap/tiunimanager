@@ -30,20 +30,20 @@ type ListParamGroupReq struct {
 	controller.PageRequest
 
 	Name       string `json:"name" form:"name" example:"default"`
-	DbType     int32  `json:"dbType" form:"dbType" example:"0"`
-	HasDefault int32  `json:"hasDefault" form:"hasDefault" example:"0"`
-	Version    string `json:"version" form:"version" example:"v5.0"`
+	DbType     int32  `json:"dbType" form:"dbType" example:"0" enums:"0,1,2"`
+	HasDefault int32  `json:"hasDefault" form:"hasDefault" example:"0" enums:"0,1,2"`
+	Version    string `json:"version" form:"version" example:"5.0"`
 	Spec       string `json:"spec" form:"spec" example:"8C16G"`
 	HasDetail  bool   `json:"hasDetail" form:"hasDetail" example:"false"`
 }
 
 type CreateParamGroupReq struct {
 	Name       string                 `json:"name" example:"8C16GV4_default"`
-	DbType     int32                  `json:"dbType" example:"1"`
-	HasDefault int32                  `json:"hasDefault" example:"1"`
-	Version    string                 `json:"version" example:"v5.0"`
+	DbType     int32                  `json:"dbType" example:"1" enums:"1,2"`
+	HasDefault int32                  `json:"hasDefault" example:"1" enums:"1,2"`
+	Version    string                 `json:"version" example:"5.0"`
 	Spec       string                 `json:"spec" example:"8C16G"`
-	GroupType  int32                  `json:"groupType" example:"1"`
+	GroupType  int32                  `json:"groupType" example:"1" enums:"1,2"`
 	Note       string                 `json:"note" example:"default param group"`
 	Params     []CreateAndUpdateParam `json:"params"`
 }
@@ -62,7 +62,8 @@ type CopyParamGroupReq struct {
 }
 
 type ApplyParamGroupReq struct {
-	ClusterId string `json:"clusterId" example:"123"`
+	ClusterId  string `json:"clusterId" example:"123"`
+	NeedReboot bool   `json:"needReboot" example:"false"`
 }
 
 type CreateAndUpdateParam struct {

@@ -54,9 +54,9 @@ func Login(c *gin.Context) {
 
 	controller.HandleHttpResponse(c, err, func() (common.TIEM_ERROR_CODE, string) {
 		return common.TIEM_ERROR_CODE(result.Status.Code), result.Status.Message
-	}, func() interface{} {
+	}, func() (interface{}, error) {
 		c.Header("Token", result.TokenString)
-		return UserIdentity{UserName: req.UserName, Token: result.TokenString}
+		return UserIdentity{UserName: req.UserName, Token: result.TokenString}, nil
 	}, nil,
 	)
 }
@@ -83,8 +83,8 @@ func Logout(c *gin.Context) {
 
 	controller.HandleHttpResponse(c, err, func() (common.TIEM_ERROR_CODE, string) {
 		return common.TIEM_ERROR_CODE(result.Status.Code), result.Status.Message
-	}, func() interface{} {
-		return UserIdentity{UserName: result.GetAccountName()}
+	}, func() (interface{}, error) {
+		return UserIdentity{UserName: result.GetAccountName()}, nil
 	}, nil,
 	)
 }

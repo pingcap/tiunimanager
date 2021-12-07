@@ -40,7 +40,7 @@ func ClusterKnowledge(c *gin.Context) {
 	var allSpec = new([]knowledge.ClusterTypeSpec)
 	b, err := json.Marshal(knowledge.SpecKnowledge.Specs)
 
-	if err !=nil {
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, controller.Fail(http.StatusInternalServerError, ""))
 	} else {
 		json.Unmarshal(b, allSpec)

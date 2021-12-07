@@ -40,7 +40,7 @@ func (secondMicro *SecondMicro) EditClusterConfig(ctx context.Context, req Clust
 	var args []string
 	if req.TiDBClusterComponent == spec.TiDBClusterComponent_TiDB {
 		args = append(args, "set")
-	} else if req.TiDBClusterComponent == spec.TiDBClusterComponent_TiKV || req.TiDBClusterComponent == spec.TiDBClusterComponent_PD{
+	} else if req.TiDBClusterComponent == spec.TiDBClusterComponent_TiKV || req.TiDBClusterComponent == spec.TiDBClusterComponent_PD {
 		args = append(args, "set config")
 		if len(req.InstanceAddr) != 0 {
 			args = append(args, fmt.Sprintf("\"%s\"", req.InstanceAddr))

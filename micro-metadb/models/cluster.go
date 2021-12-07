@@ -296,7 +296,7 @@ func (m *DAOClusterManager) ListClusterDetails(ctx context.Context, clusterId, c
 	result = make([]*ClusterFetchResult, len(clusters))
 
 	if total == 0 {
-		return result, 0,nil
+		return result, 0, nil
 	}
 
 	flowIds := make([]uint, len(clusters))

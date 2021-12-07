@@ -97,23 +97,29 @@ func defaultCluster() *ClusterAggregation {
 				ServerConfigs:    spec.ServerConfigs{},
 				TiDBServers: []*spec.TiDBSpec{
 					{
-						Host:      "127.0.0.1",
-						DeployDir: "/mnt/sda/testCluster/tidb-deploy",
-						LogDir:    "testCluster/tidb-log",
+						Host:       "127.0.0.1",
+						Port:       10000,
+						StatusPort: 10001,
+						DeployDir:  "/mnt/sda/testCluster/tidb-deploy",
+						LogDir:     "testCluster/tidb-log",
 					},
 				},
 				PDServers: []*spec.PDSpec{
 					{
-						Host:      "127.0.0.1",
-						DeployDir: "/mnt/sda/testCluster/pd-deploy",
-						LogDir:    "testCluster/tidb-log",
+						Host:       "127.0.0.1",
+						ClientPort: 10005,
+						PeerPort:   10006,
+						DeployDir:  "/mnt/sda/testCluster/pd-deploy",
+						LogDir:     "testCluster/tidb-log",
 					},
 				},
 				TiKVServers: []*spec.TiKVSpec{
 					{
-						Host:      "127.0.0.2",
-						DeployDir: "/mnt/sda/testCluster/tikv-deploy",
-						LogDir:    "testCluster/tidb-log",
+						Host:       "127.0.0.2",
+						Port:       10010,
+						StatusPort: 10011,
+						DeployDir:  "/mnt/sda/testCluster/tikv-deploy",
+						LogDir:     "testCluster/tidb-log",
 					},
 				},
 				TiFlashServers: []*spec.TiFlashSpec{
@@ -608,6 +614,14 @@ func TestModifyParameters(t *testing.T) {
 			Source:        0,
 			RealValue:     clusterpb.ParamRealValueDTO{Cluster: "2"},
 		},
+		{
+			ParamId:       3,
+			Name:          "test_param_3",
+			ComponentType: "PD",
+			HasReboot:     1,
+			Source:        3,
+			RealValue:     clusterpb.ParamRealValueDTO{Cluster: "3"},
+		},
 	}})
 	assert.NoError(t, err)
 	assert.Equal(t, "testCluster", got.Cluster.ClusterName)
@@ -656,21 +670,15 @@ func Test_modifyParameters(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		mockTiup.EXPECT().MicroSrvTiupEditGlobalConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+		mockTiup.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockTiup.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockTiup.EXPECT().MicroSrvGetTaskStatusByBizID(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "", nil)
 
 		task := &TaskEntity{
 			Id: 123,
 		}
 		modifyCtx := NewFlowContext(context.TODO())
-		modifyCtx.SetData(contextClusterKey, &ClusterAggregation{
-			LastBackupRecord: &BackupRecord{
-				Id:          123,
-				StorageType: StorageTypeS3,
-			},
-			Cluster: &Cluster{
-				Id:          "test-tidb123",
-				ClusterName: "test-tidb",
-			},
-		})
+		modifyCtx.SetData(contextClusterKey, defaultCluster())
 		modifyCtx.SetData(contextModifyParamsKey, &ModifyParam{
 			NeedReboot: false,
 			Params: []*ApplyParam{
@@ -689,6 +697,22 @@ func Test_modifyParameters(t *testing.T) {
 					HasReboot:     1,
 					Source:        0,
 					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "2"},
+				},
+				{
+					ParamId:       3,
+					Name:          "test_param_3",
+					ComponentType: "PD",
+					HasReboot:     0,
+					Source:        3,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "3"},
+				},
+				{
+					ParamId:       4,
+					Name:          "test_param_4",
+					ComponentType: "TiDB",
+					HasReboot:     0,
+					Source:        3,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "4"},
 				},
 			},
 		})

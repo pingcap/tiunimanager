@@ -47,10 +47,10 @@ func init() {
 
 func TestSecondMicro_EditClusterConfig_v1(t *testing.T) {
 	req = ClusterEditConfigReq{
-		DbConnParameter: dbConnParam3,
+		DbConnParameter:      dbConnParam3,
 		TiDBClusterComponent: spec.TiDBClusterComponent_TiKV,
-		ConfigKey: "split.qps-threshold",
-		ConfigValue: "1000",
+		ConfigKey:            "split.qps-threshold",
+		ConfigValue:          "1000",
 	}
 	err := secondMicro3.EditClusterConfig(context.TODO(), req, 0)
 	if err == nil {
@@ -60,11 +60,11 @@ func TestSecondMicro_EditClusterConfig_v1(t *testing.T) {
 
 func TestSecondMicro_EditClusterConfig_v2(t *testing.T) {
 	req = ClusterEditConfigReq{
-		DbConnParameter: dbConnParam3,
-		InstanceAddr: "127.0.0.1:10020",
+		DbConnParameter:      dbConnParam3,
+		InstanceAddr:         "127.0.0.1:10020",
 		TiDBClusterComponent: spec.TiDBClusterComponent_TiKV,
-		ConfigKey: "split.qps-threshold",
-		ConfigValue: "3000",
+		ConfigKey:            "split.qps-threshold",
+		ConfigValue:          "3000",
 	}
 	err := secondMicro3.EditClusterConfig(context.TODO(), req, 0)
 	if err == nil {
@@ -74,10 +74,10 @@ func TestSecondMicro_EditClusterConfig_v2(t *testing.T) {
 
 func TestSecondMicro_EditClusterConfig_v3(t *testing.T) {
 	req = ClusterEditConfigReq{
-		DbConnParameter: dbConnParam3,
+		DbConnParameter:      dbConnParam3,
 		TiDBClusterComponent: spec.TiDBClusterComponent_TiKV,
-		ConfigKey: "log-level",
-		ConfigValue: "'warn'",
+		ConfigKey:            "log-level",
+		ConfigValue:          "'warn'",
 	}
 	err := secondMicro3.EditClusterConfig(context.TODO(), req, 0)
 	if err == nil {
@@ -87,10 +87,10 @@ func TestSecondMicro_EditClusterConfig_v3(t *testing.T) {
 
 func TestSecondMicro_EditClusterConfig_v4(t *testing.T) {
 	req = ClusterEditConfigReq{
-		DbConnParameter: dbConnParam3,
+		DbConnParameter:      dbConnParam3,
 		TiDBClusterComponent: spec.TiDBClusterComponent_PD,
-		ConfigKey: "log.level",
-		ConfigValue: "'info'",
+		ConfigKey:            "log.level",
+		ConfigValue:          "'info'",
 	}
 	err := secondMicro3.EditClusterConfig(context.TODO(), req, 0)
 	if err == nil {
@@ -100,10 +100,10 @@ func TestSecondMicro_EditClusterConfig_v4(t *testing.T) {
 
 func TestSecondMicro_EditClusterConfig_v5(t *testing.T) {
 	req = ClusterEditConfigReq{
-		DbConnParameter: dbConnParam3,
+		DbConnParameter:      dbConnParam3,
 		TiDBClusterComponent: spec.TiDBClusterComponent_TiDB,
-		ConfigKey: "tidb_slow_log_threshold",
-		ConfigValue: "200",
+		ConfigKey:            "tidb_slow_log_threshold",
+		ConfigValue:          "200",
 	}
 	err := secondMicro3.EditClusterConfig(context.TODO(), req, 0)
 	if err == nil {
@@ -113,10 +113,10 @@ func TestSecondMicro_EditClusterConfig_v5(t *testing.T) {
 
 func TestSecondMicro_EditClusterConfig_v6(t *testing.T) {
 	req = ClusterEditConfigReq{
-		DbConnParameter: dbConnParam3,
+		DbConnParameter:      dbConnParam3,
 		TiDBClusterComponent: spec.TiDBClusterComponent_TiFlash,
-		ConfigKey: "tidb_slow_log_threshold",
-		ConfigValue: "200",
+		ConfigKey:            "tidb_slow_log_threshold",
+		ConfigValue:          "200",
 	}
 	err := secondMicro3.EditClusterConfig(context.TODO(), req, 0)
 	if err == nil || !strings.Contains(err.Error(), "not support") {

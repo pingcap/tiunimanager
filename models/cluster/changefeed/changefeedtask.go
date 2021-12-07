@@ -58,7 +58,7 @@ func ConvertStatus(s string) (status Status, err error) {
 	if invalidStatus(s) {
 		return Status(s), nil
 	} else {
-		return Unknown, framework.SimpleError(common.TIEM_SUCCESS)
+		return Unknown, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 }
 

@@ -41,7 +41,6 @@ type ResultWithPage struct {
 func HandleHttpResponse(c *gin.Context, err error,
 	withStatusCode func() (common.TIEM_ERROR_CODE, string),
 	withData func() (interface{}, error), withPage func() Page) {
-
 	if err != nil {
 		framework.LogWithContext(c).Error(err.Error())
 		c.JSON(http.StatusInternalServerError, Fail(500, err.Error()))

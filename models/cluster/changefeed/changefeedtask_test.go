@@ -197,6 +197,9 @@ func TestGormChangeFeedReadWrite_QueryByClusterId(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 3, int(total))
 	assert.Equal(t, 9999, int(tasks[1].StartTS))
+
+	_, _, err = testRW.QueryByClusterId(context.TODO(), "", 0, 2)
+	assert.Error(t, err)
 }
 
 func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
@@ -280,6 +283,7 @@ func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
 			Entity: common.Entity{ID: "111"},
 		}}, true},
 		{"without id", args{context.TODO(), &ChangeFeedTask{}}, true},
+
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -295,6 +299,62 @@ func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
 				assert.Equal(t, newString, updated.FilterRulesConfig)
 				assert.NotEqual(t, newString, updated.ClusterId)
 				assert.NotEqual(t, int8(newInt), updated.Status)
+			}
+		})
+	}
+}
+
+func TestConvertStatus(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus Status
+		wantErr    bool
+	}{
+		{"Initial", args{"Initial"}, Initial, false},
+		{"Normal", args{"Normal"}, Normal, false},
+		{"Stopped", args{"Stopped"}, Stopped, false},
+		{"Finished", args{"Finished"}, Finished, false},
+		{"Error", args{"Error"}, Error, false},
+		{"Failed", args{"Failed"}, Failed, false},
+		{"Unknown", args{"Unknown"}, Unknown, true},
+		{"whatever", args{"Unknown"}, Unknown, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotStatus, err := ConvertStatus(tt.args.s)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ConvertStatus() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotStatus != tt.wantStatus {
+				t.Errorf("ConvertStatus() gotStatus = %v, want %v", gotStatus, tt.wantStatus)
+			}
+		})
+	}
+}
+
+func TestStatus_IsFinal(t *testing.T) {
+	tests := []struct {
+		name string
+		s    Status
+		want bool
+	}{
+		{"Initial", Initial, false},
+		{"Normal", Normal, false},
+		{"Stopped", Stopped, false},
+		{"Finished", Finished, true},
+		{"Error", Error, false},
+		{"Failed", Failed, true},
+		{"Unknown", Unknown, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.s.IsFinal(); got != tt.want {
+				t.Errorf("IsFinal() = %v, want %v", got, tt.want)
 			}
 		})
 	}

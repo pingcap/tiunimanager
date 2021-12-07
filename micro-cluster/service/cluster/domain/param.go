@@ -60,8 +60,9 @@ type ParamValueType int32
 
 const (
 	Integer ParamValueType = iota
-	Boolean
 	String
+	Boolean
+	Float
 )
 
 type ModifyParam struct {

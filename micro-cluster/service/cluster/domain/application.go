@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -757,88 +758,165 @@ func syncTopology(task *TaskEntity, context *FlowContext) bool {
 
 func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 	clusterAggregation := context.GetData(contextClusterKey).(*ClusterAggregation)
-	cluster := clusterAggregation.Cluster
 
 	modifyParam := context.GetData(contextModifyParamsKey).(*ModifyParam)
 	getLoggerWithContext(context).Debugf("got modify need reboot: %v, params size: %d", modifyParam.NeedReboot, len(modifyParam.Params))
 
 	// grouping by parameter source
-	paramContainer := make(map[int32][]*ApplyParam, 0)
+	paramContainer := make(map[interface{}][]*ApplyParam, 0)
 	for i, param := range modifyParam.Params {
 		// if source is 2, then insert tiup and sql respectively
 		getLoggerWithContext(context).Debugf("loop %d modify param name: %v, cluster value: %v", i, param.Name, param.RealValue.Cluster)
 		if param.Source == int32(TiupAndSql) {
-			putParamContainer(paramContainer, int32(TiUP), modifyParam, i)
-			putParamContainer(paramContainer, int32(SQL), modifyParam, i)
+			putParamContainer(paramContainer, int32(TiUP), param)
+			putParamContainer(paramContainer, int32(SQL), param)
 		} else {
-			putParamContainer(paramContainer, param.Source, modifyParam, i)
+			putParamContainer(paramContainer, param.Source, param)
 		}
 	}
 
 	for source, params := range paramContainer {
 		getLoggerWithContext(context).Debugf("loop current param container source: %v, params size: %d", source, len(params))
-		switch source {
+		switch source.(int32) {
 		case int32(TiUP):
-			configs := make([]secondparty.GlobalComponentConfig, len(params))
-			for i, param := range params {
-				cm := map[string]interface{}{}
-				switch param.Type {
-				case int32(Integer):
-					c, err := strconv.Atoi(param.RealValue.Cluster)
-					if err != nil {
-						getLoggerWithContext(context).Errorf("strconv realvalue type int fail, err = %s", err.Error())
-						task.Fail(err)
-						return false
-					}
-					cm[param.Name] = c
-				case int32(Boolean):
-					c, err := strconv.ParseBool(param.RealValue.Cluster)
-					if err != nil {
-						getLoggerWithContext(context).Errorf("strconv realvalue type bool fail, err = %s", err.Error())
-						task.Fail(err)
-						return false
-					}
-					cm[param.Name] = c
-				default:
-					cm[param.Name] = param.RealValue.Cluster
-				}
-				configs[i] = secondparty.GlobalComponentConfig{
-					TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
-					ConfigMap:            cm,
-				}
-			}
-			getLoggerWithContext(context).Debugf("modify global component configs: %v", configs)
-			req := secondparty.CmdEditGlobalConfigReq{
-				TiUPComponent:          secondparty.ClusterComponentTypeStr,
-				InstanceName:           cluster.ClusterName,
-				GlobalComponentConfigs: configs,
-				TimeoutS:               0,
-				Flags:                  []string{},
-			}
-			editConfigId, err := secondparty.SecondParty.MicroSrvTiupEditGlobalConfig(context, req, uint64(task.Id))
-			if err != nil {
-				getLoggerWithContext(context).Errorf("call tiup api edit global config err = %s", err.Error())
-				task.Fail(err)
+			if !tiupEditConfig(context, task, params, clusterAggregation) {
 				return false
 			}
-			getLoggerWithContext(context).Infof("got editConfigId: %v", editConfigId)
 		case int32(SQL):
 			// todo: invoke secondparty
 		case int32(API):
-			// todo: invoke secondparty
+			if !apiEditConfig(context, task, params, clusterAggregation) {
+				return false
+			}
 		}
 	}
 	task.Success(nil)
 	return true
 }
 
-func putParamContainer(paramContainer map[int32][]*ApplyParam, source int32, modifyParam *ModifyParam, i int) {
-	params := paramContainer[source]
+func apiEditConfig(context *FlowContext, task *TaskEntity, params []*ApplyParam, clusterAggregation *ClusterAggregation) bool {
+	compContainer := make(map[interface{}][]*ApplyParam, 0)
+	for i, param := range params {
+		getLoggerWithContext(context).Debugf("loop %d api componet type: %v, param name: %v", i, param.ComponentType, param.Name)
+		putParamContainer(compContainer, param.ComponentType, param)
+	}
+	if len(compContainer) > 0 {
+		for comp, params := range compContainer {
+			compStr := strings.ToLower(comp.(string))
+			cm := map[string]interface{}{}
+			for _, param := range params {
+				clusterValue, err := convertRealParamType(context, param)
+				if err != nil {
+					task.Fail(err)
+					return false
+				}
+				cm[param.Name] = clusterValue
+			}
+
+			// Get the instance host and port of the component based on the topology
+			topo := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
+			servers := make(map[string]uint, 0)
+			switch strings.ToLower(compStr) {
+			case spec.ComponentTiDB:
+				for _, server := range topo.TiDBServers {
+					servers[server.Host] = uint(server.StatusPort)
+				}
+			case spec.ComponentTiKV:
+				for _, server := range topo.TiKVServers {
+					servers[server.Host] = uint(server.StatusPort)
+				}
+			case spec.ComponentPD:
+				server := topo.PDServers[rand.Intn(len(topo.PDServers))]
+				servers[server.Host] = uint(server.ClientPort)
+			}
+			for host, port := range servers {
+				hasSuc, err := secondparty.SecondParty.ApiEditConfig(context, secondparty.ApiEditConfigReq{
+					TiDBClusterComponent: spec2.TiDBClusterComponent(compStr),
+					InstanceHost:         host,
+					InstancePort:         port,
+					Headers:              map[string]string{},
+					ConfigMap:            cm,
+				})
+				if err != nil || !hasSuc {
+					getLoggerWithContext(context).Errorf("call secondparty api edit config is %v, err = %s", hasSuc, err)
+					task.Fail(err)
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
+func tiupEditConfig(context *FlowContext, task *TaskEntity, params []*ApplyParam, clusterAggregation *ClusterAggregation) bool {
+	configs := make([]secondparty.GlobalComponentConfig, len(params))
+	for i, param := range params {
+		cm := map[string]interface{}{}
+		clusterValue, err := convertRealParamType(context, param)
+		if err != nil {
+			task.Fail(err)
+			return false
+		}
+		cm[param.Name] = clusterValue
+		configs[i] = secondparty.GlobalComponentConfig{
+			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
+			ConfigMap:            cm,
+		}
+	}
+	getLoggerWithContext(context).Debugf("modify global component configs: %v", configs)
+	req := secondparty.CmdEditGlobalConfigReq{
+		TiUPComponent:          secondparty.ClusterComponentTypeStr,
+		InstanceName:           clusterAggregation.Cluster.ClusterName,
+		GlobalComponentConfigs: configs,
+		TimeoutS:               0,
+		Flags:                  []string{},
+	}
+	editConfigId, err := secondparty.SecondParty.MicroSrvTiupEditGlobalConfig(context, req, uint64(task.Id))
+	if err != nil {
+		getLoggerWithContext(context).Errorf("call secondparty tiup edit global config err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
+	getLoggerWithContext(context).Infof("got editConfigId: %v", editConfigId)
+	// loop get tiup exec status
+	return getTaskStatusByTaskId(context, task)
+}
+
+func convertRealParamType(context *FlowContext, param *ApplyParam) (interface{}, error) {
+	switch param.Type {
+	case int32(Integer):
+		c, err := strconv.ParseInt(param.RealValue.Cluster, 0, 64)
+		if err != nil {
+			getLoggerWithContext(context).Errorf("strconv realvalue type int fail, err = %s", err.Error())
+			return nil, err
+		}
+		return c, nil
+	case int32(Boolean):
+		c, err := strconv.ParseBool(param.RealValue.Cluster)
+		if err != nil {
+			getLoggerWithContext(context).Errorf("strconv realvalue type bool fail, err = %s", err.Error())
+			return nil, err
+		}
+		return c, nil
+	case int32(Float):
+		c, err := strconv.ParseFloat(param.RealValue.Cluster, 64)
+		if err != nil {
+			getLoggerWithContext(context).Errorf("strconv realvalue type float fail, err = %s", err.Error())
+			return nil, err
+		}
+		return c, nil
+	default:
+		return param.RealValue.Cluster, nil
+	}
+}
+
+func putParamContainer(paramContainer map[interface{}][]*ApplyParam, key interface{}, param *ApplyParam) {
+	params := paramContainer[key]
 	if params == nil {
-		paramContainer[source] = []*ApplyParam{modifyParam.Params[i]}
+		paramContainer[key] = []*ApplyParam{param}
 	} else {
-		params = append(params, modifyParam.Params[i])
-		paramContainer[source] = params
+		params = append(params, param)
+		paramContainer[key] = params
 	}
 }
 

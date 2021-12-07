@@ -672,6 +672,7 @@ func Test_modifyParameters(t *testing.T) {
 		mockTiup.EXPECT().MicroSrvTiupEditGlobalConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
 		mockTiup.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 		mockTiup.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
+		mockTiup.EXPECT().MicroSrvGetTaskStatusByBizID(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "", nil)
 
 		task := &TaskEntity{
 			Id: 123,

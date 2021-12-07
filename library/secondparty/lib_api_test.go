@@ -33,10 +33,10 @@ import (
 	"testing"
 )
 
-var secondMicro3 *SecondMicro
+var secondMicro4 *SecondMicro
 
 func init() {
-	secondMicro3 = &SecondMicro{}
+	secondMicro4 = &SecondMicro{}
 }
 
 func TestSecondMicro_ApiEditConfig(t *testing.T) {

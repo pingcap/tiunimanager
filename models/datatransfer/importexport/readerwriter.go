@@ -14,3 +14,62 @@
  ******************************************************************************/
 
 package importexport
+
+import (
+	"context"
+	"time"
+)
+
+type ReaderWriter interface {
+	// CreateDataTransportRecord
+	// @Description: create new data transport record
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter record
+	// @Return *DataTransportRecord
+	// @Return error
+	CreateDataTransportRecord(ctx context.Context, record *DataTransportRecord) (*DataTransportRecord, error)
+
+	// UpdateDataTransportRecord
+	// @Description: update data transport record
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter recordId
+	// @Parameter status
+	// @Parameter endTime
+	// @Return error
+	UpdateDataTransportRecord(ctx context.Context, recordId string, status string, endTime time.Time) (err error)
+
+	// GetDataTransportRecord
+	// @Description: get data transport record by id
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter recordId
+	// @Return *DataTransportRecord
+	// @Return error
+	GetDataTransportRecord(ctx context.Context, recorId string) (record *DataTransportRecord, err error)
+
+	// QueryDataTransportRecords
+	// @Description: query data transport records by condition
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter recordId
+	// @Parameter clusterId
+	// @Parameter reImport
+	// @Parameter startTime
+	// @Parameter endTime
+	// @Parameter page
+	// @Parameter pageSize
+	// @return []*DataTransportRecord
+	// @Return total
+	// @Return error
+	QueryDataTransportRecords(ctx context.Context, recordId, clusterId string, reImport bool, startTime, endTime time.Time, page int, pageSize int) (records []*DataTransportRecord, total int64, err error)
+
+	// DeleteDataTransportRecord
+	// @Description: delete data transport record by id
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter recordId
+	// @Return error
+	DeleteDataTransportRecord(ctx context.Context, recordId string) (err error)
+}

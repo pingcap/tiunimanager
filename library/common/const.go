@@ -50,8 +50,8 @@ const (
 
 const (
 	LogFileSystem      = "system"
-	LogFileSecondParty = "secondparty"
-	LogFileLibTiup     = "libtiup"
+	LogFileSecondParty = "2nd"
+	LogFileLibTiUP     = "libTiUP"
 
 	LogFileAccess = "access"
 	LogFileAudit  = "audit"

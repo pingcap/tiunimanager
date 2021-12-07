@@ -18,16 +18,23 @@ package models
 import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
+	"github.com/pingcap-inc/tiem/models/workflow"
 	"gorm.io/driver/sqlite"
+
 	"gorm.io/gorm"
 )
 
 var defaultDb *database
 
 type database struct {
-	base                   *gorm.DB
-	changeFeedReaderWriter changefeed.ReaderWriter
+	base                     *gorm.DB
+	workFlowReaderWriter     workflow.ReaderWriter
+	importExportReaderWriter importexport.ReaderWriter
+	brReaderWriter           backuprestore.ReaderWriter
+	changeFeedReaderWriter   changefeed.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -85,6 +92,33 @@ func (p *database) addTable(gormModel interface{}) error {
 	return nil
 }
 
+func initReaderWriter() {
+	defaultDb.changeFeedReaderWriter = changefeed.NewGormChangeFeedReadWrite(defaultDb.base)
+	defaultDb.workFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
+	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
+	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
+}
+
 func GetChangeFeedReaderWriter() changefeed.ReaderWriter {
 	return defaultDb.changeFeedReaderWriter
+}
+
+func SetChangeFeedReaderWriter(rw changefeed.ReaderWriter) {
+	defaultDb.changeFeedReaderWriter = rw
+}
+
+func GetWorkFlowReaderWriter() workflow.ReaderWriter {
+	return defaultDb.workFlowReaderWriter
+}
+
+func SetWorkFlowReaderWriter(rw workflow.ReaderWriter) {
+	defaultDb.workFlowReaderWriter = rw
+}
+
+func GetImportExportReaderWriter() importexport.ReaderWriter {
+	return defaultDb.importExportReaderWriter
+}
+
+func GetBRReaderWriter() backuprestore.ReaderWriter {
+	return defaultDb.brReaderWriter
 }

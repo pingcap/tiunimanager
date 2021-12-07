@@ -17,12 +17,13 @@ package controller
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/pingcap-inc/tiem/file-server/controller"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"net/http"
 )
 
 // HandleJsonRequestWithBuiltReq
@@ -36,14 +37,14 @@ import (
 // @return requestBody
 func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (requestBody string, err error) {
 	return HandleRequest(c,
-		&req,
+		req,
 		func(c *gin.Context, req interface{}) error {
 			return nil
 		},
 		func(req interface{}) error {
 			return validator.New().Struct(req)
 		},
-		func(req interface{}) ([]byte, error){
+		func(req interface{}) ([]byte, error) {
 			return json.Marshal(req)
 		},
 	)
@@ -61,8 +62,8 @@ func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (requestBody
 // @return requestBody
 func HandleJsonRequestFromBody(c *gin.Context,
 	req interface{},
-	appenders... func(c *gin.Context, req interface{}) error,
-	) (requestBody string, err error) {
+	appenders ...func(c *gin.Context, req interface{}) error,
+) (requestBody string, err error) {
 	return HandleRequest(c,
 		&req,
 		func(c *gin.Context, req interface{}) error {
@@ -81,7 +82,7 @@ func HandleJsonRequestFromBody(c *gin.Context,
 		func(req interface{}) error {
 			return validator.New().Struct(req)
 		},
-		func(req interface{}) ([]byte, error){
+		func(req interface{}) ([]byte, error) {
 			return json.Marshal(req)
 		},
 	)
@@ -100,7 +101,7 @@ func HandleRequest(c *gin.Context,
 	req interface{},
 	builder func(c *gin.Context, req interface{}) error,
 	validator func(req interface{}) error,
-	serializer func(req interface{}) ([]byte, error)) (requestBody string, err error){
+	serializer func(req interface{}) ([]byte, error)) (requestBody string, err error) {
 
 	err = builder(c, req)
 	if err != nil {

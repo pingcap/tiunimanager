@@ -32,6 +32,8 @@ type GormResourceReadWrite struct {
 
 func NewGormChangeFeedReadWrite() *GormResourceReadWrite {
 	m := new(GormResourceReadWrite)
+	//m.db, _ = gorm.Open(sqlite.Open("./t2.db"), &gorm.Config{})
+	//m.InitTables(context.TODO())
 	return m
 }
 
@@ -40,7 +42,7 @@ func (rw *GormResourceReadWrite) SetDB(db *gorm.DB) {
 }
 
 func (rw *GormResourceReadWrite) DB() (db *gorm.DB) {
-	return db
+	return rw.db
 }
 
 func (rw *GormResourceReadWrite) addTable(ctx context.Context, tableModel interface{}) (newTable bool, err error) {
@@ -109,7 +111,7 @@ func (rw *GormResourceReadWrite) initSystemDefaultLabels(ctx context.Context) (e
 func (rw *GormResourceReadWrite) Create(ctx context.Context, hosts []rp.Host) (hostIds []string, err error) {
 	tx := rw.DB().Begin()
 	for _, host := range hosts {
-		err = tx.Create(host).Error
+		err = tx.Create(&host).Error
 		if err != nil {
 			tx.Rollback()
 			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_CREATE_HOST_ERROR, "create %s(%s) error, %v", host.HostName, host.IP, err)

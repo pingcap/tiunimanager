@@ -27,6 +27,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -233,7 +234,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			host.FreeMemory = host.Memory
 			host.Nic = row[NIC_FIELD]
 
-			if err = resource.ValidClusterType(row[CLUSTER_TYPE_FIELD]); err != nil {
+			if err = constants.ValidProductName(row[CLUSTER_TYPE_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get cluster type(%s) failed, %v", irow, row[CLUSTER_TYPE_FIELD], err)
 				return nil, errors.New(errMsg)
 			}
@@ -245,7 +246,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			host.Purpose = row[PURPOSE_FIELD]
 			purposes := host.GetPurposes()
 			for _, p := range purposes {
-				if err = resource.ValidPurposeType(p); err != nil {
+				if err = constants.ValidPurposeType(p); err != nil {
 					errMsg := fmt.Sprintf("Row %d get purpose(%s) failed, %v", irow, p, err)
 					return nil, errors.New(errMsg)
 				}
@@ -254,7 +255,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 				}
 			}
 
-			if err = resource.ValidDiskType(row[DISKTYPE_FIELD]); err != nil {
+			if err = constants.ValidDiskType(row[DISKTYPE_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get disk type(%s) failed, %v", irow, row[DISKTYPE_FIELD], err)
 				return nil, errors.New(errMsg)
 			}
@@ -262,6 +263,8 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			if err = host.AddTraits(host.DiskType); err != nil {
 				return nil, err
 			}
+			host.Status = string(constants.HostOnline)
+			host.Stat = string(constants.HostLoadLoadLess)
 			disksStr := row[DISKS_FIELD]
 			if err = json.Unmarshal([]byte(disksStr), &host.Disks); err != nil {
 				errMsg := fmt.Sprintf("Row %d has a Invalid Disk Json Format, %v", irow, err)
@@ -310,7 +313,7 @@ func ImportHosts(c *gin.Context) {
 		return
 	}
 
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &message.ImportHostsReq{
+	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, message.ImportHostsReq{
 		Hosts: hosts,
 	})
 

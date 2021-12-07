@@ -69,6 +69,7 @@ func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]by
 		} else {
 			resp.Code = int32(common.TIEM_SUCCESS)
 			resp.Response = string(respData)
+			return
 		}
 	}
 
@@ -131,6 +132,8 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
 	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
 	handler.changeFeedManager = changeFeedManager.NewChangeFeedManager()
+
+	handler.resourceManager2 = resourcemanager.NewResourceManager()
 
 	domain.InitFlowMap()
 	return handler

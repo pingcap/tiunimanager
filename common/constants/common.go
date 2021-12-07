@@ -23,6 +23,11 @@
 
 package constants
 
+import (
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+)
+
 const (
 	Sunday    string = "Sunday"
 	Monday    string = "Monday"
@@ -82,6 +87,13 @@ const (
 	EMProductNameDataMigration     EMProductNameType = "DataMigration"
 	EMProductNameEnterpriseManager EMProductNameType = "EnterpriseManager"
 )
+
+func ValidProductName(p string) error {
+	if p == string(EMProductNameTiDB) || p == string(EMProductNameDataMigration) || p == string(EMProductNameEnterpriseManager) {
+		return nil
+	}
+	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_PRODUCT_NAME, "valid product name: [%s|%s|%s]", string(EMProductNameTiDB), string(EMProductNameDataMigration), string(EMProductNameEnterpriseManager))
+}
 
 type ProductStatus string
 

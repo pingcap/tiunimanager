@@ -16,10 +16,15 @@
 package resourcepool
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 )
 
@@ -47,9 +52,9 @@ type Host struct {
 	UserName     string `json:"userName,omitempty" gorm:"size:32"`
 	Passwd       string `json:"passwd,omitempty" gorm:"size:32"`
 	HostName     string `json:"hostName" gorm:"size:255"`
-	Status       string `json:"status" gorm:"index"`         // Host Status, 0 for Online, 1 for offline
-	Stat         string `json:"stat" gorm:"index;default:0"` // Host Resource Stat, 0 for loadless, 1 for inused, 2 for exhaust
-	Arch         string `json:"arch" gorm:"index"`           // x86 or arm64
+	Status       string `json:"status" gorm:"index;default:Online"` // Host Status
+	Stat         string `json:"stat" gorm:"index;default:LoadLess"` // Host Resource Stat
+	Arch         string `json:"arch" gorm:"index"`                  // x86 or arm64
 	OS           string `json:"os" gorm:"size:32"`
 	Kernel       string `json:"kernel" gorm:"size:32"`
 	Spec         string `json:"spec"`               // Host Spec, init while importing
@@ -73,4 +78,62 @@ type Host struct {
 	CreatedAt time.Time      `json:"createTime" gorm:"autoCreateTime;<-:create;->;"`
 	UpdatedAt time.Time      `json:"-" gorm:"autoUpdateTime"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+}
+
+func (h Host) IsInused() bool {
+	return h.Stat == string(constants.HostLoadInUsed)
+}
+
+func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
+	err = tx.Where("IP = ? and HOST_NAME = ?", h.IP, h.HostName).First(&Host{}).Error
+	if err == nil {
+		return framework.NewTiEMErrorf(common.TIEM_RESOURCE_HOST_ALREADY_EXIST, "host %s(%s) is existed", h.HostName, h.IP)
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		h.ID = uuidutil.GenerateID()
+		return nil
+	} else {
+		return err
+	}
+}
+
+func (h *Host) AfterCreate(tx *gorm.DB) (err error) {
+	for _, disk := range h.Disks {
+		disk.HostID = h.ID
+		err = tx.Create(&disk).Error
+		if err != nil {
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", disk.Name, h.HostName, h.IP)
+		}
+	}
+	return nil
+}
+
+func (h *Host) BeforeDelete(tx *gorm.DB) (err error) {
+	err = tx.Where("ID = ?", h.ID).First(h).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_HOST_NOT_FOUND, "host %s is not found", h.ID)
+		}
+	} else {
+		if h.IsInused() {
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_HOST_STILL_INUSED, "host %s is still in used", h.ID)
+		}
+	}
+
+	return err
+}
+
+func (h *Host) AfterDelete(tx *gorm.DB) (err error) {
+	err = tx.Where("host_id = ?", h.ID).Delete(&Disk{}).Error
+	if err != nil {
+		return
+	}
+	h.Status = string(constants.HostDeleted)
+	err = tx.Model(&h).Update("Status", h.Status).Error
+	return
+}
+
+func (h *Host) AfterFind(tx *gorm.DB) (err error) {
+	err = tx.Find(&(h.Disks), "HOST_ID = ?", h.ID).Error
+	return
 }

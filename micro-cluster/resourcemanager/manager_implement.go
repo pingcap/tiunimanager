@@ -29,6 +29,8 @@ type ResourceManager struct {
 
 func NewResourceManager() *ResourceManager {
 	m := new(ResourceManager)
+	m.resourcePool = new(resourcepool.ResourcePool)
+	m.resourcePool.InitResourcePool()
 	return m
 }
 

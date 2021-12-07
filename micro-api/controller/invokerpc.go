@@ -17,6 +17,7 @@ package controller
 
 import (
 	"context"
+
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -48,6 +49,14 @@ func InvokeRpcMethod(
 		},
 		opts...,
 	)
+	var withPage func() Page = nil
+	if err == nil && rpcResponse.Page != nil {
+		withPage = func() Page {
+			return Page{int(rpcResponse.Page.Page),
+				int(rpcResponse.Page.PageSize),
+				int(rpcResponse.Page.Total)}
+		}
+	}
 	HandleHttpResponse(ctx,
 		err,
 		func() (common.TIEM_ERROR_CODE, string) {
@@ -56,12 +65,6 @@ func InvokeRpcMethod(
 		func() interface{} {
 			return rpcResponse.Response
 		},
-		func() Page {
-			return Page{
-				Page:     int(rpcResponse.Page.Page),
-				PageSize: int(rpcResponse.Page.PageSize),
-				Total: int(rpcResponse.Page.Total),
-			}
-		},
+		withPage,
 	)
 }

@@ -23,6 +23,11 @@
 
 package constants
 
+import (
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+)
+
 type ArchType string
 
 //Definition of host architecture names
@@ -72,6 +77,14 @@ const (
 	SATA    DiskType = "SATA"
 )
 
+func ValidDiskType(diskType string) error {
+	if diskType == string(NVMeSSD) || diskType == string(SSD) || diskType == string(SATA) {
+		return nil
+	}
+	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_PURPOSE, "valid disk type: [%s|%s|%s]",
+		string(NVMeSSD), string(SSD), string(SATA))
+}
+
 type DiskStatus string
 
 //Definition of disk status
@@ -92,6 +105,14 @@ const (
 	PurposeStorage  PurposeType = "Storage"
 	PurposeSchedule PurposeType = "Schedule"
 )
+
+func ValidPurposeType(p string) error {
+	if p == string(PurposeCompute) || p == string(PurposeStorage) || p == string(PurposeSchedule) {
+		return nil
+	}
+	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_PURPOSE, "valid purpose name: [%s|%s|%s]",
+		string(PurposeCompute), string(PurposeStorage), string(PurposeSchedule))
+}
 
 type ResourceLabelCategory int8
 

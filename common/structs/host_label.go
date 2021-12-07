@@ -61,14 +61,15 @@ func (labels Labels) getLabelNamesByTraits(traits int64) (labelNames []string) {
 }
 
 var DefaultLabelTypes = Labels{
-	string(constants.EMProductNameTiDB):          {Name: string(constants.EMProductNameTiDB), Category: int8(constants.Cluster), Trait: 0x0000000000000001},
-	string(constants.EMProductNameDataMigration): {Name: string(constants.EMProductNameDataMigration), Category: int8(constants.Cluster), Trait: 0x0000000000000002},
-	string(constants.PurposeCompute):             {Name: string(constants.PurposeCompute), Category: int8(constants.Component), Trait: 0x0000000000000004},
-	string(constants.PurposeStorage):             {Name: string(constants.PurposeStorage), Category: int8(constants.Component), Trait: 0x0000000000000008},
-	string(constants.PurposeSchedule):            {Name: string(constants.PurposeSchedule), Category: int8(constants.Component), Trait: 0x0000000000000010},
-	string(constants.NVMeSSD):                    {Name: string(constants.NVMeSSD), Category: int8(constants.DiskPerf), Trait: 0x0000000000000020},
-	string(constants.SSD):                        {Name: string(constants.SSD), Category: int8(constants.DiskPerf), Trait: 0x0000000000000040},
-	string(constants.SATA):                       {Name: string(constants.SATA), Category: int8(constants.DiskPerf), Trait: 0x0000000000000080},
+	string(constants.EMProductNameTiDB):              {Name: string(constants.EMProductNameTiDB), Category: int8(constants.Cluster), Trait: 0x0000000000000001},
+	string(constants.EMProductNameDataMigration):     {Name: string(constants.EMProductNameDataMigration), Category: int8(constants.Cluster), Trait: 0x0000000000000002},
+	string(constants.EMProductNameEnterpriseManager): {Name: string(constants.EMProductNameEnterpriseManager), Category: int8(constants.Cluster), Trait: 0x0000000000000004},
+	string(constants.PurposeCompute):                 {Name: string(constants.PurposeCompute), Category: int8(constants.Component), Trait: 0x0000000000000008},
+	string(constants.PurposeStorage):                 {Name: string(constants.PurposeStorage), Category: int8(constants.Component), Trait: 0x0000000000000010},
+	string(constants.PurposeSchedule):                {Name: string(constants.PurposeSchedule), Category: int8(constants.Component), Trait: 0x0000000000000020},
+	string(constants.NVMeSSD):                        {Name: string(constants.NVMeSSD), Category: int8(constants.DiskPerf), Trait: 0x0000000000000040},
+	string(constants.SSD):                            {Name: string(constants.SSD), Category: int8(constants.DiskPerf), Trait: 0x0000000000000080},
+	string(constants.SATA):                           {Name: string(constants.SATA), Category: int8(constants.DiskPerf), Trait: 0x0000000000000100},
 }
 
 func GetTraitByName(name string) (trait int64, err error) {

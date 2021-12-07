@@ -166,21 +166,9 @@ func TestFlowReadWrite_UpdateWorkFlowNode(t *testing.T) {
 	nodeCreate, errCreate := rw.CreateWorkFlowNode(context.TODO(), node)
 	assert.NoError(t, errCreate)
 
-	node = &WorkFlowNode{
-		Entities: common.Entities{
-			ID:       nodeCreate.ID,
-			TenantId: "tenantId",
-			Status:   "NodeEndStatus",
-		},
-		Parameters: "nodeParam",
-		ParentID:   "flowId",
-		Name:       "nodeName",
-		ReturnType: "SyncFuncNode",
-		Result:     "success",
-		StartTime:  time.Now(),
-		EndTime:    time.Now(),
-	}
-	errUpdate := rw.UpdateWorkFlowNode(context.TODO(), node)
+	nodeCreate.Status = "NodeEndStatus"
+	nodeCreate.Result = "success"
+	errUpdate := rw.UpdateWorkFlowNode(context.TODO(), nodeCreate)
 	assert.NoError(t, errUpdate)
 
 	nodeQuery, errQuery := rw.GetWorkFlowNode(context.TODO(), nodeCreate.ID)
@@ -224,6 +212,7 @@ func TestFlowReadWrite_UpdateWorkFlowDetail(t *testing.T) {
 	nodeCreate.Status = "NodeEndStatus"
 	nodes[0] = nodeCreate
 	flowCreate.Status = "FlowEndStatus"
+	flowCreate.Context = "FlowContextNew"
 	errUpdate := rw.UpdateWorkFlowDetail(context.TODO(), flowCreate, nodes)
 	assert.NoError(t, errUpdate)
 

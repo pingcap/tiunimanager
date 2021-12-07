@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	changeFeedApi "github.com/pingcap-inc/tiem/apimodels/datatransfer/changefeed"
+	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/service/datatransfer/changefeed"
 	"net/http"
 	"strconv"
@@ -174,13 +175,14 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 		resp.ClusterId = clusterAggregation.Cluster.Id
 		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
 		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+
 		return nil
 	}
 }
 
 func (c ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *clusterpb.ScaleOutRequest, resp *clusterpb.ScaleOutResponse) (err error) {
 	framework.LogWithContext(ctx).Info("scale out cluster")
-	clusterAggregation, err := domain.ScaleOutCluster(ctx, req.GetOperator(), req.GetClusterId(), req.GetDemands())
+	_, err = domain.ScaleOutCluster(ctx, req.GetOperator(), req.GetClusterId(), req.GetDemands())
 
 	if err != nil {
 		framework.LogWithContext(ctx).Info(err)
@@ -188,7 +190,6 @@ func (c ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *cluster
 		resp.RespStatus.Message = err.Error()
 	} else {
 		resp.RespStatus = SuccessResponseStatus
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 	}
 
 	return nil
@@ -196,7 +197,7 @@ func (c ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *cluster
 
 func (c ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *clusterpb.ScaleInRequest, resp *clusterpb.ScaleInResponse) (err error) {
 	framework.LogWithContext(ctx).Info("scale in cluster")
-	clusterAggregation, err := domain.ScaleInCluster(ctx, req.GetOperator(), req.GetClusterId(), req.GetNodeId())
+	_, err = domain.ScaleInCluster(ctx, req.GetOperator(), req.GetClusterId(), req.GetNodeId())
 
 	if err != nil {
 		framework.LogWithContext(ctx).Info(err)
@@ -204,7 +205,6 @@ func (c ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *clusterp
 		resp.RespStatus.Message = err.Error()
 	} else {
 		resp.RespStatus = SuccessResponseStatus
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
 	}
 
 	return nil
@@ -219,33 +219,45 @@ func (c ClusterServiceHandler) TakeoverClusters(ctx context.Context, req *cluste
 	} else {
 		resp.RespStatus = SuccessResponseStatus
 		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters))
-		for i, v := range clusters {
-			resp.Clusters[i] = v.ExtractDisplayDTO()
-		}
 
 		return nil
 	}
 }
 
-func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.ClusterQueryReqDTO, resp *clusterpb.ClusterQueryRespDTO) (err error) {
+func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	framework.LogWithContext(ctx).Info("query cluster")
-	clusters, total, err := domain.ListCluster(ctx, req.Operator, req)
+	request := &management.QueryReq{}
+	err = json.Unmarshal([]byte(req.Request), request)
 	if err != nil {
-		framework.LogWithContext(ctx).Info(err)
-		return nil
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.Clusters = make([]*clusterpb.ClusterDisplayDTO, len(clusters))
-		for i, v := range clusters {
-			resp.Clusters[i] = v.ExtractDisplayDTO()
-		}
-		resp.Page = &clusterpb.PageDTO{
-			Page:     req.PageReq.Page,
-			PageSize: req.PageReq.PageSize,
-			Total:    int32(total),
-		}
-		return nil
+		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
+		resp.Message = err.Error()
+		return
 	}
+	clusters, total, err := domain.ListCluster(ctx, request)
+	if err != nil {
+		resp.Code = int32(err.(framework.TiEMError).GetCode())
+		resp.Message = err.(framework.TiEMError).GetMsg()
+	} else {
+		response := make([]management.ClusterDisplayInfo, 0)
+
+		for _, cluster := range clusters {
+			response = append(response, cluster.ExtractDisplayInfo())
+		}
+		body, err := json.Marshal(response)
+		if err != nil {
+			resp.Code = int32(common.TIEM_PARAMETER_INVALID)
+			resp.Message = err.Error()
+		} else {
+			resp.Code = int32(common.TIEM_SUCCESS)
+			resp.Response = string(body)
+			resp.Page = &clusterpb.RpcPage{
+				Page:     int32(request.Page),
+				PageSize: int32(request.PageSize),
+				Total:    int32(total),
+			}
+		}
+	}
+	return
 }
 
 func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.ClusterDeleteReqDTO, resp *clusterpb.ClusterDeleteRespDTO) (err error) {
@@ -297,26 +309,37 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.C
 	resp.RespStatus = SuccessResponseStatus
 	resp.ClusterId = clusterAggregation.Cluster.Id
 	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+
 	return nil
 }
 
-func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.ClusterDetailReqDTO, resp *clusterpb.ClusterDetailRespDTO) (err error) {
+func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
 	framework.LogWithContext(ctx).Info("detail cluster")
 
-	cluster, err := domain.GetClusterDetail(ctx, req.Operator, req.ClusterId)
+	request := &management.DetailReq{}
+	err = json.Unmarshal([]byte(req.Request), request)
+	if err != nil {
+		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
+		resp.Message = err.Error()
+		return
+	}
+
+	cluster, err := domain.GetClusterDetail(ctx, request.ClusterID)
 
 	if err != nil {
-		// todo
-		framework.LogWithContext(ctx).Info(err)
-		return nil
+		resp.Code = int32(err.(framework.TiEMError).GetCode())
+		resp.Message = err.(framework.TiEMError).GetMsg()
 	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.DisplayInfo = cluster.ExtractDisplayDTO()
-		resp.Components = cluster.ExtractComponentDTOs()
-		resp.MaintenanceInfo = cluster.ExtractMaintenanceDTO()
-
-		return nil
+		response, err := domain.ExtractClusterInfo(cluster)
+		if err != nil {
+			resp.Code = int32(common.TIEM_PARAMETER_INVALID)
+			resp.Message = err.Error()
+		} else {
+			resp.Code = int32(common.TIEM_SUCCESS)
+			resp.Response = response
+		}
 	}
+	return
 }
 
 func (c ClusterServiceHandler) ExportData(ctx context.Context, req *clusterpb.DataExportRequest, resp *clusterpb.DataExportResponse) error {

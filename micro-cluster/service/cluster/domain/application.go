@@ -112,6 +112,7 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 	cluster := &Cluster{
 		ClusterName:     clusterInfo.ClusterName,
 		DbPassword:      clusterInfo.DbPassword,
+		Status: 		 ClusterStatusUnlined,
 		ClusterType:     *knowledge.ClusterTypeFromCode(clusterInfo.ClusterType.Code),
 		ClusterVersion:  *knowledge.ClusterVersionFromCode(clusterInfo.ClusterVersion.Code),
 		Tls:             clusterInfo.Tls,
@@ -154,11 +155,9 @@ func CreateCluster(ctx ctx.Context, ope *clusterpb.OperatorDTO, clusterInfo *clu
 
 	flow.AddContext(contextClusterKey, clusterAggregation)
 
-	flow.Start()
+	err = clusterAggregation.tryStartFlow(ctx, flow)
 
-	clusterAggregation.updateWorkFlow(flow.FlowWork)
-	ClusterRepo.Persist(ctx, clusterAggregation)
-	return clusterAggregation, nil
+	return clusterAggregation, err
 }
 
 func mergeDemands(demandsList ...[]*ClusterComponentDemand) []*ClusterComponentDemand {
@@ -638,6 +637,8 @@ func buildConfig(task *TaskEntity, context *FlowContext) bool {
 	}
 
 	context.SetData(contextTopologyKey, topology)
+
+	task.Success(topology)
 	return true
 }
 
@@ -1238,14 +1239,18 @@ func (aggregation *ClusterAggregation) ExtractDisplayInfo() management.ClusterDi
 		},
 	}
 
+	displayInfo.IntranetConnectAddresses = make([]string, 0)
+	displayInfo.ExtranetConnectAddresses = make([]string, 0)
+	displayInfo.PortList = make([]int, 0)
+
+	if cluster.Status == ClusterStatusUnlined {
+		return displayInfo
+	}
+
 	if instances == nil || len(instances) == 0{
 		topologyConfig := aggregation.CurrentTopologyConfigRecord
 		displayInfo.IntranetConnectAddresses, displayInfo.ExtranetConnectAddresses, displayInfo.PortList = ConnectAddresses(topologyConfig.ConfigModel)
 	} else {
-		displayInfo.IntranetConnectAddresses = make([]string, 0)
-		displayInfo.ExtranetConnectAddresses = make([]string, 0)
-		displayInfo.PortList = make([]int, 0)
-
 		for _, instance := range instances {
 			if instance.ComponentType.ComponentType == "TiDB" && instance.Status == ClusterStatusOnline {
 				address := instance.Host + ":" + strconv.Itoa(instance.PortList[0])

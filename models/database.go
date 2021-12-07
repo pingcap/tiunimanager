@@ -118,3 +118,7 @@ func GetImportExportReaderWriter() importexport.ReaderWriter {
 func GetBRReaderWriter() backuprestore.ReaderWriter {
 	return defaultDb.brReaderWriter
 }
+
+func MockDB() {
+	defaultDb = &database{}
+}

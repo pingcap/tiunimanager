@@ -17,10 +17,13 @@
 package flowtask
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"net/http"
 )
 
 // Query query flow works
@@ -37,13 +40,18 @@ import (
 // @Failure 500 {object} controller.CommonResult
 // @Router /workflow/ [get]
 func Query(c *gin.Context) {
-	var req message.QueryWorkFlowsReq
+	var request message.QueryWorkFlowsReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
+	body, err := json.Marshal(request)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	if err == nil {
 		controller.InvokeRpcMethod(c, client.ClusterClient.ListFlows, &message.QueryWorkFlowsResp{},
-			requestBody,
+			string(body),
 			controller.DefaultTimeout)
 	}
 }
@@ -62,19 +70,20 @@ func Query(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /workflow/{workFlowId} [get]
 func Detail(c *gin.Context) {
-	var req message.QueryWorkFlowDetailReq
+	var request = message.QueryWorkFlowDetailReq{
+		WorkFlowID: c.Param("workFlowId"),
+	}
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c,
-		&req,
-		// append id in path to request
-		func(c *gin.Context, req interface{}) error {
-			req.(*message.QueryWorkFlowDetailReq).WorkFlowID = c.Param("workFlowId")
-			return nil
-		})
+	body, err := json.Marshal(request)
+	if err != nil {
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	if err == nil {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DetailFlow, &message.QueryWorkFlowDetailResp{},
-			requestBody,
+			string(body),
 			controller.DefaultTimeout)
 	}
 	/*

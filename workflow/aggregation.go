@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap/errors"
 	//"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -43,6 +44,12 @@ type WorkFlowAggregation struct {
 type FlowContext struct {
 	context.Context
 	FlowData map[string]interface{}
+}
+
+type WorkFlowDetail struct {
+	Flow      *structs.WorkFlowInfo
+	Nodes     []*structs.WorkFlowNodeInfo
+	NodeNames []string
 }
 
 func NewFlowContext(ctx context.Context) *FlowContext {
@@ -74,17 +81,6 @@ func createFlowWork(ctx context.Context, bizId string, define *WorkFlowDefine) (
 	}
 	//TaskRepo.AddFlowWork(ctx, flow.FlowWork)
 	return flow, nil
-}
-
-func (flow *WorkFlowAggregation) GetFlowNodeNameList() []string {
-	var nodeNames []string
-	node := flow.Define.TaskNodes["start"]
-
-	for node != nil && node.Name != "end" && node.Name != "fail" {
-		nodeNames = append(nodeNames, node.Name)
-		node = flow.Define.TaskNodes[node.SuccessEvent]
-	}
-	return nodeNames
 }
 
 func (flow *WorkFlowAggregation) start() {

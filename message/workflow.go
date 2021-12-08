@@ -32,18 +32,18 @@ type QueryWorkFlowDetailReq struct {
 }
 
 type QueryWorkFlowDetailResp struct {
-	Info     structs.WorkFlowInfo       `json:"info"`
-	NodeInfo []structs.WorkFlowNodeInfo `json:"nodes"`
-	NodeName []string                   `json:"nodeName"` // ???
+	Info     *structs.WorkFlowInfo       `json:"info"`
+	NodeInfo []*structs.WorkFlowNodeInfo `json:"nodes"`
+	NodeName []string                    `json:"nodeName"`
 }
 
 type QueryWorkFlowsReq struct {
 	structs.PageRequest
-	Status    string `json:"status" form:"status"`
-	Keyword   string `json:"keyword" form:"keyword"`
-	ClusterID string `json:"clusterId" form:"clusterId"`
+	Status   string `json:"status" form:"status"`
+	FlowName string `json:"flowName" form:"flowName"`
+	BizID    string `json:"bizId" form:"bizId"`
 }
 
 type QueryWorkFlowsResp struct {
-	WorkFlows []structs.WorkFlowInfo
+	WorkFlows []*structs.WorkFlowInfo
 }

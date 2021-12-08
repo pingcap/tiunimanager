@@ -59,6 +59,17 @@ func (define *WorkFlowDefine) getInstance(ctx context.Context, bizId string, dat
 	}
 }
 
+func (define *WorkFlowDefine) getNodeNameList() []string {
+	var nodeNames []string
+	node := define.TaskNodes["start"]
+
+	for node != nil && node.Name != "end" && node.Name != "fail" {
+		nodeNames = append(nodeNames, node.Name)
+		node = define.TaskNodes[node.SuccessEvent]
+	}
+	return nodeNames
+}
+
 func CompositeExecutor(executors ...NodeExecutor) NodeExecutor {
 	return func(node *workflow.WorkFlowNode, context *FlowContext) bool {
 		for _, executor := range executors {

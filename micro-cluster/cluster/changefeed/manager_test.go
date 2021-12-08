@@ -11,30 +11,47 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package parameter
+package changefeed
 
 import (
-	"github.com/pingcap-inc/tiem/micro-api/controller"
+	"context"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models"
+	"github.com/stretchr/testify/assert"
+	"os"
+	"testing"
 )
 
-type ParamQueryReq struct {
-	controller.PageRequest
+var manager = &Manager{}
+
+func TestMain(m *testing.M) {
+	var testFilePath string
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			testFilePath = d.GetDataDir()
+			os.MkdirAll(testFilePath, 0755)
+
+			return models.Open(d, false)
+		},
+	)
+	code := m.Run()
+	os.RemoveAll(testFilePath)
+
+	os.Exit(code)
 }
 
-type UpdateParamsReq struct {
-	Params     []UpdateParam `json:"params"`
-	NeedReboot bool          `json:"needReboot" example:"false"`
+func TestManager_Delete(t *testing.T) {
+	id, err := manager.Create(context.TODO(), "name")
+	assert.NotEmpty(t, id)
+	assert.NoError(t, err)
+	err = manager.Delete(context.TODO(), id)
+	assert.NoError(t, err)
 }
 
-type UpdateParam struct {
-	ParamId       int64          `json:"paramId" example:"1"`
-	Name          string         `json:"name" example:"binlog_cache"`
-	ComponentType string         `json:"componentType" example:"TiDB"`
-	HasReboot     int32          `json:"hasReboot" example:"0" enums:"0,1"`
-	Source        int32          `json:"source" example:"0" enums:"0,1,2,3"`
-	Type          int32          `json:"type" example:"0" enums:"0,1,2"`
-	RealValue     ParamRealValue `json:"realValue"`
+func TestManager_Create(t *testing.T) {
+	id, err := manager.Create(context.TODO(), "name")
+	assert.NotEmpty(t, id)
+	assert.NoError(t, err)
 }

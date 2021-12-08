@@ -17,6 +17,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/asim/go-micro/v3/client"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
@@ -33,6 +34,7 @@ import (
 func InvokeRpcMethod(
 	ctx *gin.Context,
 	rpcMethod func(ctx context.Context, in *clusterpb.RpcRequest, opts ...client.CallOption) (*clusterpb.RpcResponse, error),
+	response interface{},
 	requestBody string,
 	opts ...client.CallOption) {
 
@@ -48,20 +50,27 @@ func InvokeRpcMethod(
 		},
 		opts...,
 	)
+	var withPage func() Page = nil
+	if err == nil && rpcResponse.Page != nil {
+		withPage = func() Page {
+			return Page{int(rpcResponse.Page.Page),
+				int(rpcResponse.Page.PageSize),
+				int(rpcResponse.Page.Total)}
+		}
+	}
 	HandleHttpResponse(ctx,
 		err,
 		func() (common.TIEM_ERROR_CODE, string) {
 			return common.TIEM_ERROR_CODE(rpcResponse.GetCode()), rpcResponse.GetMessage()
 		},
-		func() interface{} {
-			return rpcResponse.Response
-		},
-		func() Page {
-			return Page{
-				Page:     int(rpcResponse.Page.Page),
-				PageSize: int(rpcResponse.Page.PageSize),
-				Total: int(rpcResponse.Page.Total),
+		func() (interface{}, error) {
+			err := json.Unmarshal([]byte(rpcResponse.Response), response)
+			if err != nil {
+				return nil, err
+			} else {
+				return response, nil
 			}
 		},
+		withPage,
 	)
 }

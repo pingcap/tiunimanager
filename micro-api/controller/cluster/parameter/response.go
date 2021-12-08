@@ -16,14 +16,16 @@
 
 package parameter
 
+import "github.com/pingcap-inc/tiem/micro-api/controller"
+
 type ListParamsResp struct {
 	ParamId       int64          `json:"paramId" example:"1"`
 	Name          string         `json:"name" example:"binlog_size"`
 	ComponentType string         `json:"componentType" example:"tidb"`
-	Type          int32          `json:"type" example:"0"`
+	Type          int32          `json:"type" example:"0" enums:"0,1,2"`
 	Unit          string         `json:"unit" example:"mb"`
 	Range         []string       `json:"range" example:"1, 1000"`
-	HasReboot     int32          `json:"hasReboot" example:"0"`
+	HasReboot     int32          `json:"hasReboot" example:"0" enums:"0,1"`
 	DefaultValue  string         `json:"defaultValue" example:"1"`
 	RealValue     ParamRealValue `json:"realValue"`
 	Description   string         `json:"description" example:"binlog cache size"`
@@ -41,7 +43,6 @@ type InspectParamsResp struct {
 }
 
 type ParamUpdateRsp struct {
-	Status    string `json:"status"`
 	ClusterId string `json:"clusterId"`
-	TaskId    uint   `json:"taskId"`
+	*controller.StatusInfo
 }

@@ -12,9 +12,9 @@ option go_package = "./clusterpb/;clusterpb";
 service ClusterService {
     // Cluster manager module
     rpc CreateCluster(ClusterCreateReqDTO) returns (ClusterCreateRespDTO);
-    rpc QueryCluster(ClusterQueryReqDTO) returns (ClusterQueryRespDTO);
+    rpc QueryCluster(RpcRequest) returns (RpcResponse);
     rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
-    rpc DetailCluster(ClusterDetailReqDTO) returns (ClusterDetailRespDTO);
+    rpc DetailCluster(RpcRequest) returns (RpcResponse);
     rpc RestartCluster(ClusterRestartReqDTO) returns (ClusterRestartRespDTO);
     rpc StopCluster(ClusterStopReqDTO) returns (ClusterStopRespDTO);
     rpc TakeoverClusters(ClusterTakeoverReqDTO) returns (ClusterTakeoverRespDTO);
@@ -84,7 +84,6 @@ service ClusterService {
     rpc DeleteChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc UpdateChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
-
 }
 
 message ClusterCreateReqDTO {
@@ -116,22 +115,6 @@ message ClusterTakeoverRespDTO {
     repeated ClusterDisplayDTO clusters = 2;
 }
 
-message ClusterQueryReqDTO {
-    OperatorDTO operator = 1;
-    PageDTO pageReq = 2;
-    string clusterId = 3;
-    string clusterName = 4;
-    string clusterType = 5;
-    string clusterStatus = 6;
-    string clusterTag = 7;
-}
-
-message ClusterQueryRespDTO {
-    ResponseStatusDTO respStatus = 1;
-    PageDTO page = 2;
-    repeated ClusterDisplayDTO clusters = 3;
-}
-
 message ClusterDeleteReqDTO {
     OperatorDTO operator = 1;
     string clusterId = 2;
@@ -141,18 +124,6 @@ message ClusterDeleteRespDTO {
     ResponseStatusDTO respStatus = 1;
     string clusterId = 2;
     DisplayStatusDTO clusterStatus = 3;
-}
-
-message ClusterDetailReqDTO {
-    OperatorDTO operator = 1;
-    string clusterId = 2;
-}
-
-message ClusterDetailRespDTO {
-    ResponseStatusDTO respStatus = 1;
-    ClusterDisplayDTO displayInfo = 2;
-    ClusterMaintenanceDTO maintenanceInfo = 3;
-    repeated ComponentInstanceDTO components = 4;
 }
 
 message ClusterRestartReqDTO {
@@ -175,15 +146,6 @@ message ClusterStopRespDTO {
     ResponseStatusDTO respStatus = 1;
     string clusterId = 2;
     DisplayStatusDTO clusterStatus = 3;
-}
-
-message ClusterMaintenanceDTO {
-    string maintainTaskCron = 1;
-}
-
-message ComponentInstanceDTO {
-    ComponentBaseInfoDTO baseInfo = 1;
-    repeated ComponentNodeDisplayInfoDTO nodes = 2;
 }
 
 message ComponentNodeDisplayInfoDTO {
@@ -263,7 +225,6 @@ message DistributionItemDTO {
     string specCode = 2;
     int32  count = 3;
 }
-
 message ClusterDisplayDTO {
     string clusterId = 1;
     ClusterBaseInfoDTO baseInfo = 2;

@@ -20,6 +20,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -27,9 +30,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	mock "github.com/pingcap-inc/tiem/test/mockdb"
 	"github.com/pingcap-inc/tiem/test/mocksecondparty"
-	"strconv"
-	"testing"
-	"time"
 
 	"github.com/pingcap/tiup/pkg/cluster/spec"
 
@@ -68,9 +68,11 @@ func defaultCluster() *ClusterAggregation {
 	}
 	return &ClusterAggregation{
 		Cluster: &Cluster{
-			Id:          "testCluster",
-			ClusterName: "testCluster",
-			Status:      ClusterStatusOnline,
+			Id:              "testCluster",
+			ClusterName:     "testCluster",
+			Status:          ClusterStatusOnline,
+			CpuArchitecture: "X86_64",
+			Region:          "region01",
 		},
 		LastBackupRecord: br,
 		LastRecoverRecord: &RecoverRecord{
@@ -131,6 +133,58 @@ func defaultCluster() *ClusterAggregation {
 			},
 			CreateTime: time.Time{},
 		},
+		CurrentComponentInstances: []*ComponentInstance{
+			{
+				Host:          "127.0.0.1",
+				ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentName: "TiDB"},
+				HostId:        "host01",
+				Version:       &knowledge.ClusterVersion{Code: "v5.0.0"},
+				Status:        ClusterStatusOnline,
+				PortList:      []int{4000, 4002},
+			},
+			{
+				Host:          "127.0.0.1",
+				ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentName: "PD"},
+				HostId:        "host01",
+				Version:       &knowledge.ClusterVersion{Code: "v5.0.0"},
+				Status:        ClusterStatusOnline,
+				PortList:      []int{4003, 4004},
+			},
+			{
+				Host:          "127.0.0.1",
+				ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentName: "TiKV"},
+				HostId:        "host01",
+				Version:       &knowledge.ClusterVersion{Code: "v5.0.0"},
+				Status:        ClusterStatusOnline,
+				PortList:      []int{4005, 4006},
+			},
+			{
+				Host:          "127.0.0.1",
+				ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentName: "PD"},
+				HostId:        "host01",
+				Version:       &knowledge.ClusterVersion{Code: "v5.0.0"},
+				Status:        ClusterStatusOnline,
+				PortList:      []int{4015, 4016},
+			},
+		},
+		CurrentComponentDemand: []*ClusterComponentDemand{
+			{
+				ComponentType:  &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentPurpose: "compute", ComponentName: "TiDB"},
+				TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+					{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+					{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
+					{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+				}},
+			{ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentPurpose: "storage", ComponentName: "TiKV"},
+				TotalNodeCount: 4, DistributionItems: []*ClusterNodeDistributionItem{
+					{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+					{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
+					{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+				}},
+			{ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
+				TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+					{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
+				}}},
 	}
 }
 
@@ -140,22 +194,29 @@ func TestClusterAggregation_ExtractBackupRecordDTO(t *testing.T) {
 	assert.Equal(t, aggregation.LastBackupRecord.Id, dto.Id)
 }
 
-func TestClusterAggregation_ExtractBaseInfoDTO(t *testing.T) {
+func TestClusterAggregation_ExtractDisplayInfo(t *testing.T) {
 	aggregation := defaultCluster()
-	dto := aggregation.ExtractBaseInfoDTO()
+	dto := aggregation.ExtractDisplayInfo()
 	assert.Equal(t, aggregation.Cluster.ClusterName, dto.ClusterName)
 }
 
-func TestClusterAggregation_ExtractDisplayDTO(t *testing.T) {
+func TestClusterAggregation_ExtractComponentInstances(t *testing.T) {
 	aggregation := defaultCluster()
-	dto := aggregation.ExtractDisplayDTO()
-	assert.Equal(t, strconv.Itoa(int(aggregation.Cluster.Status)), dto.Status.StatusCode)
-	assert.Equal(t, aggregation.Cluster.ClusterName, dto.BaseInfo.ClusterName)
+	dto := aggregation.ExtractComponentInstances()
+	assert.Equal(t, 3, len(dto))
 }
 
-func TestClusterAggregation_ExtractMaintenanceDTO(t *testing.T) {
+func TestClusterAggregation_ExtractTopologyInfo(t *testing.T) {
 	aggregation := defaultCluster()
-	dto := aggregation.ExtractMaintenanceDTO()
+	dto := aggregation.ExtractTopologyInfo()
+	assert.Equal(t, aggregation.Cluster.CpuArchitecture, dto.CpuArchitecture)
+	assert.Equal(t, dto.Region.Code, aggregation.Cluster.Region)
+	assert.Equal(t, 3, len(dto.ComponentTopology))
+}
+
+func TestClusterAggregation_ExtractMaintenanceInfo(t *testing.T) {
+	aggregation := defaultCluster()
+	dto := aggregation.ExtractMaintenanceInfo()
 	assert.Equal(t, aggregation.MaintainCronTask.Cron, dto.MaintainTaskCron)
 }
 
@@ -216,6 +277,13 @@ func Test_convertAllocHostsRequest(t *testing.T) {
 	assert.Equal(t, len(req.PdReq), 1)
 	assert.Equal(t, req.TikvReq[0].FailureDomain, "zone1")
 
+}
+
+func TestExtractClusterInfo(t *testing.T) {
+	aggregation := defaultCluster()
+	got, err := ExtractClusterInfo(aggregation)
+	assert.NoError(t, err)
+	assert.Greater(t, len(got), 0)
 }
 
 func Test_convertAllocationReq(t *testing.T) {
@@ -388,7 +456,7 @@ func TestScaleInCluster(t *testing.T) {
 		"testCluster",
 		"127.0.0.1:4000")
 
-	assert.NoError(t, err)
+	assert.Error(t, err)
 	assert.Equal(t, "testoperator", got.CurrentOperator.TenantId)
 }
 
@@ -443,8 +511,79 @@ func TestStopCluster(t *testing.T) {
 }
 
 func TestBuildClusterLogConfig(t *testing.T) {
-	err := BuildClusterLogConfig(context.TODO(),  "testCluster")
+	err := BuildClusterLogConfig(context.TODO(), "testCluster")
 	assert.NoError(t, err)
+}
+
+func TestMergeDemands(t *testing.T) {
+	demand1 := []*ClusterComponentDemand{
+		{
+			ComponentType:  &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentPurpose: "compute", ComponentName: "TiDB"},
+			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+			}},
+		{ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentPurpose: "storage", ComponentName: "TiKV"},
+			TotalNodeCount: 4, DistributionItems: []*ClusterNodeDistributionItem{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 2},
+				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+			}},
+		{ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
+			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 3},
+			}}}
+	demand2 := []*ClusterComponentDemand{
+		{
+			ComponentType:  &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentPurpose: "compute", ComponentName: "TiDB"},
+			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone2", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "zone3", Count: 1},
+			}},
+		{ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentPurpose: "storage", ComponentName: "TiKV"},
+			TotalNodeCount: 1, DistributionItems: []*ClusterNodeDistributionItem{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+			}},
+		{ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
+			TotalNodeCount: 1, DistributionItems: []*ClusterNodeDistributionItem{
+				{SpecCode: "4C8G", ZoneCode: "zone1", Count: 1},
+			}}}
+	got := mergeDemands(demand1, demand2)
+	assert.Equal(t, 3, len(got))
+}
+
+func TestDeleteDemands(t *testing.T) {
+	demand := []*ClusterComponentDemand{
+		{
+			ComponentType:  &knowledge.ClusterComponent{ComponentType: "TiDB", ComponentPurpose: "compute", ComponentName: "TiDB"},
+			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+				{SpecCode: "4C8G", ZoneCode: "region,zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "region,zone2", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "region,zone3", Count: 1},
+			}},
+		{ComponentType: &knowledge.ClusterComponent{ComponentType: "TiKV", ComponentPurpose: "storage", ComponentName: "TiKV"},
+			TotalNodeCount: 4, DistributionItems: []*ClusterNodeDistributionItem{
+				{SpecCode: "4C8G", ZoneCode: "region,zone1", Count: 1},
+				{SpecCode: "4C8G", ZoneCode: "region,zone2", Count: 2},
+				{SpecCode: "4C8G", ZoneCode: "region,zone3", Count: 1},
+			}},
+		{ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
+			TotalNodeCount: 3, DistributionItems: []*ClusterNodeDistributionItem{
+				{SpecCode: "4C8G", ZoneCode: "region,zone1", Count: 3},
+			}}}
+	instance := &ComponentInstance{
+		ComponentType: &knowledge.ClusterComponent{ComponentType: "PD", ComponentPurpose: "dispatch", ComponentName: "PD"},
+		Location:      &resource.Location{Region: "region", Zone: "zone1"},
+		Compute: &resource.ComputeRequirement{
+			CpuCores: 4,
+			Memory:   8,
+		},
+	}
+	got := deleteDemands(demand, instance)
+	assert.Equal(t, 2, got[2].TotalNodeCount)
+	assert.Equal(t, 2, got[2].DistributionItems[0].Count)
 }
 
 func TestModifyParameters(t *testing.T) {
@@ -452,7 +591,24 @@ func TestModifyParameters(t *testing.T) {
 		Id:       "testoperator",
 		Name:     "testoperator",
 		TenantId: "testoperator",
-	}, "testCluster", "content")
+	}, "testCluster", &ModifyParam{NeedReboot: false, Params: []*ApplyParam{
+		{
+			ParamId:       1,
+			Name:          "test_param_1",
+			ComponentType: "TiDB",
+			HasReboot:     1,
+			Source:        0,
+			RealValue:     clusterpb.ParamRealValueDTO{Cluster: "1"},
+		},
+		{
+			ParamId:       2,
+			Name:          "test_param_2",
+			ComponentType: "TiKV",
+			HasReboot:     1,
+			Source:        0,
+			RealValue:     clusterpb.ParamRealValueDTO{Cluster: "2"},
+		},
+	}})
 	assert.NoError(t, err)
 	assert.Equal(t, "testCluster", got.Cluster.ClusterName)
 }
@@ -484,14 +640,104 @@ func Test_destroyCluster(t *testing.T) {
 		ret := destroyCluster(task, flowCtx)
 
 		assert.Equal(t, true, ret)
-	})}
+	})
+}
 
 func Test_destroyTasks(t *testing.T) {
 	assert.True(t, destroyTasks(&TaskEntity{}, nil))
 }
 
 func Test_modifyParameters(t *testing.T) {
-	assert.True(t, modifyParameters(&TaskEntity{}, nil))
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	secondparty.SecondParty = mockTiup
+
+	t.Run("success", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupEditGlobalConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		modifyCtx := NewFlowContext(context.TODO())
+		modifyCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+		})
+		modifyCtx.SetData(contextModifyParamsKey, &ModifyParam{
+			NeedReboot: false,
+			Params: []*ApplyParam{
+				{
+					ParamId:       1,
+					Name:          "test_param_1",
+					ComponentType: "TiDB",
+					HasReboot:     1,
+					Source:        0,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "1"},
+				},
+				{
+					ParamId:       2,
+					Name:          "test_param_2",
+					ComponentType: "TiKV",
+					HasReboot:     1,
+					Source:        0,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "2"},
+				},
+			},
+		})
+		ret := modifyParameters(task, modifyCtx)
+		assert.Equal(t, true, ret)
+	})
+}
+
+func Test_refreshParameter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockTiup := mocksecondparty.NewMockMicroSrv(ctrl)
+	secondparty.SecondParty = mockTiup
+
+	t.Run("success", func(t *testing.T) {
+		mockTiup.EXPECT().MicroSrvTiupReload(gomock.Any(), gomock.Any(), gomock.Any()).Return(uint64(123), nil)
+		mockTiup.EXPECT().MicroSrvGetTaskStatusByBizID(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "", nil)
+
+		task := &TaskEntity{
+			Id: 123,
+		}
+		refreshCtx := NewFlowContext(context.TODO())
+		refreshCtx.SetData(contextClusterKey, &ClusterAggregation{
+			LastBackupRecord: &BackupRecord{
+				Id:          123,
+				StorageType: StorageTypeS3,
+			},
+			Cluster: &Cluster{
+				Id:          "test-tidb123",
+				ClusterName: "test-tidb",
+			},
+		})
+		refreshCtx.SetData(contextModifyParamsKey, &ModifyParam{
+			NeedReboot: true,
+			Params: []*ApplyParam{
+				{
+					ParamId:       1,
+					Name:          "test_param_1",
+					ComponentType: "TiDB",
+					HasReboot:     1,
+					Source:        0,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "1"},
+				},
+			},
+		})
+		ret := refreshParameter(task, refreshCtx)
+		assert.Equal(t, true, ret)
+	})
 }
 
 func Test_clusterRestart(t *testing.T) {
@@ -921,20 +1167,20 @@ func Test_scaleInCluster(t *testing.T) {
 		flowCtx := NewFlowContext(context.TODO())
 		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
 			Cluster: &Cluster{
-				Id:          "test-tidb123",
-				ClusterName: "test-tidb",
+				Id:             "test-tidb123",
+				ClusterName:    "test-tidb",
 				ClusterVersion: knowledge.ClusterVersion{Code: "v5.0.0", Name: "v5.0.0"},
-				ClusterType: knowledge.ClusterType{Code: "TiDB", Name: "TiDB"},
+				ClusterType:    knowledge.ClusterType{Code: "TiDB", Name: "TiDB"},
 			},
 			CurrentComponentInstances: []*ComponentInstance{
 				{
-					Host: "127.0.0.1",
-					PortList: []int{4000},
+					Host:          "127.0.0.1",
+					PortList:      []int{4000},
 					ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB"},
 				},
 				{
-					Host: "127.0.0.1",
-					PortList: []int{4001},
+					Host:          "127.0.0.1",
+					PortList:      []int{4001},
 					ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB"},
 				},
 			},
@@ -953,20 +1199,20 @@ func Test_scaleInCluster(t *testing.T) {
 		flowCtx := NewFlowContext(context.TODO())
 		flowCtx.SetData(contextClusterKey, &ClusterAggregation{
 			Cluster: &Cluster{
-				Id:          "test-tidb123",
-				ClusterName: "test-tidb",
+				Id:             "test-tidb123",
+				ClusterName:    "test-tidb",
 				ClusterVersion: knowledge.ClusterVersion{Code: "v5.0.0", Name: "v5.0.0"},
-				ClusterType: knowledge.ClusterType{Code: "TiDB", Name: "TiDB"},
+				ClusterType:    knowledge.ClusterType{Code: "TiDB", Name: "TiDB"},
 			},
 			CurrentComponentInstances: []*ComponentInstance{
 				{
-					Host: "127.0.0.1",
-					PortList: []int{4000},
+					Host:          "127.0.0.1",
+					PortList:      []int{4000},
 					ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB"},
 				},
 				{
-					Host: "127.0.0.1",
-					PortList: []int{4001},
+					Host:          "127.0.0.1",
+					PortList:      []int{4001},
 					ComponentType: &knowledge.ClusterComponent{ComponentType: "TiDB"},
 				},
 			},
@@ -1017,9 +1263,9 @@ func Test_freedNodeResource(t *testing.T) {
 		},
 		CurrentComponentInstances: []*ComponentInstance{
 			{
-				Host: "127.0.0.1",
+				Host:     "127.0.0.1",
 				PortList: []int{4000},
-				Compute: &resource.ComputeRequirement{CpuCores: 4, Memory: 8},
+				Compute:  &resource.ComputeRequirement{CpuCores: 4, Memory: 8},
 			},
 		},
 	})
@@ -1033,8 +1279,7 @@ func Test_freedNodeResource(t *testing.T) {
 
 func Test_prepareResourceSucceed(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
-		task1 := &TaskEntity{
-		}
+		task1 := &TaskEntity{}
 		prepareResourceSucceed(task1, &clusterpb.BatchAllocResponse{
 			Rs: &clusterpb.AllocResponseStatus{
 				Code: 0,
@@ -1071,8 +1316,7 @@ func Test_prepareResourceSucceed(t *testing.T) {
 	})
 
 	t.Run("skip", func(t *testing.T) {
-		task2 := &TaskEntity{
-		}
+		task2 := &TaskEntity{}
 		prepareResourceSucceed(task2, &clusterpb.BatchAllocResponse{
 			Rs: &clusterpb.AllocResponseStatus{
 				Code: 0,

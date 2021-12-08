@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -39,7 +38,7 @@ type Tracer opentracing.Tracer
 //			metadata key $TiEM_X_TRACE_ID_NAME
 //    normal-ctx
 //			key traceIDCtxKey
-var TiEM_X_TRACE_ID_NAME = "Tiem-X-Trace-Id"
+var TiEM_X_TRACE_ID_NAME = "Em-X-Trace-Id"
 
 type traceIDCtxKeyType struct{}
 

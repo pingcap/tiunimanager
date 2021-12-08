@@ -24,7 +24,8 @@ import (
 	"sync"
 )
 
-type FlowInterface interface {
+// WorkFlowInterface workflow interface
+type WorkFlowInterface interface {
 	// RegisterWorkFlow
 	// @Description: register workflow define
 	// @Receiver m

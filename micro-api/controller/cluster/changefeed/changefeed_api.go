@@ -132,7 +132,7 @@ func Pause(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=changefeed.ResumeResp}}
+// @Success 200 {object} controller.CommonResult{data=changefeed.ResumeResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult

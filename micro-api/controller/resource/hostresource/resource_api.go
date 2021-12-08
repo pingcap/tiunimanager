@@ -230,7 +230,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 // @Security ApiKeyAuth
 // @Param hostReserved formData string false "whether hosts are reserved(won't be allocated) after import" default(false)
 // @Param file formData file true "hosts information in a xlsx file"
-// @Success 200 {object} controller.CommonResult{data=[]string}
+// @Success 200 {object} controller.CommonResult{data=message.ImportHostsResp}
 // @Router /resources/hosts [post]
 func ImportHosts(c *gin.Context) {
 	reservedStr := c.DefaultPostForm("hostReserved", "false")

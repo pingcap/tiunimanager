@@ -22,7 +22,7 @@ import (
 
 // DataTransportRecord import and export record information
 type DataTransportRecord struct {
-	common.Entities
+	common.Entity
 	ClusterID       string `gorm:"index;"`
 	TransportType   string `gorm:"not null;"`
 	FilePath        string `gorm:"not null;"`

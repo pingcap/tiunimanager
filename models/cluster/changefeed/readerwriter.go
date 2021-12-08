@@ -73,7 +73,7 @@ type ReaderWriter interface {
 	// @Parameter taskId
 	// @Parameter targetStatus
 	// @return error if task non-existent or unlocked
-	UnlockStatus(ctx context.Context, taskId string, targetStatus int8) error
+	UnlockStatus(ctx context.Context, taskId string, targetStatus string) error
 
 	// UpdateConfig
 	// @Description: update task config with a template

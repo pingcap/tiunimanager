@@ -80,7 +80,7 @@ func (m *GormChangeFeedReadWrite) LockStatus(ctx context.Context, taskId string)
 }
 
 
-func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId string, targetStatus int8) error {
+func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId string, targetStatus string) error {
 	if "" == taskId {
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}

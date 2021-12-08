@@ -15,11 +15,25 @@
 
 package management
 
-import "context"
+import "github.com/pingcap-inc/tiem/models/common"
 
-type ReaderWriter interface {
-	Create(ctx context.Context, cluster *Cluster) (*Cluster, error)
-	Delete(ctx context.Context, clusterID string) (err error)
-	Get(ctx context.Context, clusterID string) (*Cluster, error)
-	GetMeta(ctx context.Context, clusterID string) (*Cluster, []*ClusterInstance, error)
+type ClusterInstance struct {
+	common.Entity
+
+	Type           string
+	Role           string
+	Version        string
+	ClusterID      string
+	Status         string
+	HostID         string
+	SpecCode       string
+	ZoneCode       string
+
+	Addresses      []string
+	Ports          []string
+	DiskId         string
+	DiskPath       string
+	AllocRequestId string
+	CpuCores       int8
+	Memory         int8
 }

@@ -203,7 +203,7 @@ func TestGormChangeFeedReadWrite_QueryByClusterId(t *testing.T) {
 }
 
 func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
-	newStatus := int8(2)
+	newStatus := "2"
 	locked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
 		Entity: common.Entity{TenantId: "111"},
 		StatusLock: sql.NullTime{
@@ -226,17 +226,17 @@ func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
 	type args struct {
 		ctx          context.Context
 		taskId       string
-		targetStatus int8
+		targetStatus string
 	}
 	tests := []struct {
 		name        string
 		args        args
 		wantErr     bool
-		finalStatus int8
+		finalStatus string
 	}{
 		{"locked", args{context.TODO(), locked.ID, newStatus}, false, newStatus},
-		{"unlocked", args{context.TODO(), unlocked.ID, newStatus}, true, 0},
-		{"notExisted", args{context.TODO(), notExisted, newStatus}, true, 0},
+		{"unlocked", args{context.TODO(), unlocked.ID, newStatus}, true, "0"},
+		{"notExisted", args{context.TODO(), notExisted, newStatus}, true, "0"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -245,7 +245,7 @@ func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
 				t.Errorf("UnlockStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if tt.finalStatus != 0 {
+			if tt.finalStatus != "0" {
 				final, _ := m.Get(tt.args.ctx, tt.args.taskId)
 				assert.Equal(t, tt.finalStatus, final.Status)
 				assert.False(t, final.Locked())
@@ -267,7 +267,7 @@ func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
 	existed.FilterRulesConfig = newString
 	existed.ClusterId = newString
 	existed.StartTS = int64(newInt)
-	existed.Entity.Status = int8(newInt)
+	existed.Entity.Status = "99"
 
 	type args struct {
 		ctx            context.Context

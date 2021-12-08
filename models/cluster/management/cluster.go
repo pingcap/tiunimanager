@@ -13,4 +13,22 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package instance
+package management
+
+import "github.com/pingcap-inc/tiem/models/common"
+
+type Cluster struct {
+	common.Entity
+	Name                    string
+	DBUser              	string
+	DBPassword              string
+	Type                    string
+	Version                 string
+	Tls                     bool
+	Tags                    string
+	OwnerId                 string `gorm:"not null;type:varchar(22);default:null"`
+	Exclusive               bool
+	Region                  string
+	CpuArchitecture         string
+	MaintainStatus          string
+}

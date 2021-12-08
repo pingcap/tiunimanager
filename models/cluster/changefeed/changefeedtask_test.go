@@ -311,7 +311,7 @@ func TestConvertStatus(t *testing.T) {
 	tests := []struct {
 		name       string
 		args       args
-		wantStatus Status
+		wantStatus ChangeFeedStatus
 		wantErr    bool
 	}{
 		{"Initial", args{"Initial"}, Initial, false},
@@ -340,7 +340,7 @@ func TestConvertStatus(t *testing.T) {
 func TestStatus_IsFinal(t *testing.T) {
 	tests := []struct {
 		name string
-		s    Status
+		s    ChangeFeedStatus
 		want bool
 	}{
 		{"Initial", Initial, false},

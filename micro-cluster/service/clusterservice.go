@@ -591,7 +591,7 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 	//	framework.LogWithContext(ctx).Info(err)
 	//	return nil
 	//} else {
-	//	response.Status = SuccessResponseStatus
+	//	response.ChangeFeedStatus = SuccessResponseStatus
 	//	response.DisplayInfo = &clusterpb.DisplayStatusDTO{
 	//		InProcessFlowId: int32(clusterAggregation.CurrentWorkFlow.Id),
 	//	}

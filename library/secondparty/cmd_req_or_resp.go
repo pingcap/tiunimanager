@@ -214,7 +214,7 @@ type CmdShowConfigReq struct {
 }
 
 type CmdShowConfigResp struct {
-	TiDBClusterTopo spec2.Specification
+	TiDBClusterTopo *spec2.Specification
 }
 
 type GlobalComponentConfig struct {

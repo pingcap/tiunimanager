@@ -649,7 +649,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 		return nil
 	}
 
-	framework.LogWithContext(ctx).Infof("list flows request: %+v", request)
+	framework.LogWithContext(ctx).Infof("list flows request: %+v", listReq)
 	manager := workflow.GetWorkFlowManager()
 	flows, total, err := manager.ListWorkFlows(ctx, listReq.BizID, listReq.FlowName, listReq.Status, listReq.Page, listReq.PageSize)
 	if err != nil {
@@ -679,6 +679,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 }
 
 func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	framework.LogWithContext(ctx).Info("detail flow")
 	request.GetOperator()
 	reqData := request.GetRequest()
 
@@ -689,6 +690,7 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 		return nil
 	}
 
+	framework.LogWithContext(ctx).Infof("detail flow request: %+v", detailReq)
 	manager := workflow.GetWorkFlowManager()
 	flowDetail, err := manager.DetailWorkFlow(ctx, detailReq.WorkFlowID)
 	if err != nil {
@@ -696,7 +698,7 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 		return nil
 	}
 
-	detailResp := &message.QueryWorkFlowDetailResp{
+	detailResp := message.QueryWorkFlowDetailResp{
 		Info:     flowDetail.Flow,
 		NodeInfo: flowDetail.Nodes,
 		NodeName: flowDetail.NodeNames,
@@ -706,10 +708,8 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	if err != nil {
 		handleResponse(response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil)
 	} else {
-		response = &clusterpb.RpcResponse{
-			Code:     int32(common.TIEM_SUCCESS),
-			Response: string(data),
-		}
+		response.Code = int32(common.TIEM_SUCCESS)
+		response.Response = string(data)
 	}
 
 	return nil

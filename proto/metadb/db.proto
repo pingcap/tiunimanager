@@ -4,6 +4,7 @@ import "db_auth.proto";
 import "db_host.proto";
 import "db_cluster.proto";
 import "db_tiup.proto";
+import "db_secondparty.proto";
 import "db_task.proto";
 import "db_transport.proto";
 import "db_allocation.proto";
@@ -74,6 +75,11 @@ service TiEMDBService {
 	rpc UpdateTiupTask(UpdateTiupTaskRequest) returns (UpdateTiupTaskResponse);
 	rpc FindTiupTaskByID(FindTiupTaskByIDRequest) returns (FindTiupTaskByIDResponse);
 	rpc GetTiupTaskStatusByBizID(GetTiupTaskStatusByBizIDRequest) returns (GetTiupTaskStatusByBizIDResponse);
+	// Tiup Operator
+	rpc CreateTiupOperatorRecord(CreateTiupOperatorRecordRequest) returns (CreateTiupOperatorRecordResponse);
+	rpc UpdateTiupOperatorRecord(UpdateTiupOperatorRecordRequest) returns (UpdateTiupOperatorRecordResponse);
+	rpc FindTiupOperatorRecordByID(FindTiupOperatorRecordByIDRequest) returns (FindTiupOperatorRecordByIDResponse);
+	rpc GetTiupOperatorRecordStatusByBizID(GetTiupOperatorRecordStatusByBizIDRequest) returns (GetTiupOperatorRecordStatusByBizIDResponse);
 
 	// Workflow and Task
 	rpc CreateFlow(DBCreateFlowRequest) returns (DBCreateFlowResponse);

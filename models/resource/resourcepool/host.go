@@ -184,6 +184,7 @@ func (h *Host) ToHostInfo(dst *structs.HostInfo) {
 	dst.UpdatedAt = h.UpdatedAt.Unix()
 	dst.Reserved = h.Reserved
 	dst.Traits = h.Traits
+	dst.SysLabels = structs.GetLabelNamesByTraits(dst.Traits)
 	for _, disk := range h.Disks {
 		dst.Disks = append(dst.Disks, structs.DiskInfo{
 			ID:       disk.ID,

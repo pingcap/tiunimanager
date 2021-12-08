@@ -29,7 +29,7 @@ import (
 
 type QueryHostsReq struct {
 	structs.PageRequest
-	Filter structs.HostFilter `json:"Filter"`
+	structs.HostFilter
 }
 
 type QueryHostsResp struct {

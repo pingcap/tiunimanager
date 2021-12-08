@@ -39,8 +39,8 @@ func (p *ResourcePool) DeleteHosts(ctx context.Context, hostIds []string) (err e
 	return p.hostProvider.DeleteHosts(ctx, hostIds)
 }
 
-func (p *ResourcePool) Query(ctx context.Context, filter structs.HostFilter) (hosts []*structs.HostInfo, err error) {
-	return p.hostProvider.Query(ctx, filter)
+func (p *ResourcePool) QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, err error) {
+	return p.hostProvider.QueryHosts(ctx, filter, page)
 }
 
 func (p *ResourcePool) UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error) {

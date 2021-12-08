@@ -145,16 +145,16 @@ type Location struct {
 }
 
 type HostFilter struct {
-	HostID  string `json:"hostId"`
+	HostID  string `json:"hostId" form:"hostId"`
 	Purpose string `json:"purpose" form:"purpose"`
 	Status  string `json:"status" form:"status"`
-	Stat    int    `json:"loadStat" form:"loadStat"`
-	Arch    string `json:"arch"`
+	Stat    string `json:"loadStat" form:"loadStat"`
+	Arch    string `json:"arch" form:"arch"`
 }
 
 type DiskFilter struct {
 	DiskType   string `json:"DiskType"`
-	DiskStatus int32  `json:"DiskStatus"`
+	DiskStatus string `json:"DiskStatus"`
 	Capacity   int32  `json:"Capacity"`
 }
 

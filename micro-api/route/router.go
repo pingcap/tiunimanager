@@ -162,7 +162,7 @@ func Route(g *gin.Engine) {
 			host.Use(interceptor.VerifyIdentity)
 			host.Use(interceptor.AuditLog())
 			host.POST("hosts", resourceApi.ImportHosts)
-			host.GET("hosts", resourceApi.ListHost)
+			host.GET("hosts", resourceApi.QueryHosts)
 			host.GET("hosts/:hostId", resourceApi.HostDetails)
 			host.DELETE("hosts/:hostId", resourceApi.RemoveHost)
 			host.DELETE("hosts", resourceApi.RemoveHosts)

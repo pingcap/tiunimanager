@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
@@ -974,7 +975,6 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *
 	hostIds, err := handler.resourceManager2.ImportHosts(ctx, reqStruct.Hosts)
 
 	handleResponse(response, err, func() ([]byte, error) {
-		// todo build api response data
 		var rsp message.ImportHostsResp
 		rsp.HostIDS = hostIds
 		return json.Marshal(rsp)
@@ -988,6 +988,39 @@ func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *
 }
 
 func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	request.GetOperator()
+	reqString := request.GetRequest()
+
+	reqStruct := &message.QueryHostsReq{}
+
+	err := json.Unmarshal([]byte(reqString), reqStruct)
+
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	filter := structs.HostFilter{
+		HostID:  reqStruct.HostID,
+		Arch:    reqStruct.Arch,
+		Purpose: reqStruct.Purpose,
+		Status:  reqStruct.Status,
+		Stat:    reqStruct.Stat,
+	}
+
+	page := structs.PageRequest{
+		Page:     reqStruct.Page,
+		PageSize: reqStruct.PageSize,
+	}
+
+	hosts, err := handler.resourceManager2.QueryHosts(ctx, &filter, &page)
+
+	handleResponse(response, err, func() ([]byte, error) {
+		var rsp message.QueryHostsResp
+		rsp.Hosts = hosts
+		return json.Marshal(rsp)
+	})
+
 	return nil
 }
 func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {

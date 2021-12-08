@@ -30,7 +30,7 @@ type ResourceReaderWriter interface {
 
 	Create(ctx context.Context, hosts []rp.Host) ([]string, error)
 	Delete(ctx context.Context, hostIds []string) (err error)
-	Query(ctx context.Context, filter structs.HostFilter) (hosts []rp.Host, err error)
+	Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, err error)
 
 	UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error)
 	UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error)

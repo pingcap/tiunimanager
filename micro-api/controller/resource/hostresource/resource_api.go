@@ -267,59 +267,24 @@ func ImportHosts(c *gin.Context) {
 
 // ListHost godoc
 // @Summary Show all hosts list in TiEM
-// @Description get hosts lit
+// @Description get hosts list
 // @Tags resource
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param hostQuery query HostQuery false "list condition"
-// @Success 200 {object} controller.ResultWithPage{data=[]HostInfo}
+// @Param hostQuery query message.QueryHostsReq false "list condition"
+// @Success 200 {object} controller.ResultWithPage{data=message.QueryHostsResp}
 // @Router /resources/hosts [get]
-func ListHost(c *gin.Context) {
-	hostQuery := HostQuery{
-		Status: int(resource.HOST_WHATEVER),
-		Stat:   int(resource.HOST_STAT_WHATEVER),
-	}
-	if err := c.ShouldBindQuery(&hostQuery); err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
-		return
-	}
-	if !resource.HostStatus(hostQuery.Status).IsValidForQuery() {
-		errmsg := fmt.Sprintf("input status %d is invalid for query", hostQuery.Status)
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
-		return
-	}
-	if !resource.HostStat(hostQuery.Stat).IsValidForQuery() {
-		errmsg := fmt.Sprintf("input load stat %d is invalid for query", hostQuery.Stat)
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
-		return
-	}
+func QueryHosts(c *gin.Context) {
+	var req message.QueryHostsReq
 
-	listHostReq := clusterpb.ListHostsRequest{
-		Purpose: hostQuery.Purpose,
-		Status:  int32(hostQuery.Status),
-		Stat:    int32(hostQuery.Stat),
-	}
-	listHostReq.PageReq = new(clusterpb.PageDTO)
-	listHostReq.PageReq.Page = int32(hostQuery.Page)
-	listHostReq.PageReq.PageSize = int32(hostQuery.PageSize)
+	requestBody, err := controller.HandleJsonRequestFromQuery(c, &req)
 
-	rsp, err := client.ClusterClient.ListHost(framework.NewMicroCtxFromGinCtx(c), &listHostReq)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
-		return
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryHosts, &message.QueryHostsResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
-	if rsp.Rs.Code != int32(codes.OK) {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
-		return
-	}
-	var res ListHostRsp
-	for _, v := range rsp.HostList {
-		var host HostInfo
-		copyHostFromRsp(v, &host)
-		res.Hosts = append(res.Hosts, host)
-	}
-	c.JSON(http.StatusOK, controller.SuccessWithPage(res.Hosts, controller.Page{Page: int(rsp.PageReq.Page), PageSize: int(rsp.PageReq.PageSize), Total: int(rsp.PageReq.Total)}))
 }
 
 // HostDetails godoc

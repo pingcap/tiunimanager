@@ -50,6 +50,44 @@ func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (requestBody
 	)
 }
 
+// HandleJsonRequestFromQuery
+// @Description: handle common json request from query
+// build request using c.ShouldBindQuery(req, binding.JSON)
+// validate request using validator.New().Struct(req)
+// serialize request using json.Marshal(req)
+// @Parameter c
+// @Parameter req
+// @Parameter appenders append request data out of http body, such as id in path
+// @return err
+// @return requestBody
+func HandleJsonRequestFromQuery(c *gin.Context,
+	req interface{},
+	appenders ...func(c *gin.Context, req interface{}) error,
+) (requestBody string, err error) {
+	return HandleRequest(c,
+		req,
+		func(c *gin.Context, req interface{}) error {
+			err = c.ShouldBindQuery(req)
+			if err != nil {
+				return err
+			}
+			for _, appender := range appenders {
+				err = appender(c, req)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+		func(req interface{}) error {
+			return validator.New().Struct(req)
+		},
+		func(req interface{}) ([]byte, error) {
+			return json.Marshal(req)
+		},
+	)
+}
+
 // HandleJsonRequestFromBody
 // @Description: handle common json request from body
 // build request using c.ShouldBindBodyWith(req, binding.JSON)

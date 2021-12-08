@@ -18,6 +18,7 @@ package resource
 import (
 	"context"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -140,8 +141,40 @@ func (rw *GormResourceReadWrite) Delete(ctx context.Context, hostIds []string) (
 	return
 }
 
-func (rw *GormResourceReadWrite) Query(ctx context.Context, filter structs.HostFilter) (hosts []rp.Host, err error) {
-	return nil, nil
+func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, err error) {
+	db := rw.DB()
+	// Check Host Detail
+	if filter.HostID != "" {
+		err = db.Where("id = ?", filter.HostID).Find(&hosts).Error
+		if err != nil {
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_HOST_NOT_FOUND, "query host %s error, %v", filter.HostID, err)
+		}
+		return
+	}
+
+	if filter.Arch != "" {
+		db = db.Where("arch = ?", filter.Arch)
+	}
+
+	if filter.Status != "" {
+		if filter.Status != string(constants.HostDeleted) {
+			db = db.Where("status = ?", filter.Status)
+		} else {
+			db = db.Unscoped().Where("status = ?", filter.Status)
+		}
+	}
+	if filter.Stat != "" {
+		db = db.Where("stat = ?", filter.Stat)
+	}
+	if filter.Purpose != "" {
+		label, err := structs.GetTraitByName(filter.Purpose)
+		if err != nil {
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_LABEL_NAEM, "query host use a invalid purpose name %s, %v", filter.Purpose, err)
+		}
+		db = db.Where("traits & ? = ?", label, label)
+	}
+	err = db.Offset(offset).Limit(limit).Find(&hosts).Error
+	return
 }
 
 func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error) {

@@ -44,6 +44,12 @@ type traceIDCtxKeyType struct{}
 
 var traceIDCtxKey traceIDCtxKeyType
 
+const TiEM_X_USER_ID_KEY = "Em-X-User-Id"
+
+const TiEM_X_USER_NAME_KEY = "Em-X-User-Name"
+
+const TiEM_X_TENANT_ID_KEY = "Em-X-Tenant-Id"
+
 func NewTracerFromArgs(args *ClientArgs) *Tracer {
 	jaegerTracer, _, err := NewJaegerTracer("tiem", args.TracerAddress)
 	if err != nil {
@@ -166,12 +172,20 @@ func StartBackgroundTask(fromCtx context.Context, comments string, fn func(conte
 func NewMicroCtxFromGinCtx(c *gin.Context) context.Context {
 	var ctx context.Context
 	ctx = c
-	id := getTraceIDFromGinContext(c)
+	traceID := getTraceIDFromGinContext(c)
+	userID := getStringValueFromGinContext(c, TiEM_X_USER_ID_KEY)
+	userName := getStringValueFromGinContext(c, TiEM_X_USER_NAME_KEY)
+	tenantID := getStringValueFromGinContext(c, TiEM_X_TENANT_ID_KEY)
 	parentSpan := getParentSpanFromGinContext(c)
 	if parentSpan != nil {
 		ctx = opentracing.ContextWithSpan(ctx, parentSpan)
 	}
-	return newMicroContextWithTraceID(ctx, id)
+	return newMicroContextWithKeyValuePairs(ctx, map[string]string{
+		TiEM_X_TRACE_ID_KEY:  traceID,
+		TiEM_X_USER_ID_KEY:   userID,
+		TiEM_X_USER_NAME_KEY: userName,
+		TiEM_X_TENANT_ID_KEY: tenantID,
+	})
 }
 
 func ForkMicroCtx(ctx context.Context) context.Context {
@@ -231,6 +245,58 @@ func GetTraceIDFromContext(ctx context.Context) string {
 		return id
 	}
 	return getTraceIDFromNormalContext(ctx)
+}
+
+func getStringValueFromGinContext(ctx *gin.Context, key string) string {
+	v := ctx.GetString(key)
+	if len(v) <= 0 {
+		return ""
+	} else {
+		return v
+	}
+}
+
+func getStringValueFromMicroContext(ctx context.Context, key string) string {
+	md, ok := metadata.FromContext(ctx)
+	if ok {
+		return md[key]
+	} else {
+		return ""
+	}
+}
+
+func getStringValueFromContext(ctx context.Context, key string) string {
+	AssertWithInfo(ctx != nil, "ctx should not be nil")
+	switch v := ctx.(type) {
+	case *gin.Context:
+		return getStringValueFromGinContext(v, key)
+	default:
+	}
+	return getStringValueFromMicroContext(ctx, key)
+}
+
+func newMicroContextWithKeyValuePairs(ctx context.Context, pairs map[string]string) context.Context {
+	md, ok := metadata.FromContext(ctx)
+	if ok {
+	} else {
+		md = make(map[string]string)
+	}
+	for k, v := range pairs {
+		md[k] = v
+	}
+	return metadata.NewContext(ctx, md)
+}
+
+func GetUserIDFromContext(ctx context.Context) string {
+	return getStringValueFromContext(ctx, TiEM_X_USER_ID_KEY)
+}
+
+func GetUserNameFromContext(ctx context.Context) string {
+	return getStringValueFromContext(ctx, TiEM_X_USER_NAME_KEY)
+}
+
+func GetTenantIDFromContext(ctx context.Context) string {
+	return getStringValueFromContext(ctx, TiEM_X_TENANT_ID_KEY)
 }
 
 func getParentSpanFromGinContext(ctx context.Context) opentracing.Span {

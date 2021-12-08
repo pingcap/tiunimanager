@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -29,29 +28,29 @@ func TestDAOClusterManager_AddClusterComponentInstance(t *testing.T) {
 	t.Run("normal", func(t *testing.T) {
 		data := []*ComponentInstance{
 			{
-				Entity: Entity {
+				Entity: Entity{
 					TenantId: "1111",
 				},
-				ClusterId: "cluster11",
-				ComponentType: "TiKV",
-				Role: "Leader",
-				PortInfo: "{}",
-				DiskId: "2222",
-				Version: "v5.1.1",
-				HostId: "Host11",
+				ClusterId:      "cluster11",
+				ComponentType:  "TiKV",
+				Role:           "Leader",
+				PortInfo:       "{}",
+				DiskId:         "2222",
+				Version:        "v5.1.1",
+				HostId:         "Host11",
 				AllocRequestId: "121212",
 			},
 			{
-				Entity: Entity {
+				Entity: Entity{
 					TenantId: "1111",
 				},
-				ClusterId: "cluster11",
-				ComponentType: "TiKV",
-				Role: "Flower",
-				PortInfo: "{}",
-				DiskId: "3333",
-				Version: "v5.1.1",
-				HostId: "Host11",
+				ClusterId:      "cluster11",
+				ComponentType:  "TiKV",
+				Role:           "Flower",
+				PortInfo:       "{}",
+				DiskId:         "3333",
+				Version:        "v5.1.1",
+				HostId:         "Host11",
 				AllocRequestId: "121212",
 			},
 		}
@@ -64,40 +63,40 @@ func TestDAOClusterManager_AddClusterComponentInstance(t *testing.T) {
 
 	t.Run("empty", func(t *testing.T) {
 		data := []*ComponentInstance{}
-		_ , err := dao.AddClusterComponentInstance(context.TODO(), "whatever", data)
+		_, err := dao.AddClusterComponentInstance(context.TODO(), "whatever", data)
 		assert.Error(t, err)
 	})
 
 	t.Run("without clusterId", func(t *testing.T) {
 		data := []*ComponentInstance{
 			{
-				Entity: Entity {
+				Entity: Entity{
 					TenantId: "1111",
 				},
-				ClusterId: "whatever",
-				ComponentType: "TiKV",
-				Role: "Leader",
-				PortInfo: "{}",
-				DiskId: "2222",
-				Version: "v5.1.1",
-				HostId: "111111",
+				ClusterId:      "whatever",
+				ComponentType:  "TiKV",
+				Role:           "Leader",
+				PortInfo:       "{}",
+				DiskId:         "2222",
+				Version:        "v5.1.1",
+				HostId:         "111111",
 				AllocRequestId: "121212",
 			},
 			{
-				Entity: Entity {
+				Entity: Entity{
 					TenantId: "1111",
 				},
-				ClusterId: "whatever",
-				ComponentType: "TiKV",
-				Role: "Flower",
-				PortInfo: "{}",
-				DiskId: "3333",
-				Version: "v5.1.1",
-				HostId: "111111",
+				ClusterId:      "whatever",
+				ComponentType:  "TiKV",
+				Role:           "Flower",
+				PortInfo:       "{}",
+				DiskId:         "3333",
+				Version:        "v5.1.1",
+				HostId:         "111111",
 				AllocRequestId: "121212",
 			},
 		}
-		_ , err := dao.AddClusterComponentInstance(context.TODO(), "", data)
+		_, err := dao.AddClusterComponentInstance(context.TODO(), "", data)
 		assert.Error(t, err)
 	})
 }
@@ -106,52 +105,52 @@ func TestDAOClusterManager_ListComponentInstances(t *testing.T) {
 	dao := Dao.ClusterManager()
 	data1 := []*ComponentInstance{
 		{
-			Entity: Entity {
+			Entity: Entity{
 				TenantId: "1111",
 			},
-			ClusterId: "cluster21",
-			ComponentType: "TiKV",
-			Role: "Leader",
-			PortInfo: "{}",
-			DiskId: "1111",
-			Version: "v5.1.1",
-			HostId: "HostId21",
+			ClusterId:      "cluster21",
+			ComponentType:  "TiKV",
+			Role:           "Leader",
+			PortInfo:       "{}",
+			DiskId:         "1111",
+			Version:        "v5.1.1",
+			HostId:         "HostId21",
 			AllocRequestId: "121212",
 		},
 		{
-			Entity: Entity {
+			Entity: Entity{
 				TenantId: "1111",
 			},
-			ClusterId: "cluster21",
-			ComponentType: "TiKV",
-			Role: "Flower",
-			PortInfo: "{}",
-			DiskId: "2222",
-			Version: "v5.1.1",
-			HostId: "HostId22",
+			ClusterId:      "cluster21",
+			ComponentType:  "TiKV",
+			Role:           "Flower",
+			PortInfo:       "{}",
+			DiskId:         "2222",
+			Version:        "v5.1.1",
+			HostId:         "HostId22",
 			AllocRequestId: "121212",
 		},
 	}
-	ids , err := dao.AddClusterComponentInstance(context.TODO(), "cluster21", data1)
+	ids, err := dao.AddClusterComponentInstance(context.TODO(), "cluster21", data1)
 	assert.NoError(t, err)
 	defer dao.DB(context.TODO()).Delete(ids)
 
 	data2 := []*ComponentInstance{
 		{
-			Entity: Entity {
+			Entity: Entity{
 				TenantId: "1111",
 			},
-			ClusterId: "cluster22",
-			ComponentType: "TiKV",
-			Role: "Flower",
-			PortInfo: "{}",
-			DiskId: "3333",
-			Version: "v5.1.1",
-			HostId: "HostId21",
+			ClusterId:      "cluster22",
+			ComponentType:  "TiKV",
+			Role:           "Flower",
+			PortInfo:       "{}",
+			DiskId:         "3333",
+			Version:        "v5.1.1",
+			HostId:         "HostId21",
 			AllocRequestId: "121212",
 		},
 	}
-	ids2 , err := dao.AddClusterComponentInstance(context.TODO(), "cluster22", data2)
+	ids2, err := dao.AddClusterComponentInstance(context.TODO(), "cluster22", data2)
 	assert.NoError(t, err)
 	defer dao.DB(context.TODO()).Delete(ids2)
 
@@ -174,52 +173,52 @@ func TestDAOClusterManager_ListComponentInstancesByHost(t *testing.T) {
 	dao := Dao.ClusterManager()
 	data1 := []*ComponentInstance{
 		{
-			Entity: Entity {
+			Entity: Entity{
 				TenantId: "1111",
 			},
-			ClusterId: "cluster31",
-			ComponentType: "TiKV",
-			Role: "Leader",
-			PortInfo: "{}",
-			DiskId: "1111",
-			Version: "v5.1.1",
-			HostId: "HostId31",
+			ClusterId:      "cluster31",
+			ComponentType:  "TiKV",
+			Role:           "Leader",
+			PortInfo:       "{}",
+			DiskId:         "1111",
+			Version:        "v5.1.1",
+			HostId:         "HostId31",
 			AllocRequestId: "121212",
 		},
 		{
-			Entity: Entity {
+			Entity: Entity{
 				TenantId: "1111",
 			},
-			ClusterId: "cluster31",
-			ComponentType: "TiKV",
-			Role: "Flower",
-			PortInfo: "{}",
-			DiskId: "2222",
-			Version: "v5.1.1",
-			HostId: "HostId32",
+			ClusterId:      "cluster31",
+			ComponentType:  "TiKV",
+			Role:           "Flower",
+			PortInfo:       "{}",
+			DiskId:         "2222",
+			Version:        "v5.1.1",
+			HostId:         "HostId32",
 			AllocRequestId: "121212",
 		},
 	}
-	ids , err := dao.AddClusterComponentInstance(context.TODO(), "cluster31", data1)
+	ids, err := dao.AddClusterComponentInstance(context.TODO(), "cluster31", data1)
 	assert.NoError(t, err)
 	defer dao.DB(context.TODO()).Delete(ids)
 
 	data2 := []*ComponentInstance{
 		{
-			Entity: Entity {
+			Entity: Entity{
 				TenantId: "1111",
 			},
-			ClusterId: "cluster32",
-			ComponentType: "TiKV",
-			Role: "Flower",
-			PortInfo: "{}",
-			DiskId: "3333",
-			Version: "v5.1.1",
-			HostId: "HostId31",
+			ClusterId:      "cluster32",
+			ComponentType:  "TiKV",
+			Role:           "Flower",
+			PortInfo:       "{}",
+			DiskId:         "3333",
+			Version:        "v5.1.1",
+			HostId:         "HostId31",
 			AllocRequestId: "121212",
 		},
 	}
-	ids2 , err := dao.AddClusterComponentInstance(context.TODO(), "cluster32", data2)
+	ids2, err := dao.AddClusterComponentInstance(context.TODO(), "cluster32", data2)
 	assert.NoError(t, err)
 	defer dao.DB(context.TODO()).Delete(ids2)
 
@@ -242,33 +241,33 @@ func TestDAOClusterManager_DeleteClusterComponentInstance(t *testing.T) {
 	dao := Dao.ClusterManager()
 	data1 := []*ComponentInstance{
 		{
-			Entity: Entity {
+			Entity: Entity{
 				TenantId: "1111",
 			},
-			ClusterId: "cluster31",
-			ComponentType: "TiKV",
-			Role: "Leader",
-			PortInfo: "{}",
-			DiskId: "1111",
-			Version: "v5.1.1",
-			HostId: "HostId31",
+			ClusterId:      "cluster31",
+			ComponentType:  "TiKV",
+			Role:           "Leader",
+			PortInfo:       "{}",
+			DiskId:         "1111",
+			Version:        "v5.1.1",
+			HostId:         "HostId31",
 			AllocRequestId: "121212",
 		},
 		{
-			Entity: Entity {
+			Entity: Entity{
 				TenantId: "1111",
 			},
-			ClusterId: "cluster31",
-			ComponentType: "TiKV",
-			Role: "Flower",
-			PortInfo: "{}",
-			DiskId: "2222",
-			Version: "v5.1.1",
-			HostId: "HostId32",
+			ClusterId:      "cluster31",
+			ComponentType:  "TiKV",
+			Role:           "Flower",
+			PortInfo:       "{}",
+			DiskId:         "2222",
+			Version:        "v5.1.1",
+			HostId:         "HostId32",
 			AllocRequestId: "121212",
 		},
 	}
-	_ , err := dao.AddClusterComponentInstance(context.TODO(), "cluster31", data1)
+	_, err := dao.AddClusterComponentInstance(context.TODO(), "cluster31", data1)
 	assert.NoError(t, err)
 	t.Run("normal", func(t *testing.T) {
 		got, err := dao.ListComponentInstances(context.TODO(), "cluster31")

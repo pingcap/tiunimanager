@@ -13,16 +13,13 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package changefeed
+package workflow
 
-type ChangeFeedManager struct {
-}
+import (
+	"github.com/pingcap-inc/tiem/models"
+	"testing"
+)
 
-func NewChangeFeedManager() *ChangeFeedManager {
-	return &ChangeFeedManager{}
-}
-
-func (p *ChangeFeedManager) Create(name string) string {
-	// todo access db or do something else
-	return "MockId"
+func TestMain(m *testing.M) {
+	models.MockDB()
 }

@@ -49,7 +49,9 @@ func (m *GormChangeFeedReadWrite) Delete(ctx context.Context, taskId string) (er
 	if "" == taskId {
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
-	task := &ChangeFeedTask{}
+	task := &ChangeFeedTask{
+		Type: DownstreamTypeMysql,
+	}
 
 	return m.DB(ctx).First(task, "id = ?", taskId).Delete(task).Error
 }
@@ -137,4 +139,3 @@ func (m *GormChangeFeedReadWrite) QueryByClusterId(ctx context.Context, clusterI
 		Where("cluster_id = ?", clusterId).
 		Order("created_at").Offset(offset).Limit(length).Find(&tasks).Count(&total).Error
 }
-

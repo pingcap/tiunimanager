@@ -255,3 +255,21 @@ type CmdReloadConfigReq struct {
 	TimeoutS      			int
 	Flags         			[]string
 }
+
+type ClusterEditConfigReq struct {
+	DbConnParameter 		DbConnParam
+	TiDBClusterComponent    spec.TiDBClusterComponent
+	InstanceAddr			string
+	ConfigKey       		string
+	ConfigValue				string
+}
+
+type ClusterEditConfigResp struct {
+	Message	string
+}
+
+type ShowWarningsResp struct {
+	Level	string
+	Code	string
+	Message string
+}

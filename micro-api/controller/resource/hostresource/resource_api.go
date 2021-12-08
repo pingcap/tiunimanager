@@ -259,6 +259,7 @@ func ImportHosts(c *gin.Context) {
 
 	if err == nil {
 		controller.InvokeRpcMethod(c, client.ClusterClient.ImportHosts,
+			&message.ImportHostsResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

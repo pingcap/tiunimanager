@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -31,7 +30,6 @@ var testRW *GormChangeFeedReadWrite
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
 	os.MkdirAll(testFilePath, 0755)
-
 
 	logins := framework.LogForkFile(common.LogFileSystem)
 

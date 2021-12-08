@@ -29,6 +29,7 @@ import (
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -37,6 +38,7 @@ func main() {
 		loadKnowledge,
 		initLibForDev,
 		initAdapter,
+		initDatabase,
 		initCronJob,
 		defaultPortForLocal,
 	)
@@ -69,6 +71,11 @@ func initLibForDev(f *framework.BaseFramework) error {
 
 func loadKnowledge(f *framework.BaseFramework) error {
 	knowledge.LoadKnowledge()
+	return nil
+}
+
+func initDatabase(f *framework.BaseFramework) error {
+	models.Open(f, false)
 	return nil
 }
 

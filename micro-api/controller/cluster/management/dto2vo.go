@@ -22,7 +22,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
-	"github.com/pingcap-inc/tiem/micro-api/controller/resource/warehouse"
 )
 
 func ParseClusterBaseInfoFromDTO(dto *clusterpb.ClusterBaseInfoDTO) (baseInfo *ClusterBaseInfo) {
@@ -59,74 +58,6 @@ func ParseDisplayInfoFromDTO(dto *clusterpb.ClusterDisplayDTO) (displayInfo *Clu
 		ClusterInstanceInfo: *ParseInstanceInfoFromDTO(dto.Instances),
 	}
 	return displayInfo
-}
-
-func ParseMaintenanceInfoFromDTO(dto *clusterpb.ClusterMaintenanceDTO) (maintenance *ClusterMaintenanceInfo) {
-	maintenance = &ClusterMaintenanceInfo{
-		MaintainTaskCron: dto.MaintainTaskCron,
-	}
-	return
-}
-
-func ParseComponentInfoFromDTO(dto *clusterpb.ComponentInstanceDTO) (instance *ComponentInstance) {
-	nodes := make([]ComponentNodeDisplayInfo, len(dto.Nodes))
-
-	for i, v := range dto.Nodes {
-		nodes[i] = *ParseComponentNodeFromDTO(v)
-	}
-
-	instance = &ComponentInstance{
-		ComponentBaseInfo: *ParseComponentBaseInfoFromDTO(dto.GetBaseInfo()),
-		Nodes:             nodes,
-	}
-
-	return
-}
-
-func ParseComponentNodeFromDTO(dto *clusterpb.ComponentNodeDisplayInfoDTO) (node *ComponentNodeDisplayInfo) {
-	if dto == nil || dto.Instance == nil {
-		return &ComponentNodeDisplayInfo{}
-	}
-	node = &ComponentNodeDisplayInfo{
-		NodeId:                    dto.NodeId,
-		Version:                   dto.Version,
-		Status:                    dto.Status,
-		ComponentNodeInstanceInfo: *ParseComponentNodeInstanceFromDTO(dto.Instance),
-		ComponentNodeUsageInfo:    *ParseComponentNodeUsageFromDTO(dto.Usages),
-	}
-	return
-}
-
-func ParseComponentNodeUsageFromDTO(dto *clusterpb.ComponentNodeUsageDTO) (usages *ComponentNodeUsageInfo) {
-	usages = &ComponentNodeUsageInfo{
-		IoUtil:       dto.IoUtil,
-		Iops:         dto.Iops,
-		CpuUsage:     *controller.ParseUsageFromDTO(dto.CpuUsage),
-		MemoryUsage:  *controller.ParseUsageFromDTO(dto.MemoryUsage),
-		StorageUsage: *controller.ParseUsageFromDTO(dto.StoregeUsage),
-	}
-
-	return
-}
-
-func ParseComponentNodeInstanceFromDTO(dto *clusterpb.ComponentNodeInstanceDTO) (instance *ComponentNodeInstanceInfo) {
-	instance = &ComponentNodeInstanceInfo{
-		HostId: dto.HostId,
-		Port:   int(dto.Port),
-		Role:   ComponentNodeRole{dto.Role.RoleCode, dto.Role.RoleName},
-		Spec:   warehouse.SpecBaseInfo{SpecCode: dto.Spec.SpecCode, SpecName: dto.Spec.SpecName},
-		Zone:   warehouse.ZoneBaseInfo{ZoneCode: dto.Zone.ZoneCode, ZoneName: dto.Zone.ZoneName},
-	}
-
-	return
-}
-
-func ParseComponentBaseInfoFromDTO(dto *clusterpb.ComponentBaseInfoDTO) (baseInfo *ComponentBaseInfo) {
-	baseInfo = &ComponentBaseInfo{
-		ComponentType: dto.ComponentType,
-		ComponentName: dto.ComponentName,
-	}
-	return
 }
 
 func ParseInstanceInfoFromDTO(dto *clusterpb.ClusterInstanceDTO) (instance *ClusterInstanceInfo) {

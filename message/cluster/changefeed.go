@@ -84,7 +84,7 @@ type ChangeFeedTask struct {
 	ClusterId      string      `json:"clusterId" form:"clusterId" example:"CLUSTER_ID_IN_TIEM__22"`
 	StartTS        int64       `json:"startTS" form:"startTS" example:"415241823337054209"`
 	FilterRules    []string    `json:"rules" form:"rules" example:"*.*"`
-	Status         int         `json:"status" form:"status" example:"1" enums:"0,1,2,3,4,5"`
+	Status         string      `json:"status" form:"status" example:"1" enums:"Initial,Normal,Stopped,Finished,Error,Failed"`
 	DownstreamType string      `json:"downstreamType"  form:"downstreamType" example:"tidb" enums:"tidb,kafka,mysql"`
 	Downstream     interface{} `json:"downstream" form:"downstream"`
 	CreateTime     time.Time   `json:"createTime" form:"createTime"`

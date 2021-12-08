@@ -14,3 +14,52 @@
  ******************************************************************************/
 
 package management
+
+import (
+	"context"
+	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
+)
+
+type ClusterManager struct {
+	ClusterContext *ClusterContext
+}
+
+func NewClusterManager() *ClusterManager {
+	return &ClusterManager{}
+}
+
+// ScaleOut
+// @Description scale out a cluster
+// @Parameter	operator
+// @Parameter	request
+// @Return		*cluster.ScaleOutClusterResp
+// @Return		error
+func (manager *ClusterManager) ScaleOut(ctx context.Context, operator *clusterpb.RpcOperator, request *cluster.ScaleOutClusterReq) (*cluster.ScaleOutClusterResp, error) {
+	// get cluster info from db based by clusterId
+	aggregation, err := domain.ClusterRepo.Load(ctx, request.ClusterID)
+	if err != nil {
+		return nil, err
+	}
+	aggregation.CurrentOperator = &domain.Operator{
+		Id:             operator.Id,
+		Name:           operator.Name,
+		TenantId:       operator.TenantId,
+		ManualOperator: operator.IsManual,
+	}
+
+	// convert cluster.ScaleOutClusterReq->[]*ComponentGroup, init componentGroup
+
+
+
+	return nil, nil
+}
+
+func (manager *ClusterManager) ScaleIn(ctx context.Context, operator *clusterpb.RpcOperator, request *cluster.ScaleInClusterReq) (*cluster.ScaleInClusterResp, error) {
+	return nil, nil
+}
+
+func (manager *ClusterManager) Clone(ctx context.Context, operator *clusterpb.RpcOperator, request *cluster.CloneClusterReq) (*cluster.CloneClusterResp, error) {
+	return nil, nil
+}

@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	clusterManager "github.com/pingcap-inc/tiem/micro-cluster/service/cluster"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/service/datatransfer/changefeed"
 	"net/http"
 	"strconv"
@@ -57,7 +57,7 @@ type ClusterServiceHandler struct {
 	tenantManager     *user.TenantManager
 	userManager       *user.UserManager
 	changeFeedManager *changeFeedManager.ChangeFeedManager
-	ClusterManager    *clusterManager.ClusterManager
+	ClusterManager    *management.ClusterManager
 }
 
 func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]byte, error)) {
@@ -130,7 +130,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
 	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
 	handler.changeFeedManager = changeFeedManager.NewChangeFeedManager()
-	handler.ClusterManager = clusterManager.NewClusterManager()
+	handler.ClusterManager = management.NewClusterManager()
 
 	domain.InitFlowMap()
 	return handler

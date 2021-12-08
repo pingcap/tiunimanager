@@ -132,7 +132,7 @@ func Pause(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Success 200 {object} controller.CommonResult{data=cluster.ResumeChangeFeedTaskResp}}
+// @Success 200 {object} controller.CommonResult{data=cluster.ResumeChangeFeedTaskResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -157,7 +157,7 @@ func Resume(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param changeFeedTaskId path string true "changeFeedTaskId"
-// @Param task body changefeed.UpdateChangeFeedTaskReq true "change feed task"
+// @Param task body cluster.UpdateChangeFeedTaskReq true "change feed task"
 // @Success 200 {object} controller.CommonResult{data=cluster.UpdateChangeFeedTaskResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

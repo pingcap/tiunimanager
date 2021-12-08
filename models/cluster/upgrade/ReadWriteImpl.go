@@ -25,6 +25,7 @@ package upgrade
 
 import (
 	"context"
+
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
@@ -77,4 +78,16 @@ func (m *GormProductUpgradePathReadWrite) Get(ctx context.Context, pathId string
 	} else {
 		return task, nil
 	}
+}
+
+func (m *GormProductUpgradePathReadWrite) QueryBySrcVersion(ctx context.Context, srcVersion string) (paths []*ProductUpgradePath, err error) {
+	if "" == srcVersion {
+		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+	}
+
+	var paths []*ProductUpgradePath
+
+	return path, m.DB(ctx).Model(&ProductUpgradePath{}).
+		Where("src_version = ?", srcVersion).
+		Order("created_at").Find(&paths).Error
 }

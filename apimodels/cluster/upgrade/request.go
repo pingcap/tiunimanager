@@ -33,7 +33,7 @@ type Path struct {
 }
 
 type QueryUpgradePathRsp struct {
-	Paths []Path
+	Paths []*Path
 }
 
 type QueryUpgradeVersionDiffInfoReq struct {

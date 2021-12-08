@@ -20,6 +20,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/models/cluster/upgrade"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/models/workflow"
 	"gorm.io/driver/sqlite"
@@ -35,6 +36,7 @@ type database struct {
 	importExportReaderWriter importexport.ReaderWriter
 	brReaderWriter           backuprestore.ReaderWriter
 	changeFeedReaderWriter   changefeed.ReaderWriter
+	upgradeReadWriter        upgrade.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -68,6 +70,7 @@ func (p *database) initTables() {
 	p.addTable(new(changefeed.ChangeFeedTask))
 	p.addTable(new(workflow.WorkFlow))
 	p.addTable(new(workflow.WorkFlowNode))
+	p.addTable(new(upgrade.ProductUpgradePath))
 
 	// other tables
 }
@@ -77,6 +80,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.workFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
 	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
 	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
+	defaultDb.upgradeReadWriter = upgrade.NewGormProductUpgradePath(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
@@ -118,6 +122,14 @@ func GetImportExportReaderWriter() importexport.ReaderWriter {
 
 func GetBRReaderWriter() backuprestore.ReaderWriter {
 	return defaultDb.brReaderWriter
+}
+
+func GetUpgradeReaderWriter() upgrade.ReaderWriter {
+	return defaultDb.upgradeReadWriter
+}
+
+func SetUpgradeReaderWriter(rw upgrade.ReaderWriter) {
+	defaultDb.upgradeReadWriter = rw
 }
 
 func MockDB() {

@@ -61,4 +61,13 @@ type ReaderWriter interface {
 	// @Parameter updateTemplate skip fields below : Type、ProductID、SrcVersion, DstVersion
 	// @return error if task non-existent
 	UpdateConfig(ctx context.Context, updateTemplate *ProductUpgradePath) error
+
+	// QueryBySrcVersion
+	// @Description: query ProductUpgradePath s for given srcVersion
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter srcVersion
+	// @return []*ProductUpgradePath
+	// @return error if srcVersion is invalid
+	QueryBySrcVersion(ctx context.Context, srcVersion string) (paths []*ProductUpgradePath, err error)
 }

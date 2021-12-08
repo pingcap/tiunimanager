@@ -23,13 +23,13 @@ import (
 	"strconv"
 	"time"
 
+	upgradeManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/upgrade"
+
 	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/apimodels/cluster/upgrade"
+	"github.com/pingcap-inc/tiem/library/util/convert"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
-	upgradeManager "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/upgrade"
-
-	"github.com/pingcap-inc/tiem/library/util/convert"
 
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -61,7 +61,7 @@ type ClusterServiceHandler struct {
 	tenantManager     *user.TenantManager
 	userManager       *user.UserManager
 	changeFeedManager *changeFeedManager.Manager
-	upgradeManager    *upgradeManager.UpgradeManager
+	upgradeManager    *upgradeManager.Manager
 }
 
 func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]byte, error)) {
@@ -346,29 +346,17 @@ func (c ClusterServiceHandler) DetailCluster(ctx context.Context, req *clusterpb
 	return
 }
 
-//func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-//	request.GetOperator()
-//	reqData := request.GetRequest()
-//
-//	task := &changefeed.ChangeFeedTask{}
-//
-//	err := json.Unmarshal([]byte(reqData), task)
-//
-//	if err != nil {
-//		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
-//		return nil
-//	}
-//
-//	result := handler.changeFeedManager.Create(task.Name)
-//
-//	handleResponse(response, err, func() ([]byte, error) {
-//		// todo build api response data
-//		task.Id = result
-//		return json.Marshal(task)
-//	})
-//
-//	return nil
-//}
+func (handler *ClusterServiceHandler) CreateProductUpgradePath(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) DeleteProductUpgradePath(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
+}
+
+func (handler *ClusterServiceHandler) UpdateProductUpgradePath(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	panic("implement me")
+}
 
 func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	request.GetOperator()
@@ -383,19 +371,15 @@ func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Contex
 		return nil
 	}
 
-	result := handler.upgradeManager.QueryUpdatePath(path.ClusterID)
+	result, err := handler.upgradeManager.QueryUpdatePath(ctx, path.ClusterID)
+	if err != nil {
+		handleResponse(response, err, nil)
+		return nil
+	}
 
 	handleResponse(response, err, func() ([]byte, error) {
-		var paths []upgrade.Path
-		for k, v := range result {
-			path := upgrade.Path{
-				Type:     k,
-				Versions: v,
-			}
-			paths = append(paths, path)
-		}
 		rsp := upgrade.QueryUpgradePathRsp{
-			Paths: paths,
+			Paths: result,
 		}
 		return json.Marshal(rsp)
 	})

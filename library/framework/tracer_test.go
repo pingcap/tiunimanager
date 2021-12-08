@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -62,7 +61,7 @@ func (m MyContext) Value(key interface{}) interface{} {
 func TestGetTraceIDFromContext(t *testing.T) {
 	t.Run("gin", func(t *testing.T) {
 		ginContext := &gin.Context{}
-		ginContext.Set(TiEM_X_TRACE_ID_NAME, "111")
+		ginContext.Set(TiEM_X_TRACE_ID_KEY, "111")
 		got := GetTraceIDFromContext(ginContext)
 		assert.Equal(t, "111", got)
 	})
@@ -85,10 +84,10 @@ func TestNewJaegerTracer(t *testing.T) {
 
 func TestNewMicroCtxFromGinCtx(t *testing.T) {
 	ctx := &gin.Context{}
-	ctx.Set(TiEM_X_TRACE_ID_NAME, "111")
+	ctx.Set(TiEM_X_TRACE_ID_KEY, "111")
 	got := NewMicroCtxFromGinCtx(ctx)
-	assert.True(t, got.Value(TiEM_X_TRACE_ID_NAME) != "")
-	assert.True(t, got.Value(TiEM_X_TRACE_ID_NAME) == ctx.Value(TiEM_X_TRACE_ID_NAME))
+	assert.True(t, got.Value(TiEM_X_TRACE_ID_KEY) != "")
+	assert.True(t, got.Value(TiEM_X_TRACE_ID_KEY) == ctx.Value(TiEM_X_TRACE_ID_KEY))
 }
 
 func Test_getParentSpanFromGinContext(t *testing.T) {

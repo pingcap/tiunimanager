@@ -33,12 +33,12 @@ type Tracer opentracing.Tracer
 
 // trace id:
 //    *gin.Context
-//			key $TiEM_X_TRACE_ID_NAME
+//			key $TiEM_X_TRACE_ID_KEY
 //    micro-ctx
-//			metadata key $TiEM_X_TRACE_ID_NAME
+//			metadata key $TiEM_X_TRACE_ID_KEY
 //    normal-ctx
 //			key traceIDCtxKey
-var TiEM_X_TRACE_ID_NAME = "Em-X-Trace-Id"
+var TiEM_X_TRACE_ID_KEY = "Em-X-Trace-Id"
 
 type traceIDCtxKeyType struct{}
 
@@ -184,21 +184,21 @@ func newMicroContextWithTraceID(ctx context.Context, traceID string) context.Con
 	} else {
 		md = make(map[string]string)
 	}
-	md[TiEM_X_TRACE_ID_NAME] = traceID
+	md[TiEM_X_TRACE_ID_KEY] = traceID
 	return metadata.NewContext(ctx, md)
 }
 
 func getTraceIDFromMicroContext(ctx context.Context) string {
 	md, ok := metadata.FromContext(ctx)
 	if ok {
-		return md[TiEM_X_TRACE_ID_NAME]
+		return md[TiEM_X_TRACE_ID_KEY]
 	} else {
 		return ""
 	}
 }
 
 func getTraceIDFromGinContext(ctx *gin.Context) string {
-	id := ctx.GetString(TiEM_X_TRACE_ID_NAME)
+	id := ctx.GetString(TiEM_X_TRACE_ID_KEY)
 	if len(id) <= 0 {
 		return ""
 	} else {

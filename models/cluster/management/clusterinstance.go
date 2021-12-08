@@ -20,20 +20,20 @@ import "github.com/pingcap-inc/tiem/models/common"
 type ClusterInstance struct {
 	common.Entity
 
-	Type           string
+	Type           string `gorm:"not null;default:null"`
+	Version        string `gorm:"not null;default:null"`
+	ClusterID      string `gorm:"not null;default:null"`
 	Role           string
-	Version        string
-	ClusterID      string
-	Status         string
-	HostID         string
-	SpecCode       string
-	ZoneCode       string
 
-	Addresses      []string
+	CpuCores       int8
+	Memory         int8
+
+	// instance location info
+	HostID         string `gorm:"not null;type:varchar(22);default:null"`
+	Zone           string
+	Rack           string
+	HostIP         string
 	Ports          []string
 	DiskId         string
 	DiskPath       string
-	AllocRequestId string
-	CpuCores       int8
-	Memory         int8
 }

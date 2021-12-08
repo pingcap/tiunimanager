@@ -15,20 +15,23 @@
 
 package management
 
-import "github.com/pingcap-inc/tiem/models/common"
+import (
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/models/common"
+)
 
 type Cluster struct {
 	common.Entity
-	Name                    string
-	DBUser              	string
-	DBPassword              string
-	Type                    string
-	Version                 string
+	Name                    string `gorm:"not null;type:varchar(22);default:null"`
+	DBUser              	string `gorm:"not null;default:null"`
+	DBPassword              string `gorm:"not null;default:null"`
+	Type                    string `gorm:"not null;default:null"`
+	Version                 string `gorm:"not null;default:null"`
 	Tls                     bool
-	Tags                    string
+	Tags                    []string
 	OwnerId                 string `gorm:"not null;type:varchar(22);default:null"`
 	Exclusive               bool
 	Region                  string
-	CpuArchitecture         string
-	MaintainStatus          string
+	CpuArchitecture         constants.ArchType
+	MaintainStatus          constants.ClusterMaintenanceStatus
 }

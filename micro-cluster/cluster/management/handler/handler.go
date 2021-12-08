@@ -17,6 +17,7 @@ package handler
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models"
@@ -45,12 +46,16 @@ func (p *ClusterMeta) ScaleOutMeta(ctx context.Context, instancesIDs []string) e
 	return nil
 }
 
-func (p *ClusterMeta) TryMaintenance(ctx context.Context, maintenanceType string) error {
+func (p *ClusterMeta) TryMaintenance(ctx context.Context, maintenanceType constants.ClusterMaintenanceStatus) error {
 	return nil
 }
 
 func (p *ClusterMeta) GetCluster() *management.Cluster {
 	return p.cluster
+}
+
+func (p *ClusterMeta) GetID() string {
+	return p.cluster.ID
 }
 
 func (p *ClusterMeta) GetInstances() []*management.ClusterInstance {

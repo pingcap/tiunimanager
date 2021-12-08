@@ -644,7 +644,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 	err := json.Unmarshal([]byte(reqData), listReq)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("json unmarshal reuqest failed %s", err.Error())
-		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		handleResponse(response, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, err.Error()), nil)
 		return nil
 	}
 
@@ -661,7 +661,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 	}
 	data, err := json.Marshal(listResp)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("json unmarshal response failed %s", err.Error())
+		framework.LogWithContext(ctx).Errorf("json marshal response failed %s", err.Error())
 		handleResponse(response, framework.NewTiEMError(common.TIEM_LIST_WORKFLOW_FAILED, err.Error()), nil)
 	} else {
 		response = &clusterpb.RpcResponse{

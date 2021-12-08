@@ -42,6 +42,12 @@ import (
 func Query(c *gin.Context) {
 	var request message.QueryWorkFlowsReq
 
+	if err := c.ShouldBindQuery(&request); err != nil {
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	body, err := json.Marshal(request)
 	if err != nil {
 		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
@@ -49,11 +55,7 @@ func Query(c *gin.Context) {
 		return
 	}
 
-	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.ListFlows, &message.QueryWorkFlowsResp{},
-			string(body),
-			controller.DefaultTimeout)
-	}
+	controller.InvokeRpcMethod(c, client.ClusterClient.ListFlows, &message.QueryWorkFlowsResp{}, string(body), controller.DefaultTimeout)
 }
 
 // Detail show details of a flow work

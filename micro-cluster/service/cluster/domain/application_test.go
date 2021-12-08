@@ -673,6 +673,7 @@ func Test_modifyParameters(t *testing.T) {
 		mockTiup.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 		mockTiup.EXPECT().ApiEditConfig(gomock.Any(), gomock.Any()).Return(true, nil)
 		mockTiup.EXPECT().MicroSrvGetTaskStatusByBizID(gomock.Any(), gomock.Any()).Return(dbpb.TiupTaskStatus_Finished, "", nil)
+		mockTiup.EXPECT().EditClusterConfig(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 		task := &TaskEntity{
 			Id: 123,
@@ -713,6 +714,14 @@ func Test_modifyParameters(t *testing.T) {
 					HasReboot:     0,
 					Source:        3,
 					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "4"},
+				},
+				{
+					ParamId:       5,
+					Name:          "test_param_5",
+					ComponentType: "TiDB",
+					HasReboot:     0,
+					Source:        1,
+					RealValue:     clusterpb.ParamRealValueDTO{Cluster: "5"},
 				},
 			},
 		})

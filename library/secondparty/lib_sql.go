@@ -28,33 +28,17 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/spec"
-	"strings"
 )
 
 func (secondMicro *SecondMicro) EditClusterConfig(ctx context.Context, req ClusterEditConfigReq, bizID uint64) error {
 	logInFunc := framework.LogWithContext(ctx).WithField("bizid", bizID)
 	logInFunc.Infof("editclusterconfig, clustereditconfigreq: %v, bizid: %d", req, bizID)
-	var args []string
-	if req.TiDBClusterComponent == spec.TiDBClusterComponent_TiDB {
-		args = append(args, "set")
-	} else if req.TiDBClusterComponent == spec.TiDBClusterComponent_TiKV || req.TiDBClusterComponent == spec.TiDBClusterComponent_PD {
-		args = append(args, "set config")
-		if len(req.InstanceAddr) != 0 {
-			args = append(args, fmt.Sprintf("\"%s\"", req.InstanceAddr))
-		} else {
-			args = append(args, string(req.TiDBClusterComponent))
-		}
-	} else {
-		return fmt.Errorf("not support %s", string(req.TiDBClusterComponent))
-	}
 
-	args = append(args, fmt.Sprintf("`%s` = %s", req.ConfigKey, req.ConfigValue))
-	sqlCommand := strings.Join(args, " ")
-
-	logInFunc.Infof("task start processing: %s, on: %s:%s", sqlCommand, req.DbConnParameter.IP, req.DbConnParameter.Port)
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", req.DbConnParameter.Username, req.DbConnParameter.Password, req.DbConnParameter.IP, req.DbConnParameter.Port))
 	if err != nil {
 		logInFunc.Error("conn tidb error", err)
@@ -62,13 +46,34 @@ func (secondMicro *SecondMicro) EditClusterConfig(ctx context.Context, req Clust
 	}
 	defer db.Close()
 
-	err = execEditConfigThruSQL(ctx, db, sqlCommand)
-	if err != nil {
-		return err
-	}
-	err = execShowWarningsThruSQL(ctx, db)
-	if err != nil {
-		return err
+	for _, config := range req.ComponentConfigs {
+		var args []string
+		if config.TiDBClusterComponent == spec.TiDBClusterComponent_TiDB {
+			args = append(args, "set")
+		} else if config.TiDBClusterComponent == spec.TiDBClusterComponent_TiKV || config.TiDBClusterComponent == spec.TiDBClusterComponent_PD {
+			args = append(args, "set config")
+			if len(config.InstanceAddr) != 0 {
+				args = append(args, fmt.Sprintf("\"%s\"", config.InstanceAddr))
+			} else {
+				args = append(args, string(config.TiDBClusterComponent))
+			}
+		} else {
+			return fmt.Errorf("not support %s", string(config.TiDBClusterComponent))
+		}
+
+		args = append(args, fmt.Sprintf("`%s` = %s", config.ConfigKey, config.ConfigValue))
+		sqlCommand := strings.Join(args, " ")
+
+		logInFunc.Infof("task start processing: %s, on: %s:%s", sqlCommand, req.DbConnParameter.IP, req.DbConnParameter.Port)
+
+		err = execEditConfigThruSQL(ctx, db, sqlCommand)
+		if err != nil {
+			return err
+		}
+		err = execShowWarningsThruSQL(ctx, db)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

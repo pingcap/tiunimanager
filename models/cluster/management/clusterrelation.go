@@ -15,26 +15,16 @@
 
 package management
 
-import "github.com/pingcap-inc/tiem/models/common"
+import (
+	"github.com/pingcap-inc/tiem/common/constants"
+	"gorm.io/gorm"
+)
 
-// ClusterInstance the component instances of cluster
-type ClusterInstance struct {
-	common.Entity
-
-	Type           string `gorm:"not null;default:null"`
-	Version        string `gorm:"not null;default:null"`
-	ClusterID      string `gorm:"not null;default:null"`
-	Role           string
-
-	CpuCores       int8
-	Memory         int8
-
-	// instance location info
-	HostID         string `gorm:"not null;type:varchar(22);default:null"`
-	Zone           string
-	Rack           string
-	HostIP         string
-	Ports          []string
-	DiskId         string
-	DiskPath       string
+// ClusterRelation Cluster relationship, the system will establish a master-slave relationship
+type ClusterRelation struct {
+	gorm.Model
+	RelationType     constants.ClusterRelationType `gorm:"not null;size:32"`
+	SubjectClusterID string                        `gorm:"not null;size:32"`
+	ObjectClusterID  string                        `gorm:"not null;size:32"`
 }
+

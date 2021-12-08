@@ -33,7 +33,11 @@ func (p *ClusterMeta) Save(ctx context.Context) error {
 	return nil
 }
 
-func (p *ClusterMeta) ScaleInMeta(ctx context.Context, instances []*management.ClusterInstance) error {
+func (p *ClusterMeta) ScaleIn(ctx context.Context, instancesIDs []string) error {
+	return nil
+}
+
+func (p *ClusterMeta) ScaleOut(ctx context.Context, instances []*management.ClusterInstance) error {
 	if p.instances == nil {
 		p.instances = instances
 	} else {
@@ -42,12 +46,18 @@ func (p *ClusterMeta) ScaleInMeta(ctx context.Context, instances []*management.C
 	return nil
 }
 
-func (p *ClusterMeta) ScaleOutMeta(ctx context.Context, instancesIDs []string) error {
+func (p *ClusterMeta) CloneMeta(ctx context.Context) *ClusterMeta {
 	return nil
 }
 
-func (p *ClusterMeta) TryMaintenance(ctx context.Context, maintenanceType constants.ClusterMaintenanceStatus) error {
-	return nil
+func (p *ClusterMeta) TryMaintenance(ctx context.Context, maintenanceStatus constants.ClusterMaintenanceStatus) error {
+	// check Maintenance status
+	if true {
+		p.cluster.MaintenanceStatus = maintenanceStatus
+		return nil
+	} else {
+		return framework.NewTiEMError(common.TIEM_TASK_CONFLICT, "// todo")
+	}
 }
 
 func (p *ClusterMeta) GetCluster() *management.Cluster {
@@ -66,12 +76,12 @@ func (p *ClusterMeta) GetDeployConfig() string {
 	return ""
 }
 
-func (p *ClusterMeta) GetScaleInConfig() string {
-	return ""
+func (p *ClusterMeta) GetScaleInConfig() (string, error) {
+	return "", nil
 }
 
-func (p *ClusterMeta) GetScaleOutConfig() string {
-	return ""
+func (p *ClusterMeta) GetScaleOutConfig() (string, error) {
+	return "", nil
 }
 
 func (p *ClusterMeta) GetConnectAddresses() []string {

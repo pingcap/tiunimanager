@@ -22,16 +22,17 @@ import (
 
 type Cluster struct {
 	common.Entity
-	Name                    string `gorm:"not null;type:varchar(22);default:null"`
-	DBUser              	string `gorm:"not null;default:null"`
-	DBPassword              string `gorm:"not null;default:null"`
-	Type                    string `gorm:"not null;default:null"`
-	Version                 string `gorm:"not null;default:null"`
-	Tls                     bool
-	Tags                    []string
-	OwnerId                 string `gorm:"not null;type:varchar(22);default:null"`
-	Exclusive               bool
-	Region                  string
-	CpuArchitecture         constants.ArchType
-	MaintainStatus          constants.ClusterMaintenanceStatus
+	Name              string   `gorm:"not null;size:64;comment:'user name of the cluster''"`
+	DBUser            string   `gorm:"not null;size:64;comment:'user name of the database''"`
+	DBPassword        string   `gorm:"not null;size:64;comment:'user password of the database''"`
+	Type              string   `gorm:"not null;size:16;comment:'type of the cluster, eg. TiDB、TiDB Migration';"`
+	Version           string   `gorm:"not null;size:64;comment:'version of the cluster'"`
+	TLS               bool     `gorm:"default:false;comment:'whether to enable TLS, value: true or false'"`
+	Tags              []string `gorm:"comment:'cluster tag information'"`
+	OwnerId           string   `gorm:"not null:size:32;<-:create;->"`
+	ParameterGroupID  string   `gorm:"comment: parameter group id"`
+	Exclusive         bool
+	Region            string
+	CpuArchitecture   constants.ArchType
+	MaintenanceStatus constants.ClusterMaintenanceStatus
 }

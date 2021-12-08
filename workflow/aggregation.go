@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
+	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap/errors"
 	//"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -172,36 +174,27 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 	case SyncFuncNode:
 		return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 	case PollingNode:
-		//todo: wait tiup bizid become string
-		/*
-			ticker := time.NewTicker(3 * time.Second)
-			sequence := 0
-			for range ticker.C {
-				if sequence += 1; sequence > 200 {
-					task.Fail(framework.SimpleError(common.TIEM_TASK_POLLING_TIME_OUT))
-					flow.handleTaskError(task, taskDefine)
-					return false
-				}
-				framework.LogWithContext(flow.Context).Infof("polling task waiting, sequence %d, taskId %d, taskName %s", sequence, task.ID, task.Name)
+		ticker := time.NewTicker(3 * time.Second)
+		for range ticker.C {
+			framework.LogWithContext(flow.Context).Infof("polling task waiting, taskId %d, taskName %s", node.ID, node.Name)
 
-				stat, statString, err := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(flow.Context, uint64(task.ID))
-				if err != nil {
-					framework.LogWithContext(flow.Context).Error(err)
-					task.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))
-					flow.handleTaskError(task, taskDefine)
-					return false
-				}
-				if stat == dbpb.TiupTaskStatus_Error {
-					task.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, statString))
-					flow.handleTaskError(task, taskDefine)
-					return false
-				}
-				if stat == dbpb.TiupTaskStatus_Finished {
-					task.Success(statString)
-					return flow.handle(flow.Define.TaskNodes[taskDefine.SuccessEvent])
-				}
+			stat, statString, err := secondparty.Manager.GetTaskStatusByBizID(flow.Context, node.ID)
+			if err != nil {
+				framework.LogWithContext(flow.Context).Error(err)
+				node.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))
+				flow.handleTaskError(node, nodeDefine)
+				return false
 			}
-		*/
+			if stat == dbpb.TiupTaskStatus_Error {
+				node.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, statString))
+				flow.handleTaskError(node, nodeDefine)
+				return false
+			}
+			if stat == dbpb.TiupTaskStatus_Finished {
+				node.Success(statString)
+				return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
+			}
+		}
 	}
 	return true
 }

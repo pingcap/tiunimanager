@@ -161,7 +161,6 @@ func Route(g *gin.Engine) {
 		{
 			host.Use(interceptor.VerifyIdentity)
 			host.Use(interceptor.AuditLog())
-			host.POST("host", resourceApi.ImportHost)
 			host.POST("hosts", resourceApi.ImportHosts)
 			host.GET("hosts", resourceApi.ListHost)
 			host.GET("hosts/:hostId", resourceApi.HostDetails)

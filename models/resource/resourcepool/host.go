@@ -17,34 +17,16 @@ package resourcepool
 
 import (
 	"errors"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	crypto "github.com/pingcap-inc/tiem/library/thirdparty/encrypt"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 )
-
-func GenDomainCodeByName(pre string, name string) string {
-	return fmt.Sprintf("%s,%s", pre, name)
-}
-
-func GetDomainNameFromCode(failureDomain string) string {
-	pos := strings.LastIndex(failureDomain, ",")
-	return failureDomain[pos+1:]
-}
-
-func GetDomainPrefixFromCode(failureDomain string) string {
-	pos := strings.LastIndex(failureDomain, ",")
-	if pos == -1 {
-		// No found ","
-		return failureDomain
-	}
-	return failureDomain[:pos]
-}
 
 type Host struct {
 	ID           string `json:"hostId" gorm:"primaryKey"`
@@ -136,4 +118,88 @@ func (h *Host) AfterDelete(tx *gorm.DB) (err error) {
 func (h *Host) AfterFind(tx *gorm.DB) (err error) {
 	err = tx.Find(&(h.Disks), "HOST_ID = ?", h.ID).Error
 	return
+}
+
+func (h *Host) ConstructFromHostInfo(src *structs.HostInfo) error {
+	h.HostName = src.HostName
+	h.IP = src.IP
+	h.UserName = src.UserName
+	passwd, err := crypto.AesEncryptCFB(src.Passwd)
+	if err != nil {
+		return err
+	}
+	h.Passwd = passwd
+	h.Arch = src.Arch
+	h.OS = src.OS
+	h.Kernel = src.Kernel
+	h.FreeCpuCores = src.FreeCpuCores
+	h.FreeMemory = src.FreeMemory
+	h.Spec = src.GetSpecString()
+	h.CpuCores = src.CpuCores
+	h.Memory = src.Memory
+	h.Nic = src.Nic
+	h.Region = src.Region
+	h.AZ = structs.GenDomainCodeByName(h.Region, src.AZ)
+	h.Rack = structs.GenDomainCodeByName(h.AZ, src.Rack)
+	h.Status = src.Status
+	h.Stat = src.Stat
+	h.ClusterType = src.ClusterType
+	h.Purpose = src.Purpose
+	h.DiskType = src.DiskType
+	h.Reserved = src.Reserved
+	h.Traits = src.Traits
+	for _, disk := range src.Disks {
+		h.Disks = append(h.Disks, Disk{
+			Name:     disk.Name,
+			Path:     disk.Path,
+			Capacity: disk.Capacity,
+			Status:   disk.Status,
+			Type:     disk.Type,
+		})
+	}
+	return nil
+}
+
+func (h *Host) ToHostInfo(dst *structs.HostInfo) {
+	dst.ID = h.ID
+	dst.HostName = h.HostName
+	dst.IP = h.IP
+	dst.Arch = h.Arch
+	dst.OS = h.OS
+	dst.Kernel = h.Kernel
+	dst.FreeCpuCores = h.FreeCpuCores
+	dst.FreeMemory = h.FreeMemory
+	dst.Spec = h.Spec
+	dst.CpuCores = h.CpuCores
+	dst.Memory = h.Memory
+	dst.Nic = h.Nic
+	dst.Region = h.Region
+	dst.AZ = structs.GetDomainNameFromCode(h.AZ)
+	dst.Rack = structs.GetDomainNameFromCode(h.Rack)
+	dst.Status = h.Status
+	dst.ClusterType = h.ClusterType
+	dst.Purpose = h.Purpose
+	dst.DiskType = h.DiskType
+	dst.CreatedAt = h.CreatedAt.Unix()
+	dst.UpdatedAt = h.UpdatedAt.Unix()
+	dst.Reserved = h.Reserved
+	dst.Traits = h.Traits
+	for _, disk := range h.Disks {
+		dst.Disks = append(dst.Disks, structs.DiskInfo{
+			ID:       disk.ID,
+			Name:     disk.Name,
+			Path:     disk.Path,
+			Capacity: disk.Capacity,
+			Status:   disk.Status,
+			Type:     disk.Type,
+		})
+	}
+	// Update Host's load stat after diskInfo is updated
+	dst.Stat = h.Stat
+	if dst.Stat == string(constants.HostLoadInUsed) {
+		stat, isExhaust := dst.IsExhaust()
+		if isExhaust {
+			dst.Stat = string(stat)
+		}
+	}
 }

@@ -18,8 +18,8 @@ package hostprovider
 import (
 	"context"
 
-	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
+
 	"github.com/pingcap-inc/tiem/models/resource"
 	"github.com/pingcap-inc/tiem/models/resource/resourcepool"
 )
@@ -34,85 +34,6 @@ func GetFileHostProvider() HostProvider {
 	return hostProvider
 }
 
-func (p *FileHostProvider) ResourceToDBModel(src *structs.HostInfo, dst *resourcepool.Host) {
-	dst.HostName = src.HostName
-	dst.IP = src.IP
-	dst.UserName = src.UserName
-	dst.Passwd = src.Passwd
-	dst.Arch = src.Arch
-	dst.OS = src.OS
-	dst.Kernel = src.Kernel
-	dst.FreeCpuCores = src.FreeCpuCores
-	dst.FreeMemory = src.FreeMemory
-	dst.Spec = src.Spec
-	dst.CpuCores = src.CpuCores
-	dst.Memory = src.Memory
-	dst.Nic = src.Nic
-	dst.Region = src.Region
-	dst.AZ = resourcepool.GenDomainCodeByName(dst.Region, src.AZ)
-	dst.Rack = resourcepool.GenDomainCodeByName(dst.AZ, src.Rack)
-	dst.Status = src.Status
-	dst.Stat = src.Stat
-	dst.ClusterType = src.ClusterType
-	dst.Purpose = src.Purpose
-	dst.DiskType = src.DiskType
-	dst.Reserved = src.Reserved
-	dst.Traits = src.Traits
-	for _, disk := range src.Disks {
-		dst.Disks = append(dst.Disks, resourcepool.Disk{
-			Name:     disk.Name,
-			Path:     disk.Path,
-			Capacity: disk.Capacity,
-			Status:   disk.Status,
-			Type:     disk.Type,
-		})
-	}
-}
-
-func (p *FileHostProvider) DBModelToResource(src *resourcepool.Host, dst *structs.HostInfo) {
-	dst.ID = src.ID
-	dst.HostName = src.HostName
-	dst.IP = src.IP
-	dst.Arch = src.Arch
-	dst.OS = src.OS
-	dst.Kernel = src.Kernel
-	dst.FreeCpuCores = src.FreeCpuCores
-	dst.FreeMemory = src.FreeMemory
-	dst.Spec = src.Spec
-	dst.CpuCores = src.CpuCores
-	dst.Memory = src.Memory
-	dst.Nic = src.Nic
-	dst.Region = src.Region
-	dst.AZ = resourcepool.GetDomainNameFromCode(src.AZ)
-	dst.Rack = resourcepool.GetDomainNameFromCode(src.Rack)
-	dst.Status = src.Status
-	dst.ClusterType = src.ClusterType
-	dst.Purpose = src.Purpose
-	dst.DiskType = src.DiskType
-	dst.CreatedAt = src.CreatedAt.Unix()
-	dst.UpdatedAt = src.UpdatedAt.Unix()
-	dst.Reserved = src.Reserved
-	dst.Traits = src.Traits
-	for _, disk := range src.Disks {
-		dst.Disks = append(dst.Disks, structs.DiskInfo{
-			ID:       disk.ID,
-			Name:     disk.Name,
-			Path:     disk.Path,
-			Capacity: disk.Capacity,
-			Status:   disk.Status,
-			Type:     disk.Type,
-		})
-	}
-	// Update Host's load stat after diskInfo is updated
-	dst.Stat = src.Stat
-	if dst.Stat == string(constants.HostLoadInUsed) {
-		stat, isExhaust := dst.IsExhaust()
-		if isExhaust {
-			dst.Stat = string(stat)
-		}
-	}
-}
-
 func (p *FileHostProvider) SetResourceReaderWriter(rw resource.ResourceReaderWriter) {
 	p.rw = rw
 }
@@ -121,7 +42,10 @@ func (p *FileHostProvider) ImportHosts(ctx context.Context, hosts []structs.Host
 	var dbModelHosts []resourcepool.Host
 	for _, host := range hosts {
 		var dbHost resourcepool.Host
-		p.ResourceToDBModel(&host, &dbHost)
+		err = dbHost.ConstructFromHostInfo(&host)
+		if err != nil {
+			return nil, err
+		}
 		dbModelHosts = append(dbModelHosts, dbHost)
 	}
 	return p.rw.Create(ctx, dbModelHosts)

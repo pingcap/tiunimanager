@@ -128,66 +128,6 @@ func copyHostToReq(src *HostInfo, dst *clusterpb.HostInfo) error {
 	return nil
 }
 
-func doImport(c *gin.Context, host *HostInfo) (rsp *clusterpb.ImportHostResponse, err error) {
-	importReq := clusterpb.ImportHostRequest{}
-	importReq.Host = new(clusterpb.HostInfo)
-	err = copyHostToReq(host, importReq.Host)
-	if err != nil {
-		return nil, err
-	}
-	return client.ClusterClient.ImportHost(framework.NewMicroCtxFromGinCtx(c), &importReq)
-}
-
-func doImportBatch(c *gin.Context, hosts []*HostInfo) (rsp *clusterpb.ImportHostsInBatchResponse, err error) {
-	importReq := clusterpb.ImportHostsInBatchRequest{}
-	importReq.Hosts = make([]*clusterpb.HostInfo, len(hosts))
-	for i, host := range hosts {
-		importReq.Hosts[i] = new(clusterpb.HostInfo)
-		err = copyHostToReq(host, importReq.Hosts[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return client.ClusterClient.ImportHostsInBatch(framework.NewMicroCtxFromGinCtx(c), &importReq)
-}
-
-// ImportHost godoc
-// @Summary Import a host to TiEM System
-// @Description import one host by json
-// @Tags resource
-// @Accept json
-// @Produce json
-// @Security ApiKeyAuth
-// @Param host body HostInfo true "Host information"
-// @Success 200 {object} controller.CommonResult{data=string}
-// @Router /resources/host [post]
-func ImportHost(c *gin.Context) {
-	var host HostInfo
-	if err := c.ShouldBindJSON(&host); err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
-		return
-	}
-	for i := range host.Disks {
-		if host.Disks[i].Type == "" {
-			host.Disks[i].Type = string(resource.Sata)
-		}
-	}
-
-	rsp, err := doImport(c, &host)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
-		return
-	}
-
-	if rsp.Rs.Code != int32(codes.OK) {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
-		return
-	}
-
-	c.JSON(http.StatusOK, controller.Success(ImportHostRsp{HostId: rsp.HostId}))
-}
-
 func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 	xlsx, err := excelize.OpenReader(r)
 	if err != nil {
@@ -322,19 +262,6 @@ func ImportHosts(c *gin.Context) {
 			requestBody,
 			controller.DefaultTimeout)
 	}
-	/*
-		rsp, err := doImportBatch(c, hosts)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
-			return
-		}
-		if rsp.Rs.Code != int32(codes.OK) {
-			c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
-			return
-		}
-
-		c.JSON(http.StatusOK, controller.Success(ImportHostsRsp{HostIds: rsp.HostIds}))
-	*/
 }
 
 // ListHost godoc

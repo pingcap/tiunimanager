@@ -24,10 +24,29 @@
 package structs
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 )
+
+func GenDomainCodeByName(pre string, name string) string {
+	return fmt.Sprintf("%s,%s", pre, name)
+}
+
+func GetDomainNameFromCode(failureDomain string) string {
+	pos := strings.LastIndex(failureDomain, ",")
+	return failureDomain[pos+1:]
+}
+
+func GetDomainPrefixFromCode(failureDomain string) string {
+	pos := strings.LastIndex(failureDomain, ",")
+	if pos == -1 {
+		// No found ","
+		return failureDomain
+	}
+	return failureDomain[:pos]
+}
 
 type DiskInfo struct {
 	ID       string `json:"diskId"`
@@ -72,6 +91,10 @@ type HostInfo struct {
 
 func (h *HostInfo) GetPurposes() []string {
 	return strings.Split(h.Purpose, ",")
+}
+
+func (h *HostInfo) GetSpecString() string {
+	return fmt.Sprintf("%dC%dG", h.CpuCores, h.Memory)
 }
 
 func (h *HostInfo) AddTraits(p string) (err error) {

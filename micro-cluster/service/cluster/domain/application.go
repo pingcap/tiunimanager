@@ -880,7 +880,9 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 				return false
 			}
 		case int32(SQL):
-			// todo: invoke secondparty
+			if !sqlEditConfig(context, task, params, clusterAggregation) {
+				return false
+			}
 		case int32(API):
 			if !apiEditConfig(context, task, params, clusterAggregation) {
 				return false
@@ -888,6 +890,36 @@ func modifyParameters(task *TaskEntity, context *FlowContext) bool {
 		}
 	}
 	task.Success(nil)
+	return true
+}
+
+func sqlEditConfig(context *FlowContext, task *TaskEntity, params []*ApplyParam, clusterAggregation *ClusterAggregation) bool {
+	topo := clusterAggregation.CurrentTopologyConfigRecord.ConfigModel
+	tidbServer := topo.TiDBServers[rand.Intn(len(topo.TiDBServers))]
+	configs := make([]secondparty.ClusterComponentConfig, len(params))
+	for i, param := range params {
+		configs[i] = secondparty.ClusterComponentConfig{
+			TiDBClusterComponent: spec2.TiDBClusterComponent(strings.ToLower(param.ComponentType)),
+			// todo: should be replaced with the system variable corresponding to the parameter
+			ConfigKey:   param.Name,
+			ConfigValue: param.RealValue.Cluster,
+		}
+	}
+	req := secondparty.ClusterEditConfigReq{
+		DbConnParameter: secondparty.DbConnParam{
+			Username: "root", //todo: replace admin account
+			Password: "",
+			IP:       tidbServer.Host,
+			Port:     strconv.Itoa(tidbServer.Port),
+		},
+		ComponentConfigs: configs,
+	}
+	err := secondparty.SecondParty.EditClusterConfig(context, req, uint64(task.Id))
+	if err != nil {
+		getLoggerWithContext(context).Errorf("call secondparty sql edit cluster config err = %s", err.Error())
+		task.Fail(err)
+		return false
+	}
 	return true
 }
 

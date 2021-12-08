@@ -222,6 +222,13 @@ type GlobalComponentConfig struct {
 	ConfigMap            map[string]interface{}
 }
 
+type ClusterComponentConfig struct {
+	TiDBClusterComponent spec.TiDBClusterComponent
+	InstanceAddr         string
+	ConfigKey            string
+	ConfigValue          string
+}
+
 type CmdEditGlobalConfigReq struct {
 	TiUPComponent          TiUPComponentTypeStr
 	InstanceName           string
@@ -265,11 +272,8 @@ type ApiEditConfigReq struct {
 }
 
 type ClusterEditConfigReq struct {
-	DbConnParameter      DbConnParam
-	TiDBClusterComponent spec.TiDBClusterComponent
-	InstanceAddr         string
-	ConfigKey            string
-	ConfigValue          string
+	DbConnParameter  DbConnParam
+	ComponentConfigs []ClusterComponentConfig
 }
 
 type ClusterEditConfigResp struct {

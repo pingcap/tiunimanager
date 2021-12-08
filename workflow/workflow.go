@@ -176,7 +176,7 @@ func (mgr *WorkFlowManager) ListWorkFlows(ctx context.Context, bizId string, fuz
 func (mgr *WorkFlowManager) DetailWorkFlow(ctx context.Context, flowId string) (*WorkFlowDetail, error) {
 	flow, nodes, err := models.GetWorkFlowReaderWriter().QueryDetailWorkFlow(ctx, flowId)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	define, err := mgr.GetWorkFlowDefine(ctx, flow.Name)

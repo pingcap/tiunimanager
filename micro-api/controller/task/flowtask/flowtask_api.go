@@ -83,11 +83,8 @@ func Detail(c *gin.Context) {
 		return
 	}
 
-	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.DetailFlow, &message.QueryWorkFlowDetailResp{},
-			string(body),
-			controller.DefaultTimeout)
-	}
+	controller.InvokeRpcMethod(c, client.ClusterClient.DetailFlow, &message.QueryWorkFlowDetailResp{}, string(body), controller.DefaultTimeout)
+
 	/*
 		//operator := controller.GetOperator(c)
 		flowWorkId, err := strconv.Atoi(c.Param("flowWorkId"))

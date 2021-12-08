@@ -649,6 +649,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 		return nil
 	}
 
+	framework.LogWithContext(ctx).Infof("list flows request: %+v", request)
 	manager := workflow.GetWorkFlowManager()
 	flows, total, err := manager.ListWorkFlows(ctx, listReq.BizID, listReq.FlowName, listReq.Status, listReq.Page, listReq.PageSize)
 	if err != nil {
@@ -665,14 +666,12 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 		framework.LogWithContext(ctx).Errorf("json marshal response failed %s", err.Error())
 		handleResponse(response, framework.NewTiEMError(common.TIEM_LIST_WORKFLOW_FAILED, err.Error()), nil)
 	} else {
-		response = &clusterpb.RpcResponse{
-			Page: &clusterpb.RpcPage{
-				Page:     int32(listReq.Page),
-				PageSize: int32(listReq.PageSize),
-				Total:    int32(total),
-			},
-			Code:     int32(common.TIEM_SUCCESS),
-			Response: string(data),
+		response.Code = int32(common.TIEM_SUCCESS)
+		response.Response = string(data)
+		response.Page = &clusterpb.RpcPage{
+			Page:     int32(listReq.Page),
+			PageSize: int32(listReq.PageSize),
+			Total:    int32(total),
 		}
 	}
 

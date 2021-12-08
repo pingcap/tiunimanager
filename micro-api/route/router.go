@@ -163,19 +163,13 @@ func Route(g *gin.Engine) {
 			host.Use(interceptor.AuditLog())
 			host.POST("hosts", resourceApi.ImportHosts)
 			host.GET("hosts", resourceApi.QueryHosts)
-			host.GET("hosts/:hostId", resourceApi.HostDetails)
-			host.DELETE("hosts/:hostId", resourceApi.RemoveHost)
 			host.DELETE("hosts", resourceApi.RemoveHosts)
-
 			host.GET("hosts-template", resourceApi.DownloadHostTemplateFile)
-
 			host.GET("failuredomains", warehouseApi.GetFailureDomain)
 			host.GET("hierarchy", warehouseApi.GetHierarchy)
 			host.GET("stocks", warehouseApi.GetStocks)
 
 			host.PUT("hosts", resourceApi.UpdateHost)
-			// Add allochosts API for debugging, not release.
-			host.POST("allochosts", resourceApi.AllocHosts)
 		}
 
 		log := apiV1.Group("/logs")

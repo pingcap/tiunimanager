@@ -963,9 +963,9 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *
 	request.GetOperator()
 	reqString := request.GetRequest()
 
-	reqStruct := &message.ImportHostsReq{}
+	reqStruct := message.ImportHostsReq{}
 
-	err := json.Unmarshal([]byte(reqString), reqStruct)
+	err := json.Unmarshal([]byte(reqString), &reqStruct)
 
 	if err != nil {
 		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
@@ -984,6 +984,24 @@ func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *
 }
 
 func (handler *ClusterServiceHandler) DeleteHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	request.GetOperator()
+	reqString := request.GetRequest()
+
+	reqStruct := message.DeleteHostsReq{}
+
+	err := json.Unmarshal([]byte(reqString), &reqStruct)
+
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	err = handler.resourceManager2.DeleteHosts(ctx, reqStruct.HostIDs)
+
+	handleResponse(response, err, func() ([]byte, error) {
+		var rsp message.DeleteHostsResp
+		return json.Marshal(rsp)
+	})
 	return nil
 }
 
@@ -991,9 +1009,9 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *c
 	request.GetOperator()
 	reqString := request.GetRequest()
 
-	reqStruct := &message.QueryHostsReq{}
+	reqStruct := message.QueryHostsReq{}
 
-	err := json.Unmarshal([]byte(reqString), reqStruct)
+	err := json.Unmarshal([]byte(reqString), &reqStruct)
 
 	if err != nil {
 		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)

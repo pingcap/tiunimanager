@@ -103,7 +103,7 @@ func HandleJsonRequestFromBody(c *gin.Context,
 	appenders ...func(c *gin.Context, req interface{}) error,
 ) (requestBody string, err error) {
 	return HandleRequest(c,
-		&req,
+		req,
 		func(c *gin.Context, req interface{}) error {
 			err = c.ShouldBindBodyWith(req, binding.JSON)
 			if err != nil {
@@ -157,7 +157,7 @@ func HandleRequest(c *gin.Context,
 
 	requestBodyBytes, err := serializer(req)
 	if err != nil {
-		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
+		framework.LogWithContext(c).Errorf("serialize request failed, %s", err.Error())
 		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	} else {

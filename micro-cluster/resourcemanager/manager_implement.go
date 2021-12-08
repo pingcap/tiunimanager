@@ -55,3 +55,14 @@ func (m *ResourceManager) QueryHosts(ctx context.Context, filter *structs.HostFi
 
 	return
 }
+
+func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string) (err error) {
+	err = m.resourcePool.DeleteHosts(ctx, hostIds)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("delete %d hosts in filter %v failed from db service: %v", len(hostIds), err)
+	} else {
+		framework.LogWithContext(ctx).Infof("delete %d hosts %v succeed from db service.", len(hostIds), hostIds)
+	}
+
+	return
+}

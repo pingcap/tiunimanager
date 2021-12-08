@@ -45,14 +45,10 @@ type ImportHostsResp struct {
 }
 
 type DeleteHostsReq struct {
-	HostID []string `json:"hostIds"`
+	HostIDs []string `json:"hostIds"`
 }
 
 type DeleteHostsResp struct {
-	Hosts struct {
-		HostID string `json:"hostId"`
-		Status string `json:"status"`
-	} `json:"hosts"`
 }
 
 type UpdateHostReservedReq struct {

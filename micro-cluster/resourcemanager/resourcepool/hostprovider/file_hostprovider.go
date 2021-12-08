@@ -52,7 +52,7 @@ func (p *FileHostProvider) ImportHosts(ctx context.Context, hosts []structs.Host
 }
 
 func (p *FileHostProvider) DeleteHosts(ctx context.Context, hostIds []string) (err error) {
-	return nil
+	return p.rw.Delete(ctx, hostIds)
 }
 
 func (p *FileHostProvider) QueryHosts(ctx context.Context, filter *structs.HostFilter, page *structs.PageRequest) (hosts []structs.HostInfo, err error) {

@@ -4249,16 +4249,16 @@ var doc = `{
                     "example": 415241823337054209
                 },
                 "status": {
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
                     ],
-                    "example": 1
+                    "example": "1"
                 },
                 "updateTime": {
                     "type": "string"
@@ -4347,16 +4347,16 @@ var doc = `{
                     "example": 415241823337054209
                 },
                 "status": {
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
                     ],
-                    "example": 1
+                    "example": "1"
                 },
                 "unsteady": {
                     "type": "boolean",
@@ -4440,16 +4440,16 @@ var doc = `{
                     "example": 415241823337054209
                 },
                 "status": {
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
                     ],
-                    "example": 1
+                    "example": "1"
                 },
                 "unsteady": {
                     "type": "boolean",
@@ -4525,16 +4525,16 @@ var doc = `{
                     "example": 415241823337054209
                 },
                 "status": {
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
                     ],
-                    "example": 1
+                    "example": "1"
                 },
                 "updateTime": {
                     "type": "string"

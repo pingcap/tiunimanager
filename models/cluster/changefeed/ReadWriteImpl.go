@@ -18,6 +18,7 @@ package changefeed
 import (
 	"context"
 	"database/sql"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
@@ -50,7 +51,7 @@ func (m *GormChangeFeedReadWrite) Delete(ctx context.Context, taskId string) (er
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 	task := &ChangeFeedTask{
-		Type: DownstreamTypeMysql,
+		Type: constants.DownstreamTypeMysql,
 	}
 
 	return m.DB(ctx).First(task, "id = ?", taskId).Delete(task).Error

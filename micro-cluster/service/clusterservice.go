@@ -83,16 +83,16 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 	request.GetOperator()
 	reqData := request.GetRequest()
 
-	task := &cluster.CreateChangeFeedTaskReq{}
+	req := &cluster.CreateChangeFeedTaskReq{}
 
-	err := json.Unmarshal([]byte(reqData), task)
+	err := json.Unmarshal([]byte(reqData), req)
 
 	if err != nil {
 		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
 		return nil
 	}
 
-	result, err := handler.changeFeedManager.Create(ctx, task.Name)
+	result, err := handler.changeFeedManager.Create(ctx, *req)
 
 	handleResponse(response, err, func() ([]byte, error) {
 		return json.Marshal(cluster.CreateChangeFeedTaskResp{

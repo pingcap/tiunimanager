@@ -128,14 +128,14 @@ definitions:
         type: integer
       status:
         enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        example: 1
-        type: integer
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: "1"
+        type: string
       updateTime:
         type: string
     type: object
@@ -200,14 +200,14 @@ definitions:
         type: integer
       status:
         enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        example: 1
-        type: integer
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: "1"
+        type: string
       unsteady:
         example: false
         type: boolean
@@ -269,14 +269,14 @@ definitions:
         type: integer
       status:
         enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        example: 1
-        type: integer
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: "1"
+        type: string
       unsteady:
         example: false
         type: boolean
@@ -332,14 +332,14 @@ definitions:
         type: integer
       status:
         enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        example: 1
-        type: integer
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: "1"
+        type: string
       updateTime:
         type: string
     type: object

@@ -19,15 +19,19 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/message/cluster"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/workflow"
 )
 
-type ClusterManager struct {
-	ClusterContext *ClusterContext
-}
+type ClusterManager struct {}
 
 func NewClusterManager() *ClusterManager {
 	return &ClusterManager{}
+}
+
+
+func (manager *ClusterManager) load(ctx context.Context, clusterID string) (*handler.ClusterMeta, error) {
+	return nil, nil
 }
 
 // ScaleOut
@@ -37,23 +41,24 @@ func NewClusterManager() *ClusterManager {
 // @Return		*cluster.ScaleOutClusterResp
 // @Return		error
 func (manager *ClusterManager) ScaleOut(ctx context.Context, operator *clusterpb.RpcOperator, request *cluster.ScaleOutClusterReq) (*cluster.ScaleOutClusterResp, error) {
-	// get cluster info from db based by clusterId
-	aggregation, err := domain.ClusterRepo.Load(ctx, request.ClusterID)
+	// Get cluster info and topology from db based by clusterId
+	clusterMeta, err := manager.load(ctx, request.ClusterID)
 	if err != nil {
 		return nil, err
 	}
-	aggregation.CurrentOperator = &domain.Operator{
-		Id:             operator.Id,
-		Name:           operator.Name,
-		TenantId:       operator.TenantId,
-		ManualOperator: operator.IsManual,
-	}
 
-	// convert cluster.ScaleOutClusterReq->[]*ComponentGroup, init componentGroup
+	// Add instance into cluster topology
+	clusterMeta.AddInstances(request.Compute)
 
+	// Start the workflow to scale a cluster
+	flow := workflow.GetWorkFlowManager()
+	flow.RegisterWorkFlow(ctx, )
 
+	// Handle response
+	response := &cluster.ScaleOutClusterResp{}
+	response.ClusterID = clusterContext.Cluster.ID
 
-	return nil, nil
+	return response, nil
 }
 
 func (manager *ClusterManager) ScaleIn(ctx context.Context, operator *clusterpb.RpcOperator, request *cluster.ScaleInClusterReq) (*cluster.ScaleInClusterResp, error) {

@@ -90,7 +90,7 @@ type ScaleInClusterResp struct {
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
 	ClusterID                        string `json:"clusterId" form:"clusterId"`
-	structs.ClusterResourceParameter `json:"resourceParameter"`
+	structs.ClusterResourceParameter
 }
 
 // ScaleOutClusterResp Reply message for cluster expansion operation

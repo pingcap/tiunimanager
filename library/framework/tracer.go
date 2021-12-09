@@ -168,7 +168,7 @@ func StartBackgroundTask(fromCtx context.Context, comments string, fn func(conte
 	return t
 }
 
-// make a new micro ctx base on the gin ctx
+// NewMicroCtxFromGinCtx make a new micro ctx base on the gin ctx
 func NewMicroCtxFromGinCtx(c *gin.Context) context.Context {
 	var ctx context.Context
 	ctx = c
@@ -233,6 +233,7 @@ func getTraceIDFromNormalContext(ctx context.Context) string {
 	}
 }
 
+// GetTraceIDFromContext Get TraceID from ctx
 func GetTraceIDFromContext(ctx context.Context) string {
 	AssertWithInfo(ctx != nil, "ctx should not be nil")
 	switch v := ctx.(type) {
@@ -287,14 +288,17 @@ func newMicroContextWithKeyValuePairs(ctx context.Context, pairs map[string]stri
 	return metadata.NewContext(ctx, md)
 }
 
+// GetUserIDFromContext Get UserID from ctx
 func GetUserIDFromContext(ctx context.Context) string {
 	return getStringValueFromContext(ctx, TiEM_X_USER_ID_KEY)
 }
 
+// GetUserNameFromContext Get UserName from ctx
 func GetUserNameFromContext(ctx context.Context) string {
 	return getStringValueFromContext(ctx, TiEM_X_USER_NAME_KEY)
 }
 
+// GetTenantIDFromContext Get TenantID from ctx
 func GetTenantIDFromContext(ctx context.Context) string {
 	return getStringValueFromContext(ctx, TiEM_X_TENANT_ID_KEY)
 }

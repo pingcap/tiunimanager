@@ -20,7 +20,7 @@ import (
 	"github.com/pingcap-inc/tiem/message"
 )
 
-type ImportExportApi interface {
+type ImportExportService interface {
 	// ExportData
 	// @Description: export data
 	// @Receiver m

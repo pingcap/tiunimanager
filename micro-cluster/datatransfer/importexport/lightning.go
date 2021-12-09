@@ -53,3 +53,8 @@ type TidbCfg struct {
 	StatusPort int    `toml:"status-port"` //table infomation from tidb status port
 	PdAddr     string `toml:"pd-addr"`
 }
+
+func NewDataImportConfig() *DataImportConfig {
+	//todo
+	return &DataImportConfig{}
+}

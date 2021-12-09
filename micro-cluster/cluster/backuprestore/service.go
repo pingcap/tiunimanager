@@ -20,7 +20,7 @@ import (
 	"github.com/pingcap-inc/tiem/message/cluster"
 )
 
-type BRApi interface {
+type BRService interface {
 	// BackupCluster
 	// @Description: backup cluster
 	// @Receiver m

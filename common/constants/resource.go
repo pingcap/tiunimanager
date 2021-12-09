@@ -38,6 +38,14 @@ const (
 	ArchArm64 ArchType = "ARM64"
 )
 
+func ValidArchType(arch string) error {
+	if arch == string(ArchX86) || arch == string(ArchX8664) || arch == string(ArchArm) || arch == string(ArchArm64) {
+		return nil
+	}
+	return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_ARCH, "valid arch type: [%s|%s|%s|%s]",
+		string(ArchX86), string(ArchX8664), string(ArchArm), string(ArchArm64))
+}
+
 //Constants for importing host information
 //TODO It is recommended to move to the resource module in api-server
 const (
@@ -55,6 +63,12 @@ const (
 	HostDeleted  HostStatus = "Deleted"
 )
 
+func (s HostStatus) IsValidStatus() bool {
+	return (s == HostOnline ||
+		s == HostOffline ||
+		s == HostDeleted)
+}
+
 type HostLoadStatus string
 
 //Definition of host load status
@@ -67,6 +81,15 @@ const (
 	HostLoadDiskExhaust    HostLoadStatus = "DiskExhaust"
 	HostLoadExclusive      HostLoadStatus = "Exclusive"
 )
+
+func (s HostLoadStatus) IsValidLoadStatus() bool {
+	return (s == HostLoadLoadLess ||
+		s == HostLoadInUsed ||
+		s == HostLoadExhaust ||
+		s == HostLoadComputeExhaust ||
+		s == HostLoadDiskExhaust ||
+		s == HostLoadExclusive)
+}
 
 type DiskType string
 

@@ -943,14 +943,6 @@ func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Contex
 	return clusterManager.resourceManager.RecycleResources(ctx, in, out)
 }
 
-func (clusterManager *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, in *clusterpb.UpdateHostStatusRequest, out *clusterpb.UpdateHostStatusResponse) error {
-	return clusterManager.resourceManager.UpdateHostStatus(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) ReserveHost(ctx context.Context, in *clusterpb.ReserveHostRequest, out *clusterpb.ReserveHostResponse) error {
-	return clusterManager.resourceManager.ReserveHost(ctx, in, out)
-}
-
 func (clusterManager *ClusterServiceHandler) GetHierarchy(ctx context.Context, in *clusterpb.GetHierarchyRequest, out *clusterpb.GetHierarchyResponse) error {
 	return clusterManager.resourceManager.GetHierarchy(ctx, in, out)
 }
@@ -1041,6 +1033,49 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *c
 
 	return nil
 }
+
 func (handler *ClusterServiceHandler) UpdateHostReserved(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	request.GetOperator()
+	reqString := request.GetRequest()
+
+	reqStruct := message.UpdateHostReservedReq{}
+
+	err := json.Unmarshal([]byte(reqString), &reqStruct)
+
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	err = handler.resourceManager2.UpdateHostReserved(ctx, reqStruct.HostIDs, reqStruct.Reserved)
+
+	handleResponse(response, err, func() ([]byte, error) {
+		var rsp message.UpdateHostReservedResp
+		return json.Marshal(rsp)
+	})
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	request.GetOperator()
+	reqString := request.GetRequest()
+
+	reqStruct := message.UpdateHostStatusReq{}
+
+	err := json.Unmarshal([]byte(reqString), &reqStruct)
+
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	err = handler.resourceManager2.UpdateHostStatus(ctx, reqStruct.HostIDs, reqStruct.Status)
+
+	handleResponse(response, err, func() ([]byte, error) {
+		var rsp message.UpdateHostStatusResp
+		return json.Marshal(rsp)
+	})
+
 	return nil
 }

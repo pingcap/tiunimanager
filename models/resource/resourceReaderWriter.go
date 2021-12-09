@@ -178,9 +178,35 @@ func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.Host
 }
 
 func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error) {
+	tx := rw.DB().Begin()
+	for _, hostId := range hostIds {
+		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("status", status)
+		if result.Error != nil {
+			tx.Rollback()
+			return framework.NewTiEMErrorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update host [%s] status to %s fail", hostId, status)
+		}
+		if result.RowsAffected == 0 {
+			tx.Rollback()
+			return framework.NewTiEMErrorf(common.TIEM_UPDATE_HOST_STATUS_FAIL, "update host [%s] status to %s not affected", hostId, status)
+		}
+	}
+	tx.Commit()
 	return nil
 }
 func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error) {
+	tx := rw.DB().Begin()
+	for _, hostId := range hostIds {
+		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("reserved", reserved)
+		if result.Error != nil {
+			tx.Rollback()
+			return framework.NewTiEMErrorf(common.TIEM_RESERVE_HOST_FAIL, "update host [%s] reserved status to %v fail", hostId, reserved)
+		}
+		if result.RowsAffected == 0 {
+			tx.Rollback()
+			return framework.NewTiEMErrorf(common.TIEM_RESERVE_HOST_FAIL, "update host [%s] reserved status to %v not affected", hostId, reserved)
+		}
+	}
+	tx.Commit()
 	return nil
 }
 func (rw *GormResourceReadWrite) GetHierarchy(ctx context.Context, filter structs.HostFilter, level int32, depth int32) (root *structs.HierarchyTreeNode, err error) {

@@ -29,19 +29,15 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/framework"
 
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/common/resource-type"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 
 	"github.com/pingcap-inc/tiem/message"
-	"google.golang.org/grpc/codes"
 )
 
 func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
@@ -67,7 +63,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			host.Region = row[REGION_FIELD]
 			host.AZ = row[ZONE_FIELD]
 			host.Rack = row[RACK_FIELD]
-			if err = resource.ValidArch(row[ARCH_FIELD]); err != nil {
+			if err = constants.ValidArchType(row[ARCH_FIELD]); err != nil {
 				errMsg := fmt.Sprintf("Row %d get arch(%s) failed, %v", irow, row[ARCH_FIELD], err)
 				return nil, errors.New(errMsg)
 			}
@@ -128,7 +124,7 @@ func importExcelFile(r io.Reader, reserved bool) ([]structs.HostInfo, error) {
 			}
 			for i := range host.Disks {
 				if host.Disks[i].Type == "" {
-					host.Disks[i].Type = string(resource.DiskType(host.DiskType))
+					host.Disks[i].Type = host.DiskType
 				}
 			}
 			hosts = append(hosts, host)
@@ -153,19 +149,19 @@ func ImportHosts(c *gin.Context) {
 	reserved, err := strconv.ParseBool(reservedStr)
 	if err != nil {
 		errmsg := fmt.Sprintf("GetFormData Error: %v", err)
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
+		c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
 		return
 	}
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
 		errmsg := fmt.Sprintf("GetFormFile Error: %v", err)
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
+		c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
 		return
 	}
 	hosts, err := importExcelFile(file, reserved)
 	if err != nil {
 		errmsg := fmt.Sprintf("Import File Error: %v", err)
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.InvalidArgument), errmsg))
+		c.JSON(http.StatusInternalServerError, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
 		return
 	}
 
@@ -234,7 +230,7 @@ func RemoveHosts(c *gin.Context) {
 
 	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
 	if str, dup := detectDuplicateElement(req.HostIDs); dup {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), str+" Is Duplicated in request"))
+		c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), str+" Is Duplicated in request"))
 		return
 	}
 
@@ -262,7 +258,7 @@ func DownloadHostTemplateFile(c *gin.Context) {
 
 	_, err := os.Stat(filePath)
 	if err != nil && !os.IsExist(err) {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.NotFound), err.Error()))
+		c.JSON(http.StatusInternalServerError, controller.Fail(common.TIEM_RESOURCE_TEMPLATE_FILE_NOT_FOUND.GetHttpCode(), err.Error()))
 		return
 	}
 
@@ -274,72 +270,60 @@ func DownloadHostTemplateFile(c *gin.Context) {
 	c.File(filePath)
 }
 
-// UpdateHost godoc
+// UpdateHostReserved godoc
+// @Summary Update host reserved
+// @Description update host reserved by a list
+// @Tags resource
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param updateReq body message.UpdateHostReservedReq true "do update in host list"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateHostReservedResp}
+// @Router /resources/host-reserved [put]
+func UpdateHostReserved(c *gin.Context) {
+	var req message.UpdateHostReservedReq
+
+	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
+	if str, dup := detectDuplicateElement(req.HostIDs); dup {
+		c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), str+" Is Duplicated in request"))
+		return
+	}
+
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateHostReserved, &message.UpdateHostReservedResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// UpdateHostStatus godoc
 // @Summary Update host status
 // @Description update host status by a list
 // @Tags resource
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param id query []string true "host id array" collectionFormat(multi)
-// @Param updateReq body UpdateHostReq true "do update in host list"
-// @Success 200 {object} controller.CommonResult{data=string}
-// @Router /resources/hosts/ [put]
-func UpdateHost(c *gin.Context) {
-	hostIds := c.QueryArray("id")
-	if str, dup := detectDuplicateElement(hostIds); dup {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), str+" Is Duplicated in request"))
+// @Param updateReq body message.UpdateHostStatusReq true "do update in host list"
+// @Success 200 {object} controller.CommonResult{data=message.UpdateHostStatusResp}
+// @Router /resources/host-status [put]
+func UpdateHostStatus(c *gin.Context) {
+	var req message.UpdateHostStatusReq
+
+	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
+	if str, dup := detectDuplicateElement(req.HostIDs); dup {
+		c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), str+" Is Duplicated in request"))
 		return
 	}
 
-	var updateReq UpdateHostReq
-	if err := c.ShouldBindJSON(&updateReq); err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
-		return
-	}
-	if (updateReq.Status == nil && updateReq.Reserved == nil) || (updateReq.Status != nil && updateReq.Reserved != nil) {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), "status/reserved both set/no-set at the same time"))
+	if !constants.HostStatus(req.Status).IsValidStatus() {
+		errmsg := fmt.Sprintf("input status %s is invalid, [Online,Offline,Deleted]", req.Status)
+		c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
 		return
 	}
 
-	if updateReq.Status != nil {
-		if !resource.HostStatus((*updateReq.Status)).IsValidForUpdate() {
-			errmsg := fmt.Sprintf("input status %d is invalid for update, [0:online,1:offline,2:deleted]", *(updateReq.Status))
-			c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
-			return
-		}
-
-		var updateHostStatusReq clusterpb.UpdateHostStatusRequest
-		updateHostStatusReq.Status = *(updateReq.Status)
-		updateHostStatusReq.HostIds = append(updateHostStatusReq.HostIds, hostIds...)
-
-		rsp, err := client.ClusterClient.UpdateHostStatus(framework.NewMicroCtxFromGinCtx(c), &updateHostStatusReq)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
-			return
-		}
-		if rsp.Rs.Code != int32(codes.OK) {
-			c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
-			return
-		}
-
-		c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
-	}
-
-	if updateReq.Reserved != nil {
-		var reserveHostReq clusterpb.ReserveHostRequest
-		reserveHostReq.Reserved = *updateReq.Reserved
-		reserveHostReq.HostIds = append(reserveHostReq.HostIds, hostIds...)
-
-		rsp, err := client.ClusterClient.ReserveHost(framework.NewMicroCtxFromGinCtx(c), &reserveHostReq)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
-			return
-		}
-		if rsp.Rs.Code != int32(codes.OK) {
-			c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
-			return
-		}
-		c.JSON(http.StatusOK, controller.Success(rsp.Rs.Message))
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateHostStatus, &message.UpdateHostStatusResp{},
+			requestBody,
+			controller.DefaultTimeout)
 	}
 }

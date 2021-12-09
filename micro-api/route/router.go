@@ -168,8 +168,8 @@ func Route(g *gin.Engine) {
 			host.GET("failuredomains", warehouseApi.GetFailureDomain)
 			host.GET("hierarchy", warehouseApi.GetHierarchy)
 			host.GET("stocks", warehouseApi.GetStocks)
-
-			host.PUT("hosts", resourceApi.UpdateHost)
+			host.PUT("host-reserved", resourceApi.UpdateHostReserved)
+			host.PUT("host-status", resourceApi.UpdateHostStatus)
 		}
 
 		log := apiV1.Group("/logs")

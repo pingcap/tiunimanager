@@ -68,12 +68,12 @@ func (p *FileHostProvider) QueryHosts(ctx context.Context, filter *structs.HostF
 	return
 }
 
-func (p *FileHostProvider) UpdateHostStatus(ctx context.Context, hostId []string, status string) (err error) {
-	return nil
+func (p *FileHostProvider) UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error) {
+	return p.rw.UpdateHostStatus(ctx, hostIds, status)
 }
 
-func (p *FileHostProvider) UpdateHostReserved(ctx context.Context, hostId []string, reserved bool) (err error) {
-	return nil
+func (p *FileHostProvider) UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error) {
+	return p.rw.UpdateHostReserved(ctx, hostIds, reserved)
 }
 
 func (p *FileHostProvider) GetHierarchy(ctx context.Context, filter structs.HostFilter, level int32, depth int32) (root *structs.HierarchyTreeNode, err error) {

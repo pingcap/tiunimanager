@@ -53,7 +53,7 @@ type DeleteHostsResp struct {
 
 type UpdateHostReservedReq struct {
 	HostIDs  []string `json:"hostIds"`
-	Reserved *bool    `json:"reserved"`
+	Reserved bool     `json:"reserved"`
 }
 
 type UpdateHostReservedResp struct {
@@ -61,7 +61,7 @@ type UpdateHostReservedResp struct {
 
 type UpdateHostStatusReq struct {
 	HostIDs []string `json:"hostIds"`
-	Status  *int32   `json:"status"`
+	Status  string   `json:"status"`
 }
 
 type UpdateHostStatusResp struct {

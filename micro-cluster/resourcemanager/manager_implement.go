@@ -59,9 +59,31 @@ func (m *ResourceManager) QueryHosts(ctx context.Context, filter *structs.HostFi
 func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string) (err error) {
 	err = m.resourcePool.DeleteHosts(ctx, hostIds)
 	if err != nil {
-		framework.LogWithContext(ctx).Warnf("delete %d hosts in filter %v failed from db service: %v", len(hostIds), err)
+		framework.LogWithContext(ctx).Warnf("delete %d hosts in failed from db service: %v", len(hostIds), err)
 	} else {
 		framework.LogWithContext(ctx).Infof("delete %d hosts %v succeed from db service.", len(hostIds), hostIds)
+	}
+
+	return
+}
+
+func (m *ResourceManager) UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error) {
+	err = m.resourcePool.UpdateHostReserved(ctx, hostIds, reserved)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("update %d hosts to reserved (%v) failed from db service: %v", len(hostIds), reserved, err)
+	} else {
+		framework.LogWithContext(ctx).Infof("update %d hosts[%v] to reserved (%v) succeed from db service.", len(hostIds), hostIds, reserved)
+	}
+
+	return
+}
+
+func (m *ResourceManager) UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error) {
+	err = m.resourcePool.UpdateHostStatus(ctx, hostIds, status)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("update %d hosts to status %s failed from db service: %v", len(hostIds), status, err)
+	} else {
+		framework.LogWithContext(ctx).Infof("update %d hosts[%v] to status %s succeed from db service.", len(hostIds), hostIds, status)
 	}
 
 	return

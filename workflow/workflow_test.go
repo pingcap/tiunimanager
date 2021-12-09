@@ -45,7 +45,7 @@ var doFail = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
 
 func TestFlowManager_RegisterWorkFlow(t *testing.T) {
 	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(), "flowName",
+	manager.RegisterWorkFlow(context.TODO(),
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
@@ -76,7 +76,7 @@ func TestFlowManager_Start(t *testing.T) {
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(), "flowName",
+	manager.RegisterWorkFlow(context.TODO(),
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
@@ -107,7 +107,7 @@ func TestFlowManager_AsyncStart(t *testing.T) {
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(), "flowName",
+	manager.RegisterWorkFlow(context.TODO(),
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
@@ -138,7 +138,7 @@ func TestFlowManager_AddContext(t *testing.T) {
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(), "flowName",
+	manager.RegisterWorkFlow(context.TODO(),
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
@@ -170,7 +170,7 @@ func TestFlowManager_Destroy(t *testing.T) {
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(), "flowName",
+	manager.RegisterWorkFlow(context.TODO(),
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
@@ -202,7 +202,7 @@ func TestFlowManager_Complete(t *testing.T) {
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(), "flowName",
+	manager.RegisterWorkFlow(context.TODO(),
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
@@ -246,7 +246,7 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
 	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(), "flowName",
+	manager.RegisterWorkFlow(context.TODO(),
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{

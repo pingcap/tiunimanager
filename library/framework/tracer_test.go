@@ -122,3 +122,24 @@ func Test_getParentSpanFromGinContext1(t *testing.T) {
 		assert.Equal(t, nil, got)
 	})
 }
+
+func Test_GetStringValuesFromContext(t *testing.T) {
+	c := &gin.Context{}
+	traceID := "traceID"
+	userID := "userID"
+	userName := "userName"
+	tenantID := "tenantID"
+	c.Set(TiEM_X_TRACE_ID_KEY, traceID)
+	c.Set(TiEM_X_USER_ID_KEY, userID)
+	c.Set(TiEM_X_USER_NAME_KEY, userName)
+	c.Set(TiEM_X_TENANT_ID_KEY, tenantID)
+	assert.Equal(t, traceID, GetTraceIDFromContext(c))
+	assert.Equal(t, userID, GetUserIDFromContext(c))
+	assert.Equal(t, userName, GetUserNameFromContext(c))
+	assert.Equal(t, tenantID, GetTenantIDFromContext(c))
+	ctx := NewMicroCtxFromGinCtx(c)
+	assert.Equal(t, traceID, GetTraceIDFromContext(ctx))
+	assert.Equal(t, userID, GetUserIDFromContext(ctx))
+	assert.Equal(t, userName, GetUserNameFromContext(ctx))
+	assert.Equal(t, tenantID, GetTenantIDFromContext(ctx))
+}

@@ -176,7 +176,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 	case PollingNode:
 		ticker := time.NewTicker(3 * time.Second)
 		for range ticker.C {
-			framework.LogWithContext(flow.Context).Infof("polling task waiting, taskId %d, taskName %s", node.ID, node.Name)
+			framework.LogWithContext(flow.Context).Infof("polling node waiting, nodeId %s, nodeName %s", node.ID, node.Name)
 
 			stat, statString, err := secondparty.Manager.GetTaskStatusByBizID(flow.Context, node.ID)
 			if err != nil {

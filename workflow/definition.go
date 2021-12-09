@@ -39,11 +39,6 @@ type NodeDefine struct {
 	Executor     NodeExecutor
 }
 
-func DefaultContextParser(s string) *FlowContext {
-	// todo parse context
-	return NewFlowContext(context.TODO())
-}
-
 func (define *WorkFlowDefine) getInstance(ctx context.Context, bizId string, data map[string]interface{}) *WorkFlowAggregation {
 	return &WorkFlowAggregation{
 		Flow: &workflow.WorkFlow{

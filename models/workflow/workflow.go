@@ -22,11 +22,12 @@ import (
 
 // WorkFlow work flow infomation
 type WorkFlow struct {
-	common.Entities
-	Name  string `gorm:"default:null;comment:'name of the workflow'"`
-	BizID string `gorm:"default:null;<-:create"`
+	common.Entity
+	Name    string `gorm:"default:null;comment:'name of the workflow'"`
+	BizID   string `gorm:"default:null;<-:create"`
+	Context string `gorm"default:null;not null"`
 }
 
 func (flow *WorkFlow) Finished() bool {
-	return string(constants.WorkFlowStatusFinished) == flow.Status || string(constants.WorkFlowStatusError) == flow.Status || string(constants.WorkFlowStatusCanceled) == flow.Status
+	return constants.WorkFlowStatusFinished == flow.Status || constants.WorkFlowStatusError == flow.Status || constants.WorkFlowStatusCanceled == flow.Status
 }

@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -115,7 +114,7 @@ func TestAddPermission(t *testing.T) {
 				func(args args, p *Permission) bool { return p.Name == args.name },
 				func(args args, p *Permission) bool { return p.Desc == args.desc },
 				func(args args, p *Permission) bool { return p.Type == args.permissionType },
-				func(args args, p *Permission) bool { return p.Status == 0 },
+				func(args args, p *Permission) bool { return p.Status == 99 },
 				func(args args, p *Permission) bool { return p.CreatedAt.Add(time.Second + 2).After(time.Now()) },
 			},
 		},
@@ -239,7 +238,7 @@ func TestAddRole(t *testing.T) {
 				func(args args, r *Role) bool { return len(r.ID) == uuidutil.ENTITY_UUID_LENGTH },
 				func(args args, r *Role) bool { return r.Name == args.name },
 				func(args args, r *Role) bool { return r.Desc == args.desc },
-				func(args args, r *Role) bool { return r.Status == 0 },
+				func(args args, r *Role) bool { return r.Status == 99 },
 				func(args args, r *Role) bool { return r.CreatedAt.Add(time.Second + 2).After(time.Now()) },
 			},
 		},
@@ -258,7 +257,7 @@ func TestAddRole(t *testing.T) {
 				func(args args, p *Role) bool { return p.CreatedAt.Add(time.Second + 2).After(time.Now()) },
 			},
 		},
-		{"without status", args{tenantId: defaultTenantId, name: "TestAddPermission_name_withoutStatus", desc: "desc", status: 99},
+		{"without status", args{tenantId: defaultTenantId, name: "TestAddPermission_name_withoutStatus", desc: "desc"},
 			false,
 			[]func(args args, p *Role) bool{
 				func(args args, p *Role) bool { return p.Status == 0 },

@@ -49,10 +49,9 @@ type ClusterFacade struct {
 	TableName       string
 	ClusterId       string // todo: need to know the usage
 	ClusterName     string // todo: need to know the usage
-	//PdAddress 			string
-	RateLimitM  string
-	Concurrency string
-	CheckSum    string
+	RateLimitM      string
+	Concurrency     string
+	CheckSum        string
 }
 
 type BrStorage struct {

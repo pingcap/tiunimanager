@@ -27,7 +27,7 @@ var rw *ImportExportReadWrite
 
 func TestImportExportReadWrite_CreateDataTransportRecord(t *testing.T) {
 	record := &DataTransportRecord{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "ImportInitStatus",
 		},
@@ -46,7 +46,7 @@ func TestImportExportReadWrite_CreateDataTransportRecord(t *testing.T) {
 
 func TestImportExportReadWrite_UpdateDataTransportRecord(t *testing.T) {
 	record := &DataTransportRecord{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "ImportInitStatus",
 		},
@@ -74,7 +74,7 @@ func TestImportExportReadWrite_UpdateDataTransportRecord(t *testing.T) {
 
 func TestImportExportReadWrite_QueryDataTransportRecords(t *testing.T) {
 	record := &DataTransportRecord{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "ImportInitStatus",
 		},
@@ -99,7 +99,7 @@ func TestImportExportReadWrite_QueryDataTransportRecords(t *testing.T) {
 
 func TestImportExportReadWrite_DeleteDataTransportRecord(t *testing.T) {
 	record := &DataTransportRecord{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "ImportInitStatus",
 		},

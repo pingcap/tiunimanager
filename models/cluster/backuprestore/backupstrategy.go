@@ -19,7 +19,7 @@ import "github.com/pingcap-inc/tiem/models/common"
 
 // BackupStrategy backup strategy information
 type BackupStrategy struct {
-	common.Entities
+	common.Entity
 	ClusterID  string `gorm:"not null;"`
 	BackupDate string `gorm:"default:null"`
 	StartHour  uint32

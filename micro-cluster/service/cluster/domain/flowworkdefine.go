@@ -18,9 +18,10 @@ package domain
 
 import (
 	"context"
+	"time"
+
 	copywriting2 "github.com/pingcap-inc/tiem/library/copywriting"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"time"
 )
 
 func defaultContextParser(s string) *FlowContext {
@@ -40,8 +41,8 @@ func InitFlowMap() {
 				"deployDone":       {"startupCluster", "startupDone", "fail", PollingTasK, startupCluster},
 				"startupDone":      {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
 				"syncTopologyDone": {"setClusterOnline", "onlineDone", "fail", SyncFuncTask, setClusterOnline},
-				"onlineDone":       {"end", "", "", SyncFuncTask, CompositeExecutor(clusterEnd, rebuildClusterLogConfig)},
-				"fail":             {"fail", "", "", SyncFuncTask, CompositeExecutor(clusterFail, revertResourceAfterFailure)},
+				"onlineDone":       {"end", "", "", SyncFuncTask, CompositeExecutor(clusterEnd, clusterPersist, rebuildClusterLogConfig)},
+				"fail":             {"fail", "", "", SyncFuncTask, CompositeExecutor(clusterFail, clusterPersist, revertResourceAfterFailure)},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -86,14 +87,14 @@ func InitFlowMap() {
 		},
 
 		FlowScaleInCluster: {
-			FlowName: FlowScaleInCluster,
+			FlowName:    FlowScaleInCluster,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowScaleInCluster),
-			TaskNodes: map[string]*TaskDefine {
-				"start": {"scaleInCluster", "scaleInDone", "fail", PollingTasK, scaleInCluster},
-				"scaleInDone": {"freeNodeResource", "freeDone", "fail", SyncFuncTask, freeNodeResource},
-				"freeDone": {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
+			TaskNodes: map[string]*TaskDefine{
+				"start":            {"scaleInCluster", "scaleInDone", "fail", PollingTasK, scaleInCluster},
+				"scaleInDone":      {"freeNodeResource", "freeDone", "fail", SyncFuncTask, freeNodeResource},
+				"freeDone":         {"syncTopology", "syncTopologyDone", "fail", SyncFuncTask, syncTopology},
 				"syncTopologyDone": {"end", "", "", SyncFuncTask, CompositeExecutor(clusterEnd, rebuildClusterLogConfig)},
-				"fail":         {"fail", "", "", SyncFuncTask, clusterFail},
+				"fail":             {"fail", "", "", SyncFuncTask, clusterFail},
 			},
 			ContextParser: defaultContextParser,
 		},
@@ -118,9 +119,10 @@ func InitFlowMap() {
 			FlowName:    FlowModifyParameters,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowModifyParameters),
 			TaskNodes: map[string]*TaskDefine{
-				"start":      {"modifyParameter", "modifyDone", "fail", PollingTasK, modifyParameters},
-				"modifyDone": {"end", "", "", SyncFuncTask, clusterEnd},
-				"fail":       {"fail", "", "", SyncFuncTask, clusterFail},
+				"start":       {"modifyParameter", "modifyDone", "fail", SyncFuncTask, modifyParameters},
+				"modifyDone":  {"refreshParameter", "refreshDone", "fail", SyncFuncTask, refreshParameter},
+				"refreshDone": {"end", "", "", SyncFuncTask, clusterEnd},
+				"fail":        {"fail", "", "", SyncFuncTask, clusterFail},
 			},
 			ContextParser: defaultContextParser,
 		},

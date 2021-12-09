@@ -16,66 +16,123 @@
 package models
 
 import (
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
-	changefeed2 "github.com/pingcap-inc/tiem/models/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/models/workflow"
+	"gorm.io/driver/sqlite"
+
 	"gorm.io/gorm"
 )
 
-var defaultDb database
+var defaultDb *database
 
 type database struct {
 	base                     *gorm.DB
-	ChangeFeedReaderWriter   changefeed2.ReaderWriter
-	WorkFlowReaderWriter     workflow.ReaderWriter
-	ImportExportReaderWriter importexport.ReaderWriter
-	BRReaderWriter           backuprestore.ReaderWriter
+	workFlowReaderWriter     workflow.ReaderWriter
+	importExportReaderWriter importexport.ReaderWriter
+	brReaderWriter           backuprestore.ReaderWriter
+	changeFeedReaderWriter   changefeed.ReaderWriter
+	clusterReaderWriter management.ReaderWriter
 }
 
-func open() {
+func Open(fw *framework.BaseFramework, reentry bool) error {
+	dbFile := fw.GetDataDir() + common.DBDirPrefix + common.SqliteFileName
+	logins := framework.LogForkFile(common.LogFileSystem)
+	// todo tidb?
+	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+
+	if err != nil || db.Error != nil {
+		logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
+		return err
+	} else {
+		logins.Infof("open database succeed, filepath: %s", dbFile)
+	}
+
+	defaultDb = &database{
+		base: db,
+	}
+
+	if !reentry {
+		defaultDb.initTables()
+		defaultDb.initSystemData()
+	}
+
+	defaultDb.initReaderWriters()
+
+	return nil
+}
+
+func (p *database) initTables() {
+	p.addTable(new(changefeed.ChangeFeedTask))
+	p.addTable(new(workflow.WorkFlow))
+	p.addTable(new(workflow.WorkFlowNode))
+	p.addTable(new(management.Cluster))
+	p.addTable(new(management.ClusterInstance))
+	p.addTable(new(management.ClusterRelation))
+
+	// other tables
+}
+
+func (p *database) initReaderWriters() {
+	defaultDb.changeFeedReaderWriter = changefeed.NewGormChangeFeedReadWrite(defaultDb.base)
+	defaultDb.workFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
+	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
+	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
+}
+
+func (p *database) initSystemData() {
 	// todo
 }
 
-func initReaderWriter() {
-	defaultDb.ChangeFeedReaderWriter = changefeed2.NewGormChangeFeedReadWrite(defaultDb.base)
-	defaultDb.WorkFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
-	defaultDb.ImportExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
-	defaultDb.BRReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
+func (p *database) addTable(gormModel interface{}) error {
+	log := framework.LogForkFile(common.LogFileSystem)
+	if !p.base.Migrator().HasTable(gormModel) {
+		err := p.base.Migrator().CreateTable(gormModel)
+		if err != nil {
+			log.Errorf("create table failed, error : %v.", err)
+			return err
+		}
+	}
+
+	return nil
 }
 
-func addTable() {
-	// todo
+func GetChangeFeedReaderWriter() changefeed.ReaderWriter {
+	return defaultDb.changeFeedReaderWriter
 }
 
-func GetChangeFeedReaderWriter() changefeed2.ReaderWriter {
-	return defaultDb.ChangeFeedReaderWriter
-}
-
-func SetChangeFeedReaderWriter(rw changefeed2.ReaderWriter) {
-	defaultDb.ChangeFeedReaderWriter = rw
+func SetChangeFeedReaderWriter(rw changefeed.ReaderWriter) {
+	defaultDb.changeFeedReaderWriter = rw
 }
 
 func GetWorkFlowReaderWriter() workflow.ReaderWriter {
-	return defaultDb.WorkFlowReaderWriter
+	return defaultDb.workFlowReaderWriter
 }
 
 func SetWorkFlowReaderWriter(rw workflow.ReaderWriter) {
-	defaultDb.WorkFlowReaderWriter = rw
+	defaultDb.workFlowReaderWriter = rw
 }
 
 func GetImportExportReaderWriter() importexport.ReaderWriter {
-	return defaultDb.ImportExportReaderWriter
-}
-
-func SetImportExportReaderWriter(rw importexport.ReaderWriter) {
-	defaultDb.ImportExportReaderWriter = rw
+	return defaultDb.importExportReaderWriter
 }
 
 func GetBRReaderWriter() backuprestore.ReaderWriter {
-	return defaultDb.BRReaderWriter
+	return defaultDb.brReaderWriter
 }
 
-func SetBRReaderWriter(rw backuprestore.ReaderWriter) {
-	defaultDb.BRReaderWriter = rw
+func GetClusterReaderWriter() management.ReaderWriter {
+	return defaultDb.clusterReaderWriter
+}
+
+func SetClusterReaderWriter(rw management.ReaderWriter)  {
+	defaultDb.clusterReaderWriter = rw
+}
+
+func MockDB() {
+	defaultDb = &database{}
 }

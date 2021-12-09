@@ -40,8 +40,7 @@ type ResultWithPage struct {
 
 func HandleHttpResponse(c *gin.Context, err error,
 	withStatusCode func() (common.TIEM_ERROR_CODE, string),
-	withData func() interface{}, withPage func() Page) {
-
+	withData func() (interface{}, error), withPage func() Page) {
 	if err != nil {
 		framework.LogWithContext(c).Error(err.Error())
 		c.JSON(http.StatusInternalServerError, Fail(500, err.Error()))
@@ -57,10 +56,16 @@ func HandleHttpResponse(c *gin.Context, err error,
 		}
 	}
 
+	data, err := withData()
+	if err != nil {
+		framework.LogWithContext(c).Error(err.Error())
+		c.JSON(http.StatusInternalServerError, Fail(500, err.Error()))
+		return
+	}
 	if withPage != nil {
-		c.JSON(http.StatusOK, SuccessWithPage(withData(), withPage()))
+		c.JSON(http.StatusOK, SuccessWithPage(data, withPage()))
 	} else {
-		c.JSON(http.StatusOK, Success(withData()))
+		c.JSON(http.StatusOK, Success(data))
 	}
 }
 
@@ -94,4 +99,3 @@ func SuccessWithPage(data interface{}, page Page) *ResultWithPage {
 func Fail(code int, message string) *CommonResult {
 	return &CommonResult{ResultMark{code, message}, struct{}{}}
 }
-

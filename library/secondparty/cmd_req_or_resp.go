@@ -214,44 +214,74 @@ type CmdShowConfigReq struct {
 }
 
 type CmdShowConfigResp struct {
-	TiDBClusterTopo spec2.Specification
+	TiDBClusterTopo *spec2.Specification
 }
 
 type GlobalComponentConfig struct {
-	TiDBClusterComponent    spec.TiDBClusterComponent
-	ConfigMap 				map[string]interface{}
+	TiDBClusterComponent spec.TiDBClusterComponent
+	ConfigMap            map[string]interface{}
+}
+
+type ClusterComponentConfig struct {
+	TiDBClusterComponent spec.TiDBClusterComponent
+	InstanceAddr         string
+	ConfigKey            string
+	ConfigValue          string
 }
 
 type CmdEditGlobalConfigReq struct {
-	TiUPComponent 			TiUPComponentTypeStr
-	InstanceName  			string
-	GlobalComponentConfigs  []GlobalComponentConfig
-	TimeoutS      			int
-	Flags         			[]string
+	TiUPComponent          TiUPComponentTypeStr
+	InstanceName           string
+	GlobalComponentConfigs []GlobalComponentConfig
+	TimeoutS               int
+	Flags                  []string
 }
 
 type CmdEditInstanceConfigReq struct {
-	TiUPComponent 			TiUPComponentTypeStr
-	InstanceName  			string
-	TiDBClusterComponent    spec.TiDBClusterComponent
-	Host				 	string
-	Port 					int
-	ConfigMap 				map[string]interface{}
-	TimeoutS      			int
-	Flags         			[]string
+	TiUPComponent        TiUPComponentTypeStr
+	InstanceName         string
+	TiDBClusterComponent spec.TiDBClusterComponent
+	Host                 string
+	Port                 int
+	ConfigMap            map[string]interface{}
+	TimeoutS             int
+	Flags                []string
 }
 
 type CmdEditConfigReq struct {
-	TiUPComponent 			TiUPComponentTypeStr
-	InstanceName  			string
-	NewTopo 			    *spec2.Specification
-	TimeoutS      			int
-	Flags         			[]string
+	TiUPComponent TiUPComponentTypeStr
+	InstanceName  string
+	NewTopo       *spec2.Specification
+	TimeoutS      int
+	Flags         []string
 }
 
 type CmdReloadConfigReq struct {
-	TiUPComponent 			TiUPComponentTypeStr
-	InstanceName  			string
-	TimeoutS      			int
-	Flags         			[]string
+	TiUPComponent TiUPComponentTypeStr
+	InstanceName  string
+	TimeoutS      int
+	Flags         []string
+}
+
+type ApiEditConfigReq struct {
+	TiDBClusterComponent spec.TiDBClusterComponent
+	InstanceHost         string
+	InstancePort         uint
+	Headers              map[string]string
+	ConfigMap            map[string]interface{}
+}
+
+type ClusterEditConfigReq struct {
+	DbConnParameter  DbConnParam
+	ComponentConfigs []ClusterComponentConfig
+}
+
+type ClusterEditConfigResp struct {
+	Message string
+}
+
+type ShowWarningsResp struct {
+	Level   string
+	Code    string
+	Message string
 }

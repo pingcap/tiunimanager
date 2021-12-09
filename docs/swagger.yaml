@@ -95,7 +95,7 @@ definitions:
       tls:
         type: boolean
     type: object
-  changefeed.ChangeFeedTask:
+  cluster.CreateChangeFeedTaskReq:
     properties:
       clusterId:
         example: CLUSTER_ID_IN_TIEM__22
@@ -128,6 +128,30 @@ definitions:
         type: integer
       status:
         enum:
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: "1"
+        type: string
+      updateTime:
+        type: string
+    type: object
+  cluster.CreateChangeFeedTaskResp:
+    properties:
+      id:
+        example: TASK_ID_IN_TIEM____22
+        type: string
+    type: object
+  cluster.DeleteChangeFeedTaskResp:
+    properties:
+      id:
+        example: TASK_ID_IN_TIEM____22
+        type: string
+      status:
+        enum:
         - 0
         - 1
         - 2
@@ -136,10 +160,8 @@ definitions:
         - 5
         example: 1
         type: integer
-      updateTime:
-        type: string
     type: object
-  changefeed.ChangeFeedTaskDetail:
+  cluster.DetailChangeFeedTaskResp:
     properties:
       clusterId:
         example: CLUSTER_ID_IN_TIEM__22
@@ -178,14 +200,14 @@ definitions:
         type: integer
       status:
         enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        example: 1
-        type: integer
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: "1"
+        type: string
       unsteady:
         example: false
         type: boolean
@@ -195,106 +217,143 @@ definitions:
         example: 415241823337054209
         type: integer
     type: object
-  changefeed.KafkaDownstream:
+  cluster.PauseChangeFeedTaskResp:
     properties:
-      clientId:
-        example: "213"
+      status:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        example: 1
+        type: integer
+    type: object
+  cluster.QueryChangeFeedTaskResp:
+    properties:
+      clusterId:
+        example: CLUSTER_ID_IN_TIEM__22
         type: string
-      dispatchers:
+      createTime:
+        type: string
+      downstream:
+        type: object
+      downstreamFetchTs:
+        example: 415241823337054209
+        type: integer
+      downstreamSyncTs:
+        example: 415241823337054209
+        type: integer
+      downstreamType:
+        enum:
+        - tidb
+        - kafka
+        - mysql
+        example: tidb
+        type: string
+      id:
+        example: CLUSTER_ID_IN_TIEM__22
+        type: string
+      name:
+        example: my_sync_name
+        type: string
+      rules:
+        example:
+        - '*.*'
         items:
           type: string
         type: array
-      ip:
-        example: 127.0.0.1
-        type: string
-      maxBatchSize:
-        example: 5
+      startTS:
+        example: 415241823337054209
         type: integer
-      maxMessageBytes:
-        example: 16
-        type: integer
-      partitions:
-        example: 1
-        type: integer
-      port:
-        example: 9001
-        type: integer
-      protocol:
+      status:
         enum:
-        - default
-        - canal
-        - avro
-        - maxwell
-        example: default
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: "1"
         type: string
-      replicationFactor:
+      unsteady:
+        example: false
+        type: boolean
+      updateTime:
+        type: string
+      upstreamUpdateTs:
+        example: 415241823337054209
+        type: integer
+    type: object
+  cluster.ResumeChangeFeedTaskResp:
+    properties:
+      status:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
         example: 1
         type: integer
-      tls:
-        example: false
-        type: boolean
-      topicName:
-        example: my_topic
-        type: string
-      version:
-        example: 2.4.0
-        type: string
     type: object
-  changefeed.MysqlDownstream:
+  cluster.UpdateChangeFeedTaskReq:
     properties:
-      concurrentThreads:
-        example: 7
-        type: integer
-      ip:
-        example: 127.0.0.1
-        type: string
-      maxTxnRow:
-        example: 5
-        type: integer
-      password:
-        example: my_password
-        type: string
-      port:
-        example: 8001
-        type: integer
-      tls:
-        example: false
-        type: boolean
-      username:
-        example: root
-        type: string
-      workerCount:
-        example: 2
-        type: integer
-    type: object
-  changefeed.TiDBDownstream:
-    properties:
-      concurrentThreads:
-        example: 5
-        type: integer
-      ip:
-        example: 127.0.0.1
-        type: string
-      maxTxnRow:
-        example: 4
-        type: integer
-      password:
-        example: my_password
-        type: string
-      port:
-        example: 4534
-        type: integer
-      targetClusterId:
+      clusterId:
         example: CLUSTER_ID_IN_TIEM__22
         type: string
-      tls:
-        example: false
-        type: boolean
-      username:
+      createTime:
+        type: string
+      downstream:
+        type: object
+      downstreamType:
+        enum:
+        - tidb
+        - kafka
+        - mysql
         example: tidb
         type: string
-      workerCount:
-        example: 2
+      id:
+        example: CLUSTER_ID_IN_TIEM__22
+        type: string
+      name:
+        example: my_sync_name
+        type: string
+      rules:
+        example:
+        - '*.*'
+        items:
+          type: string
+        type: array
+      startTS:
+        example: 415241823337054209
+        type: integer
+      status:
+        enum:
+        - Initial
+        - Normal
+        - Stopped
+        - Finished
+        - Error
+        - Failed
+        example: "1"
+        type: string
+      updateTime:
+        type: string
+    type: object
+  cluster.UpdateChangeFeedTaskResp:
+    properties:
+      status:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        example: 1
         type: integer
     type: object
   controller.CommonResult:
@@ -776,6 +835,8 @@ definitions:
         items:
           type: string
         type: array
+      clusterPortConstraint:
+        $ref: '#/definitions/knowledge.ComponentPortConstraint'
       clusterVersion:
         $ref: '#/definitions/knowledge.ClusterVersion'
       componentSpecs:
@@ -935,6 +996,8 @@ definitions:
     type: object
   management.ComponentNodeDisplayInfo:
     properties:
+      HostIp:
+        type: string
       cpuUsage:
         $ref: '#/definitions/controller.Usage'
       hostId:
@@ -951,6 +1014,10 @@ definitions:
         type: string
       port:
         type: integer
+      ports:
+        items:
+          type: integer
+        type: array
       role:
         $ref: '#/definitions/management.ComponentNodeRole'
       spec:
@@ -1090,10 +1157,23 @@ definitions:
         type: string
       clusterVersion:
         type: string
+      componentTopology:
+        items:
+          properties:
+            componentType:
+              type: string
+            resourceSpec:
+              items:
+                $ref: '#/definitions/management.ResourceSpec'
+              type: array
+          type: object
+        type: array
       components:
         items:
           $ref: '#/definitions/management.ComponentInstance'
         type: array
+      cpuArchitecture:
+        type: string
       cpuUsage:
         $ref: '#/definitions/controller.Usage'
       createTime:
@@ -1124,6 +1204,13 @@ definitions:
         type: array
       recoverInfo:
         $ref: '#/definitions/management.RecoverInfo'
+      region:
+        properties:
+          code:
+            type: string
+          name:
+            type: string
+        type: object
       statusCode:
         type: string
       statusName:
@@ -1191,6 +1278,25 @@ definitions:
         type: integer
       sourceClusterId:
         type: string
+    type: object
+  management.ResourceSpec:
+    properties:
+      count:
+        type: integer
+      spec:
+        properties:
+          code:
+            type: string
+          name:
+            type: string
+        type: object
+      zone:
+        properties:
+          code:
+            type: string
+          name:
+            type: string
+        type: object
     type: object
   management.RestartClusterRsp:
     properties:
@@ -1355,6 +1461,9 @@ definitions:
         example: binlog cache size
         type: string
       hasReboot:
+        enum:
+        - 0
+        - 1
         example: 0
         type: integer
       name:
@@ -1373,6 +1482,10 @@ definitions:
       realValue:
         $ref: '#/definitions/parameter.ParamRealValue'
       type:
+        enum:
+        - 0
+        - 1
+        - 2
         example: 0
         type: integer
       unit:
@@ -1385,13 +1498,16 @@ definitions:
   parameter.ParamInstanceRealValue:
     properties:
       instance:
+        example: 172.16.10.2
         type: string
       value:
+        example: "2"
         type: string
     type: object
   parameter.ParamRealValue:
     properties:
       cluster:
+        example: "1"
         type: string
       instances:
         items:
@@ -1402,21 +1518,59 @@ definitions:
     properties:
       clusterId:
         type: string
-      status:
+      createTime:
         type: string
-      taskId:
+      deleteTime:
+        type: string
+      inProcessFlowId:
         type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      updateTime:
+        type: string
     type: object
   parameter.UpdateParam:
     properties:
+      componentType:
+        example: TiDB
+        type: string
+      hasReboot:
+        enum:
+        - 0
+        - 1
+        example: 0
+        type: integer
+      name:
+        example: binlog_cache
+        type: string
       paramId:
         example: 1
         type: integer
       realValue:
         $ref: '#/definitions/parameter.ParamRealValue'
+      source:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        example: 0
+        type: integer
+      type:
+        enum:
+        - 0
+        - 1
+        - 2
+        example: 0
+        type: integer
     type: object
   parameter.UpdateParamsReq:
     properties:
+      needReboot:
+        example: false
+        type: boolean
       params:
         items:
           $ref: '#/definitions/parameter.UpdateParam'
@@ -1427,15 +1581,30 @@ definitions:
       clusterId:
         example: "123"
         type: string
+      needReboot:
+        example: false
+        type: boolean
     type: object
   paramgroup.ApplyParamGroupResp:
     properties:
       clusterId:
         example: "123"
         type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      inProcessFlowId:
+        type: integer
       paramGroupId:
         example: 1
         type: integer
+      statusCode:
+        type: string
+      statusName:
+        type: string
+      updateTime:
+        type: string
     type: object
   paramgroup.CommonParamGroupResp:
     properties:
@@ -1467,12 +1636,21 @@ definitions:
   paramgroup.CreateParamGroupReq:
     properties:
       dbType:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       groupType:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       hasDefault:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       name:
@@ -1489,7 +1667,7 @@ definitions:
         example: 8C16G
         type: string
       version:
-        example: v5.0
+        example: "5.0"
         type: string
     type: object
   paramgroup.ParamDetail:
@@ -1507,6 +1685,9 @@ definitions:
         example: binlog cache size
         type: string
       hasReboot:
+        enum:
+        - 0
+        - 1
         example: 0
         type: integer
       name:
@@ -1525,7 +1706,19 @@ definitions:
         items:
           type: string
         type: array
+      source:
+        enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        example: 0
+        type: integer
       type:
+        enum:
+        - 0
+        - 1
+        - 2
         example: 0
         type: integer
       unit:
@@ -1541,12 +1734,21 @@ definitions:
         example: 1636698675
         type: integer
       dbType:
-        example: 0
+        enum:
+        - 1
+        - 2
+        example: 1
         type: integer
       groupType:
+        enum:
+        - 1
+        - 2
         example: 0
         type: integer
       hasDefault:
+        enum:
+        - 1
+        - 2
         example: 1
         type: integer
       name:
@@ -1569,7 +1771,7 @@ definitions:
         example: 1636698675
         type: integer
       version:
-        example: v5.0
+        example: "5.0"
         type: string
     type: object
   paramgroup.UpdateParamGroupReq:
@@ -1826,7 +2028,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
+                    $ref: '#/definitions/cluster.QueryChangeFeedTaskResp'
                   type: array
               type: object
         "401":
@@ -1856,7 +2058,7 @@ paths:
         name: changeFeedTask
         required: true
         schema:
-          $ref: '#/definitions/changefeed.ChangeFeedTask'
+          $ref: '#/definitions/cluster.CreateChangeFeedTaskReq'
       produces:
       - application/json
       responses:
@@ -1867,12 +2069,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  allOf:
-                  - $ref: '#/definitions/changefeed.ChangeFeedTask'
-                  - properties:
-                      downstream:
-                        $ref: '#/definitions/changefeed.MysqlDownstream'
-                    type: object
+                  $ref: '#/definitions/cluster.CreateChangeFeedTaskResp'
               type: object
         "401":
           description: Unauthorized
@@ -1912,7 +2109,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
+                  $ref: '#/definitions/cluster.DeleteChangeFeedTaskResp'
               type: object
         "401":
           description: Unauthorized
@@ -1952,7 +2149,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
+                  $ref: '#/definitions/cluster.DetailChangeFeedTaskResp'
               type: object
         "401":
           description: Unauthorized
@@ -1992,7 +2189,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
+                  $ref: '#/definitions/cluster.PauseChangeFeedTaskResp'
               type: object
         "401":
           description: Unauthorized
@@ -2032,12 +2229,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  allOf:
-                  - $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
-                  - properties:
-                      downstream:
-                        $ref: '#/definitions/changefeed.TiDBDownstream'
-                    type: object
+                  $ref: '#/definitions/cluster.ResumeChangeFeedTaskResp'
               type: object
         "401":
           description: Unauthorized
@@ -2072,7 +2264,7 @@ paths:
         name: task
         required: true
         schema:
-          $ref: '#/definitions/changefeed.ChangeFeedTask'
+          $ref: '#/definitions/cluster.UpdateChangeFeedTaskReq'
       produces:
       - application/json
       responses:
@@ -2083,12 +2275,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  allOf:
-                  - $ref: '#/definitions/changefeed.ChangeFeedTaskDetail'
-                  - properties:
-                      downstream:
-                        $ref: '#/definitions/changefeed.KafkaDownstream'
-                    type: object
+                  $ref: '#/definitions/cluster.UpdateChangeFeedTaskResp'
               type: object
         "401":
           description: Unauthorized
@@ -3271,11 +3458,19 @@ paths:
       - application/json
       description: query param group
       parameters:
-      - example: 0
+      - enum:
+        - 0
+        - 1
+        - 2
+        example: 0
         in: query
         name: dbType
         type: integer
-      - example: 0
+      - enum:
+        - 0
+        - 1
+        - 2
+        example: 0
         in: query
         name: hasDefault
         type: integer
@@ -3297,7 +3492,7 @@ paths:
         in: query
         name: spec
         type: string
-      - example: v5.0
+      - example: "5.0"
         in: query
         name: version
         type: string

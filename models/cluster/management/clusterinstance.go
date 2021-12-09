@@ -13,16 +13,27 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package changefeed
+package management
 
-type ChangeFeedManager struct {
-}
+import "github.com/pingcap-inc/tiem/models/common"
 
-func NewChangeFeedManager() *ChangeFeedManager {
-	return &ChangeFeedManager{}
-}
+// ClusterInstance the component instances of cluster
+type ClusterInstance struct {
+	common.Entity
 
-func (p *ChangeFeedManager) Create(name string) string {
-	// todo access db or do something else
-	return "MockId"
+	Type           string `gorm:"not null;default:null"`
+	Version        string `gorm:"not null;default:null"`
+	ClusterID      string `gorm:"not null;default:null"`
+	Role           string
+
+	// instance resource info
+	CpuCores       int8
+	Memory         int8
+	HostID         string `gorm:"not null;type:varchar(22);default:null"`
+	Zone           string
+	Rack           string
+	HostIP         []string
+	Ports          []string
+	DiskId         string
+	DiskPath       string
 }

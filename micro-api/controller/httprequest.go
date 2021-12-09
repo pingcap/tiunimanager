@@ -43,7 +43,7 @@ func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (requestBody
 		func(req interface{}) error {
 			return validator.New().Struct(req)
 		},
-		func(req interface{}) ([]byte, error){
+		func(req interface{}) ([]byte, error) {
 			return json.Marshal(req)
 		},
 	)
@@ -61,8 +61,8 @@ func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (requestBody
 // @return requestBody
 func HandleJsonRequestFromBody(c *gin.Context,
 	req interface{},
-	appenders... func(c *gin.Context, req interface{}) error,
-	) (requestBody string, err error) {
+	appenders ...func(c *gin.Context, req interface{}) error,
+) (requestBody string, err error) {
 	return HandleRequest(c,
 		&req,
 		func(c *gin.Context, req interface{}) error {
@@ -81,7 +81,7 @@ func HandleJsonRequestFromBody(c *gin.Context,
 		func(req interface{}) error {
 			return validator.New().Struct(req)
 		},
-		func(req interface{}) ([]byte, error){
+		func(req interface{}) ([]byte, error) {
 			return json.Marshal(req)
 		},
 	)
@@ -100,7 +100,7 @@ func HandleRequest(c *gin.Context,
 	req interface{},
 	builder func(c *gin.Context, req interface{}) error,
 	validator func(req interface{}) error,
-	serializer func(req interface{}) ([]byte, error)) (requestBody string, err error){
+	serializer func(req interface{}) ([]byte, error)) (requestBody string, err error) {
 
 	err = builder(c, req)
 	if err != nil {

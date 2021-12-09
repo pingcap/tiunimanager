@@ -41,7 +41,7 @@ func NewBRManager() *BRManager {
 		autoBackupMgr: NewAutoBackupManager(),
 	}
 
-	flowManager := workflow.GetWorkFlowManager()
+	flowManager := workflow.GetWorkFlowService()
 	flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowBackupCluster, &workflow.WorkFlowDefine{
 		FlowName: constants.WorkFlowBackupCluster,
 		TaskNodes: map[string]*workflow.NodeDefine{

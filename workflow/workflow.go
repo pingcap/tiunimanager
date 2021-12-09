@@ -24,8 +24,8 @@ import (
 	"sync"
 )
 
-// WorkFlowInterface workflow interface
-type WorkFlowInterface interface {
+// WorkFlowService workflow interface
+type WorkFlowService interface {
 	// RegisterWorkFlow
 	// @Description: register workflow define
 	// @Receiver m
@@ -122,9 +122,9 @@ type WorkFlowManager struct {
 	flowDefineMap sync.Map
 }
 
-var manager *WorkFlowManager
+var manager WorkFlowService
 
-func GetWorkFlowManager() *WorkFlowManager {
+func GetWorkFlowService() WorkFlowService {
 	if manager == nil {
 		manager = &WorkFlowManager{}
 	}

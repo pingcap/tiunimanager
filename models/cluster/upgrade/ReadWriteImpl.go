@@ -85,9 +85,7 @@ func (m *GormProductUpgradePathReadWrite) QueryBySrcVersion(ctx context.Context,
 		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 
-	var paths []*ProductUpgradePath
-
-	return path, m.DB(ctx).Model(&ProductUpgradePath{}).
+	return paths, m.DB(ctx).Model(&ProductUpgradePath{}).
 		Where("src_version = ?", srcVersion).
 		Order("created_at").Find(&paths).Error
 }

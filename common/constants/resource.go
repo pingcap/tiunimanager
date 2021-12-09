@@ -113,6 +113,14 @@ const (
 	DiskError          DiskStatus = "Error"
 )
 
+func (s DiskStatus) IsValidStatus() bool {
+	return (s == DiskAvailable ||
+		s == DiskReserved ||
+		s == DiskInUsed ||
+		s == DiskExhaust ||
+		s == DiskError)
+}
+
 type PurposeType string
 
 //Types of purpose available

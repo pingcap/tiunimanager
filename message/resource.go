@@ -89,11 +89,19 @@ type GetHierarchyResp struct {
 }
 
 type GetStocksReq struct {
-	StockCondition struct {
-		StockLocation      structs.Location
-		StockHostCondition structs.HostFilter
-		StockDiskCondition structs.DiskFilter
-	} `json:"stockCondition"`
+	structs.Location
+	structs.HostFilter
+	structs.DiskFilter
+}
+
+func (req *GetStocksReq) GetLocation() *structs.Location {
+	return &(req.Location)
+}
+func (req *GetStocksReq) GetHostFilter() *structs.HostFilter {
+	return &(req.HostFilter)
+}
+func (req *GetStocksReq) GetDiskFilter() *structs.DiskFilter {
+	return &(req.DiskFilter)
 }
 
 type GetStocksResp struct {

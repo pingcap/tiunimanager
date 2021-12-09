@@ -165,7 +165,6 @@ func Route(g *gin.Engine) {
 			host.GET("hosts", resourceApi.QueryHosts)
 			host.DELETE("hosts", resourceApi.RemoveHosts)
 			host.GET("hosts-template", resourceApi.DownloadHostTemplateFile)
-			host.GET("failuredomains", warehouseApi.GetFailureDomain)
 			host.GET("hierarchy", warehouseApi.GetHierarchy)
 			host.GET("stocks", warehouseApi.GetStocks)
 			host.PUT("host-reserved", resourceApi.UpdateHostReserved)

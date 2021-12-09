@@ -4,7 +4,6 @@ import "common.proto";
 import "softwarespec.proto";
 import "database.proto";
 import "mng_auth.proto";
-import "mng_host.proto";
 import "mng_allocation.proto";
 import "param.proto";
 option go_package = "./clusterpb/;clusterpb";
@@ -46,10 +45,8 @@ service ClusterService {
     rpc VerifyIdentity(VerifyIdentityRequest) returns (VerifyIdentityResponse);
 
     // host manager module
-    rpc GetFailureDomain(GetFailureDomainRequest) returns (GetFailureDomainResponse);
     rpc AllocResourcesInBatch(BatchAllocRequest) returns (BatchAllocResponse);
     rpc RecycleResources(RecycleRequest) returns (RecycleResponse);
-    rpc GetStocks(GetStocksRequest) returns (GetStocksResponse);
 
     rpc ImportHosts(RpcRequest) returns (RpcResponse);
     rpc DeleteHosts(RpcRequest) returns (RpcResponse);
@@ -57,6 +54,7 @@ service ClusterService {
     rpc UpdateHostReserved(RpcRequest) returns (RpcResponse);
     rpc UpdateHostStatus(RpcRequest) returns (RpcResponse);
     rpc GetHierarchy(RpcRequest) returns (RpcResponse);
+    rpc GetStocks(RpcRequest) returns (RpcResponse);
 
     // task manager
     rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);

@@ -175,6 +175,6 @@ func (p *FileHostProvider) GetHierarchy(ctx context.Context, filter *structs.Hos
 	return root, nil
 }
 
-func (p *FileHostProvider) GetStocks(ctx context.Context, location structs.Location, hostFilter structs.HostFilter, diskFilter structs.DiskFilter) (stocks *structs.Stocks, err error) {
+func (p *FileHostProvider) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks *structs.Stocks, err error) {
 	return nil, nil
 }

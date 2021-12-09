@@ -55,6 +55,6 @@ func (p *ResourcePool) GetHierarchy(ctx context.Context, filter *structs.HostFil
 	return p.hostProvider.GetHierarchy(ctx, filter, level, depth)
 }
 
-func (p *ResourcePool) GetStocks(ctx context.Context, location structs.Location, hostFilter structs.HostFilter, diskFilter structs.DiskFilter) (stocks *structs.Stocks, err error) {
+func (p *ResourcePool) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks *structs.Stocks, err error) {
 	return p.hostProvider.GetStocks(ctx, location, hostFilter, diskFilter)
 }

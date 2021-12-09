@@ -99,3 +99,14 @@ func (m *ResourceManager) GetHierarchy(ctx context.Context, filter *structs.Host
 
 	return
 }
+
+func (m *ResourceManager) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks *structs.Stocks, err error) {
+	stocks, err = m.resourcePool.GetStocks(ctx, location, hostFilter, diskFilter)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("get stocks on location %v, host filter %v, disk filter %v failed from db service: %v", *location, *hostFilter, *diskFilter, err)
+	} else {
+		framework.LogWithContext(ctx).Infof("get stocks on location %v, host filter %v, disk filter %v succeed from db service.", *location, *hostFilter, *diskFilter)
+	}
+
+	return
+}

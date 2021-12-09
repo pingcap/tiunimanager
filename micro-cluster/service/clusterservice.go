@@ -942,10 +942,6 @@ func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Contex
 	return clusterManager.resourceManager.RecycleResources(ctx, in, out)
 }
 
-func (clusterManager *ClusterServiceHandler) GetStocks(ctx context.Context, in *clusterpb.GetStocksRequest, out *clusterpb.GetStocksResponse) error {
-	return clusterManager.resourceManager.GetStocks(ctx, in, out)
-}
-
 func (handler *ClusterServiceHandler) ImportHosts(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	request.GetOperator()
 	reqString := request.GetRequest()
@@ -1085,6 +1081,34 @@ func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request 
 	handleResponse(response, err, func() ([]byte, error) {
 		var rsp message.GetHierarchyResp
 		rsp.Root = *root
+		return json.Marshal(rsp)
+	})
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) GetStocks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	request.GetOperator()
+	reqString := request.GetRequest()
+
+	reqStruct := message.GetStocksReq{}
+
+	err := json.Unmarshal([]byte(reqString), &reqStruct)
+
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	location := reqStruct.GetLocation()
+	hostFilter := reqStruct.GetHostFilter()
+	diskFilter := reqStruct.GetDiskFilter()
+
+	stocks, err := handler.resourceManager2.GetStocks(ctx, location, hostFilter, diskFilter)
+
+	handleResponse(response, err, func() ([]byte, error) {
+		var rsp message.GetStocksResp
+		rsp.Stocks = *stocks
 		return json.Marshal(rsp)
 	})
 

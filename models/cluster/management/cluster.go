@@ -44,6 +44,13 @@ type Cluster struct {
 }
 
 func (t *Cluster) BeforeSave(tx *gorm.DB) (err error) {
+	if t.Status == "" {
+		t.Status = string(constants.ClusterInitializing)
+	}
+
+	if t.Tags == nil {
+		t.Tags = make([]string, 0)
+	}
 	b, jsonErr := json.Marshal(t.Tags)
 	if jsonErr == nil {
 		t.TagInfo = string(b)

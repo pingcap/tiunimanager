@@ -44,12 +44,15 @@ type ClusterInstance struct {
 	DiskPath       string
 
 	// marshal HostIP, never use
-	HostInfo	   string
+	HostInfo	   string `gorm:"type:varchar(128)"`
 	// marshal PortInfo, never use
-	PortInfo	   string
+	PortInfo	   string `gorm:"type:varchar(128)"`
 }
 
 func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {
+	if t.Ports == nil {
+		t.Ports = make([]string, 0)
+	}
 	p, jsonErr := json.Marshal(t.Ports)
 	if jsonErr == nil {
 		t.PortInfo = string(p)
@@ -57,12 +60,16 @@ func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {
 		return framework.NewTiEMErrorf(libCommon.TIEM_PARAMETER_INVALID, jsonErr.Error())
 	}
 
+	if t.HostIP == nil {
+		t.HostIP = make([]string, 0)
+	}
 	h, jsonErr := json.Marshal(t.HostIP)
 	if jsonErr == nil {
 		t.HostInfo = string(h)
 	} else {
 		return framework.NewTiEMErrorf(libCommon.TIEM_PARAMETER_INVALID, jsonErr.Error())
 	}
+
 	if len(t.ID) == 0 {
 		return t.Entity.BeforeCreate(tx)
 	}
@@ -71,10 +78,12 @@ func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {
 
 func (t *ClusterInstance) AfterFind(tx *gorm.DB) (err error) {
 	if len(t.PortInfo) > 0 {
-		json.Unmarshal([]byte(t.PortInfo), t.Ports)
+		t.Ports = make([]string, 0)
+		err = json.Unmarshal([]byte(t.PortInfo), &t.Ports)
 	}
-	if len(t.HostInfo) > 0 {
-		json.Unmarshal([]byte(t.HostInfo), t.HostIP)
+	if err == nil && len(t.HostInfo) > 0 {
+		t.HostIP = make([]string, 0)
+		err = json.Unmarshal([]byte(t.HostInfo), &t.HostIP)
 	}
-	return nil
+	return err
 }

@@ -32,6 +32,7 @@ func TestGormClusterReadWrite_MaintenanceStatus(t *testing.T) {
 		},
 		Tags: []string{"tag1", "tag2"},
 	})
+	defer testRW.Delete(context.TODO(), got.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, constants.ClusterMaintenanceNone, got.MaintenanceStatus)
 
@@ -67,13 +68,31 @@ func TestGormClusterReadWrite_Create(t *testing.T) {
 		got, err := testRW.Create(context.TODO(), &Cluster{
 			Entity: common.Entity{
 				TenantId: "111",
+				Status: string(constants.ClusterRunning),
 			},
 			Tags: []string{"tag1", "tag2"},
 		})
+		defer testRW.Delete(context.TODO(), got.ID)
+
 		assert.NoError(t, err)
 		assert.NotEmpty(t, got.ID)
 		assert.NotEmpty(t, got.UpdatedAt)
 		assert.Equal(t, 2, len(got.Tags))
+		assert.Equal(t, string(constants.ClusterRunning), got.Status)
+	})
+	t.Run("default", func(t *testing.T) {
+		got, err := testRW.Create(context.TODO(), &Cluster{
+			Entity: common.Entity{
+				TenantId: "111",
+			},
+		})
+		defer testRW.Delete(context.TODO(), got.ID)
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, got.ID)
+		assert.NotEmpty(t, got.UpdatedAt)
+		assert.Equal(t, 0, len(got.Tags))
+		assert.Equal(t, string(constants.ClusterInitializing), got.Status)
 	})
 }
 
@@ -84,7 +103,8 @@ func TestGormClusterReadWrite_CreateRelation(t *testing.T) {
 			SubjectClusterID: "222",
 			RelationType: constants.ClusterRelationCloneFrom,
 		}
-		err := testRW.CreateRelation(context.TODO(),relation )
+		err := testRW.CreateRelation(context.TODO(), relation)
+
 		assert.NoError(t, err)
 		assert.NotEmpty(t, relation.ID)
 		assert.NotEmpty(t, relation.UpdatedAt)
@@ -98,7 +118,8 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 		},
 		Tags: []string{"tag1", "tag2"},
 	}
-	testRW.Create(context.TODO(),cluster)
+	got, _ := testRW.Create(context.TODO(),cluster)
+	defer testRW.Delete(context.TODO(), got.ID)
 
 	t.Run("normal", func(t *testing.T) {
 		err := testRW.DB(context.TODO()).Where("id = ?", cluster.ID).First(cluster).Error
@@ -117,7 +138,6 @@ func TestGormClusterReadWrite_Delete(t *testing.T) {
 		err = testRW.Delete(context.TODO(), "")
 		assert.Error(t, err)
 		assert.Equal(t, libCommon.TIEM_PARAMETER_INVALID, err.(framework.TiEMError).GetCode())
-
 	})
 }
 
@@ -151,6 +171,7 @@ func TestGormClusterReadWrite_GetMeta(t *testing.T) {
 		},
 		Tags: []string{"tag1", "tag2"},
 	})
+	defer testRW.Delete(context.TODO(), got.ID)
 
 	instances := []*ClusterInstance{
 		{Entity: common.Entity{TenantId: "111"}, ClusterID: got.ID, Type: "TiKV", Version: "v5.0.0"},
@@ -189,6 +210,7 @@ func TestGormClusterReadWrite_UpdateInstance(t *testing.T) {
 		},
 		Tags: []string{"tag1", "tag2"},
 	})
+	defer testRW.Delete(context.TODO(), got.ID)
 
 	instances := []*ClusterInstance{
 		{Entity: common.Entity{TenantId: "111"}, ClusterID: got.ID, Type: "TiKV", Version: "v5.0.0"},
@@ -215,8 +237,13 @@ func TestGormClusterReadWrite_UpdateInstance(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, string(constants.ClusterRunning), gotInstances[0].Status)
 	assert.Equal(t, []string{"127.0.0.1", "127.0.0.2"}, gotInstances[0].HostIP)
-	assert.Equal(t, 4, gotInstances[0].CpuCores)
-	assert.Equal(t, 8, gotInstances[0].Memory)
+	assert.Equal(t, int8(4), gotInstances[0].CpuCores)
+	assert.Equal(t, int8(8), gotInstances[0].Memory)
+
+	assert.Equal(t, string(constants.ClusterInitializing), gotInstances[1].Status)
+	assert.Equal(t, []string{}, gotInstances[1].HostIP)
+	assert.Equal(t, int8(0), gotInstances[1].CpuCores)
+	assert.Equal(t, int8(0), gotInstances[1].Memory)
 }
 
 func TestGormClusterReadWrite_UpdateStatus(t *testing.T) {
@@ -227,6 +254,8 @@ func TestGormClusterReadWrite_UpdateStatus(t *testing.T) {
 			},
 			Tags: []string{"tag1", "tag2"},
 		})
+		defer testRW.Delete(context.TODO(), got.ID)
+
 		assert.NoError(t, err)
 
 		err = testRW.UpdateStatus(context.TODO(), got.ID, constants.ClusterRunning)

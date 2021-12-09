@@ -24,7 +24,7 @@ import (
 )
 
 type Entity struct {
-	ID        string    `gorm:"primaryKey;"`
+	ID        string    `gorm:"primarykey"`
 	CreatedAt time.Time `gorm:"<-:create"`
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`

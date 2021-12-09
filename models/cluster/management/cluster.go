@@ -66,7 +66,8 @@ func (t *Cluster) BeforeSave(tx *gorm.DB) (err error) {
 
 func (t *Cluster) AfterFind(tx *gorm.DB) (err error) {
 	if len(t.TagInfo) > 0 {
-		json.Unmarshal([]byte(t.TagInfo), t.Tags)
+		t.Tags = make([]string, 0)
+		json.Unmarshal([]byte(t.TagInfo), &t.Tags)
 	}
 	return nil
 }

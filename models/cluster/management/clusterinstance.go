@@ -17,6 +17,7 @@ package management
 
 import (
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/constants"
 	libCommon "github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/common"
@@ -50,6 +51,10 @@ type ClusterInstance struct {
 }
 
 func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {
+	if t.Status == "" {
+		t.Status = string(constants.ClusterInitializing)
+	}
+
 	if t.Ports == nil {
 		t.Ports = make([]string, 0)
 	}

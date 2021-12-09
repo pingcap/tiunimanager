@@ -548,12 +548,13 @@ func (manager *SecondPartyManager) ClusterShowConfig(ctx context.Context, req *C
 	}
 
 	topoStr := string(data)
-	topo := spec2.Specification{}
+	topo := &spec2.Specification{}
 	if err = yaml.UnmarshalStrict([]byte(topoStr), topo); err != nil {
 		logInFunc.Errorf("parse original config(%s) error: %+v", topoStr, err)
 		return
 	}
 
+	resp = &CmdShowConfigResp{topo}
 	resp.TiDBClusterTopo = topo
 	return
 }
@@ -587,7 +588,7 @@ func (manager *SecondPartyManager) ClusterEditGlobalConfig(ctx context.Context,
 	}
 	topo := cmdShowConfigResp.TiDBClusterTopo
 
-	manager.startTiupEditGlobalConfigTask(ctx, rsp.Id, &cmdEditGlobalConfigReq, &topo)
+	manager.startTiupEditGlobalConfigTask(ctx, rsp.Id, &cmdEditGlobalConfigReq, topo)
 	return rsp.Id, nil
 }
 
@@ -678,7 +679,7 @@ func (manager *SecondPartyManager) ClusterEditInstanceConfig(ctx context.Context
 	}
 	topo := cmdShowConfigResp.TiDBClusterTopo
 
-	manager.startTiupEditInstanceConfigTask(ctx, rsp.Id, &cmdEditInstanceConfigReq, &topo)
+	manager.startTiupEditInstanceConfigTask(ctx, rsp.Id, &cmdEditInstanceConfigReq, topo)
 	return rsp.Id, nil
 }
 

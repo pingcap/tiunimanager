@@ -80,7 +80,6 @@ func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]by
 }
 
 func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	request.GetOperator()
 	reqData := request.GetRequest()
 
 	req := &cluster.CreateChangeFeedTaskReq{}

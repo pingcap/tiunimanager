@@ -13,41 +13,27 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package common
+package management
 
-import (
-	"context"
-	"time"
+import "github.com/pingcap-inc/tiem/models/common"
 
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-	"gorm.io/gorm"
-)
+// ClusterInstance the component instances of cluster
+type ClusterInstance struct {
+	common.Entity
 
-type Entity struct {
-	ID        string    `gorm:"primaryKey;"`
-	CreatedAt time.Time `gorm:"<-:create"`
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	Type           string `gorm:"not null;default:null"`
+	Version        string `gorm:"not null;default:null"`
+	ClusterID      string `gorm:"not null;default:null"`
+	Role           string
 
-	TenantId string `gorm:"default:null;not null;<-:create"`
-	Status   string `gorm:"default:null"`
-}
-
-func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = uuidutil.GenerateID()
-	return nil
-}
-
-var split = []byte("_")
-
-type GormDB struct {
-	db *gorm.DB
-}
-
-func WrapDB(db *gorm.DB) GormDB {
-	return GormDB{db: db}
-}
-
-func (m *GormDB) DB(ctx context.Context) *gorm.DB {
-	return m.db.WithContext(ctx)
+	// instance resource info
+	CpuCores       int8
+	Memory         int8
+	HostID         string `gorm:"not null;type:varchar(22);default:null"`
+	Zone           string
+	Rack           string
+	HostIP         []string
+	Ports          []string
+	DiskId         string
+	DiskPath       string
 }

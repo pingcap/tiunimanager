@@ -18,6 +18,7 @@ package changefeed
 import (
 	"context"
 	"database/sql"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/models/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -29,7 +30,7 @@ func TestChangeFeedTask_Locked(t1 *testing.T) {
 		Entity            common.Entity
 		Name              string
 		ClusterId         string
-		DownstreamType    DownstreamType
+		DownstreamType    constants.DownstreamType
 		StartTS           int64
 		FilterRulesConfig string
 		DownstreamConfig  string
@@ -203,7 +204,7 @@ func TestGormChangeFeedReadWrite_QueryByClusterId(t *testing.T) {
 }
 
 func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
-	newStatus := int8(2)
+	newStatus := "2"
 	locked, _ := testRW.Create(context.TODO(), &ChangeFeedTask{
 		Entity: common.Entity{TenantId: "111"},
 		StatusLock: sql.NullTime{
@@ -226,17 +227,17 @@ func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
 	type args struct {
 		ctx          context.Context
 		taskId       string
-		targetStatus int8
+		targetStatus string
 	}
 	tests := []struct {
 		name        string
 		args        args
 		wantErr     bool
-		finalStatus int8
+		finalStatus string
 	}{
 		{"locked", args{context.TODO(), locked.ID, newStatus}, false, newStatus},
-		{"unlocked", args{context.TODO(), unlocked.ID, newStatus}, true, 0},
-		{"notExisted", args{context.TODO(), notExisted, newStatus}, true, 0},
+		{"unlocked", args{context.TODO(), unlocked.ID, newStatus}, true, "0"},
+		{"notExisted", args{context.TODO(), notExisted, newStatus}, true, "0"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -245,7 +246,7 @@ func TestGormChangeFeedReadWrite_UnlockStatus(t *testing.T) {
 				t.Errorf("UnlockStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if tt.finalStatus != 0 {
+			if tt.finalStatus != "0" {
 				final, _ := m.Get(tt.args.ctx, tt.args.taskId)
 				assert.Equal(t, tt.finalStatus, final.Status)
 				assert.False(t, final.Locked())
@@ -263,11 +264,11 @@ func TestGormChangeFeedReadWrite_UpdateConfig(t *testing.T) {
 	existed.Downstream = &TiDBDownstream{
 		Password: "updated",
 	}
-	existed.Type = DownstreamTypeTiDB
+	existed.Type = constants.DownstreamTypeTiDB
 	existed.FilterRulesConfig = newString
 	existed.ClusterId = newString
 	existed.StartTS = int64(newInt)
-	existed.Entity.Status = int8(newInt)
+	existed.Entity.Status = "99"
 
 	type args struct {
 		ctx            context.Context
@@ -311,21 +312,21 @@ func TestConvertStatus(t *testing.T) {
 	tests := []struct {
 		name       string
 		args       args
-		wantStatus Status
+		wantStatus constants.ChangeFeedStatus
 		wantErr    bool
 	}{
-		{"Initial", args{"Initial"}, Initial, false},
-		{"Normal", args{"Normal"}, Normal, false},
-		{"Stopped", args{"Stopped"}, Stopped, false},
-		{"Finished", args{"Finished"}, Finished, false},
-		{"Error", args{"Error"}, Error, false},
-		{"Failed", args{"Failed"}, Failed, false},
-		{"Unknown", args{"Unknown"}, Unknown, true},
-		{"whatever", args{"Unknown"}, Unknown, true},
+		{"Initial", args{"Initial"}, constants.Initial, false},
+		{"Normal", args{"Normal"}, constants.Normal, false},
+		{"Stopped", args{"Stopped"}, constants.Stopped, false},
+		{"Finished", args{"Finished"}, constants.Finished, false},
+		{"Error", args{"Error"}, constants.Error, false},
+		{"Failed", args{"Failed"}, constants.Failed, false},
+		{"Unknown", args{"Unknown"}, constants.Unknown, true},
+		{"whatever", args{"Unknown"}, constants.Unknown, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotStatus, err := ConvertStatus(tt.args.s)
+			gotStatus, err := constants.ConvertStatus(tt.args.s)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ConvertStatus() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -340,16 +341,16 @@ func TestConvertStatus(t *testing.T) {
 func TestStatus_IsFinal(t *testing.T) {
 	tests := []struct {
 		name string
-		s    Status
+		s    constants.ChangeFeedStatus
 		want bool
 	}{
-		{"Initial", Initial, false},
-		{"Normal", Normal, false},
-		{"Stopped", Stopped, false},
-		{"Finished", Finished, true},
-		{"Error", Error, false},
-		{"Failed", Failed, true},
-		{"Unknown", Unknown, false},
+		{"Initial", constants.Initial, false},
+		{"Normal", constants.Normal, false},
+		{"Stopped", constants.Stopped, false},
+		{"Finished", constants.Finished, true},
+		{"Error", constants.Error, false},
+		{"Failed", constants.Failed, true},
+		{"Unknown", constants.Unknown, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

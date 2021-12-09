@@ -26,11 +26,11 @@ func TestComponentInstance_AcceptPortInfo(t *testing.T) {
 		portInfo string
 	}
 	tests := []struct {
-		name   string
-		args   args
-		want   []int
+		name string
+		args args
+		want []int
 	}{
-		{"normal", args{"[1,2,3]"}, []int{1,2,3}},
+		{"normal", args{"[1,2,3]"}, []int{1, 2, 3}},
 		{"empty", args{"[]"}, []int{}},
 		{"empty", args{""}, []int{}},
 	}
@@ -38,7 +38,7 @@ func TestComponentInstance_AcceptPortInfo(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &ComponentInstance{}
 			c.DeserializePortInfo(tt.args.portInfo)
-			if tt.args.portInfo == "[]" || tt.args.portInfo == ""{
+			if tt.args.portInfo == "[]" || tt.args.portInfo == "" {
 				assert.NotNil(t, c.PortList)
 				assert.Equal(t, 0, len(c.PortList))
 			} else {
@@ -53,11 +53,11 @@ func TestComponentInstance_ExtractPortInfo(t *testing.T) {
 		portList []int
 	}
 	tests := []struct {
-		name   string
-		args   args
-		want   string
+		name string
+		args args
+		want string
 	}{
-		{"normal", args{[]int{1,2,3}}, "[1,2,3]"},
+		{"normal", args{[]int{1, 2, 3}}, "[1,2,3]"},
 		{"normal", args{[]int{}}, "[]"},
 	}
 	for _, tt := range tests {

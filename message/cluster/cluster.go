@@ -119,7 +119,6 @@ type RestoreExistClusterReq struct {
 //RestoreExistClusterResp Restore to exist cluster using the backup file Reply Message
 type RestoreExistClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterID"`
 }
 
 // CloneClusterReq Message for clone a new cluster

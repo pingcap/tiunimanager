@@ -119,10 +119,9 @@ type ClusterTopologyInfo struct {
 
 // BackupStrategy Timed or scheduled data backup strategy
 type BackupStrategy struct {
-	ClusterID      string    `json:"clusterId"`
-	BackupDate     string    `json:"backupDate"`
-	Period         string    `json:"period"`
-	NextBackupTime time.Time `json:"nextBackupTime"`
+	ClusterID  string `json:"clusterId"`
+	BackupDate string `json:"backupDate"`
+	Period     string `json:"period"`
 }
 
 // BackupRecord Single backup file details

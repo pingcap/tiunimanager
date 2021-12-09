@@ -43,12 +43,13 @@ type BackupClusterDataResp struct {
 
 // DeleteBackupDataReq Delete a backup file based on the cluster ID and the ID of the backup file
 type DeleteBackupDataReq struct {
-	ClusterID string `json:"clusterId"`
+	ClusterID  string `json:"clusterId"`
+	BackupMode string `json:"backupMode"`
+	BackupID   string `json:"backupId"`
 }
 
 // DeleteBackupDataResp Delete a backup file reply message
 type DeleteBackupDataResp struct {
-	BackupID string `json:"backupId"`
 }
 
 // QueryBackupRecordsReq Query the list of backup files over time based on cluster ID
@@ -62,7 +63,7 @@ type QueryBackupRecordsReq struct {
 
 // QueryBackupRecordsResp Query the return information of the backup file
 type QueryBackupRecordsResp struct {
-	BackupFileItems []*structs.BackupRecord
+	BackupRecords []*structs.BackupRecord
 }
 
 // UpdateBackupStrategyReq Request to update backup data strategy
@@ -75,20 +76,19 @@ type UpdateBackupStrategyReq struct {
 type UpdateBackupStrategyResp struct {
 }
 
-// QueryBackupStrategyReq Query messages for cluster backup strategy
-type QueryBackupStrategyReq struct {
+// GetBackupStrategyReq Query messages for cluster backup strategy
+type GetBackupStrategyReq struct {
 	ClusterID string `json:"clusterId" form:"clusterId"`
 }
 
-// QueryBackupStrategyResp Query backup strategy reply message
-type QueryBackupStrategyResp struct {
+// GetBackupStrategyResp Query backup strategy reply message
+type GetBackupStrategyResp struct {
 	Strategy structs.BackupStrategy `json:"strategy"`
 }
 
 // DeleteBackupStrategyReq Request to delete backup data strategy
 type DeleteBackupStrategyReq struct {
-	ClusterID string                 `json:"clusterId"`
-	Strategy  structs.BackupStrategy `json:"strategy"`
+	ClusterID string `json:"clusterId"`
 }
 
 // DeleteBackupStrategyResp delete backup strategy reply message

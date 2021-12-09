@@ -17,6 +17,7 @@ package backuprestore
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/message/cluster"
 )
 
@@ -54,8 +55,9 @@ type BRService interface {
 	// @Parameter ctx
 	// @Parameter request
 	// @Return *cluster.QueryBackupRecordsResp
+	// @Return *structs.Page
 	// @Return error
-	QueryClusterBackupRecords(ctx context.Context, request *cluster.QueryBackupRecordsReq) (*cluster.QueryBackupRecordsResp, error)
+	QueryClusterBackupRecords(ctx context.Context, request *cluster.QueryBackupRecordsReq) (*cluster.QueryBackupRecordsResp, *structs.Page, error)
 
 	// DeleteBackupRecords
 	// @Description: delete backup records by condition
@@ -66,14 +68,14 @@ type BRService interface {
 	// @Return error
 	DeleteBackupRecords(ctx context.Context, request *cluster.DeleteBackupDataReq) (*cluster.DeleteBackupDataResp, error)
 
-	// QueryBackupStrategy
-	// @Description: query backup strategy of cluster
+	// GetBackupStrategy
+	// @Description: get backup strategy of cluster
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *cluster.QueryBackupStrategyResp
+	// @Return *cluster.GetBackupStrategyResp
 	// @Return error
-	QueryBackupStrategy(ctx context.Context, request *cluster.QueryBackupStrategyReq) (*cluster.QueryBackupStrategyResp, error)
+	GetBackupStrategy(ctx context.Context, request *cluster.GetBackupStrategyReq) (*cluster.GetBackupStrategyResp, error)
 
 	// SaveBackupStrategy
 	// @Description: save backup strategy of cluster

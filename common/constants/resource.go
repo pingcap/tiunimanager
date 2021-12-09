@@ -46,13 +46,6 @@ func ValidArchType(arch string) error {
 		string(ArchX86), string(ArchX8664), string(ArchArm), string(ArchArm64))
 }
 
-//Constants for importing host information
-//TODO It is recommended to move to the resource module in api-server
-const (
-	ImportHostTemplateFileName string = "hostInfo_template.xlsx"
-	ImportHostTemplateFilePath string = "./etc"
-)
-
 type HostStatus string
 
 //Definition of host status

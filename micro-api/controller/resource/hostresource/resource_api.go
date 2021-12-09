@@ -252,9 +252,9 @@ func RemoveHosts(c *gin.Context) {
 // @Router /resources/hosts-template/ [get]
 func DownloadHostTemplateFile(c *gin.Context) {
 	curDir, _ := os.Getwd()
-	templateName := common.TemplateFileName
+	templateName := ImportHostTemplateFileName
 	// The template file should be on tiem/etc/hostInfo_template.xlsx
-	filePath := filepath.Join(curDir, common.TemplateFilePath, templateName)
+	filePath := filepath.Join(curDir, ImportHostTemplateFilePath, templateName)
 
 	_, err := os.Stat(filePath)
 	if err != nil && !os.IsExist(err) {

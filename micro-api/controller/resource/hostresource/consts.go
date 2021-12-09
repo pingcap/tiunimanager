@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -17,39 +16,30 @@
 
 package hostresource
 
-type DemoHostInfo struct {
-	HostId   string `json:"hostId"`
-	HostName string `json:"hostName"`
-	HostIp   string `json:"hostIp"`
-}
+type ExcelField int
 
-type ImportHostRsp struct {
-	HostId string `json:"hostId"`
-}
+const (
+	HOSTNAME_FIELD ExcelField = iota
+	IP_FILED
+	USERNAME_FIELD
+	PASSWD_FIELD
+	REGION_FIELD
+	ZONE_FIELD
+	RACK_FIELD
+	ARCH_FIELD
+	OS_FIELD
+	KERNEL_FIELD
+	CPU_FIELD
+	MEM_FIELD
+	NIC_FIELD
+	CLUSTER_TYPE_FIELD
+	PURPOSE_FIELD
+	DISKTYPE_FIELD
+	DISKS_FIELD
+)
 
-type ImportHostsRsp struct {
-	HostIds []string `json:"hostIds"`
-}
-type ListHostRsp struct {
-	Hosts []HostInfo `json:"hosts"`
-}
-
-type HostDetailsRsp struct {
-	Host HostInfo `json:"host"`
-}
-
-type AllocateRsp struct {
-	HostName string   `json:"hostName"`
-	Ip       string   `json:"ip"`
-	UserName string   `json:"userName"`
-	Passwd   string   `json:"passwd"`
-	CpuCores int32    `json:"cpuCore"`
-	Memory   int32    `json:"memory"`
-	Disk     DiskInfo `json:"disk"`
-}
-
-type AllocHostsRsp struct {
-	PdHosts   []AllocateRsp `json:"pdHosts"`
-	TidbHosts []AllocateRsp `json:"tidbHosts"`
-	TikvHosts []AllocateRsp `json:"tikvHosts"`
-}
+//Constants for importing host information
+const (
+	ImportHostTemplateFileName string = "hostInfo_template.xlsx"
+	ImportHostTemplateFilePath string = "./etc"
+)

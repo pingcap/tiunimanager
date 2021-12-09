@@ -37,7 +37,7 @@ type BRService interface {
 	// @Parameter request
 	// @Return *cluster.RestoreNewClusterResp
 	// @Return error
-	//RestoreNewCluster(ctx context.Context, request *cluster.RestoreNewClusterReq) (*cluster.RestoreNewClusterResp, error) // todo: move to cluster manager to reuse create workflow node
+	//RestoreNewCluster(ctx context.Context, request *cluster.RestoreNewClusterReq) (*cluster.RestoreNewClusterResp, error) // todo: move to cluster manager
 
 	// RestoreExistCluster
 	// @Description: restore exist cluster by backup record

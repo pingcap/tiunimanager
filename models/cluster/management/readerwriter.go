@@ -34,7 +34,7 @@ type ReaderWriter interface {
 	//  @param instances
 	//  @return error
 	//
-	UpdateInstance(ctx context.Context, instances ...ClusterInstance) error
+	UpdateInstance(ctx context.Context, instances ...*ClusterInstance) error
 
 	//
 	// UpdateBaseInfo update cluster base info

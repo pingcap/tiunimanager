@@ -56,6 +56,7 @@ type MicroSrv interface {
 	MicroSrvShowRestoreInfo(ctx context.Context, cluster ClusterFacade) CmdShowRestoreInfoResp
 	MicroSrvGetTaskStatus(ctx context.Context, taskID uint64) (stat dbPb.TiupTaskStatus, errStr string, err error)
 	MicroSrvGetTaskStatusByBizID(ctx context.Context, bizID uint64) (stat dbPb.TiupTaskStatus, statErrStr string, err error)
+	ApiEditConfig(ctx context.Context, apiEditConfigReq ApiEditConfigReq) (bool, error)
 	EditClusterConfig(ctx context.Context, req ClusterEditConfigReq, bizID uint64) error
 }
 

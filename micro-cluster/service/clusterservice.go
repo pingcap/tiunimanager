@@ -19,8 +19,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/workflow"
@@ -697,9 +697,9 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 	}
 
 	detailResp := message.QueryWorkFlowDetailResp{
-		Info:     flowDetail.Flow,
-		NodeInfo: flowDetail.Nodes,
-		NodeName: flowDetail.NodeNames,
+		Info:      flowDetail.Flow,
+		NodeInfo:  flowDetail.Nodes,
+		NodeNames: flowDetail.NodeNames,
 	}
 
 	data, err := json.Marshal(detailResp)

@@ -32,9 +32,9 @@ type QueryWorkFlowDetailReq struct {
 }
 
 type QueryWorkFlowDetailResp struct {
-	Info     *structs.WorkFlowInfo       `json:"info"`
-	NodeInfo []*structs.WorkFlowNodeInfo `json:"nodes"`
-	NodeName []string                    `json:"nodeName"`
+	Info      *structs.WorkFlowInfo       `json:"info"`
+	NodeInfo  []*structs.WorkFlowNodeInfo `json:"nodes"`
+	NodeNames []string                    `json:"nodeNames"`
 }
 
 type QueryWorkFlowsReq struct {

@@ -13,51 +13,54 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package common
+package constants
 
 import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"os"
-	"testing"
 )
 
-type TestEntity struct {
-	Entity
-	name string
+type ChangeFeedStatus string
+
+const (
+	Initial  ChangeFeedStatus = "Initial"
+	Normal   ChangeFeedStatus = "Normal"
+	Stopped  ChangeFeedStatus = "Stopped"
+	Finished ChangeFeedStatus = "Finished"
+	Error    ChangeFeedStatus = "Error"
+	Failed   ChangeFeedStatus = "Failed"
+	Unknown  ChangeFeedStatus = "Unknown"
+)
+
+func (s ChangeFeedStatus) IsFinal() bool {
+	return Finished == s || Failed == s
 }
 
-var baseDB *gorm.DB
-
-func TestMain(m *testing.M) {
-	testFilePath := "testdata/" + uuidutil.ShortId()
-	os.MkdirAll(testFilePath, 0755)
-	logins := framework.LogForkFile(common.LogFileSystem)
-
-	defer func() {
-		os.RemoveAll(testFilePath)
-		os.Remove(testFilePath)
-	}()
-
-	framework.InitBaseFrameworkForUt(framework.ClusterService,
-		func(d *framework.BaseFramework) error {
-			dbFile := testFilePath + common.DBDirPrefix + common.SqliteFileName
-			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
-
-			if err != nil || db.Error != nil {
-				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
-			} else {
-				logins.Infof("open database successful, filepath: %s", dbFile)
-			}
-
-			baseDB = db
-			db.Migrator().CreateTable(new(TestEntity))
-
-			return nil
-		},
-	)
-	os.Exit(m.Run())
+func (s ChangeFeedStatus) ToString() string {
+	return string(s)
 }
+
+func IsValidStatus(s string) bool {
+	return Initial.ToString() == s ||
+		Normal.ToString() == s ||
+		Stopped.ToString() == s ||
+		Finished.ToString() == s ||
+		Error.ToString() == s ||
+		Failed.ToString() == s
+}
+
+func ConvertStatus(s string) (status ChangeFeedStatus, err error) {
+	if IsValidStatus(s) {
+		return ChangeFeedStatus(s), nil
+	} else {
+		return Unknown, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+	}
+}
+
+type DownstreamType string
+
+const (
+	DownstreamTypeTiDB  DownstreamType = "tidb"
+	DownstreamTypeKafka DownstreamType = "kafka"
+	DownstreamTypeMysql DownstreamType = "mysql"
+)

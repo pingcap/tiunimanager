@@ -151,7 +151,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 		return true
 	}
 	node := &workflow.WorkFlowNode{
-		Entities: common2.Entities{
+		Entity: common2.Entity{
 			Status: constants.WorkFlowStatusInitializing,
 		},
 		Name:       nodeDefine.Name,

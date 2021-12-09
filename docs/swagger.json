@@ -302,7 +302,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                                "$ref": "#/definitions/cluster.QueryChangeFeedTaskResp"
                                             }
                                         }
                                     }
@@ -354,7 +354,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/changefeed.ChangeFeedTask"
+                            "$ref": "#/definitions/cluster.CreateChangeFeedTaskReq"
                         }
                     }
                 ],
@@ -370,19 +370,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "allOf": [
-                                                {
-                                                    "$ref": "#/definitions/changefeed.ChangeFeedTask"
-                                                },
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "downstream": {
-                                                            "$ref": "#/definitions/changefeed.MysqlDownstream"
-                                                        }
-                                                    }
-                                                }
-                                            ]
+                                            "$ref": "#/definitions/cluster.CreateChangeFeedTaskResp"
                                         }
                                     }
                                 }
@@ -449,7 +437,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                            "$ref": "#/definitions/cluster.DeleteChangeFeedTaskResp"
                                         }
                                     }
                                 }
@@ -516,7 +504,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                            "$ref": "#/definitions/cluster.DetailChangeFeedTaskResp"
                                         }
                                     }
                                 }
@@ -583,7 +571,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
+                                            "$ref": "#/definitions/cluster.PauseChangeFeedTaskResp"
                                         }
                                     }
                                 }
@@ -650,19 +638,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "allOf": [
-                                                {
-                                                    "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
-                                                },
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "downstream": {
-                                                            "$ref": "#/definitions/changefeed.TiDBDownstream"
-                                                        }
-                                                    }
-                                                }
-                                            ]
+                                            "$ref": "#/definitions/cluster.ResumeChangeFeedTaskResp"
                                         }
                                     }
                                 }
@@ -722,7 +698,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/changefeed.ChangeFeedTask"
+                            "$ref": "#/definitions/cluster.UpdateChangeFeedTaskReq"
                         }
                     }
                 ],
@@ -738,19 +714,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "allOf": [
-                                                {
-                                                    "$ref": "#/definitions/changefeed.ChangeFeedTaskDetail"
-                                                },
-                                                {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "downstream": {
-                                                            "$ref": "#/definitions/changefeed.KafkaDownstream"
-                                                        }
-                                                    }
-                                                }
-                                            ]
+                                            "$ref": "#/definitions/cluster.UpdateChangeFeedTaskResp"
                                         }
                                     }
                                 }
@@ -4226,7 +4190,7 @@
                 }
             }
         },
-        "changefeed.ChangeFeedTask": {
+        "cluster.CreateChangeFeedTaskReq": {
             "type": "object",
             "properties": {
                 "clusterId": {
@@ -4270,6 +4234,39 @@
                     "example": 415241823337054209
                 },
                 "status": {
+                    "type": "string",
+                    "enum": [
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
+                    ],
+                    "example": "1"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.CreateChangeFeedTaskResp": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "TASK_ID_IN_TIEM____22"
+                }
+            }
+        },
+        "cluster.DeleteChangeFeedTaskResp": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "TASK_ID_IN_TIEM____22"
+                },
+                "status": {
                     "type": "integer",
                     "enum": [
                         0,
@@ -4280,13 +4277,10 @@
                         5
                     ],
                     "example": 1
-                },
-                "updateTime": {
-                    "type": "string"
                 }
             }
         },
-        "changefeed.ChangeFeedTaskDetail": {
+        "cluster.DetailChangeFeedTaskResp": {
             "type": "object",
             "properties": {
                 "clusterId": {
@@ -4338,16 +4332,16 @@
                     "example": 415241823337054209
                 },
                 "status": {
-                    "type": "integer",
+                    "type": "string",
                     "enum": [
-                        0,
-                        1,
-                        2,
-                        3,
-                        4,
-                        5
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
                     ],
-                    "example": 1
+                    "example": "1"
                 },
                 "unsteady": {
                     "type": "boolean",
@@ -4362,142 +4356,190 @@
                 }
             }
         },
-        "changefeed.KafkaDownstream": {
+        "cluster.PauseChangeFeedTaskResp": {
             "type": "object",
             "properties": {
-                "clientId": {
-                    "type": "string",
-                    "example": "213"
-                },
-                "dispatchers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "ip": {
-                    "type": "string",
-                    "example": "127.0.0.1"
-                },
-                "maxBatchSize": {
+                "status": {
                     "type": "integer",
-                    "example": 5
-                },
-                "maxMessageBytes": {
-                    "type": "integer",
-                    "example": 16
-                },
-                "partitions": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "port": {
-                    "type": "integer",
-                    "example": 9001
-                },
-                "protocol": {
-                    "type": "string",
                     "enum": [
-                        "default",
-                        "canal",
-                        "avro",
-                        "maxwell"
+                        0,
+                        1,
+                        2,
+                        3,
+                        4,
+                        5
                     ],
-                    "example": "default"
-                },
-                "replicationFactor": {
-                    "type": "integer",
                     "example": 1
-                },
-                "tls": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "topicName": {
-                    "type": "string",
-                    "example": "my_topic"
-                },
-                "version": {
-                    "type": "string",
-                    "example": "2.4.0"
                 }
             }
         },
-        "changefeed.MysqlDownstream": {
+        "cluster.QueryChangeFeedTaskResp": {
             "type": "object",
             "properties": {
-                "concurrentThreads": {
-                    "type": "integer",
-                    "example": 7
-                },
-                "ip": {
-                    "type": "string",
-                    "example": "127.0.0.1"
-                },
-                "maxTxnRow": {
-                    "type": "integer",
-                    "example": 5
-                },
-                "password": {
-                    "type": "string",
-                    "example": "my_password"
-                },
-                "port": {
-                    "type": "integer",
-                    "example": 8001
-                },
-                "tls": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "username": {
-                    "type": "string",
-                    "example": "root"
-                },
-                "workerCount": {
-                    "type": "integer",
-                    "example": 2
-                }
-            }
-        },
-        "changefeed.TiDBDownstream": {
-            "type": "object",
-            "properties": {
-                "concurrentThreads": {
-                    "type": "integer",
-                    "example": 5
-                },
-                "ip": {
-                    "type": "string",
-                    "example": "127.0.0.1"
-                },
-                "maxTxnRow": {
-                    "type": "integer",
-                    "example": 4
-                },
-                "password": {
-                    "type": "string",
-                    "example": "my_password"
-                },
-                "port": {
-                    "type": "integer",
-                    "example": 4534
-                },
-                "targetClusterId": {
+                "clusterId": {
                     "type": "string",
                     "example": "CLUSTER_ID_IN_TIEM__22"
                 },
-                "tls": {
+                "createTime": {
+                    "type": "string"
+                },
+                "downstream": {
+                    "type": "object"
+                },
+                "downstreamFetchTs": {
+                    "type": "integer",
+                    "example": 415241823337054209
+                },
+                "downstreamSyncTs": {
+                    "type": "integer",
+                    "example": 415241823337054209
+                },
+                "downstreamType": {
+                    "type": "string",
+                    "enum": [
+                        "tidb",
+                        "kafka",
+                        "mysql"
+                    ],
+                    "example": "tidb"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "CLUSTER_ID_IN_TIEM__22"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "my_sync_name"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "*.*"
+                    ]
+                },
+                "startTS": {
+                    "type": "integer",
+                    "example": 415241823337054209
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
+                    ],
+                    "example": "1"
+                },
+                "unsteady": {
                     "type": "boolean",
                     "example": false
                 },
-                "username": {
+                "updateTime": {
+                    "type": "string"
+                },
+                "upstreamUpdateTs": {
+                    "type": "integer",
+                    "example": 415241823337054209
+                }
+            }
+        },
+        "cluster.ResumeChangeFeedTaskResp": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4,
+                        5
+                    ],
+                    "example": 1
+                }
+            }
+        },
+        "cluster.UpdateChangeFeedTaskReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
                     "type": "string",
+                    "example": "CLUSTER_ID_IN_TIEM__22"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "downstream": {
+                    "type": "object"
+                },
+                "downstreamType": {
+                    "type": "string",
+                    "enum": [
+                        "tidb",
+                        "kafka",
+                        "mysql"
+                    ],
                     "example": "tidb"
                 },
-                "workerCount": {
+                "id": {
+                    "type": "string",
+                    "example": "CLUSTER_ID_IN_TIEM__22"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "my_sync_name"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "*.*"
+                    ]
+                },
+                "startTS": {
                     "type": "integer",
-                    "example": 2
+                    "example": 415241823337054209
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "Initial",
+                        "Normal",
+                        "Stopped",
+                        "Finished",
+                        "Error",
+                        "Failed"
+                    ],
+                    "example": "1"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.UpdateChangeFeedTaskResp": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2,
+                        3,
+                        4,
+                        5
+                    ],
+                    "example": 1
                 }
             }
         },
@@ -5465,6 +5507,9 @@
         "management.ComponentNodeDisplayInfo": {
             "type": "object",
             "properties": {
+                "HostIp": {
+                    "type": "string"
+                },
                 "cpuUsage": {
                     "$ref": "#/definitions/controller.Usage"
                 },
@@ -5488,6 +5533,12 @@
                 },
                 "port": {
                     "type": "integer"
+                },
+                "ports": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 },
                 "role": {
                     "$ref": "#/definitions/management.ComponentNodeRole"
@@ -5700,11 +5751,31 @@
                 "clusterVersion": {
                     "type": "string"
                 },
+                "componentTopology": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "componentType": {
+                                "type": "string"
+                            },
+                            "resourceSpec": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/management.ResourceSpec"
+                                }
+                            }
+                        }
+                    }
+                },
                 "components": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/management.ComponentInstance"
                     }
+                },
+                "cpuArchitecture": {
+                    "type": "string"
                 },
                 "cpuUsage": {
                     "$ref": "#/definitions/controller.Usage"
@@ -5750,6 +5821,17 @@
                 },
                 "recoverInfo": {
                     "$ref": "#/definitions/management.RecoverInfo"
+                },
+                "region": {
+                    "type": "object",
+                    "properties": {
+                        "code": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 },
                 "statusCode": {
                     "type": "string"
@@ -5852,6 +5934,36 @@
                 },
                 "sourceClusterId": {
                     "type": "string"
+                }
+            }
+        },
+        "management.ResourceSpec": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "spec": {
+                    "type": "object",
+                    "properties": {
+                        "code": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "zone": {
+                    "type": "object",
+                    "properties": {
+                        "code": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        }
+                    }
                 }
             }
         },
@@ -6231,6 +6343,15 @@
                         1,
                         2,
                         3
+                    ],
+                    "example": 0
+                },
+                "type": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1,
+                        2
                     ],
                     "example": 0
                 }

@@ -20,6 +20,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/models/workflow"
 	"gorm.io/driver/sqlite"
@@ -35,6 +36,7 @@ type database struct {
 	importExportReaderWriter importexport.ReaderWriter
 	brReaderWriter           backuprestore.ReaderWriter
 	changeFeedReaderWriter   changefeed.ReaderWriter
+	clusterReaderWriter management.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -68,6 +70,9 @@ func (p *database) initTables() {
 	p.addTable(new(changefeed.ChangeFeedTask))
 	p.addTable(new(workflow.WorkFlow))
 	p.addTable(new(workflow.WorkFlowNode))
+	p.addTable(new(management.Cluster))
+	p.addTable(new(management.ClusterInstance))
+	p.addTable(new(management.ClusterRelation))
 
 	// other tables
 }
@@ -118,6 +123,14 @@ func GetImportExportReaderWriter() importexport.ReaderWriter {
 
 func GetBRReaderWriter() backuprestore.ReaderWriter {
 	return defaultDb.brReaderWriter
+}
+
+func GetClusterReaderWriter() management.ReaderWriter {
+	return defaultDb.clusterReaderWriter
+}
+
+func SetClusterReaderWriter(rw management.ReaderWriter)  {
+	defaultDb.clusterReaderWriter = rw
 }
 
 func MockDB() {

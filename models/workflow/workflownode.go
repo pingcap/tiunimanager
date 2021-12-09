@@ -24,7 +24,7 @@ import (
 
 // WorkFlowNode work flow node infomation
 type WorkFlowNode struct {
-	common.Entities
+	common.Entity
 	BizID      string `gorm:"default:null;<-:create"`
 	ParentID   string `gorm:"default:null;index;comment:'ID of the workflow parent node'"`
 	Name       string `gorm:"default:null;comment:'name of the workflow node'"`

@@ -218,25 +218,25 @@ func (mgr *WorkFlowManager) AddContext(flow *WorkFlowAggregation, key string, va
 }
 
 func (mgr *WorkFlowManager) AsyncStart(ctx context.Context, flow *WorkFlowAggregation) error {
-	framework.LogWithContext(ctx).Infof("Begin async start workflow name %s, workflowId %s", flow.Flow.Name, flow.Flow.ID)
+	framework.LogWithContext(ctx).Infof("Begin async start workflow name %s, workflowId %s, bizId: %s", flow.Flow.Name, flow.Flow.ID, flow.Flow.BizID)
 	flow.asyncStart()
 	return nil
 }
 
 func (mgr *WorkFlowManager) Start(ctx context.Context, flow *WorkFlowAggregation) error {
-	framework.LogWithContext(ctx).Infof("Begin sync start workflow name %s, workflowId %s", flow.Flow.Name, flow.Flow.ID)
+	framework.LogWithContext(ctx).Infof("Begin sync start workflow name %s, workflowId %s, bizId: %s", flow.Flow.Name, flow.Flow.ID, flow.Flow.BizID)
 	flow.start()
 	return nil
 }
 
 func (mgr *WorkFlowManager) Destroy(ctx context.Context, flow *WorkFlowAggregation, reason string) error {
-	framework.LogWithContext(ctx).Infof("Begin destroy workflow name %s, workflowId %s", flow.Flow.Name, flow.Flow.ID)
+	framework.LogWithContext(ctx).Infof("Begin destroy workflow name %s, workflowId %s, bizId: %s", flow.Flow.Name, flow.Flow.ID, flow.Flow.BizID)
 	flow.destroy(reason)
 	return nil
 }
 
 func (mgr *WorkFlowManager) Complete(ctx context.Context, flow *WorkFlowAggregation, success bool) {
-	framework.LogWithContext(ctx).Infof("Begin complete workflow name %s, workflowId %s", flow.Flow.Name, flow.Flow.ID)
+	framework.LogWithContext(ctx).Infof("Begin complete workflow name %s, workflowId %s, bizId: %s", flow.Flow.Name, flow.Flow.ID, flow.Flow.BizID)
 	flow.complete(success)
 	return
 }

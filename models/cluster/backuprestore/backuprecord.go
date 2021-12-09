@@ -22,7 +22,7 @@ import (
 
 // BackupRecord backup record information
 type BackupRecord struct {
-	common.Entities
+	common.Entity
 	StorageType  string `gorm:"not null"`
 	ClusterID    string `gorm:"not null;type:varchar(22);default:null"`
 	BackupType   string

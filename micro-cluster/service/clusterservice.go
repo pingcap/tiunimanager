@@ -85,19 +85,19 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 	request.GetOperator()
 	reqData := request.GetRequest()
 
-	task := &changefeed.CreateReq{}
+	req := &cluster.CreateChangeFeedTaskReq{}
 
-	err := json.Unmarshal([]byte(reqData), task)
+	err := json.Unmarshal([]byte(reqData), req)
 
 	if err != nil {
 		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
 		return nil
 	}
 
-	result, err := handler.changeFeedManager.Create(ctx, task.Name)
+	result, err := handler.changeFeedManager.Create(ctx, *req)
 
 	handleResponse(response, err, func() ([]byte, error) {
-		return json.Marshal(changefeed.CreateResp{
+		return json.Marshal(cluster.CreateChangeFeedTaskResp{
 			ID: result,
 		})
 	})
@@ -593,7 +593,7 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 	//	framework.LogWithContext(ctx).Info(err)
 	//	return nil
 	//} else {
-	//	response.Status = SuccessResponseStatus
+	//	response.ChangeFeedStatus = SuccessResponseStatus
 	//	response.DisplayInfo = &clusterpb.DisplayStatusDTO{
 	//		InProcessFlowId: int32(clusterAggregation.CurrentWorkFlow.Id),
 	//	}

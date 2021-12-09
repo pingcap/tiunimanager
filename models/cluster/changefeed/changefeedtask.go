@@ -18,6 +18,7 @@ package changefeed
 import (
 	"database/sql"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
@@ -25,80 +26,35 @@ import (
 	"time"
 )
 
-type Status string
-
-const (
-	Initial  Status = "Initial"
-	Normal   Status = "Normal"
-	Stopped  Status = "Stopped"
-	Finished Status = "Finished"
-	Error    Status = "Error"
-	Failed   Status = "Failed"
-	Unknown  Status = "Unknown"
-)
-
-func (s Status) IsFinal() bool {
-	return Finished == s || Failed == s
-}
-
-func (s Status) ToString() string {
-	return string(s)
-}
-
-func invalidStatus(s string) bool {
-	return Initial.ToString() == s ||
-		Normal.ToString() == s ||
-		Stopped.ToString() == s ||
-		Finished.ToString() == s ||
-		Error.ToString() == s ||
-		Failed.ToString() == s
-}
-
-func ConvertStatus(s string) (status Status, err error) {
-	if invalidStatus(s) {
-		return Status(s), nil
-	} else {
-		return Unknown, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
-	}
-}
-
 type ChangeFeedTask struct {
 	dbCommon.Entity
-	TaskStatus        Status         `gorm:"-"`
-	Name              string         `gorm:"type:varchar(32)"`
-	ClusterId         string         `gorm:"not null;type:varchar(22);index"`
-	Type              DownstreamType `gorm:"not null;type:varchar(16)"`
-	StartTS           int64          `gorm:"column:start_ts"`
-	TargetTS          int64          `gorm:"column:target_ts"`
-	FilterRulesConfig string         `gorm:"type:text"`
-	Downstream        interface{}    `gorm:"-"`
-	DownstreamConfig  string         `gorm:"type:text"`
-	StatusLock        sql.NullTime   `gorm:"column:status_lock"`
+	TaskStatus        constants.ChangeFeedStatus `gorm:"-"`
+	Name              string           `gorm:"type:varchar(32)"`
+	ClusterId         string           `gorm:"not null;type:varchar(22);index"`
+	Type              constants.DownstreamType   `gorm:"not null;type:varchar(16)"`
+	StartTS           int64            `gorm:"column:start_ts"`
+	TargetTS          int64            `gorm:"column:target_ts"`
+	FilterRulesConfig string           `gorm:"type:text"`
+	Downstream        interface{}      `gorm:"-"`
+	DownstreamConfig  string           `gorm:"type:text"`
+	StatusLock        sql.NullTime     `gorm:"column:status_lock"`
 }
 
 func (t ChangeFeedTask) GetStatusLock() sql.NullTime {
 	return t.StatusLock
 }
 
-type DownstreamType string
-
-const (
-	DownstreamTypeTiDB  DownstreamType = "tidb"
-	DownstreamTypeKafka DownstreamType = "kafka"
-	DownstreamTypeMysql DownstreamType = "mysql"
-)
-
-func (dt DownstreamType) unmarshal(cc string) (interface{}, error) {
+func unmarshal(dt constants.DownstreamType, cc string) (interface{}, error) {
 	switch dt {
-	case DownstreamTypeTiDB:
+	case constants.DownstreamTypeTiDB:
 		downstream := &TiDBDownstream{}
 		err := json.Unmarshal([]byte(cc), downstream)
 		return downstream, err
-	case DownstreamTypeKafka:
+	case constants.DownstreamTypeKafka:
 		downstream := &KafkaDownstream{}
 		err := json.Unmarshal([]byte(cc), downstream)
 		return downstream, err
-	case DownstreamTypeMysql:
+	case constants.DownstreamTypeMysql:
 		downstream := &MysqlDownstream{}
 		err := json.Unmarshal([]byte(cc), downstream)
 		return downstream, err
@@ -124,7 +80,7 @@ func (t *ChangeFeedTask) BeforeSave(tx *gorm.DB) (err error) {
 
 func (t *ChangeFeedTask) AfterFind(tx *gorm.DB) (err error) {
 	if len(t.DownstreamConfig) > 0 {
-		downstream, err := t.Type.unmarshal(t.DownstreamConfig)
+		downstream, err := unmarshal(t.Type, t.DownstreamConfig)
 		if err != nil {
 			return err
 		}

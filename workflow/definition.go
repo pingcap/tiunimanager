@@ -44,7 +44,7 @@ func (define *WorkFlowDefine) getInstance(ctx context.Context, bizId string, dat
 		Flow: &workflow.WorkFlow{
 			Name:  define.FlowName,
 			BizID: bizId,
-			Entities: common.Entities{
+			Entity: common.Entity{
 				Status: constants.WorkFlowStatusInitializing,
 			},
 		},

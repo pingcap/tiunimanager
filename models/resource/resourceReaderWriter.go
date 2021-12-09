@@ -17,6 +17,8 @@ package resource
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
@@ -141,17 +143,7 @@ func (rw *GormResourceReadWrite) Delete(ctx context.Context, hostIds []string) (
 	return
 }
 
-func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, err error) {
-	db := rw.DB()
-	// Check Host Detail
-	if filter.HostID != "" {
-		err = db.Where("id = ?", filter.HostID).Find(&hosts).Error
-		if err != nil {
-			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_HOST_NOT_FOUND, "query host %s error, %v", filter.HostID, err)
-		}
-		return
-	}
-
+func (rw *GormResourceReadWrite) hostFiltered(db *gorm.DB, filter *structs.HostFilter) (db2 *gorm.DB, err error) {
 	if filter.Arch != "" {
 		db = db.Where("arch = ?", filter.Arch)
 	}
@@ -172,6 +164,23 @@ func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.Host
 			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_INVALID_LABEL_NAEM, "query host use a invalid purpose name %s, %v", filter.Purpose, err)
 		}
 		db = db.Where("traits & ? = ?", label, label)
+	}
+	return db, nil
+}
+
+func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, err error) {
+	db := rw.DB()
+	// Check Host Detail
+	if filter.HostID != "" {
+		err = db.Where("id = ?", filter.HostID).Find(&hosts).Error
+		if err != nil {
+			return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_HOST_NOT_FOUND, "query host %s error, %v", filter.HostID, err)
+		}
+		return
+	}
+	db, err = rw.hostFiltered(db, filter)
+	if err != nil {
+		return nil, err
 	}
 	err = db.Offset(offset).Limit(limit).Find(&hosts).Error
 	return
@@ -209,8 +218,35 @@ func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds
 	tx.Commit()
 	return nil
 }
-func (rw *GormResourceReadWrite) GetHierarchy(ctx context.Context, filter structs.HostFilter, level int32, depth int32) (root *structs.HierarchyTreeNode, err error) {
-	return nil, nil
+
+func (rw *GormResourceReadWrite) GetHostItems(ctx context.Context, filter *structs.HostFilter, level int32, depth int32) (items []HostItem, err error) {
+	leafLevel := level + depth
+	tx := rw.DB().Begin()
+	db := tx.Model(&rp.Host{}).Select("region, az, rack, ip, host_name as name")
+	db, err = rw.hostFiltered(db, filter)
+	if err != nil {
+		return nil, err
+	}
+	switch constants.HierarchyTreeNodeLevel(leafLevel) {
+	case constants.REGION:
+		err = db.Group("region").Scan(&items).Error
+	case constants.ZONE:
+		err = db.Group("region").Group("az").Scan(&items).Error
+	case constants.RACK:
+		err = db.Group("region").Group("az").Group("rack").Scan(&items).Error
+	case constants.HOST:
+		// Build whole tree with hosts
+		err = db.Order("region").Order("az").Order("rack").Order("ip").Scan(&items).Error
+	default:
+		errMsg := fmt.Sprintf("invalid leaf level %d, level = %d, depth = %d", leafLevel, level, depth)
+		err = errors.New(errMsg)
+	}
+	if err != nil {
+		tx.Rollback()
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get hierarchy failed, %v", err)
+	}
+	tx.Commit()
+	return
 }
 func (rw *GormResourceReadWrite) GetStocks(ctx context.Context, location structs.Location, hostFilter structs.HostFilter, diskFilter structs.DiskFilter) (stocks *structs.Stocks, err error) {
 	return nil, nil

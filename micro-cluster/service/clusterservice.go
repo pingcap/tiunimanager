@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
-	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
@@ -943,10 +942,6 @@ func (clusterManager *ClusterServiceHandler) RecycleResources(ctx context.Contex
 	return clusterManager.resourceManager.RecycleResources(ctx, in, out)
 }
 
-func (clusterManager *ClusterServiceHandler) GetHierarchy(ctx context.Context, in *clusterpb.GetHierarchyRequest, out *clusterpb.GetHierarchyResponse) error {
-	return clusterManager.resourceManager.GetHierarchy(ctx, in, out)
-}
-
 func (clusterManager *ClusterServiceHandler) GetStocks(ctx context.Context, in *clusterpb.GetStocksRequest, out *clusterpb.GetStocksResponse) error {
 	return clusterManager.resourceManager.GetStocks(ctx, in, out)
 }
@@ -1010,20 +1005,10 @@ func (handler *ClusterServiceHandler) QueryHosts(ctx context.Context, request *c
 		return nil
 	}
 
-	filter := structs.HostFilter{
-		HostID:  reqStruct.HostID,
-		Arch:    reqStruct.Arch,
-		Purpose: reqStruct.Purpose,
-		Status:  reqStruct.Status,
-		Stat:    reqStruct.Stat,
-	}
+	filter := reqStruct.GetHostFilter()
+	page := reqStruct.GetPage()
 
-	page := structs.PageRequest{
-		Page:     reqStruct.Page,
-		PageSize: reqStruct.PageSize,
-	}
-
-	hosts, err := handler.resourceManager2.QueryHosts(ctx, &filter, &page)
+	hosts, err := handler.resourceManager2.QueryHosts(ctx, filter, page)
 
 	handleResponse(response, err, func() ([]byte, error) {
 		var rsp message.QueryHostsResp
@@ -1074,6 +1059,32 @@ func (handler *ClusterServiceHandler) UpdateHostStatus(ctx context.Context, requ
 
 	handleResponse(response, err, func() ([]byte, error) {
 		var rsp message.UpdateHostStatusResp
+		return json.Marshal(rsp)
+	})
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) GetHierarchy(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	request.GetOperator()
+	reqString := request.GetRequest()
+
+	reqStruct := message.GetHierarchyReq{}
+
+	err := json.Unmarshal([]byte(reqString), &reqStruct)
+
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	filter := reqStruct.GetHostFilter()
+
+	root, err := handler.resourceManager2.GetHierarchy(ctx, filter, reqStruct.Level, reqStruct.Depth)
+
+	handleResponse(response, err, func() ([]byte, error) {
+		var rsp message.GetHierarchyResp
+		rsp.Root = *root
 		return json.Marshal(rsp)
 	})
 

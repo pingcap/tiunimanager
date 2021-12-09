@@ -21,8 +21,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/message"
 
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
@@ -107,61 +110,35 @@ func copyHierarchyFromRsp(root *clusterpb.Node, dst *Node) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param filter query HostFilter true "resource filter"
-// @Param level query int true "failure domain type of region/zone/rack/host" Enums(1, 2, 3, 4)
-// @Param depth query int true "hierarchy depth"
-// @Success 200 {object} controller.CommonResult{data=Node}
+// @Param filter query message.GetHierarchyReq true "resource filter"
+// @Success 200 {object} controller.CommonResult{data=message.GetHierarchyResp}
 // @Router /resources/hierarchy [get]
 func GetHierarchy(c *gin.Context) {
-	var filter HostFilter
-	if err := c.ShouldBindQuery(&filter); err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
-		return
-	}
-	if err := resource.ValidArch(filter.Arch); err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), err.Error()))
-		return
-	}
-	var level int
-	levelStr := c.DefaultQuery("level", "1")
-	levelInt, err := strconv.Atoi(levelStr) // #nosec G109
-	if err != nil || levelInt > int(resource.HOST) || levelInt < int(resource.REGION) {
-		errmsg := fmt.Sprintf("Input domainType [%s] invalid: %v", levelStr, err)
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
-		return
-	}
-	level = levelInt
+	var req message.GetHierarchyReq
 
-	var depth int
-	depthStr := c.DefaultQuery("depth", "0")
-	depthInt, err := strconv.Atoi(depthStr)
-	if err != nil || depthInt < 0 || levelInt+depthInt > int(resource.HOST) {
-		errmsg := fmt.Sprintf("Input depth [%s] invalid or is not vaild(level+depth>4) where level is [%d]: %v", depthStr, level, err)
-		c.JSON(http.StatusBadRequest, controller.Fail(int(codes.InvalidArgument), errmsg))
-		return
-	}
-	depth = depthInt
+	requestBody, err := controller.HandleJsonRequestFromQuery(c, &req)
+	if err == nil {
+		if err = constants.ValidArchType(req.Arch); err != nil {
+			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), err.Error()))
+			return
+		}
 
-	GetHierarchyReq := clusterpb.GetHierarchyRequest{
-		Level: int32(level),
-		Depth: int32(depth),
-		Filter: &clusterpb.HostFilter{
-			Arch: filter.Arch,
-		},
-	}
-	rsp, err := client.ClusterClient.GetHierarchy(framework.NewMicroCtxFromGinCtx(c), &GetHierarchyReq)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(codes.Internal), err.Error()))
-		return
-	}
-	if rsp.Rs.Code != int32(codes.OK) {
-		c.JSON(http.StatusInternalServerError, controller.Fail(int(rsp.Rs.Code), rsp.Rs.Message))
-		return
-	}
+		if req.Level > int(resource.HOST) || req.Level < int(resource.REGION) {
+			errmsg := fmt.Sprintf("Input domainType [%d] invalid, [1:Region, 2:Zone, 3:Rack, 4:Host]", req.Level)
+			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+			return
+		}
 
-	var res GetHierarchyRsp
-	copyHierarchyFromRsp(rsp.Root, &res.Root)
-	c.JSON(http.StatusOK, controller.Success(res.Root))
+		if req.Depth < 0 || req.Depth+req.Level > int(resource.HOST) {
+			errmsg := fmt.Sprintf("Input depth [%d] invalid or is not vaild(level+depth>4) where level is [%d]", req.Depth, req.Level)
+			c.JSON(http.StatusBadRequest, controller.Fail(common.TIEM_PARAMETER_INVALID.GetHttpCode(), errmsg))
+			return
+		}
+
+		controller.InvokeRpcMethod(c, client.ClusterClient.GetHierarchy, &message.GetHierarchyResp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
 }
 
 func copyStocksFromRsp(src *clusterpb.Stocks, dst *Stocks) {

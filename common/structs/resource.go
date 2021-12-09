@@ -159,10 +159,10 @@ type DiskFilter struct {
 }
 
 type HierarchyTreeNode struct {
-	Code     string              `json:"Code"`
-	Name     string              `json:"Name"`
-	Prefix   string              `json:"Prefix"`
-	SubNodes []HierarchyTreeNode `json:"SubNodes"`
+	Code     string               `json:"Code"`
+	Name     string               `json:"Name"`
+	Prefix   string               `json:"Prefix"`
+	SubNodes []*HierarchyTreeNode `json:"SubNodes"`
 }
 
 type Stocks struct {

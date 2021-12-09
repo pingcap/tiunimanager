@@ -24,6 +24,14 @@ import (
 	"gorm.io/gorm"
 )
 
+// Use HostItem to store filtered hosts records to build hierarchy tree
+type HostItem struct {
+	Region string
+	Az     string
+	Rack   string
+	Ip     string
+	Name   string
+}
 type ResourceReaderWriter interface {
 	SetDB(db *gorm.DB)
 	DB() *gorm.DB
@@ -34,6 +42,7 @@ type ResourceReaderWriter interface {
 
 	UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error)
 	UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error)
-	GetHierarchy(ctx context.Context, filter structs.HostFilter, level int32, depth int32) (root *structs.HierarchyTreeNode, err error)
+	// Get all filtered hosts to build hierarchy tree
+	GetHostItems(ctx context.Context, filter *structs.HostFilter, level int32, depth int32) (items []HostItem, err error)
 	GetStocks(ctx context.Context, location structs.Location, hostFilter structs.HostFilter, diskFilter structs.DiskFilter) (stocks *structs.Stocks, err error)
 }

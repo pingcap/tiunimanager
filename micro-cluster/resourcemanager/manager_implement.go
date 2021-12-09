@@ -88,3 +88,14 @@ func (m *ResourceManager) UpdateHostStatus(ctx context.Context, hostIds []string
 
 	return
 }
+
+func (m *ResourceManager) GetHierarchy(ctx context.Context, filter *structs.HostFilter, level int, depth int) (root *structs.HierarchyTreeNode, err error) {
+	root, err = m.resourcePool.GetHierarchy(ctx, filter, level, depth)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("get hierarchy filter %v, level %d, depth %d failed from db service: %v", *filter, level, depth, err)
+	} else {
+		framework.LogWithContext(ctx).Infof("get hierarchy filter %v, level %d, depth %d succeed from db service.", *filter, level, depth)
+	}
+
+	return
+}

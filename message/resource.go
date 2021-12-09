@@ -32,6 +32,13 @@ type QueryHostsReq struct {
 	structs.HostFilter
 }
 
+func (req *QueryHostsReq) GetHostFilter() *structs.HostFilter {
+	return &(req.HostFilter)
+}
+func (req *QueryHostsReq) GetPage() *structs.PageRequest {
+	return &(req.PageRequest)
+}
+
 type QueryHostsResp struct {
 	Hosts []structs.HostInfo `json:"hosts"`
 }
@@ -68,11 +75,13 @@ type UpdateHostStatusResp struct {
 }
 
 type GetHierarchyReq struct {
-	Filter struct {
-		Arch string `json:"Arch"`
-	} `json:"Filter"`
-	Level int32 `json:"Level"`
-	Depth int32 `json:"Depth"`
+	structs.HostFilter
+	Level int `json:"Level"` // [1:Region, 2:Zone, 3:Rack, 4:Host]
+	Depth int `json:"Depth"`
+}
+
+func (req *GetHierarchyReq) GetHostFilter() *structs.HostFilter {
+	return &(req.HostFilter)
 }
 
 type GetHierarchyResp struct {

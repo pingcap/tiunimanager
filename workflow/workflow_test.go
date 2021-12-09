@@ -43,6 +43,10 @@ var doFail = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
 	return true
 }
 
+func init() {
+	models.MockDB()
+}
+
 func TestFlowManager_RegisterWorkFlow(t *testing.T) {
 	manager := GetWorkFlowManager()
 	manager.RegisterWorkFlow(context.TODO(), "flowName",

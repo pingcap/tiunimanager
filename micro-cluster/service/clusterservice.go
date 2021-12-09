@@ -649,7 +649,7 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 		return nil
 	}
 
-	manager := workflow.GetWorkFlowManager()
+	manager := workflow.GetWorkFlowService()
 	flows, total, err := manager.ListWorkFlows(ctx, listReq.BizID, listReq.FlowName, listReq.Status, listReq.Page, listReq.PageSize)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call workflow manager list flows failed %s", err.Error())
@@ -689,7 +689,7 @@ func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *cluster
 		return nil
 	}
 
-	manager := workflow.GetWorkFlowManager()
+	manager := workflow.GetWorkFlowService()
 	flowDetail, err := manager.DetailWorkFlow(ctx, detailReq.WorkFlowID)
 	if err != nil {
 		handleResponse(response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil)

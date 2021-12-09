@@ -44,7 +44,7 @@ func GetImportExportService() ImportExportService {
 
 func NewImportExportManager() *ImportExportManager {
 	mgr := ImportExportManager{}
-	flowManager := workflow.GetWorkFlowManager()
+	flowManager := workflow.GetWorkFlowService()
 	flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowExportData, &workflow.WorkFlowDefine{
 		FlowName: constants.WorkFlowExportData,
 		TaskNodes: map[string]*workflow.NodeDefine{

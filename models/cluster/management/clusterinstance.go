@@ -26,10 +26,9 @@ type ClusterInstance struct {
 	ClusterID      string `gorm:"not null;default:null"`
 	Role           string
 
+	// instance resource info
 	CpuCores       int8
 	Memory         int8
-
-	// instance location info
 	HostID         string `gorm:"not null;type:varchar(22);default:null"`
 	Zone           string
 	Rack           string

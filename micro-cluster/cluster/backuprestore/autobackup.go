@@ -83,7 +83,7 @@ func (auto *autoBackupHandler) doBackup(strategy *backuprestore.BackupStrategy) 
 	framework.Log().Infof("begin do auto backup for cluster %s", strategy.ClusterID)
 	defer framework.Log().Infof("end do auto backup for cluster %s", strategy.ClusterID)
 
-	_, err := GetBRManager().BackupCluster(framework.NewMicroCtxFromGinCtx(&gin.Context{}), &cluster.BackupClusterDataReq{
+	_, err := GetBRService().BackupCluster(framework.NewMicroCtxFromGinCtx(&gin.Context{}), &cluster.BackupClusterDataReq{
 		ClusterID:  strategy.ClusterID,
 		BackupMode: string(constants.BackupModeAuto),
 	})

@@ -19,13 +19,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os/exec"
+	"syscall"
+	"time"
+
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/spec"
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
-	"os/exec"
-	"syscall"
-	"time"
 
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -36,7 +37,7 @@ type TiUPComponentTypeStr string
 const (
 	ClusterComponentTypeStr TiUPComponentTypeStr = "cluster"
 	DMComponentTypeStr      TiUPComponentTypeStr = "dm"
-	TiEMComponentTypeStr	TiUPComponentTypeStr = "tiem"
+	TiEMComponentTypeStr    TiUPComponentTypeStr = "tiem"
 )
 
 func (secondMicro *SecondMicro) MicroSrvTiupDeploy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
@@ -83,7 +84,7 @@ func (secondMicro *SecondMicro) startNewTiupDeployTask(ctx context.Context, task
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupScaleOut(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, configStrYaml string, timeoutS int, flags []string, bizID uint64)(taskID uint64, err error) {
+func (secondMicro *SecondMicro) MicroSrvTiupScaleOut(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
 	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupscaleout tiupcomponent: %s, instancename: %s, configstryaml: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, configStrYaml, timeoutS, flags, bizID)
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_ScaleOut
@@ -192,8 +193,10 @@ func (secondMicro *SecondMicro) startNewTiupStartTask(ctx context.Context, taskI
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupRestart(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiuprestart tiupcomponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, timeoutS, flags, bizID)
+func (secondMicro *SecondMicro) MicroSrvTiupRestart(ctx context.Context, tiupComponent TiUPComponentTypeStr,
+	instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiuprestart tiupcomponent: %s, "+
+		"instancename: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, timeoutS, flags, bizID)
 	var req dbPb.CreateTiupTaskRequest
 	req.Type = dbPb.TiupTaskType_Restart
 	req.BizID = bizID
@@ -480,12 +483,12 @@ func (secondMicro *SecondMicro) startNewTiupTransferTask(ctx context.Context, ta
 
 func (secondMicro *SecondMicro) MicroSrvTiupUpgrade(ctx context.Context, tiupComponent TiUPComponentTypeStr,
 	instanceName string, version string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupupgrade tiupcomponent: %s" +
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupupgrade tiupcomponent: %s"+
 		", instancename: %s, version: %s, timeouts: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName,
 		version, timeoutS, flags, bizID)
 	req := dbPb.CreateTiupTaskRequest{
-		Type : dbPb.TiupTaskType_Upgrade,
-		BizID : bizID,
+		Type:  dbPb.TiupTaskType_Upgrade,
+		BizID: bizID,
 	}
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
@@ -561,8 +564,8 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditGlobalConfig(ctx context.Context
 	cmdEditGlobalConfigReq CmdEditGlobalConfigReq, bizID uint64) (uint64, error) {
 	framework.LogWithContext(ctx).Infof("microsrvtiupeditglobalconfig cmdeditglobalconfigreq: %v, bizid: %d", cmdEditGlobalConfigReq, bizID)
 	req := dbPb.CreateTiupTaskRequest{
-		Type : dbPb.TiupTaskType_EditGlobalConfig,
-		BizID : bizID,
+		Type:  dbPb.TiupTaskType_EditGlobalConfig,
+		BizID: bizID,
 	}
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
@@ -572,7 +575,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditGlobalConfig(ctx context.Context
 
 	cmdShowConfigReq := CmdShowConfigReq{
 		TiUPComponent: ClusterComponentTypeStr,
-		InstanceName: cmdEditGlobalConfigReq.InstanceName,
+		InstanceName:  cmdEditGlobalConfigReq.InstanceName,
 	}
 	cmdShowConfigResp, err := secondMicro.MicroSrvTiupShowConfig(ctx, &cmdShowConfigReq)
 	if err != nil {
@@ -640,10 +643,10 @@ func (secondMicro *SecondMicro) startTiupEditGlobalConfigTask(ctx context.Contex
 
 	cmdEditConfigReq := CmdEditConfigReq{
 		TiUPComponent: req.TiUPComponent,
-		InstanceName: req.InstanceName,
-		NewTopo: topo,
-		TimeoutS: req.TimeoutS,
-		Flags: req.Flags,
+		InstanceName:  req.InstanceName,
+		NewTopo:       topo,
+		TimeoutS:      req.TimeoutS,
+		Flags:         req.Flags,
 	}
 	secondMicro.startNewTiupEditConfigTask(ctx, cmdEditConfigReq, taskID)
 }
@@ -652,8 +655,8 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditInstanceConfig(ctx context.Conte
 	cmdEditInstanceConfigReq CmdEditInstanceConfigReq, bizID uint64) (uint64, error) {
 	framework.LogWithContext(ctx).Infof("microsrvtiupeditinstanceconfig cmdeditinstanceconfigreq: %v, bizid: %d", cmdEditInstanceConfigReq, bizID)
 	req := dbPb.CreateTiupTaskRequest{
-		Type : dbPb.TiupTaskType_EditInstanceConfig,
-		BizID : bizID,
+		Type:  dbPb.TiupTaskType_EditInstanceConfig,
+		BizID: bizID,
 	}
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
@@ -663,7 +666,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditInstanceConfig(ctx context.Conte
 
 	cmdShowConfigReq := CmdShowConfigReq{
 		TiUPComponent: ClusterComponentTypeStr,
-		InstanceName: cmdEditInstanceConfigReq.InstanceName,
+		InstanceName:  cmdEditInstanceConfigReq.InstanceName,
 	}
 	cmdShowConfigResp, err := secondMicro.MicroSrvTiupShowConfig(ctx, &cmdShowConfigReq)
 	if err != nil {
@@ -807,10 +810,10 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 
 	cmdEditConfigReq := CmdEditConfigReq{
 		TiUPComponent: req.TiUPComponent,
-		InstanceName: req.InstanceName,
-		NewTopo: topo,
-		TimeoutS: req.TimeoutS,
-		Flags: req.Flags,
+		InstanceName:  req.InstanceName,
+		NewTopo:       topo,
+		TimeoutS:      req.TimeoutS,
+		Flags:         req.Flags,
 	}
 	secondMicro.startNewTiupEditConfigTask(ctx, cmdEditConfigReq, taskID)
 }
@@ -851,8 +854,8 @@ func (secondMicro *SecondMicro) MicroSrvTiupReload(ctx context.Context, cmdReloa
 	bizID uint64) (taskID uint64, err error) {
 	framework.LogWithContext(ctx).Infof("microsrvtiupreload cmdreloadconfigreq: %v, bizid: %d", cmdReloadConfigReq, bizID)
 	req := dbPb.CreateTiupTaskRequest{
-		Type : dbPb.TiupTaskType_Reload,
-		BizID : bizID,
+		Type:  dbPb.TiupTaskType_Reload,
+		BizID: bizID,
 	}
 	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {

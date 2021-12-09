@@ -193,8 +193,10 @@ func (manager *SecondPartyManager) startNewTiupStartTask(ctx context.Context, ta
 	}()
 }
 
-func (manager *SecondPartyManager) ClusterRestart(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID string) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiuprestart tiupcomponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %s", string(tiupComponent), instanceName, timeoutS, flags, bizID)
+func (manager *SecondPartyManager) ClusterRestart(ctx context.Context, tiupComponent TiUPComponentTypeStr,
+	instanceName string, timeoutS int, flags []string, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiuprestart tiupcomponent: %s, "+
+		"instancename: %s, timeout: %d, flags: %v, bizid: %s", string(tiupComponent), instanceName, timeoutS, flags, bizID)
 	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_Restart
 	req.BizID = bizID

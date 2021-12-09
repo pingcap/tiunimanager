@@ -120,6 +120,7 @@ func Route(g *gin.Engine) {
 
 			//Upgrade
 			cluster.GET("/:clusterId/upgrade/path", upgrade.QueryUpgradePaths)
+			cluster.GET("/:clusterId/upgrade/diff", upgrade.QueryUpgradeVersionDiffInfo)
 		}
 
 		knowledge := apiV1.Group("/knowledges")

@@ -41,15 +41,17 @@ type QueryUpgradeVersionDiffInfoReq struct {
 	Version   string `json:"version"`
 }
 
+type ConfigDiffInfo struct {
+	Name         string `json:"name"`
+	InstanceType string `json:"instanceType"`
+	CurrentVal   string `json:"currentVal"`
+	SuggestVal   string `json:"suggestVal"`
+	Range        string `json:"range"`
+	Description  string `json:"description"`
+}
+
 type QueryUpgradeVersionDiffInfoRsp struct {
-	ConfigDiffInfo []struct {
-		Name         string `json:"name"`
-		InstanceType string `json:"instanceType"`
-		CurrentVal   string `json:"currentVal"`
-		SuggestVal   string `json:"suggestVal"`
-		Range        string `json:"range"`
-		Description  string `json:"description"`
-	}
+	ConfigDiffInfos []*ConfigDiffInfo
 }
 
 type ClusterUpgradeReq struct {

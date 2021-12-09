@@ -51,7 +51,39 @@ func QueryUpgradePaths(c *gin.Context) {
 	})
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProductUpgradePath,
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProductUpgradePath, &upgrade.QueryUpgradePathRsp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}
+
+// QueryUpgradeVersionDiffInfo query upgrade params diff between current cluster and dst version
+// @Summary query upgrade params diff between current cluster and dst version
+// @Description query upgrade params diff between current cluster and dst version
+// @Tags upgrade
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param clusterId path string true "clusterId"
+// @Param task body upgrade.QueryUpgradeVersionDiffInfoReq true "upgrade version diff info"
+// @Success 200 {object} controller.CommonResult{data=upgrade.QueryUpgradeVersionDiffInfoRsp}
+// @Failure 401 {object} controller.CommonResult
+// @Failure 403 {object} controller.CommonResult
+// @Failure 500 {object} controller.CommonResult
+// @Router /clusters/:clusterId/upgrade/diff [get]
+func QueryUpgradeVersionDiffInfo(c *gin.Context) {
+	var req upgrade.QueryUpgradeVersionDiffInfoReq
+
+	requestBody, err := controller.HandleJsonRequestFromBody(c,
+		&req,
+		// append id in path to request
+		func(c *gin.Context, req interface{}) error {
+			req.(*upgrade.QueryUpgradeVersionDiffInfoReq).ClusterID = c.Param(paramNameOfClusterID)
+			return nil
+		})
+
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryUpgradeVersionDiffInfo, &upgrade.QueryUpgradeVersionDiffInfoRsp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

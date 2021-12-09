@@ -371,7 +371,7 @@ func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Contex
 		return nil
 	}
 
-	result, err := handler.upgradeManager.QueryUpdatePath(ctx, path.ClusterID)
+	result, err := handler.upgradeManager.QueryProductUpdatePath(ctx, path.ClusterID)
 	if err != nil {
 		handleResponse(response, err, nil)
 		return nil
@@ -380,6 +380,35 @@ func (handler *ClusterServiceHandler) QueryProductUpgradePath(ctx context.Contex
 	handleResponse(response, err, func() ([]byte, error) {
 		rsp := upgrade.QueryUpgradePathRsp{
 			Paths: result,
+		}
+		return json.Marshal(rsp)
+	})
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	request.GetOperator()
+	reqData := request.GetRequest()
+
+	req := &upgrade.QueryUpgradeVersionDiffInfoReq{}
+
+	err := json.Unmarshal([]byte(reqData), req)
+
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	result, err := handler.upgradeManager.QueryUpgradeVersionDiffInfo(ctx, req.ClusterID, req.Version)
+	if err != nil {
+		handleResponse(response, err, nil)
+		return nil
+	}
+
+	handleResponse(response, err, func() ([]byte, error) {
+		rsp := upgrade.QueryUpgradeVersionDiffInfoRsp{
+			ConfigDiffInfos: result,
 		}
 		return json.Marshal(rsp)
 	})

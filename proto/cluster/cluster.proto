@@ -90,7 +90,7 @@ service ClusterService {
     rpc DeleteProductUpgradePath(RpcRequest) returns (RpcResponse);
     rpc UpdateProductUpgradePath(RpcRequest) returns (RpcResponse);
     rpc QueryProductUpgradePath(RpcRequest) returns (RpcResponse);
-
+    rpc QueryUpgradeVersionDiffInfo(RpcRequest) returns (RpcResponse);
 }
 
 message ClusterCreateReqDTO {

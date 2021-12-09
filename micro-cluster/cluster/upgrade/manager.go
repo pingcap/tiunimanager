@@ -42,18 +42,18 @@ func NewManager() *Manager {
 	return &Manager{}
 }
 
-func (p *Manager) QueryUpdatePath(ctx context.Context, clusterID string) ([]*upgrade.Path, error) {
+func (p *Manager) QueryProductUpdatePath(ctx context.Context, clusterID string) ([]*upgrade.Path, error) {
 	cluster, err := domain.GetClusterDetail(ctx, clusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to query update path, %s", err.Error())
-		return []*upgrade.Path{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query update path", err)
+		return []*upgrade.Path{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade path", err)
 	}
 
 	version := cluster.Cluster.ClusterVersion
 	productUpgradePaths, err := models.GetUpgradeReaderWriter().QueryBySrcVersion(ctx, version.Name)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to query update path, %s", err.Error())
-		return []*upgrade.Path{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query update path", err)
+		return []*upgrade.Path{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_PATH_FAILED, "failed to query upgrade path", err)
 	}
 
 	pathMap := make(map[string][]string)
@@ -75,4 +75,20 @@ func (p *Manager) QueryUpdatePath(ctx context.Context, clusterID string) ([]*upg
 	}
 
 	return paths, nil
+}
+
+func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID string, version string) ([]*upgrade.ConfigDiffInfo, error) {
+	cluster, err := domain.GetClusterDetail(ctx, clusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("failed to query upgrade version diff, %s", err.Error())
+		return []*upgrade.ConfigDiffInfo{}, framework.WrapError(common.TIEM_UPGRADE_QUERY_VERSION_DIFF_FAILED, "failed to query upgrade version diff", err)
+	}
+
+	srcVersion := cluster.Cluster.ClusterVersion.Name
+	// TODO: get params for clusterID and dst version and check the diffs
+	framework.LogWithContext(ctx).Infof("TODO: get params for current cluster(%s:%s) and dst version(%s) and get get diffs", clusterID, srcVersion, version)
+
+	var configDiffInfos []*upgrade.ConfigDiffInfo
+
+	return configDiffInfos, nil
 }

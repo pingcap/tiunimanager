@@ -13,41 +13,26 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package common
+package management
 
 import (
-	"context"
-	"time"
-
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-	"gorm.io/gorm"
+	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/models/common"
 )
 
-type Entity struct {
-	ID        string    `gorm:"primaryKey;"`
-	CreatedAt time.Time `gorm:"<-:create"`
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-
-	TenantId string `gorm:"default:null;not null;<-:create"`
-	Status   string `gorm:"default:null"`
-}
-
-func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = uuidutil.GenerateID()
-	return nil
-}
-
-var split = []byte("_")
-
-type GormDB struct {
-	db *gorm.DB
-}
-
-func WrapDB(db *gorm.DB) GormDB {
-	return GormDB{db: db}
-}
-
-func (m *GormDB) DB(ctx context.Context) *gorm.DB {
-	return m.db.WithContext(ctx)
+type Cluster struct {
+	common.Entity
+	Name              string   `gorm:"not null;size:64;comment:'user name of the cluster''"`
+	DBUser            string   `gorm:"not null;size:64;comment:'user name of the database''"`
+	DBPassword        string   `gorm:"not null;size:64;comment:'user password of the database''"`
+	Type              string   `gorm:"not null;size:16;comment:'type of the cluster, eg. TiDB、TiDB Migration';"`
+	Version           string   `gorm:"not null;size:64;comment:'version of the cluster'"`
+	TLS               bool     `gorm:"default:false;comment:'whether to enable TLS, value: true or false'"`
+	Tags              []string `gorm:"comment:'cluster tag information'"`
+	OwnerId           string   `gorm:"not null:size:32;<-:create;->"`
+	ParameterGroupID  string   `gorm:"comment: parameter group id"`
+	Exclusive         bool
+	Region            string
+	CpuArchitecture   constants.ArchType
+	MaintenanceStatus constants.ClusterMaintenanceStatus
 }

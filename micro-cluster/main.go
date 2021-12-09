@@ -66,6 +66,10 @@ func initLibForDev(f *framework.BaseFramework) error {
 		TiupBinPath: "tiup",
 	}
 	secondparty.SecondParty.MicroInit()
+	secondparty.Manager = &secondparty.SecondPartyManager{
+		TiupBinPath: "tiup",
+	}
+	secondparty.Manager.Init()
 	return nil
 }
 

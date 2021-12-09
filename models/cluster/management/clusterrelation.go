@@ -13,4 +13,18 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package instance
+package management
+
+import (
+	"github.com/pingcap-inc/tiem/common/constants"
+	"gorm.io/gorm"
+)
+
+// ClusterRelation Cluster relationship, the system will establish a master-slave relationship
+type ClusterRelation struct {
+	gorm.Model
+	RelationType     constants.ClusterRelationType `gorm:"not null;size:32"`
+	SubjectClusterID string                        `gorm:"not null;size:32"`
+	ObjectClusterID  string                        `gorm:"not null;size:32"`
+}
+

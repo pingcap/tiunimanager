@@ -13,38 +13,39 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
+/*******************************************************************************
+ * @File: lib_tiup_v2
+ * @Description:
+ * @Author: shenhaibo@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/8
+*******************************************************************************/
+
 package secondparty
 
 import (
 	"bytes"
 	"context"
 	"fmt"
+	"os/exec"
+	"syscall"
+	"time"
+
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/spec"
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 	"gopkg.in/yaml.v2"
-	"os/exec"
-	"syscall"
-	"time"
 
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 )
 
-type TiUPComponentTypeStr string
-
-const (
-	ClusterComponentTypeStr TiUPComponentTypeStr = "cluster"
-	DMComponentTypeStr      TiUPComponentTypeStr = "dm"
-	TiEMComponentTypeStr	TiUPComponentTypeStr = "tiem"
-)
-
-func (secondMicro *SecondMicro) MicroSrvTiupDeploy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupdeploy tiupcomponent: %s, instancename: %s, version: %s, configstryaml: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, version, configStrYaml, timeoutS, flags, bizID)
-	var req dbPb.CreateTiupTaskRequest
+func (manager *SecondPartyManager) ClusterDeploy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, version string, configStrYaml string, timeoutS int, flags []string, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupdeploy tiupcomponent: %s, instancename: %s, version: %s, configstryaml: %s, timeout: %d, flags: %v, bizid: %s", string(tiupComponent), instanceName, version, configStrYaml, timeoutS, flags, bizID)
+	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_Deploy
 	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -56,17 +57,17 @@ func (secondMicro *SecondMicro) MicroSrvTiupDeploy(ctx context.Context, tiupComp
 		deployReq.ConfigStrYaml = configStrYaml
 		deployReq.TimeoutS = timeoutS
 		deployReq.Flags = flags
-		deployReq.TiupPath = secondMicro.TiupBinPath
+		deployReq.TiupPath = manager.TiupBinPath
 		deployReq.TaskID = rsp.Id
-		secondMicro.startNewTiupDeployTask(ctx, deployReq.TaskID, &deployReq)
+		manager.startNewTiupDeployTask(ctx, deployReq.TaskID, &deployReq)
 		return rsp.Id, nil
 	}
 }
 
-func (secondMicro *SecondMicro) startNewTiupDeployTask(ctx context.Context, taskID uint64, req *CmdDeployReq) {
+func (manager *SecondPartyManager) startNewTiupDeployTask(ctx context.Context, taskID uint64, req *CmdDeployReq) {
 	topologyTmpFilePath, err := newTmpFileWithContent("tiem-topology", []byte(req.ConfigStrYaml))
 	if err != nil {
-		secondMicro.taskStatusCh <- TaskStatusMember{
+		manager.taskStatusCh <- TaskStatusMember{
 			TaskID:   taskID,
 			Status:   TaskStatusError,
 			ErrorStr: fmt.Sprintln(err),
@@ -79,16 +80,16 @@ func (secondMicro *SecondMicro) startNewTiupDeployTask(ctx context.Context, task
 		args = append(args, string(req.TiUPComponent), "deploy", req.InstanceName, req.Version, topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupScaleOut(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, configStrYaml string, timeoutS int, flags []string, bizID uint64)(taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupscaleout tiupcomponent: %s, instancename: %s, configstryaml: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, configStrYaml, timeoutS, flags, bizID)
-	var req dbPb.CreateTiupTaskRequest
+func (manager *SecondPartyManager) ClusterScaleOut(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, configStrYaml string, timeoutS int, flags []string, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupscaleout tiupcomponent: %s, instancename: %s, configstryaml: %s, timeout: %d, flags: %v, bizid: %s", string(tiupComponent), instanceName, configStrYaml, timeoutS, flags, bizID)
+	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_ScaleOut
 	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%s", rsp, err)
 		return 0, err
@@ -99,18 +100,18 @@ func (secondMicro *SecondMicro) MicroSrvTiupScaleOut(ctx context.Context, tiupCo
 		scaleOutReq.ConfigStrYaml = configStrYaml
 		scaleOutReq.TimeoutS = timeoutS
 		scaleOutReq.Flags = flags
-		scaleOutReq.TiupPath = secondMicro.TiupBinPath
+		scaleOutReq.TiupPath = manager.TiupBinPath
 		scaleOutReq.TaskID = rsp.Id
-		secondMicro.startNewTiupScaleOutTask(ctx, scaleOutReq.TaskID, &scaleOutReq)
+		manager.startNewTiupScaleOutTask(ctx, scaleOutReq.TaskID, &scaleOutReq)
 		return rsp.Id, nil
 	}
 	return
 }
 
-func (secondMicro *SecondMicro) startNewTiupScaleOutTask(ctx context.Context, taskID uint64, req *CmdScaleOutReq) {
+func (manager *SecondPartyManager) startNewTiupScaleOutTask(ctx context.Context, taskID uint64, req *CmdScaleOutReq) {
 	topologyTmpFilePath, err := newTmpFileWithContent("tiem-topology", []byte(req.ConfigStrYaml))
 	if err != nil {
-		secondMicro.taskStatusCh <- TaskStatusMember{
+		manager.taskStatusCh <- TaskStatusMember{
 			TaskID:   taskID,
 			Status:   TaskStatusError,
 			ErrorStr: fmt.Sprintln(err),
@@ -123,16 +124,16 @@ func (secondMicro *SecondMicro) startNewTiupScaleOutTask(ctx context.Context, ta
 		args = append(args, string(req.TiUPComponent), "scale-out", req.InstanceName, topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupScaleIn(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, nodeId string, timeoutS int, flags []string, bizID uint64) (taskId uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupscalein tiupcomponent: %s, instancename: %s, nodeId: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, nodeId, timeoutS, flags, bizID)
-	var req dbPb.CreateTiupTaskRequest
+func (manager *SecondPartyManager) ClusterScaleIn(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, nodeId string, timeoutS int, flags []string, bizID string) (taskId uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupscalein tiupcomponent: %s, instancename: %s, nodeId: %s, timeout: %d, flags: %v, bizid: %s", string(tiupComponent), instanceName, nodeId, timeoutS, flags, bizID)
+	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_ScaleIn
 	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%s", rsp, err)
 		return 0, err
@@ -143,29 +144,29 @@ func (secondMicro *SecondMicro) MicroSrvTiupScaleIn(ctx context.Context, tiupCom
 		scaleInReq.NodeId = nodeId
 		scaleInReq.TimeoutS = timeoutS
 		scaleInReq.Flags = flags
-		scaleInReq.TiupPath = secondMicro.TiupBinPath
+		scaleInReq.TiupPath = manager.TiupBinPath
 		scaleInReq.TaskID = rsp.Id
-		secondMicro.startNewTiupScaleInTask(ctx, scaleInReq.TaskID, &scaleInReq)
+		manager.startNewTiupScaleInTask(ctx, scaleInReq.TaskID, &scaleInReq)
 		return rsp.Id, nil
 	}
 	return
 }
 
-func (secondMicro *SecondMicro) startNewTiupScaleInTask(ctx context.Context, taskID uint64, req *CmdScaleInReq) {
+func (manager *SecondPartyManager) startNewTiupScaleInTask(ctx context.Context, taskID uint64, req *CmdScaleInReq) {
 	go func() {
 		var args []string
 		args = append(args, string(req.TiUPComponent), "scale-in", req.InstanceName, "--node", req.NodeId)
 		args = append(args, req.Flags...)
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupStart(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupstart tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, timeoutS, flags, bizID)
-	var req dbPb.CreateTiupTaskRequest
+func (manager *SecondPartyManager) ClusterStart(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupstart tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %s", string(tiupComponent), instanceName, timeoutS, flags, bizID)
+	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_Start
 	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -175,29 +176,29 @@ func (secondMicro *SecondMicro) MicroSrvTiupStart(ctx context.Context, tiupCompo
 		req.TaskID = rsp.Id
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
-		req.TiupPath = secondMicro.TiupBinPath
+		req.TiupPath = manager.TiupBinPath
 		req.Flags = flags
-		secondMicro.startNewTiupStartTask(ctx, req.TaskID, &req)
+		manager.startNewTiupStartTask(ctx, req.TaskID, &req)
 		return rsp.Id, nil
 	}
 }
 
-func (secondMicro *SecondMicro) startNewTiupStartTask(ctx context.Context, taskID uint64, req *CmdStartReq) {
+func (manager *SecondPartyManager) startNewTiupStartTask(ctx context.Context, taskID uint64, req *CmdStartReq) {
 	go func() {
 		var args []string
 		args = append(args, string(req.TiUPComponent), "start", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupRestart(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiuprestart tiupcomponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, timeoutS, flags, bizID)
-	var req dbPb.CreateTiupTaskRequest
+func (manager *SecondPartyManager) ClusterRestart(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiuprestart tiupcomponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %s", string(tiupComponent), instanceName, timeoutS, flags, bizID)
+	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_Restart
 	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -207,29 +208,29 @@ func (secondMicro *SecondMicro) MicroSrvTiupRestart(ctx context.Context, tiupCom
 		req.TaskID = rsp.Id
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
-		req.TiupPath = secondMicro.TiupBinPath
+		req.TiupPath = manager.TiupBinPath
 		req.Flags = flags
-		secondMicro.startNewTiupRestartTask(ctx, req.TaskID, &req)
+		manager.startNewTiupRestartTask(ctx, req.TaskID, &req)
 		return rsp.Id, nil
 	}
 }
 
-func (secondMicro *SecondMicro) startNewTiupRestartTask(ctx context.Context, taskID uint64, req *CmdStartReq) {
+func (manager *SecondPartyManager) startNewTiupRestartTask(ctx context.Context, taskID uint64, req *CmdStartReq) {
 	go func() {
 		var args []string
 		args = append(args, string(req.TiUPComponent), "restart", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupStop(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupstop tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, timeoutS, flags, bizID)
-	var req dbPb.CreateTiupTaskRequest
+func (manager *SecondPartyManager) ClusterStop(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupstop tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %s", string(tiupComponent), instanceName, timeoutS, flags, bizID)
+	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_Stop
 	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -239,35 +240,35 @@ func (secondMicro *SecondMicro) MicroSrvTiupStop(ctx context.Context, tiupCompon
 		req.TaskID = rsp.Id
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
-		req.TiupPath = secondMicro.TiupBinPath
+		req.TiupPath = manager.TiupBinPath
 		req.Flags = flags
-		secondMicro.startNewTiupStopTask(ctx, req.TaskID, &req)
+		manager.startNewTiupStopTask(ctx, req.TaskID, &req)
 		return rsp.Id, nil
 	}
 }
 
-func (secondMicro *SecondMicro) startNewTiupStopTask(ctx context.Context, taskID uint64, req *CmdStartReq) {
+func (manager *SecondPartyManager) startNewTiupStopTask(ctx context.Context, taskID uint64, req *CmdStartReq) {
 	go func() {
 		var args []string
 		args = append(args, string(req.TiUPComponent), "stop", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupList(ctx context.Context, tiupComponent TiUPComponentTypeStr, timeoutS int, flags []string) (resp *CmdListResp, err error) {
+func (manager *SecondPartyManager) ClusterList(ctx context.Context, tiupComponent TiUPComponentTypeStr, timeoutS int, flags []string) (resp *CmdListResp, err error) {
 	framework.LogWithContext(ctx).Infof("microsrvtiuplist tiupComponent: %s, timeout: %d, flags: %v", string(tiupComponent), timeoutS, flags)
 	var req CmdListReq
 	req.TiUPComponent = tiupComponent
 	req.TimeoutS = timeoutS
-	req.TiupPath = secondMicro.TiupBinPath
+	req.TiupPath = manager.TiupBinPath
 	req.Flags = flags
-	cmdListResp, err := secondMicro.startNewTiupListTask(ctx, &req)
+	cmdListResp, err := manager.startNewTiupListTask(ctx, &req)
 	return &cmdListResp, err
 }
 
-func (secondMicro *SecondMicro) startNewTiupListTask(ctx context.Context, req *CmdListReq) (resp CmdListResp, err error) {
+func (manager *SecondPartyManager) startNewTiupListTask(ctx context.Context, req *CmdListReq) (resp CmdListResp, err error) {
 	var args []string
 	args = append(args, string(req.TiUPComponent), "list")
 	args = append(args, req.Flags...)
@@ -300,12 +301,12 @@ func (secondMicro *SecondMicro) startNewTiupListTask(ctx context.Context, req *C
 	return
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupDestroy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupstop tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, timeoutS, flags, bizID)
-	var req dbPb.CreateTiupTaskRequest
+func (manager *SecondPartyManager) ClusterDestroy(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupstop tiupComponent: %s, instancename: %s, timeout: %d, flags: %v, bizid: %s", string(tiupComponent), instanceName, timeoutS, flags, bizID)
+	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_Destroy
 	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -315,29 +316,29 @@ func (secondMicro *SecondMicro) MicroSrvTiupDestroy(ctx context.Context, tiupCom
 		req.TaskID = rsp.Id
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
-		req.TiupPath = secondMicro.TiupBinPath
+		req.TiupPath = manager.TiupBinPath
 		req.Flags = flags
-		secondMicro.startNewTiupDestroyTask(ctx, req.TaskID, &req)
+		manager.startNewTiupDestroyTask(ctx, req.TaskID, &req)
 		return rsp.Id, nil
 	}
 }
 
-func (secondMicro *SecondMicro) startNewTiupDestroyTask(ctx context.Context, taskID uint64, req *CmdDestroyReq) {
+func (manager *SecondPartyManager) startNewTiupDestroyTask(ctx context.Context, taskID uint64, req *CmdDestroyReq) {
 	go func() {
 		var args []string
 		args = append(args, string(req.TiUPComponent), "destroy", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvDumpling(ctx context.Context, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvdumpling, timeouts: %d, flags: %v, bizid: %d", timeoutS, flags, bizID)
-	var req dbPb.CreateTiupTaskRequest
+func (manager *SecondPartyManager) Dumpling(ctx context.Context, timeoutS int, flags []string, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvdumpling, timeouts: %d, flags: %v, bizid: %s", timeoutS, flags, bizID)
+	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_Dumpling
 	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -345,28 +346,28 @@ func (secondMicro *SecondMicro) MicroSrvDumpling(ctx context.Context, timeoutS i
 		var dumplingReq CmdDumplingReq
 		dumplingReq.TaskID = rsp.Id
 		dumplingReq.TimeoutS = timeoutS
-		dumplingReq.TiupPath = secondMicro.TiupBinPath
+		dumplingReq.TiupPath = manager.TiupBinPath
 		dumplingReq.Flags = flags
-		secondMicro.startNewTiupDumplingTask(ctx, dumplingReq.TaskID, &dumplingReq)
+		manager.startNewTiupDumplingTask(ctx, dumplingReq.TaskID, &dumplingReq)
 		return rsp.Id, nil
 	}
 }
 
-func (secondMicro *SecondMicro) startNewTiupDumplingTask(ctx context.Context, taskID uint64, req *CmdDumplingReq) {
+func (manager *SecondPartyManager) startNewTiupDumplingTask(ctx context.Context, taskID uint64, req *CmdDumplingReq) {
 	go func() {
 		var args []string
 		args = append(args, "dumpling")
 		args = append(args, req.Flags...)
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvLightning(ctx context.Context, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvlightning, timeouts: %d, flags: %v, bizid: %d", timeoutS, flags, bizID)
-	var req dbPb.CreateTiupTaskRequest
+func (manager *SecondPartyManager) Lightning(ctx context.Context, timeoutS int, flags []string, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvlightning, timeouts: %d, flags: %v, bizid: %s", timeoutS, flags, bizID)
+	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_Lightning
 	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -374,35 +375,35 @@ func (secondMicro *SecondMicro) MicroSrvLightning(ctx context.Context, timeoutS 
 		var lightningReq CmdLightningReq
 		lightningReq.TaskID = rsp.Id
 		lightningReq.TimeoutS = timeoutS
-		lightningReq.TiupPath = secondMicro.TiupBinPath
+		lightningReq.TiupPath = manager.TiupBinPath
 		lightningReq.Flags = flags
-		secondMicro.startNewTiupLightningTask(ctx, lightningReq.TaskID, &lightningReq)
+		manager.startNewTiupLightningTask(ctx, lightningReq.TaskID, &lightningReq)
 		return rsp.Id, nil
 	}
 }
 
-func (secondMicro *SecondMicro) startNewTiupLightningTask(ctx context.Context, taskID uint64, req *CmdLightningReq) {
+func (manager *SecondPartyManager) startNewTiupLightningTask(ctx context.Context, taskID uint64, req *CmdLightningReq) {
 	go func() {
 		var args []string
 		args = append(args, "tidb-lightning")
 		args = append(args, req.Flags...)
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupDisplay(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string) (resp *CmdDisplayResp, err error) {
+func (manager *SecondPartyManager) ClusterDisplay(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, timeoutS int, flags []string) (resp *CmdDisplayResp, err error) {
 	framework.LogWithContext(ctx).Infof("microsrvtiupclusterdisplay tiupcomponent: %s,  instanceName: %s, timeouts: %d, flags: %v", string(tiupComponent), instanceName, timeoutS, flags)
 	var req CmdDisplayReq
 	req.TiUPComponent = tiupComponent
 	req.InstanceName = instanceName
 	req.TimeoutS = timeoutS
-	req.TiupPath = secondMicro.TiupBinPath
+	req.TiupPath = manager.TiupBinPath
 	req.Flags = flags
-	cmdDisplayResp, err := secondMicro.startNewTiupDisplayTask(ctx, &req)
+	cmdDisplayResp, err := manager.startNewTiupDisplayTask(ctx, &req)
 	return &cmdDisplayResp, err
 }
 
-func (secondMicro *SecondMicro) startNewTiupDisplayTask(ctx context.Context, req *CmdDisplayReq) (resp CmdDisplayResp, err error) {
+func (manager *SecondPartyManager) startNewTiupDisplayTask(ctx context.Context, req *CmdDisplayReq) (resp CmdDisplayResp, err error) {
 	var args []string
 	args = append(args, string(req.TiUPComponent), "display")
 	args = append(args, req.InstanceName)
@@ -435,12 +436,12 @@ func (secondMicro *SecondMicro) startNewTiupDisplayTask(ctx context.Context, req
 	return
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupTransfer(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, collectorYaml string, remotePath string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiuptransfer tiupcomponent: %s, instancename: %s, collectoryaml: %s, remotepath: %s, timeouts: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName, collectorYaml, remotePath, timeoutS, flags, bizID)
-	var req dbPb.CreateTiupTaskRequest
+func (manager *SecondPartyManager) Transfer(ctx context.Context, tiupComponent TiUPComponentTypeStr, instanceName string, collectorYaml string, remotePath string, timeoutS int, flags []string, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiuptransfer tiupcomponent: %s, instancename: %s, collectoryaml: %s, remotepath: %s, timeouts: %d, flags: %v, bizid: %s", string(tiupComponent), instanceName, collectorYaml, remotePath, timeoutS, flags, bizID)
+	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_Transfer
 	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -452,17 +453,17 @@ func (secondMicro *SecondMicro) MicroSrvTiupTransfer(ctx context.Context, tiupCo
 		req.RemotePath = remotePath
 		req.TimeoutS = timeoutS
 		req.Flags = flags
-		req.TiupPath = secondMicro.TiupBinPath
+		req.TiupPath = manager.TiupBinPath
 		req.TaskID = rsp.Id
-		secondMicro.startNewTiupTransferTask(ctx, req.TaskID, &req)
+		manager.startNewTiupTransferTask(ctx, req.TaskID, &req)
 		return rsp.Id, nil
 	}
 }
 
-func (secondMicro *SecondMicro) startNewTiupTransferTask(ctx context.Context, taskID uint64, req *CmdTransferReq) {
+func (manager *SecondPartyManager) startNewTiupTransferTask(ctx context.Context, taskID uint64, req *CmdTransferReq) {
 	collectorTmpFilePath, err := newTmpFileWithContent("tiem-collector", []byte(req.CollectorYaml))
 	if err != nil {
-		secondMicro.taskStatusCh <- TaskStatusMember{
+		manager.taskStatusCh <- TaskStatusMember{
 			TaskID:   taskID,
 			Status:   TaskStatusError,
 			ErrorStr: fmt.Sprintln(err),
@@ -474,20 +475,20 @@ func (secondMicro *SecondMicro) startNewTiupTransferTask(ctx context.Context, ta
 		args = append(args, string(req.TiUPComponent), "push", req.InstanceName, collectorTmpFilePath, req.RemotePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupUpgrade(ctx context.Context, tiupComponent TiUPComponentTypeStr,
-	instanceName string, version string, timeoutS int, flags []string, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupupgrade tiupcomponent: %s" +
-		", instancename: %s, version: %s, timeouts: %d, flags: %v, bizid: %d", string(tiupComponent), instanceName,
+func (manager *SecondPartyManager) ClusterUpgrade(ctx context.Context, tiupComponent TiUPComponentTypeStr,
+	instanceName string, version string, timeoutS int, flags []string, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvtiupupgrade tiupcomponent: %s"+
+		", instancename: %s, version: %s, timeouts: %d, flags: %v, bizid: %s", string(tiupComponent), instanceName,
 		version, timeoutS, flags, bizID)
-	req := dbPb.CreateTiupTaskRequest{
-		Type : dbPb.TiupTaskType_Upgrade,
-		BizID : bizID,
+	req := dbPb.CreateTiupOperatorRecordRequest{
+		Type:  dbPb.TiupTaskType_Upgrade,
+		BizID: bizID,
 	}
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -498,24 +499,24 @@ func (secondMicro *SecondMicro) MicroSrvTiupUpgrade(ctx context.Context, tiupCom
 		req.Version = version
 		req.TimeoutS = timeoutS
 		req.Flags = flags
-		req.TiupPath = secondMicro.TiupBinPath
+		req.TiupPath = manager.TiupBinPath
 		req.TaskID = rsp.Id
-		secondMicro.startNewTiupUpgradeTask(ctx, req.TaskID, &req)
+		manager.startNewTiupUpgradeTask(ctx, req.TaskID, &req)
 		return rsp.Id, nil
 	}
 }
 
-func (secondMicro *SecondMicro) startNewTiupUpgradeTask(ctx context.Context, taskID uint64, req *CmdUpgradeReq) {
+func (manager *SecondPartyManager) startNewTiupUpgradeTask(ctx context.Context, taskID uint64, req *CmdUpgradeReq) {
 	go func() {
 		var args []string
 		args = append(args, string(req.TiUPComponent), "upgrade", req.InstanceName, req.Version)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupShowConfig(ctx context.Context, req *CmdShowConfigReq) (resp *CmdShowConfigResp, err error) {
+func (manager *SecondPartyManager) ClusterShowConfig(ctx context.Context, req *CmdShowConfigReq) (resp *CmdShowConfigResp, err error) {
 	framework.LogWithContext(ctx).Infof("microsrvtiupshowconfig cmdshowconfigreq: %v", req)
 	var args []string
 	args = append(args, string(req.TiUPComponent), "show-config")
@@ -523,20 +524,21 @@ func (secondMicro *SecondMicro) MicroSrvTiupShowConfig(ctx context.Context, req 
 	args = append(args, req.Flags...)
 
 	logInFunc := framework.LogWithContext(ctx)
-	logInFunc.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", secondMicro.TiupBinPath, args, req.TimeoutS))
+	logInFunc.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", manager.TiupBinPath, args, req.TimeoutS))
 	var cmd *exec.Cmd
 	var cancelFp context.CancelFunc
 	if req.TimeoutS != 0 {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(req.TimeoutS)*time.Second)
 		cancelFp = cancel
-		cmd = exec.CommandContext(ctx, secondMicro.TiupBinPath, args...)
+		cmd = exec.CommandContext(ctx, manager.TiupBinPath, args...)
 	} else {
-		cmd = exec.Command(secondMicro.TiupBinPath, args...)
+		cmd = exec.Command(manager.TiupBinPath, args...)
 		cancelFp = func() {}
 	}
 	defer cancelFp()
 	cmd.SysProcAttr = genSysProcAttr()
-	var stderr bytes.Buffer
+	var out, stderr bytes.Buffer
+	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	var data []byte
 	if data, err = cmd.Output(); err != nil {
@@ -557,14 +559,14 @@ func (secondMicro *SecondMicro) MicroSrvTiupShowConfig(ctx context.Context, req 
 	return
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupEditGlobalConfig(ctx context.Context,
-	cmdEditGlobalConfigReq CmdEditGlobalConfigReq, bizID uint64) (uint64, error) {
-	framework.LogWithContext(ctx).Infof("microsrvtiupeditglobalconfig cmdeditglobalconfigreq: %v, bizid: %d", cmdEditGlobalConfigReq, bizID)
-	req := dbPb.CreateTiupTaskRequest{
-		Type : dbPb.TiupTaskType_EditGlobalConfig,
-		BizID : bizID,
+func (manager *SecondPartyManager) ClusterEditGlobalConfig(ctx context.Context,
+	cmdEditGlobalConfigReq CmdEditGlobalConfigReq, bizID string) (uint64, error) {
+	framework.LogWithContext(ctx).Infof("microsrvtiupeditglobalconfig cmdeditglobalconfigreq: %v, bizid: %s", cmdEditGlobalConfigReq, bizID)
+	req := dbPb.CreateTiupOperatorRecordRequest{
+		Type:  dbPb.TiupTaskType_EditGlobalConfig,
+		BizID: bizID,
 	}
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -572,12 +574,12 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditGlobalConfig(ctx context.Context
 
 	cmdShowConfigReq := CmdShowConfigReq{
 		TiUPComponent: ClusterComponentTypeStr,
-		InstanceName: cmdEditGlobalConfigReq.InstanceName,
+		InstanceName:  cmdEditGlobalConfigReq.InstanceName,
 	}
-	cmdShowConfigResp, err := secondMicro.MicroSrvTiupShowConfig(ctx, &cmdShowConfigReq)
+	cmdShowConfigResp, err := manager.ClusterShowConfig(ctx, &cmdShowConfigReq)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("check orignal config error: %+v", err)
-		secondMicro.taskStatusCh <- TaskStatusMember{
+		manager.taskStatusCh <- TaskStatusMember{
 			TaskID:   rsp.Id,
 			Status:   TaskStatusError,
 			ErrorStr: fmt.Sprintln(err),
@@ -586,11 +588,11 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditGlobalConfig(ctx context.Context
 	}
 	topo := cmdShowConfigResp.TiDBClusterTopo
 
-	secondMicro.startTiupEditGlobalConfigTask(ctx, rsp.Id, &cmdEditGlobalConfigReq, topo)
+	manager.startTiupEditGlobalConfigTask(ctx, rsp.Id, &cmdEditGlobalConfigReq, topo)
 	return rsp.Id, nil
 }
 
-func (secondMicro *SecondMicro) startTiupEditGlobalConfigTask(ctx context.Context, taskID uint64, req *CmdEditGlobalConfigReq, topo *spec2.Specification) {
+func (manager *SecondPartyManager) startTiupEditGlobalConfigTask(ctx context.Context, taskID uint64, req *CmdEditGlobalConfigReq, topo *spec2.Specification) {
 	var componentServerConfigs map[string]interface{}
 
 	for _, globalComponentConfig := range req.GlobalComponentConfigs {
@@ -640,22 +642,22 @@ func (secondMicro *SecondMicro) startTiupEditGlobalConfigTask(ctx context.Contex
 
 	cmdEditConfigReq := CmdEditConfigReq{
 		TiUPComponent: req.TiUPComponent,
-		InstanceName: req.InstanceName,
-		NewTopo: topo,
-		TimeoutS: req.TimeoutS,
-		Flags: req.Flags,
+		InstanceName:  req.InstanceName,
+		NewTopo:       topo,
+		TimeoutS:      req.TimeoutS,
+		Flags:         req.Flags,
 	}
-	secondMicro.startNewTiupEditConfigTask(ctx, cmdEditConfigReq, taskID)
+	manager.startNewTiupEditConfigTask(ctx, cmdEditConfigReq, taskID)
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupEditInstanceConfig(ctx context.Context,
-	cmdEditInstanceConfigReq CmdEditInstanceConfigReq, bizID uint64) (uint64, error) {
-	framework.LogWithContext(ctx).Infof("microsrvtiupeditinstanceconfig cmdeditinstanceconfigreq: %v, bizid: %d", cmdEditInstanceConfigReq, bizID)
-	req := dbPb.CreateTiupTaskRequest{
-		Type : dbPb.TiupTaskType_EditInstanceConfig,
-		BizID : bizID,
+func (manager *SecondPartyManager) ClusterEditInstanceConfig(ctx context.Context,
+	cmdEditInstanceConfigReq CmdEditInstanceConfigReq, bizID string) (uint64, error) {
+	framework.LogWithContext(ctx).Infof("microsrvtiupeditinstanceconfig cmdeditinstanceconfigreq: %v, bizid: %s", cmdEditInstanceConfigReq, bizID)
+	req := dbPb.CreateTiupOperatorRecordRequest{
+		Type:  dbPb.TiupTaskType_EditInstanceConfig,
+		BizID: bizID,
 	}
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -663,12 +665,12 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditInstanceConfig(ctx context.Conte
 
 	cmdShowConfigReq := CmdShowConfigReq{
 		TiUPComponent: ClusterComponentTypeStr,
-		InstanceName: cmdEditInstanceConfigReq.InstanceName,
+		InstanceName:  cmdEditInstanceConfigReq.InstanceName,
 	}
-	cmdShowConfigResp, err := secondMicro.MicroSrvTiupShowConfig(ctx, &cmdShowConfigReq)
+	cmdShowConfigResp, err := manager.ClusterShowConfig(ctx, &cmdShowConfigReq)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("check orignal config error: %+v", err)
-		secondMicro.taskStatusCh <- TaskStatusMember{
+		manager.taskStatusCh <- TaskStatusMember{
 			TaskID:   rsp.Id,
 			Status:   TaskStatusError,
 			ErrorStr: fmt.Sprintln(err),
@@ -677,11 +679,11 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditInstanceConfig(ctx context.Conte
 	}
 	topo := cmdShowConfigResp.TiDBClusterTopo
 
-	secondMicro.startTiupEditInstanceConfigTask(ctx, rsp.Id, &cmdEditInstanceConfigReq, topo)
+	manager.startTiupEditInstanceConfigTask(ctx, rsp.Id, &cmdEditInstanceConfigReq, topo)
 	return rsp.Id, nil
 }
 
-func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Context, taskID uint64, req *CmdEditInstanceConfigReq, topo *spec2.Specification) {
+func (manager *SecondPartyManager) startTiupEditInstanceConfigTask(ctx context.Context, taskID uint64, req *CmdEditInstanceConfigReq, topo *spec2.Specification) {
 	switch req.TiDBClusterComponent {
 	case spec.TiDBClusterComponent_TiDB:
 		for idx, tiDBServer := range topo.TiDBServers {
@@ -807,20 +809,20 @@ func (secondMicro *SecondMicro) startTiupEditInstanceConfigTask(ctx context.Cont
 
 	cmdEditConfigReq := CmdEditConfigReq{
 		TiUPComponent: req.TiUPComponent,
-		InstanceName: req.InstanceName,
-		NewTopo: topo,
-		TimeoutS: req.TimeoutS,
-		Flags: req.Flags,
+		InstanceName:  req.InstanceName,
+		NewTopo:       topo,
+		TimeoutS:      req.TimeoutS,
+		Flags:         req.Flags,
 	}
-	secondMicro.startNewTiupEditConfigTask(ctx, cmdEditConfigReq, taskID)
+	manager.startNewTiupEditConfigTask(ctx, cmdEditConfigReq, taskID)
 }
 
-func (secondMicro *SecondMicro) startNewTiupEditConfigTask(ctx context.Context, req CmdEditConfigReq,
+func (manager *SecondPartyManager) startNewTiupEditConfigTask(ctx context.Context, req CmdEditConfigReq,
 	taskID uint64) {
 	newData, err := yaml.Marshal(req.NewTopo)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("startnewtiupeditconfigtask marshal new config(%+v) error: %+v", req.NewTopo, err)
-		secondMicro.taskStatusCh <- TaskStatusMember{
+		manager.taskStatusCh <- TaskStatusMember{
 			TaskID:   taskID,
 			Status:   TaskStatusError,
 			ErrorStr: fmt.Sprintf("startnewtiupeditconfigtask marshal new config(%+v) error: %+v", req.NewTopo, err),
@@ -830,7 +832,7 @@ func (secondMicro *SecondMicro) startNewTiupEditConfigTask(ctx context.Context, 
 
 	topologyTmpFilePath, err := newTmpFileWithContent("tidb-cluster-topology", newData)
 	if err != nil {
-		secondMicro.taskStatusCh <- TaskStatusMember{
+		manager.taskStatusCh <- TaskStatusMember{
 			TaskID:   taskID,
 			Status:   TaskStatusError,
 			ErrorStr: fmt.Sprintln(err),
@@ -840,44 +842,44 @@ func (secondMicro *SecondMicro) startNewTiupEditConfigTask(ctx context.Context, 
 	go func() {
 		//defer os.Remove(topologyTmpFilePath)
 		var args []string
-		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "--topology-file", topologyTmpFilePath)
+		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "-f", topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, secondMicro.TiupBinPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, manager.TiupBinPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvTiupReload(ctx context.Context, cmdReloadConfigReq CmdReloadConfigReq,
-	bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).Infof("microsrvtiupreload cmdreloadconfigreq: %v, bizid: %d", cmdReloadConfigReq, bizID)
-	req := dbPb.CreateTiupTaskRequest{
-		Type : dbPb.TiupTaskType_Reload,
-		BizID : bizID,
+func (manager *SecondPartyManager) ClusterReload(ctx context.Context, cmdReloadConfigReq CmdReloadConfigReq,
+	bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).Infof("microsrvtiupreload cmdreloadconfigreq: %v, bizid: %s", cmdReloadConfigReq, bizID)
+	req := dbPb.CreateTiupOperatorRecordRequest{
+		Type:  dbPb.TiupTaskType_Reload,
+		BizID: bizID,
 	}
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
 	}
-	secondMicro.startNewTiupReloadTask(ctx, rsp.Id, &cmdReloadConfigReq)
+	manager.startNewTiupReloadTask(ctx, rsp.Id, &cmdReloadConfigReq)
 	return rsp.Id, nil
 }
 
-func (secondMicro *SecondMicro) startNewTiupReloadTask(ctx context.Context, taskID uint64, req *CmdReloadConfigReq) {
+func (manager *SecondPartyManager) startNewTiupReloadTask(ctx context.Context, taskID uint64, req *CmdReloadConfigReq) {
 	go func() {
 		var args []string
 		args = append(args, string(req.TiUPComponent), "reload", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, secondMicro.TiupBinPath, args, req.TimeoutS)
+		<-manager.startNewTiupTask(ctx, taskID, manager.TiupBinPath, args, req.TimeoutS)
 	}()
 }
 
-func (secondMicro *SecondMicro) startNewTiupTask(ctx context.Context, taskID uint64, tiupPath string, tiupArgs []string, TimeoutS int) (exitCh chan struct{}) {
+func (manager *SecondPartyManager) startNewTiupTask(ctx context.Context, taskID uint64, tiupPath string, tiupArgs []string, TimeoutS int) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
 	logInFunc := framework.LogWithContext(ctx).WithField("task", taskID)
 	logInFunc.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", tiupPath, tiupArgs, TimeoutS))
-	secondMicro.taskStatusCh <- TaskStatusMember{
+	manager.taskStatusCh <- TaskStatusMember{
 		TaskID:   taskID,
 		Status:   TaskStatusProcessing,
 		ErrorStr: "",
@@ -902,7 +904,7 @@ func (secondMicro *SecondMicro) startNewTiupTask(ctx context.Context, taskID uin
 		t0 := time.Now()
 		if err := cmd.Start(); err != nil {
 			logInFunc.Errorf("cmd start err: %+v, errStr: %s", err, stderr.String())
-			secondMicro.taskStatusCh <- TaskStatusMember{
+			manager.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
 				ErrorStr: fmt.Sprintf("cmd start err: %+v, errStr: %s", err, stderr.String()),
@@ -912,7 +914,7 @@ func (secondMicro *SecondMicro) startNewTiupTask(ctx context.Context, taskID uin
 		logInFunc.Info("cmd started")
 		successFp := func() {
 			logInFunc.Info("task finished, time cost", time.Since(t0))
-			secondMicro.taskStatusCh <- TaskStatusMember{
+			manager.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusFinished,
 				ErrorStr: "",
@@ -931,7 +933,7 @@ func (secondMicro *SecondMicro) startNewTiupTask(ctx context.Context, taskID uin
 				}
 			}
 			logInFunc.Errorf("cmd wait return with err: %+v, errStr: %s, time cost: %v", err, stderr.String(), time.Since(t0))
-			secondMicro.taskStatusCh <- TaskStatusMember{
+			manager.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
 				ErrorStr: fmt.Sprintf("cmd wait return with err: %+v, errStr: %s, time cost: %v", err, stderr.String(), time.Since(t0)),

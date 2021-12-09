@@ -19,11 +19,10 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	management2 "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
-	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
+	management3 "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
 	"net/http"
 	"strconv"
 	"time"
@@ -60,7 +59,7 @@ type ClusterServiceHandler struct {
 	tenantManager     *user.TenantManager
 	userManager       *user.UserManager
 	changeFeedManager *changeFeedManager.Manager
-	ClusterManager    *management.ClusterManager
+	ClusterManager    *management3.ClusterManager
 }
 
 func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]byte, error)) {
@@ -86,19 +85,19 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 	request.GetOperator()
 	reqData := request.GetRequest()
 
-	task := &changefeed.CreateReq{}
+	req := &cluster.CreateChangeFeedTaskReq{}
 
-	err := json.Unmarshal([]byte(reqData), task)
+	err := json.Unmarshal([]byte(reqData), req)
 
 	if err != nil {
 		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
 		return nil
 	}
 
-	result, err := handler.changeFeedManager.Create(ctx, task.Name)
+	result, err := handler.changeFeedManager.Create(ctx, *req)
 
 	handleResponse(response, err, func() ([]byte, error) {
-		return json.Marshal(changefeed.CreateResp{
+		return json.Marshal(cluster.CreateChangeFeedTaskResp{
 			ID: result,
 		})
 	})
@@ -133,7 +132,7 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.tenantManager = user.NewTenantManager(adapt.MicroMetaDbRepo{})
 	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
 	handler.changeFeedManager = changeFeedManager.NewManager()
-	handler.ClusterManager = management.NewClusterManager()
+	handler.ClusterManager = management3.NewClusterManager()
 
 	domain.InitFlowMap()
 	return handler
@@ -650,7 +649,7 @@ func (c ClusterServiceHandler) SaveParameters(ctx context.Context, request *clus
 	//	framework.LogWithContext(ctx).Info(err)
 	//	return nil
 	//} else {
-	//	response.Status = SuccessResponseStatus
+	//	response.ChangeFeedStatus = SuccessResponseStatus
 	//	response.DisplayInfo = &clusterpb.DisplayStatusDTO{
 	//		InProcessFlowId: int32(clusterAggregation.CurrentWorkFlow.Id),
 	//	}

@@ -18,6 +18,7 @@ package changefeed
 import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/stretchr/testify/assert"
 	"os"
@@ -43,7 +44,15 @@ func TestMain(m *testing.M) {
 }
 
 func TestManager_Delete(t *testing.T) {
-	id, err := manager.Create(context.TODO(), "name")
+	id, err := manager.Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
+		ChangeFeedTask: cluster.ChangeFeedTask{
+			DownstreamType: "tidb",
+			Name: "name",
+			Downstream: cluster.TiDBDownstream{
+				MaxTxnRow: 4,
+			},
+		},
+	})
 	assert.NotEmpty(t, id)
 	assert.NoError(t, err)
 	err = manager.Delete(context.TODO(), id)
@@ -51,7 +60,15 @@ func TestManager_Delete(t *testing.T) {
 }
 
 func TestManager_Create(t *testing.T) {
-	id, err := manager.Create(context.TODO(), "name")
+	id, err := manager.Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
+		ChangeFeedTask: cluster.ChangeFeedTask{
+			DownstreamType: "mysql",
+			Name: "name",
+			Downstream: cluster.MysqlDownstream{
+				Username: "root",
+			},
+		},
+	})
 	assert.NotEmpty(t, id)
 	assert.NoError(t, err)
 }

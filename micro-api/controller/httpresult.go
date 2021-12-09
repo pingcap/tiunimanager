@@ -99,4 +99,3 @@ func SuccessWithPage(data interface{}, page Page) *ResultWithPage {
 func Fail(code int, message string) *CommonResult {
 	return &CommonResult{ResultMark{code, message}, struct{}{}}
 }
-

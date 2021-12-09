@@ -15,7 +15,13 @@
 
 package management
 
-import "github.com/pingcap-inc/tiem/models/common"
+import (
+	"encoding/json"
+	libCommon "github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models/common"
+	"gorm.io/gorm"
+)
 
 // ClusterInstance the component instances of cluster
 type ClusterInstance struct {
@@ -29,11 +35,46 @@ type ClusterInstance struct {
 	// instance resource info
 	CpuCores       int8
 	Memory         int8
-	HostID         string `gorm:"not null;type:varchar(22);default:null"`
+	HostID         string
 	Zone           string
 	Rack           string
-	HostIP         []string
-	Ports          []string
+	HostIP         []string `gorm:"-"`
+	Ports          []string `gorm:"-"`
 	DiskId         string
 	DiskPath       string
+
+	// marshal HostIP, never use
+	HostInfo	   string
+	// marshal PortInfo, never use
+	PortInfo	   string
+}
+
+func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {
+	p, jsonErr := json.Marshal(t.Ports)
+	if jsonErr == nil {
+		t.PortInfo = string(p)
+	} else {
+		return framework.NewTiEMErrorf(libCommon.TIEM_PARAMETER_INVALID, jsonErr.Error())
+	}
+
+	h, jsonErr := json.Marshal(t.HostIP)
+	if jsonErr == nil {
+		t.HostInfo = string(h)
+	} else {
+		return framework.NewTiEMErrorf(libCommon.TIEM_PARAMETER_INVALID, jsonErr.Error())
+	}
+	if len(t.ID) == 0 {
+		return t.Entity.BeforeCreate(tx)
+	}
+	return nil
+}
+
+func (t *ClusterInstance) AfterFind(tx *gorm.DB) (err error) {
+	if len(t.PortInfo) > 0 {
+		json.Unmarshal([]byte(t.PortInfo), t.Ports)
+	}
+	if len(t.HostInfo) > 0 {
+		json.Unmarshal([]byte(t.HostInfo), t.HostIP)
+	}
+	return nil
 }

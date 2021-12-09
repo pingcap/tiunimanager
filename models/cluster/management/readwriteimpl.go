@@ -66,7 +66,7 @@ func (g *GormClusterReadWrite) GetMeta(ctx context.Context, clusterID string) (c
 
 	instances = make([]*ClusterInstance, 0)
 
-	err = g.DB(ctx).Model(&ClusterInstance{}).Where("cluster_id = ?", clusterID).Find(instances).Error
+	err = g.DB(ctx).Model(&ClusterInstance{}).Where("cluster_id = ?", clusterID).Find(&instances).Error
 	return
 }
 
@@ -75,6 +75,16 @@ func (g *GormClusterReadWrite) UpdateInstance(ctx context.Context, instances ...
 }
 
 func (g *GormClusterReadWrite) UpdateBaseInfo(ctx context.Context, template *Cluster) error {
+	if "" == template.ID {
+		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+	}
+
+	_, err := g.Get(ctx, template.ID)
+
+	if err != nil {
+		return err
+	}
+
 	return g.DB(ctx).Save(template).Error
 }
 
@@ -125,13 +135,23 @@ func (g *GormClusterReadWrite) ClearMaintenanceStatus(ctx context.Context, clust
 		return err
 	}
 
-	if cluster.MaintenanceStatus == originalStatus {
+	if cluster.MaintenanceStatus != originalStatus {
 		return framework.SimpleError(common.TIEM_CLUSTER_MAINTENANCE_CONFLICT)
 	}
 
 	cluster.MaintenanceStatus = constants.ClusterMaintenanceNone
 
 	return g.DB(ctx).Save(cluster).Error
+}
+
+func (g *GormClusterReadWrite) CreateRelation(ctx context.Context, relation *ClusterRelation) error {
+	return g.DB(ctx).Create(relation).Error
+
+}
+
+func (g *GormClusterReadWrite) DeleteRelation(ctx context.Context, relationID uint) error {
+	relation := &ClusterRelation{}
+	return g.DB(ctx).First(relation, "id = ?", relationID).Delete(relation).Error
 }
 
 func NewGormClusterReadWrite(db *gorm.DB) *GormClusterReadWrite{

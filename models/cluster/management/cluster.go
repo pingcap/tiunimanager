@@ -16,23 +16,50 @@
 package management
 
 import (
+	"encoding/json"
 	"github.com/pingcap-inc/tiem/common/constants"
+	libCommon "github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/common"
+	"gorm.io/gorm"
 )
 
 type Cluster struct {
 	common.Entity
-	Name              string   `gorm:"not null;size:64;comment:'user name of the cluster''"`
-	DBUser            string   `gorm:"not null;size:64;comment:'user name of the database''"`
-	DBPassword        string   `gorm:"not null;size:64;comment:'user password of the database''"`
-	Type              string   `gorm:"not null;size:16;comment:'type of the cluster, eg. TiDB、TiDB Migration';"`
-	Version           string   `gorm:"not null;size:64;comment:'version of the cluster'"`
-	TLS               bool     `gorm:"default:false;comment:'whether to enable TLS, value: true or false'"`
-	Tags              []string `gorm:"comment:'cluster tag information'"`
-	OwnerId           string   `gorm:"not null:size:32;<-:create;->"`
-	ParameterGroupID  string   `gorm:"comment: parameter group id"`
-	Exclusive         bool
-	Region            string
-	CpuArchitecture   constants.ArchType
-	MaintenanceStatus constants.ClusterMaintenanceStatus
+	Name              string                             `gorm:"not null;size:64;comment:'user name of the cluster''"`
+	DBUser            string                             `gorm:"not null;size:64;comment:'user name of the database''"`
+	DBPassword        string                             `gorm:"not null;size:64;comment:'user password of the database''"`
+	Type              string                             `gorm:"not null;size:16;comment:'type of the cluster, eg. TiDB、TiDB Migration';"`
+	Version           string                             `gorm:"not null;size:64;comment:'version of the cluster'"`
+	TLS               bool                               `gorm:"default:false;comment:'whether to enable TLS, value: true or false'"`
+	Tags              []string                           `gorm:"-"`
+	TagInfo           string                             `gorm:"comment:'cluster tag information'"`
+	OwnerId           string                             `gorm:"not null:size:32;<-:create;->"`
+	ParameterGroupID  string                             `gorm:"comment: parameter group id"`
+	Copies            int                                `gorm:"comment: copies"`
+	Exclusive         bool                               `gorm:"comment: exclusive"`
+	Region            string                             `gorm:"comment: region location"`
+	CpuArchitecture   constants.ArchType                 `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`
+	MaintenanceStatus constants.ClusterMaintenanceStatus `gorm:"not null;type:varchar(64);comment:'user name of the cluster''"`
+}
+
+func (t *Cluster) BeforeSave(tx *gorm.DB) (err error) {
+	b, jsonErr := json.Marshal(t.Tags)
+	if jsonErr == nil {
+		t.TagInfo = string(b)
+	} else {
+		return framework.NewTiEMErrorf(libCommon.TIEM_PARAMETER_INVALID, jsonErr.Error())
+	}
+
+	if len(t.ID) == 0 {
+		return t.Entity.BeforeCreate(tx)
+	}
+	return nil
+}
+
+func (t *Cluster) AfterFind(tx *gorm.DB) (err error) {
+	if len(t.TagInfo) > 0 {
+		json.Unmarshal([]byte(t.TagInfo), t.Tags)
+	}
+	return nil
 }

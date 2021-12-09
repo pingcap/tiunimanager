@@ -30,7 +30,7 @@ type Entity struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 
 	TenantId string `gorm:"default:null;not null;<-:create"`
-	Status   string `gorm:"default:null"`
+	Status   string `gorm:""`
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {

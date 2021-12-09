@@ -73,7 +73,7 @@ func TestFlowReadWrite_QueryWorkFlows(t *testing.T) {
 	assert.NoError(t, errQuery)
 }
 
-func TestFlowReadWrite_UpdateWorkFlowStatus(t *testing.T) {
+func TestFlowReadWrite_UpdateWorkFlow(t *testing.T) {
 	flow := &WorkFlow{
 		Entity: common.Entity{
 			TenantId: "tenantId",

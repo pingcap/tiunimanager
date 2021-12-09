@@ -55,12 +55,12 @@ func (m *ImportExportReadWrite) UpdateDataTransportRecord(ctx context.Context, r
 		Update("end_time", endTime).Error
 }
 
-func (m *ImportExportReadWrite) GetDataTransportRecord(ctx context.Context, recorId string) (record *DataTransportRecord, err error) {
-	if "" == recorId {
+func (m *ImportExportReadWrite) GetDataTransportRecord(ctx context.Context, recordId string) (record *DataTransportRecord, err error) {
+	if "" == recordId {
 		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 	record = &DataTransportRecord{}
-	err = m.DB(ctx).First(record, "id = ?", recorId).Error
+	err = m.DB(ctx).First(record, "id = ?", recordId).Error
 	if err != nil {
 		return nil, framework.SimpleError(common.TIEM_TRANSPORT_RECORD_NOT_FOUND)
 	}

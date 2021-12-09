@@ -33,7 +33,7 @@ type ClusterInstance struct {
 	HostID         string `gorm:"not null;type:varchar(22);default:null"`
 	Zone           string
 	Rack           string
-	HostIP         string
+	HostIP         []string
 	Ports          []string
 	DiskId         string
 	DiskPath       string

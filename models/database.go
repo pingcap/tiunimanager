@@ -70,6 +70,9 @@ func (p *database) initTables() {
 	p.addTable(new(changefeed.ChangeFeedTask))
 	p.addTable(new(workflow.WorkFlow))
 	p.addTable(new(workflow.WorkFlowNode))
+	p.addTable(new(management.Cluster))
+	p.addTable(new(management.ClusterInstance))
+	p.addTable(new(management.ClusterRelation))
 
 	// other tables
 }

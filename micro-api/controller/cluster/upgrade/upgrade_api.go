@@ -88,3 +88,21 @@ func QueryUpgradeVersionDiffInfo(c *gin.Context) {
 			controller.DefaultTimeout)
 	}
 }
+
+func ClusterUpgrade(c *gin.Context) {
+	var req upgrade.ClusterUpgradeReq
+
+	requestBody, err := controller.HandleJsonRequestFromBody(c,
+		&req,
+		// append id in path to request
+		func(c *gin.Context, req interface{}) error {
+			req.(*upgrade.ClusterUpgradeReq).ClusterID = c.Param(paramNameOfClusterID)
+			return nil
+		})
+
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ClusterUpgrade, &upgrade.ClusterUpgradeRsp{},
+			requestBody,
+			controller.DefaultTimeout)
+	}
+}

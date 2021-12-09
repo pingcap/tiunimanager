@@ -26,6 +26,8 @@ package upgrade
 import (
 	"context"
 
+	"github.com/pingcap-inc/tiem/library/secondparty"
+
 	"github.com/pingcap-inc/tiem/apimodels/cluster/upgrade"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
@@ -91,4 +93,25 @@ func (p *Manager) QueryUpgradeVersionDiffInfo(ctx context.Context, clusterID str
 	var configDiffInfos []*upgrade.ConfigDiffInfo
 
 	return configDiffInfos, nil
+}
+
+func (p *Manager) ClusterUpgrade(ctx context.Context, req *upgrade.ClusterUpgradeReq) (string, error) {
+	cluster, err := domain.GetClusterDetail(ctx, req.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("failed to query upgrade version diff, %s", err.Error())
+		return "", framework.WrapError(common.TIEM_UPGRADE_FAILED, "failed to query upgrade version diff", err)
+	}
+
+	// TODO: get param for dst version, use parameters to apply it, and do upgrade cluster
+	framework.LogWithContext(ctx).Infof("TODO: get param for dst version, use parameters to apply it, and do upgrade cluster")
+
+	_, err = secondparty.Manager.ClusterUpgrade(
+		ctx, secondparty.ClusterComponentTypeStr, cluster.Cluster.ClusterName, req.TargetVersion, 0, []string{}, "WorkflowID",
+	)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("failed to upgrade cluster, %s", err.Error())
+		return "", framework.WrapError(common.TIEM_UPGRADE_FAILED, "failed to query upgrade version diff", err)
+	}
+
+	return "WorkflowID", nil
 }

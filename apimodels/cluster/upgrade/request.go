@@ -23,6 +23,8 @@
 
 package upgrade
 
+import "github.com/pingcap-inc/tiem/common/structs"
+
 type QueryUpgradePathReq struct {
 	ClusterID string `json:"ClusterId"`
 }
@@ -65,5 +67,5 @@ type ClusterUpgradeReq struct {
 }
 
 type ClusterUpgradeRsp struct {
-	AsyncTaskWorkFlowInfo
+	structs.AsyncTaskWorkFlowInfo
 }

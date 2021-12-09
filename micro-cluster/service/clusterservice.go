@@ -23,6 +23,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pingcap-inc/tiem/common/structs"
+
 	upgradeManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/upgrade"
 
 	"github.com/pingcap-inc/tiem/apimodels/cluster/changefeed"
@@ -409,6 +411,35 @@ func (handler *ClusterServiceHandler) QueryUpgradeVersionDiffInfo(ctx context.Co
 	handleResponse(response, err, func() ([]byte, error) {
 		rsp := upgrade.QueryUpgradeVersionDiffInfoRsp{
 			ConfigDiffInfos: result,
+		}
+		return json.Marshal(rsp)
+	})
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) ClusterUpgrade(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	request.GetOperator()
+	reqData := request.GetRequest()
+
+	req := &upgrade.ClusterUpgradeReq{}
+
+	err := json.Unmarshal([]byte(reqData), req)
+
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	result, err := handler.upgradeManager.ClusterUpgrade(ctx, req)
+	if err != nil {
+		handleResponse(response, err, nil)
+		return nil
+	}
+
+	handleResponse(response, err, func() ([]byte, error) {
+		rsp := upgrade.ClusterUpgradeRsp{
+			AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{WorkFlowID: result},
 		}
 		return json.Marshal(rsp)
 	})

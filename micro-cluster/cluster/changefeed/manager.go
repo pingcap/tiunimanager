@@ -17,6 +17,7 @@ package changefeed
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
@@ -43,11 +44,11 @@ func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTa
 		Entity: dbCommon.Entity{
 			TenantId: "1111",
 		},
-		//Name: name,
+		Name: request.Name,
+		Type: constants.DownstreamType(request.DownstreamType),
 		Downstream: changefeed.MysqlDownstream{
 			WorkerCount: 3,
 		},
-		//Type: changefeed.DownstreamTypeMysql,
 	}
 
 	task, err := models.GetChangeFeedReaderWriter().Create(ctx, task)

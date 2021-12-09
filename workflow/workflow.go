@@ -131,9 +131,9 @@ func GetWorkFlowManager() *WorkFlowManager {
 	return manager
 }
 
-func (mgr *WorkFlowManager) RegisterWorkFlow(ctx context.Context, flowName string, flowDefine *WorkFlowDefine) {
-	mgr.flowDefineMap.Store(flowName, flowDefine)
-	framework.LogWithContext(ctx).Infof("Register WorkFlow %s success, definition: %+v", flowName, flowDefine)
+func (mgr *WorkFlowManager) RegisterWorkFlow(ctx context.Context, flowDefine *WorkFlowDefine) {
+	mgr.flowDefineMap.Store(flowDefine.FlowName, flowDefine)
+	framework.LogWithContext(ctx).Infof("Register WorkFlow %s success, definition: %+v", flowDefine.FlowName, flowDefine)
 	return
 }
 

@@ -59,8 +59,23 @@ const (
 	ClusterMaintenanceUpgrading                    ClusterMaintenanceStatus = "Upgrading"
 	ClusterMaintenanceSwitching                    ClusterMaintenanceStatus = "Switching"
 	ClusterMaintenanceModifyParameterAndRestarting ClusterMaintenanceStatus = "ModifyParameterRestarting"
-
 	ClusterMaintenanceNone                    	   ClusterMaintenanceStatus = ""
+)
+
+const (
+	FlowCreateCluster    = "CreateCluster"
+	FlowDeleteCluster    = "DeleteCluster"
+	FlowBackupCluster    = "BackupCluster"
+	FlowRecoverCluster   = "RecoverCluster"
+	FlowModifyParameters = "ModifyParameters"
+	FlowExportData       = "ExportData"
+	FlowImportData       = "ImportData"
+	FlowRestartCluster   = "RestartCluster"
+	FlowStopCluster      = "StopCluster"
+	FlowTakeoverCluster  = "TakeoverCluster"
+	FlowBuildLogConfig   = "BuildLogConfig"
+	FlowScaleOutCluster  = "ScaleOutCluster"
+	FlowScaleInCluster   = "ScaleInCluster"
 )
 
 type ClusterBackupStatus string
@@ -81,6 +96,15 @@ const (
 	ClusterRelationStandBy     ClusterRelationType = "StandBy"
 	ClusterRelationCloneFrom   ClusterRelationType = "CloneFrom"
 	ClusterRelationRecoverFrom ClusterRelationType = "RecoverFrom"
+)
+
+type ClusterCloneStrategy string
+
+// Definition cluster clone strategy
+const (
+	EmptyDataClone ClusterCloneStrategy = "Empty"
+	SnapShotClone  ClusterCloneStrategy = "Snapshot"
+	SyncDataClone  ClusterCloneStrategy = "Sync"
 )
 
 type BackupType string

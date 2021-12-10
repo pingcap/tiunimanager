@@ -190,89 +190,47 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 }
 
 func (handler *ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	framework.LogWithContext(ctx).Info("scale out cluster")
-	request := &cluster.ScaleOutClusterReq{}
-	if err := json.Unmarshal([]byte(req.Request), request); err != nil {
-		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-		resp.Message = err.Error()
-		return err
-	}
-	// HandleRequest
+	start := time.Now()
+	defer handleMetrics(start, "ScaleOutCluster", int(resp.GetCode()))
 
-	response, err := handler.clusterManager.ScaleOut(ctx, request)
-	if err != nil {
-		resp.Code = int32(err.(framework.TiEMError).GetCode())
-		resp.Message = err.(framework.TiEMError).GetMsg()
-		return err
-	}
+	request := cluster.ScaleOutClusterReq{}
 
-	// handle response
-	body, err := json.Marshal(*response)
-	if err != nil {
-		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-		resp.Message = err.Error()
-		return err
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.clusterManager.ScaleOut(ctx, &request)
+
+		handleResponse(ctx, resp, err, *result, nil)
 	}
-	resp.Code = int32(common.TIEM_SUCCESS)
-	resp.Response = string(body)
-	// HandleResponse
 
 	return nil
 }
 
 func (handler *ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	framework.LogWithContext(ctx).Info("scale in cluster")
-	request := &cluster.ScaleInClusterReq{}
-	if err := json.Unmarshal([]byte(req.Request), request); err != nil {
-		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-		resp.Message = err.Error()
-		return err
+	start := time.Now()
+	defer handleMetrics(start, "ScaleInCluster", int(resp.GetCode()))
+
+	request := cluster.ScaleInClusterReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.clusterManager.ScaleIn(ctx, &request)
+
+		handleResponse(ctx, resp, err, *result, nil)
 	}
 
-	response, err := handler.clusterManager.ScaleIn(ctx, request)
-	if err != nil {
-		resp.Code = int32(err.(framework.TiEMError).GetCode())
-		resp.Message = err.(framework.TiEMError).GetMsg()
-		return err
-	}
-
-	// handle response
-	body, err := json.Marshal(*response)
-	if err != nil {
-		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-		resp.Message = err.Error()
-		return err
-	}
-	resp.Code = int32(common.TIEM_SUCCESS)
-	resp.Response = string(body)
 	return nil
 }
 
 func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
-	framework.LogWithContext(ctx).Info("clone cluster")
-	request := &cluster.CloneClusterReq{}
-	if err := json.Unmarshal([]byte(req.Request), request); err != nil {
-		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-		resp.Message = err.Error()
-		return err
+	start := time.Now()
+	defer handleMetrics(start, "CloneCluster", int(resp.GetCode()))
+
+	request := cluster.CloneClusterReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.clusterManager.Clone(ctx, &request)
+
+		handleResponse(ctx, resp, err, *result, nil)
 	}
 
-	response, err := handler.clusterManager.Clone(ctx, request)
-	if err != nil {
-		resp.Code = int32(err.(framework.TiEMError).GetCode())
-		resp.Message = err.(framework.TiEMError).GetMsg()
-		return err
-	}
-
-	// handle response
-	body, err := json.Marshal(*response)
-	if err != nil {
-		resp.Code = int32(common.TIEM_PARAMETER_INVALID)
-		resp.Message = err.Error()
-		return err
-	}
-	resp.Code = int32(common.TIEM_SUCCESS)
-	resp.Response = string(body)
 	return nil
 }
 

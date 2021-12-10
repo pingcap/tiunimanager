@@ -48,13 +48,13 @@ func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterRe
 	}
 
 	// start flow of creating, and get flowID
-	flow, err := workflow.GetWorkFlowManager().CreateWorkFlow(ctx, meta.GetID(), createClusterFlow.FlowName)
+	flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.GetID(), createClusterFlow.FlowName)
 
 	if err != nil {
 		return resp, err
 	}
 
-	err = workflow.GetWorkFlowManager().AsyncStart(ctx, flow)
+	err = workflow.GetWorkFlowService().AsyncStart(ctx, flow)
 	if err != nil {
 		return resp, err
 	}
@@ -79,8 +79,8 @@ func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (
 }
 
 func Init() {
-	f := workflow.GetWorkFlowManager()
-	f.RegisterWorkFlow(context.TODO(), createClusterFlow)
+	f := workflow.GetWorkFlowService()
+	f.RegisterWorkFlow(context.TODO(), createClusterFlow.FlowName, createClusterFlow)
 }
 
 func buildClusterForCreate(ctx context.Context, p structs.CreateClusterParameter) management.Cluster {

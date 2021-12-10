@@ -64,6 +64,9 @@ func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterRe
 	return
 }
 
+var stopClusterFlow = &workflow.WorkFlowDefine {
+	// define
+}
 func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (resp cluster.StopClusterResp, err error) {
 	meta, err := handler.Get(ctx, req.ClusterID)
 
@@ -75,6 +78,14 @@ func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (
 	// start flow of stopping, and get flowID
 	flowID := ""
 	resp.WorkFlowID = flowID
+	return
+}
+
+func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterReq) (resp cluster.DeleteClusterResp, err error) {
+	return
+}
+
+func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartClusterReq) (resp cluster.RestartClusterResp, err error) {
 	return
 }
 

@@ -174,7 +174,6 @@ func (g *GormClusterReadWrite) ClearMaintenanceStatus(ctx context.Context, clust
 	return dbCommon.WrapDBError(err)
 }
 
-
 func (g *GormClusterReadWrite) CreateRelation(ctx context.Context, relation *ClusterRelation) error {
 	err := g.DB(ctx).Create(relation).Error
 	return dbCommon.WrapDBError(err)

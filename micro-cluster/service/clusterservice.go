@@ -19,10 +19,13 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
+	clusterManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
+
 	"github.com/pingcap-inc/tiem/workflow"
 	"net/http"
 	"strconv"
@@ -60,6 +63,7 @@ type ClusterServiceHandler struct {
 	tenantManager     *user.TenantManager
 	userManager       *user.UserManager
 	changeFeedManager *changeFeedManager.Manager
+	clusterManager    *clusterManager.Manager
 }
 
 func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]byte, error)) {
@@ -162,23 +166,28 @@ func handleMetrics(start time.Time, funcName string, code int) {
 		Inc()
 }
 
-func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb.ClusterCreateReqDTO, resp *clusterpb.ClusterCreateRespDTO) (err error) {
-	framework.LogWithContext(ctx).Info("create cluster")
-	clusterAggregation, err := domain.CreateCluster(ctx, req.GetOperator(), req.GetCluster(), req.GetCommonDemand(), req.GetDemands())
+func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+	request := cluster.CreateClusterReq{}
 
+	err = json.Unmarshal([]byte(req.GetRequest()), &request)
 	if err != nil {
-		framework.LogWithContext(ctx).Info(err)
-		resp.RespStatus = BizErrorResponseStatus
-		resp.RespStatus.Message = err.Error()
-		return nil
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.ClusterId = clusterAggregation.Cluster.Id
-		resp.BaseInfo = clusterAggregation.ExtractBaseInfoDTO()
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
-
+		framework.LogWithContext(ctx).Errorf("CreateCluster unmarshal request error, request = %s, err = %s", req.GetRequest(), err.Error())
+		handleResponse(resp, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
 		return nil
 	}
+
+	result, err := c.clusterManager.CreateCluster(ctx, request)
+
+	handleResponse(resp, err, func() ([]byte, error) {
+		return json.Marshal(cluster.CreateClusterResp{
+			ClusterID: result.ClusterID,
+			AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
+				WorkFlowID: result.WorkFlowID,
+			},
+		})
+	})
+
+	return nil
 }
 
 func (c ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *clusterpb.ScaleOutRequest, resp *clusterpb.ScaleOutResponse) (err error) {
@@ -261,55 +270,74 @@ func (c ClusterServiceHandler) QueryCluster(ctx context.Context, req *clusterpb.
 	return
 }
 
-func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.ClusterDeleteReqDTO, resp *clusterpb.ClusterDeleteRespDTO) (err error) {
-	framework.LogWithContext(ctx).Info("delete cluster")
+func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+	request := cluster.DeleteClusterReq{}
 
-	clusterAggregation, err := domain.DeleteCluster(ctx, req.GetOperator(), req.GetClusterId())
+	err = json.Unmarshal([]byte(req.GetRequest()), &request)
 	if err != nil {
-		// todo
-		framework.LogWithContext(ctx).Info(err)
-		return nil
-	} else {
-		resp.RespStatus = SuccessResponseStatus
-		resp.ClusterId = clusterAggregation.Cluster.Id
-		resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+		framework.LogWithContext(ctx).Errorf("DeleteCluster unmarshal request error, request = %s, err = %s", req.GetRequest(), err.Error())
+		handleResponse(resp, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
 		return nil
 	}
-}
 
-func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.ClusterRestartReqDTO, resp *clusterpb.ClusterRestartRespDTO) (err error) {
-	framework.LogWithContext(ctx).Info("restart cluster")
-	start := time.Now()
-	defer handleMetrics(start, "RestartCluster", int(resp.GetRespStatus().GetCode()))
+	result, err := c.clusterManager.DeleteCluster(ctx, request)
 
-	clusterAggregation, err := domain.RestartCluster(ctx, req.GetOperator(), req.GetClusterId())
-	if err != nil {
-		resp.RespStatus = BizErrorResponseStatus
-		resp.RespStatus.Message = err.Error()
-		framework.LogWithContext(ctx).Error(err)
-		return nil
-	}
-	resp.RespStatus = SuccessResponseStatus
-	resp.ClusterId = clusterAggregation.Cluster.Id
-	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+	handleResponse(resp, err, func() ([]byte, error) {
+		return json.Marshal(cluster.DeleteClusterResp{
+			ClusterID: result.ClusterID,
+			AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
+				WorkFlowID: result.WorkFlowID,
+			},
+		})
+	})
+
 	return nil
 }
 
-func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.ClusterStopReqDTO, resp *clusterpb.ClusterStopRespDTO) (err error) {
-	framework.LogWithContext(ctx).Info("stop cluster")
-	start := time.Now()
-	defer handleMetrics(start, "StopCluster", int(resp.GetRespStatus().GetCode()))
+func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+	request := cluster.RestartClusterReq{}
 
-	clusterAggregation, err := domain.StopCluster(ctx, req.GetOperator(), req.GetClusterId())
+	err = json.Unmarshal([]byte(req.GetRequest()), &request)
 	if err != nil {
-		resp.RespStatus = BizErrorResponseStatus
-		resp.RespStatus.Message = err.Error()
-		framework.LogWithContext(ctx).Error(err)
+		framework.LogWithContext(ctx).Errorf("RestartCluster unmarshal request error, request = %s, err = %s", req.GetRequest(), err.Error())
+		handleResponse(resp, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
 		return nil
 	}
-	resp.RespStatus = SuccessResponseStatus
-	resp.ClusterId = clusterAggregation.Cluster.Id
-	resp.ClusterStatus = clusterAggregation.ExtractStatusDTO()
+
+	result, err := c.clusterManager.RestartCluster(ctx, request)
+
+	handleResponse(resp, err, func() ([]byte, error) {
+		return json.Marshal(cluster.DeleteClusterResp{
+			ClusterID: result.ClusterID,
+			AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
+				WorkFlowID: result.WorkFlowID,
+			},
+		})
+	})
+
+	return nil
+}
+
+func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) (err error) {
+	request := cluster.StopClusterReq{}
+
+	err = json.Unmarshal([]byte(req.GetRequest()), &request)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("StopCluster unmarshal request error, request = %s, err = %s", req.GetRequest(), err.Error())
+		handleResponse(resp, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	result, err := c.clusterManager.StopCluster(ctx, request)
+
+	handleResponse(resp, err, func() ([]byte, error) {
+		return json.Marshal(cluster.StopClusterResp{
+			ClusterID: result.ClusterID,
+			AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
+				WorkFlowID: result.WorkFlowID,
+			},
+		})
+	})
 
 	return nil
 }

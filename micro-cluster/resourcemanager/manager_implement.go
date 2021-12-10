@@ -20,11 +20,13 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
 )
 
 type ResourceManager struct {
 	resourcePool *resourcepool.ResourcePool
+	management   *management.Management
 }
 
 func NewResourceManager() *ResourceManager {

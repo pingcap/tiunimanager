@@ -62,8 +62,8 @@ service ClusterService {
     rpc GetStocks(GetStocksRequest) returns (GetStocksResponse);
 
     // task manager
-    rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);
-    rpc DetailFlow(DetailFlowRequest) returns (DetailFlowsResponse);
+    rpc ListFlows(RpcRequest) returns (RpcResponse);
+    rpc DetailFlow(RpcRequest) returns (RpcResponse);
 
     // Param Group & Cluster Params
     rpc CreateParamGroup(CreateParamGroupRequest) returns (CreateParamGroupResponse);

@@ -270,26 +270,14 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context) *ClusterMeta {
 	return nil
 }
 
-func (p *ClusterMeta) T(ctx context.Context, maintenanceStatus constants.ClusterMaintenanceStatus) error {
+func (p *ClusterMeta) TryMaintenance(ctx context.Context, maintenanceStatus constants.ClusterMaintenanceStatus) error {
 	// check Maintenance status
 	if true {
-		p.cluster.MaintenanceStatus = maintenanceStatus
+		p.Cluster.MaintenanceStatus = maintenanceStatus
 		return nil
 	} else {
 		return framework.NewTiEMError(common.TIEM_TASK_CONFLICT, "// todo")
 	}
-}
-
-func (p *ClusterMeta) GetCluster() *management.Cluster {
-	return p.cluster
-}
-
-func (p *ClusterMeta) GetID() string {
-	return p.cluster.ID
-}
-
-func (p *ClusterMeta) GetInstances() []*management.ClusterInstance {
-	return p.instances
 }
 
 func (p *ClusterMeta) GetDeployConfig() string {
@@ -315,12 +303,12 @@ func (p *ClusterMeta) GetMonitorAddresses() []string {
 }
 
 func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
-	cluster, instances, err := models.GetClusterReaderWriter().GetMeta(ctx, clusterID)
+	cluster, _, err := models.GetClusterReaderWriter().GetMeta(ctx, clusterID)
 	// todo
 	if err != nil {
 		return &ClusterMeta{
-			cluster: cluster,
-			instances: instances,
+			Cluster: cluster,
+			//Instances: instances,
 		}, err
 	}
 

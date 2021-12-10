@@ -19,10 +19,12 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	management2 "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	changeFeedManager "github.com/pingcap-inc/tiem/micro-cluster/cluster/changefeed"
 	management3 "github.com/pingcap-inc/tiem/micro-cluster/cluster/management"
+	"github.com/pingcap-inc/tiem/workflow"
 	"net/http"
 	"strconv"
 	"time"
@@ -82,7 +84,6 @@ func handleResponse(resp *clusterpb.RpcResponse, err error, getData func() ([]by
 }
 
 func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	request.GetOperator()
 	reqData := request.GetRequest()
 
 	req := &cluster.CreateChangeFeedTaskReq{}
@@ -694,71 +695,76 @@ func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clu
 	return nil
 }
 
-func (c ClusterServiceHandler) ListFlows(ctx context.Context, req *clusterpb.ListFlowsRequest, response *clusterpb.ListFlowsResponse) (err error) {
-	flows, total, err := domain.TaskRepo.ListFlows(ctx, req.BizId, req.Keyword, int(req.Status), int(req.Page.Page), int(req.Page.PageSize))
+func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	framework.LogWithContext(ctx).Info("list flows")
+	reqData := request.GetRequest()
+
+	listReq := &message.QueryWorkFlowsReq{}
+	err := json.Unmarshal([]byte(reqData), listReq)
 	if err != nil {
-		framework.LogWithContext(ctx).Error(err)
-		return err
+		framework.LogWithContext(ctx).Errorf("json unmarshal reuqest failed %s", err.Error())
+		handleResponse(response, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, err.Error()), nil)
+		return nil
 	}
 
-	response.Status = SuccessResponseStatus
-	response.Page = &clusterpb.PageDTO{
-		Page:     req.Page.Page,
-		PageSize: req.Page.PageSize,
-		Total:    int32(total),
+	manager := workflow.GetWorkFlowService()
+	flows, total, err := manager.ListWorkFlows(ctx, listReq.BizID, listReq.FlowName, listReq.Status, listReq.Page, listReq.PageSize)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("call workflow manager list flows failed %s", err.Error())
+		handleResponse(response, framework.NewTiEMError(common.TIEM_LIST_WORKFLOW_FAILED, err.Error()), nil)
+		return nil
 	}
 
-	response.Flows = make([]*clusterpb.FlowDTO, len(flows))
-	for i, v := range flows {
-		response.Flows[i] = &clusterpb.FlowDTO{
-			Id:          int64(v.Id),
-			FlowName:    v.FlowName,
-			StatusAlias: v.StatusAlias,
-			BizId:       v.BizId,
-			Status:      int32(v.Status),
-			StatusName:  v.Status.Display(),
-			CreateTime:  v.CreateTime.Unix(),
-			UpdateTime:  v.UpdateTime.Unix(),
-			Operator: &clusterpb.OperatorDTO{
-				Name:           v.Operator.Name,
-				Id:             v.Operator.Id,
-				TenantId:       v.Operator.TenantId,
-				ManualOperator: v.Operator.ManualOperator,
-			},
+	listResp := message.QueryWorkFlowsResp{
+		WorkFlows: flows,
+	}
+	data, err := json.Marshal(listResp)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("json marshal response failed %s", err.Error())
+		handleResponse(response, framework.NewTiEMError(common.TIEM_LIST_WORKFLOW_FAILED, err.Error()), nil)
+	} else {
+		response.Code = int32(common.TIEM_SUCCESS)
+		response.Response = string(data)
+		response.Page = &clusterpb.RpcPage{
+			Page:     int32(listReq.Page),
+			PageSize: int32(listReq.PageSize),
+			Total:    int32(total),
 		}
 	}
-	return err
+
+	return nil
 }
 
-func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *clusterpb.DetailFlowRequest, response *clusterpb.DetailFlowsResponse) error {
-	flowwork, err := domain.TaskRepo.Load(ctx, uint(request.FlowId))
-	if e, ok := err.(framework.TiEMError); ok {
-		response.Status = &clusterpb.ResponseStatusDTO{
-			Code:    int32(e.GetCode()),
-			Message: e.GetMsg(),
-		}
+func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
+	framework.LogWithContext(ctx).Info("detail flow")
+	reqData := request.GetRequest()
+
+	detailReq := &message.QueryWorkFlowDetailReq{}
+	err := json.Unmarshal([]byte(reqData), detailReq)
+	if err != nil {
+		handleResponse(response, framework.SimpleError(common.TIEM_PARAMETER_INVALID), nil)
+		return nil
+	}
+
+	manager := workflow.GetWorkFlowService()
+	flowDetail, err := manager.DetailWorkFlow(ctx, detailReq.WorkFlowID)
+	if err != nil {
+		handleResponse(response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil)
+		return nil
+	}
+
+	detailResp := message.QueryWorkFlowDetailResp{
+		Info:      flowDetail.Flow,
+		NodeInfo:  flowDetail.Nodes,
+		NodeNames: flowDetail.NodeNames,
+	}
+
+	data, err := json.Marshal(detailResp)
+	if err != nil {
+		handleResponse(response, framework.NewTiEMError(common.TIEM_DETAIL_WORKFLOW_FAILED, err.Error()), nil)
 	} else {
-		response.Status = SuccessResponseStatus
-		response.Flow = &clusterpb.FlowWithTaskDTO{
-			Flow: &clusterpb.FlowDTO{
-				Id:          int64(flowwork.FlowWork.Id),
-				FlowName:    flowwork.FlowWork.FlowName,
-				StatusAlias: flowwork.FlowWork.StatusAlias,
-				BizId:       flowwork.FlowWork.BizId,
-				Status:      int32(flowwork.FlowWork.Status),
-				StatusName:  flowwork.FlowWork.Status.Display(),
-				CreateTime:  flowwork.FlowWork.CreateTime.Unix(),
-				UpdateTime:  flowwork.FlowWork.UpdateTime.Unix(),
-				Operator: &clusterpb.OperatorDTO{
-					Name:           flowwork.FlowWork.Operator.Name,
-					Id:             flowwork.FlowWork.Operator.Id,
-					TenantId:       flowwork.FlowWork.Operator.TenantId,
-					ManualOperator: flowwork.FlowWork.Operator.ManualOperator,
-				},
-			},
-			TaskDef: flowwork.GetAllTaskDef(),
-			Tasks:   flowwork.ExtractTaskDTO(),
-		}
+		response.Code = int32(common.TIEM_SUCCESS)
+		response.Response = string(data)
 	}
 
 	return nil

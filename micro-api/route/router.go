@@ -152,12 +152,12 @@ func Route(g *gin.Engine) {
 			changeFeeds.GET("/", changefeed2.Query)
 		}
 
-		flowworks := apiV1.Group("/flowworks")
+		flowworks := apiV1.Group("/workflow")
 		{
 			flowworks.Use(interceptor.VerifyIdentity)
 			flowworks.Use(interceptor.AuditLog())
 			flowworks.GET("/", flowtaskApi.Query)
-			flowworks.GET("/:flowWorkId", flowtaskApi.Detail)
+			flowworks.GET("/:workFlowId", flowtaskApi.Detail)
 		}
 
 		host := apiV1.Group("/resources")

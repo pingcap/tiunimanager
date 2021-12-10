@@ -45,7 +45,7 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 }
 
 func NewClusterManager() *ClusterManager {
-	workflowManager := workflow.GetWorkFlowManager()
+	workflowManager := workflow.GetWorkFlowService()
 
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowScaleOutCluster, &scaleOutDefine)
 	return &ClusterManager{}
@@ -82,7 +82,7 @@ func (manager *ClusterManager) ScaleOut(ctx context.Context, request *cluster.Sc
 	}
 
 	// Create the workflow to scale out a cluster
-	workflowManager := workflow.GetWorkFlowManager()
+	workflowManager := workflow.GetWorkFlowService()
 	flow, err := workflowManager.CreateWorkFlow(ctx, clusterMeta.Cluster.ID, constants.FlowScaleOutCluster)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create workflow error: %s", err.Error())
@@ -124,21 +124,42 @@ func (manager *ClusterManager) Clone(ctx context.Context, request *cluster.Clone
 	return nil, nil
 }
 
-/*
+
 type Manager struct {}
 
+var createClusterFlow = &workflow.WorkFlowDefine {
+	// define
+}
+
+// CreateCluster
+// @Description: See createClusterFlow
+// @Receiver p
+// @Parameter ctx
+// @Parameter req
+// @return resp
+// @return err
 func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterReq) (resp cluster.CreateClusterResp, err error) {
-	meta, err := handler.Create(ctx, buildClusterForCreate(ctx, req.CreateClusterParameter))
-	meta.ScaleOut(ctx, buildInstances(req.ResourceParameter))
+	//meta, err := handler.Create(ctx, buildClusterForCreate(ctx, req.CreateClusterParameter))
+	//meta.ScaleOut(ctx, buildInstances(req.ResourceParameter))
 
 	if err != nil {
-		// wrap error
 		return resp, err
 	}
 
 	// start flow of creating, and get flowID
-	flowID := ""
-	resp.WorkFlowID = flowID
+	//flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.GetID(), createClusterFlow.FlowName)
+
+	if err != nil {
+		return resp, err
+	}
+
+	//err = workflow.GetWorkFlowService().AsyncStart(ctx, flow)
+	if err != nil {
+		return resp, err
+	}
+
+	//resp.ClusterID = meta.GetID()
+	//resp.WorkFlowID = flow.Flow.ID
 	return
 }
 
@@ -156,29 +177,8 @@ func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (
 	return
 }
 
-func buildClusterForCreate(ctx context.Context, p structs.CreateClusterParameter) management.Cluster {
-	return management.Cluster{
-		Entity: common.Entity{
-			// todo replace
-			TenantId: ctx.Value("TENANT_ID").(string),
-		},
-		Name:            p.Name,
-		DBUser:          p.DBUser,
-		DBPassword:      p.DBPassword,
-		Type:            p.Type,
-		Version:         p.Version,
-		TLS:             p.TLS,
-		Tags:            p.Tags,
-		// todo replace
-		OwnerId:          ctx.Value("OPERATOR_ID").(string),
-		Exclusive:       p.Exclusive,
-		Region:          p.Region,
-		CpuArchitecture: constants.ArchType(p.CpuArchitecture),
-	}
+func Init() {
+	f := workflow.GetWorkFlowService()
+	f.RegisterWorkFlow(context.TODO(), createClusterFlow.FlowName, createClusterFlow)
 }
 
-func buildInstances(p []structs.ClusterResourceParameter) []*management.ClusterInstance {
-	// todo
-	return nil
-}
-*/

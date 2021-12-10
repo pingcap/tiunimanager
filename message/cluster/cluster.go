@@ -111,14 +111,14 @@ type RestoreNewClusterResp struct {
 	ClusterID                     string `json:"clusterID"`
 }
 
-//RestoreOldClusterReq Restore to a old cluster message using the backup file
-type RestoreOldClusterReq struct {
+//RestoreExistClusterReq Restore to exist cluster message using the backup file
+type RestoreExistClusterReq struct {
 	ClusterID string `json:"clusterID"`
 	BackupID  string `json:"backupID"`
 }
 
-//RestoreOldClusterResp Restore to a new cluster using the backup file Reply Message
-type RestoreOldClusterResp struct {
+//RestoreExistClusterResp Restore to exist cluster using the backup file Reply Message
+type RestoreExistClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
 	ClusterID                     string `json:"clusterID"`
 }

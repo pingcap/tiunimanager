@@ -34,7 +34,7 @@ type ReaderWriter interface {
 	//  @param instances
 	//  @return error
 	//
-	UpdateInstance(ctx context.Context, instances ...ClusterInstance) error
+	UpdateInstance(ctx context.Context, instances ...*ClusterInstance) error
 
 	//
 	// UpdateBaseInfo update cluster base info
@@ -55,6 +55,7 @@ type ReaderWriter interface {
 	//
 	UpdateStatus(ctx context.Context, clusterID string, status constants.ClusterRunningStatus) error
 
+
 	//
 	// SetMaintenanceStatus
 	//  @Description:
@@ -74,4 +75,7 @@ type ReaderWriter interface {
 	//  @return error
 	//
 	ClearMaintenanceStatus(ctx context.Context, clusterID string, originalStatus constants.ClusterMaintenanceStatus) error
+
+	CreateRelation(ctx context.Context, relation *ClusterRelation) error
+	DeleteRelation(ctx context.Context, relationID uint) error
 }

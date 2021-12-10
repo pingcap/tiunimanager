@@ -15,7 +15,14 @@
 
 package management
 
-import "github.com/pingcap-inc/tiem/models/common"
+import (
+	"encoding/json"
+	"github.com/pingcap-inc/tiem/common/constants"
+	libCommon "github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/models/common"
+	"gorm.io/gorm"
+)
 
 // ClusterInstance the component instances of cluster
 type ClusterInstance struct {
@@ -29,13 +36,61 @@ type ClusterInstance struct {
 	DiskCapacity int32
 
 	// instance resource info
-	CpuCores int8
-	Memory   int8
-	HostID   string `gorm:"not null;type:varchar(22);default:null"`
-	Zone     string
-	Rack     string
-	HostIP   []string
-	Ports    []int32
-	DiskID   string
-	DiskPath string
+	CpuCores       int8
+	Memory         int8
+	HostID         string
+	Zone           string
+	Rack           string
+	HostIP         []string `gorm:"-"`
+	Ports          []int32 `gorm:"-"`
+	DiskID         string
+	DiskPath       string
+
+	// marshal HostIP, never use
+	HostInfo	   string `gorm:"type:varchar(128)"`
+	// marshal PortInfo, never use
+	PortInfo	   string `gorm:"type:varchar(128)"`
+}
+
+func (t *ClusterInstance) BeforeSave(tx *gorm.DB) (err error) {
+	if t.Status == "" {
+		t.Status = string(constants.ClusterInitializing)
+	}
+
+	if t.Ports == nil {
+		t.Ports = make([]int32, 0)
+	}
+	p, jsonErr := json.Marshal(t.Ports)
+	if jsonErr == nil {
+		t.PortInfo = string(p)
+	} else {
+		return framework.NewTiEMErrorf(libCommon.TIEM_PARAMETER_INVALID, jsonErr.Error())
+	}
+
+	if t.HostIP == nil {
+		t.HostIP = make([]string, 0)
+	}
+	h, jsonErr := json.Marshal(t.HostIP)
+	if jsonErr == nil {
+		t.HostInfo = string(h)
+	} else {
+		return framework.NewTiEMErrorf(libCommon.TIEM_PARAMETER_INVALID, jsonErr.Error())
+	}
+
+	if len(t.ID) == 0 {
+		return t.Entity.BeforeCreate(tx)
+	}
+	return nil
+}
+
+func (t *ClusterInstance) AfterFind(tx *gorm.DB) (err error) {
+	if len(t.PortInfo) > 0 {
+		t.Ports = make([]int32, 0)
+		err = json.Unmarshal([]byte(t.PortInfo), &t.Ports)
+	}
+	if err == nil && len(t.HostInfo) > 0 {
+		t.HostIP = make([]string, 0)
+		err = json.Unmarshal([]byte(t.HostInfo), &t.HostIP)
+	}
+	return err
 }

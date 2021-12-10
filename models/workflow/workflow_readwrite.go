@@ -124,7 +124,7 @@ func (m *WorkFlowReadWrite) QueryDetailWorkFlow(ctx context.Context, flowId stri
 	}
 
 	err = m.DB(ctx).Where("parent_id = ?", flowId).Find(&nodes).Error
-	if err != nil {
+	if err != nil && gorm.ErrRecordNotFound != err {
 		return nil, nil, err
 	}
 	return flow, nodes, nil

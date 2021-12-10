@@ -33,11 +33,6 @@ func TestMain(m *testing.M) {
 
 	logins := framework.LogForkFile(common.LogFileSystem)
 
-	defer func() {
-		os.RemoveAll(testFilePath)
-		os.Remove(testFilePath)
-	}()
-
 	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
 			dbFile := testFilePath + common.DBDirPrefix + common.SqliteFileName
@@ -54,6 +49,8 @@ func TestMain(m *testing.M) {
 			return nil
 		},
 	)
-
-	os.Exit(m.Run())
+	code := m.Run()
+	os.RemoveAll("testdata/")
+	os.RemoveAll("logs/")
+	os.Exit(code)
 }

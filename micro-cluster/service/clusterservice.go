@@ -191,6 +191,7 @@ func (handler *ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *
 		resp.Message = err.Error()
 		return err
 	}
+	// HandleRequest
 
 	response, err := handler.ClusterManager.ScaleOut(ctx, request)
 	if err != nil {
@@ -208,6 +209,7 @@ func (handler *ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *
 	}
 	resp.Code = int32(common.TIEM_SUCCESS)
 	resp.Response = string(body)
+	// HandleResponse
 
 	return nil
 }

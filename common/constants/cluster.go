@@ -59,13 +59,13 @@ const (
 	ClusterMaintenanceUpgrading                    ClusterMaintenanceStatus = "Upgrading"
 	ClusterMaintenanceSwitching                    ClusterMaintenanceStatus = "Switching"
 	ClusterMaintenanceModifyParameterAndRestarting ClusterMaintenanceStatus = "ModifyParameterRestarting"
+	ClusterMaintenanceNone                    	   ClusterMaintenanceStatus = ""
 )
 
 type ClusterInstanceStatus string
 
 const (
 	InstanceInitializing ClusterInstanceStatus = "Initializing"
-	InstanceDeleted      ClusterInstanceStatus = "Deleted"
 	InstanceRunning      ClusterInstanceStatus = "Running"
 )
 

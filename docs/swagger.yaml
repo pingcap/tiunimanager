@@ -7,65 +7,6 @@ definitions:
       userName:
         type: string
     type: object
-  backuprestore.BackupDeleteReq:
-    properties:
-      clusterId:
-        type: string
-    type: object
-  backuprestore.BackupRecord:
-    properties:
-      backupMethod:
-        type: string
-      backupMode:
-        type: string
-      backupTso:
-        type: integer
-      backupType:
-        type: string
-      clusterId:
-        type: string
-      endTime:
-        type: string
-      filePath:
-        type: string
-      id:
-        type: integer
-      operator:
-        $ref: '#/definitions/controller.Operator'
-      size:
-        type: number
-      startTime:
-        type: string
-      status:
-        $ref: '#/definitions/controller.StatusInfo'
-    type: object
-  backuprestore.BackupReq:
-    properties:
-      backupMethod:
-        type: string
-      backupType:
-        type: string
-      clusterId:
-        type: string
-      filePath:
-        type: string
-    type: object
-  backuprestore.BackupStrategy:
-    properties:
-      backupDate:
-        type: string
-      clusterId:
-        type: string
-      nextBackupTime:
-        type: string
-      period:
-        type: string
-    type: object
-  backuprestore.BackupStrategyUpdateReq:
-    properties:
-      strategy:
-        $ref: '#/definitions/backuprestore.BackupStrategy'
-    type: object
   backuprestore.RestoreReq:
     properties:
       clusterName:
@@ -100,7 +41,8 @@ definitions:
       backupId:
         type: string
       cloneStrategy:
-        description: specify clone strategy, include empty, snapshot and sync, default empty(option)
+        description: specify clone strategy, include empty, snapshot and sync, default
+          empty(option)
         type: string
       clusterName:
         type: string
@@ -109,7 +51,8 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -117,10 +60,13 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
         type: boolean
       paramGroupId:
         description: specify cloned cluster parameter group id(option)
@@ -207,7 +153,8 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -215,10 +162,13 @@ definitions:
       dbPassword:
         type: string
       dbUser:
-        description: The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
         type: boolean
       region:
         description: The Region where the cluster is located
@@ -241,6 +191,17 @@ definitions:
       workFlowId:
         description: Asynchronous task workflow ID
         type: string
+    type: object
+  cluster.DeleteBackupDataReq:
+    properties:
+      backupId:
+        type: string
+      backupMode:
+        type: string
+      clusterId:
+        type: string
+    type: object
+  cluster.DeleteBackupDataResp:
     type: object
   cluster.DeleteChangeFeedTaskResp:
     properties:
@@ -331,6 +292,11 @@ definitions:
         example: 415241823337054209
         type: integer
     type: object
+  cluster.GetBackupStrategyResp:
+    properties:
+      strategy:
+        $ref: '#/definitions/structs.BackupStrategy'
+    type: object
   cluster.PauseChangeFeedTaskResp:
     properties:
       status:
@@ -343,6 +309,13 @@ definitions:
         - 5
         example: 1
         type: integer
+    type: object
+  cluster.QueryBackupRecordsResp:
+    properties:
+      backupRecords:
+        items:
+          $ref: '#/definitions/structs.BackupRecord'
+        type: array
     type: object
   cluster.QueryChangeFeedTaskResp:
     properties:
@@ -421,6 +394,15 @@ definitions:
         - 5
         example: 1
         type: integer
+    type: object
+  cluster.SaveBackupStrategyReq:
+    properties:
+      clusterId:
+        type: string
+      strategy:
+        $ref: '#/definitions/structs.BackupStrategy'
+    type: object
+  cluster.SaveBackupStrategyResp:
     type: object
   cluster.ScaleInClusterReq:
     properties:
@@ -526,17 +508,6 @@ definitions:
       data:
         type: object
       message:
-        type: string
-    type: object
-  controller.Operator:
-    properties:
-      manualOperator:
-        type: boolean
-      operatorId:
-        type: string
-      operatorName:
-        type: string
-      tenantId:
         type: string
     type: object
   controller.Page:
@@ -764,105 +735,6 @@ definitions:
         type: string
       userName:
         type: string
-    type: object
-  importexport.DataExportReq:
-    properties:
-      accessKey:
-        type: string
-      bucketRegion:
-        type: string
-      bucketUrl:
-        type: string
-      clusterId:
-        type: string
-      comment:
-        type: string
-      endpointUrl:
-        type: string
-      fileType:
-        type: string
-      filter:
-        type: string
-      password:
-        type: string
-      secretAccessKey:
-        type: string
-      sql:
-        type: string
-      storageType:
-        type: string
-      userName:
-        type: string
-      zipName:
-        type: string
-    type: object
-  importexport.DataExportResp:
-    properties:
-      recordId:
-        type: integer
-    type: object
-  importexport.DataImportReq:
-    properties:
-      accessKey:
-        type: string
-      bucketUrl:
-        type: string
-      clusterId:
-        type: string
-      comment:
-        type: string
-      endpointUrl:
-        type: string
-      password:
-        type: string
-      recordId:
-        type: integer
-      secretAccessKey:
-        type: string
-      storageType:
-        type: string
-      userName:
-        type: string
-    type: object
-  importexport.DataImportResp:
-    properties:
-      recordId:
-        type: integer
-    type: object
-  importexport.DataTransportDeleteReq:
-    properties:
-      clusterId:
-        type: string
-    type: object
-  importexport.DataTransportInfo:
-    properties:
-      clusterId:
-        type: string
-      comment:
-        type: string
-      endTime:
-        type: string
-      filePath:
-        type: string
-      recordId:
-        type: integer
-      startTime:
-        type: string
-      status:
-        $ref: '#/definitions/controller.StatusInfo'
-      storageType:
-        type: string
-      transportType:
-        type: string
-      zipName:
-        type: string
-    type: object
-  importexport.DataTransportRecordQueryResp:
-    properties:
-      transportRecords:
-        items:
-          $ref: '#/definitions/importexport.DataTransportInfo'
-        type: array
     type: object
   knowledge.ClusterComponent:
     properties:
@@ -1195,6 +1067,93 @@ definitions:
       tiupUserPassword:
         example: password
         type: string
+    type: object
+  message.DataExportReq:
+    properties:
+      accessKey:
+        type: string
+      bucketRegion:
+        type: string
+      bucketUrl:
+        type: string
+      clusterId:
+        type: string
+      comment:
+        type: string
+      endpointUrl:
+        type: string
+      fileType:
+        type: string
+      filter:
+        type: string
+      password:
+        type: string
+      secretAccessKey:
+        type: string
+      sql:
+        type: string
+      storageType:
+        type: string
+      userName:
+        type: string
+      zipName:
+        type: string
+    type: object
+  message.DataExportResp:
+    properties:
+      recordId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  message.DataImportReq:
+    properties:
+      accessKey:
+        type: string
+      bucketUrl:
+        type: string
+      clusterId:
+        type: string
+      comment:
+        type: string
+      endpointUrl:
+        type: string
+      password:
+        type: string
+      recordId:
+        type: string
+      secretAccessKey:
+        type: string
+      storageType:
+        type: string
+      userName:
+        type: string
+    type: object
+  message.DataImportResp:
+    properties:
+      recordId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  message.DeleteImportExportRecordReq:
+    properties:
+      recordId:
+        type: string
+    type: object
+  message.DeleteImportExportRecordResp:
+    properties:
+      recordId:
+        type: string
+    type: object
+  message.QueryDataImportExportRecordsResp:
+    properties:
+      transportRecords:
+        items:
+          $ref: '#/definitions/structs.DataImportExportRecordInfo'
+        type: array
     type: object
   message.QueryWorkFlowDetailResp:
     properties:
@@ -1583,6 +1542,46 @@ definitions:
         example: v5.0
         type: string
     type: object
+  structs.BackupRecord:
+    properties:
+      backupMethod:
+        type: string
+      backupMode:
+        type: string
+      backupTso:
+        type: integer
+      backupType:
+        type: string
+      clusterId:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      endTime:
+        type: string
+      filePath:
+        type: string
+      id:
+        type: string
+      size:
+        type: number
+      startTime:
+        type: string
+      status:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  structs.BackupStrategy:
+    properties:
+      backupDate:
+        type: string
+      clusterId:
+        type: string
+      period:
+        type: string
+    type: object
   structs.ClusterInfo:
     properties:
       alertUrl:
@@ -1599,7 +1598,8 @@ definitions:
       clusterVersion:
         type: string
       copies:
-        description: The number of copies of the newly created cluster data, consistent with the number of copies set in PD
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
         type: integer
       cpuArchitecture:
         description: X86/X86_64/ARM
@@ -1611,7 +1611,9 @@ definitions:
       deleteTime:
         type: string
       exclusive:
-        description: Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
         type: boolean
       extranetConnectAddresses:
         items:
@@ -1728,6 +1730,35 @@ definitions:
         description: 4C8G/8C16G ?
         type: string
       zoneCode:
+        type: string
+    type: object
+  structs.DataImportExportRecordInfo:
+    properties:
+      clusterId:
+        type: string
+      comment:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      endTime:
+        type: string
+      filePath:
+        type: string
+      recordId:
+        type: string
+      startTime:
+        type: string
+      status:
+        type: string
+      storageType:
+        type: string
+      transportType:
+        type: string
+      updateTime:
+        type: string
+      zipName:
         type: string
     type: object
   structs.ProductSpecInfo:
@@ -1847,20 +1878,25 @@ paths:
       description: query backup records of a cluster
       parameters:
       - in: query
+        name: backupId
+        type: string
+      - in: query
         name: clusterId
         type: string
       - in: query
         name: endTime
-        type: integer
-      - in: query
+        type: string
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       - in: query
         name: startTime
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1871,9 +1907,7 @@ paths:
             - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/backuprestore.BackupRecord'
-                  type: array
+                  $ref: '#/definitions/cluster.QueryBackupRecordsResp'
               type: object
         "401":
           description: Unauthorized
@@ -1892,46 +1926,7 @@ paths:
       summary: query backup records of a cluster
       tags:
       - cluster backup
-    post:
-      consumes:
-      - application/json
-      description: backup
-      parameters:
-      - description: backup request
-        in: body
-        name: backupReq
-        required: true
-        schema:
-          $ref: '#/definitions/backuprestore.BackupReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/backuprestore.BackupRecord'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: backup
-      tags:
-      - cluster backup
+    post: {}
   /backups/{backupId}:
     delete:
       consumes:
@@ -1948,7 +1943,7 @@ paths:
         name: backupDeleteReq
         required: true
         schema:
-          $ref: '#/definitions/backuprestore.BackupDeleteReq'
+          $ref: '#/definitions/cluster.DeleteBackupDataReq'
       produces:
       - application/json
       responses:
@@ -1959,7 +1954,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  type: integer
+                  $ref: '#/definitions/cluster.DeleteBackupDataResp'
               type: object
         "401":
           description: Unauthorized
@@ -2852,12 +2847,12 @@ paths:
         name: clusterId
         required: true
         type: string
-      - description: 备份策略信息
+      - description: backup strategy request
         in: body
         name: updateReq
         required: true
         schema:
-          $ref: '#/definitions/backuprestore.BackupStrategyUpdateReq'
+          $ref: '#/definitions/cluster.SaveBackupStrategyReq'
       produces:
       - application/json
       responses:
@@ -2868,7 +2863,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/backuprestore.BackupStrategy'
+                  $ref: '#/definitions/cluster.SaveBackupStrategyResp'
               type: object
         "401":
           description: Unauthorized
@@ -2908,7 +2903,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/backuprestore.BackupStrategy'
+                  $ref: '#/definitions/cluster.GetBackupStrategyResp'
               type: object
         "401":
           description: Unauthorized
@@ -2979,7 +2974,7 @@ paths:
         name: dataExport
         required: true
         schema:
-          $ref: '#/definitions/importexport.DataExportReq'
+          $ref: '#/definitions/message.DataExportReq'
       produces:
       - application/json
       responses:
@@ -2990,7 +2985,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/importexport.DataExportResp'
+                  $ref: '#/definitions/message.DataExportResp'
               type: object
         "401":
           description: Unauthorized
@@ -3020,7 +3015,7 @@ paths:
         name: dataImport
         required: true
         schema:
-          $ref: '#/definitions/importexport.DataImportReq'
+          $ref: '#/definitions/message.DataImportReq'
       produces:
       - application/json
       responses:
@@ -3031,7 +3026,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/importexport.DataImportResp'
+                  $ref: '#/definitions/message.DataImportResp'
               type: object
         "401":
           description: Unauthorized
@@ -3187,10 +3182,12 @@ paths:
       - in: query
         name: endTime
         type: integer
-      - in: query
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       - in: query
@@ -3198,7 +3195,7 @@ paths:
         type: boolean
       - in: query
         name: recordId
-        type: integer
+        type: string
       - in: query
         name: startTime
         type: integer
@@ -3212,7 +3209,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/importexport.DataTransportRecordQueryResp'
+                  $ref: '#/definitions/message.QueryDataImportExportRecordsResp'
               type: object
         "401":
           description: Unauthorized
@@ -3247,7 +3244,7 @@ paths:
         name: DataTransportDeleteReq
         required: true
         schema:
-          $ref: '#/definitions/importexport.DataTransportDeleteReq'
+          $ref: '#/definitions/message.DeleteImportExportRecordReq'
       produces:
       - application/json
       responses:
@@ -3258,7 +3255,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  type: integer
+                  $ref: '#/definitions/message.DeleteImportExportRecordResp'
               type: object
         "401":
           description: Unauthorized

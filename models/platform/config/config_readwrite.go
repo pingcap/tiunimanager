@@ -13,24 +13,39 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package backuprestore
+package config
 
 import (
-	"github.com/pingcap-inc/tiem/models/common"
-	"time"
+	"context"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	dbCommon "github.com/pingcap-inc/tiem/models/common"
+	"gorm.io/gorm"
 )
 
-// BackupRecord backup record information
-type BackupRecord struct {
-	common.Entity
-	StorageType  string `gorm:"not null"`
-	ClusterID    string `gorm:"not null;type:varchar(22);default:null"`
-	BackupType   string
-	BackupMethod string
-	BackupMode   string
-	FilePath     string
-	Size         uint64
-	BackupTso    uint64
-	StartTime    time.Time
-	EndTime      time.Time
+type ConfigReadWrite struct {
+	dbCommon.GormDB
+}
+
+func NewConfigReadWrite(db *gorm.DB) *ConfigReadWrite {
+	m := &ConfigReadWrite{
+		dbCommon.WrapDB(db),
+	}
+	return m
+}
+
+func (m *ConfigReadWrite) CreateConfig(ctx context.Context, config *SystemConfig) (*SystemConfig, error) {
+	return config, m.DB(ctx).Create(config).Error
+}
+
+func (m *ConfigReadWrite) GetConfig(ctx context.Context, configKey string) (config *SystemConfig, err error) {
+	if "" == configKey {
+		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+	}
+	config = &SystemConfig{}
+	err = m.DB(ctx).First(config, "config_key = ?", configKey).Error
+	if err != nil {
+		return nil, framework.SimpleError(common.TIEM_GET_CONFIG_FAILED)
+	}
+	return config, err
 }

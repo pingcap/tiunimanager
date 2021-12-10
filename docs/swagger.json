@@ -37,26 +37,33 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "name": "backupId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "name": "clusterId",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "name": "endTime",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Current page location",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Number of this request",
                         "name": "pageSize",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "name": "startTime",
                         "in": "query"
                     }
@@ -73,10 +80,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/backuprestore.BackupRecord"
-                                            }
+                                            "$ref": "#/definitions/cluster.QueryBackupRecordsResp"
                                         }
                                     }
                                 }
@@ -103,73 +107,7 @@
                     }
                 }
             },
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "backup",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "cluster backup"
-                ],
-                "summary": "backup",
-                "parameters": [
-                    {
-                        "description": "backup request",
-                        "name": "backupReq",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/backuprestore.BackupReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/controller.CommonResult"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/backuprestore.BackupRecord"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/controller.CommonResult"
-                        }
-                    }
-                }
-            }
+            "post": {}
         },
         "/backups/{backupId}": {
             "delete": {
@@ -203,7 +141,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/backuprestore.BackupDeleteReq"
+                            "$ref": "#/definitions/cluster.DeleteBackupDataReq"
                         }
                     }
                 ],
@@ -219,7 +157,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "integer"
+                                            "$ref": "#/definitions/cluster.DeleteBackupDataResp"
                                         }
                                     }
                                 }
@@ -1001,7 +939,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/importexport.DataExportReq"
+                            "$ref": "#/definitions/message.DataExportReq"
                         }
                     }
                 ],
@@ -1017,7 +955,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/importexport.DataExportResp"
+                                            "$ref": "#/definitions/message.DataExportResp"
                                         }
                                     }
                                 }
@@ -1070,7 +1008,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/importexport.DataImportReq"
+                            "$ref": "#/definitions/message.DataImportReq"
                         }
                     }
                 ],
@@ -1086,7 +1024,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/importexport.DataImportResp"
+                                            "$ref": "#/definitions/message.DataImportResp"
                                         }
                                     }
                                 }
@@ -1355,11 +1293,13 @@
                     },
                     {
                         "type": "integer",
+                        "description": "Current page location",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "Number of this request",
                         "name": "pageSize",
                         "in": "query"
                     },
@@ -1369,7 +1309,7 @@
                         "in": "query"
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "name": "recordId",
                         "in": "query"
                     },
@@ -1391,7 +1331,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/importexport.DataTransportRecordQueryResp"
+                                            "$ref": "#/definitions/message.QueryDataImportExportRecordsResp"
                                         }
                                     }
                                 }
@@ -1451,7 +1391,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/importexport.DataTransportDeleteReq"
+                            "$ref": "#/definitions/message.DeleteImportExportRecordReq"
                         }
                     }
                 ],
@@ -1467,7 +1407,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "integer"
+                                            "$ref": "#/definitions/message.DeleteImportExportRecordResp"
                                         }
                                     }
                                 }
@@ -2303,12 +2243,12 @@
                         "required": true
                     },
                     {
-                        "description": "备份策略信息",
+                        "description": "backup strategy request",
                         "name": "updateReq",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/backuprestore.BackupStrategyUpdateReq"
+                            "$ref": "#/definitions/cluster.SaveBackupStrategyReq"
                         }
                     }
                 ],
@@ -2324,7 +2264,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/backuprestore.BackupStrategy"
+                                            "$ref": "#/definitions/cluster.SaveBackupStrategyResp"
                                         }
                                     }
                                 }
@@ -2391,7 +2331,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/backuprestore.BackupStrategy"
+                                            "$ref": "#/definitions/cluster.GetBackupStrategyResp"
                                         }
                                     }
                                 }
@@ -4123,97 +4063,6 @@
                 }
             }
         },
-        "backuprestore.BackupDeleteReq": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                }
-            }
-        },
-        "backuprestore.BackupRecord": {
-            "type": "object",
-            "properties": {
-                "backupMethod": {
-                    "type": "string"
-                },
-                "backupMode": {
-                    "type": "string"
-                },
-                "backupTso": {
-                    "type": "integer"
-                },
-                "backupType": {
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "endTime": {
-                    "type": "string"
-                },
-                "filePath": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "operator": {
-                    "$ref": "#/definitions/controller.Operator"
-                },
-                "size": {
-                    "type": "number"
-                },
-                "startTime": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/controller.StatusInfo"
-                }
-            }
-        },
-        "backuprestore.BackupReq": {
-            "type": "object",
-            "properties": {
-                "backupMethod": {
-                    "type": "string"
-                },
-                "backupType": {
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "filePath": {
-                    "type": "string"
-                }
-            }
-        },
-        "backuprestore.BackupStrategy": {
-            "type": "object",
-            "properties": {
-                "backupDate": {
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "nextBackupTime": {
-                    "type": "string"
-                },
-                "period": {
-                    "type": "string"
-                }
-            }
-        },
-        "backuprestore.BackupStrategyUpdateReq": {
-            "type": "object",
-            "properties": {
-                "strategy": {
-                    "$ref": "#/definitions/backuprestore.BackupStrategy"
-                }
-            }
-        },
         "backuprestore.RestoreReq": {
             "type": "object",
             "properties": {
@@ -4467,6 +4316,23 @@
                 }
             }
         },
+        "cluster.DeleteBackupDataReq": {
+            "type": "object",
+            "properties": {
+                "backupId": {
+                    "type": "string"
+                },
+                "backupMode": {
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.DeleteBackupDataResp": {
+            "type": "object"
+        },
         "cluster.DeleteChangeFeedTaskResp": {
             "type": "object",
             "properties": {
@@ -4590,6 +4456,14 @@
                 }
             }
         },
+        "cluster.GetBackupStrategyResp": {
+            "type": "object",
+            "properties": {
+                "strategy": {
+                    "$ref": "#/definitions/structs.BackupStrategy"
+                }
+            }
+        },
         "cluster.PauseChangeFeedTaskResp": {
             "type": "object",
             "properties": {
@@ -4604,6 +4478,17 @@
                         5
                     ],
                     "example": 1
+                }
+            }
+        },
+        "cluster.QueryBackupRecordsResp": {
+            "type": "object",
+            "properties": {
+                "backupRecords": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.BackupRecord"
+                    }
                 }
             }
         },
@@ -4713,6 +4598,20 @@
                     "example": 1
                 }
             }
+        },
+        "cluster.SaveBackupStrategyReq": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "strategy": {
+                    "$ref": "#/definitions/structs.BackupStrategy"
+                }
+            }
+        },
+        "cluster.SaveBackupStrategyResp": {
+            "type": "object"
         },
         "cluster.ScaleInClusterReq": {
             "type": "object",
@@ -4862,23 +4761,6 @@
                     "type": "object"
                 },
                 "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.Operator": {
-            "type": "object",
-            "properties": {
-                "manualOperator": {
-                    "type": "boolean"
-                },
-                "operatorId": {
-                    "type": "string"
-                },
-                "operatorName": {
-                    "type": "string"
-                },
-                "tenantId": {
                     "type": "string"
                 }
             }
@@ -5216,158 +5098,6 @@
                 },
                 "userName": {
                     "type": "string"
-                }
-            }
-        },
-        "importexport.DataExportReq": {
-            "type": "object",
-            "properties": {
-                "accessKey": {
-                    "type": "string"
-                },
-                "bucketRegion": {
-                    "type": "string"
-                },
-                "bucketUrl": {
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "comment": {
-                    "type": "string"
-                },
-                "endpointUrl": {
-                    "type": "string"
-                },
-                "fileType": {
-                    "type": "string"
-                },
-                "filter": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "secretAccessKey": {
-                    "type": "string"
-                },
-                "sql": {
-                    "type": "string"
-                },
-                "storageType": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                },
-                "zipName": {
-                    "type": "string"
-                }
-            }
-        },
-        "importexport.DataExportResp": {
-            "type": "object",
-            "properties": {
-                "recordId": {
-                    "type": "integer"
-                }
-            }
-        },
-        "importexport.DataImportReq": {
-            "type": "object",
-            "properties": {
-                "accessKey": {
-                    "type": "string"
-                },
-                "bucketUrl": {
-                    "type": "string"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "comment": {
-                    "type": "string"
-                },
-                "endpointUrl": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "recordId": {
-                    "type": "integer"
-                },
-                "secretAccessKey": {
-                    "type": "string"
-                },
-                "storageType": {
-                    "type": "string"
-                },
-                "userName": {
-                    "type": "string"
-                }
-            }
-        },
-        "importexport.DataImportResp": {
-            "type": "object",
-            "properties": {
-                "recordId": {
-                    "type": "integer"
-                }
-            }
-        },
-        "importexport.DataTransportDeleteReq": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                }
-            }
-        },
-        "importexport.DataTransportInfo": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "comment": {
-                    "type": "string"
-                },
-                "endTime": {
-                    "type": "string"
-                },
-                "filePath": {
-                    "type": "string"
-                },
-                "recordId": {
-                    "type": "integer"
-                },
-                "startTime": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/controller.StatusInfo"
-                },
-                "storageType": {
-                    "type": "string"
-                },
-                "transportType": {
-                    "type": "string"
-                },
-                "zipName": {
-                    "type": "string"
-                }
-            }
-        },
-        "importexport.DataTransportRecordQueryResp": {
-            "type": "object",
-            "properties": {
-                "transportRecords": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/importexport.DataTransportInfo"
-                    }
                 }
             }
         },
@@ -5867,6 +5597,139 @@
                 "tiupUserPassword": {
                     "type": "string",
                     "example": "password"
+                }
+            }
+        },
+        "message.DataExportReq": {
+            "type": "object",
+            "properties": {
+                "accessKey": {
+                    "type": "string"
+                },
+                "bucketRegion": {
+                    "type": "string"
+                },
+                "bucketUrl": {
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "endpointUrl": {
+                    "type": "string"
+                },
+                "fileType": {
+                    "type": "string"
+                },
+                "filter": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "secretAccessKey": {
+                    "type": "string"
+                },
+                "sql": {
+                    "type": "string"
+                },
+                "storageType": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
+                },
+                "zipName": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.DataExportResp": {
+            "type": "object",
+            "properties": {
+                "recordId": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
+        "message.DataImportReq": {
+            "type": "object",
+            "properties": {
+                "accessKey": {
+                    "type": "string"
+                },
+                "bucketUrl": {
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "endpointUrl": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "recordId": {
+                    "type": "string"
+                },
+                "secretAccessKey": {
+                    "type": "string"
+                },
+                "storageType": {
+                    "type": "string"
+                },
+                "userName": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.DataImportResp": {
+            "type": "object",
+            "properties": {
+                "recordId": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
+        "message.DeleteImportExportRecordReq": {
+            "type": "object",
+            "properties": {
+                "recordId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.DeleteImportExportRecordResp": {
+            "type": "object",
+            "properties": {
+                "recordId": {
+                    "type": "string"
+                }
+            }
+        },
+        "message.QueryDataImportExportRecordsResp": {
+            "type": "object",
+            "properties": {
+                "transportRecords": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.DataImportExportRecordInfo"
+                    }
                 }
             }
         },
@@ -6414,6 +6277,67 @@
                 }
             }
         },
+        "structs.BackupRecord": {
+            "type": "object",
+            "properties": {
+                "backupMethod": {
+                    "type": "string"
+                },
+                "backupMode": {
+                    "type": "string"
+                },
+                "backupTso": {
+                    "type": "integer"
+                },
+                "backupType": {
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "endTime": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "number"
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.BackupStrategy": {
+            "type": "object",
+            "properties": {
+                "backupDate": {
+                    "type": "string"
+                },
+                "clusterId": {
+                    "type": "string"
+                },
+                "period": {
+                    "type": "string"
+                }
+            }
+        },
         "structs.ClusterInfo": {
             "type": "object",
             "properties": {
@@ -6628,6 +6552,50 @@
                     "type": "string"
                 },
                 "zoneCode": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.DataImportExportRecordInfo": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "endTime": {
+                    "type": "string"
+                },
+                "filePath": {
+                    "type": "string"
+                },
+                "recordId": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "storageType": {
+                    "type": "string"
+                },
+                "transportType": {
+                    "type": "string"
+                },
+                "updateTime": {
+                    "type": "string"
+                },
+                "zipName": {
                     "type": "string"
                 }
             }

@@ -13,26 +13,22 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package config
+package controller
 
-import "context"
+type FileResultMark struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
 
-type ReaderWriter interface {
-	// CreateConfig
-	// @Description: create system config
-	// @Receiver m
-	// @Parameter ctx
-	// @Parameter config
-	// @Return *SystemConfig
-	// @Return error
-	CreateConfig(ctx context.Context, config *SystemConfig) (*SystemConfig, error)
+type CommonFileResult struct {
+	FileResultMark
+	Data interface{} `json:"data"`
+}
 
-	// GetConfig
-	// @Description: get system config by configKey
-	// @Receiver m
-	// @Parameter ctx
-	// @Parameter configKey
-	// @Return *SystemConfig
-	// @Return error
-	GetConfig(ctx context.Context, configKey string) (config *SystemConfig, err error)
+func Success(data interface{}) *CommonFileResult {
+	return &CommonFileResult{FileResultMark: FileResultMark{0, "OK"}, Data: data}
+}
+
+func Fail(code int, message string) *CommonFileResult {
+	return &CommonFileResult{FileResultMark{code, message}, struct{}{}}
 }

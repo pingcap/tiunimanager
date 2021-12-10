@@ -13,24 +13,18 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package backuprestore
+package config
 
 import (
-	"github.com/pingcap-inc/tiem/models/common"
+	"gorm.io/gorm"
 	"time"
 )
 
-// BackupRecord backup record information
-type BackupRecord struct {
-	common.Entity
-	StorageType  string `gorm:"not null"`
-	ClusterID    string `gorm:"not null;type:varchar(22);default:null"`
-	BackupType   string
-	BackupMethod string
-	BackupMode   string
-	FilePath     string
-	Size         uint64
-	BackupTso    uint64
-	StartTime    time.Time
-	EndTime      time.Time
+type SystemConfig struct {
+	ID          string    `gorm:"primarykey"`
+	CreatedAt   time.Time `gorm:"<-:create"`
+	UpdatedAt   time.Time
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
+	ConfigKey   string         `gorm:"not null;"`
+	ConfigValue string         `gorm:"not null;"`
 }

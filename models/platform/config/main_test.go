@@ -15,24 +15,43 @@
 
 package config
 
-import "context"
+import (
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"os"
+	"testing"
+)
 
-type ReaderWriter interface {
-	// CreateConfig
-	// @Description: create system config
-	// @Receiver m
-	// @Parameter ctx
-	// @Parameter config
-	// @Return *SystemConfig
-	// @Return error
-	CreateConfig(ctx context.Context, config *SystemConfig) (*SystemConfig, error)
+func TestMain(m *testing.M) {
+	testFilePath := "testdata/" + uuidutil.ShortId()
+	os.MkdirAll(testFilePath, 0755)
 
-	// GetConfig
-	// @Description: get system config by configKey
-	// @Receiver m
-	// @Parameter ctx
-	// @Parameter configKey
-	// @Return *SystemConfig
-	// @Return error
-	GetConfig(ctx context.Context, configKey string) (config *SystemConfig, err error)
+	logins := framework.LogForkFile(common.LogFileSystem)
+
+	defer func() {
+		os.RemoveAll(testFilePath)
+		os.Remove(testFilePath)
+	}()
+
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			dbFile := testFilePath + common.DBDirPrefix + common.SqliteFileName
+			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+
+			if err != nil || db.Error != nil {
+				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
+			} else {
+				logins.Infof("open database successful, filepath: %s", dbFile)
+			}
+			db.Migrator().CreateTable(SystemConfig{})
+
+			rw = NewConfigReadWrite(db)
+			return nil
+		},
+	)
+
+	os.Exit(m.Run())
 }

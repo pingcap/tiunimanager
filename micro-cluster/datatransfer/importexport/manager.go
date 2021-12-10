@@ -17,33 +17,44 @@ package importexport
 
 import (
 	"context"
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	"github.com/pingcap-inc/tiem/models"
-	wfModel "github.com/pingcap-inc/tiem/models/workflow"
+	dbModel "github.com/pingcap-inc/tiem/models/common"
+	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/workflow"
 	"os"
 	"path/filepath"
+	"strings"
+	"sync"
 	"time"
 )
 
 var manager ImportExportService
+var once sync.Once
 
 type ImportExportManager struct {
+	defaultExportPath string
+	defaultImportPath string
 }
 
 func GetImportExportService() ImportExportService {
-	if manager == nil {
+	once.Do(func() {
 		manager = NewImportExportManager()
-	}
+	})
 	return manager
 }
 
 func NewImportExportManager() *ImportExportManager {
-	mgr := ImportExportManager{}
+	mgr := ImportExportManager{
+		defaultExportPath: constants.DefaultExportPath, //todo: get from config
+		defaultImportPath: constants.DefaultImportPath, //todo: get from config
+	}
 	flowManager := workflow.GetWorkFlowService()
 	flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowExportData, &workflow.WorkFlowDefine{
 		FlowName: constants.WorkFlowExportData,
@@ -72,26 +83,212 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request *message
 	framework.LogWithContext(ctx).Infof("begin exportdata request %+v", request)
 	defer framework.LogWithContext(ctx).Infof("end exportdata")
 
-	//todo
-	return nil, nil
+	if err := mgr.exportDataPreCheck(ctx, request); err != nil {
+		framework.LogWithContext(ctx).Errorf("export data precheck failed, %s", err.Error())
+		return nil, err
+	}
+
+	meta, err := handler.Get(ctx, request.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
+		return nil, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
+	}
+
+	exportTime := time.Now()
+	exportPrefix, _ := filepath.Abs(mgr.defaultExportPath)
+	exportDir := filepath.Join(exportPrefix, request.ClusterID, fmt.Sprintf("%s_%s", exportTime.Format("2006-01-02_15:04:05"), request.StorageType))
+
+	record := &importexport.DataTransportRecord{
+		Entity: dbModel.Entity{
+			TenantId: meta.Cluster.TenantId,
+			Status:   string(constants.DataImportExportProcessing),
+		},
+		ClusterID:       request.ClusterID,
+		TransportType:   string(constants.TransportTypeExport),
+		FilePath:        mgr.getDataExportFilePath(request, exportDir, true),
+		ZipName:         request.ZipName,
+		StorageType:     request.StorageType,
+		Comment:         request.Comment,
+		ReImportSupport: mgr.checkExportParamSupportReimport(request),
+		StartTime:       time.Now(),
+		EndTime:         time.Now(),
+	}
+	rw := models.GetImportExportReaderWriter()
+	recordCreate, err := rw.CreateDataTransportRecord(ctx, record)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("create data transport record failed, %s", err.Error())
+		return nil, fmt.Errorf("create data transport record failed, %s", err.Error())
+	}
+
+	info := &ExportInfo{
+		ClusterId:    request.ClusterID,
+		UserName:     request.UserName,
+		Password:     request.Password,
+		FileType:     request.FileType,
+		RecordId:     recordCreate.ID,
+		FilePath:     mgr.getDataExportFilePath(request, exportDir, false),
+		Filter:       request.Filter,
+		Sql:          request.Sql,
+		StorageType:  request.StorageType,
+		BucketRegion: request.BucketRegion,
+	}
+
+	flowManager := workflow.GetWorkFlowService()
+	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.WorkFlowExportData)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.WorkFlowExportData, err.Error())
+		return nil, fmt.Errorf("create %s workflow failed, %s", constants.WorkFlowExportData, err.Error())
+	}
+	// Start the workflow
+	flowManager.AddContext(flow, contextClusterMetaKey, meta)
+	flowManager.AddContext(flow, contextDataTransportRecordKey, info)
+	flowManager.AsyncStart(ctx, flow)
+
+	return &message.DataExportResp{
+		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
+			WorkFlowID: flow.Flow.ID,
+		},
+		RecordID: recordCreate.ID,
+	}, nil
 }
 
 func (mgr *ImportExportManager) ImportData(ctx context.Context, request *message.DataImportReq) (*message.DataImportResp, error) {
 	framework.LogWithContext(ctx).Infof("begin importdata request %+v", request)
 	defer framework.LogWithContext(ctx).Infof("end importdata")
 
-	//todo
-	return nil, nil
+	if err := mgr.importDataPreCheck(ctx, request); err != nil {
+		framework.LogWithContext(ctx).Errorf("export data precheck failed, %s", err.Error())
+		return nil, err
+	}
+
+	meta, err := handler.Get(ctx, request.ClusterID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
+		return nil, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
+	}
+
+	rw := models.GetImportExportReaderWriter()
+	var info *ImportInfo
+	importTime := time.Now()
+	importPrefix, _ := filepath.Abs(mgr.defaultImportPath)
+	importDir := filepath.Join(importPrefix, request.ClusterID, fmt.Sprintf("%s_%s", importTime.Format("2006-01-02_15:04:05"), request.StorageType))
+	if request.RecordId == "" {
+		if common.NfsStorageType == request.StorageType {
+			err = os.Rename(filepath.Join(importPrefix, request.ClusterID, "temp"), importDir)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("find import dir failed, %s", err.Error())
+				return nil, err
+			}
+		} else {
+			err = os.MkdirAll(importDir, os.ModeDir)
+			if err != nil {
+				framework.LogWithContext(ctx).Errorf("mkdir import dir failed, %s", err.Error())
+				return nil, err
+			}
+		}
+
+		record := &importexport.DataTransportRecord{
+			Entity: dbModel.Entity{
+				TenantId: meta.Cluster.TenantId,
+				Status:   string(constants.DataImportExportProcessing),
+			},
+			ClusterID:       request.ClusterID,
+			TransportType:   string(constants.TransportTypeImport),
+			FilePath:        mgr.getDataImportFilePath(request, importDir, true),
+			ZipName:         constants.DefaultZipName,
+			StorageType:     request.StorageType,
+			Comment:         request.Comment,
+			ReImportSupport: mgr.checkImportParamSupportReimport(request),
+			StartTime:       time.Now(),
+			EndTime:         time.Now(),
+		}
+		recordCreate, err := rw.CreateDataTransportRecord(ctx, record)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("create data transport record failed, %s", err.Error())
+			return nil, fmt.Errorf("create data transport record failed, %s", err.Error())
+		}
+
+		info = &ImportInfo{
+			ClusterId:   request.ClusterID,
+			UserName:    request.UserName,
+			Password:    request.Password,
+			FilePath:    mgr.getDataImportFilePath(request, importDir, false),
+			RecordId:    recordCreate.ID,
+			StorageType: request.StorageType,
+			ConfigPath:  importDir,
+		}
+	} else {
+		// import from transport record
+		recordGet, err := rw.GetDataTransportRecord(ctx, request.RecordId)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get data transport record %s failed, %s", request.RecordId, err.Error())
+			return nil, fmt.Errorf("get data transport record %s failed, %s", request.RecordId, err.Error())
+		}
+
+		if err := os.MkdirAll(importDir, os.ModeDir); err != nil {
+			return nil, fmt.Errorf("make import dir %s failed, %s", importDir, err.Error())
+		}
+
+		record := &importexport.DataTransportRecord{
+			Entity: dbModel.Entity{
+				TenantId: meta.Cluster.TenantId,
+				Status:   string(constants.DataImportExportProcessing),
+			},
+			ClusterID:       request.ClusterID,
+			TransportType:   string(constants.TransportTypeImport),
+			FilePath:        mgr.getDataImportFilePath(request, importDir, true),
+			ZipName:         constants.DefaultZipName,
+			StorageType:     request.StorageType,
+			Comment:         request.Comment,
+			ReImportSupport: false,
+			StartTime:       time.Now(),
+			EndTime:         time.Now(),
+		}
+		recordCreate, err := rw.CreateDataTransportRecord(ctx, record)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("create data transport record failed, %s", err.Error())
+			return nil, fmt.Errorf("create data transport record failed, %s", err.Error())
+		}
+		info = &ImportInfo{
+			ClusterId:   request.ClusterID,
+			UserName:    request.UserName,
+			Password:    request.Password,
+			FilePath:    recordGet.FilePath,
+			RecordId:    recordCreate.ID,
+			StorageType: request.StorageType,
+			ConfigPath:  importDir,
+		}
+	}
+	flowManager := workflow.GetWorkFlowService()
+	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.WorkFlowExportData)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.WorkFlowExportData, err.Error())
+		return nil, fmt.Errorf("create %s workflow failed, %s", constants.WorkFlowExportData, err.Error())
+	}
+	// Start the workflow
+	flowManager.AddContext(flow, contextClusterMetaKey, meta)
+	flowManager.AddContext(flow, contextDataTransportRecordKey, info)
+	if err = flowManager.AsyncStart(ctx, flow); err != nil {
+		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.WorkFlowBackupCluster, err.Error())
+		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.WorkFlowBackupCluster, err.Error())
+	}
+
+	return &message.DataImportResp{
+		AsyncTaskWorkFlowInfo: structs.AsyncTaskWorkFlowInfo{
+			WorkFlowID: flow.Flow.ID,
+		},
+		RecordID: info.RecordId,
+	}, nil
 }
 
-func (mgr *ImportExportManager) QueryDataTransportRecords(ctx context.Context, request *message.QueryDataImportExportRecordsReq) (*message.QueryDataImportExportRecordsResp, error) {
+func (mgr *ImportExportManager) QueryDataTransportRecords(ctx context.Context, request *message.QueryDataImportExportRecordsReq) (*message.QueryDataImportExportRecordsResp, *structs.Page, error) {
 	framework.LogWithContext(ctx).Infof("begin QueryDataTransportRecords request: %+v", request)
 	defer framework.LogWithContext(ctx).Info("end QueryDataTransportRecords")
 
 	rw := models.GetImportExportReaderWriter()
-	records, _, err := rw.QueryDataTransportRecords(ctx, request.RecordID, request.ClusterID, request.ReImport, time.Unix(request.StartTime, 0), time.Unix(request.EndTime, 0), request.Page, request.PageSize)
+	records, total, err := rw.QueryDataTransportRecords(ctx, request.RecordID, request.ClusterID, request.ReImport, time.Unix(request.StartTime, 0), time.Unix(request.EndTime, 0), request.Page, request.PageSize)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	respRecords := make([]*structs.DataImportExportRecordInfo, len(records))
@@ -113,9 +310,16 @@ func (mgr *ImportExportManager) QueryDataTransportRecords(ctx context.Context, r
 		}
 	}
 
-	return &message.QueryDataImportExportRecordsResp{
+	response := &message.QueryDataImportExportRecordsResp{
 		Records: respRecords,
-	}, nil
+	}
+	page := &structs.Page{
+		Page:     request.Page,
+		PageSize: request.PageSize,
+		Total:    int(total),
+	}
+
+	return response, page, nil
 }
 
 func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, request *message.DeleteImportExportRecordReq) (*message.DeleteImportExportRecordResp, error) {
@@ -145,45 +349,175 @@ func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, r
 	return nil, nil
 }
 
-func buildDataImportConfig(node *wfModel.WorkFlowNode, flowContext *workflow.FlowContext) bool {
-	node.Success(nil)
+func (mgr *ImportExportManager) exportDataPreCheck(ctx context.Context, request *message.DataExportReq) error {
+	if request.ClusterID == "" {
+		return fmt.Errorf("invalid param clusterId %s", request.ClusterID)
+	}
+	if request.UserName == "" {
+		return fmt.Errorf("invalid param userName %s", request.UserName)
+	}
+	/*
+		if request.Password == "" {
+			return fmt.Errorf("invalid param password %s", request.Password)
+		}
+	*/
+
+	if FileTypeCSV != request.FileType && FileTypeSQL != request.FileType {
+		return fmt.Errorf("invalid param fileType %s", request.FileType)
+	}
+	if request.ZipName == "" {
+		request.ZipName = constants.DefaultZipName
+	} else if !strings.HasSuffix(request.ZipName, ".zip") {
+		request.ZipName = fmt.Sprintf("%s.zip", request.ZipName)
+	}
+
+	switch request.StorageType {
+	case string(constants.StorageTypeS3):
+		if request.EndpointUrl == "" {
+			return fmt.Errorf("invalid param endpointUrl %s", request.EndpointUrl)
+		}
+		if request.BucketUrl == "" {
+			return fmt.Errorf("invalid param bucketUrl %s", request.BucketUrl)
+		}
+		if request.AccessKey == "" {
+			return fmt.Errorf("invalid param accessKey %s", request.AccessKey)
+		}
+		if request.SecretAccessKey == "" {
+			return fmt.Errorf("invalid param secretAccessKey %s", request.SecretAccessKey)
+		}
+	case string(constants.StorageTypeNFS):
+		absPath, err := filepath.Abs(mgr.defaultExportPath)
+		if err != nil {
+			return fmt.Errorf("export dir %s is not vaild", mgr.defaultExportPath)
+		}
+		if !mgr.checkFilePathExists(absPath) {
+			//return fmt.Errorf("export path %s not exist", absPath)
+			_ = os.MkdirAll(absPath, os.ModeDir)
+		}
+	default:
+		return fmt.Errorf("invalid param storageType %s", request.StorageType)
+	}
+
+	return nil
+}
+
+func (mgr *ImportExportManager) importDataPreCheck(ctx context.Context, request *message.DataImportReq) error {
+	if request.ClusterID == "" {
+		return fmt.Errorf("invalid param clusterId %s", request.ClusterID)
+	}
+	if request.UserName == "" {
+		return fmt.Errorf("invalid param userName %s", request.UserName)
+	}
+	/*
+		if request.Password == "" {
+			return fmt.Errorf("invalid param password %s", request.Password)
+		}
+	*/
+	absPath, err := filepath.Abs(mgr.defaultImportPath)
+	if err != nil {
+		return fmt.Errorf("import dir %s is not vaild", mgr.defaultImportPath)
+	}
+	if !mgr.checkFilePathExists(absPath) {
+		//return fmt.Errorf("import path %s not exist", absPath)
+		_ = os.MkdirAll(absPath, os.ModeDir)
+	}
+
+	if request.RecordId == "" {
+		switch request.StorageType {
+		case string(constants.StorageTypeS3):
+			if request.EndpointUrl == "" {
+				return fmt.Errorf("invalid param endpointUrl %s", request.EndpointUrl)
+			}
+			if request.BucketUrl == "" {
+				return fmt.Errorf("invalid param bucketUrl %s", request.BucketUrl)
+			}
+			if request.AccessKey == "" {
+				return fmt.Errorf("invalid param accessKey %s", request.AccessKey)
+			}
+			if request.SecretAccessKey == "" {
+				return fmt.Errorf("invalid param secretAccessKey %s", request.SecretAccessKey)
+			}
+		case string(constants.StorageTypeNFS):
+			break
+		default:
+			return fmt.Errorf("invalid param storageType %s", request.StorageType)
+		}
+	} else {
+		// import from transport record
+		request.StorageType = string(constants.StorageTypeNFS)
+		rw := models.GetImportExportReaderWriter()
+		recordGet, err := rw.GetDataTransportRecord(ctx, request.RecordId)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get data transport record %s failed, %s", request.RecordId, err.Error())
+			return fmt.Errorf("get data transport record %s failed, %s", request.RecordId, err.Error())
+		}
+
+		if !mgr.checkFilePathExists(recordGet.FilePath) {
+			return fmt.Errorf("data source path %s not exist", recordGet.FilePath)
+		}
+		if recordGet.StorageType != string(constants.StorageTypeNFS) {
+			return fmt.Errorf("storage type %s can not support re-import", recordGet.StorageType)
+		}
+		if !recordGet.ReImportSupport {
+			return fmt.Errorf("transport record %s not support re-import", recordGet.ID)
+		}
+	}
+
+	return nil
+}
+
+func (mgr *ImportExportManager) checkFilePathExists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		return false
+	}
 	return true
 }
 
-func importDataToCluster(node *wfModel.WorkFlowNode, flowContext *workflow.FlowContext) bool {
-	node.Success(nil)
+func (mgr *ImportExportManager) checkExportParamSupportReimport(request *message.DataExportReq) bool {
+	if common.S3StorageType == request.StorageType {
+		return false
+	}
+	if request.Filter == "" && request.Sql != "" && FileTypeCSV == request.FileType {
+		return false
+	}
 	return true
 }
 
-func updateDataImportRecord(node *wfModel.WorkFlowNode, flowContext *workflow.FlowContext) bool {
-	node.Success(nil)
-	return true
+func (mgr *ImportExportManager) checkImportParamSupportReimport(request *message.DataImportReq) bool {
+	if common.NfsStorageType == request.StorageType {
+		return true
+	}
+	return false
 }
 
-func exportDataFromCluster(node *wfModel.WorkFlowNode, flowContext *workflow.FlowContext) bool {
-	node.Success(nil)
-	return true
+func (mgr *ImportExportManager) getDataExportFilePath(request *message.DataExportReq, exportDir string, persist bool) string {
+	var filePath string
+	if common.S3StorageType == request.StorageType {
+		if persist {
+			filePath = fmt.Sprintf("%s?&endpoint=%s", request.BucketUrl, request.EndpointUrl)
+		} else {
+			filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.BucketUrl, request.AccessKey, request.SecretAccessKey, request.EndpointUrl)
+		}
+	} else {
+		filePath = filepath.Join(exportDir, "data")
+	}
+	return filePath
 }
 
-func updateDataExportRecord(node *wfModel.WorkFlowNode, flowContext *workflow.FlowContext) bool {
-	node.Success(nil)
-	return true
-}
-
-func importDataFailed(node *wfModel.WorkFlowNode, flowContext *workflow.FlowContext) bool {
-	return clusterFail(node, flowContext)
-}
-
-func exportDataFailed(node *wfModel.WorkFlowNode, flowContext *workflow.FlowContext) bool {
-	return clusterFail(node, flowContext)
-}
-
-func clusterEnd(node *wfModel.WorkFlowNode, flowContext *workflow.FlowContext) bool {
-	node.Success(nil)
-	return true
-}
-
-func clusterFail(node *wfModel.WorkFlowNode, flowContext *workflow.FlowContext) bool {
-	node.Success(nil)
-	return true
+func (mgr *ImportExportManager) getDataImportFilePath(request *message.DataImportReq, importDir string, persist bool) string {
+	var filePath string
+	if common.S3StorageType == request.StorageType {
+		if persist {
+			filePath = fmt.Sprintf("%s?&endpoint=%s", request.BucketUrl, request.EndpointUrl)
+		} else {
+			filePath = fmt.Sprintf("%s?access-key=%s&secret-access-key=%s&endpoint=%s&force-path-style=true", request.BucketUrl, request.AccessKey, request.SecretAccessKey, request.EndpointUrl)
+		}
+	} else {
+		filePath = filepath.Join(importDir, "data")
+	}
+	return filePath
 }

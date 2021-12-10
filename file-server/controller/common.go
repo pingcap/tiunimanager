@@ -6,12 +6,11 @@
  *                                                                            *
  * http://www.apache.org/licenses/LICENSE-2.0                                 *
  *                                                                            *
- * Unless required by applicable law or agreed to in writing, software        *
- * distributed under the License is distributed on an "AS IS" BASIS,          *
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
- * See the License for the specific language governing permissions and        *
- * limitations under the License.                                             *
- *                                                                            *
+ *  Unless required by applicable law or agreed to in writing, software       *
+ *  distributed under the License is distributed on an "AS IS" BASIS,         *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *  See the License for the specific language governing permissions and       *
+ *  limitations under the License.                                            *
  ******************************************************************************/
 
 // Package classification TiEM API.
@@ -38,29 +37,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ResultMark struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
-type CommonFileResult struct {
-	ResultMark
-	Data interface{} `json:"data"`
-}
-
+// DefaultTimeout
+// todo adjust timeout for async flow task
 var DefaultTimeout = func(o *client.CallOptions) {
-	o.RequestTimeout = time.Second * 30
-	o.DialTimeout = time.Second * 30
-}
-
-func Success(data interface{}) *CommonFileResult {
-	return &CommonFileResult{ResultMark: ResultMark{0, "OK"}, Data: data}
-}
-
-func Fail(code int, message string) *CommonFileResult {
-	return &CommonFileResult{ResultMark{code, message}, struct{}{}}
+	o.RequestTimeout = time.Minute * 5
+	o.DialTimeout = time.Minute * 5
 }
 
 func Hello(c *gin.Context) {
 	c.JSON(http.StatusOK, Success("hello"))
+}
+
+func HelloPage(c *gin.Context) {
+	c.JSON(http.StatusOK, Success("hello world"))
 }

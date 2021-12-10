@@ -17,6 +17,7 @@ package importexport
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/message"
 )
 
@@ -45,8 +46,9 @@ type ImportExportService interface {
 	// @Parameter ctx
 	// @Parameter request
 	// @Return *message.QueryDataImportExportRecordsResp
+	// @Return *structs.Page
 	// @Return error
-	QueryDataTransportRecords(ctx context.Context, request *message.QueryDataImportExportRecordsReq) (*message.QueryDataImportExportRecordsResp, error)
+	QueryDataTransportRecords(ctx context.Context, request *message.QueryDataImportExportRecordsReq) (*message.QueryDataImportExportRecordsResp, *structs.Page, error)
 
 	// DeleteDataTransportRecord
 	// @Description: delete data import & export records by condition

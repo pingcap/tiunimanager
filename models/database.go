@@ -22,6 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
+	"github.com/pingcap-inc/tiem/models/platform/config"
 	"github.com/pingcap-inc/tiem/models/workflow"
 	"gorm.io/driver/sqlite"
 
@@ -36,7 +37,8 @@ type database struct {
 	importExportReaderWriter importexport.ReaderWriter
 	brReaderWriter           backuprestore.ReaderWriter
 	changeFeedReaderWriter   changefeed.ReaderWriter
-	clusterReaderWriter management.ReaderWriter
+	clusterReaderWriter      management.ReaderWriter
+	configReaderWriter       config.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -73,6 +75,10 @@ func (p *database) initTables() {
 	p.addTable(new(management.Cluster))
 	p.addTable(new(management.ClusterInstance))
 	p.addTable(new(management.ClusterRelation))
+	p.addTable(new(importexport.DataTransportRecord))
+	p.addTable(new(backuprestore.BackupRecord))
+	p.addTable(new(backuprestore.BackupStrategy))
+	p.addTable(new(config.SystemConfig))
 	p.addTable(new(management.ClusterTopologySnapshot))
 
 	// other tables
@@ -83,6 +89,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.workFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
 	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
 	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
+	defaultDb.configReaderWriter = config.NewConfigReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
@@ -130,8 +137,16 @@ func GetClusterReaderWriter() management.ReaderWriter {
 	return defaultDb.clusterReaderWriter
 }
 
-func SetClusterReaderWriter(rw management.ReaderWriter)  {
+func SetClusterReaderWriter(rw management.ReaderWriter) {
 	defaultDb.clusterReaderWriter = rw
+}
+
+func GetConfigReaderWriter() config.ReaderWriter {
+	return defaultDb.configReaderWriter
+}
+
+func SetConfigReaderWriter(rw config.ReaderWriter) {
+	defaultDb.configReaderWriter = rw
 }
 
 func MockDB() {

@@ -22,21 +22,22 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/resource"
 	"github.com/pingcap-inc/tiem/models/resource/resourcepool"
 )
 
 type FileHostProvider struct {
-	rw resource.ResourceReaderWriter
+	rw resource.ReaderWriter
 }
 
 func GetFileHostProvider() HostProvider {
 	hostProvider := new(FileHostProvider)
-	hostProvider.rw = resource.NewGormChangeFeedReadWrite()
+	hostProvider.rw = models.GetResourceReaderWriter()
 	return hostProvider
 }
 
-func (p *FileHostProvider) SetResourceReaderWriter(rw resource.ResourceReaderWriter) {
+func (p *FileHostProvider) SetResourceReaderWriter(rw resource.ReaderWriter) {
 	p.rw = rw
 }
 

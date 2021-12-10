@@ -24,33 +24,26 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+	dbCommon "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/resource/management"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 	"gorm.io/gorm"
 )
 
 type GormResourceReadWrite struct {
-	db *gorm.DB
+	dbCommon.GormDB
 }
 
-func NewGormChangeFeedReadWrite() *GormResourceReadWrite {
-	m := new(GormResourceReadWrite)
-	//m.db, _ = gorm.Open(sqlite.Open("./t2.db"), &gorm.Config{})
-	//m.InitTables(context.TODO())
+func NewGormResourceReadWrite(db *gorm.DB) ReaderWriter {
+	m := &GormResourceReadWrite{
+		dbCommon.WrapDB(db),
+	}
 	return m
 }
 
-func (rw *GormResourceReadWrite) SetDB(db *gorm.DB) {
-	rw.db = db
-}
-
-func (rw *GormResourceReadWrite) DB() (db *gorm.DB) {
-	return rw.db
-}
-
 func (rw *GormResourceReadWrite) addTable(ctx context.Context, tableModel interface{}) (newTable bool, err error) {
-	if !rw.db.Migrator().HasTable(tableModel) {
-		err := rw.db.Migrator().CreateTable(tableModel)
+	if !rw.DB(ctx).Migrator().HasTable(tableModel) {
+		err := rw.DB(ctx).Migrator().CreateTable(tableModel)
 		if nil != err {
 			return true, framework.NewTiEMErrorf(common.TIEM_RESOURCE_ADD_TABLE_ERROR, "crete table %v failed, error: %v", tableModel, err)
 		}
@@ -103,7 +96,7 @@ func (rw *GormResourceReadWrite) InitTables(ctx context.Context) error {
 
 func (rw *GormResourceReadWrite) initSystemDefaultLabels(ctx context.Context) (err error) {
 	for _, v := range management.DefaultLabelTypes {
-		err = rw.db.Create(&v).Error
+		err = rw.DB(ctx).Create(&v).Error
 		if err != nil {
 			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_INIT_LABELS_ERROR, "init default label table failed, error: %v", err)
 		}
@@ -112,7 +105,7 @@ func (rw *GormResourceReadWrite) initSystemDefaultLabels(ctx context.Context) (e
 }
 
 func (rw *GormResourceReadWrite) Create(ctx context.Context, hosts []rp.Host) (hostIds []string, err error) {
-	tx := rw.DB().Begin()
+	tx := rw.DB(ctx).Begin()
 	for _, host := range hosts {
 		err = tx.Create(&host).Error
 		if err != nil {
@@ -126,7 +119,7 @@ func (rw *GormResourceReadWrite) Create(ctx context.Context, hosts []rp.Host) (h
 }
 
 func (rw *GormResourceReadWrite) Delete(ctx context.Context, hostIds []string) (err error) {
-	tx := rw.DB().Begin()
+	tx := rw.DB(ctx).Begin()
 	for _, hostId := range hostIds {
 		var host rp.Host
 		if err = tx.Set("gorm:query_option", "FOR UPDATE").First(&host, "ID = ?", hostId).Error; err != nil {
@@ -212,7 +205,7 @@ func (rw *GormResourceReadWrite) locationFiltered(db *gorm.DB, location *structs
 }
 
 func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, err error) {
-	db := rw.DB()
+	db := rw.DB(ctx)
 	// Check Host Detail
 	if filter.HostID != "" {
 		err = db.Where("id = ?", filter.HostID).Find(&hosts).Error
@@ -230,7 +223,7 @@ func (rw *GormResourceReadWrite) Query(ctx context.Context, filter *structs.Host
 }
 
 func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error) {
-	tx := rw.DB().Begin()
+	tx := rw.DB(ctx).Begin()
 	for _, hostId := range hostIds {
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("status", status)
 		if result.Error != nil {
@@ -246,7 +239,7 @@ func (rw *GormResourceReadWrite) UpdateHostStatus(ctx context.Context, hostIds [
 	return nil
 }
 func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error) {
-	tx := rw.DB().Begin()
+	tx := rw.DB(ctx).Begin()
 	for _, hostId := range hostIds {
 		result := tx.Model(&rp.Host{}).Where("id = ?", hostId).Update("reserved", reserved)
 		if result.Error != nil {
@@ -264,7 +257,7 @@ func (rw *GormResourceReadWrite) UpdateHostReserved(ctx context.Context, hostIds
 
 func (rw *GormResourceReadWrite) GetHostItems(ctx context.Context, filter *structs.HostFilter, level int32, depth int32) (items []HostItem, err error) {
 	leafLevel := level + depth
-	tx := rw.DB().Begin()
+	tx := rw.DB(ctx).Begin()
 	db := tx.Model(&rp.Host{}).Select("region, az, rack, ip, host_name as name")
 	db, err = rw.hostFiltered(db, filter)
 	if err != nil {
@@ -293,7 +286,7 @@ func (rw *GormResourceReadWrite) GetHostItems(ctx context.Context, filter *struc
 	return
 }
 func (rw *GormResourceReadWrite) GetHostStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks []structs.Stocks, err error) {
-	tx := rw.DB().Begin()
+	tx := rw.DB(ctx).Begin()
 	db := tx.Model(&rp.Host{}).Select(
 		"hosts.free_cpu_cores as free_cpu_cores, hosts.free_memory as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
 		"left join disks on disks.host_id = hosts.id")

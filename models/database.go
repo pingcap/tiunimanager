@@ -16,11 +16,14 @@
 package models
 
 import (
+	"context"
+
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
+	"github.com/pingcap-inc/tiem/models/resource"
 	"github.com/pingcap-inc/tiem/models/workflow"
 	"gorm.io/driver/sqlite"
 
@@ -35,6 +38,7 @@ type database struct {
 	importExportReaderWriter importexport.ReaderWriter
 	brReaderWriter           backuprestore.ReaderWriter
 	changeFeedReaderWriter   changefeed.ReaderWriter
+	resourceReaderWriter     resource.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -54,22 +58,34 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 		base: db,
 	}
 
+	defaultDb.initReaderWriters()
+
 	if !reentry {
-		defaultDb.initTables()
+		err := defaultDb.initTables()
+		if err != nil {
+			logins.Fatalf("init tables failed, %v", err)
+			return err
+		}
 		defaultDb.initSystemData()
 	}
-
-	defaultDb.initReaderWriters()
 
 	return nil
 }
 
-func (p *database) initTables() {
+func (p *database) initTables() (err error) {
 	p.addTable(new(changefeed.ChangeFeedTask))
 	p.addTable(new(workflow.WorkFlow))
 	p.addTable(new(workflow.WorkFlowNode))
 
+	// init tables for resource manager
+	err = p.resourceReaderWriter.InitTables(context.TODO())
+	if err != nil {
+		return err
+	}
+
 	// other tables
+
+	return nil
 }
 
 func (p *database) initReaderWriters() {
@@ -77,6 +93,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.workFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
 	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
 	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
+	defaultDb.resourceReaderWriter = resource.NewGormResourceReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
@@ -118,6 +135,10 @@ func GetImportExportReaderWriter() importexport.ReaderWriter {
 
 func GetBRReaderWriter() backuprestore.ReaderWriter {
 	return defaultDb.brReaderWriter
+}
+
+func GetResourceReaderWriter() resource.ReaderWriter {
+	return defaultDb.resourceReaderWriter
 }
 
 func MockDB() {

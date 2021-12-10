@@ -20,8 +20,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/structs"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
-
-	"gorm.io/gorm"
 )
 
 // Use HostItem to store filtered hosts records to build hierarchy tree
@@ -32,10 +30,9 @@ type HostItem struct {
 	Ip     string
 	Name   string
 }
-type ResourceReaderWriter interface {
-	SetDB(db *gorm.DB)
-	DB() *gorm.DB
-
+type ReaderWriter interface {
+	// Init all table for resource manager
+	InitTables(ctx context.Context) error
 	Create(ctx context.Context, hosts []rp.Host) ([]string, error)
 	Delete(ctx context.Context, hostIds []string) (err error)
 	Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, err error)

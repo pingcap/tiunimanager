@@ -36,9 +36,8 @@ message DisplayStatusDTO {
 }
 
 message RpcRequest {
-    RpcOperator operator = 1;
-    string request = 2;
-    RpcPage page = 3;
+    string request = 1;
+    RpcPage page = 2;
 }
 
 message RpcResponse {
@@ -52,11 +51,4 @@ message RpcPage {
     int32 page = 1;
     int32 pageSize = 2;
     int32 total = 3;
-}
-
-message RpcOperator {
-    string id = 1;
-    string name = 2;
-    string tenantId = 3;
-    bool isManual = 4;
 }

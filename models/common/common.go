@@ -64,7 +64,7 @@ func WrapDBError(err error) error {
 	}
 
 	switch err.(type) {
-	case *framework.TiEMError:
+	case framework.TiEMError:
 		return err
 	default:
 		return framework.NewTiEMErrorf(common.TIEM_UNRECOGNIZED_ERROR, err.Error())

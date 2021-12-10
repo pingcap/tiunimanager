@@ -204,7 +204,7 @@ func (g *GormClusterReadWrite) GetLatestClusterTopologySnapshot(ctx context.Cont
 		return
 	}
 
-	err = g.DB(ctx).Model(snapshot).Where("cluster_id = ?", clusterID).Order("").First(&snapshot).Error
+	err = g.DB(ctx).Model(snapshot).Where("cluster_id = ?", clusterID).Order("id desc").First(&snapshot).Error
 	err = dbCommon.WrapDBError(err)
 	return
 }

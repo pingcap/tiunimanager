@@ -41,8 +41,8 @@ func buildDataImportConfig(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 
 	config := NewDataImportConfig(meta, info)
 	if config == nil {
-		framework.LogWithContext(ctx).Errorf("convert toml config failed, cluster: %s", meta.GetCluster().ID)
-		node.Fail(fmt.Errorf("convert toml config failed, cluster: %s", meta.GetCluster().ID))
+		framework.LogWithContext(ctx).Errorf("convert toml config failed, cluster: %s", meta.Cluster.ID)
+		node.Fail(fmt.Errorf("convert toml config failed, cluster: %s", meta.Cluster.ID))
 		return false
 	}
 
@@ -182,7 +182,7 @@ func importDataFailed(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) boo
 
 	meta := ctx.GetData(contextClusterMetaKey).(*handler.ClusterMeta)
 	info := ctx.GetData(contextDataTransportRecordKey).(*ExportInfo)
-	if err := updateTransportRecordFailed(ctx, info.RecordId, meta.GetCluster().ID); err != nil {
+	if err := updateTransportRecordFailed(ctx, info.RecordId, meta.Cluster.ID); err != nil {
 		node.Fail(err)
 		return false
 	}

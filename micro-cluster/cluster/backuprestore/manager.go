@@ -93,7 +93,7 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 	//todo: only support FULL Physics backup now
 	record := &backuprestore.BackupRecord{
 		Entity: dbModel.Entity{
-			TenantId: meta.GetCluster().TenantId,
+			TenantId: meta.Cluster.TenantId,
 			Status:   string(constants.ClusterBackupProcessing),
 		},
 		ClusterID:    request.ClusterID,

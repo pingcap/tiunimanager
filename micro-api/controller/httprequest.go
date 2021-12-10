@@ -36,7 +36,7 @@ import (
 // @return requestBody
 func HandleJsonRequestWithBuiltReq(c *gin.Context, req interface{}) (requestBody string, err error) {
 	return HandleRequest(c,
-		&req,
+		req,
 		func(c *gin.Context, req interface{}) error {
 			return nil
 		},
@@ -64,9 +64,9 @@ func HandleJsonRequestFromBody(c *gin.Context,
 	appenders ...func(c *gin.Context, req interface{}) error,
 ) (requestBody string, err error) {
 	return HandleRequest(c,
-		&req,
+		req,
 		func(c *gin.Context, req interface{}) error {
-			err = c.ShouldBindBodyWith(req, binding.JSON)
+			err = c.ShouldBindBodyWith(&req, binding.JSON)
 			if err != nil {
 				return err
 			}

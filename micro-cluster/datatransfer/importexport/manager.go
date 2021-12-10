@@ -100,7 +100,7 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request *message
 
 	record := &importexport.DataTransportRecord{
 		Entity: dbModel.Entity{
-			TenantId: meta.GetCluster().TenantId,
+			TenantId: meta.Cluster.TenantId,
 			Status:   string(constants.DataImportExportProcessing),
 		},
 		ClusterID:       request.ClusterID,
@@ -189,7 +189,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request *message
 
 		record := &importexport.DataTransportRecord{
 			Entity: dbModel.Entity{
-				TenantId: meta.GetCluster().TenantId,
+				TenantId: meta.Cluster.TenantId,
 				Status:   string(constants.DataImportExportProcessing),
 			},
 			ClusterID:       request.ClusterID,
@@ -231,7 +231,7 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request *message
 
 		record := &importexport.DataTransportRecord{
 			Entity: dbModel.Entity{
-				TenantId: meta.GetCluster().TenantId,
+				TenantId: meta.Cluster.TenantId,
 				Status:   string(constants.DataImportExportProcessing),
 			},
 			ClusterID:       request.ClusterID,

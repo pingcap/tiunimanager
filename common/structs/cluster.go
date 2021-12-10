@@ -29,7 +29,7 @@ import "time"
 type ClusterResourceParameterComputeResource struct {
 	Zone         string `json:"zoneCode"` //
 	DiskType     string `json:"diskType"` //NVMeSSD/SSD/SATA
-	DiskCapacity string `json:"diskCapacity"`
+	DiskCapacity int    `json:"diskCapacity"`
 	Spec         string `json:"specCode"` //4C8G/8C16G ?
 	Count        int    `json:"count"`
 }

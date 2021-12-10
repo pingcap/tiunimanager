@@ -59,8 +59,8 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) bool {
 		},
 		DbName:      "", //todo: support db table backup
 		TableName:   "",
-		ClusterId:   meta.GetCluster().ID,
-		ClusterName: meta.GetCluster().Name,
+		ClusterId:   meta.Cluster.ID,
+		ClusterName: meta.Cluster.Name,
 	}
 	storage := secondparty.BrStorage{
 		StorageType: storageType,
@@ -93,7 +93,7 @@ func updateBackupRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) b
 	brRW := models.GetBRReaderWriter()
 	err := brRW.UpdateBackupRecord(ctx, record.ID, string(constants.ClusterBackupFinished), size, backupTSO, time.Now())
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update backup reocrd %s of cluster %s failed", record.ID, meta.GetCluster().ID)
+		framework.LogWithContext(ctx).Errorf("update backup reocrd %s of cluster %s failed", record.ID, meta.Cluster.ID)
 		node.Fail(err)
 		return false
 	}
@@ -128,8 +128,8 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 		},
 		DbName:      "", //todo: support db table restore
 		TableName:   "",
-		ClusterId:   meta.GetCluster().ID,
-		ClusterName: meta.GetCluster().Name,
+		ClusterId:   meta.Cluster.ID,
+		ClusterName: meta.Cluster.Name,
 	}
 	storage := secondparty.BrStorage{
 		StorageType: storageType,
@@ -164,7 +164,7 @@ func backupFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) bool {
 	brRW := models.GetBRReaderWriter()
 	err := brRW.UpdateBackupRecord(ctx, record.ID, string(constants.ClusterBackupFailed), 0, 0, time.Now())
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("update backup reocrd %s of cluster %s failed", record.ID, meta.GetCluster().ID)
+		framework.LogWithContext(ctx).Errorf("update backup reocrd %s of cluster %s failed", record.ID, meta.Cluster.ID)
 		node.Fail(err)
 		return false
 	}

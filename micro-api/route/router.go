@@ -101,6 +101,9 @@ func Route(g *gin.Engine) {
 			cluster.POST("/:clusterId/scale-out", clusterApi.ScaleOut)
 			cluster.POST("/:clusterId/scale-in", clusterApi.ScaleIn)
 
+			// Clone cluster
+			cluster.POST("/clone", clusterApi.Clone)
+
 			// Params
 			cluster.GET("/:clusterId/params", parameterApi.QueryParams)
 			cluster.PUT("/:clusterId/params", parameterApi.UpdateParams)

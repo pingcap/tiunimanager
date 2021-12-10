@@ -22,6 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
+	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/models/resource"
 	"github.com/pingcap-inc/tiem/models/workflow"
@@ -39,6 +40,7 @@ type database struct {
 	brReaderWriter           backuprestore.ReaderWriter
 	changeFeedReaderWriter   changefeed.ReaderWriter
 	resourceReaderWriter     resource.ReaderWriter
+	clusterReaderWriter      management.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -76,6 +78,9 @@ func (p *database) initTables() (err error) {
 	p.addTable(new(changefeed.ChangeFeedTask))
 	p.addTable(new(workflow.WorkFlow))
 	p.addTable(new(workflow.WorkFlowNode))
+	p.addTable(new(management.Cluster))
+	p.addTable(new(management.ClusterInstance))
+	p.addTable(new(management.ClusterRelation))
 
 	// init tables for resource manager
 	err = p.resourceReaderWriter.InitTables(context.TODO())
@@ -139,6 +144,14 @@ func GetBRReaderWriter() backuprestore.ReaderWriter {
 
 func GetResourceReaderWriter() resource.ReaderWriter {
 	return defaultDb.resourceReaderWriter
+}
+
+func GetClusterReaderWriter() management.ReaderWriter {
+	return defaultDb.clusterReaderWriter
+}
+
+func SetClusterReaderWriter(rw management.ReaderWriter) {
+	defaultDb.clusterReaderWriter = rw
 }
 
 func MockDB() {

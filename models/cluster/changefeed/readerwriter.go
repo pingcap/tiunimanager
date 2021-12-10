@@ -73,13 +73,13 @@ type ReaderWriter interface {
 	// @Parameter taskId
 	// @Parameter targetStatus
 	// @return error if task non-existent or unlocked
-	UnlockStatus(ctx context.Context, taskId string, targetStatus int8) error
+	UnlockStatus(ctx context.Context, taskId string, targetStatus string) error
 
 	// UpdateConfig
 	// @Description: update task config with a template
 	// @Receiver m
 	// @Parameter ctx
-	// @Parameter updateTemplate skip fields below : Status、StatusLock、ClusterId, StartTS
+	// @Parameter updateTemplate skip fields below : ChangeFeedStatus、StatusLock、ClusterId, StartTS
 	// @return error if task non-existent
 	UpdateConfig(ctx context.Context, updateTemplate *ChangeFeedTask) error
 }

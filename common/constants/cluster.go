@@ -59,6 +59,8 @@ const (
 	ClusterMaintenanceUpgrading                    ClusterMaintenanceStatus = "Upgrading"
 	ClusterMaintenanceSwitching                    ClusterMaintenanceStatus = "Switching"
 	ClusterMaintenanceModifyParameterAndRestarting ClusterMaintenanceStatus = "ModifyParameterRestarting"
+
+	ClusterMaintenanceNone                    	   ClusterMaintenanceStatus = ""
 )
 
 type ClusterBackupStatus string

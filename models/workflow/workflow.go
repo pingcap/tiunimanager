@@ -29,5 +29,5 @@ type WorkFlow struct {
 }
 
 func (flow *WorkFlow) Finished() bool {
-	return string(constants.WorkFlowStatusFinished) == flow.Status || string(constants.WorkFlowStatusError) == flow.Status || string(constants.WorkFlowStatusCanceled) == flow.Status
+	return constants.WorkFlowStatusFinished == flow.Status || constants.WorkFlowStatusError == flow.Status || constants.WorkFlowStatusCanceled == flow.Status
 }

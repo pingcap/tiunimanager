@@ -47,7 +47,7 @@ type ReaderWriter interface {
 	// @Parameter recordId
 	// @Return *DataTransportRecord
 	// @Return error
-	GetDataTransportRecord(ctx context.Context, recorId string) (record *DataTransportRecord, err error)
+	GetDataTransportRecord(ctx context.Context, recordId string) (record *DataTransportRecord, err error)
 
 	// QueryDataTransportRecords
 	// @Description: query data transport records by condition

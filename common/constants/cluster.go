@@ -62,13 +62,6 @@ const (
 	ClusterMaintenanceNone                    	   ClusterMaintenanceStatus = ""
 )
 
-type ClusterInstanceStatus string
-
-const (
-	InstanceInitializing ClusterInstanceStatus = "Initializing"
-	InstanceRunning      ClusterInstanceStatus = "Running"
-)
-
 const (
 	FlowCreateCluster    = "CreateCluster"
 	FlowDeleteCluster    = "DeleteCluster"

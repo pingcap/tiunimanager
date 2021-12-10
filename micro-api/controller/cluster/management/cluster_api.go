@@ -492,7 +492,7 @@ func ScaleOut(c *gin.Context) {
 	// handle scale out request
 	if err := c.ShouldBindWith(&request, binding.JSON); err != nil {
 		framework.LogWithContext(c).Errorf("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 	request.ClusterID = c.Param("clusterId")
@@ -500,7 +500,7 @@ func ScaleOut(c *gin.Context) {
 	body, err := json.Marshal(request)
 	if err != nil {
 		framework.LogWithContext(c).Errorf("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -529,7 +529,7 @@ func ScaleIn(c *gin.Context) {
 	// handle scale in request
 	if err := c.ShouldBindWith(&request, binding.JSON); err != nil {
 		framework.LogWithContext(c).Error("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 	request.ClusterID = c.Param("clusterId")
@@ -537,7 +537,7 @@ func ScaleIn(c *gin.Context) {
 	body, err := json.Marshal(request)
 	if err != nil {
 		framework.LogWithContext(c).Error("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 
@@ -565,7 +565,7 @@ func Clone(c *gin.Context) {
 	// handle clone cluster request
 	if err := c.ShouldBindWith(&request, binding.JSON); err != nil {
 		framework.LogWithContext(c).Errorf("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 	// set default clone strategy
@@ -575,7 +575,7 @@ func Clone(c *gin.Context) {
 	body, err := json.Marshal(request)
 	if err != nil {
 		framework.LogWithContext(c).Errorf("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
 		return
 	}
 

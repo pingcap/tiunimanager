@@ -85,7 +85,7 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 		}
 	}
 	if err := clusterMeta.UpdateInstancesStatus(context.Context,
-		constants.InstanceInitializing, constants.InstanceRunning); err != nil {
+		constants.ClusterInitializing, constants.ClusterRunning); err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"update cluster[%s] instances status into running error: %s", clusterMeta.Cluster.Name, err.Error())
 		node.Fail(err)

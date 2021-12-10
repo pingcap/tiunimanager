@@ -64,7 +64,7 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 					DiskType:     item.DiskType,
 					DiskCapacity: int32(item.DiskCapacity),
 				}
-				instance.Status = string(constants.InstanceInitializing)
+				instance.Status = string(constants.ClusterInitializing)
 				p.Instances[compute.Type] = append(p.Instances[compute.Type], instance)
 			}
 		}
@@ -147,7 +147,7 @@ func (p *ClusterMeta) AllocInstanceResource(ctx context.Context) (string, error)
 	instances := make([]*management.ClusterInstance, 0)
 	for _, components := range p.Instances {
 		for _, instance := range components {
-			if instance.Status != string(constants.InstanceInitializing) {
+			if instance.Status != string(constants.ClusterInitializing) {
 				continue
 			}
 			instances = append(instances, instance)
@@ -253,7 +253,7 @@ func (p *ClusterMeta) UpdateClusterMaintenanceStatus(ctx context.Context, status
 // @Description update cluster Instances status
 // @Return		error
 func (p *ClusterMeta) UpdateInstancesStatus(ctx context.Context,
-	originStatus constants.ClusterInstanceStatus, status constants.ClusterInstanceStatus) error {
+	originStatus constants.ClusterRunningStatus, status constants.ClusterRunningStatus) error {
 	for _, components := range p.Instances {
 		for _, instance := range components {
 			if instance.Status == string(originStatus) {

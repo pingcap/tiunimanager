@@ -33,15 +33,17 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 var brService BRService
+var once sync.Once
 
 func GetBRService() BRService {
-	if brService == nil {
+	once.Do(func() {
 		brService = NewBRManager()
-	}
+	})
 	return brService
 }
 
@@ -264,7 +266,7 @@ func (mgr *BRManager) GetBackupStrategy(ctx context.Context, request *cluster.Ge
 	}, nil
 }
 
-func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request *cluster.UpdateBackupStrategyReq) (*cluster.UpdateBackupStrategyResp, error) {
+func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request *cluster.SaveBackupStrategyReq) (*cluster.SaveBackupStrategyResp, error) {
 	framework.LogWithContext(ctx).Infof("Begin SaveBackupStrategy, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End SaveBackupStrategy")
 
@@ -289,7 +291,7 @@ func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request *cluster.U
 		return nil, err
 	}
 
-	return &cluster.UpdateBackupStrategyResp{}, nil
+	return &cluster.SaveBackupStrategyResp{}, nil
 }
 
 func (mgr *BRManager) DeleteBackupStrategy(ctx context.Context, request *cluster.DeleteBackupStrategyReq) (*cluster.DeleteBackupStrategyResp, error) {

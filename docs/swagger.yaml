@@ -7,49 +7,6 @@ definitions:
       userName:
         type: string
     type: object
-  backuprestore.BackupDeleteReq:
-    properties:
-      clusterId:
-        type: string
-    type: object
-  backuprestore.BackupRecord:
-    properties:
-      backupMethod:
-        type: string
-      backupMode:
-        type: string
-      backupTso:
-        type: integer
-      backupType:
-        type: string
-      clusterId:
-        type: string
-      endTime:
-        type: string
-      filePath:
-        type: string
-      id:
-        type: integer
-      operator:
-        $ref: '#/definitions/controller.Operator'
-      size:
-        type: number
-      startTime:
-        type: string
-      status:
-        $ref: '#/definitions/controller.StatusInfo'
-    type: object
-  backuprestore.BackupReq:
-    properties:
-      backupMethod:
-        type: string
-      backupType:
-        type: string
-      clusterId:
-        type: string
-      filePath:
-        type: string
-    type: object
   backuprestore.BackupStrategy:
     properties:
       backupDate:
@@ -60,11 +17,6 @@ definitions:
         type: string
       period:
         type: string
-    type: object
-  backuprestore.BackupStrategyUpdateReq:
-    properties:
-      strategy:
-        $ref: '#/definitions/backuprestore.BackupStrategy'
     type: object
   backuprestore.RestoreReq:
     properties:
@@ -94,6 +46,25 @@ definitions:
         type: array
       tls:
         type: boolean
+    type: object
+  cluster.BackupClusterDataReq:
+    properties:
+      backupMode:
+        description: auto,manual
+        type: string
+      backupType:
+        description: full,incr
+        type: string
+      clusterId:
+        type: string
+    type: object
+  cluster.BackupClusterDataResp:
+    properties:
+      backupId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
     type: object
   cluster.CreateChangeFeedTaskReq:
     properties:
@@ -144,6 +115,17 @@ definitions:
       id:
         example: TASK_ID_IN_TIEM____22
         type: string
+    type: object
+  cluster.DeleteBackupDataReq:
+    properties:
+      backupId:
+        type: string
+      backupMode:
+        type: string
+      clusterId:
+        type: string
+    type: object
+  cluster.DeleteBackupDataResp:
     type: object
   cluster.DeleteChangeFeedTaskResp:
     properties:
@@ -230,6 +212,13 @@ definitions:
         example: 1
         type: integer
     type: object
+  cluster.QueryBackupRecordsResp:
+    properties:
+      backupRecords:
+        items:
+          $ref: '#/definitions/structs.BackupRecord'
+        type: array
+    type: object
   cluster.QueryChangeFeedTaskResp:
     properties:
       clusterId:
@@ -299,6 +288,15 @@ definitions:
         example: 1
         type: integer
     type: object
+  cluster.SaveBackupStrategyReq:
+    properties:
+      clusterId:
+        type: string
+      strategy:
+        $ref: '#/definitions/structs.BackupStrategy'
+    type: object
+  cluster.SaveBackupStrategyResp:
+    type: object
   cluster.UpdateChangeFeedTaskReq:
     properties:
       clusterId:
@@ -365,17 +363,6 @@ definitions:
       message:
         type: string
     type: object
-  controller.Operator:
-    properties:
-      manualOperator:
-        type: boolean
-      operatorId:
-        type: string
-      operatorName:
-        type: string
-      tenantId:
-        type: string
-    type: object
   controller.Page:
     properties:
       page:
@@ -419,93 +406,6 @@ definitions:
         type: number
       used:
         type: number
-    type: object
-  flowtask.FlowWorkDetailInfo:
-    properties:
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      flowWorkName:
-        type: string
-      id:
-        type: integer
-      inProcessFlowId:
-        type: integer
-      manualOperator:
-        type: boolean
-      operatorId:
-        type: string
-      operatorName:
-        type: string
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      taskName:
-        items:
-          type: string
-        type: array
-      tasks:
-        items:
-          $ref: '#/definitions/flowtask.FlowWorkTaskInfo'
-        type: array
-      tenantId:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  flowtask.FlowWorkDisplayInfo:
-    properties:
-      clusterId:
-        type: string
-      clusterName:
-        type: string
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      flowWorkName:
-        type: string
-      id:
-        type: integer
-      inProcessFlowId:
-        type: integer
-      manualOperator:
-        type: boolean
-      operatorId:
-        type: string
-      operatorName:
-        type: string
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      tenantId:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  flowtask.FlowWorkTaskInfo:
-    properties:
-      endTime:
-        type: string
-      id:
-        type: integer
-      result:
-        type: string
-      startTime:
-        type: string
-      taskName:
-        type: string
-      taskParameters:
-        type: string
-      taskStatus:
-        type: integer
     type: object
   hostresource.AllocHostsReq:
     properties:
@@ -688,105 +588,6 @@ definitions:
         type: string
       userName:
         type: string
-    type: object
-  importexport.DataExportReq:
-    properties:
-      accessKey:
-        type: string
-      bucketRegion:
-        type: string
-      bucketUrl:
-        type: string
-      clusterId:
-        type: string
-      comment:
-        type: string
-      endpointUrl:
-        type: string
-      fileType:
-        type: string
-      filter:
-        type: string
-      password:
-        type: string
-      secretAccessKey:
-        type: string
-      sql:
-        type: string
-      storageType:
-        type: string
-      userName:
-        type: string
-      zipName:
-        type: string
-    type: object
-  importexport.DataExportResp:
-    properties:
-      recordId:
-        type: integer
-    type: object
-  importexport.DataImportReq:
-    properties:
-      accessKey:
-        type: string
-      bucketUrl:
-        type: string
-      clusterId:
-        type: string
-      comment:
-        type: string
-      endpointUrl:
-        type: string
-      password:
-        type: string
-      recordId:
-        type: integer
-      secretAccessKey:
-        type: string
-      storageType:
-        type: string
-      userName:
-        type: string
-    type: object
-  importexport.DataImportResp:
-    properties:
-      recordId:
-        type: integer
-    type: object
-  importexport.DataTransportDeleteReq:
-    properties:
-      clusterId:
-        type: string
-    type: object
-  importexport.DataTransportInfo:
-    properties:
-      clusterId:
-        type: string
-      comment:
-        type: string
-      endTime:
-        type: string
-      filePath:
-        type: string
-      recordId:
-        type: integer
-      startTime:
-        type: string
-      status:
-        $ref: '#/definitions/controller.StatusInfo'
-      storageType:
-        type: string
-      transportType:
-        type: string
-      zipName:
-        type: string
-    type: object
-  importexport.DataTransportRecordQueryResp:
-    properties:
-      transportRecords:
-        items:
-          $ref: '#/definitions/importexport.DataTransportInfo'
-        type: array
     type: object
   knowledge.ClusterComponent:
     properties:
@@ -1426,6 +1227,113 @@ definitions:
         example: password
         type: string
     type: object
+  message.DataExportReq:
+    properties:
+      accessKey:
+        type: string
+      bucketRegion:
+        type: string
+      bucketUrl:
+        type: string
+      clusterId:
+        type: string
+      comment:
+        type: string
+      endpointUrl:
+        type: string
+      fileType:
+        type: string
+      filter:
+        type: string
+      password:
+        type: string
+      secretAccessKey:
+        type: string
+      sql:
+        type: string
+      storageType:
+        type: string
+      userName:
+        type: string
+      zipName:
+        type: string
+    type: object
+  message.DataExportResp:
+    properties:
+      recordId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  message.DataImportReq:
+    properties:
+      accessKey:
+        type: string
+      bucketUrl:
+        type: string
+      clusterId:
+        type: string
+      comment:
+        type: string
+      endpointUrl:
+        type: string
+      password:
+        type: string
+      recordId:
+        type: string
+      secretAccessKey:
+        type: string
+      storageType:
+        type: string
+      userName:
+        type: string
+    type: object
+  message.DataImportResp:
+    properties:
+      recordId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  message.DeleteImportExportRecordReq:
+    properties:
+      recordId:
+        type: string
+    type: object
+  message.DeleteImportExportRecordResp:
+    properties:
+      recordId:
+        type: string
+    type: object
+  message.QueryDataImportExportRecordsResp:
+    properties:
+      transportRecords:
+        items:
+          $ref: '#/definitions/structs.DataImportExportRecordInfo'
+        type: array
+    type: object
+  message.QueryWorkFlowDetailResp:
+    properties:
+      info:
+        $ref: '#/definitions/structs.WorkFlowInfo'
+      nodeNames:
+        items:
+          type: string
+        type: array
+      nodes:
+        items:
+          $ref: '#/definitions/structs.WorkFlowNodeInfo'
+        type: array
+    type: object
+  message.QueryWorkFlowsResp:
+    properties:
+      workFlows:
+        items:
+          $ref: '#/definitions/structs.WorkFlowInfo'
+        type: array
+    type: object
   parameter.InspectParamsResp:
     properties:
       componentType:
@@ -1793,6 +1701,109 @@ definitions:
         example: v5.0
         type: string
     type: object
+  structs.BackupRecord:
+    properties:
+      backupMethod:
+        type: string
+      backupMode:
+        type: string
+      backupTso:
+        type: integer
+      backupType:
+        type: string
+      clusterId:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      endTime:
+        type: string
+      filePath:
+        type: string
+      id:
+        type: string
+      size:
+        type: number
+      startTime:
+        type: string
+      status:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  structs.BackupStrategy:
+    properties:
+      backupDate:
+        type: string
+      clusterId:
+        type: string
+      period:
+        type: string
+    type: object
+  structs.DataImportExportRecordInfo:
+    properties:
+      clusterId:
+        type: string
+      comment:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      endTime:
+        type: string
+      filePath:
+        type: string
+      recordId:
+        type: string
+      startTime:
+        type: string
+      status:
+        type: string
+      storageType:
+        type: string
+      transportType:
+        type: string
+      updateTime:
+        type: string
+      zipName:
+        type: string
+    type: object
+  structs.WorkFlowInfo:
+    properties:
+      BizId:
+        type: string
+      createTime:
+        type: string
+      deleteTime:
+        type: string
+      flowWorkName:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      updateTime:
+        type: string
+    type: object
+  structs.WorkFlowNodeInfo:
+    properties:
+      endTime:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      parameters:
+        type: string
+      result:
+        type: string
+      startTime:
+        type: string
+      status:
+        type: string
+    type: object
   warehouse.DomainResource:
     properties:
       count:
@@ -1867,20 +1878,25 @@ paths:
       description: query backup records of a cluster
       parameters:
       - in: query
+        name: backupId
+        type: string
+      - in: query
         name: clusterId
         type: string
       - in: query
         name: endTime
-        type: integer
-      - in: query
+        type: string
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       - in: query
         name: startTime
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1891,9 +1907,7 @@ paths:
             - $ref: '#/definitions/controller.ResultWithPage'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/backuprestore.BackupRecord'
-                  type: array
+                  $ref: '#/definitions/cluster.QueryBackupRecordsResp'
               type: object
         "401":
           description: Unauthorized
@@ -1922,7 +1936,7 @@ paths:
         name: backupReq
         required: true
         schema:
-          $ref: '#/definitions/backuprestore.BackupReq'
+          $ref: '#/definitions/cluster.BackupClusterDataReq'
       produces:
       - application/json
       responses:
@@ -1933,7 +1947,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/backuprestore.BackupRecord'
+                  $ref: '#/definitions/cluster.BackupClusterDataResp'
               type: object
         "401":
           description: Unauthorized
@@ -1968,7 +1982,7 @@ paths:
         name: backupDeleteReq
         required: true
         schema:
-          $ref: '#/definitions/backuprestore.BackupDeleteReq'
+          $ref: '#/definitions/cluster.DeleteBackupDataReq'
       produces:
       - application/json
       responses:
@@ -1979,7 +1993,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  type: integer
+                  $ref: '#/definitions/cluster.DeleteBackupDataResp'
               type: object
         "401":
           description: Unauthorized
@@ -2877,7 +2891,7 @@ paths:
         name: updateReq
         required: true
         schema:
-          $ref: '#/definitions/backuprestore.BackupStrategyUpdateReq'
+          $ref: '#/definitions/cluster.SaveBackupStrategyReq'
       produces:
       - application/json
       responses:
@@ -2888,7 +2902,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/backuprestore.BackupStrategy'
+                  $ref: '#/definitions/cluster.SaveBackupStrategyResp'
               type: object
         "401":
           description: Unauthorized
@@ -2958,7 +2972,7 @@ paths:
         name: dataExport
         required: true
         schema:
-          $ref: '#/definitions/importexport.DataExportReq'
+          $ref: '#/definitions/message.DataExportReq'
       produces:
       - application/json
       responses:
@@ -2969,7 +2983,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/importexport.DataExportResp'
+                  $ref: '#/definitions/message.DataExportResp'
               type: object
         "401":
           description: Unauthorized
@@ -2999,7 +3013,7 @@ paths:
         name: dataImport
         required: true
         schema:
-          $ref: '#/definitions/importexport.DataImportReq'
+          $ref: '#/definitions/message.DataImportReq'
       produces:
       - application/json
       responses:
@@ -3010,7 +3024,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/importexport.DataImportResp'
+                  $ref: '#/definitions/message.DataImportResp'
               type: object
         "401":
           description: Unauthorized
@@ -3166,10 +3180,12 @@ paths:
       - in: query
         name: endTime
         type: integer
-      - in: query
+      - description: Current page location
+        in: query
         name: page
         type: integer
-      - in: query
+      - description: Number of this request
+        in: query
         name: pageSize
         type: integer
       - in: query
@@ -3177,7 +3193,7 @@ paths:
         type: boolean
       - in: query
         name: recordId
-        type: integer
+        type: string
       - in: query
         name: startTime
         type: integer
@@ -3191,7 +3207,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/importexport.DataTransportRecordQueryResp'
+                  $ref: '#/definitions/message.QueryDataImportExportRecordsResp'
               type: object
         "401":
           description: Unauthorized
@@ -3226,7 +3242,7 @@ paths:
         name: DataTransportDeleteReq
         required: true
         schema:
-          $ref: '#/definitions/importexport.DataTransportDeleteReq'
+          $ref: '#/definitions/message.DeleteImportExportRecordReq'
       produces:
       - application/json
       responses:
@@ -3237,7 +3253,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  type: integer
+                  $ref: '#/definitions/message.DeleteImportExportRecordResp'
               type: object
         "401":
           description: Unauthorized
@@ -3256,98 +3272,6 @@ paths:
       summary: delete data transport record
       tags:
       - cluster data transport
-  /flowworks/:
-    get:
-      consumes:
-      - application/json
-      description: query flow works
-      parameters:
-      - in: query
-        name: clusterId
-        type: string
-      - in: query
-        name: keyword
-        type: string
-      - in: query
-        name: page
-        type: integer
-      - in: query
-        name: pageSize
-        type: integer
-      - in: query
-        name: status
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.ResultWithPage'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/flowtask.FlowWorkDisplayInfo'
-                  type: array
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: query flow works
-      tags:
-      - task
-  /flowworks/{flowWorkId}:
-    get:
-      consumes:
-      - application/json
-      description: show details of a flow work
-      parameters:
-      - description: flow work id
-        in: path
-        name: flowWorkId
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/flowtask.FlowWorkDetailInfo'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: show details of a flow work
-      tags:
-      - task
   /knowledges/:
     get:
       consumes:
@@ -4261,6 +4185,98 @@ paths:
       summary: user profile
       tags:
       - platform
+  /workflow/:
+    get:
+      consumes:
+      - application/json
+      description: query flow works
+      parameters:
+      - in: query
+        name: bizId
+        type: string
+      - in: query
+        name: flowName
+        type: string
+      - description: Current page location
+        in: query
+        name: page
+        type: integer
+      - description: Number of this request
+        in: query
+        name: pageSize
+        type: integer
+      - in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.ResultWithPage'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryWorkFlowsResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: query flow works
+      tags:
+      - task
+  /workflow/{workFlowId}:
+    get:
+      consumes:
+      - application/json
+      description: show details of a flow work
+      parameters:
+      - description: flow work id
+        in: path
+        name: workFlowId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/message.QueryWorkFlowDetailResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: show details of a flow work
+      tags:
+      - task
 securityDefinitions:
   ApiKeyAuth:
     in: header

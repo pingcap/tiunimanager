@@ -34,10 +34,13 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 )
 
 var manager ImportExportService
+var once sync.Once
 
 type ImportExportManager struct {
 	defaultExportPath string
@@ -45,9 +48,9 @@ type ImportExportManager struct {
 }
 
 func GetImportExportService() ImportExportService {
-	if manager == nil {
+	once.Do(func() {
 		manager = NewImportExportManager()
-	}
+	})
 	return manager
 }
 
@@ -83,6 +86,11 @@ func NewImportExportManager() *ImportExportManager {
 func (mgr *ImportExportManager) ExportData(ctx context.Context, request *message.DataExportReq) (*message.DataExportResp, error) {
 	framework.LogWithContext(ctx).Infof("begin exportdata request %+v", request)
 	defer framework.LogWithContext(ctx).Infof("end exportdata")
+
+	if err := mgr.exportDataPreCheck(ctx, request); err != nil {
+		framework.LogWithContext(ctx).Errorf("export data precheck failed, %s", err.Error())
+		return nil, err
+	}
 
 	meta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
@@ -151,6 +159,11 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request *message
 func (mgr *ImportExportManager) ImportData(ctx context.Context, request *message.DataImportReq) (*message.DataImportResp, error) {
 	framework.LogWithContext(ctx).Infof("begin importdata request %+v", request)
 	defer framework.LogWithContext(ctx).Infof("end importdata")
+
+	if err := mgr.importDataPreCheck(ctx, request); err != nil {
+		framework.LogWithContext(ctx).Errorf("export data precheck failed, %s", err.Error())
+		return nil, err
+	}
 
 	meta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
@@ -272,14 +285,14 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request *message
 	}, nil
 }
 
-func (mgr *ImportExportManager) QueryDataTransportRecords(ctx context.Context, request *message.QueryDataImportExportRecordsReq) (*message.QueryDataImportExportRecordsResp, error) {
+func (mgr *ImportExportManager) QueryDataTransportRecords(ctx context.Context, request *message.QueryDataImportExportRecordsReq) (*message.QueryDataImportExportRecordsResp, *structs.Page, error) {
 	framework.LogWithContext(ctx).Infof("begin QueryDataTransportRecords request: %+v", request)
 	defer framework.LogWithContext(ctx).Info("end QueryDataTransportRecords")
 
 	rw := models.GetImportExportReaderWriter()
-	records, _, err := rw.QueryDataTransportRecords(ctx, request.RecordID, request.ClusterID, request.ReImport, time.Unix(request.StartTime, 0), time.Unix(request.EndTime, 0), request.Page, request.PageSize)
+	records, total, err := rw.QueryDataTransportRecords(ctx, request.RecordID, request.ClusterID, request.ReImport, time.Unix(request.StartTime, 0), time.Unix(request.EndTime, 0), request.Page, request.PageSize)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	respRecords := make([]*structs.DataImportExportRecordInfo, len(records))
@@ -301,9 +314,16 @@ func (mgr *ImportExportManager) QueryDataTransportRecords(ctx context.Context, r
 		}
 	}
 
-	return &message.QueryDataImportExportRecordsResp{
+	response := &message.QueryDataImportExportRecordsResp{
 		Records: respRecords,
-	}, nil
+	}
+	page := &structs.Page{
+		Page:     request.Page,
+		PageSize: request.PageSize,
+		Total:    int(total),
+	}
+
+	return response, page, nil
 }
 
 func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, request *message.DeleteImportExportRecordReq) (*message.DeleteImportExportRecordResp, error) {
@@ -331,6 +351,134 @@ func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, r
 	framework.LogWithContext(ctx).Infof("delete transport record %+v success", record.ID)
 
 	return nil, nil
+}
+
+func (mgr *ImportExportManager) exportDataPreCheck(ctx context.Context, request *message.DataExportReq) error {
+	if request.ClusterID == "" {
+		return fmt.Errorf("invalid param clusterId %s", request.ClusterID)
+	}
+	if request.UserName == "" {
+		return fmt.Errorf("invalid param userName %s", request.UserName)
+	}
+	/*
+		if request.Password == "" {
+			return fmt.Errorf("invalid param password %s", request.Password)
+		}
+	*/
+
+	if FileTypeCSV != request.FileType && FileTypeSQL != request.FileType {
+		return fmt.Errorf("invalid param fileType %s", request.FileType)
+	}
+	if request.ZipName == "" {
+		request.ZipName = constants.DefaultZipName
+	} else if !strings.HasSuffix(request.ZipName, ".zip") {
+		request.ZipName = fmt.Sprintf("%s.zip", request.ZipName)
+	}
+
+	switch request.StorageType {
+	case string(constants.StorageTypeS3):
+		if request.EndpointUrl == "" {
+			return fmt.Errorf("invalid param endpointUrl %s", request.EndpointUrl)
+		}
+		if request.BucketUrl == "" {
+			return fmt.Errorf("invalid param bucketUrl %s", request.BucketUrl)
+		}
+		if request.AccessKey == "" {
+			return fmt.Errorf("invalid param accessKey %s", request.AccessKey)
+		}
+		if request.SecretAccessKey == "" {
+			return fmt.Errorf("invalid param secretAccessKey %s", request.SecretAccessKey)
+		}
+	case string(constants.StorageTypeNFS):
+		absPath, err := filepath.Abs(mgr.defaultExportPath)
+		if err != nil {
+			return fmt.Errorf("export dir %s is not vaild", mgr.defaultExportPath)
+		}
+		if !mgr.checkFilePathExists(absPath) {
+			//return fmt.Errorf("export path %s not exist", absPath)
+			_ = os.MkdirAll(absPath, os.ModeDir)
+		}
+	default:
+		return fmt.Errorf("invalid param storageType %s", request.StorageType)
+	}
+
+	return nil
+}
+
+func (mgr *ImportExportManager) importDataPreCheck(ctx context.Context, request *message.DataImportReq) error {
+	if request.ClusterID == "" {
+		return fmt.Errorf("invalid param clusterId %s", request.ClusterID)
+	}
+	if request.UserName == "" {
+		return fmt.Errorf("invalid param userName %s", request.UserName)
+	}
+	/*
+		if request.Password == "" {
+			return fmt.Errorf("invalid param password %s", request.Password)
+		}
+	*/
+	absPath, err := filepath.Abs(mgr.defaultImportPath)
+	if err != nil {
+		return fmt.Errorf("import dir %s is not vaild", mgr.defaultImportPath)
+	}
+	if !mgr.checkFilePathExists(absPath) {
+		//return fmt.Errorf("import path %s not exist", absPath)
+		_ = os.MkdirAll(absPath, os.ModeDir)
+	}
+
+	if request.RecordId == "" {
+		switch request.StorageType {
+		case string(constants.StorageTypeS3):
+			if request.EndpointUrl == "" {
+				return fmt.Errorf("invalid param endpointUrl %s", request.EndpointUrl)
+			}
+			if request.BucketUrl == "" {
+				return fmt.Errorf("invalid param bucketUrl %s", request.BucketUrl)
+			}
+			if request.AccessKey == "" {
+				return fmt.Errorf("invalid param accessKey %s", request.AccessKey)
+			}
+			if request.SecretAccessKey == "" {
+				return fmt.Errorf("invalid param secretAccessKey %s", request.SecretAccessKey)
+			}
+		case string(constants.StorageTypeNFS):
+			break
+		default:
+			return fmt.Errorf("invalid param storageType %s", request.StorageType)
+		}
+	} else {
+		// import from transport record
+		request.StorageType = string(constants.StorageTypeNFS)
+		rw := models.GetImportExportReaderWriter()
+		recordGet, err := rw.GetDataTransportRecord(ctx, request.RecordId)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get data transport record %s failed, %s", request.RecordId, err.Error())
+			return fmt.Errorf("get data transport record %s failed, %s", request.RecordId, err.Error())
+		}
+
+		if !mgr.checkFilePathExists(recordGet.FilePath) {
+			return fmt.Errorf("data source path %s not exist", recordGet.FilePath)
+		}
+		if recordGet.StorageType != string(constants.StorageTypeNFS) {
+			return fmt.Errorf("storage type %s can not support re-import", recordGet.StorageType)
+		}
+		if !recordGet.ReImportSupport {
+			return fmt.Errorf("transport record %s not support re-import", recordGet.ID)
+		}
+	}
+
+	return nil
+}
+
+func (mgr *ImportExportManager) checkFilePathExists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		return false
+	}
+	return true
 }
 
 func (mgr *ImportExportManager) checkExportParamSupportReimport(request *message.DataExportReq) bool {

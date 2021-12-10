@@ -82,9 +82,9 @@ type BRService interface {
 	// @Receiver m
 	// @Parameter ctx
 	// @Parameter request
-	// @Return *cluster.UpdateBackupStrategyResp
+	// @Return *cluster.SaveBackupStrategyResp
 	// @Return error
-	SaveBackupStrategy(ctx context.Context, request *cluster.UpdateBackupStrategyReq) (*cluster.UpdateBackupStrategyResp, error)
+	SaveBackupStrategy(ctx context.Context, request *cluster.SaveBackupStrategyReq) (*cluster.SaveBackupStrategyResp, error)
 
 	// DeleteBackupStrategy
 	// @Description: save backup strategy of cluster

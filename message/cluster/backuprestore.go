@@ -66,14 +66,14 @@ type QueryBackupRecordsResp struct {
 	BackupRecords []*structs.BackupRecord
 }
 
-// UpdateBackupStrategyReq Request to update backup data strategy
-type UpdateBackupStrategyReq struct {
+// SaveBackupStrategyReq Request to update backup data strategy
+type SaveBackupStrategyReq struct {
 	ClusterID string                 `json:"clusterId"`
 	Strategy  structs.BackupStrategy `json:"strategy"`
 }
 
-// UpdateBackupStrategyResp update backup strategy reply message
-type UpdateBackupStrategyResp struct {
+// SaveBackupStrategyResp update backup strategy reply message
+type SaveBackupStrategyResp struct {
 }
 
 // GetBackupStrategyReq Query messages for cluster backup strategy

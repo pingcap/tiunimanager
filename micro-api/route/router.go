@@ -107,14 +107,14 @@ func Route(g *gin.Engine) {
 			cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParams)
 
 			// Backup Strategy
-			cluster.GET("/:clusterId/strategy", backuprestore.QueryBackupStrategy)
+			cluster.GET("/:clusterId/strategy", backuprestore.GetBackupStrategy)
 			cluster.PUT("/:clusterId/strategy", backuprestore.SaveBackupStrategy)
 			// cluster.DELETE("/:clusterId/strategy", instanceapi.DeleteBackupStrategy)
 
 			//Import and Export
 			cluster.POST("/import", importexport.ImportData)
 			cluster.POST("/export", importexport.ExportData)
-			cluster.GET("/transport", importexport.DescribeDataTransport)
+			cluster.GET("/transport", importexport.QueryDataTransport)
 			cluster.DELETE("/transport/:recordId", importexport.DeleteDataTransportRecord)
 		}
 
@@ -128,7 +128,7 @@ func Route(g *gin.Engine) {
 			backup.Use(interceptor.VerifyIdentity)
 			backup.Use(interceptor.AuditLog())
 			backup.POST("/", backuprestore.Backup)
-			backup.GET("/", backuprestore.QueryBackup)
+			backup.GET("/", backuprestore.QueryBackupRecords)
 			backup.DELETE("/:backupId", backuprestore.DeleteBackup)
 			//backup.GET("/:backupId", instanceapi.DetailsBackup)
 		}

@@ -2,7 +2,6 @@ syntax = "proto3";
 
 import "common.proto";
 import "softwarespec.proto";
-import "database.proto";
 import "mng_auth.proto";
 import "mng_host.proto";
 import "mng_allocation.proto";
@@ -22,17 +21,17 @@ service ClusterService {
     rpc ScaleOutCluster(ScaleOutRequest) returns (ScaleOutResponse);
     rpc ScaleInCluster(ScaleInRequest) returns (ScaleInResponse);
 
-    rpc ImportData(DataImportRequest) returns (DataImportResponse);
-    rpc ExportData(DataExportRequest) returns (DataExportResponse);
-    rpc DescribeDataTransport(DataTransportQueryRequest) returns (DataTransportQueryResponse);
-    rpc DeleteDataTransportRecord(DataTransportDeleteRequest) returns (DataTransportDeleteResponse);
+    rpc ImportData(RpcRequest) returns (RpcResponse);
+    rpc ExportData(RpcRequest) returns (RpcResponse);
+    rpc QueryDataTransport(RpcRequest) returns (RpcResponse);
+    rpc DeleteDataTransportRecord(RpcRequest) returns (RpcResponse);
 
-    rpc QueryBackupRecord(QueryBackupRequest) returns (QueryBackupResponse);
-    rpc CreateBackup(CreateBackupRequest) returns (CreateBackupResponse);
+    rpc QueryBackupRecords(RpcRequest) returns (RpcResponse);
+    rpc CreateBackup(RpcRequest) returns (RpcResponse);
     rpc RecoverCluster(RecoverRequest) returns (RecoverResponse);
-    rpc DeleteBackupRecord(DeleteBackupRequest) returns (DeleteBackupResponse);
-    rpc SaveBackupStrategy(SaveBackupStrategyRequest) returns (SaveBackupStrategyResponse);
-    rpc GetBackupStrategy(GetBackupStrategyRequest) returns (GetBackupStrategyResponse);
+    rpc DeleteBackupRecord(RpcRequest) returns (RpcResponse);
+    rpc SaveBackupStrategy(RpcRequest) returns (RpcResponse);
+    rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);
 
     rpc QueryParameters(QueryClusterParametersRequest) returns (QueryClusterParametersResponse);
     rpc SaveParameters(SaveClusterParametersRequest) returns (SaveClusterParametersResponse);

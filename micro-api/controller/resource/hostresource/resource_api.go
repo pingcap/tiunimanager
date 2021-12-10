@@ -177,7 +177,7 @@ func ImportHosts(c *gin.Context) {
 	}
 }
 
-// ListHost godoc
+// QueryHosts godoc
 // @Summary Show all hosts list in TiEM
 // @Description get hosts list
 // @Tags resource

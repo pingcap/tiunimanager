@@ -907,38 +907,6 @@ func (c *ClusterServiceHandler) InspectClusterParams(ctx context.Context, req *c
 	return domain.InspectClusterParams(ctx, req, resp)
 }
 
-func (clusterManager *ClusterServiceHandler) ImportHost(ctx context.Context, in *clusterpb.ImportHostRequest, out *clusterpb.ImportHostResponse) error {
-	return clusterManager.resourceManager.ImportHost(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) ImportHostsInBatch(ctx context.Context, in *clusterpb.ImportHostsInBatchRequest, out *clusterpb.ImportHostsInBatchResponse) error {
-	return clusterManager.resourceManager.ImportHostsInBatch(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) RemoveHost(ctx context.Context, in *clusterpb.RemoveHostRequest, out *clusterpb.RemoveHostResponse) error {
-	return clusterManager.resourceManager.RemoveHost(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) RemoveHostsInBatch(ctx context.Context, in *clusterpb.RemoveHostsInBatchRequest, out *clusterpb.RemoveHostsInBatchResponse) error {
-	return clusterManager.resourceManager.RemoveHostsInBatch(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) ListHost(ctx context.Context, in *clusterpb.ListHostsRequest, out *clusterpb.ListHostsResponse) error {
-	return clusterManager.resourceManager.ListHost(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) CheckDetails(ctx context.Context, in *clusterpb.CheckDetailsRequest, out *clusterpb.CheckDetailsResponse) error {
-	return clusterManager.resourceManager.CheckDetails(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) AllocHosts(ctx context.Context, in *clusterpb.AllocHostsRequest, out *clusterpb.AllocHostResponse) error {
-	return clusterManager.resourceManager.AllocHosts(ctx, in, out)
-}
-
-func (clusterManager *ClusterServiceHandler) GetFailureDomain(ctx context.Context, in *clusterpb.GetFailureDomainRequest, out *clusterpb.GetFailureDomainResponse) error {
-	return clusterManager.resourceManager.GetFailureDomain(ctx, in, out)
-}
-
 func (clusterManager *ClusterServiceHandler) AllocResourcesInBatch(ctx context.Context, in *clusterpb.BatchAllocRequest, out *clusterpb.BatchAllocResponse) error {
 	return clusterManager.resourceManager.AllocResourcesInBatch(ctx, in, out)
 }

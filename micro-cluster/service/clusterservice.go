@@ -66,11 +66,10 @@ type ClusterServiceHandler struct {
 	clusterManager    *clusterManager.Manager
 }
 
-func receiveRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {
+func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {
 	err := json.Unmarshal([]byte(req.GetRequest()), &requestBody)
 	if err != nil {
 		errMsg := fmt.Sprintf("unmarshal request error, request = %s, err = %s", req.GetRequest(), err.Error())
-		framework.LogWithContext(ctx).Error(errMsg)
 		handleResponse(ctx, resp, framework.NewTiEMErrorf(common.TIEM_UNMARSHAL_ERROR, errMsg), nil, nil)
 		return false
 	} else {
@@ -107,7 +106,7 @@ func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error,
 func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
 	request := cluster.CreateChangeFeedTaskReq{}
 
-	if receiveRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, request) {
 		result, err := handler.changeFeedManager.Create(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -179,7 +178,7 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 
 	request := cluster.CreateClusterReq{}
 
-	if receiveRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, request) {
 		result, err := c.clusterManager.CreateCluster(ctx, request)
 
 		handleResponse(ctx, resp, err, result, nil)
@@ -274,7 +273,7 @@ func (c ClusterServiceHandler) DeleteCluster(ctx context.Context, req *clusterpb
 
 	request := cluster.DeleteClusterReq{}
 
-	if receiveRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, request) {
 		result, err := c.clusterManager.DeleteCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -288,7 +287,7 @@ func (c ClusterServiceHandler) RestartCluster(ctx context.Context, req *clusterp
 
 	request := cluster.RestartClusterReq{}
 
-	if receiveRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, request) {
 		result, err := c.clusterManager.RestartCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}
@@ -302,7 +301,7 @@ func (c ClusterServiceHandler) StopCluster(ctx context.Context, req *clusterpb.R
 
 	request := cluster.StopClusterReq{}
 
-	if receiveRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, request) {
 		result, err := c.clusterManager.StopCluster(ctx, request)
 		handleResponse(ctx, resp, err, result, nil)
 	}

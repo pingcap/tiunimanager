@@ -7,17 +7,6 @@ definitions:
       userName:
         type: string
     type: object
-  backuprestore.BackupStrategy:
-    properties:
-      backupDate:
-        type: string
-      clusterId:
-        type: string
-      nextBackupTime:
-        type: string
-      period:
-        type: string
-    type: object
   backuprestore.RestoreReq:
     properties:
       clusterName:
@@ -47,20 +36,57 @@ definitions:
       tls:
         type: boolean
     type: object
-  cluster.BackupClusterDataReq:
-    properties:
-      backupMode:
-        description: auto,manual
-        type: string
-      backupType:
-        description: full,incr
-        type: string
-      clusterId:
-        type: string
-    type: object
-  cluster.BackupClusterDataResp:
+  cluster.CloneClusterReq:
     properties:
       backupId:
+        type: string
+      cloneStrategy:
+        description: specify clone strategy, include empty, snapshot and sync, default
+          empty(option)
+        type: string
+      clusterName:
+        type: string
+      clusterType:
+        type: string
+      clusterVersion:
+        type: string
+      copies:
+        description: The number of copies of the newly created cluster data, consistent
+          with the number of copies set in PD
+        type: integer
+      cpuArchitecture:
+        description: X86/X86_64/ARM
+        type: string
+      dbPassword:
+        type: string
+      dbUser:
+        description: The username and password for the newly created database cluster,
+          default is the root user, which is not valid for Data Migration clusters
+        type: string
+      exclusive:
+        description: Whether the newly created cluster is exclusive to physical resources,
+          when exclusive, a host will only deploy instances of the same cluster, which
+          may result in poor resource utilization
+        type: boolean
+      paramGroupId:
+        description: specify cloned cluster parameter group id(option)
+        type: integer
+      region:
+        description: The Region where the cluster is located
+        type: string
+      sourceClusterId:
+        description: specify source cluster id(require)
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      tls:
+        type: boolean
+    type: object
+  cluster.CloneClusterResp:
+    properties:
+      clusterId:
         type: string
       workFlowId:
         description: Asynchronous task workflow ID
@@ -199,6 +225,11 @@ definitions:
         example: 415241823337054209
         type: integer
     type: object
+  cluster.GetBackupStrategyResp:
+    properties:
+      strategy:
+        $ref: '#/definitions/structs.BackupStrategy'
+    type: object
   cluster.PauseChangeFeedTaskResp:
     properties:
       status:
@@ -296,6 +327,38 @@ definitions:
         $ref: '#/definitions/structs.BackupStrategy'
     type: object
   cluster.SaveBackupStrategyResp:
+    type: object
+  cluster.ScaleInClusterReq:
+    properties:
+      clusterId:
+        type: string
+      instanceId:
+        type: string
+    type: object
+  cluster.ScaleInClusterResp:
+    properties:
+      clusterId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
+    type: object
+  cluster.ScaleOutClusterReq:
+    properties:
+      clusterId:
+        type: string
+      compute:
+        items:
+          $ref: '#/definitions/structs.ClusterResourceParameterCompute'
+        type: array
+    type: object
+  cluster.ScaleOutClusterResp:
+    properties:
+      clusterId:
+        type: string
+      workFlowId:
+        description: Asynchronous task workflow ID
+        type: string
     type: object
   cluster.UpdateChangeFeedTaskReq:
     properties:
@@ -1116,50 +1179,6 @@ definitions:
       updateTime:
         type: string
     type: object
-  management.ScaleInClusterRsp:
-    properties:
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  management.ScaleInReq:
-    properties:
-      componentType:
-        type: string
-      nodeId:
-        type: string
-    type: object
-  management.ScaleOutClusterRsp:
-    properties:
-      createTime:
-        type: string
-      deleteTime:
-        type: string
-      inProcessFlowId:
-        type: integer
-      statusCode:
-        type: string
-      statusName:
-        type: string
-      updateTime:
-        type: string
-    type: object
-  management.ScaleOutReq:
-    properties:
-      nodeDemandList:
-        items:
-          $ref: '#/definitions/management.ClusterNodeDemand'
-        type: array
-    type: object
   management.ServiceCapabilityIndex:
     properties:
       description:
@@ -1741,6 +1760,33 @@ definitions:
       period:
         type: string
     type: object
+  structs.ClusterResourceParameterCompute:
+    properties:
+      componentType:
+        description: TiDB/TiKV/PD/TiFlash/TiCDC/DM-Master/DM-Worker
+        type: string
+      resource:
+        items:
+          $ref: '#/definitions/structs.ClusterResourceParameterComputeResource'
+        type: array
+      totalNodeCount:
+        type: integer
+    type: object
+  structs.ClusterResourceParameterComputeResource:
+    properties:
+      count:
+        type: integer
+      diskCapacity:
+        type: integer
+      diskType:
+        description: NVMeSSD/SSD/SATA
+        type: string
+      specCode:
+        description: 4C8G/8C16G ?
+        type: string
+      zoneCode:
+        type: string
+    type: object
   structs.DataImportExportRecordInfo:
     properties:
       clusterId:
@@ -1926,46 +1972,7 @@ paths:
       summary: query backup records of a cluster
       tags:
       - cluster backup
-    post:
-      consumes:
-      - application/json
-      description: backup
-      parameters:
-      - description: backup request
-        in: body
-        name: backupReq
-        required: true
-        schema:
-          $ref: '#/definitions/cluster.BackupClusterDataReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/controller.CommonResult'
-            - properties:
-                data:
-                  $ref: '#/definitions/cluster.BackupClusterDataResp'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/controller.CommonResult'
-      security:
-      - ApiKeyAuth: []
-      summary: backup
-      tags:
-      - cluster backup
+    post: {}
   /backups/{backupId}:
     delete:
       consumes:
@@ -2759,7 +2766,7 @@ paths:
         name: scaleInReq
         required: true
         schema:
-          $ref: '#/definitions/management.ScaleInReq'
+          $ref: '#/definitions/cluster.ScaleInClusterReq'
       produces:
       - application/json
       responses:
@@ -2770,7 +2777,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.ScaleInClusterRsp'
+                  $ref: '#/definitions/cluster.ScaleInClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -2805,7 +2812,7 @@ paths:
         name: scaleOutReq
         required: true
         schema:
-          $ref: '#/definitions/management.ScaleOutReq'
+          $ref: '#/definitions/cluster.ScaleOutClusterReq'
       produces:
       - application/json
       responses:
@@ -2816,7 +2823,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/management.ScaleOutClusterRsp'
+                  $ref: '#/definitions/cluster.ScaleOutClusterResp'
               type: object
         "401":
           description: Unauthorized
@@ -2886,7 +2893,7 @@ paths:
         name: clusterId
         required: true
         type: string
-      - description: 备份策略信息
+      - description: backup strategy request
         in: body
         name: updateReq
         required: true
@@ -2942,7 +2949,7 @@ paths:
             - $ref: '#/definitions/controller.CommonResult'
             - properties:
                 data:
-                  $ref: '#/definitions/backuprestore.BackupStrategy'
+                  $ref: '#/definitions/cluster.GetBackupStrategyResp'
               type: object
         "401":
           description: Unauthorized
@@ -2961,6 +2968,47 @@ paths:
       summary: show the backup strategy of a cluster
       tags:
       - cluster backup
+  /clusters/clone:
+    post:
+      consumes:
+      - application/json
+      description: clone a cluster
+      parameters:
+      - description: clone cluster request
+        in: body
+        name: cloneClusterReq
+        required: true
+        schema:
+          $ref: '#/definitions/cluster.CloneClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/controller.CommonResult'
+            - properties:
+                data:
+                  $ref: '#/definitions/cluster.CloneClusterResp'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.CommonResult'
+      security:
+      - ApiKeyAuth: []
+      summary: clone a cluster
+      tags:
+      - cluster
   /clusters/export:
     post:
       consumes:

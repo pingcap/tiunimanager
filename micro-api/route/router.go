@@ -130,10 +130,10 @@ func Route(g *gin.Engine) {
 		{
 			backup.Use(interceptor.VerifyIdentity)
 			backup.Use(interceptor.AuditLog())
+
 			backup.POST("/", backuprestore.Backup)
 			backup.GET("/", backuprestore.QueryBackupRecords)
 			backup.DELETE("/:backupId", backuprestore.DeleteBackup)
-			//backup.GET("/:backupId", instanceapi.DetailsBackup)
 		}
 
 		changeFeeds := apiV1.Group("/changefeeds")

@@ -45,6 +45,7 @@ import (
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
+
 // @Router /backups/ [post]
 func Backup(c *gin.Context) {
 	var request cluster.BackupClusterDataReq

@@ -559,7 +559,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 	framework.LogWithContext(ctx).Info("save backup strategy")
 	reqData := request.GetRequest()
 
-	saveReq := &cluster.UpdateBackupStrategyReq{}
+	saveReq := &cluster.SaveBackupStrategyReq{}
 	err = json.Unmarshal([]byte(reqData), saveReq)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("json unmarshal reuqest failed %s", err.Error())

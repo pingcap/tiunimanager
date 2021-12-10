@@ -637,7 +637,6 @@ func (c ClusterServiceHandler) DescribeMonitor(ctx context.Context, request *clu
 
 func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	framework.LogWithContext(ctx).Info("list flows")
-	request.GetOperator()
 	reqData := request.GetRequest()
 
 	listReq := &message.QueryWorkFlowsReq{}
@@ -678,7 +677,6 @@ func (c ClusterServiceHandler) ListFlows(ctx context.Context, request *clusterpb
 
 func (c *ClusterServiceHandler) DetailFlow(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
 	framework.LogWithContext(ctx).Info("detail flow")
-	request.GetOperator()
 	reqData := request.GetRequest()
 
 	detailReq := &message.QueryWorkFlowDetailReq{}

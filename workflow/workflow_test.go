@@ -204,6 +204,7 @@ func TestFlowManager_ListWorkFlows(t *testing.T) {
 	mockFlowRW.EXPECT().QueryWorkFlows(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, int64(0), nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
+	manager := GetWorkFlowService()
 	_, _, err := manager.ListWorkFlows(context.TODO(), "", "", "", 1, 10)
 	assert.NoError(t, err)
 }

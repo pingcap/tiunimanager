@@ -35,7 +35,7 @@ import (
 	"time"
 )
 
-var manager ImportExportService
+var dataTransportService ImportExportService
 var once sync.Once
 
 type ImportExportManager struct {
@@ -45,9 +45,9 @@ type ImportExportManager struct {
 
 func GetImportExportService() ImportExportService {
 	once.Do(func() {
-		manager = NewImportExportManager()
+		dataTransportService = NewImportExportManager()
 	})
-	return manager
+	return dataTransportService
 }
 
 func NewImportExportManager() *ImportExportManager {

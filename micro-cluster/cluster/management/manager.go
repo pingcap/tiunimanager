@@ -51,11 +51,6 @@ func NewClusterManager() *ClusterManager {
 	return &ClusterManager{}
 }
 
-func (manager *ClusterManager) load(ctx context.Context, clusterID string) (*handler.ClusterMeta, error) {
-	// TODO: read db
-	return nil, nil
-}
-
 // ScaleOut
 // @Description scale out a cluster
 // @Parameter	operator
@@ -64,7 +59,8 @@ func (manager *ClusterManager) load(ctx context.Context, clusterID string) (*han
 // @Return		error
 func (manager *ClusterManager) ScaleOut(ctx context.Context, request *cluster.ScaleOutClusterReq) (*cluster.ScaleOutClusterResp, error) {
 	// Get cluster info and topology from db based by clusterID
-	clusterMeta, err := manager.load(ctx, request.ClusterID)
+	clusterMeta, err := handler.Get(ctx, request.ClusterID)
+
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"load cluser[%s] meta from db error: %s", request.ClusterID, err.Error())
@@ -109,7 +105,7 @@ func (manager *ClusterManager) ScaleOut(ctx context.Context, request *cluster.Sc
 
 func (manager *ClusterManager) ScaleIn(ctx context.Context, request *cluster.ScaleInClusterReq) (*cluster.ScaleInClusterResp, error) {
 	// Get cluster info and topology from db based by clusterID
-	clusterMeta, err := manager.load(ctx, request.ClusterID)
+	clusterMeta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
 		return nil, err
 	}

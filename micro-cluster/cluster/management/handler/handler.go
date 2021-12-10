@@ -26,6 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
+	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"text/template"
 )
@@ -41,13 +42,13 @@ type ClusterMeta struct {
 // @Description add new instances into cluster topology, then alloc host ip, port and disk for these instances
 // @Parameter	computes
 // @Return		error
-func (meta *ClusterMeta) AddInstances(ctx context.Context, computes []structs.ClusterResourceParameterCompute) error {
+func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.ClusterResourceParameterCompute) error {
 	if len(computes) <= 0 {
 		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "cluster resource parameter is empty!")
 	}
 
-	if meta.Instances == nil {
-		meta.Instances = make(map[string][]*management.ClusterInstance)
+	if p.Instances == nil {
+		p.Instances = make(map[string][]*management.ClusterInstance)
 	}
 
 	for _, compute := range computes {
@@ -55,8 +56,8 @@ func (meta *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Cl
 			for i := 0; i < item.Count; i++ {
 				instance := &management.ClusterInstance{
 					Type:         compute.Type,
-					Version:      meta.Cluster.Version,
-					ClusterID:    meta.Cluster.ID,
+					Version:      p.Cluster.Version,
+					ClusterID:    p.Cluster.ID,
 					CpuCores:     int8(knowledge.ParseCpu(item.Spec)),
 					Memory:       int8(knowledge.ParseMemory(item.Spec)),
 					Zone:         resource.GetDomainNameFromCode(item.Zone),
@@ -64,25 +65,25 @@ func (meta *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Cl
 					DiskCapacity: int32(item.DiskCapacity),
 				}
 				instance.Status = string(constants.InstanceInitializing)
-				meta.Instances[compute.Type] = append(meta.Instances[compute.Type], instance)
+				p.Instances[compute.Type] = append(p.Instances[compute.Type], instance)
 			}
 		}
 	}
-	framework.LogWithContext(ctx).Infof("add new instances into cluster[%s] topology", meta.Cluster.Name)
+	framework.LogWithContext(ctx).Infof("add new instances into cluster[%s] topology", p.Cluster.Name)
 	return nil
 }
 
-func (meta *ClusterMeta) generateAllocRequirements(instances []*management.ClusterInstance) []resource.AllocRequirement {
+func (p *ClusterMeta) generateAllocRequirements(instances []*management.ClusterInstance) []resource.AllocRequirement {
 	requirements := make([]resource.AllocRequirement, 0)
 	for _, instance := range instances {
-		portRange := knowledge.GetComponentPortRange(meta.Cluster.Type, meta.Cluster.Version, instance.Type)
+		portRange := knowledge.GetComponentPortRange(p.Cluster.Type, p.Cluster.Version, instance.Type)
 		requirements = append(requirements, resource.AllocRequirement{
 			Location: resource.Location{
-				Region: meta.Cluster.Region,
+				Region: p.Cluster.Region,
 				Zone:   instance.Zone,
 			},
 			Require: resource.Requirement{
-				Exclusive: meta.Cluster.Exclusive,
+				Exclusive: p.Cluster.Exclusive,
 				PortReq: []resource.PortRequirement{
 					{
 						Start:   int32(portRange.Start),
@@ -102,7 +103,7 @@ func (meta *ClusterMeta) generateAllocRequirements(instances []*management.Clust
 			},
 			Count: 1,
 			HostFilter: resource.Filter{
-				Arch: string(meta.Cluster.CpuArchitecture),
+				Arch: string(p.Cluster.CpuArchitecture),
 			},
 			Strategy: resource.RandomRack,
 		})
@@ -110,12 +111,12 @@ func (meta *ClusterMeta) generateAllocRequirements(instances []*management.Clust
 	return requirements
 }
 
-func (meta *ClusterMeta) generateAllocMonitoredPortRequirements() []resource.AllocRequirement {
+func (p *ClusterMeta) generateAllocMonitoredPortRequirements() []resource.AllocRequirement {
 	requirements := make([]resource.AllocRequirement, 0)
 
-	portRange := knowledge.GetClusterPortRange(meta.Cluster.Type, meta.Cluster.Version)
+	portRange := knowledge.GetClusterPortRange(p.Cluster.Type, p.Cluster.Version)
 	requirements = append(requirements, resource.AllocRequirement{
-		Location: resource.Location{Region: meta.Cluster.Region},
+		Location: resource.Location{Region: p.Cluster.Region},
 		Require: resource.Requirement{
 			PortReq: []resource.PortRequirement{
 				{
@@ -129,7 +130,7 @@ func (meta *ClusterMeta) generateAllocMonitoredPortRequirements() []resource.All
 		},
 		Count: 1,
 		HostFilter: resource.Filter{
-			Arch: string(meta.Cluster.CpuArchitecture),
+			Arch: string(p.Cluster.CpuArchitecture),
 		},
 		Strategy: resource.ClusterPorts,
 	})
@@ -141,10 +142,10 @@ func (meta *ClusterMeta) generateAllocMonitoredPortRequirements() []resource.All
 // @Description alloc host ip, port and disk for all new instances
 // @Return		alloc request id
 // @Return		error
-func (meta *ClusterMeta) AllocInstanceResource(ctx context.Context) (string, error) {
+func (p *ClusterMeta) AllocInstanceResource(ctx context.Context) (string, error) {
 	requestID := uuidutil.GenerateID()
 	instances := make([]*management.ClusterInstance, 0)
-	for _, components := range meta.Instances {
+	for _, components := range p.Instances {
 		for _, instance := range components {
 			if instance.Status != string(constants.InstanceInitializing) {
 				continue
@@ -159,17 +160,17 @@ func (meta *ClusterMeta) AllocInstanceResource(ctx context.Context) (string, err
 		BatchRequests: []resource.AllocReq{
 			{
 				Applicant: resource.Applicant{
-					HolderId:  meta.Cluster.ID,
+					HolderId:  p.Cluster.ID,
 					RequestId: requestID,
 				},
-				Requires: meta.generateAllocRequirements(instances),
+				Requires: p.generateAllocRequirements(instances),
 			},
 		},
 	}
 	response, err := resourceManager.AllocResources(ctx, request)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
-			"cluster[%s] alloc instances resource error: %s", meta.Cluster.Name, err.Error())
+			"cluster[%s] alloc instances resource error: %s", p.Cluster.Name, err.Error())
 		return "", err
 	}
 	for i, instance := range instances {
@@ -185,22 +186,22 @@ func (meta *ClusterMeta) AllocInstanceResource(ctx context.Context) (string, err
 		BatchRequests: []resource.AllocReq{
 			{
 				Applicant: resource.Applicant{
-					HolderId:  meta.Cluster.ID,
+					HolderId:  p.Cluster.ID,
 					RequestId: requestID,
 				},
-				Requires: meta.generateAllocMonitoredPortRequirements(),
+				Requires: p.generateAllocMonitoredPortRequirements(),
 			},
 		},
 	}
 	response, err = resourceManager.AllocResources(ctx, request)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
-			"cluster[%s] alloc monitored ports resource error: %s", meta.Cluster.Name, err.Error())
+			"cluster[%s] alloc monitored ports resource error: %s", p.Cluster.Name, err.Error())
 		return "", err
 	}
 
-	meta.NodeExporterPort = response.BatchResults[0].Results[0].PortRes[0].Ports[0]
-	meta.BlackboxExporterPort = response.BatchResults[0].Results[0].PortRes[0].Ports[1]
+	p.NodeExporterPort = response.BatchResults[0].Results[0].PortRes[0].Ports[0]
+	p.BlackboxExporterPort = response.BatchResults[0].Results[0].PortRes[0].Ports[1]
 
 	return requestID, nil
 }
@@ -209,8 +210,8 @@ func (meta *ClusterMeta) AllocInstanceResource(ctx context.Context) (string, err
 // @Description generate yaml config based on cluster topology
 // @Return		yaml config
 // @Return		error
-func (meta *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error) {
-	if meta.Cluster == nil || len(meta.Instances) == 0 {
+func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error) {
+	if p.Cluster == nil || len(p.Instances) == 0 {
 		return "", framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "cluster topology is empty, please check it!")
 	}
 
@@ -220,7 +221,7 @@ func (meta *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, er
 	}
 
 	topology := new(bytes.Buffer)
-	if err = t.Execute(topology, meta); err != nil {
+	if err = t.Execute(topology, p); err != nil {
 		return "", framework.NewTiEMError(common.TIEM_UNRECOGNIZED_ERROR, err.Error())
 	}
 	framework.LogWithContext(ctx).Infof("generate topology config: %s", topology.String())
@@ -231,29 +232,29 @@ func (meta *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, er
 // UpdateClusterStatus
 // @Description update cluster status
 // @Return		error
-func (meta *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.ClusterRunningStatus) error {
-	meta.Cluster.Status = string(status)
+func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.ClusterRunningStatus) error {
+	p.Cluster.Status = string(status)
 	// TODO: write db
-	framework.LogWithContext(ctx).Infof("update cluster[%s] status into %s", meta.Cluster.Name, status)
+	framework.LogWithContext(ctx).Infof("update cluster[%s] status into %s", p.Cluster.Name, status)
 	return nil
 }
 
 // UpdateClusterMaintenanceStatus
 // @Description update cluster maintenance status
 // @Return		error
-func (meta *ClusterMeta) UpdateClusterMaintenanceStatus(ctx context.Context, status constants.ClusterMaintenanceStatus) error {
-	meta.Cluster.MaintenanceStatus = status
+func (p *ClusterMeta) UpdateClusterMaintenanceStatus(ctx context.Context, status constants.ClusterMaintenanceStatus) error {
+	p.Cluster.MaintenanceStatus = status
 	// TODO: write db
-	framework.LogWithContext(ctx).Infof("update cluster[%s] maintenance status into %s", meta.Cluster.Name, status)
+	framework.LogWithContext(ctx).Infof("update cluster[%s] maintenance status into %s", p.Cluster.Name, status)
 	return nil
 }
 
 // UpdateInstancesStatus
 // @Description update cluster Instances status
 // @Return		error
-func (meta *ClusterMeta) UpdateInstancesStatus(ctx context.Context,
+func (p *ClusterMeta) UpdateInstancesStatus(ctx context.Context,
 	originStatus constants.ClusterInstanceStatus, status constants.ClusterInstanceStatus) error {
-	for _, components := range meta.Instances {
+	for _, components := range p.Instances {
 		for _, instance := range components {
 			if instance.Status == string(originStatus) {
 				instance.Status = string(status)
@@ -261,16 +262,7 @@ func (meta *ClusterMeta) UpdateInstancesStatus(ctx context.Context,
 		}
 	}
 	// TODO: write db
-	framework.LogWithContext(ctx).Infof("update cluster[%s] instances status into %s", meta.Cluster.ID, status)
-	return nil
-}
-
-
-/*
-// Persist
-// @Description persist new instances and cluster info into db
-// @Return		error
-func (meta *ClusterMeta) Persist() error {
+	framework.LogWithContext(ctx).Infof("update cluster[%s] instances status into %s", p.Cluster.ID, status)
 	return nil
 }
 
@@ -278,7 +270,7 @@ func (p *ClusterMeta) CloneMeta(ctx context.Context) *ClusterMeta {
 	return nil
 }
 
-func (p *ClusterMeta) TryMaintenance(ctx context.Context, maintenanceStatus constants.ClusterMaintenanceStatus) error {
+func (p *ClusterMeta) T(ctx context.Context, maintenanceStatus constants.ClusterMaintenanceStatus) error {
 	// check Maintenance status
 	if true {
 		p.cluster.MaintenanceStatus = maintenanceStatus
@@ -338,4 +330,4 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 func Create(ctx context.Context, template management.Cluster) (*ClusterMeta, error) {
 	return nil, nil
 }
-*/
+

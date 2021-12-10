@@ -276,3 +276,53 @@ func TestGormClusterReadWrite_UpdateStatus(t *testing.T) {
 		assert.Equal(t, libCommon.TIEM_PARAMETER_INVALID, err.(framework.TiEMError).GetCode())
 	})
 }
+
+func TestGormClusterReadWrite_ClusterTopologySnapshot(t *testing.T) {
+	t.Run("create", func(t *testing.T) {
+		err := testRW.CreateClusterTopologySnapshot(context.TODO(), ClusterTopologySnapshot{
+			TenantID: "111", ClusterID: "222", Config: "333",
+		})
+		assert.NoError(t, err)
+	})
+	t.Run("empty", func(t *testing.T) {
+		err := testRW.CreateClusterTopologySnapshot(context.TODO(), ClusterTopologySnapshot{
+
+			TenantID: "", ClusterID: "222", Config: "333",
+		})
+		assert.Error(t, err)
+
+		err = testRW.CreateClusterTopologySnapshot(context.TODO(), ClusterTopologySnapshot{
+			TenantID: "111", ClusterID: "", Config: "333",
+		})
+		assert.Error(t, err)
+
+		err = testRW.CreateClusterTopologySnapshot(context.TODO(), ClusterTopologySnapshot{
+
+			TenantID: "111", ClusterID: "222", Config: "",
+		})
+		assert.Error(t, err)
+
+		_, err = testRW.GetLatestClusterTopologySnapshot(context.TODO(), "")
+		assert.Error(t, err)
+	})
+	t.Run("latest", func(t *testing.T) {
+		err := testRW.CreateClusterTopologySnapshot(context.TODO(), ClusterTopologySnapshot {
+			TenantID: "tenant111", ClusterID: "cluster111", Config: "content111",
+		})
+		assert.NoError(t, err)
+
+		err = testRW.CreateClusterTopologySnapshot(context.TODO(), ClusterTopologySnapshot{
+			TenantID: "tenant111", ClusterID: "cluster111", Config: "content_modified",
+		})
+		assert.NoError(t, err)
+
+		err = testRW.CreateClusterTopologySnapshot(context.TODO(), ClusterTopologySnapshot{
+			TenantID: "tenant111", ClusterID: "cluster_whatever", Config: "content111",
+		})
+		assert.NoError(t, err)
+
+		s, err := testRW.GetLatestClusterTopologySnapshot(context.TODO(), "cluster111")
+		assert.NoError(t, err)
+		assert.Equal(t, "content_modified", s.Config)
+	})
+}

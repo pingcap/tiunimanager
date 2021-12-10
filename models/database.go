@@ -73,6 +73,7 @@ func (p *database) initTables() {
 	p.addTable(new(management.Cluster))
 	p.addTable(new(management.ClusterInstance))
 	p.addTable(new(management.ClusterRelation))
+	p.addTable(new(management.ClusterTopologySnapshot))
 
 	// other tables
 }

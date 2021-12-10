@@ -33,7 +33,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 )
 
-// Backup backup
+// Backup
 // @Summary backup
 // @Description backup
 // @Tags cluster backup
@@ -72,19 +72,13 @@ func Backup(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "clusterId"
-// @Success 200 {object} controller.CommonResult{data=BackupStrategy}
+// @Success 200 {object} controller.CommonResult{data=cluster.GetBackupStrategyResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/strategy/ [get]
 func GetBackupStrategy(c *gin.Context) {
 	var request cluster.GetBackupStrategyReq
-	if err := c.ShouldBindQuery(&request); err != nil {
-		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
 	request.ClusterID = c.Param("clusterId")
 	body, err := json.Marshal(request)
 	if err != nil {
@@ -104,7 +98,7 @@ func GetBackupStrategy(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "clusterId"
-// @Param updateReq body cluster.SaveBackupStrategyReq true "备份策略信息"
+// @Param updateReq body cluster.SaveBackupStrategyReq true "backup strategy request"
 // @Success 200 {object} controller.CommonResult{data=cluster.SaveBackupStrategyResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult

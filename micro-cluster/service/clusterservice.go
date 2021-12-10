@@ -192,7 +192,7 @@ func (handler *ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *
 		return err
 	}
 
-	response, err := handler.ClusterManager.ScaleOut(ctx, req.GetOperator(), request)
+	response, err := handler.ClusterManager.ScaleOut(ctx, request)
 	if err != nil {
 		resp.Code = int32(err.(framework.TiEMError).GetCode())
 		resp.Message = err.(framework.TiEMError).GetMsg()
@@ -221,7 +221,7 @@ func (handler *ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *c
 		return err
 	}
 
-	response, err := handler.ClusterManager.ScaleIn(ctx, req.GetOperator(), request)
+	response, err := handler.ClusterManager.ScaleIn(ctx, request)
 	if err != nil {
 		resp.Code = int32(err.(framework.TiEMError).GetCode())
 		resp.Message = err.(framework.TiEMError).GetMsg()
@@ -249,7 +249,7 @@ func (handler *ClusterServiceHandler) CloneCluster(ctx context.Context, req *clu
 		return err
 	}
 
-	response, err := handler.ClusterManager.Clone(ctx, req.GetOperator(), request)
+	response, err := handler.ClusterManager.Clone(ctx, request)
 	if err != nil {
 		resp.Code = int32(err.(framework.TiEMError).GetCode())
 		resp.Message = err.(framework.TiEMError).GetMsg()

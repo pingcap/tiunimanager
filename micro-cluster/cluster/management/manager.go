@@ -17,19 +17,26 @@ package management
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	"github.com/pingcap-inc/tiem/workflow"
 )
 
-type ClusterManager struct {}
+const (
+	ContextClusterMeta   = "ClusterMeta"
+	ContextTopology      = "Topology"
+	ContextAllocResource = "AllocResource"
+)
+
+type ClusterManager struct{}
 
 func NewClusterManager() *ClusterManager {
 	return &ClusterManager{}
 }
 
-
 func (manager *ClusterManager) load(ctx context.Context, clusterID string) (*handler.ClusterMeta, error) {
+	// TODO: read db
 	return nil, nil
 }
 
@@ -39,7 +46,7 @@ func (manager *ClusterManager) load(ctx context.Context, clusterID string) (*han
 // @Parameter	request
 // @Return		*cluster.ScaleOutClusterResp
 // @Return		error
-func (manager *ClusterManager) ScaleOut(ctx context.Context, operator *clusterpb.RpcOperator, request *cluster.ScaleOutClusterReq) (*cluster.ScaleOutClusterResp, error) {
+func (manager *ClusterManager) ScaleOut(ctx context.Context, request *cluster.ScaleOutClusterReq) (*cluster.ScaleOutClusterResp, error) {
 	// Get cluster info and topology from db based by clusterId
 	clusterMeta, err := manager.load(ctx, request.ClusterID)
 	if err != nil {
@@ -47,26 +54,55 @@ func (manager *ClusterManager) ScaleOut(ctx context.Context, operator *clusterpb
 	}
 
 	// Add instance into cluster topology
-	clusterMeta.AddInstances(ctx, request.Compute)
+	if err = clusterMeta.AddInstances(ctx, request.Compute); err != nil {
+		return nil, err
+	}
+
+	// Set cluster maintenance status into scale out
+	if err = clusterMeta.SetClusterMaintenanceStatus(ctx, constants.ClusterMaintenanceScaleOut); err != nil {
+		return nil, err
+	}
 
 	// Start the workflow to scale a cluster
-	//flow := workflow.GetWorkFlowManager()
-	//flow.RegisterWorkFlow(ctx, )
+	workflowManager := workflow.GetWorkFlowManager()
+	workflowManager.RegisterWorkFlow(ctx, constants.FlowScaleOutCluster, &workflow.WorkFlowDefine{
+		FlowName: constants.FlowScaleOutCluster,
+		TaskNodes: map[string]*workflow.NodeDefine{
+			"start":        {"prepareResource", "resourceDone", "fail", workflow.SyncFuncNode, PrepareResource},
+			"resourceDone": {"buildConfig", "configDone", "fail", workflow.SyncFuncNode, BuildConfig},
+			"configDone":   {"scaleOutCluster", "scaleOutDone", "fail", workflow.PollingNode, ScaleOutCluster},
+			"scaleOutDone": {"setClusterOnline", "onlineDone", "fail", workflow.SyncFuncNode, SetClusterOnline},
+			"onlineDone":   {"end", "", "", workflow.SyncFuncNode, ClusterEnd},
+			"fail":         {"fail", "", "", workflow.SyncFuncNode, ClusterFail},
+		},
+	})
+
+	flow, err := workflowManager.CreateWorkFlow(ctx, clusterMeta.Cluster.ID, constants.FlowScaleOutCluster)
+	if err != nil {
+		return nil, err
+	}
+	workflowManager.AddContext(flow, ContextClusterMeta, clusterMeta)
+
+	if err = workflowManager.AsyncStart(ctx, flow); err != nil {
+		return nil, err
+	}
 
 	// Handle response
 	response := &cluster.ScaleOutClusterResp{}
-	response.ClusterID = clusterMeta.GetClusterID()
+	response.ClusterID = clusterMeta.Cluster.ID
+	response.WorkFlowID = flow.Flow.ID
 
 	return response, nil
 }
 
-func (manager *ClusterManager) ScaleIn(ctx context.Context, operator *clusterpb.RpcOperator, request *cluster.ScaleInClusterReq) (*cluster.ScaleInClusterResp, error) {
+func (manager *ClusterManager) ScaleIn(ctx context.Context, request *cluster.ScaleInClusterReq) (*cluster.ScaleInClusterResp, error) {
 	return nil, nil
 }
 
-func (manager *ClusterManager) Clone(ctx context.Context, operator *clusterpb.RpcOperator, request *cluster.CloneClusterReq) (*cluster.CloneClusterResp, error) {
+func (manager *ClusterManager) Clone(ctx context.Context, request *cluster.CloneClusterReq) (*cluster.CloneClusterResp, error) {
 	return nil, nil
 }
+
 /*
 type Manager struct {}
 

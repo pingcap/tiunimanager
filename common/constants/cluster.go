@@ -61,6 +61,30 @@ const (
 	ClusterMaintenanceModifyParameterAndRestarting ClusterMaintenanceStatus = "ModifyParameterRestarting"
 )
 
+type ClusterInstanceStatus string
+
+const (
+	InstanceInitializing ClusterInstanceStatus = "Initializing"
+	InstanceDeleted      ClusterInstanceStatus = "Deleted"
+	InstanceRunning      ClusterInstanceStatus = "Running"
+)
+
+const (
+	FlowCreateCluster    = "CreateCluster"
+	FlowDeleteCluster    = "DeleteCluster"
+	FlowBackupCluster    = "BackupCluster"
+	FlowRecoverCluster   = "RecoverCluster"
+	FlowModifyParameters = "ModifyParameters"
+	FlowExportData       = "ExportData"
+	FlowImportData       = "ImportData"
+	FlowRestartCluster   = "RestartCluster"
+	FlowStopCluster      = "StopCluster"
+	FlowTakeoverCluster  = "TakeoverCluster"
+	FlowBuildLogConfig   = "BuildLogConfig"
+	FlowScaleOutCluster  = "ScaleOutCluster"
+	FlowScaleInCluster   = "ScaleInCluster"
+)
+
 type ClusterBackupStatus string
 
 //Definition of cluster backup status information

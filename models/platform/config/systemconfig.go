@@ -15,10 +15,16 @@
 
 package config
 
-import "github.com/pingcap-inc/tiem/models/common"
+import (
+	"gorm.io/gorm"
+	"time"
+)
 
 type SystemConfig struct {
-	common.Entity
-	configKey   string `gorm:"not null;"`
-	configValue string `gorm:"not null;"`
+	ID          string    `gorm:"primarykey"`
+	CreatedAt   time.Time `gorm:"<-:create"`
+	UpdatedAt   time.Time
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
+	ConfigKey   string         `gorm:"not null;"`
+	ConfigValue string         `gorm:"not null;"`
 }

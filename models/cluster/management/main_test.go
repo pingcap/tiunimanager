@@ -13,7 +13,7 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package workflow
+package management
 
 import (
 	"github.com/pingcap-inc/tiem/library/common"
@@ -24,6 +24,8 @@ import (
 	"os"
 	"testing"
 )
+
+var testRW *GormClusterReadWrite
 
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
@@ -41,10 +43,11 @@ func TestMain(m *testing.M) {
 			} else {
 				logins.Infof("open database successful, filepath: %s", dbFile)
 			}
-			db.Migrator().CreateTable(WorkFlowNode{})
-			db.Migrator().CreateTable(WorkFlow{})
+			db.Migrator().CreateTable(Cluster{})
+			db.Migrator().CreateTable(ClusterRelation{})
+			db.Migrator().CreateTable(ClusterInstance{})
 
-			rw = NewFlowReadWrite(db)
+			testRW = NewGormClusterReadWrite(db)
 			return nil
 		},
 	)

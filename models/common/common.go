@@ -24,13 +24,13 @@ import (
 )
 
 type Entity struct {
-	ID        string    `gorm:"primaryKey;"`
+	ID        string    `gorm:"primarykey"`
 	CreatedAt time.Time `gorm:"<-:create"`
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 
 	TenantId string `gorm:"default:null;not null;<-:create"`
-	Status   string `gorm:"default:null"`
+	Status   string `gorm:"not null;"`
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {

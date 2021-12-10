@@ -21,6 +21,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 	"github.com/pingcap-inc/tiem/file-server/controller"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 )
@@ -104,22 +105,22 @@ func HandleRequest(c *gin.Context,
 
 	err = builder(c, req)
 	if err != nil {
-		framework.LogWithContext(c).Errorf("get request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		framework.LogWithContext(c).Errorf("unmarshal request failed, %s", err.Error())
+		c.JSON(http.StatusBadRequest, controller.Fail(int(common.TIEM_UNMARSHAL_ERROR), err.Error()))
 		return
 	}
 
 	err = validator(req)
 	if err != nil {
 		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		c.JSON(http.StatusBadRequest, controller.Fail(int(common.TIEM_PARAMETER_INVALID), err.Error()))
 		return
 	}
 
 	requestBodyBytes, err := serializer(req)
 	if err != nil {
-		framework.LogWithContext(c).Errorf("validate request failed, %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		framework.LogWithContext(c).Errorf("marshal request failed, %s", err.Error())
+		c.JSON(http.StatusBadRequest, controller.Fail(int(common.TIEM_MARSHAL_ERROR), err.Error()))
 		return
 	} else {
 		requestBody = string(requestBodyBytes)

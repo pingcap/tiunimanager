@@ -234,7 +234,8 @@ func (p *ClusterMeta) GenerateTopologyConfig(ctx context.Context) (string, error
 // @Return		error
 func (p *ClusterMeta) UpdateClusterStatus(ctx context.Context, status constants.ClusterRunningStatus) error {
 	p.Cluster.Status = string(status)
-	// TODO: write db
+	models.GetClusterReaderWriter().UpdateStatus(ctx, p.Cluster.ID, status)
+
 	framework.LogWithContext(ctx).Infof("update cluster[%s] status into %s", p.Cluster.Name, status)
 	return nil
 }
@@ -266,10 +267,21 @@ func (p *ClusterMeta) UpdateInstancesStatus(ctx context.Context,
 	return nil
 }
 
+// CloneMeta
+// @Description: clone meta info from cluster
+// @Receiver p
+// @Parameter ctx
+// @return *ClusterMeta
 func (p *ClusterMeta) CloneMeta(ctx context.Context) *ClusterMeta {
 	return nil
 }
 
+// TryMaintenance
+// @Description: try to change maintenance status to target status with former status validation
+// @Receiver p
+// @Parameter ctx
+// @Parameter maintenanceStatus
+// @return error
 func (p *ClusterMeta) TryMaintenance(ctx context.Context, maintenanceStatus constants.ClusterMaintenanceStatus) error {
 	// check Maintenance status
 	if true {

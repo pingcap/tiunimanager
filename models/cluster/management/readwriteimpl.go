@@ -44,7 +44,7 @@ func (g *GormClusterReadWrite) Delete(ctx context.Context, clusterID string) (er
 
 func (g *GormClusterReadWrite) Get(ctx context.Context, clusterID string) (*Cluster, error) {
 	if "" == clusterID {
-		errInfo := fmt.Sprintf("get cluster failed : empty clusterID")
+		errInfo := fmt.Sprint("get cluster failed : empty clusterID")
 		framework.LogWithContext(ctx).Error(errInfo)
 		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, errInfo)
 	}
@@ -107,7 +107,7 @@ func (g *GormClusterReadWrite) UpdateInstance(ctx context.Context, instances ...
 
 func (g *GormClusterReadWrite) UpdateBaseInfo(ctx context.Context, template *Cluster) error {
 	if template == nil {
-		errInfo := fmt.Sprintf("update cluster base info failed : empty template")
+		errInfo := fmt.Sprint("update cluster base info failed : empty template")
 		framework.LogWithContext(ctx).Error(errInfo)
 		return framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, errInfo)
 	}
@@ -197,7 +197,7 @@ func (g *GormClusterReadWrite) CreateClusterTopologySnapshot(ctx context.Context
 
 func (g *GormClusterReadWrite) GetLatestClusterTopologySnapshot(ctx context.Context, clusterID string) (snapshot ClusterTopologySnapshot, err error) {
 	if "" == clusterID {
-		errInfo := fmt.Sprintf("get latest cluster topology snapshot failed : empty clusterID")
+		errInfo := fmt.Sprint("get latest cluster topology snapshot failed : empty clusterID")
 		framework.LogWithContext(ctx).Error(errInfo)
 		err = framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, errInfo)
 		return

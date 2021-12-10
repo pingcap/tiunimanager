@@ -13,60 +13,13 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package common
+package management
 
-import (
-	"context"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"time"
+import "gorm.io/gorm"
 
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-	"gorm.io/gorm"
-)
-
-type Entity struct {
-	ID        string    `gorm:"primarykey"`
-	CreatedAt time.Time `gorm:"<-:create"`
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-
-	TenantId string `gorm:"default:null;not null;<-:create"`
-	Status   string `gorm:"not null;"`
-}
-
-func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = uuidutil.GenerateID()
-	return nil
-}
-
-var split = []byte("_")
-
-type GormDB struct {
-	db *gorm.DB
-}
-
-func WrapDB(db *gorm.DB) GormDB {
-	return GormDB{db: db}
-}
-
-func (m *GormDB) DB(ctx context.Context) *gorm.DB {
-	return m.db.WithContext(ctx)
-}
-
-// WrapDBError
-// @Description:
-// @Parameter err
-// @return error is nil or TiEMError
-func WrapDBError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	switch err.(type) {
-	case framework.TiEMError:
-		return err
-	default:
-		return framework.NewTiEMErrorf(common.TIEM_UNRECOGNIZED_ERROR, err.Error())
-	}
+type ClusterTopologySnapshot struct {
+	gorm.Model
+	TenantID  string `gorm:"not null;default:null;<-:create;size:64;comment:'tenant id';"`
+	ClusterID string `gorm:"not null;default:null;<-:create;size:64;comment:'cluster id';"`
+	Config    string `gorm:"not null;default:null;<-:create;type:text;comment:'yaml content of cluster topology';'"`
 }

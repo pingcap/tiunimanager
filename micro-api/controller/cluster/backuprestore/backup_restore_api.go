@@ -185,7 +185,7 @@ func DeleteBackup(c *gin.Context) {
 		return
 	}
 
-	controller.InvokeRpcMethod(c, client.ClusterClient.DeleteBackupRecord, &cluster.DeleteBackupDataResp{}, string(body), controller.DefaultTimeout)
+	controller.InvokeRpcMethod(c, client.ClusterClient.DeleteBackupRecords, &cluster.DeleteBackupDataResp{}, string(body), controller.DefaultTimeout)
 }
 
 // Restore

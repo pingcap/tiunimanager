@@ -801,7 +801,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/management.CreateReq"
+                            "$ref": "#/definitions/cluster.CreateClusterReq"
                         }
                     }
                 ],
@@ -817,7 +817,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.CreateClusterRsp"
+                                            "$ref": "#/definitions/cluster.CreateClusterResp"
                                         }
                                     }
                                 }
@@ -1077,7 +1077,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/management.CreateReq"
+                            "$ref": "#/definitions/cluster.CreateClusterReq"
                         }
                     }
                 ],
@@ -1474,7 +1474,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.DetailClusterRsp"
+                                            "$ref": "#/definitions/cluster.QueryClusterDetailResp"
                                         }
                                     }
                                 }
@@ -1531,7 +1531,7 @@
                         "name": "deleteReq",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/management.DeleteReq"
+                            "$ref": "#/definitions/cluster.DeleteClusterReq"
                         }
                     }
                 ],
@@ -1547,7 +1547,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.DeleteClusterRsp"
+                                            "$ref": "#/definitions/cluster.DeleteClusterResp"
                                         }
                                     }
                                 }
@@ -2188,7 +2188,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.StopClusterRsp"
+                                            "$ref": "#/definitions/cluster.StopClusterResp"
                                         }
                                     }
                                 }
@@ -4249,6 +4249,73 @@
                 }
             }
         },
+        "cluster.CreateClusterReq": {
+            "type": "object",
+            "properties": {
+                "backupId": {
+                    "type": "string"
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
+                "copies": {
+                    "description": "The number of copies of the newly created cluster data, consistent with the number of copies set in PD",
+                    "type": "integer"
+                },
+                "cpuArchitecture": {
+                    "description": "X86/X86_64/ARM",
+                    "type": "string"
+                },
+                "dbPassword": {
+                    "type": "string"
+                },
+                "dbUser": {
+                    "description": "The username and password for the newly created database cluster, default is the root user, which is not valid for Data Migration clusters",
+                    "type": "string"
+                },
+                "exclusive": {
+                    "description": "Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization",
+                    "type": "boolean"
+                },
+                "region": {
+                    "description": "The Region where the cluster is located",
+                    "type": "string"
+                },
+                "resourceParameters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterResourceParameter"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "cluster.CreateClusterResp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "cluster.DeleteBackupDataReq": {
             "type": "object",
             "properties": {
@@ -4284,6 +4351,32 @@
                         5
                     ],
                     "example": 1
+                }
+            }
+        },
+        "cluster.DeleteClusterReq": {
+            "type": "object",
+            "properties": {
+                "autoBackup": {
+                    "type": "boolean"
+                },
+                "clearBackupData": {
+                    "type": "boolean"
+                },
+                "clusterID": {
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.DeleteClusterResp": {
+            "type": "object",
+            "properties": {
+                "clusterID": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
                 }
             }
         },
@@ -4475,6 +4568,20 @@
                 }
             }
         },
+        "cluster.QueryClusterDetailResp": {
+            "type": "object",
+            "properties": {
+                "info": {
+                    "$ref": "#/definitions/structs.ClusterInfo"
+                },
+                "topology": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterInstanceInfo"
+                    }
+                }
+            }
+        },
         "cluster.ResumeChangeFeedTaskResp": {
             "type": "object",
             "properties": {
@@ -4544,6 +4651,18 @@
             }
         },
         "cluster.ScaleOutClusterResp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
+        "cluster.StopClusterResp": {
             "type": "object",
             "properties": {
                 "clusterId": {
@@ -5275,221 +5394,6 @@
                 }
             }
         },
-        "management.ComponentInstance": {
-            "type": "object",
-            "properties": {
-                "componentName": {
-                    "type": "string"
-                },
-                "componentType": {
-                    "type": "string"
-                },
-                "nodes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.ComponentNodeDisplayInfo"
-                    }
-                }
-            }
-        },
-        "management.ComponentNodeDisplayInfo": {
-            "type": "object",
-            "properties": {
-                "HostIp": {
-                    "type": "string"
-                },
-                "cpuUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "hostId": {
-                    "type": "string"
-                },
-                "ioUtil": {
-                    "type": "number"
-                },
-                "iops": {
-                    "type": "array",
-                    "items": {
-                        "type": "number"
-                    }
-                },
-                "memoryUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "nodeId": {
-                    "type": "string"
-                },
-                "port": {
-                    "type": "integer"
-                },
-                "ports": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "role": {
-                    "$ref": "#/definitions/management.ComponentNodeRole"
-                },
-                "spec": {
-                    "$ref": "#/definitions/warehouse.SpecBaseInfo"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "storageUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "version": {
-                    "type": "string"
-                },
-                "zone": {
-                    "$ref": "#/definitions/warehouse.ZoneBaseInfo"
-                }
-            }
-        },
-        "management.ComponentNodeRole": {
-            "type": "object",
-            "properties": {
-                "roleCode": {
-                    "type": "string"
-                },
-                "roleName": {
-                    "type": "string"
-                }
-            }
-        },
-        "management.CreateClusterRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "recoverInfo": {
-                    "$ref": "#/definitions/management.RecoverInfo"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tls": {
-                    "type": "boolean"
-                },
-                "updateTime": {
-                    "type": "string"
-                }
-            }
-        },
-        "management.CreateReq": {
-            "type": "object",
-            "properties": {
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "cpuArchitecture": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "exclusive": {
-                    "type": "boolean"
-                },
-                "nodeDemandList": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.ClusterNodeDemand"
-                    }
-                },
-                "recoverInfo": {
-                    "$ref": "#/definitions/management.RecoverInfo"
-                },
-                "region": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tls": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "management.DeleteClusterRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "updateTime": {
-                    "type": "string"
-                }
-            }
-        },
-        "management.DeleteReq": {
-            "type": "object",
-            "properties": {
-                "autoBackup": {
-                    "type": "boolean"
-                },
-                "clearBackupData": {
-                    "type": "boolean"
-                }
-            }
-        },
         "management.DescribeDashboardRsp": {
             "type": "object",
             "properties": {
@@ -5518,135 +5422,6 @@
                 "grafanaUrl": {
                     "type": "string",
                     "example": "http://127.0.0.1:3000"
-                }
-            }
-        },
-        "management.DetailClusterRsp": {
-            "type": "object",
-            "properties": {
-                "backupFileUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "clusterId": {
-                    "type": "string"
-                },
-                "clusterName": {
-                    "type": "string"
-                },
-                "clusterType": {
-                    "type": "string"
-                },
-                "clusterVersion": {
-                    "type": "string"
-                },
-                "componentTopology": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "componentType": {
-                                "type": "string"
-                            },
-                            "resourceSpec": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/definitions/management.ResourceSpec"
-                                }
-                            }
-                        }
-                    }
-                },
-                "components": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/management.ComponentInstance"
-                    }
-                },
-                "cpuArchitecture": {
-                    "type": "string"
-                },
-                "cpuUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "dbPassword": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "diskUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "extranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "intranetConnectAddresses": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "maintainTaskCron": {
-                    "type": "string"
-                },
-                "memoryUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "portList": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "recoverInfo": {
-                    "$ref": "#/definitions/management.RecoverInfo"
-                },
-                "region": {
-                    "type": "object",
-                    "properties": {
-                        "code": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "storageUsage": {
-                    "$ref": "#/definitions/controller.Usage"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tls": {
-                    "type": "boolean"
-                },
-                "updateTime": {
-                    "type": "string"
-                },
-                "whitelist": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
@@ -5725,36 +5500,6 @@
                 }
             }
         },
-        "management.ResourceSpec": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "spec": {
-                    "type": "object",
-                    "properties": {
-                        "code": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "zone": {
-                    "type": "object",
-                    "properties": {
-                        "code": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "management.RestartClusterRsp": {
             "type": "object",
             "properties": {
@@ -5820,32 +5565,6 @@
                     "type": "string"
                 },
                 "zoneCode": {
-                    "type": "string"
-                }
-            }
-        },
-        "management.StopClusterRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "updateTime": {
                     "type": "string"
                 }
             }
@@ -6619,6 +6338,184 @@
                 }
             }
         },
+        "structs.ClusterInfo": {
+            "type": "object",
+            "properties": {
+                "alertUrl": {
+                    "type": "string",
+                    "example": "http://127.0.0.1:9093"
+                },
+                "backupFileUsage": {
+                    "$ref": "#/definitions/structs.Usage"
+                },
+                "clusterId": {
+                    "type": "string"
+                },
+                "clusterName": {
+                    "type": "string"
+                },
+                "clusterType": {
+                    "type": "string"
+                },
+                "clusterVersion": {
+                    "type": "string"
+                },
+                "copies": {
+                    "description": "The number of copies of the newly created cluster data, consistent with the number of copies set in PD",
+                    "type": "integer"
+                },
+                "cpuArchitecture": {
+                    "description": "X86/X86_64/ARM",
+                    "type": "string"
+                },
+                "cpuUsage": {
+                    "$ref": "#/definitions/structs.Usage"
+                },
+                "createTime": {
+                    "type": "string"
+                },
+                "deleteTime": {
+                    "type": "string"
+                },
+                "exclusive": {
+                    "description": "Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization",
+                    "type": "boolean"
+                },
+                "extranetConnectAddresses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "grafanaUrl": {
+                    "type": "string",
+                    "example": "http://127.0.0.1:3000"
+                },
+                "intranetConnectAddresses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "maintainStatus": {
+                    "type": "string"
+                },
+                "maintainWindow": {
+                    "type": "string"
+                },
+                "memoryUsage": {
+                    "$ref": "#/definitions/structs.Usage"
+                },
+                "portList": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "role": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "storageUsage": {
+                    "$ref": "#/definitions/structs.Usage"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "type": "boolean"
+                },
+                "updateTime": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                },
+                "whitelist": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "structs.ClusterInstanceInfo": {
+            "type": "object",
+            "properties": {
+                "addresses": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "cpuUsage": {
+                    "$ref": "#/definitions/structs.Usage"
+                },
+                "hostID": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ioUtil": {
+                    "type": "number"
+                },
+                "iops": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                },
+                "memoryUsage": {
+                    "$ref": "#/definitions/structs.Usage"
+                },
+                "ports": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "role": {
+                    "type": "string"
+                },
+                "spec": {
+                    "description": "??",
+                    "$ref": "#/definitions/structs.ProductSpecInfo"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "storageUsage": {
+                    "$ref": "#/definitions/structs.Usage"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "zone": {
+                    "description": "??",
+                    "$ref": "#/definitions/structs.ZoneInfo"
+                }
+            }
+        },
+        "structs.ClusterResourceParameter": {
+            "type": "object",
+            "properties": {
+                "compute": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
+                    }
+                }
+            }
+        },
         "structs.ClusterResourceParameterCompute": {
             "type": "object",
             "properties": {
@@ -6703,6 +6600,31 @@
                 }
             }
         },
+        "structs.ProductSpecInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "structs.Usage": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "number"
+                },
+                "usageRate": {
+                    "type": "number"
+                },
+                "used": {
+                    "type": "number"
+                }
+            }
+        },
         "structs.WorkFlowInfo": {
             "type": "object",
             "properties": {
@@ -6755,6 +6677,17 @@
                 }
             }
         },
+        "structs.ZoneInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "warehouse.DomainResource": {
             "type": "object",
             "properties": {
@@ -6798,17 +6731,6 @@
                 }
             }
         },
-        "warehouse.SpecBaseInfo": {
-            "type": "object",
-            "properties": {
-                "specCode": {
-                    "type": "string"
-                },
-                "specName": {
-                    "type": "string"
-                }
-            }
-        },
         "warehouse.Stocks": {
             "type": "object",
             "properties": {
@@ -6826,17 +6748,6 @@
                 },
                 "freeMemory": {
                     "type": "integer"
-                }
-            }
-        },
-        "warehouse.ZoneBaseInfo": {
-            "type": "object",
-            "properties": {
-                "zoneCode": {
-                    "type": "string"
-                },
-                "zoneName": {
-                    "type": "string"
                 }
             }
         }

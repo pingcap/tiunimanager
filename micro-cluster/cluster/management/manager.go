@@ -30,8 +30,6 @@ const (
 	ContextAllocResource = "AllocResource"
 )
 
-type ClusterManager struct{}
-
 var scaleOutDefine = workflow.WorkFlowDefine{
 	FlowName: constants.FlowScaleOutCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
@@ -44,11 +42,11 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 	},
 }
 
-func NewClusterManager() *ClusterManager {
+func NewClusterManager() *Manager {
 	workflowManager := workflow.GetWorkFlowService()
 
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowScaleOutCluster, &scaleOutDefine)
-	return &ClusterManager{}
+	return &Manager{}
 }
 
 // ScaleOut
@@ -57,7 +55,7 @@ func NewClusterManager() *ClusterManager {
 // @Parameter	request
 // @Return		*cluster.ScaleOutClusterResp
 // @Return		error
-func (manager *ClusterManager) ScaleOut(ctx context.Context, request *cluster.ScaleOutClusterReq) (*cluster.ScaleOutClusterResp, error) {
+func (p *Manager) ScaleOut(ctx context.Context, request *cluster.ScaleOutClusterReq) (*cluster.ScaleOutClusterResp, error) {
 	// Get cluster info and topology from db based by clusterID
 	clusterMeta, err := handler.Get(ctx, request.ClusterID)
 
@@ -103,7 +101,7 @@ func (manager *ClusterManager) ScaleOut(ctx context.Context, request *cluster.Sc
 	return response, nil
 }
 
-func (manager *ClusterManager) ScaleIn(ctx context.Context, request *cluster.ScaleInClusterReq) (*cluster.ScaleInClusterResp, error) {
+func (manager *Manager) ScaleIn(ctx context.Context, request *cluster.ScaleInClusterReq) (*cluster.ScaleInClusterResp, error) {
 	// Get cluster info and topology from db based by clusterID
 	clusterMeta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
@@ -120,7 +118,7 @@ func (manager *ClusterManager) ScaleIn(ctx context.Context, request *cluster.Sca
 	return nil, nil
 }
 
-func (manager *ClusterManager) Clone(ctx context.Context, request *cluster.CloneClusterReq) (*cluster.CloneClusterResp, error) {
+func (manager *Manager) Clone(ctx context.Context, request *cluster.CloneClusterReq) (*cluster.CloneClusterResp, error) {
 	return nil, nil
 }
 
@@ -163,6 +161,9 @@ func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterRe
 	return
 }
 
+var stopClusterFlow = &workflow.WorkFlowDefine {
+	// define
+}
 func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (resp cluster.StopClusterResp, err error) {
 	meta, err := handler.Get(ctx, req.ClusterID)
 
@@ -177,8 +178,12 @@ func (p *Manager) StopCluster(ctx context.Context, req cluster.StopClusterReq) (
 	return
 }
 
-func Init() {
-	f := workflow.GetWorkFlowService()
-	f.RegisterWorkFlow(context.TODO(), createClusterFlow.FlowName, createClusterFlow)
+func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterReq) (resp cluster.DeleteClusterResp, err error) {
+	return
 }
+
+func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartClusterReq) (resp cluster.RestartClusterResp, err error) {
+	return
+}
+
 

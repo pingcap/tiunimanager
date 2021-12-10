@@ -10,12 +10,12 @@ option go_package = "./clusterpb/;clusterpb";
 
 service ClusterService {
     // Cluster manager module
-    rpc CreateCluster(ClusterCreateReqDTO) returns (ClusterCreateRespDTO);
+    rpc CreateCluster(RpcRequest) returns (RpcResponse);
     rpc QueryCluster(RpcRequest) returns (RpcResponse);
-    rpc DeleteCluster(ClusterDeleteReqDTO) returns (ClusterDeleteRespDTO);
+    rpc DeleteCluster(RpcRequest) returns (RpcResponse);
     rpc DetailCluster(RpcRequest) returns (RpcResponse);
-    rpc RestartCluster(ClusterRestartReqDTO) returns (ClusterRestartRespDTO);
-    rpc StopCluster(ClusterStopReqDTO) returns (ClusterStopRespDTO);
+    rpc RestartCluster(RpcRequest) returns (RpcResponse);
+    rpc StopCluster(RpcRequest) returns (RpcResponse);
     rpc TakeoverClusters(ClusterTakeoverReqDTO) returns (ClusterTakeoverRespDTO);
     rpc ScaleOutCluster(RpcRequest) returns (RpcResponse);
     rpc ScaleInCluster(RpcRequest) returns (RpcResponse);
@@ -29,7 +29,7 @@ service ClusterService {
     rpc QueryBackupRecords(RpcRequest) returns (RpcResponse);
     rpc CreateBackup(RpcRequest) returns (RpcResponse);
     rpc RecoverCluster(RecoverRequest) returns (RecoverResponse);
-    rpc DeleteBackupRecord(RpcRequest) returns (RpcResponse);
+    rpc DeleteBackupRecords(RpcRequest) returns (RpcResponse);
     rpc SaveBackupStrategy(RpcRequest) returns (RpcResponse);
     rpc GetBackupStrategy(RpcRequest) returns (RpcResponse);
 

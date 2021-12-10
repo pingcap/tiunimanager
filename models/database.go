@@ -79,6 +79,7 @@ func (p *database) initTables() {
 	p.addTable(new(backuprestore.BackupRecord))
 	p.addTable(new(backuprestore.BackupStrategy))
 	p.addTable(new(config.SystemConfig))
+	p.addTable(new(management.ClusterTopologySnapshot))
 
 	// other tables
 }

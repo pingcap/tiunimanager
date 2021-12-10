@@ -43,9 +43,13 @@ var doFail = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
 	return true
 }
 
+func init() {
+	models.MockDB()
+}
+
 func TestFlowManager_RegisterWorkFlow(t *testing.T) {
-	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(),
+	manager := GetWorkFlowService()
+	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
@@ -75,8 +79,8 @@ func TestFlowManager_Start(t *testing.T) {
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
-	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(),
+	manager := GetWorkFlowService()
+	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
@@ -106,8 +110,8 @@ func TestFlowManager_AsyncStart(t *testing.T) {
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
-	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(),
+	manager := GetWorkFlowService()
+	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
@@ -137,8 +141,8 @@ func TestFlowManager_AddContext(t *testing.T) {
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
-	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(),
+	manager := GetWorkFlowService()
+	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
@@ -169,8 +173,8 @@ func TestFlowManager_Destroy(t *testing.T) {
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
-	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(),
+	manager := GetWorkFlowService()
+	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
@@ -201,8 +205,8 @@ func TestFlowManager_Complete(t *testing.T) {
 	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
-	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(),
+	manager := GetWorkFlowService()
+	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{
@@ -245,8 +249,8 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 	}, nil, nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
-	manager := GetWorkFlowManager()
-	manager.RegisterWorkFlow(context.TODO(),
+	manager := GetWorkFlowService()
+	manager.RegisterWorkFlow(context.TODO(), "flowName",
 		&WorkFlowDefine{
 			FlowName: "flowName",
 			TaskNodes: map[string]*NodeDefine{

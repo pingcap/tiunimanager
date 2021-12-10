@@ -119,7 +119,7 @@ func InitFlowMap() {
 			FlowName:    FlowModifyParameters,
 			StatusAlias: copywriting2.DisplayByDefault(copywriting2.CWFlowModifyParameters),
 			TaskNodes: map[string]*TaskDefine{
-				"start":       {"modifyParameter", "modifyDone", "fail", PollingTasK, modifyParameters},
+				"start":       {"modifyParameter", "modifyDone", "fail", SyncFuncTask, modifyParameters},
 				"modifyDone":  {"refreshParameter", "refreshDone", "fail", SyncFuncTask, refreshParameter},
 				"refreshDone": {"end", "", "", SyncFuncTask, clusterEnd},
 				"fail":        {"fail", "", "", SyncFuncTask, clusterFail},

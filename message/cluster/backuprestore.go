@@ -30,9 +30,9 @@ import (
 
 // BackupClusterDataReq Requests for manual data backup
 type BackupClusterDataReq struct {
-	ClusterID    string `json:"clusterId"`
-	BackupType   string `json:"backupType"`   //full,incr
-	BackupMethod string `json:"backupMethod"` //logic,physic
+	ClusterID  string `json:"clusterId"`
+	BackupType string `json:"backupType"` //full,incr
+	BackupMode string `json:"backupMode"` //auto,manual
 }
 
 // BackupClusterDataResp Cluster backup reply message
@@ -83,4 +83,14 @@ type QueryBackupStrategyReq struct {
 // QueryBackupStrategyResp Query backup strategy reply message
 type QueryBackupStrategyResp struct {
 	Strategy structs.BackupStrategy `json:"strategy"`
+}
+
+// DeleteBackupStrategyReq Request to delete backup data strategy
+type DeleteBackupStrategyReq struct {
+	ClusterID string                 `json:"clusterId"`
+	Strategy  structs.BackupStrategy `json:"strategy"`
+}
+
+// DeleteBackupStrategyResp delete backup strategy reply message
+type DeleteBackupStrategyResp struct {
 }

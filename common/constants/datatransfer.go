@@ -24,12 +24,14 @@
 package constants
 
 //Definition export & import data constants
+type TransportType string
+
 const (
-	DefaultImportDir    string = "/tmp/em/import"
-	DefaultExportDir    string = "/tmp/em/export"
-	DefaultZipName      string = "data.zip"
-	TransportTypeExport string = "export"
-	TransportTypeImport string = "import"
+	DefaultImportDir    string        = "/home/em/import"
+	DefaultExportDir    string        = "/home/em/export"
+	DefaultZipName      string        = "data.zip"
+	TransportTypeExport TransportType = "export"
+	TransportTypeImport TransportType = "import"
 )
 
 type DataExportStatus string

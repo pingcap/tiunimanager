@@ -13,58 +13,36 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
+/*******************************************************************************
+ * @File: lib_br_v2
+ * @Description:
+ * @Author: shenhaibo@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/8
+*******************************************************************************/
+
 package secondparty
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/pingcap-inc/tiem/library/framework"
 	"strings"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/framework"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 )
 
-type DbConnParam struct {
-	Username string
-	Password string
-	IP       string
-	Port     string
-}
-
-type StorageType string
-
-const (
-	StorageTypeLocal StorageType = "local"
-	StorageTypeS3    StorageType = "s3"
-)
-
-type ClusterFacade struct {
-	TaskID          uint64 // do not pass this value for br command
-	DbConnParameter DbConnParam
-	DbName          string
-	TableName       string
-	ClusterId       string // todo: need to know the usage
-	ClusterName     string // todo: need to know the usage
-	RateLimitM      string
-	Concurrency     string
-	CheckSum        string
-}
-
-type BrStorage struct {
-	StorageType StorageType
-	Root        string // "/tmp/backup"
-}
-
-func (secondMicro *SecondMicro) MicroSrvBackUp(ctx context.Context, cluster ClusterFacade, storage BrStorage, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvbackup, clusterfacade: %v, storage: %v, bizid: %d", cluster, storage, bizID)
-	var req dbPb.CreateTiupTaskRequest
+func (manager *SecondPartyManager) BackUp(ctx context.Context, cluster ClusterFacade, storage BrStorage, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvbackup, clusterfacade: %v, storage: %v, bizid: %s", cluster, storage, bizID)
+	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_Backup
 	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -78,12 +56,12 @@ func (secondMicro *SecondMicro) MicroSrvBackUp(ctx context.Context, cluster Clus
 		backupReq.RateLimitM = cluster.RateLimitM
 		backupReq.Concurrency = cluster.Concurrency
 		backupReq.CheckSum = cluster.CheckSum
-		secondMicro.startNewBrBackUpTaskThruSQL(ctx, backupReq.TaskID, &backupReq)
+		manager.startNewBrBackUpTaskThruSQL(ctx, backupReq.TaskID, &backupReq)
 		return rsp.Id, nil
 	}
 }
 
-func (secondMicro *SecondMicro) startNewBrBackUpTaskThruSQL(ctx context.Context, taskID uint64, req *CmdBackUpReq) {
+func (manager *SecondPartyManager) startNewBrBackUpTaskThruSQL(ctx context.Context, taskID uint64, req *CmdBackUpReq) {
 	go func() {
 		var args []string
 		args = append(args, "BACKUP")
@@ -108,19 +86,19 @@ func (secondMicro *SecondMicro) startNewBrBackUpTaskThruSQL(ctx context.Context,
 			args = append(args, "CHECKSUM", "=", req.CheckSum)
 		}
 		args = append(args, req.Flags...)
-		<-secondMicro.startNewBrTaskThruSQL(ctx, taskID, &req.DbConnParameter, strings.Join(args, " "))
+		<-manager.startNewBrTaskThruSQL(ctx, taskID, &req.DbConnParameter, strings.Join(args, " "))
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvShowBackUpInfo(ctx context.Context, cluster ClusterFacade) CmdShowBackUpInfoResp {
+func (manager *SecondPartyManager) ShowBackUpInfo(ctx context.Context, cluster ClusterFacade) CmdShowBackUpInfoResp {
 	framework.LogWithContext(ctx).Infof("microsrvshowbackupinfo, clusterfacade: %v", cluster)
 	var showBackUpInfoReq CmdShowBackUpInfoReq
 	showBackUpInfoReq.DbConnParameter = cluster.DbConnParameter
-	showBackUpInfoResp := secondMicro.startNewBrShowBackUpInfoThruSQL(ctx, &showBackUpInfoReq)
+	showBackUpInfoResp := manager.startNewBrShowBackUpInfoThruSQL(ctx, &showBackUpInfoReq)
 	return showBackUpInfoResp
 }
 
-func (secondMicro *SecondMicro) startNewBrShowBackUpInfoThruSQL(ctx context.Context, req *CmdShowBackUpInfoReq) (resp CmdShowBackUpInfoResp) {
+func (manager *SecondPartyManager) startNewBrShowBackUpInfoThruSQL(ctx context.Context, req *CmdShowBackUpInfoReq) (resp CmdShowBackUpInfoResp) {
 	brSQLCmd := "SHOW BACKUPS"
 	dbConnParam := req.DbConnParameter
 	framework.LogWithContext(ctx).Info("task start processing:", fmt.Sprintf("brSQLCmd:%s", brSQLCmd))
@@ -135,36 +113,12 @@ func (secondMicro *SecondMicro) startNewBrShowBackUpInfoThruSQL(ctx context.Cont
 	return
 }
 
-func execShowBackUpInfoThruSQL(ctx context.Context, db *sql.DB, showBackupSQLCmd string) (resp CmdShowBackUpInfoResp) {
-	t0 := time.Now()
-	err := db.QueryRow(showBackupSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.QueueTime, &resp.ExecutionTime, &resp.FinishTime, &resp.Connection)
-	logInFunc := framework.LogWithContext(ctx)
-	successFp := func() {
-		logInFunc.Info("showbackupinfo task finished, time cost", time.Since(t0))
-	}
-	if err != nil {
-		logInFunc.Errorf("query sql cmd err: %v", err)
-		if err.Error() != "sql: no rows in result set" {
-			logInFunc.Debugf("(%s) != (sql: no rows in result set", err.Error())
-			resp.ErrorStr = err.Error()
-			return
-		}
-		logInFunc.Debugf("(%s) == (sql: no rows in result set)", err.Error())
-		logInFunc.Infof("task has finished without checking db while no rows is result for sql cmd")
-		resp.Progress = 100
-		return
-	}
-	logInFunc.Info("sql cmd return successfully")
-	successFp()
-	return
-}
-
-func (secondMicro *SecondMicro) MicroSrvRestore(ctx context.Context, cluster ClusterFacade, storage BrStorage, bizID uint64) (taskID uint64, err error) {
-	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvrestore, clusterfacade: %v, storage: %v, bizid: %d", cluster, storage, bizID)
-	var req dbPb.CreateTiupTaskRequest
+func (manager *SecondPartyManager) Restore(ctx context.Context, cluster ClusterFacade, storage BrStorage, bizID string) (taskID uint64, err error) {
+	framework.LogWithContext(ctx).WithField("bizid", bizID).Infof("microsrvrestore, clusterfacade: %v, storage: %v, bizid: %s", cluster, storage, bizID)
+	var req dbPb.CreateTiupOperatorRecordRequest
 	req.Type = dbPb.TiupTaskType_Restore
 	req.BizID = bizID
-	rsp, err := client.DBClient.CreateTiupTask(context.Background(), &req)
+	rsp, err := client.DBClient.CreateTiupOperatorRecord(context.Background(), &req)
 	if rsp == nil || err != nil || rsp.ErrCode != 0 {
 		err = fmt.Errorf("rsp:%v, err:%v", rsp, err)
 		return 0, err
@@ -178,12 +132,12 @@ func (secondMicro *SecondMicro) MicroSrvRestore(ctx context.Context, cluster Clu
 		restoreReq.RateLimitM = cluster.RateLimitM
 		restoreReq.Concurrency = cluster.Concurrency
 		restoreReq.CheckSum = cluster.CheckSum
-		secondMicro.startNewBrRestoreTaskThruSQL(ctx, restoreReq.TaskID, &restoreReq)
+		manager.startNewBrRestoreTaskThruSQL(ctx, restoreReq.TaskID, &restoreReq)
 		return rsp.Id, nil
 	}
 }
 
-func (secondMicro *SecondMicro) startNewBrRestoreTaskThruSQL(ctx context.Context, taskID uint64, req *CmdRestoreReq) {
+func (manager *SecondPartyManager) startNewBrRestoreTaskThruSQL(ctx context.Context, taskID uint64, req *CmdRestoreReq) {
 	go func() {
 		var args []string
 		args = append(args, "RESTORE")
@@ -208,19 +162,19 @@ func (secondMicro *SecondMicro) startNewBrRestoreTaskThruSQL(ctx context.Context
 			args = append(args, "CHECKSUM", "=", req.CheckSum)
 		}
 		args = append(args, req.Flags...)
-		<-secondMicro.startNewBrTaskThruSQL(ctx, taskID, &req.DbConnParameter, strings.Join(args, " "))
+		<-manager.startNewBrTaskThruSQL(ctx, taskID, &req.DbConnParameter, strings.Join(args, " "))
 	}()
 }
 
-func (secondMicro *SecondMicro) MicroSrvShowRestoreInfo(ctx context.Context, cluster ClusterFacade) CmdShowRestoreInfoResp {
+func (manager *SecondPartyManager) ShowRestoreInfo(ctx context.Context, cluster ClusterFacade) CmdShowRestoreInfoResp {
 	framework.LogWithContext(ctx).Infof("microsrvshowrestoreinfo, clusterfacade: %v", cluster)
 	var showRestoreInfoReq CmdShowRestoreInfoReq
 	showRestoreInfoReq.DbConnParameter = cluster.DbConnParameter
-	showRestoreInfoResp := secondMicro.startNewBrShowRestoreInfoThruSQL(ctx, &showRestoreInfoReq)
+	showRestoreInfoResp := manager.startNewBrShowRestoreInfoThruSQL(ctx, &showRestoreInfoReq)
 	return showRestoreInfoResp
 }
 
-func (secondMicro *SecondMicro) startNewBrShowRestoreInfoThruSQL(ctx context.Context, req *CmdShowRestoreInfoReq) (resp CmdShowRestoreInfoResp) {
+func (manager *SecondPartyManager) startNewBrShowRestoreInfoThruSQL(ctx context.Context, req *CmdShowRestoreInfoReq) (resp CmdShowRestoreInfoResp) {
 	brSQLCmd := "SHOW RESTORES"
 	dbConnParam := req.DbConnParameter
 	framework.LogWithContext(ctx).Infof("task start processing: brSQLCmd:%s", brSQLCmd)
@@ -235,35 +189,11 @@ func (secondMicro *SecondMicro) startNewBrShowRestoreInfoThruSQL(ctx context.Con
 	return
 }
 
-func execShowRestoreInfoThruSQL(ctx context.Context, db *sql.DB, showRestoreSQLCmd string) (resp CmdShowRestoreInfoResp) {
-	t0 := time.Now()
-	err := db.QueryRow(showRestoreSQLCmd).Scan(&resp.Destination, &resp.State, &resp.Progress, &resp.QueueTime, &resp.ExecutionTime, &resp.FinishTime, &resp.Connection)
-	logInFunc := framework.LogWithContext(ctx)
-	successFp := func() {
-		logInFunc.Info("showretoreinfo task finished, time cost", time.Since(t0))
-	}
-	if err != nil {
-		logInFunc.Errorf("query sql cmd err: %v", err)
-		if err.Error() != "sql: no rows in result set" {
-			logInFunc.Debugf("(%s) != (sql: no rows in result set", err.Error())
-			resp.ErrorStr = err.Error()
-			return resp
-		}
-		logInFunc.Debugf("(%s) == (sql: no rows in result set)", err.Error())
-		logInFunc.Infof("task has finished without checking db while no rows is result for sql cmd")
-		resp.Progress = 100
-		return resp
-	}
-	logInFunc.Info("sql cmd return successfully")
-	successFp()
-	return resp
-}
-
-func (secondMicro *SecondMicro) startNewBrTaskThruSQL(ctx context.Context, taskID uint64, dbConnParam *DbConnParam, brSQLCmd string) (exitCh chan struct{}) {
+func (manager *SecondPartyManager) startNewBrTaskThruSQL(ctx context.Context, taskID uint64, dbConnParam *DbConnParam, brSQLCmd string) (exitCh chan struct{}) {
 	exitCh = make(chan struct{})
 	logInFunc := framework.LogWithContext(ctx).WithField("task", taskID)
 	logInFunc.Infof("task start processing: brSQLCmd:%s", brSQLCmd)
-	secondMicro.taskStatusCh <- TaskStatusMember{
+	manager.taskStatusCh <- TaskStatusMember{
 		TaskID:   taskID,
 		Status:   TaskStatusProcessing,
 		ErrorStr: "",
@@ -273,7 +203,7 @@ func (secondMicro *SecondMicro) startNewBrTaskThruSQL(ctx context.Context, taskI
 
 		db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", dbConnParam.Username, dbConnParam.Password, dbConnParam.IP, dbConnParam.Port))
 		if err != nil {
-			secondMicro.taskStatusCh <- TaskStatusMember{
+			manager.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
 				ErrorStr: fmt.Sprintln(err),
@@ -286,7 +216,7 @@ func (secondMicro *SecondMicro) startNewBrTaskThruSQL(ctx context.Context, taskI
 		err = db.QueryRow(brSQLCmd).Scan(&resp.Destination, &resp.Size, &resp.BackupTS, &resp.Queue_time, &resp.Execution_Time)
 		if err != nil {
 			logInFunc.Error("query sql cmd err", err)
-			secondMicro.taskStatusCh <- TaskStatusMember{
+			manager.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusError,
 				ErrorStr: fmt.Sprintln(err),
@@ -295,7 +225,7 @@ func (secondMicro *SecondMicro) startNewBrTaskThruSQL(ctx context.Context, taskI
 		}
 		successFp := func() {
 			logInFunc.Info("task finished, time cost", time.Since(t0))
-			secondMicro.taskStatusCh <- TaskStatusMember{
+			manager.taskStatusCh <- TaskStatusMember{
 				TaskID:   taskID,
 				Status:   TaskStatusFinished,
 				ErrorStr: string(jsonMustMarshal(&resp)),

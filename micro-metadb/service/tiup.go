@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,8 +18,9 @@ package service
 
 import (
 	"context"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"time"
+
+	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 
 	"github.com/pingcap-inc/tiem/micro-metadb/models"
 )
@@ -80,6 +80,104 @@ func (handler *DBServiceHandler) GetTiupTaskStatusByBizID(ctx context.Context, r
 
 	db := handler.Dao().Db()
 	tasks, e := models.FindTiupTasksByBizID(db, ctx, req.BizID)
+	if e == nil {
+		errCt := 0
+		errStatStr := ""
+		processingCt := 0
+		for _, task := range tasks {
+			if task.Status == int(dbpb.TiupTaskStatus_Finished) {
+				rsp.Stat = dbpb.TiupTaskStatus_Finished
+				return nil
+			}
+			if task.Status == int(dbpb.TiupTaskStatus_Error) {
+				errStatStr = task.ErrorStr
+				errCt++
+				continue
+			}
+			if task.Status == int(dbpb.TiupTaskStatus_Processing) {
+				processingCt++
+				continue
+			}
+		}
+		if len(tasks) == 0 {
+			rsp.ErrCode = 2
+			rsp.ErrStr = "no match record was found"
+			return nil
+		}
+		if errCt >= len(tasks) {
+			rsp.Stat = dbpb.TiupTaskStatus_Error
+			rsp.StatErrStr = errStatStr
+			return nil
+		} else {
+			if processingCt > 0 {
+				rsp.Stat = dbpb.TiupTaskStatus_Processing
+			} else {
+				rsp.Stat = dbpb.TiupTaskStatus_Init
+			}
+			return nil
+		}
+	} else {
+		rsp.ErrCode = 1
+		rsp.ErrStr = e.Error()
+	}
+	return nil
+}
+
+func (handler *DBServiceHandler) CreateTiupOperatorRecord(ctx context.Context, req *dbpb.CreateTiupOperatorRecordRequest, rsp *dbpb.CreateTiupOperatorRecordResponse) error {
+	db := handler.Dao().Db()
+	id, e := models.CreateTiupOperatorRecord(db, ctx, req.Type, req.BizID)
+	if e == nil {
+		rsp.Id = id
+	} else {
+		rsp.ErrCode = 1
+		rsp.ErrStr = e.Error()
+	}
+	return nil
+}
+
+func (handler *DBServiceHandler) UpdateTiupOperatorRecord(ctx context.Context, req *dbpb.UpdateTiupOperatorRecordRequest, rsp *dbpb.UpdateTiupOperatorRecordResponse) error {
+	db := handler.Dao().Db()
+	e := models.UpdateTiupOperatorRecordStatus(db, ctx, req.Id, req.Status, req.ErrStr)
+	if e == nil {
+	} else {
+		rsp.ErrCode = 1
+		rsp.ErrStr = e.Error()
+	}
+	return nil
+}
+
+func (handler *DBServiceHandler) FindTiupOperatorRecordByID(ctx context.Context, req *dbpb.FindTiupOperatorRecordByIDRequest, rsp *dbpb.FindTiupOperatorRecordByIDResponse) error {
+	db := handler.Dao().Db()
+	task, e := models.FindTiupOperatorRecordByID(db, ctx, req.Id)
+	if e == nil {
+		var deleteAt string
+		if task.DeletedAt.Valid {
+			deleteAt = task.DeletedAt.Time.String()
+		} else {
+			var zeroTime time.Time
+			deleteAt = zeroTime.String()
+		}
+		rsp.TiupTask = &dbpb.TiupOperatorRecord{
+			ID:        task.ID,
+			CreatedAt: task.CreatedAt.String(),
+			UpdatedAt: task.UpdatedAt.String(),
+			DeletedAt: deleteAt,
+			Type:      dbpb.TiupTaskType(task.Type),
+			Status:    dbpb.TiupTaskStatus(task.Status),
+			ErrorStr:  task.ErrorStr,
+		}
+	} else {
+		rsp.ErrCode = 1
+		rsp.ErrStr = e.Error()
+	}
+	return nil
+}
+
+func (handler *DBServiceHandler) GetTiupOperatorRecordStatusByBizID(ctx context.Context, req *dbpb.GetTiupOperatorRecordStatusByBizIDRequest,
+	rsp *dbpb.GetTiupOperatorRecordStatusByBizIDResponse) error {
+
+	db := handler.Dao().Db()
+	tasks, e := models.FindTiupOperatorRecordsByBizID(db, ctx, req.BizID)
 	if e == nil {
 		errCt := 0
 		errStatStr := ""

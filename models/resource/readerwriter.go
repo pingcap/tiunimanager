@@ -44,5 +44,5 @@ type ResourceReaderWriter interface {
 	UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error)
 	// Get all filtered hosts to build hierarchy tree
 	GetHostItems(ctx context.Context, filter *structs.HostFilter, level int32, depth int32) (items []HostItem, err error)
-	GetStocks(ctx context.Context, location structs.Location, hostFilter structs.HostFilter, diskFilter structs.DiskFilter) (stocks *structs.Stocks, err error)
+	GetHostStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks []structs.Stocks, err error)
 }

@@ -161,6 +161,7 @@ func (p *FileHostProvider) GetHierarchy(ctx context.Context, filter *structs.Hos
 	log := framework.LogWithContext(ctx)
 	items, err := p.rw.GetHostItems(ctx, filter, int32(level), int32(depth))
 	if err != nil {
+		log.Errorf("get host items on hostFilter %v failed, %v", *filter, err)
 		return nil, err
 	}
 	wholeTree := p.buildHierarchy(items)
@@ -176,5 +177,19 @@ func (p *FileHostProvider) GetHierarchy(ctx context.Context, filter *structs.Hos
 }
 
 func (p *FileHostProvider) GetStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks *structs.Stocks, err error) {
-	return nil, nil
+	log := framework.LogWithContext(ctx)
+	hostStocks, err := p.rw.GetHostStocks(ctx, location, hostFilter, diskFilter)
+	if err != nil {
+		log.Errorf("get host stocks on location %v, hostFilter %v, diskFilter %v failed, %v", *location, *hostFilter, *diskFilter, err)
+		return nil, err
+	}
+	stocks = new(structs.Stocks)
+	stocks.FreeHostCount = int32(len(hostStocks))
+	for _, stock := range hostStocks {
+		stocks.FreeCpuCores += int32(stock.FreeCpuCores)
+		stocks.FreeMemory += int32(stock.FreeMemory)
+		stocks.FreeDiskCount += int32(stock.FreeDiskCount)
+		stocks.FreeDiskCapacity += int32(stock.FreeDiskCapacity)
+	}
+	return stocks, nil
 }

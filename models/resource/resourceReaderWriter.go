@@ -143,7 +143,7 @@ func (rw *GormResourceReadWrite) Delete(ctx context.Context, hostIds []string) (
 	return
 }
 
-func (rw *GormResourceReadWrite) hostFiltered(db *gorm.DB, filter *structs.HostFilter) (db2 *gorm.DB, err error) {
+func (rw *GormResourceReadWrite) hostFiltered(db *gorm.DB, filter *structs.HostFilter) (*gorm.DB, error) {
 	if filter.Arch != "" {
 		db = db.Where("arch = ?", filter.Arch)
 	}
@@ -165,6 +165,49 @@ func (rw *GormResourceReadWrite) hostFiltered(db *gorm.DB, filter *structs.HostF
 		}
 		db = db.Where("traits & ? = ?", label, label)
 	}
+	return db, nil
+}
+
+func (rw *GormResourceReadWrite) diskFiltered(db *gorm.DB, filter *structs.DiskFilter) (*gorm.DB, error) {
+	if filter.DiskStatus != "" {
+		db = db.Where("disks.status = ?", filter.DiskStatus)
+	}
+	if filter.DiskType != "" {
+		db = db.Where("disks.type = ?", filter.DiskType)
+	}
+	if filter.Capacity >= 0 {
+		db = db.Where("disks.capacity >= ?", filter.Capacity)
+	}
+	return db, nil
+}
+
+func (rw *GormResourceReadWrite) locationFiltered(db *gorm.DB, location *structs.Location) (*gorm.DB, error) {
+	var regionCode, zoneCode, rackCode string
+
+	// Region field should be required for follower filter
+	if location.Region == "" {
+		return db, nil
+	}
+	regionCode = location.Region
+	db = db.Where("hosts.region = ?", regionCode)
+
+	//  Zone field should be required for follower filter
+	if location.Zone != "" {
+		return db, nil
+	}
+	zoneCode = structs.GenDomainCodeByName(regionCode, location.Zone)
+	db = db.Where("hosts.az = ?", zoneCode)
+
+	// Rack field is optional by now
+	if location.Rack != "" {
+		rackCode = structs.GenDomainCodeByName(zoneCode, location.Rack)
+		db = db.Where("hosts.rack = ?", rackCode)
+	}
+
+	if location.HostIp != "" {
+		db = db.Where("hosts.ip = ?", location.HostIp)
+	}
+
 	return db, nil
 }
 
@@ -225,6 +268,7 @@ func (rw *GormResourceReadWrite) GetHostItems(ctx context.Context, filter *struc
 	db := tx.Model(&rp.Host{}).Select("region, az, rack, ip, host_name as name")
 	db, err = rw.hostFiltered(db, filter)
 	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 	switch constants.HierarchyTreeNodeLevel(leafLevel) {
@@ -248,6 +292,35 @@ func (rw *GormResourceReadWrite) GetHostItems(ctx context.Context, filter *struc
 	tx.Commit()
 	return
 }
-func (rw *GormResourceReadWrite) GetStocks(ctx context.Context, location structs.Location, hostFilter structs.HostFilter, diskFilter structs.DiskFilter) (stocks *structs.Stocks, err error) {
-	return nil, nil
+func (rw *GormResourceReadWrite) GetHostStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks []structs.Stocks, err error) {
+	tx := rw.DB().Begin()
+	db := tx.Model(&rp.Host{}).Select(
+		"hosts.free_cpu_cores as free_cpu_cores, hosts.free_memory as free_memory, count(disks.id) as free_disk_count, sum(disks.capacity) as free_disk_capacity").Joins(
+		"left join disks on disks.host_id = hosts.id")
+	db, err = rw.locationFiltered(db, location)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	db, err = rw.hostFiltered(db, hostFilter)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	db, err = rw.diskFiltered(db, diskFilter)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	db = db.Group("hosts.id")
+
+	err = db.Scan(&stocks).Error
+	if err != nil {
+		tx.Rollback()
+		return nil, framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "get stocks failed, %v", err)
+	}
+	tx.Commit()
+	return
 }

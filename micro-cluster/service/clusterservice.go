@@ -84,12 +84,13 @@ func handleResponse(ctx context.Context, resp *clusterpb.RpcResponse, err error,
 			// deal with err uniformly later
 			err = framework.WrapError(common.TIEM_MARSHAL_ERROR, fmt.Sprintf("marshal request data error, data = %v", responseData), getDataError)
 		} else {
+			// handle data and page
 			resp.Code = int32(common.TIEM_SUCCESS)
 			resp.Response = string(data)
-		}
-
-		if page != nil {
-			resp.Page = page
+			if page != nil {
+				resp.Page = page
+			}
+			return
 		}
 	}
 

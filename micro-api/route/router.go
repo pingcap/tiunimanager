@@ -24,7 +24,7 @@ import (
 	logApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/log"
 	clusterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/management"
 	parameterApi "github.com/pingcap-inc/tiem/micro-api/controller/cluster/parameter"
-	paramGroupApi "github.com/pingcap-inc/tiem/micro-api/controller/param/paramgroup"
+	"github.com/pingcap-inc/tiem/micro-api/controller/parametergroup"
 
 	"github.com/pingcap-inc/tiem/micro-api/controller/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/micro-api/controller/platform/specs"
@@ -104,7 +104,7 @@ func Route(g *gin.Engine) {
 			// Params
 			cluster.GET("/:clusterId/params", parameterApi.QueryParams)
 			cluster.PUT("/:clusterId/params", parameterApi.UpdateParams)
-			cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParams)
+			//cluster.POST("/:clusterId/params/inspect", parameterApi.InspectParams)
 
 			// Backup Strategy
 			cluster.GET("/:clusterId/strategy", backuprestore.QueryBackupStrategy)
@@ -189,13 +189,13 @@ func Route(g *gin.Engine) {
 		{
 			paramGroups.Use(interceptor.VerifyIdentity)
 			paramGroups.Use(interceptor.AuditLog())
-			paramGroups.GET("/", paramGroupApi.Query)
-			paramGroups.GET("/:paramGroupId", paramGroupApi.Detail)
-			paramGroups.POST("/", paramGroupApi.Create)
-			paramGroups.PUT("/:paramGroupId", paramGroupApi.Update)
-			paramGroups.DELETE("/:paramGroupId", paramGroupApi.Delete)
-			paramGroups.POST("/:paramGroupId/copy", paramGroupApi.Copy)
-			paramGroups.POST("/:paramGroupId/apply", paramGroupApi.Apply)
+			paramGroups.GET("/", parametergroup.Query)
+			paramGroups.GET("/:paramGroupId", parametergroup.Detail)
+			paramGroups.POST("/", parametergroup.Create)
+			paramGroups.PUT("/:paramGroupId", parametergroup.Update)
+			paramGroups.DELETE("/:paramGroupId", parametergroup.Delete)
+			paramGroups.POST("/:paramGroupId/copy", parametergroup.Copy)
+			paramGroups.POST("/:paramGroupId/apply", parametergroup.Apply)
 		}
 	}
 

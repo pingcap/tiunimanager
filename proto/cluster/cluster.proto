@@ -6,7 +6,6 @@ import "database.proto";
 import "mng_auth.proto";
 import "mng_host.proto";
 import "mng_allocation.proto";
-import "param.proto";
 option go_package = "./clusterpb/;clusterpb";
 
 service ClusterService {
@@ -65,17 +64,17 @@ service ClusterService {
     rpc ListFlows(ListFlowsRequest) returns (ListFlowsResponse);
     rpc DetailFlow(DetailFlowRequest) returns (DetailFlowsResponse);
 
-    // Param Group & Cluster Params
-    rpc CreateParamGroup(CreateParamGroupRequest) returns (CreateParamGroupResponse);
-    rpc UpdateParamGroup(UpdateParamGroupRequest) returns (UpdateParamGroupResponse);
-    rpc DeleteParamGroup(DeleteParamGroupRequest) returns (DeleteParamGroupResponse);
-    rpc ListParamGroup(ListParamGroupRequest) returns (ListParamGroupResponse);
-    rpc DetailParamGroup(DetailParamGroupRequest) returns (DetailParamGroupResponse);
-    rpc ApplyParamGroup(ApplyParamGroupRequest) returns (ApplyParamGroupResponse);
-    rpc CopyParamGroup(CopyParamGroupRequest) returns (CopyParamGroupResponse);
-    rpc ListClusterParams(ListClusterParamsRequest) returns (ListClusterParamsResponse);
-    rpc UpdateClusterParams(UpdateClusterParamsRequest) returns (UpdateClusterParamsResponse);
-    rpc InspectClusterParams(InspectClusterParamsRequest) returns (InspectClusterParamsResponse);
+    // Parameter Group & Cluster Parameters
+    rpc CreateParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc UpdateParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc DeleteParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc QueryParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc DetailParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc ApplyParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc CopyParameterGroup(RpcRequest) returns (RpcResponse);
+    rpc QueryClusterParameters(RpcRequest) returns (RpcResponse);
+    rpc UpdateClusterParameters(RpcRequest) returns (RpcResponse);
+    rpc InspectClusterParameters(RpcRequest) returns (RpcResponse);
 
     // change feed task
     rpc CreateChangeFeedTask(RpcRequest) returns (RpcResponse);

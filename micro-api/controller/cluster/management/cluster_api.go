@@ -18,7 +18,6 @@ package management
 
 import (
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/library/knowledge"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"net/http"
 	"strconv"
@@ -53,7 +52,7 @@ import (
 func Create(c *gin.Context) {
 	var req cluster.CreateClusterReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
+	requestBody, err := controller.HandleJsonRequestFromBody(c, req)
 
 	if err == nil {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateCluster, &cluster.CreateClusterResp{},
@@ -70,44 +69,45 @@ func Create(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Security ApiKeyAuth
-// @Param createReq body CreateReq true "preview request"
+// @Param createReq body cluster.CreateClusterReq true "preview request"
 // @Success 200 {object} controller.CommonResult{data=PreviewClusterRsp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/preview [post]
 func Preview(c *gin.Context) {
-	var req CreateReq
-
-	if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
-		_ = c.Error(err)
-		return
-	}
-
-	stockCheckResult := make([]StockCheckItem, 0)
-
-	for _, group := range req.NodeDemandList {
-		for _, node := range group.DistributionItems {
-			stockCheckResult = append(stockCheckResult, StockCheckItem{
-				Region:           req.Region,
-				CpuArchitecture:  req.CpuArchitecture,
-				Component:        *knowledge.ClusterComponentFromCode(group.ComponentType),
-				DistributionItem: node,
-				// todo stock
-				Enough: true,
-			})
-		}
-	}
-
-	c.JSON(http.StatusOK, controller.Success(PreviewClusterRsp{
-		ClusterBaseInfo:     req.ClusterBaseInfo,
-		StockCheckResult:    stockCheckResult,
-		ClusterCommonDemand: req.ClusterCommonDemand,
-		CapabilityIndexes:   []ServiceCapabilityIndex{
-			//{"StorageCapability", "database storage capability", 800, "GB"},
-			//{"TPCC", "TPCC tmpC ", 523456, ""},
-		},
-	}))
+	// todo refactor at last
+	//var req cluster.CreateClusterReq
+	//
+	//if err := c.ShouldBindBodyWith(&req, binding.JSON); err != nil {
+	//	_ = c.Error(err)
+	//	return
+	//}
+	//
+	//stockCheckResult := make([]StockCheckItem, 0)
+	//
+	//for _, group := range req.NodeDemandList {
+	//	for _, node := range group.DistributionItems {
+	//		stockCheckResult = append(stockCheckResult, StockCheckItem{
+	//			Region:           req.Region,
+	//			CpuArchitecture:  req.CpuArchitecture,
+	//			Component:        *knowledge.ClusterComponentFromCode(group.ComponentType),
+	//			DistributionItem: node,
+	//			// todo stock
+	//			Enough: true,
+	//		})
+	//	}
+	//}
+	//
+	//c.JSON(http.StatusOK, controller.Success(PreviewClusterRsp{
+	//	ClusterBaseInfo:     req.ClusterBaseInfo,
+	//	StockCheckResult:    stockCheckResult,
+	//	ClusterCommonDemand: req.ClusterCommonDemand,
+	//	CapabilityIndexes:   []ServiceCapabilityIndex{
+	//		//{"StorageCapability", "database storage capability", 800, "GB"},
+	//		//{"TPCC", "TPCC tmpC ", 523456, ""},
+	//	},
+	//}))
 }
 
 // Query query clusters
@@ -162,7 +162,7 @@ func Query(c *gin.Context) {
 func Delete(c *gin.Context) {
 	var req cluster.DeleteClusterReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
+	requestBody, err := controller.HandleJsonRequestFromBody(c, req)
 
 
 	if err == nil {
@@ -186,7 +186,7 @@ func Delete(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/restart [post]
 func Restart(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &cluster.RestartClusterReq{
+	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, cluster.RestartClusterReq{
 		ClusterID: c.Param("clusterId"),
 	})
 
@@ -211,7 +211,7 @@ func Restart(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/stop [post]
 func Stop(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &cluster.StopClusterReq{
+	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, cluster.StopClusterReq{
 		ClusterID: c.Param("clusterId"),
 	})
 

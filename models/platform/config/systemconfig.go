@@ -13,11 +13,12 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package importexport
+package config
 
-const (
-	FileTypeCSV                   string = "csv"
-	FileTypeSQL                   string = "sql"
-	contextClusterMetaKey         string = "clusterMeta"
-	contextDataTransportRecordKey string = "transportRecord"
-)
+import "github.com/pingcap-inc/tiem/models/common"
+
+type SystemConfig struct {
+	common.Entity
+	configKey   string `gorm:"not null;"`
+	configValue string `gorm:"not null;"`
+}

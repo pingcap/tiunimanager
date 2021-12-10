@@ -13,11 +13,25 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package importexport
+package config
 
-const (
-	FileTypeCSV                   string = "csv"
-	FileTypeSQL                   string = "sql"
-	contextClusterMetaKey         string = "clusterMeta"
-	contextDataTransportRecordKey string = "transportRecord"
+import (
+	"context"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
+
+var rw *ConfigReadWrite
+
+func TestConfigReadWrite_GetConfig(t *testing.T) {
+	config := &SystemConfig{
+		configKey:   "key",
+		configValue: "value",
+	}
+	configCreate, errCreate := rw.CreateConfig(context.TODO(), config)
+	assert.NoError(t, errCreate)
+
+	configGet, errGet := rw.GetConfig(context.TODO(), configCreate.configKey)
+	assert.NoError(t, errGet)
+	assert.Equal(t, configCreate.configValue, configGet.configValue)
+}

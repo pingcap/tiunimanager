@@ -13,11 +13,9 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package importexport
+package backuprestore
 
 const (
-	FileTypeCSV                   string = "csv"
-	FileTypeSQL                   string = "sql"
-	contextClusterMetaKey         string = "clusterMeta"
-	contextDataTransportRecordKey string = "transportRecord"
+	contextClusterMetaKey  string = "clusterMeta"
+	contextBackupRecordKey string = "backupRecord"
 )

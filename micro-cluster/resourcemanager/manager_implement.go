@@ -22,6 +22,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
+	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
 )
 
 type ResourceManager struct {
@@ -114,5 +115,26 @@ func (m *ResourceManager) GetStocks(ctx context.Context, location *structs.Locat
 		framework.LogWithContext(ctx).Infof("get stocks on location %v, host filter %v, disk filter %v succeed from db service.", *location, *hostFilter, *diskFilter)
 	}
 
+	return
+}
+
+func (m *ResourceManager) AllocResources(ctx context.Context, batchReq *resource_structs.BatchAllocRequest) (results *resource_structs.BatchAllocResponse, err error) {
+	results, err = m.management.AllocResources(ctx, batchReq)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("alloc resource failed on request %v from db service: %v", *batchReq, err)
+	} else {
+		framework.LogWithContext(ctx).Infof("alloc resources %v succeed from db service for request %v.", *results, *batchReq)
+	}
+
+	return
+}
+
+func (m *ResourceManager) RecycleResources(ctx context.Context, request *resource_structs.RecycleRequest) (err error) {
+	err = m.management.RecycleResources(ctx, request)
+	if err != nil {
+		framework.LogWithContext(ctx).Warnf("recycle resources failed on request %v from db service: %v", *request, err)
+	} else {
+		framework.LogWithContext(ctx).Infof("recycle resources %v succeed from db service for request %v.", *request)
+	}
 	return
 }

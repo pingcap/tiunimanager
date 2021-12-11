@@ -33,8 +33,8 @@ func (m *Management) InitManagement() {
 }
 
 func (m *Management) AllocResources(ctx context.Context, batchReq *structs.BatchAllocRequest) (results *structs.BatchAllocResponse, err error) {
-	return nil, nil
+	return m.localHostManage.AllocResources(ctx, batchReq)
 }
 func (m *Management) RecycleResources(ctx context.Context, request *structs.RecycleRequest) (err error) {
-	return nil
+	return m.localHostManage.RecycleResources(ctx, request)
 }

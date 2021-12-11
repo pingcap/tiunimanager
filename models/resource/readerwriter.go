@@ -19,6 +19,7 @@ import (
 	"context"
 
 	"github.com/pingcap-inc/tiem/common/structs"
+	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
 	rp "github.com/pingcap-inc/tiem/models/resource/resourcepool"
 )
 
@@ -33,13 +34,23 @@ type HostItem struct {
 type ReaderWriter interface {
 	// Init all table for resource manager
 	InitTables(ctx context.Context) error
+
+	// Create a batch of hosts
 	Create(ctx context.Context, hosts []rp.Host) ([]string, error)
+	// Delete a batch of hosts
 	Delete(ctx context.Context, hostIds []string) (err error)
+	// Query hosts, if specify HostID in HostFilter, return a single host info
 	Query(ctx context.Context, filter *structs.HostFilter, offset int, limit int) (hosts []rp.Host, err error)
 
 	UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error)
 	UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error)
+
 	// Get all filtered hosts to build hierarchy tree
 	GetHostItems(ctx context.Context, filter *structs.HostFilter, level int32, depth int32) (items []HostItem, err error)
+	// Get a list of stock on each host
 	GetHostStocks(ctx context.Context, location *structs.Location, hostFilter *structs.HostFilter, diskFilter *structs.DiskFilter) (stocks []structs.Stocks, err error)
+
+	// Alloc/Recycle resources, used by cluster module internal
+	AllocResources(ctx context.Context, batchReq *resource_structs.BatchAllocRequest) (results *resource_structs.BatchAllocResponse, err error)
+	RecycleResources(ctx context.Context, request *resource_structs.RecycleRequest) (err error)
 }

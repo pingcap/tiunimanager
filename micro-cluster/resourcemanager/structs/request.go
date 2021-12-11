@@ -32,8 +32,9 @@ type AllocReq struct {
 }
 
 type Applicant struct {
-	HolderId  string
-	RequestId string
+	HolderId          string
+	RequestId         string
+	TakeoverOperation bool
 }
 
 type AllocRequirement struct {
@@ -50,9 +51,10 @@ type Excluded struct {
 }
 
 type Filter struct {
-	Arch     string
-	Purpose  string
-	DiskType string
+	Arch       string
+	Purpose    string
+	DiskType   string
+	HostTraits int64
 }
 
 type Requirement struct {
@@ -67,9 +69,10 @@ type ComputeRequirement struct {
 }
 
 type DiskRequirement struct {
-	NeedDisk bool
-	Capacity int32  // Reserved, not used by now
-	DiskType string // Reserved, not used by now
+	NeedDisk    bool
+	Capacity    int32  // Reserved, not used by now
+	DiskType    string // Reserved, not used by now
+	DiskSpecify string // specify diskId
 }
 
 type PortRequirement struct {

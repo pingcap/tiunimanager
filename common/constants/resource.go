@@ -121,6 +121,18 @@ func (s DiskStatus) IsValidStatus() bool {
 		s == DiskError)
 }
 
+func (s DiskStatus) IsInused() bool {
+	return s == DiskInUsed
+}
+
+func (s DiskStatus) IsExhaust() bool {
+	return s == DiskExhaust
+}
+
+func (s DiskStatus) IsAvailable() bool {
+	return s == DiskAvailable
+}
+
 type PurposeType string
 
 //Types of purpose available

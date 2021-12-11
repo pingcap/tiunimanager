@@ -14,7 +14,7 @@
  *                                                                            *
  ******************************************************************************/
 
-package allocrecycle
+package structs
 
 import "github.com/pingcap-inc/tiem/common/structs"
 

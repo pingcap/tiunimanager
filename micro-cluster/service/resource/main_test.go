@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -22,12 +21,15 @@ import (
 	"testing"
 
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager"
 )
 
 var resourceManager *ResourceManager
+var resourceManger2 *resourcemanager.ResourceManager
 
 func TestMain(m *testing.M) {
 	framework.InitBaseFrameworkForUt(framework.ClusterService)
 	resourceManager = NewResourceManager()
+	resourceManger2 = resourcemanager.NewResourceManager()
 	os.Exit(m.Run())
 }

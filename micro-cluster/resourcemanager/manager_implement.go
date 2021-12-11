@@ -36,6 +36,10 @@ func NewResourceManager() *ResourceManager {
 	return m
 }
 
+func (m *ResourceManager) GetResourcePool() *resourcepool.ResourcePool {
+	return m.resourcePool
+}
+
 func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {
 	hostIds, err = m.resourcePool.ImportHosts(ctx, hosts)
 	if err != nil {

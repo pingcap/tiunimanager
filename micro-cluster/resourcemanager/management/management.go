@@ -20,10 +20,11 @@ import (
 	"context"
 
 	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
 )
 
 type Management struct {
-	localHostManage allocrecycle.AllocatorRecycler
+	localHostManage structs.AllocatorRecycler
 	// cloudManage allocrecycle.AllocatorRecycler
 }
 
@@ -31,9 +32,9 @@ func (m *Management) InitManagement() {
 	m.localHostManage = allocrecycle.GetLocalHostManagement()
 }
 
-func (m *Management) AllocResources(ctx context.Context, batchReq *allocrecycle.BatchAllocRequest) (results *allocrecycle.BatchAllocResponse, err error) {
+func (m *Management) AllocResources(ctx context.Context, batchReq *structs.BatchAllocRequest) (results *structs.BatchAllocResponse, err error) {
 	return nil, nil
 }
-func (m *Management) RecycleResources(ctx context.Context, request *allocrecycle.RecycleRequest) (err error) {
+func (m *Management) RecycleResources(ctx context.Context, request *structs.RecycleRequest) (err error) {
 	return nil
 }

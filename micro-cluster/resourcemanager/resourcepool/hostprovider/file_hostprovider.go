@@ -31,7 +31,7 @@ type FileHostProvider struct {
 	rw resource.ReaderWriter
 }
 
-func GetFileHostProvider() HostProvider {
+func GetFileHostProvider() *FileHostProvider {
 	hostProvider := new(FileHostProvider)
 	hostProvider.rw = models.GetResourceReaderWriter()
 	return hostProvider

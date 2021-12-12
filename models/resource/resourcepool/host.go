@@ -66,6 +66,17 @@ func (h Host) IsInused() bool {
 	return h.Stat == string(constants.HostLoadInUsed)
 }
 
+func (h Host) IsLoadless() bool {
+	diskLoadless := true
+	for _, disk := range h.Disks {
+		if disk.Status == string(constants.DiskExhaust) || disk.Status == string(constants.DiskInUsed) {
+			diskLoadless = false
+			break
+		}
+	}
+	return diskLoadless && h.FreeCpuCores == h.CpuCores && h.FreeMemory == h.Memory
+}
+
 func (h *Host) BeforeCreate(tx *gorm.DB) (err error) {
 	err = tx.Where("IP = ? and HOST_NAME = ?", h.IP, h.HostName).First(&Host{}).Error
 	if err == nil {

@@ -111,7 +111,7 @@ type RecycleRequire struct {
 	HostIP      string
 	ComputeReq  ComputeRequirement
 	PortReq     []PortResource
-	DiskReq     DiskResource
+	DiskReq     []DiskResource
 }
 
 type RecycleRequest struct {

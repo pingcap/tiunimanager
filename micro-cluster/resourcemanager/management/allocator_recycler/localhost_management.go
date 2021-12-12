@@ -35,8 +35,8 @@ func GetLocalHostManagement() structs.AllocatorRecycler {
 }
 
 func (m *LocalHostManagement) AllocResources(ctx context.Context, batchReq *structs.BatchAllocRequest) (results *structs.BatchAllocResponse, err error) {
-	return nil, nil
+	return m.rw.AllocResources(ctx, batchReq)
 }
 func (m *LocalHostManagement) RecycleResources(ctx context.Context, request *structs.RecycleRequest) (err error) {
-	return nil
+	return m.rw.RecycleResources(ctx, request)
 }

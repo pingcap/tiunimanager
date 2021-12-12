@@ -33,6 +33,7 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	context.SetData(ContextAllocResource, allocID)
 	framework.LogWithContext(context.Context).Infof(
 		"cluster[%s] alloc resource request id: %s", clusterMeta.Cluster.Name, allocID)
+
 	node.Success(nil)
 	return true
 }
@@ -129,6 +130,106 @@ func clusterEnd(node *workflowModel.WorkFlowNode, context *workflow.FlowContext)
 		node.Fail(err)
 		return false
 	}
+	node.Success(nil)
+	return true
+}
+
+func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+	yamlConfig := context.GetData(ContextTopology).(string)
+
+	framework.LogWithContext(context.Context).Infof(
+		"deploy cluster[%s], version = %s, yamlConfig = %s", cluster.Name, cluster.Version, yamlConfig)
+	taskId, err := secondparty.Manager.ClusterDeploy(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, cluster.Version,
+		yamlConfig, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] deploy error: %s", clusterMeta.Cluster.Name, err.Error())
+		node.Fail(err)
+		return false
+	}
+	framework.LogWithContext(context.Context).Infof("get deploy cluster task id: %d", taskId)
+	node.Success(nil)
+	return true
+}
+
+func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	framework.LogWithContext(context.Context).Infof(
+		"start cluster[%s], version = %s", cluster.Name, cluster.Version)
+	taskId, err := secondparty.Manager.ClusterStart(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, 0, []string{}, node.ID,
+		)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] start error: %s", clusterMeta.Cluster.Name, err.Error())
+		node.Fail(err)
+		return false
+	}
+	framework.LogWithContext(context.Context).Infof("get start cluster task id: %d", taskId)
+	node.Success(nil)
+	return true
+}
+
+func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	framework.LogWithContext(context.Context).Infof(
+		"stop cluster[%s], version = %s", cluster.Name, cluster.Version)
+	taskId, err := secondparty.Manager.ClusterStop(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, 0, []string{}, node.ID,
+	)
+
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] stop error: %s", clusterMeta.Cluster.Name, err.Error())
+		node.Fail(err)
+		return false
+	}
+	framework.LogWithContext(context.Context).Infof("get stop cluster task id: %d", taskId)
+	node.Success(nil)
+	return true
+}
+
+func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	framework.LogWithContext(context.Context).Infof(
+		"destroy cluster[%s], version = %s", cluster.Name, cluster.Version)
+	taskId, err := secondparty.Manager.ClusterDestroy(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, 0, []string{}, node.ID,
+	)
+
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] destroy error: %s", clusterMeta.Cluster.Name, err.Error())
+		node.Fail(err)
+		return false
+	}
+	framework.LogWithContext(context.Context).Infof("get destroy cluster task id: %d", taskId)
+	node.Success(nil)
+	return true
+}
+
+func freedResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	err := clusterMeta.FreedInstanceResource(context)
+
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] freed resource error: %s", clusterMeta.Cluster.Name, err.Error())
+		node.Fail(err)
+		return false
+	}
+	framework.LogWithContext(context.Context).Infof(
+		"cluster[%s] freed resource succeed", clusterMeta.Cluster.Name)
+
 	node.Success(nil)
 	return true
 }

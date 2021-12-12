@@ -26,21 +26,17 @@ import (
 	"testing"
 )
 
-var doNodeName1 = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
-	node.Success("success")
-	return true
+var doNodeName1 = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
+	return nil
 }
-var doNodeName2 = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
-	node.Success("success")
-	return true
+var doNodeName2 = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
+	return nil
 }
-var doSuccess = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
-	node.Success("success")
-	return true
+var doSuccess = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
+	return nil
 }
-var doFail = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
-	node.Success("success")
-	return true
+var doFail = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
+	return nil
 }
 
 func init() {

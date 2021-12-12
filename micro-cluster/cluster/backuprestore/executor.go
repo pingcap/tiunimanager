@@ -29,7 +29,7 @@ import (
 	"time"
 )
 
-func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) bool {
+func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin backupCluster")
 	defer framework.LogWithContext(ctx).Info("end backupCluster")
 
@@ -46,8 +46,7 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) bool {
 	storageType, err := convertBrStorageType(record.StorageType)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("convert storage type failed, %s", err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
 
 	clusterFacade := secondparty.ClusterFacade{
@@ -72,15 +71,13 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) bool {
 	backupTaskId, err := secondparty.Manager.BackUp(ctx, clusterFacade, storage, node.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call backup api failed, %s", err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
 	ctx.SetData("backupTaskId", backupTaskId)
-	node.Success()
-	return true
+	return nil
 }
 
-func updateBackupRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) bool {
+func updateBackupRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin updateBackupRecord")
 	defer framework.LogWithContext(ctx).Info("end updateBackupRecord")
 
@@ -94,15 +91,13 @@ func updateBackupRecord(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) b
 	err := brRW.UpdateBackupRecord(ctx, record.ID, string(constants.ClusterBackupFinished), size, backupTSO, time.Now())
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update backup reocrd %s of cluster %s failed", record.ID, meta.Cluster.ID)
-		node.Fail(err)
-		return false
+		return err
 	}
 
-	node.Success()
-	return true
+	return nil
 }
 
-func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) bool {
+func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin recoverFromSrcCluster")
 	defer framework.LogWithContext(ctx).Info("end recoverFromSrcCluster")
 
@@ -115,8 +110,7 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	storageType, err := convertBrStorageType(record.StorageType)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("convert br storage type failed, %s", err.Error())
-		node.Fail(fmt.Errorf("convert br storage type failed, %s", err.Error()))
-		return false
+		return fmt.Errorf("convert br storage type failed, %s", err.Error())
 	}
 
 	clusterFacade := secondparty.ClusterFacade{
@@ -139,22 +133,19 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	_, err = secondparty.Manager.Restore(ctx, clusterFacade, storage, node.ID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("call restore api failed, %s", err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
-	node.Success()
-	return true
+	return nil
 }
 
-func defaultEnd(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) bool {
+func defaultEnd(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin defaultEnd")
 	defer framework.LogWithContext(ctx).Info("end defaultEnd")
 
-	node.Success()
-	return true
+	return nil
 }
 
-func backupFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) bool {
+func backupFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin backupFail")
 	defer framework.LogWithContext(ctx).Info("end backupFail")
 
@@ -165,20 +156,17 @@ func backupFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) bool {
 	err := brRW.UpdateBackupRecord(ctx, record.ID, string(constants.ClusterBackupFailed), 0, 0, time.Now())
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("update backup reocrd %s of cluster %s failed", record.ID, meta.Cluster.ID)
-		node.Fail(err)
-		return false
+		return err
 	}
 
-	node.Success()
-	return true
+	return nil
 }
 
-func restoreFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) bool {
+func restoreFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	framework.LogWithContext(ctx).Info("begin restoreFail")
 	defer framework.LogWithContext(ctx).Info("end restoreFail")
 
-	node.Success()
-	return true
+	return nil
 }
 
 func convertBrStorageType(storageType string) (secondparty.StorageType, error) {

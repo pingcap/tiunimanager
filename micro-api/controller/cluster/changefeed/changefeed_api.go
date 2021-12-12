@@ -170,7 +170,7 @@ func Update(c *gin.Context) {
 		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
-			req.(*cluster.UpdateChangeFeedTaskReq).Id = c.Param(paramNameOfChangeFeedTaskId)
+			req.(*cluster.UpdateChangeFeedTaskReq).ID = c.Param(paramNameOfChangeFeedTaskId)
 			return nil
 		})
 

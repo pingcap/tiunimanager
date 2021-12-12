@@ -18,6 +18,8 @@ package changefeed
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	dbCommon "github.com/pingcap-inc/tiem/models/common"
@@ -42,85 +44,80 @@ func (m *GormChangeFeedReadWrite) Create(ctx context.Context, task *ChangeFeedTa
 		Valid: true,
 	}
 
-	return task, m.DB(ctx).Create(task).Error
+	err := m.DB(ctx).Create(task).Error
+	return task, dbCommon.WrapDBError(err)
 }
 
 func (m *GormChangeFeedReadWrite) Delete(ctx context.Context, taskId string) (err error) {
-	if "" == taskId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+	task, err := m.Get(ctx, taskId)
+	if err != nil {
+		return err
 	}
-	task := &ChangeFeedTask{}
 
-	return m.DB(ctx).First(task, "id = ?", taskId).Delete(task).Error
+	err = m.DB(ctx).Delete(task).Error
+	return dbCommon.WrapDBError(err)
+
 }
 
 func (m *GormChangeFeedReadWrite) LockStatus(ctx context.Context, taskId string) error {
-	if "" == taskId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
-	}
-
-	task := &ChangeFeedTask{}
-	err := m.DB(ctx).First(task, "id = ?", taskId).Error
-
+	task, err := m.Get(ctx, taskId)
 	if err != nil {
-		return framework.SimpleError(common.TIEM_CHANGE_FEED_NOT_FOUND)
+		return err
 	}
 
 	if task.Locked() {
 		return framework.SimpleError(common.TIEM_CHANGE_FEED_STATUS_CONFLICT)
 	}
 
-	return m.DB(ctx).Model(task).
+	err = m.DB(ctx).Model(task).
 		Update("status_lock", sql.NullTime{
 			Time:  time.Now(),
 			Valid: true,
 		}).Error
+	return dbCommon.WrapDBError(err)
 }
 
 
-func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId string, targetStatus string) error {
-	if "" == taskId {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
-	}
-
-	task := &ChangeFeedTask{}
-	err :=m.DB(ctx).First(task, "id = ?", taskId).Error
-
+func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId string, targetStatus constants.ChangeFeedStatus) error {
+	task, err := m.Get(ctx, taskId)
 	if err != nil {
-		return framework.SimpleError(common.TIEM_CHANGE_FEED_NOT_FOUND)
+		return err
 	}
 
 	if !task.Locked() {
 		return framework.SimpleError(common.TIEM_CHANGE_FEED_LOCK_EXPIRED)
 	}
 
-	return m.DB(ctx).Model(task).
+	err = m.DB(ctx).Model(task).
 		Update("status", targetStatus).
 		Update("status_lock", sql.NullTime{
 			Time:  time.Now(),
 			Valid: false,
 		}).Error
+	return dbCommon.WrapDBError(err)
 }
 
 func (m *GormChangeFeedReadWrite) UpdateConfig(ctx context.Context, updateTemplate *ChangeFeedTask) error {
-	if "" == updateTemplate.ID {
-		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+	_, err := m.Get(ctx, updateTemplate.ID)
+	if err != nil {
+		return err
 	}
 
-	return m.DB(ctx).Omit("status_lock", "status", "cluster_id", "start_ts").
+	err = m.DB(ctx).Omit("status_lock", "status", "cluster_id", "start_ts").
 		Save(updateTemplate).Error
+	return dbCommon.WrapDBError(err)
 }
 
 func (m *GormChangeFeedReadWrite) Get(ctx context.Context, taskId string) (*ChangeFeedTask, error) {
 	if "" == taskId {
-		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "empty id")
 	}
 
 	task := &ChangeFeedTask{}
 	err := m.DB(ctx).First(task, "id = ?", taskId).Error
 
 	if err != nil {
-		return nil, framework.SimpleError(common.TIEM_CHANGE_FEED_NOT_FOUND)
+		return nil, framework.NewTiEMError(common.TIEM_CHANGE_FEED_NOT_FOUND, fmt.Sprintf("task [%s]", taskId))
 	} else {
 		return task, nil
 	}
@@ -128,12 +125,13 @@ func (m *GormChangeFeedReadWrite) Get(ctx context.Context, taskId string) (*Chan
 
 func (m *GormChangeFeedReadWrite) QueryByClusterId(ctx context.Context, clusterId string, offset int, length int) (tasks []*ChangeFeedTask, total int64, err error) {
 	if "" == clusterId {
-		return nil, 0, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
+		return nil, 0, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "empty cluster id")
 	}
 
 	tasks = make([]*ChangeFeedTask, length)
 
-	return tasks, total, m.DB(ctx).Model(&ChangeFeedTask{}).
+	err = m.DB(ctx).Model(&ChangeFeedTask{}).
 		Where("cluster_id = ?", clusterId).
 		Order("created_at").Offset(offset).Limit(length).Find(&tasks).Count(&total).Error
+	return tasks, total, dbCommon.WrapDBError(err)
 }

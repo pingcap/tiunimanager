@@ -32,6 +32,22 @@ func NewManager() *Manager {
 	return &Manager{}
 }
 
+func buildFromRequest(request cluster.ChangeFeedTask) *changefeed.ChangeFeedTask {
+	task := &changefeed.ChangeFeedTask{
+		Entity: dbCommon.Entity{
+			TenantId: "1111",
+		},
+		Name: request.Name,
+		ClusterId: request.ClusterID,
+		Type: constants.DownstreamType(request.DownstreamType),
+		StartTS: request.StartTS,
+		//FilterRulesConfig: request.FilterRules,
+		Downstream: changefeed.MysqlDownstream{},
+	}
+
+	return task
+}
+
 // Create
 // @Description:
 // @Receiver p
@@ -40,37 +56,59 @@ func NewManager() *Manager {
 // @return string ID of ChangeFeedTask
 // @return error
 func (p *Manager) Create(ctx context.Context, request cluster.CreateChangeFeedTaskReq) (cluster.CreateChangeFeedTaskResp, error) {
-	task := &changefeed.ChangeFeedTask{
-		Entity: dbCommon.Entity{
-			TenantId: "1111",
-		},
-		Name: request.Name,
-		Type: constants.DownstreamType(request.DownstreamType),
-		Downstream: changefeed.MysqlDownstream{
-			WorkerCount: 3,
-		},
-	}
+	task := buildFromRequest(request.ChangeFeedTask)
 
 	task, err := models.GetChangeFeedReaderWriter().Create(ctx, task)
 
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("failed to create change feed task, %s", err.Error())
-		return cluster.CreateChangeFeedTaskResp{}, framework.WrapError(common.TIEM_CHANGE_FEED_CREATE_ERROR, "failed to create change feed task", err)
+		return cluster.CreateChangeFeedTaskResp{}, err
 	}
+	// todo execute
 
 	return cluster.CreateChangeFeedTaskResp{
 		ID: task.ID,
 	}, nil
 }
 
-func (p *Manager) Delete(ctx context.Context, id string) error {
-
-	err := models.GetChangeFeedReaderWriter().Delete(ctx, id)
+func (p *Manager) Delete(ctx context.Context, request cluster.DeleteChangeFeedTaskReq) (cluster.DeleteChangeFeedTaskResp, error) {
+	err := models.GetChangeFeedReaderWriter().Delete(ctx, request.ID)
 
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("failed to create change feed task, %s", err.Error())
-		return framework.SimpleError(common.TIEM_CHANGE_FEED_CREATE_ERROR)
+		framework.LogWithContext(ctx).Errorf("failed to delete change feed task, %s", err.Error())
+		return cluster.DeleteChangeFeedTaskResp{}, framework.SimpleError(common.TIEM_CHANGE_FEED_CREATE_ERROR)
 	}
+	// todo execute
 
-	return nil
+	return cluster.DeleteChangeFeedTaskResp{
+		ID: request.ID,
+	}, nil
+}
+
+func (p *Manager) Pause(ctx context.Context, request cluster.PauseChangeFeedTaskReq) (cluster.PauseChangeFeedTaskResp, error) {
+	err := models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
+
+	// todo invoke changefeed open api
+	go func() {
+		// todo check
+		models.GetChangeFeedReaderWriter().UnlockStatus(ctx, request.ID, constants.ChangeFeedStatusStopped)
+	}()
+
+	return cluster.PauseChangeFeedTaskResp{
+		Status: string(constants.ChangeFeedStatusStopped),
+	}, err
+}
+
+func (p *Manager) Resume(ctx context.Context, request cluster.ResumeChangeFeedTaskReq) (cluster.ResumeChangeFeedTaskResp, error) {
+	err := models.GetChangeFeedReaderWriter().LockStatus(ctx, request.Id)
+
+	// todo invoke changefeed open api
+	go func() {
+		// todo check
+		models.GetChangeFeedReaderWriter().UnlockStatus(ctx, request.Id, constants.ChangeFeedStatusNormal)
+	}()
+
+	return cluster.ResumeChangeFeedTaskResp{
+		Status: string(constants.ChangeFeedStatusStopped),
+	}, err
 }

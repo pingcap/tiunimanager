@@ -25,6 +25,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/models/resource"
+	resource_rw "github.com/pingcap-inc/tiem/models/resource/gormreadwrite"
 	"github.com/pingcap-inc/tiem/models/workflow"
 	"gorm.io/driver/sqlite"
 
@@ -98,7 +99,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.workFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
 	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
 	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
-	defaultDb.resourceReaderWriter = resource.NewGormResourceReadWrite(defaultDb.base)
+	defaultDb.resourceReaderWriter = resource_rw.NewGormResourceReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {

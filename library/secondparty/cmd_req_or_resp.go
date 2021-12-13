@@ -285,3 +285,73 @@ type ShowWarningsResp struct {
 	Code    string
 	Message string
 }
+
+type ChangeFeedCreateReq struct {
+	PD               string
+	ChangeFeedID     string   `form:"changefeed_id"`
+	SinkURI          string   `form:"sink_uri"`
+	StartTS          uint64   `form:"start_ts"`
+	TargetTS         uint64   `json:"target_ts"`
+	IgnoreTxnStartTS uint64   `json:"ignore_txn_start_ts"`
+	FilterRules      []string `json:"filter_rules"`
+	SinkConfig       []string `json:"sink_config"`
+	MounterWorkerNum int      `json:"mounter_worker_num"`
+}
+
+type ChangeFeedUpdateReq struct {
+	ChangeFeedID     string
+	PD               string
+	SinkURI          string   `json:"sink_uri"`
+	TargetTS         int64    `json:"target_ts"`
+	FilterRules      []string `json:"filter_rules"`
+	IgnoreTxnStartTS uint64   `json:"ignore_txn_start_ts"`
+	SinkConfig       []string `json:"sink_config"`
+	MounterWorkerNum int      `json:"mounter_worker_num"`
+}
+
+type ChangeFeedPauseReq struct {
+	ChangeFeedID string
+	PD           string
+}
+
+type ChangeFeedDeleteReq struct {
+	ChangeFeedID string
+	PD           string
+}
+
+type ChangeFeedResumeReq struct {
+	ChangeFeedID string
+	PD           string
+}
+
+type ChangeFeedCmdAcceptResp struct {
+	Accept
+	Succeed      bool
+	ErrorCode string   `json:"error_code"`
+	ErrorMsg string   `json:"error_msg"`
+}
+
+type ChangeFeedQueryReq struct {
+	PD    string
+	State string
+}
+
+type ChangeFeedQueryResp struct {
+	Tasks []ChangeFeedInfo
+}
+
+type ChangeFeedDetailReq struct {
+	PD           string
+	ChangeFeedID string
+}
+
+type ChangeFeedDetailResp struct {
+	ChangeFeedInfo
+}
+
+type ChangeFeedInfo struct {
+	ChangeFeedID  string `json:"id"`
+	State         string `json:"state"`
+	CheckPointTSO string `json:"checkpoint_tso"`
+	Error         string `json:"error"`
+}

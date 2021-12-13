@@ -76,6 +76,7 @@ const (
 	TIEM_CHANGE_FEED_LOCK_EXPIRED           TIEM_ERROR_CODE = 21204
 	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM TIEM_ERROR_CODE = 21205
 	TIEM_CHANGE_FEED_CREATE_ERROR           TIEM_ERROR_CODE = 21206
+	TIEM_CHANGE_FEED_CONNECT_ERROR          TIEM_ERROR_CODE = 21207
 
 	// resource, import, 301xx
 	// resource, management, 302xx
@@ -218,7 +219,7 @@ var explanationContainer = map[TIEM_ERROR_CODE]ErrorCodeExplanation{
 	TIEM_CHANGE_FEED_LOCK_EXPIRED:           {TIEM_CHANGE_FEED_LOCK_EXPIRED, "task status lock expired", 409},
 	TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM: {TIEM_CHANGE_FEED_UNSUPPORTED_DOWNSTREAM, "task downstream type not supported", 400},
 	TIEM_CHANGE_FEED_CREATE_ERROR:           {TIEM_CHANGE_FEED_CREATE_ERROR, "failed to create change feed task", 500},
-
+	TIEM_CHANGE_FEED_CONNECT_ERROR:          {TIEM_CHANGE_FEED_CONNECT_ERROR, "failed to connect cdc server", 500},
 
 	TIEM_TASK_TIMEOUT:          {TIEM_TASK_TIMEOUT, "task timeout", 500},
 	TIEM_FLOW_NOT_FOUND:        {TIEM_FLOW_NOT_FOUND, "flow not found", 500},

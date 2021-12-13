@@ -18,6 +18,7 @@ package changefeed
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -29,22 +30,22 @@ import (
 type ChangeFeedTask struct {
 	dbCommon.Entity
 	TaskStatus        constants.ChangeFeedStatus `gorm:"-"`
-	Name              string           `gorm:"type:varchar(32)"`
-	ClusterId         string           `gorm:"not null;type:varchar(22);index"`
+	Name              string                     `gorm:"type:varchar(32)"`
+	ClusterId         string                     `gorm:"not null;type:varchar(22);index"`
 	Type              constants.DownstreamType   `gorm:"not null;type:varchar(16)"`
-	StartTS           int64            `gorm:"column:start_ts"`
-	TargetTS          int64            `gorm:"column:target_ts"`
-	FilterRulesConfig string           `gorm:"type:text"`
-	Downstream        interface{}      `gorm:"-"`
-	DownstreamConfig  string           `gorm:"type:text"`
-	StatusLock        sql.NullTime     `gorm:"column:status_lock"`
+	StartTS           int64                      `gorm:"column:start_ts"`
+	TargetTS          int64                      `gorm:"column:target_ts"`
+	FilterRulesConfig string                     `gorm:"type:text"`
+	Downstream        ChangeFeedDownStream       `gorm:"-"`
+	DownstreamConfig  string                     `gorm:"type:text"`
+	StatusLock        sql.NullTime               `gorm:"column:status_lock"`
 }
 
 func (t ChangeFeedTask) GetStatusLock() sql.NullTime {
 	return t.StatusLock
 }
 
-func unmarshal(dt constants.DownstreamType, cc string) (interface{}, error) {
+func unmarshal(dt constants.DownstreamType, cc string) (ChangeFeedDownStream, error) {
 	switch dt {
 	case constants.DownstreamTypeTiDB:
 		downstream := &TiDBDownstream{}
@@ -135,4 +136,21 @@ type TiDBDownstream struct {
 type Dispatcher struct {
 	Matcher    string `json:"matcher"`
 	Dispatcher string `json:"dispatcher"`
+}
+
+type ChangeFeedDownStream interface {
+	GetSinkURI() string
+}
+
+// GetSinkURI todo
+func (p *MysqlDownstream) GetSinkURI() string {
+	return fmt.Sprintf("")
+}
+
+func (p *TiDBDownstream) GetSinkURI() string {
+	return fmt.Sprintf("")
+}
+
+func (p *KafkaDownstream) GetSinkURI() string {
+	return fmt.Sprintf("")
 }

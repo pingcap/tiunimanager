@@ -29,6 +29,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 	"github.com/pingcap-inc/tiem/models/platform/config"
 	"github.com/pingcap-inc/tiem/models/workflow"
+	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	"gorm.io/driver/sqlite"
 
 	"gorm.io/gorm"
@@ -37,15 +38,16 @@ import (
 var defaultDb *database
 
 type database struct {
-	base                         *gorm.DB
-	workFlowReaderWriter         workflow.ReaderWriter
-	importExportReaderWriter     importexport.ReaderWriter
-	brReaderWriter               backuprestore.ReaderWriter
-	changeFeedReaderWriter       changefeed.ReaderWriter
-	clusterReaderWriter          management.ReaderWriter
-	parameterGroupReaderWriter   parametergroup.ReaderWriter
-	clusterParameterReaderWriter parameter.ReaderWriter
-	configReaderWriter           config.ReaderWriter
+	base                             *gorm.DB
+	workFlowReaderWriter             workflow.ReaderWriter
+	importExportReaderWriter         importexport.ReaderWriter
+	brReaderWriter                   backuprestore.ReaderWriter
+	changeFeedReaderWriter           changefeed.ReaderWriter
+	clusterReaderWriter              management.ReaderWriter
+	parameterGroupReaderWriter       parametergroup.ReaderWriter
+	clusterParameterReaderWriter     parameter.ReaderWriter
+	configReaderWriter               config.ReaderWriter
+	secondPartyOperationReaderWriter secondparty.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -81,11 +83,12 @@ func (p *database) initTables() {
 	p.addTable(new(management.Cluster))
 	p.addTable(new(management.ClusterInstance))
 	p.addTable(new(management.ClusterRelation))
+	p.addTable(new(management.ClusterTopologySnapshot))
 	p.addTable(new(importexport.DataTransportRecord))
 	p.addTable(new(backuprestore.BackupRecord))
 	p.addTable(new(backuprestore.BackupStrategy))
 	p.addTable(new(config.SystemConfig))
-	p.addTable(new(management.ClusterTopologySnapshot))
+	p.addTable(new(secondparty.SecondPartyOperation))
 
 	// other tables
 }
@@ -98,6 +101,7 @@ func (p *database) initReaderWriters() {
 	defaultDb.parameterGroupReaderWriter = parametergroup.NewParameterGroupReadWrite(defaultDb.base)
 	defaultDb.clusterParameterReaderWriter = parameter.NewClusterParameterReadWrite(defaultDb.base)
 	defaultDb.configReaderWriter = config.NewConfigReadWrite(defaultDb.base)
+	defaultDb.secondPartyOperationReaderWriter = secondparty.NewGormSecondPartyOperationReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
@@ -161,6 +165,14 @@ func GetConfigReaderWriter() config.ReaderWriter {
 
 func SetConfigReaderWriter(rw config.ReaderWriter) {
 	defaultDb.configReaderWriter = rw
+}
+
+func GetSecondPartyOperationReaderWriter() secondparty.ReaderWriter {
+	return defaultDb.secondPartyOperationReaderWriter
+}
+
+func SetSecondPartyOperationReaderWriter(rw secondparty.ReaderWriter) {
+	defaultDb.secondPartyOperationReaderWriter = rw
 }
 
 func MockDB() {

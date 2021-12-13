@@ -17,10 +17,11 @@ package secondparty
 
 import (
 	"context"
+	"time"
+
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/framework"
-	"time"
 )
 
 type TaskStatus int
@@ -39,12 +40,12 @@ type TaskStatusMember struct {
 }
 
 type TaskStatusMapValue struct {
-	validFlag bool // flag to help check if the value in the taskStatusMap
+	validFlag bool // flag to help check if the value in the operationStatusMap
 	stat      TaskStatusMember
 	readct    uint64 // the count that the value has been read
 }
 
-// sync(put or update) all TaskStatus to database(synced in tiUPMicro.syncedTaskStatusMap) from taskStatusMap(valid ones)
+// sync(put or update) all TaskStatus to database(synced in tiUPMicro.syncedOperationStatusMap) from taskStatusMap(valid ones)
 func (secondMicro *SecondMicro) taskStatusMapSyncer() {
 	for {
 		time.Sleep(time.Second)
@@ -99,7 +100,7 @@ func (secondMicro *SecondMicro) startGetAllValidTaskStatusTask() CmdGetAllTaskSt
 	}
 }
 
-// sync(put or update) all TaskStatus to memory(tiUPMicro.taskStatusMap) from taskStatusCh which is sent by async task in sub go routine
+// sync(put or update) all TaskStatus to memory(tiUPMicro.operationStatusMap) from taskStatusCh which is sent by async task in sub go routine
 func (secondMicro *SecondMicro) syncTaskStatusMap() {
 	for {
 		var consumedFlag bool

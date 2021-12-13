@@ -20,20 +20,17 @@ import (
 	"errors"
 	"fmt"
 
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pingcap-inc/tiem/library/client"
 	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/test/mockdb"
-	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
 var secondMicro2 *SecondMicro
-
-var dbConnParam DbConnParam
-var storage BrStorage
-var clusterFacade ClusterFacade
 
 func init() {
 	secondMicro2 = &SecondMicro{}
@@ -58,7 +55,7 @@ func TestSecondMicro_BackUp_Fail(t *testing.T) {
 	req.Type = dbPb.TiupTaskType_Backup
 	req.BizID = 0
 
-	expectedErr := errors.New("Fail Create tiup task")
+	expectedErr := errors.New("Fail Create secondparty task")
 
 	mockCtl := gomock.NewController(t)
 	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
@@ -67,7 +64,7 @@ func TestSecondMicro_BackUp_Fail(t *testing.T) {
 
 	taskID, err := secondMicro2.MicroSrvBackUp(context.TODO(), clusterFacade, storage, 0)
 	if taskID != 0 || err == nil {
-		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
+		t.Errorf("case: fail create secondparty task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
 	}
 }
 
@@ -97,7 +94,7 @@ func TestSecondMicro_BackUp_Success1_DontCareAsyncResult(t *testing.T) {
 
 	taskID, err := secondMicro2.MicroSrvBackUp(context.TODO(), clusterFacade, storage, 0)
 	if taskID != 1 || err != nil {
-		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
+		t.Errorf("case: create secondparty task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
 }
 
@@ -123,7 +120,7 @@ func TestSecondMicro_BackUp_Success2_DontCareAsyncResult(t *testing.T) {
 
 	taskID, err := secondMicro2.MicroSrvBackUp(context.TODO(), clusterFacade, storage, 0)
 	if taskID != 1 || err != nil {
-		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
+		t.Errorf("case: create secondparty task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
 }
 
@@ -144,7 +141,7 @@ func TestSecondMicro_BackUp_Success3_DontCareAsyncResult(t *testing.T) {
 
 	taskID, err := secondMicro2.MicroSrvBackUp(context.TODO(), clusterFacade, storage, 0)
 	if taskID != 1 || err != nil {
-		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
+		t.Errorf("case: create secondparty task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
 }
 
@@ -196,7 +193,7 @@ func TestSecondMicro_Restore_Fail(t *testing.T) {
 	req.Type = dbPb.TiupTaskType_Restore
 	req.BizID = 0
 
-	expectedErr := errors.New("Fail Create tiup task")
+	expectedErr := errors.New("Fail Create secondparty task")
 
 	mockCtl := gomock.NewController(t)
 	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
@@ -205,7 +202,7 @@ func TestSecondMicro_Restore_Fail(t *testing.T) {
 
 	taskID, err := secondMicro2.MicroSrvRestore(context.TODO(), clusterFacade, storage, 0)
 	if taskID != 0 || err == nil {
-		t.Errorf("case: fail create tiup task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
+		t.Errorf("case: fail create secondparty task intentionally. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 0, taskID, expectedErr, err)
 	}
 }
 
@@ -235,7 +232,7 @@ func TestSecondMicro_Restore_Success1_DontCareAsyncResult(t *testing.T) {
 
 	taskID, err := secondMicro2.MicroSrvRestore(context.TODO(), clusterFacade, storage, 0)
 	if taskID != 1 || err != nil {
-		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
+		t.Errorf("case: create secondparty task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
 }
 
@@ -261,7 +258,7 @@ func TestSecondMicro_Restore_Success2_DontCareAsyncResult(t *testing.T) {
 
 	taskID, err := secondMicro2.MicroSrvRestore(context.TODO(), clusterFacade, storage, 0)
 	if taskID != 1 || err != nil {
-		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
+		t.Errorf("case: create secondparty task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
 }
 
@@ -282,7 +279,7 @@ func TestSecondMicro_Restore_Success3_DontCareAsyncResult(t *testing.T) {
 
 	taskID, err := secondMicro2.MicroSrvRestore(context.TODO(), clusterFacade, storage, 0)
 	if taskID != 1 || err != nil {
-		t.Errorf("case: create tiup task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
+		t.Errorf("case: create secondparty task successfully. taskid(expected: %d, actual: %d), err(expected: %v, actual: %v)", 1, taskID, nil, err)
 	}
 }
 

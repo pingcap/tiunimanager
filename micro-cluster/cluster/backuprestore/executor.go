@@ -162,6 +162,8 @@ func backupFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 		return err
 	}
 
+	//todo: update cluster status
+
 	return nil
 }
 

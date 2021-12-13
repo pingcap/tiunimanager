@@ -38,10 +38,7 @@ import (
 var dataTransportService ImportExportService
 var once sync.Once
 
-type ImportExportManager struct {
-	defaultExportPath string
-	defaultImportPath string
-}
+type ImportExportManager struct{}
 
 func GetImportExportService() ImportExportService {
 	once.Do(func() {
@@ -51,10 +48,7 @@ func GetImportExportService() ImportExportService {
 }
 
 func NewImportExportManager() *ImportExportManager {
-	mgr := ImportExportManager{
-		defaultExportPath: constants.DefaultExportPath, //todo: get from config
-		defaultImportPath: constants.DefaultImportPath, //todo: get from config
-	}
+	mgr := ImportExportManager{}
 	flowManager := workflow.GetWorkFlowService()
 	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowExportData, &workflow.WorkFlowDefine{
 		FlowName: constants.FlowExportData,
@@ -93,9 +87,15 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request *message
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 		return nil, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 	}
+	configRW := models.GetConfigReaderWriter()
+	exportPathConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyExportShareStoragePath)
+	if err != nil || exportPathConfig.ConfigValue == "" {
+		framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyExportShareStoragePath, err.Error())
+		return nil, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyExportShareStoragePath, err.Error())
+	}
 
 	exportTime := time.Now()
-	exportPrefix, _ := filepath.Abs(mgr.defaultExportPath)
+	exportPrefix, _ := filepath.Abs(exportPathConfig.ConfigValue)
 	exportDir := filepath.Join(exportPrefix, request.ClusterID, fmt.Sprintf("%s_%s", exportTime.Format("2006-01-02_15:04:05"), request.StorageType))
 
 	record := &importexport.DataTransportRecord{
@@ -167,10 +167,17 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request *message
 		return nil, fmt.Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
 	}
 
+	configRW := models.GetConfigReaderWriter()
+	importPathConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyImportShareStoragePath)
+	if err != nil || importPathConfig.ConfigValue == "" {
+		framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyImportShareStoragePath, err.Error())
+		return nil, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyImportShareStoragePath, err.Error())
+	}
+
 	rw := models.GetImportExportReaderWriter()
 	var info *ImportInfo
 	importTime := time.Now()
-	importPrefix, _ := filepath.Abs(mgr.defaultImportPath)
+	importPrefix, _ := filepath.Abs(importPathConfig.ConfigValue)
 	importDir := filepath.Join(importPrefix, request.ClusterID, fmt.Sprintf("%s_%s", importTime.Format("2006-01-02_15:04:05"), request.StorageType))
 	if request.RecordId == "" {
 		if common.NfsStorageType == request.StorageType {
@@ -350,6 +357,12 @@ func (mgr *ImportExportManager) DeleteDataTransportRecord(ctx context.Context, r
 }
 
 func (mgr *ImportExportManager) exportDataPreCheck(ctx context.Context, request *message.DataExportReq) error {
+	configRW := models.GetConfigReaderWriter()
+	exportPathConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyExportShareStoragePath)
+	if err != nil || exportPathConfig.ConfigValue == "" {
+		return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyExportShareStoragePath, err.Error())
+	}
+
 	if request.ClusterID == "" {
 		return fmt.Errorf("invalid param clusterId %s", request.ClusterID)
 	}
@@ -386,9 +399,9 @@ func (mgr *ImportExportManager) exportDataPreCheck(ctx context.Context, request 
 			return fmt.Errorf("invalid param secretAccessKey %s", request.SecretAccessKey)
 		}
 	case string(constants.StorageTypeNFS):
-		absPath, err := filepath.Abs(mgr.defaultExportPath)
+		absPath, err := filepath.Abs(exportPathConfig.ConfigValue)
 		if err != nil {
-			return fmt.Errorf("export dir %s is not vaild", mgr.defaultExportPath)
+			return fmt.Errorf("export dir %s is not vaild", exportPathConfig.ConfigValue)
 		}
 		if !mgr.checkFilePathExists(absPath) {
 			//return fmt.Errorf("export path %s not exist", absPath)
@@ -402,6 +415,12 @@ func (mgr *ImportExportManager) exportDataPreCheck(ctx context.Context, request 
 }
 
 func (mgr *ImportExportManager) importDataPreCheck(ctx context.Context, request *message.DataImportReq) error {
+	configRW := models.GetConfigReaderWriter()
+	importPathConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyImportShareStoragePath)
+	if err != nil || importPathConfig.ConfigValue == "" {
+		return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyImportShareStoragePath, err.Error())
+	}
+
 	if request.ClusterID == "" {
 		return fmt.Errorf("invalid param clusterId %s", request.ClusterID)
 	}
@@ -413,9 +432,9 @@ func (mgr *ImportExportManager) importDataPreCheck(ctx context.Context, request 
 			return fmt.Errorf("invalid param password %s", request.Password)
 		}
 	*/
-	absPath, err := filepath.Abs(mgr.defaultImportPath)
+	absPath, err := filepath.Abs(importPathConfig.ConfigValue)
 	if err != nil {
-		return fmt.Errorf("import dir %s is not vaild", mgr.defaultImportPath)
+		return fmt.Errorf("import dir %s is not vaild", importPathConfig.ConfigValue)
 	}
 	if !mgr.checkFilePathExists(absPath) {
 		//return fmt.Errorf("import path %s not exist", absPath)

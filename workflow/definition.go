@@ -77,13 +77,3 @@ func CompositeExecutor(executors ...NodeExecutor) NodeExecutor {
 		return nil
 	}
 }
-
-func defaultEnd(node *workflow.WorkFlowNode, context *FlowContext) bool {
-	node.Status = constants.WorkFlowStatusFinished
-	return true
-}
-
-func defaultFail(node *workflow.WorkFlowNode, context *FlowContext) bool {
-	node.Status = constants.WorkFlowStatusError
-	return true
-}

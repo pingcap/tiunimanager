@@ -23,25 +23,6 @@
 
 package constants
 
-const (
-	Sunday    string = "Sunday"
-	Monday    string = "Monday"
-	Tuesday   string = "Tuesday"
-	Wednesday string = "Wednesday"
-	Thursday  string = "Thursday"
-	Friday    string = "Friday"
-	Saturday  string = "Saturday"
-)
-
-var WeekDayMap = map[string]int{
-	Sunday:    0,
-	Monday:    1,
-	Tuesday:   2,
-	Wednesday: 3,
-	Thursday:  4,
-	Friday:    5,
-	Saturday:  6}
-
 //System log-related constants
 const (
 	LogFileSystem      string = "system"

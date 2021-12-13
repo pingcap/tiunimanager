@@ -126,14 +126,18 @@ func (flow *WorkFlowAggregation) addContext(key string, value interface{}) {
 	flow.Flow.Context = string(data)
 }
 
-func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) bool {
+func (flow *WorkFlowAggregation) executeTask(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) error {
 	flow.CurrentNode = node
 	flow.Nodes = append(flow.Nodes, node)
 	node.Processing()
 	_ = models.GetWorkFlowReaderWriter().UpdateWorkFlowDetail(flow.Context, flow.Flow, flow.Nodes)
 	//TaskRepo.Persist(flow.Context, flow)
+	err := nodeDefine.Executor(node, &flow.Context)
+	if err != nil {
+		node.Fail(err)
+	}
 
-	return nodeDefine.Executor(node, &flow.Context)
+	return err
 }
 
 func (flow *WorkFlowAggregation) handleTaskError(node *workflow.WorkFlowNode, nodeDefine *NodeDefine) {
@@ -163,9 +167,8 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 
 	_, _ = models.GetWorkFlowReaderWriter().CreateWorkFlowNode(flow.Context, node)
 	//TaskRepo.AddFlowTask(flow.Context, task, flow.FlowWork.ID)
-	handleSuccess := flow.executeTask(node, nodeDefine)
-
-	if !handleSuccess {
+	handleError := flow.executeTask(node, nodeDefine)
+	if handleError != nil {
 		flow.handleTaskError(node, nodeDefine)
 		return false
 	}

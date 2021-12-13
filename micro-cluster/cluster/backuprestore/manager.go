@@ -68,7 +68,7 @@ func NewBRManager() *BRManager {
 			"fail":             {"fail", "", "", workflow.SyncFuncNode, backupFail},
 		},
 	})
-	flowManager.RegisterWorkFlow(context.TODO(), "ExportData", &workflow.WorkFlowDefine{
+	flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowRestoreExistCluster, &workflow.WorkFlowDefine{
 		FlowName: constants.WorkFlowRestoreExistCluster,
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start":       {"restoreFromSrcCluster", "restoreDone", "fail", workflow.PollingNode, restoreFromSrcCluster},

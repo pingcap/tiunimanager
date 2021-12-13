@@ -22,3 +22,15 @@
 *******************************************************************************/
 
 package constants
+
+// System config key
+const (
+	ConfigKeyBackupStorageType       string = "BackupStorageType"
+	ConfigKeyBackupStoragePath       string = "BackupStoragePath"
+	ConfigKeyBackupS3Endpoint        string = "BackupS3Endpoint"
+	ConfigKeyBackupS3AccessKey       string = "BackupS3AccessKey"
+	ConfigKeyBackupS3SecretAccessKey string = "BackupS3SecretAccessKey"
+
+	ConfigKeyImportShareStoragePath string = "ImportShareStoragePath"
+	ConfigKeyExportShareStoragePath string = "ExportShareStoragePath"
+)

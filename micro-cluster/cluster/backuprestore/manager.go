@@ -46,21 +46,17 @@ func GetBRService() BRService {
 }
 
 type BRManager struct {
-	autoBackupMgr      *autoBackupManager
-	defaultStorageType string
-	defaultStoragePath string
+	autoBackupMgr *autoBackupManager
 }
 
 func NewBRManager() *BRManager {
 	mgr := &BRManager{
-		autoBackupMgr:      NewAutoBackupManager(),
-		defaultStoragePath: "nfs/tiem/backup",               //todo: get from config
-		defaultStorageType: string(constants.StorageTypeS3), //todo: get from config
+		autoBackupMgr: NewAutoBackupManager(),
 	}
 
 	flowManager := workflow.GetWorkFlowService()
-	flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowBackupCluster, &workflow.WorkFlowDefine{
-		FlowName: constants.WorkFlowBackupCluster,
+	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowBackupCluster, &workflow.WorkFlowDefine{
+		FlowName: constants.FlowBackupCluster,
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start":            {"backup", "backupDone", "fail", workflow.PollingNode, backupCluster},
 			"backupDone":       {"updateBackupRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateBackupRecord},
@@ -68,8 +64,8 @@ func NewBRManager() *BRManager {
 			"fail":             {"fail", "", "", workflow.SyncFuncNode, backupFail},
 		},
 	})
-	flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowRestoreExistCluster, &workflow.WorkFlowDefine{
-		FlowName: constants.WorkFlowRestoreExistCluster,
+	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestoreExistCluster, &workflow.WorkFlowDefine{
+		FlowName: constants.FlowRestoreExistCluster,
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start":       {"restoreFromSrcCluster", "restoreDone", "fail", workflow.PollingNode, restoreFromSrcCluster},
 			"restoreDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
@@ -84,6 +80,22 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 	framework.LogWithContext(ctx).Infof("Begin BackupCluster, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End BackupCluster")
 
+	if err := mgr.backupClusterPreCheck(ctx, request); err != nil {
+		framework.LogWithContext(ctx).Errorf("backup cluster precheck failed: %s", err.Error())
+		return nil, err
+	}
+	configRW := models.GetConfigReaderWriter()
+	storageTypeConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupStorageType)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStorageType, err.Error())
+		return nil, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStorageType, err.Error())
+	}
+	storagePathConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupStoragePath)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error())
+		return nil, fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error())
+	}
+
 	meta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("load cluster meta %s failed, %s", request.ClusterID, err.Error())
@@ -97,11 +109,11 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 			Status:   string(constants.ClusterBackupProcessing),
 		},
 		ClusterID:    request.ClusterID,
-		StorageType:  mgr.defaultStorageType,
+		StorageType:  storageTypeConfig.ConfigValue,
 		BackupType:   string(constants.BackupTypeFull),
 		BackupMethod: string(constants.BackupMethodPhysics),
 		BackupMode:   request.BackupMode,
-		FilePath:     mgr.getBackupPath(request.ClusterID, time.Now(), string(constants.BackupTypeFull)),
+		FilePath:     mgr.getBackupPath(storagePathConfig.ConfigValue, request.ClusterID, time.Now(), string(constants.BackupTypeFull)),
 		StartTime:    time.Now(),
 		EndTime:      time.Now(),
 	}
@@ -113,17 +125,17 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 	}
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.WorkFlowBackupCluster)
+	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowBackupCluster)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.WorkFlowBackupCluster, err.Error())
-		return nil, fmt.Errorf("create %s workflow failed, %s", constants.WorkFlowBackupCluster, err.Error())
+		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
+		return nil, fmt.Errorf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
 	}
 
 	flowManager.AddContext(flow, contextBackupRecordKey, recordCreate)
 	flowManager.AddContext(flow, contextClusterMetaKey, meta)
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
-		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.WorkFlowBackupCluster, err.Error())
-		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.WorkFlowBackupCluster, err.Error())
+		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
+		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
 	}
 
 	return &cluster.BackupClusterDataResp{
@@ -152,17 +164,17 @@ func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request *cluster.
 	}
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.WorkFlowRestoreExistCluster)
+	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowRestoreExistCluster)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.WorkFlowRestoreExistCluster, err.Error())
-		return nil, fmt.Errorf("create %s workflow failed, %s", constants.WorkFlowRestoreExistCluster, err.Error())
+		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
+		return nil, fmt.Errorf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
 	}
 
 	flowManager.AddContext(flow, contextBackupRecordKey, record)
 	flowManager.AddContext(flow, contextClusterMetaKey, meta)
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
-		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.WorkFlowRestoreExistCluster, err.Error())
-		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.WorkFlowRestoreExistCluster, err.Error())
+		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
+		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
 	}
 
 	return &cluster.RestoreExistClusterResp{
@@ -268,6 +280,11 @@ func (mgr *BRManager) SaveBackupStrategy(ctx context.Context, request *cluster.S
 	framework.LogWithContext(ctx).Infof("Begin SaveBackupStrategy, request: %+v", request)
 	defer framework.LogWithContext(ctx).Infof("End SaveBackupStrategy")
 
+	if err := mgr.saveBackupStrategyPreCheck(ctx, request); err != nil {
+		framework.LogWithContext(ctx).Errorf("save backup strategy precheck failed, %s", err.Error())
+		return nil, err
+	}
+
 	period := strings.Split(request.Strategy.Period, "-")
 	starts := strings.Split(period[0], ":")
 	ends := strings.Split(period[1], ":")
@@ -306,6 +323,77 @@ func (mgr *BRManager) DeleteBackupStrategy(ctx context.Context, request *cluster
 	return &cluster.DeleteBackupStrategyResp{}, nil
 }
 
-func (mgr *BRManager) getBackupPath(clusterId string, time time.Time, backupType string) string {
-	return fmt.Sprintf("%s/%s/%s_%s", mgr.defaultStoragePath, clusterId, time.Format("2006-01-02_15:04:05"), backupType)
+func (mgr *BRManager) backupClusterPreCheck(ctx context.Context, request *cluster.BackupClusterDataReq) error {
+	configRW := models.GetConfigReaderWriter()
+	storageTypeCfg, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupStorageType)
+	if err != nil {
+		return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStorageType, err.Error())
+	}
+	_, err = configRW.GetConfig(ctx, constants.ConfigKeyBackupStoragePath)
+	if err != nil {
+		return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupStoragePath, err.Error())
+	}
+	if string(constants.StorageTypeS3) == storageTypeCfg.ConfigValue {
+		_, err = configRW.GetConfig(ctx, constants.ConfigKeyBackupS3Endpoint)
+		if err != nil {
+			return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3Endpoint, err.Error())
+		}
+		_, err = configRW.GetConfig(ctx, constants.ConfigKeyBackupS3AccessKey)
+		if err != nil {
+			return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3AccessKey, err.Error())
+		}
+		_, err = configRW.GetConfig(ctx, constants.ConfigKeyBackupS3SecretAccessKey)
+		if err != nil {
+			return fmt.Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3SecretAccessKey, err.Error())
+		}
+	}
+
+	if request.ClusterID == "" {
+		return fmt.Errorf("empty param clusterID")
+	}
+	if request.BackupMode != string(constants.BackupModeManual) &&
+		request.BackupMode != string(constants.BackupModeAuto) {
+		return fmt.Errorf("invalid param backupMode %s", request.BackupMode)
+	}
+
+	return nil
+}
+
+func (mgr *BRManager) saveBackupStrategyPreCheck(ctx context.Context, request *cluster.SaveBackupStrategyReq) error {
+	if request == nil {
+		return fmt.Errorf("empty save backup strategy request")
+	}
+	period := strings.Split(request.Strategy.Period, "-")
+	if len(period) != 2 {
+		return fmt.Errorf("invalid param period, %s", request.Strategy.Period)
+	}
+
+	starts := strings.Split(period[0], ":")
+	ends := strings.Split(period[1], ":")
+	startHour, err := strconv.Atoi(starts[0])
+	if err != nil {
+		return fmt.Errorf("invalid param start hour, %s", err.Error())
+	}
+	endHour, err := strconv.Atoi(ends[0])
+	if err != nil {
+		return fmt.Errorf("invalid param end hour, %s", err.Error())
+	}
+	if startHour > 23 || startHour < 0 || endHour > 23 || endHour < 0 || startHour >= endHour {
+		return fmt.Errorf("invalid param period, %s", request.Strategy.Period)
+	}
+
+	if request.Strategy.BackupDate != "" {
+		backupDates := strings.Split(request.Strategy.BackupDate, ",")
+		for _, day := range backupDates {
+			if !checkWeekDayValid(day) {
+				return fmt.Errorf("backupDate contains invalid weekday, %s", day)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (mgr *BRManager) getBackupPath(backupPath, clusterId string, time time.Time, backupType string) string {
+	return fmt.Sprintf("%s/%s/%s_%s", backupPath, clusterId, time.Format("2006-01-02_15:04:05"), backupType)
 }

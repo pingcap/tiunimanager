@@ -63,20 +63,21 @@ const (
 )
 
 const (
-	FlowCreateCluster    = "CreateCluster"
-	FlowDeleteCluster    = "DeleteCluster"
-	FlowBackupCluster    = "BackupCluster"
-	FlowRecoverCluster   = "RecoverCluster"
-	FlowModifyParameters = "ModifyParameters"
-	FlowExportData       = "ExportData"
-	FlowImportData       = "ImportData"
-	FlowRestartCluster   = "RestartCluster"
-	FlowStopCluster      = "StopCluster"
-	FlowTakeoverCluster  = "TakeoverCluster"
-	FlowBuildLogConfig   = "BuildLogConfig"
-	FlowScaleOutCluster  = "ScaleOutCluster"
-	FlowScaleInCluster   = "ScaleInCluster"
-	FlowCloneCluster     = "CloneCluster"
+	FlowCreateCluster       = "CreateCluster"
+	FlowDeleteCluster       = "DeleteCluster"
+	FlowBackupCluster       = "BackupCluster"
+	FlowRestoreNewCluster   = "RestoreNewCluster"
+	FlowRestoreExistCluster = "RestoreExistCluster"
+	FlowModifyParameters    = "ModifyParameters"
+	FlowExportData          = "ExportData"
+	FlowImportData          = "ImportData"
+	FlowRestartCluster      = "RestartCluster"
+	FlowStopCluster         = "StopCluster"
+	FlowTakeoverCluster     = "TakeoverCluster"
+	FlowBuildLogConfig      = "BuildLogConfig"
+	FlowScaleOutCluster     = "ScaleOutCluster"
+	FlowScaleInCluster      = "ScaleInCluster"
+	FlowCloneCluster        = "CloneCluster"
 )
 
 type ClusterBackupStatus string
@@ -134,4 +135,11 @@ const (
 	StorageTypeLocal StorageType = "local"
 	StorageTypeS3    StorageType = "s3"
 	StorageTypeNFS   StorageType = "nfs"
+)
+
+const (
+	DefaultBackupStoragePath       string = "em/backup"
+	DefaultBackupS3AccessKey       string = "minioadmin"
+	DefaultBackupS3SecretAccessKey string = "minioadmin"
+	DefaultBackupS3Endpoint        string = "http://minio.pingcap.net:9000"
 )

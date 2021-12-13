@@ -203,3 +203,103 @@ func clusterEnd(node *workflowModel.WorkFlowNode, context *workflow.FlowContext)
 	}
 	return nil
 }
+
+func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+	yamlConfig := context.GetData(ContextTopology).(string)
+
+	framework.LogWithContext(context.Context).Infof(
+		"deploy cluster[%s], version = %s, yamlConfig = %s", cluster.Name, cluster.Version, yamlConfig)
+	taskId, err := secondparty.Manager.ClusterDeploy(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, cluster.Version,
+		yamlConfig, 0, []string{"--user", "root", "-i", "/home/tiem/.ssh/tiup_rsa"}, node.ID)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] deploy error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+	framework.LogWithContext(context.Context).Infof("get deploy cluster task id: %d", taskId)
+	return nil
+}
+
+func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	framework.LogWithContext(context.Context).Infof(
+		"start cluster[%s], version = %s", cluster.Name, cluster.Version)
+	taskId, err := secondparty.Manager.ClusterStart(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, 0, []string{}, node.ID,
+		)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] start error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+	framework.LogWithContext(context.Context).Infof("get start cluster task id: %d", taskId)
+	return nil
+}
+
+func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	framework.LogWithContext(context.Context).Infof(
+		"stop cluster[%s], version = %s", cluster.Name, cluster.Version)
+	taskId, err := secondparty.Manager.ClusterStop(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, 0, []string{}, node.ID,
+	)
+
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] stop error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+	framework.LogWithContext(context.Context).Infof("get stop cluster task id: %d", taskId)
+	return nil
+}
+
+func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	framework.LogWithContext(context.Context).Infof(
+		"destroy cluster[%s], version = %s", cluster.Name, cluster.Version)
+	taskId, err := secondparty.Manager.ClusterDestroy(
+		context.Context, secondparty.ClusterComponentTypeStr, cluster.Name, 0, []string{}, node.ID,
+	)
+
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] destroy error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+	framework.LogWithContext(context.Context).Infof("get destroy cluster task id: %d", taskId)
+	return nil
+}
+
+func freedResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	err := clusterMeta.FreedInstanceResource(context)
+
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] freed resource error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+	framework.LogWithContext(context.Context).Infof(
+		"cluster[%s] freed resource succeed", clusterMeta.Cluster.Name)
+
+	return nil
+}
+
+// initDatabaseAccount
+// @Description: init database account after deploy
+// @Parameter node
+// @Parameter context
+// @return error
+func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	// todo
+	return nil
+}

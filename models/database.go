@@ -16,6 +16,8 @@
 package models
 
 import (
+	"context"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
@@ -24,6 +26,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/models/platform/config"
 	"github.com/pingcap-inc/tiem/models/workflow"
+	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	"gorm.io/driver/sqlite"
 
 	"gorm.io/gorm"
@@ -32,13 +35,14 @@ import (
 var defaultDb *database
 
 type database struct {
-	base                     *gorm.DB
-	workFlowReaderWriter     workflow.ReaderWriter
-	importExportReaderWriter importexport.ReaderWriter
-	brReaderWriter           backuprestore.ReaderWriter
-	changeFeedReaderWriter   changefeed.ReaderWriter
-	clusterReaderWriter      management.ReaderWriter
-	configReaderWriter       config.ReaderWriter
+	base                             *gorm.DB
+	workFlowReaderWriter             workflow.ReaderWriter
+	importExportReaderWriter         importexport.ReaderWriter
+	brReaderWriter                   backuprestore.ReaderWriter
+	changeFeedReaderWriter           changefeed.ReaderWriter
+	clusterReaderWriter              management.ReaderWriter
+	configReaderWriter               config.ReaderWriter
+	secondPartyOperationReaderWriter secondparty.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -58,12 +62,11 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 		base: db,
 	}
 
+	defaultDb.initReaderWriters()
 	if !reentry {
 		defaultDb.initTables()
 		defaultDb.initSystemData()
 	}
-
-	defaultDb.initReaderWriters()
 
 	return nil
 }
@@ -75,11 +78,12 @@ func (p *database) initTables() {
 	p.addTable(new(management.Cluster))
 	p.addTable(new(management.ClusterInstance))
 	p.addTable(new(management.ClusterRelation))
+	p.addTable(new(management.ClusterTopologySnapshot))
 	p.addTable(new(importexport.DataTransportRecord))
 	p.addTable(new(backuprestore.BackupRecord))
 	p.addTable(new(backuprestore.BackupStrategy))
 	p.addTable(new(config.SystemConfig))
-	p.addTable(new(management.ClusterTopologySnapshot))
+	p.addTable(new(secondparty.SecondPartyOperation))
 
 	// other tables
 }
@@ -90,10 +94,17 @@ func (p *database) initReaderWriters() {
 	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
 	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
 	defaultDb.configReaderWriter = config.NewConfigReadWrite(defaultDb.base)
+	defaultDb.secondPartyOperationReaderWriter = secondparty.NewGormSecondPartyOperationReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
-	// todo
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3SecretAccessKey, ConfigValue: constants.DefaultBackupS3SecretAccessKey})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
 }
 
 func (p *database) addTable(gormModel interface{}) error {
@@ -147,6 +158,14 @@ func GetConfigReaderWriter() config.ReaderWriter {
 
 func SetConfigReaderWriter(rw config.ReaderWriter) {
 	defaultDb.configReaderWriter = rw
+}
+
+func GetSecondPartyOperationReaderWriter() secondparty.ReaderWriter {
+	return defaultDb.secondPartyOperationReaderWriter
+}
+
+func SetSecondPartyOperationReaderWriter(rw secondparty.ReaderWriter) {
+	defaultDb.secondPartyOperationReaderWriter = rw
 }
 
 func MockDB() {

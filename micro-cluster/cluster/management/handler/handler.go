@@ -208,6 +208,15 @@ func (p *ClusterMeta) AllocInstanceResource(ctx context.Context) (string, error)
 	return requestID, nil
 }
 
+// FreedInstanceResource
+// @Description return host ip, port and disk for all existing instance
+// @Return
+// @Return		error
+func (p *ClusterMeta) FreedInstanceResource(ctx context.Context) error {
+	// todo
+	return nil
+}
+
 // GenerateTopologyConfig
 // @Description generate yaml config based on cluster topology
 // @Return		yaml config
@@ -444,13 +453,44 @@ func (p *ClusterMeta) GetScaleOutConfig() (string, error) {
 	return "", nil
 }
 
-func (p *ClusterMeta) GetConnectAddresses() []string {
+type ComponentAddress struct {
+	IP string
+	Port int
+}
+
+// GetClusterConnectAddresses
+// @Description: Access the TiDB cluster
+// @Receiver p
+// @return []ComponentAddress
+func (p *ClusterMeta) GetClusterConnectAddresses() []ComponentAddress {
 	// got all tidb instances, then get connect addresses
 	return nil
 }
 
-func (p *ClusterMeta) GetMonitorAddresses() []string {
-	// got all tidb instances, then get connect addresses
+// GetClusterStatusAddress
+// @Description: TiDB Server status information reporting.
+// @Receiver p
+// @return []ComponentAddress
+func (p *ClusterMeta) GetClusterStatusAddress() []ComponentAddress {
+	//
+	return nil
+}
+
+// GetClientAddresses
+// @Description: communication address for TiDB Servers to connect.
+// @Receiver p
+// @return []ComponentAddress
+func (p *ClusterMeta) GetClientAddresses() []ComponentAddress {
+	// todo
+	return nil
+}
+
+// GetMonitorAddresses
+// @Description: Prometheus Service communication port
+// @Receiver p
+// @return []ComponentAddress
+func (p *ClusterMeta) GetMonitorAddresses() []ComponentAddress {
+	// todo
 	return nil
 }
 
@@ -465,8 +505,4 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 	}
 
 	return nil, framework.WrapError(common.TIEM_CLUSTER_NOT_FOUND, "", err)
-}
-
-func Create(ctx context.Context, template management.Cluster) (*ClusterMeta, error) {
-	return nil, nil
 }

@@ -17,6 +17,7 @@ package secondparty
 
 import (
 	"github.com/pingcap-inc/tiem/library/spec"
+	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	spec2 "github.com/pingcap/tiup/pkg/cluster/spec"
 )
 
@@ -288,4 +289,10 @@ type ShowWarningsResp struct {
 	Level   string
 	Code    string
 	Message string
+}
+
+type GetOperationStatusResp struct {
+	Status   secondparty.OperationStatus
+	Result   string
+	ErrorStr string
 }

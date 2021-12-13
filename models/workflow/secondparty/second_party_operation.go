@@ -35,7 +35,7 @@ type SecondPartyOperation struct {
 	Type           OperationType   `gorm:"not null;comment:'second party operation of type, eg: secondparty cluster deploy,start,stop,...BACKUP, RESTORE as SQL cmd;'"`
 	WorkFlowNodeID string          `gorm:"not null;index;comment:'TiEM of the workflow ID'"`
 	Status         OperationStatus `gorm:"default:null"`
-	Message        string          `gorm:"size:8192;comment:'second party operation msg'"`
+	Result         string          `gorm:"default:null"`
 	ErrorStr       string          `gorm:"size:8192;comment:'second party operation error msg'"`
 	CreatedAt      time.Time       `gorm:"<-:create"`
 	UpdatedAt      time.Time

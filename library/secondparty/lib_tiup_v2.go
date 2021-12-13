@@ -71,7 +71,7 @@ func (manager *SecondPartyManager) startTiUPDeployOperation(ctx context.Context,
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
 			Status:      secondparty.OperationStatus_Error,
-			Message:     "",
+			Result:      "",
 			ErrorStr:    fmt.Sprintln(err),
 		}
 		return
@@ -116,6 +116,7 @@ func (manager *SecondPartyManager) startTiUPScaleOutOperation(ctx context.Contex
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
 			Status:      secondparty.OperationStatus_Error,
+			Result:      "",
 			ErrorStr:    fmt.Sprintln(err),
 		}
 		return
@@ -490,6 +491,7 @@ func (manager *SecondPartyManager) ClusterEditGlobalConfig(ctx context.Context,
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: secondPartyOperation.ID,
 			Status:      secondparty.OperationStatus_Error,
+			Result:      "",
 			ErrorStr:    fmt.Sprintln(err),
 		}
 		return secondPartyOperation.ID, err
@@ -580,6 +582,7 @@ func (manager *SecondPartyManager) ClusterEditInstanceConfig(ctx context.Context
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: secondPartyOperation.ID,
 			Status:      secondparty.OperationStatus_Error,
+			Result:      "",
 			ErrorStr:    fmt.Sprintln(err),
 		}
 		return secondPartyOperation.ID, err
@@ -734,6 +737,7 @@ func (manager *SecondPartyManager) startTiUPEditConfigOperation(ctx context.Cont
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
 			Status:      secondparty.OperationStatus_Error,
+			Result:      "",
 			ErrorStr:    fmt.Sprintf("startTiUPeditconfigoperation marshal new config(%+v) error: %+v", req.NewTopo, err),
 		}
 		return
@@ -744,6 +748,7 @@ func (manager *SecondPartyManager) startTiUPEditConfigOperation(ctx context.Cont
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
 			Status:      secondparty.OperationStatus_Error,
+			Result:      "",
 			ErrorStr:    fmt.Sprintln(err),
 		}
 		return
@@ -869,6 +874,7 @@ func (manager *SecondPartyManager) startTiUPTransferOperation(ctx context.Contex
 		manager.operationStatusCh <- OperationStatusMember{
 			OperationID: operationID,
 			Status:      secondparty.OperationStatus_Error,
+			Result:      "",
 			ErrorStr:    fmt.Sprintln(err),
 		}
 		return
@@ -891,6 +897,7 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 	manager.operationStatusCh <- OperationStatusMember{
 		OperationID: operationID,
 		Status:      secondparty.OperationStatus_Processing,
+		Result:      "",
 		ErrorStr:    "",
 	}
 	go func() {
@@ -916,6 +923,7 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
 				Status:      secondparty.OperationStatus_Error,
+				Result:      "",
 				ErrorStr:    fmt.Sprintf("cmd start err: %+v, errStr: %s", err, stderr.String()),
 			}
 			return
@@ -926,6 +934,7 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
 				Status:      secondparty.OperationStatus_Finished,
+				Result:      "",
 				ErrorStr:    "",
 			}
 		}
@@ -946,6 +955,7 @@ func (manager *SecondPartyManager) startTiUPOperation(ctx context.Context, opera
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
 				Status:      secondparty.OperationStatus_Error,
+				Result:      "",
 				ErrorStr: fmt.Sprintf("cmd wait return with err: %+v, errStr: %s, time cost: %v", err,
 					stderr.String(), time.Since(t0)),
 			}

@@ -720,9 +720,9 @@ func TestSecondPartyManager_GetOperationStatus_Fail(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Get(context.Background(), TestOperationID).Return(nil, expectedErr)
 
-	operationStatus, err := secondPartyManager1.GetOperationStatus(context.TODO(), TestOperationID)
-	if operationStatus != "" || err == nil {
-		t.Errorf("case: fail find secondparty opeartion by id intentionally. operationStatus(expected: %s, actual: %s), err(expected: %v, actual: %v)", "", operationStatus, expectedErr, err)
+	resp, err := secondPartyManager1.GetOperationStatus(context.TODO(), TestOperationID)
+	if resp.Status != "" || err == nil {
+		t.Errorf("case: fail find secondparty opeartion by id intentionally. operationStatus(expected: %s, actual: %s), err(expected: %v, actual: %v)", "", resp.Status, expectedErr, err)
 	}
 }
 
@@ -737,9 +737,9 @@ func TestSecondPartyManager_ClusterGetTaskStatus_Success(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().Get(context.Background(), TestOperationID).Return(&secondPartyOperation, nil)
 
-	operationStatus, err := secondPartyManager1.GetOperationStatus(context.TODO(), TestOperationID)
-	if operationStatus != secondparty.OperationStatus_Finished || err != nil {
-		t.Errorf("case: find secondparty operation by id successfully. operationStatus(expected: %v, actual: %v), err(expected: %v, actual: %v)", secondparty.OperationStatus_Finished, operationStatus, nil, err)
+	resp, err := secondPartyManager1.GetOperationStatus(context.TODO(), TestOperationID)
+	if resp.Status != secondparty.OperationStatus_Finished || err != nil {
+		t.Errorf("case: find secondparty operation by id successfully. operationStatus(expected: %v, actual: %v), err(expected: %v, actual: %v)", secondparty.OperationStatus_Finished, resp.Status, nil, err)
 	}
 }
 
@@ -751,9 +751,9 @@ func TestSecondPartyManager_ClusterGetTaskStatusByBizID_Fail(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().QueryByWorkFlowNodeID(context.Background(), TestWorkFlowNodeID).Return(nil, expectedErr)
 
-	operationStatus, err := secondPartyManager1.GetOperationStatusByWorkFlowNodeID(context.TODO(), TestWorkFlowNodeID)
-	if operationStatus != "" || err == nil {
-		t.Errorf("case: fail find secondparty operation by workflownodeid intentionally. operationStatus(expected: %s, actual: %s), err(expected: %v, actual: %v)", "", operationStatus, expectedErr, err)
+	resp, err := secondPartyManager1.GetOperationStatusByWorkFlowNodeID(context.TODO(), TestWorkFlowNodeID)
+	if resp.Status != "" || err == nil {
+		t.Errorf("case: fail find secondparty operation by workflownodeid intentionally. operationStatus(expected: %s, actual: %s), err(expected: %v, actual: %v)", "", resp.Status, expectedErr, err)
 	}
 }
 
@@ -768,9 +768,9 @@ func TestSecondPartyManager_ClusterGetTaskStatusByBizID_Success(t *testing.T) {
 	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 	mockReaderWriter.EXPECT().QueryByWorkFlowNodeID(context.Background(), TestWorkFlowNodeID).Return(&secondPartyOperation, nil)
 
-	operationStatus, err := secondPartyManager1.GetOperationStatusByWorkFlowNodeID(context.TODO(), TestWorkFlowNodeID)
-	if operationStatus != secondparty.OperationStatus_Finished || err != nil {
-		t.Errorf("case: find secondparty operation by id successfully. operationStatus(expected: %v, actual: %v), err(expected: %v, actual: %v)", secondparty.OperationStatus_Finished, operationStatus, nil, err)
+	resp, err := secondPartyManager1.GetOperationStatusByWorkFlowNodeID(context.TODO(), TestWorkFlowNodeID)
+	if resp.Status != secondparty.OperationStatus_Finished || err != nil {
+		t.Errorf("case: find secondparty operation by id successfully. operationStatus(expected: %v, actual: %v), err(expected: %v, actual: %v)", secondparty.OperationStatus_Finished, resp.Status, nil, err)
 	}
 }
 

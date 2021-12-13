@@ -202,7 +202,7 @@ func (manager *SecondPartyManager) startBrTaskThruSQL(ctx context.Context, opera
 	manager.operationStatusCh <- OperationStatusMember{
 		OperationID: operationID,
 		Status:      secondparty.OperationStatus_Processing,
-		Message:     "",
+		Result:      "",
 		ErrorStr:    "",
 	}
 	go func() {
@@ -214,7 +214,7 @@ func (manager *SecondPartyManager) startBrTaskThruSQL(ctx context.Context, opera
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
 				Status:      secondparty.OperationStatus_Error,
-				Message:     "",
+				Result:      "",
 				ErrorStr:    fmt.Sprintln(err),
 			}
 			return
@@ -229,7 +229,7 @@ func (manager *SecondPartyManager) startBrTaskThruSQL(ctx context.Context, opera
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
 				Status:      secondparty.OperationStatus_Error,
-				Message:     "",
+				Result:      "",
 				ErrorStr:    fmt.Sprintln(err),
 			}
 			return
@@ -239,7 +239,7 @@ func (manager *SecondPartyManager) startBrTaskThruSQL(ctx context.Context, opera
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
 				Status:      secondparty.OperationStatus_Finished,
-				Message:     "",
+				Result:      "",
 				ErrorStr:    string(jsonMustMarshal(&resp)),
 			}
 		}

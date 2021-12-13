@@ -83,7 +83,7 @@ func TestSecondPartyManager_taskStatusMapSyncer_updateButFail(t *testing.T) {
 	secondPartyOperation := secondparty.SecondPartyOperation{
 		ID:       TestOperationID,
 		Status:   secondparty.OperationStatus_Processing,
-		Message:  "",
+		Result:   "",
 		ErrorStr: "",
 	}
 	expectedErr := errors.New("fail update second party operation")
@@ -93,7 +93,7 @@ func TestSecondPartyManager_taskStatusMapSyncer_updateButFail(t *testing.T) {
 	secondPartyManager.operationStatusCh <- OperationStatusMember{
 		OperationID: TestOperationID,
 		Status:      secondparty.OperationStatus_Processing,
-		Message:     "",
+		Result:      "",
 		ErrorStr:    "",
 	}
 
@@ -117,7 +117,7 @@ func TestSecondPartyManager_taskStatusMapSyncer_updateAndSucceed(t *testing.T) {
 	secondPartyOperation := secondparty.SecondPartyOperation{
 		ID:       TestOperationID,
 		Status:   secondparty.OperationStatus_Finished,
-		Message:  "",
+		Result:   "",
 		ErrorStr: "",
 	}
 	mockReaderWriter.EXPECT().Update(context.Background(), &secondPartyOperation).Return(nil)
@@ -125,7 +125,7 @@ func TestSecondPartyManager_taskStatusMapSyncer_updateAndSucceed(t *testing.T) {
 	secondPartyManager.operationStatusCh <- OperationStatusMember{
 		OperationID: TestOperationID,
 		Status:      secondparty.OperationStatus_Finished,
-		Message:     "",
+		Result:      "",
 		ErrorStr:    "",
 	}
 

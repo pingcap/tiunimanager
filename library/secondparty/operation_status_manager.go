@@ -37,7 +37,7 @@ import (
 type OperationStatusMember struct {
 	OperationID string
 	Status      secondparty.OperationStatus
-	Message     string
+	Result      string
 	ErrorStr    string
 }
 
@@ -84,7 +84,7 @@ func (manager *SecondPartyManager) operationStatusMapSyncer() {
 			err := models.GetSecondPartyOperationReaderWriter().Update(context.Background(), &secondparty.SecondPartyOperation{
 				ID:       v.OperationID,
 				Status:   v.Status,
-				Message:  v.Message,
+				Result:   v.Result,
 				ErrorStr: v.ErrorStr,
 			})
 			if err != nil {

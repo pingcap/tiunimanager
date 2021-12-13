@@ -30,8 +30,6 @@ import (
 
 	"github.com/pingcap-inc/tiem/models"
 
-	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
-
 	"github.com/pingcap-inc/tiem/library/framework"
 )
 
@@ -76,8 +74,8 @@ type SecondPartyService interface {
 	Restore(ctx context.Context, cluster ClusterFacade, storage BrStorage, workFlowNodeID string) (operationID string,
 		err error)
 	ShowRestoreInfo(ctx context.Context, cluster ClusterFacade) CmdShowRestoreInfoResp
-	GetOperationStatus(ctx context.Context, operationID string) (status secondparty.OperationStatus, err error)
-	GetOperationStatusByWorkFlowNodeID(ctx context.Context, workFlowNodeID string) (status secondparty.OperationStatus, err error)
+	GetOperationStatus(ctx context.Context, operationID string) (resp GetOperationStatusResp, err error)
+	GetOperationStatusByWorkFlowNodeID(ctx context.Context, workFlowNodeID string) (resp GetOperationStatusResp, err error)
 }
 
 type SecondPartyManager struct {
@@ -97,26 +95,32 @@ func (manager *SecondPartyManager) Init() {
 }
 
 func (manager *SecondPartyManager) GetOperationStatus(ctx context.Context, operationID string) (
-	status secondparty.OperationStatus, err error) {
+	resp GetOperationStatusResp, err error) {
 	framework.LogWithContext(ctx).WithField("operationid", operationID).Infof("getoperationstatus")
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().Get(ctx, operationID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondPartyOperation:%v, err:%v", secondPartyOperation, err)
-		return "", err
+		return
 	} else {
 		assert(secondPartyOperation.ID == operationID)
-		return secondPartyOperation.Status, nil
+		resp.Status = secondPartyOperation.Status
+		resp.Result = secondPartyOperation.Result
+		resp.ErrorStr = secondPartyOperation.ErrorStr
+		return
 	}
 }
 
 func (manager *SecondPartyManager) GetOperationStatusByWorkFlowNodeID(ctx context.Context, workFlowNodeID string) (
-	status secondparty.OperationStatus, err error) {
+	resp GetOperationStatusResp, err error) {
 	framework.LogWithContext(ctx).WithField("workflownodeid", workFlowNodeID).Infof("getoperationstatusbybizid")
 	secondPartyOperation, err := models.GetSecondPartyOperationReaderWriter().QueryByWorkFlowNodeID(ctx, workFlowNodeID)
 	if secondPartyOperation == nil || err != nil {
 		err = fmt.Errorf("secondpartypperation:%v, err:%v", secondPartyOperation, err)
-		return "", err
+		return
 	} else {
-		return secondPartyOperation.Status, nil
+		resp.Status = secondPartyOperation.Status
+		resp.Result = secondPartyOperation.Result
+		resp.ErrorStr = secondPartyOperation.ErrorStr
+		return
 	}
 }

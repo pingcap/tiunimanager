@@ -21,9 +21,9 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models"
+	secondparty2 "github.com/pingcap-inc/tiem/models/workflow/secondparty"
 	"github.com/pingcap/errors"
 
 	//"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -188,20 +188,20 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 		for range ticker.C {
 			framework.LogWithContext(flow.Context).Infof("polling node waiting, nodeId %s, nodeName %s", node.ID, node.Name)
 
-			stat, statString, err := secondparty.Manager.GetOperationStatusByWorkFlowNodeID(flow.Context, node.ID)
+			resp, err := secondparty.Manager.GetOperationStatusByWorkFlowNodeID(flow.Context, node.ID)
 			if err != nil {
 				framework.LogWithContext(flow.Context).Error(err)
 				node.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			if stat == dbpb.TiupTaskStatus_Error {
-				node.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, statString))
+			if resp.Status == secondparty2.OperationStatus_Error {
+				node.Fail(framework.NewTiEMError(common.TIEM_TASK_FAILED, resp.ErrorStr))
 				flow.handleTaskError(node, nodeDefine)
 				return false
 			}
-			if stat == dbpb.TiupTaskStatus_Finished {
-				node.Success(statString)
+			if resp.Status == secondparty2.OperationStatus_Finished {
+				node.Success(resp.Result)
 				return flow.handle(flow.Define.TaskNodes[nodeDefine.SuccessEvent])
 			}
 		}

@@ -60,12 +60,11 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 		base: db,
 	}
 
+	defaultDb.initReaderWriters()
 	if !reentry {
 		defaultDb.initTables()
 		defaultDb.initSystemData()
 	}
-
-	defaultDb.initReaderWriters()
 
 	return nil
 }

@@ -26,7 +26,7 @@ type SystemConfig struct {
 	CreatedAt   time.Time `gorm:"<-:create"`
 	UpdatedAt   time.Time
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
-	ConfigKey   string         `gorm:"not null;"`
+	ConfigKey   string         `gorm:"not null;uniqueIndex"`
 	ConfigValue string         `gorm:"not null;"`
 }
 

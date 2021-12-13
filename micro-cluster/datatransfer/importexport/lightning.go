@@ -71,16 +71,15 @@ type ImportInfo struct {
 }
 
 type ExportInfo struct {
-	ClusterId    string
-	UserName     string
-	Password     string
-	FileType     string
-	RecordId     string
-	FilePath     string
-	Filter       string
-	Sql          string
-	StorageType  string
-	BucketRegion string
+	ClusterId   string
+	UserName    string
+	Password    string
+	FileType    string
+	RecordId    string
+	FilePath    string
+	Filter      string
+	Sql         string
+	StorageType string
 }
 
 func NewDataImportConfig(meta *handler.ClusterMeta, info *ImportInfo) *DataImportConfig {

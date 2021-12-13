@@ -121,16 +121,15 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request *message
 	}
 
 	info := &ExportInfo{
-		ClusterId:    request.ClusterID,
-		UserName:     request.UserName,
-		Password:     request.Password,
-		FileType:     request.FileType,
-		RecordId:     recordCreate.ID,
-		FilePath:     mgr.getDataExportFilePath(request, exportDir, false),
-		Filter:       request.Filter,
-		Sql:          request.Sql,
-		StorageType:  request.StorageType,
-		BucketRegion: request.BucketRegion,
+		ClusterId:   request.ClusterID,
+		UserName:    request.UserName,
+		Password:    request.Password,
+		FileType:    request.FileType,
+		RecordId:    recordCreate.ID,
+		FilePath:    mgr.getDataExportFilePath(request, exportDir, false),
+		Filter:      request.Filter,
+		Sql:         request.Sql,
+		StorageType: request.StorageType,
 	}
 
 	flowManager := workflow.GetWorkFlowService()

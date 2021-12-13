@@ -132,9 +132,6 @@ func exportDataFromCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	if FileTypeCSV == info.FileType && info.Filter == "" && info.Sql != "" {
 		cmd = append(cmd, "--sql", info.Sql)
 	}
-	if common.S3StorageType == info.StorageType && info.BucketRegion != "" {
-		cmd = append(cmd, "--s3.region", fmt.Sprintf("\"%s\"", info.BucketRegion))
-	}
 	framework.LogWithContext(ctx).Infof("call tiupmgr dumpling api, cmd: %v", cmd)
 	exportTaskId, err := secondparty.Manager.Dumpling(ctx, 0, cmd, node.ID)
 	if err != nil {

@@ -57,12 +57,14 @@ var SuccessResponseStatus = &clusterpb.ResponseStatusDTO{Code: 0}
 var BizErrorResponseStatus = &clusterpb.ResponseStatusDTO{Code: 500}
 
 type ClusterServiceHandler struct {
-	resourceManager   *resource.ResourceManager
-	authManager       *user.AuthManager
-	tenantManager     *user.TenantManager
-	userManager       *user.UserManager
-	changeFeedManager *changeFeedManager.Manager
-	clusterManager    *clusterManager.Manager
+	resourceManager     *resource.ResourceManager
+	authManager         *user.AuthManager
+	tenantManager       *user.TenantManager
+	userManager         *user.UserManager
+	changeFeedManager   *changeFeedManager.Manager
+	clusterManager      *clusterManager.Manager
+	brManager           backuprestore.BRService
+	importexportService importexport.ImportExportService
 }
 
 func handleRequest(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse, requestBody interface{}) bool {
@@ -142,8 +144,9 @@ func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandle
 	handler.authManager = user.NewAuthManager(handler.userManager, adapt.MicroMetaDbRepo{})
 	handler.changeFeedManager = changeFeedManager.NewManager()
 	handler.clusterManager = clusterManager.NewClusterManager()
+	handler.brManager = backuprestore.GetBRService()
+	handler.importexportService = importexport.GetImportExportService()
 
-	domain.InitFlowMap()
 	return handler
 }
 
@@ -425,8 +428,7 @@ func (c ClusterServiceHandler) CreateBackup(ctx context.Context, request *cluste
 	backupReq := cluster.BackupClusterDataReq{}
 
 	if handleRequest(ctx, request, response, backupReq) {
-		manager := backuprestore.GetBRService()
-		result, err := manager.BackupCluster(ctx, &backupReq)
+		result, err := c.brManager.BackupCluster(ctx, &backupReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -462,8 +464,7 @@ func (c ClusterServiceHandler) DeleteBackupRecords(ctx context.Context, request 
 	deleteReq := cluster.DeleteBackupDataReq{}
 
 	if handleRequest(ctx, request, response, deleteReq) {
-		manager := backuprestore.GetBRService()
-		result, err := manager.DeleteBackupRecords(ctx, &deleteReq)
+		result, err := c.brManager.DeleteBackupRecords(ctx, &deleteReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -477,8 +478,7 @@ func (c ClusterServiceHandler) SaveBackupStrategy(ctx context.Context, request *
 	saveReq := cluster.SaveBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, saveReq) {
-		manager := backuprestore.GetBRService()
-		result, err := manager.SaveBackupStrategy(ctx, &saveReq)
+		result, err := c.brManager.SaveBackupStrategy(ctx, &saveReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -492,8 +492,7 @@ func (c ClusterServiceHandler) GetBackupStrategy(ctx context.Context, request *c
 	getReq := cluster.GetBackupStrategyReq{}
 
 	if handleRequest(ctx, request, response, getReq) {
-		manager := backuprestore.GetBRService()
-		result, err := manager.GetBackupStrategy(ctx, &getReq)
+		result, err := c.brManager.GetBackupStrategy(ctx, &getReq)
 		handleResponse(ctx, response, err, *result, nil)
 	}
 
@@ -507,8 +506,7 @@ func (c ClusterServiceHandler) QueryBackupRecords(ctx context.Context, request *
 	queryReq := cluster.QueryBackupRecordsReq{}
 
 	if handleRequest(ctx, request, response, queryReq) {
-		manager := backuprestore.GetBRService()
-		result, page, err := manager.QueryClusterBackupRecords(ctx, &queryReq)
+		result, page, err := c.brManager.QueryClusterBackupRecords(ctx, &queryReq)
 		handleResponse(ctx, response, err, *result, &clusterpb.RpcPage{
 			Page:     int32(page.Page),
 			PageSize: int32(page.PageSize),

@@ -85,6 +85,36 @@ func (p *Manager) Delete(ctx context.Context, request cluster.DeleteChangeFeedTa
 	}, nil
 }
 
+func (p *Manager) Query(ctx context.Context, request cluster.QueryChangeFeedTaskReq) (cluster.QueryChangeFeedTaskResp, int, error) {
+	return cluster.QueryChangeFeedTaskResp{}, 8, nil
+}
+
+func (p *Manager) Detail(ctx context.Context, request cluster.DetailChangeFeedTaskReq) (cluster.DetailChangeFeedTaskResp, error) {
+	return cluster.DetailChangeFeedTaskResp{}, nil
+}
+// Update
+// @Description: lock -> stop -> update -> resume -> unlock
+// @Receiver p
+// @Parameter ctx
+// @Parameter request
+// @return cluster.UpdateChangeFeedTaskResp
+// @return error
+func (p *Manager) Update(ctx context.Context, request cluster.UpdateChangeFeedTaskReq) (cluster.UpdateChangeFeedTaskResp, error) {
+	task := buildFromRequest(request.ChangeFeedTask)
+
+	models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
+	err := models.GetChangeFeedReaderWriter().UpdateConfig(ctx, task)
+
+	// todo invoke changefeed open api
+	go func() {
+		// todo check
+		models.GetChangeFeedReaderWriter().UnlockStatus(ctx, request.ID, constants.ChangeFeedStatusStopped)
+	}()
+
+	return cluster.UpdateChangeFeedTaskResp{
+		Status: string(constants.ChangeFeedStatusStopped),
+	}, err
+}
 func (p *Manager) Pause(ctx context.Context, request cluster.PauseChangeFeedTaskReq) (cluster.PauseChangeFeedTaskResp, error) {
 	err := models.GetChangeFeedReaderWriter().LockStatus(ctx, request.ID)
 

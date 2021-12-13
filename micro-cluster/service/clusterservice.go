@@ -114,24 +114,74 @@ func (handler *ClusterServiceHandler) CreateChangeFeedTask(ctx context.Context, 
 	return nil
 }
 
-func (handler *ClusterServiceHandler) PauseChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
+func (handler *ClusterServiceHandler) PauseChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := cluster.PauseChangeFeedTaskReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.changeFeedManager.Pause(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
 }
 
-func (handler *ClusterServiceHandler) ResumeChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
+func (handler *ClusterServiceHandler) ResumeChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := cluster.ResumeChangeFeedTaskReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.changeFeedManager.Resume(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
 }
 
-func (handler *ClusterServiceHandler) DeleteChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
+func (handler *ClusterServiceHandler) DeleteChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := cluster.DeleteChangeFeedTaskReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.changeFeedManager.Delete(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
 }
 
-func (handler *ClusterServiceHandler) UpdateChangeFeedTask(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
+func (handler *ClusterServiceHandler) UpdateChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := cluster.UpdateChangeFeedTaskReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.changeFeedManager.Update(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
 }
 
-func (handler *ClusterServiceHandler) QueryChangeFeedTasks(ctx context.Context, request *clusterpb.RpcRequest, response *clusterpb.RpcResponse) error {
-	panic("implement me")
+func (handler *ClusterServiceHandler) QueryChangeFeedTasks(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := cluster.QueryChangeFeedTaskReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, total, err := handler.changeFeedManager.Query(ctx, request)
+		handleResponse(ctx, resp, err, result, &clusterpb.RpcPage{
+			Page:     int32(request.Page.Page),
+			PageSize: int32(request.PageSize),
+			Total: int32(total),
+		})
+	}
+
+	return nil
+}
+
+func (handler *ClusterServiceHandler) DetailChangeFeedTask(ctx context.Context, req *clusterpb.RpcRequest, resp *clusterpb.RpcResponse) error {
+	request := cluster.DetailChangeFeedTaskReq{}
+
+	if handleRequest(ctx, req, resp, request) {
+		result, err := handler.changeFeedManager.Detail(ctx, request)
+		handleResponse(ctx, resp, err, result, nil)
+	}
+
+	return nil
 }
 
 func NewClusterServiceHandler(fw *framework.BaseFramework) *ClusterServiceHandler {

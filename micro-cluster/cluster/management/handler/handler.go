@@ -279,7 +279,7 @@ func (p *ClusterMeta) GetInstance(ctx context.Context, instanceID string) (*mana
 	if len(host) != 2 {
 		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is wrong")
 	}
-	port, err := strconv.Atoi(host[1])
+	port, err := strconv.ParseInt(host[1], 10, 32)
 	if err != nil {
 		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is wrong")
 	}

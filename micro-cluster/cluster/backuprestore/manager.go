@@ -59,8 +59,8 @@ func NewBRManager() *BRManager {
 	}
 
 	flowManager := workflow.GetWorkFlowService()
-	flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowBackupCluster, &workflow.WorkFlowDefine{
-		FlowName: constants.WorkFlowBackupCluster,
+	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowBackupCluster, &workflow.WorkFlowDefine{
+		FlowName: constants.FlowBackupCluster,
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start":            {"backup", "backupDone", "fail", workflow.PollingNode, backupCluster},
 			"backupDone":       {"updateBackupRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateBackupRecord},
@@ -68,8 +68,8 @@ func NewBRManager() *BRManager {
 			"fail":             {"fail", "", "", workflow.SyncFuncNode, backupFail},
 		},
 	})
-	flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowRestoreExistCluster, &workflow.WorkFlowDefine{
-		FlowName: constants.WorkFlowRestoreExistCluster,
+	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestoreExistCluster, &workflow.WorkFlowDefine{
+		FlowName: constants.FlowRestoreExistCluster,
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start":       {"restoreFromSrcCluster", "restoreDone", "fail", workflow.PollingNode, restoreFromSrcCluster},
 			"restoreDone": {"end", "", "", workflow.SyncFuncNode, defaultEnd},
@@ -113,17 +113,17 @@ func (mgr *BRManager) BackupCluster(ctx context.Context, request *cluster.Backup
 	}
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.WorkFlowBackupCluster)
+	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowBackupCluster)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.WorkFlowBackupCluster, err.Error())
-		return nil, fmt.Errorf("create %s workflow failed, %s", constants.WorkFlowBackupCluster, err.Error())
+		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
+		return nil, fmt.Errorf("create %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
 	}
 
 	flowManager.AddContext(flow, contextBackupRecordKey, recordCreate)
 	flowManager.AddContext(flow, contextClusterMetaKey, meta)
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
-		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.WorkFlowBackupCluster, err.Error())
-		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.WorkFlowBackupCluster, err.Error())
+		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
+		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.FlowBackupCluster, err.Error())
 	}
 
 	return &cluster.BackupClusterDataResp{
@@ -152,17 +152,17 @@ func (mgr *BRManager) RestoreExistCluster(ctx context.Context, request *cluster.
 	}
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.WorkFlowRestoreExistCluster)
+	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowRestoreExistCluster)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.WorkFlowRestoreExistCluster, err.Error())
-		return nil, fmt.Errorf("create %s workflow failed, %s", constants.WorkFlowRestoreExistCluster, err.Error())
+		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
+		return nil, fmt.Errorf("create %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
 	}
 
 	flowManager.AddContext(flow, contextBackupRecordKey, record)
 	flowManager.AddContext(flow, contextClusterMetaKey, meta)
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
-		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.WorkFlowRestoreExistCluster, err.Error())
-		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.WorkFlowRestoreExistCluster, err.Error())
+		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
+		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.FlowRestoreExistCluster, err.Error())
 	}
 
 	return &cluster.RestoreExistClusterResp{

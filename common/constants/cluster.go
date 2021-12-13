@@ -59,23 +59,24 @@ const (
 	ClusterMaintenanceUpgrading                    ClusterMaintenanceStatus = "Upgrading"
 	ClusterMaintenanceSwitching                    ClusterMaintenanceStatus = "Switching"
 	ClusterMaintenanceModifyParameterAndRestarting ClusterMaintenanceStatus = "ModifyParameterRestarting"
-	ClusterMaintenanceNone                    	   ClusterMaintenanceStatus = ""
+	ClusterMaintenanceNone                         ClusterMaintenanceStatus = ""
 )
 
 const (
-	FlowCreateCluster    = "CreateCluster"
-	FlowDeleteCluster    = "DeleteCluster"
-	FlowBackupCluster    = "BackupCluster"
-	FlowRecoverCluster   = "RecoverCluster"
-	FlowModifyParameters = "ModifyParameters"
-	FlowExportData       = "ExportData"
-	FlowImportData       = "ImportData"
-	FlowRestartCluster   = "RestartCluster"
-	FlowStopCluster      = "StopCluster"
-	FlowTakeoverCluster  = "TakeoverCluster"
-	FlowBuildLogConfig   = "BuildLogConfig"
-	FlowScaleOutCluster  = "ScaleOutCluster"
-	FlowScaleInCluster   = "ScaleInCluster"
+	FlowCreateCluster       = "CreateCluster"
+	FlowDeleteCluster       = "DeleteCluster"
+	FlowBackupCluster       = "BackupCluster"
+	FlowRestoreNewCluster   = "FlowRestoreNewCluster"
+	FlowRestoreExistCluster = "RestoreExistCluster"
+	FlowModifyParameters    = "ModifyParameters"
+	FlowExportData          = "ExportData"
+	FlowImportData          = "ImportData"
+	FlowRestartCluster      = "RestartCluster"
+	FlowStopCluster         = "StopCluster"
+	FlowTakeoverCluster     = "TakeoverCluster"
+	FlowBuildLogConfig      = "BuildLogConfig"
+	FlowScaleOutCluster     = "ScaleOutCluster"
+	FlowScaleInCluster      = "ScaleInCluster"
 )
 
 type ClusterBackupStatus string

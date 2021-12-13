@@ -28,6 +28,8 @@ import (
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"strconv"
+	"strings"
 	"text/template"
 )
 
@@ -266,6 +268,30 @@ func (p *ClusterMeta) UpdateInstancesStatus(ctx context.Context,
 	return nil
 }
 
+// GetInstance
+// @Description get instance based on instanceID
+// @Return		instance
+// @Return		error
+func (p *ClusterMeta) GetInstance(instanceID string) (*management.ClusterInstance, error) {
+	host := strings.Split(instanceID, ":")
+	if len(host) != 2 {
+		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is wrong")
+	}
+	port, err := strconv.Atoi(host[1])
+	if err != nil {
+		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is wrong")
+	}
+
+	for _, components := range p.Instances {
+		for _, instance := range components {
+			if Contain(instance.HostIP, host[0]) && Contain(instance.Ports, int32(port)) {
+				return instance, nil
+			}
+		}
+	}
+	return nil, framework.NewTiEMError(common.TIEM_INSTANCE_NOT_FOUND, "instance not found")
+}
+
 func (p *ClusterMeta) CloneMeta(ctx context.Context) *ClusterMeta {
 	return nil
 }
@@ -318,4 +344,5 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 func Create(ctx context.Context, template management.Cluster) (*ClusterMeta, error) {
 	return nil, nil
 }
+
 

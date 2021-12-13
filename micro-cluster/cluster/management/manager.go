@@ -28,6 +28,7 @@ const (
 	ContextClusterMeta   = "ClusterMeta"
 	ContextTopology      = "Topology"
 	ContextAllocResource = "AllocResource"
+	ContextInstanceID    = "InstanceID"
 )
 
 type ClusterManager struct{}
@@ -107,6 +108,16 @@ func (manager *ClusterManager) ScaleIn(ctx context.Context, request *cluster.Sca
 	// Get cluster info and topology from db based by clusterID
 	clusterMeta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"load cluser[%s] meta from db error: %s", request.ClusterID, err.Error())
+		return nil, err
+	}
+
+	// Judge whether the instance exists
+	_, err = clusterMeta.GetInstance(request.InstanceID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"cluster[%s] has no instance[%s]", clusterMeta.Cluster.Name, request.InstanceID)
 		return nil, err
 	}
 
@@ -116,18 +127,35 @@ func (manager *ClusterManager) ScaleIn(ctx context.Context, request *cluster.Sca
 	}
 
 	// Start the workflow to scale in a cluster
+	workflowManager := workflow.GetWorkFlowService()
+	flow, err := workflowManager.CreateWorkFlow(ctx, clusterMeta.Cluster.ID, constants.FlowScaleInCluster)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("create workflow error: %s", err.Error())
+		return nil, err
+	}
+	workflowManager.AddContext(flow, ContextClusterMeta, clusterMeta)
+	workflowManager.AddContext(flow, ContextInstanceID, request.InstanceID)
 
-	return nil, nil
+	if err = workflowManager.AsyncStart(ctx, flow); err != nil {
+		framework.LogWithContext(ctx).Errorf("async start workflow[%s] error: %s", flow.Flow.ID, err.Error())
+		return nil, err
+	}
+
+	// Handle response
+	response := &cluster.ScaleInClusterResp{}
+	response.ClusterID = clusterMeta.Cluster.ID
+	response.WorkFlowID = flow.Flow.ID
+
+	return response, nil
 }
 
 func (manager *ClusterManager) Clone(ctx context.Context, request *cluster.CloneClusterReq) (*cluster.CloneClusterResp, error) {
 	return nil, nil
 }
 
+type Manager struct{}
 
-type Manager struct {}
-
-var createClusterFlow = &workflow.WorkFlowDefine {
+var createClusterFlow = &workflow.WorkFlowDefine{
 	// define
 }
 
@@ -181,4 +209,3 @@ func Init() {
 	f := workflow.GetWorkFlowService()
 	f.RegisterWorkFlow(context.TODO(), createClusterFlow.FlowName, createClusterFlow)
 }
-

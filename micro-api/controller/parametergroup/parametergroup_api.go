@@ -47,10 +47,8 @@ import (
 func Query(c *gin.Context) {
 	var req message.QueryParameterGroupReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
-
-	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryParameterGroup, make([]message.QueryParameterGroupResp, 0),
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryParameterGroup, &message.QueryParameterGroupResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -72,11 +70,9 @@ const paramNameOfParameterGroupId = "paramGroupId"
 // @Failure 500 {object} controller.CommonResult
 // @Router /param-groups/{paramGroupId} [get]
 func Detail(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &message.DetailParameterGroupReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DetailParameterGroupReq{
 		ID: c.Param(paramNameOfParameterGroupId),
-	})
-
-	if err == nil {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DetailParameterGroup, &message.DetailParameterGroupResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -99,9 +95,7 @@ func Detail(c *gin.Context) {
 func Create(c *gin.Context) {
 	var req message.CreateParameterGroupReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
-
-	if err == nil {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateParameterGroup, &message.CreateParameterGroupResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -122,11 +116,9 @@ func Create(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /param-groups/{paramGroupId} [delete]
 func Delete(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteParameterGroupReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &message.DeleteParameterGroupReq{
 		ID: c.Param(paramNameOfParameterGroupId),
-	})
-
-	if err == nil {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteParameterGroup, &message.DeleteParameterGroupResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -149,15 +141,13 @@ func Delete(c *gin.Context) {
 func Update(c *gin.Context) {
 	var req message.UpdateParameterGroupReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c,
-		&req,
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
+		req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
 			req.(*message.UpdateParameterGroupReq).ID = c.Param(paramNameOfParameterGroupId)
 			return nil
-		})
-
-	if err == nil {
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateParameterGroup, &message.UpdateParameterGroupResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -180,15 +170,13 @@ func Update(c *gin.Context) {
 func Copy(c *gin.Context) {
 	var req message.CopyParameterGroupReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c,
-		&req,
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
+		req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
 			req.(*message.CopyParameterGroupReq).ID = c.Param(paramNameOfParameterGroupId)
 			return nil
-		})
-
-	if err == nil {
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CopyParameterGroup, &message.CopyParameterGroupResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -203,7 +191,7 @@ func Copy(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param applyReq body message.ApplyParameterGroupReq true "apply param group request"
-// @Success 200 {object} controller.CommonResult{data=message.CopyParameterGroupResp}
+// @Success 200 {object} controller.CommonResult{data=message.ApplyParameterGroupResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -211,16 +199,14 @@ func Copy(c *gin.Context) {
 func Apply(c *gin.Context) {
 	var req message.ApplyParameterGroupReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c,
-		&req,
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
+		req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
 			req.(*message.ApplyParameterGroupReq).ID = c.Param(paramNameOfParameterGroupId)
 			return nil
-		})
-
-	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.ApplyParameterGroup, &message.CopyParameterGroupResp{},
+		}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ApplyParameterGroup, &message.ApplyParameterGroupResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

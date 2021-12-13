@@ -40,10 +40,8 @@ import (
 func QueryParams(c *gin.Context) {
 	var req cluster.QueryClusterParametersReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c, &req)
-
-	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.QueryClusterParameters, make([]cluster.QueryClusterParametersResp, 0),
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.QueryClusterParameters, make([][]cluster.QueryClusterParametersResp, 0),
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -68,15 +66,13 @@ const paramNameOfClusterId = "clusterId"
 func UpdateParams(c *gin.Context) {
 	var req cluster.UpdateClusterParametersReq
 
-	requestBody, err := controller.HandleJsonRequestFromBody(c,
-		&req,
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
+		req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
 			req.(*cluster.UpdateClusterParametersReq).ClusterID = c.Param(paramNameOfClusterId)
 			return nil
-		})
-
-	if err == nil {
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateClusterParameters, &cluster.UpdateClusterParametersResp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -97,12 +93,10 @@ func UpdateParams(c *gin.Context) {
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/{clusterId}/params/inspect [post]
 func InspectParams(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &cluster.InspectClusterParametersReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, cluster.InspectClusterParametersReq{
 		ClusterID: c.Param(paramNameOfClusterId),
-	})
-
-	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateClusterParameters, make([]cluster.InspectClusterParametersResp, 0),
+	}); ok {
+		controller.InvokeRpcMethod(c, client.ClusterClient.InspectClusterParameters, &cluster.InspectClusterParametersResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

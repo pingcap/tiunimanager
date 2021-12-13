@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -19,6 +18,7 @@ package interceptor
 
 import (
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -60,6 +60,9 @@ func VerifyIdentity(c *gin.Context) {
 			AccountName: result.AccountName,
 			TenantId:    result.TenantId,
 		})
+		c.Set(framework.TiEM_X_USER_ID_KEY, result.AccountId)
+		c.Set(framework.TiEM_X_USER_NAME_KEY, result.AccountName)
+		c.Set(framework.TiEM_X_TENANT_ID_KEY, result.TenantId)
 		c.Next()
 	}
 }

@@ -11,26 +11,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package interceptor
+package management
 
-import (
-	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-)
+import "gorm.io/gorm"
 
-// Tiem-X-Trace-ID
-func GinTraceIDHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.GetHeader(framework.TiEM_X_TRACE_ID_KEY)
-		if len(id) <= 0 {
-			id = uuidutil.GenerateID()
-		}
-		c.Set(framework.TiEM_X_TRACE_ID_KEY, id)
-		c.Header(framework.TiEM_X_TRACE_ID_KEY, id)
-		c.Next()
-	}
+type ClusterTopologySnapshot struct {
+	gorm.Model
+	TenantID  string `gorm:"not null;default:null;<-:create;size:64;comment:'tenant id';"`
+	ClusterID string `gorm:"not null;default:null;<-:create;size:64;comment:'cluster id';"`
+	Config    string `gorm:"not null;default:null;<-:create;type:text;comment:'yaml content of cluster topology';'"`
 }

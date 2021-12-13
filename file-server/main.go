@@ -21,7 +21,6 @@ import (
 	"github.com/pingcap-inc/tiem/file-server/service"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
-	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"time"
 
 	"github.com/asim/go-micro/v3"
@@ -39,13 +38,6 @@ func main() {
 		defaultPortForLocal,
 		initManager,
 	)
-
-	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
-		framework.MetaDBService: func(service micro.Service) error {
-			client.DBClient = dbpb.NewTiEMDBService(string(framework.MetaDBService), service.Client())
-			return nil
-		},
-	})
 
 	f.PrepareClientClient(map[framework.ServiceNameEnum]framework.ClientHandler{
 		framework.ClusterService: func(service micro.Service) error {

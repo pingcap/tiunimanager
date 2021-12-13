@@ -39,7 +39,7 @@ func Route(g *gin.Engine) {
 	}
 
 	// api
-	apiV1 := g.Group("/api/v1")
+	apiV1 := g.Group("/fs/api/v1")
 	{
 		apiV1.Use(interceptor.GinOpenTracing())
 		apiV1.Use(interceptor.GinTraceIDHandler())

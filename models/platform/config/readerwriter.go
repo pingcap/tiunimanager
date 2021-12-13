@@ -14,3 +14,25 @@
  ******************************************************************************/
 
 package config
+
+import "context"
+
+type ReaderWriter interface {
+	// CreateConfig
+	// @Description: create system config
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter config
+	// @Return *SystemConfig
+	// @Return error
+	CreateConfig(ctx context.Context, config *SystemConfig) (*SystemConfig, error)
+
+	// GetConfig
+	// @Description: get system config by configKey
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter configKey
+	// @Return *SystemConfig
+	// @Return error
+	GetConfig(ctx context.Context, configKey string) (config *SystemConfig, err error)
+}

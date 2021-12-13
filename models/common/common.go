@@ -17,6 +17,8 @@ package common
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
@@ -50,4 +52,21 @@ func WrapDB(db *gorm.DB) GormDB {
 
 func (m *GormDB) DB(ctx context.Context) *gorm.DB {
 	return m.db.WithContext(ctx)
+}
+
+// WrapDBError
+// @Description:
+// @Parameter err
+// @return error is nil or TiEMError
+func WrapDBError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	switch err.(type) {
+	case framework.TiEMError:
+		return err
+	default:
+		return framework.NewTiEMErrorf(common.TIEM_UNRECOGNIZED_ERROR, err.Error())
+	}
 }

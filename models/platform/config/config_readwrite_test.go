@@ -13,24 +13,25 @@
  *  limitations under the License.                                            *
  ******************************************************************************/
 
-package backuprestore
+package config
 
 import (
-	"github.com/pingcap-inc/tiem/models/common"
-	"time"
+	"context"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
-// BackupRecord backup record information
-type BackupRecord struct {
-	common.Entity
-	StorageType  string `gorm:"not null"`
-	ClusterID    string `gorm:"not null;type:varchar(22);default:null"`
-	BackupType   string
-	BackupMethod string
-	BackupMode   string
-	FilePath     string
-	Size         uint64
-	BackupTso    uint64
-	StartTime    time.Time
-	EndTime      time.Time
+var rw *ConfigReadWrite
+
+func TestConfigReadWrite_GetConfig(t *testing.T) {
+	config := &SystemConfig{
+		ConfigKey:   "key",
+		ConfigValue: "value",
+	}
+	configCreate, errCreate := rw.CreateConfig(context.TODO(), config)
+	assert.NoError(t, errCreate)
+
+	configGet, errGet := rw.GetConfig(context.TODO(), configCreate.ConfigKey)
+	assert.NoError(t, errGet)
+	assert.Equal(t, configCreate.ConfigValue, configGet.ConfigValue)
 }

@@ -11,26 +11,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package interceptor
+package controller
 
-import (
-	"github.com/gin-gonic/gin"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
-)
+type FileResultMark struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
 
-// Tiem-X-Trace-ID
-func GinTraceIDHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.GetHeader(framework.TiEM_X_TRACE_ID_KEY)
-		if len(id) <= 0 {
-			id = uuidutil.GenerateID()
-		}
-		c.Set(framework.TiEM_X_TRACE_ID_KEY, id)
-		c.Header(framework.TiEM_X_TRACE_ID_KEY, id)
-		c.Next()
-	}
+type CommonFileResult struct {
+	FileResultMark
+	Data interface{} `json:"data"`
+}
+
+func Success(data interface{}) *CommonFileResult {
+	return &CommonFileResult{FileResultMark: FileResultMark{0, "OK"}, Data: data}
+}
+
+func Fail(code int, message string) *CommonFileResult {
+	return &CommonFileResult{FileResultMark{code, message}, struct{}{}}
 }

@@ -26,21 +26,17 @@ import (
 	"testing"
 )
 
-var doNodeName1 = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
-	node.Success("success")
-	return true
+var doNodeName1 = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
+	return nil
 }
-var doNodeName2 = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
-	node.Success("success")
-	return true
+var doNodeName2 = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
+	return nil
 }
-var doSuccess = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
-	node.Success("success")
-	return true
+var doSuccess = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
+	return nil
 }
-var doFail = func(node *wfModel.WorkFlowNode, context *FlowContext) bool {
-	node.Success("success")
-	return true
+var doFail = func(node *wfModel.WorkFlowNode, context *FlowContext) error {
+	return nil
 }
 
 func init() {
@@ -97,37 +93,6 @@ func TestFlowManager_Start(t *testing.T) {
 	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
 	assert.NoError(t, errCreate)
 	errStart := manager.Start(context.TODO(), flow)
-	assert.NoError(t, errStart)
-}
-
-func TestFlowManager_AsyncStart(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
-	mockFlowRW.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
-	mockFlowRW.EXPECT().CreateWorkFlowNode(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
-	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	models.SetWorkFlowReaderWriter(mockFlowRW)
-
-	manager := GetWorkFlowService()
-	manager.RegisterWorkFlow(context.TODO(), "flowName",
-		&WorkFlowDefine{
-			FlowName: "flowName",
-			TaskNodes: map[string]*NodeDefine{
-				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
-				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
-				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
-				"fail":          {"fail", "", "", SyncFuncNode, doFail},
-			},
-		})
-
-	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
-	assert.NoError(t, errRegister)
-
-	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
-	assert.NoError(t, errCreate)
-	errStart := manager.AsyncStart(context.TODO(), flow)
 	assert.NoError(t, errStart)
 }
 
@@ -235,6 +200,7 @@ func TestFlowManager_ListWorkFlows(t *testing.T) {
 	mockFlowRW.EXPECT().QueryWorkFlows(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, int64(0), nil).AnyTimes()
 	models.SetWorkFlowReaderWriter(mockFlowRW)
 
+	manager := GetWorkFlowService()
 	_, _, err := manager.ListWorkFlows(context.TODO(), "", "", "", 1, 10)
 	assert.NoError(t, err)
 }
@@ -262,4 +228,35 @@ func TestFlowManager_DetailWorkFlow(t *testing.T) {
 		})
 	_, err := manager.DetailWorkFlow(context.TODO(), "")
 	assert.NoError(t, err)
+}
+
+func TestFlowManager_AsyncStart(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockFlowRW := mockworkflow.NewMockReaderWriter(ctrl)
+	mockFlowRW.EXPECT().CreateWorkFlow(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	mockFlowRW.EXPECT().CreateWorkFlowNode(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+	mockFlowRW.EXPECT().UpdateWorkFlowDetail(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	models.SetWorkFlowReaderWriter(mockFlowRW)
+
+	manager := GetWorkFlowService()
+	manager.RegisterWorkFlow(context.TODO(), "flowName",
+		&WorkFlowDefine{
+			FlowName: "flowName",
+			TaskNodes: map[string]*NodeDefine{
+				"start":         {"nodeName1", "nodeName1Done", "fail", SyncFuncNode, doNodeName1},
+				"nodeName1Done": {"nodeName2", "nodeName2Done", "fail", SyncFuncNode, doNodeName2},
+				"nodeName2Done": {"end", "", "", SyncFuncNode, doSuccess},
+				"fail":          {"fail", "", "", SyncFuncNode, doFail},
+			},
+		})
+
+	_, errRegister := manager.GetWorkFlowDefine(context.TODO(), "flowName")
+	assert.NoError(t, errRegister)
+
+	flow, errCreate := manager.CreateWorkFlow(context.TODO(), "clusterId", "flowName")
+	assert.NoError(t, errCreate)
+	errStart := manager.AsyncStart(context.TODO(), flow)
+	assert.NoError(t, errStart)
 }

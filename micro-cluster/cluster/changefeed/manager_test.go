@@ -44,7 +44,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestManager_Delete(t *testing.T) {
-	id, err := manager.Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
+	result, err := manager.Create(context.TODO(), cluster.CreateChangeFeedTaskReq{
 		ChangeFeedTask: cluster.ChangeFeedTask{
 			DownstreamType: "tidb",
 			Name: "name",
@@ -53,9 +53,9 @@ func TestManager_Delete(t *testing.T) {
 			},
 		},
 	})
-	assert.NotEmpty(t, id)
+	assert.NotEmpty(t, result)
 	assert.NoError(t, err)
-	err = manager.Delete(context.TODO(), id)
+	err = manager.Delete(context.TODO(), result.ID)
 	assert.NoError(t, err)
 }
 

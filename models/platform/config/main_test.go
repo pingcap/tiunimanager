@@ -11,26 +11,47 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package interceptor
+package config
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"os"
+	"testing"
 )
 
-// Tiem-X-Trace-ID
-func GinTraceIDHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id := c.GetHeader(framework.TiEM_X_TRACE_ID_KEY)
-		if len(id) <= 0 {
-			id = uuidutil.GenerateID()
-		}
-		c.Set(framework.TiEM_X_TRACE_ID_KEY, id)
-		c.Header(framework.TiEM_X_TRACE_ID_KEY, id)
-		c.Next()
-	}
+func TestMain(m *testing.M) {
+	testFilePath := "testdata/" + uuidutil.ShortId()
+	os.MkdirAll(testFilePath, 0755)
+
+	logins := framework.LogForkFile(common.LogFileSystem)
+
+	defer func() {
+		os.RemoveAll(testFilePath)
+		os.Remove(testFilePath)
+	}()
+
+	framework.InitBaseFrameworkForUt(framework.ClusterService,
+		func(d *framework.BaseFramework) error {
+			dbFile := testFilePath + common.DBDirPrefix + common.SqliteFileName
+			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+
+			if err != nil || db.Error != nil {
+				logins.Fatalf("open database failed, filepath: %s database error: %s, meta database error: %v", dbFile, err, db.Error)
+			} else {
+				logins.Infof("open database successful, filepath: %s", dbFile)
+			}
+			db.Migrator().CreateTable(SystemConfig{})
+
+			rw = NewConfigReadWrite(db)
+			return nil
+		},
+	)
+
+	os.Exit(m.Run())
 }

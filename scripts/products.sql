@@ -309,7 +309,7 @@ VALUES ('Aliyun','CN-BEIJING', 'TiDB', 'TiDB', '5.0.0', 'x86_64', 'Online', 0, d
 INSERT INTO products
 VALUES ('Aliyun','CN-BEIJING', 'TiDB', 'TiDB', '5.1.0', 'x86_64', 'Online', 0, datetime('now'), datetime('now'));
 INSERT INTO products
-VALUES ('Aliyun','CN-HANGZHOU', 'Enterprise Manager', 'Enterprise Manager', '1.0.0', 'x86_64', 'Online', 1, datetime('now'),
+VALUES ('Aliyun','CN-HANGZHOU', 'EnterpriseManager', 'EnterpriseManager', '1.0.0', 'x86_64', 'Online', 1, datetime('now'),
         datetime('now'));
 /**INSERT INTO products VALUES('CN-HANGZHOU','TiDB Data Migration','Data Migration','2.0.0','x86_64','UnAvailable',datetime('now'),datetime('now'));*/
 
@@ -395,18 +395,18 @@ VALUES ('BlackboxExporter', 'TiDB', '5.1.0', 'BlackboxExporter', 'Available', 'S
         datetime('now'), datetime('now'));
 
 INSERT INTO product_components
-VALUES ('cluster-server', 'Enterprise Manager', '1.0.0', 'cluster-server', 'Available', 'Schedule', 10000, 10400, 2, 1,
+VALUES ('cluster-server', 'EnterpriseManager', '1.0.0', 'cluster-server', 'Available', 'Schedule', 10000, 10400, 2, 1,
         1, datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('openapi-server', 'Enterprise Manager', '1.0.0', 'openapi-server', 'Available', 'Storage', 10000, 10400, 2, 1,
+VALUES ('openapi-server', 'EnterpriseManager', '1.0.0', 'openapi-server', 'Available', 'Storage', 10000, 10400, 2, 1,
         1, datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('Grafana', 'Enterprise Manager', '1.0.0', 'Monitor GUI', 'Available', 'Schedule', 10000, 10400, 2, 1, 1,
+VALUES ('Grafana', 'EnterpriseManager', '1.0.0', 'Monitor GUI', 'Available', 'Schedule', 10000, 10400, 2, 1, 1,
         datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('Prometheus', 'Enterprise Manager', '1.0.0', 'Monitor', 'Available', 'Schedule', 10000, 10400, 2, 1, 1,
+VALUES ('Prometheus', 'EnterpriseManager', '1.0.0', 'Monitor', 'Available', 'Schedule', 10000, 10400, 2, 1, 1,
         datetime('now'), datetime('now'));
 INSERT INTO product_components
-VALUES ('AlertManger', 'Enterprise Manager', '1.0.0', 'Alert GUI', 'Available', 'Schedule', 10000, 10400, 2, 1, 1,
+VALUES ('AlertManger', 'EnterpriseManager', '1.0.0', 'Alert GUI', 'Available', 'Schedule', 10000, 10400, 2, 1, 1,
         datetime('now'), datetime('now'));
 

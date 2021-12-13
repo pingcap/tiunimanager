@@ -443,7 +443,3 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 
 	return nil, framework.WrapError(common.TIEM_CLUSTER_NOT_FOUND, "", err)
 }
-
-func Create(ctx context.Context, template management.Cluster) (*ClusterMeta, error) {
-	return nil, nil
-}

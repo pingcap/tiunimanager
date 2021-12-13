@@ -29,7 +29,7 @@ type WorkFlowDefine struct {
 	ContextParser func(string) *FlowContext
 }
 
-type NodeExecutor func(task *workflow.WorkFlowNode, context *FlowContext) bool
+type NodeExecutor func(task *workflow.WorkFlowNode, context *FlowContext) error
 
 type NodeDefine struct {
 	Name         string
@@ -39,17 +39,12 @@ type NodeDefine struct {
 	Executor     NodeExecutor
 }
 
-func DefaultContextParser(s string) *FlowContext {
-	// todo parse context
-	return NewFlowContext(context.TODO())
-}
-
 func (define *WorkFlowDefine) getInstance(ctx context.Context, bizId string, data map[string]interface{}) *WorkFlowAggregation {
 	return &WorkFlowAggregation{
 		Flow: &workflow.WorkFlow{
 			Name:  define.FlowName,
 			BizID: bizId,
-			Entities: common.Entities{
+			Entity: common.Entity{
 				Status: constants.WorkFlowStatusInitializing,
 			},
 		},
@@ -59,25 +54,26 @@ func (define *WorkFlowDefine) getInstance(ctx context.Context, bizId string, dat
 	}
 }
 
+func (define *WorkFlowDefine) getNodeNameList() []string {
+	var nodeNames []string
+	node := define.TaskNodes["start"]
+
+	for node != nil && node.Name != "end" && node.Name != "fail" {
+		nodeNames = append(nodeNames, node.Name)
+		node = define.TaskNodes[node.SuccessEvent]
+	}
+	return nodeNames
+}
+
 func CompositeExecutor(executors ...NodeExecutor) NodeExecutor {
-	return func(node *workflow.WorkFlowNode, context *FlowContext) bool {
+	return func(node *workflow.WorkFlowNode, context *FlowContext) error {
 		for _, executor := range executors {
-			if executor(node, context) {
+			if err := executor(node, context); err == nil {
 				continue
 			} else {
-				return false
+				return err
 			}
 		}
-		return true
+		return nil
 	}
-}
-
-func defaultEnd(node *workflow.WorkFlowNode, context *FlowContext) bool {
-	node.Status = constants.WorkFlowStatusFinished
-	return true
-}
-
-func defaultFail(node *workflow.WorkFlowNode, context *FlowContext) bool {
-	node.Status = constants.WorkFlowStatusError
-	return true
 }

@@ -17,13 +17,13 @@
 package flowtask
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/pingcap-inc/tiem/library/client"
-	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/message"
 	"github.com/pingcap-inc/tiem/micro-api/controller"
 	"net/http"
-	"strconv"
 )
 
 // Query query flow works
@@ -33,43 +33,29 @@ import (
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param queryReq query QueryReq false "query request"
-// @Success 200 {object} controller.ResultWithPage{data=[]FlowWorkDisplayInfo}
+// @Param queryReq query message.QueryWorkFlowsReq false "query request"
+// @Success 200 {object} controller.ResultWithPage{data=message.QueryWorkFlowsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /flowworks/ [get]
+// @Router /workflow/ [get]
 func Query(c *gin.Context) {
-	var queryReq QueryReq
-	if err := c.ShouldBindQuery(&queryReq); err != nil {
-		_ = c.Error(err)
+	var request message.QueryWorkFlowsReq
+
+	if err := c.ShouldBindQuery(&request); err != nil {
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	reqDTO := &clusterpb.ListFlowsRequest{
-		BizId:   queryReq.ClusterId,
-		Keyword: queryReq.Keyword,
-		Status:  int64(queryReq.Status),
-		Page:    queryReq.PageRequest.ConvertToDTO(),
-	}
-
-	respDTO, err := client.ClusterClient.ListFlows(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
-
+	body, err := json.Marshal(request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
-	} else {
-		status := respDTO.GetStatus()
-
-		flows := make([]FlowWorkDisplayInfo, len(respDTO.Flows))
-
-		for i, v := range respDTO.Flows {
-			flows[i] = ParseFlowFromDTO(v)
-		}
-
-		result := controller.BuildResultWithPage(int(status.Code), status.Message, controller.ParsePageFromDTO(respDTO.Page), flows)
-
-		c.JSON(http.StatusOK, result)
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
+
+	controller.InvokeRpcMethod(c, client.ClusterClient.ListFlows, &message.QueryWorkFlowsResp{}, string(body), controller.DefaultTimeout)
 }
 
 // Detail show details of a flow work
@@ -79,33 +65,49 @@ func Query(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param flowWorkId path int true "flow work id"
-// @Success 200 {object} controller.CommonResult{data=FlowWorkDetailInfo}
+// @Param workFlowId path int true "flow work id"
+// @Success 200 {object} controller.CommonResult{data=message.QueryWorkFlowDetailResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /flowworks/{flowWorkId} [get]
+// @Router /workflow/{workFlowId} [get]
 func Detail(c *gin.Context) {
-	//operator := controller.GetOperator(c)
-	flowWorkId, err := strconv.Atoi(c.Param("flowWorkId"))
+	var request = message.QueryWorkFlowDetailReq{
+		WorkFlowID: c.Param("workFlowId"),
+	}
 
+	body, err := json.Marshal(request)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+		framework.LogWithContext(c).Errorf("parse parameter error: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	reqDTO := &clusterpb.DetailFlowRequest {
-		FlowId: int64(flowWorkId),
-	}
 
-	respDTO, err := client.ClusterClient.DetailFlow(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
+	controller.InvokeRpcMethod(c, client.ClusterClient.DetailFlow, &message.QueryWorkFlowDetailResp{}, string(body), controller.DefaultTimeout)
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
-	} else {
-		status := respDTO.GetStatus()
+	/*
+		//operator := controller.GetOperator(c)
+		flowWorkId, err := strconv.Atoi(c.Param("flowWorkId"))
 
-		result := controller.BuildCommonResult(int(status.Code), status.Message, ParseFlowWorkDetailInfoFromDTO(respDTO.Flow))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
+			return
+		}
+		reqDTO := &clusterpb.DetailFlowRequest{
+			FlowId: int64(flowWorkId),
+		}
 
-		c.JSON(http.StatusOK, result)
-	}
+		respDTO, err := client.ClusterClient.DetailFlow(framework.NewMicroCtxFromGinCtx(c), reqDTO, controller.DefaultTimeout)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, controller.Fail(500, err.Error()))
+		} else {
+			status := respDTO.GetStatus()
+
+			result := controller.BuildCommonResult(int(status.Code), status.Message, ParseFlowWorkDetailInfoFromDTO(respDTO.Flow))
+
+			c.JSON(http.StatusOK, result)
+		}
+
+	*/
 }

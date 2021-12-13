@@ -27,7 +27,7 @@ var rw *BRReadWrite
 
 func TestBRReadWrite_CreateBackupRecord(t *testing.T) {
 	record := &BackupRecord{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "BackupInitStatus",
 		},
@@ -47,7 +47,7 @@ func TestBRReadWrite_CreateBackupRecord(t *testing.T) {
 
 func TestBRReadWrite_GetBackupRecord(t *testing.T) {
 	record := &BackupRecord{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "BackupInitStatus",
 		},
@@ -73,7 +73,7 @@ func TestBRReadWrite_GetBackupRecord(t *testing.T) {
 
 func TestBRReadWrite_UpdateBackupRecord(t *testing.T) {
 	record := &BackupRecord{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "BackupInitStatus",
 		},
@@ -107,7 +107,7 @@ func TestBRReadWrite_UpdateBackupRecord(t *testing.T) {
 
 func TestBRReadWrite_QueryBackupRecords(t *testing.T) {
 	record := &BackupRecord{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "BackupInitStatus",
 		},
@@ -124,7 +124,7 @@ func TestBRReadWrite_QueryBackupRecords(t *testing.T) {
 	recordCreate, errCreate := rw.CreateBackupRecord(context.TODO(), record)
 	assert.NoError(t, errCreate)
 
-	recordQuery, total, errQuery := rw.QueryBackupRecords(context.TODO(), "", recordCreate.ID, time.Unix(0, 0), time.Unix(0, 0), 1, 10)
+	recordQuery, total, errQuery := rw.QueryBackupRecords(context.TODO(), "", recordCreate.ID, "", time.Unix(0, 0), time.Unix(0, 0), 1, 10)
 	assert.NoError(t, errQuery)
 	assert.Equal(t, int64(1), total)
 	assert.Equal(t, recordCreate.ID, recordQuery[0].ID)
@@ -134,7 +134,7 @@ func TestBRReadWrite_QueryBackupRecords(t *testing.T) {
 
 func TestBRReadWrite_DeleteBackupRecord(t *testing.T) {
 	record := &BackupRecord{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "BackupInitStatus",
 		},
@@ -161,7 +161,7 @@ func TestBRReadWrite_DeleteBackupRecord(t *testing.T) {
 
 func TestBRReadWrite_CreateBackupStrategy(t *testing.T) {
 	strategy := &BackupStrategy{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "BackupInitStatus",
 		},
@@ -176,7 +176,7 @@ func TestBRReadWrite_CreateBackupStrategy(t *testing.T) {
 
 func TestBRReadWrite_GetBackupStrategy(t *testing.T) {
 	strategy := &BackupStrategy{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "BackupInitStatus",
 		},
@@ -199,7 +199,7 @@ func TestBRReadWrite_GetBackupStrategy(t *testing.T) {
 
 func TestBRReadWrite_QueryBackupStrategy(t *testing.T) {
 	strategy := &BackupStrategy{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "BackupInitStatus",
 		},
@@ -218,7 +218,7 @@ func TestBRReadWrite_QueryBackupStrategy(t *testing.T) {
 
 func TestBRReadWrite_DeleteBackupStrategy(t *testing.T) {
 	strategy := &BackupStrategy{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "BackupInitStatus",
 		},

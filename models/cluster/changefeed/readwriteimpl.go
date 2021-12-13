@@ -49,9 +49,7 @@ func (m *GormChangeFeedReadWrite) Delete(ctx context.Context, taskId string) (er
 	if "" == taskId {
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
-	task := &ChangeFeedTask{
-		Type: DownstreamTypeMysql,
-	}
+	task := &ChangeFeedTask{}
 
 	return m.DB(ctx).First(task, "id = ?", taskId).Delete(task).Error
 }
@@ -80,7 +78,7 @@ func (m *GormChangeFeedReadWrite) LockStatus(ctx context.Context, taskId string)
 }
 
 
-func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId string, targetStatus int8) error {
+func (m *GormChangeFeedReadWrite) UnlockStatus(ctx context.Context, taskId string, targetStatus string) error {
 	if "" == taskId {
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}

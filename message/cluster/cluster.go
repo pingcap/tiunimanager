@@ -24,6 +24,7 @@
 package cluster
 
 import (
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 )
 
@@ -82,20 +83,20 @@ type ScaleInClusterReq struct {
 
 // ScaleInClusterResp Reply message for delete an instance in the cluster
 type ScaleInClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterID"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID                     string `json:"clusterId"`
 }
 
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
 	ClusterID                        string `json:"clusterId" form:"clusterId"`
-	structs.ClusterResourceParameter `json:"resourceParameter"`
+	structs.ClusterResourceParameter
 }
 
 // ScaleOutClusterResp Reply message for cluster expansion operation
 type ScaleOutClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterID"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID                     string `json:"clusterId"`
 }
 
 //RestoreNewClusterReq Restore to a new cluster message using the backup file
@@ -110,30 +111,29 @@ type RestoreNewClusterResp struct {
 	ClusterID                     string `json:"clusterID"`
 }
 
-//RestoreOldClusterReq Restore to a old cluster message using the backup file
-type RestoreOldClusterReq struct {
+//RestoreExistClusterReq Restore to exist cluster message using the backup file
+type RestoreExistClusterReq struct {
 	ClusterID string `json:"clusterID"`
 	BackupID  string `json:"backupID"`
 }
 
-//RestoreOldClusterResp Restore to a new cluster using the backup file Reply Message
-type RestoreOldClusterResp struct {
+//RestoreExistClusterResp Restore to exist cluster using the backup file Reply Message
+type RestoreExistClusterResp struct {
 	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterID"`
 }
 
 // CloneClusterReq Message for clone a new cluster
 type CloneClusterReq struct {
 	structs.CreateClusterParameter
-	ParamGroupID    int64  `json:"paramGroupID"`    // specify cloned cluster parameter group id(option)
-	CloneStrategy   string `json:"cloneStrategy"`   // specify clone strategy, include empty, snapshot and sync, default empty(option)
-	SourceClusterID string `json:"sourceClusterID"` // specify source cluster id(require)
+	ParamGroupID    int64                          `json:"paramGroupId"`    // specify cloned cluster parameter group id(option)
+	CloneStrategy   constants.ClusterCloneStrategy `json:"cloneStrategy"`   // specify clone strategy, include empty, snapshot and sync, default empty(option)
+	SourceClusterID string                         `json:"sourceClusterId"` // specify source cluster id(require)
 }
 
 // CloneClusterResp Reply message for clone a new cluster
 type CloneClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
-	ClusterID                     string `json:"clusterID"`
+	structs.AsyncTaskWorkFlowInfo
+	ClusterID                     string `json:"clusterId"`
 }
 
 // MasterSlaveClusterSwitchoverReq Master and slave cluster switchover messages

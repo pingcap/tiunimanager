@@ -27,7 +27,7 @@ var rw *WorkFlowReadWrite
 
 func TestFlowReadWrite_CreateWorkFlow(t *testing.T) {
 	flow := &WorkFlow{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "FlowInitStatus",
 		},
@@ -40,7 +40,7 @@ func TestFlowReadWrite_CreateWorkFlow(t *testing.T) {
 
 func TestFlowReadWrite_GetWorkFlow(t *testing.T) {
 	flow := &WorkFlow{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "FlowInitStatus",
 		},
@@ -57,7 +57,7 @@ func TestFlowReadWrite_GetWorkFlow(t *testing.T) {
 
 func TestFlowReadWrite_QueryWorkFlows(t *testing.T) {
 	flow := &WorkFlow{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "FlowInitStatus",
 		},
@@ -73,9 +73,9 @@ func TestFlowReadWrite_QueryWorkFlows(t *testing.T) {
 	assert.NoError(t, errQuery)
 }
 
-func TestFlowReadWrite_UpdateWorkFlowStatus(t *testing.T) {
+func TestFlowReadWrite_UpdateWorkFlow(t *testing.T) {
 	flow := &WorkFlow{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "FlowInitStatus",
 		},
@@ -99,7 +99,7 @@ func TestFlowReadWrite_UpdateWorkFlowStatus(t *testing.T) {
 
 func TestFlowReadWrite_DetailWorkFlow(t *testing.T) {
 	flow := &WorkFlow{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "FlowInitStatus",
 		},
@@ -110,7 +110,7 @@ func TestFlowReadWrite_DetailWorkFlow(t *testing.T) {
 	assert.NoError(t, errFlowCreate)
 
 	node := &WorkFlowNode{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "NodeInitStatus",
 		},
@@ -133,7 +133,7 @@ func TestFlowReadWrite_DetailWorkFlow(t *testing.T) {
 
 func TestFlowReadWrite_CreateWorkFlowNode(t *testing.T) {
 	node := &WorkFlowNode{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "NodeInitStatus",
 		},
@@ -151,7 +151,7 @@ func TestFlowReadWrite_CreateWorkFlowNode(t *testing.T) {
 
 func TestFlowReadWrite_UpdateWorkFlowNode(t *testing.T) {
 	node := &WorkFlowNode{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "NodeInitStatus",
 		},
@@ -180,7 +180,7 @@ func TestFlowReadWrite_UpdateWorkFlowNode(t *testing.T) {
 
 func TestFlowReadWrite_UpdateWorkFlowDetail(t *testing.T) {
 	flow := &WorkFlow{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "FlowInitStatus",
 		},
@@ -192,7 +192,7 @@ func TestFlowReadWrite_UpdateWorkFlowDetail(t *testing.T) {
 	assert.NoError(t, errFlowCreate)
 
 	node := &WorkFlowNode{
-		Entities: common.Entities{
+		Entity: common.Entity{
 			TenantId: "tenantId",
 			Status:   "NodeInitStatus",
 		},

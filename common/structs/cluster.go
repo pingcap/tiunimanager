@@ -29,7 +29,7 @@ import "time"
 type ClusterResourceParameterComputeResource struct {
 	Zone         string `json:"zoneCode"` //
 	DiskType     string `json:"diskType"` //NVMeSSD/SSD/SATA
-	DiskCapacity string `json:"diskCapacity"`
+	DiskCapacity int    `json:"diskCapacity"`
 	Spec         string `json:"specCode"` //4C8G/8C16G ?
 	Count        int    `json:"count"`
 }
@@ -54,7 +54,7 @@ type CreateClusterParameter struct {
 	Type            string   `json:"clusterType"`
 	Version         string   `json:"clusterVersion"`
 	Tags            []string `json:"tags"`
-	Tls             bool     `json:"tls"`
+	TLS             bool     `json:"tls"`
 	Copies          int      `json:"copies"`                                 //The number of copies of the newly created cluster data, consistent with the number of copies set in PD
 	Exclusive       bool     `json:"exclusive" form:"exclusive"`             //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
 	Region          string   `json:"region" form:"region"`                   //The Region where the cluster is located
@@ -119,10 +119,9 @@ type ClusterTopologyInfo struct {
 
 // BackupStrategy Timed or scheduled data backup strategy
 type BackupStrategy struct {
-	ClusterID      string    `json:"clusterId"`
-	BackupDate     string    `json:"backupDate"`
-	Period         string    `json:"period"`
-	NextBackupTime time.Time `json:"nextBackupTime"`
+	ClusterID  string `json:"clusterId"`
+	BackupDate string `json:"backupDate"`
+	Period     string `json:"period"`
 }
 
 // BackupRecord Single backup file details

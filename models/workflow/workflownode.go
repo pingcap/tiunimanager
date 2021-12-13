@@ -24,7 +24,7 @@ import (
 
 // WorkFlowNode work flow node infomation
 type WorkFlowNode struct {
-	common.Entities
+	common.Entity
 	BizID      string `gorm:"default:null;<-:create"`
 	ParentID   string `gorm:"default:null;index;comment:'ID of the workflow parent node'"`
 	Name       string `gorm:"default:null;comment:'name of the workflow node'"`
@@ -36,13 +36,13 @@ type WorkFlowNode struct {
 }
 
 func (node *WorkFlowNode) Processing() {
-	node.Status = string(constants.WorkFlowStatusProcessing)
+	node.Status = constants.WorkFlowStatusProcessing
 }
 
 var defaultSuccessInfo = "success"
 
 func (node *WorkFlowNode) Success(result ...interface{}) {
-	node.Status = string(constants.WorkFlowStatusFinished)
+	node.Status = constants.WorkFlowStatusFinished
 	node.EndTime = time.Now()
 
 	if result == nil {
@@ -58,7 +58,7 @@ func (node *WorkFlowNode) Success(result ...interface{}) {
 }
 
 func (node *WorkFlowNode) Fail(e error) {
-	node.Status = string(constants.WorkFlowStatusError)
+	node.Status = constants.WorkFlowStatusError
 	node.EndTime = time.Now()
 	node.Result = e.Error()
 }

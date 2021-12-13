@@ -57,7 +57,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupDeploy(ctx context.Context, tiupComp
 		deployReq.ConfigStrYaml = configStrYaml
 		deployReq.TimeoutS = timeoutS
 		deployReq.Flags = flags
-		deployReq.TiupPath = secondMicro.TiupBinPath
+		deployReq.TiUPPath = secondMicro.TiupBinPath
 		deployReq.TaskID = rsp.Id
 		secondMicro.startNewTiupDeployTask(ctx, deployReq.TaskID, &deployReq)
 		return rsp.Id, nil
@@ -80,7 +80,7 @@ func (secondMicro *SecondMicro) startNewTiupDeployTask(ctx context.Context, task
 		args = append(args, string(req.TiUPComponent), "deploy", req.InstanceName, req.Version, topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiUPPath, args, req.TimeoutS)
 	}()
 }
 
@@ -100,7 +100,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupScaleOut(ctx context.Context, tiupCo
 		scaleOutReq.ConfigStrYaml = configStrYaml
 		scaleOutReq.TimeoutS = timeoutS
 		scaleOutReq.Flags = flags
-		scaleOutReq.TiupPath = secondMicro.TiupBinPath
+		scaleOutReq.TiUPPath = secondMicro.TiupBinPath
 		scaleOutReq.TaskID = rsp.Id
 		secondMicro.startNewTiupScaleOutTask(ctx, scaleOutReq.TaskID, &scaleOutReq)
 		return rsp.Id, nil
@@ -124,7 +124,7 @@ func (secondMicro *SecondMicro) startNewTiupScaleOutTask(ctx context.Context, ta
 		args = append(args, string(req.TiUPComponent), "scale-out", req.InstanceName, topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiUPPath, args, req.TimeoutS)
 	}()
 }
 
@@ -144,7 +144,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupScaleIn(ctx context.Context, tiupCom
 		scaleInReq.NodeId = nodeId
 		scaleInReq.TimeoutS = timeoutS
 		scaleInReq.Flags = flags
-		scaleInReq.TiupPath = secondMicro.TiupBinPath
+		scaleInReq.TiUPPath = secondMicro.TiupBinPath
 		scaleInReq.TaskID = rsp.Id
 		secondMicro.startNewTiupScaleInTask(ctx, scaleInReq.TaskID, &scaleInReq)
 		return rsp.Id, nil
@@ -157,7 +157,7 @@ func (secondMicro *SecondMicro) startNewTiupScaleInTask(ctx context.Context, tas
 		var args []string
 		args = append(args, string(req.TiUPComponent), "scale-in", req.InstanceName, "--node", req.NodeId)
 		args = append(args, req.Flags...)
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiUPPath, args, req.TimeoutS)
 	}()
 }
 
@@ -176,7 +176,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupStart(ctx context.Context, tiupCompo
 		req.TaskID = rsp.Id
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
-		req.TiupPath = secondMicro.TiupBinPath
+		req.TiUPPath = secondMicro.TiupBinPath
 		req.Flags = flags
 		secondMicro.startNewTiupStartTask(ctx, req.TaskID, &req)
 		return rsp.Id, nil
@@ -189,7 +189,7 @@ func (secondMicro *SecondMicro) startNewTiupStartTask(ctx context.Context, taskI
 		args = append(args, string(req.TiUPComponent), "start", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiUPPath, args, req.TimeoutS)
 	}()
 }
 
@@ -210,7 +210,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupRestart(ctx context.Context, tiupCom
 		req.TaskID = rsp.Id
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
-		req.TiupPath = secondMicro.TiupBinPath
+		req.TiUPPath = secondMicro.TiupBinPath
 		req.Flags = flags
 		secondMicro.startNewTiupRestartTask(ctx, req.TaskID, &req)
 		return rsp.Id, nil
@@ -223,7 +223,7 @@ func (secondMicro *SecondMicro) startNewTiupRestartTask(ctx context.Context, tas
 		args = append(args, string(req.TiUPComponent), "restart", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiUPPath, args, req.TimeoutS)
 	}()
 }
 
@@ -242,7 +242,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupStop(ctx context.Context, tiupCompon
 		req.TaskID = rsp.Id
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
-		req.TiupPath = secondMicro.TiupBinPath
+		req.TiUPPath = secondMicro.TiupBinPath
 		req.Flags = flags
 		secondMicro.startNewTiupStopTask(ctx, req.TaskID, &req)
 		return rsp.Id, nil
@@ -255,7 +255,7 @@ func (secondMicro *SecondMicro) startNewTiupStopTask(ctx context.Context, taskID
 		args = append(args, string(req.TiUPComponent), "stop", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiUPPath, args, req.TimeoutS)
 	}()
 }
 
@@ -264,7 +264,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupList(ctx context.Context, tiupCompon
 	var req CmdListReq
 	req.TiUPComponent = tiupComponent
 	req.TimeoutS = timeoutS
-	req.TiupPath = secondMicro.TiupBinPath
+	req.TiUPPath = secondMicro.TiupBinPath
 	req.Flags = flags
 	cmdListResp, err := secondMicro.startNewTiupListTask(ctx, &req)
 	return &cmdListResp, err
@@ -277,15 +277,15 @@ func (secondMicro *SecondMicro) startNewTiupListTask(ctx context.Context, req *C
 	args = append(args, "--yes")
 
 	logInFunc := framework.LogWithContext(ctx)
-	logInFunc.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
+	logInFunc.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiUPPath, args, req.TimeoutS))
 	var cmd *exec.Cmd
 	var cancelFp context.CancelFunc
 	if req.TimeoutS != 0 {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(req.TimeoutS)*time.Second)
 		cancelFp = cancel
-		cmd = exec.CommandContext(ctx, req.TiupPath, args...)
+		cmd = exec.CommandContext(ctx, req.TiUPPath, args...)
 	} else {
-		cmd = exec.Command(req.TiupPath, args...)
+		cmd = exec.Command(req.TiUPPath, args...)
 		cancelFp = func() {}
 	}
 	defer cancelFp()
@@ -318,7 +318,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupDestroy(ctx context.Context, tiupCom
 		req.TaskID = rsp.Id
 		req.InstanceName = instanceName
 		req.TimeoutS = timeoutS
-		req.TiupPath = secondMicro.TiupBinPath
+		req.TiUPPath = secondMicro.TiupBinPath
 		req.Flags = flags
 		secondMicro.startNewTiupDestroyTask(ctx, req.TaskID, &req)
 		return rsp.Id, nil
@@ -331,7 +331,7 @@ func (secondMicro *SecondMicro) startNewTiupDestroyTask(ctx context.Context, tas
 		args = append(args, string(req.TiUPComponent), "destroy", req.InstanceName)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiUPPath, args, req.TimeoutS)
 	}()
 }
 
@@ -348,7 +348,7 @@ func (secondMicro *SecondMicro) MicroSrvDumpling(ctx context.Context, timeoutS i
 		var dumplingReq CmdDumplingReq
 		dumplingReq.TaskID = rsp.Id
 		dumplingReq.TimeoutS = timeoutS
-		dumplingReq.TiupPath = secondMicro.TiupBinPath
+		dumplingReq.TiUPPath = secondMicro.TiupBinPath
 		dumplingReq.Flags = flags
 		secondMicro.startNewTiupDumplingTask(ctx, dumplingReq.TaskID, &dumplingReq)
 		return rsp.Id, nil
@@ -360,7 +360,7 @@ func (secondMicro *SecondMicro) startNewTiupDumplingTask(ctx context.Context, ta
 		var args []string
 		args = append(args, "dumpling")
 		args = append(args, req.Flags...)
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiUPPath, args, req.TimeoutS)
 	}()
 }
 
@@ -377,7 +377,7 @@ func (secondMicro *SecondMicro) MicroSrvLightning(ctx context.Context, timeoutS 
 		var lightningReq CmdLightningReq
 		lightningReq.TaskID = rsp.Id
 		lightningReq.TimeoutS = timeoutS
-		lightningReq.TiupPath = secondMicro.TiupBinPath
+		lightningReq.TiUPPath = secondMicro.TiupBinPath
 		lightningReq.Flags = flags
 		secondMicro.startNewTiupLightningTask(ctx, lightningReq.TaskID, &lightningReq)
 		return rsp.Id, nil
@@ -389,7 +389,7 @@ func (secondMicro *SecondMicro) startNewTiupLightningTask(ctx context.Context, t
 		var args []string
 		args = append(args, "tidb-lightning")
 		args = append(args, req.Flags...)
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiUPPath, args, req.TimeoutS)
 	}()
 }
 
@@ -399,7 +399,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupDisplay(ctx context.Context, tiupCom
 	req.TiUPComponent = tiupComponent
 	req.InstanceName = instanceName
 	req.TimeoutS = timeoutS
-	req.TiupPath = secondMicro.TiupBinPath
+	req.TiUPPath = secondMicro.TiupBinPath
 	req.Flags = flags
 	cmdDisplayResp, err := secondMicro.startNewTiupDisplayTask(ctx, &req)
 	return &cmdDisplayResp, err
@@ -412,15 +412,15 @@ func (secondMicro *SecondMicro) startNewTiupDisplayTask(ctx context.Context, req
 	args = append(args, req.Flags...)
 
 	logInFunc := framework.LogWithContext(ctx)
-	logInFunc.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiupPath, args, req.TimeoutS))
+	logInFunc.Info("task start processing:", fmt.Sprintf("tiupPath:%s tiupArgs:%v timeouts:%d", req.TiUPPath, args, req.TimeoutS))
 	var cmd *exec.Cmd
 	var cancelFp context.CancelFunc
 	if req.TimeoutS != 0 {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(req.TimeoutS)*time.Second)
 		cancelFp = cancel
-		cmd = exec.CommandContext(ctx, req.TiupPath, args...)
+		cmd = exec.CommandContext(ctx, req.TiUPPath, args...)
 	} else {
-		cmd = exec.Command(req.TiupPath, args...)
+		cmd = exec.Command(req.TiUPPath, args...)
 		cancelFp = func() {}
 	}
 	defer cancelFp()
@@ -455,7 +455,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupTransfer(ctx context.Context, tiupCo
 		req.RemotePath = remotePath
 		req.TimeoutS = timeoutS
 		req.Flags = flags
-		req.TiupPath = secondMicro.TiupBinPath
+		req.TiUPPath = secondMicro.TiupBinPath
 		req.TaskID = rsp.Id
 		secondMicro.startNewTiupTransferTask(ctx, req.TaskID, &req)
 		return rsp.Id, nil
@@ -477,7 +477,7 @@ func (secondMicro *SecondMicro) startNewTiupTransferTask(ctx context.Context, ta
 		args = append(args, string(req.TiUPComponent), "push", req.InstanceName, collectorTmpFilePath, req.RemotePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiUPPath, args, req.TimeoutS)
 	}()
 }
 
@@ -501,7 +501,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupUpgrade(ctx context.Context, tiupCom
 		req.Version = version
 		req.TimeoutS = timeoutS
 		req.Flags = flags
-		req.TiupPath = secondMicro.TiupBinPath
+		req.TiUPPath = secondMicro.TiupBinPath
 		req.TaskID = rsp.Id
 		secondMicro.startNewTiupUpgradeTask(ctx, req.TaskID, &req)
 		return rsp.Id, nil
@@ -514,7 +514,7 @@ func (secondMicro *SecondMicro) startNewTiupUpgradeTask(ctx context.Context, tas
 		args = append(args, string(req.TiUPComponent), "upgrade", req.InstanceName, req.Version)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
-		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiupPath, args, req.TimeoutS)
+		<-secondMicro.startNewTiupTask(ctx, taskID, req.TiUPPath, args, req.TimeoutS)
 	}()
 }
 
@@ -539,8 +539,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupShowConfig(ctx context.Context, req 
 	}
 	defer cancelFp()
 	cmd.SysProcAttr = genSysProcAttr()
-	var out, stderr bytes.Buffer
-	cmd.Stdout = &out
+	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	var data []byte
 	if data, err = cmd.Output(); err != nil {
@@ -550,12 +549,13 @@ func (secondMicro *SecondMicro) MicroSrvTiupShowConfig(ctx context.Context, req 
 	}
 
 	topoStr := string(data)
-	topo := spec2.Specification{}
+	topo := &spec2.Specification{}
 	if err = yaml.UnmarshalStrict([]byte(topoStr), topo); err != nil {
 		logInFunc.Errorf("parse original config(%s) error: %+v", topoStr, err)
 		return
 	}
 
+	resp = &CmdShowConfigResp{topo}
 	resp.TiDBClusterTopo = topo
 	return
 }
@@ -589,7 +589,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditGlobalConfig(ctx context.Context
 	}
 	topo := cmdShowConfigResp.TiDBClusterTopo
 
-	secondMicro.startTiupEditGlobalConfigTask(ctx, rsp.Id, &cmdEditGlobalConfigReq, &topo)
+	secondMicro.startTiupEditGlobalConfigTask(ctx, rsp.Id, &cmdEditGlobalConfigReq, topo)
 	return rsp.Id, nil
 }
 
@@ -680,7 +680,7 @@ func (secondMicro *SecondMicro) MicroSrvTiupEditInstanceConfig(ctx context.Conte
 	}
 	topo := cmdShowConfigResp.TiDBClusterTopo
 
-	secondMicro.startTiupEditInstanceConfigTask(ctx, rsp.Id, &cmdEditInstanceConfigReq, &topo)
+	secondMicro.startTiupEditInstanceConfigTask(ctx, rsp.Id, &cmdEditInstanceConfigReq, topo)
 	return rsp.Id, nil
 }
 
@@ -843,7 +843,7 @@ func (secondMicro *SecondMicro) startNewTiupEditConfigTask(ctx context.Context, 
 	go func() {
 		//defer os.Remove(topologyTmpFilePath)
 		var args []string
-		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "-f", topologyTmpFilePath)
+		args = append(args, string(req.TiUPComponent), "edit-config", req.InstanceName, "--topology-file", topologyTmpFilePath)
 		args = append(args, req.Flags...)
 		args = append(args, "--yes")
 		<-secondMicro.startNewTiupTask(ctx, taskID, secondMicro.TiupBinPath, args, req.TimeoutS)

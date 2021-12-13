@@ -46,11 +46,9 @@ const paramNameOfClusterID = "clusterId"
 // @Failure 500 {object} controller.CommonResult
 // @Router /clusters/:clusterId/upgrade/path [get]
 func QueryUpgradePaths(c *gin.Context) {
-	requestBody, err := controller.HandleJsonRequestWithBuiltReq(c, &upgrade.QueryUpgradePathReq{
+	if requestBody, ok := controller.HandleJsonRequestWithBuiltReq(c, &upgrade.QueryUpgradePathReq{
 		ClusterID: c.Param(paramNameOfClusterID),
-	})
-
-	if err == nil {
+	}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryProductUpgradePath, &upgrade.QueryUpgradePathRsp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -73,16 +71,13 @@ func QueryUpgradePaths(c *gin.Context) {
 // @Router /clusters/:clusterId/upgrade/diff [get]
 func QueryUpgradeVersionDiffInfo(c *gin.Context) {
 	var req upgrade.QueryUpgradeVersionDiffInfoReq
-
-	requestBody, err := controller.HandleJsonRequestFromBody(c,
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
 		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
 			req.(*upgrade.QueryUpgradeVersionDiffInfoReq).ClusterID = c.Param(paramNameOfClusterID)
 			return nil
-		})
-
-	if err == nil {
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.QueryUpgradeVersionDiffInfo, &upgrade.QueryUpgradeVersionDiffInfoRsp{},
 			requestBody,
 			controller.DefaultTimeout)
@@ -91,16 +86,13 @@ func QueryUpgradeVersionDiffInfo(c *gin.Context) {
 
 func ClusterUpgrade(c *gin.Context) {
 	var req upgrade.ClusterUpgradeReq
-
-	requestBody, err := controller.HandleJsonRequestFromBody(c,
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c,
 		&req,
 		// append id in path to request
 		func(c *gin.Context, req interface{}) error {
 			req.(*upgrade.ClusterUpgradeReq).ClusterID = c.Param(paramNameOfClusterID)
 			return nil
-		})
-
-	if err == nil {
+		}); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.ClusterUpgrade, &upgrade.ClusterUpgradeRsp{},
 			requestBody,
 			controller.DefaultTimeout)

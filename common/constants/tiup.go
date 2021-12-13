@@ -6,20 +6,21 @@
  *                                                                            *
  * http://www.apache.org/licenses/LICENSE-2.0                                 *
  *                                                                            *
- * Unless required by applicable law or agreed to in writing, software        *
- * distributed under the License is distributed on an "AS IS" BASIS,          *
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
- * See the License for the specific language governing permissions and        *
- * limitations under the License.                                             *
+ *  Unless required by applicable law or agreed to in writing, software       *
+ *  distributed under the License is distributed on an "AS IS" BASIS,         *
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  *
+ *  See the License for the specific language governing permissions and       *
+ *  limitations under the License.                                            *
  ******************************************************************************/
 
-package workflow
+/*******************************************************************************
+ * @File: tiup.go
+ * @Description:
+ * @Author: shenhaibo@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/12
+*******************************************************************************/
 
-import (
-	"github.com/pingcap-inc/tiem/models"
-	"testing"
-)
+package constants
 
-func TestMain(m *testing.M) {
-	models.MockDB()
-}
+const TiUPBinPath = "tiup"

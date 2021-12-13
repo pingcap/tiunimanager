@@ -22,7 +22,7 @@ import (
 
 // BackupRecord backup record information
 type BackupRecord struct {
-	common.Entities
+	common.Entity
 	StorageType  string `gorm:"not null"`
 	ClusterID    string `gorm:"not null;type:varchar(22);default:null"`
 	BackupType   string
@@ -30,7 +30,7 @@ type BackupRecord struct {
 	BackupMode   string
 	FilePath     string
 	Size         uint64
-	BackupTso    int64
+	BackupTso    uint64
 	StartTime    time.Time
 	EndTime      time.Time
 }

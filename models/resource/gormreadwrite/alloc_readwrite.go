@@ -440,7 +440,7 @@ func (rw *GormResourceReadWrite) markResourcesForUsed(tx *gorm.DB, applicant *re
 					return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "update disk(%s) status err, %v", resource.DiskId, err)
 				}
 			} else {
-				return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "disk %s status not expected(%d)", resource.DiskId, disk.Status)
+				return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "disk %s status not expected(%s)", resource.DiskId, disk.Status)
 			}
 			usedDisk := mm.UsedDisk{
 				DiskId:   resource.DiskId,

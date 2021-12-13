@@ -159,7 +159,7 @@ func (rw *GormResourceReadWrite) recycleResourcesInHosts(ctx context.Context, tx
 				return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "update disk(%s) status while recycle failed, %v", diskId, err)
 			}
 		} else {
-			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "disk %s status not expected(%d) while recycle", diskId, disk.Status)
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_SQL_ERROR, "disk %s status not expected(%s) while recycle", diskId, disk.Status)
 		}
 	}
 	for _, usedCompute := range usedCompute {

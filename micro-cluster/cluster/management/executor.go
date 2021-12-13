@@ -166,7 +166,7 @@ func clusterEnd(node *workflowModel.WorkFlowNode, context *workflow.FlowContext)
 	return nil
 }
 
-func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 	yamlConfig := context.GetData(ContextTopology).(string)
@@ -179,15 +179,13 @@ func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] deploy error: %s", clusterMeta.Cluster.Name, err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
 	framework.LogWithContext(context.Context).Infof("get deploy cluster task id: %d", taskId)
-	node.Success(nil)
-	return true
+	return nil
 }
 
-func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 
@@ -199,15 +197,13 @@ func startCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContex
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] start error: %s", clusterMeta.Cluster.Name, err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
 	framework.LogWithContext(context.Context).Infof("get start cluster task id: %d", taskId)
-	node.Success(nil)
-	return true
+	return nil
 }
 
-func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 
@@ -220,15 +216,13 @@ func stopCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] stop error: %s", clusterMeta.Cluster.Name, err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
 	framework.LogWithContext(context.Context).Infof("get stop cluster task id: %d", taskId)
-	node.Success(nil)
-	return true
+	return nil
 }
 
-func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 
@@ -241,27 +235,23 @@ func destroyCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCont
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] destroy error: %s", clusterMeta.Cluster.Name, err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
 	framework.LogWithContext(context.Context).Infof("get destroy cluster task id: %d", taskId)
-	node.Success(nil)
-	return true
+	return nil
 }
 
-func freedResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+func freedResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	err := clusterMeta.FreedInstanceResource(context)
 
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] freed resource error: %s", clusterMeta.Cluster.Name, err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
 	framework.LogWithContext(context.Context).Infof(
 		"cluster[%s] freed resource succeed", clusterMeta.Cluster.Name)
 
-	node.Success(nil)
-	return true
+	return nil
 }

@@ -345,12 +345,75 @@ func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceID string) err
 }
 
 // CloneMeta
-// @Description: clone meta info from cluster
+// @Description: clone meta info from cluster based on create cluster parameter
 // @Receiver p
 // @Parameter ctx
 // @return *ClusterMeta
-func (p *ClusterMeta) CloneMeta(ctx context.Context) *ClusterMeta {
-	return nil
+func (p *ClusterMeta) CloneMeta(ctx context.Context, parameter structs.CreateClusterParameter) (*ClusterMeta, error) {
+	// clone cluster info
+	cluster := &management.Cluster{
+		Name:            parameter.Name,            // user specify (required)
+		DBUser:          parameter.DBUser,          // user specify (required)
+		DBPassword:      parameter.DBPassword,      // user specify (required)
+		Region:          parameter.Region,          // user specify (required)
+		Type:            p.Cluster.Type,            // user not specify
+		Version:         p.Cluster.Version,         // user specify (option)
+		Tags:            p.Cluster.Tags,            // user specify (option)
+		TLS:             p.Cluster.TLS,             // user specify (option)
+		Copies:          p.Cluster.Copies,          // user specify (option)
+		Exclusive:       p.Cluster.Exclusive,       // user specify (option)
+		CpuArchitecture: p.Cluster.CpuArchitecture, // user specify (option)
+	}
+	// if user specify cluster version
+	if len(parameter.Version) > 0 {
+		if parameter.Version < p.Cluster.Version {
+			return nil, framework.NewTiEMError(common.TIEM_CHECK_CLUSTER_VERSION_ERROR,
+				"the specified cluster version is less than source cluster version")
+		}
+		cluster.Version = parameter.Version
+	}
+	// if user specify cluster tags
+	if len(parameter.Tags) > 0 {
+		cluster.Tags = parameter.Tags
+	}
+	// if user specify tls
+	if parameter.TLS != p.Cluster.TLS {
+		cluster.TLS = parameter.TLS
+	}
+	// if user specify copies
+	if parameter.Copies > 0 {
+		cluster.Copies = parameter.Copies
+	}
+	// if user specify exclusive
+	if parameter.Exclusive != p.Cluster.Exclusive {
+		cluster.Exclusive = parameter.Exclusive
+	}
+	// if user specify cpu arch
+	if len(parameter.CpuArchitecture) > 0 {
+		cluster.CpuArchitecture = constants.ArchType(parameter.CpuArchitecture)
+	}
+	cluster.Status = string(constants.ClusterInitializing)
+
+	meta := &ClusterMeta{
+		Cluster: cluster,
+	}
+	meta.Instances = make(map[string][]*management.ClusterInstance)
+	for componentType, components := range p.Instances {
+		for _, instance := range components {
+			newInstance := &management.ClusterInstance{
+				Type:         instance.Type,
+				Zone:         instance.Zone,
+				Version:      cluster.Version,
+				CpuCores:     instance.CpuCores,
+				Memory:       instance.Memory,
+				DiskType:     instance.DiskType,
+				DiskCapacity: instance.DiskCapacity,
+			}
+			meta.Instances[componentType] = append(meta.Instances[componentType], newInstance)
+		}
+	}
+
+	return meta, nil
 }
 
 // TryMaintenance

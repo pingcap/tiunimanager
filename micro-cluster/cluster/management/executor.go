@@ -14,10 +14,13 @@ import (
 	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
+	"github.com/pingcap-inc/tiem/message/cluster"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
+	"time"
 )
 
 func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
@@ -114,6 +117,35 @@ func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.Fl
 	return nil
 }
 
+func backupSourceCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	sourceClusterMeta := context.GetData(ContextSourceClusterMeta).(*handler.ClusterMeta)
+	cloneStrategy := context.GetData(ContextCloneStrategy).(string)
+
+	if cloneStrategy == string(constants.EmptyDataClone) {
+		return nil
+	}
+	backupResponse, err := backuprestore.GetBRService().BackupCluster(context.Context,
+		&cluster.BackupClusterDataReq{
+			ClusterID:  sourceClusterMeta.Cluster.ID,
+			BackupMode: string(constants.BackupModeManual),
+		})
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"do backup for cluster[%s] error: %s", sourceClusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+
+	//backupResponse.WorkFlowID
+	if err = handler.WaitWorkflow(backupResponse.WorkFlowID, 10 * time.Second); err != nil {
+		framework.LogWithContext(context.Context).Errorf("backup workflow error: %s", err)
+		return err
+	}
+
+	context.SetData(ContextBackupID, backupResponse.BackupID)
+
+	return nil
+}
+
 func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	if clusterMeta.Cluster.Status == string(constants.ClusterInitializing) {
@@ -135,6 +167,7 @@ func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowCo
 }
 
 func clusterFail(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	allocID := context.GetData(ContextAllocResource)
 	if allocID != nil {
 		request := &resourceType.RecycleRequest{
@@ -152,6 +185,11 @@ func clusterFail(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 				"recycle request id[%s] resources error, %s", allocID.(string), err.Error())
 			return err
 		}
+	}
+	if err := clusterMeta.UpdateClusterMaintenanceStatus(context.Context, constants.ClusterMaintenanceNone); err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"set cluster[%s] maintenance status error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
 	}
 	return nil
 }

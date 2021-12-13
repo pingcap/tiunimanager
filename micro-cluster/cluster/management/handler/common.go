@@ -11,6 +11,7 @@ package handler
 import (
 	"reflect"
 	"strings"
+	"time"
 )
 
 func Contain(target interface{}, list interface{}) bool {
@@ -26,4 +27,8 @@ func Contain(target interface{}, list interface{}) bool {
 		return strings.Contains(list.(string), target.(string))
 	}
 	return false
+}
+
+func WaitWorkflow(workflowID string, interval time.Duration) error {
+	return nil
 }

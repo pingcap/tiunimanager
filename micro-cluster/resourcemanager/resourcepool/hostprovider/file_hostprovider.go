@@ -22,7 +22,6 @@ import (
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/framework"
 
-	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/resource"
 	"github.com/pingcap-inc/tiem/models/resource/resourcepool"
 )
@@ -31,9 +30,9 @@ type FileHostProvider struct {
 	rw resource.ReaderWriter
 }
 
-func GetFileHostProvider() *FileHostProvider {
+func NewFileHostProvider(rw resource.ReaderWriter) *FileHostProvider {
 	hostProvider := new(FileHostProvider)
-	hostProvider.rw = models.GetResourceReaderWriter()
+	hostProvider.rw = rw
 	return hostProvider
 }
 

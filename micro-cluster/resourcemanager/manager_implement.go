@@ -23,6 +23,7 @@ import (
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
 	resource_structs "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
+	"github.com/pingcap-inc/tiem/models"
 )
 
 type ResourceManager struct {
@@ -33,12 +34,18 @@ type ResourceManager struct {
 func NewResourceManager() *ResourceManager {
 	m := new(ResourceManager)
 	m.resourcePool = new(resourcepool.ResourcePool)
-	m.resourcePool.InitResourcePool()
+	m.management = new(management.Management)
+	m.resourcePool.InitResourcePool(models.GetResourceReaderWriter())
+	m.management.InitManagement(models.GetResourceReaderWriter())
 	return m
 }
 
 func (m *ResourceManager) GetResourcePool() *resourcepool.ResourcePool {
 	return m.resourcePool
+}
+
+func (m *ResourceManager) GetManagement() *management.Management {
+	return m.management
 }
 
 func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {
@@ -134,7 +141,7 @@ func (m *ResourceManager) RecycleResources(ctx context.Context, request *resourc
 	if err != nil {
 		framework.LogWithContext(ctx).Warnf("recycle resources failed on request %v from db service: %v", *request, err)
 	} else {
-		framework.LogWithContext(ctx).Infof("recycle resources %v succeed from db service for request %v.", *request)
+		framework.LogWithContext(ctx).Infof("recycle resources %v succeed from db service.", *request)
 	}
 	return
 }

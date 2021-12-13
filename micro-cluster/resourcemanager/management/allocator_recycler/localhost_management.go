@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
-	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/resource"
 )
 
@@ -28,10 +27,14 @@ type LocalHostManagement struct {
 	rw resource.ReaderWriter
 }
 
-func GetLocalHostManagement() structs.AllocatorRecycler {
+func NewLocalHostManagement(rw resource.ReaderWriter) structs.AllocatorRecycler {
 	localManagement := new(LocalHostManagement)
-	localManagement.rw = models.GetResourceReaderWriter()
+	localManagement.rw = rw
 	return localManagement
+}
+
+func (m *LocalHostManagement) SetResourceReaderWriter(rw resource.ReaderWriter) {
+	m.rw = rw
 }
 
 func (m *LocalHostManagement) AllocResources(ctx context.Context, batchReq *structs.BatchAllocRequest) (results *structs.BatchAllocResponse, err error) {

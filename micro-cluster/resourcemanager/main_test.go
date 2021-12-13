@@ -14,32 +14,32 @@
  *                                                                            *
  ******************************************************************************/
 
-package management
+package resourcemanager
 
 import (
-	"context"
+	"os"
+	"testing"
 
-	allocrecycle "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management/allocator_recycler"
-	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/structs"
+	"github.com/pingcap-inc/tiem/library/framework"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
+	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool"
 	"github.com/pingcap-inc/tiem/models/resource"
 )
 
-type Management struct {
-	localHostManage structs.AllocatorRecycler
-	// cloudManage allocrecycle.AllocatorRecycler
+var resourceManager *ResourceManager
+
+func NewMockResourceManager(rw resource.ReaderWriter) *ResourceManager {
+
+	m := new(ResourceManager)
+	m.resourcePool = new(resourcepool.ResourcePool)
+	m.management = new(management.Management)
+	m.resourcePool.InitResourcePool(rw)
+	m.management.InitManagement(rw)
+	return m
 }
 
-func (m *Management) InitManagement(rw resource.ReaderWriter) {
-	m.localHostManage = allocrecycle.NewLocalHostManagement(rw)
-}
-
-func (m *Management) GetAllocatorRecycler() structs.AllocatorRecycler {
-	return m.localHostManage
-}
-
-func (m *Management) AllocResources(ctx context.Context, batchReq *structs.BatchAllocRequest) (results *structs.BatchAllocResponse, err error) {
-	return m.localHostManage.AllocResources(ctx, batchReq)
-}
-func (m *Management) RecycleResources(ctx context.Context, request *structs.RecycleRequest) (err error) {
-	return m.localHostManage.RecycleResources(ctx, request)
+func TestMain(m *testing.M) {
+	framework.InitBaseFrameworkForUt(framework.ClusterService)
+	resourceManager = NewMockResourceManager(nil)
+	os.Exit(m.Run())
 }

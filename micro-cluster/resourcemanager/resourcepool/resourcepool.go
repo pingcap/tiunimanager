@@ -20,6 +20,7 @@ import (
 
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/resourcepool/hostprovider"
+	resource_models "github.com/pingcap-inc/tiem/models/resource"
 )
 
 type ResourcePool struct {
@@ -27,8 +28,12 @@ type ResourcePool struct {
 	// cloudHostProvider hostprovider.HostProvider
 }
 
-func (p *ResourcePool) InitResourcePool() {
-	p.hostProvider = hostprovider.GetFileHostProvider()
+func (p *ResourcePool) InitResourcePool(rw resource_models.ReaderWriter) {
+	p.hostProvider = hostprovider.NewFileHostProvider(rw)
+}
+
+func (p *ResourcePool) GetHostProvider() hostprovider.HostProvider {
+	return p.hostProvider
 }
 
 func (p *ResourcePool) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {

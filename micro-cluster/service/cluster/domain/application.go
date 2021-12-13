@@ -1002,7 +1002,7 @@ func tiupEditConfig(context *FlowContext, task *TaskEntity, params []*parameterg
 		TimeoutS:               0,
 		Flags:                  []string{},
 	}
-	editConfigId, err := secondparty.Manager.ClusterEditGlobalConfig(context, req, strconv.Itoa(int(task.Id)))
+	editConfigId, err := secondparty.SecondParty.MicroSrvTiupEditGlobalConfig(context, req, uint64(task.Id))
 	if err != nil {
 		getLoggerWithContext(context).Errorf("call secondparty tiup edit global config err = %s", err.Error())
 		task.Fail(err)
@@ -1091,7 +1091,7 @@ func getTaskStatusByTaskId(context *FlowContext, task *TaskEntity) bool {
 		}
 		framework.LogWithContext(context).Infof("polling task waiting, sequence %d, taskId %d, taskName %s", sequence, task.Id, task.TaskName)
 
-		stat, statString, err := secondparty.Manager.GetTaskStatusByBizID(context, strconv.Itoa(int(task.Id)))
+		stat, statString, err := secondparty.SecondParty.MicroSrvGetTaskStatusByBizID(context, uint64(task.Id))
 		if err != nil {
 			framework.LogWithContext(context).Error(err)
 			task.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))

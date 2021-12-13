@@ -60,8 +60,8 @@ func (m ClusterParameterReadWrite) QueryClusterParameter(ctx context.Context, cl
 	paramGroupId = cluster.ParameterGroupID
 
 	err = m.DB(ctx).Model(&ClusterParameterMapping{}).
-		Select("parameters.id, parameter.category, parameters.name, parameters.instance_type, parameters.system_variable, "+
-			"parameters.type, parameters.unit, parameters.range, parameters.has_reboot, parameters.has_apply, parameters.update_source,, parameters.description, "+
+		Select("parameters.id, parameters.category, parameters.name, parameters.instance_type, parameters.system_variable, "+
+			"parameters.type, parameters.unit, parameters.range, parameters.has_reboot, parameters.has_apply, parameters.update_source, parameters.description, "+
 			"parameter_group_mappings.default_value, cluster_parameter_mappings.real_value, parameter_group_mappings.note, "+
 			"cluster_parameter_mappings.created_at, cluster_parameter_mappings.updated_at").
 		Joins("left join parameters on parameters.id = cluster_parameter_mappings.parameter_id").
@@ -121,7 +121,10 @@ func (m ClusterParameterReadWrite) ApplyClusterParameter(ctx context.Context, pa
 	}
 
 	// update clusters table
-	err = m.DB(ctx).Model(&management.Cluster{}).Where("id = ?", clusterId).Update("parameter_group_id", parameterGroupId).Error
+	c := management.Cluster{
+		Entity: dbCommon.Entity{ID: clusterId},
+	}
+	err = m.DB(ctx).Debug().Model(&c).Update("parameter_group_id", parameterGroupId).Error
 	if err != nil {
 		log.Errorf("apply param group err: %v", err.Error())
 		tx.Rollback()

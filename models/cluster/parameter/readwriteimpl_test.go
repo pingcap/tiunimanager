@@ -113,7 +113,7 @@ func TestClusterParameterReadWrite_QueryClusterParameter(t *testing.T) {
 				if tt.wantErr {
 					return
 				}
-				t.Errorf("FindParamsByClusterId() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ApplyClusterParameter() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			paramGroupId, params, total, err := clusterParameterRW.QueryClusterParameter(context.TODO(), tt.args.clusterId, tt.args.offset, tt.args.size)
@@ -121,7 +121,7 @@ func TestClusterParameterReadWrite_QueryClusterParameter(t *testing.T) {
 				if tt.wantErr {
 					return
 				}
-				t.Errorf("FindParamsByClusterId() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("QueryClusterParameter() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			ret := resp{
@@ -131,7 +131,7 @@ func TestClusterParameterReadWrite_QueryClusterParameter(t *testing.T) {
 			}
 			for i, assert := range tt.wants {
 				if !assert(tt.args, ret) {
-					t.Errorf("FindParamsByClusterId() test error, testname = %v, assert %v, args = %v, got ret = %v", tt.name, i, tt.args, ret)
+					t.Errorf("QueryClusterParameter() test error, testname = %v, assert %v, args = %v, got ret = %v", tt.name, i, tt.args, ret)
 				}
 			}
 		})
@@ -260,6 +260,44 @@ func TestClusterParameterReadWrite_ApplyClusterParameter(t *testing.T) {
 			[]func(a args, id string) bool{
 				func(a args, id string) bool { return id != "" },
 			},
+		},
+		{
+			"idIsEmpty",
+			args{
+				id:        "",
+				clusterId: cluster.ID,
+				params: []*ClusterParameterMapping{
+					{
+						ParameterID: params[0].ID,
+						RealValue:   "{\"cluster\": 123}",
+					},
+					{
+						ParameterID: params[1].ID,
+						RealValue:   "{\"cluster\": 1024}",
+					},
+				},
+			},
+			true,
+			[]func(a args, id string) bool{},
+		},
+		{
+			"clusterIdIsEmpty",
+			args{
+				id:        groups[0].ID,
+				clusterId: "",
+				params: []*ClusterParameterMapping{
+					{
+						ParameterID: params[0].ID,
+						RealValue:   "{\"cluster\": 123}",
+					},
+					{
+						ParameterID: params[1].ID,
+						RealValue:   "{\"cluster\": 1024}",
+					},
+				},
+			},
+			true,
+			[]func(a args, id string) bool{},
 		},
 	}
 	for _, tt := range tests {

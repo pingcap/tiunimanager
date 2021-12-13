@@ -29,6 +29,8 @@ import (
 	"strconv"
 	"testing"
 
+	common2 "github.com/pingcap-inc/tiem/models/common"
+
 	"github.com/pingcap-inc/tiem/models/cluster/management"
 	"github.com/pingcap-inc/tiem/models/parametergroup"
 
@@ -41,6 +43,7 @@ import (
 
 var clusterParameterRW *ClusterParameterReadWrite
 var parameterGroupRW *parametergroup.ParameterGroupReadWrite
+var clusterRW *management.GormClusterReadWrite
 
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
@@ -72,6 +75,7 @@ func TestMain(m *testing.M) {
 
 			clusterParameterRW = NewClusterParameterReadWrite(db)
 			parameterGroupRW = parametergroup.NewParameterGroupReadWrite(db)
+			clusterRW = management.NewGormClusterReadWrite(db)
 			return nil
 		},
 	)
@@ -132,15 +136,15 @@ func buildParams(count uint) (params []*parametergroup.Parameter, err error) {
 }
 
 func buildCluster() (*management.Cluster, error) {
-	//cluster, err := Dao.ClusterManager().CreateCluster(context.TODO(), Cluster{
-	//	Entity: Entity{
-	//		TenantId: "111",
-	//	},
-	//	Name:    "build_test_cluster_" + uuidutil.GenerateID(),
-	//	OwnerId: "111",
-	//})
-	//if err != nil {
-	//	return nil, err
-	//}
-	return nil, nil
+	cluster, err := clusterRW.Create(context.TODO(), &management.Cluster{
+		Entity: common2.Entity{
+			TenantId: "111",
+		},
+		Name:    "build_test_cluster_" + uuidutil.GenerateID(),
+		OwnerId: "111",
+	})
+	if err != nil {
+		return nil, err
+	}
+	return cluster, nil
 }

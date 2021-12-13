@@ -325,10 +325,10 @@ type ChangeFeedResumeReq struct {
 }
 
 type ChangeFeedCmdAcceptResp struct {
-	Accept
-	Succeed      bool
-	ErrorCode string   `json:"error_code"`
-	ErrorMsg string   `json:"error_msg"`
+	Accepted  bool
+	Succeed   bool
+	ErrorCode string `json:"error_code"`
+	ErrorMsg  string `json:"error_msg"`
 }
 
 type ChangeFeedQueryReq struct {

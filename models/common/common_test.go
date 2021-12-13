@@ -19,6 +19,7 @@ import (
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
@@ -27,10 +28,17 @@ import (
 
 type TestEntity struct {
 	Entity
-	name string
+	Name string
 }
 
 var baseDB *gorm.DB
+
+func (t *TestEntity) BeforeSave(tx *gorm.DB) (err error) {
+	if len(t.ID) == 0 {
+		return t.Entity.BeforeCreate(tx)
+	}
+	return nil
+}
 
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
@@ -60,4 +68,24 @@ func TestMain(m *testing.M) {
 		},
 	)
 	os.Exit(m.Run())
+}
+
+func Test_Entity(t *testing.T) {
+	tt := &TestEntity{
+		Entity{
+			Status: "aaa",
+			TenantId: "111",
+		},
+		"aaa",
+	}
+	baseDB.Create(tt)
+
+	assert.NotEmpty(t, tt.ID)
+
+	baseDB.Model(&TestEntity{
+		Entity: Entity{
+			ID: tt.ID,
+		},
+	}).Update("nadfame", "bbb")
+
 }

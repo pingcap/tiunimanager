@@ -19,18 +19,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	util "github.com/pingcap-inc/tiem/library/util/http"
 	"net/http"
-	"strconv"
+	"time"
 )
 
 const CDCApiUrl  = "/api/v1/changefeeds"
 
 func (secondMicro *SecondMicro) CreateChangeFeedTask(ctx context.Context, req ChangeFeedCreateReq) (resp ChangeFeedCmdAcceptResp, err error) {
 	framework.LogWithContext(ctx).Infof("micro srv create change feed task, req : %v", req)
-	url := fmt.Sprintf("http://%s%s", CDCApiUrl)
+	url := fmt.Sprintf("http://%s%s", req.PD, CDCApiUrl)
 
 	bytes, err := json.Marshal(&req)
 	if err != nil {
@@ -51,39 +52,211 @@ func (secondMicro *SecondMicro) CreateChangeFeedTask(ctx context.Context, req Ch
 		return
 	}
 
-	if strconv.Itoa(http.StatusAccepted) == httpResp.Status {
+	if http.StatusAccepted == httpResp.StatusCode {
+		resp.Accepted = true
 		resp.Succeed = true
 	} else {
-		resp.Succeed = false
-		return
+		handleAcceptError(ctx, httpResp, &resp)
 	}
 
 	return
 }
 
-func (secondMicro *SecondMicro) UpdateChangeFeedTask(ctx context.Context, req ChangeFeedUpdateReq) (ChangeFeedCmdAcceptResp, error) {
-	return ChangeFeedCmdAcceptResp{}, nil
+func handleAcceptError(ctx context.Context, httpResp *http.Response, resp *ChangeFeedCmdAcceptResp) {
+	resp.Accepted = false
+	resp.Succeed = false
+
+	respBody := make([]byte, 0)
+	length, err := httpResp.Body.Read(respBody)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("read http response failed, %s", err.Error())
+		resp.ErrorCode = ""
+		resp.ErrorMsg = err.Error()
+		return
+	}
+	
+	if length == 0 {
+		framework.LogWithContext(ctx).Errorf("read http response empty")
+		return
+	}
+
+	err = json.Unmarshal(respBody, resp)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("unmarshal http response failed, %s", err.Error())
+		resp.ErrorCode = ""
+		resp.ErrorMsg = err.Error()
+	}
 }
 
-func (secondMicro *SecondMicro) PauseChangeFeedTask(ctx context.Context, req ChangeFeedPauseReq) (ChangeFeedCmdAcceptResp, error) {
-	return ChangeFeedCmdAcceptResp{}, nil
+var changeFeedRetryTimes = 10
+
+func handleAcceptedCmd(ctx context.Context,
+	pdAddress string, id string,
+	resp *ChangeFeedCmdAcceptResp,
+	asserts func(info ChangeFeedInfo) bool) {
+	for i := 0; i < changeFeedRetryTimes; i++ {
+		time.Sleep(time.Second)
+		task, err := getChangeFeedTaskByID(ctx, pdAddress, id)
+		if err != nil {
+			resp.Succeed = false
+			resp.ErrorMsg = err.Error()
+			return
+		}
+
+		if task.State == constants.ChangeFeedStatusError.ToString() ||
+			task.State == constants.ChangeFeedStatusFailed.ToString() ||
+			task.State == constants.ChangeFeedStatusFinished.ToString() {
+			resp.Succeed = false
+			return
+		}
+
+	}
 }
 
-func (secondMicro *SecondMicro) ResumeChangeFeedTask(ctx context.Context, req ChangeFeedResumeReq) (ChangeFeedCmdAcceptResp, error) {
-	return ChangeFeedCmdAcceptResp{}, nil
+func (secondMicro *SecondMicro) UpdateChangeFeedTask(ctx context.Context, req ChangeFeedUpdateReq) (resp ChangeFeedCmdAcceptResp, err error) {
+	framework.LogWithContext(ctx).Infof("micro srv update change feed task, req : %v", req)
+	url := fmt.Sprintf("http://%s%s/%s", req.PD, CDCApiUrl, req.ChangeFeedID)
+
+	bytes, err := json.Marshal(&req)
+	if err != nil {
+		err = framework.WrapError(common.TIEM_MARSHAL_ERROR, "", err)
+		return
+	}
+	data := make(map[string]interface{})
+	err = json.Unmarshal(bytes, data)
+
+	if err != nil {
+		err = framework.WrapError(common.TIEM_UNMARSHAL_ERROR, "", err)
+		return
+	}
+
+	httpResp, err := util.PostJSON(url, data, map[string]string{})
+	if err != nil {
+		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		return
+	}
+
+	if http.StatusAccepted == httpResp.StatusCode {
+		resp.Accepted = true
+		resp.Succeed = true
+	} else {
+		handleAcceptError(ctx, httpResp, &resp)
+	}
+	return
 }
 
-func (secondMicro *SecondMicro) DeleteChangeFeedTask(ctx context.Context, req ChangeFeedDeleteReq) (ChangeFeedCmdAcceptResp, error) {
-	return ChangeFeedCmdAcceptResp{}, nil
+func (secondMicro *SecondMicro) PauseChangeFeedTask(ctx context.Context, req ChangeFeedPauseReq) (resp ChangeFeedCmdAcceptResp, err error) {
+	url := fmt.Sprintf("http://%s%s/%s/pause", req.PD, CDCApiUrl, req.ChangeFeedID)
+	httpResp, err := util.PostJSON(url, map[string]interface{}{}, map[string]string{})
+	if err != nil {
+		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		return
+	}
+
+	if http.StatusAccepted == httpResp.StatusCode {
+		resp.Accepted = true
+		resp.Succeed = true
+	} else {
+		handleAcceptError(ctx, httpResp, &resp)
+	}
+	return
 }
 
-func (secondMicro *SecondMicro) QueryChangeFeedTasks(ctx context.Context, req ChangeFeedQueryReq) (ChangeFeedQueryResp, error) {
-	return ChangeFeedQueryResp{}, nil
+func (secondMicro *SecondMicro) ResumeChangeFeedTask(ctx context.Context, req ChangeFeedResumeReq) (resp ChangeFeedCmdAcceptResp, err error) {
+	url := fmt.Sprintf("http://%s%s/%s/resume", req.PD, CDCApiUrl, req.ChangeFeedID)
+	httpResp, err := util.PostJSON(url, map[string]interface{}{}, map[string]string{})
+	if err != nil {
+		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		return
+	}
+
+	if http.StatusAccepted == httpResp.StatusCode {
+		resp.Accepted = true
+		resp.Succeed = true
+	} else {
+		handleAcceptError(ctx, httpResp, &resp)
+	}
+	return
+}
+
+func (secondMicro *SecondMicro) DeleteChangeFeedTask(ctx context.Context, req ChangeFeedDeleteReq) (resp ChangeFeedCmdAcceptResp, err error) {
+	url := fmt.Sprintf("http://%s%s/%s", req.PD, CDCApiUrl, req.ChangeFeedID)
+	// todo delete
+	httpResp, err := util.PostJSON(url, map[string]interface{}{}, map[string]string{})
+	if err != nil {
+		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		return
+	}
+
+	if http.StatusAccepted == httpResp.StatusCode {
+		resp.Accepted = true
+		resp.Succeed = true
+	} else {
+		handleAcceptError(ctx, httpResp, &resp)
+	}
+	return
+}
+
+func (secondMicro *SecondMicro) QueryChangeFeedTasks(ctx context.Context, req ChangeFeedQueryReq) (resp ChangeFeedQueryResp, err error) {
+	url := fmt.Sprintf("http://%s%s", req.PD, CDCApiUrl)
+	params := map[string]string{}
+	if req.State != "" {
+		params["state"] = req.State
+	}
+	httpResp, err := util.Get(url, params, map[string]string{})
+
+	if err != nil {
+		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		return
+	}
+
+	if http.StatusOK == httpResp.StatusCode {
+		respBody := make([]byte, 0)
+		_, err = httpResp.Body.Read(respBody)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("read http response failed, %s", err.Error())
+			return
+		}
+		resp.Tasks = make([]ChangeFeedInfo, 0)
+		err = json.Unmarshal(respBody, &resp.Tasks)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("unmarshal http response failed, %s", err.Error())
+			return
+		}
+	} else {
+		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+	}
+	return
 }
 
 func (secondMicro *SecondMicro) DetailChangeFeedTask(ctx context.Context, req ChangeFeedDetailReq) (ChangeFeedDetailResp, error) {
-	return ChangeFeedDetailResp{}, nil
+	return getChangeFeedTaskByID(ctx, req.PD, req.ChangeFeedID)
 }
 
+func getChangeFeedTaskByID(ctx context.Context, pdAddress, id string) (resp ChangeFeedDetailResp, err error) {
+	url := fmt.Sprintf("http://%s%s/%s", pdAddress, CDCApiUrl, id)
+	httpResp, err := util.Get(url, map[string]string{}, map[string]string{})
 
+	if err != nil {
+		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+		return
+	}
+
+	if http.StatusOK == httpResp.StatusCode {
+		respBody := make([]byte, 0)
+		_, err = httpResp.Body.Read(respBody)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("read http response failed, %s", err.Error())
+			return
+		}
+		err = json.Unmarshal(respBody, resp)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("unmarshal http response failed, %s", err.Error())
+			return 
+		}
+	} else {
+		err = framework.WrapError(common.TIEM_CHANGE_FEED_CONNECT_ERROR, "", err)
+	}
+	return 
+}
 

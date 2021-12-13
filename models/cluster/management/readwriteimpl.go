@@ -202,7 +202,7 @@ func (g *GormClusterReadWrite) GetLatestClusterTopologySnapshot(ctx context.Cont
 		err = framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, errInfo)
 		return
 	}
-
+	
 	err = g.DB(ctx).Model(snapshot).Where("cluster_id = ?", clusterID).Order("id desc").First(&snapshot).Error
 	err = dbCommon.WrapDBError(err)
 	return

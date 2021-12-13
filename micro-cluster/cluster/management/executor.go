@@ -19,7 +19,7 @@ import (
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
-func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	// Alloc resource for new instances
@@ -27,34 +27,29 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] alloc resource error: %s", clusterMeta.Cluster.Name, err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
 	context.SetData(ContextAllocResource, allocID)
 	framework.LogWithContext(context.Context).Infof(
 		"cluster[%s] alloc resource request id: %s", clusterMeta.Cluster.Name, allocID)
-
-	node.Success(nil)
-	return true
+	return nil
 }
 
-func buildConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+func buildConfig(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 
 	topology, err := clusterMeta.GenerateTopologyConfig(context.Context)
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] build config error: %s", clusterMeta.Cluster.Name, err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
 
 	context.SetData(ContextTopology, topology)
-	node.Success(nil)
-	return true
+	return nil
 }
 
-func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	cluster := clusterMeta.Cluster
 	yamlConfig := context.GetData(ContextTopology).(string)
@@ -67,38 +62,33 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 	if err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"cluster[%s] scale out error: %s", clusterMeta.Cluster.Name, err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
 	framework.LogWithContext(context.Context).Infof("get scale out cluster task id: %d", taskId)
-	node.Success(nil)
-	return true
+	return nil
 }
 
-func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+func setClusterOnline(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	if clusterMeta.Cluster.Status == string(constants.ClusterInitializing) {
 		if err := clusterMeta.UpdateClusterStatus(context.Context, constants.ClusterRunning); err != nil {
 			framework.LogWithContext(context.Context).Errorf(
 				"update cluster[%s] status into running error: %s", clusterMeta.Cluster.Name, err.Error())
-			node.Fail(err)
-			return false
+			return err
 		}
 	}
 	if err := clusterMeta.UpdateInstancesStatus(context.Context,
 		constants.ClusterInitializing, constants.ClusterRunning); err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"update cluster[%s] instances status into running error: %s", clusterMeta.Cluster.Name, err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
 	framework.LogWithContext(context.Context).Infof(
 		"set cluster[%s] online successfully", clusterMeta.Cluster.Name)
-	node.Success(nil)
-	return true
+	return nil
 }
 
-func clusterFail(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+func clusterFail(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	allocID := context.GetData(ContextAllocResource)
 	if allocID != nil {
 		request := &resourceType.RecycleRequest{
@@ -114,24 +104,20 @@ func clusterFail(node *workflowModel.WorkFlowNode, context *workflow.FlowContext
 		if err != nil {
 			framework.LogWithContext(context.Context).Errorf(
 				"recycle request id[%s] resources error, %s", allocID.(string), err.Error())
-			node.Fail(err)
-			return false
+			return err
 		}
 	}
-	node.Success(nil)
-	return true
+	return nil
 }
 
-func clusterEnd(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {
+func clusterEnd(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
 	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
 	if err := clusterMeta.UpdateClusterMaintenanceStatus(context.Context, constants.ClusterMaintenanceNone); err != nil {
 		framework.LogWithContext(context.Context).Errorf(
 			"set cluster[%s] maintenance status error: %s", clusterMeta.Cluster.Name, err.Error())
-		node.Fail(err)
-		return false
+		return err
 	}
-	node.Success(nil)
-	return true
+	return nil
 }
 
 func deployCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) bool {

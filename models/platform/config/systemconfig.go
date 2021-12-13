@@ -16,6 +16,7 @@
 package config
 
 import (
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
 	"time"
 )
@@ -27,4 +28,9 @@ type SystemConfig struct {
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
 	ConfigKey   string         `gorm:"not null;"`
 	ConfigValue string         `gorm:"not null;"`
+}
+
+func (e *SystemConfig) BeforeCreate(tx *gorm.DB) (err error) {
+	e.ID = uuidutil.GenerateID()
+	return nil
 }

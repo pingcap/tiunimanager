@@ -45,7 +45,7 @@ func (m *ConfigReadWrite) GetConfig(ctx context.Context, configKey string) (conf
 	config = &SystemConfig{}
 	err = m.DB(ctx).First(config, "config_key = ?", configKey).Error
 	if err != nil {
-		return nil, framework.SimpleError(common.TIEM_GET_CONFIG_FAILED)
+		return nil, err
 	}
 	return config, err
 }

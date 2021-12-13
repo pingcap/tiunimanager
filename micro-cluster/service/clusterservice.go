@@ -195,9 +195,9 @@ func (handler *ClusterServiceHandler) ScaleOutCluster(ctx context.Context, req *
 	request := cluster.ScaleOutClusterReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterManager.ScaleOut(ctx, &request)
+		result, err := handler.clusterManager.ScaleOut(ctx, request)
 
-		handleResponse(ctx, resp, err, *result, nil)
+		handleResponse(ctx, resp, err, result, nil)
 	}
 
 	return nil
@@ -210,9 +210,9 @@ func (handler *ClusterServiceHandler) ScaleInCluster(ctx context.Context, req *c
 	request := cluster.ScaleInClusterReq{}
 
 	if handleRequest(ctx, req, resp, request) {
-		result, err := handler.clusterManager.ScaleIn(ctx, &request)
+		result, err := handler.clusterManager.ScaleIn(ctx, request)
 
-		handleResponse(ctx, resp, err, *result, nil)
+		handleResponse(ctx, resp, err, result, nil)
 	}
 
 	return nil

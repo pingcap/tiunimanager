@@ -28,6 +28,8 @@ import (
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"strconv"
+	"strings"
 	"text/template"
 )
 
@@ -276,6 +278,81 @@ func (p *ClusterMeta) UpdateInstancesStatus(ctx context.Context,
 	return nil
 }
 
+// GetInstance
+// @Description get instance based on instanceID
+// @Parameter	instance id (format: ip:port)
+// @Return		instance
+// @Return		error
+func (p *ClusterMeta) GetInstance(ctx context.Context, instanceID string) (*management.ClusterInstance, error) {
+	host := strings.Split(instanceID, ":")
+	if len(host) != 2 {
+		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is wrong")
+	}
+	port, err := strconv.ParseInt(host[1], 10, 32)
+	if err != nil {
+		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is wrong")
+	}
+
+	for _, components := range p.Instances {
+		for _, instance := range components {
+			if Contain(instance.HostIP, host[0]) && Contain(instance.Ports, int32(port)) {
+				return instance, nil
+			}
+		}
+	}
+	return nil, framework.NewTiEMError(common.TIEM_INSTANCE_NOT_FOUND, "instance not found")
+}
+
+// IsComponentRequired
+// @Description judge whether component is required
+// @Parameter	component type
+// @Return		bool
+func (p *ClusterMeta) IsComponentRequired(ctx context.Context, componentType string) bool {
+	return knowledge.GetComponentSpec(p.Cluster.Type,
+		p.Cluster.Version, componentType).ComponentConstraint.ComponentRequired
+}
+
+// DeleteInstance
+// @Description delete instance from cluster topology based on instance id
+// @Parameter	instance id (format: ip:port)
+// @Return		error
+func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceID string) error {
+	instance, err := p.GetInstance(ctx, instanceID)
+	if err != nil {
+		return err
+	}
+	// recycle instance resource
+	request := &resource.RecycleRequest{
+		RecycleReqs: []resource.RecycleRequire{
+			{
+				RecycleType: resource.RecycleHost,
+				HolderID:    instance.ClusterID,
+				HostID:      instance.HostID,
+				ComputeReq: resource.ComputeRequirement{
+					CpuCores: int32(instance.CpuCores),
+					Memory:   int32(instance.Memory),
+				},
+				DiskReq: resource.DiskResource{
+					DiskId: instance.DiskID,
+				},
+				PortReq: []resource.PortResource{
+					{
+						Ports: instance.Ports,
+					},
+				},
+			},
+		},
+	}
+	resourceManager := resourceManagement.NewResourceManager()
+	err = resourceManager.RecycleResources(ctx, request)
+	if err != nil {
+		return err
+	}
+
+	//TODO: delete from db
+	return nil
+}
+
 // CloneMeta
 // @Description: clone meta info from cluster
 // @Receiver p
@@ -370,4 +447,3 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 func Create(ctx context.Context, template management.Cluster) (*ClusterMeta, error) {
 	return nil, nil
 }
-

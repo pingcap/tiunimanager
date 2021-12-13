@@ -21,7 +21,6 @@ import (
 )
 
 type ReaderWriter interface {
-
 	Create(ctx context.Context, cluster *Cluster) (*Cluster, error)
 	Delete(ctx context.Context, clusterID string) (err error)
 	Get(ctx context.Context, clusterID string) (*Cluster, error)
@@ -34,7 +33,7 @@ type ReaderWriter interface {
 	//  @param instances
 	//  @return error
 	//
-	UpdateInstance(ctx context.Context, instances ...ClusterInstance) error
+	UpdateInstance(ctx context.Context, instances ...*ClusterInstance) error
 
 	//
 	// UpdateBaseInfo update cluster base info
@@ -74,4 +73,10 @@ type ReaderWriter interface {
 	//  @return error
 	//
 	ClearMaintenanceStatus(ctx context.Context, clusterID string, originalStatus constants.ClusterMaintenanceStatus) error
+
+	CreateRelation(ctx context.Context, relation *ClusterRelation) error
+	DeleteRelation(ctx context.Context, relationID uint) error
+
+	CreateClusterTopologySnapshot(ctx context.Context, snapshot ClusterTopologySnapshot) error
+	GetLatestClusterTopologySnapshot(ctx context.Context, clusterID string) (ClusterTopologySnapshot, error)
 }

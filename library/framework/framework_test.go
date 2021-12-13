@@ -1,4 +1,3 @@
-
 /******************************************************************************
  * Copyright (c)  2021 PingCAP, Inc.                                          *
  * Licensed under the Apache License, Version 2.0 (the "License");            *
@@ -71,10 +70,10 @@ func TestLog(t *testing.T) {
 
 func TestBaseFramework_GetLoggerWithContext(t *testing.T) {
 	ctx := &gin.Context{}
-	ctx.Set(TiEM_X_TRACE_ID_NAME, "111")
+	ctx.Set(TiEM_X_TRACE_ID_KEY, "111")
 
 	got := LogWithContext(ctx)
-	assert.Equal(t, "111", got.Data[TiEM_X_TRACE_ID_NAME])
+	assert.Equal(t, "111", got.Data[TiEM_X_TRACE_ID_KEY])
 }
 
 func TestBaseFramework_Get(t *testing.T) {
@@ -90,10 +89,9 @@ func TestBaseFramework_Get(t *testing.T) {
 	assert.NoError(t, f.StopService())
 
 	ctx := &gin.Context{}
-	ctx.Set(TiEM_X_TRACE_ID_NAME, "111")
-	assert.Equal(t, "111", f.LogWithContext(ctx).Data[TiEM_X_TRACE_ID_NAME])
+	ctx.Set(TiEM_X_TRACE_ID_KEY, "111")
+	assert.Equal(t, "111", f.LogWithContext(ctx).Data[TiEM_X_TRACE_ID_KEY])
 }
-
 
 func TestBaseFramework_loadCert(t *testing.T) {
 	b := BaseFramework{

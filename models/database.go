@@ -16,6 +16,9 @@
 package models
 
 import (
+	"context"
+
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
@@ -24,6 +27,7 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/parameter"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
 	"github.com/pingcap-inc/tiem/models/parametergroup"
+	"github.com/pingcap-inc/tiem/models/platform/config"
 	"github.com/pingcap-inc/tiem/models/workflow"
 	"gorm.io/driver/sqlite"
 
@@ -41,6 +45,7 @@ type database struct {
 	clusterReaderWriter          management.ReaderWriter
 	parameterGroupReaderWriter   parametergroup.ReaderWriter
 	clusterParameterReaderWriter parameter.ReaderWriter
+	configReaderWriter           config.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -60,12 +65,11 @@ func Open(fw *framework.BaseFramework, reentry bool) error {
 		base: db,
 	}
 
+	defaultDb.initReaderWriters()
 	if !reentry {
 		defaultDb.initTables()
 		defaultDb.initSystemData()
 	}
-
-	defaultDb.initReaderWriters()
 
 	return nil
 }
@@ -77,6 +81,11 @@ func (p *database) initTables() {
 	p.addTable(new(management.Cluster))
 	p.addTable(new(management.ClusterInstance))
 	p.addTable(new(management.ClusterRelation))
+	p.addTable(new(importexport.DataTransportRecord))
+	p.addTable(new(backuprestore.BackupRecord))
+	p.addTable(new(backuprestore.BackupStrategy))
+	p.addTable(new(config.SystemConfig))
+	p.addTable(new(management.ClusterTopologySnapshot))
 
 	// other tables
 }
@@ -88,10 +97,17 @@ func (p *database) initReaderWriters() {
 	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
 	defaultDb.parameterGroupReaderWriter = parametergroup.NewParameterGroupReadWrite(defaultDb.base)
 	defaultDb.clusterParameterReaderWriter = parameter.NewClusterParameterReadWrite(defaultDb.base)
+	defaultDb.configReaderWriter = config.NewConfigReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
-	// todo
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStorageType, ConfigValue: string(constants.StorageTypeS3)})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupStoragePath, ConfigValue: constants.DefaultBackupStoragePath})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3AccessKey, ConfigValue: constants.DefaultBackupS3AccessKey})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3SecretAccessKey, ConfigValue: constants.DefaultBackupS3SecretAccessKey})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyBackupS3Endpoint, ConfigValue: constants.DefaultBackupS3Endpoint})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyExportShareStoragePath, ConfigValue: constants.DefaultExportPath})
+	defaultDb.configReaderWriter.CreateConfig(context.TODO(), &config.SystemConfig{ConfigKey: constants.ConfigKeyImportShareStoragePath, ConfigValue: constants.DefaultImportPath})
 }
 
 func (p *database) addTable(gormModel interface{}) error {
@@ -137,6 +153,14 @@ func GetClusterReaderWriter() management.ReaderWriter {
 
 func SetClusterReaderWriter(rw management.ReaderWriter) {
 	defaultDb.clusterReaderWriter = rw
+}
+
+func GetConfigReaderWriter() config.ReaderWriter {
+	return defaultDb.configReaderWriter
+}
+
+func SetConfigReaderWriter(rw config.ReaderWriter) {
+	defaultDb.configReaderWriter = rw
 }
 
 func MockDB() {

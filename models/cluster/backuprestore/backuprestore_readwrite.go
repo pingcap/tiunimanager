@@ -39,8 +39,8 @@ func (m *BRReadWrite) CreateBackupRecord(ctx context.Context, record *BackupReco
 	return record, m.DB(ctx).Create(record).Error
 }
 
-func (m *BRReadWrite) UpdateBackupRecord(ctx context.Context, backupId string, status string, size uint64, backupTso int64, endTime time.Time) (err error) {
-	if "" == backupId || "" == status || backupTso < 0 || endTime.IsZero() {
+func (m *BRReadWrite) UpdateBackupRecord(ctx context.Context, backupId string, status string, size uint64, backupTso uint64, endTime time.Time) (err error) {
+	if "" == backupId {
 		return framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 
@@ -50,11 +50,21 @@ func (m *BRReadWrite) UpdateBackupRecord(ctx context.Context, backupId string, s
 		return framework.SimpleError(common.TIEM_BACKUP_RECORD_NOT_FOUND)
 	}
 
-	return m.DB(ctx).Model(record).
-		Update("status", status).
-		Update("size", size).
-		Update("backup_tso", backupTso).
-		Update("end_time", endTime).Error
+	db := m.DB(ctx).Model(record)
+	if "" != status {
+		db.Update("status", status)
+	}
+	if size > 0 {
+		db.Update("size", size)
+	}
+	if backupTso > 0 {
+		db.Update("backup_tso", backupTso)
+	}
+	if !endTime.IsZero() {
+		db.Update("end_time", endTime)
+	}
+
+	return db.Error
 }
 
 func (m *BRReadWrite) GetBackupRecord(ctx context.Context, backupId string) (record *BackupRecord, err error) {
@@ -69,11 +79,14 @@ func (m *BRReadWrite) GetBackupRecord(ctx context.Context, backupId string) (rec
 	return record, err
 }
 
-func (m *BRReadWrite) QueryBackupRecords(ctx context.Context, clusterId, backupId string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error) {
+func (m *BRReadWrite) QueryBackupRecords(ctx context.Context, clusterId, backupId, backupMode string, startTime, endTime time.Time, page int, pageSize int) (records []*BackupRecord, total int64, err error) {
 	records = make([]*BackupRecord, pageSize)
 	query := m.DB(ctx).Model(BackupRecord{})
 	if backupId != "" {
 		query = query.Where("id = ?", backupId)
+	}
+	if backupMode != "" {
+		query = query.Where("backup_mode = ?", backupMode)
 	}
 	if clusterId != "" {
 		query = query.Where("cluster_id = ?", clusterId)

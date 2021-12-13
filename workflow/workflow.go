@@ -122,18 +122,19 @@ type WorkFlowManager struct {
 	flowDefineMap sync.Map
 }
 
-var manager WorkFlowService
+var workflowService WorkFlowService
+var once sync.Once
 
 func GetWorkFlowService() WorkFlowService {
-	if manager == nil {
-		manager = &WorkFlowManager{}
-	}
-	return manager
+	once.Do(func() {
+		workflowService = &WorkFlowManager{}
+	})
+	return workflowService
 }
 
 func (mgr *WorkFlowManager) RegisterWorkFlow(ctx context.Context, flowName string, flowDefine *WorkFlowDefine) {
 	mgr.flowDefineMap.Store(flowName, flowDefine)
-	framework.LogWithContext(ctx).Infof("Register WorkFlow %s success, definition: %+v", flowName, flowDefine)
+	framework.LogWithContext(ctx).Infof("Register WorkFlow %s success, definition: %+v", flowDefine.FlowName, flowDefine)
 	return
 }
 

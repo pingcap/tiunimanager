@@ -28,7 +28,6 @@ import (
 	"github.com/pingcap-inc/tiem/library/thirdparty/metrics"
 	clusterService "github.com/pingcap-inc/tiem/micro-cluster/service"
 	clusterAdapt "github.com/pingcap-inc/tiem/micro-cluster/service/cluster/adapt"
-	"github.com/pingcap-inc/tiem/micro-cluster/service/cluster/domain"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -39,7 +38,6 @@ func main() {
 		initLibForDev,
 		initAdapter,
 		initDatabase,
-		initCronJob,
 		defaultPortForLocal,
 	)
 
@@ -85,11 +83,6 @@ func initDatabase(f *framework.BaseFramework) error {
 
 func initAdapter(f *framework.BaseFramework) error {
 	clusterAdapt.InjectionMetaDbRepo()
-	return nil
-}
-
-func initCronJob(f *framework.BaseFramework) error {
-	domain.InitAutoBackupCronJob()
 	return nil
 }
 

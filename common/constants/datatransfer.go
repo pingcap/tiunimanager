@@ -27,29 +27,19 @@ package constants
 type TransportType string
 
 const (
-	DefaultImportDir    string        = "/home/em/import"
-	DefaultExportDir    string        = "/home/em/export"
+	DefaultImportPath   string        = "/home/em/import"
+	DefaultExportPath   string        = "/home/em/export"
 	DefaultZipName      string        = "data.zip"
 	TransportTypeExport TransportType = "export"
 	TransportTypeImport TransportType = "import"
 )
 
-type DataExportStatus string
+type DataImportExportStatus string
 
 //Definition data export status information
 const (
-	DataExportInitializing DataExportStatus = "Initializing"
-	DataExportProcessing   DataExportStatus = "Processing"
-	DataExportFinished     DataExportStatus = "Finished"
-	DataExportFailed       DataExportStatus = "Failed"
-)
-
-type DataImportStatus string
-
-//Definition data import status information
-const (
-	DataImportInitializing DataImportStatus = "Initializing"
-	DataImportProcessing   DataImportStatus = "Processing"
-	DataImportFinished     DataImportStatus = "Finished"
-	DataImportFailed       DataImportStatus = "Failed"
+	DataImportExportInitializing DataImportExportStatus = "Initializing"
+	DataImportExportProcessing   DataImportExportStatus = "Processing"
+	DataImportExportFinished     DataImportExportStatus = "Finished"
+	DataImportExportFailed       DataImportExportStatus = "Failed"
 )

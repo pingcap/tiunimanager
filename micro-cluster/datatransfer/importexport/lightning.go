@@ -15,29 +15,35 @@
 
 package importexport
 
+import (
+	"fmt"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+)
+
 // DataImportConfig data import toml config for lightning https://docs.pingcap.com/zh/tidb/dev/tidb-lightning-configuration
 type DataImportConfig struct {
 	Lightning    LightningCfg    `toml:"lightning"`
-	TikvImporter TikvImporterCfg `toml:"tikv-importer"`
+	TiKVImporter TiKVImporterCfg `toml:"tikv-importer"`
 	MyDumper     MyDumperCfg     `toml:"mydumper"`
-	Tidb         TidbCfg         `toml:"tidb"`
+	TiDB         TiDBCfg         `toml:"tidb"`
 }
 
 type LightningCfg struct {
 	Level             string `toml:"level"`              //lightning log level
 	File              string `toml:"file"`               //lightning log path
-	CheckRequirements bool   `toml:"check-requirements"` //lightning pre check
+	CheckRequirements bool   `toml:"check-requirements"` //lightning pre-check
 }
 
 // BackendLocal tidb-lightning backend https://docs.pingcap.com/zh/tidb/stable/tidb-lightning-backends#tidb-lightning-backend
 const (
 	BackendLocal string = "local"
 	//BackendImport string = "importer"
-	//BackendTidb   string = "tidb"
+	//BackendTiDB   string = "tidb"
 )
 
-type TikvImporterCfg struct {
-	Backend     string `toml:"backend"`       //backend mode: local/normal
+type TiKVImporterCfg struct {
+	Backend     string `toml:"backend"`       //backend mode
 	SortedKvDir string `toml:"sorted-kv-dir"` //temp store path
 }
 
@@ -45,16 +51,85 @@ type MyDumperCfg struct {
 	DataSourceDir string `toml:"data-source-dir"` //import data filepath
 }
 
-type TidbCfg struct {
+type TiDBCfg struct {
 	Host       string `toml:"host"`
 	Port       int    `toml:"port"`
 	User       string `toml:"user"`
 	Password   string `toml:"password"`
-	StatusPort int    `toml:"status-port"` //table infomation from tidb status port
-	PdAddr     string `toml:"pd-addr"`
+	StatusPort int    `toml:"status-port"` //table information from tidb status port
+	PDAddr     string `toml:"pd-addr"`
 }
 
-func NewDataImportConfig() *DataImportConfig {
-	//todo
-	return &DataImportConfig{}
+type ImportInfo struct {
+	ClusterId   string
+	UserName    string
+	Password    string
+	FilePath    string
+	RecordId    string
+	StorageType string
+	ConfigPath  string
+}
+
+type ExportInfo struct {
+	ClusterId    string
+	UserName     string
+	Password     string
+	FileType     string
+	RecordId     string
+	FilePath     string
+	Filter       string
+	Sql          string
+	StorageType  string
+	BucketRegion string
+}
+
+func NewDataImportConfig(meta *handler.ClusterMeta, info *ImportInfo) *DataImportConfig {
+	if meta == nil {
+		return nil
+	}
+	//todo: get from meta
+	tidbServerHost := ""
+	pdServerHost := ""
+	tidbServerPort := 0
+	tidbStatusPort := 0
+	pdClientPort := 0
+
+	if tidbServerPort == 0 {
+		tidbServerPort = common.DefaultTidbPort
+	}
+	if tidbStatusPort == 0 {
+		tidbStatusPort = common.DefaultTidbStatusPort
+	}
+	if pdClientPort == 0 {
+		pdClientPort = common.DefaultPDClientPort
+	}
+
+	/*
+	 * todo: sorted-kv-dir and data-source-dir in the same disk, may slow down import performance,
+	 *  and check-requirements = true can not pass lightning pre-check
+	 *  in real environment, config data-source-dir = user nfs storage, sorted-kv-dir = other disk, turn on pre-check
+	 */
+	config := &DataImportConfig{
+		Lightning: LightningCfg{
+			Level:             "info",
+			File:              fmt.Sprintf("%s/tidb-lightning.log", info.ConfigPath),
+			CheckRequirements: false, //todo: TBD
+		},
+		TiKVImporter: TiKVImporterCfg{
+			Backend:     BackendLocal,
+			SortedKvDir: info.ConfigPath, //todo: TBD
+		},
+		MyDumper: MyDumperCfg{
+			DataSourceDir: info.FilePath,
+		},
+		TiDB: TiDBCfg{
+			Host:       tidbServerHost,
+			Port:       tidbServerPort,
+			User:       info.UserName,
+			Password:   info.Password,
+			StatusPort: tidbStatusPort,
+			PDAddr:     fmt.Sprintf("%s:%d", pdServerHost, pdClientPort),
+		},
+	}
+	return config
 }

@@ -124,7 +124,7 @@ func TestBRReadWrite_QueryBackupRecords(t *testing.T) {
 	recordCreate, errCreate := rw.CreateBackupRecord(context.TODO(), record)
 	assert.NoError(t, errCreate)
 
-	recordQuery, total, errQuery := rw.QueryBackupRecords(context.TODO(), "", recordCreate.ID, time.Unix(0, 0), time.Unix(0, 0), 1, 10)
+	recordQuery, total, errQuery := rw.QueryBackupRecords(context.TODO(), "", recordCreate.ID, "", time.Unix(0, 0), time.Unix(0, 0), 1, 10)
 	assert.NoError(t, errQuery)
 	assert.Equal(t, int64(1), total)
 	assert.Equal(t, recordCreate.ID, recordQuery[0].ID)

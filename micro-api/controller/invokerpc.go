@@ -38,14 +38,8 @@ func InvokeRpcMethod(
 	requestBody string,
 	opts ...client.CallOption) {
 
-	operator := GetOperator(ctx)
 	rpcResponse, err := rpcMethod(framework.NewMicroCtxFromGinCtx(ctx),
 		&clusterpb.RpcRequest{
-			Operator: &clusterpb.RpcOperator{
-				Id:       operator.OperatorId,
-				Name:     operator.OperatorName,
-				TenantId: operator.TenantId,
-			},
 			Request: requestBody,
 		},
 		opts...,

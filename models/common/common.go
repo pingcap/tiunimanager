@@ -17,6 +17,8 @@ package common
 
 import (
 	"context"
+	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/library/framework"
 	"time"
 
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
@@ -24,13 +26,13 @@ import (
 )
 
 type Entity struct {
-	ID        string    `gorm:"primaryKey;"`
+	ID        string    `gorm:"primarykey"`
 	CreatedAt time.Time `gorm:"<-:create"`
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 
 	TenantId string `gorm:"default:null;not null;<-:create"`
-	Status   string `gorm:"default:null"`
+	Status   string `gorm:"not null;"`
 }
 
 func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
@@ -50,4 +52,21 @@ func WrapDB(db *gorm.DB) GormDB {
 
 func (m *GormDB) DB(ctx context.Context) *gorm.DB {
 	return m.db.WithContext(ctx)
+}
+
+// WrapDBError
+// @Description:
+// @Parameter err
+// @return error is nil or TiEMError
+func WrapDBError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	switch err.(type) {
+	case framework.TiEMError:
+		return err
+	default:
+		return framework.NewTiEMErrorf(common.TIEM_UNRECOGNIZED_ERROR, err.Error())
+	}
 }

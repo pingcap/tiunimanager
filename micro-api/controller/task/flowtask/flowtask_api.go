@@ -33,8 +33,8 @@ import (
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Param queryReq query QueryReq false "query request"
-// @Success 200 {object} controller.ResultWithPage{data=message.QueryWorkFlowsRep}
+// @Param queryReq query message.QueryWorkFlowsReq false "query request"
+// @Success 200 {object} controller.ResultWithPage{data=message.QueryWorkFlowsResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
@@ -66,7 +66,7 @@ func Query(c *gin.Context) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param workFlowId path int true "flow work id"
-// @Success 200 {object} controller.CommonResult{data=QueryWorkFlowDetailReq}
+// @Success 200 {object} controller.CommonResult{data=message.QueryWorkFlowDetailResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult

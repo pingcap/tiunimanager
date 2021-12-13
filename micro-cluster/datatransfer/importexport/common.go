@@ -16,6 +16,8 @@
 package importexport
 
 const (
-	FileTypeCSV string = "csv"
-	FileTypeSQL string = "sql"
+	FileTypeCSV                   string = "csv"
+	FileTypeSQL                   string = "sql"
+	contextClusterMetaKey         string = "clusterMeta"
+	contextDataTransportRecordKey string = "transportRecord"
 )

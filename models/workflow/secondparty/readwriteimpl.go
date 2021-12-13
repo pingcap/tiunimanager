@@ -91,7 +91,7 @@ func (m *GormSecondPartyOperationReadWrite) QueryByWorkFlowNodeID(ctx context.Co
 	}
 
 	secondPartyOperation := &SecondPartyOperation{}
-	err := m.DB(ctx).First(secondPartyOperation, fmt.Sprintf("%s = ?", Column_WorkFlowNodeID), workFlowNodeID).Error
+	err := m.DB(ctx).Last(secondPartyOperation, fmt.Sprintf("%s = ?", Column_WorkFlowNodeID), workFlowNodeID).Error
 
 	if err != nil {
 		return nil, framework.NewTiEMError(common.TIEM_SECOND_PARTY_OPERATION_NOT_FOUND, err.Error())

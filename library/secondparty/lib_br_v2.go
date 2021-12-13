@@ -239,8 +239,8 @@ func (manager *SecondPartyManager) startBrTaskThruSQL(ctx context.Context, opera
 			manager.operationStatusCh <- OperationStatusMember{
 				OperationID: operationID,
 				Status:      secondparty.OperationStatus_Finished,
-				Result:      "",
-				ErrorStr:    string(jsonMustMarshal(&resp)),
+				Result:      string(jsonMustMarshal(&resp)),
+				ErrorStr:    string(jsonMustMarshal(&resp)), //deprecated
 			}
 		}
 		logInFunc.Info("sql cmd return successfully")

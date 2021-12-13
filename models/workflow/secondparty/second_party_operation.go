@@ -26,6 +26,8 @@ package secondparty
 import (
 	"time"
 
+	"github.com/pingcap-inc/tiem/library/util/uuidutil"
+
 	"gorm.io/gorm"
 )
 
@@ -42,32 +44,43 @@ type SecondPartyOperation struct {
 	DeletedAt      gorm.DeletedAt `gorm:"index"`
 }
 
+func (s *SecondPartyOperation) BeforeCreate(tx *gorm.DB) (err error) {
+	s.ID = uuidutil.GenerateID()
+	return nil
+}
+
 type OperationStatus string
+
+const (
+	OperationStatus_Init       OperationStatus = "init"
+	OperationStatus_Processing OperationStatus = "processing"
+	OperationStatus_Finished   OperationStatus = "finished"
+	OperationStatus_Error      OperationStatus = "error"
+)
 
 type OperationType string
 
 const (
-	OperationStatus_Init                    OperationStatus = "init"
-	OperationStatus_Processing              OperationStatus = "processing"
-	OperationStatus_Finished                OperationStatus = "finished"
-	OperationStatus_Error                   OperationStatus = "error"
-	OperationType_ClusterDeploy             OperationType   = "cluster deploy"
-	OperationType_ClusterStart              OperationType   = "cluster start"
-	OperationType_ClusterDestroy            OperationType   = "cluster destroy"
-	OperationType_ClusterList               OperationType   = "cluster list"
-	OperationType_ClusterRestart            OperationType   = "cluster restart"
-	OperationType_ClusterStop               OperationType   = "cluster stop"
-	OperationType_ClusterUpgrade            OperationType   = "cluster upgrade"
-	OperationType_ClusterScaleOut           OperationType   = "cluster scale out"
-	OperationType_ClusterScaleIn            OperationType   = "cluster scale in"
-	OperationType_ClusterEditGlobalConfig   OperationType   = "cluster edit global config"
-	OperationType_ClusterEditInstanceConfig OperationType   = "cluster edit instance config"
-	OperationType_ClusterReload             OperationType   = "cluster reload"
-	OperationType_Transfer                  OperationType   = "transfer"
-	OperationType_Dumpling                  OperationType   = "dumpling"
-	OperationType_Lightning                 OperationType   = "lightning"
-	OperationType_Backup                    OperationType   = "backup"
-	OperationType_Restore                   OperationType   = "restore"
-	Column_Type                                             = "type"
-	Column_WorkFlowNodeID                                   = "work_flow_node_id"
+	OperationType_ClusterDeploy             OperationType = "cluster deploy"
+	OperationType_ClusterStart              OperationType = "cluster start"
+	OperationType_ClusterDestroy            OperationType = "cluster destroy"
+	OperationType_ClusterList               OperationType = "cluster list"
+	OperationType_ClusterRestart            OperationType = "cluster restart"
+	OperationType_ClusterStop               OperationType = "cluster stop"
+	OperationType_ClusterUpgrade            OperationType = "cluster upgrade"
+	OperationType_ClusterScaleOut           OperationType = "cluster scale out"
+	OperationType_ClusterScaleIn            OperationType = "cluster scale in"
+	OperationType_ClusterEditGlobalConfig   OperationType = "cluster edit global config"
+	OperationType_ClusterEditInstanceConfig OperationType = "cluster edit instance config"
+	OperationType_ClusterReload             OperationType = "cluster reload"
+	OperationType_Transfer                  OperationType = "transfer"
+	OperationType_Dumpling                  OperationType = "dumpling"
+	OperationType_Lightning                 OperationType = "lightning"
+	OperationType_Backup                    OperationType = "backup"
+	OperationType_Restore                   OperationType = "restore"
+)
+
+const (
+	Column_Type           = "type"
+	Column_WorkFlowNodeID = "work_flow_node_id"
 )

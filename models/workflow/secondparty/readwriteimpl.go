@@ -25,6 +25,7 @@ package secondparty
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/pingcap-inc/tiem/library/common"
@@ -85,17 +86,52 @@ func (m *GormSecondPartyOperationReadWrite) Get(ctx context.Context, id string) 
 }
 
 func (m *GormSecondPartyOperationReadWrite) QueryByWorkFlowNodeID(ctx context.Context,
-	workFlowNodeID string) (*SecondPartyOperation, error) {
+	workFlowNodeID string) (secondPartyOperation *SecondPartyOperation, err error) {
 	if "" == workFlowNodeID {
 		return nil, framework.SimpleError(common.TIEM_PARAMETER_INVALID)
 	}
 
-	secondPartyOperation := &SecondPartyOperation{}
-	err := m.DB(ctx).Last(secondPartyOperation, fmt.Sprintf("%s = ?", Column_WorkFlowNodeID), workFlowNodeID).Error
+	var secondPartyOperations []SecondPartyOperation
+	err = m.DB(ctx).Model(&SecondPartyOperation{}).
+		Where(fmt.Sprintf("%s = ?", Column_WorkFlowNodeID), workFlowNodeID).
+		Find(&secondPartyOperations).Error
 
 	if err != nil {
-		return nil, framework.NewTiEMError(common.TIEM_SECOND_PARTY_OPERATION_NOT_FOUND, err.Error())
+		return
+	}
+
+	errCt := 0
+	errStatStr := ""
+	processingCt := 0
+	for _, operation := range secondPartyOperations {
+		if operation.Status == OperationStatus_Finished {
+			return &operation, nil
+		}
+		if operation.Status == OperationStatus_Error {
+			errStatStr = operation.ErrorStr
+			errCt++
+			continue
+		}
+		if operation.Status == OperationStatus_Processing {
+			processingCt++
+			continue
+		}
+	}
+	if len(secondPartyOperations) == 0 {
+		err = errors.New("no match record was found")
+		return
+	}
+	secondPartyOperation = &SecondPartyOperation{}
+	if errCt >= len(secondPartyOperations) {
+		secondPartyOperation.Status = OperationStatus_Error
+		secondPartyOperation.ErrorStr = errStatStr
+		return
 	} else {
-		return secondPartyOperation, nil
+		if processingCt > 0 {
+			secondPartyOperation.Status = OperationStatus_Processing
+		} else {
+			secondPartyOperation.Status = OperationStatus_Init
+		}
+		return
 	}
 }

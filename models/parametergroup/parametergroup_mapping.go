@@ -14,47 +14,33 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: readerwriter.go
- * @Description: parameter group reader and writer interface define
+ * @File: parametergroup_mapping.go
+ * @Description: parameter group mapping table orm
  * @Author: jiangxunyu@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/10 14:31
+ * @Date: 2021/12/10 14:46
 *******************************************************************************/
 
-package parameter
+package parametergroup
 
-import "context"
+import "time"
 
-// ReaderWriter
-// @Description: cluster parameter reader and writer interface
-type ReaderWriter interface {
+// ParameterGroupMapping
+// @Description: parameter_group_mapping table orm
+type ParameterGroupMapping struct {
+	ParameterGroupID string    `gorm:"primaryKey;comment:'parameter group id, relation parameter_group table'"`
+	ParameterID      string    `gorm:"primaryKey;comment:'group id, relation parameter table'"`
+	DefaultValue     string    `gorm:"not null;comment:'parameter default value'"`
+	Note             string    `gorm:"comment:'parameter remark information'"`
+	CreatedAt        time.Time `gorm:"<-:create"`
+	UpdatedAt        time.Time
+}
 
-	// QueryClusterParameter
-	// @Description: query cluster parameter
-	// @param ctx
-	// @param clusterId
-	// @param page
-	// @param pageSize
-	// @return paramGroupId
-	// @return total
-	// @return params
-	// @return err
-	QueryClusterParameter(ctx context.Context, clusterId string, offset, size int) (paramGroupId string, params []*ClusterParamDetail, total int64, err error)
+// ParamDetail
+// @Description: parameter group detail object
+type ParamDetail struct {
+	Parameter
 
-	// UpdateClusterParameter
-	// @Description: update cluster parameters
-	// @param ctx
-	// @param clusterId
-	// @param params
-	// @return err
-	UpdateClusterParameter(ctx context.Context, clusterId string, params []*ClusterParameterMapping) (err error)
-
-	// ApplyClusterParameter
-	// @Description: applying a parameter group to a cluster
-	// @param ctx
-	// @param parameterGroupId
-	// @param clusterId
-	// @param params
-	// @return err
-	ApplyClusterParameter(ctx context.Context, parameterGroupId string, clusterId string, params []*ClusterParameterMapping) (err error)
+	DefaultValue string `json:"defaultValue"`
+	Note         string `json:"note"`
 }

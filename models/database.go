@@ -21,7 +21,9 @@ import (
 	"github.com/pingcap-inc/tiem/models/cluster/backuprestore"
 	"github.com/pingcap-inc/tiem/models/cluster/changefeed"
 	"github.com/pingcap-inc/tiem/models/cluster/management"
+	"github.com/pingcap-inc/tiem/models/cluster/parameter"
 	"github.com/pingcap-inc/tiem/models/datatransfer/importexport"
+	"github.com/pingcap-inc/tiem/models/parametergroup"
 	"github.com/pingcap-inc/tiem/models/workflow"
 	"gorm.io/driver/sqlite"
 
@@ -31,12 +33,14 @@ import (
 var defaultDb *database
 
 type database struct {
-	base                     *gorm.DB
-	workFlowReaderWriter     workflow.ReaderWriter
-	importExportReaderWriter importexport.ReaderWriter
-	brReaderWriter           backuprestore.ReaderWriter
-	changeFeedReaderWriter   changefeed.ReaderWriter
-	clusterReaderWriter management.ReaderWriter
+	base                         *gorm.DB
+	workFlowReaderWriter         workflow.ReaderWriter
+	importExportReaderWriter     importexport.ReaderWriter
+	brReaderWriter               backuprestore.ReaderWriter
+	changeFeedReaderWriter       changefeed.ReaderWriter
+	clusterReaderWriter          management.ReaderWriter
+	parameterGroupReaderWriter   parametergroup.ReaderWriter
+	clusterParameterReaderWriter parameter.ReaderWriter
 }
 
 func Open(fw *framework.BaseFramework, reentry bool) error {
@@ -82,6 +86,8 @@ func (p *database) initReaderWriters() {
 	defaultDb.workFlowReaderWriter = workflow.NewFlowReadWrite(defaultDb.base)
 	defaultDb.importExportReaderWriter = importexport.NewImportExportReadWrite(defaultDb.base)
 	defaultDb.brReaderWriter = backuprestore.NewBRReadWrite(defaultDb.base)
+	defaultDb.parameterGroupReaderWriter = parametergroup.NewParameterGroupReadWrite(defaultDb.base)
+	defaultDb.clusterParameterReaderWriter = parameter.NewClusterParameterReadWrite(defaultDb.base)
 }
 
 func (p *database) initSystemData() {
@@ -129,7 +135,7 @@ func GetClusterReaderWriter() management.ReaderWriter {
 	return defaultDb.clusterReaderWriter
 }
 
-func SetClusterReaderWriter(rw management.ReaderWriter)  {
+func SetClusterReaderWriter(rw management.ReaderWriter) {
 	defaultDb.clusterReaderWriter = rw
 }
 

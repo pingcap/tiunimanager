@@ -93,7 +93,7 @@ func Detail(c *gin.Context) {
 	})
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.DetailChangeFeedTaskResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.DetailChangeFeedTask, &cluster.DetailChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -118,7 +118,7 @@ func Pause(c *gin.Context) {
 	})
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.PauseChangeFeedTaskResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.PauseChangeFeedTask, &cluster.PauseChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -143,7 +143,7 @@ func Resume(c *gin.Context) {
 	})
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.ResumeChangeFeedTaskResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.ResumeChangeFeedTask, &cluster.ResumeChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -175,7 +175,7 @@ func Update(c *gin.Context) {
 		})
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.UpdateChangeFeedTaskResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.UpdateChangeFeedTask, &cluster.UpdateChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}
@@ -200,7 +200,7 @@ func Delete(c *gin.Context) {
 	})
 
 	if err == nil {
-		controller.InvokeRpcMethod(c, client.ClusterClient.CreateChangeFeedTask, &cluster.DeleteChangeFeedTaskResp{},
+		controller.InvokeRpcMethod(c, client.ClusterClient.DeleteChangeFeedTask, &cluster.DeleteChangeFeedTaskResp{},
 			requestBody,
 			controller.DefaultTimeout)
 	}

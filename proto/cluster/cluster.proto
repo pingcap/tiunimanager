@@ -83,6 +83,7 @@ service ClusterService {
     rpc DeleteChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc UpdateChangeFeedTask(RpcRequest) returns (RpcResponse);
     rpc QueryChangeFeedTasks(RpcRequest) returns (RpcResponse);
+    rpc DetailChangeFeedTask(RpcRequest) returns (RpcResponse);
 }
 
 message ClusterCreateReqDTO {

@@ -83,13 +83,20 @@ const (
 	EMProductNameEnterpriseManager EMProductNameType = "EnterpriseManager"
 )
 
+type EMInternalProduct int
+
+//Definition of internal product, only Enterprise Manager' value is EMInternalProductYes
+const (
+	EMInternalProductNo  = 0
+	EMInternalProductYes = 1
+)
+
 type ProductStatus string
 
 //Definition product status information
 const (
-	ProductStatusOnline    ProductStatus = "Online"
-	ProductStatusOffline   ProductStatus = "Offline"
-	ProductStatusException ProductStatus = "Exception" // only TiDB Enterprise Manager
+	ProductStatusOnline  ProductStatus = "Online"
+	ProductStatusOffline ProductStatus = "Offline"
 )
 
 type ProductSpecStatus string
@@ -106,4 +113,9 @@ type ProductUpgradePathStatus string
 const (
 	ProductUpgradePathAvailable   ProductUpgradePathStatus = "Available"
 	ProductUpgradePathUnAvailable ProductUpgradePathStatus = "UnAvailable"
+)
+
+// MaxBatchQueryDataNumber Batch querying data from an array with maximum conditions
+const (
+	MaxBatchQueryDataNumber int = 512
 )

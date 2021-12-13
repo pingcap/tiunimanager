@@ -255,3 +255,13 @@ func freedResource(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 
 	return nil
 }
+
+// initDatabaseAccount
+// @Description: init database account after deploy
+// @Parameter node
+// @Parameter context
+// @return error
+func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	// todo
+	return nil
+}

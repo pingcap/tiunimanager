@@ -255,7 +255,7 @@ func (d DefaultTopologyPlanner) getClusterPorts(ctx context.Context, cluster *do
 	if err != nil {
 		return nil, err
 	} else if rsp.Rs.Code != 0 {
-		err = framework.NewTiEMErrorf(common.TIEM_CLUSTER_GET_CLUSTER_PORT_ERROR, rsp.Rs.Message)
+		err = framework.NewTiEMErrorf(common.TIEM_CLUSTER_RESOURCE_NOT_ENOUGH, rsp.Rs.Message)
 		return nil, err
 	}
 

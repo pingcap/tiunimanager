@@ -66,14 +66,14 @@ func (t TiUPTiDBMetadataManager) FetchFromRemoteCluster(ctx context.Context, req
 	Client, err := ssh.Dial("tcp", net.JoinHostPort(req.TiupIp, req.Port), &Conf)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("FetchFromRemoteCluster, error: %s", err.Error())
-		return nil, framework.WrapError(common.TIEM_TAKEOVER_SSH_CONNECT_ERROR, "ssh dial error", err)
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_NOT_REACHABLE, "ssh dial error", err)
 	}
 	defer Client.Close()
 
 	sftpClient, err := sftp.NewClient(Client)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("FetchFromRemoteCluster, error: %s", err.Error())
-		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "new sftp client error", err)
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_INCORRECT_PATH, "new sftp client error", err)
 	}
 	defer sftpClient.Close()
 
@@ -81,14 +81,14 @@ func (t TiUPTiDBMetadataManager) FetchFromRemoteCluster(ctx context.Context, req
 	remoteFile, err := sftpClient.Open(remoteFileName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("FetchFromRemoteCluster, error: %s", err.Error())
-		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "open sftp client error", err)
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_INCORRECT_PATH, "open sftp client error", err)
 	}
 	defer remoteFile.Close()
 
 	dataByte, err := ioutil.ReadAll(remoteFile)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("FetchFromRemoteCluster, error: %s", err.Error())
-		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "read remote file error", err)
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_INCORRECT_PATH, "read remote file error", err)
 	}
 
 	metadata := &spec.ClusterMeta{}
@@ -103,14 +103,14 @@ func (t TiUPTiDBMetadataManager) FetchFromLocal(ctx context.Context, tiupPath st
 	file, err := os.Open(fileName)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("FetchFromLocal, error: %s", err.Error())
-		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "open file error", err)
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_INCORRECT_PATH, "open file error", err)
 	}
 	defer file.Close()
 
 	dataByte, err := ioutil.ReadAll(file)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("FetchFromLocal, error: %s", err.Error())
-		return nil, framework.WrapError(common.TIEM_TAKEOVER_SFTP_ERROR, "read file error", err)
+		return nil, framework.WrapError(common.TIEM_TAKEOVER_INCORRECT_PATH, "read file error", err)
 	}
 
 	metadata := &spec.ClusterMeta{}

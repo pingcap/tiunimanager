@@ -68,15 +68,6 @@ type BRService interface {
 	// @Return error
 	DeleteBackupRecords(ctx context.Context, request *cluster.DeleteBackupDataReq) (*cluster.DeleteBackupDataResp, error)
 
-	// GetBackupStrategy
-	// @Description: get backup strategy of cluster
-	// @Receiver m
-	// @Parameter ctx
-	// @Parameter request
-	// @Return *cluster.GetBackupStrategyResp
-	// @Return error
-	GetBackupStrategy(ctx context.Context, request *cluster.GetBackupStrategyReq) (*cluster.GetBackupStrategyResp, error)
-
 	// SaveBackupStrategy
 	// @Description: save backup strategy of cluster
 	// @Receiver m
@@ -85,6 +76,15 @@ type BRService interface {
 	// @Return *cluster.SaveBackupStrategyResp
 	// @Return error
 	SaveBackupStrategy(ctx context.Context, request *cluster.SaveBackupStrategyReq) (*cluster.SaveBackupStrategyResp, error)
+
+	// GetBackupStrategy
+	// @Description: get backup strategy of cluster
+	// @Receiver m
+	// @Parameter ctx
+	// @Parameter request
+	// @Return *cluster.GetBackupStrategyResp
+	// @Return error
+	GetBackupStrategy(ctx context.Context, request *cluster.GetBackupStrategyReq) (*cluster.GetBackupStrategyResp, error)
 
 	// DeleteBackupStrategy
 	// @Description: save backup strategy of cluster

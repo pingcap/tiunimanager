@@ -16,6 +16,7 @@
 package backuprestore
 
 import (
+	"context"
 	"fmt"
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
@@ -63,7 +64,8 @@ func backupCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error 
 	}
 	storage := secondparty.BrStorage{
 		StorageType: storageType,
-		Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk, get from config
+		Root:        getBRStoragePath(ctx, record.StorageType, record.FilePath),
+		//Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"),
 	}
 
 	framework.LogWithContext(ctx).Infof("begin call brmgr backup api, clusterFacade[%v], storage[%v]", clusterFacade, storage)
@@ -127,7 +129,8 @@ func restoreFromSrcCluster(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext
 	}
 	storage := secondparty.BrStorage{
 		StorageType: storageType,
-		Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"), //todo: test env s3 ak sk
+		Root:        getBRStoragePath(ctx, record.StorageType, record.FilePath),
+		//Root:        fmt.Sprintf("%s/%s", record.FilePath, "?access-key=minioadmin\\&secret-access-key=minioadmin\\&endpoint=http://minio.pingcap.net:9000\\&force-path-style=true"),
 	}
 	framework.LogWithContext(ctx).Infof("begin call brmgr restore api, clusterFacade %v, storage %v", clusterFacade, storage)
 	_, err = secondparty.Manager.Restore(ctx, clusterFacade, storage, node.ID)
@@ -167,6 +170,31 @@ func restoreFail(node *wfModel.WorkFlowNode, ctx *workflow.FlowContext) error {
 	defer framework.LogWithContext(ctx).Info("end restoreFail")
 
 	return nil
+}
+
+func getBRStoragePath(ctx context.Context, storageType string, filePath string) string {
+	configRW := models.GetConfigReaderWriter()
+	if string(constants.StorageTypeS3) == storageType {
+		endpointConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupS3Endpoint)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3Endpoint, err.Error())
+			return ""
+		}
+		accessKeyConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupS3AccessKey)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3AccessKey, err.Error())
+			return ""
+		}
+		secretAccessKeyConfig, err := configRW.GetConfig(ctx, constants.ConfigKeyBackupS3SecretAccessKey)
+		if err != nil {
+			framework.LogWithContext(ctx).Errorf("get conifg %s failed: %s", constants.ConfigKeyBackupS3SecretAccessKey, err.Error())
+			return ""
+		}
+		return fmt.Sprintf("%s/?access-key=%s\\&secret-access-key=%s\\&endpoint=%s\\&force-path-style=true",
+			filePath, accessKeyConfig.ConfigValue, secretAccessKeyConfig.ConfigValue, endpointConfig.ConfigValue)
+	} else {
+		return filePath
+	}
 }
 
 func convertBrStorageType(storageType string) (secondparty.StorageType, error) {

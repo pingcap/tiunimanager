@@ -18,6 +18,7 @@ package main
 
 import (
 	"github.com/asim/go-micro/v3"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/client"
 	"github.com/pingcap-inc/tiem/library/client/cluster/clusterpb"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
@@ -61,11 +62,11 @@ func main() {
 
 func initLibForDev(f *framework.BaseFramework) error {
 	secondparty.SecondParty = &secondparty.SecondMicro{
-		TiupBinPath: "tiup",
+		TiupBinPath: constants.TiUPBinPath,
 	}
 	secondparty.SecondParty.MicroInit()
 	secondparty.Manager = &secondparty.SecondPartyManager{
-		TiupBinPath: "tiup",
+		TiUPBinPath: constants.TiUPBinPath,
 	}
 	secondparty.Manager.Init()
 	return nil

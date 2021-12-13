@@ -18,19 +18,23 @@ package workflow
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/common/structs"
 	"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/secondparty"
 	"github.com/pingcap-inc/tiem/models"
 	"github.com/pingcap/errors"
+
 	//"github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
 	"github.com/pingcap-inc/tiem/library/common"
 	"github.com/pingcap-inc/tiem/library/framework"
+
 	//"github.com/pingcap-inc/tiem/library/secondparty"
+	"time"
+
 	common2 "github.com/pingcap-inc/tiem/models/common"
 	"github.com/pingcap-inc/tiem/models/workflow"
-	"time"
 )
 
 // WorkFlowAggregation workflow aggregation with workflow definition and nodes
@@ -184,7 +188,7 @@ func (flow *WorkFlowAggregation) handle(nodeDefine *NodeDefine) bool {
 		for range ticker.C {
 			framework.LogWithContext(flow.Context).Infof("polling node waiting, nodeId %s, nodeName %s", node.ID, node.Name)
 
-			stat, statString, err := secondparty.Manager.GetTaskStatusByBizID(flow.Context, node.ID)
+			stat, statString, err := secondparty.Manager.GetOperationStatusByWorkFlowNodeID(flow.Context, node.ID)
 			if err != nil {
 				framework.LogWithContext(flow.Context).Error(err)
 				node.Fail(framework.WrapError(common.TIEM_TASK_FAILED, common.TIEM_TASK_FAILED.Explain(), err))

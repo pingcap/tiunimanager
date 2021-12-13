@@ -29,25 +29,29 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pingcap-inc/tiem/test/mockmodels/mocksecondparty"
+
+	"github.com/pingcap-inc/tiem/models"
+
+	"github.com/pingcap-inc/tiem/models/workflow/secondparty"
+
 	"github.com/golang/mock/gomock"
-	"github.com/pingcap-inc/tiem/library/client"
-	dbPb "github.com/pingcap-inc/tiem/library/client/metadb/dbpb"
-	"github.com/pingcap-inc/tiem/test/mockdb"
 )
 
 var secondPartyManager *SecondPartyManager
 
 func init() {
 	secondPartyManager = &SecondPartyManager{
-		TiupBinPath: "mock_tiup",
+		TiUPBinPath: "mock_tiup",
 	}
+	models.MockDB()
 	secondPartyManager.Init()
 }
 
 func TestSecondPartyManager_Init(t *testing.T) {
-	syncedTaskStatusMapLen := len(secondPartyManager.syncedTaskStatusMap)
-	taskStatusChCap := cap(secondPartyManager.taskStatusCh)
-	taskStatusMapLen := len(secondPartyManager.taskStatusMap)
+	syncedTaskStatusMapLen := len(secondPartyManager.syncedOperationStatusMap)
+	taskStatusChCap := cap(secondPartyManager.operationStatusCh)
+	taskStatusMapLen := len(secondPartyManager.operationStatusMap)
 	if syncedTaskStatusMapLen != 0 {
 		t.Errorf("syncedTaskStatusMapLen len is incorrect, got: %d, want: %d.", syncedTaskStatusMapLen, 0)
 	}
@@ -55,93 +59,91 @@ func TestSecondPartyManager_Init(t *testing.T) {
 		t.Errorf("taskStatusChCap cap is incorrect, got: %d, want: %d.", taskStatusChCap, 1024)
 	}
 	if taskStatusMapLen != 0 {
-		t.Errorf("taskStatusMap len is incorrect, got: %d, want: %d.", taskStatusMapLen, 0)
+		t.Errorf("operationStatusMap len is incorrect, got: %d, want: %d.", taskStatusMapLen, 0)
 	}
 }
 
 func TestSecondPartyManager_taskStatusMapSyncer_NothingUpdate(t *testing.T) {
 	time.Sleep(1500 * time.Microsecond)
-	syncedTaskStatusMapLen := len(secondPartyManager.syncedTaskStatusMap)
-	taskStatusMapLen := len(secondPartyManager.taskStatusMap)
+	syncedTaskStatusMapLen := len(secondPartyManager.syncedOperationStatusMap)
+	taskStatusMapLen := len(secondPartyManager.operationStatusMap)
 	if syncedTaskStatusMapLen != 0 {
 		t.Errorf("syncedTaskStatusMapLen len is incorrect, got: %d, want: %d.", syncedTaskStatusMapLen, 0)
 	}
 	if taskStatusMapLen != 0 {
-		t.Errorf("taskStatusMap len is incorrect, got: %d, want: %d.", taskStatusMapLen, 0)
+		t.Errorf("operationStatusMap len is incorrect, got: %d, want: %d.", taskStatusMapLen, 0)
 	}
 }
 
 func TestSecondPartyManager_taskStatusMapSyncer_updateButFail(t *testing.T) {
 	mockCtl := gomock.NewController(t)
-	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
-	client.DBClient = mockDBClient
+	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
+	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 
-	syncReq := dbPb.UpdateTiupOperatorRecordRequest{
-		Id:     1,
-		Status: dbPb.TiupTaskStatus_Processing,
-		ErrStr: "",
-	}
-	syncResp := dbPb.UpdateTiupOperatorRecordResponse{
-		ErrCode: 0,
-		ErrStr:  "",
-	}
-	mockDBClient.EXPECT().UpdateTiupOperatorRecord(context.Background(), &syncReq).Return(&syncResp, errors.New("fail update"))
-
-	secondPartyManager.taskStatusCh <- TaskStatusMember{
-		TaskID:   1,
-		Status:   TaskStatusProcessing,
+	secondPartyOperation := secondparty.SecondPartyOperation{
+		ID:       TestOperationID,
+		Status:   secondparty.OperationStatus_Processing,
+		Message:  "",
 		ErrorStr: "",
+	}
+	expectedErr := errors.New("fail update second party operation")
+
+	mockReaderWriter.EXPECT().Update(context.Background(), &secondPartyOperation).Return(expectedErr)
+
+	secondPartyManager.operationStatusCh <- OperationStatusMember{
+		OperationID: TestOperationID,
+		Status:      secondparty.OperationStatus_Processing,
+		Message:     "",
+		ErrorStr:    "",
 	}
 
 	time.Sleep(1500 * time.Millisecond)
 
-	syncedTaskStatusMapLen := len(secondPartyManager.syncedTaskStatusMap)
+	syncedTaskStatusMapLen := len(secondPartyManager.syncedOperationStatusMap)
 	if syncedTaskStatusMapLen != 1 {
 		t.Errorf("syncedTaskStatusMapLen len is incorrect, got: %d, want: %d.", syncedTaskStatusMapLen, 1)
 	}
-	v := secondPartyManager.syncedTaskStatusMap[1]
-	if !v.validFlag || v.stat.Status != TaskStatusProcessing {
+	v := secondPartyManager.syncedOperationStatusMap[TestOperationID]
+	if !v.validFlag || v.stat.Status != secondparty.OperationStatus_Processing {
 		t.Errorf("TaskStatus for 1 is incorrect, got: %v %v, want: %v %v", v.validFlag, v.stat.Status, true, TaskStatusProcessing)
 	}
 }
 
 func TestSecondPartyManager_taskStatusMapSyncer_updateAndSucceed(t *testing.T) {
 	mockCtl := gomock.NewController(t)
-	mockDBClient := mockdb.NewMockTiEMDBService(mockCtl)
-	client.DBClient = mockDBClient
+	mockReaderWriter := mocksecondparty.NewMockReaderWriter(mockCtl)
+	models.SetSecondPartyOperationReaderWriter(mockReaderWriter)
 
-	syncReq := dbPb.UpdateTiupOperatorRecordRequest{
-		Id:     1,
-		Status: dbPb.TiupTaskStatus_Finished,
-		ErrStr: "",
-	}
-	syncResp := dbPb.UpdateTiupOperatorRecordResponse{
-		ErrCode: 0,
-		ErrStr:  "",
-	}
-	mockDBClient.EXPECT().UpdateTiupOperatorRecord(context.Background(), &syncReq).Return(&syncResp, nil)
-
-	secondPartyManager.taskStatusCh <- TaskStatusMember{
-		TaskID:   1,
-		Status:   TaskStatusFinished,
+	secondPartyOperation := secondparty.SecondPartyOperation{
+		ID:       TestOperationID,
+		Status:   secondparty.OperationStatus_Finished,
+		Message:  "",
 		ErrorStr: "",
+	}
+	mockReaderWriter.EXPECT().Update(context.Background(), &secondPartyOperation).Return(nil)
+
+	secondPartyManager.operationStatusCh <- OperationStatusMember{
+		OperationID: TestOperationID,
+		Status:      secondparty.OperationStatus_Finished,
+		Message:     "",
+		ErrorStr:    "",
 	}
 
 	time.Sleep(1500 * time.Millisecond)
-	syncedTaskStatusMapLen := len(secondPartyManager.syncedTaskStatusMap)
+	syncedTaskStatusMapLen := len(secondPartyManager.syncedOperationStatusMap)
 	if syncedTaskStatusMapLen != 1 {
 		t.Errorf("syncedTaskStatusMapLen len is incorrect, got: %d, want: %d.", syncedTaskStatusMapLen, 1)
 	}
-	v := secondPartyManager.syncedTaskStatusMap[1]
-	if !v.validFlag || v.stat.Status != TaskStatusFinished {
+	v := secondPartyManager.syncedOperationStatusMap[TestOperationID]
+	if !v.validFlag || v.stat.Status != secondparty.OperationStatus_Finished {
 		t.Errorf("TaskStatus for 1 is incorrect, got: %v %v, want: %v %v", v.validFlag, v.stat.Status, true, TaskStatusFinished)
 	}
 }
 
 func TestSecondPartyManager_taskStatusMapSyncer_DeleteInvalidTaskStatus(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
-	taskStatusMapLen := len(secondPartyManager.taskStatusMap)
+	taskStatusMapLen := len(secondPartyManager.operationStatusMap)
 	if taskStatusMapLen != 0 {
-		t.Errorf("taskStatusMap len is incorrect, got: %d, want: %d.", taskStatusMapLen, 0)
+		t.Errorf("operationStatusMap len is incorrect, got: %d, want: %d.", taskStatusMapLen, 0)
 	}
 }

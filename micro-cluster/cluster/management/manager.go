@@ -28,6 +28,7 @@ const (
 	ContextClusterMeta   = "ClusterMeta"
 	ContextTopology      = "Topology"
 	ContextAllocResource = "AllocResource"
+	ContextInstanceID    = "InstanceID"
 )
 
 var scaleOutDefine = workflow.WorkFlowDefine{
@@ -42,10 +43,21 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 	},
 }
 
+var scaleInDefine = workflow.WorkFlowDefine{
+	FlowName: constants.FlowScaleInCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":            {"scaleInCluster", "scaleInDone", "fail", workflow.PollingNode, scaleInCluster},
+		"scaleInDone":      {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
+		"freeDone": {"end", "", "", workflow.SyncFuncNode, clusterEnd},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, clusterFail},
+	},
+}
+
 func NewClusterManager() *Manager {
 	workflowManager := workflow.GetWorkFlowService()
 
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowScaleOutCluster, &scaleOutDefine)
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowScaleInCluster, &scaleInDefine)
 	return &Manager{}
 }
 
@@ -55,28 +67,29 @@ func NewClusterManager() *Manager {
 // @Parameter	request
 // @Return		*cluster.ScaleOutClusterResp
 // @Return		error
-func (p *Manager) ScaleOut(ctx context.Context, request *cluster.ScaleOutClusterReq) (*cluster.ScaleOutClusterResp, error) {
+func (p *Manager) ScaleOut(ctx context.Context, request cluster.ScaleOutClusterReq) (cluster.ScaleOutClusterResp, error) {
+	response := cluster.ScaleOutClusterResp{}
 	// Get cluster info and topology from db based by clusterID
 	clusterMeta, err := handler.Get(ctx, request.ClusterID)
 
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"load cluser[%s] meta from db error: %s", request.ClusterID, err.Error())
-		return nil, err
+		return response, err
 	}
 
 	// Add instance into cluster topology
 	if err = clusterMeta.AddInstances(ctx, request.Compute); err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"add instances into cluster[%s] topology error: %s", clusterMeta.Cluster.Name, err.Error())
-		return nil, err
+		return response, err
 	}
 
 	// Update cluster maintenance status into scale out
 	if err = clusterMeta.UpdateClusterMaintenanceStatus(ctx, constants.ClusterMaintenanceScaleOut); err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"update cluster[%s] maintenance status error: %s", clusterMeta.Cluster.Name, err.Error())
-		return nil, err
+		return response, err
 	}
 
 	// Create the workflow to scale out a cluster
@@ -84,48 +97,73 @@ func (p *Manager) ScaleOut(ctx context.Context, request *cluster.ScaleOutCluster
 	flow, err := workflowManager.CreateWorkFlow(ctx, clusterMeta.Cluster.ID, constants.FlowScaleOutCluster)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf("create workflow error: %s", err.Error())
-		return nil, err
+		return response, err
 	}
 	workflowManager.AddContext(flow, ContextClusterMeta, clusterMeta)
 
 	if err = workflowManager.AsyncStart(ctx, flow); err != nil {
 		framework.LogWithContext(ctx).Errorf("async start workflow[%s] error: %s", flow.Flow.ID, err.Error())
-		return nil, err
+		return response, err
 	}
 
 	// Handle response
-	response := &cluster.ScaleOutClusterResp{}
 	response.ClusterID = clusterMeta.Cluster.ID
 	response.WorkFlowID = flow.Flow.ID
 
 	return response, nil
 }
 
-func (manager *Manager) ScaleIn(ctx context.Context, request *cluster.ScaleInClusterReq) (*cluster.ScaleInClusterResp, error) {
+func (manager *Manager) ScaleIn(ctx context.Context, request cluster.ScaleInClusterReq) (cluster.ScaleInClusterResp, error) {
+	response := cluster.ScaleInClusterResp{}
 	// Get cluster info and topology from db based by clusterID
 	clusterMeta, err := handler.Get(ctx, request.ClusterID)
 	if err != nil {
-		return nil, err
+		framework.LogWithContext(ctx).Errorf(
+			"load cluser[%s] meta from db error: %s", request.ClusterID, err.Error())
+		return response, err
+	}
+
+	// Judge whether the instance exists
+	_, err = clusterMeta.GetInstance(ctx, request.InstanceID)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf(
+			"cluster[%s] has no instance[%s]", clusterMeta.Cluster.Name, request.InstanceID)
+		return response, err
 	}
 
 	// Set cluster maintenance status into scale in
 	if err = clusterMeta.UpdateClusterMaintenanceStatus(ctx, constants.ClusterMaintenanceScaleIn); err != nil {
-		return nil, err
+		return response, err
 	}
 
 	// Start the workflow to scale in a cluster
+	workflowManager := workflow.GetWorkFlowService()
+	flow, err := workflowManager.CreateWorkFlow(ctx, clusterMeta.Cluster.ID, constants.FlowScaleInCluster)
+	if err != nil {
+		framework.LogWithContext(ctx).Errorf("create workflow error: %s", err.Error())
+		return response, err
+	}
+	workflowManager.AddContext(flow, ContextClusterMeta, clusterMeta)
+	workflowManager.AddContext(flow, ContextInstanceID, request.InstanceID)
 
-	return nil, nil
+	if err = workflowManager.AsyncStart(ctx, flow); err != nil {
+		framework.LogWithContext(ctx).Errorf("async start workflow[%s] error: %s", flow.Flow.ID, err.Error())
+		return response, err
+	}
+
+	// Handle response
+	response.ClusterID = clusterMeta.Cluster.ID
+	response.WorkFlowID = flow.Flow.ID
+	return response, nil
 }
 
 func (manager *Manager) Clone(ctx context.Context, request *cluster.CloneClusterReq) (*cluster.CloneClusterResp, error) {
 	return nil, nil
 }
 
+type Manager struct{}
 
-type Manager struct {}
-
-var createClusterFlow = &workflow.WorkFlowDefine {
+var createClusterFlow = &workflow.WorkFlowDefine{
 	// define
 }
 
@@ -185,5 +223,3 @@ func (p *Manager) DeleteCluster(ctx context.Context, req cluster.DeleteClusterRe
 func (p *Manager) RestartCluster(ctx context.Context, req cluster.RestartClusterReq) (resp cluster.RestartClusterResp, err error) {
 	return
 }
-
-

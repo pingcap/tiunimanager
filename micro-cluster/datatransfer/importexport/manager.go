@@ -56,8 +56,8 @@ func NewImportExportManager() *ImportExportManager {
 		defaultImportPath: constants.DefaultImportPath, //todo: get from config
 	}
 	flowManager := workflow.GetWorkFlowService()
-	flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowExportData, &workflow.WorkFlowDefine{
-		FlowName: constants.WorkFlowExportData,
+	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowExportData, &workflow.WorkFlowDefine{
+		FlowName: constants.FlowExportData,
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start":            {"exportDataFromCluster", "exportDataDone", "fail", workflow.PollingNode, exportDataFromCluster},
 			"exportDataDone":   {"updateDataExportRecord", "updateRecordDone", "fail", workflow.SyncFuncNode, updateDataExportRecord},
@@ -65,8 +65,8 @@ func NewImportExportManager() *ImportExportManager {
 			"fail":             {"fail", "", "", workflow.SyncFuncNode, exportDataFailed},
 		},
 	})
-	flowManager.RegisterWorkFlow(context.TODO(), constants.WorkFlowImportData, &workflow.WorkFlowDefine{
-		FlowName: constants.WorkFlowImportData,
+	flowManager.RegisterWorkFlow(context.TODO(), constants.FlowImportData, &workflow.WorkFlowDefine{
+		FlowName: constants.FlowImportData,
 		TaskNodes: map[string]*workflow.NodeDefine{
 			"start":            {"buildDataImportConfig", "buildConfigDone", "fail", workflow.SyncFuncNode, buildDataImportConfig},
 			"buildConfigDone":  {"importDataToCluster", "importDataDone", "fail", workflow.PollingNode, importDataToCluster},
@@ -134,10 +134,10 @@ func (mgr *ImportExportManager) ExportData(ctx context.Context, request *message
 	}
 
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.WorkFlowExportData)
+	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowExportData)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.WorkFlowExportData, err.Error())
-		return nil, fmt.Errorf("create %s workflow failed, %s", constants.WorkFlowExportData, err.Error())
+		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowExportData, err.Error())
+		return nil, fmt.Errorf("create %s workflow failed, %s", constants.FlowExportData, err.Error())
 	}
 	// Start the workflow
 	flowManager.AddContext(flow, contextClusterMetaKey, meta)
@@ -260,17 +260,17 @@ func (mgr *ImportExportManager) ImportData(ctx context.Context, request *message
 		}
 	}
 	flowManager := workflow.GetWorkFlowService()
-	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.WorkFlowExportData)
+	flow, err := flowManager.CreateWorkFlow(ctx, request.ClusterID, constants.FlowImportData)
 	if err != nil {
-		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.WorkFlowExportData, err.Error())
-		return nil, fmt.Errorf("create %s workflow failed, %s", constants.WorkFlowExportData, err.Error())
+		framework.LogWithContext(ctx).Errorf("create %s workflow failed, %s", constants.FlowImportData, err.Error())
+		return nil, fmt.Errorf("create %s workflow failed, %s", constants.FlowImportData, err.Error())
 	}
 	// Start the workflow
 	flowManager.AddContext(flow, contextClusterMetaKey, meta)
 	flowManager.AddContext(flow, contextDataTransportRecordKey, info)
 	if err = flowManager.AsyncStart(ctx, flow); err != nil {
-		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.WorkFlowBackupCluster, err.Error())
-		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.WorkFlowBackupCluster, err.Error())
+		framework.LogWithContext(ctx).Errorf("async start %s workflow failed, %s", constants.FlowImportData, err.Error())
+		return nil, fmt.Errorf("async start %s workflow failed, %s", constants.FlowImportData, err.Error())
 	}
 
 	return &message.DataImportResp{

@@ -271,9 +271,10 @@ func (p *ClusterMeta) UpdateInstancesStatus(ctx context.Context,
 
 // GetInstance
 // @Description get instance based on instanceID
+// @Parameter	instance id (format: ip:port)
 // @Return		instance
 // @Return		error
-func (p *ClusterMeta) GetInstance(instanceID string) (*management.ClusterInstance, error) {
+func (p *ClusterMeta) GetInstance(ctx context.Context, instanceID string) (*management.ClusterInstance, error) {
 	host := strings.Split(instanceID, ":")
 	if len(host) != 2 {
 		return nil, framework.NewTiEMError(common.TIEM_PARAMETER_INVALID, "parameter format is wrong")
@@ -291,6 +292,56 @@ func (p *ClusterMeta) GetInstance(instanceID string) (*management.ClusterInstanc
 		}
 	}
 	return nil, framework.NewTiEMError(common.TIEM_INSTANCE_NOT_FOUND, "instance not found")
+}
+
+// IsComponentRequired
+// @Description judge whether component is required
+// @Parameter	component type
+// @Return		bool
+func (p *ClusterMeta) IsComponentRequired(ctx context.Context, componentType string) bool {
+	return knowledge.GetComponentSpec(p.Cluster.Type,
+		p.Cluster.Version, componentType).ComponentConstraint.ComponentRequired
+}
+
+// DeleteInstance
+// @Description delete instance from cluster topology based on instance id
+// @Parameter	instance id (format: ip:port)
+// @Return		error
+func (p *ClusterMeta) DeleteInstance(ctx context.Context, instanceID string) error {
+	instance, err := p.GetInstance(ctx, instanceID)
+	if err != nil {
+		return err
+	}
+	// recycle instance resource
+	request := &resource.RecycleRequest{
+		RecycleReqs: []resource.RecycleRequire{
+			{
+				RecycleType: resource.RecycleHost,
+				HolderID:    instance.ClusterID,
+				HostID:      instance.HostID,
+				ComputeReq: resource.ComputeRequirement{
+					CpuCores: int32(instance.CpuCores),
+					Memory:   int32(instance.Memory),
+				},
+				DiskReq: resource.DiskResource{
+					DiskId: instance.DiskID,
+				},
+				PortReq: []resource.PortResource{
+					{
+						Ports: instance.Ports,
+					},
+				},
+			},
+		},
+	}
+	resourceManager := resourceManagement.NewResourceManager()
+	err = resourceManager.RecycleResources(ctx, request)
+	if err != nil {
+		return err
+	}
+
+	//TODO: delete from db
+	return nil
 }
 
 // CloneMeta
@@ -356,5 +407,3 @@ func Get(ctx context.Context, clusterID string) (*ClusterMeta, error) {
 func Create(ctx context.Context, template management.Cluster) (*ClusterMeta, error) {
 	return nil, nil
 }
-
-

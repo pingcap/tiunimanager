@@ -18,7 +18,6 @@ package management
 
 import (
 	"encoding/json"
-	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"net/http"
 	"strconv"
@@ -400,28 +399,18 @@ func DescribeMonitor(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/{clusterId}/scale-out [post]
+// @Router /clusters/scale-out [post]
 func ScaleOut(c *gin.Context) {
 	var request cluster.ScaleOutClusterReq
 
 	// handle scale out request
-	if err := c.ShouldBindWith(&request, binding.JSON); err != nil {
-		framework.LogWithContext(c).Errorf("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
-	}
-	request.ClusterID = c.Param("clusterId")
-
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
-	}
+	body, err := controller.HandleJsonRequestFromBody(c, request)
 
 	// call rpc method
-	response := &cluster.ScaleOutClusterResp{}
-	controller.InvokeRpcMethod(c, client.ClusterClient.ScaleOutCluster, response, string(body), controller.DefaultTimeout)
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ScaleOutCluster,
+			&cluster.ScaleOutClusterResp{}, body, controller.DefaultTimeout)
+	}
 }
 
 // ScaleIn scale in a cluster
@@ -437,28 +426,18 @@ func ScaleOut(c *gin.Context) {
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult
-// @Router /clusters/{clusterId}/scale-in [post]
+// @Router /clusters/scale-in [post]
 func ScaleIn(c *gin.Context) {
 	var request cluster.ScaleInClusterReq
 
 	// handle scale in request
-	if err := c.ShouldBindWith(&request, binding.JSON); err != nil {
-		framework.LogWithContext(c).Error("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
-	}
-	request.ClusterID = c.Param("clusterId")
-
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Error("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
-	}
+	body, err := controller.HandleJsonRequestFromBody(c, request)
 
 	// call rpc method
-	response := &cluster.ScaleInClusterResp{}
-	controller.InvokeRpcMethod(c, client.ClusterClient.ScaleInCluster, response, string(body), controller.DefaultTimeout)
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.ScaleInCluster,
+			&cluster.ScaleInClusterResp{}, body, controller.DefaultTimeout)
+	}
 }
 
 // Clone clone a cluster
@@ -478,23 +457,11 @@ func Clone(c *gin.Context) {
 	var request cluster.CloneClusterReq
 
 	// handle clone cluster request
-	if err := c.ShouldBindWith(&request, binding.JSON); err != nil {
-		framework.LogWithContext(c).Errorf("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
-	}
-	// set default clone strategy
-	if len(request.CloneStrategy) == 0 {
-		request.CloneStrategy = constants.EmptyDataClone
-	}
-	body, err := json.Marshal(request)
-	if err != nil {
-		framework.LogWithContext(c).Errorf("parse request error: %s", err.Error())
-		c.JSON(http.StatusBadRequest, controller.Fail(http.StatusBadRequest, err.Error()))
-		return
-	}
+	body, err := controller.HandleJsonRequestFromBody(c, request)
 
 	// call rpc method
-	response := &cluster.CloneClusterResp{}
-	controller.InvokeRpcMethod(c, client.ClusterClient.CloneCluster, response, string(body), controller.DefaultTimeout)
+	if err == nil {
+		controller.InvokeRpcMethod(c, client.ClusterClient.CloneCluster,
+			&cluster.CloneClusterResp{}, body, controller.DefaultTimeout)
+	}
 }

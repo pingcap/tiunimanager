@@ -43,10 +43,21 @@ var scaleOutDefine = workflow.WorkFlowDefine{
 	},
 }
 
+var scaleInDefine = workflow.WorkFlowDefine{
+	FlowName: constants.FlowScaleInCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start":            {"scaleInCluster", "scaleInDone", "fail", workflow.PollingNode, scaleInCluster},
+		"scaleInDone":      {"freeInstanceResource", "freeDone", "fail", workflow.SyncFuncNode, freeInstanceResource},
+		"freeDone": {"end", "", "", workflow.SyncFuncNode, clusterEnd},
+		"fail":             {"fail", "", "", workflow.SyncFuncNode, clusterFail},
+	},
+}
+
 func NewClusterManager() *Manager {
 	workflowManager := workflow.GetWorkFlowService()
 
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowScaleOutCluster, &scaleOutDefine)
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowScaleInCluster, &scaleInDefine)
 	return &Manager{}
 }
 
@@ -112,7 +123,7 @@ func (manager *Manager) ScaleIn(ctx context.Context, request *cluster.ScaleInClu
 	}
 
 	// Judge whether the instance exists
-	_, err = clusterMeta.GetInstance(request.InstanceID)
+	_, err = clusterMeta.GetInstance(ctx, request.InstanceID)
 	if err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"cluster[%s] has no instance[%s]", clusterMeta.Cluster.Name, request.InstanceID)

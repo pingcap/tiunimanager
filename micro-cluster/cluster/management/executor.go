@@ -10,6 +10,7 @@ package management
 
 import (
 	"github.com/pingcap-inc/tiem/common/constants"
+	"github.com/pingcap-inc/tiem/library/common"
 	resourceType "github.com/pingcap-inc/tiem/library/common/resource-type"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/secondparty"
@@ -65,6 +66,51 @@ func scaleOutCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 		return err
 	}
 	framework.LogWithContext(context.Context).Infof("get scale out cluster task id: %d", taskId)
+	return nil
+}
+
+func scaleInCluster(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	instanceID := context.GetData(ContextInstanceID).(string)
+
+	instance, err := clusterMeta.GetInstance(context.Context, instanceID)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] has no instance[%s]", clusterMeta.Cluster.Name, instanceID)
+		return err
+	}
+	if clusterMeta.IsComponentRequired(context.Context, instance.Type) {
+		if len(clusterMeta.Instances[instance.Type]) <= 1 {
+			framework.LogWithContext(context.Context).Errorf(
+				"instance: %s is unique in cluster[%s], can not delete it", instanceID, clusterMeta.Cluster.Name)
+			return framework.NewTiEMError(common.TIEM_DELETE_INSTANCE_ERROR, "instance can not be deleted")
+		}
+	}
+	framework.LogWithContext(context.Context).Infof(
+		"scale in cluster %s, delete instance: %s", clusterMeta.Cluster.Name, instanceID)
+	taskId, err := secondparty.Manager.ClusterScaleIn(
+		context.Context, secondparty.ClusterComponentTypeStr, clusterMeta.Cluster.Name,
+		instanceID, 0, []string{"--yes"}, node.ID)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] scale in error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+	framework.LogWithContext(context.Context).Infof("get scale in cluster task id: %d", taskId)
+	return nil
+}
+
+func freeInstanceResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	instanceID := context.GetData(ContextInstanceID).(string)
+
+	err := clusterMeta.DeleteInstance(context.Context, instanceID)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] delete instance[%s] error: %s", clusterMeta.Cluster.Name, instanceID, err.Error())
+		return err
+	}
+
 	return nil
 }
 

@@ -85,7 +85,7 @@ func (p *Manager) ScaleOut(ctx context.Context, request cluster.ScaleOutClusterR
 	}
 
 	// Add instance into cluster topology
-	if err = clusterMeta.AddInstances(ctx, request.Compute); err != nil {
+	if err = clusterMeta.AddInstances(ctx, request.InstanceResource); err != nil {
 		framework.LogWithContext(ctx).Errorf(
 			"add instances into cluster[%s] topology error: %s", clusterMeta.Cluster.Name, err.Error())
 		return

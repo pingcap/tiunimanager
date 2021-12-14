@@ -4576,14 +4576,14 @@ var doc = `{
         "cluster.QueryClusterDetailResp": {
             "type": "object",
             "properties": {
-                "compute": {
+                "info": {
+                    "$ref": "#/definitions/structs.ClusterInfo"
+                },
+                "instanceResource": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
                     }
-                },
-                "info": {
-                    "$ref": "#/definitions/structs.ClusterInfo"
                 },
                 "topology": {
                     "type": "array",
@@ -4664,7 +4664,7 @@ var doc = `{
                 "clusterId": {
                     "type": "string"
                 },
-                "compute": {
+                "instanceResource": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
@@ -6449,7 +6449,7 @@ var doc = `{
         "structs.ClusterResourceInfo": {
             "type": "object",
             "properties": {
-                "compute": {
+                "instanceResource": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"

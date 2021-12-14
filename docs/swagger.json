@@ -4561,14 +4561,14 @@
         "cluster.QueryClusterDetailResp": {
             "type": "object",
             "properties": {
-                "compute": {
+                "info": {
+                    "$ref": "#/definitions/structs.ClusterInfo"
+                },
+                "instanceResource": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
                     }
-                },
-                "info": {
-                    "$ref": "#/definitions/structs.ClusterInfo"
                 },
                 "topology": {
                     "type": "array",
@@ -4649,7 +4649,7 @@
                 "clusterId": {
                     "type": "string"
                 },
-                "compute": {
+                "instanceResource": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
@@ -6434,7 +6434,7 @@
         "structs.ClusterResourceInfo": {
             "type": "object",
             "properties": {
-                "compute": {
+                "instanceResource": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/structs.ClusterResourceParameterCompute"

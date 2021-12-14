@@ -43,7 +43,7 @@ type ClusterResourceParameterCompute struct {
 
 //ClusterResourceInfo Resource information for creating database cluster input
 type ClusterResourceInfo struct {
-	Compute []ClusterResourceParameterCompute `json:"compute"`
+	InstanceResource []ClusterResourceParameterCompute `json:"instanceResource"`
 }
 
 //CreateClusterParameter User input parameters when creating a cluster

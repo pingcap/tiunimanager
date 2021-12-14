@@ -32,7 +32,7 @@ func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowCon
 			"cluster[%s] alloc resource error: %s", clusterMeta.Cluster.Name, err.Error())
 		return err
 	}
-	context.SetData(ContextAllocResource, allocID)
+	context.SetData(ContextAllocId, allocID)
 	framework.LogWithContext(context.Context).Infof(
 		"cluster[%s] alloc resource request id: %s", clusterMeta.Cluster.Name, allocID)
 	return nil
@@ -160,7 +160,7 @@ func setClusterOffline(node *workflowModel.WorkFlowNode, context *workflow.FlowC
 // setClusterOnline
 // @Description: revert allocated resource after creating, scaling out
 func revertResourceAfterFailure(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	allocID := context.GetData(ContextAllocResource)
+	allocID := context.GetData(ContextAllocId)
 	if allocID != nil {
 		request := &resourceType.RecycleRequest{
 			RecycleReqs: []resourceType.RecycleRequire{

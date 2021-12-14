@@ -49,7 +49,7 @@ import (
 func Create(c *gin.Context) {
 	var req cluster.CreateClusterReq
 
-	if requestBody, ok := controller.HandleJsonRequestFromBody(c, req); ok {
+	if requestBody, ok := controller.HandleJsonRequestFromBody(c, &req); ok {
 		controller.InvokeRpcMethod(c, client.ClusterClient.CreateCluster, &cluster.CreateClusterResp{},
 			requestBody,
 			controller.DefaultTimeout)

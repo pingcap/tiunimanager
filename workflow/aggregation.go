@@ -76,7 +76,7 @@ func createFlowWork(ctx context.Context, bizId string, define *WorkFlowDefine) (
 	}
 	flowData := make(map[string]interface{})
 
-	flow := define.getInstance(framework.ForkMicroCtx(ctx), bizId, flowData)
+	flow := define.getInstance(ctx, bizId, flowData)
 	_, err := models.GetWorkFlowReaderWriter().CreateWorkFlow(ctx, flow.Flow)
 	if err != nil {
 		return nil, err

@@ -4157,6 +4157,9 @@ var doc = `{
                     "description": "specify cloned cluster parameter group id(option)",
                     "type": "integer"
                 },
+                "parameterGroupID": {
+                    "type": "string"
+                },
                 "region": {
                     "description": "The Region where the cluster is located",
                     "type": "string"
@@ -4287,6 +4290,9 @@ var doc = `{
                 "exclusive": {
                     "description": "Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization",
                     "type": "boolean"
+                },
+                "parameterGroupID": {
+                    "type": "string"
                 },
                 "region": {
                     "description": "The Region where the cluster is located",

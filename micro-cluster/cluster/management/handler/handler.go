@@ -95,6 +95,10 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 		for _, item := range compute.Resource {
 			for i := 0; i < item.Count; i++ {
 				instance := &management.ClusterInstance{
+					Entity: dbCommon.Entity{
+						TenantId: p.Cluster.TenantId,
+						Status: string(constants.ClusterInitializing),
+					},
 					Type:         compute.Type,
 					Version:      p.Cluster.Version,
 					ClusterID:    p.Cluster.ID,
@@ -104,7 +108,6 @@ func (p *ClusterMeta) AddInstances(ctx context.Context, computes []structs.Clust
 					DiskType:     item.DiskType,
 					DiskCapacity: int32(item.DiskCapacity),
 				}
-				instance.Status = string(constants.ClusterInitializing)
 				p.Instances[compute.Type] = append(p.Instances[compute.Type], instance)
 			}
 		}

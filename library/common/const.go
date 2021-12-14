@@ -41,6 +41,7 @@ const (
 	DBDirPrefix   string = "/"
 
 	SqliteFileName string = "tiem.sqlite.db"
+	DatabaseFileName string = "em.db"
 
 	CrtFileName string = "server.crt"
 	KeyFileName string = "server.key"

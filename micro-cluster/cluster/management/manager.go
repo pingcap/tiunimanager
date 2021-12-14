@@ -21,12 +21,14 @@ import (
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/message/cluster"
 	"github.com/pingcap-inc/tiem/micro-cluster/cluster/management/handler"
+	wfModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
 )
 
 const (
 	ContextClusterMeta   = "ClusterMeta"
 	ContextTopology      = "Topology"
+	ContextAllocId       = "AllocResource"
 	ContextAllocResource = "AllocResource"
 	ContextInstanceID    = "InstanceID"
 )
@@ -38,7 +40,8 @@ func NewClusterManager() *Manager {
 
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowScaleOutCluster, &scaleOutDefine)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowScaleInCluster, &scaleInDefine)
-	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCreateCluster, &createClusterFlow)
+	// todo revert after test
+	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowCreateCluster, &testClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowDeleteCluster, &deleteClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowRestartCluster, &restartClusterFlow)
 	workflowManager.RegisterWorkFlow(context.TODO(), constants.FlowStopCluster, &stopClusterFlow)
@@ -128,6 +131,18 @@ func (p *Manager) Clone(ctx context.Context, request *cluster.CloneClusterReq) (
 	return nil, nil
 }
 
+// todo delete after test
+var testClusterFlow = workflow.WorkFlowDefine{
+	FlowName: constants.FlowCreateCluster,
+	TaskNodes: map[string]*workflow.NodeDefine{
+		"start": {"start", "succeed", "fail", workflow.SyncFuncNode, func(task *wfModel.WorkFlowNode, context *workflow.FlowContext) error {
+			return nil
+		}},
+		"succeed": {"end", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster)},
+		"fail":    {"fail", "", "", workflow.SyncFuncNode, workflow.CompositeExecutor(endMaintenance, persistCluster, revertResourceAfterFailure)},
+	},
+}
+
 var createClusterFlow = workflow.WorkFlowDefine{
 	FlowName: constants.FlowCreateCluster,
 	TaskNodes: map[string]*workflow.NodeDefine{
@@ -158,7 +173,7 @@ func (p *Manager) CreateCluster(ctx context.Context, req cluster.CreateClusterRe
 		return
 	}
 
-	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceStopping, createClusterFlow.FlowName)
+	flowID, err := asyncMaintenance(ctx, meta, constants.ClusterMaintenanceCreating, createClusterFlow.FlowName)
 
 	resp.ClusterID = meta.Cluster.ID
 	resp.WorkFlowID = flowID
@@ -235,16 +250,18 @@ func asyncMaintenance(ctx context.Context, meta *handler.ClusterMeta, status con
 		return
 	}
 
-	if flow, err := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, flowName); err != nil {
+	if flow, flowError := workflow.GetWorkFlowService().CreateWorkFlow(ctx, meta.Cluster.ID, flowName); flowError != nil {
 		framework.LogWithContext(ctx).Errorf("create flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, meta.Cluster.ID, err.Error())
+		err = flowError
 		return
 	} else {
 		flowID = flow.Flow.ID
+		flow.Context.SetData(ContextClusterMeta, meta)
 		if err = workflow.GetWorkFlowService().AsyncStart(ctx, flow); err != nil {
 			framework.LogWithContext(ctx).Errorf("start flow %s failed, clusterID = %s, error = %s", flow.Flow.Name, meta.Cluster.ID, err.Error())
 			return
 		}
-		framework.LogWithContext(ctx).Infof("create flow %s succeed, clusterID = %s, error = %s", flow.Flow.Name, meta.Cluster.ID, err.Error())
+		framework.LogWithContext(ctx).Infof("create flow %s succeed, clusterID = %s", flow.Flow.Name, meta.Cluster.ID)
 	}
 	return
 }

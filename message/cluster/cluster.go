@@ -31,12 +31,12 @@ import (
 //CreateClusterReq Message for creating a new cluster
 type CreateClusterReq struct {
 	structs.CreateClusterParameter
-	ResourceParameter structs.ClusterResourceInfo `json:"resourceParameters"`
+	ResourceParameter structs.ClusterResourceInfo `json:"resourceParameters" form:"resourceParameters"`
 }
 
 // CreateClusterResp Reply message for creating a new cluster
 type CreateClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
+	structs.AsyncTaskWorkFlowInfo
 	ClusterID                     string `json:"clusterId"`
 }
 
@@ -49,7 +49,7 @@ type DeleteClusterReq struct {
 
 // DeleteClusterResp Reply message for delete a new cluster
 type DeleteClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
+	structs.AsyncTaskWorkFlowInfo
 	ClusterID                     string `json:"clusterID"`
 }
 
@@ -60,7 +60,7 @@ type StopClusterReq struct {
 
 // StopClusterResp Reply message for stop a new cluster
 type StopClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowID"`
+	structs.AsyncTaskWorkFlowInfo
 	ClusterID                     string `json:"clusterId"`
 }
 
@@ -71,14 +71,14 @@ type RestartClusterReq struct {
 
 // RestartClusterResp Reply message for restart a new cluster
 type RestartClusterResp struct {
-	structs.AsyncTaskWorkFlowInfo `json:"workFlowId"`
+	structs.AsyncTaskWorkFlowInfo
 	ClusterID                     string `json:"clusterId"`
 }
 
 // ScaleInClusterReq Message for delete an instance in the cluster
 type ScaleInClusterReq struct {
 	ClusterID  string `json:"clusterId" form:"clusterId"`
-	InstanceID string `json:"instanceId"`
+	InstanceID string `json:"instanceId"  form:"instanceId"`
 }
 
 // ScaleInClusterResp Reply message for delete an instance in the cluster

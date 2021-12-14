@@ -179,7 +179,7 @@ func (c ClusterServiceHandler) CreateCluster(ctx context.Context, req *clusterpb
 
 	request := cluster.CreateClusterReq{}
 
-	if handleRequest(ctx, req, resp, request) {
+	if handleRequest(ctx, req, resp, &request) {
 		result, err := c.clusterManager.CreateCluster(ctx, request)
 
 		handleResponse(ctx, resp, err, result, nil)

@@ -96,7 +96,7 @@ func (h *Host) AfterCreate(tx *gorm.DB) (err error) {
 		disk.HostID = h.ID
 		err = tx.Create(&disk).Error
 		if err != nil {
-			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", disk.Name, h.HostName, h.IP)
+			return framework.NewTiEMErrorf(common.TIEM_RESOURCE_CREATE_DISK_ERROR, "create disk %s for host %s(%s) failed, %v", disk.Name, h.HostName, h.IP, err)
 		}
 	}
 	return nil

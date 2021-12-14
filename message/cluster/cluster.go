@@ -31,7 +31,7 @@ import (
 //CreateClusterReq Message for creating a new cluster
 type CreateClusterReq struct {
 	structs.CreateClusterParameter
-	ResourceParameter []structs.ClusterResourceParameter `json:"resourceParameters"`
+	ResourceParameter structs.ClusterResourceInfo `json:"resourceParameters"`
 }
 
 // CreateClusterResp Reply message for creating a new cluster
@@ -90,7 +90,7 @@ type ScaleInClusterResp struct {
 // ScaleOutClusterReq Message for cluster expansion operation
 type ScaleOutClusterReq struct {
 	ClusterID                        string `json:"clusterId" form:"clusterId"`
-	structs.ClusterResourceParameter
+	structs.ClusterResourceInfo
 }
 
 // ScaleOutClusterResp Reply message for cluster expansion operation
@@ -102,7 +102,8 @@ type ScaleOutClusterResp struct {
 //RestoreNewClusterReq Restore to a new cluster message using the backup file
 type RestoreNewClusterReq struct {
 	structs.CreateClusterParameter
-	ResourceParameter []structs.ClusterResourceParameter `json:"resourceParameters"`
+	BackupID          string                      `json:"backupId"`
+	ResourceParameter structs.ClusterResourceInfo `json:"resourceParameters"`
 }
 
 //RestoreNewClusterResp Restore to a new cluster using the backup file Reply Message
@@ -213,6 +214,7 @@ type QueryClusterDetailReq struct {
 type QueryClusterDetailResp struct {
 	Info structs.ClusterInfo `json:"info"`
 	structs.ClusterTopologyInfo
+	structs.ClusterResourceInfo
 }
 
 // QueryMonitorInfoReq Message to query the monitoring address information of a cluster

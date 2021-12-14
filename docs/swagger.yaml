@@ -38,8 +38,6 @@ definitions:
     type: object
   cluster.CloneClusterReq:
     properties:
-      backupId:
-        type: string
       cloneStrategy:
         description: specify clone strategy, include empty, snapshot and sync, default empty(option)
         type: string
@@ -139,8 +137,6 @@ definitions:
     type: object
   cluster.CreateClusterReq:
     properties:
-      backupId:
-        type: string
       clusterName:
         type: string
       clusterType:
@@ -165,9 +161,7 @@ definitions:
         description: The Region where the cluster is located
         type: string
       resourceParameters:
-        items:
-          $ref: '#/definitions/structs.ClusterResourceParameter'
-        type: array
+        $ref: '#/definitions/structs.ClusterResourceInfo'
       tags:
         items:
           type: string
@@ -366,6 +360,10 @@ definitions:
     type: object
   cluster.QueryClusterDetailResp:
     properties:
+      compute:
+        items:
+          $ref: '#/definitions/structs.ClusterResourceParameterCompute'
+        type: array
       info:
         $ref: '#/definitions/structs.ClusterInfo'
       topology:
@@ -1640,7 +1638,7 @@ definitions:
         $ref: '#/definitions/structs.ZoneInfo'
         description: ??
     type: object
-  structs.ClusterResourceParameter:
+  structs.ClusterResourceInfo:
     properties:
       compute:
         items:

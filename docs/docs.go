@@ -4124,9 +4124,6 @@ var doc = `{
         "cluster.CloneClusterReq": {
             "type": "object",
             "properties": {
-                "backupId": {
-                    "type": "string"
-                },
                 "cloneStrategy": {
                     "description": "specify clone strategy, include empty, snapshot and sync, default empty(option)",
                     "type": "string"
@@ -4266,9 +4263,6 @@ var doc = `{
         "cluster.CreateClusterReq": {
             "type": "object",
             "properties": {
-                "backupId": {
-                    "type": "string"
-                },
                 "clusterName": {
                     "type": "string"
                 },
@@ -4302,10 +4296,7 @@ var doc = `{
                     "type": "string"
                 },
                 "resourceParameters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/structs.ClusterResourceParameter"
-                    }
+                    "$ref": "#/definitions/structs.ClusterResourceInfo"
                 },
                 "tags": {
                     "type": "array",
@@ -4585,6 +4576,12 @@ var doc = `{
         "cluster.QueryClusterDetailResp": {
             "type": "object",
             "properties": {
+                "compute": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/structs.ClusterResourceParameterCompute"
+                    }
+                },
                 "info": {
                     "$ref": "#/definitions/structs.ClusterInfo"
                 },
@@ -6449,7 +6446,7 @@ var doc = `{
                 }
             }
         },
-        "structs.ClusterResourceParameter": {
+        "structs.ClusterResourceInfo": {
             "type": "object",
             "properties": {
                 "compute": {

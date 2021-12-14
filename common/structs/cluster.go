@@ -41,8 +41,8 @@ type ClusterResourceParameterCompute struct {
 	Resource []ClusterResourceParameterComputeResource `json:"resource"`
 }
 
-//ClusterResourceParameter Resource information for creating database cluster input
-type ClusterResourceParameter struct {
+//ClusterResourceInfo Resource information for creating database cluster input
+type ClusterResourceInfo struct {
 	Compute []ClusterResourceParameterCompute `json:"compute"`
 }
 
@@ -59,7 +59,6 @@ type CreateClusterParameter struct {
 	Exclusive       bool     `json:"exclusive" form:"exclusive"`             //Whether the newly created cluster is exclusive to physical resources, when exclusive, a host will only deploy instances of the same cluster, which may result in poor resource utilization
 	Region          string   `json:"region" form:"region"`                   //The Region where the cluster is located
 	CpuArchitecture string   `json:"cpuArchitecture" form:"cpuArchitecture"` //X86/X86_64/ARM
-	BackupID        string   `json:"backupId"`
 }
 
 // ClusterInfo Cluster details information

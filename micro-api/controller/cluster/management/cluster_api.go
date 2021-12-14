@@ -167,7 +167,7 @@ func Delete(c *gin.Context) {
 // @Produce application/json
 // @Security ApiKeyAuth
 // @Param clusterId path string true "cluster id"
-// @Success 200 {object} controller.CommonResult{data=RestartClusterRsp}
+// @Success 200 {object} controller.CommonResult{data=cluster.RestartClusterResp}
 // @Failure 401 {object} controller.CommonResult
 // @Failure 403 {object} controller.CommonResult
 // @Failure 500 {object} controller.CommonResult

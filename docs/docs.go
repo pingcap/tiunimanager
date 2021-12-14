@@ -2132,7 +2132,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/management.RestartClusterRsp"
+                                            "$ref": "#/definitions/cluster.RestartClusterResp"
                                         }
                                     }
                                 }
@@ -4601,6 +4601,18 @@ var doc = `{
                 }
             }
         },
+        "cluster.RestartClusterResp": {
+            "type": "object",
+            "properties": {
+                "clusterId": {
+                    "type": "string"
+                },
+                "workFlowId": {
+                    "description": "Asynchronous task workflow ID",
+                    "type": "string"
+                }
+            }
+        },
         "cluster.ResumeChangeFeedTaskResp": {
             "type": "object",
             "properties": {
@@ -5458,32 +5470,6 @@ var doc = `{
                     "type": "integer"
                 },
                 "sourceClusterId": {
-                    "type": "string"
-                }
-            }
-        },
-        "management.RestartClusterRsp": {
-            "type": "object",
-            "properties": {
-                "clusterId": {
-                    "type": "string"
-                },
-                "createTime": {
-                    "type": "string"
-                },
-                "deleteTime": {
-                    "type": "string"
-                },
-                "inProcessFlowId": {
-                    "type": "integer"
-                },
-                "statusCode": {
-                    "type": "string"
-                },
-                "statusName": {
-                    "type": "string"
-                },
-                "updateTime": {
                     "type": "string"
                 }
             }

@@ -101,9 +101,9 @@ func execShowWarningsThruSQL(ctx context.Context, db *sql.DB) error {
 	return errors.New(showWarningsResp.Message)
 }
 
-func (manager *SecondPartyManager) SetClusterDbPassword(ctx context.Context, req ClusterSetDbPswReq, bizID string) error {
-	logInFunc := framework.LogWithContext(ctx).WithField("bizid", bizID)
-	logInFunc.Infof("setclusterrootpsw, clustersetrootpswreq: %v, bizId: %s", req, bizID)
+func (manager *SecondPartyManager) SetClusterDbPassword(ctx context.Context, req ClusterSetDbPswReq, workFlowNodeID string) error {
+	logInFunc := framework.LogWithContext(ctx).WithField("bizid", workFlowNodeID)
+	logInFunc.Infof("setclusterrootpsw, clustersetrootpswreq: %v, bizId: %s", req, workFlowNodeID)
 
 	if len(req.DbConnParameter.Password) < 8 || len(req.DbConnParameter.Password) > 32 {
 		errMsg := errors.New("the valid length of the password is 8~32")

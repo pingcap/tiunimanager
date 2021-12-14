@@ -34,13 +34,7 @@ func Test_AutoBackup_Run(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	strategies := make([]*backuprestore.BackupStrategy, 1)
-	strategies[0] = &backuprestore.BackupStrategy{
-		ClusterID:  "cls-xxxx",
-		BackupDate: "Monday,Friday",
-		StartHour:  0,
-		EndHour:    1,
-	}
+	strategies := make([]*backuprestore.BackupStrategy, 0)
 	brRW := mockbr.NewMockReaderWriter(ctrl)
 	brRW.EXPECT().QueryBackupStrategy(gomock.Any(), gomock.Any(), gomock.Any()).Return(strategies, nil).AnyTimes()
 	models.SetBRReaderWriter(brRW)

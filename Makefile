@@ -285,3 +285,4 @@ mock:
 swag:
 	$(GO) install github.com/swaggo/swag/cmd/swag@v1.7.1
 	swag init -g micro-api/main.go
+

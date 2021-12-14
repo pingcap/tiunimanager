@@ -29,6 +29,7 @@ import (
 )
 
 var GormRW resource.ReaderWriter
+var MetaDB *gorm.DB
 
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
@@ -46,6 +47,7 @@ func TestMain(m *testing.M) {
 			if err != nil || db.Error != nil {
 				return err
 			}
+			MetaDB = db
 			GormRW = NewGormResourceReadWrite(db)
 			GormRW.InitTables(context.Background())
 			return nil

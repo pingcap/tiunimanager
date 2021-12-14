@@ -100,3 +100,48 @@ func execShowWarningsThruSQL(ctx context.Context, db *sql.DB) error {
 	logInFunc.Errorf("set config error: %s", showWarningsResp.Message)
 	return errors.New(showWarningsResp.Message)
 }
+
+func (manager *SecondPartyManager) SetClusterDbPassword(ctx context.Context, req ClusterSetDbPswReq, bizID string) error {
+	logInFunc := framework.LogWithContext(ctx).WithField("bizid", bizID)
+	logInFunc.Infof("setclusterrootpsw, clustersetrootpswreq: %v, bizId: %s", req, bizID)
+
+	if len(req.DbConnParameter.Password) < 8 || len(req.DbConnParameter.Password) > 32 {
+		errMsg := errors.New("the valid length of the password is 8~32")
+		logInFunc.Info(errMsg)
+		return errMsg
+	}
+
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/mysql", req.DbConnParameter.Username, "", req.DbConnParameter.IP, req.DbConnParameter.Port))
+	if err != nil {
+		logInFunc.Error("conn tidb error", err)
+		return err
+	}
+	defer db.Close()
+
+	//sqlCommand := fmt.Sprintf("CREATE USER '%s'@'localhost' IDENTIFIED BY '%s'", req.DbConnParameter.Username, req.DbConnParameter.Password)
+	sqlCommand := fmt.Sprintf("ALTER USER '%s'@'%s' IDENTIFIED BY '%s'", req.DbConnParameter.Username, req.DbConnParameter.IP, req.DbConnParameter.Password)
+	logInFunc.Infof("task start processing: %s, on %s:%s", sqlCommand, req.DbConnParameter.IP, req.DbConnParameter.Port)
+
+	err = execSetDbPswThruSQL(ctx, db, sqlCommand)
+
+	if err != nil {
+		return err
+	}
+	//is it necessary?
+	err = execShowWarningsThruSQL(ctx, db)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func execSetDbPswThruSQL(ctx context.Context, db *sql.DB, sqlCommand string) error {
+	logInFunc := framework.LogWithContext(ctx)
+	_, err := db.Exec(sqlCommand)
+	if err != nil {
+		logInFunc.Errorf("set db password error: %s", err.Error())
+		return err
+	}
+	return nil
+}

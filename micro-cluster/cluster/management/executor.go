@@ -18,6 +18,7 @@ import (
 	resourceManagement "github.com/pingcap-inc/tiem/micro-cluster/resourcemanager/management"
 	workflowModel "github.com/pingcap-inc/tiem/models/workflow"
 	"github.com/pingcap-inc/tiem/workflow"
+	"strconv"
 )
 
 func prepareResource(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
@@ -262,6 +263,31 @@ func freedResource(node *workflowModel.WorkFlowNode, context *workflow.FlowConte
 // @Parameter context
 // @return error
 func initDatabaseAccount(node *workflowModel.WorkFlowNode, context *workflow.FlowContext) error {
-	// todo
+	framework.LogWithContext(context).Info("begin initDatabaseAccount")
+	defer framework.LogWithContext(context).Info("end initDatabaseAccount")
+
+	clusterMeta := context.GetData(ContextClusterMeta).(*handler.ClusterMeta)
+	cluster := clusterMeta.Cluster
+
+	//todo: get from meta
+	tidbServerHost := ""
+	tidbServerPort := 0
+	req := secondparty.ClusterSetDbPswReq{
+		DbConnParameter: secondparty.DbConnParam{
+			Username: "root", //todo: replace admin account
+			Password: cluster.DBPassword,
+			IP:       tidbServerHost,
+			Port:     strconv.Itoa(tidbServerPort),
+		},
+	}
+	err := secondparty.Manager.SetClusterDbPassword(context, req, node.ID)
+	if err != nil {
+		framework.LogWithContext(context.Context).Errorf(
+			"cluster[%s] init database account error: %s", clusterMeta.Cluster.Name, err.Error())
+		return err
+	}
+	framework.LogWithContext(context.Context).Infof(
+		"cluster[%s] init database account succeed", clusterMeta.Cluster.Name)
+
 	return nil
 }

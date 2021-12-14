@@ -76,6 +76,7 @@ type SecondPartyService interface {
 	ShowRestoreInfo(ctx context.Context, cluster ClusterFacade) CmdShowRestoreInfoResp
 	GetOperationStatus(ctx context.Context, operationID string) (resp GetOperationStatusResp, err error)
 	GetOperationStatusByWorkFlowNodeID(ctx context.Context, workFlowNodeID string) (resp GetOperationStatusResp, err error)
+	SetClusterDbPassword(ctx context.Context, req ClusterSetDbPswReq, bizID string) error
 }
 
 type SecondPartyManager struct {

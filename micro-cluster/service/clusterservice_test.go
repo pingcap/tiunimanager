@@ -30,7 +30,6 @@ type TestStruct struct {
 	Type int    `json:"type"`
 }
 
-
 type TestErrorStruct struct {
 	Name string `json:"name"`
 	Type int    `json:"type"`
@@ -70,9 +69,9 @@ func Test_handleResponse(t *testing.T) {
 			Type: 4,
 		}
 		handleResponse(context.TODO(), resp, nil, data, &clusterpb.RpcPage{
-			Page: 4,
+			Page:     4,
 			PageSize: 8,
-			Total: 32,
+			Total:    32,
 		})
 
 		assert.Equal(t, int32(0), resp.Code)
@@ -89,9 +88,9 @@ func Test_handleResponse(t *testing.T) {
 			Type: 4,
 		}
 		handleResponse(context.TODO(), resp, framework.SimpleError(common.TIEM_CLUSTER_NOT_FOUND), data, &clusterpb.RpcPage{
-			Page: 4,
+			Page:     4,
 			PageSize: 8,
-			Total: 32,
+			Total:    32,
 		})
 
 		assert.Equal(t, int32(common.TIEM_CLUSTER_NOT_FOUND), resp.Code)
@@ -103,9 +102,9 @@ func Test_handleResponse(t *testing.T) {
 		resp := &clusterpb.RpcResponse{}
 
 		handleResponse(context.TODO(), resp, nil, TestErrorStruct{}, &clusterpb.RpcPage{
-			Page: 4,
+			Page:     4,
 			PageSize: 8,
-			Total: 32,
+			Total:    32,
 		})
 
 		assert.Equal(t, int32(common.TIEM_MARSHAL_ERROR), resp.Code)

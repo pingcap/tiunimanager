@@ -13,10 +13,18 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package management
+/*******************************************************************************
+ * @File: test_main.go
+ * @Description:
+ * @Author: duanbing@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/10
+*******************************************************************************/
+
+package specs
 
 import (
-	"github.com/pingcap-inc/tiem/library/common"
+	"github.com/pingcap-inc/tiem/common/constants"
 	"github.com/pingcap-inc/tiem/library/framework"
 	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/driver/sqlite"
@@ -25,17 +33,20 @@ import (
 	"testing"
 )
 
-var testRW *GormClusterReadWrite
-
 func TestMain(m *testing.M) {
 	testFilePath := "testdata/" + uuidutil.ShortId()
 	os.MkdirAll(testFilePath, 0755)
 
-	logins := framework.LogForkFile(common.LogFileSystem)
+	logins := framework.LogForkFile(constants.LogFileSystem)
+
+	defer func() {
+		os.RemoveAll(testFilePath)
+		os.Remove(testFilePath)
+	}()
 
 	framework.InitBaseFrameworkForUt(framework.ClusterService,
 		func(d *framework.BaseFramework) error {
-			dbFile := testFilePath + common.DBDirPrefix + common.SqliteFileName
+			dbFile := testFilePath + constants.DBDirPrefix + constants.SqliteFileName
 			db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
 
 			if err != nil || db.Error != nil {
@@ -43,17 +54,17 @@ func TestMain(m *testing.M) {
 			} else {
 				logins.Infof("open database successful, filepath: %s", dbFile)
 			}
-			db.Migrator().CreateTable(Cluster{})
-			db.Migrator().CreateTable(ClusterRelation{})
-			db.Migrator().CreateTable(ClusterInstance{})
-			db.Migrator().CreateTable(ClusterTopologySnapshot{})
-
-			testRW = NewGormClusterReadWrite(db)
+			db.Migrator().CreateTable(Zone{})
+			db.Migrator().CreateTable(Region{})
+			db.Migrator().CreateTable(ResourceSpec{})
+			db.Migrator().CreateTable(ProductComponent{})
+			db.Migrator().CreateTable(Product{})
+			db.Migrator().CreateTable(Vendor{})
+			//init test data
+			prw = NewProductReadWriter(db)
 			return nil
 		},
 	)
-	code := m.Run()
-	os.RemoveAll("testdata/")
-	os.RemoveAll("logs/")
-	os.Exit(code)
+
+	os.Exit(m.Run())
 }

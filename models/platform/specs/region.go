@@ -11,31 +11,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
  * See the License for the specific language governing permissions and        *
  * limitations under the License.                                             *
- *                                                                            *
  ******************************************************************************/
 
-package parameter
+/*******************************************************************************
+ * @File: region.go
+ * @Description:
+ * @Author: duanbing@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/6
+*******************************************************************************/
+
+package specs
 
 import (
-	"github.com/pingcap-inc/tiem/library/knowledge"
+	"gorm.io/gorm"
+	"time"
 )
 
-type ParamRealValue struct {
-	Cluster   string                    `json:"cluster" example:"1"`
-	Instances []*ParamInstanceRealValue `json:"instances"`
-}
-
-type ParamInstanceRealValue struct {
-	Instance string `json:"instance" example:"172.16.10.2"`
-	Value    string `json:"value" example:"2"`
-}
-
-type ParamItem struct {
-	Definition   knowledge.Parameter `json:"definition"`
-	CurrentValue ParamInstance       `json:"currentValue"`
-}
-
-type ParamInstance struct {
-	Name  string      `json:"name"`
-	Value interface{} `json:"value"`
+//Region region information provided by Enterprise Manager
+type Region struct {
+	RegionID  string         `gorm:"primaryKey;"`
+	VendorID  string         `gorm:"primaryKey;"`
+	Name      string         `gorm:"size:32;"`
+	Comment   string         `gorm:"size:1024;"`
+	CreatedAt time.Time      `gorm:"autoCreateTime;<-:create;->;"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime"`
+	DeletedAt gorm.DeletedAt `gorm:""`
 }

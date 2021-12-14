@@ -13,60 +13,27 @@
  * limitations under the License.                                             *
  ******************************************************************************/
 
-package common
+/*******************************************************************************
+ * @File: vendors
+ * @Description:
+ * @Author: duanbing@pingcap.com
+ * @Version: 1.0.0
+ * @Date: 2021/12/13
+*******************************************************************************/
+
+package specs
 
 import (
-	"context"
-	"github.com/pingcap-inc/tiem/library/common"
-	"github.com/pingcap-inc/tiem/library/framework"
-	"time"
-
-	"github.com/pingcap-inc/tiem/library/util/uuidutil"
 	"gorm.io/gorm"
+	"time"
 )
 
-type Entity struct {
-	ID        string    `gorm:"primarykey"`
-	CreatedAt time.Time `gorm:"<-:create"`
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
-
-	TenantId string `gorm:"default:null;not null;<-:create"`
-	Status   string `gorm:"not null;"`
-}
-
-func (e *Entity) BeforeCreate(tx *gorm.DB) (err error) {
-	e.ID = uuidutil.GenerateID()
-	return nil
-}
-
-var split = []byte("_")
-
-type GormDB struct {
-	db *gorm.DB
-}
-
-func WrapDB(db *gorm.DB) GormDB {
-	return GormDB{db: db}
-}
-
-func (m *GormDB) DB(ctx context.Context) *gorm.DB {
-	return m.db.WithContext(ctx)
-}
-
-// WrapDBError
-// @Description:
-// @Parameter err
-// @return error is nil or TiEMError
-func WrapDBError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	switch err.(type) {
-	case framework.TiEMError:
-		return err
-	default:
-		return framework.NewTiEMErrorf(common.TIEM_UNRECOGNIZED_ERROR, err.Error())
-	}
+//Vendor vendor information provided by Enterprise Manager
+type Vendor struct {
+	VendorID  string         `gorm:"primaryKey;"`
+	Name      string         `gorm:"size:32;"`
+	Comment   string         `gorm:"size:1024;"`
+	CreatedAt time.Time      `gorm:"autoCreateTime;<-:create;->;"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime"`
+	DeletedAt gorm.DeletedAt `gorm:""`
 }

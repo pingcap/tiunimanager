@@ -12,6 +12,7 @@ import (
 	"context"
 	"github.com/pingcap-inc/tiem/library/common/resource-type"
 )
+
 type ResourceManager struct{}
 
 func NewResourceManager() *ResourceManager {
@@ -19,10 +20,10 @@ func NewResourceManager() *ResourceManager {
 	return m
 }
 
-func (manager *ResourceManager)AllocResources(ctx context.Context, batchReq *resource.BatchAllocRequest) (results *resource.BatchAllocResponse, err error) {
+func (manager *ResourceManager) AllocResources(ctx context.Context, batchReq *resource.BatchAllocRequest) (results *resource.BatchAllocResponse, err error) {
 	return nil, nil
 }
 
-func (manager *ResourceManager)RecycleResources(ctx context.Context, request *resource.RecycleRequest) (err error) {
+func (manager *ResourceManager) RecycleResources(ctx context.Context, request *resource.RecycleRequest) (err error) {
 	return nil
 }

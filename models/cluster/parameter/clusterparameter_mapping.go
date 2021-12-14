@@ -14,47 +14,37 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * @File: readerwriter.go
- * @Description: parameter group reader and writer interface define
+ * @File: clusterparameter_mapping.go
+ * @Description: cluster parameter mapping table orm
  * @Author: jiangxunyu@pingcap.com
  * @Version: 1.0.0
- * @Date: 2021/12/10 14:31
+ * @Date: 2021/12/10 14:50
 *******************************************************************************/
 
 package parameter
 
-import "context"
+import (
+	"time"
 
-// ReaderWriter
-// @Description: cluster parameter reader and writer interface
-type ReaderWriter interface {
+	"github.com/pingcap-inc/tiem/models/parametergroup"
+)
 
-	// QueryClusterParameter
-	// @Description: query cluster parameter
-	// @param ctx
-	// @param clusterId
-	// @param page
-	// @param pageSize
-	// @return paramGroupId
-	// @return total
-	// @return params
-	// @return err
-	QueryClusterParameter(ctx context.Context, clusterId string, offset, size int) (paramGroupId string, params []*ClusterParamDetail, total int64, err error)
+// ClusterParameterMapping
+// @Description: cluster_parameter_mapping table orm
+type ClusterParameterMapping struct {
+	ClusterID   string    `gorm:"primaryKey;comment:'cluster id. relation cluster table'"`
+	ParameterID string    `gorm:"primaryKey;comment:'parameter id. relation parameter table'"`
+	RealValue   string    `gorm:"not null;comment:'cluster parameter real value. value format: {\"clusterValue\":1, \"instanceValue\":[{\"id\":1,\"value\":2}]}'"`
+	CreatedAt   time.Time `gorm:"<-:create"`
+	UpdatedAt   time.Time
+}
 
-	// UpdateClusterParameter
-	// @Description: update cluster parameters
-	// @param ctx
-	// @param clusterId
-	// @param params
-	// @return err
-	UpdateClusterParameter(ctx context.Context, clusterId string, params []*ClusterParameterMapping) (err error)
+// ClusterParamDetail
+// @Description: cluster parameter detail object
+type ClusterParamDetail struct {
+	parametergroup.Parameter
 
-	// ApplyClusterParameter
-	// @Description: applying a parameter group to a cluster
-	// @param ctx
-	// @param parameterGroupId
-	// @param clusterId
-	// @param params
-	// @return err
-	ApplyClusterParameter(ctx context.Context, parameterGroupId string, clusterId string, params []*ClusterParameterMapping) (err error)
+	DefaultValue string `json:"defaultValue"`
+	RealValue    string `json:"realValue"`
+	Note         string `json:"note"`
 }

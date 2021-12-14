@@ -186,7 +186,7 @@ func (rw *GormResourceReadWrite) locationFiltered(db *gorm.DB, location *structs
 	db = db.Where("hosts.region = ?", regionCode)
 
 	//  Zone field should be required for follower filter
-	if location.Zone != "" {
+	if location.Zone == "" {
 		return db, nil
 	}
 	zoneCode = structs.GenDomainCodeByName(regionCode, location.Zone)

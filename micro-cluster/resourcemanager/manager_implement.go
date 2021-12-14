@@ -51,7 +51,7 @@ func (m *ResourceManager) GetManagement() *management.Management {
 func (m *ResourceManager) ImportHosts(ctx context.Context, hosts []structs.HostInfo) (hostIds []string, err error) {
 	hostIds, err = m.resourcePool.ImportHosts(ctx, hosts)
 	if err != nil {
-		framework.LogWithContext(ctx).Warnf("import hosts in batch failed from db service: %v", err)
+		framework.LogWithContext(ctx).Warnf("import hosts %v in batch failed from db service: %v", hosts, err)
 	} else {
 		framework.LogWithContext(ctx).Infof("import %d hosts in batch succeed from db service.", len(hosts))
 	}
@@ -73,7 +73,7 @@ func (m *ResourceManager) QueryHosts(ctx context.Context, filter *structs.HostFi
 func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string) (err error) {
 	err = m.resourcePool.DeleteHosts(ctx, hostIds)
 	if err != nil {
-		framework.LogWithContext(ctx).Warnf("delete %d hosts in failed from db service: %v", len(hostIds), err)
+		framework.LogWithContext(ctx).Warnf("delete %d hosts %v in failed from db service: %v", len(hostIds), hostIds, err)
 	} else {
 		framework.LogWithContext(ctx).Infof("delete %d hosts %v succeed from db service.", len(hostIds), hostIds)
 	}
@@ -84,7 +84,7 @@ func (m *ResourceManager) DeleteHosts(ctx context.Context, hostIds []string) (er
 func (m *ResourceManager) UpdateHostReserved(ctx context.Context, hostIds []string, reserved bool) (err error) {
 	err = m.resourcePool.UpdateHostReserved(ctx, hostIds, reserved)
 	if err != nil {
-		framework.LogWithContext(ctx).Warnf("update %d hosts to reserved (%v) failed from db service: %v", len(hostIds), reserved, err)
+		framework.LogWithContext(ctx).Warnf("update %d hosts %v to reserved (%v) failed from db service: %v", len(hostIds), hostIds, reserved, err)
 	} else {
 		framework.LogWithContext(ctx).Infof("update %d hosts[%v] to reserved (%v) succeed from db service.", len(hostIds), hostIds, reserved)
 	}
@@ -95,7 +95,7 @@ func (m *ResourceManager) UpdateHostReserved(ctx context.Context, hostIds []stri
 func (m *ResourceManager) UpdateHostStatus(ctx context.Context, hostIds []string, status string) (err error) {
 	err = m.resourcePool.UpdateHostStatus(ctx, hostIds, status)
 	if err != nil {
-		framework.LogWithContext(ctx).Warnf("update %d hosts to status %s failed from db service: %v", len(hostIds), status, err)
+		framework.LogWithContext(ctx).Warnf("update %d hosts %v to status %s failed from db service: %v", len(hostIds), hostIds, status, err)
 	} else {
 		framework.LogWithContext(ctx).Infof("update %d hosts[%v] to status %s succeed from db service.", len(hostIds), hostIds, status)
 	}

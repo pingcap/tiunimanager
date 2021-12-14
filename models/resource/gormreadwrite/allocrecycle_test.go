@@ -129,3 +129,46 @@ func Test_UpdateHostStatus_Succeed(t *testing.T) {
 	assert.True(t, err == nil && len(hosts) == 1)
 	assert.Equal(t, string(constants.HostOffline), hosts[0].Status)
 }
+
+func Test_GetHostItems(t *testing.T) {
+	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
+		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
+	assert.Nil(t, err)
+	id2, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack2", "Test_Host2", "192.168.192.169",
+		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+	defer func() { _ = GormRW.Delete(context.TODO(), id2) }()
+	assert.Nil(t, err)
+	id3, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone2,Test_Rack1", "Test_Host3", "192.168.192.170",
+		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+	defer func() { _ = GormRW.Delete(context.TODO(), id3) }()
+	assert.Nil(t, err)
+	items, err := GormRW.GetHostItems(context.TODO(), &structs.HostFilter{Arch: string(constants.ArchX8664)}, 1, 3)
+	assert.True(t, err == nil && len(items) == 3)
+	assert.Equal(t, "192.168.192.168", items[0].Ip)
+	assert.Equal(t, "192.168.192.169", items[1].Ip)
+	assert.Equal(t, "192.168.192.170", items[2].Ip)
+}
+
+func Test_GetHostStocks(t *testing.T) {
+	id1, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack1", "Test_Host1", "192.168.192.168",
+		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+	defer func() { _ = GormRW.Delete(context.TODO(), id1) }()
+	assert.Nil(t, err)
+	id2, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone1", "Test_Region1,Test_Zone1,Test_Rack2", "Test_Host2", "192.168.192.169",
+		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 8, 16, 2)
+	defer func() { _ = GormRW.Delete(context.TODO(), id2) }()
+	assert.Nil(t, err)
+	id3, err := CreateTestHost("Test_Region1", "Test_Region1,Test_Zone2", "Test_Region1,Test_Zone2,Test_Rack1", "Test_Host3", "192.168.192.170",
+		string(constants.EMProductNameTiDB), string(constants.PurposeCompute), string(constants.SSD), 32, 64, 2)
+	defer func() { _ = GormRW.Delete(context.TODO(), id3) }()
+	assert.Nil(t, err)
+	stocks, err := GormRW.GetHostStocks(context.TODO(), &structs.Location{Region: "Test_Region1", Zone: "Test_Zone2"}, &structs.HostFilter{}, &structs.DiskFilter{})
+	t.Log(stocks)
+	assert.True(t, err == nil)
+	assert.Equal(t, 1, len(stocks))
+	assert.Equal(t, int32(32), stocks[0].FreeCpuCores)
+	assert.Equal(t, int32(64), stocks[0].FreeMemory)
+	assert.Equal(t, int32(3), stocks[0].FreeDiskCount)
+	assert.Equal(t, int32(3*256), stocks[0].FreeDiskCapacity)
+}
